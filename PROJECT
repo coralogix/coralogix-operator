@@ -3,9 +3,15 @@ layout: go.kubebuilder.io/v2
 projectName: coralogix-operator
 repo: github.com/coralogix/coralogix-operator
 resources:
-- group: loggers
+-
+  # TODO(user): Uncomment the below line if this resource implements a controller, else delete it.
+  # controller: true
+  domain: coralogix.com
+  group: loggers
   kind: CoralogixLogger
+  # TODO(user): Update the package path for your API if the below value is incorrect.
+  path: github.com/coralogix/coralogix-operator/api/v1
   version: v1
-version: 3-alpha
+version: "3"
 plugins:
   go.sdk.operatorframework.io/v2-alpha: {}
