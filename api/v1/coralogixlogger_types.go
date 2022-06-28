@@ -1,5 +1,5 @@
 /*
-Copyright 2020 Coralogix Ltd..
+Copyright 2022 Coralogix Ltd..
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28,6 +28,13 @@ type CoralogixLoggerSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
+	// Coralogix Region
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Region"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:select:Europe","urn:alm:descriptor:com.tectonic.ui:select:Europe2","urn:alm:descriptor:com.tectonic.ui:select:India","urn:alm:descriptor:com.tectonic.ui:select:Singapore","urn:alm:descriptor:com.tectonic.ui:select:US"}
+	// +kubebuilder:validation:Enum=Europe;Europe2;India;Singapore;US
+	// +kubebuilder:default:=Europe
+	// +kubebuilder:validation:Optional
+	Region string `json:"region"`
 	// Coralogix Private Key
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Private Key"
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors="urn:alm:descriptor:com.tectonic.ui:password"
@@ -35,9 +42,13 @@ type CoralogixLoggerSpec struct {
 	// +kubebuilder:validation:Pattern="^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-z]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
 	// +kubebuilder:validation:MinLength=36
 	// +kubebuilder:validation:MaxLength=36
+	// +kubebuilder:validation:Required
 	PrivateKey string `json:"private_key"`
 	// Current cluster name
-	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Cluster Name",xDescriptors="urn:alm:descriptor:com.tectonic.ui:advanced"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Cluster Name"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors="urn:alm:descriptor:com.tectonic.ui:advanced"
+	// +kubebuilder:default:=cluster.local
+	// +kubebuilder:validation:Optional
 	ClusterName string `json:"cluster_name"`
 }
 

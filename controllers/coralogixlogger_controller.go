@@ -332,6 +332,17 @@ func newClusterRoleBinding(cr *loggersv1.CoralogixLogger) *rbacv1.ClusterRoleBin
 func newDaemonSet(cr *loggersv1.CoralogixLogger) *appsv1.DaemonSet {
 	var uid int64 = 0
 	var privileged bool = true
+	coralogixEndpoints := map[string]string{
+		"Europe":    "api.coralogix.com",
+		"Europe2":   "api.eu2.coralogix.com",
+		"India":     "api.app.coralogix.in",
+		"Singapore": "api.coralogixsg.com",
+		"US":        "api.coralogix.us",
+	}
+	coralogixURL, ok := coralogixEndpoints[cr.Spec.Region]
+	if !ok {
+		coralogixURL = "api.coralogix.com"
+	}
 	return &appsv1.DaemonSet{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DaemonSet",
@@ -359,13 +370,17 @@ func newDaemonSet(cr *loggersv1.CoralogixLogger) *appsv1.DaemonSet {
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{{
 						Name:            "fluentd",
-						Image:           "registry.connect.redhat.com/coralogix/coralogix-fluentd:1.0.0",
+						Image:           "registry.connect.redhat.com/coralogix/coralogix-fluentd:1.0.1",
 						ImagePullPolicy: corev1.PullAlways,
 						SecurityContext: &corev1.SecurityContext{
 							RunAsUser:  &uid,
 							Privileged: &privileged,
 						},
 						Env: []corev1.EnvVar{
+							{
+								Name:  "CORALOGIX_ENDPOINT",
+								Value: coralogixURL,
+							},
 							{
 								Name:  "CORALOGIX_PRIVATE_KEY",
 								Value: cr.Spec.PrivateKey,

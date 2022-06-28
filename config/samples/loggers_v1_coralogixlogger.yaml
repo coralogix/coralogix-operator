@@ -3,5 +3,6 @@ kind: CoralogixLogger
 metadata:
   name: coralogix-logger
 spec:
+  region: Europe
   private_key: 00000000-0000-0000-0000-000000000000
   cluster_name: cluster.local

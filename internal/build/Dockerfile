@@ -11,12 +11,11 @@ LABEL name="coralogix-fluentd" \
       description="Special FluentD image for Coralogix integration"
 
 RUN yum install -y hostname sudo make gcc gcc-c++ ruby-devel && \
-    curl -L https://toolbelt.treasuredata.com/sh/install-redhat-td-agent3.sh | sh && \
-    td-agent-gem install --no-rdoc --no-ri --no-document \
+    curl -L https://toolbelt.treasuredata.com/sh/install-redhat-td-agent4.sh | sh && \
+    td-agent-gem install \
         fluent-plugin-kubernetes_metadata_filter \
         fluent-plugin-multi-format-parser \
-        fluent-plugin-detect-exceptions \
-        fluent-plugin-coralogix && \
+        fluent-plugin-detect-exceptions && \
     td-agent-gem sources --clear-all && \
     rm -rf /tmp/* /var/tmp/* /var/cache/* /opt/td-agent/embedded/lib/ruby/gems/*/cache/*.gem && \
     ulimit -n 65536 && \
