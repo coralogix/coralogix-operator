@@ -50,6 +50,12 @@ type CoralogixLoggerSpec struct {
 	// +kubebuilder:default:=cluster.local
 	// +kubebuilder:validation:Optional
 	ClusterName string `json:"cluster_name"`
+	// Proxy address to send the data
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Proxy URL"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors="urn:alm:descriptor:com.tectonic.ui:advanced"
+	// +kubebuilder:default:=""
+	// +kubebuilder:validation:Optional
+	Proxy string `json:"proxy"`
 }
 
 // CoralogixLoggerStatus defines the observed state of CoralogixLogger

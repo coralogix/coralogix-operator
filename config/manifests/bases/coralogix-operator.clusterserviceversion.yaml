@@ -51,6 +51,11 @@ spec:
         path: private_key
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:password
+      - description: Proxy address to send the data
+        displayName: Proxy URL
+        path: proxy
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:advanced
       - description: Coralogix Region
         displayName: Region
         path: region
@@ -119,7 +124,6 @@ spec:
     type: MultiNamespace
   - supported: true
     type: AllNamespaces
-  relatedImages: []
   keywords:
   - coralogix
   - logging

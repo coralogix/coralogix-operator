@@ -389,6 +389,10 @@ func newDaemonSet(cr *loggersv1.CoralogixLogger) *appsv1.DaemonSet {
 								Name:  "CLUSTER_NAME",
 								Value: cr.Spec.ClusterName,
 							},
+							{
+								Name:  "HTTP_PROXY",
+								Value: cr.Spec.Proxy,
+							},
 						},
 						Resources: corev1.ResourceRequirements{
 							Requests: corev1.ResourceList{

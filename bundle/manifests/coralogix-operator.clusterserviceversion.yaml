@@ -20,8 +20,8 @@ metadata:
       ]
     capabilities: Basic Install
     categories: Logging & Tracing
-    certified: "false"
-    containerImage: registry.connect.redhat.com/coralogix/coralogix-operator@sha256:4673e4db99fb76496479fa30f390c02c14018cdb13450a78efc6690c8420f389
+    certified: "true"
+    containerImage: registry.connect.redhat.com/coralogix/coralogix-operator@sha256:fdb7b7c5beba42318c9f50e8a9748ea04e8a77a8a0186659de2bb90b93a94479
     createdAt: "2020-09-08T07:15:53Z"
     description: Coralogix is a machine data analytics SaaS platform that drastically
       improves the delivery & maintenance process for software providers. Using proprietary
@@ -32,7 +32,7 @@ metadata:
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
     repository: https://github.com/coralogix/coralogix-operator
     support: Coralogix Ltd.
-  name: coralogix-operator.v1.0.1
+  name: coralogix-operator.v1.0.2
   namespace: kube-system
 spec:
   apiservicedefinitions: {}
@@ -66,6 +66,11 @@ spec:
         path: private_key
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:password
+      - description: Proxy address to send the data
+        displayName: Proxy URL
+        path: proxy
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:advanced
       - description: Coralogix Region
         displayName: Region
         path: region
@@ -244,7 +249,7 @@ spec:
                 - --enable-leader-election
                 command:
                 - /manager
-                image: registry.connect.redhat.com/coralogix/coralogix-operator@sha256:4673e4db99fb76496479fa30f390c02c14018cdb13450a78efc6690c8420f389
+                image: registry.connect.redhat.com/coralogix/coralogix-operator@sha256:fdb7b7c5beba42318c9f50e8a9748ea04e8a77a8a0186659de2bb90b93a94479
                 name: manager
                 resources:
                   limits:
@@ -296,7 +301,7 @@ spec:
     type: AllNamespaces
   relatedImages:
   - name: coralogix-operator
-    image: registry.connect.redhat.com/coralogix/coralogix-operator@sha256:4673e4db99fb76496479fa30f390c02c14018cdb13450a78efc6690c8420f389
+    image: registry.connect.redhat.com/coralogix/coralogix-operator@sha256:fdb7b7c5beba42318c9f50e8a9748ea04e8a77a8a0186659de2bb90b93a94479
   - name: coralogix-fluentd
     image: registry.connect.redhat.com/coralogix/coralogix-fluentd@sha256:925b2d97edd0681c10cc3cc61059e6fd17e68cb12f9386d4af50c1e380db422d
   - name: ose-kube-rbac-proxy
@@ -316,4 +321,4 @@ spec:
   maturity: stable
   provider:
     name: Coralogix Ltd.
-  version: 1.0.1
+  version: 1.0.2

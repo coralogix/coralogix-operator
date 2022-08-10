@@ -46,6 +46,10 @@ spec:
                 minLength: 36
                 pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-z]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
                 type: string
+              proxy:
+                default: ""
+                description: Proxy address to send the data
+                type: string
               region:
                 default: Europe
                 description: Coralogix Region
