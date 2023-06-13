@@ -1,0 +1,118 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.9.2
+  creationTimestamp: null
+  name: recordingrulegroupsets.coralogix.coralogix
+spec:
+  group: coralogix.coralogix
+  names:
+    kind: RecordingRuleGroupSet
+    listKind: RecordingRuleGroupSetList
+    plural: recordingrulegroupsets
+    singular: recordingrulegroupset
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: RecordingRuleGroupSet is the Schema for the recordingrulegroupsets
+          API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: RecordingRuleGroupSetSpec defines the desired state of RecordingRuleGroupSet
+            properties:
+              groups:
+                items:
+                  properties:
+                    intervalSeconds:
+                      default: 60
+                      format: int32
+                      minimum: 60
+                      type: integer
+                    limit:
+                      format: int64
+                      type: integer
+                    name:
+                      description: 'INSERT ADDITIONAL SPEC FIELDS - desired state
+                        of cluster Important: Run "make" to regenerate code after
+                        modifying this file'
+                      type: string
+                    rules:
+                      items:
+                        properties:
+                          expr:
+                            type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          record:
+                            type: string
+                        type: object
+                      type: array
+                  type: object
+                minItems: 1
+                type: array
+            required:
+            - groups
+            type: object
+          status:
+            description: RecordingRuleGroupSetStatus defines the observed state of
+              RecordingRuleGroupSet
+            properties:
+              groups:
+                items:
+                  properties:
+                    intervalSeconds:
+                      default: 60
+                      format: int32
+                      minimum: 60
+                      type: integer
+                    limit:
+                      format: int64
+                      type: integer
+                    name:
+                      description: 'INSERT ADDITIONAL SPEC FIELDS - desired state
+                        of cluster Important: Run "make" to regenerate code after
+                        modifying this file'
+                      type: string
+                    rules:
+                      items:
+                        properties:
+                          expr:
+                            type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          record:
+                            type: string
+                        type: object
+                      type: array
+                  type: object
+                type: array
+              id:
+                type: string
+            required:
+            - id
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

@@ -1,0 +1,20 @@
+apiVersion: coralogix.coralogix/v1alpha1
+kind: RuleGroup
+metadata:
+  labels:
+    app.kubernetes.io/name: rulegroup
+    app.kubernetes.io/instance: rulegroup-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kuberentes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: extract-rule
+spec:
+  name: extract-rule
+  description: rule-group from k8s operator
+  subgroups:
+    - rules:
+        - name: Severity Rule
+          description: Look for default severity text
+          extract:
+            sourceField: text
+            regex: message\\s*:s*(?P<bytes>\\d+)\\s*.*?status\\sis\\s(?P<status>\\[^\"]+)

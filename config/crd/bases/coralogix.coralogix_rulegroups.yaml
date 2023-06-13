@@ -1,0 +1,440 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.9.2
+  creationTimestamp: null
+  name: rulegroups.coralogix.coralogix
+spec:
+  group: coralogix.coralogix
+  names:
+    kind: RuleGroup
+    listKind: RuleGroupList
+    plural: rulegroups
+    singular: rulegroup
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: RuleGroup is the Schema for the rulegroups API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: RuleGroupSpec defines the Desired state of RuleGroup
+            properties:
+              active:
+                default: true
+                type: boolean
+              applications:
+                items:
+                  type: string
+                type: array
+              creator:
+                type: string
+              description:
+                type: string
+              hidden:
+                default: false
+                type: boolean
+              name:
+                minLength: 0
+                type: string
+              order:
+                format: int32
+                minimum: 1
+                type: integer
+              severities:
+                items:
+                  enum:
+                  - Debug
+                  - Verbose
+                  - Info
+                  - Warning
+                  - Error
+                  - Critical
+                  type: string
+                type: array
+              subgroups:
+                items:
+                  properties:
+                    active:
+                      default: true
+                      type: boolean
+                    id:
+                      type: string
+                    order:
+                      format: int32
+                      type: integer
+                    rules:
+                      items:
+                        properties:
+                          active:
+                            default: true
+                            type: boolean
+                          block:
+                            properties:
+                              blockingAllMatchingBlocks:
+                                default: true
+                                type: boolean
+                              keepBlockedLogs:
+                                default: false
+                                type: boolean
+                              regex:
+                                type: string
+                              sourceField:
+                                type: string
+                            required:
+                            - regex
+                            - sourceField
+                            type: object
+                          description:
+                            type: string
+                          extract:
+                            properties:
+                              regex:
+                                type: string
+                              sourceField:
+                                type: string
+                            required:
+                            - regex
+                            - sourceField
+                            type: object
+                          extractTimestamp:
+                            properties:
+                              fieldFormatStandard:
+                                enum:
+                                - Strftime
+                                - JavaSDF
+                                - Golang
+                                - SecondTS
+                                - MilliTS
+                                - MicroTS
+                                - NanoTS
+                                type: string
+                              sourceField:
+                                type: string
+                              timeFormat:
+                                type: string
+                            required:
+                            - fieldFormatStandard
+                            - sourceField
+                            - timeFormat
+                            type: object
+                          jsonExtract:
+                            properties:
+                              destinationField:
+                                enum:
+                                - Category
+                                - CLASSNAME
+                                - METHODNAME
+                                - THREADID
+                                - SEVERITY
+                                type: string
+                              jsonKey:
+                                type: string
+                            required:
+                            - destinationField
+                            - jsonKey
+                            type: object
+                          jsonStringify:
+                            properties:
+                              destinationField:
+                                type: string
+                              keepSourceField:
+                                default: false
+                                type: boolean
+                              sourceField:
+                                type: string
+                            required:
+                            - destinationField
+                            - sourceField
+                            type: object
+                          name:
+                            minLength: 0
+                            type: string
+                          parse:
+                            properties:
+                              destinationField:
+                                type: string
+                              regex:
+                                type: string
+                              sourceField:
+                                type: string
+                            required:
+                            - destinationField
+                            - regex
+                            - sourceField
+                            type: object
+                          parseJsonField:
+                            properties:
+                              destinationField:
+                                type: string
+                              keepDestinationField:
+                                type: boolean
+                              keepSourceField:
+                                type: boolean
+                              sourceField:
+                                type: string
+                            required:
+                            - destinationField
+                            - keepDestinationField
+                            - keepSourceField
+                            - sourceField
+                            type: object
+                          removeFields:
+                            properties:
+                              excludedFields:
+                                items:
+                                  type: string
+                                type: array
+                            required:
+                            - excludedFields
+                            type: object
+                          replace:
+                            properties:
+                              destinationField:
+                                type: string
+                              regex:
+                                type: string
+                              replacementString:
+                                type: string
+                              sourceField:
+                                type: string
+                            required:
+                            - destinationField
+                            - regex
+                            - replacementString
+                            - sourceField
+                            type: object
+                        required:
+                        - name
+                        type: object
+                      type: array
+                  type: object
+                type: array
+              subsystems:
+                items:
+                  type: string
+                type: array
+            required:
+            - name
+            type: object
+          status:
+            description: RuleGroupStatus defines the observed state of RuleGroup
+            properties:
+              active:
+                type: boolean
+              applications:
+                items:
+                  type: string
+                type: array
+              creator:
+                type: string
+              description:
+                type: string
+              hidden:
+                type: boolean
+              id:
+                description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                  of cluster Important: Run "make" to regenerate code after modifying
+                  this file'
+                type: string
+              name:
+                type: string
+              order:
+                format: int32
+                type: integer
+              severities:
+                items:
+                  enum:
+                  - Debug
+                  - Verbose
+                  - Info
+                  - Warning
+                  - Error
+                  - Critical
+                  type: string
+                type: array
+              subgroups:
+                items:
+                  properties:
+                    active:
+                      default: true
+                      type: boolean
+                    id:
+                      type: string
+                    order:
+                      format: int32
+                      type: integer
+                    rules:
+                      items:
+                        properties:
+                          active:
+                            default: true
+                            type: boolean
+                          block:
+                            properties:
+                              blockingAllMatchingBlocks:
+                                default: true
+                                type: boolean
+                              keepBlockedLogs:
+                                default: false
+                                type: boolean
+                              regex:
+                                type: string
+                              sourceField:
+                                type: string
+                            required:
+                            - regex
+                            - sourceField
+                            type: object
+                          description:
+                            type: string
+                          extract:
+                            properties:
+                              regex:
+                                type: string
+                              sourceField:
+                                type: string
+                            required:
+                            - regex
+                            - sourceField
+                            type: object
+                          extractTimestamp:
+                            properties:
+                              fieldFormatStandard:
+                                enum:
+                                - Strftime
+                                - JavaSDF
+                                - Golang
+                                - SecondTS
+                                - MilliTS
+                                - MicroTS
+                                - NanoTS
+                                type: string
+                              sourceField:
+                                type: string
+                              timeFormat:
+                                type: string
+                            required:
+                            - fieldFormatStandard
+                            - sourceField
+                            - timeFormat
+                            type: object
+                          jsonExtract:
+                            properties:
+                              destinationField:
+                                enum:
+                                - Category
+                                - CLASSNAME
+                                - METHODNAME
+                                - THREADID
+                                - SEVERITY
+                                type: string
+                              jsonKey:
+                                type: string
+                            required:
+                            - destinationField
+                            - jsonKey
+                            type: object
+                          jsonStringify:
+                            properties:
+                              destinationField:
+                                type: string
+                              keepSourceField:
+                                default: false
+                                type: boolean
+                              sourceField:
+                                type: string
+                            required:
+                            - destinationField
+                            - sourceField
+                            type: object
+                          name:
+                            minLength: 0
+                            type: string
+                          parse:
+                            properties:
+                              destinationField:
+                                type: string
+                              regex:
+                                type: string
+                              sourceField:
+                                type: string
+                            required:
+                            - destinationField
+                            - regex
+                            - sourceField
+                            type: object
+                          parseJsonField:
+                            properties:
+                              destinationField:
+                                type: string
+                              keepDestinationField:
+                                type: boolean
+                              keepSourceField:
+                                type: boolean
+                              sourceField:
+                                type: string
+                            required:
+                            - destinationField
+                            - keepDestinationField
+                            - keepSourceField
+                            - sourceField
+                            type: object
+                          removeFields:
+                            properties:
+                              excludedFields:
+                                items:
+                                  type: string
+                                type: array
+                            required:
+                            - excludedFields
+                            type: object
+                          replace:
+                            properties:
+                              destinationField:
+                                type: string
+                              regex:
+                                type: string
+                              replacementString:
+                                type: string
+                              sourceField:
+                                type: string
+                            required:
+                            - destinationField
+                            - regex
+                            - replacementString
+                            - sourceField
+                            type: object
+                        required:
+                        - name
+                        type: object
+                      type: array
+                  type: object
+                type: array
+              subsystems:
+                items:
+                  type: string
+                type: array
+            required:
+            - id
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

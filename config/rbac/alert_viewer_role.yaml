@@ -1,0 +1,27 @@
+# permissions for end users to view alerts.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: alert-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: coralogix-operator
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: alert-viewer-role
+rules:
+  - apiGroups:
+      - coralogix.coralogix
+    resources:
+      - alerts
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - coralogix.coralogix
+    resources:
+      - alerts/status
+    verbs:
+      - get

@@ -1,0 +1,9 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestSuite
+testDirs:
+  - tests/e2e/alerts
+  - tests/e2e/rulegroups
+  - tests/e2e/recordingrulegroupsets
+  - tests/e2e/promatheusrules
+namespace: default
+timeout: 40

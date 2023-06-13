@@ -1,0 +1,61 @@
+apiVersion: coralogix.coralogix/v1alpha1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/name: alert
+    app.kubernetes.io/instance: alert-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kuberentes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: tracing-alert-example
+spec:
+  name: tracing alert example
+  description: alert from k8s operator
+  severity: Critical
+  notificationGroups:
+    - notifications:
+        - notifyOn: TriggeredOnly
+          integrationID: 2235
+          retriggeringPeriodMinutes: 1
+        - notifyOn: TriggeredAndResolved
+          emailRecipients: [ "example2@coralogix.com" ]
+          retriggeringPeriodMinutes: 1440
+  scheduling:
+    daysEnabled: [ "Wednesday", "Thursday" ]
+    timeZone: UTC+02
+    startTime: 08:30
+    endTime: 20:30
+  alertType:
+    tracing:
+      filters:
+        latencyThresholdMilliseconds: 20
+        applications:
+          [
+            "application_name",
+            "filter:contains:application-name2",
+            "filter:endsWith:application-name3",
+            "filter:startsWith:application-name4",
+          ]
+        subsystems:
+          [
+            "subsystemName",
+            "filter:contains:subsystemName",
+            "filter:endsWith:subsystemName",
+            "filter:startsWith:subsystemName",
+          ]
+        services:
+          [
+            "serviceName",
+            "filter:contains:serviceName",
+            "filter:endsWith:serviceName",
+            "filter:startsWith:serviceName",
+          ]
+        tagFilters:
+          - field: status
+            values: [ "filter:contains:400", "500" ]
+          - field: name
+            values: [ "filter:endsWith:name1", "filter:startsWith:name2" ]
+      conditions:
+        alertWhen: More
+        threshold: 5
+        timeWindow: TenMinutes

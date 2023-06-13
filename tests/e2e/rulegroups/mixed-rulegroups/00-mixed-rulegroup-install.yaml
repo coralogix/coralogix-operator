@@ -1,0 +1,38 @@
+apiVersion: coralogix.coralogix/v1alpha1
+kind: RuleGroup
+metadata:
+  labels:
+    app.kubernetes.io/name: rulegroup
+    app.kubernetes.io/instance: rulegroup-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kuberentes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: mixed-rulegroup
+spec:
+  name: mixed-rulegroup
+  description: rule-group from k8s operator
+  applications: ["application-name"]
+  subsystems: ["subsystems-name"]
+  severities: ["Warning", "Info"]
+  subgroups:
+    - rules:
+        - name: parsing-rule
+          parse:
+            sourceField: text
+            destinationField: text
+            regex: message\\s*:s*(?P<bytes>\\d+)\\s*.*?status\\sis\\s(?P<status>\\[^\"]+)
+        - name: blocking-rule
+          block:
+            sourceField: text
+            regex: sql_error_code\\s*=\\s*28000
+    - rules:
+        - name: json-extract-rule
+          jsonExtract:
+            jsonKey: worker
+            destinationField: Category
+        - name: replacing-rule
+          replace:
+            sourceField: text
+            destinationField: text
+            replacementString: "{"
+            regex: .*{

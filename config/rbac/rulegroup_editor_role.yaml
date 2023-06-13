@@ -1,0 +1,31 @@
+# permissions for end users to edit rulegroups.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: rulegroup-editor-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: coralogix-operator
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: rulegroup-editor-role
+rules:
+  - apiGroups:
+      - coralogix.coralogix
+    resources:
+      - rulegroups
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - coralogix.coralogix
+    resources:
+      - rulegroups/status
+    verbs:
+      - get

@@ -1,0 +1,35 @@
+apiVersion: coralogix.coralogix/v1alpha1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/name: alert
+    app.kubernetes.io/instance: alert-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kuberentes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: new-value-alert-example
+spec:
+  name: new-value alert example
+  description: alert from k8s operator
+  severity: Critical
+  notificationGroups:
+    - groupByFields: [ "remote_addr_geoip.country_name" ]
+      notifications:
+        - notifyOn: TriggeredOnly
+          integrationID: 2235
+          retriggeringPeriodMinutes: 1
+        - notifyOn: TriggeredAndResolved
+          emailRecipients: [ "example@coralogix.com" ]
+          retriggeringPeriodMinutes: 1440
+  scheduling:
+    daysEnabled: ["Wednesday", "Thursday"]
+    timeZone: UTC+02
+    startTime: 08:30
+    endTime: 20:30
+  alertType:
+    newValue:
+      filters:
+        severities: ["Error"]
+      conditions:
+        key: remote_addr_geoip.country_name
+        timeWindow: "TwelveHours"
