@@ -53,5 +53,5 @@ spec:
         - "--health-probe-bind-address=:8081"
         - "--metrics-bind-address=127.0.0.1:8080"
         - "--leader-elect"
-        - "--api-key=6dd9c41e-bacf-48e2-9f2b-6e049741ee04"
+        - "--api-key=xxx"
         - "--region=EUROPE2"
