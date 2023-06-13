@@ -2,20 +2,26 @@
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
-- bases/loggers.coralogix.com_coralogixloggers.yaml
-# +kubebuilder:scaffold:crdkustomizeresource
+  - bases/coralogix.coralogix_rulegroups.yaml
+  - bases/coralogix.coralogix_alerts.yaml
+  - bases/coralogix.coralogix_recordingrulegroupsets.yaml
+#+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
 # [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix.
 # patches here are for enabling the conversion webhook for each CRD
-#- patches/webhook_in_coralogixloggers.yaml
-# +kubebuilder:scaffold:crdkustomizewebhookpatch
+#- patches/webhook_in_rulegroups.yaml
+#- patches/webhook_in_alerts.yaml
+#- patches/webhook_in_recordingrulegroupsets.yaml
+#+kubebuilder:scaffold:crdkustomizewebhookpatch
 
-# [CERTMANAGER] To enable webhook, uncomment all the sections with [CERTMANAGER] prefix.
+# [CERTMANAGER] To enable cert-manager, uncomment all the sections with [CERTMANAGER] prefix.
 # patches here are for enabling the CA injection for each CRD
-#- patches/cainjection_in_coralogixloggers.yaml
-# +kubebuilder:scaffold:crdkustomizecainjectionpatch
+#- patches/cainjection_in_rulegroups.yaml
+#- patches/cainjection_in_alerts.yaml
+#- patches/cainjection_in_recordingrulegroupsets.yaml
+#+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # the following config is for teaching kustomize how to do kustomization for CRDs.
 configurations:
-- kustomizeconfig.yaml
+  - kustomizeconfig.yaml

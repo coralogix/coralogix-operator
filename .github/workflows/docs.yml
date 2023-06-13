@@ -1,0 +1,31 @@
+name: docs
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  check-docs:
+    name: Check API documentation for changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Go
+        uses: actions/setup-go@37335c7bb261b353407cff977110895fa0b4f7d8
+        with:
+          go-version:  1.20.x
+      - name: Generate docs
+        run: make generate-api-docs
+      - name: Check for changes
+        run: |
+          git diff --exit-code
+          if [ $? -ne 0 ]; then
+            echo "API documentation is out of date. Please run 'make generate-api-docs' and commit the changes."
+            exit 1
+          fi

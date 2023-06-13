@@ -6,11 +6,9 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - ""
+  - coralogix.coralogix
   resources:
-  - configmaps
-  - secrets
-  - serviceaccounts
+  - alerts
   verbs:
   - create
   - delete
@@ -20,18 +18,23 @@ rules:
   - update
   - watch
 - apiGroups:
-  - ""
+  - coralogix.coralogix
   resources:
-  - namespaces
-  - pods
+  - alerts/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.coralogix
+  resources:
+  - alerts/status
   verbs:
   - get
-  - list
-  - watch
+  - patch
+  - update
 - apiGroups:
-  - apps
+  - coralogix.coralogix
   resources:
-  - daemonsets
+  - recordingrulegroupsets
   verbs:
   - create
   - delete
@@ -41,9 +44,23 @@ rules:
   - update
   - watch
 - apiGroups:
-  - loggers.coralogix.com
+  - coralogix.coralogix
   resources:
-  - coralogixloggers
+  - recordingrulegroupsets/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.coralogix
+  resources:
+  - recordingrulegroupsets/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - coralogix.coralogix
+  resources:
+  - rulegroups
   verbs:
   - create
   - delete
@@ -53,29 +70,24 @@ rules:
   - update
   - watch
 - apiGroups:
-  - loggers.coralogix.com
+  - coralogix.coralogix
   resources:
-  - coralogixloggers/finalizers
+  - rulegroups/finalizers
   verbs:
   - update
 - apiGroups:
-  - loggers.coralogix.com
+  - coralogix.coralogix
   resources:
-  - coralogixloggers/status
+  - rulegroups/status
   verbs:
   - get
   - patch
   - update
 - apiGroups:
-  - rbac.authorization.k8s.io
+  - monitoring.coreos.com
   resources:
-  - clusterrolebindings
-  - clusterroles
+  - prometheusrules
   verbs:
-  - create
-  - delete
   - get
   - list
-  - patch
-  - update
   - watch

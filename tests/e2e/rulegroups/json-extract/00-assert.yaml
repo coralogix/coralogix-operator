@@ -1,0 +1,25 @@
+apiVersion: coralogix.coralogix/v1alpha1
+kind: RuleGroup
+metadata:
+  labels:
+    app.kubernetes.io/name: rulegroup
+    app.kubernetes.io/instance: rulegroup-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kuberentes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: json-extract-rule
+status:
+  active: true
+  description: rule-group from k8s operator
+  name: json-extract-rule
+  order: 1
+  subgroups:
+    - active: true
+      order: 1
+      rules:
+        - active: true
+          description: Extracts value from 'worker' and populates 'Category'
+          jsonExtract:
+            destinationField: Category
+            jsonKey: worker
+          name: Worker to category

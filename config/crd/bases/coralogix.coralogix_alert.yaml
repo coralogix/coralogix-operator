@@ -1,0 +1,1695 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.9.2
+  creationTimestamp: null
+  name: alert.coralogix.coralogix
+spec:
+  group: coralogix.coralogix
+  names:
+    kind: Alert
+    listKind: AlertList
+    plural: alert
+    singular: alert
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Alert is the Schema for the alerts API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: AlertSpec defines the desired state of Alert
+            properties:
+              active:
+                default: true
+                type: boolean
+              alertType:
+                properties:
+                  flow:
+                    properties:
+                      stages:
+                        items:
+                          properties:
+                            groups:
+                              items:
+                                properties:
+                                  innerFlowAlerts:
+                                    properties:
+                                      alerts:
+                                        items:
+                                          properties:
+                                            not:
+                                              default: false
+                                              type: boolean
+                                            userAlertId:
+                                              type: string
+                                          type: object
+                                        type: array
+                                      operator:
+                                        enum:
+                                        - And
+                                        - Or
+                                        type: string
+                                    type: object
+                                  nextOperator:
+                                    enum:
+                                    - And
+                                    - Or
+                                    type: string
+                                type: object
+                              type: array
+                            timeWindow:
+                              properties:
+                                hours:
+                                  type: integer
+                                minutes:
+                                  type: integer
+                                seconds:
+                                  type: integer
+                              type: object
+                          type: object
+                        type: array
+                    type: object
+                  metric:
+                    properties:
+                      lucene:
+                        properties:
+                          conditions:
+                            properties:
+                              alertWhen:
+                                enum:
+                                - More
+                                - Less
+                                type: string
+                              arithmeticOperator:
+                                enum:
+                                - Avg
+                                - Min
+                                - Max
+                                - Sum
+                                - Count
+                                - Percentile
+                                type: string
+                              arithmeticOperatorModifier:
+                                type: integer
+                              groupBy:
+                                items:
+                                  type: string
+                                type: array
+                              manageUndetectedValues:
+                                properties:
+                                  autoRetireRatio:
+                                    default: Never
+                                    enum:
+                                    - Never
+                                    - FiveMinutes
+                                    - TenMinutes
+                                    - Hour
+                                    - TwoHours
+                                    - SixHours
+                                    - TwelveHours
+                                    - TwentyFourHours
+                                    type: string
+                                  enableTriggeringOnUndetectedValues:
+                                    default: true
+                                    type: boolean
+                                type: object
+                              metricField:
+                                type: string
+                              minNonNullValuesPercentage:
+                                minimum: 0
+                                multipleOf: 10
+                                type: integer
+                              replaceMissingValueWithZero:
+                                default: false
+                                type: boolean
+                              sampleThresholdPercentage:
+                                minimum: 0
+                                multipleOf: 10
+                                type: integer
+                              threshold:
+                                anyOf:
+                                - type: integer
+                                - type: string
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                              timeWindow:
+                                enum:
+                                - Minute
+                                - FiveMinutes
+                                - TenMinutes
+                                - FifteenMinutes
+                                - TwentyMinutes
+                                - ThirtyMinutes
+                                - Hour
+                                - TwoHours
+                                - FourHours
+                                - SixHours
+                                - TwelveHours
+                                - TwentyFourHours
+                                type: string
+                            type: object
+                          searchQuery:
+                            type: string
+                        type: object
+                      promql:
+                        properties:
+                          conditions:
+                            properties:
+                              alertWhen:
+                                enum:
+                                - More
+                                - Less
+                                type: string
+                              groupBy:
+                                items:
+                                  type: string
+                                type: array
+                              manageUndetectedValues:
+                                properties:
+                                  autoRetireRatio:
+                                    default: Never
+                                    enum:
+                                    - Never
+                                    - FiveMinutes
+                                    - TenMinutes
+                                    - Hour
+                                    - TwoHours
+                                    - SixHours
+                                    - TwelveHours
+                                    - TwentyFourHours
+                                    type: string
+                                  enableTriggeringOnUndetectedValues:
+                                    default: true
+                                    type: boolean
+                                type: object
+                              minNonNullValuesPercentage:
+                                minimum: 0
+                                multipleOf: 10
+                                type: integer
+                              replaceMissingValueWithZero:
+                                type: boolean
+                              sampleThresholdPercentage:
+                                minimum: 0
+                                multipleOf: 10
+                                type: integer
+                              threshold:
+                                anyOf:
+                                - type: integer
+                                - type: string
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                              timeWindow:
+                                enum:
+                                - Minute
+                                - FiveMinutes
+                                - TenMinutes
+                                - FifteenMinutes
+                                - TwentyMinutes
+                                - ThirtyMinutes
+                                - Hour
+                                - TwoHours
+                                - FourHours
+                                - SixHours
+                                - TwelveHours
+                                - TwentyFourHours
+                                type: string
+                            type: object
+                          searchQuery:
+                            type: string
+                        type: object
+                    type: object
+                  newValue:
+                    properties:
+                      conditions:
+                        properties:
+                          key:
+                            type: string
+                          timeWindow:
+                            enum:
+                            - TwelveHours
+                            - TwentyFourHours
+                            - FortyEightHours
+                            - SeventTwoHours
+                            - Week
+                            - Month
+                            - TwoMonths
+                            - ThreeMonths
+                            type: string
+                        type: object
+                      filters:
+                        properties:
+                          alias:
+                            type: string
+                          applications:
+                            items:
+                              type: string
+                            type: array
+                          categories:
+                            items:
+                              type: string
+                            type: array
+                          classes:
+                            items:
+                              type: string
+                            type: array
+                          computers:
+                            items:
+                              type: string
+                            type: array
+                          ips:
+                            items:
+                              type: string
+                            type: array
+                          methods:
+                            items:
+                              type: string
+                            type: array
+                          searchQuery:
+                            type: string
+                          severities:
+                            items:
+                              enum:
+                              - Debug
+                              - Verbose
+                              - Info
+                              - Warning
+                              - Critical
+                              - Error
+                              type: string
+                            type: array
+                          subsystems:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                    type: object
+                  ratio:
+                    properties:
+                      conditions:
+                        properties:
+                          alertWhen:
+                            enum:
+                            - More
+                            - Less
+                            type: string
+                          groupBy:
+                            items:
+                              type: string
+                            type: array
+                          groupByFor:
+                            enum:
+                            - Q1
+                            - Q2
+                            - Both
+                            type: string
+                          ignoreInfinity:
+                            default: false
+                            type: boolean
+                          manageUndetectedValues:
+                            properties:
+                              autoRetireRatio:
+                                default: Never
+                                enum:
+                                - Never
+                                - FiveMinutes
+                                - TenMinutes
+                                - Hour
+                                - TwoHours
+                                - SixHours
+                                - TwelveHours
+                                - TwentyFourHours
+                                type: string
+                              enableTriggeringOnUndetectedValues:
+                                default: true
+                                type: boolean
+                            type: object
+                          ratio:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                          timeWindow:
+                            enum:
+                            - FiveMinutes
+                            - TenMinutes
+                            - FifteenMinutes
+                            - TwentyMinutes
+                            - ThirtyMinutes
+                            - Hour
+                            - TwoHours
+                            - FourHours
+                            - SixHours
+                            - TwelveHours
+                            - TwentyFourHours
+                            - ThirtySixHours
+                            type: string
+                        type: object
+                      q1Filters:
+                        properties:
+                          alias:
+                            type: string
+                          applications:
+                            items:
+                              type: string
+                            type: array
+                          categories:
+                            items:
+                              type: string
+                            type: array
+                          classes:
+                            items:
+                              type: string
+                            type: array
+                          computers:
+                            items:
+                              type: string
+                            type: array
+                          ips:
+                            items:
+                              type: string
+                            type: array
+                          methods:
+                            items:
+                              type: string
+                            type: array
+                          searchQuery:
+                            type: string
+                          severities:
+                            items:
+                              enum:
+                              - Debug
+                              - Verbose
+                              - Info
+                              - Warning
+                              - Critical
+                              - Error
+                              type: string
+                            type: array
+                          subsystems:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      q2Filters:
+                        properties:
+                          alias:
+                            type: string
+                          applications:
+                            items:
+                              type: string
+                            type: array
+                          searchQuery:
+                            type: string
+                          severities:
+                            items:
+                              enum:
+                              - Debug
+                              - Verbose
+                              - Info
+                              - Warning
+                              - Critical
+                              - Error
+                              type: string
+                            type: array
+                          subsystems:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                    type: object
+                  standard:
+                    properties:
+                      conditions:
+                        properties:
+                          alertWhen:
+                            enum:
+                            - More
+                            - Less
+                            - Immediately
+                            - MoreThanUsual
+                            type: string
+                          groupBy:
+                            items:
+                              type: string
+                            type: array
+                          manageUndetectedValues:
+                            properties:
+                              autoRetireRatio:
+                                default: Never
+                                enum:
+                                - Never
+                                - FiveMinutes
+                                - TenMinutes
+                                - Hour
+                                - TwoHours
+                                - SixHours
+                                - TwelveHours
+                                - TwentyFourHours
+                                type: string
+                              enableTriggeringOnUndetectedValues:
+                                default: true
+                                type: boolean
+                            type: object
+                          threshold:
+                            type: integer
+                          timeWindow:
+                            enum:
+                            - FiveMinutes
+                            - TenMinutes
+                            - FifteenMinutes
+                            - TwentyMinutes
+                            - ThirtyMinutes
+                            - Hour
+                            - TwoHours
+                            - FourHours
+                            - SixHours
+                            - TwelveHours
+                            - TwentyFourHours
+                            - ThirtySixHours
+                            type: string
+                        type: object
+                      filters:
+                        properties:
+                          alias:
+                            type: string
+                          applications:
+                            items:
+                              type: string
+                            type: array
+                          categories:
+                            items:
+                              type: string
+                            type: array
+                          classes:
+                            items:
+                              type: string
+                            type: array
+                          computers:
+                            items:
+                              type: string
+                            type: array
+                          ips:
+                            items:
+                              type: string
+                            type: array
+                          methods:
+                            items:
+                              type: string
+                            type: array
+                          searchQuery:
+                            type: string
+                          severities:
+                            items:
+                              enum:
+                              - Debug
+                              - Verbose
+                              - Info
+                              - Warning
+                              - Critical
+                              - Error
+                              type: string
+                            type: array
+                          subsystems:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                    type: object
+                  timeRelative:
+                    properties:
+                      conditions:
+                        properties:
+                          alertWhen:
+                            enum:
+                            - More
+                            - Less
+                            type: string
+                          groupBy:
+                            items:
+                              type: string
+                            type: array
+                          ignoreInfinity:
+                            default: false
+                            type: boolean
+                          manageUndetectedValues:
+                            properties:
+                              autoRetireRatio:
+                                default: Never
+                                enum:
+                                - Never
+                                - FiveMinutes
+                                - TenMinutes
+                                - Hour
+                                - TwoHours
+                                - SixHours
+                                - TwelveHours
+                                - TwentyFourHours
+                                type: string
+                              enableTriggeringOnUndetectedValues:
+                                default: true
+                                type: boolean
+                            type: object
+                          threshold:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                          timeWindow:
+                            enum:
+                            - PreviousHour
+                            - SameHourYesterday
+                            - SameHourLastWeek
+                            - Yesterday
+                            - SameDayLastWeek
+                            - SameDayLastMonth
+                            type: string
+                        type: object
+                      filters:
+                        properties:
+                          alias:
+                            type: string
+                          applications:
+                            items:
+                              type: string
+                            type: array
+                          categories:
+                            items:
+                              type: string
+                            type: array
+                          classes:
+                            items:
+                              type: string
+                            type: array
+                          computers:
+                            items:
+                              type: string
+                            type: array
+                          ips:
+                            items:
+                              type: string
+                            type: array
+                          methods:
+                            items:
+                              type: string
+                            type: array
+                          searchQuery:
+                            type: string
+                          severities:
+                            items:
+                              enum:
+                              - Debug
+                              - Verbose
+                              - Info
+                              - Warning
+                              - Critical
+                              - Error
+                              type: string
+                            type: array
+                          subsystems:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                    type: object
+                  tracing:
+                    properties:
+                      conditions:
+                        properties:
+                          alertWhen:
+                            enum:
+                            - More
+                            - Immediately
+                            type: string
+                          groupBy:
+                            items:
+                              type: string
+                            type: array
+                          threshold:
+                            type: integer
+                          timeWindow:
+                            enum:
+                            - FiveMinutes
+                            - TenMinutes
+                            - FifteenMinutes
+                            - TwentyMinutes
+                            - ThirtyMinutes
+                            - Hour
+                            - TwoHours
+                            - FourHours
+                            - SixHours
+                            - TwelveHours
+                            - TwentyFourHours
+                            - ThirtySixHours
+                            type: string
+                        type: object
+                      filters:
+                        properties:
+                          applications:
+                            items:
+                              type: string
+                            type: array
+                          latencyThresholdMilliseconds:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                          services:
+                            items:
+                              type: string
+                            type: array
+                          subsystems:
+                            items:
+                              type: string
+                            type: array
+                          tagFilters:
+                            items:
+                              properties:
+                                field:
+                                  type: string
+                                values:
+                                  items:
+                                    type: string
+                                  type: array
+                              type: object
+                            type: array
+                        type: object
+                    type: object
+                  uniqueCount:
+                    properties:
+                      conditions:
+                        properties:
+                          groupBy:
+                            type: string
+                          key:
+                            type: string
+                          maxUniqueValues:
+                            minimum: 1
+                            type: integer
+                          maxUniqueValuesForGroupBy:
+                            minimum: 1
+                            type: integer
+                          timeWindow:
+                            enum:
+                            - Minute
+                            - FiveMinutes
+                            - TenMinutes
+                            - FifteenMinutes
+                            - TwentyMinutes
+                            - ThirtyMinutes
+                            - Hour
+                            - TwoHours
+                            - FourHours
+                            - SixHours
+                            - TwelveHours
+                            - TwentyFourHours
+                            - ThirtySixHours
+                            type: string
+                        type: object
+                      filters:
+                        properties:
+                          alias:
+                            type: string
+                          applications:
+                            items:
+                              type: string
+                            type: array
+                          categories:
+                            items:
+                              type: string
+                            type: array
+                          classes:
+                            items:
+                              type: string
+                            type: array
+                          computers:
+                            items:
+                              type: string
+                            type: array
+                          ips:
+                            items:
+                              type: string
+                            type: array
+                          methods:
+                            items:
+                              type: string
+                            type: array
+                          searchQuery:
+                            type: string
+                          severities:
+                            items:
+                              enum:
+                              - Debug
+                              - Verbose
+                              - Info
+                              - Warning
+                              - Critical
+                              - Error
+                              type: string
+                            type: array
+                          subsystems:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                    type: object
+                type: object
+              description:
+                type: string
+              expirationDate:
+                properties:
+                  day:
+                    format: int32
+                    maximum: 31
+                    minimum: 1
+                    type: integer
+                  month:
+                    format: int32
+                    maximum: 12
+                    minimum: 1
+                    type: integer
+                  year:
+                    format: int32
+                    maximum: 9999
+                    minimum: 1
+                    type: integer
+                type: object
+              labels:
+                additionalProperties:
+                  type: string
+                type: object
+              name:
+                minLength: 0
+                type: string
+              notifications:
+                properties:
+                  notifyEveryMin:
+                    minimum: 1
+                    type: integer
+                  notifyOnlyOnTriggeredGroupByValues:
+                    default: false
+                    type: boolean
+                  onTriggerAndResolved:
+                    default: false
+                    type: boolean
+                  recipients:
+                    properties:
+                      emails:
+                        items:
+                          type: string
+                        type: array
+                      webhooks:
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                type: object
+              payloadFilters:
+                items:
+                  type: string
+                type: array
+              scheduling:
+                properties:
+                  daysEnabled:
+                    items:
+                      enum:
+                      - Sunday
+                      - Monday
+                      - Tuesday
+                      - Wednesday
+                      - Thursday
+                      - Friday
+                      - Saturday
+                      type: string
+                    type: array
+                  endTime:
+                    pattern: ^(0\d|1\d|2[0-3]):[0-5]\d$
+                    type: string
+                  startTime:
+                    pattern: ^(0\d|1\d|2[0-3]):[0-5]\d$
+                    type: string
+                  timeZone:
+                    default: UTC+00
+                    pattern: ^UTC[+-]\d{2}$
+                    type: string
+                type: object
+              severity:
+                enum:
+                - Info
+                - Warning
+                - Critical
+                - Error
+                type: string
+            type: object
+          status:
+            description: AlertStatus defines the observed state of Alert
+            properties:
+              active:
+                type: boolean
+              alertType:
+                properties:
+                  flow:
+                    properties:
+                      stages:
+                        items:
+                          properties:
+                            groups:
+                              items:
+                                properties:
+                                  innerFlowAlerts:
+                                    properties:
+                                      alerts:
+                                        items:
+                                          properties:
+                                            not:
+                                              default: false
+                                              type: boolean
+                                            userAlertId:
+                                              type: string
+                                          type: object
+                                        type: array
+                                      operator:
+                                        enum:
+                                        - And
+                                        - Or
+                                        type: string
+                                    type: object
+                                  nextOperator:
+                                    enum:
+                                    - And
+                                    - Or
+                                    type: string
+                                type: object
+                              type: array
+                            timeWindow:
+                              properties:
+                                hours:
+                                  type: integer
+                                minutes:
+                                  type: integer
+                                seconds:
+                                  type: integer
+                              type: object
+                          type: object
+                        type: array
+                    type: object
+                  metric:
+                    properties:
+                      lucene:
+                        properties:
+                          conditions:
+                            properties:
+                              alertWhen:
+                                enum:
+                                - More
+                                - Less
+                                type: string
+                              arithmeticOperator:
+                                enum:
+                                - Avg
+                                - Min
+                                - Max
+                                - Sum
+                                - Count
+                                - Percentile
+                                type: string
+                              arithmeticOperatorModifier:
+                                type: integer
+                              groupBy:
+                                items:
+                                  type: string
+                                type: array
+                              manageUndetectedValues:
+                                properties:
+                                  autoRetireRatio:
+                                    default: Never
+                                    enum:
+                                    - Never
+                                    - FiveMinutes
+                                    - TenMinutes
+                                    - Hour
+                                    - TwoHours
+                                    - SixHours
+                                    - TwelveHours
+                                    - TwentyFourHours
+                                    type: string
+                                  enableTriggeringOnUndetectedValues:
+                                    default: true
+                                    type: boolean
+                                type: object
+                              metricField:
+                                type: string
+                              minNonNullValuesPercentage:
+                                minimum: 0
+                                multipleOf: 10
+                                type: integer
+                              replaceMissingValueWithZero:
+                                default: false
+                                type: boolean
+                              sampleThresholdPercentage:
+                                minimum: 0
+                                multipleOf: 10
+                                type: integer
+                              threshold:
+                                anyOf:
+                                - type: integer
+                                - type: string
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                              timeWindow:
+                                enum:
+                                - Minute
+                                - FiveMinutes
+                                - TenMinutes
+                                - FifteenMinutes
+                                - TwentyMinutes
+                                - ThirtyMinutes
+                                - Hour
+                                - TwoHours
+                                - FourHours
+                                - SixHours
+                                - TwelveHours
+                                - TwentyFourHours
+                                type: string
+                            type: object
+                          searchQuery:
+                            type: string
+                        type: object
+                      promql:
+                        properties:
+                          conditions:
+                            properties:
+                              alertWhen:
+                                enum:
+                                - More
+                                - Less
+                                type: string
+                              groupBy:
+                                items:
+                                  type: string
+                                type: array
+                              manageUndetectedValues:
+                                properties:
+                                  autoRetireRatio:
+                                    default: Never
+                                    enum:
+                                    - Never
+                                    - FiveMinutes
+                                    - TenMinutes
+                                    - Hour
+                                    - TwoHours
+                                    - SixHours
+                                    - TwelveHours
+                                    - TwentyFourHours
+                                    type: string
+                                  enableTriggeringOnUndetectedValues:
+                                    default: true
+                                    type: boolean
+                                type: object
+                              minNonNullValuesPercentage:
+                                minimum: 0
+                                multipleOf: 10
+                                type: integer
+                              replaceMissingValueWithZero:
+                                type: boolean
+                              sampleThresholdPercentage:
+                                minimum: 0
+                                multipleOf: 10
+                                type: integer
+                              threshold:
+                                anyOf:
+                                - type: integer
+                                - type: string
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                              timeWindow:
+                                enum:
+                                - Minute
+                                - FiveMinutes
+                                - TenMinutes
+                                - FifteenMinutes
+                                - TwentyMinutes
+                                - ThirtyMinutes
+                                - Hour
+                                - TwoHours
+                                - FourHours
+                                - SixHours
+                                - TwelveHours
+                                - TwentyFourHours
+                                type: string
+                            type: object
+                          searchQuery:
+                            type: string
+                        type: object
+                    type: object
+                  newValue:
+                    properties:
+                      conditions:
+                        properties:
+                          key:
+                            type: string
+                          timeWindow:
+                            enum:
+                            - TwelveHours
+                            - TwentyFourHours
+                            - FortyEightHours
+                            - SeventTwoHours
+                            - Week
+                            - Month
+                            - TwoMonths
+                            - ThreeMonths
+                            type: string
+                        type: object
+                      filters:
+                        properties:
+                          alias:
+                            type: string
+                          applications:
+                            items:
+                              type: string
+                            type: array
+                          categories:
+                            items:
+                              type: string
+                            type: array
+                          classes:
+                            items:
+                              type: string
+                            type: array
+                          computers:
+                            items:
+                              type: string
+                            type: array
+                          ips:
+                            items:
+                              type: string
+                            type: array
+                          methods:
+                            items:
+                              type: string
+                            type: array
+                          searchQuery:
+                            type: string
+                          severities:
+                            items:
+                              enum:
+                              - Debug
+                              - Verbose
+                              - Info
+                              - Warning
+                              - Critical
+                              - Error
+                              type: string
+                            type: array
+                          subsystems:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                    type: object
+                  ratio:
+                    properties:
+                      conditions:
+                        properties:
+                          alertWhen:
+                            enum:
+                            - More
+                            - Less
+                            type: string
+                          groupBy:
+                            items:
+                              type: string
+                            type: array
+                          groupByFor:
+                            enum:
+                            - Q1
+                            - Q2
+                            - Both
+                            type: string
+                          ignoreInfinity:
+                            default: false
+                            type: boolean
+                          manageUndetectedValues:
+                            properties:
+                              autoRetireRatio:
+                                default: Never
+                                enum:
+                                - Never
+                                - FiveMinutes
+                                - TenMinutes
+                                - Hour
+                                - TwoHours
+                                - SixHours
+                                - TwelveHours
+                                - TwentyFourHours
+                                type: string
+                              enableTriggeringOnUndetectedValues:
+                                default: true
+                                type: boolean
+                            type: object
+                          ratio:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                          timeWindow:
+                            enum:
+                            - FiveMinutes
+                            - TenMinutes
+                            - FifteenMinutes
+                            - TwentyMinutes
+                            - ThirtyMinutes
+                            - Hour
+                            - TwoHours
+                            - FourHours
+                            - SixHours
+                            - TwelveHours
+                            - TwentyFourHours
+                            - ThirtySixHours
+                            type: string
+                        type: object
+                      q1Filters:
+                        properties:
+                          alias:
+                            type: string
+                          applications:
+                            items:
+                              type: string
+                            type: array
+                          categories:
+                            items:
+                              type: string
+                            type: array
+                          classes:
+                            items:
+                              type: string
+                            type: array
+                          computers:
+                            items:
+                              type: string
+                            type: array
+                          ips:
+                            items:
+                              type: string
+                            type: array
+                          methods:
+                            items:
+                              type: string
+                            type: array
+                          searchQuery:
+                            type: string
+                          severities:
+                            items:
+                              enum:
+                              - Debug
+                              - Verbose
+                              - Info
+                              - Warning
+                              - Critical
+                              - Error
+                              type: string
+                            type: array
+                          subsystems:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      q2Filters:
+                        properties:
+                          alias:
+                            type: string
+                          applications:
+                            items:
+                              type: string
+                            type: array
+                          searchQuery:
+                            type: string
+                          severities:
+                            items:
+                              enum:
+                              - Debug
+                              - Verbose
+                              - Info
+                              - Warning
+                              - Critical
+                              - Error
+                              type: string
+                            type: array
+                          subsystems:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                    type: object
+                  standard:
+                    properties:
+                      conditions:
+                        properties:
+                          alertWhen:
+                            enum:
+                            - More
+                            - Less
+                            - Immediately
+                            - MoreThanUsual
+                            type: string
+                          groupBy:
+                            items:
+                              type: string
+                            type: array
+                          manageUndetectedValues:
+                            properties:
+                              autoRetireRatio:
+                                default: Never
+                                enum:
+                                - Never
+                                - FiveMinutes
+                                - TenMinutes
+                                - Hour
+                                - TwoHours
+                                - SixHours
+                                - TwelveHours
+                                - TwentyFourHours
+                                type: string
+                              enableTriggeringOnUndetectedValues:
+                                default: true
+                                type: boolean
+                            type: object
+                          threshold:
+                            type: integer
+                          timeWindow:
+                            enum:
+                            - FiveMinutes
+                            - TenMinutes
+                            - FifteenMinutes
+                            - TwentyMinutes
+                            - ThirtyMinutes
+                            - Hour
+                            - TwoHours
+                            - FourHours
+                            - SixHours
+                            - TwelveHours
+                            - TwentyFourHours
+                            - ThirtySixHours
+                            type: string
+                        type: object
+                      filters:
+                        properties:
+                          alias:
+                            type: string
+                          applications:
+                            items:
+                              type: string
+                            type: array
+                          categories:
+                            items:
+                              type: string
+                            type: array
+                          classes:
+                            items:
+                              type: string
+                            type: array
+                          computers:
+                            items:
+                              type: string
+                            type: array
+                          ips:
+                            items:
+                              type: string
+                            type: array
+                          methods:
+                            items:
+                              type: string
+                            type: array
+                          searchQuery:
+                            type: string
+                          severities:
+                            items:
+                              enum:
+                              - Debug
+                              - Verbose
+                              - Info
+                              - Warning
+                              - Critical
+                              - Error
+                              type: string
+                            type: array
+                          subsystems:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                    type: object
+                  timeRelative:
+                    properties:
+                      conditions:
+                        properties:
+                          alertWhen:
+                            enum:
+                            - More
+                            - Less
+                            type: string
+                          groupBy:
+                            items:
+                              type: string
+                            type: array
+                          ignoreInfinity:
+                            default: false
+                            type: boolean
+                          manageUndetectedValues:
+                            properties:
+                              autoRetireRatio:
+                                default: Never
+                                enum:
+                                - Never
+                                - FiveMinutes
+                                - TenMinutes
+                                - Hour
+                                - TwoHours
+                                - SixHours
+                                - TwelveHours
+                                - TwentyFourHours
+                                type: string
+                              enableTriggeringOnUndetectedValues:
+                                default: true
+                                type: boolean
+                            type: object
+                          threshold:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                          timeWindow:
+                            enum:
+                            - PreviousHour
+                            - SameHourYesterday
+                            - SameHourLastWeek
+                            - Yesterday
+                            - SameDayLastWeek
+                            - SameDayLastMonth
+                            type: string
+                        type: object
+                      filters:
+                        properties:
+                          alias:
+                            type: string
+                          applications:
+                            items:
+                              type: string
+                            type: array
+                          categories:
+                            items:
+                              type: string
+                            type: array
+                          classes:
+                            items:
+                              type: string
+                            type: array
+                          computers:
+                            items:
+                              type: string
+                            type: array
+                          ips:
+                            items:
+                              type: string
+                            type: array
+                          methods:
+                            items:
+                              type: string
+                            type: array
+                          searchQuery:
+                            type: string
+                          severities:
+                            items:
+                              enum:
+                              - Debug
+                              - Verbose
+                              - Info
+                              - Warning
+                              - Critical
+                              - Error
+                              type: string
+                            type: array
+                          subsystems:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                    type: object
+                  tracing:
+                    properties:
+                      conditions:
+                        properties:
+                          alertWhen:
+                            enum:
+                            - More
+                            - Immediately
+                            type: string
+                          groupBy:
+                            items:
+                              type: string
+                            type: array
+                          threshold:
+                            type: integer
+                          timeWindow:
+                            enum:
+                            - FiveMinutes
+                            - TenMinutes
+                            - FifteenMinutes
+                            - TwentyMinutes
+                            - ThirtyMinutes
+                            - Hour
+                            - TwoHours
+                            - FourHours
+                            - SixHours
+                            - TwelveHours
+                            - TwentyFourHours
+                            - ThirtySixHours
+                            type: string
+                        type: object
+                      filters:
+                        properties:
+                          applications:
+                            items:
+                              type: string
+                            type: array
+                          latencyThresholdMilliseconds:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                          services:
+                            items:
+                              type: string
+                            type: array
+                          subsystems:
+                            items:
+                              type: string
+                            type: array
+                          tagFilters:
+                            items:
+                              properties:
+                                field:
+                                  type: string
+                                values:
+                                  items:
+                                    type: string
+                                  type: array
+                              type: object
+                            type: array
+                        type: object
+                    type: object
+                  uniqueCount:
+                    properties:
+                      conditions:
+                        properties:
+                          groupBy:
+                            type: string
+                          key:
+                            type: string
+                          maxUniqueValues:
+                            minimum: 1
+                            type: integer
+                          maxUniqueValuesForGroupBy:
+                            minimum: 1
+                            type: integer
+                          timeWindow:
+                            enum:
+                            - Minute
+                            - FiveMinutes
+                            - TenMinutes
+                            - FifteenMinutes
+                            - TwentyMinutes
+                            - ThirtyMinutes
+                            - Hour
+                            - TwoHours
+                            - FourHours
+                            - SixHours
+                            - TwelveHours
+                            - TwentyFourHours
+                            - ThirtySixHours
+                            type: string
+                        type: object
+                      filters:
+                        properties:
+                          alias:
+                            type: string
+                          applications:
+                            items:
+                              type: string
+                            type: array
+                          categories:
+                            items:
+                              type: string
+                            type: array
+                          classes:
+                            items:
+                              type: string
+                            type: array
+                          computers:
+                            items:
+                              type: string
+                            type: array
+                          ips:
+                            items:
+                              type: string
+                            type: array
+                          methods:
+                            items:
+                              type: string
+                            type: array
+                          searchQuery:
+                            type: string
+                          severities:
+                            items:
+                              enum:
+                              - Debug
+                              - Verbose
+                              - Info
+                              - Warning
+                              - Critical
+                              - Error
+                              type: string
+                            type: array
+                          subsystems:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                    type: object
+                type: object
+              description:
+                type: string
+              expirationDate:
+                properties:
+                  day:
+                    format: int32
+                    maximum: 31
+                    minimum: 1
+                    type: integer
+                  month:
+                    format: int32
+                    maximum: 12
+                    minimum: 1
+                    type: integer
+                  year:
+                    format: int32
+                    maximum: 9999
+                    minimum: 1
+                    type: integer
+                type: object
+              id:
+                type: string
+              labels:
+                additionalProperties:
+                  type: string
+                type: object
+              name:
+                type: string
+              notifications:
+                properties:
+                  notifyEveryMin:
+                    minimum: 1
+                    type: integer
+                  notifyOnlyOnTriggeredGroupByValues:
+                    default: false
+                    type: boolean
+                  onTriggerAndResolved:
+                    default: false
+                    type: boolean
+                  recipients:
+                    properties:
+                      emails:
+                        items:
+                          type: string
+                        type: array
+                      webhooks:
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                type: object
+              payloadFilters:
+                items:
+                  type: string
+                type: array
+              scheduling:
+                properties:
+                  daysEnabled:
+                    items:
+                      enum:
+                      - Sunday
+                      - Monday
+                      - Tuesday
+                      - Wednesday
+                      - Thursday
+                      - Friday
+                      - Saturday
+                      type: string
+                    type: array
+                  endTime:
+                    pattern: ^(0\d|1\d|2[0-3]):[0-5]\d$
+                    type: string
+                  startTime:
+                    pattern: ^(0\d|1\d|2[0-3]):[0-5]\d$
+                    type: string
+                  timeZone:
+                    default: UTC+00
+                    pattern: ^UTC[+-]\d{2}$
+                    type: string
+                type: object
+              severity:
+                enum:
+                - Info
+                - Warning
+                - Critical
+                - Error
+                type: string
+            required:
+            - id
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

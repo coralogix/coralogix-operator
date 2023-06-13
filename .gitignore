@@ -6,11 +6,11 @@
 *.so
 *.dylib
 bin
-
+testbin/*
+Dockerfile.cross
+kubeconfig
 # Test binary, build with `go test -c`
 *.test
-preflight.log
-artifacts/
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
