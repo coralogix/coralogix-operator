@@ -42,9 +42,9 @@ type RecordingRuleGroupSetReconciler struct {
 	Scheme             *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=coralogix.coralogix,resources=recordingrulegroupsets,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=coralogix.coralogix,resources=recordingrulegroupsets/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=coralogix.coralogix,resources=recordingrulegroupsets/finalizers,verbs=update
+//+kubebuilder:rbac:groups=coralogix.com,resources=recordingrulegroupsets,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=coralogix.com,resources=recordingrulegroupsets/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=coralogix.com,resources=recordingrulegroupsets/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

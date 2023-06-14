@@ -12,7 +12,7 @@ metadata:
   name: recordingrulegroupset-editor-role
 rules:
   - apiGroups:
-      - coralogix.coralogix
+      - coralogix.com
     resources:
       - recordingrulegroupsets
     verbs:
@@ -24,7 +24,7 @@ rules:
       - update
       - watch
   - apiGroups:
-      - coralogix.coralogix
+      - coralogix.com
     resources:
       - recordingrulegroupsets/status
     verbs:

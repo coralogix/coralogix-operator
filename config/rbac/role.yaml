@@ -6,7 +6,7 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - coralogix.coralogix
+  - coralogix.com
   resources:
   - alerts
   verbs:
@@ -18,13 +18,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - coralogix.coralogix
+  - coralogix.com
   resources:
   - alerts/finalizers
   verbs:
   - update
 - apiGroups:
-  - coralogix.coralogix
+  - coralogix.com
   resources:
   - alerts/status
   verbs:
@@ -32,7 +32,7 @@ rules:
   - patch
   - update
 - apiGroups:
-  - coralogix.coralogix
+  - coralogix.com
   resources:
   - recordingrulegroupsets
   verbs:
@@ -44,13 +44,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - coralogix.coralogix
+  - coralogix.com
   resources:
   - recordingrulegroupsets/finalizers
   verbs:
   - update
 - apiGroups:
-  - coralogix.coralogix
+  - coralogix.com
   resources:
   - recordingrulegroupsets/status
   verbs:
@@ -58,7 +58,7 @@ rules:
   - patch
   - update
 - apiGroups:
-  - coralogix.coralogix
+  - coralogix.com
   resources:
   - rulegroups
   verbs:
@@ -70,13 +70,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - coralogix.coralogix
+  - coralogix.com
   resources:
   - rulegroups/finalizers
   verbs:
   - update
 - apiGroups:
-  - coralogix.coralogix
+  - coralogix.com
   resources:
   - rulegroups/status
   verbs:

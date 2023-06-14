@@ -2,9 +2,9 @@
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
-  - bases/coralogix.coralogix_rulegroups.yaml
-  - bases/coralogix.coralogix_alerts.yaml
-  - bases/coralogix.coralogix_recordingrulegroupsets.yaml
+  - bases/coralogix.com_rulegroups.yaml
+  - bases/coralogix.com_alerts.yaml
+  - bases/coralogix.com_recordingrulegroupsets.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:

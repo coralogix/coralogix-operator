@@ -58,13 +58,13 @@ $ kubectl apply -f config/samples/alerts/standard_alert.yaml
 Getting the resource status
 
 ```sh
-$ kubectl get alerts.coralogix.coralogix standard-alert-example -oyaml
+$ kubectl get alerts.coralogix.com standard-alert-example -oyaml
 ```
 
 Destroying the resource.
 
 ```sh
-$ kubectl delete alerts.coralogix.coralogix standard-alert-example
+$ kubectl delete alerts.coralogix.com standard-alert-example
 ```
 
 Developing

@@ -12,7 +12,7 @@ metadata:
   name: recordingrulegroupset-viewer-role
 rules:
   - apiGroups:
-      - coralogix.coralogix
+      - coralogix.com
     resources:
       - recordingrulegroupsets
     verbs:
@@ -20,7 +20,7 @@ rules:
       - list
       - watch
   - apiGroups:
-      - coralogix.coralogix
+      - coralogix.com
     resources:
       - recordingrulegroupsets/status
     verbs:

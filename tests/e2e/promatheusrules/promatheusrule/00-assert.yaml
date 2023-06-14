@@ -1,4 +1,4 @@
-apiVersion: coralogix.coralogix/v1alpha1
+apiVersion: coralogix.com/v1alpha1
 kind: RecordingRuleGroupSet
 metadata:
   name: prometheus-example-rules

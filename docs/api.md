@@ -2,9 +2,9 @@
 
 Packages:
 
-- [coralogix.coralogix/v1alpha1](#coralogixcoralogixv1alpha1)
+- [coralogix.com/v1alpha1](#coralogixcomv1alpha1)
 
-# coralogix.coralogix/v1alpha1
+# coralogix.com/v1alpha1
 
 Resource Types:
 
@@ -18,7 +18,7 @@ Resource Types:
 
 
 ## Alert
-<sup><sup>[↩ Parent](#coralogixcoralogixv1alpha1 )</sup></sup>
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
 
 
 
@@ -39,7 +39,7 @@ Alert is the Schema for the alerts API
     <tbody><tr>
       <td><b>apiVersion</b></td>
       <td>string</td>
-      <td>coralogix.coralogix/v1alpha1</td>
+      <td>coralogix.com/v1alpha1</td>
       <td>true</td>
       </tr>
       <tr>
@@ -4530,7 +4530,7 @@ Alert is the Schema for the alerts API
     <tbody><tr>
       <td><b>apiVersion</b></td>
       <td>string</td>
-      <td>coralogix.coralogix/v1alpha1</td>
+      <td>coralogix.com/v1alpha1</td>
       <td>true</td>
       </tr>
       <tr>
@@ -9093,7 +9093,7 @@ AlertStatus defines the observed state of Alert
 </table>
 
 ## RecordingRuleGroupSet
-<sup><sup>[↩ Parent](#coralogixcoralogixv1alpha1 )</sup></sup>
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
 
 
 
@@ -9114,7 +9114,7 @@ RecordingRuleGroupSet is the Schema for the recordingrulegroupsets API
     <tbody><tr>
       <td><b>apiVersion</b></td>
       <td>string</td>
-      <td>coralogix.coralogix/v1alpha1</td>
+      <td>coralogix.com/v1alpha1</td>
       <td>true</td>
       </tr>
       <tr>
@@ -9397,7 +9397,7 @@ RecordingRuleGroupSetStatus defines the observed state of RecordingRuleGroupSet
 </table>
 
 ## RuleGroup
-<sup><sup>[↩ Parent](#coralogixcoralogixv1alpha1 )</sup></sup>
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
 
 
 
@@ -9418,7 +9418,7 @@ RuleGroup is the Schema for the rulegroups API
     <tbody><tr>
       <td><b>apiVersion</b></td>
       <td>string</td>
-      <td>coralogix.coralogix/v1alpha1</td>
+      <td>coralogix.com/v1alpha1</td>
       <td>true</td>
       </tr>
       <tr>

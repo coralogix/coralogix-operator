@@ -27,13 +27,13 @@ const (
 
 //+kubebuilder:rbac:groups=monitoring.coreos.com,resources=prometheusrules,verbs=get;list;watch
 
-//+kubebuilder:rbac:groups=coralogix.coralogix,resources=recordingrulegroupsets,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=coralogix.coralogix,resources=recordingrulegroupsets/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=coralogix.coralogix,resources=recordingrulegroupsets/finalizers,verbs=update
+//+kubebuilder:rbac:groups=coralogix.com,resources=recordingrulegroupsets,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=coralogix.com,resources=recordingrulegroupsets/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=coralogix.com,resources=recordingrulegroupsets/finalizers,verbs=update
 
-//+kubebuilder:rbac:groups=coralogix.coralogix,resources=alerts,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=coralogix.coralogix,resources=alerts/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=coralogix.coralogix,resources=alerts/finalizers,verbs=update
+//+kubebuilder:rbac:groups=coralogix.com,resources=alerts,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=coralogix.com,resources=alerts/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=coralogix.com,resources=alerts/finalizers,verbs=update
 
 // PrometheusRuleReconciler reconciles a PrometheusRule object
 type PrometheusRuleReconciler struct {
