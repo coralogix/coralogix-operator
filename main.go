@@ -71,12 +71,6 @@ func main() {
 	var enableLeaderElection bool
 	var probeAddr string
 
-	opts := zap.Options{}
-	opts.BindFlags(flag.CommandLine)
-	flag.Parse()
-
-	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
-
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
@@ -85,14 +79,22 @@ func main() {
 
 	region := os.Getenv("CORALOGIX_REGION")
 	flag.StringVar(&region, "region", region, fmt.Sprintf("The region of your Coralogix cluster. Can be one of %q.", validRegions))
+
+	apiKey := os.Getenv("CORALOGIX_API_KEY")
+	flag.StringVar(&apiKey, "api-key", apiKey, "The proper api-key based on your Coralogix cluster's region")
+
+	opts := zap.Options{}
+	opts.BindFlags(flag.CommandLine)
+	flag.Parse()
+
+	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+
 	if !slices.Contains(validRegions, region) {
 		err := fmt.Errorf("region value is '%s', but can be one of %q", region, validRegions)
 		setupLog.Error(err, "invalid arguments for running operator")
 		os.Exit(1)
 	}
 
-	apiKey := os.Getenv("CORALOGIX_API_KEY")
-	flag.StringVar(&apiKey, "api-key", apiKey, "The proper api-key based on your Coralogix cluster's region")
 	if apiKey == "" {
 		err := fmt.Errorf("api-key can not be empty")
 		setupLog.Error(err, "invalid arguments for running operator")
