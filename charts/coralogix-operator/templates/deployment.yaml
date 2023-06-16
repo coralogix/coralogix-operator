@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "coralogixOperator.fullname" . }}
+  labels:
+    {{- include "coralogixOperator.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "coralogixOperator.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+        {{- with .Values.podAnnotations }}
+            {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "coralogixOperator.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "coralogixOperator.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.securityContext | nindent 8 }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: kube-rbac-proxy
+        args:
+        - --secure-listen-address=0.0.0.0:8443
+        - --upstream=http://127.0.0.1:8080/
+        - --logtostderr=true
+        - --v=0
+        image: {{ .Values.kubeRbacProxy.image }}
+        ports:
+        - containerPort: 8443
+          name: https
+          protocol: TCP
+        resources:
+          {{- toYaml .Values.kubeRbacProxy.resources | nindent 12 }}
+      - name: {{ .Chart.Name }}
+        args:
+        - /manager
+        - --health-probe-bind-address=:8081
+        - --metrics-bind-address=127.0.0.1:8080
+        - --leader-elect
+        env:
+          - name: CORALOGIX_REGION
+            value: {{ .Values.coralogixOperator.region | quote }}
+          - name: CORALOGIX_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "coralogixOperator.secretName" . }}
+                key: "CORALOGIX_API_KEY"
+        image: {{ .Values.coralogixOperator.image.repository }}:v{{ .Values.coralogixOperator.image.tag | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.coralogixOperator.image.pullPolicy }}
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          {{- toYaml .Values.coralogixOperator.resources | nindent 12 }}
+        securityContext:
+          {{- toYaml .Values.coralogixOperator.securityContext | nindent 12 }}

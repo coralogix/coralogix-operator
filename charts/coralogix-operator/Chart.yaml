@@ -1,0 +1,25 @@
+apiVersion: v2
+description: Coralogix Operator Helm Chart
+icon: https://avatars.githubusercontent.com/u/35295744
+type: application
+maintainers:
+  - name: Coralogix
+    email: platform@coralogix.com
+name: coralogix-operator
+sources:
+  - https://github.com/coralogix/coralogix-operator
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.16.0-0"
+home: https://github.com/coralogix/coralogix-operator
+keywords:
+  - operator
+  - prometheus
+  - prometheus-operator
+  - coralogix
+annotations:
+  "artifacthub.io/license": Apache-2.0
+  "artifacthub.io/operator": "true"
+  "artifacthub.io/links": |
+    - name: Upstream Project
+      url: https://github.com/coralogix/coralogix-operator

@@ -1,0 +1,106 @@
+# -- Provide a name in place of kube-prometheus-stack for `app:` labels
+nameOverride: ""
+
+# -- Provide a name to substitute for the full names of resources
+fullnameOverride: ""
+
+imagePullSecrets: []
+
+# -- Service account for Coralogix operator to use.
+# -- ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  create: true
+
+  # -- The name of the service account to use.
+  # -- If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+  # -- Annotations to add to the service account
+  annotations: {}
+
+# -- Annotations to add to the operator pod
+podAnnotations: {}
+
+# -- SecurityContext holds pod-level security attributes and common container settings.
+# -- This defaults to non root user with uid 2000 and gid 2000. *v1.PodSecurityContext  false
+# -- ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+securityContext:
+  fsGroup: 2000
+  runAsGroup: 2000
+  runAsNonRoot: true
+  runAsUser: 2000
+  seccompProfile:
+    type: RuntimeDefault
+
+# -- Define which Nodes the Pods are scheduled on.
+# -- ref: https://kubernetes.io/docs/user-guide/node-selection/
+nodeSelector: {}
+
+# -- If specified, the pod's tolerations.
+# -- ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+tolerations: []
+
+# -- Assign custom affinity rules
+# -- ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+affinity: {}
+
+# -- Configuration for Coralogix operator secret
+secret:
+  # -- Indicates if the Coralogix operator secret should be created
+  create: true
+
+  # -- Labels to add to the Coralogix operator secret
+  labels: {}
+
+  # -- Annotations to add to the Coralogix operator secret
+  annotations: {}
+
+  # -- secretKeyReference is used to reference an existing Kubernetes secret
+  # -- Use secretKeyReference if you're concerned with exposing sensitive data over you chart's values file.
+  # -- secret.data and secret.secretKeyReference should be mutually exclusive.
+  secretKeyReference: {}
+  #   name: "coralogix-operator"
+  #   key: "apiKey"
+
+  # -- Coralogix operator secret data
+  data:
+    apiKey: ""
+
+# --  kube-rbac-proxy container config
+kubeRbacProxy:
+  # --  kube-rbac-proxy Image
+  image: gcr.io/kubebuilder/kube-rbac-proxy:v0.13.0
+
+  # -- Security context for kube-rbac-proxy container
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+
+  # -- resource config for kube-rbac-proxy
+  resources: {}
+
+# -- Coralogix operator container config
+coralogixOperator:
+  # --  Coralogix operator Image
+  image:
+    repository: coralogixrepo/coralogix-operator
+    tag: ""
+    pullPolicy: IfNotPresent
+
+  # -- Coralogix Account Region
+  region: ""
+
+  # -- resource config for Coralogix operator
+  resources: {}
+
+  # -- Security context for Coralogix operator container
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
