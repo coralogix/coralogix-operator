@@ -34,7 +34,7 @@ Add the region and api-key as environment variables (or later as flags).
 
 ```sh
 $ export CORALOGIX_API_KEY="xxx-xxx-xxx"
-$ export CORALOGIX_ENV = "EUROPE2"
+$ export CORALOGIX_REGION = "EUROPE2"
 ```
 
 Run the operator locally
@@ -45,8 +45,18 @@ Or with `regin` and `api-key` flags
 ```sh
 $ go run main.go -region EUROPE2 -api-key xxx-xxx-xxx
 ```
+Or build and push your image to a registry
+```sh
+make docker-build docker-push IMG=<some-registry>/coralogix-operator:tag
+```
+Then deploy it to the cluster
+```sh
+make deploy IMG=<some-registry>/coralogix-operator:tag
+```
 
 Running examples
+```sh
+
 ---------------------
 It's possible to use one of the samples in the [sample directory](./config/samples) or creating your own sample file.
 Then apply it -
