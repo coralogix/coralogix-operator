@@ -24,6 +24,7 @@ jobs:
         uses: actions/checkout@v2.4.0
       - name: Setup Helm Repo
         run: |
+          cd charts/coralogix-operator
           helm package .
       - name: Setup JFrog CLI
         uses: jfrog/setup-jfrog-cli@v2.1.0
@@ -31,4 +32,5 @@ jobs:
           version: 2.12.1
       - name: use-jfrog-cli
         run: |
+          cd charts/coralogix-operator
           jfrog rt upload --access-token ${{ secrets.ARTIFACTORY_NONUSER_ACCESS_TOKEN }} "${{ env.CHART_NAME }}-*.tgz" coralogix-charts --url ${{ env.ARTIFACTORY_URL }}
