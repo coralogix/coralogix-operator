@@ -265,7 +265,7 @@ func prometheusInnerRuleToCoralogixAlert(prometheusRule prometheus.Rule) coralog
 
 	timeWindow, ok := prometheusAlertForToCoralogixPromqlAlertTimeWindow[prometheusRule.For]
 	if !ok {
-		timeWindow = prometheusAlertForToCoralogixPromqlAlertTimeWindow["10m"]
+		timeWindow = prometheusAlertForToCoralogixPromqlAlertTimeWindow["1m"]
 	}
 
 	return coralogixv1alpha1.AlertSpec{
