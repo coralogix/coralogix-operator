@@ -263,7 +263,10 @@ func prometheusInnerRuleToCoralogixAlert(prometheusRule prometheus.Rule) coralog
 		notificationPeriod = defaultCoralogixNotificationPeriod
 	}
 
-	timeWindow := prometheusAlertForToCoralogixPromqlAlertTimeWindow[prometheusRule.For]
+	timeWindow, ok := prometheusAlertForToCoralogixPromqlAlertTimeWindow[prometheusRule.For]
+	if !ok {
+		timeWindow = prometheusAlertForToCoralogixPromqlAlertTimeWindow["10m"]
+	}
 
 	return coralogixv1alpha1.AlertSpec{
 		Severity: coralogixv1alpha1.AlertSeverityInfo,
