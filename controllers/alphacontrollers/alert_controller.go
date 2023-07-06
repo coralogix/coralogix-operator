@@ -742,7 +742,7 @@ func flattenTracingFilter(filters []*alerts.Filters) []string {
 	for _, f := range filters {
 		values := f.GetValues()
 		switch operator := f.GetOperator(); operator {
-		case "contains", "startsWith", "endsWith":
+		case "notEquals", "contains", "startsWith", "endsWith":
 			for i, val := range values {
 				values[i] = fmt.Sprintf("filter:%s:%s", operator, val)
 			}
