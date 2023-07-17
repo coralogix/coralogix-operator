@@ -159,6 +159,15 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	if notFount {
+		if alertCRD.Spec.Labels == nil {
+			alertCRD.Spec.Labels = make(map[string]string)
+		}
+		alertCRD.Spec.Labels["managed-by"] = "coralogix-operator"
+		if err := r.Client.Update(ctx, alertCRD); err != nil {
+			log.Error(err, "Error on updating alert", "Name", alertCRD.Name, "Namespace", alertCRD.Namespace)
+			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		}
+
 		createAlertReq, err := alertCRD.Spec.ExtractCreateAlertRequest()
 		if err != nil {
 			log.Error(err, "Bad request for creating alert", "Name", alertCRD.Name, "Namespace", alertCRD.Namespace)

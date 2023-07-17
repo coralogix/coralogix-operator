@@ -24,6 +24,8 @@ status:
           - Error
   description: alert from k8s operator
   name: unique-count alert example
+  labels:
+    managed-by: coralogix-operator
 #  notificationGroups:
 #    - notifications:
 #        - notifyOn: TriggeredOnly

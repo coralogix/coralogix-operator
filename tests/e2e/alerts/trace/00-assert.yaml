@@ -30,6 +30,8 @@ status:
               - filter:contains:400
   description: alert from k8s operator
   name: tracing alert example
+  labels:
+    managed-by: coralogix-operator
   #    notificationGroups:
   #      - notifications:
   #          - notifyOn: TriggeredOnly

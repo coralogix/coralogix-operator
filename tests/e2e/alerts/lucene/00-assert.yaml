@@ -30,6 +30,8 @@ status:
         searchQuery: name:\"Frontend transactions\"
   description: alert from k8s operator
   name: lucene alert example
+  labels:
+    managed-by: coralogix-operator
 #  notificationGroups:
 #    - notifications:
 #        - notifyOn: TriggeredOnly

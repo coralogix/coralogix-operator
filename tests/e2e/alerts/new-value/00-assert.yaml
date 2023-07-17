@@ -21,6 +21,8 @@ status:
           - Error
   description: alert from k8s operator
   name: new-value alert example
+  labels:
+    managed-by: coralogix-operator
 #  notificationGroups:
 #    - notifications:
 #        - notifyOn: TriggeredOnly

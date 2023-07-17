@@ -43,6 +43,8 @@ status:
           - filter:startsWith:subsystem-name
   description: alert from k8s operator
   name: ratio alert example
+  labels:
+    managed-by: coralogix-operator
 #  notificationGroups:
 #    - notifications:
 #        - notifyOn: TriggeredOnly
