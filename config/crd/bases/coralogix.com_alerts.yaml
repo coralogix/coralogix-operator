@@ -868,9 +868,8 @@ spec:
                             items:
                               type: string
                             type: array
-                          integrationID:
-                            format: int32
-                            type: integer
+                          integrationName:
+                            type: string
                           notifyOn:
                             type: string
                           retriggeringPeriodMinutes:
@@ -1767,9 +1766,8 @@ spec:
                             items:
                               type: string
                             type: array
-                          integrationID:
-                            format: int32
-                            type: integer
+                          integrationName:
+                            type: string
                           notifyOn:
                             type: string
                           retriggeringPeriodMinutes:

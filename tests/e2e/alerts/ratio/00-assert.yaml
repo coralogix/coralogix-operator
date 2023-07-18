@@ -48,7 +48,7 @@ status:
 #  notificationGroups:
 #    - notifications:
 #        - notifyOn: TriggeredOnly
-#          integrationID: 2235
+#          integrationName: WebhookAlerts
 #          retriggeringPeriodMinutes: 1
 #        - notifyOn: TriggeredAndResolved
 #          emailRecipients: [ "example@coralogix.com" ]
@@ -56,7 +56,7 @@ status:
 #    - groupByFields: [ "coralogix.metadata.sdkId" ]
 #      notifications:
 #        - notifyOn: TriggeredOnly
-#          integrationID: 2235
+#          integrationName: WebhookAlerts
 #          retriggeringPeriodMinutes: 1
 #        - notifyOn: TriggeredAndResolved
 #          emailRecipients: [ "example2@coralogix.com" ]

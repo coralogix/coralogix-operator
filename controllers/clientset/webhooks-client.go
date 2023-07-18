@@ -20,6 +20,10 @@ func (w WebhooksClient) GetWebhook(ctx context.Context, webhookId string) (strin
 	return w.client.Get(ctx, fmt.Sprintf("/api/v1/external/integrations/%s", webhookId))
 }
 
+func (w WebhooksClient) GetWebhooks(ctx context.Context) (string, error) {
+	return w.client.Get(ctx, "/api/v1/external/integrations/")
+}
+
 func (w WebhooksClient) UpdateWebhook(ctx context.Context, body string) (string, error) {
 	return w.client.Post(ctx, "/api/v1/external/integrations", "application/json", body)
 }

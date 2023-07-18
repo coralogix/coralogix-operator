@@ -18,7 +18,9 @@ package alphacontrollers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/golang/protobuf/jsonpb"
@@ -76,6 +78,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		//Indent: "\t",
 	}
 	alertsClient := r.CoralogixClientSet.Alerts()
+	coralogixv1alpha1.WebhooksClient = r.CoralogixClientSet.Webhooks()
 
 	//Get alertCRD
 	alertCRD := &coralogixv1alpha1.Alert{}
@@ -992,8 +995,17 @@ func flattenNotification(notification *alerts.AlertNotification) coralogixv1alph
 
 	switch integration := notification.GetIntegrationType().(type) {
 	case *alerts.AlertNotification_IntegrationId:
-		flattenedNotification.IntegrationID = new(int32)
-		*flattenedNotification.IntegrationID = int32(integration.IntegrationId.GetValue())
+		id := strconv.Itoa(int(integration.IntegrationId.GetValue()))
+		webhookStr, err := coralogixv1alpha1.WebhooksClient.GetWebhook(context.Background(), id)
+		if err != nil {
+			return flattenedNotification
+		}
+		var m map[string]interface{}
+		if err = json.Unmarshal([]byte(webhookStr), &m); err != nil {
+			return flattenedNotification
+		}
+		flattenedNotification.IntegrationName = new(string)
+		*flattenedNotification.IntegrationName = m["alias"].(string)
 	case *alerts.AlertNotification_Recipients:
 		flattenedNotification.EmailRecipients = utils.WrappedStringSliceToStringSlice(integration.Recipients.Emails)
 	}

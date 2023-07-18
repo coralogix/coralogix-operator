@@ -16,7 +16,7 @@ spec:
     - groupByFields: [ "EventType" ]
       notifications:
         - notifyOn: TriggeredOnly
-          integrationID: 2235
+          integrationName: WebhookAlerts
           retriggeringPeriodMinutes: 1
         - notifyOn: TriggeredAndResolved
           emailRecipients: [ "example2@coralogix.com" ]

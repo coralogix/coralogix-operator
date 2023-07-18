@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -24,6 +26,7 @@ import (
 	"time"
 
 	utils "github.com/coralogix/coralogix-operator/apis"
+	"github.com/coralogix/coralogix-operator/controllers/clientset"
 	alerts "github.com/coralogix/coralogix-operator/controllers/clientset/grpc/alerts/v2"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -106,8 +109,9 @@ var (
 		NotifyOnTriggeredOnly:        alerts.NotifyOn_TRIGGERED_ONLY,
 		NotifyOnTriggeredAndResolved: alerts.NotifyOn_TRIGGERED_AND_RESOLVED,
 	}
-	msInHour   = int(time.Hour.Milliseconds())
-	msInMinute = int(time.Minute.Milliseconds())
+	msInHour       = int(time.Hour.Milliseconds())
+	msInMinute     = int(time.Minute.Milliseconds())
+	WebhooksClient *clientset.WebhooksClient
 )
 
 type ProtoTimeFrameAndRelativeTimeFrame struct {
@@ -1029,16 +1033,20 @@ func expandNotification(notification Notification) (*alerts.AlertNotification, e
 		NotifyOn:                  &notifyOn,
 	}
 
-	if integrationID := notification.IntegrationID; integrationID != nil {
+	if integrationName := notification.IntegrationName; integrationName != nil {
+		integrationID, err := extractIntegrationID(*integrationName)
+		if err != nil {
+			return nil, err
+		}
 		result.IntegrationType = &alerts.AlertNotification_IntegrationId{
-			IntegrationId: wrapperspb.UInt32(uint32(*integrationID)),
+			IntegrationId: wrapperspb.UInt32(integrationID),
 		}
 	}
 
 	emails := notification.EmailRecipients
 	{
 		if result.IntegrationType != nil && len(emails) != 0 {
-			return nil, fmt.Errorf("required exactly on of 'integrationID' or 'emailRecipients'")
+			return nil, fmt.Errorf("required exactly on of 'integrationName' or 'emailRecipients'")
 		}
 
 		if result.IntegrationType == nil {
@@ -1051,6 +1059,23 @@ func expandNotification(notification Notification) (*alerts.AlertNotification, e
 	}
 
 	return result, nil
+}
+
+func extractIntegrationID(name string) (uint32, error) {
+	webhooksStr, err := WebhooksClient.GetWebhooks(context.Background())
+	if err != nil {
+		return 0, err
+	}
+	var maps []map[string]interface{}
+	if err = json.Unmarshal([]byte(webhooksStr), &maps); err != nil {
+		return 0, err
+	}
+	for _, m := range maps {
+		if m["alias"] == name {
+			return uint32(m["id"].(float64)), nil
+		}
+	}
+	return 0, fmt.Errorf("integration with name %s not found", name)
 }
 
 func (in *AlertSpec) DeepEqual(actualAlert *AlertStatus) (bool, utils.Diff) {
@@ -1303,7 +1328,7 @@ type Notification struct {
 	NotifyOn NotifyOn `json:"notifyOn,omitempty"`
 
 	// +optional
-	IntegrationID *int32 `json:"integrationID,omitempty"`
+	IntegrationName *string `json:"integrationName,omitempty"`
 
 	// +optional
 	EmailRecipients []string `json:"emailRecipients,omitempty"`
@@ -1318,11 +1343,11 @@ func (in *Notification) DeepEqual(actualNotification Notification) (bool, utils.
 		}
 	}
 
-	if !reflect.DeepEqual(in.IntegrationID, actualNotification.IntegrationID) {
+	if !reflect.DeepEqual(in.IntegrationName, actualNotification.IntegrationName) {
 		return false, utils.Diff{
-			Name:    "IntegrationID",
-			Desired: in.IntegrationID,
-			Actual:  actualNotification.IntegrationID,
+			Name:    "IntegrationName",
+			Desired: in.IntegrationName,
+			Actual:  actualNotification.IntegrationName,
 		}
 	}
 
