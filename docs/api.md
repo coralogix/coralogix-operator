@@ -2217,12 +2217,10 @@ AlertSpec defines the desired state of Alert
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>integrationID</b></td>
-        <td>integer</td>
+        <td><b>integrationName</b></td>
+        <td>string</td>
         <td>
           <br/>
-          <br/>
-            <i>Format</i>: int32<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4485,12 +4483,10 @@ AlertStatus defines the observed state of Alert
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>integrationID</b></td>
-        <td>integer</td>
+        <td><b>integrationName</b></td>
+        <td>string</td>
         <td>
           <br/>
-          <br/>
-            <i>Format</i>: int32<br/>
         </td>
         <td>false</td>
       </tr><tr>
