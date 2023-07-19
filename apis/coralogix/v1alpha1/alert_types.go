@@ -153,7 +153,7 @@ type AlertSpec struct {
 	AlertType AlertType `json:"alertType"`
 }
 
-func (in *AlertSpec) ExtractCreateAlertRequest() (*alerts.CreateAlertRequest, error) {
+func (in *AlertSpec) ExtractCreateAlertRequest(ctx context.Context) (*alerts.CreateAlertRequest, error) {
 	enabled := wrapperspb.Bool(in.Active)
 	name := wrapperspb.String(in.Name)
 	description := wrapperspb.String(in.Description)
@@ -161,7 +161,7 @@ func (in *AlertSpec) ExtractCreateAlertRequest() (*alerts.CreateAlertRequest, er
 	metaLabels := expandMetaLabels(in.Labels)
 	expirationDate := expandExpirationDate(in.ExpirationDate)
 	showInInsight := expandShowInInsight(in.ShowInInsight)
-	notificationGroups, err := expandNotificationGroups(in.NotificationGroups)
+	notificationGroups, err := expandNotificationGroups(ctx, in.NotificationGroups)
 	if err != nil {
 		return nil, err
 	}
@@ -987,10 +987,10 @@ func expandShowInInsight(showInInsight *ShowInInsight) *alerts.ShowInInsight {
 	}
 }
 
-func expandNotificationGroups(notificationGroups []NotificationGroup) ([]*alerts.AlertNotificationGroups, error) {
+func expandNotificationGroups(ctx context.Context, notificationGroups []NotificationGroup) ([]*alerts.AlertNotificationGroups, error) {
 	result := make([]*alerts.AlertNotificationGroups, 0, len(notificationGroups))
 	for i, ng := range notificationGroups {
-		notificationGroup, err := expandNotificationGroup(ng)
+		notificationGroup, err := expandNotificationGroup(ctx, ng)
 		if err != nil {
 			return nil, fmt.Errorf("error on notificationGroups[%d] - %s", i, err.Error())
 		}
@@ -999,9 +999,9 @@ func expandNotificationGroups(notificationGroups []NotificationGroup) ([]*alerts
 	return result, nil
 }
 
-func expandNotificationGroup(notificationGroup NotificationGroup) (*alerts.AlertNotificationGroups, error) {
+func expandNotificationGroup(ctx context.Context, notificationGroup NotificationGroup) (*alerts.AlertNotificationGroups, error) {
 	groupFields := utils.StringSliceToWrappedStringSlice(notificationGroup.GroupByFields)
-	notifications, err := expandNotifications(notificationGroup.Notifications)
+	notifications, err := expandNotifications(ctx, notificationGroup.Notifications)
 	if err != nil {
 		return nil, err
 	}
@@ -1012,10 +1012,10 @@ func expandNotificationGroup(notificationGroup NotificationGroup) (*alerts.Alert
 	}, nil
 }
 
-func expandNotifications(notifications []Notification) ([]*alerts.AlertNotification, error) {
+func expandNotifications(ctx context.Context, notifications []Notification) ([]*alerts.AlertNotification, error) {
 	result := make([]*alerts.AlertNotification, 0, len(notifications))
 	for i, n := range notifications {
-		notification, err := expandNotification(n)
+		notification, err := expandNotification(ctx, n)
 		if err != nil {
 			return nil, fmt.Errorf("error on notifications[%d] - %s", i, err.Error())
 		}
@@ -1024,7 +1024,7 @@ func expandNotifications(notifications []Notification) ([]*alerts.AlertNotificat
 	return result, nil
 }
 
-func expandNotification(notification Notification) (*alerts.AlertNotification, error) {
+func expandNotification(ctx context.Context, notification Notification) (*alerts.AlertNotification, error) {
 	retriggeringPeriodSeconds := wrapperspb.UInt32(uint32(60 * notification.RetriggeringPeriodMinutes))
 	notifyOn := AlertSchemaNotifyOnToProtoNotifyOn[notification.NotifyOn]
 
@@ -1034,7 +1034,7 @@ func expandNotification(notification Notification) (*alerts.AlertNotification, e
 	}
 
 	if integrationName := notification.IntegrationName; integrationName != nil {
-		integrationID, err := extractIntegrationID(*integrationName)
+		integrationID, err := extractIntegrationID(ctx, *integrationName)
 		if err != nil {
 			return nil, err
 		}
@@ -1061,8 +1061,8 @@ func expandNotification(notification Notification) (*alerts.AlertNotification, e
 	return result, nil
 }
 
-func extractIntegrationID(name string) (uint32, error) {
-	webhooksStr, err := WebhooksClient.GetWebhooks(context.Background())
+func extractIntegrationID(ctx context.Context, name string) (uint32, error) {
+	webhooksStr, err := WebhooksClient.GetWebhooks(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -1213,7 +1213,7 @@ func DeepEqualNotificationGroups(notificationGroups []NotificationGroup, actualN
 	return false, utils.Diff{}
 }
 
-func (in *AlertSpec) ExtractUpdateAlertRequest(id string) (*alerts.UpdateAlertByUniqueIdRequest, error) {
+func (in *AlertSpec) ExtractUpdateAlertRequest(ctx context.Context, id string) (*alerts.UpdateAlertByUniqueIdRequest, error) {
 	uniqueIdentifier := wrapperspb.String(id)
 	enabled := wrapperspb.Bool(in.Active)
 	name := wrapperspb.String(in.Name)
@@ -1222,7 +1222,7 @@ func (in *AlertSpec) ExtractUpdateAlertRequest(id string) (*alerts.UpdateAlertBy
 	metaLabels := expandMetaLabels(in.Labels)
 	expirationDate := expandExpirationDate(in.ExpirationDate)
 	showInInsight := expandShowInInsight(in.ShowInInsight)
-	notificationGroups, err := expandNotificationGroups(in.NotificationGroups)
+	notificationGroups, err := expandNotificationGroups(ctx, in.NotificationGroups)
 	if err != nil {
 		return nil, err
 	}
