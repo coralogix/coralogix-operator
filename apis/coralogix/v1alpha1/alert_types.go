@@ -1034,7 +1034,7 @@ func expandNotification(ctx context.Context, notification Notification) (*alerts
 	}
 
 	if integrationName := notification.IntegrationName; integrationName != nil {
-		integrationID, err := extractIntegrationID(ctx, *integrationName)
+		integrationID, err := searchIntegrationID(ctx, *integrationName)
 		if err != nil {
 			return nil, err
 		}
@@ -1061,7 +1061,7 @@ func expandNotification(ctx context.Context, notification Notification) (*alerts
 	return result, nil
 }
 
-func extractIntegrationID(ctx context.Context, name string) (uint32, error) {
+func searchIntegrationID(ctx context.Context, name string) (uint32, error) {
 	webhooksStr, err := WebhooksClient.GetWebhooks(ctx)
 	if err != nil {
 		return 0, err
