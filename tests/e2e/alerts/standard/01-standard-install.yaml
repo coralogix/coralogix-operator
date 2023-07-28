@@ -7,7 +7,7 @@ metadata:
     app.kubernetes.io/part-of: coralogix-operator
     app.kuberentes.io/managed-by: kustomize
     app.kubernetes.io/created-by: coralogix-operator
-  name: standard-alert-example
+  name: standard-alert-example-01
 spec:
   name: standard alert example
   description: alert from k8s operator

@@ -7,15 +7,13 @@ metadata:
     app.kubernetes.io/part-of: coralogix-operator
     app.kuberentes.io/managed-by: kustomize
     app.kubernetes.io/created-by: coralogix-operator
-  name: standard-alert-example
+  name: standard-alert-example-03
 status:
   active: true
   alertType:
     standard:
       conditions:
         alertWhen: Immediately
-        groupBy:
-          - coralogix.metadata.sdkId
       filters:
         alias: ""
         applications:
@@ -33,13 +31,10 @@ status:
     managed-by: coralogix-operator
   name: standard alert example
   notificationGroups:
-    notifications:
-      - notifyOn: TriggeredOnly
-        integrationName: WebhookAlerts
-        retriggeringPeriodMinutes: 1
-      - notifyOn: TriggeredAndResolved
-        emailRecipients: [ "example2@coralogix.com" ]
-        retriggeringPeriodMinutes: 1440
+    - notifications:
+        - notifyOn: TriggeredOnly
+          integrationName: WebhookAlerts
+          retriggeringPeriodMinutes: 1
   scheduling:
     daysEnabled:
       - Wednesday
