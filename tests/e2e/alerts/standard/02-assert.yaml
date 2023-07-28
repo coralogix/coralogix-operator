@@ -1,0 +1,59 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/name: alert
+    app.kubernetes.io/instance: alert-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kuberentes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: standard-alert-example
+status:
+  active: true
+  alertType:
+    standard:
+      conditions:
+        alertWhen: MoreThanUsual
+        groupBy:
+          - coralogix.metadata.sdkId
+        threshold: 5
+      filters:
+        alias: ""
+        applications:
+          - filter:contains:nginx
+        searchQuery: remote_addr_enriched:/.*/
+        severities:
+          - Warning
+          - Info
+        subsystems:
+          - filter:startsWith:subsystem-name
+  description: alert from k8s operator
+  labels:
+    alert_type: security
+    security_severity: high
+    managed-by: coralogix-operator
+  name: standard alert example
+  #  notificationGroups:
+  #    - notifications:
+  #        - notifyOn: TriggeredOnly
+  #          integrationName: WebhookAlerts
+  #          retriggeringPeriodMinutes: 1
+  #        - notifyOn: TriggeredAndResolved
+  #          emailRecipients: [ "example@coralogix.com" ]
+  #          retriggeringPeriodMinutes: 1440
+  #    - groupByFields: [ "coralogix.metadata.sdkId" ]
+  #      notifications:
+  #        - notifyOn: TriggeredOnly
+  #          integrationName: WebhookAlerts
+  #          retriggeringPeriodMinutes: 1
+  #        - notifyOn: TriggeredAndResolved
+  #          emailRecipients: [ "example2@coralogix.com" ]
+  #          retriggeringPeriodMinutes: 1440
+  scheduling:
+    daysEnabled:
+      - Wednesday
+      - Thursday
+    endTime: "20:00"
+    startTime: "08:00"
+    timeZone: UTC+02
+  severity: Info
