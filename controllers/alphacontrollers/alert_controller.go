@@ -367,6 +367,9 @@ func flattenStandardCondition(condition *alerts.AlertCondition) coralogixv1alpha
 	var standardCondition coralogixv1alpha1.StandardConditions
 	var conditionParams *alerts.ConditionParameters
 
+	standardCondition.Threshold = new(int)
+	standardCondition.TimeWindow = new(coralogixv1alpha1.TimeWindow)
+
 	switch condition := condition.GetCondition().(type) {
 	case *alerts.AlertCondition_LessThan:
 		conditionParams = condition.LessThan.GetParameters()
@@ -391,9 +394,7 @@ func flattenStandardCondition(condition *alerts.AlertCondition) coralogixv1alpha
 	case *alerts.AlertCondition_MoreThan:
 		conditionParams = condition.MoreThan.GetParameters()
 		standardCondition.AlertWhen = coralogixv1alpha1.StandardAlertWhenMoreThan
-		standardCondition.Threshold = new(int)
 		*standardCondition.Threshold = int(conditionParams.GetThreshold().GetValue())
-		standardCondition.TimeWindow = new(coralogixv1alpha1.TimeWindow)
 		*standardCondition.TimeWindow = coralogixv1alpha1.TimeWindow(alertProtoTimeWindowToSchemaTimeWindow[conditionParams.GetTimeframe()])
 	case *alerts.AlertCondition_MoreThanUsual:
 		conditionParams = condition.MoreThanUsual.GetParameters()
