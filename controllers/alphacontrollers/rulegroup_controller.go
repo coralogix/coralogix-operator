@@ -144,6 +144,15 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		if createRuleGroupResp, err := rulesGroupsClient.CreateRuleGroup(ctx, createRuleGroupReq); err == nil {
 			jstr, _ := jsm.MarshalToString(createRuleGroupResp)
 			log.V(1).Info("Rule-Group was updated", "ruleGroup", jstr)
+
+			//To avoid a situation of the operator falling between the creation of the ruleGroup in coralogix and being saved in the cluster (something that would cause it to be created again and again), its id will be saved ASAP.
+			id := createRuleGroupResp.GetRuleGroup().GetId().GetValue()
+			ruleGroupCRD.Status = coralogixv1alpha1.RuleGroupStatus{ID: &id}
+			if err := r.Status().Update(ctx, ruleGroupCRD); err != nil {
+				log.Error(err, "Error on updating RecordingRuleGroupSet status", "Name", ruleGroupCRD.Name, "Namespace", ruleGroupCRD.Namespace)
+				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			}
+
 			ruleGroupCRD.Status = *flattenRuleGroup(createRuleGroupResp.GetRuleGroup())
 			if err := r.Status().Update(ctx, ruleGroupCRD); err != nil {
 				log.V(1).Error(err, "updating crd")

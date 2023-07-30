@@ -144,6 +144,15 @@ func (r *RecordingRuleGroupSetReconciler) Reconcile(ctx context.Context, req ctr
 		if createRRGResp, err := rRGClient.CreateRecordingRuleGroupSet(ctx, createRuleGroupReq); err == nil {
 			jstr, _ := jsm.MarshalToString(createRRGResp)
 			log.V(1).Info("RecordingRuleGroupSet was updated", "RecordingRuleGroupSet", jstr)
+
+			//To avoid a situation of the operator falling between the creation of the ruleGroup in coralogix and being saved in the cluster (something that would cause it to be created again and again), its id will be saved ASAP.
+			id := createRRGResp.Id
+			ruleGroupSetCRD.Status = coralogixv1alpha1.RecordingRuleGroupSetStatus{ID: &id}
+			if err := r.Status().Update(ctx, ruleGroupSetCRD); err != nil {
+				log.Error(err, "Error on updating RecordingRuleGroupSet status", "Name", ruleGroupSetCRD.Name, "Namespace", ruleGroupSetCRD.Namespace)
+				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			}
+
 			getRuleGroupReq := &rrg.FetchRuleGroupSet{Id: createRRGResp.Id}
 			var getRRGResp *rrg.OutRuleGroupSet
 			if getRRGResp, err = rRGClient.GetRecordingRuleGroupSet(ctx, getRuleGroupReq); err != nil || ruleGroupSetCRD == nil {

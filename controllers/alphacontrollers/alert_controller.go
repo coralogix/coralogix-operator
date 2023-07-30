@@ -183,10 +183,19 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		if createAlertResp, err := alertsClient.CreateAlert(ctx, createAlertReq); err == nil {
 			jstr, _ = jsm.MarshalToString(createAlertResp)
 			log.V(1).Info("Alert was created", "alert", jstr)
+
+			//To avoid a situation of the operator falling between the creation of the alert in coralogix and being saved in the cluster (something that would cause it to be created again and again), its id will be saved ASAP.
+			id := createAlertResp.GetAlert().GetId().GetValue()
+			alertCRD.Status = coralogixv1alpha1.AlertStatus{ID: &id}
+			if err := r.Status().Update(ctx, alertCRD); err != nil {
+				log.Error(err, "Error on updating alert status", "Name", alertCRD.Name, "Namespace", alertCRD.Namespace)
+				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			}
+
 			actualState, flattenErr = flattenAlert(ctx, createAlertResp.GetAlert(), alertCRD.Spec)
 			alertCRD.Status = *actualState
 			if err := r.Status().Update(ctx, alertCRD); err != nil {
-				log.Error(err, "Error on updating alert", "Name", alertCRD.Name, "Namespace", alertCRD.Namespace)
+				log.Error(err, "Error on updating alert status", "Name", alertCRD.Name, "Namespace", alertCRD.Namespace)
 				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 			}
 			return ctrl.Result{RequeueAfter: defaultRequeuePeriod}, nil

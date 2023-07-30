@@ -1660,12 +1660,12 @@ func (in *AlertType) DeepEqual(actualAlert AlertType) (bool, utils.Diff) {
 	}
 
 	if tracing := in.Tracing; tracing != nil {
-		if actulTracing := actualAlert.Tracing; actulTracing == nil {
+		if actualTracing := actualAlert.Tracing; actualTracing == nil {
 			return false, utils.Diff{
 				Name:   "Type",
 				Actual: "Tracing",
 			}
-		} else if equal, diff := tracing.DeepEqual(*actulTracing); !equal {
+		} else if equal, diff := tracing.DeepEqual(*actualTracing); !equal {
 			return false, utils.Diff{
 				Name:    fmt.Sprintf("Tracing.%s", diff.Name),
 				Desired: diff.Desired,
