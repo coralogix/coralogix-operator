@@ -160,6 +160,10 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		notFount = true
 	} else if err == nil {
 		actualState, flattenErr = flattenAlert(ctx, getAlertResp.GetAlert(), alertCRD.Spec)
+		if flattenErr != nil {
+			log.Error(flattenErr, "Received an error while flattened Alert")
+			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, flattenErr
+		}
 	}
 
 	if notFount {
@@ -193,6 +197,10 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			}
 
 			actualState, flattenErr = flattenAlert(ctx, createAlertResp.GetAlert(), alertCRD.Spec)
+			if flattenErr != nil {
+				log.Error(flattenErr, "Received an error while flattened Alert")
+				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, flattenErr
+			}
 			alertCRD.Status = *actualState
 			if err := r.Status().Update(ctx, alertCRD); err != nil {
 				log.Error(err, "Error on updating alert status", "Name", alertCRD.Name, "Namespace", alertCRD.Namespace)
@@ -223,11 +231,6 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 		jstr, _ := jsm.MarshalToString(updateAlertResp)
 		log.V(1).Info("Alert was updated", "alert", jstr)
-	}
-
-	if flattenErr != nil {
-		log.Error(err, "Received an error while flattened Alert")
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 	}
 
 	return ctrl.Result{RequeueAfter: defaultRequeuePeriod}, nil
