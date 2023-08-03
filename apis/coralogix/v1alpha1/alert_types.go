@@ -1197,20 +1197,59 @@ func DeepEqualNotificationGroups(notificationGroups []NotificationGroup, actualN
 		}
 	}
 
-	for i := range notificationGroups {
-		notificationGroup, actualNotificationGroup := notificationGroups[i], actualNotificationGroups[i]
-		{
-			if equal, diff := notificationGroup.DeepEqual(actualNotificationGroup); !equal {
-				return false, utils.Diff{
-					Name:    fmt.Sprintf("Notifications.%d.%s", i, diff.Name),
-					Desired: diff.Desired,
-					Actual:  diff.Actual,
+	desiredGroupByFieldsToNotification := getGroupByFieldsToNotificationMap(notificationGroups)
+	actualGroupByFieldsToNotification := getGroupByFieldsToNotificationMap(actualNotificationGroups)
+	for groupByFields, notifications := range desiredGroupByFieldsToNotification {
+		if actualNotifications, ok := actualGroupByFieldsToNotification[groupByFields]; !ok {
+			return false, utils.Diff{
+				Name:    fmt.Sprintf("Notifications.gropup-by:%s", groupByFields),
+				Desired: notifications,
+				Actual:  nil,
+			}
+		} else {
+			desiredNotificationsByIntegrationName := getNotificationsByIntegrationNameMap(notifications)
+			actualNotificationsByIntegrationName := getNotificationsByIntegrationNameMap(actualNotifications)
+
+			for integrationName, notification := range desiredNotificationsByIntegrationName {
+				if actualNotification, ok := actualNotificationsByIntegrationName[integrationName]; !ok {
+					return false, utils.Diff{
+						Name:    fmt.Sprintf("Notifications.gropup-by:%s.%s", groupByFields, integrationName),
+						Desired: notification,
+						Actual:  nil,
+					}
+				} else if equal, diff := notification.DeepEqual(actualNotification); !equal {
+					return false, utils.Diff{
+						Name:    fmt.Sprintf("Notifications.gropup-by:%s.%s.%s", groupByFields, integrationName, diff.Name),
+						Desired: diff.Desired,
+						Actual:  diff.Actual,
+					}
 				}
 			}
 		}
 	}
 
 	return true, utils.Diff{}
+}
+
+func getGroupByFieldsToNotificationMap(notificationGroups []NotificationGroup) map[string][]Notification {
+	groupByFieldsToNotification := make(map[string][]Notification)
+	for _, notificationGroup := range notificationGroups {
+		groupByFields := fmt.Sprintf("%+q", notificationGroup.GroupByFields)
+		groupByFieldsToNotification[groupByFields] = notificationGroup.Notifications
+	}
+	return groupByFieldsToNotification
+}
+
+func getNotificationsByIntegrationNameMap(notifications []Notification) map[string]Notification {
+	notificationsByIntegrationName := make(map[string]Notification)
+	for _, notification := range notifications {
+		if notification.IntegrationName != nil {
+			notificationsByIntegrationName[*notification.IntegrationName] = notification
+		} else {
+			notificationsByIntegrationName["emailRecipients"] = notification
+		}
+	}
+	return notificationsByIntegrationName
 }
 
 func (in *AlertSpec) ExtractUpdateAlertRequest(ctx context.Context, id string) (*alerts.UpdateAlertByUniqueIdRequest, error) {
@@ -1338,8 +1377,8 @@ func (in *Notification) DeepEqual(actualNotification Notification) (bool, utils.
 	if in.RetriggeringPeriodMinutes != actualNotification.RetriggeringPeriodMinutes {
 		return false, utils.Diff{
 			Name:    "RetriggeringPeriodMinutes",
-			Desired: in.RetriggeringPeriodMinutes,
-			Actual:  actualNotification.RetriggeringPeriodMinutes,
+			Desired: fmt.Sprintf("%d", in.RetriggeringPeriodMinutes),
+			Actual:  fmt.Sprintf("%d", actualNotification.RetriggeringPeriodMinutes),
 		}
 	}
 
