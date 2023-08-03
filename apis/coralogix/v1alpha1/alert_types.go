@@ -1324,43 +1324,6 @@ type NotificationGroup struct {
 	Notifications []Notification `json:"notifications,omitempty"`
 }
 
-func (in *NotificationGroup) DeepEqual(actualNotificationGroup NotificationGroup) (bool, utils.Diff) {
-	if groupByFields, actualGroupByFields := in.GroupByFields, actualNotificationGroup.GroupByFields; !utils.SlicesWithUniqueValuesEqual(groupByFields, actualGroupByFields) {
-		return false, utils.Diff{
-			Name:    "GroupByFields",
-			Desired: groupByFields,
-			Actual:  actualGroupByFields,
-		}
-	}
-
-	notifications, actualNotifications := in.Notifications, actualNotificationGroup.Notifications
-	{
-		if length, actualLength := len(notifications), len(actualNotifications); length != actualLength {
-			return false, utils.Diff{
-				Name:    "Notifications.Length",
-				Desired: length,
-				Actual:  actualLength,
-			}
-		}
-
-		for i := range notifications {
-			notification, actualNotification := notifications[i], actualNotifications[i]
-			{
-				if equal, diff := notification.DeepEqual(actualNotification); !equal {
-					return false, utils.Diff{
-						Name:    fmt.Sprintf("Notifications[%d].%s", i, diff.Name),
-						Desired: diff.Desired,
-						Actual:  diff.Actual,
-					}
-				}
-			}
-
-		}
-	}
-
-	return true, utils.Diff{}
-}
-
 type Notification struct {
 	RetriggeringPeriodMinutes int32 `json:"retriggeringPeriodMinutes,omitempty"`
 
