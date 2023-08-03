@@ -1210,7 +1210,7 @@ func DeepEqualNotificationGroups(notificationGroups []NotificationGroup, actualN
 		}
 	}
 
-	return false, utils.Diff{}
+	return true, utils.Diff{}
 }
 
 func (in *AlertSpec) ExtractUpdateAlertRequest(ctx context.Context, id string) (*alerts.UpdateAlertByUniqueIdRequest, error) {
