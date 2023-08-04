@@ -14,3 +14,8 @@ jobs:
       with:
         go-version-file: go.mod
     - run: make test
+    - name: Patch Coverage
+      uses: seriousben/go-patch-cover-action@v1
+      with:
+        version: v0.2.0
+        coverage_filename: cover.out
