@@ -263,6 +263,8 @@ func flattenAlert(ctx context.Context, actualAlert *alerts.Alert, spec coralogix
 
 	status.ShowInInsight = flattenShowInInsight(actualAlert.GetShowInInsight())
 
+	status.PayloadFilters = utils.WrappedStringSliceToStringSlice(actualAlert.GetNotificationPayloadFilters())
+
 	return &status, err
 }
 
