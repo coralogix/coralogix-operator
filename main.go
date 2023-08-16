@@ -53,6 +53,7 @@ var (
 		"EUROPE2": "ng-api-grpc.eu2.coralogix.com:443",
 		"USA1":    "ng-api-grpc.coralogix.us:443",
 		"STG":     "ng-api-grpc.app.staging.coralogix.net:443",
+		"USA2":    "ng-api-grpc.cx498.coralogix.com:443",
 	}
 	validRegions = utils.GetKeys(regionToGrpcUrl)
 )
