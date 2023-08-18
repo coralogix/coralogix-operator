@@ -1,3 +1,4 @@
+---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -17,13 +18,18 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: RecordingRuleGroupSet is the Schema for the recordingrulegroupsets API
+        description: RecordingRuleGroupSet is the Schema for the recordingrulegroupsets
+          API
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
             type: string
           metadata:
             type: object
@@ -42,7 +48,9 @@ spec:
                       format: int64
                       type: integer
                     name:
-                      description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster Important: Run "make" to regenerate code after modifying this file'
+                      description: 'INSERT ADDITIONAL SPEC FIELDS - desired state
+                        of cluster Important: Run "make" to regenerate code after
+                        modifying this file'
                       type: string
                     rules:
                       items:
@@ -64,7 +72,8 @@ spec:
             - groups
             type: object
           status:
-            description: RecordingRuleGroupSetStatus defines the observed state of RecordingRuleGroupSet
+            description: RecordingRuleGroupSetStatus defines the observed state of
+              RecordingRuleGroupSet
             properties:
               groups:
                 items:
@@ -78,7 +87,9 @@ spec:
                       format: int64
                       type: integer
                     name:
-                      description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster Important: Run "make" to regenerate code after modifying this file'
+                      description: 'INSERT ADDITIONAL SPEC FIELDS - desired state
+                        of cluster Important: Run "make" to regenerate code after
+                        modifying this file'
                       type: string
                     rules:
                       items:

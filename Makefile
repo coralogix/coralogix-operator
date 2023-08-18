@@ -165,3 +165,11 @@ $(CRDOC): $(LOCALBIN)
 
 e2e:
 	kubectl kuttl test
+
+.PHONY: helm-check-crd-version
+helm-check-crd-version:
+	sh scripts/helm-check-crd-version.sh
+
+.PHONY: helm-update-crds
+helm-update-crds:
+	sh scripts/helm-update-crds.sh
