@@ -65,7 +65,7 @@ secret:
 
   # -- Coralogix operator secret data
   data:
-    apiKey: ""
+    apiKey: "xablaus"
 
 # --  kube-rbac-proxy container config
 kubeRbacProxy:
