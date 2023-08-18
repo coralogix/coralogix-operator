@@ -4,9 +4,13 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - "charts/**"
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - "charts/**"
 
 jobs:
   check-docs:
