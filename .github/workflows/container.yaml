@@ -45,6 +45,15 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
+      - uses: actions/checkout@v2
+
+          - name: Fetch latest release version
+            id: fetch-latest-release
+            uses: reloc8/action-latest-release-version@1.0.0
+
+          - name: Test
+            run: echo ${{ steps.fetch-latest-release.outputs.latest-release }}
+
       - name: Build And Push
         uses: docker/build-push-action@v2.8.0
         with:
@@ -53,5 +62,5 @@ jobs:
           push: ${{ github.repository == 'coralogix/coralogix-operator' && github.event_name != 'pull_request'}}
           tags: |
             ${{ steps.meta.outputs.tags }}
-            coralogix/coralogix-operator:${{ github.ref_name }}
+            coralogix/coralogix-operator:${{ steps.fetch-latest-release.outputs.latest-release }}
             coralogix/coralogix-operator:latest
