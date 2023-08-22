@@ -1392,6 +1392,7 @@ func (in *ShowInInsight) DeepEqual(actualShowInInsight ShowInInsight) (bool, uti
 	return true, utils.Diff{}
 }
 
+// +kubebuilder:validation:Enum=TriggeredOnly;TriggeredAndResolved;
 type NotifyOn string
 
 const (

@@ -867,6 +867,9 @@ spec:
                           integrationName:
                             type: string
                           notifyOn:
+                            enum:
+                            - TriggeredOnly
+                            - TriggeredAndResolved
                             type: string
                           retriggeringPeriodMinutes:
                             format: int32
@@ -915,6 +918,9 @@ spec:
                 properties:
                   notifyOn:
                     default: TriggeredOnly
+                    enum:
+                    - TriggeredOnly
+                    - TriggeredAndResolved
                     type: string
                   retriggeringPeriodMinutes:
                     format: int32
@@ -1761,6 +1767,9 @@ spec:
                           integrationName:
                             type: string
                           notifyOn:
+                            enum:
+                            - TriggeredOnly
+                            - TriggeredAndResolved
                             type: string
                           retriggeringPeriodMinutes:
                             format: int32
@@ -1809,6 +1818,9 @@ spec:
                 properties:
                   notifyOn:
                     default: TriggeredOnly
+                    enum:
+                    - TriggeredOnly
+                    - TriggeredAndResolved
                     type: string
                   retriggeringPeriodMinutes:
                     format: int32

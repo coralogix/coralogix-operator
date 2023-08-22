@@ -2218,9 +2218,11 @@ AlertSpec defines the desired state of Alert
         <td>false</td>
       </tr><tr>
         <td><b>notifyOn</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: TriggeredOnly, TriggeredAndResolved<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2304,10 +2306,11 @@ AlertSpec defines the desired state of Alert
     </thead>
     <tbody><tr>
         <td><b>notifyOn</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
           <br/>
           <br/>
+            <i>Enum</i>: TriggeredOnly, TriggeredAndResolved<br/>
             <i>Default</i>: TriggeredOnly<br/>
         </td>
         <td>false</td>
@@ -4477,9 +4480,11 @@ AlertStatus defines the observed state of Alert
         <td>false</td>
       </tr><tr>
         <td><b>notifyOn</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: TriggeredOnly, TriggeredAndResolved<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4563,10 +4568,11 @@ AlertStatus defines the observed state of Alert
     </thead>
     <tbody><tr>
         <td><b>notifyOn</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
           <br/>
           <br/>
+            <i>Enum</i>: TriggeredOnly, TriggeredAndResolved<br/>
             <i>Default</i>: TriggeredOnly<br/>
         </td>
         <td>false</td>
