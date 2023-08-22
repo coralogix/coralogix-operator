@@ -750,13 +750,6 @@ AlertSpec defines the desired state of Alert
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>groupBy</b></td>
-        <td>[]string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b><a href="#alertspecalerttypemetricpromqlconditionsmanageundetectedvalues">manageUndetectedValues</a></b></td>
         <td>object</td>
         <td>
@@ -3015,13 +3008,6 @@ AlertStatus defines the observed state of Alert
             <i>Enum</i>: Minute, FiveMinutes, TenMinutes, FifteenMinutes, TwentyMinutes, ThirtyMinutes, Hour, TwoHours, FourHours, SixHours, TwelveHours, TwentyFourHours<br/>
         </td>
         <td>true</td>
-      </tr><tr>
-        <td><b>groupBy</b></td>
-        <td>[]string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
       </tr><tr>
         <td><b><a href="#alertstatusalerttypemetricpromqlconditionsmanageundetectedvalues">manageUndetectedValues</a></b></td>
         <td>object</td>

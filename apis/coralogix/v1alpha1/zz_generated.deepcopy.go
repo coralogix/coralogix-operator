@@ -749,11 +749,6 @@ func (in *Promql) DeepCopy() *Promql {
 func (in *PromqlConditions) DeepCopyInto(out *PromqlConditions) {
 	*out = *in
 	out.Threshold = in.Threshold.DeepCopy()
-	if in.GroupBy != nil {
-		in, out := &in.GroupBy, &out.GroupBy
-		*out = make([]string, len(*in))
-		copy(*out, *in)
-	}
 	if in.MinNonNullValuesPercentage != nil {
 		in, out := &in.MinNonNullValuesPercentage, &out.MinNonNullValuesPercentage
 		*out = new(int)

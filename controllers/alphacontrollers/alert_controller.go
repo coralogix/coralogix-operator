@@ -622,7 +622,6 @@ func flattenPromqlAlert(conditionParams *alerts.ConditionParameters, promqlParam
 		Threshold:                   utils.FloatToQuantity(conditionParams.GetThreshold().GetValue()),
 		SampleThresholdPercentage:   int(promqlParams.GetSampleThresholdPercentage().GetValue()),
 		TimeWindow:                  coralogixv1alpha1.MetricTimeWindow(alertProtoTimeWindowToSchemaTimeWindow[conditionParams.GetTimeframe()]),
-		GroupBy:                     utils.WrappedStringSliceToStringSlice(conditionParams.GetGroupBy()),
 		ReplaceMissingValueWithZero: promqlParams.GetSwapNullValues().GetValue(),
 	}
 

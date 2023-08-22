@@ -2409,9 +2409,6 @@ type PromqlConditions struct {
 	TimeWindow MetricTimeWindow `json:"timeWindow"`
 
 	// +optional
-	GroupBy []string `json:"groupBy,omitempty"`
-
-	// +optional
 	ReplaceMissingValueWithZero bool `json:"replaceMissingValueWithZero,omitempty"`
 
 	// +kubebuilder:validation:Minimum:=0
@@ -2428,14 +2425,6 @@ func (in *PromqlConditions) DeepEqual(actualCondition PromqlConditions) (bool, u
 			Name:    "Threshold",
 			Desired: in.Threshold,
 			Actual:  actualCondition.Threshold,
-		}
-	}
-
-	if !utils.SlicesWithUniqueValuesEqual(in.GroupBy, actualCondition.GroupBy) {
-		return false, utils.Diff{
-			Name:    "GroupBy",
-			Desired: in.GroupBy,
-			Actual:  actualCondition.GroupBy,
 		}
 	}
 

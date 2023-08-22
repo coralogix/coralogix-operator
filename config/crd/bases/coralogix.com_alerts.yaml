@@ -194,10 +194,6 @@ spec:
                                 - More
                                 - Less
                                 type: string
-                              groupBy:
-                                items:
-                                  type: string
-                                type: array
                               manageUndetectedValues:
                                 properties:
                                   autoRetireRatio:
@@ -1091,10 +1087,6 @@ spec:
                                 - More
                                 - Less
                                 type: string
-                              groupBy:
-                                items:
-                                  type: string
-                                type: array
                               manageUndetectedValues:
                                 properties:
                                   autoRetireRatio:
