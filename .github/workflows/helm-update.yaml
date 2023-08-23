@@ -23,16 +23,11 @@ jobs:
           CURRENT_VERSION=$(grep "version:" charts/coralogix-operator/Chart.yaml | awk '{print $2}')
           NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. -v OFS=. '{$3+=1}1')
 
-          echo "${{ github.ref_name }}"
-
-          git checkout -b update-chart-version-${TAG}
-
           sed -i "s/appVersion:.*/appVersion: $TAG/" charts/coralogix-operator/Chart.yaml
           sed -i "s/version:.*/version: $NEW_VERSION/" charts/coralogix-operator/Chart.yaml
 
           git add charts/coralogix-operator/Chart.yaml
           git commit -m "Bump version and update appVersion in Chart.yaml"
-          git push origin update-chart-version-${TAG}
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
