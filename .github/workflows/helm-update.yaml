@@ -19,9 +19,11 @@ jobs:
 
       - name: Update Chart Version
         run: |
-          TAG=$(echo "${{ github.event.ref }}" | sed -n 's/refs\/tags\/v\(.*\)/\1/p')
+          TAG="${{ github.ref_name }}"
           CURRENT_VERSION=$(grep "version:" charts/coralogix-operator/Chart.yaml | awk '{print $2}')
           NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. -v OFS=. '{$3+=1}1')
+
+          echo "${{ github.ref_name }}"
 
           git checkout -b update-chart-version-${TAG}
 
