@@ -20,10 +20,11 @@ jobs:
       - name: Update Chart Version
         run: |
           TAG="${{ github.ref_name }}"
+          TAG_VERSION=$(echo $TAG | sed 's/v//')
           CURRENT_VERSION=$(grep "version:" charts/coralogix-operator/Chart.yaml | awk '{print $2}')
           NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. -v OFS=. '{$3+=1}1')
 
-          sed -i "s/appVersion:.*/appVersion: $TAG/" charts/coralogix-operator/Chart.yaml
+          sed -i "s/appVersion:.*/appVersion: $TAG_VERSION/" charts/coralogix-operator/Chart.yaml
           sed -i "s/version:.*/version: $NEW_VERSION/" charts/coralogix-operator/Chart.yaml
 
       - name: Create Pull Request
