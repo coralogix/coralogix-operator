@@ -26,9 +26,6 @@ jobs:
           sed -i "s/appVersion:.*/appVersion: $TAG/" charts/coralogix-operator/Chart.yaml
           sed -i "s/version:.*/version: $NEW_VERSION/" charts/coralogix-operator/Chart.yaml
 
-          git add charts/coralogix-operator/Chart.yaml
-          git commit -m "Bump version and update appVersion in Chart.yaml"
-
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
@@ -37,5 +34,7 @@ jobs:
           title: "Bump version and update appVersion in Chart.yaml"
           base: main
           branch: update-chart-version-${{ github.ref_name }}
+          add-paths: |
+            charts/coralogix-operator/Chart.yaml
           body: |
             This pull request bumps the version and updates the appVersion in Chart.yaml to match the tag.
