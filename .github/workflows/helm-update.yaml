@@ -40,6 +40,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "Bump version and update appVersion in Chart.yaml"
           title: "Bump version and update appVersion in Chart.yaml"
+          base: main
           branch: update-chart-version-${{ github.ref_name }}
           body: |
             This pull request bumps the version and updates the appVersion in Chart.yaml to match the tag.
