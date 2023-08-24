@@ -105,6 +105,11 @@ func (r *RecordingRuleGroupSetReconciler) Reconcile(ctx context.Context, req ctr
 			deleteRRGReq := &rrg.DeleteRuleGroupSet{Id: id}
 			log.V(1).Info("Deleting RecordingRuleGroupSet", "recordingRuleGroup ID", id)
 			if _, err := rRGClient.DeleteRecordingRuleGroupSet(ctx, deleteRRGReq); err != nil {
+				if status.Code(err) == codes.NotFound {
+					controllerutil.RemoveFinalizer(ruleGroupSetCRD, myFinalizerName)
+					err := r.Update(ctx, ruleGroupSetCRD)
+					return ctrl.Result{}, err
+				}
 				// if fail to delete the external dependency here, return with error
 				// so that it can be retried
 				log.Error(err, "Received an error while Deleting a RecordingRuleGroupSet", "recordingRuleGroup ID", id)
