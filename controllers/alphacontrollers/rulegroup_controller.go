@@ -78,6 +78,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 	}
 
+	//TODO: rename finalizer
 	// name of our custom finalizer
 	myFinalizerName := "batch.tutorial.kubebuilder.io/finalizer"
 
@@ -124,20 +125,29 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, nil
 	}
 
-	var notFount bool
-	var err error
-	var actualState *coralogixv1alpha1.RuleGroupStatus
+	var (
+		notFound    bool
+		err         error
+		actualState *coralogixv1alpha1.RuleGroupStatus
+	)
+
 	if id := ruleGroupCRD.Status.ID; id == nil {
 		log.V(1).Info("ruleGroup wasn't created")
-		notFount = true
+		notFound = true
 	} else if getRuleGroupResp, err := rulesGroupsClient.GetRuleGroup(ctx, &rulesgroups.GetRuleGroupRequest{GroupId: *id}); status.Code(err) == codes.NotFound {
+		// TODO: this needs more error handling, what if it returns internal error?
+
 		log.V(1).Info("ruleGroup doesn't exist in Coralogix backend")
-		notFount = true
+		notFound = true
 	} else if err == nil {
-		actualState = flattenRuleGroup(getRuleGroupResp.GetRuleGroup())
+		actualState, err = flattenRuleGroup(getRuleGroupResp.GetRuleGroup())
+		if err != nil {
+			log.Error(err, "Error mapping coralogix API response", "Name", ruleGroupCRD.Name, "Namespace", ruleGroupCRD.Namespace)
+			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		}
 	}
 
-	if notFount {
+	if notFound {
 		createRuleGroupReq := ruleGroupCRD.Spec.ExtractCreateRuleGroupRequest()
 		jstr, _ := jsm.MarshalToString(createRuleGroupReq)
 		log.V(1).Info("Creating Rule-Group", "ruleGroup", jstr)
@@ -153,7 +163,12 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 			}
 
-			ruleGroupCRD.Status = *flattenRuleGroup(createRuleGroupResp.GetRuleGroup())
+			status, err := flattenRuleGroup(createRuleGroupResp.GetRuleGroup())
+			if err != nil {
+				log.Error(err, "Error mapping coralogix API response", "Name", ruleGroupCRD.Name, "Namespace", ruleGroupCRD.Namespace)
+				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			}
+			ruleGroupCRD.Status = *status
 			if err := r.Status().Update(ctx, ruleGroupCRD); err != nil {
 				log.V(1).Error(err, "updating crd")
 			}
@@ -182,7 +197,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	return ctrl.Result{RequeueAfter: defaultRequeuePeriod}, nil
 }
 
-func flattenRuleGroup(ruleGroup *rulesgroups.RuleGroup) *coralogixv1alpha1.RuleGroupStatus {
+func flattenRuleGroup(ruleGroup *rulesgroups.RuleGroup) (*coralogixv1alpha1.RuleGroupStatus, error) {
 	var status coralogixv1alpha1.RuleGroupStatus
 
 	status.ID = new(string)
@@ -192,7 +207,11 @@ func flattenRuleGroup(ruleGroup *rulesgroups.RuleGroup) *coralogixv1alpha1.RuleG
 
 	status.Active = ruleGroup.GetEnabled().GetValue()
 
-	status.Applications, status.Subsystems, status.Severities = flattenRuleMatcher(ruleGroup.GetRuleMatchers())
+	var err error
+	status.Applications, status.Subsystems, status.Severities, err = flattenRuleMatcher(ruleGroup.GetRuleMatchers())
+	if err != nil {
+		return nil, fmt.Errorf("flattenRuleGroup name: %s: %w", ruleGroup.GetName().GetValue(), err)
+	}
 
 	status.Description = ruleGroup.Description.GetValue()
 
@@ -203,21 +222,27 @@ func flattenRuleGroup(ruleGroup *rulesgroups.RuleGroup) *coralogixv1alpha1.RuleG
 
 	status.Hidden = ruleGroup.GetHidden().GetValue()
 
-	status.RuleSubgroups = flattenRuleSubGroups(ruleGroup.GetRuleSubgroups())
-
-	return &status
+	subGroups, err := flattenRuleSubGroups(ruleGroup.GetRuleSubgroups())
+	if err != nil {
+		return nil, fmt.Errorf("flattenRuleGroup name: %s: %w", ruleGroup.GetName().GetValue(), err)
+	}
+	status.RuleSubgroups = subGroups
+	return &status, nil
 }
 
-func flattenRuleSubGroups(subgroups []*rulesgroups.RuleSubgroup) []coralogixv1alpha1.RuleSubGroup {
+func flattenRuleSubGroups(subgroups []*rulesgroups.RuleSubgroup) ([]coralogixv1alpha1.RuleSubGroup, error) {
 	result := make([]coralogixv1alpha1.RuleSubGroup, 0, len(subgroups))
 	for _, sg := range subgroups {
-		subgroup := flattenRuleSubGroup(sg)
+		subgroup, err := flattenRuleSubGroup(sg)
+		if err != nil {
+			return nil, fmt.Errorf("flattenRuleSubGroups subGroupId: %s: %w", sg.GetId().GetValue(), err)
+		}
 		result = append(result, subgroup)
 	}
-	return result
+	return result, nil
 }
 
-func flattenRuleSubGroup(subGroup *rulesgroups.RuleSubgroup) coralogixv1alpha1.RuleSubGroup {
+func flattenRuleSubGroup(subGroup *rulesgroups.RuleSubgroup) (coralogixv1alpha1.RuleSubGroup, error) {
 	var result coralogixv1alpha1.RuleSubGroup
 
 	result.ID = new(string)
@@ -228,21 +253,27 @@ func flattenRuleSubGroup(subGroup *rulesgroups.RuleSubgroup) coralogixv1alpha1.R
 	result.Order = new(int32)
 	*result.Order = int32(subGroup.GetOrder().GetValue())
 
-	result.Rules = flattenRules(subGroup.Rules)
-
-	return result
+	rules, err := flattenRules(subGroup.Rules)
+	if err != nil {
+		return coralogixv1alpha1.RuleSubGroup{}, fmt.Errorf("flattenRuleSubGroup: %w", err)
+	}
+	result.Rules = rules
+	return result, nil
 }
 
-func flattenRules(rules []*rulesgroups.Rule) []coralogixv1alpha1.Rule {
+func flattenRules(rules []*rulesgroups.Rule) ([]coralogixv1alpha1.Rule, error) {
 	result := make([]coralogixv1alpha1.Rule, 0, len(rules))
 	for _, r := range rules {
-		rule := flattenRule(r)
+		rule, err := flattenRule(r)
+		if err != nil {
+			return nil, fmt.Errorf("flattenRules: %w", err)
+		}
 		result = append(result, rule)
 	}
-	return result
+	return result, nil
 }
 
-func flattenRule(rule *rulesgroups.Rule) coralogixv1alpha1.Rule {
+func flattenRule(rule *rulesgroups.Rule) (coralogixv1alpha1.Rule, error) {
 	var result coralogixv1alpha1.Rule
 	result.Name = rule.GetName().GetValue()
 	result.Active = rule.GetEnabled().GetValue()
@@ -320,12 +351,12 @@ func flattenRule(rule *rulesgroups.Rule) coralogixv1alpha1.Rule {
 			KeepDestinationField: !(jsonParseParameters.GetOverrideDest().GetValue()),
 		}
 	default:
-		panic(fmt.Sprintf("unexpected type %T for r parameters", ruleParams))
+		return coralogixv1alpha1.Rule{}, fmt.Errorf("unexpected type %T for rule parameters, name: %s", ruleParams, rule.GetName().GetValue())
 	}
-	return result
+	return result, nil
 }
 
-func flattenRuleMatcher(ruleMatchers []*rulesgroups.RuleMatcher) (applications, subsystems []string, severities []coralogixv1alpha1.RuleSeverity) {
+func flattenRuleMatcher(ruleMatchers []*rulesgroups.RuleMatcher) (applications, subsystems []string, severities []coralogixv1alpha1.RuleSeverity, err error) {
 	for _, ruleMatcher := range ruleMatchers {
 		switch matcher := ruleMatcher.Constraint.(type) {
 		case *rulesgroups.RuleMatcher_ApplicationName:
@@ -336,7 +367,7 @@ func flattenRuleMatcher(ruleMatchers []*rulesgroups.RuleMatcher) (applications, 
 			severity := matcher.Severity.GetValue()
 			severities = append(severities, coralogixv1alpha1.RulesProtoSeverityToSchemaSeverity[severity])
 		default:
-			panic(fmt.Sprintf("unexpected type %T for rule matcher", ruleMatcher))
+			return nil, nil, nil, fmt.Errorf("unexpected type %T for rule matcher", ruleMatcher)
 		}
 	}
 
