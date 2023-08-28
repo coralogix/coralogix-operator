@@ -194,10 +194,6 @@ spec:
                                 - More
                                 - Less
                                 type: string
-                              groupBy:
-                                items:
-                                  type: string
-                                type: array
                               manageUndetectedValues:
                                 properties:
                                   autoRetireRatio:
@@ -871,6 +867,9 @@ spec:
                           integrationName:
                             type: string
                           notifyOn:
+                            enum:
+                            - TriggeredOnly
+                            - TriggeredAndResolved
                             type: string
                           retriggeringPeriodMinutes:
                             format: int32
@@ -919,6 +918,9 @@ spec:
                 properties:
                   notifyOn:
                     default: TriggeredOnly
+                    enum:
+                    - TriggeredOnly
+                    - TriggeredAndResolved
                     type: string
                   retriggeringPeriodMinutes:
                     format: int32
@@ -1091,10 +1093,6 @@ spec:
                                 - More
                                 - Less
                                 type: string
-                              groupBy:
-                                items:
-                                  type: string
-                                type: array
                               manageUndetectedValues:
                                 properties:
                                   autoRetireRatio:
@@ -1769,6 +1767,9 @@ spec:
                           integrationName:
                             type: string
                           notifyOn:
+                            enum:
+                            - TriggeredOnly
+                            - TriggeredAndResolved
                             type: string
                           retriggeringPeriodMinutes:
                             format: int32
@@ -1817,6 +1818,9 @@ spec:
                 properties:
                   notifyOn:
                     default: TriggeredOnly
+                    enum:
+                    - TriggeredOnly
+                    - TriggeredAndResolved
                     type: string
                   retriggeringPeriodMinutes:
                     format: int32
