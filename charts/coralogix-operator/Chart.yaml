@@ -9,7 +9,7 @@ name: coralogix-operator
 sources:
   - https://github.com/coralogix/coralogix-operator
 version: 0.1.3
-appVersion: 0.1.12
+appVersion: rulegroup-fix
 kubeVersion: ">=1.16.0-0"
 home: https://github.com/coralogix/coralogix-operator
 keywords:
