@@ -107,8 +107,13 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			log.V(1).Info("Deleting Rule-Group", "Rule-Group ID", ruleGroupId)
 			if _, err := rulesGroupsClient.DeleteRuleGroup(ctx, deleteRuleGroupReq); err != nil {
 				// if fail to delete the external dependency here, return with error
-				// so that it can be retried
+				// so that it can be retried unless it is deleted manually.
 				log.Error(err, "Received an error while Deleting a Rule-Group", "Rule-Group ID", ruleGroupId)
+				if status.Code(err) == codes.NotFound {
+					controllerutil.RemoveFinalizer(ruleGroupCRD, myFinalizerName)
+					err := r.Update(ctx, ruleGroupCRD)
+					return ctrl.Result{}, err
+				}
 				return ctrl.Result{}, err
 			}
 
