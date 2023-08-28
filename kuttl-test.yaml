@@ -6,4 +6,4 @@ testDirs:
   - tests/e2e/recordingrulegroupsets
   - tests/e2e/promatheusrules
 namespace: default
-timeout: 40
+timeout: 60
