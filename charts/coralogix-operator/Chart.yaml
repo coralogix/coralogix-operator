@@ -8,8 +8,8 @@ maintainers:
 name: coralogix-operator
 sources:
   - https://github.com/coralogix/coralogix-operator
-version: 0.1.3
-appVersion: 0.1.12
+version: 0.1.4
+appVersion: delete_CR_bug_fixing
 kubeVersion: ">=1.16.0-0"
 home: https://github.com/coralogix/coralogix-operator
 keywords:
