@@ -472,16 +472,22 @@ func expandPromqlCondition(conditions *PromqlConditions, searchQuery string) *al
 	}
 
 	switch conditions.AlertWhen {
-	case "More":
+	case PromqlAlertWhenMoreThan:
 		return &alerts.AlertCondition{
 			Condition: &alerts.AlertCondition_MoreThan{
 				MoreThan: &alerts.MoreThanCondition{Parameters: parameters},
 			},
 		}
-	case "Less":
+	case PromqlAlertWhenLessThan:
 		return &alerts.AlertCondition{
 			Condition: &alerts.AlertCondition_LessThan{
 				LessThan: &alerts.LessThanCondition{Parameters: parameters},
+			},
+		}
+	case PromqlAlertWhenMoreThanUsual:
+		return &alerts.AlertCondition{
+			Condition: &alerts.AlertCondition_MoreThanUsual{
+				MoreThanUsual: &alerts.MoreThanUsualCondition{Parameters: parameters},
 			},
 		}
 	}
@@ -2399,7 +2405,7 @@ func (in *LuceneConditions) DeepEqual(actualCondition LuceneConditions) (bool, u
 }
 
 type PromqlConditions struct {
-	AlertWhen AlertWhen `json:"alertWhen"`
+	AlertWhen PromqlAlertWhen `json:"alertWhen"`
 
 	Threshold resource.Quantity `json:"threshold"`
 
@@ -2533,6 +2539,15 @@ type AlertWhen string
 const (
 	AlertWhenLessThan AlertWhen = "Less"
 	AlertWhenMoreThan AlertWhen = "More"
+)
+
+// +kubebuilder:validation:Enum=More;Less;MoreThanUsual
+type PromqlAlertWhen string
+
+const (
+	PromqlAlertWhenLessThan      PromqlAlertWhen = "Less"
+	PromqlAlertWhenMoreThan      PromqlAlertWhen = "More"
+	PromqlAlertWhenMoreThanUsual PromqlAlertWhen = "MoreThanUsual"
 )
 
 // +kubebuilder:validation:Enum=More;Less;Immediately;MoreThanUsual

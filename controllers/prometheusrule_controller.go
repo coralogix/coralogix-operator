@@ -286,7 +286,7 @@ func prometheusInnerRuleToCoralogixAlert(prometheusRule prometheus.Rule) coralog
 					SearchQuery: prometheusRule.Expr.StrVal,
 					Conditions: coralogixv1alpha1.PromqlConditions{
 						TimeWindow:                 timeWindow,
-						AlertWhen:                  coralogixv1alpha1.AlertWhenMoreThan,
+						AlertWhen:                  coralogixv1alpha1.PromqlAlertWhenMoreThan,
 						Threshold:                  resource.MustParse("0"),
 						SampleThresholdPercentage:  100,
 						MinNonNullValuesPercentage: pointer.Int(0),

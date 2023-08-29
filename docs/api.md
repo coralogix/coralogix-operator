@@ -730,7 +730,7 @@ AlertSpec defines the desired state of Alert
         <td>
           <br/>
           <br/>
-            <i>Enum</i>: More, Less<br/>
+            <i>Enum</i>: More, Less, MoreThanUsual<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -2992,7 +2992,7 @@ AlertStatus defines the observed state of Alert
         <td>
           <br/>
           <br/>
-            <i>Enum</i>: More, Less<br/>
+            <i>Enum</i>: More, Less, MoreThanUsual<br/>
         </td>
         <td>true</td>
       </tr><tr>

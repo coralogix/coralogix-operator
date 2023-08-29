@@ -594,26 +594,32 @@ func flattenMetricAlert(filters *alerts.AlertFilters, condition *alerts.AlertCon
 	metric := new(coralogixv1alpha1.Metric)
 
 	var conditionParams *alerts.ConditionParameters
-	var alertWhen coralogixv1alpha1.AlertWhen
+	var promqlAlertWhen coralogixv1alpha1.PromqlAlertWhen
+	var luceneAlertWhen coralogixv1alpha1.AlertWhen
 	switch condition := condition.GetCondition().(type) {
 	case *alerts.AlertCondition_LessThan:
-		alertWhen = coralogixv1alpha1.AlertWhenLessThan
+		promqlAlertWhen = coralogixv1alpha1.PromqlAlertWhenLessThan
+		luceneAlertWhen = coralogixv1alpha1.AlertWhenLessThan
 		conditionParams = condition.LessThan.GetParameters()
 	case *alerts.AlertCondition_MoreThan:
 		conditionParams = condition.MoreThan.GetParameters()
-		alertWhen = coralogixv1alpha1.AlertWhenMoreThan
+		promqlAlertWhen = coralogixv1alpha1.PromqlAlertWhenMoreThan
+		luceneAlertWhen = coralogixv1alpha1.AlertWhenMoreThan
+	case *alerts.AlertCondition_MoreThanUsual:
+		conditionParams = condition.MoreThanUsual.GetParameters()
+		promqlAlertWhen = coralogixv1alpha1.PromqlAlertWhenMoreThanUsual
 	}
 
 	if promqlParams := conditionParams.GetMetricAlertPromqlParameters(); promqlParams != nil {
-		metric.Promql = flattenPromqlAlert(conditionParams, promqlParams, alertWhen)
+		metric.Promql = flattenPromqlAlert(conditionParams, promqlParams, promqlAlertWhen)
 	} else {
-		metric.Lucene = flattenLuceneAlert(conditionParams, filters.GetText(), alertWhen)
+		metric.Lucene = flattenLuceneAlert(conditionParams, filters.GetText(), luceneAlertWhen)
 	}
 
 	return metric
 }
 
-func flattenPromqlAlert(conditionParams *alerts.ConditionParameters, promqlParams *alerts.MetricAlertPromqlConditionParameters, alertWhen coralogixv1alpha1.AlertWhen) *coralogixv1alpha1.Promql {
+func flattenPromqlAlert(conditionParams *alerts.ConditionParameters, promqlParams *alerts.MetricAlertPromqlConditionParameters, alertWhen coralogixv1alpha1.PromqlAlertWhen) *coralogixv1alpha1.Promql {
 	promql := new(coralogixv1alpha1.Promql)
 
 	promql.SearchQuery = promqlParams.GetPromqlText().GetValue()
@@ -630,7 +636,7 @@ func flattenPromqlAlert(conditionParams *alerts.ConditionParameters, promqlParam
 		*promql.Conditions.MinNonNullValuesPercentage = int(minNonNullValuesPercentage.GetValue())
 	}
 
-	if alertWhen == coralogixv1alpha1.AlertWhenLessThan {
+	if alertWhen == coralogixv1alpha1.PromqlAlertWhenLessThan {
 		if actualManageUndetectedValues := conditionParams.GetRelatedExtendedData(); actualManageUndetectedValues != nil {
 			actualShouldTriggerDeadman, actualCleanupDeadmanDuration := actualManageUndetectedValues.GetShouldTriggerDeadman().GetValue(), actualManageUndetectedValues.GetCleanupDeadmanDuration()
 			autoRetireRatio := alertProtoAutoRetireRatioToSchemaAutoRetireRatio[actualCleanupDeadmanDuration]
