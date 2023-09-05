@@ -5,3 +5,7 @@
 {{- if and (eq .Values.secret.create false) (eq .Values.secret.secretKeyReference.name nil) }}
 {{ fail "[ERROR] 'secret.secretKeyReference' is required when 'secret.create' is false." }}
 {{ end }}
+
+{{- if (eq .Values.coralogixOperator.region "") }}
+{{ fail "[ERROR] 'coralogixOperator.region' must be set. Please select one of APAC1,APAC2,EUROPE1,EUROPE2,USA1,USA2 regions. See https://coralogix.com/docs/coralogix-domain/ for more information." }}
+{{ end }}
