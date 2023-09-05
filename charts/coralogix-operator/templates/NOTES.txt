@@ -1,5 +1,5 @@
 {{- if and .Values.secret.create (eq .Values.secret.data.apiKey "") }}
-{{ fail "[ERROR] 'secret.create.apiKey' must be set. See https://coralogix.com/docs/send-your-data-api-key for instructions." }}
+{{ fail "[ERROR] 'secret.data.apiKey' must be set. See https://coralogix.com/docs/send-your-data-api-key for instructions." }}
 {{ end }}
 
 {{- if and (eq .Values.secret.create false) (eq .Values.secret.secretKeyReference.name nil) }}
