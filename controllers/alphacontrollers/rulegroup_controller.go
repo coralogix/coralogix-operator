@@ -139,16 +139,21 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	if id := ruleGroupCRD.Status.ID; id == nil {
 		log.V(1).Info("ruleGroup wasn't created")
 		notFound = true
-	} else if getRuleGroupResp, err := rulesGroupsClient.GetRuleGroup(ctx, &rulesgroups.GetRuleGroupRequest{GroupId: *id}); status.Code(err) == codes.NotFound {
-		// TODO: this needs more error handling, what if it returns internal error?
-
-		log.V(1).Info("ruleGroup doesn't exist in Coralogix backend")
-		notFound = true
-	} else if err == nil {
-		actualState, err = flattenRuleGroup(getRuleGroupResp.GetRuleGroup())
-		if err != nil {
-			log.Error(err, "Error mapping coralogix API response", "Name", ruleGroupCRD.Name, "Namespace", ruleGroupCRD.Namespace)
+	} else {
+		getRuleGroupResp, err := rulesGroupsClient.GetRuleGroup(ctx, &rulesgroups.GetRuleGroupRequest{GroupId: *id})
+		switch {
+		case status.Code(err) == codes.NotFound:
+			log.V(1).Info("ruleGroup doesn't exist in Coralogix backend")
+			notFound = true
+		case err != nil:
+			log.Error(err, "Received an error while getting RuleGroup")
 			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		case err == nil:
+			actualState, err = flattenRuleGroup(getRuleGroupResp.GetRuleGroup())
+			if err != nil {
+				log.Error(err, "Error mapping coralogix API response", "Name", ruleGroupCRD.Name, "Namespace", ruleGroupCRD.Namespace)
+				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			}
 		}
 	}
 
