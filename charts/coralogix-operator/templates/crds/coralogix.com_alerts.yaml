@@ -193,6 +193,7 @@ spec:
                                 enum:
                                 - More
                                 - Less
+                                - MoreThanUsual
                                 type: string
                               manageUndetectedValues:
                                 properties:
@@ -1092,6 +1093,7 @@ spec:
                                 enum:
                                 - More
                                 - Less
+                                - MoreThanUsual
                                 type: string
                               manageUndetectedValues:
                                 properties:

@@ -148,26 +148,33 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, nil
 	}
 
-	var notFount bool
-	var err error
-	var actualState *coralogixv1alpha1.AlertStatus
-	var flattenErr error
-
+	var (
+		notFound    bool
+		err         error
+		actualState *coralogixv1alpha1.AlertStatus
+	)
 	if id := alertCRD.Status.ID; id == nil {
 		log.V(1).Info("alert wasn't created")
-		notFount = true
-	} else if getAlertResp, err := alertsClient.GetAlert(ctx, &alerts.GetAlertByUniqueIdRequest{Id: wrapperspb.String(*id)}); status.Code(err) == codes.NotFound {
-		log.V(1).Info("alert doesn't exist in Coralogix backend", "ID", id)
-		notFount = true
-	} else if err == nil {
-		actualState, flattenErr = flattenAlert(ctx, getAlertResp.GetAlert(), alertCRD.Spec)
-		if flattenErr != nil {
-			log.Error(flattenErr, "Received an error while flattened Alert")
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, flattenErr
+		notFound = true
+	} else {
+		getAlertResp, err := alertsClient.GetAlert(ctx, &alerts.GetAlertByUniqueIdRequest{Id: wrapperspb.String(*id)})
+		switch {
+		case status.Code(err) == codes.NotFound:
+			log.V(1).Info("alert doesn't exist in Coralogix backend", "ID", id)
+			notFound = true
+		case err != nil:
+			log.Error(err, "Received an error while getting Alert")
+			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		case err == nil:
+			actualState, err = flattenAlert(ctx, getAlertResp.GetAlert(), alertCRD.Spec)
+			if err != nil {
+				log.Error(err, "Received an error while flattened Alert")
+				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			}
 		}
 	}
 
-	if notFount {
+	if notFound {
 		if alertCRD.Spec.Labels == nil {
 			alertCRD.Spec.Labels = make(map[string]string)
 		}
@@ -197,10 +204,10 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 			}
 
-			actualState, flattenErr = flattenAlert(ctx, createAlertResp.GetAlert(), alertCRD.Spec)
-			if flattenErr != nil {
-				log.Error(flattenErr, "Received an error while flattened Alert")
-				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, flattenErr
+			actualState, err = flattenAlert(ctx, createAlertResp.GetAlert(), alertCRD.Spec)
+			if err != nil {
+				log.Error(err, "Received an error while flattened Alert")
+				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 			}
 			alertCRD.Status = *actualState
 			if err := r.Status().Update(ctx, alertCRD); err != nil {
