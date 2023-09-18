@@ -17,17 +17,17 @@ spec:
     security_severity: high
   notificationGroups:
     - notifications:
-        - notifyOn: TriggeredOnly
-          integrationName: slack-webhook
-          retriggeringPeriodMinutes: 1
+#        - notifyOn: TriggeredOnly
+#          integrationName: slack-webhook
+#          retriggeringPeriodMinutes: 1
         - notifyOn: TriggeredAndResolved
           emailRecipients: [ "example@coralogix.com" ]
           retriggeringPeriodMinutes: 1440
     - groupByFields: [ "coralogix.metadata.sdkId" ]
       notifications:
-        - notifyOn: TriggeredOnly
-          integrationName: WebhookAlerts
-          retriggeringPeriodMinutes: 1
+#        - notifyOn: TriggeredOnly
+#          integrationName: WebhookAlerts
+#          retriggeringPeriodMinutes: 1
         - notifyOn: TriggeredAndResolved
           emailRecipients: [ "example2@coralogix.com" ]
           retriggeringPeriodMinutes: 1440

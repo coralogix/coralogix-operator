@@ -1533,6 +1533,7 @@ func DeepEqualTimes(time, actualTime *alerts.Time) (bool, utils.Diff) {
 }
 
 // +kubebuilder:validation:Pattern=`^UTC[+-]\d{2}$`
+// +kubebuilder:default=UTC+00
 type TimeZone string
 
 // +kubebuilder:validation:Enum=Sunday;Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;

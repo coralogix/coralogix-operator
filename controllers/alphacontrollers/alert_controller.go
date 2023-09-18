@@ -19,6 +19,7 @@ package alphacontrollers
 import (
 	"context"
 	"encoding/json"
+	errors2 "errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -237,8 +238,12 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 }
 
 func flattenAlert(ctx context.Context, actualAlert *alerts.Alert, spec coralogixv1alpha1.AlertSpec) (*coralogixv1alpha1.AlertStatus, error) {
+	if actualAlert == nil {
+		return nil, errors2.New("alert is nil")
+	}
+
 	var status coralogixv1alpha1.AlertStatus
-	var err error
+	var errors error
 
 	status.ID = new(string)
 	*status.ID = actualAlert.GetUniqueIdentifier().GetValue()
@@ -255,17 +260,26 @@ func flattenAlert(ctx context.Context, actualAlert *alerts.Alert, spec coralogix
 
 	status.ExpirationDate = flattenExpirationDate(actualAlert.GetExpiration())
 
-	status.Scheduling = flattenScheduling(actualAlert.GetActiveWhen(), spec)
+	var timeZone coralogixv1alpha1.TimeZone
+	if spec.Scheduling != nil {
+		timeZone = spec.Scheduling.TimeZone
+	}
+
+	status.Scheduling = flattenScheduling(actualAlert.GetActiveWhen(), timeZone)
 
 	status.AlertType = flattenAlertType(actualAlert)
 
-	status.NotificationGroups, err = flattenNotificationGroups(ctx, actualAlert.GetNotificationGroups())
+	if notificationGroups, err := flattenNotificationGroups(ctx, actualAlert.GetNotificationGroups()); err != nil {
+		errors = errors2.Join(errors, fmt.Errorf("error on flatten alert - %s", err))
+	} else {
+		status.NotificationGroups = notificationGroups
+	}
 
 	status.ShowInInsight = flattenShowInInsight(actualAlert.GetShowInInsight())
 
 	status.PayloadFilters = utils.WrappedStringSliceToStringSlice(actualAlert.GetNotificationPayloadFilters())
 
-	return &status, err
+	return &status, errors
 }
 
 func flattenAlertType(actualAlert *alerts.Alert) coralogixv1alpha1.AlertType {
@@ -912,18 +926,12 @@ func flattenExpirationDate(expirationDate *alerts.Date) *coralogixv1alpha1.Expir
 	}
 }
 
-func flattenScheduling(scheduling *alerts.AlertActiveWhen, spec coralogixv1alpha1.AlertSpec) *coralogixv1alpha1.Scheduling {
+func flattenScheduling(scheduling *alerts.AlertActiveWhen, timeZone coralogixv1alpha1.TimeZone) *coralogixv1alpha1.Scheduling {
 	if scheduling == nil || len(scheduling.GetTimeframes()) == 0 {
 		return nil
 	}
 
-	timeZone := coralogixv1alpha1.TimeZone("UTC+00")
-	var utc int32
-	if spec.Scheduling != nil {
-		timeZone = spec.Scheduling.TimeZone
-		utc = coralogixv1alpha1.ExtractUTC(timeZone)
-	}
-
+	utc := coralogixv1alpha1.ExtractUTC(timeZone)
 	timeframe := scheduling.GetTimeframes()[0]
 	timeRange := timeframe.GetRange()
 	activityStartGMT, activityEndGMT := timeRange.GetStart(), timeRange.GetEnd()
@@ -988,43 +996,39 @@ func flattenDaysOfWeek(daysOfWeek []alerts.DayOfWeek, daysOffset int32) []coralo
 
 func flattenNotificationGroups(ctx context.Context, notificationGroups []*alerts.AlertNotificationGroups) ([]coralogixv1alpha1.NotificationGroup, error) {
 	result := make([]coralogixv1alpha1.NotificationGroup, 0, len(notificationGroups))
-	errors := make([]error, 0)
+	var errors error
 	for _, ng := range notificationGroups {
-		notificationGroup, errs := flattenNotificationGroup(ctx, ng)
-		errors = append(errors, errs...)
+		notificationGroup, err := flattenNotificationGroup(ctx, ng)
+		if err != nil {
+			errors = errors2.Join(errors, fmt.Errorf("error on flatten notification-groups - %s", err.Error()))
+		}
 		result = append(result, notificationGroup)
 	}
 
-	if len(errors) > 0 {
-		var errStr string
-		for _, err := range errors {
-			errStr += err.Error() + "\n"
-		}
-		return result, fmt.Errorf(errStr)
-	}
-
-	return result, nil
+	return result, errors
 }
 
-func flattenNotificationGroup(ctx context.Context, notificationGroup *alerts.AlertNotificationGroups) (coralogixv1alpha1.NotificationGroup, []error) {
+func flattenNotificationGroup(ctx context.Context, notificationGroup *alerts.AlertNotificationGroups) (coralogixv1alpha1.NotificationGroup, error) {
 	groupByFields := utils.WrappedStringSliceToStringSlice(notificationGroup.GroupByFields)
-	notifications, errors := flattenNotifications(ctx, notificationGroup.Notifications)
-
+	notifications, err := flattenNotifications(ctx, notificationGroup.Notifications)
+	if err != nil {
+		err = fmt.Errorf("error on flatten notification-group - %s", err.Error())
+	}
 	return coralogixv1alpha1.NotificationGroup{
 		GroupByFields: groupByFields,
 		Notifications: notifications,
-	}, errors
+	}, err
 }
 
-func flattenNotifications(ctx context.Context, notifications []*alerts.AlertNotification) ([]coralogixv1alpha1.Notification, []error) {
+func flattenNotifications(ctx context.Context, notifications []*alerts.AlertNotification) ([]coralogixv1alpha1.Notification, error) {
 	result := make([]coralogixv1alpha1.Notification, 0, len(notifications))
-	errors := make([]error, 0)
-	for _, n := range notifications {
-		notification, err := flattenNotification(ctx, n)
+	var errors error
+	for _, notification := range notifications {
+		flattenedNotification, err := flattenNotification(ctx, notification)
 		if err != nil {
-			errors = append(errors, err)
+			errors2.Join(errors, fmt.Errorf("error on flatten notifications - %s", err.Error()))
 		}
-		result = append(result, notification)
+		result = append(result, flattenedNotification)
 	}
 	return result, errors
 }
@@ -1042,11 +1046,11 @@ func flattenNotification(ctx context.Context, notification *alerts.AlertNotifica
 		id := strconv.Itoa(int(integration.IntegrationId.GetValue()))
 		webhookStr, err := coralogixv1alpha1.WebhooksClient.GetWebhook(ctx, id)
 		if err != nil {
-			return flattenedNotification, err
+			return flattenedNotification, fmt.Errorf("error on get webhook - %s", err.Error())
 		}
 		var m map[string]interface{}
 		if err = json.Unmarshal([]byte(webhookStr), &m); err != nil {
-			return flattenedNotification, err
+			return flattenedNotification, fmt.Errorf("error on unmarshal webhook - %s", err.Error())
 		}
 		flattenedNotification.IntegrationName = new(string)
 		*flattenedNotification.IntegrationName = m["alias"].(string)
