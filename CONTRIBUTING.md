@@ -45,6 +45,10 @@ Or with `regin` and `api-key` flags
 ```sh
 $ go run main.go -region EUROPE2 -api-key xxx-xxx-xxx
 ```
+For not running the prometheusRule controller set the `prometheus-rule-controller` flag to `false`
+```sh
+$ go run main.go -prometheus-rule-controller=false
+```
 Or build and push your image to a registry
 ```sh
 make docker-build docker-push IMG=<some-registry>/coralogix-operator:tag
