@@ -58,7 +58,7 @@ type RecordingRuleGroupSetReconciler struct {
 func (r *RecordingRuleGroupSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 	jsm := &jsonpb.Marshaler{
-		//Indent: "\t",
+		EmitDefaults: true,
 	}
 	rRGClient := r.CoralogixClientSet.RecordingRuleGroups()
 

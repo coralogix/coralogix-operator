@@ -60,7 +60,7 @@ type RuleGroupReconciler struct {
 func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 	jsm := &jsonpb.Marshaler{
-		//Indent: "\t",
+		EmitDefaults: true,
 	}
 	rulesGroupsClient := r.CoralogixClientSet.RuleGroups()
 

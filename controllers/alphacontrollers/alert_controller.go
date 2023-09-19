@@ -76,7 +76,7 @@ type AlertReconciler struct {
 func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 	jsm := &jsonpb.Marshaler{
-		//Indent: "\t",
+		EmitDefaults: true,
 	}
 	alertsClient := r.CoralogixClientSet.Alerts()
 	coralogixv1alpha1.WebhooksClient = r.CoralogixClientSet.Webhooks()
