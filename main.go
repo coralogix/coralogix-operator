@@ -84,6 +84,9 @@ func main() {
 	apiKey := os.Getenv("CORALOGIX_API_KEY")
 	flag.StringVar(&apiKey, "api-key", apiKey, "The proper api-key based on your Coralogix cluster's region")
 
+	var prometheusRuleController bool
+	flag.BoolVar(&prometheusRuleController, "prometheus-rule-controller", true, "Determine if the prometheus rule controller should be started. Default is true.")
+
 	opts := zap.Options{}
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
@@ -144,13 +147,15 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Alert")
 		os.Exit(1)
 	}
-	if err = (&controllers.PrometheusRuleReconciler{
-		CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),
-		Client:             mgr.GetClient(),
-		Scheme:             mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "RecordingRuleGroup")
-		os.Exit(1)
+	if prometheusRuleController {
+		if err = (&controllers.PrometheusRuleReconciler{
+			CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),
+			Client:             mgr.GetClient(),
+			Scheme:             mgr.GetScheme(),
+		}).SetupWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", "RecordingRuleGroup")
+			os.Exit(1)
+		}
 	}
 	if err = (&alphacontrollers.RecordingRuleGroupSetReconciler{
 		CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),
