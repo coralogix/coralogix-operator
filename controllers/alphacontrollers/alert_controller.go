@@ -19,7 +19,7 @@ package alphacontrollers
 import (
 	"context"
 	"encoding/json"
-	errors2 "errors"
+	stdErr "errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -246,11 +246,11 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 func flattenAlert(ctx context.Context, actualAlert *alerts.Alert, spec coralogixv1alpha1.AlertSpec) (*coralogixv1alpha1.AlertStatus, error) {
 	if actualAlert == nil {
-		return nil, errors2.New("alert is nil")
+		return nil, stdErr.New("alert is nil")
 	}
 
 	var status coralogixv1alpha1.AlertStatus
-	var errors error
+	var err error
 
 	status.ID = new(string)
 	*status.ID = actualAlert.GetUniqueIdentifier().GetValue()
@@ -276,8 +276,8 @@ func flattenAlert(ctx context.Context, actualAlert *alerts.Alert, spec coralogix
 
 	status.AlertType = flattenAlertType(actualAlert)
 
-	if notificationGroups, err := flattenNotificationGroups(ctx, actualAlert.GetNotificationGroups()); err != nil {
-		errors = errors2.Join(errors, fmt.Errorf("error on flatten alert - %s", err))
+	if notificationGroups, flattenErr := flattenNotificationGroups(ctx, actualAlert.GetNotificationGroups()); flattenErr != nil {
+		err = stdErr.Join(err, fmt.Errorf("error on flatten alert - %w", flattenErr))
 	} else {
 		status.NotificationGroups = notificationGroups
 	}
@@ -286,7 +286,7 @@ func flattenAlert(ctx context.Context, actualAlert *alerts.Alert, spec coralogix
 
 	status.PayloadFilters = utils.WrappedStringSliceToStringSlice(actualAlert.GetNotificationPayloadFilters())
 
-	return &status, errors
+	return &status, err
 }
 
 func flattenAlertType(actualAlert *alerts.Alert) coralogixv1alpha1.AlertType {
@@ -1007,24 +1007,25 @@ func flattenNotificationGroups(ctx context.Context, notificationGroups []*alerts
 	for _, ng := range notificationGroups {
 		notificationGroup, err := flattenNotificationGroup(ctx, ng)
 		if err != nil {
-			errors = errors2.Join(errors, fmt.Errorf("error on flatten notification-groups - %s", err.Error()))
+			errors = stdErr.Join(errors, fmt.Errorf("error on flatten notification-groups - %s", err.Error()))
 		}
-		result = append(result, notificationGroup)
+		result = append(result, *notificationGroup)
 	}
 
 	return result, errors
 }
 
-func flattenNotificationGroup(ctx context.Context, notificationGroup *alerts.AlertNotificationGroups) (coralogixv1alpha1.NotificationGroup, error) {
+func flattenNotificationGroup(ctx context.Context, notificationGroup *alerts.AlertNotificationGroups) (*coralogixv1alpha1.NotificationGroup, error) {
 	groupByFields := utils.WrappedStringSliceToStringSlice(notificationGroup.GroupByFields)
 	notifications, err := flattenNotifications(ctx, notificationGroup.Notifications)
 	if err != nil {
-		err = fmt.Errorf("error on flatten notification-group - %s", err.Error())
+		return nil, fmt.Errorf("error on flatten notification-group - %s", err.Error())
 	}
-	return coralogixv1alpha1.NotificationGroup{
+
+	return &coralogixv1alpha1.NotificationGroup{
 		GroupByFields: groupByFields,
 		Notifications: notifications,
-	}, err
+	}, nil
 }
 
 func flattenNotifications(ctx context.Context, notifications []*alerts.AlertNotification) ([]coralogixv1alpha1.Notification, error) {
@@ -1033,7 +1034,7 @@ func flattenNotifications(ctx context.Context, notifications []*alerts.AlertNoti
 	for _, notification := range notifications {
 		flattenedNotification, err := flattenNotification(ctx, notification)
 		if err != nil {
-			errors2.Join(errors, fmt.Errorf("error on flatten notifications - %s", err.Error()))
+			stdErr.Join(errors, fmt.Errorf("error on flatten notifications - %s", err.Error()))
 		}
 		result = append(result, flattenedNotification)
 	}
@@ -1053,11 +1054,11 @@ func flattenNotification(ctx context.Context, notification *alerts.AlertNotifica
 		id := strconv.Itoa(int(integration.IntegrationId.GetValue()))
 		webhookStr, err := coralogixv1alpha1.WebhooksClient.GetWebhook(ctx, id)
 		if err != nil {
-			return flattenedNotification, fmt.Errorf("error on get webhook - %s", err.Error())
+			return flattenedNotification, fmt.Errorf("error on get webhook - %w", err)
 		}
 		var m map[string]interface{}
 		if err = json.Unmarshal([]byte(webhookStr), &m); err != nil {
-			return flattenedNotification, fmt.Errorf("error on unmarshal webhook - %s", err.Error())
+			return flattenedNotification, fmt.Errorf("error on unmarshal webhook - %w", err)
 		}
 		flattenedNotification.IntegrationName = new(string)
 		*flattenedNotification.IntegrationName = m["alias"].(string)
