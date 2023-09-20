@@ -2,7 +2,7 @@ apiVersion: coralogix.com/v1alpha1
 kind: Alert
 metadata:
   finalizers:
-    - batch.tutorial.kubebuilder.io/finalizer
+    - coralogix.com/alert/finalizer
   labels:
     app.kubernetes.io/managed-by: prometheus-example-rules
   name: prometheus-example-rules-app-latency-1

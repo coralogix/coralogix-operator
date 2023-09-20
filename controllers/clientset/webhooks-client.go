@@ -8,6 +8,14 @@ import (
 	"github.com/coralogix/coralogix-operator/controllers/clientset/rest"
 )
 
+type WebhooksClientInterface interface {
+	CreateWebhook(ctx context.Context, body string) (string, error)
+	GetWebhook(ctx context.Context, webhookId string) (string, error)
+	GetWebhooks(ctx context.Context) (string, error)
+	UpdateWebhook(ctx context.Context, body string) (string, error)
+	DeleteWebhook(ctx context.Context, webhookId string) (string, error)
+}
+
 type WebhooksClient struct {
 	client *rest.Client
 }

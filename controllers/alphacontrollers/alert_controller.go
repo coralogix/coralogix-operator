@@ -56,7 +56,7 @@ var (
 // AlertReconciler reconciles a Alert object
 type AlertReconciler struct {
 	client.Client
-	CoralogixClientSet *clientset.ClientSet
+	CoralogixClientSet clientset.ClientSetInterface
 	Scheme             *runtime.Scheme
 }
 
@@ -95,7 +95,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	// name of our custom finalizer
-	myFinalizerName := "batch.tutorial.kubebuilder.io/finalizer"
+	myFinalizerName := "coralogix.com/alert/finalizer"
 
 	// examine DeletionTimestamp to determine if object is under deletion
 	if alertCRD.ObjectMeta.DeletionTimestamp.IsZero() {

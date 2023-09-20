@@ -7,6 +7,13 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
+type RecordingRulesGroupsClientInterface interface {
+	CreateRecordingRuleGroupSet(ctx context.Context, req *rrg.CreateRuleGroupSet) (*rrg.CreateRuleGroupSetResult, error)
+	GetRecordingRuleGroupSet(ctx context.Context, req *rrg.FetchRuleGroupSet) (*rrg.OutRuleGroupSet, error)
+	UpdateRecordingRuleGroupSet(ctx context.Context, req *rrg.UpdateRuleGroupSet) (*emptypb.Empty, error)
+	DeleteRecordingRuleGroupSet(ctx context.Context, req *rrg.DeleteRuleGroupSet) (*emptypb.Empty, error)
+}
+
 type RecordingRulesGroupsClient struct {
 	callPropertiesCreator *CallPropertiesCreator
 }

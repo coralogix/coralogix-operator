@@ -78,9 +78,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 	}
 
-	//TODO: rename finalizer
-	// name of our custom finalizer
-	myFinalizerName := "batch.tutorial.kubebuilder.io/finalizer"
+	myFinalizerName := "coralogix.com/rulegroup/finalizer"
 
 	// examine DeletionTimestamp to determine if object is under deletion
 	if ruleGroupCRD.ObjectMeta.DeletionTimestamp.IsZero() {
