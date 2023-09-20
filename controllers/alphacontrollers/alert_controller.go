@@ -1003,16 +1003,16 @@ func flattenDaysOfWeek(daysOfWeek []alerts.DayOfWeek, daysOffset int32) []coralo
 
 func flattenNotificationGroups(ctx context.Context, notificationGroups []*alerts.AlertNotificationGroups) ([]coralogixv1alpha1.NotificationGroup, error) {
 	result := make([]coralogixv1alpha1.NotificationGroup, 0, len(notificationGroups))
-	var errors error
+	var err error
 	for _, ng := range notificationGroups {
-		notificationGroup, err := flattenNotificationGroup(ctx, ng)
+		notificationGroup, flattenErr := flattenNotificationGroup(ctx, ng)
 		if err != nil {
-			errors = stdErr.Join(errors, fmt.Errorf("error on flatten notification-groups - %s", err.Error()))
+			err = stdErr.Join(err, fmt.Errorf("error on flatten notification-groups - %w", flattenErr))
 		}
 		result = append(result, *notificationGroup)
 	}
 
-	return result, errors
+	return result, err
 }
 
 func flattenNotificationGroup(ctx context.Context, notificationGroup *alerts.AlertNotificationGroups) (*coralogixv1alpha1.NotificationGroup, error) {
@@ -1030,15 +1030,15 @@ func flattenNotificationGroup(ctx context.Context, notificationGroup *alerts.Ale
 
 func flattenNotifications(ctx context.Context, notifications []*alerts.AlertNotification) ([]coralogixv1alpha1.Notification, error) {
 	result := make([]coralogixv1alpha1.Notification, 0, len(notifications))
-	var errors error
+	var err error
 	for _, notification := range notifications {
-		flattenedNotification, err := flattenNotification(ctx, notification)
-		if err != nil {
-			stdErr.Join(errors, fmt.Errorf("error on flatten notifications - %s", err.Error()))
+		flattenedNotification, flattenErr := flattenNotification(ctx, notification)
+		if flattenErr != nil {
+			err = stdErr.Join(err, fmt.Errorf("error on flatten notifications - %w", flattenErr))
 		}
 		result = append(result, flattenedNotification)
 	}
-	return result, errors
+	return result, err
 }
 
 func flattenNotification(ctx context.Context, notification *alerts.AlertNotification) (coralogixv1alpha1.Notification, error) {
