@@ -11,7 +11,6 @@ on:
 jobs:
   unit-tests:
     runs-on: ubuntu-latest
-
     name: Unit tests
     steps:
     - uses: actions/checkout@v3
@@ -22,18 +21,7 @@ jobs:
       uses: helm/kind-action@v1.4.0
     - name: Install CRDs
       run: make install
-    - name: Install Go
-      uses: actions/setup-go@37335c7bb261b353407cff977110895fa0b4f7d8
-      with:
-        go-version: 1.20.x
-    - name: Running operator and Tests
-      env:
-        CORALOGIX_REGION: ${{ secrets.CORALOGIX_REGION }}
-        CORALOGIX_API_KEY: ${{ secrets.CORALOGIX_API_KEY }}
-      run: |
-        go run main.go &
-        sleep 10s
-        make test
+    - run: make test
     - name: Patch Coverage
       uses: seriousben/go-patch-cover-action@v1
       with:
