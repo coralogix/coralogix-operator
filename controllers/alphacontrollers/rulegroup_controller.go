@@ -40,7 +40,7 @@ import (
 // RuleGroupReconciler reconciles a RuleGroup object
 type RuleGroupReconciler struct {
 	client.Client
-	CoralogixClientSet *clientset.ClientSet
+	CoralogixClientSet clientset.ClientSetInterface
 	Scheme             *runtime.Scheme
 }
 
@@ -78,7 +78,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 	}
 
-	myFinalizerName := "coralogix.com/rulegroup/finalizer"
+	myFinalizerName := "coralogix.com.rulegroup/finalizer"
 
 	// examine DeletionTimestamp to determine if object is under deletion
 	if ruleGroupCRD.ObjectMeta.DeletionTimestamp.IsZero() {

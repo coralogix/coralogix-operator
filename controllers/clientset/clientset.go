@@ -3,7 +3,7 @@ package clientset
 type ClientSetInterface interface {
 	RuleGroups() RuleGroupsClientInterface
 	Alerts() AlertsClientInterface
-	RecordingRulesGroups() RecordingRulesGroupsClientInterface
+	RecordingRuleGroups() RecordingRulesGroupsClientInterface
 	Webhooks() WebhooksClientInterface
 }
 
@@ -26,7 +26,7 @@ func (c *ClientSet) Webhooks() WebhooksClientInterface {
 	return c.webhooks
 }
 
-func (c *ClientSet) RecordingRulesGroups() RecordingRulesGroupsClientInterface {
+func (c *ClientSet) RecordingRuleGroups() RecordingRulesGroupsClientInterface {
 	return c.recordingRuleGroups
 }
 

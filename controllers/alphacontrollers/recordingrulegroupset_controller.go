@@ -38,7 +38,7 @@ import (
 // RecordingRuleGroupSetReconciler reconciles a RecordingRuleGroupSet object
 type RecordingRuleGroupSetReconciler struct {
 	client.Client
-	CoralogixClientSet *clientset.ClientSet
+	CoralogixClientSet clientset.ClientSetInterface
 	Scheme             *runtime.Scheme
 }
 
@@ -76,7 +76,7 @@ func (r *RecordingRuleGroupSetReconciler) Reconcile(ctx context.Context, req ctr
 	}
 
 	// name of our custom finalizer
-	myFinalizerName := "coralogix.com/recordingrulegroupset/finalizer"
+	myFinalizerName := "coralogix.com.recordingrulegroupset/finalizer"
 
 	// examine DeletionTimestamp to determine if object is under deletion
 	if ruleGroupSetCRD.ObjectMeta.DeletionTimestamp.IsZero() {

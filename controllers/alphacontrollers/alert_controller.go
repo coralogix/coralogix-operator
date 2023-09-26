@@ -60,9 +60,9 @@ type AlertReconciler struct {
 	Scheme             *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=coralogix.com,resources=alerts,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=coralogix.com,resources=alerts/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=coralogix.com,resources=alerts/finalizers,verbs=update
+//+kubebuilder:rbac:groups=coralogix.com,resources=Alerts,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=coralogix.com,resources=Alerts/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=coralogix.com,resources=Alerts/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -95,7 +95,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	// name of our custom finalizer
-	myFinalizerName := "coralogix.com/alert/finalizer"
+	myFinalizerName := "coralogix.com.alert/finalizer"
 
 	// examine DeletionTimestamp to determine if object is under deletion
 	if alertCRD.ObjectMeta.DeletionTimestamp.IsZero() {
@@ -160,6 +160,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		getAlertResp, err := alertsClient.GetAlert(ctx, &alerts.GetAlertByUniqueIdRequest{Id: wrapperspb.String(*id)})
 		switch {
 		case status.Code(err) == codes.NotFound:
+			log.V(1).Info("Content", "Alerts", alertsClient.(*mockAlertsClient).Alerts)
 			log.V(1).Info("alert doesn't exist in Coralogix backend", "ID", id)
 			notFound = true
 		case err != nil:
@@ -193,11 +194,12 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		jstr, _ := jsm.MarshalToString(createAlertReq)
 		log.V(1).Info("Creating Alert", "alert", jstr)
 		if createAlertResp, err := alertsClient.CreateAlert(ctx, createAlertReq); err == nil {
+			log.V(1).Info("Content", "Alerts", alertsClient.(*mockAlertsClient).Alerts)
 			jstr, _ = jsm.MarshalToString(createAlertResp)
 			log.V(1).Info("Alert was created", "alert", jstr)
 
 			//To avoid a situation of the operator falling between the creation of the alert in coralogix and being saved in the cluster (something that would cause it to be created again and again), its id will be saved ASAP.
-			id := createAlertResp.GetAlert().GetId().GetValue()
+			id := createAlertResp.GetAlert().GetUniqueIdentifier().GetValue()
 			alertCRD.Status = coralogixv1alpha1.AlertStatus{ID: &id}
 			if err := r.Status().Update(ctx, alertCRD); err != nil {
 				log.Error(err, "Error on updating alert status", "Name", alertCRD.Name, "Namespace", alertCRD.Namespace)

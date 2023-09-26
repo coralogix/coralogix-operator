@@ -38,7 +38,7 @@ const (
 // PrometheusRuleReconciler reconciles a PrometheusRule object
 type PrometheusRuleReconciler struct {
 	client.Client
-	CoralogixClientSet *clientset.ClientSet
+	CoralogixClientSet clientset.ClientSetInterface
 	Scheme             *runtime.Scheme
 }
 

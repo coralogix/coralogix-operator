@@ -111,7 +111,7 @@ var (
 	}
 	msInHour       = int(time.Hour.Milliseconds())
 	msInMinute     = int(time.Minute.Milliseconds())
-	WebhooksClient *clientset.WebhooksClient
+	WebhooksClient clientset.WebhooksClientInterface
 )
 
 type ProtoTimeFrameAndRelativeTimeFrame struct {
