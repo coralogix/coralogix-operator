@@ -60,9 +60,9 @@ type AlertReconciler struct {
 	Scheme             *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=coralogix.com,resources=Alerts,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=coralogix.com,resources=Alerts/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=coralogix.com,resources=Alerts/finalizers,verbs=update
+//+kubebuilder:rbac:groups=coralogix.com,resources=alerts,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=coralogix.com,resources=alerts/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=coralogix.com,resources=alerts/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
