@@ -34,7 +34,6 @@ jobs:
         go run main.go &
         sleep 10s
         make test
-#    - run: make test
     - name: Patch Coverage
       uses: seriousben/go-patch-cover-action@v1
       with:

@@ -90,22 +90,18 @@ func TestAlertReconciler_Reconcile(t *testing.T) {
 	mgr, _ := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme: scheme,
 	})
-
 	r := AlertReconciler{
 		Client:             mgr.GetClient(),
 		Scheme:             mgr.GetScheme(),
 		CoralogixClientSet: NewMockCoralogixClientSet(),
 	}
-
 	r.SetupWithManager(mgr)
-
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
 	go func() {
 		err := mgr.Start(ctrl.SetupSignalHandler())
 		assert.NoError(t, err)
 	}()
-
 	time.Sleep(2 * time.Second)
 
 	alert := &coralogixv1alpha1.Alert{
@@ -149,24 +145,24 @@ func TestAlertReconciler_Reconcile(t *testing.T) {
 	err := r.Client.Create(ctx, alert)
 	time.Sleep(2 * time.Second)
 
-	var alertCRD = &coralogixv1alpha1.Alert{}
-	err = r.Client.Get(ctx, types.NamespacedName{Namespace: "default", Name: "test"}, alertCRD)
+	namespacedName := types.NamespacedName{Namespace: "default", Name: "test"}
+	alertCRD := &coralogixv1alpha1.Alert{}
+	err = r.Client.Get(ctx, namespacedName, alertCRD)
 	assert.NoError(t, err)
 
-	req := ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}}
-
-	err = r.Client.Get(ctx, req.NamespacedName, alertCRD)
+	err = r.Client.Get(ctx, namespacedName, alertCRD)
 	assert.NoError(t, err)
 
 	id := alertCRD.Status.ID
 	assert.NotNil(t, id)
 
-	_, err = r.CoralogixClientSet.Alerts().GetAlert(ctx, &alerts.GetAlertByUniqueIdRequest{Id: wrapperspb.String(*id)})
+	getAlertRequest := &alerts.GetAlertByUniqueIdRequest{Id: wrapperspb.String(*id)}
+	_, err = r.CoralogixClientSet.Alerts().GetAlert(ctx, getAlertRequest)
 	assert.NoError(t, err)
 
 	r.Client.Delete(ctx, alert)
 	time.Sleep(2 * time.Second)
 
-	_, err = r.CoralogixClientSet.Alerts().GetAlert(ctx, &alerts.GetAlertByUniqueIdRequest{Id: wrapperspb.String(*id)})
+	_, err = r.CoralogixClientSet.Alerts().GetAlert(ctx, getAlertRequest)
 	assert.Error(t, err)
 }

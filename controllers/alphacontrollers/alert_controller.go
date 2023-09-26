@@ -160,7 +160,6 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		getAlertResp, err := alertsClient.GetAlert(ctx, &alerts.GetAlertByUniqueIdRequest{Id: wrapperspb.String(*id)})
 		switch {
 		case status.Code(err) == codes.NotFound:
-			log.V(1).Info("Content", "Alerts", alertsClient.(*mockAlertsClient).Alerts)
 			log.V(1).Info("alert doesn't exist in Coralogix backend", "ID", id)
 			notFound = true
 		case err != nil:
@@ -194,7 +193,6 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		jstr, _ := jsm.MarshalToString(createAlertReq)
 		log.V(1).Info("Creating Alert", "alert", jstr)
 		if createAlertResp, err := alertsClient.CreateAlert(ctx, createAlertReq); err == nil {
-			log.V(1).Info("Content", "Alerts", alertsClient.(*mockAlertsClient).Alerts)
 			jstr, _ = jsm.MarshalToString(createAlertResp)
 			log.V(1).Info("Alert was created", "alert", jstr)
 
