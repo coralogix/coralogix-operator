@@ -143,7 +143,7 @@ func TestAlertReconciler_Reconcile(t *testing.T) {
 		},
 	}
 	ctx := context.Background()
-	err := r.Client.Create(ctx, alert)
+	err = r.Client.Create(ctx, alert)
 	time.Sleep(2 * time.Second)
 
 	namespacedName := types.NamespacedName{Namespace: "default", Name: "test"}
