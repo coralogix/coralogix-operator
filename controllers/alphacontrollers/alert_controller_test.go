@@ -87,9 +87,10 @@ func TestFlattenAlerts(t *testing.T) {
 func TestAlertReconciler_Reconcile(t *testing.T) {
 	scheme := runtime.NewScheme()
 	utilruntime.Must(coralogixv1alpha1.AddToScheme(scheme))
-	mgr, _ := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme: scheme,
 	})
+	assert.NoError(t, err)
 	r := AlertReconciler{
 		Client:             mgr.GetClient(),
 		Scheme:             mgr.GetScheme(),
