@@ -276,6 +276,55 @@ func TestAlertReconciler_Reconcile(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestAlertReconciler_Reconcile_5XX_StatusError(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	mockAlertsClient := createMockAlertsClientWith5XXStatusError(mockCtrl, expectedAlertBackendSchema)
+	mockWebhooksClient := createSimpleWebhooksClient(mockCtrl)
+	mockClientSet := mock_clientset.NewMockClientSetInterface(mockCtrl)
+	mockClientSet.EXPECT().Alerts().Return(mockAlertsClient).AnyTimes()
+	mockClientSet.EXPECT().Webhooks().Return(mockWebhooksClient).AnyTimes()
+
+	scheme := runtime.NewScheme()
+	utilruntime.Must(coralogixv1alpha1.AddToScheme(scheme))
+	mgr, _ := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+		Scheme: scheme,
+	})
+	ctx := context.Background()
+	go mgr.GetCache().Start(ctx)
+	mgr.GetCache().WaitForCacheSync(ctx)
+	withWatch, err := client.NewWithWatch(mgr.GetConfig(), client.Options{
+		Scheme: mgr.GetScheme(),
+	})
+	assert.NoError(t, err)
+	r := AlertReconciler{
+		WithWatch:          withWatch,
+		Scheme:             mgr.GetScheme(),
+		CoralogixClientSet: mockClientSet,
+	}
+	r.SetupWithManager(mgr)
+
+	watcher, _ := r.WithWatch.Watch(ctx, &coralogixv1alpha1.AlertList{})
+	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
+
+	err = r.WithWatch.Create(ctx, expectedAlertCRD)
+	assert.NoError(t, err)
+	<-watcher.ResultChan()
+
+	result, err := r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
+	assert.Error(t, err)
+	assert.Equal(t, result.RequeueAfter, defaultErrRequeuePeriod)
+
+	result, err = r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
+	assert.NoError(t, err)
+	assert.Equal(t, result.RequeueAfter, defaultRequeuePeriod)
+
+	namespacedName := types.NamespacedName{Namespace: "default", Name: "test"}
+	actualAlertCRD := &coralogixv1alpha1.Alert{}
+	err = r.WithWatch.Get(ctx, namespacedName, actualAlertCRD)
+	assert.NoError(t, err)
+}
+
 // Creates a mock webhooks client that contains a single webhook with id "id1".
 func createSimpleWebhooksClient(mockCtrl *gomock.Controller) *mock_clientset.MockWebhooksClientInterface {
 	mockWebhooksClient := mock_clientset.NewMockWebhooksClientInterface(mockCtrl)
@@ -286,11 +335,53 @@ func createSimpleWebhooksClient(mockCtrl *gomock.Controller) *mock_clientset.Moc
 	return mockWebhooksClient
 }
 
-// Creates a mock alerts client that returns the given alert when creating an alert with name "name1" and id "id1", and .
+// Creates a mock alerts client that returns the given alert when creating an alert with name "name1" and id "id1".
 func createSimpleMockAlertsClient(mockCtrl *gomock.Controller, alert *alerts.Alert) *mock_clientset.MockAlertsClientInterface {
 	mockAlertsClient := mock_clientset.NewMockAlertsClientInterface(mockCtrl)
 
 	var alertExist bool
+
+	mockAlertsClient.EXPECT().
+		CreateAlert(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, _ *alerts.CreateAlertRequest) (*alerts.CreateAlertResponse, error) {
+		alertExist = true
+		return &alerts.CreateAlertResponse{Alert: alert}, nil
+	}).AnyTimes()
+
+	mockAlertsClient.EXPECT().
+		GetAlert(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, req *alerts.GetAlertByUniqueIdRequest) (*alerts.GetAlertByUniqueIdResponse, error) {
+		if alertExist {
+			return &alerts.GetAlertByUniqueIdResponse{Alert: alert}, nil
+		}
+		return nil, errors.NewNotFound(schema.GroupResource{}, "id1")
+	}).AnyTimes()
+
+	mockAlertsClient.EXPECT().
+		DeleteAlert(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, req *alerts.DeleteAlertByUniqueIdRequest) (*alerts.DeleteAlertByUniqueIdResponse, error) {
+		if alertExist {
+			alertExist = false
+			return &alerts.DeleteAlertByUniqueIdResponse{}, nil
+		}
+		return nil, errors.NewNotFound(schema.GroupResource{}, "id1")
+	}).AnyTimes()
+
+	return mockAlertsClient
+}
+
+// Creates a mock alerts client that first time fails on creating alert, then returns the given alert when creating an alert with name "name1" and id "id1" .
+func createMockAlertsClientWith5XXStatusError(mockCtrl *gomock.Controller, alert *alerts.Alert) *mock_clientset.MockAlertsClientInterface {
+	mockAlertsClient := mock_clientset.NewMockAlertsClientInterface(mockCtrl)
+
+	var alertExist bool
+	var wasCalled bool
+	mockAlertsClient.EXPECT().
+		CreateAlert(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, _ *alerts.CreateAlertRequest) (*alerts.CreateAlertResponse, error) {
+		if !wasCalled {
+			wasCalled = true
+			return nil, errors.NewBadRequest("bad request")
+		}
+		alertExist = true
+		return &alerts.CreateAlertResponse{Alert: alert}, nil
+	}).AnyTimes()
 
 	mockAlertsClient.EXPECT().
 		CreateAlert(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, _ *alerts.CreateAlertRequest) (*alerts.CreateAlertResponse, error) {
