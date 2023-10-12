@@ -233,16 +233,16 @@ func TestAlertReconciler_Reconcile(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	r := AlertReconciler{
-		WithWatch:          withWatch,
+		Client:             withWatch,
 		Scheme:             mgr.GetScheme(),
 		CoralogixClientSet: mockClientSet,
 	}
 	r.SetupWithManager(mgr)
 
-	watcher, _ := r.WithWatch.Watch(ctx, &coralogixv1alpha1.AlertList{})
+	watcher, _ := r.Client.(client.WithWatch).Watch(ctx, &coralogixv1alpha1.AlertList{})
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
-	err = r.WithWatch.Create(ctx, expectedAlertCRD)
+	err = r.Client.Create(ctx, expectedAlertCRD)
 	assert.NoError(t, err)
 	<-watcher.ResultChan()
 
@@ -252,7 +252,7 @@ func TestAlertReconciler_Reconcile(t *testing.T) {
 
 	namespacedName := types.NamespacedName{Namespace: "default", Name: "test"}
 	actualAlertCRD := &coralogixv1alpha1.Alert{}
-	err = r.WithWatch.Get(ctx, namespacedName, actualAlertCRD)
+	err = r.Client.Get(ctx, namespacedName, actualAlertCRD)
 	assert.NoError(t, err)
 
 	id := actualAlertCRD.Status.ID
@@ -264,7 +264,7 @@ func TestAlertReconciler_Reconcile(t *testing.T) {
 	assert.NoError(t, err)
 	assert.EqualValues(t, expectedAlertBackendSchema, alert.GetAlert())
 
-	err = r.WithWatch.Delete(ctx, actualAlertCRD)
+	err = r.Client.Delete(ctx, actualAlertCRD)
 	<-watcher.ResultChan()
 
 	result, err = r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
@@ -298,16 +298,16 @@ func TestAlertReconciler_Reconcile_5XX_StatusError(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	r := AlertReconciler{
-		WithWatch:          withWatch,
+		Client:             withWatch,
 		Scheme:             mgr.GetScheme(),
 		CoralogixClientSet: mockClientSet,
 	}
 	r.SetupWithManager(mgr)
 
-	watcher, _ := r.WithWatch.Watch(ctx, &coralogixv1alpha1.AlertList{})
+	watcher, _ := r.Client.(client.WithWatch).Watch(ctx, &coralogixv1alpha1.AlertList{})
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
-	err = r.WithWatch.Create(ctx, expectedAlertCRD)
+	err = r.Client.Create(ctx, expectedAlertCRD)
 	assert.NoError(t, err)
 	<-watcher.ResultChan()
 
@@ -321,7 +321,7 @@ func TestAlertReconciler_Reconcile_5XX_StatusError(t *testing.T) {
 
 	namespacedName := types.NamespacedName{Namespace: "default", Name: "test"}
 	actualAlertCRD := &coralogixv1alpha1.Alert{}
-	err = r.WithWatch.Get(ctx, namespacedName, actualAlertCRD)
+	err = r.Client.Get(ctx, namespacedName, actualAlertCRD)
 	assert.NoError(t, err)
 }
 

@@ -55,7 +55,7 @@ var (
 
 // AlertReconciler reconciles a Alert object
 type AlertReconciler struct {
-	client.WithWatch
+	client.Client
 	CoralogixClientSet clientset.ClientSetInterface
 	Scheme             *runtime.Scheme
 }
@@ -84,7 +84,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	//Get alertCRD
 	alertCRD := &coralogixv1alpha1.Alert{}
-	if err := r.WithWatch.Get(ctx, req.NamespacedName, alertCRD); err != nil {
+	if err := r.Client.Get(ctx, req.NamespacedName, alertCRD); err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
@@ -180,7 +180,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			alertCRD.Spec.Labels = make(map[string]string)
 		}
 		alertCRD.Spec.Labels["managed-by"] = "coralogix-operator"
-		if err := r.WithWatch.Update(ctx, alertCRD); err != nil {
+		if err := r.Client.Update(ctx, alertCRD); err != nil {
 			log.Error(err, "Error on updating alert", "Name", alertCRD.Name, "Namespace", alertCRD.Namespace)
 			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 		}

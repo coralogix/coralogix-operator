@@ -23,7 +23,6 @@ import (
 
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"k8s.io/utils/strings/slices"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	utils "github.com/coralogix/coralogix-operator/apis"
@@ -140,13 +139,9 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "RuleGroup")
 		os.Exit(1)
 	}
-
-	withWatch, _ := client.NewWithWatch(mgr.GetConfig(), client.Options{
-		Scheme: mgr.GetScheme(),
-	})
 	if err = (&alphacontrollers.AlertReconciler{
 		CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),
-		WithWatch:          withWatch,
+		Client:             mgr.GetClient(),
 		Scheme:             mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Alert")
