@@ -96,7 +96,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	// name of our custom finalizer
-	myFinalizerName := "coralogix.com.alert/finalizer"
+	myFinalizerName := "alert.coralogix.com/finalizer"
 
 	// examine DeletionTimestamp to determine if object is under deletion
 	if alertCRD.ObjectMeta.DeletionTimestamp.IsZero() {

@@ -76,7 +76,7 @@ func (r *RecordingRuleGroupSetReconciler) Reconcile(ctx context.Context, req ctr
 	}
 
 	// name of our custom finalizer
-	myFinalizerName := "coralogix.com.recordingrulegroupset/finalizer"
+	myFinalizerName := "recordingrulegroupset.coralogix.com/finalizer"
 
 	// examine DeletionTimestamp to determine if object is under deletion
 	if ruleGroupSetCRD.ObjectMeta.DeletionTimestamp.IsZero() {
