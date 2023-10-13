@@ -8,6 +8,7 @@ import (
 	"github.com/coralogix/coralogix-operator/controllers/clientset/rest"
 )
 
+//go:generate mockgen -destination=../mock_clientset/mock_webhooks-client.go -package=mock_clientset github.com/coralogix/coralogix-operator/controllers/clientset WebhooksClientInterface
 type WebhooksClientInterface interface {
 	CreateWebhook(ctx context.Context, body string) (string, error)
 	GetWebhook(ctx context.Context, webhookId string) (string, error)

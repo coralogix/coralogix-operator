@@ -37,6 +37,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+var ruleGroupFinalizerName = "rulegroup.coralogix.com/finalizer"
+
 // RuleGroupReconciler reconciles a RuleGroup object
 type RuleGroupReconciler struct {
 	client.Client
@@ -78,25 +80,23 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 	}
 
-	myFinalizerName := "rulegroup.coralogix.com/finalizer"
-
 	// examine DeletionTimestamp to determine if object is under deletion
 	if ruleGroupCRD.ObjectMeta.DeletionTimestamp.IsZero() {
 		// The object is not being deleted, so if it does not have our finalizer,
 		// then lets add the finalizer and update the object. This is equivalent
 		// registering our finalizer.
-		if !controllerutil.ContainsFinalizer(ruleGroupCRD, myFinalizerName) {
-			controllerutil.AddFinalizer(ruleGroupCRD, myFinalizerName)
+		if !controllerutil.ContainsFinalizer(ruleGroupCRD, ruleGroupFinalizerName) {
+			controllerutil.AddFinalizer(ruleGroupCRD, ruleGroupFinalizerName)
 			if err := r.Update(ctx, ruleGroupCRD); err != nil {
 				return ctrl.Result{}, err
 			}
 		}
 	} else {
 		// The object is being deleted
-		if controllerutil.ContainsFinalizer(ruleGroupCRD, myFinalizerName) {
+		if controllerutil.ContainsFinalizer(ruleGroupCRD, ruleGroupFinalizerName) {
 			// our finalizer is present, so lets handle any external dependency
 			if ruleGroupCRD.Status.ID == nil {
-				controllerutil.RemoveFinalizer(ruleGroupCRD, myFinalizerName)
+				controllerutil.RemoveFinalizer(ruleGroupCRD, ruleGroupFinalizerName)
 				err := r.Update(ctx, ruleGroupCRD)
 				return ctrl.Result{}, err
 			}
@@ -109,7 +109,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 				// so that it can be retried unless it is deleted manually.
 				log.Error(err, "Received an error while Deleting a Rule-Group", "Rule-Group ID", ruleGroupId)
 				if status.Code(err) == codes.NotFound {
-					controllerutil.RemoveFinalizer(ruleGroupCRD, myFinalizerName)
+					controllerutil.RemoveFinalizer(ruleGroupCRD, ruleGroupFinalizerName)
 					err := r.Update(ctx, ruleGroupCRD)
 					return ctrl.Result{}, err
 				}
@@ -118,7 +118,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 			log.V(1).Info("Rule-Group was deleted", "Rule-Group ID", ruleGroupId)
 			// remove our finalizer from the list and update it.
-			controllerutil.RemoveFinalizer(ruleGroupCRD, myFinalizerName)
+			controllerutil.RemoveFinalizer(ruleGroupCRD, ruleGroupFinalizerName)
 			if err := r.Update(ctx, ruleGroupCRD); err != nil {
 				return ctrl.Result{}, err
 			}

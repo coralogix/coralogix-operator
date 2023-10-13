@@ -35,6 +35,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
+var recordingRuleGroupSetFinalizerName = "recordingrulegroupset.coralogix.com/finalizer"
+
 // RecordingRuleGroupSetReconciler reconciles a RecordingRuleGroupSet object
 type RecordingRuleGroupSetReconciler struct {
 	client.Client
@@ -75,16 +77,13 @@ func (r *RecordingRuleGroupSetReconciler) Reconcile(ctx context.Context, req ctr
 		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 	}
 
-	// name of our custom finalizer
-	myFinalizerName := "recordingrulegroupset.coralogix.com/finalizer"
-
 	// examine DeletionTimestamp to determine if object is under deletion
 	if ruleGroupSetCRD.ObjectMeta.DeletionTimestamp.IsZero() {
 		// The object is not being deleted, so if it does not have our finalizer,
 		// then lets add the finalizer and update the object. This is equivalent
 		// registering our finalizer.
-		if !controllerutil.ContainsFinalizer(ruleGroupSetCRD, myFinalizerName) {
-			controllerutil.AddFinalizer(ruleGroupSetCRD, myFinalizerName)
+		if !controllerutil.ContainsFinalizer(ruleGroupSetCRD, recordingRuleGroupSetFinalizerName) {
+			controllerutil.AddFinalizer(ruleGroupSetCRD, recordingRuleGroupSetFinalizerName)
 			if err := r.Update(ctx, ruleGroupSetCRD); err != nil {
 				log.Error(err, "Received an error while Updating a RecordingRuleGroupSet", "recordingRuleGroup Name", ruleGroupSetCRD.Name)
 				return ctrl.Result{}, err
@@ -92,10 +91,10 @@ func (r *RecordingRuleGroupSetReconciler) Reconcile(ctx context.Context, req ctr
 		}
 	} else {
 		// The object is being deleted
-		if controllerutil.ContainsFinalizer(ruleGroupSetCRD, myFinalizerName) {
+		if controllerutil.ContainsFinalizer(ruleGroupSetCRD, recordingRuleGroupSetFinalizerName) {
 			// our finalizer is present, so lets handle any external dependency
 			if ruleGroupSetCRD.Status.ID == nil {
-				controllerutil.RemoveFinalizer(ruleGroupSetCRD, myFinalizerName)
+				controllerutil.RemoveFinalizer(ruleGroupSetCRD, recordingRuleGroupSetFinalizerName)
 				err := r.Update(ctx, ruleGroupSetCRD)
 				log.Error(err, "Received an error while Updating a RecordingRuleGroupSet", "recordingRuleGroup Name", ruleGroupSetCRD.Name)
 				return ctrl.Result{}, err
@@ -109,7 +108,7 @@ func (r *RecordingRuleGroupSetReconciler) Reconcile(ctx context.Context, req ctr
 				// so that it can be retried unless it is deleted manually.
 				log.Error(err, "Received an error while Deleting a RecordingRuleGroupSet", "recordingRuleGroup ID", id)
 				if status.Code(err) == codes.NotFound {
-					controllerutil.RemoveFinalizer(ruleGroupSetCRD, myFinalizerName)
+					controllerutil.RemoveFinalizer(ruleGroupSetCRD, recordingRuleGroupSetFinalizerName)
 					err := r.Update(ctx, ruleGroupSetCRD)
 					return ctrl.Result{}, err
 				}
@@ -118,7 +117,7 @@ func (r *RecordingRuleGroupSetReconciler) Reconcile(ctx context.Context, req ctr
 
 			log.V(1).Info("RecordingRuleGroupSet was deleted", "RecordingRuleGroupSet ID", id)
 			// remove our finalizer from the list and update it.
-			controllerutil.RemoveFinalizer(ruleGroupSetCRD, myFinalizerName)
+			controllerutil.RemoveFinalizer(ruleGroupSetCRD, recordingRuleGroupSetFinalizerName)
 			if err := r.Update(ctx, ruleGroupSetCRD); err != nil {
 				return ctrl.Result{}, err
 			}

@@ -6,6 +6,7 @@ import (
 	alerts "github.com/coralogix/coralogix-operator/controllers/clientset/grpc/alerts/v2"
 )
 
+//go:generate mockgen -destination=../mock_clientset/mock_alerts-client.go -package=mock_clientset github.com/coralogix/coralogix-operator/controllers/clientset AlertsClientInterface
 type AlertsClientInterface interface {
 	CreateAlert(ctx context.Context, req *alerts.CreateAlertRequest) (*alerts.CreateAlertResponse, error)
 	GetAlert(ctx context.Context, req *alerts.GetAlertByUniqueIdRequest) (*alerts.GetAlertByUniqueIdResponse, error)

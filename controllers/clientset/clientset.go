@@ -1,5 +1,6 @@
 package clientset
 
+//go:generate mockgen -destination=../mock_clientset/mock_clientset.go -package=mock_clientset github.com/coralogix/coralogix-operator/controllers/clientset ClientSetInterface
 type ClientSetInterface interface {
 	RuleGroups() RuleGroupsClientInterface
 	Alerts() AlertsClientInterface

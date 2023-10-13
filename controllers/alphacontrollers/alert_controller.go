@@ -51,6 +51,7 @@ var (
 	alertProtoArithmeticOperatorToSchemaArithmeticOperator           = utils.ReverseMap(coralogixv1alpha1.AlertSchemaArithmeticOperatorToProtoArithmeticOperator)
 	alertProtoNotifyOn                                               = utils.ReverseMap(coralogixv1alpha1.AlertSchemaNotifyOnToProtoNotifyOn)
 	alertProtoFlowOperatorToProtoFlowOperator                        = utils.ReverseMap(coralogixv1alpha1.AlertSchemaFlowOperatorToProtoFlowOperator)
+	alertFinalizerName                                               = "alert.coralogix.com/finalizer"
 )
 
 // AlertReconciler reconciles a Alert object
@@ -73,6 +74,7 @@ type AlertReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.4/pkg/reconcile
+
 func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 	jsm := &jsonpb.Marshaler{
@@ -95,16 +97,13 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 	}
 
-	// name of our custom finalizer
-	myFinalizerName := "alert.coralogix.com/finalizer"
-
 	// examine DeletionTimestamp to determine if object is under deletion
 	if alertCRD.ObjectMeta.DeletionTimestamp.IsZero() {
 		// The object is not being deleted, so if it does not have our finalizer,
 		// then lets add the finalizer and update the object. This is equivalent
 		// registering our finalizer.
-		if !controllerutil.ContainsFinalizer(alertCRD, myFinalizerName) {
-			controllerutil.AddFinalizer(alertCRD, myFinalizerName)
+		if !controllerutil.ContainsFinalizer(alertCRD, alertFinalizerName) {
+			controllerutil.AddFinalizer(alertCRD, alertFinalizerName)
 			if err := r.Update(ctx, alertCRD); err != nil {
 				log.Error(err, "Error on updating alert", "Name", alertCRD.Name, "Namespace", alertCRD.Namespace)
 				return ctrl.Result{}, err
@@ -112,10 +111,10 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 	} else {
 		// The object is being deleted
-		if controllerutil.ContainsFinalizer(alertCRD, myFinalizerName) {
+		if controllerutil.ContainsFinalizer(alertCRD, alertFinalizerName) {
 			// our finalizer is present, so lets handle any external dependency
 			if alertCRD.Status.ID == nil {
-				controllerutil.RemoveFinalizer(alertCRD, myFinalizerName)
+				controllerutil.RemoveFinalizer(alertCRD, alertFinalizerName)
 				err := r.Update(ctx, alertCRD)
 				return ctrl.Result{}, err
 			}
@@ -127,7 +126,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 				// if fail to delete the external dependency here, return with error
 				// so that it can be retried
 				if status.Code(err) == codes.NotFound {
-					controllerutil.RemoveFinalizer(alertCRD, myFinalizerName)
+					controllerutil.RemoveFinalizer(alertCRD, alertFinalizerName)
 					err := r.Update(ctx, alertCRD)
 					return ctrl.Result{}, err
 				}
@@ -138,7 +137,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 			log.V(1).Info("Alert was deleted", "Alert ID", alertId)
 			// remove our finalizer from the list and update it.
-			controllerutil.RemoveFinalizer(alertCRD, myFinalizerName)
+			controllerutil.RemoveFinalizer(alertCRD, alertFinalizerName)
 			if err := r.Update(ctx, alertCRD); err != nil {
 				log.Error(err, "Error on updating alert", "Name", alertCRD.Name, "Namespace", alertCRD.Namespace)
 				return ctrl.Result{}, err
