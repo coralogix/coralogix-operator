@@ -18,6 +18,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -25,7 +26,7 @@ import (
 )
 
 var expectedAlertBackendSchema = &alerts.Alert{
-	UniqueIdentifier: wrapperspb.String("id"),
+	UniqueIdentifier: wrapperspb.String("id1"),
 	Name:             wrapperspb.String("name"),
 	Description:      wrapperspb.String("description"),
 	IsActive:         wrapperspb.Bool(true),
@@ -74,43 +75,47 @@ var expectedAlertBackendSchema = &alerts.Alert{
 	},
 	NotificationPayloadFilters: []*wrapperspb.StringValue{wrapperspb.String("filter")},
 }
-var expectedAlertCRD = &coralogixv1alpha1.Alert{
-	TypeMeta:   metav1.TypeMeta{Kind: "Alert", APIVersion: "coralogix.com/v1alpha1"},
-	ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
-	Spec: coralogixv1alpha1.AlertSpec{
-		Name:        expectedAlertBackendSchema.GetName().GetValue(),
-		Description: expectedAlertBackendSchema.GetDescription().GetValue(),
-		Active:      expectedAlertBackendSchema.GetIsActive().GetValue(),
-		Severity:    alertProtoSeverityToSchemaSeverity[expectedAlertBackendSchema.GetSeverity()],
-		Labels:      map[string]string{"key": "value", "managed-by": "coralogix-operator"},
-		NotificationGroups: []coralogixv1alpha1.NotificationGroup{
-			{
-				Notifications: []coralogixv1alpha1.Notification{
-					{
-						RetriggeringPeriodMinutes: 10,
-						NotifyOn:                  coralogixv1alpha1.NotifyOnTriggeredAndResolved,
-						EmailRecipients:           []string{"example@coralogix.com"},
+
+func expectedAlertCRD() *coralogixv1alpha1.Alert {
+	return &coralogixv1alpha1.Alert{
+		TypeMeta:   metav1.TypeMeta{Kind: "Alert", APIVersion: "coralogix.com/v1alpha1"},
+		ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+		Spec: coralogixv1alpha1.AlertSpec{
+			Name:        expectedAlertBackendSchema.GetName().GetValue(),
+			Description: expectedAlertBackendSchema.GetDescription().GetValue(),
+			Active:      expectedAlertBackendSchema.GetIsActive().GetValue(),
+			Severity:    alertProtoSeverityToSchemaSeverity[expectedAlertBackendSchema.GetSeverity()],
+			Labels:      map[string]string{"key": "value", "managed-by": "coralogix-operator"},
+			NotificationGroups: []coralogixv1alpha1.NotificationGroup{
+				{
+					Notifications: []coralogixv1alpha1.Notification{
+						{
+							RetriggeringPeriodMinutes: 10,
+							NotifyOn:                  coralogixv1alpha1.NotifyOnTriggeredAndResolved,
+							EmailRecipients:           []string{"example@coralogix.com"},
+						},
+					},
+				},
+			},
+			PayloadFilters: []string{"filter"},
+			AlertType: coralogixv1alpha1.AlertType{
+				Metric: &coralogixv1alpha1.Metric{
+					Promql: &coralogixv1alpha1.Promql{
+						SearchQuery: "http_requests_total{status!~\"4..\"}",
+						Conditions: coralogixv1alpha1.PromqlConditions{
+							AlertWhen:                   "MoreThanUsual",
+							Threshold:                   utils.FloatToQuantity(3.0),
+							TimeWindow:                  "TwelveHours",
+							MinNonNullValuesPercentage:  pointer.Int(10),
+							ReplaceMissingValueWithZero: false,
+						},
 					},
 				},
 			},
 		},
-		PayloadFilters: []string{"filter"},
-		AlertType: coralogixv1alpha1.AlertType{
-			Metric: &coralogixv1alpha1.Metric{
-				Promql: &coralogixv1alpha1.Promql{
-					SearchQuery: "http_requests_total{status!~\"4..\"}",
-					Conditions: coralogixv1alpha1.PromqlConditions{
-						AlertWhen:                   "MoreThanUsual",
-						Threshold:                   utils.FloatToQuantity(3.0),
-						TimeWindow:                  coralogixv1alpha1.MetricTimeWindow("TwelveHours"),
-						MinNonNullValuesPercentage:  pointer.Int(10),
-						ReplaceMissingValueWithZero: false,
-					},
-				},
-			},
-		},
-	},
+	}
 }
+
 var expectedAlertStatus = &coralogixv1alpha1.AlertStatus{
 	ID:          pointer.String("id"),
 	Name:        "name",
@@ -148,7 +153,7 @@ var expectedAlertStatus = &coralogixv1alpha1.AlertStatus{
 
 func TestFlattenAlerts(t *testing.T) {
 	alert := &alerts.Alert{
-		UniqueIdentifier: wrapperspb.String("id"),
+		UniqueIdentifier: wrapperspb.String("id1"),
 		Name:             wrapperspb.String("name"),
 		Description:      wrapperspb.String("description"),
 		IsActive:         wrapperspb.Bool(true),
@@ -184,7 +189,7 @@ func TestFlattenAlerts(t *testing.T) {
 	assert.NoError(t, err)
 
 	expected := &coralogixv1alpha1.AlertStatus{
-		ID:          pointer.String("id"),
+		ID:          pointer.String("id1"),
 		Name:        "name",
 		Description: "description",
 		Active:      true,
@@ -242,13 +247,13 @@ func TestAlertReconciler_Reconcile(t *testing.T) {
 	watcher, _ := r.Client.(client.WithWatch).Watch(ctx, &coralogixv1alpha1.AlertList{})
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
-	err = r.Client.Create(ctx, expectedAlertCRD)
+	err = r.Client.Create(ctx, expectedAlertCRD())
 	assert.NoError(t, err)
 	<-watcher.ResultChan()
 
 	result, err := r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
 	assert.NoError(t, err)
-	assert.Equal(t, result.RequeueAfter, defaultRequeuePeriod)
+	assert.Equal(t, defaultRequeuePeriod, result.RequeueAfter)
 
 	namespacedName := types.NamespacedName{Namespace: "default", Name: "test"}
 	actualAlertCRD := &coralogixv1alpha1.Alert{}
@@ -307,17 +312,18 @@ func TestAlertReconciler_Reconcile_5XX_StatusError(t *testing.T) {
 	watcher, _ := r.Client.(client.WithWatch).Watch(ctx, &coralogixv1alpha1.AlertList{})
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
-	err = r.Client.Create(ctx, expectedAlertCRD)
+	err = r.Client.Create(ctx, expectedAlertCRD())
 	assert.NoError(t, err)
-	<-watcher.ResultChan()
+	event := <-watcher.ResultChan()
+	assert.Equal(t, watch.Added, event.Type)
 
 	result, err := r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
 	assert.Error(t, err)
-	assert.Equal(t, result.RequeueAfter, defaultErrRequeuePeriod)
+	assert.Equal(t, defaultErrRequeuePeriod, result.RequeueAfter)
 
 	result, err = r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
 	assert.NoError(t, err)
-	assert.Equal(t, result.RequeueAfter, defaultRequeuePeriod)
+	assert.Equal(t, defaultRequeuePeriod, result.RequeueAfter)
 
 	namespacedName := types.NamespacedName{Namespace: "default", Name: "test"}
 	actualAlertCRD := &coralogixv1alpha1.Alert{}
