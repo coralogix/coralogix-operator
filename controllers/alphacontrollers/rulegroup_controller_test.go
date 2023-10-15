@@ -175,9 +175,11 @@ func TestRuleGroupReconciler_Reconcile(t *testing.T) {
 	scheme := runtime.NewScheme()
 	utilruntime.Must(coralogixv1alpha1.AddToScheme(scheme))
 	mgr, _ := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme: scheme,
+		Scheme:             scheme,
+		MetricsBindAddress: "0",
 	})
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	go mgr.GetCache().Start(ctx)
 	mgr.GetCache().WaitForCacheSync(ctx)
 	withWatch, err := client.NewWithWatch(mgr.GetConfig(), client.Options{
@@ -238,9 +240,10 @@ func TestRuleGroupReconciler_Reconcile_5XX_StatusError(t *testing.T) {
 	utilruntime.Must(coralogixv1alpha1.AddToScheme(scheme))
 	mgr, _ := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:             scheme,
-		MetricsBindAddress: ":8081",
+		MetricsBindAddress: "0",
 	})
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	go mgr.GetCache().Start(ctx)
 	mgr.GetCache().WaitForCacheSync(ctx)
 	withWatch, err := client.NewWithWatch(mgr.GetConfig(), client.Options{
