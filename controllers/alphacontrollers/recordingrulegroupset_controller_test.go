@@ -159,7 +159,8 @@ func TestRecordingRuleGroupSetReconciler_Reconcile_5XX_StatusError(t *testing.T)
 	scheme := runtime.NewScheme()
 	utilruntime.Must(coralogixv1alpha1.AddToScheme(scheme))
 	mgr, _ := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme: scheme,
+		Scheme:             scheme,
+		MetricsBindAddress: ":8081",
 	})
 	ctx := context.Background()
 	go mgr.GetCache().Start(ctx)
