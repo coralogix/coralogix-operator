@@ -3,6 +3,7 @@ package alphacontrollers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	utils "github.com/coralogix/coralogix-operator/apis"
@@ -114,41 +115,6 @@ func expectedAlertCRD() *coralogixv1alpha1.Alert {
 			},
 		},
 	}
-}
-
-var expectedAlertStatus = &coralogixv1alpha1.AlertStatus{
-	ID:          pointer.String("id"),
-	Name:        "name",
-	Description: "description",
-	Active:      true,
-	Severity:    "Critical",
-	Labels:      map[string]string{"key": "value", "managed-by": "coralogix-operator"},
-	AlertType: coralogixv1alpha1.AlertType{
-		Metric: &coralogixv1alpha1.Metric{
-			Promql: &coralogixv1alpha1.Promql{
-				SearchQuery: "http_requests_total{status!~\"4..\"}",
-				Conditions: coralogixv1alpha1.PromqlConditions{
-					AlertWhen:                   "MoreThanUsual",
-					Threshold:                   utils.FloatToQuantity(3.0),
-					TimeWindow:                  coralogixv1alpha1.MetricTimeWindow("TwelveHours"),
-					MinNonNullValuesPercentage:  pointer.Int(10),
-					ReplaceMissingValueWithZero: false,
-				},
-			},
-		},
-	},
-	NotificationGroups: []coralogixv1alpha1.NotificationGroup{
-		{
-			Notifications: []coralogixv1alpha1.Notification{
-				{
-					RetriggeringPeriodMinutes: 10,
-					NotifyOn:                  coralogixv1alpha1.NotifyOnTriggeredAndResolved,
-					EmailRecipients:           []string{"example@coralogix.com"},
-				},
-			},
-		},
-	},
-	PayloadFilters: []string{"filter"},
 }
 
 func TestFlattenAlerts(t *testing.T) {
@@ -329,6 +295,10 @@ func TestAlertReconciler_Reconcile_5XX_StatusError(t *testing.T) {
 	actualAlertCRD := &coralogixv1alpha1.Alert{}
 	err = r.Client.Get(ctx, namespacedName, actualAlertCRD)
 	assert.NoError(t, err)
+
+	err = r.Client.Delete(ctx, actualAlertCRD)
+	<-watcher.ResultChan()
+	r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
 }
 
 // Creates a mock webhooks client that contains a single webhook with id "id1".
@@ -383,7 +353,7 @@ func createMockAlertsClientWith5XXStatusError(mockCtrl *gomock.Controller, alert
 		CreateAlert(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, _ *alerts.CreateAlertRequest) (*alerts.CreateAlertResponse, error) {
 		if !wasCalled {
 			wasCalled = true
-			return nil, errors.NewBadRequest("bad request")
+			return nil, errors.NewInternalError(fmt.Errorf("internal error"))
 		}
 		alertExist = true
 		return &alerts.CreateAlertResponse{Alert: alert}, nil

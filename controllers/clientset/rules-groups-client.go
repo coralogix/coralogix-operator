@@ -6,6 +6,7 @@ import (
 	rulesgroups "github.com/coralogix/coralogix-operator/controllers/clientset/grpc/rules-groups/v1"
 )
 
+//go:generate mockgen -destination=../mock_clientset/mock_rulegroups-client.go -package=mock_clientset github.com/coralogix/coralogix-operator/controllers/clientset RuleGroupsClientInterface
 type RuleGroupsClientInterface interface {
 	CreateRuleGroup(ctx context.Context, req *rulesgroups.CreateRuleGroupRequest) (*rulesgroups.CreateRuleGroupResponse, error)
 	GetRuleGroup(ctx context.Context, req *rulesgroups.GetRuleGroupRequest) (*rulesgroups.GetRuleGroupResponse, error)

@@ -7,6 +7,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
+//go:generate mockgen -destination=../mock_clientset/mock_recordingrulesgroups-client.go -package=mock_clientset github.com/coralogix/coralogix-operator/controllers/clientset RecordingRulesGroupsClientInterface
 type RecordingRulesGroupsClientInterface interface {
 	CreateRecordingRuleGroupSet(ctx context.Context, req *rrg.CreateRuleGroupSet) (*rrg.CreateRuleGroupSetResult, error)
 	GetRecordingRuleGroupSet(ctx context.Context, req *rrg.FetchRuleGroupSet) (*rrg.OutRuleGroupSet, error)
