@@ -175,8 +175,7 @@ func TestRuleGroupReconciler_Reconcile(t *testing.T) {
 	scheme := runtime.NewScheme()
 	utilruntime.Must(coralogixv1alpha1.AddToScheme(scheme))
 	mgr, _ := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:             scheme,
-		MetricsBindAddress: ":8082",
+		Scheme: scheme,
 	})
 	ctx := context.Background()
 	go mgr.GetCache().Start(ctx)
@@ -239,7 +238,7 @@ func TestRuleGroupReconciler_Reconcile_5XX_StatusError(t *testing.T) {
 	utilruntime.Must(coralogixv1alpha1.AddToScheme(scheme))
 	mgr, _ := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:             scheme,
-		MetricsBindAddress: ":8082",
+		MetricsBindAddress: ":8081",
 	})
 	ctx := context.Background()
 	go mgr.GetCache().Start(ctx)
