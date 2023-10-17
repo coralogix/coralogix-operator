@@ -291,7 +291,7 @@ func TestRuleGroupReconciler_Reconcile_5XX_StatusError(t *testing.T) {
 	r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
 }
 
-// createRecordingRuleGroupClientSimpleMock creates a simple mock for RecordingRuleGroupsClientInterface which returns a single recording rule group.
+// createRuleGroupClientSimpleMock creates a simple mock for RuleGroupsClientInterface which returns a single rule group.
 func createRuleGroupClientSimpleMock(mockCtrl *gomock.Controller) clientset.RuleGroupsClientInterface {
 	mockRuleGroupsClient := mock_clientset.NewMockRuleGroupsClientInterface(mockCtrl)
 
