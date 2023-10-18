@@ -8,8 +8,8 @@ maintainers:
 name: coralogix-operator
 sources:
   - https://github.com/coralogix/coralogix-operator
-version: 0.1.5
-appVersion: 0.1.18
+version: 0.1.6
+appVersion: adding_delete_steps_for_kuttl_tests
 kubeVersion: ">=1.16.0-0"
 home: https://github.com/coralogix/coralogix-operator
 keywords:
