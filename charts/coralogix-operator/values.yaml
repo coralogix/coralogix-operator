@@ -85,6 +85,10 @@ kubeRbacProxy:
 
 # -- Coralogix operator container config
 coralogixOperator:
+  # Set this is to true if Prometheus Operator is installed and
+  # PrometheusRule CRD is available in cluster.
+  prometheusRules: 
+    enabled: true
   # --  Coralogix operator Image
   image:
     repository: coralogixrepo/coralogix-operator
