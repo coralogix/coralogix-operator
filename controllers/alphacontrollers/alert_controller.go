@@ -24,16 +24,21 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/go-logr/logr"
 	"github.com/golang/protobuf/jsonpb"
+	"github.com/mitchellh/hashstructure"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	utils "github.com/coralogix/coralogix-operator/apis"
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
@@ -52,6 +57,9 @@ var (
 	alertProtoNotifyOn                                               = utils.ReverseMap(coralogixv1alpha1.AlertSchemaNotifyOnToProtoNotifyOn)
 	alertProtoFlowOperatorToProtoFlowOperator                        = utils.ReverseMap(coralogixv1alpha1.AlertSchemaFlowOperatorToProtoFlowOperator)
 	alertFinalizerName                                               = "alert.coralogix.com/finalizer"
+	jsm                                                              = &jsonpb.Marshaler{
+		EmitDefaults: true,
+	}
 )
 
 // AlertReconciler reconciles a Alert object
@@ -76,6 +84,117 @@ type AlertReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.4/pkg/reconcile
 
 func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	//Get alertCRD
+	// Request object not found, could have been deleted after reconcile request.
+	// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
+	// Return and don't requeue
+	// Error reading the object - requeue the request
+	// examine DeletionTimestamp to determine if object is under deletion
+	// The object is not being deleted, so if it does not have our finalizer,
+	// then lets add the finalizer and update the object. This is equivalent
+	// registering our finalizer.
+	// The object is being deleted
+	// our finalizer is present, so lets handle any external dependency
+	// if fail to delete the external dependency here, return with error
+	// so that it can be retried
+	// remove our finalizer from the list and update it.
+	// Stop reconciliation as the item is being deleted
+	//To avoid a situation of the operator falling between the creation of the alert in coralogix and being saved in the cluster (something that would cause it to be created again and again), its id will be saved ASAP.
+	return ReconcileV2(ctx, r, req)
+}
+
+func ReconcileV2(ctx context.Context, r *AlertReconciler, req reconcile.Request) (reconcile.Result, error) {
+	log := log.FromContext(ctx)
+
+	// jsm := &jsonpb.Marshaler{
+	// 	EmitDefaults: true,
+	// }
+
+	alertClient := r.CoralogixClientSet.Alerts()
+
+	//TODO(nicolastakashi) we need review this strategy later
+	coralogixv1alpha1.WebhooksClient = r.CoralogixClientSet.Webhooks()
+
+	alert := coralogixv1alpha1.NewAlert()
+	if err := r.Client.Get(ctx, req.NamespacedName, alert); err != nil {
+		if errors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
+		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+	}
+
+	// If the alert has no id, it means it was not created in Coralogix backend yet.
+	if alert.Status.ID == nil {
+		r.create(ctx, log, alertClient, alert)
+	}
+
+	return ctrl.Result{RequeueAfter: defaultRequeuePeriod}, nil
+}
+
+func (r *AlertReconciler) create(
+	ctx context.Context,
+	log logr.Logger,
+	alertClient clientset.AlertsClientInterface,
+	alert *coralogixv1alpha1.Alert) (reconcile.Result, error) {
+
+	if alert.Spec.Labels == nil {
+		alert.Spec.Labels = make(map[string]string)
+	}
+
+	if value, ok := alert.Spec.Labels["managed-by"]; !ok || value == "" {
+		alert.Spec.Labels["managed-by"] = "coralogix-operator"
+	}
+
+	alertRequest, err := alert.ExtractCreateAlertRequest(ctx)
+	if err != nil {
+		log.Error(err, "Bad request for creating alert", "Name", alert.Name, "Namespace", alert.Namespace)
+		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+	}
+
+	_, err = jsm.MarshalToString(alertRequest)
+	if err != nil {
+		log.Error(err, "Error on marshaling create alert request", "Name", alert.Name, "Namespace", alert.Namespace)
+		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+	}
+
+	response, err := alertClient.CreateAlert(ctx, alertRequest)
+	if err != nil {
+		log.Error(err, "Received an error while creating Alert", "Crating request")
+		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+	}
+
+	hash, err := hashstructure.Hash(alert.Spec, nil)
+	if err != nil {
+		log.Error(err, "Error on hashing alert spec", "Name", alert.Name, "Namespace", alert.Namespace)
+		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+	}
+
+	if !controllerutil.ContainsFinalizer(alert, alertFinalizerName) {
+		controllerutil.AddFinalizer(alert, alertFinalizerName)
+	}
+
+	alert.Status = coralogixv1alpha1.AlertStatus{
+		ID:   ptr.To(response.Alert.GetUniqueIdentifier().GetValue()),
+		Hash: ptr.To(hash),
+		UpdatedAt: &metav1.Time{
+			Time: time.Now(),
+		},
+	}
+
+	if err := r.Client.Status().Update(ctx, alert); err != nil {
+		log.Error(err, "Error on updating alert status", "Name", alert.Name, "Namespace", alert.Namespace)
+		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+	}
+
+	if err := r.Client.Update(ctx, alert); err != nil {
+		log.Error(err, "Error on updating alert", "Name", alert.Name, "Namespace", alert.Namespace)
+		return ctrl.Result{}, err
+	}
+
+	return ctrl.Result{RequeueAfter: defaultRequeuePeriod}, nil
+}
+
+func ReconcileV1(ctx context.Context, r *AlertReconciler, req reconcile.Request) (reconcile.Result, error) {
 	log := log.FromContext(ctx)
 	jsm := &jsonpb.Marshaler{
 		EmitDefaults: true,
@@ -84,24 +203,18 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	alertsClient := r.CoralogixClientSet.Alerts()
 	coralogixv1alpha1.WebhooksClient = r.CoralogixClientSet.Webhooks()
 
-	//Get alertCRD
 	alertCRD := &coralogixv1alpha1.Alert{}
 	if err := r.Client.Get(ctx, req.NamespacedName, alertCRD); err != nil {
 		if errors.IsNotFound(err) {
-			// Request object not found, could have been deleted after reconcile request.
-			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-			// Return and don't requeue
+
 			return ctrl.Result{}, nil
 		}
-		// Error reading the object - requeue the request
+
 		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 	}
 
-	// examine DeletionTimestamp to determine if object is under deletion
 	if alertCRD.ObjectMeta.DeletionTimestamp.IsZero() {
-		// The object is not being deleted, so if it does not have our finalizer,
-		// then lets add the finalizer and update the object. This is equivalent
-		// registering our finalizer.
+
 		if !controllerutil.ContainsFinalizer(alertCRD, alertFinalizerName) {
 			controllerutil.AddFinalizer(alertCRD, alertFinalizerName)
 			if err := r.Update(ctx, alertCRD); err != nil {
@@ -110,9 +223,9 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			}
 		}
 	} else {
-		// The object is being deleted
+
 		if controllerutil.ContainsFinalizer(alertCRD, alertFinalizerName) {
-			// our finalizer is present, so lets handle any external dependency
+
 			if alertCRD.Status.ID == nil {
 				controllerutil.RemoveFinalizer(alertCRD, alertFinalizerName)
 				err := r.Update(ctx, alertCRD)
@@ -123,8 +236,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			deleteAlertReq := &alerts.DeleteAlertByUniqueIdRequest{Id: wrapperspb.String(alertId)}
 			log.V(1).Info("Deleting Alert", "Alert ID", alertId)
 			if _, err := alertsClient.DeleteAlert(ctx, deleteAlertReq); err != nil {
-				// if fail to delete the external dependency here, return with error
-				// so that it can be retried
+
 				if status.Code(err) == codes.NotFound {
 					controllerutil.RemoveFinalizer(alertCRD, alertFinalizerName)
 					err := r.Update(ctx, alertCRD)
@@ -136,7 +248,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			}
 
 			log.V(1).Info("Alert was deleted", "Alert ID", alertId)
-			// remove our finalizer from the list and update it.
+
 			controllerutil.RemoveFinalizer(alertCRD, alertFinalizerName)
 			if err := r.Update(ctx, alertCRD); err != nil {
 				log.Error(err, "Error on updating alert", "Name", alertCRD.Name, "Namespace", alertCRD.Namespace)
@@ -144,7 +256,6 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			}
 		}
 
-		// Stop reconciliation as the item is being deleted
 		return ctrl.Result{}, nil
 	}
 
@@ -184,7 +295,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 		}
 
-		createAlertReq, err := alertCRD.Spec.ExtractCreateAlertRequest(ctx)
+		createAlertReq, err := alertCRD.ExtractCreateAlertRequest(ctx)
 		if err != nil {
 			log.Error(err, "Bad request for creating alert", "Name", alertCRD.Name, "Namespace", alertCRD.Namespace)
 			return ctrl.Result{}, err
@@ -196,7 +307,6 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			jstr, _ = jsm.MarshalToString(createAlertResp)
 			log.V(1).Info("Alert was created", "alert", jstr)
 
-			//To avoid a situation of the operator falling between the creation of the alert in coralogix and being saved in the cluster (something that would cause it to be created again and again), its id will be saved ASAP.
 			id := createAlertResp.GetAlert().GetUniqueIdentifier().GetValue()
 			alertCRD.Status = coralogixv1alpha1.AlertStatus{ID: &id}
 			if err := r.Status().Update(ctx, alertCRD); err != nil {
@@ -224,7 +334,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 	}
 
-	if equal, diff := alertCRD.Spec.DeepEqual(actualState); !equal {
+	if equal, diff := alertCRD.DeepEqual(nil); !equal {
 		log.V(1).Info("Find diffs between spec and the actual state", "Diff", diff)
 		updateAlertReq, err := alertCRD.Spec.ExtractUpdateAlertRequest(ctx, *alertCRD.Status.ID)
 		if err != nil {
@@ -255,41 +365,41 @@ func flattenAlert(ctx context.Context, actualAlert *alerts.Alert, spec coralogix
 	status.ID = new(string)
 	*status.ID = actualAlert.GetUniqueIdentifier().GetValue()
 
-	status.Name = actualAlert.GetName().GetValue()
+	// status.Name = actualAlert.GetName().GetValue()
 
-	status.Description = actualAlert.GetDescription().GetValue()
+	// status.Description = actualAlert.GetDescription().GetValue()
 
-	status.Active = actualAlert.GetIsActive().GetValue()
+	// status.Active = actualAlert.GetIsActive().GetValue()
 
-	status.Severity = alertProtoSeverityToSchemaSeverity[actualAlert.GetSeverity()]
+	// status.Severity = alertProtoSeverityToSchemaSeverity[actualAlert.GetSeverity()]
 
-	status.Labels = flattenMetaLabels(actualAlert.GetMetaLabels())
+	// status.Labels = toMapString(actualAlert.GetMetaLabels())
 
-	status.ExpirationDate = flattenExpirationDate(actualAlert.GetExpiration())
+	// status.ExpirationDate = flattenExpirationDate(actualAlert.GetExpiration())
 
-	var timeZone coralogixv1alpha1.TimeZone
+	// var timeZone coralogixv1alpha1.TimeZone
 	if spec.Scheduling != nil {
-		timeZone = spec.Scheduling.TimeZone
+		// timeZone = spec.Scheduling.TimeZone
 	}
 
-	status.Scheduling = flattenScheduling(actualAlert.GetActiveWhen(), timeZone)
+	// status.Scheduling = toScheduling(actualAlert.GetActiveWhen(), timeZone)
 
-	status.AlertType = flattenAlertType(actualAlert)
+	// status.AlertType = getAlertType(actualAlert)
 
-	if notificationGroups, flattenErr := flattenNotificationGroups(ctx, actualAlert.GetNotificationGroups()); flattenErr != nil {
-		err = stdErr.Join(err, fmt.Errorf("error on flatten alert - %w", flattenErr))
-	} else {
-		status.NotificationGroups = notificationGroups
-	}
+	// if notificationGroups, flattenErr := flattenNotificationGroups(ctx, actualAlert.GetNotificationGroups()); flattenErr != nil {
+	// 	err = stdErr.Join(err, fmt.Errorf("error on flatten alert - %w", flattenErr))
+	// } else {
+	// 	status.NotificationGroups = notificationGroups
+	// }
 
-	status.ShowInInsight = flattenShowInInsight(actualAlert.GetShowInInsight())
+	// status.ShowInInsight = flattenShowInInsight(actualAlert.GetShowInInsight())
 
-	status.PayloadFilters = utils.WrappedStringSliceToStringSlice(actualAlert.GetNotificationPayloadFilters())
+	// status.PayloadFilters = utils.WrappedStringSliceToStringSlice(actualAlert.GetNotificationPayloadFilters())
 
 	return &status, err
 }
 
-func flattenAlertType(actualAlert *alerts.Alert) coralogixv1alpha1.AlertType {
+func getAlertType(actualAlert *alerts.Alert) coralogixv1alpha1.AlertType {
 	actualFilters := actualAlert.GetFilters()
 	actualCondition := actualAlert.GetCondition()
 
@@ -909,7 +1019,7 @@ func expandFlowInnerAlert(alert *alerts.FlowAlert) coralogixv1alpha1.InnerFlowAl
 	}
 }
 
-func flattenMetaLabels(labels []*alerts.MetaLabel) map[string]string {
+func toMapString(labels []*alerts.MetaLabel) map[string]string {
 	if len(labels) == 0 {
 		return nil
 	}
@@ -933,7 +1043,7 @@ func flattenExpirationDate(expirationDate *alerts.Date) *coralogixv1alpha1.Expir
 	}
 }
 
-func flattenScheduling(scheduling *alerts.AlertActiveWhen, timeZone coralogixv1alpha1.TimeZone) *coralogixv1alpha1.Scheduling {
+func toScheduling(scheduling *alerts.AlertActiveWhen, timeZone coralogixv1alpha1.TimeZone) *coralogixv1alpha1.Scheduling {
 	if scheduling == nil || len(scheduling.GetTimeframes()) == 0 {
 		return nil
 	}

@@ -28,9 +28,11 @@ import (
 	utils "github.com/coralogix/coralogix-operator/apis"
 	"github.com/coralogix/coralogix-operator/controllers/clientset"
 	alerts "github.com/coralogix/coralogix-operator/controllers/clientset/grpc/alerts/v2"
+	"github.com/mitchellh/hashstructure"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -153,36 +155,27 @@ type AlertSpec struct {
 	AlertType AlertType `json:"alertType"`
 }
 
-func (in *AlertSpec) ExtractCreateAlertRequest(ctx context.Context) (*alerts.CreateAlertRequest, error) {
-	enabled := wrapperspb.Bool(in.Active)
-	name := wrapperspb.String(in.Name)
-	description := wrapperspb.String(in.Description)
-	severity := AlertSchemaSeverityToProtoSeverity[in.Severity]
-	metaLabels := expandMetaLabels(in.Labels)
-	expirationDate := expandExpirationDate(in.ExpirationDate)
-	showInInsight := expandShowInInsight(in.ShowInInsight)
-	notificationGroups, err := expandNotificationGroups(ctx, in.NotificationGroups)
+func (a *Alert) ExtractCreateAlertRequest(ctx context.Context) (*alerts.CreateAlertRequest, error) {
+	notificationGroups, err := expandNotificationGroups(ctx, a.Spec.NotificationGroups)
+
 	if err != nil {
 		return nil, err
 	}
-	payloadFilters := utils.StringSliceToWrappedStringSlice(in.PayloadFilters)
-	activeWhen := expandActiveWhen(in.Scheduling)
-	alertTypeParams := expandAlertType(in.AlertType)
 
 	return &alerts.CreateAlertRequest{
-		Name:                       name,
-		Description:                description,
-		IsActive:                   enabled,
-		Severity:                   severity,
-		MetaLabels:                 metaLabels,
-		Expiration:                 expirationDate,
-		ShowInInsight:              showInInsight,
+		IsActive:                   wrapperspb.Bool(a.Spec.Active),
+		Name:                       wrapperspb.String(a.Spec.Name),
+		Description:                wrapperspb.String(a.Spec.Description),
+		Severity:                   AlertSchemaSeverityToProtoSeverity[a.Spec.Severity],
+		MetaLabels:                 expandMetaLabels(a.Spec.Labels),
+		Expiration:                 expandExpirationDate(a.Spec.ExpirationDate),
+		ShowInInsight:              expandShowInInsight(a.Spec.ShowInInsight),
 		NotificationGroups:         notificationGroups,
-		NotificationPayloadFilters: payloadFilters,
-		ActiveWhen:                 activeWhen,
-		Filters:                    alertTypeParams.filters,
-		Condition:                  alertTypeParams.condition,
-		TracingAlert:               alertTypeParams.tracingAlert,
+		NotificationPayloadFilters: utils.StringSliceToWrappedStringSlice(a.Spec.PayloadFilters),
+		ActiveWhen:                 expandActiveWhen(a.Spec.Scheduling),
+		Filters:                    expandAlertType(a.Spec.AlertType).filters,
+		Condition:                  expandAlertType(a.Spec.AlertType).condition,
+		TracingAlert:               expandAlertType(a.Spec.AlertType).tracingAlert,
 	}, nil
 }
 
@@ -1006,14 +999,13 @@ func expandNotificationGroups(ctx context.Context, notificationGroups []Notifica
 }
 
 func expandNotificationGroup(ctx context.Context, notificationGroup NotificationGroup) (*alerts.AlertNotificationGroups, error) {
-	groupFields := utils.StringSliceToWrappedStringSlice(notificationGroup.GroupByFields)
 	notifications, err := expandNotifications(ctx, notificationGroup.Notifications)
 	if err != nil {
 		return nil, err
 	}
 
 	return &alerts.AlertNotificationGroups{
-		GroupByFields: groupFields,
+		GroupByFields: utils.StringSliceToWrappedStringSlice(notificationGroup.GroupByFields),
 		Notifications: notifications,
 	}, nil
 }
@@ -1031,36 +1023,32 @@ func expandNotifications(ctx context.Context, notifications []Notification) ([]*
 }
 
 func expandNotification(ctx context.Context, notification Notification) (*alerts.AlertNotification, error) {
-	retriggeringPeriodSeconds := wrapperspb.UInt32(uint32(60 * notification.RetriggeringPeriodMinutes))
-	notifyOn := AlertSchemaNotifyOnToProtoNotifyOn[notification.NotifyOn]
-
 	result := &alerts.AlertNotification{
-		RetriggeringPeriodSeconds: retriggeringPeriodSeconds,
-		NotifyOn:                  &notifyOn,
+		RetriggeringPeriodSeconds: wrapperspb.UInt32(uint32(60 * notification.RetriggeringPeriodMinutes)),
+		NotifyOn:                  ptr.To(AlertSchemaNotifyOnToProtoNotifyOn[notification.NotifyOn]),
 	}
 
-	if integrationName := notification.IntegrationName; integrationName != nil {
-		integrationID, err := searchIntegrationID(ctx, *integrationName)
+	if notification.IntegrationName != nil {
+		integrationID, err := searchIntegrationID(ctx, *notification.IntegrationName)
+
 		if err != nil {
 			return nil, err
 		}
+
 		result.IntegrationType = &alerts.AlertNotification_IntegrationId{
 			IntegrationId: wrapperspb.UInt32(integrationID),
 		}
 	}
 
-	emails := notification.EmailRecipients
-	{
-		if result.IntegrationType != nil && len(emails) != 0 {
-			return nil, fmt.Errorf("required exactly on of 'integrationName' or 'emailRecipients'")
-		}
+	if result.IntegrationType != nil && len(notification.EmailRecipients) != 0 {
+		return nil, fmt.Errorf("required exactly on of 'integrationName' or 'emailRecipients'")
+	}
 
-		if result.IntegrationType == nil {
-			result.IntegrationType = &alerts.AlertNotification_Recipients{
-				Recipients: &alerts.Recipients{
-					Emails: utils.StringSliceToWrappedStringSlice(emails),
-				},
-			}
+	if result.IntegrationType == nil {
+		result.IntegrationType = &alerts.AlertNotification_Recipients{
+			Recipients: &alerts.Recipients{
+				Emails: utils.StringSliceToWrappedStringSlice(notification.EmailRecipients),
+			},
 		}
 	}
 
@@ -1068,6 +1056,10 @@ func expandNotification(ctx context.Context, notification Notification) (*alerts
 }
 
 func searchIntegrationID(ctx context.Context, name string) (uint32, error) {
+	//TODO(nicolastakashi) we must review this, because very reconcile we're fetching all webhooks
+	//talk to the webhook client team to create a method to fetch by name
+	//a quick alternative is to cache the webhooks in the first call
+	//and use the cache to search by name and evict the cache using a time to live
 	webhooksStr, err := WebhooksClient.GetWebhooks(ctx)
 	if err != nil {
 		return 0, err
@@ -1084,114 +1076,18 @@ func searchIntegrationID(ctx context.Context, name string) (uint32, error) {
 	return 0, fmt.Errorf("integration with name %s not found", name)
 }
 
-func (in *AlertSpec) DeepEqual(actualAlert *AlertStatus) (bool, utils.Diff) {
-	if actualName := actualAlert.Name; actualName != in.Name {
-		return false, utils.Diff{
-			Name:    "Name",
-			Desired: in.Name,
-			Actual:  actualName,
-		}
+func (alert *Alert) DeepEqual(current *Alert) (bool, error) {
+	newHash, err := hashstructure.Hash(alert.Spec, nil)
+	if err != nil {
+		return false, err
 	}
 
-	if actualDescription := actualAlert.Description; actualDescription != in.Description {
-		return false, utils.Diff{
-			Name:    "Description",
-			Desired: in.Description,
-			Actual:  actualDescription,
-		}
+	currentHash, err := hashstructure.Hash(current.Spec, nil)
+	if err != nil {
+		return false, err
 	}
 
-	if actualActive := actualAlert.Active; actualActive != in.Active {
-		return false, utils.Diff{
-			Name:    "Active",
-			Desired: in.Active,
-			Actual:  actualActive,
-		}
-	}
-
-	if actualSeverity := actualAlert.Severity; actualSeverity != in.Severity {
-		return false, utils.Diff{
-			Name:    "Severity",
-			Desired: in.Severity,
-			Actual:  actualSeverity,
-		}
-	}
-
-	if !reflect.DeepEqual(in.Labels, actualAlert.Labels) {
-		return false, utils.Diff{
-			Name:    "Labels",
-			Desired: in.Labels,
-			Actual:  actualAlert.Labels,
-		}
-	}
-
-	if !reflect.DeepEqual(in.ExpirationDate, actualAlert.ExpirationDate) {
-		return false, utils.Diff{
-			Name:    "ExpirationDate",
-			Desired: utils.PointerToString(in.ExpirationDate),
-			Actual:  utils.PointerToString(actualAlert.ExpirationDate),
-		}
-	}
-
-	if equal, diff := in.AlertType.DeepEqual(actualAlert.AlertType); !equal {
-		return false, utils.Diff{
-			Name:    fmt.Sprintf("AlertType.%s", diff.Name),
-			Desired: diff.Desired,
-			Actual:  diff.Actual,
-		}
-	}
-
-	notificationGroups, actualNotificationGroups := in.NotificationGroups, actualAlert.NotificationGroups
-	{
-		if equal, diff := DeepEqualNotificationGroups(notificationGroups, actualNotificationGroups); !equal {
-			return false, diff
-		}
-	}
-
-	if !utils.SlicesWithUniqueValuesEqual(in.PayloadFilters, actualAlert.PayloadFilters) {
-		return false, utils.Diff{
-			Name:    "PayloadFilters",
-			Desired: in.PayloadFilters,
-			Actual:  actualAlert.PayloadFilters,
-		}
-	}
-
-	if scheduling, actualScheduling := in.Scheduling, actualAlert.Scheduling; (scheduling == nil && actualScheduling != nil) || (scheduling != nil && actualScheduling == nil) {
-		return false, utils.Diff{
-			Name:    "Scheduling",
-			Desired: scheduling,
-			Actual:  actualScheduling,
-		}
-	} else if actualScheduling == nil {
-
-	} else if equal, diff := scheduling.DeepEqual(*actualScheduling); !equal {
-		return false, utils.Diff{
-			Name:    fmt.Sprintf("Scheduling.%s", diff.Name),
-			Desired: diff.Desired,
-			Actual:  diff.Actual,
-		}
-	}
-
-	showInInsight, actualShowInInsight := in.ShowInInsight, actualAlert.ShowInInsight
-	{
-		if showInInsight != nil {
-			if actualShowInInsight == nil {
-				return false, utils.Diff{
-					Name:    "ShowInInsight",
-					Desired: *showInInsight,
-					Actual:  actualShowInInsight,
-				}
-			} else if equal, diff := showInInsight.DeepEqual(*actualShowInInsight); !equal {
-				return false, utils.Diff{
-					Name:    fmt.Sprintf("ShowInInsight.%s", diff.Name),
-					Desired: diff.Desired,
-					Actual:  diff.Actual,
-				}
-			}
-		}
-	}
-
-	return true, utils.Diff{}
+	return newHash == currentHash, nil
 }
 
 func DeepEqualNotificationGroups(notificationGroups []NotificationGroup, actualNotificationGroups []NotificationGroup) (bool, utils.Diff) {
@@ -1317,6 +1213,18 @@ type ExpirationDate struct {
 	// +kubebuilder:validation:Minimum:=1
 	// +kubebuilder:validation:Maximum:=9999
 	Year int32 `json:"year,omitempty"`
+}
+
+func toAlertDateRequest(date *ExpirationDate) *alerts.Date {
+	if date == nil {
+		return nil
+	}
+
+	return &alerts.Date{
+		Year:  date.Year,
+		Month: date.Month,
+		Day:   date.Day,
+	}
 }
 
 func (in *ExpirationDate) DeepEqual(date *alerts.Date) bool {
@@ -3081,27 +2989,9 @@ type FlowOperator string
 type AlertStatus struct {
 	ID *string `json:"id"`
 
-	Name string `json:"name,omitempty"`
+	Hash *uint64 `json:"hash"`
 
-	Description string `json:"description,omitempty"`
-
-	Active bool `json:"active,omitempty"`
-
-	Severity AlertSeverity `json:"severity,omitempty"`
-
-	Labels map[string]string `json:"labels,omitempty"`
-
-	ExpirationDate *ExpirationDate `json:"expirationDate,omitempty"`
-
-	ShowInInsight *ShowInInsight `json:"showInInsight,omitempty"`
-
-	NotificationGroups []NotificationGroup `json:"notificationGroups,omitempty"`
-
-	PayloadFilters []string `json:"payloadFilters,omitempty"`
-
-	Scheduling *Scheduling `json:"scheduling,omitempty"`
-
-	AlertType AlertType `json:"alertType,omitempty"`
+	UpdatedAt *metav1.Time `json:"updatedAt"`
 }
 
 //+kubebuilder:object:root=true
@@ -3115,6 +3005,14 @@ type Alert struct {
 
 	Spec   AlertSpec   `json:"spec,omitempty"`
 	Status AlertStatus `json:"status,omitempty"`
+}
+
+func NewAlert() *Alert {
+	return &Alert{
+		Spec: AlertSpec{
+			Labels: make(map[string]string),
+		},
+	}
 }
 
 //+kubebuilder:object:root=true
