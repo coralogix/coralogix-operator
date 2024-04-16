@@ -25,7 +25,6 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"github.com/golang/protobuf/jsonpb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -35,7 +34,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	utils "github.com/coralogix/coralogix-operator/apis"
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
@@ -54,7 +52,6 @@ var (
 	alertProtoNotifyOn                                               = utils.ReverseMap(coralogixv1alpha1.AlertSchemaNotifyOnToProtoNotifyOn)
 	alertProtoFlowOperatorToProtoFlowOperator                        = utils.ReverseMap(coralogixv1alpha1.AlertSchemaFlowOperatorToProtoFlowOperator)
 	alertFinalizerName                                               = "alert.coralogix.com/finalizer"
-	jsm                                                              = jsonpb.Marshaler{EmitDefaults: true}
 )
 
 // AlertReconciler reconciles a Alert object
@@ -68,216 +65,123 @@ type AlertReconciler struct {
 //+kubebuilder:rbac:groups=coralogix.com,resources=alerts/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=coralogix.com,resources=alerts/finalizers,verbs=update
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the Alert object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.4/pkg/reconcile
-
-func (r *AlertReconciler) ReconcileV1(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx)
-	jsm := &jsonpb.Marshaler{
-		EmitDefaults: true,
-	}
-
-	alertsClient := r.CoralogixClientSet.Alerts()
-	coralogixv1alpha1.WebhooksClient = r.CoralogixClientSet.Webhooks()
-
-	//Get alertCRD
-	alertCRD := &coralogixv1alpha1.Alert{}
-	if err := r.Client.Get(ctx, req.NamespacedName, alertCRD); err != nil {
-		if errors.IsNotFound(err) {
-			// Request object not found, could have been deleted after reconcile request.
-			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-			// Return and don't requeue
-			return ctrl.Result{}, nil
-		}
-		// Error reading the object - requeue the request
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
-	}
-
-	// examine DeletionTimestamp to determine if object is under deletion
-	if alertCRD.ObjectMeta.DeletionTimestamp.IsZero() {
-		// The object is not being deleted, so if it does not have our finalizer,
-		// then lets add the finalizer and update the object. This is equivalent
-		// registering our finalizer.
-		if !controllerutil.ContainsFinalizer(alertCRD, alertFinalizerName) {
-			controllerutil.AddFinalizer(alertCRD, alertFinalizerName)
-			if err := r.Update(ctx, alertCRD); err != nil {
-				log.Error(err, "Error on updating alert", "Name", alertCRD.Name, "Namespace", alertCRD.Namespace)
-				return ctrl.Result{}, err
-			}
-		}
-	} else {
-		// The object is being deleted
-		if controllerutil.ContainsFinalizer(alertCRD, alertFinalizerName) {
-			// our finalizer is present, so lets handle any external dependency
-			if alertCRD.Status.ID == nil {
-				controllerutil.RemoveFinalizer(alertCRD, alertFinalizerName)
-				err := r.Update(ctx, alertCRD)
-				return ctrl.Result{}, err
-			}
-
-			alertId := *alertCRD.Status.ID
-			deleteAlertReq := &alerts.DeleteAlertByUniqueIdRequest{Id: wrapperspb.String(alertId)}
-			log.V(1).Info("Deleting Alert", "Alert ID", alertId)
-			if _, err := alertsClient.DeleteAlert(ctx, deleteAlertReq); err != nil {
-				// if fail to delete the external dependency here, return with error
-				// so that it can be retried
-				if status.Code(err) == codes.NotFound {
-					controllerutil.RemoveFinalizer(alertCRD, alertFinalizerName)
-					err := r.Update(ctx, alertCRD)
-					return ctrl.Result{}, err
-				}
-
-				log.Error(err, "Received an error while Deleting a Alert", "Alert ID", alertId)
-				return ctrl.Result{}, err
-			}
-
-			log.V(1).Info("Alert was deleted", "Alert ID", alertId)
-			// remove our finalizer from the list and update it.
-			controllerutil.RemoveFinalizer(alertCRD, alertFinalizerName)
-			if err := r.Update(ctx, alertCRD); err != nil {
-				log.Error(err, "Error on updating alert", "Name", alertCRD.Name, "Namespace", alertCRD.Namespace)
-				return ctrl.Result{}, err
-			}
-		}
-
-		// Stop reconciliation as the item is being deleted
-		return ctrl.Result{}, nil
-	}
-
-	var (
-		notFound    bool
-		err         error
-		actualState *coralogixv1alpha1.AlertStatus
-	)
-	if id := alertCRD.Status.ID; id == nil {
-		log.V(1).Info("alert wasn't created")
-		notFound = true
-	} else {
-		getAlertResp, err := alertsClient.GetAlert(ctx, &alerts.GetAlertByUniqueIdRequest{Id: wrapperspb.String(*id)})
-		switch {
-		case status.Code(err) == codes.NotFound:
-			log.V(1).Info("alert doesn't exist in Coralogix backend", "ID", id)
-			notFound = true
-		case err != nil:
-			log.Error(err, "Received an error while getting Alert")
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
-		case err == nil:
-			actualState, err = getStatus(ctx, getAlertResp.GetAlert(), alertCRD.Spec)
-			if err != nil {
-				log.Error(err, "Received an error while flattened Alert")
-				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
-			}
-		}
-	}
-
-	if notFound {
-		if alertCRD.Spec.Labels == nil {
-			alertCRD.Spec.Labels = make(map[string]string)
-		}
-		alertCRD.Spec.Labels["managed-by"] = "coralogix-operator"
-		if err := r.Client.Update(ctx, alertCRD); err != nil {
-			log.Error(err, "Error on updating alert", "Name", alertCRD.Name, "Namespace", alertCRD.Namespace)
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
-		}
-
-		createAlertReq, err := alertCRD.Spec.ExtractCreateAlertRequest(ctx)
-		if err != nil {
-			log.Error(err, "Bad request for creating alert", "Name", alertCRD.Name, "Namespace", alertCRD.Namespace)
-			return ctrl.Result{}, err
-		}
-
-		jstr, _ := jsm.MarshalToString(createAlertReq)
-		log.V(1).Info("Creating Alert", "alert", jstr)
-		if createAlertResp, err := alertsClient.CreateAlert(ctx, createAlertReq); err == nil {
-			jstr, _ = jsm.MarshalToString(createAlertResp)
-			log.V(1).Info("Alert was created", "alert", jstr)
-
-			//To avoid a situation of the operator falling between the creation of the alert in coralogix and being saved in the cluster (something that would cause it to be created again and again), its id will be saved ASAP.
-			id := createAlertResp.GetAlert().GetUniqueIdentifier().GetValue()
-			alertCRD.Status = coralogixv1alpha1.AlertStatus{ID: &id}
-			if err := r.Status().Update(ctx, alertCRD); err != nil {
-				log.Error(err, "Error on updating alert status", "Name", alertCRD.Name, "Namespace", alertCRD.Namespace)
-				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
-			}
-
-			actualState, err = getStatus(ctx, createAlertResp.GetAlert(), alertCRD.Spec)
-			if err != nil {
-				log.Error(err, "Received an error while flattened Alert")
-				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
-			}
-			alertCRD.Status = *actualState
-			if err := r.Status().Update(ctx, alertCRD); err != nil {
-				log.Error(err, "Error on updating alert status", "Name", alertCRD.Name, "Namespace", alertCRD.Namespace)
-				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
-			}
-			return ctrl.Result{RequeueAfter: defaultRequeuePeriod}, nil
-		} else {
-			log.Error(err, "Received an error while creating Alert", "Crating request", jstr)
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
-		}
-	} else if err != nil {
-		log.Error(err, "Received an error while reading Alert", "alert ID", *alertCRD.Status.ID)
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
-	}
-
-	if equal, diff := alertCRD.Spec.DeepEqual(actualState); !equal {
-		log.V(1).Info("Find diffs between spec and the actual state", "Diff", diff)
-		updateAlertReq, err := alertCRD.Spec.ExtractUpdateAlertRequest(ctx, *alertCRD.Status.ID)
-		if err != nil {
-			log.Error(err, "Bad request for updating alert", "Name", alertCRD.Name, "Namespace", alertCRD.Namespace)
-			return ctrl.Result{}, err
-		}
-
-		updateAlertResp, err := alertsClient.UpdateAlert(ctx, updateAlertReq)
-		if err != nil {
-			log.Error(err, "Received an error while updating a Alert", "alert", updateAlertReq)
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
-		}
-		jstr, _ := jsm.MarshalToString(updateAlertResp)
-		log.V(1).Info("Alert was updated", "alert", jstr)
-	}
-
-	return ctrl.Result{RequeueAfter: defaultRequeuePeriod}, nil
-}
-
 func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx)
+	var (
+		resultError ctrl.Result = ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}
+		resultOk    ctrl.Result = ctrl.Result{RequeueAfter: defaultRequeuePeriod}
+		err         error
+	)
 
-	alertsClient := r.CoralogixClientSet.Alerts()
+	log := log.FromContext(ctx).WithValues(
+		"alert", req.NamespacedName.Name,
+		"namespace", req.NamespacedName.Namespace,
+	)
+
 	coralogixv1alpha1.WebhooksClient = r.CoralogixClientSet.Webhooks()
-	return r.ReconcileV1(ctx, req)
-
 	alert := coralogixv1alpha1.NewAlert()
-	if err := r.Client.Get(ctx, req.NamespacedName, alert); err != nil {
+
+	if err = r.Client.Get(ctx, req.NamespacedName, alert); err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
 			return ctrl.Result{}, nil
 		}
-		// Error reading the object - requeue the request
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		return resultError, err
 	}
 
 	if alert.Status.ID == nil {
-		r.create(ctx, log, alertsClient, alert)
+		err = r.create(ctx, log, alert)
+		if err != nil {
+			log.Error(err, "Error on creating alert")
+			return resultError, err
+		}
+		return resultOk, nil
 	}
 
-	return ctrl.Result{RequeueAfter: defaultRequeuePeriod}, nil
+	if !alert.ObjectMeta.DeletionTimestamp.IsZero() {
+		err = r.delete(ctx, log, alert)
+		if err != nil {
+			log.Error(err, "Error on deleting alert")
+			return resultError, err
+		}
+		return resultOk, nil
+	}
+
+	err = r.update(ctx, log, alert)
+	if err != nil {
+		log.Error(err, "Error on updating alert")
+		return resultError, err
+	}
+
+	return resultOk, nil
+}
+
+func (r *AlertReconciler) update(ctx context.Context,
+	log logr.Logger,
+	alert *coralogixv1alpha1.Alert) error {
+	remoteAlert, err := r.CoralogixClientSet.Alerts().GetAlert(ctx, &alerts.GetAlertByUniqueIdRequest{
+		Id: wrapperspb.String(*alert.Status.ID),
+	})
+
+	if err != nil {
+		log.Error(err, "Error on getting alert")
+		return err
+	}
+
+	status, err := getStatus(ctx, remoteAlert.GetAlert(), alert.Spec)
+	if err != nil {
+		log.Error(err, "Error on flattening alert")
+		return err
+	}
+
+	equal, _ := alert.Spec.DeepEqual(&status)
+	if equal {
+		return nil
+	}
+
+	alertRequest, err := alert.Spec.ExtractUpdateAlertRequest(ctx, *alert.Status.ID)
+	if err != nil {
+		log.Error(err, "Error to parse alert request")
+		return err
+	}
+
+	_, err = r.CoralogixClientSet.Alerts().UpdateAlert(ctx, alertRequest)
+	if err != nil {
+		log.Error(err, "Error on remote updating alert")
+		return err
+	}
+
+	return nil
+}
+
+func (r *AlertReconciler) delete(ctx context.Context,
+	log logr.Logger,
+	alert *coralogixv1alpha1.Alert) error {
+
+	_, err := r.CoralogixClientSet.Alerts().DeleteAlert(ctx, &alerts.DeleteAlertByUniqueIdRequest{
+		Id: wrapperspb.String(*alert.Status.ID),
+	})
+
+	if err != nil && status.Code(err) != codes.NotFound {
+		log.Error(err, "Error on deleting alert")
+		return err
+	}
+
+	controllerutil.RemoveFinalizer(alert, alertFinalizerName)
+	err = r.Update(ctx, alert)
+	if err != nil {
+		log.Error(err, "Error on updating alert after deletion")
+		return err
+	}
+
+	return nil
 }
 
 func (r *AlertReconciler) create(
 	ctx context.Context,
 	log logr.Logger,
-	alertClient clientset.AlertsClientInterface,
-	alert *coralogixv1alpha1.Alert) (reconcile.Result, error) {
+	alert *coralogixv1alpha1.Alert) error {
 
 	if alert.Spec.Labels == nil {
 		alert.Spec.Labels = make(map[string]string)
@@ -287,28 +191,28 @@ func (r *AlertReconciler) create(
 		alert.Spec.Labels["managed-by"] = "coralogix-operator"
 	}
 
-	alertRequest, err := alert.Spec.ExtractCreateAlertRequest(ctx)
+	alertRequest, err := alert.ExtractCreateAlertRequest(ctx)
 	if err != nil {
-		log.Error(err, "Bad request for creating alert", "Name", alert.Name, "Namespace", alert.Namespace)
-		return ctrl.Result{}, err
+		log.Error(err, "Error to create alert request")
+		return err
 	}
 
-	response, err := alertClient.CreateAlert(ctx, alertRequest)
+	response, err := r.CoralogixClientSet.Alerts().CreateAlert(ctx, alertRequest)
 	if err != nil {
-		log.Error(err, "Received an error while creating Alert", "Crating request")
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		log.Error(err, "Received an error while creating Alert")
+		return err
 	}
 
 	status, err := getStatus(ctx, response.GetAlert(), alert.Spec)
 	if err != nil {
 		log.Error(err, "Received an error while flattened Alert")
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		return err
 	}
 
 	alert.Status = status
 	if err := r.Status().Update(ctx, alert); err != nil {
-		log.Error(err, "Error on updating alert status", "Name", alert.Name, "Namespace", alert.Namespace)
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		log.Error(err, "Error on updating alert status")
+		return err
 	}
 
 	if !controllerutil.ContainsFinalizer(alert, alertFinalizerName) {
@@ -316,11 +220,11 @@ func (r *AlertReconciler) create(
 	}
 
 	if err := r.Client.Update(ctx, alert); err != nil {
-		log.Error(err, "Error on updating alert", "Name", alert.Name, "Namespace", alert.Namespace)
-		return ctrl.Result{}, err
+		log.Error(err, "Error on updating alert")
+		return err
 	}
 
-	return reconcile.Result{}, nil
+	return nil
 }
 
 func getStatus(ctx context.Context, actualAlert *alerts.Alert, spec coralogixv1alpha1.AlertSpec) (coralogixv1alpha1.AlertStatus, error) {
@@ -1087,6 +991,7 @@ func flattenNotificationGroups(ctx context.Context, notificationGroups []*alerts
 		notificationGroup, flattenErr := flattenNotificationGroup(ctx, ng)
 		if err != nil {
 			err = stdErr.Join(err, fmt.Errorf("error on flatten notification-groups - %w", flattenErr))
+			continue
 		}
 		result = append(result, *notificationGroup)
 	}
