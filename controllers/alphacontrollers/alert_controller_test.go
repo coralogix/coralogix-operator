@@ -151,7 +151,7 @@ func TestFlattenAlerts(t *testing.T) {
 			TimeZone: coralogixv1alpha1.TimeZone("UTC+02"),
 		},
 	}
-	status, err := flattenAlert(context.Background(), alert, spec)
+	status, err := getStatus(context.Background(), alert, spec)
 	assert.NoError(t, err)
 
 	expected := &coralogixv1alpha1.AlertStatus{

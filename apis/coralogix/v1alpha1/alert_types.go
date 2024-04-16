@@ -3117,6 +3117,14 @@ type Alert struct {
 	Status AlertStatus `json:"status,omitempty"`
 }
 
+func NewAlert() *Alert {
+	return &Alert{
+		Spec: AlertSpec{
+			Labels: make(map[string]string),
+		},
+	}
+}
+
 //+kubebuilder:object:root=true
 
 // AlertList contains a list of Alert

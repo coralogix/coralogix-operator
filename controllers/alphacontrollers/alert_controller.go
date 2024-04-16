@@ -24,6 +24,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/go-logr/logr"
 	"github.com/golang/protobuf/jsonpb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -34,6 +35,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	utils "github.com/coralogix/coralogix-operator/apis"
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
@@ -52,6 +54,7 @@ var (
 	alertProtoNotifyOn                                               = utils.ReverseMap(coralogixv1alpha1.AlertSchemaNotifyOnToProtoNotifyOn)
 	alertProtoFlowOperatorToProtoFlowOperator                        = utils.ReverseMap(coralogixv1alpha1.AlertSchemaFlowOperatorToProtoFlowOperator)
 	alertFinalizerName                                               = "alert.coralogix.com/finalizer"
+	jsm                                                              = jsonpb.Marshaler{EmitDefaults: true}
 )
 
 // AlertReconciler reconciles a Alert object
@@ -75,7 +78,7 @@ type AlertReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.4/pkg/reconcile
 
-func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *AlertReconciler) ReconcileV1(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 	jsm := &jsonpb.Marshaler{
 		EmitDefaults: true,
@@ -166,7 +169,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			log.Error(err, "Received an error while getting Alert")
 			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 		case err == nil:
-			actualState, err = flattenAlert(ctx, getAlertResp.GetAlert(), alertCRD.Spec)
+			actualState, err = getStatus(ctx, getAlertResp.GetAlert(), alertCRD.Spec)
 			if err != nil {
 				log.Error(err, "Received an error while flattened Alert")
 				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
@@ -204,7 +207,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 			}
 
-			actualState, err = flattenAlert(ctx, createAlertResp.GetAlert(), alertCRD.Spec)
+			actualState, err = getStatus(ctx, createAlertResp.GetAlert(), alertCRD.Spec)
 			if err != nil {
 				log.Error(err, "Received an error while flattened Alert")
 				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
@@ -244,9 +247,85 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	return ctrl.Result{RequeueAfter: defaultRequeuePeriod}, nil
 }
 
-func flattenAlert(ctx context.Context, actualAlert *alerts.Alert, spec coralogixv1alpha1.AlertSpec) (*coralogixv1alpha1.AlertStatus, error) {
+func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	log := log.FromContext(ctx)
+
+	alertsClient := r.CoralogixClientSet.Alerts()
+	coralogixv1alpha1.WebhooksClient = r.CoralogixClientSet.Webhooks()
+	return r.ReconcileV1(ctx, req)
+
+	alert := coralogixv1alpha1.NewAlert()
+	if err := r.Client.Get(ctx, req.NamespacedName, alert); err != nil {
+		if errors.IsNotFound(err) {
+			// Request object not found, could have been deleted after reconcile request.
+			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
+			// Return and don't requeue
+			return ctrl.Result{}, nil
+		}
+		// Error reading the object - requeue the request
+		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+	}
+
+	if alert.Status.ID == nil {
+		r.create(ctx, log, alertsClient, alert)
+	}
+
+	return ctrl.Result{RequeueAfter: defaultRequeuePeriod}, nil
+}
+
+func (r *AlertReconciler) create(
+	ctx context.Context,
+	log logr.Logger,
+	alertClient clientset.AlertsClientInterface,
+	alert *coralogixv1alpha1.Alert) (reconcile.Result, error) {
+
+	if alert.Spec.Labels == nil {
+		alert.Spec.Labels = make(map[string]string)
+	}
+
+	if value, ok := alert.Spec.Labels["managed-by"]; !ok || value == "" {
+		alert.Spec.Labels["managed-by"] = "coralogix-operator"
+	}
+
+	alertRequest, err := alert.Spec.ExtractCreateAlertRequest(ctx)
+	if err != nil {
+		log.Error(err, "Bad request for creating alert", "Name", alert.Name, "Namespace", alert.Namespace)
+		return ctrl.Result{}, err
+	}
+
+	response, err := alertClient.CreateAlert(ctx, alertRequest)
+	if err != nil {
+		log.Error(err, "Received an error while creating Alert", "Crating request")
+		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+	}
+
+	status, err := getStatus(ctx, response.GetAlert(), alert.Spec)
+	if err != nil {
+		log.Error(err, "Received an error while flattened Alert")
+		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+	}
+
+	alert.Status = status
+	if err := r.Status().Update(ctx, alert); err != nil {
+		log.Error(err, "Error on updating alert status", "Name", alert.Name, "Namespace", alert.Namespace)
+		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+	}
+
+	if !controllerutil.ContainsFinalizer(alert, alertFinalizerName) {
+		controllerutil.AddFinalizer(alert, alertFinalizerName)
+	}
+
+	if err := r.Client.Update(ctx, alert); err != nil {
+		log.Error(err, "Error on updating alert", "Name", alert.Name, "Namespace", alert.Namespace)
+		return ctrl.Result{}, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func getStatus(ctx context.Context, actualAlert *alerts.Alert, spec coralogixv1alpha1.AlertSpec) (coralogixv1alpha1.AlertStatus, error) {
 	if actualAlert == nil {
-		return nil, stdErr.New("alert is nil")
+		return coralogixv1alpha1.AlertStatus{}, stdErr.New("alert is nil")
 	}
 
 	var status coralogixv1alpha1.AlertStatus
@@ -286,7 +365,7 @@ func flattenAlert(ctx context.Context, actualAlert *alerts.Alert, spec coralogix
 
 	status.PayloadFilters = utils.WrappedStringSliceToStringSlice(actualAlert.GetNotificationPayloadFilters())
 
-	return &status, err
+	return status, err
 }
 
 func flattenAlertType(actualAlert *alerts.Alert) coralogixv1alpha1.AlertType {
