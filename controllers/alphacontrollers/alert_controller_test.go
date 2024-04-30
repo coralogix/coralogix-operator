@@ -23,6 +23,8 @@ import (
 )
 
 func setupReconciler(t *testing.T, ctx context.Context, clientSet *mock_clientset.MockClientSetInterface) (AlertReconciler, watch.Interface) {
+	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
+
 	scheme := runtime.NewScheme()
 	utilruntime.Must(coralogixv1alpha1.AddToScheme(scheme))
 
@@ -47,7 +49,6 @@ func setupReconciler(t *testing.T, ctx context.Context, clientSet *mock_clientse
 	r.SetupWithManager(mgr)
 
 	watcher, _ := r.Client.(client.WithWatch).Watch(ctx, &coralogixv1alpha1.AlertList{})
-	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 	return r, watcher
 }
 

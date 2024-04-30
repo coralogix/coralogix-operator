@@ -205,7 +205,7 @@ func (r *AlertReconciler) create(
 
 	status, err := getStatus(ctx, response.GetAlert(), alert.Spec)
 	if err != nil {
-		log.Error(err, "Received an error while flattened Alert")
+		log.Error(err, "Received an error while getting status")
 		return err
 	}
 
