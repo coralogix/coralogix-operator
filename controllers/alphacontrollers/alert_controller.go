@@ -988,7 +988,7 @@ func flattenNotificationGroups(ctx context.Context, notificationGroups []*alerts
 	var err error
 	for _, ng := range notificationGroups {
 		notificationGroup, flattenErr := flattenNotificationGroup(ctx, ng)
-		if err != nil {
+		if flattenErr != nil {
 			err = stdErr.Join(err, fmt.Errorf("error on flatten notification-groups - %w", flattenErr))
 			continue
 		}
@@ -1018,6 +1018,7 @@ func flattenNotifications(ctx context.Context, notifications []*alerts.AlertNoti
 		flattenedNotification, flattenErr := flattenNotification(ctx, notification)
 		if flattenErr != nil {
 			err = stdErr.Join(err, fmt.Errorf("error on flatten notifications - %w", flattenErr))
+			continue
 		}
 		result = append(result, flattenedNotification)
 	}
