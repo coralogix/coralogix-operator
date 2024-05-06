@@ -153,36 +153,26 @@ type AlertSpec struct {
 	AlertType AlertType `json:"alertType"`
 }
 
-func (in *AlertSpec) ExtractCreateAlertRequest(ctx context.Context) (*alerts.CreateAlertRequest, error) {
-	enabled := wrapperspb.Bool(in.Active)
-	name := wrapperspb.String(in.Name)
-	description := wrapperspb.String(in.Description)
-	severity := AlertSchemaSeverityToProtoSeverity[in.Severity]
-	metaLabels := expandMetaLabels(in.Labels)
-	expirationDate := expandExpirationDate(in.ExpirationDate)
-	showInInsight := expandShowInInsight(in.ShowInInsight)
-	notificationGroups, err := expandNotificationGroups(ctx, in.NotificationGroups)
+func (a *Alert) ExtractCreateAlertRequest(ctx context.Context) (*alerts.CreateAlertRequest, error) {
+	notificationGroups, err := expandNotificationGroups(ctx, a.Spec.NotificationGroups)
 	if err != nil {
 		return nil, err
 	}
-	payloadFilters := utils.StringSliceToWrappedStringSlice(in.PayloadFilters)
-	activeWhen := expandActiveWhen(in.Scheduling)
-	alertTypeParams := expandAlertType(in.AlertType)
 
 	return &alerts.CreateAlertRequest{
-		Name:                       name,
-		Description:                description,
-		IsActive:                   enabled,
-		Severity:                   severity,
-		MetaLabels:                 metaLabels,
-		Expiration:                 expirationDate,
-		ShowInInsight:              showInInsight,
+		IsActive:                   wrapperspb.Bool(a.Spec.Active),
+		Name:                       wrapperspb.String(a.Spec.Name),
+		Description:                wrapperspb.String(a.Spec.Description),
+		Severity:                   AlertSchemaSeverityToProtoSeverity[a.Spec.Severity],
+		MetaLabels:                 expandMetaLabels(a.Spec.Labels),
+		Expiration:                 expandExpirationDate(a.Spec.ExpirationDate),
+		ShowInInsight:              expandShowInInsight(a.Spec.ShowInInsight),
 		NotificationGroups:         notificationGroups,
-		NotificationPayloadFilters: payloadFilters,
-		ActiveWhen:                 activeWhen,
-		Filters:                    alertTypeParams.filters,
-		Condition:                  alertTypeParams.condition,
-		TracingAlert:               alertTypeParams.tracingAlert,
+		NotificationPayloadFilters: utils.StringSliceToWrappedStringSlice(a.Spec.PayloadFilters),
+		ActiveWhen:                 expandActiveWhen(a.Spec.Scheduling),
+		Filters:                    expandAlertType(a.Spec.AlertType).filters,
+		Condition:                  expandAlertType(a.Spec.AlertType).condition,
+		TracingAlert:               expandAlertType(a.Spec.AlertType).tracingAlert,
 	}, nil
 }
 
@@ -3115,6 +3105,14 @@ type Alert struct {
 
 	Spec   AlertSpec   `json:"spec,omitempty"`
 	Status AlertStatus `json:"status,omitempty"`
+}
+
+func NewAlert() *Alert {
+	return &Alert{
+		Spec: AlertSpec{
+			Labels: make(map[string]string),
+		},
+	}
 }
 
 //+kubebuilder:object:root=true
