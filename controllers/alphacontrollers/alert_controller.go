@@ -135,8 +135,7 @@ func (r *AlertReconciler) update(ctx context.Context,
 		return err
 	}
 
-	equal, _ := alert.Spec.DeepEqual(&status)
-	if equal {
+	if equal, _ := alert.Spec.DeepEqual(&status); equal {
 		return nil
 	}
 
