@@ -29,7 +29,7 @@ status:
     - notifications:
         - notifyOn: TriggeredOnly
           retriggeringPeriodMinutes: 5
-  severity: Info
+  severity: Critical
   showInInsight:
     notifyOn: TriggeredOnly
     retriggeringPeriodMinutes: 5
