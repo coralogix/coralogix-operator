@@ -268,8 +268,14 @@ func prometheusInnerRuleToCoralogixAlert(prometheusRule prometheus.Rule) coralog
 		timeWindow = prometheusAlertForToCoralogixPromqlAlertTimeWindow["1m"]
 	}
 
+	severity := coralogixv1alpha1.AlertSeverityInfo
+	if severityStr, ok := prometheusRule.Labels["severity"]; ok {
+		severityStr = strings.ToUpper(severityStr[:1]) + severityStr[1:]
+		severity = coralogixv1alpha1.AlertSeverity(severityStr)
+	}
+
 	return coralogixv1alpha1.AlertSpec{
-		Severity: coralogixv1alpha1.AlertSeverityInfo,
+		Severity: severity,
 		NotificationGroups: []coralogixv1alpha1.NotificationGroup{
 			{
 				Notifications: []coralogixv1alpha1.Notification{

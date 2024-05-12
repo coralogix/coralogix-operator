@@ -22,6 +22,8 @@ spec:
           for: 5m
           annotations:
             cxMinNonNullValuesPercentage: "20"
+          labels:
+            severity: critical
     - name: example.rules2
       interval: "70s"
       rules:
@@ -34,3 +36,5 @@ spec:
             for: 5m
             annotations:
               cxMinNonNullValuesPercentage: "20"
+            labels:
+                severity: info
