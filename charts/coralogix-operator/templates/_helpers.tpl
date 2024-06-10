@@ -72,3 +72,14 @@ Create the name of the service account to use
 {{- .Values.secret.secretKeyReference.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Get the name of the secret key, defaults to CORALOGIX_API_KEY
+*/}}
+{{- define "coralogixOperator.secretKey" -}}
+{{- if and (.Values.secret.create) (not .Values.secret.secretKeyReference) }}
+{{- print "CORALOGIX_API_KEY" }}
+{{- else }}
+{{- .Values.secret.secretKeyReference.key }}
+{{- end }}
+{{- end }}
