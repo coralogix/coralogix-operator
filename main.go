@@ -21,12 +21,11 @@ import (
 	"fmt"
 	"os"
 
+	utils "github.com/coralogix/coralogix-operator/apis"
+	"github.com/coralogix/coralogix-operator/controllers/clientset"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"k8s.io/utils/strings/slices"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-
-	utils "github.com/coralogix/coralogix-operator/apis"
-	"github.com/coralogix/coralogix-operator/controllers/clientset"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -113,6 +112,14 @@ func main() {
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "9e1892e3.coralogix",
 		PprofBindAddress:       "0.0.0.0:8888",
+		//WebhookServer: &webhook.DefaultServer{
+		//	Options: webhook.Options{
+		//		CertDir:  "./certs",
+		//		CertName: "server-cert.pem",
+		//		KeyName:  "server-key.pem",
+		//		Port:     443,
+		//	},
+		//},
 		// LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
 		// when the Manager ends. This requires the binary to immediately end when the
 		// Manager is stopped, otherwise, this setting is unsafe. Setting this significantly
@@ -163,6 +170,10 @@ func main() {
 		Scheme:             mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RecordingRuleGroupSet")
+		os.Exit(1)
+	}
+	if err = (&coralogixv1alpha1.Alert{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "Alert")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

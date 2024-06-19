@@ -1,0 +1,57 @@
+#
+#apiVersion: v1
+#kind: Service
+#metadata:
+#  labels:
+#    app.kubernetes.io/name: service
+#    app.kubernetes.io/instance: webhook-service
+#    app.kubernetes.io/component: webhook
+#    app.kubernetes.io/created-by: coralogix-operator
+#    app.kubernetes.io/part-of: coralogix-operator
+#    app.kubernetes.io/managed-by: kustomize
+#  name: webhook-service
+#  namespace: system
+#spec:
+#  ports:
+#    - port: 443
+#      protocol: TCP
+#      targetPort: 9443
+#  selector:
+#    control-plane: controller-manager
+#---
+#apiVersion: v1
+#kind: Pod
+#metadata:
+#  name: validation-webhook
+#  labels:
+#    app.kubernetes.io/name: validation-webhook
+#spec:
+#  containers:
+#    - name: validation-webhook
+#      image: webhook:0.1.0
+#      imagePullPolicy: Never
+#      ports:
+#        - containerPort: 443
+#          name: http-web-svc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: service
+    app.kubernetes.io/instance: webhook-service
+    app.kubernetes.io/component: webhook
+    app.kubernetes.io/created-by: coralogix-operator
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: validation-webhook-svc
+spec:
+  selector:
+#    app.kubernetes.io/name: validation-webhook
+    control-plane: controller-manager
+  ports:
+    - name: name-of-service-port
+      protocol: TCP
+      port: 8443
+      targetPort: http-web-svc
