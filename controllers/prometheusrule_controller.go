@@ -18,7 +18,9 @@ import (
 	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
 const (
@@ -339,7 +341,28 @@ func prometheusInnerRuleToCoralogixInnerRule(rule prometheus.Rule) coralogixv1al
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *PrometheusRuleReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	shouldTrackPrometheusRules := func(labels map[string]string) bool {
+		if value, ok := labels["app.coralogix.com/track-recording-rules"]; ok && value == "true" {
+			return true
+		}
+		if value, ok := labels["app.coralogix.com/track-alerting-rules"]; ok && value == "true" {
+			return true
+		}
+		return false
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&prometheus.PrometheusRule{}).
+		WithEventFilter(predicate.Funcs{
+			CreateFunc: func(e event.CreateEvent) bool {
+				return shouldTrackPrometheusRules(e.Object.GetLabels())
+			},
+			UpdateFunc: func(e event.UpdateEvent) bool {
+				return shouldTrackPrometheusRules(e.ObjectNew.GetLabels()) || shouldTrackPrometheusRules(e.ObjectOld.GetLabels())
+			},
+			DeleteFunc: func(e event.DeleteEvent) bool {
+				return shouldTrackPrometheusRules(e.Object.GetLabels())
+			},
+		}).
 		Complete(r)
 }
