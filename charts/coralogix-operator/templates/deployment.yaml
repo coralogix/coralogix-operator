@@ -50,11 +50,10 @@ spec:
           {{- toYaml .Values.kubeRbacProxy.resources | nindent 12 }}
       - name: {{ .Chart.Name }}
         args:
-        - /manager
-        - --health-probe-bind-address=:8081
-        - --metrics-bind-address=127.0.0.1:8080
-        - --leader-elect
-        - --prometheus-rule-controller={{.Values.coralogixOperator.prometheusRules.enabled}}
+        - -health-probe-bind-address=:8081
+        - -metrics-bind-address=127.0.0.1:8080
+        - -leader-elect
+        - -prometheus-rule-controller={{.Values.coralogixOperator.prometheusRules.enabled}}
         env:
           - name: CORALOGIX_REGION
             value: {{ .Values.coralogixOperator.region | quote }}
