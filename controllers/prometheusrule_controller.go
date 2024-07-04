@@ -18,7 +18,9 @@ import (
 	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
 const (
@@ -57,171 +59,157 @@ func (r *PrometheusRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 	}
 
-	if shouldTrackRecordingRules(prometheusRuleCRD) {
-		ruleGroupSetCRD := &coralogixv1alpha1.RecordingRuleGroupSet{}
-		if err := r.Client.Get(ctx, req.NamespacedName, ruleGroupSetCRD); err != nil {
-			if errors.IsNotFound(err) {
-				log.V(1).Info(fmt.Sprintf("Couldn't find RecordingRuleSet Namespace: %s, Name: %s. Trying to create.", req.Namespace, req.Name))
-				//Meaning there's a PrometheusRule with that NamespacedName but not RecordingRuleGroupSet accordingly (so creating it).
-				if ruleGroupSetCRD.Spec, err = prometheusRuleToRuleGroupSet(prometheusRuleCRD); err != nil {
-					log.Error(err, "Received an error while Converting PrometheusRule to RecordingRuleGroupSet", "PrometheusRule Name", prometheusRuleCRD.Name)
-					return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
-				}
-				ruleGroupSetCRD.Namespace = req.Namespace
-				ruleGroupSetCRD.Name = req.Name
-				ruleGroupSetCRD.OwnerReferences = []metav1.OwnerReference{
-					{
-						APIVersion: prometheusRuleCRD.APIVersion,
-						Kind:       prometheusRuleCRD.Kind,
-						Name:       prometheusRuleCRD.Name,
-						UID:        prometheusRuleCRD.UID,
-					},
-				}
-				if err = r.Create(ctx, ruleGroupSetCRD); err != nil {
-					log.Error(err, "Received an error while trying to create RecordingRuleGroupSet CRD", "RecordingRuleGroupSet Name", ruleGroupSetCRD.Name)
-					return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
-				}
+	// if shouldTrackRecordingRules(prometheusRuleCRD) {
+	ruleGroupSetCRD := &coralogixv1alpha1.RecordingRuleGroupSet{}
+	if err := r.Client.Get(ctx, req.NamespacedName, ruleGroupSetCRD); err != nil {
+		if errors.IsNotFound(err) {
+			log.V(1).Info(fmt.Sprintf("Couldn't find RecordingRuleSet Namespace: %s, Name: %s. Trying to create.", req.Namespace, req.Name))
+			//Meaning there's a PrometheusRule with that NamespacedName but not RecordingRuleGroupSet accordingly (so creating it).
+			if ruleGroupSetCRD.Spec, err = prometheusRuleToRuleGroupSet(prometheusRuleCRD); err != nil {
+				log.Error(err, "Received an error while Converting PrometheusRule to RecordingRuleGroupSet", "PrometheusRule Name", prometheusRuleCRD.Name)
+				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			}
+			ruleGroupSetCRD.Namespace = req.Namespace
+			ruleGroupSetCRD.Name = req.Name
+			ruleGroupSetCRD.OwnerReferences = []metav1.OwnerReference{
+				{
+					APIVersion: prometheusRuleCRD.APIVersion,
+					Kind:       prometheusRuleCRD.Kind,
+					Name:       prometheusRuleCRD.Name,
+					UID:        prometheusRuleCRD.UID,
+				},
+			}
+			if err = r.Create(ctx, ruleGroupSetCRD); err != nil {
+				log.Error(err, "Received an error while trying to create RecordingRuleGroupSet CRD", "RecordingRuleGroupSet Name", ruleGroupSetCRD.Name)
+				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			}
 
-			} else {
+		} else {
+			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		}
+	}
+
+	//Converting the PrometheusRule to the desired RecordingRuleGroupSet.
+	var err error
+	if ruleGroupSetCRD.Spec, err = prometheusRuleToRuleGroupSet(prometheusRuleCRD); err != nil {
+		log.Error(err, "Received an error while Converting PrometheusRule to RecordingRuleGroupSet", "PrometheusRule Name", prometheusRuleCRD.Name)
+		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+	}
+	ruleGroupSetCRD.OwnerReferences = []metav1.OwnerReference{
+		{
+			APIVersion: prometheusRuleCRD.APIVersion,
+			Kind:       prometheusRuleCRD.Kind,
+			Name:       prometheusRuleCRD.Name,
+			UID:        prometheusRuleCRD.UID,
+		},
+	}
+
+	if err = r.Client.Update(ctx, ruleGroupSetCRD); err != nil {
+		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+	}
+	// }
+
+	// if shouldTrackAlerts(prometheusRuleCRD) {
+	// A single PrometheusRule can have multiple alerts with the same name, while the Alert CRD from coralogix can only manage one alert.
+	// alertMap is used to map an alert name with potentially multiple alerts from the promrule CRD. For example:
+	//
+	// A prometheusRule with the following rules:
+	// rules:
+	//   - alert: Example
+	//     expr: metric > 10
+	//   - alert: Example
+	//     expr: metric > 20
+	//
+	// Would be mapped into:
+	//   map[string][]prometheus.Rule{
+	// 	   "Example": []prometheus.Rule{
+	// 		 {
+	//          Alert: Example,
+	//          Expr: "metric > 10"
+	// 		 },
+	// 		 {
+	//          Alert: Example,
+	//          Expr: "metric > 100"
+	// 		 },
+	// 	   },
+	//   }
+	//
+	// To later on generate coralogix Alert CRDs using the alert name followed by it's index on the array, making sure we don't clash names.
+	alertMap := make(map[string][]prometheus.Rule)
+	var a string
+	for _, group := range prometheusRuleCRD.Spec.Groups {
+		for _, rule := range group.Rules {
+			if rule.Alert != "" {
+				a = strings.ToLower(rule.Alert)
+				if _, ok := alertMap[a]; !ok {
+					alertMap[a] = []prometheus.Rule{rule}
+					continue
+				}
+				alertMap[a] = append(alertMap[a], rule)
+			}
+		}
+	}
+
+	alertsToKeep := make(map[string]bool)
+	for alertName, rules := range alertMap {
+		for i, rule := range rules {
+			alertCRD := &coralogixv1alpha1.Alert{}
+			req.Name = fmt.Sprintf("%s-%s-%d", prometheusRuleCRD.Name, alertName, i)
+			alertsToKeep[req.Name] = true
+			if err := r.Client.Get(ctx, req.NamespacedName, alertCRD); err != nil {
+				if errors.IsNotFound(err) {
+					log.V(1).Info(fmt.Sprintf("Couldn't find Alert Namespace: %s, Name: %s. Trying to create.", req.Namespace, req.Name))
+					alertCRD.Spec = prometheusInnerRuleToCoralogixAlert(rule)
+					alertCRD.Namespace = req.Namespace
+					alertCRD.Name = req.Name
+					alertCRD.OwnerReferences = []metav1.OwnerReference{
+						{
+							APIVersion: prometheusRuleCRD.APIVersion,
+							Kind:       prometheusRuleCRD.Kind,
+							Name:       prometheusRuleCRD.Name,
+							UID:        prometheusRuleCRD.UID,
+						},
+					}
+					alertCRD.Labels = map[string]string{"app.kubernetes.io/managed-by": prometheusRuleCRD.Name}
+					if err = r.Create(ctx, alertCRD); err != nil {
+						log.Error(err, "Received an error while trying to create Alert CRD", "Alert Name", alertCRD.Name)
+						return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+					}
+				} else {
+					return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+				}
+			}
+
+			//Converting the PrometheusRule to the desired Alert.
+			alertCRD.Spec = prometheusInnerRuleToCoralogixAlert(rule)
+			alertCRD.OwnerReferences = []metav1.OwnerReference{
+				{
+					APIVersion: prometheusRuleCRD.APIVersion,
+					Kind:       prometheusRuleCRD.Kind,
+					Name:       prometheusRuleCRD.Name,
+					UID:        prometheusRuleCRD.UID,
+				},
+			}
+		}
+	}
+
+	var childAlerts coralogixv1alpha1.AlertList
+	if err := r.List(ctx, &childAlerts, client.InNamespace(req.Namespace), client.MatchingLabels{"app.kubernetes.io/managed-by": prometheusRuleCRD.Name}); err != nil {
+		log.Error(err, "unable to list child Alerts")
+		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+	}
+
+	for _, alert := range childAlerts.Items {
+		if !alertsToKeep[alert.Name] {
+			if err := r.Delete(ctx, &alert); err != nil {
+				log.Error(err, "unable to remove child Alert")
 				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 			}
 		}
-
-		//Converting the PrometheusRule to the desired RecordingRuleGroupSet.
-		var err error
-		if ruleGroupSetCRD.Spec, err = prometheusRuleToRuleGroupSet(prometheusRuleCRD); err != nil {
-			log.Error(err, "Received an error while Converting PrometheusRule to RecordingRuleGroupSet", "PrometheusRule Name", prometheusRuleCRD.Name)
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
-		}
-		ruleGroupSetCRD.OwnerReferences = []metav1.OwnerReference{
-			{
-				APIVersion: prometheusRuleCRD.APIVersion,
-				Kind:       prometheusRuleCRD.Kind,
-				Name:       prometheusRuleCRD.Name,
-				UID:        prometheusRuleCRD.UID,
-			},
-		}
-
-		if err = r.Client.Update(ctx, ruleGroupSetCRD); err != nil {
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
-		}
 	}
-
-	if shouldTrackAlerts(prometheusRuleCRD) {
-		// A single PrometheusRule can have multiple alerts with the same name, while the Alert CRD from coralogix can only manage one alert.
-		// alertMap is used to map an alert name with potentially multiple alerts from the promrule CRD. For example:
-		//
-		// A prometheusRule with the following rules:
-		// rules:
-		//   - alert: Example
-		//     expr: metric > 10
-		//   - alert: Example
-		//     expr: metric > 20
-		//
-		// Would be mapped into:
-		//   map[string][]prometheus.Rule{
-		// 	   "Example": []prometheus.Rule{
-		// 		 {
-		//          Alert: Example,
-		//          Expr: "metric > 10"
-		// 		 },
-		// 		 {
-		//          Alert: Example,
-		//          Expr: "metric > 100"
-		// 		 },
-		// 	   },
-		//   }
-		//
-		// To later on generate coralogix Alert CRDs using the alert name followed by it's index on the array, making sure we don't clash names.
-		alertMap := make(map[string][]prometheus.Rule)
-		var a string
-		for _, group := range prometheusRuleCRD.Spec.Groups {
-			for _, rule := range group.Rules {
-				if rule.Alert != "" {
-					a = strings.ToLower(rule.Alert)
-					if _, ok := alertMap[a]; !ok {
-						alertMap[a] = []prometheus.Rule{rule}
-						continue
-					}
-					alertMap[a] = append(alertMap[a], rule)
-				}
-			}
-		}
-
-		alertsToKeep := make(map[string]bool)
-		for alertName, rules := range alertMap {
-			for i, rule := range rules {
-				alertCRD := &coralogixv1alpha1.Alert{}
-				req.Name = fmt.Sprintf("%s-%s-%d", prometheusRuleCRD.Name, alertName, i)
-				alertsToKeep[req.Name] = true
-				if err := r.Client.Get(ctx, req.NamespacedName, alertCRD); err != nil {
-					if errors.IsNotFound(err) {
-						log.V(1).Info(fmt.Sprintf("Couldn't find Alert Namespace: %s, Name: %s. Trying to create.", req.Namespace, req.Name))
-						alertCRD.Spec = prometheusInnerRuleToCoralogixAlert(rule)
-						alertCRD.Namespace = req.Namespace
-						alertCRD.Name = req.Name
-						alertCRD.OwnerReferences = []metav1.OwnerReference{
-							{
-								APIVersion: prometheusRuleCRD.APIVersion,
-								Kind:       prometheusRuleCRD.Kind,
-								Name:       prometheusRuleCRD.Name,
-								UID:        prometheusRuleCRD.UID,
-							},
-						}
-						alertCRD.Labels = map[string]string{"app.kubernetes.io/managed-by": prometheusRuleCRD.Name}
-						if err = r.Create(ctx, alertCRD); err != nil {
-							log.Error(err, "Received an error while trying to create Alert CRD", "Alert Name", alertCRD.Name)
-							return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
-						}
-					} else {
-						return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
-					}
-				}
-
-				//Converting the PrometheusRule to the desired Alert.
-				alertCRD.Spec = prometheusInnerRuleToCoralogixAlert(rule)
-				alertCRD.OwnerReferences = []metav1.OwnerReference{
-					{
-						APIVersion: prometheusRuleCRD.APIVersion,
-						Kind:       prometheusRuleCRD.Kind,
-						Name:       prometheusRuleCRD.Name,
-						UID:        prometheusRuleCRD.UID,
-					},
-				}
-			}
-		}
-
-		var childAlerts coralogixv1alpha1.AlertList
-		if err := r.List(ctx, &childAlerts, client.InNamespace(req.Namespace), client.MatchingLabels{"app.kubernetes.io/managed-by": prometheusRuleCRD.Name}); err != nil {
-			log.Error(err, "unable to list child Alerts")
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
-		}
-
-		for _, alert := range childAlerts.Items {
-			if !alertsToKeep[alert.Name] {
-				if err := r.Delete(ctx, &alert); err != nil {
-					log.Error(err, "unable to remove child Alert")
-					return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
-				}
-			}
-		}
-	}
+	// }
 
 	return ctrl.Result{RequeueAfter: defaultRequeuePeriod}, nil
-}
-
-func shouldTrackRecordingRules(prometheusRule *prometheus.PrometheusRule) bool {
-	if value, ok := prometheusRule.Labels["app.coralogix.com/track-recording-rules"]; ok && value == "true" {
-		return true
-	}
-	return false
-}
-
-func shouldTrackAlerts(prometheusRule *prometheus.PrometheusRule) bool {
-	if value, ok := prometheusRule.Labels["app.coralogix.com/track-alerting-rules"]; ok && value == "true" {
-		return true
-	}
-	return false
 }
 
 func prometheusRuleToRuleGroupSet(prometheusRule *prometheus.PrometheusRule) (coralogixv1alpha1.RecordingRuleGroupSetSpec, error) {
@@ -339,7 +327,28 @@ func prometheusInnerRuleToCoralogixInnerRule(rule prometheus.Rule) coralogixv1al
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *PrometheusRuleReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	shouldTrackPrometheusRules := func(labels map[string]string) bool {
+		if value, ok := labels["app.coralogix.com/track-recording-rules"]; ok && value == "true" {
+			return true
+		}
+		if value, ok := labels["app.coralogix.com/track-alerting-rules"]; ok && value == "true" {
+			return true
+		}
+		return false
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&prometheus.PrometheusRule{}).
+		WithEventFilter(predicate.Funcs{
+			CreateFunc: func(e event.CreateEvent) bool {
+				return shouldTrackPrometheusRules(e.Object.GetLabels())
+			},
+			UpdateFunc: func(e event.UpdateEvent) bool {
+				return shouldTrackPrometheusRules(e.ObjectNew.GetLabels())
+			},
+			DeleteFunc: func(e event.DeleteEvent) bool {
+				return shouldTrackPrometheusRules(e.Object.GetLabels())
+			},
+		}).
 		Complete(r)
 }
