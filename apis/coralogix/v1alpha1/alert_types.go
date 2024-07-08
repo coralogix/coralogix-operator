@@ -31,6 +31,7 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -3092,6 +3093,12 @@ type AlertStatus struct {
 	Scheduling *Scheduling `json:"scheduling,omitempty"`
 
 	AlertType AlertType `json:"alertType,omitempty"`
+}
+
+func NewDefaultAlertStatus() *AlertStatus {
+	return &AlertStatus{
+		ID: ptr.To(""),
+	}
 }
 
 //+kubebuilder:object:root=true

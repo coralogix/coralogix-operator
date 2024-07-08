@@ -10,6 +10,8 @@ import (
 	"github.com/coralogix/coralogix-operator/controllers/mock_clientset"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -367,6 +369,65 @@ func TestAlertUpdate(t *testing.T) {
 
 				params.alertsClient.EXPECT().GetAlert(params.ctx, gomock.Any()).
 					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
+					MinTimes(1).MaxTimes(1)
+			},
+		},
+		{
+			name:       "Alert update clean status if not found in remote",
+			shouldFail: true,
+			alert: &coralogixv1alpha1.Alert{
+				TypeMeta:   metav1.TypeMeta{Kind: "Alert", APIVersion: "coralogix.com/v1alpha1"},
+				ObjectMeta: metav1.ObjectMeta{Name: "alert-update-clean-status", Namespace: "default"},
+				Spec: coralogixv1alpha1.AlertSpec{
+					Name:               "AlertUpdateCleanStatus",
+					Description:        "AlertUpdateCleanStatus",
+					Active:             true,
+					Severity:           alertProtoSeverityToSchemaSeverity[alerts.AlertSeverity_ALERT_SEVERITY_CRITICAL],
+					NotificationGroups: defaultNotificationGroups,
+					PayloadFilters:     []string{"filter"},
+					AlertType:          defaultAlertType,
+				},
+				Status: coralogixv1alpha1.AlertStatus{
+					ID:          pointer.String("AlertUpdateCleanStatus"),
+					Name:        "AlertUpdateCleanStatus",
+					Description: "AlertUpdateCleanStatus",
+					Active:      true,
+					Severity:    "Critical",
+				},
+			},
+			remoteAlert: &alerts.Alert{
+				UniqueIdentifier: wrapperspb.String("AlertUpdateCleanStatus"),
+				Name:             wrapperspb.String("AlertUpdateCleanStatus"),
+				Description:      wrapperspb.String("AlertUpdateCleanStatus"),
+				IsActive:         wrapperspb.Bool(true),
+				Severity:         alerts.AlertSeverity_ALERT_SEVERITY_CRITICAL,
+				MetaLabels: []*alerts.MetaLabel{
+					{Key: wrapperspb.String("key"), Value: wrapperspb.String("value")},
+					{Key: wrapperspb.String("managed-by"), Value: wrapperspb.String("coralogix-operator")},
+				},
+				Condition:          defaultRemoteCondition,
+				NotificationGroups: defaultRemoteNotificationGroups,
+				Filters: &alerts.AlertFilters{
+					FilterType: alerts.AlertFilters_FILTER_TYPE_METRIC,
+				},
+				NotificationPayloadFilters: []*wrapperspb.StringValue{wrapperspb.String("filter")},
+			},
+			prepare: func(params PrepareParams) {
+				params.alertsClient.EXPECT().
+					GetAlert(params.alert.Namespace, coralogixv1alpha1.NewAlert()).
+					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
+					MinTimes(1).MaxTimes(1)
+
+				params.alertsClient.EXPECT().CreateAlert(params.ctx, gomock.Any()).
+					Return(&alerts.CreateAlertResponse{Alert: params.remoteAlert}, nil).
+					MinTimes(1).MaxTimes(1)
+
+				params.alertsClient.EXPECT().UpdateAlert(params.ctx, gomock.Any()).
+					Return(&alerts.UpdateAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
+					MinTimes(1).MaxTimes(1)
+
+				params.alertsClient.EXPECT().GetAlert(params.ctx, gomock.Any()).
+					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, status.Error(codes.NotFound, "")).
 					MinTimes(1).MaxTimes(1)
 			},
 		},

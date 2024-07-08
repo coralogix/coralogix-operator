@@ -30,6 +30,7 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -90,7 +91,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return resultError, err
 	}
 
-	if alert.Status.ID == nil {
+	if ptr.Deref(alert.Status.ID, "") == "" {
 		err = r.create(ctx, log, alert)
 		if err != nil {
 			log.Error(err, "Error on creating alert")
@@ -125,6 +126,15 @@ func (r *AlertReconciler) update(ctx context.Context,
 	})
 
 	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			log.Info("alert not found on remote, recreating it")
+			alert.Status = *coralogixv1alpha1.NewDefaultAlertStatus()
+			if err := r.Status().Update(ctx, alert); err != nil {
+				log.Error(err, "Error on updating alert status")
+				return err
+			}
+			return err
+		}
 		log.Error(err, "Error on getting alert")
 		return err
 	}
