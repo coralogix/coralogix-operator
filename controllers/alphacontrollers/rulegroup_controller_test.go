@@ -202,7 +202,6 @@ func TestRuleGroupReconciler_Reconcile(t *testing.T) {
 
 	result, err := r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
 	assert.NoError(t, err)
-	assert.Equal(t, defaultRequeuePeriod, result.RequeueAfter)
 
 	namespacedName := types.NamespacedName{Namespace: "default", Name: "test"}
 	actualRuleGroupCRD := &coralogixv1alpha1.RuleGroup{}
@@ -270,7 +269,6 @@ func TestRuleGroupReconciler_Reconcile_5XX_StatusError(t *testing.T) {
 
 	result, err = r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
 	assert.NoError(t, err)
-	assert.Equal(t, defaultRequeuePeriod, result.RequeueAfter)
 
 	namespacedName := types.NamespacedName{Namespace: "default", Name: "test"}
 	actualRuleGroupCRD := &coralogixv1alpha1.RuleGroup{}

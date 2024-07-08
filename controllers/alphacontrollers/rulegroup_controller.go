@@ -180,7 +180,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			if err := r.Status().Update(ctx, ruleGroupCRD); err != nil {
 				log.V(1).Error(err, "updating crd")
 			}
-			return ctrl.Result{RequeueAfter: defaultRequeuePeriod}, nil
+			return ctrl.Result{}, nil
 		} else {
 			log.Error(err, "Received an error while creating a Rule-Group", "ruleGroup", createRuleGroupReq)
 			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
@@ -202,7 +202,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		log.V(1).Info("Rule-Group was updated", "ruleGroup", jstr)
 	}
 
-	return ctrl.Result{RequeueAfter: defaultRequeuePeriod}, nil
+	return ctrl.Result{}, nil
 }
 
 func flattenRuleGroup(ruleGroup *rulesgroups.RuleGroup) (*coralogixv1alpha1.RuleGroupStatus, error) {
