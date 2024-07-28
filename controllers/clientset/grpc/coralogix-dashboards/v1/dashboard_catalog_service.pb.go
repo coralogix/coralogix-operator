@@ -652,24 +652,24 @@ var file_com_coralogixapis_dashboards_v1_services_dashboard_catalog_service_prot
 	(*UnpinDashboardRequest)(nil),           // 7: com.coralogixapis.dashboards.v1.services.UnpinDashboardRequest
 	(*UnpinDashboardResponse)(nil),          // 8: com.coralogixapis.dashboards.v1.services.UnpinDashboardResponse
 	(*wrapperspb.StringValue)(nil),          // 9: google.protobuf.StringValue
-	(*UUID)(nil),                            // 10: com.coralogixapis.dashboards.v1.UUID
+	(*UUID)(nil),                            // 10: com.coralogixapis.dashboards.v1.Uuid
 	(*timestamppb.Timestamp)(nil),           // 11: google.protobuf.Timestamp
 }
 var file_com_coralogixapis_dashboards_v1_services_dashboard_catalog_service_proto_depIdxs = []int32{
 	9,  // 0: com.coralogixapis.dashboards.v1.services.GetDashboardCatalogResponse.default_dashboard:type_name -> google.protobuf.StringValue
 	9,  // 1: com.coralogixapis.dashboards.v1.services.GetDashboardCatalogResponse.pinned_dashboards:type_name -> google.protobuf.StringValue
 	2,  // 2: com.coralogixapis.dashboards.v1.services.GetDashboardCatalogResponse.items:type_name -> com.coralogixapis.dashboards.v1.services.DashboardCatalogItem
-	10, // 3: com.coralogixapis.dashboards.v1.services.DashboardCatalogItem.id:type_name -> com.coralogixapis.dashboards.v1.UUID
+	10, // 3: com.coralogixapis.dashboards.v1.services.DashboardCatalogItem.id:type_name -> com.coralogixapis.dashboards.v1.Uuid
 	9,  // 4: com.coralogixapis.dashboards.v1.services.DashboardCatalogItem.name:type_name -> google.protobuf.StringValue
 	9,  // 5: com.coralogixapis.dashboards.v1.services.DashboardCatalogItem.description:type_name -> google.protobuf.StringValue
 	11, // 6: com.coralogixapis.dashboards.v1.services.DashboardCatalogItem.create_time:type_name -> google.protobuf.Timestamp
 	11, // 7: com.coralogixapis.dashboards.v1.services.DashboardCatalogItem.update_time:type_name -> google.protobuf.Timestamp
 	9,  // 8: com.coralogixapis.dashboards.v1.services.ReplaceDefaultDashboardRequest.request_id:type_name -> google.protobuf.StringValue
-	10, // 9: com.coralogixapis.dashboards.v1.services.ReplaceDefaultDashboardRequest.dashboard_id:type_name -> com.coralogixapis.dashboards.v1.UUID
+	10, // 9: com.coralogixapis.dashboards.v1.services.ReplaceDefaultDashboardRequest.dashboard_id:type_name -> com.coralogixapis.dashboards.v1.Uuid
 	9,  // 10: com.coralogixapis.dashboards.v1.services.PinDashboardRequest.request_id:type_name -> google.protobuf.StringValue
-	10, // 11: com.coralogixapis.dashboards.v1.services.PinDashboardRequest.dashboard_id:type_name -> com.coralogixapis.dashboards.v1.UUID
+	10, // 11: com.coralogixapis.dashboards.v1.services.PinDashboardRequest.dashboard_id:type_name -> com.coralogixapis.dashboards.v1.Uuid
 	9,  // 12: com.coralogixapis.dashboards.v1.services.UnpinDashboardRequest.request_id:type_name -> google.protobuf.StringValue
-	10, // 13: com.coralogixapis.dashboards.v1.services.UnpinDashboardRequest.dashboard_id:type_name -> com.coralogixapis.dashboards.v1.UUID
+	10, // 13: com.coralogixapis.dashboards.v1.services.UnpinDashboardRequest.dashboard_id:type_name -> com.coralogixapis.dashboards.v1.Uuid
 	0,  // 14: com.coralogixapis.dashboards.v1.services.DashboardCatalogService.GetDashboardCatalog:input_type -> com.coralogixapis.dashboards.v1.services.GetDashboardCatalogRequest
 	3,  // 15: com.coralogixapis.dashboards.v1.services.DashboardCatalogService.ReplaceDefaultDashboard:input_type -> com.coralogixapis.dashboards.v1.services.ReplaceDefaultDashboardRequest
 	5,  // 16: com.coralogixapis.dashboards.v1.services.DashboardCatalogService.PinDashboard:input_type -> com.coralogixapis.dashboards.v1.services.PinDashboardRequest

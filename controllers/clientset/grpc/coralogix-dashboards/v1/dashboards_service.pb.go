@@ -540,7 +540,7 @@ var file_com_coralogixapis_dashboards_v1_services_dashboards_service_proto_goTyp
 	(*GetDashboardResponse)(nil),     // 7: com.coralogixapis.dashboards.v1.services.GetDashboardResponse
 	(*wrapperspb.StringValue)(nil),   // 8: google.protobuf.StringValue
 	(*Dashboard)(nil),                // 9: com.coralogixapis.dashboards.v1.ast.Dashboard
-	(*UUID)(nil),                     // 10: com.coralogixapis.dashboards.v1.UUID
+	(*UUID)(nil),                     // 10: com.coralogixapis.dashboards.v1.Uuid
 }
 var file_com_coralogixapis_dashboards_v1_services_dashboards_service_proto_depIdxs = []int32{
 	8,  // 0: com.coralogixapis.dashboards.v1.services.CreateDashboardRequest.request_id:type_name -> google.protobuf.StringValue
@@ -548,8 +548,8 @@ var file_com_coralogixapis_dashboards_v1_services_dashboards_service_proto_depId
 	8,  // 2: com.coralogixapis.dashboards.v1.services.ReplaceDashboardRequest.request_id:type_name -> google.protobuf.StringValue
 	9,  // 3: com.coralogixapis.dashboards.v1.services.ReplaceDashboardRequest.dashboard:type_name -> com.coralogixapis.dashboards.v1.ast.Dashboard
 	8,  // 4: com.coralogixapis.dashboards.v1.services.DeleteDashboardRequest.request_id:type_name -> google.protobuf.StringValue
-	10, // 5: com.coralogixapis.dashboards.v1.services.DeleteDashboardRequest.dashboard_id:type_name -> com.coralogixapis.dashboards.v1.UUID
-	10, // 6: com.coralogixapis.dashboards.v1.services.GetDashboardRequest.dashboard_id:type_name -> com.coralogixapis.dashboards.v1.UUID
+	10, // 5: com.coralogixapis.dashboards.v1.services.DeleteDashboardRequest.dashboard_id:type_name -> com.coralogixapis.dashboards.v1.Uuid
+	10, // 6: com.coralogixapis.dashboards.v1.services.GetDashboardRequest.dashboard_id:type_name -> com.coralogixapis.dashboards.v1.Uuid
 	9,  // 7: com.coralogixapis.dashboards.v1.services.GetDashboardResponse.dashboard:type_name -> com.coralogixapis.dashboards.v1.ast.Dashboard
 	0,  // 8: com.coralogixapis.dashboards.v1.services.DashboardsService.CreateDashboard:input_type -> com.coralogixapis.dashboards.v1.services.CreateDashboardRequest
 	2,  // 9: com.coralogixapis.dashboards.v1.services.DashboardsService.ReplaceDashboard:input_type -> com.coralogixapis.dashboards.v1.services.ReplaceDashboardRequest
