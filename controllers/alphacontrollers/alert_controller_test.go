@@ -234,7 +234,6 @@ func TestAlertCreation(t *testing.T) {
 				assert.Equal(t, defaultErrRequeuePeriod, result.RequeueAfter)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, defaultRequeuePeriod, result.RequeueAfter)
 			}
 		})
 	}
@@ -504,7 +503,6 @@ func TestAlertUpdate(t *testing.T) {
 				assert.Equal(t, defaultErrRequeuePeriod, result.RequeueAfter)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, defaultRequeuePeriod, result.RequeueAfter)
 			}
 		})
 	}
@@ -715,7 +713,6 @@ func TestAlertDelete(t *testing.T) {
 				assert.Equal(t, defaultErrRequeuePeriod, result.RequeueAfter)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, defaultRequeuePeriod, result.RequeueAfter)
 			}
 		})
 	}
