@@ -126,6 +126,9 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 	prometheusRuleAlerts := make(map[string]bool)
 	for _, group := range prometheusRule.Spec.Groups {
 		for _, rule := range group.Rules {
+			if rule.Alert == "" {
+				continue
+			}
 			alert := &coralogixv1alpha1.Alert{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: prometheusRule.Namespace,
