@@ -201,9 +201,7 @@ func shouldTrackAlerts(prometheusRule *prometheus.PrometheusRule) bool {
 func prometheusRuleToRecordingRuleToRuleGroupSet(log logr.Logger, prometheusRule *prometheus.PrometheusRule) coralogixv1alpha1.RecordingRuleGroupSetSpec {
 	groups := make([]coralogixv1alpha1.RecordingRuleGroup, 0)
 	for _, group := range prometheusRule.Spec.Groups {
-		// Default Coralogix interval is 30 seconds according to the documentation.
-		// https://coralogix.com/docs/recordingrules/
-		var interval int32 = 30
+		var interval int32 = 60
 
 		if group.Interval != "" {
 			duration, err := time.ParseDuration(string(group.Interval))
