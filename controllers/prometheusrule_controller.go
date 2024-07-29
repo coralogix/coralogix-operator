@@ -115,6 +115,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleRecordingRuleToCxRecordi
 		return fmt.Errorf("received an error while trying to get RecordingRuleGroupSet CRD: %w", err)
 	}
 
+	recordingRuleGroupSet.Spec = recordingRuleGroupSetSpec
 	if err := r.Client.Update(ctx, recordingRuleGroupSet); err != nil {
 		return fmt.Errorf("received an error while trying to update RecordingRuleGroupSet CRD: %w", err)
 	}
@@ -212,11 +213,13 @@ func prometheusRuleToRecordingRuleToRuleGroupSet(log logr.Logger, prometheusRule
 			interval = int32(duration.Seconds())
 		}
 
-		groups = append(groups, coralogixv1alpha1.RecordingRuleGroup{
-			Name:            group.Name,
-			IntervalSeconds: interval,
-			Rules:           prometheusInnerRulesToCoralogixInnerRules(group.Rules),
-		})
+		if rules := prometheusInnerRulesToCoralogixInnerRules(group.Rules); len(rules) > 0 {
+			groups = append(groups, coralogixv1alpha1.RecordingRuleGroup{
+				Name:            group.Name,
+				IntervalSeconds: interval,
+				Rules:           rules,
+			})
+		}
 	}
 
 	return coralogixv1alpha1.RecordingRuleGroupSetSpec{
