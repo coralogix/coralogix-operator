@@ -97,6 +97,7 @@ func (r *RecordingRuleGroupSetReconciler) create(ctx context.Context, recordingR
 	response, err := r.CoralogixClientSet.
 		RecordingRuleGroups().
 		CreateRecordingRuleGroupSet(ctx, &rrg.CreateRuleGroupSet{
+			Name:   ptr.To(recordingRuleGroupSet.Name),
 			Groups: recordingRuleGroupSet.Spec.ExtractRecordingRuleGroups(),
 		})
 
@@ -142,6 +143,7 @@ func (r *RecordingRuleGroupSetReconciler) update(ctx context.Context, recordingR
 		UpdateRecordingRuleGroupSet(ctx, &rrg.UpdateRuleGroupSet{
 			Id:     remoteRecordingRule.Id,
 			Groups: recordingRuleGroupSet.Spec.ExtractRecordingRuleGroups(),
+			Name:   ptr.To(recordingRuleGroupSet.Name),
 		}); err != nil {
 		return fmt.Errorf("failed to update recording rule groupSet: %w", err)
 	}
