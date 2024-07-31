@@ -87,6 +87,9 @@ func main() {
 	var prometheusRuleController bool
 	flag.BoolVar(&prometheusRuleController, "prometheus-rule-controller", true, "Determine if the prometheus rule controller should be started. Default is true.")
 
+	var recordingRuleGroupSetSuffix string
+	flag.StringVar(&recordingRuleGroupSetSuffix, "recording-rule-group-set-suffix", "", "Suffix to be added to the RecordingRuleGroupSet")
+
 	opts := zap.Options{}
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
@@ -158,9 +161,10 @@ func main() {
 		}
 	}
 	if err = (&alphacontrollers.RecordingRuleGroupSetReconciler{
-		CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),
-		Client:             mgr.GetClient(),
-		Scheme:             mgr.GetScheme(),
+		CoralogixClientSet:          clientset.NewClientSet(targetUrl, apiKey),
+		Client:                      mgr.GetClient(),
+		Scheme:                      mgr.GetScheme(),
+		RecordingRuleGroupSetSuffix: recordingRuleGroupSetSuffix,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RecordingRuleGroupSet")
 		os.Exit(1)
