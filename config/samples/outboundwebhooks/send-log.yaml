@@ -13,4 +13,4 @@ spec:
   outboundWebhookType:
     sendLog:
       payload: '{"key1": "value1", "key2": "value2"}'
-      uuid: 12345678-1234-1234-1234-123456789012
+      url: https://example.com

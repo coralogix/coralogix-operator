@@ -63,10 +63,13 @@ spec:
                     properties:
                       payload:
                         type: string
+                      url:
+                        type: string
                       uuid:
                         type: string
                     required:
                     - payload
+                    - url
                     - uuid
                     type: object
                   emailGroup:
@@ -95,10 +98,9 @@ spec:
                         type: string
                       url:
                         type: string
-                      uuid:
-                        type: string
                     required:
                     - method
+                    - url
                     type: object
                   jira:
                     properties:
@@ -108,14 +110,27 @@ spec:
                         type: string
                       projectKey:
                         type: string
+                      url:
+                        type: string
                     required:
                     - apiToken
                     - email
                     - projectKey
+                    - url
                     type: object
                   microsoftTeams:
+                    properties:
+                      url:
+                        type: string
+                    required:
+                    - url
                     type: object
                   opsgenie:
+                    properties:
+                      url:
+                        type: string
+                    required:
+                    - url
                     type: object
                   pagerDuty:
                     properties:
@@ -128,11 +143,11 @@ spec:
                     properties:
                       payload:
                         type: string
-                      uuid:
+                      url:
                         type: string
                     required:
                     - payload
-                    - uuid
+                    - url
                     type: object
                   slack:
                     properties:
@@ -204,10 +219,13 @@ spec:
                     properties:
                       payload:
                         type: string
+                      url:
+                        type: string
                       uuid:
                         type: string
                     required:
                     - payload
+                    - url
                     - uuid
                     type: object
                   emailGroup:
@@ -240,6 +258,8 @@ spec:
                         type: string
                     required:
                     - method
+                    - url
+                    - uuid
                     type: object
                   jira:
                     properties:
@@ -249,14 +269,27 @@ spec:
                         type: string
                       projectKey:
                         type: string
+                      url:
+                        type: string
                     required:
                     - apiToken
                     - email
                     - projectKey
+                    - url
                     type: object
                   microsoftTeams:
+                    properties:
+                      url:
+                        type: string
+                    required:
+                    - url
                     type: object
                   opsgenie:
+                    properties:
+                      url:
+                        type: string
+                    required:
+                    - url
                     type: object
                   pagerDuty:
                     properties:
@@ -269,10 +302,13 @@ spec:
                     properties:
                       payload:
                         type: string
+                      url:
+                        type: string
                       uuid:
                         type: string
                     required:
                     - payload
+                    - url
                     - uuid
                     type: object
                   slack:

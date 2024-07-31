@@ -12,3 +12,4 @@ spec:
   name: opsgenie-webhook
   outboundWebhookType:
     opsgenie:
+      url: "https://api.opsgenie.com/v2/alerts"

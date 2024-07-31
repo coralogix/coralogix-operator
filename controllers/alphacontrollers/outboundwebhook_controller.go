@@ -126,7 +126,6 @@ func (r *OutboundWebhookReconciler) create(ctx context.Context, log logr.Logger,
 		return err
 	}
 
-	//1 level means debug - for every backend request
 	log.V(1).Info(fmt.Sprintf("Creating outbound-webhook-\n%s", protojson.Format(createRequest)))
 	createResponse, err := r.OutboundWebhooksClient.CreateOutboundWebhook(ctx, createRequest)
 	if err != nil {
@@ -138,7 +137,7 @@ func (r *OutboundWebhookReconciler) create(ctx context.Context, log logr.Logger,
 	webhook.Status = coralogixv1alpha1.OutboundWebhookStatus{
 		ID:                  ptr.To(createResponse.Id.GetValue()),
 		Name:                webhook.Name,
-		OutboundWebhookType: &coralogixv1alpha1.OutboundWebhookType{},
+		OutboundWebhookType: &coralogixv1alpha1.OutboundWebhookTypeStatus{},
 	}
 	if err = r.Status().Update(ctx, webhook); err != nil {
 		log.Error(err, fmt.Sprintf("Error on updating outbound-webhook status -\n%s", webhook))
@@ -181,7 +180,7 @@ func getOutboundWebhookStatus(webhook *outboundwebhooks.OutgoingWebhook) (*coral
 		return nil, fmt.Errorf("outbound-webhook is nil")
 	}
 
-	outboundWebhookType, err := getOutboundWebhookType(webhook)
+	outboundWebhookType, err := getOutboundWebhookTypeStatus(webhook)
 	if err != nil {
 		return nil, err
 	}
@@ -195,33 +194,33 @@ func getOutboundWebhookStatus(webhook *outboundwebhooks.OutgoingWebhook) (*coral
 	return status, nil
 }
 
-func getOutboundWebhookType(webhook *outboundwebhooks.OutgoingWebhook) (*coralogixv1alpha1.OutboundWebhookType, error) {
+func getOutboundWebhookTypeStatus(webhook *outboundwebhooks.OutgoingWebhook) (*coralogixv1alpha1.OutboundWebhookTypeStatus, error) {
 	if webhook == nil {
 		return nil, fmt.Errorf("outbound-webhook is nil")
 	}
 
-	outboundWebhooks := &coralogixv1alpha1.OutboundWebhookType{}
+	outboundWebhooks := &coralogixv1alpha1.OutboundWebhookTypeStatus{}
 	switch webhookType := webhook.Config.(type) {
 	case *outboundwebhooks.OutgoingWebhook_GenericWebhook:
-		outboundWebhooks.GenericWebhook = getOutboundWebhookGenericType(webhookType.GenericWebhook, webhook.Url)
+		outboundWebhooks.GenericWebhook = getOutboundWebhookGenericTypeStatus(webhookType.GenericWebhook, webhook.Url)
 	case *outboundwebhooks.OutgoingWebhook_Slack:
-		outboundWebhooks.Slack = getOutgoingWebhookSlackType(webhookType.Slack, webhook.Url)
+		outboundWebhooks.Slack = getOutgoingWebhookSlackStatus(webhookType.Slack, webhook.Url)
 	case *outboundwebhooks.OutgoingWebhook_PagerDuty:
-		outboundWebhooks.PagerDuty = getOutgoingWebhookPagerDutyType(webhookType.PagerDuty)
+		outboundWebhooks.PagerDuty = getOutgoingWebhookPagerDutyStatus(webhookType.PagerDuty)
 	case *outboundwebhooks.OutgoingWebhook_SendLog:
-		outboundWebhooks.SendLog = getOutgoingWebhookSendLogType(webhookType.SendLog)
+		outboundWebhooks.SendLog = getOutgoingWebhookSendLogStatus(webhookType.SendLog, webhook.Url)
 	case *outboundwebhooks.OutgoingWebhook_EmailGroup:
-		outboundWebhooks.EmailGroup = getOutgoingWebhookEmailGroupType(webhookType.EmailGroup)
+		outboundWebhooks.EmailGroup = getOutgoingWebhookEmailGroupStatus(webhookType.EmailGroup)
 	case *outboundwebhooks.OutgoingWebhook_MicrosoftTeams:
-		outboundWebhooks.MicrosoftTeams = getOutgoingWebhookMicrosoftTeamsType(webhookType.MicrosoftTeams)
+		outboundWebhooks.MicrosoftTeams = getOutgoingWebhookMicrosoftTeamsStatus(webhookType.MicrosoftTeams, webhook.Url)
 	case *outboundwebhooks.OutgoingWebhook_Jira:
-		outboundWebhooks.Jira = getOutboundWebhookJiraType(webhookType.Jira)
+		outboundWebhooks.Jira = getOutboundWebhookJiraStatus(webhookType.Jira, webhook.Url)
 	case *outboundwebhooks.OutgoingWebhook_Opsgenie:
-		outboundWebhooks.Opsgenie = getOutboundWebhookOpsgenieType(webhookType.Opsgenie)
+		outboundWebhooks.Opsgenie = getOutboundWebhookOpsgenieStatus(webhookType.Opsgenie, webhook.Url)
 	case *outboundwebhooks.OutgoingWebhook_Demisto:
-		outboundWebhooks.Demisto = getOutboundWebhookDemistoType(webhookType.Demisto)
+		outboundWebhooks.Demisto = getOutboundWebhookDemistoStatus(webhookType.Demisto, webhook.Url)
 	case *outboundwebhooks.OutgoingWebhook_AwsEventBridge:
-		outboundWebhooks.AwsEventBridge = getOutboundWebhookAwsEventBridgeType(webhookType.AwsEventBridge)
+		outboundWebhooks.AwsEventBridge = getOutboundWebhookAwsEventBridgeStatus(webhookType.AwsEventBridge)
 	default:
 		return nil, fmt.Errorf("unsupported outbound-webhook type %T", webhookType)
 	}
@@ -229,7 +228,7 @@ func getOutboundWebhookType(webhook *outboundwebhooks.OutgoingWebhook) (*coralog
 	return outboundWebhooks, nil
 }
 
-func getOutboundWebhookAwsEventBridgeType(awsEventBridge *outboundwebhooks.AwsEventBridgeConfig) *coralogixv1alpha1.AwsEventBridge {
+func getOutboundWebhookAwsEventBridgeStatus(awsEventBridge *outboundwebhooks.AwsEventBridgeConfig) *coralogixv1alpha1.AwsEventBridge {
 	if awsEventBridge == nil {
 		return nil
 	}
@@ -243,33 +242,33 @@ func getOutboundWebhookAwsEventBridgeType(awsEventBridge *outboundwebhooks.AwsEv
 	}
 }
 
-func getOutboundWebhookGenericType(generic *outboundwebhooks.GenericWebhookConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.GenericWebhook {
+func getOutboundWebhookGenericTypeStatus(generic *outboundwebhooks.GenericWebhookConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.GenericWebhookStatus {
 	if generic == nil {
 		return nil
 	}
 
-	return &coralogixv1alpha1.GenericWebhook{
-		Uuid:    WrapperspbStringToStringPointer(generic.Uuid),
-		Url:     WrapperspbStringToStringPointer(url),
+	return &coralogixv1alpha1.GenericWebhookStatus{
+		Uuid:    generic.Uuid.GetValue(),
+		Url:     url.GetValue(),
 		Method:  coralogixv1alpha1.GenericWebhookMethodTypeFromProto[generic.Method],
 		Headers: generic.Headers,
 		Payload: WrapperspbStringToStringPointer(generic.Payload),
 	}
 }
 
-func getOutgoingWebhookSlackType(slack *outboundwebhooks.SlackConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.Slack {
+func getOutgoingWebhookSlackStatus(slack *outboundwebhooks.SlackConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.Slack {
 	if slack == nil {
 		return nil
 	}
 
 	return &coralogixv1alpha1.Slack{
-		Url:         WrapperspbStringToStringPointer(url),
+		Url:         url.GetValue(),
 		Digests:     flattenSlackDigests(slack.Digests),
 		Attachments: flattenSlackConfigAttachments(slack.Attachments),
 	}
 }
 
-func getOutgoingWebhookPagerDutyType(pagerDuty *outboundwebhooks.PagerDutyConfig) *coralogixv1alpha1.PagerDuty {
+func getOutgoingWebhookPagerDutyStatus(pagerDuty *outboundwebhooks.PagerDutyConfig) *coralogixv1alpha1.PagerDuty {
 	if pagerDuty == nil {
 		return nil
 	}
@@ -279,15 +278,17 @@ func getOutgoingWebhookPagerDutyType(pagerDuty *outboundwebhooks.PagerDutyConfig
 	}
 }
 
-func getOutgoingWebhookMicrosoftTeamsType(teams *outboundwebhooks.MicrosoftTeamsConfig) *coralogixv1alpha1.MicrosoftTeams {
+func getOutgoingWebhookMicrosoftTeamsStatus(teams *outboundwebhooks.MicrosoftTeamsConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.MicrosoftTeams {
 	if teams == nil {
 		return nil
 	}
 
-	return &coralogixv1alpha1.MicrosoftTeams{}
+	return &coralogixv1alpha1.MicrosoftTeams{
+		Url: url.GetValue(),
+	}
 }
 
-func getOutboundWebhookJiraType(jira *outboundwebhooks.JiraConfig) *coralogixv1alpha1.Jira {
+func getOutboundWebhookJiraStatus(jira *outboundwebhooks.JiraConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.Jira {
 	if jira == nil {
 		return nil
 	}
@@ -296,18 +297,21 @@ func getOutboundWebhookJiraType(jira *outboundwebhooks.JiraConfig) *coralogixv1a
 		ApiToken:   jira.ApiToken.GetValue(),
 		Email:      jira.Email.GetValue(),
 		ProjectKey: jira.ProjectKey.GetValue(),
+		Url:        url.GetValue(),
 	}
 }
 
-func getOutboundWebhookOpsgenieType(opsgenie *outboundwebhooks.OpsgenieConfig) *coralogixv1alpha1.Opsgenie {
+func getOutboundWebhookOpsgenieStatus(opsgenie *outboundwebhooks.OpsgenieConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.Opsgenie {
 	if opsgenie == nil {
 		return nil
 	}
 
-	return &coralogixv1alpha1.Opsgenie{}
+	return &coralogixv1alpha1.Opsgenie{
+		Url: url.GetValue(),
+	}
 }
 
-func getOutboundWebhookDemistoType(demisto *outboundwebhooks.DemistoConfig) *coralogixv1alpha1.Demisto {
+func getOutboundWebhookDemistoStatus(demisto *outboundwebhooks.DemistoConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.Demisto {
 	if demisto == nil {
 		return nil
 	}
@@ -315,6 +319,7 @@ func getOutboundWebhookDemistoType(demisto *outboundwebhooks.DemistoConfig) *cor
 	return &coralogixv1alpha1.Demisto{
 		Uuid:    demisto.Uuid.GetValue(),
 		Payload: demisto.Payload.GetValue(),
+		Url:     url.GetValue(),
 	}
 }
 
@@ -340,18 +345,19 @@ func flattenSlackConfigAttachments(attachments []*outboundwebhooks.SlackConfig_A
 	return flattenedSlackConfigAttachments
 }
 
-func getOutgoingWebhookSendLogType(sendLog *outboundwebhooks.SendLogConfig) *coralogixv1alpha1.SendLog {
+func getOutgoingWebhookSendLogStatus(sendLog *outboundwebhooks.SendLogConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.SendLogStatus {
 	if sendLog == nil {
 		return nil
 	}
 
-	return &coralogixv1alpha1.SendLog{
-		Uuid:    sendLog.Uuid.GetValue(),
+	return &coralogixv1alpha1.SendLogStatus{
 		Payload: sendLog.Payload.GetValue(),
+		Uuid:    sendLog.Payload.GetValue(),
+		Url:     url.GetValue(),
 	}
 }
 
-func getOutgoingWebhookEmailGroupType(group *outboundwebhooks.EmailGroupConfig) *coralogixv1alpha1.EmailGroup {
+func getOutgoingWebhookEmailGroupStatus(group *outboundwebhooks.EmailGroupConfig) *coralogixv1alpha1.EmailGroup {
 	if group == nil {
 		return nil
 	}
@@ -391,7 +397,7 @@ func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger,
 	if equal, diff := webhook.Spec.DeepEqual(status); equal {
 		return nil
 	} else {
-		log.Info("Outbound-webhook is not equal to remote, updating it", "path", diff.Name, "desired", diff.Desired, "actual", diff.Actual)
+		log.Info("outbound-webhook is not equal to remote, updating it", "path", diff.Name, "desired", diff.Desired, "actual", diff.Actual)
 	}
 
 	updateReq, err := webhook.ExtractUpdateOutboundWebhookRequest()

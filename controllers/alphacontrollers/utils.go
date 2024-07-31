@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	defaultRequeuePeriod    = 30 * time.Second
-	defaultErrRequeuePeriod = 20 * time.Second
+	defaultRequeuePeriod    = 30 * time.Minute
+	defaultErrRequeuePeriod = 1 * time.Minute
 )
 
 func WrapperspbStringToStringPointer(s *wrapperspb.StringValue) *string {

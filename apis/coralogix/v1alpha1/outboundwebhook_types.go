@@ -21,6 +21,7 @@ import (
 
 	utils "github.com/coralogix/coralogix-operator/apis"
 	outboundwebhooks "github.com/coralogix/coralogix-operator/controllers/clientset/grpc/outbound-webhooks"
+	gouuid "github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -68,35 +69,62 @@ type OutboundWebhookType struct {
 	AwsEventBridge *AwsEventBridge `json:"awsEventBridge,omitempty"`
 }
 
+type OutboundWebhookTypeStatus struct {
+	GenericWebhook *GenericWebhookStatus `json:"genericWebhook,omitempty"`
+
+	Slack *Slack `json:"slack,omitempty"`
+
+	PagerDuty *PagerDuty `json:"pagerDuty,omitempty"`
+
+	SendLog *SendLogStatus `json:"sendLog,omitempty"`
+
+	EmailGroup *EmailGroup `json:"emailGroup,omitempty"`
+
+	MicrosoftTeams *MicrosoftTeams `json:"microsoftTeams,omitempty"`
+
+	Jira *Jira `json:"jira,omitempty"`
+
+	Opsgenie *Opsgenie `json:"opsgenie,omitempty"`
+
+	Demisto *Demisto `json:"demisto,omitempty"`
+
+	AwsEventBridge *AwsEventBridge `json:"awsEventBridge,omitempty"`
+}
+
 func (in *OutboundWebhookType) appendOutgoingWebhookConfig(data *outboundwebhooks.OutgoingWebhookInputData) (*outboundwebhooks.OutgoingWebhookInputData, error) {
 	if genericWebhook := in.GenericWebhook; genericWebhook != nil {
 		data.Config = genericWebhook.extractGenericWebhookConfig()
 		data.Type = outboundwebhooks.WebhookType_GENERIC
-		data.Url = utils.StringPointerToWrapperspbString(genericWebhook.Url)
+		data.Url = wrapperspb.String(genericWebhook.Url)
 	} else if slack := in.Slack; slack != nil {
 		data.Config = slack.extractSlackConfig()
 		data.Type = outboundwebhooks.WebhookType_SLACK
-		data.Url = utils.StringPointerToWrapperspbString(slack.Url)
+		data.Url = wrapperspb.String(slack.Url)
 	} else if pagerDuty := in.PagerDuty; pagerDuty != nil {
 		data.Config = pagerDuty.extractPagerDutyConfig()
 		data.Type = outboundwebhooks.WebhookType_PAGERDUTY
 	} else if sendLog := in.SendLog; sendLog != nil {
 		data.Config = sendLog.extractSendLogConfig()
 		data.Type = outboundwebhooks.WebhookType_SEND_LOG
+		data.Url = wrapperspb.String(sendLog.Url)
 	} else if emailGroup := in.EmailGroup; emailGroup != nil {
 		data.Config = emailGroup.extractEmailGroupConfig()
 		data.Type = outboundwebhooks.WebhookType_EMAIL_GROUP
 	} else if microsoftTeams := in.MicrosoftTeams; microsoftTeams != nil {
 		data.Config = microsoftTeams.extractMicrosoftTeamsConfig()
+		data.Url = wrapperspb.String(microsoftTeams.Url)
 		data.Type = outboundwebhooks.WebhookType_MICROSOFT_TEAMS
 	} else if jira := in.Jira; jira != nil {
 		data.Config = jira.extractJiraConfig()
+		data.Url = wrapperspb.String(jira.Url)
 		data.Type = outboundwebhooks.WebhookType_JIRA
 	} else if opsgenie := in.Opsgenie; opsgenie != nil {
 		data.Config = opsgenie.extractOpsgenieConfig()
 		data.Type = outboundwebhooks.WebhookType_OPSGENIE
+		data.Url = wrapperspb.String(opsgenie.Url)
 	} else if demisto := in.Demisto; demisto != nil {
 		data.Config = demisto.extractDemistoConfig()
+		data.Url = wrapperspb.String(demisto.Url)
 		data.Type = outboundwebhooks.WebhookType_DEMISTO
 	} else if in.AwsEventBridge != nil {
 		data.Config = in.AwsEventBridge.extractAwsEventBridgeConfig()
@@ -108,7 +136,7 @@ func (in *OutboundWebhookType) appendOutgoingWebhookConfig(data *outboundwebhook
 	return data, nil
 }
 
-func (in *OutboundWebhookType) DeepEqual(webhookType *OutboundWebhookType) (bool, utils.Diff) {
+func (in *OutboundWebhookType) DeepEqual(webhookType *OutboundWebhookTypeStatus) (bool, utils.Diff) {
 	if webhookType == nil {
 		return false, utils.Diff{
 			Name:    "OutboundWebhookType",
@@ -158,11 +186,21 @@ func (in *OutboundWebhookType) DeepEqual(webhookType *OutboundWebhookType) (bool
 }
 
 type GenericWebhook struct {
-	// +optional
-	Uuid *string `json:"uuid"`
+	Url string `json:"url"`
+
+	Method GenericWebhookMethodType `json:"method"`
 
 	// +optional
-	Url *string `json:"url"`
+	Headers map[string]string `json:"headers"`
+
+	// +optional
+	Payload *string `json:"payload"`
+}
+
+type GenericWebhookStatus struct {
+	Uuid string `json:"uuid"`
+
+	Url string `json:"url"`
 
 	Method GenericWebhookMethodType `json:"method"`
 
@@ -176,7 +214,7 @@ type GenericWebhook struct {
 func (in *GenericWebhook) extractGenericWebhookConfig() *outboundwebhooks.OutgoingWebhookInputData_GenericWebhook {
 	return &outboundwebhooks.OutgoingWebhookInputData_GenericWebhook{
 		GenericWebhook: &outboundwebhooks.GenericWebhookConfig{
-			Uuid:    utils.StringPointerToWrapperspbString(in.Uuid),
+			Uuid:    wrapperspb.String(gouuid.NewString()),
 			Method:  GenericWebhookMethodTypeToProto[in.Method],
 			Headers: in.Headers,
 			Payload: utils.StringPointerToWrapperspbString(in.Payload),
@@ -184,7 +222,47 @@ func (in *GenericWebhook) extractGenericWebhookConfig() *outboundwebhooks.Outgoi
 	}
 }
 
-func (in *GenericWebhook) DeepEqual(webhook *GenericWebhook) (bool, utils.Diff) {
+func (in *GenericWebhook) DeepEqual(webhook *GenericWebhookStatus) (bool, utils.Diff) {
+	if webhook == nil {
+		return false, utils.Diff{
+			Name:    "GenericWebhook",
+			Desired: utils.PointerToString(in),
+			Actual:  nil,
+		}
+	}
+
+	if in.Url != webhook.Url {
+		return false, utils.Diff{
+			Name:    "GenericWebhook.Url",
+			Desired: in.Url,
+			Actual:  webhook.Url,
+		}
+	}
+
+	if in.Method != webhook.Method {
+		return false, utils.Diff{
+			Name:    "GenericWebhook.Method",
+			Desired: in.Method,
+			Actual:  webhook.Method,
+		}
+	}
+
+	if !utils.StringMapEqual(in.Headers, webhook.Headers) {
+		return false, utils.Diff{
+			Name:    "GenericWebhook.Headers",
+			Desired: in.Headers,
+			Actual:  webhook.Headers,
+		}
+	}
+
+	if utils.PointerToString(in.Payload) != utils.PointerToString(webhook.Payload) {
+		return false, utils.Diff{
+			Name:    "GenericWebhook.Payload",
+			Desired: in.Payload,
+			Actual:  webhook.Payload,
+		}
+	}
+
 	return true, utils.Diff{}
 }
 
@@ -211,7 +289,7 @@ var (
 type Slack struct {
 	Digests     []SlackConfigDigest     `json:"digests"`
 	Attachments []SlackConfigAttachment `json:"attachments"`
-	Url         *string                 `json:"url"`
+	Url         string                  `json:"url"`
 }
 
 func (in *Slack) extractSlackConfig() *outboundwebhooks.OutgoingWebhookInputData_Slack {
@@ -264,7 +342,7 @@ func (in *Slack) DeepEqual(slack *Slack) (bool, utils.Diff) {
 		}
 	}
 
-	if utils.PointerToString(in.Url) != utils.PointerToString(slack.Url) {
+	if in.Url != slack.Url {
 		return false, utils.Diff{
 			Name:    "Slack.Url",
 			Desired: in.Url,
@@ -356,24 +434,22 @@ func (in *PagerDuty) DeepEqual(pagerDuty *PagerDuty) (bool, utils.Diff) {
 }
 
 type SendLog struct {
-	Uuid    string `json:"uuid"`
 	Payload string `json:"payload"`
+	Url     string `json:"url"`
 }
 
-func (in *SendLog) DeepEqual(sendLog *SendLog) (bool, utils.Diff) {
+type SendLogStatus struct {
+	Payload string `json:"payload"`
+	Url     string `json:"url"`
+	Uuid    string `json:"uuid"`
+}
+
+func (in *SendLog) DeepEqual(sendLog *SendLogStatus) (bool, utils.Diff) {
 	if sendLog == nil {
 		return false, utils.Diff{
 			Name:    "SendLog",
 			Desired: utils.PointerToString(in),
 			Actual:  nil,
-		}
-	}
-
-	if in.Uuid != sendLog.Uuid {
-		return false, utils.Diff{
-			Name:    "SendLog.Uuid",
-			Desired: in.Uuid,
-			Actual:  sendLog.Uuid,
 		}
 	}
 
@@ -385,14 +461,22 @@ func (in *SendLog) DeepEqual(sendLog *SendLog) (bool, utils.Diff) {
 		}
 	}
 
+	if in.Url != sendLog.Url {
+		return false, utils.Diff{
+			Name:    "SendLog.Url",
+			Desired: in.Url,
+			Actual:  sendLog.Url,
+		}
+	}
+
 	return true, utils.Diff{}
 }
 
 func (in *SendLog) extractSendLogConfig() *outboundwebhooks.OutgoingWebhookInputData_SendLog {
 	return &outboundwebhooks.OutgoingWebhookInputData_SendLog{
 		SendLog: &outboundwebhooks.SendLogConfig{
-			Uuid:    wrapperspb.String(in.Uuid),
 			Payload: wrapperspb.String(in.Payload),
+			Uuid:    wrapperspb.String(gouuid.NewString()),
 		},
 	}
 }
@@ -430,6 +514,7 @@ func (in *EmailGroup) extractEmailGroupConfig() *outboundwebhooks.OutgoingWebhoo
 }
 
 type MicrosoftTeams struct {
+	Url string `json:"url"`
 }
 
 func (in *MicrosoftTeams) extractMicrosoftTeamsConfig() *outboundwebhooks.OutgoingWebhookInputData_MicrosoftTeams {
@@ -447,6 +532,14 @@ func (in *MicrosoftTeams) DeepEqual(microsoftTeams *MicrosoftTeams) (bool, utils
 		}
 	}
 
+	if in.Url != microsoftTeams.Url {
+		return false, utils.Diff{
+			Name:    "MicrosoftTeams.Url",
+			Desired: in.Url,
+			Actual:  microsoftTeams.Url,
+		}
+	}
+
 	return true, utils.Diff{}
 }
 
@@ -454,6 +547,7 @@ type Jira struct {
 	ApiToken   string `json:"apiToken"`
 	Email      string `json:"email"`
 	ProjectKey string `json:"projectKey"`
+	Url        string `json:"url"`
 }
 
 func (in *Jira) extractJiraConfig() *outboundwebhooks.OutgoingWebhookInputData_Jira {
@@ -499,10 +593,19 @@ func (in *Jira) DeepEqual(jira *Jira) (bool, utils.Diff) {
 		}
 	}
 
+	if in.Url != jira.Url {
+		return false, utils.Diff{
+			Name:    "Jira.Url",
+			Desired: in.Url,
+			Actual:  jira.Url,
+		}
+	}
+
 	return true, utils.Diff{}
 }
 
 type Opsgenie struct {
+	Url string `json:"url"`
 }
 
 func (in *Opsgenie) extractOpsgenieConfig() *outboundwebhooks.OutgoingWebhookInputData_Opsgenie {
@@ -520,12 +623,21 @@ func (in *Opsgenie) DeepEqual(opsgenie *Opsgenie) (bool, utils.Diff) {
 		}
 	}
 
+	if in.Url != opsgenie.Url {
+		return false, utils.Diff{
+			Name:    "Opsgenie.Url",
+			Desired: in.Url,
+			Actual:  opsgenie.Url,
+		}
+	}
+
 	return true, utils.Diff{}
 }
 
 type Demisto struct {
 	Uuid    string `json:"uuid"`
 	Payload string `json:"payload"`
+	Url     string `json:"url"`
 }
 
 func (in *Demisto) extractDemistoConfig() *outboundwebhooks.OutgoingWebhookInputData_Demisto {
@@ -559,6 +671,14 @@ func (in *Demisto) DeepEqual(demisto *Demisto) (bool, utils.Diff) {
 			Name:    "Demisto.Payload",
 			Desired: in.Payload,
 			Actual:  demisto.Payload,
+		}
+	}
+
+	if in.Url != demisto.Url {
+		return false, utils.Diff{
+			Name:    "Demisto.Url",
+			Desired: in.Url,
+			Actual:  demisto.Url,
 		}
 	}
 
@@ -643,7 +763,7 @@ type OutboundWebhookStatus struct {
 
 	Name string `json:"name"`
 
-	OutboundWebhookType *OutboundWebhookType `json:"outboundWebhookType"`
+	OutboundWebhookType *OutboundWebhookTypeStatus `json:"outboundWebhookType"`
 }
 
 //+kubebuilder:object:root=true

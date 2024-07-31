@@ -12,4 +12,4 @@ spec:
   name: microsoft-teams-webhook
   outboundWebhookType:
     microsoftTeams:
-
+      url: "https://outlook.office.com/webhook/12345678-1234-1234-1234-123456789012/IncomingWebhook/12345678-1234-1234-1234-123456789012"

@@ -7,12 +7,13 @@ metadata:
     app.kubernetes.io/part-of: coralogix-operator
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/created-by: coralogix-operator
-  name: jira-webhook
+  name: aws-event-bridge-webhook
 spec:
-  name: jira-webhook
+  name: aws-event-bridge-webhook
   outboundWebhookType:
-    jira:
-      apiToken: "12345678-1234-1234-1234-123456789012"
-      email: "example@coralogix.com"
-      projectKey: "COR"
-      url: "https://example.atlassian.net"
+    awsEventBridge:
+      eventBusArn: "my-event-bus"
+      detail: "{\"key1\": \"value1\", \"key2\": \"value2\"}"
+      detailType: "myDetailType"
+      source: "mySource"
+      roleName: "arn:aws:iam::123456789012:role/my-role"

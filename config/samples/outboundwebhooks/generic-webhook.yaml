@@ -18,4 +18,3 @@ spec:
           method: Post
           payload: '{"key1": "value1", "key2": "value2"}'
           url: https://example.com
-          uuid: 12345678-1234-1234-1234-123456789012
