@@ -65,7 +65,7 @@ var (
 func (r *OutboundWebhookReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	var (
 		resultError = ctrl.Result{RequeueAfter: 40}
-		resultOk    = ctrl.Result{RequeueAfter: defaultRequeuePeriod}
+		resultOk    = ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}
 		err         error
 	)
 
