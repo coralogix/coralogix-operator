@@ -190,6 +190,8 @@ spec:
           status:
             description: OutboundWebhookStatus defines the observed state of OutboundWebhook
             properties:
+              externalId:
+                type: string
               id:
                 type: string
               name:

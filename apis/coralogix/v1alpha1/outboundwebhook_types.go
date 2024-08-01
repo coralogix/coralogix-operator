@@ -761,6 +761,9 @@ func (in *AwsEventBridge) DeepEqual(awsEventBridge *AwsEventBridge) (bool, utils
 type OutboundWebhookStatus struct {
 	ID *string `json:"id"`
 
+	// +optional
+	ExternalID *string `json:"externalId"`
+
 	Name string `json:"name"`
 
 	OutboundWebhookType *OutboundWebhookTypeStatus `json:"outboundWebhookType"`

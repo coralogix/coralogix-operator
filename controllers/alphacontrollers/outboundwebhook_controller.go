@@ -19,6 +19,7 @@ package alphacontrollers
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	utils "github.com/coralogix/coralogix-operator/apis"
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
@@ -187,6 +188,7 @@ func getOutboundWebhookStatus(webhook *outboundwebhooks.OutgoingWebhook) (*coral
 
 	status := &coralogixv1alpha1.OutboundWebhookStatus{
 		ID:                  ptr.To(webhook.Id.GetValue()),
+		ExternalID:          ptr.To(strconv.Itoa(int(webhook.ExternalId.GetValue()))),
 		Name:                webhook.Name.GetValue(),
 		OutboundWebhookType: outboundWebhookType,
 	}

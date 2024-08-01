@@ -931,6 +931,11 @@ func (in *OutboundWebhookStatus) DeepCopyInto(out *OutboundWebhookStatus) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.ExternalID != nil {
+		in, out := &in.ExternalID, &out.ExternalID
+		*out = new(string)
+		**out = **in
+	}
 	if in.OutboundWebhookType != nil {
 		in, out := &in.OutboundWebhookType, &out.OutboundWebhookType
 		*out = new(OutboundWebhookTypeStatus)
