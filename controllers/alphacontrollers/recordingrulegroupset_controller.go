@@ -41,8 +41,9 @@ var recordingRuleGroupSetFinalizerName = "recordingrulegroupset.coralogix.com/fi
 // RecordingRuleGroupSetReconciler reconciles a RecordingRuleGroupSet object
 type RecordingRuleGroupSetReconciler struct {
 	client.Client
-	CoralogixClientSet clientset.ClientSetInterface
-	Scheme             *runtime.Scheme
+	CoralogixClientSet          clientset.ClientSetInterface
+	Scheme                      *runtime.Scheme
+	RecordingRuleGroupSetSuffix string
 }
 
 //+kubebuilder:rbac:groups=coralogix.com,resources=recordingrulegroupsets,verbs=get;list;watch;create;update;patch;delete
@@ -97,7 +98,7 @@ func (r *RecordingRuleGroupSetReconciler) create(ctx context.Context, recordingR
 	response, err := r.CoralogixClientSet.
 		RecordingRuleGroups().
 		CreateRecordingRuleGroupSet(ctx, &rrg.CreateRuleGroupSet{
-			Name:   ptr.To(recordingRuleGroupSet.Name),
+			Name:   ptr.To(fmt.Sprintf("%s%s", recordingRuleGroupSet.Name, r.RecordingRuleGroupSetSuffix)),
 			Groups: recordingRuleGroupSet.Spec.ExtractRecordingRuleGroups(),
 		})
 
@@ -143,7 +144,7 @@ func (r *RecordingRuleGroupSetReconciler) update(ctx context.Context, recordingR
 		UpdateRecordingRuleGroupSet(ctx, &rrg.UpdateRuleGroupSet{
 			Id:     remoteRecordingRule.Id,
 			Groups: recordingRuleGroupSet.Spec.ExtractRecordingRuleGroups(),
-			Name:   ptr.To(recordingRuleGroupSet.Name),
+			Name:   ptr.To(fmt.Sprintf("%s%s", recordingRuleGroupSet.Name, r.RecordingRuleGroupSetSuffix)),
 		}); err != nil {
 		return fmt.Errorf("failed to update recording rule groupSet: %w", err)
 	}
