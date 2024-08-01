@@ -252,7 +252,7 @@ func getOutboundWebhookGenericTypeStatus(generic *outboundwebhooks.GenericWebhoo
 		Url:     url.GetValue(),
 		Method:  coralogixv1alpha1.GenericWebhookMethodTypeFromProto[generic.Method],
 		Headers: generic.Headers,
-		Payload: WrapperspbStringToStringPointer(generic.Payload),
+		Payload: utils.WrapperspbStringToStringPointer(generic.Payload),
 	}
 }
 

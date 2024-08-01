@@ -308,14 +308,14 @@ var file_com_coralogixapis_dashboards_v1_ast_widget_proto_goTypes = []interface{
 	(*Widget)(nil),                 // 0: com.coralogixapis.dashboards.v1.ast.Widget
 	(*Widget_Definition)(nil),      // 1: com.coralogixapis.dashboards.v1.ast.Widget.Definition
 	(*Widget_Appearance)(nil),      // 2: com.coralogixapis.dashboards.v1.ast.Widget.Appearance
-	(*UUID)(nil),                   // 3: com.coralogixapis.dashboards.v1.Uuid
+	(*UUID)(nil),                   // 3: com.coralogixapis.dashboards.v1.UUID
 	(*wrapperspb.StringValue)(nil), // 4: google.protobuf.StringValue
 	(*LineChart)(nil),              // 5: com.coralogixapis.dashboards.v1.ast.widgets.LineChart
 	(*DataTable)(nil),              // 6: com.coralogixapis.dashboards.v1.ast.widgets.DataTable
 	(*wrapperspb.Int32Value)(nil),  // 7: google.protobuf.Int32Value
 }
 var file_com_coralogixapis_dashboards_v1_ast_widget_proto_depIdxs = []int32{
-	3, // 0: com.coralogixapis.dashboards.v1.ast.Widget.id:type_name -> com.coralogixapis.dashboards.v1.Uuid
+	3, // 0: com.coralogixapis.dashboards.v1.ast.Widget.id:type_name -> com.coralogixapis.dashboards.v1.UUID
 	4, // 1: com.coralogixapis.dashboards.v1.ast.Widget.title:type_name -> google.protobuf.StringValue
 	4, // 2: com.coralogixapis.dashboards.v1.ast.Widget.description:type_name -> google.protobuf.StringValue
 	1, // 3: com.coralogixapis.dashboards.v1.ast.Widget.definition:type_name -> com.coralogixapis.dashboards.v1.ast.Widget.Definition

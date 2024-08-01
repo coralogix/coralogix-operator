@@ -56,7 +56,7 @@ func (x *UUID) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Uuid.ProtoReflect.Descriptor instead.
+// Deprecated: Use UUID.ProtoReflect.Descriptor instead.
 func (*UUID) Descriptor() ([]byte, []int) {
 	return file_com_coralogixapis_dashboards_v1_types_proto_rawDescGZIP(), []int{0}
 }
@@ -95,7 +95,7 @@ func file_com_coralogixapis_dashboards_v1_types_proto_rawDescGZIP() []byte {
 
 var file_com_coralogixapis_dashboards_v1_types_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_com_coralogixapis_dashboards_v1_types_proto_goTypes = []interface{}{
-	(*UUID)(nil), // 0: com.coralogixapis.dashboards.v1.Uuid
+	(*UUID)(nil), // 0: com.coralogixapis.dashboards.v1.UUID
 }
 var file_com_coralogixapis_dashboards_v1_types_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type

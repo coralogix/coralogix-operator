@@ -160,13 +160,13 @@ func file_com_coralogixapis_dashboards_v1_ast_dashboard_proto_rawDescGZIP() []by
 var file_com_coralogixapis_dashboards_v1_ast_dashboard_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_com_coralogixapis_dashboards_v1_ast_dashboard_proto_goTypes = []interface{}{
 	(*Dashboard)(nil),              // 0: com.coralogixapis.dashboards.v1.ast.Dashboard
-	(*UUID)(nil),                   // 1: com.coralogixapis.dashboards.v1.Uuid
+	(*UUID)(nil),                   // 1: com.coralogixapis.dashboards.v1.UUID
 	(*wrapperspb.StringValue)(nil), // 2: google.protobuf.StringValue
 	(*Layout)(nil),                 // 3: com.coralogixapis.dashboards.v1.ast.Layout
 	(*Variable)(nil),               // 4: com.coralogixapis.dashboards.v1.ast.Variable
 }
 var file_com_coralogixapis_dashboards_v1_ast_dashboard_proto_depIdxs = []int32{
-	1, // 0: com.coralogixapis.dashboards.v1.ast.Dashboard.id:type_name -> com.coralogixapis.dashboards.v1.Uuid
+	1, // 0: com.coralogixapis.dashboards.v1.ast.Dashboard.id:type_name -> com.coralogixapis.dashboards.v1.UUID
 	2, // 1: com.coralogixapis.dashboards.v1.ast.Dashboard.name:type_name -> google.protobuf.StringValue
 	2, // 2: com.coralogixapis.dashboards.v1.ast.Dashboard.description:type_name -> google.protobuf.StringValue
 	3, // 3: com.coralogixapis.dashboards.v1.ast.Dashboard.layout:type_name -> com.coralogixapis.dashboards.v1.ast.Layout

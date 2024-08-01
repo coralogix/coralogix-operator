@@ -303,15 +303,15 @@ var file_com_coralogixapis_dashboards_v1_ast_layout_proto_goTypes = []interface{
 	(*Section)(nil),               // 1: com.coralogixapis.dashboards.v1.ast.Section
 	(*Row)(nil),                   // 2: com.coralogixapis.dashboards.v1.ast.Row
 	(*Row_Appearance)(nil),        // 3: com.coralogixapis.dashboards.v1.ast.Row.Appearance
-	(*UUID)(nil),                  // 4: com.coralogixapis.dashboards.v1.Uuid
+	(*UUID)(nil),                  // 4: com.coralogixapis.dashboards.v1.UUID
 	(*Widget)(nil),                // 5: com.coralogixapis.dashboards.v1.ast.Widget
 	(*wrapperspb.Int32Value)(nil), // 6: google.protobuf.Int32Value
 }
 var file_com_coralogixapis_dashboards_v1_ast_layout_proto_depIdxs = []int32{
 	1, // 0: com.coralogixapis.dashboards.v1.ast.Layout.sections:type_name -> com.coralogixapis.dashboards.v1.ast.Section
-	4, // 1: com.coralogixapis.dashboards.v1.ast.Section.id:type_name -> com.coralogixapis.dashboards.v1.Uuid
+	4, // 1: com.coralogixapis.dashboards.v1.ast.Section.id:type_name -> com.coralogixapis.dashboards.v1.UUID
 	2, // 2: com.coralogixapis.dashboards.v1.ast.Section.rows:type_name -> com.coralogixapis.dashboards.v1.ast.Row
-	4, // 3: com.coralogixapis.dashboards.v1.ast.Row.id:type_name -> com.coralogixapis.dashboards.v1.Uuid
+	4, // 3: com.coralogixapis.dashboards.v1.ast.Row.id:type_name -> com.coralogixapis.dashboards.v1.UUID
 	3, // 4: com.coralogixapis.dashboards.v1.ast.Row.appearance:type_name -> com.coralogixapis.dashboards.v1.ast.Row.Appearance
 	5, // 5: com.coralogixapis.dashboards.v1.ast.Row.widgets:type_name -> com.coralogixapis.dashboards.v1.ast.Widget
 	6, // 6: com.coralogixapis.dashboards.v1.ast.Row.Appearance.height:type_name -> google.protobuf.Int32Value

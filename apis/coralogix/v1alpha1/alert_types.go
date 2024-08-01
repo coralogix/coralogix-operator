@@ -887,8 +887,15 @@ func expandTimeFrames(scheduling *Scheduling) []*alerts.AlertActiveTimeframe {
 }
 
 func ExtractUTC(timeZone TimeZone) int32 {
-	utcStr := strings.Split(string(timeZone), "UTC")[1]
-	utc, _ := strconv.Atoi(utcStr)
+	parts := strings.Split(string(timeZone), "UTC")
+	if len(parts) < 2 {
+		return 0
+	}
+	utcStr := parts[1]
+	utc, err := strconv.Atoi(utcStr)
+	if err != nil {
+		return 0
+	}
 	return int32(utc)
 }
 

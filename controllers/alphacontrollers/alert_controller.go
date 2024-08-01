@@ -68,9 +68,7 @@ type AlertReconciler struct {
 
 func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	var (
-		resultError ctrl.Result = ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}
-		resultOk    ctrl.Result = ctrl.Result{RequeueAfter: defaultRequeuePeriod}
-		err         error
+		err error
 	)
 
 	log := log.FromContext(ctx).WithValues(
@@ -88,34 +86,34 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			// Return and don't requeue
 			return ctrl.Result{}, nil
 		}
-		return resultError, err
+		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 	}
 
 	if ptr.Deref(alert.Status.ID, "") == "" {
 		err = r.create(ctx, log, alert)
 		if err != nil {
 			log.Error(err, "Error on creating alert")
-			return resultError, err
+			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 		}
-		return resultOk, nil
+		return ctrl.Result{}, nil
 	}
 
 	if !alert.ObjectMeta.DeletionTimestamp.IsZero() {
 		err = r.delete(ctx, log, alert)
 		if err != nil {
 			log.Error(err, "Error on deleting alert")
-			return resultError, err
+			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 		}
-		return resultOk, nil
+		return ctrl.Result{}, nil
 	}
 
 	err = r.update(ctx, log, alert)
 	if err != nil {
 		log.Error(err, "Error on updating alert")
-		return resultError, err
+		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 	}
 
-	return resultOk, nil
+	return ctrl.Result{}, nil
 }
 
 func (r *AlertReconciler) update(ctx context.Context,

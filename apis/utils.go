@@ -136,3 +136,10 @@ func StringPointerToWrapperspbString(s *string) *wrapperspb.StringValue {
 	}
 	return wrapperspb.String(*s)
 }
+
+func WrapperspbStringToStringPointer(s *wrapperspb.StringValue) *string {
+	if s == nil {
+		return nil
+	}
+	return &s.Value
+}
