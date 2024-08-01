@@ -10,14 +10,14 @@ metadata:
   name: new-value-alert-example
 spec:
   name: new-value alert example
-  description: alert from k8s operator
+  description: alert from k8s operator bla bla
   severity: Critical
   notificationGroups:
     - groupByFields: [ "remote_addr_geoip.country_name" ]
       notifications:
-        - notifyOn: TriggeredOnly
-          integrationName: WebhookAlerts
-          retriggeringPeriodMinutes: 1
+#        - notifyOn: TriggeredOnly
+#          integrationName: WebhookAlerts
+#          retriggeringPeriodMinutes: 1
         - notifyOn: TriggeredAndResolved
           emailRecipients: [ "example@coralogix.com" ]
           retriggeringPeriodMinutes: 1440
