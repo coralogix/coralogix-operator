@@ -21,7 +21,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-//*
+// *
 // A group of recording rules. Rules within a group are run sequentially at a regular interval,
 // with the same evaluation time.
 type InRuleGroup struct {
@@ -318,7 +318,7 @@ func (x *OutRule) GetLastEvalDurationMs() uint64 {
 	return 0
 }
 
-//* A matcher specifying a group to delete.
+// * A matcher specifying a group to delete.
 type DeleteRuleGroup struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -367,7 +367,7 @@ func (x *DeleteRuleGroup) GetName() string {
 	return ""
 }
 
-//* A listing of rule groups.
+// * A listing of rule groups.
 type RuleGroupListing struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -416,7 +416,7 @@ func (x *RuleGroupListing) GetRuleGroups() []*OutRuleGroup {
 	return nil
 }
 
-//* A matcher specifying a group to fetch.
+// * A matcher specifying a group to fetch.
 type FetchRuleGroup struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -465,7 +465,7 @@ func (x *FetchRuleGroup) GetName() string {
 	return ""
 }
 
-//* Result of a rule group fetch operation.
+// * Result of a rule group fetch operation.
 type FetchRuleGroupResult struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

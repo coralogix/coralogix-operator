@@ -151,6 +151,7 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 		name            string
 		params          func(params PrepareOutboundWebhooksParams)
 		outboundWebhook coralogixv1alpha1.OutboundWebhook
+		updatedWebhook  coralogixv1alpha1.OutboundWebhook
 		shouldFail      bool
 	}{
 		{
@@ -174,7 +175,39 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 						},
 					},
 				}, nil)
+				params.outboundWebhooksClient.EXPECT().GetOutboundWebhook(params.ctx, gomock.Any()).Return(&ow.GetOutgoingWebhookResponse{
+					Webhook: &ow.OutgoingWebhook{
+						Id:   wrapperspb.String("id"),
+						Name: wrapperspb.String("name"),
+						Type: ow.WebhookType_GENERIC,
+						Url:  wrapperspb.String("url"),
+						Config: &ow.OutgoingWebhook_GenericWebhook{
+							GenericWebhook: &ow.GenericWebhookConfig{
+								Uuid:    wrapperspb.String("uuid"),
+								Method:  ow.GenericWebhookConfig_GET,
+								Headers: map[string]string{"key": "value"},
+								Payload: wrapperspb.String("payload"),
+							},
+						},
+					},
+				}, nil)
 				params.outboundWebhooksClient.EXPECT().UpdateOutboundWebhook(params.ctx, gomock.Any()).Return(&ow.UpdateOutgoingWebhookResponse{}, nil)
+				params.outboundWebhooksClient.EXPECT().GetOutboundWebhook(params.ctx, gomock.Any()).Return(&ow.GetOutgoingWebhookResponse{
+					Webhook: &ow.OutgoingWebhook{
+						Id:   wrapperspb.String("id"),
+						Name: wrapperspb.String("updated-name"),
+						Type: ow.WebhookType_GENERIC,
+						Url:  wrapperspb.String("updated-url"),
+						Config: &ow.OutgoingWebhook_GenericWebhook{
+							GenericWebhook: &ow.GenericWebhookConfig{
+								Uuid:    wrapperspb.String("updated-uuid"),
+								Method:  ow.GenericWebhookConfig_POST,
+								Headers: map[string]string{"updated-key": "updated-value"},
+								Payload: wrapperspb.String("updated-payload"),
+							},
+						},
+					},
+				}, nil)
 			},
 			outboundWebhook: coralogixv1alpha1.OutboundWebhook{
 				ObjectMeta: metav1.ObjectMeta{
@@ -189,6 +222,23 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 							Method:  "Get",
 							Headers: map[string]string{"key": "value"},
 							Payload: pointer.String("payload"),
+						},
+					},
+				},
+			},
+			updatedWebhook: coralogixv1alpha1.OutboundWebhook{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "outbound-webhook-update-success",
+					Namespace: "default",
+				},
+				Spec: coralogixv1alpha1.OutboundWebhookSpec{
+					Name: "updated-name",
+					OutboundWebhookType: coralogixv1alpha1.OutboundWebhookType{
+						GenericWebhook: &coralogixv1alpha1.GenericWebhook{
+							Url:     "updated-url",
+							Method:  "Post",
+							Headers: map[string]string{"updated-key": "updated-value"},
+							Payload: pointer.String("updated-payload"),
 						},
 					},
 				},
@@ -239,15 +289,24 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 
 			assert.NoError(t, err)
 
-			err = reconciler.Client.Update(ctx, outboundWebhook)
+			tt.updatedWebhook.ObjectMeta.ResourceVersion = outboundWebhook.ObjectMeta.ResourceVersion
+			err = reconciler.Client.Update(ctx, &tt.updatedWebhook)
 			assert.NoError(t, err)
+
+			<-watcher.ResultChan()
 
 			_, err = reconciler.Reconcile(ctx, ctrl.Request{
 				NamespacedName: types.NamespacedName{
-					Namespace: tt.outboundWebhook.Namespace,
-					Name:      tt.outboundWebhook.Name,
+					Namespace: tt.updatedWebhook.Namespace,
+					Name:      tt.updatedWebhook.Name,
 				},
 			})
+
+			outboundWebhook = &coralogixv1alpha1.OutboundWebhook{}
+			err = reconciler.Get(ctx, types.NamespacedName{
+				Namespace: tt.updatedWebhook.Namespace,
+				Name:      tt.updatedWebhook.Name,
+			}, outboundWebhook)
 
 			if tt.shouldFail {
 				assert.Error(t, err)

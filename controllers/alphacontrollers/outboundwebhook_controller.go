@@ -415,6 +415,20 @@ func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger,
 		return err
 	}
 
+	log.Info("Getting outbound-webhook from remote", "id", webhook.Status.ID)
+	remoteOutboundWebhook, err = r.OutboundWebhooksClient.GetOutboundWebhook(ctx,
+		&outboundwebhooks.GetOutgoingWebhookRequest{
+			Id: utils.StringPointerToWrapperspbString(webhook.Status.ID),
+		},
+	)
+	status, err = getOutboundWebhookStatus(remoteOutboundWebhook.GetWebhook())
+	if err != nil {
+		log.Error(err, "Error on flattening outbound-webhook")
+		return err
+	}
+	webhook.Status = *status
+	r.Status().Update(ctx, webhook)
+
 	return nil
 }
 
