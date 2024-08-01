@@ -122,7 +122,7 @@ func (r *OutboundWebhookReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *OutboundWebhookReconciler) create(ctx context.Context, log logr.Logger, webhook *coralogixv1alpha1.OutboundWebhook) error {
 	createRequest, err := webhook.ExtractCreateOutboundWebhookRequest()
 	if err != nil {
-		log.Error(err, fmt.Sprintf("Error to extrac create-request out of the outbound-webhook -\n%s", webhook))
+		log.Error(err, fmt.Sprintf("Error to extract create-request out of the outbound-webhook -\n%v", webhook))
 		return err
 	}
 
@@ -140,7 +140,7 @@ func (r *OutboundWebhookReconciler) create(ctx context.Context, log logr.Logger,
 		OutboundWebhookType: &coralogixv1alpha1.OutboundWebhookTypeStatus{},
 	}
 	if err = r.Status().Update(ctx, webhook); err != nil {
-		log.Error(err, fmt.Sprintf("Error on updating outbound-webhook status -\n%s", webhook))
+		log.Error(err, fmt.Sprintf("Error on updating outbound-webhook status -\n%v", webhook))
 		return err
 	}
 

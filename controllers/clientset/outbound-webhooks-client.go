@@ -6,6 +6,7 @@ import (
 	outboundwebhooks "github.com/coralogix/coralogix-operator/controllers/clientset/grpc/outbound-webhooks"
 )
 
+//go:generate mockgen -destination=../mock_clientset/mock_outboundwebhooks-client.go -package=mock_clientset github.com/coralogix/coralogix-operator/controllers/clientset OutboundWebhooksClientInterface
 type OutboundWebhooksClientInterface interface {
 	CreateOutboundWebhook(ctx context.Context, req *outboundwebhooks.CreateOutgoingWebhookRequest) (*outboundwebhooks.CreateOutgoingWebhookResponse, error)
 	GetOutboundWebhook(ctx context.Context, req *outboundwebhooks.GetOutgoingWebhookRequest) (*outboundwebhooks.GetOutgoingWebhookResponse, error)
