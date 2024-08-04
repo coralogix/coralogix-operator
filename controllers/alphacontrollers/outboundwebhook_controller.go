@@ -26,6 +26,7 @@ import (
 	"github.com/coralogix/coralogix-operator/controllers/clientset"
 	outboundwebhooks "github.com/coralogix/coralogix-operator/controllers/clientset/grpc/outbound-webhooks"
 	"github.com/go-logr/logr"
+	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -50,15 +51,6 @@ type OutboundWebhookReconciler struct {
 //+kubebuilder:rbac:groups=coralogix.coralogix.com,resources=outboundwebhooks/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=coralogix.coralogix.com,resources=outboundwebhooks/finalizers,verbs=update
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the OutboundWebhook object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.4/pkg/reconcile
 var (
 	outboundWebhookFinalizerName = "outbound-webhook.coralogix.com/finalizer"
 )
@@ -66,7 +58,6 @@ var (
 func (r *OutboundWebhookReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	var (
 		resultError = ctrl.Result{RequeueAfter: 40}
-		resultOk    = ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}
 		err         error
 	)
 
@@ -92,7 +83,7 @@ func (r *OutboundWebhookReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			log.Error(err, "Error on creating outbound-webhook")
 			return resultError, err
 		}
-		return resultOk, nil
+		return ctrl.Result{}, nil
 	}
 
 	if !outboundWebhook.ObjectMeta.DeletionTimestamp.IsZero() {
@@ -101,7 +92,7 @@ func (r *OutboundWebhookReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			log.Error(err, "Error on deleting outbound-webhook")
 			return resultError, err
 		}
-		return resultOk, nil
+		return ctrl.Result{}, nil
 	}
 
 	err = r.update(ctx, log, outboundWebhook)
@@ -110,7 +101,7 @@ func (r *OutboundWebhookReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return resultError, err
 	}
 
-	return resultOk, nil
+	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -127,13 +118,13 @@ func (r *OutboundWebhookReconciler) create(ctx context.Context, log logr.Logger,
 		return err
 	}
 
-	log.V(1).Info(fmt.Sprintf("Creating outbound-webhook-\n%s", protojson.Format(createRequest)))
+	log.V(int(zapcore.DebugLevel)).Info(fmt.Sprintf("Creating outbound-webhook-\n%s", protojson.Format(createRequest)))
 	createResponse, err := r.OutboundWebhooksClient.CreateOutboundWebhook(ctx, createRequest)
 	if err != nil {
 		log.Error(err, fmt.Sprintf("Received an error while creating outbound-webhook -\n%s", protojson.Format(createRequest)))
 		return err
 	}
-	log.Info(fmt.Sprintf("outbound-webhook was created-\n%s", protojson.Format(createResponse)))
+	log.V(int(zapcore.DebugLevel)).Info(fmt.Sprintf("outbound-webhook was created-\n%s", protojson.Format(createResponse)))
 
 	webhook.Status = coralogixv1alpha1.OutboundWebhookStatus{
 		ID:                  ptr.To(createResponse.Id.GetValue()),
@@ -146,11 +137,13 @@ func (r *OutboundWebhookReconciler) create(ctx context.Context, log logr.Logger,
 	}
 
 	readRequest := &outboundwebhooks.GetOutgoingWebhookRequest{Id: createResponse.Id}
+	log.V(int(zapcore.DebugLevel)).Info(fmt.Sprintf("Getting outbound-webhook -\n%s", protojson.Format(readRequest)))
 	readResponse, err := r.OutboundWebhooksClient.GetOutboundWebhook(ctx, readRequest)
 	if err != nil {
 		log.Error(err, fmt.Sprintf("Received an error while getting outbound-webhook -\n%s", protojson.Format(readRequest)))
 		return err
 	}
+	log.V(int(zapcore.DebugLevel)).Info(fmt.Sprintf("outbound-webhook was read -\n%s", protojson.Format(readResponse)))
 
 	status, err := getOutboundWebhookStatus(readResponse.GetWebhook())
 	if err != nil {
@@ -370,12 +363,8 @@ func getOutgoingWebhookEmailGroupStatus(group *outboundwebhooks.EmailGroupConfig
 }
 
 func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger, webhook *coralogixv1alpha1.OutboundWebhook) error {
-	log.Info("Getting outbound-webhook from remote", "id", webhook.Status.ID)
-	remoteOutboundWebhook, err := r.OutboundWebhooksClient.GetOutboundWebhook(ctx,
-		&outboundwebhooks.GetOutgoingWebhookRequest{
-			Id: utils.StringPointerToWrapperspbString(webhook.Status.ID)},
-	)
-
+	log.V(int(zapcore.DebugLevel)).Info("Getting outbound-webhook from remote", "id", webhook.Status.ID)
+	remoteOutboundWebhook, err := r.OutboundWebhooksClient.GetOutboundWebhook(ctx, &outboundwebhooks.GetOutgoingWebhookRequest{Id: utils.StringPointerToWrapperspbString(webhook.Status.ID)})
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
 			log.Info("outbound-webhook not found on remote, recreating it", "id", webhook.Status.ID)
@@ -389,6 +378,7 @@ func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger,
 		log.Error(err, "Error on getting outbound-webhook", "id", webhook.Status.ID)
 		return err
 	}
+	log.V(int(zapcore.DebugLevel)).Info(fmt.Sprintf("outbound-webhook was read\n%s", protojson.Format(remoteOutboundWebhook)))
 
 	status, err := getOutboundWebhookStatus(remoteOutboundWebhook.GetWebhook())
 	if err != nil {
@@ -408,19 +398,25 @@ func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger,
 		return err
 	}
 
-	log.Info(fmt.Sprintf("updating outbound-webhook\n%s", protojson.Format(updateReq)))
+	log.V(int(zapcore.DebugLevel)).Info(fmt.Sprintf("updating outbound-webhook\n%s", protojson.Format(updateReq)))
 	_, err = r.OutboundWebhooksClient.UpdateOutboundWebhook(ctx, updateReq)
 	if err != nil {
 		log.Error(err, fmt.Sprintf("Error on remote updating outbound-webhook\n%s", protojson.Format(updateReq)))
 		return err
 	}
 
-	log.Info("Getting outbound-webhook from remote", "id", webhook.Status.ID)
+	log.V(int(zapcore.DebugLevel)).Info("Getting outbound-webhook from remote", "id", webhook.Status.ID)
 	remoteOutboundWebhook, err = r.OutboundWebhooksClient.GetOutboundWebhook(ctx,
 		&outboundwebhooks.GetOutgoingWebhookRequest{
 			Id: utils.StringPointerToWrapperspbString(webhook.Status.ID),
 		},
 	)
+	if err != nil {
+		log.Error(err, "Error on getting outbound-webhook")
+		return err
+	}
+	log.V(int(zapcore.DebugLevel)).Info(fmt.Sprintf("outbound-webhook was read\n%s", protojson.Format(remoteOutboundWebhook)))
+
 	status, err = getOutboundWebhookStatus(remoteOutboundWebhook.GetWebhook())
 	if err != nil {
 		log.Error(err, "Error on flattening outbound-webhook")
@@ -433,7 +429,7 @@ func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger,
 }
 
 func (r *OutboundWebhookReconciler) delete(ctx context.Context, log logr.Logger, webhook *coralogixv1alpha1.OutboundWebhook) error {
-	log.Info("Deleting outbound-webhook from remote", "id", webhook.Status.ID)
+	log.V(int(zapcore.DebugLevel)).Info("Deleting outbound-webhook from remote", "id", webhook.Status.ID)
 	_, err := r.OutboundWebhooksClient.DeleteOutboundWebhook(ctx, &outboundwebhooks.DeleteOutgoingWebhookRequest{
 		Id: wrapperspb.String(*webhook.Status.ID),
 	})
