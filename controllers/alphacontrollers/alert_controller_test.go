@@ -58,7 +58,7 @@ type PrepareParams struct {
 	ctx            context.Context
 	clientSet      *mock_clientset.MockClientSetInterface
 	alertsClient   *mock_clientset.MockAlertsClientInterface
-	webhooksClient *mock_clientset.MockWebhooksClientInterface
+	webhooksClient *mock_clientset.MockOutboundWebhooksClientInterface
 	alert          *coralogixv1alpha1.Alert
 	remoteAlert    *alerts.Alert
 }
@@ -194,11 +194,11 @@ func TestAlertCreation(t *testing.T) {
 			alertsClient := mock_clientset.NewMockAlertsClientInterface(controller)
 
 			// Creating webhooks client.
-			webhooksClient := mock_clientset.NewMockWebhooksClientInterface(controller)
+			webhooksClient := mock_clientset.NewMockOutboundWebhooksClientInterface(controller)
 
 			// Preparing common mocks.
 			clientSet.EXPECT().Alerts().MaxTimes(1).MinTimes(1).Return(alertsClient)
-			clientSet.EXPECT().Webhooks().Return(webhooksClient).AnyTimes()
+			clientSet.EXPECT().OutboundWebhooks().Return(webhooksClient).AnyTimes()
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
@@ -444,11 +444,11 @@ func TestAlertUpdate(t *testing.T) {
 			alertsClient := mock_clientset.NewMockAlertsClientInterface(controller)
 
 			// Creating webhooks client.
-			webhooksClient := mock_clientset.NewMockWebhooksClientInterface(controller)
+			webhooksClient := mock_clientset.NewMockOutboundWebhooksClientInterface(controller)
 
 			// Preparing common mocks.
 			clientSet.EXPECT().Alerts().MaxTimes(1).MinTimes(1).Return(alertsClient)
-			clientSet.EXPECT().Webhooks().Return(webhooksClient).AnyTimes()
+			clientSet.EXPECT().OutboundWebhooks().Return(webhooksClient).AnyTimes()
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
@@ -654,11 +654,11 @@ func TestAlertDelete(t *testing.T) {
 			alertsClient := mock_clientset.NewMockAlertsClientInterface(controller)
 
 			// Creating webhooks client.
-			webhooksClient := mock_clientset.NewMockWebhooksClientInterface(controller)
+			webhooksClient := mock_clientset.NewMockOutboundWebhooksClientInterface(controller)
 
 			// Preparing common mocks.
 			clientSet.EXPECT().Alerts().MaxTimes(1).MinTimes(1).Return(alertsClient)
-			clientSet.EXPECT().Webhooks().Return(webhooksClient).AnyTimes()
+			clientSet.EXPECT().OutboundWebhooks().Return(webhooksClient).AnyTimes()
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
