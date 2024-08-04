@@ -1,0 +1,24 @@
+apiVersion: coralogix.com/v1alpha1
+kind: OutboundWebhook
+metadata:
+  labels:
+    app.kubernetes.io/name: outboundwebhook
+    app.kubernetes.io/instance: outboundwebhook-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: demisto-webhook
+spec:
+  name: demisto-webhook
+  outboundWebhookType:
+    demisto:
+      uuid: "12345678-1234-1234-1234-123456789012"
+      payload: "{\"key1\": \"value1\", \"key2\": \"value2\"}"
+      url: "https://example.com"
+status:
+  name: demisto-webhook
+  outboundWebhookType:
+    demisto:
+      uuid: "12345678-1234-1234-1234-123456789012"
+      payload: "{\"key1\": \"value1\", \"key2\": \"value2\"}"
+      url: "https://example.com"

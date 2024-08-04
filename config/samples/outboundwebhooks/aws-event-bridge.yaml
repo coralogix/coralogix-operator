@@ -1,0 +1,19 @@
+apiVersion: coralogix.com/v1alpha1
+kind: OutboundWebhook
+metadata:
+  labels:
+    app.kubernetes.io/name: outboundwebhook
+    app.kubernetes.io/instance: outboundwebhook-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: aws-event-bridge-webhook
+spec:
+  name: aws-event-bridge-webhook
+  outboundWebhookType:
+    awsEventBridge:
+        eventBusArn: "my-event-bus"
+        detail: "{\"key1\": \"value1\", \"key2\": \"value2\"}"
+        detailType: "myDetailType"
+        source: "mySource"
+        roleName: "arn:aws:iam::123456789012:role/my-role"

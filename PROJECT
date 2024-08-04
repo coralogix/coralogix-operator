@@ -4,33 +4,42 @@
 # More info: https://book.kubebuilder.io/reference/project-config.html
 domain: coralogix.com
 layout:
-  - go.kubebuilder.io/v3
+- go.kubebuilder.io/v3
 multigroup: true
 projectName: coralogix-operator
 repo: coralogix-operator
 resources:
-  - api:
-      crdVersion: v1
-      namespaced: true
-    controller: true
-    domain: coralogix.com
-    kind: Alert
-    path: coralogix-operator/apis/coralogix/v1alpha1
-    version: v1alpha1
-  - api:
-      crdVersion: v1
-      namespaced: true
-    controller: true
-    domain: coralogix.com
-    kind: RecordingRuleGroupSet
-    path: coralogix-operator/apis/coralogix/v1alpha1
-    version: v1alpha1
-  - api:
-      crdVersion: v1
-      namespaced: true
-    controller: true
-    domain: coralogix.com
-    kind: RuleGroup
-    path: coralogix-operator/apis/coralogix/v1alpha1
-    version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: coralogix.com
+  kind: Alert
+  path: coralogix-operator/apis/coralogix/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: coralogix.com
+  kind: RecordingRuleGroupSet
+  path: coralogix-operator/apis/coralogix/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: coralogix.com
+  kind: RuleGroup
+  path: coralogix-operator/apis/coralogix/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: coralogix.com
+  group: coralogix
+  kind: OutboundWebhook
+  path: coralogix-operator/apis/coralogix/v1alpha1
+  version: v1alpha1
 version: "3"

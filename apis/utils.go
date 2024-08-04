@@ -68,6 +68,20 @@ func FloatToQuantity(n float64) resource.Quantity {
 	return resource.MustParse(fmt.Sprintf("%f", n))
 }
 
+func StringMapEqual(a, b map[string]string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for k, v := range a {
+		if b[k] != v {
+			return false
+		}
+	}
+
+	return true
+}
+
 func PointerToString(o any) string {
 	if o == nil {
 		return "<nil>"
@@ -114,4 +128,18 @@ func PointerToString(o any) string {
 	}
 
 	return result
+}
+
+func StringPointerToWrapperspbString(s *string) *wrapperspb.StringValue {
+	if s == nil {
+		return nil
+	}
+	return wrapperspb.String(*s)
+}
+
+func WrapperspbStringToStringPointer(s *wrapperspb.StringValue) *string {
+	if s == nil {
+		return nil
+	}
+	return &s.Value
 }

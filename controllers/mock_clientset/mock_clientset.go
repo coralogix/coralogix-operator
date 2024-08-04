@@ -52,6 +52,20 @@ func (mr *MockClientSetInterfaceMockRecorder) Alerts() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Alerts", reflect.TypeOf((*MockClientSetInterface)(nil).Alerts))
 }
 
+// OutboundWebhooks mocks base method.
+func (m *MockClientSetInterface) OutboundWebhooks() clientset.OutboundWebhooksClientInterface {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "OutboundWebhooks")
+	ret0, _ := ret[0].(clientset.OutboundWebhooksClientInterface)
+	return ret0
+}
+
+// OutboundWebhooks indicates an expected call of OutboundWebhooks.
+func (mr *MockClientSetInterfaceMockRecorder) OutboundWebhooks() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OutboundWebhooks", reflect.TypeOf((*MockClientSetInterface)(nil).OutboundWebhooks))
+}
+
 // RecordingRuleGroups mocks base method.
 func (m *MockClientSetInterface) RecordingRuleGroups() clientset.RecordingRulesGroupsClientInterface {
 	m.ctrl.T.Helper()

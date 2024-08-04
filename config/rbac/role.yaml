@@ -84,6 +84,32 @@ rules:
   - patch
   - update
 - apiGroups:
+  - coralogix.coralogix.com
+  resources:
+  - outboundwebhooks
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.coralogix.com
+  resources:
+  - outboundwebhooks/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.coralogix.com
+  resources:
+  - outboundwebhooks/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - monitoring.coreos.com
   resources:
   - prometheusrules
