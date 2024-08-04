@@ -84,6 +84,21 @@ func (mr *MockOutboundWebhooksClientInterfaceMockRecorder) GetOutboundWebhook(ar
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOutboundWebhook", reflect.TypeOf((*MockOutboundWebhooksClientInterface)(nil).GetOutboundWebhook), arg0, arg1)
 }
 
+// ListAllOutgoingWebhooks mocks base method.
+func (m *MockOutboundWebhooksClientInterface) ListAllOutgoingWebhooks(arg0 context.Context, arg1 *__.ListAllOutgoingWebhooksRequest) (*__.ListAllOutgoingWebhooksResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAllOutgoingWebhooks", arg0, arg1)
+	ret0, _ := ret[0].(*__.ListAllOutgoingWebhooksResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListAllOutgoingWebhooks indicates an expected call of ListAllOutgoingWebhooks.
+func (mr *MockOutboundWebhooksClientInterfaceMockRecorder) ListAllOutgoingWebhooks(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAllOutgoingWebhooks", reflect.TypeOf((*MockOutboundWebhooksClientInterface)(nil).ListAllOutgoingWebhooks), arg0, arg1)
+}
+
 // UpdateOutboundWebhook mocks base method.
 func (m *MockOutboundWebhooksClientInterface) UpdateOutboundWebhook(arg0 context.Context, arg1 *__.UpdateOutgoingWebhookRequest) (*__.UpdateOutgoingWebhookResponse, error) {
 	m.ctrl.T.Helper()

@@ -93,17 +93,3 @@ func (mr *MockClientSetInterfaceMockRecorder) RuleGroups() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RuleGroups", reflect.TypeOf((*MockClientSetInterface)(nil).RuleGroups))
 }
-
-// Webhooks mocks base method.
-func (m *MockClientSetInterface) Webhooks() clientset.WebhooksClientInterface {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Webhooks")
-	ret0, _ := ret[0].(clientset.WebhooksClientInterface)
-	return ret0
-}
-
-// Webhooks indicates an expected call of Webhooks.
-func (mr *MockClientSetInterfaceMockRecorder) Webhooks() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Webhooks", reflect.TypeOf((*MockClientSetInterface)(nil).Webhooks))
-}

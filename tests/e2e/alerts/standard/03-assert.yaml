@@ -42,4 +42,4 @@ status:
     endTime: "20:00"
     startTime: "08:00"
     timeZone: UTC+02
-  severity: Info
+  severity: Error

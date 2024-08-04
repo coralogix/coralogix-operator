@@ -5,7 +5,6 @@ type ClientSetInterface interface {
 	RuleGroups() RuleGroupsClientInterface
 	Alerts() AlertsClientInterface
 	RecordingRuleGroups() RecordingRulesGroupsClientInterface
-	Webhooks() WebhooksClientInterface
 	OutboundWebhooks() OutboundWebhooksClientInterface
 }
 
@@ -13,7 +12,6 @@ type ClientSet struct {
 	ruleGroups          *RuleGroupsClient
 	alerts              *AlertsClient
 	recordingRuleGroups *RecordingRulesGroupsClient
-	webhooks            *WebhooksClient
 	outboundWebhooks    *OutboundWebhooksClient
 }
 
@@ -23,10 +21,6 @@ func (c *ClientSet) RuleGroups() RuleGroupsClientInterface {
 
 func (c *ClientSet) Alerts() AlertsClientInterface {
 	return c.alerts
-}
-
-func (c *ClientSet) Webhooks() WebhooksClientInterface {
-	return c.webhooks
 }
 
 func (c *ClientSet) RecordingRuleGroups() RecordingRulesGroupsClientInterface {
@@ -44,7 +38,6 @@ func NewClientSet(targetUrl, apiKey string) ClientSetInterface {
 		ruleGroups:          NewRuleGroupsClient(apikeyCPC),
 		alerts:              NewAlertsClient(apikeyCPC),
 		recordingRuleGroups: NewRecordingRuleGroupsClient(apikeyCPC),
-		webhooks:            NewWebhooksClient(apikeyCPC),
 		outboundWebhooks:    NewOutboundWebhooksClient(apikeyCPC),
 	}
 }
