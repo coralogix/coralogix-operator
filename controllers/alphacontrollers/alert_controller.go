@@ -18,12 +18,12 @@ package alphacontrollers
 
 import (
 	"context"
-	"encoding/json"
 	stdErr "errors"
 	"fmt"
 	"strconv"
 	"time"
 
+	webhooks "github.com/coralogix/coralogix-operator/controllers/clientset/grpc/outbound-webhooks"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -76,7 +76,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		"namespace", req.NamespacedName.Namespace,
 	)
 
-	coralogixv1alpha1.WebhooksClient = r.CoralogixClientSet.Webhooks()
+	coralogixv1alpha1.WebhooksClient = r.CoralogixClientSet.OutboundWebhooks()
 	alert := coralogixv1alpha1.NewAlert()
 
 	if err = r.Client.Get(ctx, req.NamespacedName, alert); err != nil {
@@ -156,6 +156,25 @@ func (r *AlertReconciler) update(ctx context.Context,
 	_, err = r.CoralogixClientSet.Alerts().UpdateAlert(ctx, alertRequest)
 	if err != nil {
 		log.Error(err, "Error on remote updating alert")
+		return err
+	}
+
+	remoteUpdatedAlert, err := r.CoralogixClientSet.Alerts().GetAlert(ctx, &alerts.GetAlertByUniqueIdRequest{
+		Id: wrapperspb.String(*alert.Status.ID),
+	})
+	if err != nil {
+		log.Error(err, "Error on getting updated alert")
+		return err
+	}
+	status, err = getStatus(ctx, remoteUpdatedAlert.GetAlert(), alert.Spec)
+	if err != nil {
+		log.Error(err, "Error on getting status")
+		return err
+	}
+
+	alert.Status = status
+	if err = r.Update(ctx, alert); err != nil {
+		log.Error(err, "Error on updating alert status")
 		return err
 	}
 
@@ -1043,17 +1062,15 @@ func flattenNotification(ctx context.Context, notification *alerts.AlertNotifica
 
 	switch integration := notification.GetIntegrationType().(type) {
 	case *alerts.AlertNotification_IntegrationId:
+		log := log.FromContext(ctx)
 		id := strconv.Itoa(int(integration.IntegrationId.GetValue()))
-		webhookStr, err := coralogixv1alpha1.WebhooksClient.GetWebhook(ctx, id)
+		log.V(1).Info("get webhook", "id", id)
+		webhook, err := coralogixv1alpha1.WebhooksClient.GetOutboundWebhook(ctx, &webhooks.GetOutgoingWebhookRequest{Id: wrapperspb.String(id)})
 		if err != nil {
+			log.Error(err, "error on get webhook")
 			return flattenedNotification, fmt.Errorf("error on get webhook - %w", err)
 		}
-		var m map[string]interface{}
-		if err = json.Unmarshal([]byte(webhookStr), &m); err != nil {
-			return flattenedNotification, fmt.Errorf("error on unmarshal webhook - %w", err)
-		}
-		flattenedNotification.IntegrationName = new(string)
-		*flattenedNotification.IntegrationName = m["alias"].(string)
+		flattenedNotification.IntegrationName = utils.WrapperspbStringToStringPointer(webhook.GetWebhook().GetName())
 	case *alerts.AlertNotification_Recipients:
 		flattenedNotification.EmailRecipients = utils.WrappedStringSliceToStringSlice(integration.Recipients.Emails)
 	}

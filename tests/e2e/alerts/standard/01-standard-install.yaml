@@ -11,7 +11,7 @@ metadata:
 spec:
   name: standard alert example
   description: alert from k8s operator
-  severity: Info
+  severity: Error
   labels:
     alert_type: security
     security_severity: high

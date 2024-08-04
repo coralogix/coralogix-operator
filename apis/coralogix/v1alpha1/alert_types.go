@@ -18,7 +18,6 @@ package v1alpha1
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -28,10 +27,12 @@ import (
 	utils "github.com/coralogix/coralogix-operator/apis"
 	"github.com/coralogix/coralogix-operator/controllers/clientset"
 	alerts "github.com/coralogix/coralogix-operator/controllers/clientset/grpc/alerts/v2"
+	webhooks "github.com/coralogix/coralogix-operator/controllers/clientset/grpc/outbound-webhooks"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -112,7 +113,7 @@ var (
 	}
 	msInHour       = int(time.Hour.Milliseconds())
 	msInMinute     = int(time.Minute.Milliseconds())
-	WebhooksClient clientset.WebhooksClientInterface
+	WebhooksClient clientset.OutboundWebhooksClientInterface
 )
 
 type ProtoTimeFrameAndRelativeTimeFrame struct {
@@ -1066,17 +1067,17 @@ func expandNotification(ctx context.Context, notification Notification) (*alerts
 }
 
 func searchIntegrationID(ctx context.Context, name string) (uint32, error) {
-	webhooksStr, err := WebhooksClient.GetWebhooks(ctx)
+	log := log.FromContext(ctx)
+	log.V(1).Info("Listing all outgoing webhooks")
+	listWebhooksResp, err := WebhooksClient.ListAllOutgoingWebhooks(ctx, &webhooks.ListAllOutgoingWebhooksRequest{})
 	if err != nil {
+		log.Error(err, "Failed to list all outgoing webhooks")
 		return 0, err
 	}
-	var maps []map[string]interface{}
-	if err = json.Unmarshal([]byte(webhooksStr), &maps); err != nil {
-		return 0, err
-	}
-	for _, m := range maps {
-		if m["alias"] == name {
-			return uint32(m["id"].(float64)), nil
+
+	for _, webhook := range listWebhooksResp.GetDeployed() {
+		if webhook.GetName().GetValue() == name {
+			return webhook.GetExternalId().GetValue(), nil
 		}
 	}
 	return 0, fmt.Errorf("integration with name %s not found", name)

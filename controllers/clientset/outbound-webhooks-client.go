@@ -12,6 +12,7 @@ type OutboundWebhooksClientInterface interface {
 	GetOutboundWebhook(ctx context.Context, req *outboundwebhooks.GetOutgoingWebhookRequest) (*outboundwebhooks.GetOutgoingWebhookResponse, error)
 	UpdateOutboundWebhook(ctx context.Context, req *outboundwebhooks.UpdateOutgoingWebhookRequest) (*outboundwebhooks.UpdateOutgoingWebhookResponse, error)
 	DeleteOutboundWebhook(ctx context.Context, req *outboundwebhooks.DeleteOutgoingWebhookRequest) (*outboundwebhooks.DeleteOutgoingWebhookResponse, error)
+	ListAllOutgoingWebhooks(ctx context.Context, req *outboundwebhooks.ListAllOutgoingWebhooksRequest) (*outboundwebhooks.ListAllOutgoingWebhooksResponse, error)
 }
 
 type OutboundWebhooksClient struct {
@@ -68,6 +69,19 @@ func (c OutboundWebhooksClient) DeleteOutboundWebhook(ctx context.Context, req *
 	client := outboundwebhooks.NewOutgoingWebhooksServiceClient(conn)
 
 	return client.DeleteOutgoingWebhook(callProperties.Ctx, req, callProperties.CallOptions...)
+}
+
+func (c OutboundWebhooksClient) ListAllOutgoingWebhooks(ctx context.Context, req *outboundwebhooks.ListAllOutgoingWebhooksRequest) (*outboundwebhooks.ListAllOutgoingWebhooksResponse, error) {
+	callProperties, err := c.callPropertiesCreator.GetCallProperties(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	conn := callProperties.Connection
+	defer conn.Close()
+	client := outboundwebhooks.NewOutgoingWebhooksServiceClient(conn)
+
+	return client.ListAllOutgoingWebhooks(callProperties.Ctx, req, callProperties.CallOptions...)
 }
 
 func NewOutboundWebhooksClient(c *CallPropertiesCreator) *OutboundWebhooksClient {
