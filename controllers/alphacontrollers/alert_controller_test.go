@@ -354,7 +354,7 @@ func TestAlertUpdate(t *testing.T) {
 			},
 			prepare: func(params PrepareParams) {
 				params.alertsClient.EXPECT().
-					GetAlert(params.alert.Namespace, coralogixv1alpha1.NewAlert()).
+					GetAlert(params.ctx, gomock.Any()).
 					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
 					MinTimes(1).MaxTimes(1)
 
@@ -368,7 +368,7 @@ func TestAlertUpdate(t *testing.T) {
 
 				params.alertsClient.EXPECT().GetAlert(params.ctx, gomock.Any()).
 					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
-					MinTimes(1).MaxTimes(1)
+					MinTimes(1).MaxTimes(2)
 			},
 		},
 		{
@@ -413,7 +413,7 @@ func TestAlertUpdate(t *testing.T) {
 			},
 			prepare: func(params PrepareParams) {
 				params.alertsClient.EXPECT().
-					GetAlert(params.alert.Namespace, coralogixv1alpha1.NewAlert()).
+					GetAlert(params.ctx, gomock.Any()).
 					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
 					MinTimes(1).MaxTimes(1)
 
