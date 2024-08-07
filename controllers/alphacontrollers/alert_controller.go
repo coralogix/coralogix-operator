@@ -122,46 +122,36 @@ func (r *AlertReconciler) update(ctx context.Context,
 	alert *coralogixv1alpha1.Alert) error {
 	alertRequest, err := alert.Spec.ExtractUpdateAlertRequest(ctx, log, *alert.Status.ID)
 	if err != nil {
-		log.Error(err, "Error to parse alert request")
-		return err
+		return fmt.Errorf("error to parse alert request: %w", err)
 	}
 
 	log.V(1).Info("Updating remote alert", "alert", protojson.Format(alertRequest))
-	if _, err = r.CoralogixClientSet.Alerts().UpdateAlert(ctx, alertRequest); err != nil {
+	remoteUpdatedAlert, err := r.CoralogixClientSet.Alerts().UpdateAlert(ctx, alertRequest)
+	if err != nil {
 		if status.Code(err) == codes.NotFound {
 			log.Info("alert not found on remote, recreating it")
 			alert.Status = *coralogixv1alpha1.NewDefaultAlertStatus()
-			if err := r.Status().Update(ctx, alert); err != nil {
-				log.Error(err, "Error on updating alert status")
-				return err
+			if err = r.Status().Update(ctx, alert); err != nil {
+				return fmt.Errorf("error on updating alert status: %w", err)
 			}
-			return err
+			return fmt.Errorf("alert not found on remote, recreating it: %w", err)
 		}
-		log.Error(err, "Error on updating alert")
-		return err
-	}
-
-	log.V(1).Info(fmt.Sprintf("Getting updated alert with id %s", *alert.Status.ID))
-	remoteUpdatedAlert, err := r.CoralogixClientSet.Alerts().GetAlert(ctx, &alerts.GetAlertByUniqueIdRequest{
-		Id: wrapperspb.String(*alert.Status.ID),
-	})
-	if err != nil {
-		log.Error(err, "Error on getting updated alert")
-		return err
+		return fmt.Errorf("error on updating alert: %w", err)
 	}
 	log.V(1).Info("Remote alert updated", "alert", protojson.Format(remoteUpdatedAlert))
 
 	status, err := getStatus(ctx, log, remoteUpdatedAlert.GetAlert(), alert.Spec)
 	if err != nil {
-		log.Error(err, "Error on getting status")
-		return err
+		return fmt.Errorf("error on getting status: %w", err)
 	}
-	r.Get(ctx, client.ObjectKeyFromObject(alert), alert)
+
+	if err = r.Get(ctx, client.ObjectKeyFromObject(alert), alert); err != nil {
+		return fmt.Errorf("error on getting alert: %w", err)
+	}
 	alert.Status = status
 
 	if err = r.Status().Update(ctx, alert); err != nil {
-		log.Error(err, "Error on updating alert status")
-		return err
+		return fmt.Errorf("error on updating alert status: %w", err)
 	}
 
 	return nil
@@ -171,20 +161,18 @@ func (r *AlertReconciler) delete(ctx context.Context,
 	log logr.Logger,
 	alert *coralogixv1alpha1.Alert) error {
 
+	log.V(1).Info("Deleting remote alert", "alert", *alert.Status.ID)
 	_, err := r.CoralogixClientSet.Alerts().DeleteAlert(ctx, &alerts.DeleteAlertByUniqueIdRequest{
 		Id: wrapperspb.String(*alert.Status.ID),
 	})
-
 	if err != nil && status.Code(err) != codes.NotFound {
-		log.Error(err, "Error on deleting alert")
-		return err
+		return fmt.Errorf("error on deleting alert: %w", err)
 	}
+	log.V(1).Info("Remote alert deleted", "alert", *alert.Status.ID)
 
 	controllerutil.RemoveFinalizer(alert, alertFinalizerName)
-	err = r.Update(ctx, alert)
-	if err != nil {
-		log.Error(err, "Error on updating alert after deletion")
-		return err
+	if err = r.Update(ctx, alert); err != nil {
+		return fmt.Errorf("error on updating alert: %w", err)
 	}
 
 	return nil
@@ -202,45 +190,44 @@ func (r *AlertReconciler) create(
 	if value, ok := alert.Spec.Labels["managed-by"]; !ok || value == "" {
 		alert.Spec.Labels["managed-by"] = "coralogix-operator"
 	}
-	r.Update(ctx, alert)
+
+	if err := r.Update(ctx, alert); err != nil {
+		return fmt.Errorf("error on updating alert: %w", err)
+	}
 
 	alertRequest, err := alert.ExtractCreateAlertRequest(ctx, log)
 	if err != nil {
-		log.Error(err, "Error on extract create remote alert request")
-		return err
+		return fmt.Errorf("error to parse alert request: %w", err)
 	}
 
 	log.V(1).Info("Creating remote alert", "alert", protojson.Format(alertRequest))
 	response, err := r.CoralogixClientSet.Alerts().CreateAlert(ctx, alertRequest)
 	if err != nil {
-		log.Error(err, "Received an error while creating remote alert")
-		return err
+		return fmt.Errorf("error on creating alert: %w", err)
 	}
 	log.V(1).Info("Remote alert created", "response", protojson.Format(response))
 
-	r.Get(ctx, client.ObjectKeyFromObject(alert), alert)
-	alert.Status.ID = pointer.String(response.GetAlert().GetUniqueIdentifier().GetValue())
-	if err = r.Update(ctx, alert); err != nil {
-		log.Error(err, "Error on updating alert status")
-		return err
+	if err = r.Get(ctx, client.ObjectKeyFromObject(alert), alert); err != nil {
+		return fmt.Errorf("error on getting alert: %w", err)
 	}
 
-	alert.Status, err = getStatus(ctx, log, response.GetAlert(), alert.Spec)
-	if err != nil {
-		log.Error(err, "Received an error while getting status")
-		return err
+	alert.Status.ID = pointer.String(response.GetAlert().GetUniqueIdentifier().GetValue())
+	if err = r.Update(ctx, alert); err != nil {
+		return fmt.Errorf("error on updating alert: %w", err)
+	}
+
+	if alert.Status, err = getStatus(ctx, log, response.GetAlert(), alert.Spec); err != nil {
+		return fmt.Errorf("error on getting status: %w", err)
 	}
 	if err = r.Status().Update(ctx, alert); err != nil {
-		log.Error(err, "Error on updating alert status")
-		return err
+		return fmt.Errorf("error on updating alert status: %w", err)
 	}
 
 	if !controllerutil.ContainsFinalizer(alert, alertFinalizerName) {
 		controllerutil.AddFinalizer(alert, alertFinalizerName)
 	}
 	if err = r.Client.Update(ctx, alert); err != nil {
-		log.Error(err, "Error on updating alert")
-		return err
+		return fmt.Errorf("error on updating alert: %w", err)
 	}
 
 	return nil

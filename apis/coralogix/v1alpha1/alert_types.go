@@ -33,7 +33,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -1014,8 +1013,7 @@ func getWebhooksNamesToIds(ctx context.Context, log logr.Logger) (map[string]uin
 	log.V(1).Info("Listing all outgoing webhooks")
 	listWebhooksResp, err := WebhooksClient.ListAllOutgoingWebhooks(ctx, &webhooks.ListAllOutgoingWebhooksRequest{})
 	if err != nil {
-		log.Error(err, "Failed to list all outgoing webhooks")
-		return nil, err
+		return nil, fmt.Errorf("failed to list all outgoing webhooks %w", err)
 	}
 	for _, webhook := range listWebhooksResp.GetDeployed() {
 		webhooksNamesToIds[webhook.GetName().GetValue()] = webhook.GetExternalId().GetValue()
@@ -1080,23 +1078,6 @@ func expandNotification(notification Notification, webhooksNameToIds map[string]
 	}
 
 	return result, nil
-}
-
-func searchIntegrationID(ctx context.Context, name string) (uint32, error) {
-	log := log.FromContext(ctx)
-	log.V(1).Info("Listing all outgoing webhooks")
-	listWebhooksResp, err := WebhooksClient.ListAllOutgoingWebhooks(ctx, &webhooks.ListAllOutgoingWebhooksRequest{})
-	if err != nil {
-		log.Error(err, "Failed to list all outgoing webhooks")
-		return 0, err
-	}
-
-	for _, webhook := range listWebhooksResp.GetDeployed() {
-		if webhook.GetName().GetValue() == name {
-			return webhook.GetExternalId().GetValue(), nil
-		}
-	}
-	return 0, fmt.Errorf("integration with name %s not found", name)
 }
 
 func (in *AlertSpec) DeepEqual(actualAlert *AlertStatus) (bool, utils.Diff) {
