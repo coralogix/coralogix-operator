@@ -646,6 +646,10 @@ func TestAlertDelete(t *testing.T) {
 					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
 					MinTimes(1).MaxTimes(1)
 
+				params.webhooksClient.EXPECT().ListAllOutgoingWebhooks(params.ctx, gomock.Any()).
+					Return(&webhooks.ListAllOutgoingWebhooksResponse{}, nil).
+					MinTimes(1).MaxTimes(2)
+
 				params.alertsClient.EXPECT().CreateAlert(params.ctx, gomock.Any()).
 					Return(&alerts.CreateAlertResponse{Alert: params.remoteAlert}, nil).
 					MinTimes(1).MaxTimes(1)
