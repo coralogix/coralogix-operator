@@ -254,8 +254,7 @@ func getStatus(ctx context.Context, log logr.Logger, actualAlert *alerts.Alert, 
 	var status coralogixv1alpha1.AlertStatus
 	var err error
 
-	status.ID = new(string)
-	*status.ID = actualAlert.GetUniqueIdentifier().GetValue()
+	status.ID = utils.WrapperspbStringToStringPointer(actualAlert.GetUniqueIdentifier())
 
 	status.Name = actualAlert.GetName().GetValue()
 

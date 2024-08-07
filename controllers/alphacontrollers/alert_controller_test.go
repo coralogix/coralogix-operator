@@ -779,6 +779,14 @@ func TestFlattenAlerts(t *testing.T) {
 
 	ctx := context.Background()
 	log := log.FromContext(ctx)
+
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	webhookMock := mock_clientset.NewMockOutboundWebhooksClientInterface(controller)
+	webhookMock.EXPECT().ListAllOutgoingWebhooks(ctx, gomock.Any()).Return(&webhooks.ListAllOutgoingWebhooksResponse{}, nil).AnyTimes()
+	coralogixv1alpha1.WebhooksClient = webhookMock
+
 	status, err := getStatus(ctx, log, alert, spec)
 	assert.NoError(t, err)
 
