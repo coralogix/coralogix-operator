@@ -71,7 +71,6 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	var (
 		err error
 	)
-	ctx, _ = context.WithTimeout(ctx, 120*time.Second)
 	log := log.FromContext(ctx).WithValues(
 		"alert", req.NamespacedName.Name,
 		"namespace", req.NamespacedName.Namespace,

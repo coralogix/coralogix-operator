@@ -360,28 +360,28 @@ func TestAlertUpdate(t *testing.T) {
 			},
 			prepare: func(params PrepareParams) {
 				params.alertsClient.EXPECT().
-					GetAlert(gomock.Any(), coralogixv1alpha1.NewAlert()).
+					GetAlert(params.ctx, coralogixv1alpha1.NewAlert()).
 					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
 					MinTimes(1).MaxTimes(1)
 
-				params.webhooksClient.EXPECT().ListAllOutgoingWebhooks(gomock.Any(), gomock.Any()).
+				params.webhooksClient.EXPECT().ListAllOutgoingWebhooks(params.ctx, gomock.Any()).
 					Return(&webhooks.ListAllOutgoingWebhooksResponse{}, nil).
 					MinTimes(1).MaxTimes(2)
 
-				params.alertsClient.EXPECT().CreateAlert(gomock.Any(), gomock.Any()).
+				params.alertsClient.EXPECT().CreateAlert(params.ctx, gomock.Any()).
 					Return(&alerts.CreateAlertResponse{Alert: params.remoteAlert}, nil).
 					MinTimes(1).MaxTimes(1)
 
 				params.alertsClient.EXPECT().
-					GetAlert(gomock.Any(), gomock.Any()).
+					GetAlert(params.ctx, gomock.Any()).
 					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
 					MinTimes(1).MaxTimes(1)
 
-				params.webhooksClient.EXPECT().ListAllOutgoingWebhooks(gomock.Any(), gomock.Any()).
+				params.webhooksClient.EXPECT().ListAllOutgoingWebhooks(params.ctx, gomock.Any()).
 					Return(&webhooks.ListAllOutgoingWebhooksResponse{}, nil).
 					MinTimes(1).MaxTimes(2)
 
-				params.alertsClient.EXPECT().UpdateAlert(gomock.Any(), gomock.Any()).
+				params.alertsClient.EXPECT().UpdateAlert(params.ctx, gomock.Any()).
 					Return(&alerts.UpdateAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
 					MinTimes(1).MaxTimes(1)
 			},
@@ -440,16 +440,12 @@ func TestAlertUpdate(t *testing.T) {
 					Return(&alerts.CreateAlertResponse{Alert: params.remoteAlert}, nil).
 					MinTimes(1).MaxTimes(1)
 
-				params.alertsClient.EXPECT().UpdateAlert(gomock.Any(), gomock.Any()).
-					Return(&alerts.UpdateAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
-					MinTimes(1).MaxTimes(1)
-
 				params.webhooksClient.EXPECT().ListAllOutgoingWebhooks(gomock.Any(), gomock.Any()).
 					Return(&webhooks.ListAllOutgoingWebhooksResponse{}, nil).
-					MinTimes(1).MaxTimes(1)
+					MinTimes(1).MaxTimes(2)
 
-				params.alertsClient.EXPECT().GetAlert(gomock.Any(), gomock.Any()).
-					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, status.Error(codes.NotFound, "")).
+				params.alertsClient.EXPECT().UpdateAlert(gomock.Any(), gomock.Any()).
+					Return(nil, status.Error(codes.NotFound, "")).
 					MinTimes(1).MaxTimes(1)
 			},
 		},
