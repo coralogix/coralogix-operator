@@ -7,31 +7,21 @@ metadata:
     app.kubernetes.io/part-of: coralogix-operator
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/created-by: coralogix-operator
-  name: standard-alert-example-02
+  name: new-value-alert-example
 status:
   active: true
   alertType:
-    standard:
+    newValue:
       conditions:
-        alertWhen: MoreThanUsual
-        groupBy:
-          - coralogix.metadata.sdkId
-        threshold: 5
+        key: remote_addr_geoip.city_name
+        timeWindow: TwentyFourHours
       filters:
-        applications:
-          - filter:contains:nginx
-        searchQuery: remote_addr_enriched:/.*/
         severities:
-          - Warning
-          - Info
-        subsystems:
-          - filter:startsWith:subsystem-name
+          - Error
   description: alert from k8s operator
+  name: new-value alert example
   labels:
-    alert_type: security
-    security_severity: high
     managed-by: coralogix-operator
-  name: standard alert example
   #  notificationGroups:
   #    - notifications:
   #        - notifyOn: TriggeredOnly
@@ -52,7 +42,7 @@ status:
     daysEnabled:
       - Wednesday
       - Thursday
-    endTime: "20:00"
-    startTime: "08:00"
+    endTime: "20:30"
+    startTime: "08:30"
     timeZone: UTC+02
-  severity: Error
+  severity: Critical

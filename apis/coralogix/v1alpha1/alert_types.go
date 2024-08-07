@@ -28,6 +28,7 @@ import (
 	"github.com/coralogix/coralogix-operator/controllers/clientset"
 	alerts "github.com/coralogix/coralogix-operator/controllers/clientset/grpc/alerts/v2"
 	webhooks "github.com/coralogix/coralogix-operator/controllers/clientset/grpc/outbound-webhooks"
+	"github.com/go-logr/logr"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -155,8 +156,8 @@ type AlertSpec struct {
 	AlertType AlertType `json:"alertType"`
 }
 
-func (a *Alert) ExtractCreateAlertRequest(ctx context.Context) (*alerts.CreateAlertRequest, error) {
-	notificationGroups, err := expandNotificationGroups(ctx, a.Spec.NotificationGroups)
+func (a *Alert) ExtractCreateAlertRequest(ctx context.Context, log logr.Logger) (*alerts.CreateAlertRequest, error) {
+	notificationGroups, err := expandNotificationGroups(ctx, log, a.Spec.NotificationGroups)
 	if err != nil {
 		return nil, err
 	}
@@ -992,10 +993,14 @@ func expandShowInInsight(showInInsight *ShowInInsight) *alerts.ShowInInsight {
 	}
 }
 
-func expandNotificationGroups(ctx context.Context, notificationGroups []NotificationGroup) ([]*alerts.AlertNotificationGroups, error) {
+func expandNotificationGroups(ctx context.Context, log logr.Logger, notificationGroups []NotificationGroup) ([]*alerts.AlertNotificationGroups, error) {
+	webhooksNamesToIds, err := getWebhooksNamesToIds(ctx, log)
+	if err != nil {
+		return nil, err
+	}
 	result := make([]*alerts.AlertNotificationGroups, 0, len(notificationGroups))
 	for i, ng := range notificationGroups {
-		notificationGroup, err := expandNotificationGroup(ctx, ng)
+		notificationGroup, err := expandNotificationGroup(ng, webhooksNamesToIds)
 		if err != nil {
 			return nil, fmt.Errorf("error on notificationGroups[%d] - %s", i, err.Error())
 		}
@@ -1004,9 +1009,23 @@ func expandNotificationGroups(ctx context.Context, notificationGroups []Notifica
 	return result, nil
 }
 
-func expandNotificationGroup(ctx context.Context, notificationGroup NotificationGroup) (*alerts.AlertNotificationGroups, error) {
+func getWebhooksNamesToIds(ctx context.Context, log logr.Logger) (map[string]uint32, error) {
+	webhooksNamesToIds := make(map[string]uint32)
+	log.V(1).Info("Listing all outgoing webhooks")
+	listWebhooksResp, err := WebhooksClient.ListAllOutgoingWebhooks(ctx, &webhooks.ListAllOutgoingWebhooksRequest{})
+	if err != nil {
+		log.Error(err, "Failed to list all outgoing webhooks")
+		return nil, err
+	}
+	for _, webhook := range listWebhooksResp.GetDeployed() {
+		webhooksNamesToIds[webhook.GetName().GetValue()] = webhook.GetExternalId().GetValue()
+	}
+	return webhooksNamesToIds, nil
+}
+
+func expandNotificationGroup(notificationGroup NotificationGroup, webhooksNameToIds map[string]uint32) (*alerts.AlertNotificationGroups, error) {
 	groupFields := utils.StringSliceToWrappedStringSlice(notificationGroup.GroupByFields)
-	notifications, err := expandNotifications(ctx, notificationGroup.Notifications)
+	notifications, err := expandNotifications(notificationGroup.Notifications, webhooksNameToIds)
 	if err != nil {
 		return nil, err
 	}
@@ -1017,19 +1036,19 @@ func expandNotificationGroup(ctx context.Context, notificationGroup Notification
 	}, nil
 }
 
-func expandNotifications(ctx context.Context, notifications []Notification) ([]*alerts.AlertNotification, error) {
+func expandNotifications(notifications []Notification, webhooksNameToIds map[string]uint32) ([]*alerts.AlertNotification, error) {
 	result := make([]*alerts.AlertNotification, 0, len(notifications))
-	for i, n := range notifications {
-		notification, err := expandNotification(ctx, n)
+	for i, notification := range notifications {
+		expandedNotification, err := expandNotification(notification, webhooksNameToIds)
 		if err != nil {
 			return nil, fmt.Errorf("error on notifications[%d] - %s", i, err.Error())
 		}
-		result = append(result, notification)
+		result = append(result, expandedNotification)
 	}
 	return result, nil
 }
 
-func expandNotification(ctx context.Context, notification Notification) (*alerts.AlertNotification, error) {
+func expandNotification(notification Notification, webhooksNameToIds map[string]uint32) (*alerts.AlertNotification, error) {
 	retriggeringPeriodSeconds := wrapperspb.UInt32(uint32(60 * notification.RetriggeringPeriodMinutes))
 	notifyOn := AlertSchemaNotifyOnToProtoNotifyOn[notification.NotifyOn]
 
@@ -1039,10 +1058,7 @@ func expandNotification(ctx context.Context, notification Notification) (*alerts
 	}
 
 	if integrationName := notification.IntegrationName; integrationName != nil {
-		integrationID, err := searchIntegrationID(ctx, *integrationName)
-		if err != nil {
-			return nil, err
-		}
+		integrationID, _ := webhooksNameToIds[*integrationName]
 		result.IntegrationType = &alerts.AlertNotification_IntegrationId{
 			IntegrationId: wrapperspb.UInt32(integrationID),
 		}
@@ -1257,7 +1273,7 @@ func getNotificationsByIntegrationNameMap(notifications []Notification) map[stri
 	return notificationsByIntegrationName
 }
 
-func (in *AlertSpec) ExtractUpdateAlertRequest(ctx context.Context, id string) (*alerts.UpdateAlertByUniqueIdRequest, error) {
+func (in *AlertSpec) ExtractUpdateAlertRequest(ctx context.Context, log logr.Logger, id string) (*alerts.UpdateAlertByUniqueIdRequest, error) {
 	uniqueIdentifier := wrapperspb.String(id)
 	enabled := wrapperspb.Bool(in.Active)
 	name := wrapperspb.String(in.Name)
@@ -1266,7 +1282,7 @@ func (in *AlertSpec) ExtractUpdateAlertRequest(ctx context.Context, id string) (
 	metaLabels := expandMetaLabels(in.Labels)
 	expirationDate := expandExpirationDate(in.ExpirationDate)
 	showInInsight := expandShowInInsight(in.ShowInInsight)
-	notificationGroups, err := expandNotificationGroups(ctx, in.NotificationGroups)
+	notificationGroups, err := expandNotificationGroups(ctx, log, in.NotificationGroups)
 	if err != nil {
 		return nil, err
 	}
