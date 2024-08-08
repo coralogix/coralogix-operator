@@ -7,9 +7,11 @@ metadata:
     app.kubernetes.io/part-of: coralogix-operator
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/created-by: coralogix-operator
-  name: microsoft-teams-webhook
+  name: demisto-webhook
 spec:
-  name: microsoft-teams-webhook
+  name: demisto-webhook
   outboundWebhookType:
-    microsoftTeams:
-      url: "https://outlook.office.com/webhook/12345678-1234-1234-1234-123456789012/IncomingWebhook/12345678-1234-1234-1234-123456789012"
+    demisto:
+      uuid: "12345678-1234-1234-1234-123456789013"
+      payload: "{\"updated-key1\": \"updated-value1\", \"updated-key2\": \"updated-value2\"}"
+      url: "https://updated-example.com"
