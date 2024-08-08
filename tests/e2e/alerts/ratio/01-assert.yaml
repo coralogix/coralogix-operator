@@ -7,32 +7,14 @@ metadata:
     app.kubernetes.io/part-of: coralogix-operator
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/created-by: coralogix-operator
-  name: standard-alert-example
+  name: ratio-alert-example
 status:
   active: true
-  alertType:
-    standard:
-      conditions:
-        alertWhen: More
-        groupBy:
-          - coralogix.metadata.sdkId
-        threshold: 5
-        timeWindow: FiveMinutes
-      filters:
-        applications:
-          - filter:contains:nginx
-        searchQuery: remote_addr_enriched:/.*/
-        severities:
-          - Warning
-          - Info
-        subsystems:
-          - filter:startsWith:subsystem-name
+  name: ratio alert example
   description: alert from k8s operator
+  severity: Critical
   labels:
-    alert_type: security
-    security_severity: high
-    managed-by: coralogix-operator
-  name: standard alert example
+      managed-by: coralogix-operator
 #  notificationGroups:
 #    - notifications:
 #        - notifyOn: TriggeredOnly
@@ -50,10 +32,30 @@ status:
 #          emailRecipients: [ "example2@coralogix.com" ]
 #          retriggeringPeriodMinutes: 1440
   scheduling:
-    daysEnabled:
-      - Wednesday
-      - Thursday
-    endTime: "20:00"
-    startTime: "08:00"
+    daysEnabled: [ "Wednesday", "Thursday" ]
     timeZone: UTC+02
-  severity: Error
+    startTime: 08:30
+    endTime: 20:30
+  alertType:
+    ratio:
+      q1Filters:
+        alias: Q1-updated
+        searchQuery: remote_addr_enriched:/.*/
+        applications: [ "filter:contains:nginx" ]
+        subsystems: [ "filter:startsWith:subsystem-name" ]
+        severities: [ "Warning", "Info" ]
+      q2Filters:
+        alias: Q2-updated
+        searchQuery: remote_addr_enriched:/.*/
+        applications: [ "filter:contains:nginx" ]
+        subsystems: [ "filter:startsWith:updated-subsystem-name" ]
+        severities: [ "Critical", "Warning" ]
+      conditions:
+        alertWhen: Less
+        ratio: "2"
+        timeWindow: TenMinutes
+        groupBy: [ "coralogix.metadata.sdkId" ]
+        groupByFor: Q1
+        manageUndetectedValues:
+          enableTriggeringOnUndetectedValues: true
+          autoRetireRatio: TwelveHours

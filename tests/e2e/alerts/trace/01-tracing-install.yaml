@@ -7,9 +7,9 @@ metadata:
     app.kubernetes.io/part-of: coralogix-operator
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/created-by: coralogix-operator
-  name: promql-alert-example
+  name: tracing-alert-example
 spec:
-  name: promql alert example
+  name: tracing alert example
   description: alert from k8s operator
   severity: Critical
   notificationGroups:
@@ -18,28 +18,33 @@ spec:
           integrationName: WebhookAlerts
           retriggeringPeriodMinutes: 1
         - notifyOn: TriggeredAndResolved
-          emailRecipients: [ "example@coralogix.com" ]
-          retriggeringPeriodMinutes: 1440
-    - groupByFields: [ "coralogix.metadata.sdkId" ]
-      notifications:
-        - notifyOn: TriggeredOnly
-          integrationName: WebhookAlerts
-          retriggeringPeriodMinutes: 1
-        - notifyOn: TriggeredAndResolved
           emailRecipients: [ "example2@coralogix.com" ]
           retriggeringPeriodMinutes: 1440
   scheduling:
-    daysEnabled: ["Wednesday", "Thursday"]
+    daysEnabled: [ "Wednesday", "Thursday" ]
     timeZone: UTC+02
     startTime: 08:30
     endTime: 20:30
   alertType:
-    metric:
-      promql:
-        searchQuery: http_requests_total{status!~\"4..\"}
-        conditions:
-          alertWhen: More
-          threshold: 3
-          sampleThresholdPercentage: 50
-          timeWindow: TwelveHours
-          minNonNullValuesPercentage: 10
+    tracing:
+      filters:
+        latencyThresholdMilliseconds: 30
+        applications:
+          [
+            "application_name",
+          ]
+        subsystems:
+          [
+            "filter:startsWith:subsystemName",
+          ]
+        services:
+          [
+            "filter:contains:serviceName",
+          ]
+        tagFilters:
+          - field: status
+            values: [ "filter:startsWith:500"]
+      conditions:
+        alertWhen: More
+        threshold: 15
+        timeWindow: FifteenMinutes

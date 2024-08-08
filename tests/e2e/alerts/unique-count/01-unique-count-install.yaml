@@ -7,26 +7,19 @@ metadata:
     app.kubernetes.io/part-of: coralogix-operator
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/created-by: coralogix-operator
-  name: promql-alert-example
+  name: unique-count-alert-example
 spec:
-  name: promql alert example
+  name: unique-count alert example
   description: alert from k8s operator
   severity: Critical
   notificationGroups:
-    - notifications:
-        - notifyOn: TriggeredOnly
-          integrationName: slack-webhook
-          retriggeringPeriodMinutes: 1
-        - notifyOn: TriggeredAndResolved
-          emailRecipients: [ "example@coralogix.com" ]
-          retriggeringPeriodMinutes: 1440
-    - groupByFields: [ "coralogix.metadata.sdkId" ]
+    - groupByFields: [ "EventType" ]
       notifications:
         - notifyOn: TriggeredOnly
           integrationName: WebhookAlerts
           retriggeringPeriodMinutes: 1
         - notifyOn: TriggeredAndResolved
-          emailRecipients: [ "example@coralogix.com" ]
+          emailRecipients: [ "example2@coralogix.com" ]
           retriggeringPeriodMinutes: 1440
   scheduling:
     daysEnabled: ["Wednesday", "Thursday"]
@@ -34,12 +27,12 @@ spec:
     startTime: 08:30
     endTime: 20:30
   alertType:
-    metric:
-      promql:
-        searchQuery: http_requests_total{status!~\"4..\"}
-        conditions:
-          alertWhen: More
-          threshold: 3
-          sampleThresholdPercentage: 50
-          timeWindow: TwelveHours
-          minNonNullValuesPercentage: 10
+    uniqueCount:
+      filters:
+        severities: ["Error"]
+      conditions:
+        key: remote_addr_geoip.city_name
+        maxUniqueValues: 3
+        timeWindow: TenMinutes
+        groupBy: EventType
+        maxUniqueValuesForGroupBy: 600

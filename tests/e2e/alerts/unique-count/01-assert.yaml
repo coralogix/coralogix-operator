@@ -14,9 +14,9 @@ status:
     uniqueCount:
       conditions:
         groupBy: EventType
-        key: remote_addr_geoip.country_name
-        maxUniqueValues: 2
-        maxUniqueValuesForGroupBy: 500
+        key: remote_addr_geoip.city_name
+        maxUniqueValues: 3
+        maxUniqueValuesForGroupBy: 600
         timeWindow: TenMinutes
       filters:
         severities:
@@ -25,22 +25,22 @@ status:
   name: unique-count alert example
   labels:
     managed-by: coralogix-operator
-#  notificationGroups:
-#    - notifications:
-#        - notifyOn: TriggeredOnly
-#          integrationName: WebhookAlerts
-#          retriggeringPeriodMinutes: 1
-#        - notifyOn: TriggeredAndResolved
-#          emailRecipients: [ "example@coralogix.com" ]
-#          retriggeringPeriodMinutes: 1440
-#    - groupByFields: [ "coralogix.metadata.sdkId" ]
-#      notifications:
-#        - notifyOn: TriggeredOnly
-#          integrationName: WebhookAlerts
-#          retriggeringPeriodMinutes: 1
-#        - notifyOn: TriggeredAndResolved
-#          emailRecipients: [ "example2@coralogix.com" ]
-#          retriggeringPeriodMinutes: 1440
+  #  notificationGroups:
+  #    - notifications:
+  #        - notifyOn: TriggeredOnly
+  #          integrationName: WebhookAlerts
+  #          retriggeringPeriodMinutes: 1
+  #        - notifyOn: TriggeredAndResolved
+  #          emailRecipients: [ "example@coralogix.com" ]
+  #          retriggeringPeriodMinutes: 1440
+  #    - groupByFields: [ "coralogix.metadata.sdkId" ]
+  #      notifications:
+  #        - notifyOn: TriggeredOnly
+  #          integrationName: WebhookAlerts
+  #          retriggeringPeriodMinutes: 1
+  #        - notifyOn: TriggeredAndResolved
+  #          emailRecipients: [ "example2@coralogix.com" ]
+  #          retriggeringPeriodMinutes: 1440
   scheduling:
     daysEnabled:
       - Wednesday

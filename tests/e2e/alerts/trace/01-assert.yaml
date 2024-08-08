@@ -14,20 +14,20 @@ status:
     tracing:
       conditions:
         alertWhen: More
-        threshold: 5
-        timeWindow: TenMinutes
+        threshold: 15
+        timeWindow: FifteenMinutes
       filters:
         applications:
           - application_name
-        latencyThresholdMilliseconds: "20"
+        latencyThresholdMilliseconds: "30"
         services:
-          - filter:startsWith:serviceName
+          - filter:contains:serviceName
         subsystems:
-          - filter:contains:subsystemName
+          - filter:startsWith:subsystemName
         tagFilters:
           - field: status
             values:
-              - filter:contains:400
+              - filter:startsWith:500
   description: alert from k8s operator
   name: tracing alert example
   labels:

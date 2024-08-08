@@ -7,21 +7,21 @@ metadata:
     app.kubernetes.io/part-of: coralogix-operator
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/created-by: coralogix-operator
-  name: standard-alert-example
+  name: time-relative-example
 status:
   active: true
   alertType:
-    standard:
+    timeRelative:
       conditions:
         alertWhen: More
         groupBy:
           - coralogix.metadata.sdkId
-        threshold: 5
-        timeWindow: FiveMinutes
+        ignoreInfinity: true
+        threshold: "15"
+        timeWindow: SameHourYesterday
       filters:
         applications:
           - filter:contains:nginx
-        searchQuery: remote_addr_enriched:/.*/
         severities:
           - Warning
           - Info
@@ -32,23 +32,23 @@ status:
     alert_type: security
     security_severity: high
     managed-by: coralogix-operator
-  name: standard alert example
-#  notificationGroups:
-#    - notifications:
-#        - notifyOn: TriggeredOnly
-#          integrationName: WebhookAlerts
-#          retriggeringPeriodMinutes: 1
-#        - notifyOn: TriggeredAndResolved
-#          emailRecipients: [ "example@coralogix.com" ]
-#          retriggeringPeriodMinutes: 1440
-#    - groupByFields: [ "coralogix.metadata.sdkId" ]
-#      notifications:
-#        - notifyOn: TriggeredOnly
-#          integrationName: WebhookAlerts
-#          retriggeringPeriodMinutes: 1
-#        - notifyOn: TriggeredAndResolved
-#          emailRecipients: [ "example2@coralogix.com" ]
-#          retriggeringPeriodMinutes: 1440
+  name: time-relative alert example
+  #  notificationGroups:
+  #    - notifications:
+  #        - notifyOn: TriggeredOnly
+  #          integrationName: WebhookAlerts
+  #          retriggeringPeriodMinutes: 1
+  #        - notifyOn: TriggeredAndResolved
+  #          emailRecipients: [ "example@coralogix.com" ]
+  #          retriggeringPeriodMinutes: 1440
+  #    - groupByFields: [ "coralogix.metadata.sdkId" ]
+  #      notifications:
+  #        - notifyOn: TriggeredOnly
+  #          integrationName: WebhookAlerts
+  #          retriggeringPeriodMinutes: 1
+  #        - notifyOn: TriggeredAndResolved
+  #          emailRecipients: [ "example2@coralogix.com" ]
+  #          retriggeringPeriodMinutes: 1440
   scheduling:
     daysEnabled:
       - Wednesday

@@ -7,11 +7,14 @@ metadata:
     app.kubernetes.io/part-of: coralogix-operator
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/created-by: coralogix-operator
-  name: flow-alert-example
+  name: time-relative-example
 spec:
-  name: flow alert example
+  name: time-relative alert example
   description: alert from k8s operator
-  severity: Critical
+  severity: Error
+  labels:
+    alert_type: security
+    security_severity: high
   notificationGroups:
     - notifications:
         - notifyOn: TriggeredOnly
@@ -31,28 +34,17 @@ spec:
   scheduling:
     daysEnabled: ["Wednesday", "Thursday"]
     timeZone: UTC+02
-    startTime: 08:30
-    endTime: 20:30
+    startTime: 08:00
+    endTime: 20:00
   alertType:
-    flow:
-      stages:
-        - groups:
-            - innerFlowAlerts:
-                alerts:
-                  - not: true
-                    userAlertId: cb998390-f28b-40e9-b8ed-97eaa6aa240b
-                  - not: false
-                    userAlertId: cb998390-f28b-40e9-b8ed-97eaa6aa240b
-                operator: And
-              nextOperator: And
-          timeWindow:
-            minutes: 20
-        - groups:
-            - innerFlowAlerts:
-                alerts:
-                  - not: true
-                    userAlertId: cb998390-f28b-40e9-b8ed-97eaa6aa240b
-                operator: And
-              nextOperator: Or
-          timeWindow:
-            minutes: 20
+    timeRelative:
+      filters:
+        applications: ["filter:contains:nginx"]
+        subsystems: ["filter:startsWith:subsystem-name"]
+        severities: ["Warning", "Info"]
+      conditions:
+        alertWhen: More
+        threshold: 15
+        timeWindow: SameHourYesterday
+        ignoreInfinity: true
+        groupBy: ["coralogix.metadata.sdkId"]

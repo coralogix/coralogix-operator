@@ -7,9 +7,9 @@ metadata:
     app.kubernetes.io/part-of: coralogix-operator
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/created-by: coralogix-operator
-  name: flow-alert-example
+  name: new-value-alert-example
 spec:
-  name: flow alert example
+  name: new-value alert example
   description: alert from k8s operator
   severity: Critical
   notificationGroups:
@@ -20,7 +20,7 @@ spec:
         - notifyOn: TriggeredAndResolved
           emailRecipients: [ "example@coralogix.com" ]
           retriggeringPeriodMinutes: 1440
-    - groupByFields: [ "coralogix.metadata.sdkId" ]
+    - groupByFields: [ "remote_addr_geoip.city_name" ]
       notifications:
         - notifyOn: TriggeredOnly
           integrationName: WebhookAlerts
@@ -34,25 +34,9 @@ spec:
     startTime: 08:30
     endTime: 20:30
   alertType:
-    flow:
-      stages:
-        - groups:
-            - innerFlowAlerts:
-                alerts:
-                  - not: true
-                    userAlertId: cb998390-f28b-40e9-b8ed-97eaa6aa240b
-                  - not: false
-                    userAlertId: cb998390-f28b-40e9-b8ed-97eaa6aa240b
-                operator: And
-              nextOperator: And
-          timeWindow:
-            minutes: 20
-        - groups:
-            - innerFlowAlerts:
-                alerts:
-                  - not: true
-                    userAlertId: cb998390-f28b-40e9-b8ed-97eaa6aa240b
-                operator: And
-              nextOperator: Or
-          timeWindow:
-            minutes: 20
+    newValue:
+      filters:
+        severities: ["Error"]
+      conditions:
+        key: remote_addr_geoip.city_name
+        timeWindow: "TwentyFourHours"

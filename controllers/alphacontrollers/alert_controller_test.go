@@ -7,6 +7,7 @@ import (
 	utils "github.com/coralogix/coralogix-operator/apis"
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
 	alerts "github.com/coralogix/coralogix-operator/controllers/clientset/grpc/alerts/v2"
+	webhooks "github.com/coralogix/coralogix-operator/controllers/clientset/grpc/outbound-webhooks"
 	"github.com/coralogix/coralogix-operator/controllers/mock_clientset"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -21,6 +22,7 @@ import (
 	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
@@ -175,9 +177,13 @@ func TestAlertCreation(t *testing.T) {
 					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
 					MinTimes(1).MaxTimes(1)
 
-				params.alertsClient.EXPECT().CreateAlert(params.ctx, gomock.Any()).
+				params.webhooksClient.EXPECT().ListAllOutgoingWebhooks(gomock.Any(), gomock.Any()).
+					Return(&webhooks.ListAllOutgoingWebhooksResponse{}, nil).AnyTimes()
+
+				params.alertsClient.EXPECT().CreateAlert(gomock.Any(), gomock.Any()).
 					Return(&alerts.CreateAlertResponse{Alert: params.remoteAlert}, nil).
 					MinTimes(1).MaxTimes(1)
+
 			},
 		},
 	}
@@ -198,7 +204,7 @@ func TestAlertCreation(t *testing.T) {
 
 			// Preparing common mocks.
 			clientSet.EXPECT().Alerts().MaxTimes(1).MinTimes(1).Return(alertsClient)
-			clientSet.EXPECT().OutboundWebhooks().Return(webhooksClient).AnyTimes()
+			clientSet.EXPECT().OutboundWebhooks().MaxTimes(1).MinTimes(1).Return(webhooksClient)
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
@@ -354,21 +360,30 @@ func TestAlertUpdate(t *testing.T) {
 			},
 			prepare: func(params PrepareParams) {
 				params.alertsClient.EXPECT().
-					GetAlert(params.ctx, gomock.Any()).
+					GetAlert(params.ctx, coralogixv1alpha1.NewAlert()).
 					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
 					MinTimes(1).MaxTimes(1)
+
+				params.webhooksClient.EXPECT().ListAllOutgoingWebhooks(params.ctx, gomock.Any()).
+					Return(&webhooks.ListAllOutgoingWebhooksResponse{}, nil).
+					MinTimes(1).MaxTimes(2)
 
 				params.alertsClient.EXPECT().CreateAlert(params.ctx, gomock.Any()).
 					Return(&alerts.CreateAlertResponse{Alert: params.remoteAlert}, nil).
 					MinTimes(1).MaxTimes(1)
 
+				params.alertsClient.EXPECT().
+					GetAlert(params.ctx, gomock.Any()).
+					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
+					MinTimes(1).MaxTimes(1)
+
+				params.webhooksClient.EXPECT().ListAllOutgoingWebhooks(params.ctx, gomock.Any()).
+					Return(&webhooks.ListAllOutgoingWebhooksResponse{}, nil).
+					MinTimes(1).MaxTimes(2)
+
 				params.alertsClient.EXPECT().UpdateAlert(params.ctx, gomock.Any()).
 					Return(&alerts.UpdateAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
 					MinTimes(1).MaxTimes(1)
-
-				params.alertsClient.EXPECT().GetAlert(params.ctx, gomock.Any()).
-					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
-					MinTimes(1).MaxTimes(2)
 			},
 		},
 		{
@@ -417,16 +432,20 @@ func TestAlertUpdate(t *testing.T) {
 					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
 					MinTimes(1).MaxTimes(1)
 
-				params.alertsClient.EXPECT().CreateAlert(params.ctx, gomock.Any()).
+				params.webhooksClient.EXPECT().ListAllOutgoingWebhooks(gomock.Any(), gomock.Any()).
+					Return(&webhooks.ListAllOutgoingWebhooksResponse{}, nil).
+					MinTimes(1).MaxTimes(2)
+
+				params.alertsClient.EXPECT().CreateAlert(gomock.Any(), gomock.Any()).
 					Return(&alerts.CreateAlertResponse{Alert: params.remoteAlert}, nil).
 					MinTimes(1).MaxTimes(1)
 
-				params.alertsClient.EXPECT().UpdateAlert(params.ctx, gomock.Any()).
-					Return(&alerts.UpdateAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
-					MinTimes(1).MaxTimes(1)
+				params.webhooksClient.EXPECT().ListAllOutgoingWebhooks(gomock.Any(), gomock.Any()).
+					Return(&webhooks.ListAllOutgoingWebhooksResponse{}, nil).
+					MinTimes(1).MaxTimes(2)
 
-				params.alertsClient.EXPECT().GetAlert(params.ctx, gomock.Any()).
-					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, status.Error(codes.NotFound, "")).
+				params.alertsClient.EXPECT().UpdateAlert(gomock.Any(), gomock.Any()).
+					Return(nil, status.Error(codes.NotFound, "")).
 					MinTimes(1).MaxTimes(1)
 			},
 		},
@@ -627,6 +646,10 @@ func TestAlertDelete(t *testing.T) {
 					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
 					MinTimes(1).MaxTimes(1)
 
+				params.webhooksClient.EXPECT().ListAllOutgoingWebhooks(params.ctx, gomock.Any()).
+					Return(&webhooks.ListAllOutgoingWebhooksResponse{}, nil).
+					MinTimes(1).MaxTimes(2)
+
 				params.alertsClient.EXPECT().CreateAlert(params.ctx, gomock.Any()).
 					Return(&alerts.CreateAlertResponse{Alert: params.remoteAlert}, nil).
 					MinTimes(1).MaxTimes(1)
@@ -753,7 +776,18 @@ func TestFlattenAlerts(t *testing.T) {
 			TimeZone: coralogixv1alpha1.TimeZone("UTC+02"),
 		},
 	}
-	status, err := getStatus(context.Background(), alert, spec)
+
+	ctx := context.Background()
+	log := log.FromContext(ctx)
+
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	webhookMock := mock_clientset.NewMockOutboundWebhooksClientInterface(controller)
+	webhookMock.EXPECT().ListAllOutgoingWebhooks(ctx, gomock.Any()).Return(&webhooks.ListAllOutgoingWebhooksResponse{}, nil).AnyTimes()
+	coralogixv1alpha1.WebhooksClient = webhookMock
+
+	status, err := getStatus(ctx, log, alert, spec)
 	assert.NoError(t, err)
 
 	expected := &coralogixv1alpha1.AlertStatus{
