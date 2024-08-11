@@ -3,18 +3,18 @@ kind: RecordingRuleGroupSet
 metadata:
   name: prometheus-example-rules
 status:
-  groups:
-    - intervalSeconds: 60
-      name: example.rules
-      rules:
-        - expr: vector(1)
-          record: ExampleRecord
-        - expr: vector(2)
-          record: ExampleRecord2
-    - intervalSeconds: 70
-      name: example.rules2
-      rules:
-        - expr: vector(3)
-          record: ExampleRecord
-        - expr: vector(4)
-          record: ExampleRecord
+#  groups:
+#    - intervalSeconds: 60
+#      name: example.rules
+#      rules:
+#        - expr: vector(1)
+#          record: ExampleRecord
+#        - expr: vector(2)
+#          record: ExampleRecord2
+#    - intervalSeconds: 70
+#      name: example.rules2
+#      rules:
+#        - expr: vector(3)
+#          record: ExampleRecord
+#        - expr: vector(4)
+#          record: ExampleRecord
