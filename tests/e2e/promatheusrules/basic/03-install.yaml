@@ -1,0 +1,36 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app.coralogix.com/track-recording-rules: "true"
+    app.coralogix.com/track-alerting-rules: "true"
+  name: prometheus-example-rules
+spec:
+  groups:
+    - name: example.rules2
+      interval: "70s"
+      rules:
+        - record: UpdatedExampleRecord
+          expr: vector(3)
+        - record: UpdatedExampleRecord
+          expr: vector(4)
+        - alert: updated-app-latency-1
+          expr: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m])) by (le, destination_workload)) > 0.2
+          for: 15m
+          annotations:
+            cxMinNonNullValuesPercentage: "25"
+          labels:
+            severity: info
+    - name: example.rules
+      rules:
+        - record: UpdatedExampleRecord
+          expr: vector(1)
+        - record: UpdatedExampleRecord2
+          expr: vector(2)
+        - alert: updated-app-latency-2
+          expr: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m])) by (le, destination_workload)) > 0.2
+          for: 5m
+          annotations:
+            cxMinNonNullValuesPercentage: "25"
+          labels:
+            severity: critical

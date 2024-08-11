@@ -161,7 +161,7 @@ func (r *RecordingRuleGroupSetReconciler) delete(ctx context.Context, recordingR
 		return fmt.Errorf("failed to delete recording rule groupSet: %w", err)
 	}
 
-	controllerutil.RemoveFinalizer(recordingRuleGroupSet, alertFinalizerName)
+	controllerutil.RemoveFinalizer(recordingRuleGroupSet, recordingRuleGroupSetFinalizerName)
 	if err = r.Update(ctx, recordingRuleGroupSet); err != nil {
 		return fmt.Errorf("failed to remove finalizer from recording rule groupSet: %w", err)
 	}

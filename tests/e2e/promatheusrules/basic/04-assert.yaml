@@ -5,7 +5,7 @@ metadata:
     - alert.coralogix.com/finalizer
   labels:
     app.kubernetes.io/managed-by: prometheus-example-rules
-  name: prometheus-example-rules-app-latency-0
+  name: prometheus-example-rules-updated-app-latency-1
   namespace: default
   ownerReferences:
     - apiVersion: monitoring.coreos.com/v1
@@ -21,15 +21,12 @@ status:
           minNonNullValuesPercentage: 0
           sampleThresholdPercentage: 100
           threshold: "0"
-          timeWindow: FiveMinutes
+          timeWindow: FifteenMinutes
         searchQuery: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m]))
           by (le, destination_workload)) > 0.2
-  name: app-latency
+  name: updated-app-latency-1
   notificationGroups:
     - notifications:
         - notifyOn: TriggeredOnly
-          retriggeringPeriodMinutes: 5
-  severity: Critical
-  showInInsight:
-    notifyOn: TriggeredOnly
-    retriggeringPeriodMinutes: 5
+          retriggeringPeriodMinutes: 15
+  severity: Info
