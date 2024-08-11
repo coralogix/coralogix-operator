@@ -14,7 +14,7 @@ spec:
           expr: vector(3)
         - record: UpdatedExampleRecord
           expr: vector(4)
-        - alert: updated-app-latency
+        - alert: updated-app-latency-1
           expr: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m])) by (le, destination_workload)) > 0.2
           for: 15m
           annotations:
@@ -27,7 +27,7 @@ spec:
           expr: vector(1)
         - record: UpdatedExampleRecord2
           expr: vector(2)
-        - alert: updated-app-latency
+        - alert: updated-app-latency-2
           expr: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m])) by (le, destination_workload)) > 0.2
           for: 5m
           annotations:
