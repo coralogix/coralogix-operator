@@ -124,63 +124,103 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleRecordingRuleToCxRecordi
 }
 
 func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx context.Context, prometheusRule *prometheus.PrometheusRule) error {
-	prometheusRuleAlerts := make(map[string]bool)
+	// A single PrometheusRule can have multiple alerts with the same name, while the Alert CRD from coralogix can only manage one alert.
+	// alertMap is used to map an alert name with potentially multiple alerts from the promrule CRD. For example:
+	//
+	// A prometheusRule with the following rules:
+	// rules:
+	//   - alert: Example
+	//     expr: metric > 10
+	//   - alert: Example
+	//     expr: metric > 20
+	//
+	// Would be mapped into:
+	//   map[string][]prometheus.Rule{
+	// 	   "Example": []prometheus.Rule{
+	// 		 {
+	//          Alert: Example,
+	//          Expr: "metric > 10"
+	// 		 },
+	// 		 {
+	//          Alert: Example,
+	//          Expr: "metric > 100"
+	// 		 },
+	// 	   },
+	//   }
+	//
+	// To later on generate coralogix Alert CRDs using the alert name followed by it's index on the array, making sure we don't clash names.
+	alertMap := make(map[string][]prometheus.Rule)
+	var a string
 	for _, group := range prometheusRule.Spec.Groups {
 		for _, rule := range group.Rules {
-			if rule.Alert == "" {
-				continue
+			if rule.Alert != "" {
+				a = strings.ToLower(rule.Alert)
+				if _, ok := alertMap[a]; !ok {
+					alertMap[a] = []prometheus.Rule{rule}
+					continue
+				}
+				alertMap[a] = append(alertMap[a], rule)
 			}
-			alert := &coralogixv1alpha1.Alert{
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: prometheusRule.Namespace,
-					Name:      fmt.Sprintf("%s-%s", prometheusRule.Name, strings.ToLower(rule.Alert)),
-					Labels: map[string]string{
-						"app.kubernetes.io/managed-by": prometheusRule.Name,
-					},
-					OwnerReferences: []metav1.OwnerReference{
+		}
+	}
+
+	alertsToKeep := make(map[string]bool)
+	for alertName, rules := range alertMap {
+		for i, rule := range rules {
+			alertCRD := &coralogixv1alpha1.Alert{}
+			alertCRDName := fmt.Sprintf("%s-%s-%d", prometheusRule.Name, alertName, i)
+			alertsToKeep[alertCRDName] = true
+			if err := r.Client.Get(ctx, client.ObjectKey{Namespace: prometheusRule.Namespace, Name: alertCRDName}, alertCRD); err != nil {
+				if errors.IsNotFound(err) {
+					alertCRD.Spec = prometheusRuleToCoralogixAlertSpec(rule)
+					alertCRD.Namespace = prometheusRule.Namespace
+					alertCRD.Name = alertCRDName
+					alertCRD.OwnerReferences = []metav1.OwnerReference{
 						{
 							APIVersion: prometheusRule.APIVersion,
 							Kind:       prometheusRule.Kind,
 							Name:       prometheusRule.Name,
 							UID:        prometheusRule.UID,
 						},
-					},
-				},
-				Spec: prometheusRuleToCoralogixAlertSpec(rule),
-			}
-
-			prometheusRuleAlerts[alert.Name] = true
-
-			if err := r.Client.Get(ctx, client.ObjectKeyFromObject(alert), alert); err != nil {
-				if errors.IsNotFound(err) {
-					if err = r.Create(ctx, alert); err != nil {
-						return fmt.Errorf("received an error while trying to create Alert CRD from PrometheusRule: %w", err)
+					}
+					alertCRD.Labels = map[string]string{"app.kubernetes.io/managed-by": prometheusRule.Name}
+					if err = r.Create(ctx, alertCRD); err != nil {
+						return fmt.Errorf("received an error while trying to create Alert CRD: %w", err)
 					}
 					continue
+				} else {
+					return fmt.Errorf("received an error while trying to get Alert CRD: %w", err)
 				}
-				return err
 			}
 
-			if err := r.Client.Update(ctx, alert); err != nil {
-				return fmt.Errorf("received an error while trying to update Alert CRD from PrometheusRule: %w", err)
+			//Converting the PrometheusRule to the desired Alert.
+			alertCRD.Spec = prometheusRuleToCoralogixAlertSpec(rule)
+			alertCRD.OwnerReferences = []metav1.OwnerReference{
+				{
+					APIVersion: prometheusRule.APIVersion,
+					Kind:       prometheusRule.Kind,
+					Name:       prometheusRule.Name,
+					UID:        prometheusRule.UID,
+				},
+			}
+			if err := r.Update(ctx, alertCRD); err != nil {
+				return fmt.Errorf("received an error while trying to update Alert CRD: %w", err)
 			}
 		}
 	}
 
-	var alerts coralogixv1alpha1.AlertList
-	if err := r.List(ctx, &alerts, client.InNamespace(prometheusRule.Namespace), client.MatchingLabels{"app.kubernetes.io/managed-by": prometheusRule.Name}); err != nil {
-		return fmt.Errorf("received an error while trying to list child Alerts: %w", err)
+	var childAlerts coralogixv1alpha1.AlertList
+	if err := r.List(ctx, &childAlerts, client.InNamespace(prometheusRule.Namespace), client.MatchingLabels{"app.kubernetes.io/managed-by": prometheusRule.Name}); err != nil {
+		return fmt.Errorf("received an error while trying to list Alerts: %w", err)
 	}
 
-	// Remove alerts that are not present in the PrometheusRule anymore.
-	for _, alert := range alerts.Items {
-		if !prometheusRuleAlerts[alert.Name] {
+	for _, alert := range childAlerts.Items {
+		if !alertsToKeep[alert.Name] {
 			if err := r.Delete(ctx, &alert); err != nil {
-				return fmt.Errorf("received an error while trying to remove child Alert: %w", err)
+				return fmt.Errorf("received an error while trying to delete Alert CRD: %w", err)
 			}
 		}
 	}
-
 	return nil
 }
 
