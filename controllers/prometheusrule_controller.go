@@ -130,6 +130,36 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 			if rule.Alert == "" {
 				continue
 			}
+			alert2 := &coralogixv1alpha1.Alert{ObjectMeta: metav1.ObjectMeta{Name: fmt.Sprintf("%s-%s", prometheusRule.Name, strings.ToLower(rule.Alert)), Namespace: prometheusRule.Namespace}}
+			if err := r.Client.Get(ctx, client.ObjectKeyFromObject(alert2), alert2); err != nil {
+				if errors.IsNotFound(err) {
+					alert := &coralogixv1alpha1.Alert{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: prometheusRule.Namespace,
+							Name:      fmt.Sprintf("%s-%s", prometheusRule.Name, strings.ToLower(rule.Alert)),
+							Labels: map[string]string{
+								"app.kubernetes.io/managed-by": prometheusRule.Name,
+							},
+							OwnerReferences: []metav1.OwnerReference{
+								{
+									APIVersion: prometheusRule.APIVersion,
+									Kind:       prometheusRule.Kind,
+									Name:       prometheusRule.Name,
+									UID:        prometheusRule.UID,
+								},
+							},
+						},
+						Spec: prometheusRuleToCoralogixAlertSpec(rule),
+					}
+					prometheusRuleAlerts[alert.Name] = true
+					if err = r.Create(ctx, alert); err != nil {
+						return fmt.Errorf("received an error while trying to create Alert CRD from PrometheusRule: %w", err)
+					}
+					continue
+				}
+				return err
+			}
+
 			alert := &coralogixv1alpha1.Alert{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: prometheusRule.Namespace,
@@ -145,22 +175,10 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 							UID:        prometheusRule.UID,
 						},
 					},
+					ResourceVersion: alert2.ResourceVersion,
 				},
 				Spec: prometheusRuleToCoralogixAlertSpec(rule),
 			}
-
-			prometheusRuleAlerts[alert.Name] = true
-
-			if err := r.Client.Get(ctx, client.ObjectKeyFromObject(alert), alert); err != nil {
-				if errors.IsNotFound(err) {
-					if err = r.Create(ctx, alert); err != nil {
-						return fmt.Errorf("received an error while trying to create Alert CRD from PrometheusRule: %w", err)
-					}
-					continue
-				}
-				return err
-			}
-
 			if err := r.Client.Update(ctx, alert); err != nil {
 				return fmt.Errorf("received an error while trying to update Alert CRD from PrometheusRule: %w", err)
 			}
