@@ -30,6 +30,3 @@ status:
         - notifyOn: TriggeredOnly
           retriggeringPeriodMinutes: 5
   severity: Info
-  showInInsight:
-    notifyOn: TriggeredOnly
-    retriggeringPeriodMinutes: 5
