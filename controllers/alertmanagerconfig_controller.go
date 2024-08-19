@@ -61,14 +61,52 @@ func (r *AlertmanagerConfigReconciler) Reconcile(ctx context.Context, req ctrl.R
 
 func (r *AlertmanagerConfigReconciler) convertAlertmanagerConfigToCxIntegrations(ctx context.Context, config *prometheus.AlertmanagerConfig) error {
 	for _, receiver := range config.Spec.Receivers {
-		for _, opsGenieConfig := range receiver.OpsGenieConfigs {
-			outboundWebhook := &coralogixv1alpha1.OutboundWebhook{ObjectMeta: metav1.ObjectMeta{Name: receiver.Name + ("todo"), Namespace: config.Namespace}}
+		for i, opsGenieConfig := range receiver.OpsGenieConfigs {
+			name := receiver.Name + ".OpsGenie." + string(i)
+			outboundWebhook := &coralogixv1alpha1.OutboundWebhook{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: config.Namespace}}
 			if err := r.Get(ctx, client.ObjectKeyFromObject(outboundWebhook), outboundWebhook); err != nil {
 				if errors.IsNotFound(err) {
+					outboundWebhook.Spec = coralogixv1alpha1.OutboundWebhookSpec{
+						Name: name, //todo: check if this is correct
+						OutboundWebhookType: coralogixv1alpha1.OutboundWebhookType{
+							Opsgenie: &coralogixv1alpha1.Opsgenie{
+								Url: opsGenieConfig.APIURL,
+							},
+						},
+					}
 					if err = r.Create(ctx, outboundWebhook); err != nil {
 						return fmt.Errorf("received an error while trying to create OutboundWebhook CRD from AlertmanagerConfig: %w", err)
 					}
-					fmt.Sprint(opsGenieConfig.APIKey)
+				} else {
+					return fmt.Errorf("received an error while trying to get OutboundWebhook CRD from AlertmanagerConfig: %w", err)
+				}
+			} else {
+				if err = r.Update(ctx, outboundWebhook); err != nil {
+					return fmt.Errorf("received an error while trying to update OutboundWebhook CRD from AlertmanagerConfig: %w", err)
+				}
+			}
+		}
+		for i, slackConfig := range receiver.SlackConfigs {
+			slackConfig = slackConfig
+			name := receiver.Name + ".Slack." + string(i)
+			outboundWebhook := &coralogixv1alpha1.OutboundWebhook{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: config.Namespace}}
+			if err := r.Get(ctx, client.ObjectKeyFromObject(outboundWebhook), outboundWebhook); err != nil {
+				if errors.IsNotFound(err) {
+					outboundWebhook.Spec = coralogixv1alpha1.OutboundWebhookSpec{
+						Name: name, //todo: check if this is correct
+						OutboundWebhookType: coralogixv1alpha1.OutboundWebhookType{
+							Slack: &coralogixv1alpha1.Slack{},
+						},
+					}
+					if err = r.Create(ctx, outboundWebhook); err != nil {
+						return fmt.Errorf("received an error while trying to create OutboundWebhook CRD from AlertmanagerConfig: %w", err)
+					}
+				} else {
+					return fmt.Errorf("received an error while trying to get OutboundWebhook CRD from AlertmanagerConfig: %w", err)
+				}
+			} else {
+				if err = r.Update(ctx, outboundWebhook); err != nil {
+					return fmt.Errorf("received an error while trying to update OutboundWebhook CRD from AlertmanagerConfig: %w", err)
 				}
 			}
 		}
