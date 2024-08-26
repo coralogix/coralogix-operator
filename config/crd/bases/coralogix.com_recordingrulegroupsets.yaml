@@ -42,7 +42,6 @@ spec:
                     intervalSeconds:
                       default: 60
                       format: int32
-                      minimum: 60
                       type: integer
                     limit:
                       format: int64

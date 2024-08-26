@@ -187,7 +187,6 @@ type RecordingRuleGroup struct {
 	Name string `json:"name,omitempty"`
 
 	//+kubebuilder:default=60
-	// +kubebuilder:validation:Minimum=60
 	IntervalSeconds int32 `json:"intervalSeconds,omitempty"`
 
 	// +optional

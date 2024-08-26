@@ -246,9 +246,18 @@ func prometheusRuleToRecordingRuleToRuleGroupSet(log logr.Logger, prometheusRule
 		if group.Interval != "" {
 			duration, err := time.ParseDuration(string(group.Interval))
 			if err != nil {
-				log.V(int(zapcore.WarnLevel)).Info("failed to parse interval duration", "interval", group.Interval, "error", err, "using default interval")
+				log.V(int(zapcore.WarnLevel)).Info("Failed to parse interval duration", "interval", group.Interval, "error", err, "using default interval")
 			}
-			interval = int32(duration.Seconds())
+
+			// Convert duration to seconds
+			durationSeconds := int32(duration.Seconds())
+
+			if durationSeconds < interval {
+				log.V(int(zapcore.WarnLevel)).Info("Recording rule interval is lower than the default interval", "interval", durationSeconds, "default interval", interval, "using the greater interval")
+			} else {
+				// Update interval if parsed duration is greater
+				interval = durationSeconds
+			}
 		}
 
 		if rules := prometheusInnerRulesToCoralogixInnerRules(group.Rules); len(rules) > 0 {
