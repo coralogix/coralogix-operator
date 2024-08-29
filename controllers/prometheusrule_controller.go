@@ -308,6 +308,7 @@ func prometheusRuleToCoralogixAlertSpec(prometheusRule prometheus.Rule) coralogi
 				},
 			},
 		},
+		Labels: prometheusRule.Labels,
 	}
 }
 

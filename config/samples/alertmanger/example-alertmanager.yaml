@@ -1,0 +1,40 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: config-example
+  labels:
+    alertmanagerConfig: example
+spec:
+  route:
+    groupBy:
+      - alertname
+      - cluster
+      - alert_group
+      - job
+      - namespace
+      - severity
+      - priority
+    receiver: slack-default
+    routes:
+      - receiver: slack-general
+        matchers:
+          - matchType: "=~"
+            name: slack_channel
+            value: ".+"
+        continue: true
+      - receiver: opsgenie-general
+        matchers:
+          - matchType: "=~"
+            name: opsgenie_team
+            value: ".+"
+  receivers:
+    - name: slack-general
+      slackConfigs:
+        - sendResolved: true
+    - name: opsgenie-general
+      opsgenieConfigs:
+        - sendResolved: true
+          apiURL: https://api.opsgenie.com/
+    - name: slack-default
+      slackConfigs:
+        - sendResolved: true

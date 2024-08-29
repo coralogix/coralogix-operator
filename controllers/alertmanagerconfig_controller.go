@@ -3,16 +3,22 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"regexp"
+	"time"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/controllers/clientset"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	"github.com/prometheus/common/model"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -31,6 +37,31 @@ type AlertmanagerConfigReconciler struct {
 	client.Client
 	CoralogixClientSet clientset.ClientSetInterface
 	Scheme             *runtime.Scheme
+}
+
+// SetupWithManager sets up the controller with the Manager.
+func (r *AlertmanagerConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	shouldTrackAlertmanagerConfigs := func(labels map[string]string) bool {
+		if value, ok := labels["app.coralogix.com/track-alertmanger-config"]; ok && value == "true" {
+			return true
+		}
+		return false
+	}
+
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&prometheus.AlertmanagerConfig{}).
+		WithEventFilter(predicate.Funcs{
+			CreateFunc: func(e event.CreateEvent) bool {
+				return shouldTrackAlertmanagerConfigs(e.Object.GetLabels())
+			},
+			UpdateFunc: func(e event.UpdateEvent) bool {
+				return shouldTrackAlertmanagerConfigs(e.ObjectNew.GetLabels()) || shouldTrackAlertmanagerConfigs(e.ObjectOld.GetLabels())
+			},
+			DeleteFunc: func(e event.DeleteEvent) bool {
+				return shouldTrackAlertmanagerConfigs(e.Object.GetLabels())
+			},
+		}).
+		Complete(r)
 }
 
 func (r *AlertmanagerConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -54,15 +85,21 @@ func (r *AlertmanagerConfigReconciler) Reconcile(ctx context.Context, req ctrl.R
 			log.Error(err, "Received an error while trying to convert AlertmanagerConfig to Integration CRD")
 			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 		}
+
+		err = r.linkCxAlertToCxIntegrations(ctx, alertmanagerConfig)
+		if err != nil {
+			log.Error(err, "Received an error while trying to link Alert to Integration CRD")
+			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		}
 	}
 
-	return reconcile.Result{}, nil
+	return reconcile.Result{RequeueAfter: 10 * time.Minute}, nil
 }
 
 func (r *AlertmanagerConfigReconciler) convertAlertmanagerConfigToCxIntegrations(ctx context.Context, config *prometheus.AlertmanagerConfig) error {
 	for _, receiver := range config.Spec.Receivers {
 		for i, opsGenieConfig := range receiver.OpsGenieConfigs {
-			name := receiver.Name + ".OpsGenie." + string(i)
+			name := fmt.Sprintf("%s.%s.%d", receiver.Name, "opsgenie", i)
 			outboundWebhook := &coralogixv1alpha1.OutboundWebhook{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: config.Namespace}}
 			if err := r.Get(ctx, client.ObjectKeyFromObject(outboundWebhook), outboundWebhook); err != nil {
 				if errors.IsNotFound(err) {
@@ -86,16 +123,17 @@ func (r *AlertmanagerConfigReconciler) convertAlertmanagerConfigToCxIntegrations
 				}
 			}
 		}
-		for i, slackConfig := range receiver.SlackConfigs {
-			slackConfig = slackConfig
-			name := receiver.Name + ".Slack." + string(i)
+		for i := range receiver.SlackConfigs {
+			name := fmt.Sprintf("%s.%s.%d", receiver.Name, "slack", i)
 			outboundWebhook := &coralogixv1alpha1.OutboundWebhook{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: config.Namespace}}
 			if err := r.Get(ctx, client.ObjectKeyFromObject(outboundWebhook), outboundWebhook); err != nil {
 				if errors.IsNotFound(err) {
 					outboundWebhook.Spec = coralogixv1alpha1.OutboundWebhookSpec{
 						Name: name, //todo: check if this is correct
 						OutboundWebhookType: coralogixv1alpha1.OutboundWebhookType{
-							Slack: &coralogixv1alpha1.Slack{},
+							Slack: &coralogixv1alpha1.Slack{
+								Url: "https://slack.com/api/chat.postMessage",
+							},
 						},
 					}
 					if err = r.Create(ctx, outboundWebhook); err != nil {
@@ -111,13 +149,167 @@ func (r *AlertmanagerConfigReconciler) convertAlertmanagerConfigToCxIntegrations
 			}
 		}
 	}
+	return nil
+}
+
+func (r *AlertmanagerConfigReconciler) linkCxAlertToCxIntegrations(ctx context.Context, config *prometheus.AlertmanagerConfig) error {
+	var alerts coralogixv1alpha1.AlertList
+	if err := r.List(ctx, &alerts, client.InNamespace(config.Namespace), client.HasLabels([]string{"app.kubernetes.io/managed-by"})); err != nil {
+		return fmt.Errorf("received an error while trying to list Alerts: %w", err)
+	}
+
+	for _, alert := range alerts.Items {
+		lset := GetLabelSet(&alert)
+		matchRoutes, err := Match(config.Spec.Route, lset)
+		if err != nil {
+			return fmt.Errorf("received an error while trying to match routes: %w", err)
+		}
+		var notifications []coralogixv1alpha1.Notification
+		for _, route := range matchRoutes {
+			if route.Receiver == "" {
+				continue
+			}
+
+			receiver := getReceiverByName(config.Spec.Receivers, route.Receiver)
+			if receiver == nil {
+				continue
+			}
+			for i := range receiver.SlackConfigs {
+				webhookName := fmt.Sprintf("%s.%s.%d", receiver.Name, "slack", i)
+				outboundWebhook := &coralogixv1alpha1.OutboundWebhook{ObjectMeta: metav1.ObjectMeta{Name: webhookName, Namespace: config.Namespace}}
+				if err = r.Get(ctx, client.ObjectKeyFromObject(outboundWebhook), outboundWebhook); err != nil {
+					return fmt.Errorf("received an error while trying to get OutboundWebhook CRD from AlertmanagerConfig: %w", err)
+				} else {
+					notifications = append(notifications, webhookToAlertNotification(outboundWebhook))
+					//append(alert.Spec.NotificationGroups, webhookToAlertNotification(outboundWebhook))
+				}
+			}
+			for i := range receiver.OpsGenieConfigs {
+				webhookName := fmt.Sprintf("%s.%s.%d", receiver.Name, "opsgenie", i)
+				outboundWebhook := &coralogixv1alpha1.OutboundWebhook{ObjectMeta: metav1.ObjectMeta{Name: webhookName, Namespace: config.Namespace}}
+				if err = r.Get(ctx, client.ObjectKeyFromObject(outboundWebhook), outboundWebhook); err != nil {
+					return fmt.Errorf("received an error while trying to get OutboundWebhook CRD from AlertmanagerConfig: %w", err)
+				} else {
+					notifications = append(notifications, webhookToAlertNotification(outboundWebhook))
+				}
+			}
+		}
+		alert.Spec.NotificationGroups = []coralogixv1alpha1.NotificationGroup{
+			{
+				Notifications: notifications,
+			},
+		}
+
+		if err = r.Update(ctx, &alert); err != nil {
+			return fmt.Errorf("received an error while trying to update OutboundWebhook CRD from AlertmanagerConfig: %w", err)
+		}
+	}
 
 	return nil
 }
 
-func shouldTrackIntegrations(alertmanager *prometheus.AlertmanagerConfig) bool {
-	if alertmanagerConfiguration := alertmanager.Labels["coralogix.com/alertmanager-configuration"]; alertmanagerConfiguration == "true" {
-		return true
+func webhookToAlertNotification(webhook *coralogixv1alpha1.OutboundWebhook) coralogixv1alpha1.Notification {
+	return coralogixv1alpha1.Notification{
+		IntegrationName:           pointer.String(webhook.Name),
+		RetriggeringPeriodMinutes: 5,
 	}
-	return false
+}
+
+func getReceiverByName(receivers []prometheus.Receiver, receiver string) *prometheus.Receiver {
+	for _, r := range receivers {
+		if r.Name == receiver {
+			return &r
+		}
+	}
+	return nil
+}
+
+func shouldTrackIntegrations(alertmanager *prometheus.AlertmanagerConfig) bool {
+	//if alertmanagerConfiguration := alertmanager.Labels["coralogix.com/alertmanager-configuration"]; alertmanagerConfiguration == "true" {
+	//	return true
+	//}
+	//return false
+	return true
+}
+
+func GetLabelSet(a *coralogixv1alpha1.Alert) model.LabelSet {
+	lset := model.LabelSet{}
+	for k, v := range a.Spec.Labels {
+		lset[model.LabelName(k)] = model.LabelValue(v)
+	}
+	return lset
+}
+
+// Match does a depth-first left-to-right search through the route tree
+// and returns the matching routing nodes.
+func Match(r *prometheus.Route, lset model.LabelSet) ([]*prometheus.Route, error) {
+	if r == nil {
+		return nil, fmt.Errorf("match: nil route")
+	}
+	if match, err := AllMatches(r.Matchers, lset); err != nil {
+		return nil, err
+	} else if !match {
+		return nil, nil
+	}
+
+	var all []*prometheus.Route
+	crs, err := r.ChildRoutes()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, cr := range crs {
+		matches, err := Match(&cr, lset)
+		if err != nil {
+			return nil, err
+		}
+
+		all = append(all, matches...)
+
+		if matches != nil && !cr.Continue {
+			break
+		}
+	}
+
+	//If no child nodes were matches, the current node itself is a match.
+	if len(all) == 0 {
+		all = append(all, r)
+	}
+
+	return all, nil
+}
+
+// AllMatches checks whether all matchers are fulfilled against the given label set.
+func AllMatches(ms []prometheus.Matcher, lset model.LabelSet) (bool, error) {
+	for _, m := range ms {
+		if match, err := Matches(&m, string(lset[model.LabelName(m.Name)])); err != nil {
+			return false, err
+		} else if !match {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+// Matches returns whether the matcher matches the given string value.
+func Matches(m *prometheus.Matcher, s string) (bool, error) {
+	switch m.MatchType {
+	case prometheus.MatchEqual:
+		return s == m.Value, nil
+	case prometheus.MatchNotEqual:
+		return s != m.Value, nil
+	case prometheus.MatchRegexp:
+		re, err := regexp.Compile("^(?:" + m.Value + ")$")
+		if err != nil {
+			return false, fmt.Errorf("labels.Matcher.Matches: invalid regular expression %q: %v", s, err)
+		}
+		return re.MatchString(s), nil
+	case prometheus.MatchNotRegexp:
+		re, err := regexp.Compile("^(?:" + m.Value + ")$")
+		if err != nil {
+			return false, fmt.Errorf("labels.Matcher.Matches: invalid regular expression %q: %v", s, err)
+		}
+		return !re.MatchString(s), nil
+	}
+	return false, fmt.Errorf("labels.Matcher.Matches: invalid match type %v", m.MatchType)
 }
