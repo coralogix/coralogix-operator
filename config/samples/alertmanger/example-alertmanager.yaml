@@ -4,6 +4,7 @@ metadata:
   name: config-example
   labels:
     alertmanagerConfig: example
+    app.coralogix.com/track-alertmanger-config: "true"
 spec:
   route:
     groupBy:

@@ -79,72 +79,87 @@ func (r *AlertmanagerConfigReconciler) Reconcile(ctx context.Context, req ctrl.R
 		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 	}
 
-	if shouldTrackIntegrations(alertmanagerConfig) {
-		err := r.convertAlertmanagerConfigToCxIntegrations(ctx, alertmanagerConfig)
-		if err != nil {
-			log.Error(err, "Received an error while trying to convert AlertmanagerConfig to Integration CRD")
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
-		}
-
-		err = r.linkCxAlertToCxIntegrations(ctx, alertmanagerConfig)
-		if err != nil {
-			log.Error(err, "Received an error while trying to link Alert to Integration CRD")
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
-		}
+	err := r.convertAlertmanagerConfigToCxIntegrations(ctx, alertmanagerConfig)
+	if err != nil {
+		log.Error(err, "Received an error while trying to convert AlertmanagerConfig to Integration CRD")
+		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 	}
 
-	return reconcile.Result{RequeueAfter: 10 * time.Minute}, nil
+	err = r.linkCxAlertToCxIntegrations(ctx, alertmanagerConfig)
+	if err != nil {
+		log.Error(err, "Received an error while trying to link Alert to Integration CRD")
+		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+	}
+
+	return reconcile.Result{RequeueAfter: 20 * time.Second}, nil
 }
 
-func (r *AlertmanagerConfigReconciler) convertAlertmanagerConfigToCxIntegrations(ctx context.Context, config *prometheus.AlertmanagerConfig) error {
-	for _, receiver := range config.Spec.Receivers {
+func (r *AlertmanagerConfigReconciler) convertAlertmanagerConfigToCxIntegrations(ctx context.Context, alertmanagerConfig *prometheus.AlertmanagerConfig) error {
+	for _, receiver := range alertmanagerConfig.Spec.Receivers {
 		for i, opsGenieConfig := range receiver.OpsGenieConfigs {
 			name := fmt.Sprintf("%s.%s.%d", receiver.Name, "opsgenie", i)
-			outboundWebhook := &coralogixv1alpha1.OutboundWebhook{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: config.Namespace}}
+			outboundWebhook := &coralogixv1alpha1.OutboundWebhook{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: alertmanagerConfig.Namespace}}
 			if err := r.Get(ctx, client.ObjectKeyFromObject(outboundWebhook), outboundWebhook); err != nil {
 				if errors.IsNotFound(err) {
 					outboundWebhook.Spec = coralogixv1alpha1.OutboundWebhookSpec{
-						Name: name, //todo: check if this is correct
+						Name: name,
+
 						OutboundWebhookType: coralogixv1alpha1.OutboundWebhookType{
 							Opsgenie: &coralogixv1alpha1.Opsgenie{
 								Url: opsGenieConfig.APIURL,
 							},
 						},
 					}
+					outboundWebhook.OwnerReferences = []metav1.OwnerReference{
+						{
+							APIVersion: alertmanagerConfig.APIVersion,
+							Kind:       alertmanagerConfig.Kind,
+							Name:       alertmanagerConfig.Name,
+							UID:        alertmanagerConfig.UID,
+						},
+					}
 					if err = r.Create(ctx, outboundWebhook); err != nil {
-						return fmt.Errorf("received an error while trying to create OutboundWebhook CRD from AlertmanagerConfig: %w", err)
+						return fmt.Errorf("received an error while trying to create OutboundWebhook CRD from alertmanagerConfig: %w", err)
 					}
 				} else {
-					return fmt.Errorf("received an error while trying to get OutboundWebhook CRD from AlertmanagerConfig: %w", err)
+					return fmt.Errorf("received an error while trying to get OutboundWebhook CRD from alertmanagerConfig: %w", err)
 				}
 			} else {
 				if err = r.Update(ctx, outboundWebhook); err != nil {
-					return fmt.Errorf("received an error while trying to update OutboundWebhook CRD from AlertmanagerConfig: %w", err)
+					return fmt.Errorf("received an error while trying to update OutboundWebhook CRD from alertmanagerConfig: %w", err)
 				}
 			}
 		}
 		for i := range receiver.SlackConfigs {
 			name := fmt.Sprintf("%s.%s.%d", receiver.Name, "slack", i)
-			outboundWebhook := &coralogixv1alpha1.OutboundWebhook{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: config.Namespace}}
+			outboundWebhook := &coralogixv1alpha1.OutboundWebhook{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: alertmanagerConfig.Namespace}}
 			if err := r.Get(ctx, client.ObjectKeyFromObject(outboundWebhook), outboundWebhook); err != nil {
 				if errors.IsNotFound(err) {
 					outboundWebhook.Spec = coralogixv1alpha1.OutboundWebhookSpec{
-						Name: name, //todo: check if this is correct
+						Name: name,
 						OutboundWebhookType: coralogixv1alpha1.OutboundWebhookType{
 							Slack: &coralogixv1alpha1.Slack{
 								Url: "https://slack.com/api/chat.postMessage",
 							},
 						},
 					}
+					outboundWebhook.OwnerReferences = []metav1.OwnerReference{
+						{
+							APIVersion: alertmanagerConfig.APIVersion,
+							Kind:       alertmanagerConfig.Kind,
+							Name:       alertmanagerConfig.Name,
+							UID:        alertmanagerConfig.UID,
+						},
+					}
 					if err = r.Create(ctx, outboundWebhook); err != nil {
-						return fmt.Errorf("received an error while trying to create OutboundWebhook CRD from AlertmanagerConfig: %w", err)
+						return fmt.Errorf("received an error while trying to create OutboundWebhook CRD from alertmanagerConfig: %w", err)
 					}
 				} else {
-					return fmt.Errorf("received an error while trying to get OutboundWebhook CRD from AlertmanagerConfig: %w", err)
+					return fmt.Errorf("received an error while trying to get OutboundWebhook CRD from alertmanagerConfig: %w", err)
 				}
 			} else {
 				if err = r.Update(ctx, outboundWebhook); err != nil {
-					return fmt.Errorf("received an error while trying to update OutboundWebhook CRD from AlertmanagerConfig: %w", err)
+					return fmt.Errorf("received an error while trying to update OutboundWebhook CRD from alertmanagerConfig: %w", err)
 				}
 			}
 		}
@@ -159,46 +174,14 @@ func (r *AlertmanagerConfigReconciler) linkCxAlertToCxIntegrations(ctx context.C
 	}
 
 	for _, alert := range alerts.Items {
-		lset := GetLabelSet(&alert)
+		lset := getLabelSet(&alert)
 		matchRoutes, err := Match(config.Spec.Route, lset)
 		if err != nil {
 			return fmt.Errorf("received an error while trying to match routes: %w", err)
 		}
-		var notifications []coralogixv1alpha1.Notification
-		for _, route := range matchRoutes {
-			if route.Receiver == "" {
-				continue
-			}
 
-			receiver := getReceiverByName(config.Spec.Receivers, route.Receiver)
-			if receiver == nil {
-				continue
-			}
-			for i := range receiver.SlackConfigs {
-				webhookName := fmt.Sprintf("%s.%s.%d", receiver.Name, "slack", i)
-				outboundWebhook := &coralogixv1alpha1.OutboundWebhook{ObjectMeta: metav1.ObjectMeta{Name: webhookName, Namespace: config.Namespace}}
-				if err = r.Get(ctx, client.ObjectKeyFromObject(outboundWebhook), outboundWebhook); err != nil {
-					return fmt.Errorf("received an error while trying to get OutboundWebhook CRD from AlertmanagerConfig: %w", err)
-				} else {
-					notifications = append(notifications, webhookToAlertNotification(outboundWebhook))
-					//append(alert.Spec.NotificationGroups, webhookToAlertNotification(outboundWebhook))
-				}
-			}
-			for i := range receiver.OpsGenieConfigs {
-				webhookName := fmt.Sprintf("%s.%s.%d", receiver.Name, "opsgenie", i)
-				outboundWebhook := &coralogixv1alpha1.OutboundWebhook{ObjectMeta: metav1.ObjectMeta{Name: webhookName, Namespace: config.Namespace}}
-				if err = r.Get(ctx, client.ObjectKeyFromObject(outboundWebhook), outboundWebhook); err != nil {
-					return fmt.Errorf("received an error while trying to get OutboundWebhook CRD from AlertmanagerConfig: %w", err)
-				} else {
-					notifications = append(notifications, webhookToAlertNotification(outboundWebhook))
-				}
-			}
-		}
-		alert.Spec.NotificationGroups = []coralogixv1alpha1.NotificationGroup{
-			{
-				Notifications: notifications,
-			},
-		}
+		matchedReceivers := matchedRoutesToMatchedReceivers(matchRoutes, config.Spec.Receivers)
+		alert.Spec.NotificationGroups = generateNotificationGroupOutOfMatchedReceivers(matchedReceivers)
 
 		if err = r.Update(ctx, &alert); err != nil {
 			return fmt.Errorf("received an error while trying to update OutboundWebhook CRD from AlertmanagerConfig: %w", err)
@@ -208,9 +191,40 @@ func (r *AlertmanagerConfigReconciler) linkCxAlertToCxIntegrations(ctx context.C
 	return nil
 }
 
-func webhookToAlertNotification(webhook *coralogixv1alpha1.OutboundWebhook) coralogixv1alpha1.Notification {
+func matchedRoutesToMatchedReceivers(matchedRoutes []*prometheus.Route, allReceivers []prometheus.Receiver) []*prometheus.Receiver {
+	var matchedReceivers []*prometheus.Receiver
+	for _, route := range matchedRoutes {
+		if route.Receiver == "" {
+			continue
+		}
+		receiver := getReceiverByName(allReceivers, route.Receiver)
+		matchedReceivers = append(matchedReceivers, receiver)
+	}
+	return matchedReceivers
+}
+
+func generateNotificationGroupOutOfMatchedReceivers(matchedReceivers []*prometheus.Receiver) []coralogixv1alpha1.NotificationGroup {
+	var notifications []coralogixv1alpha1.Notification
+	for _, receiver := range matchedReceivers {
+		if receiver == nil {
+			continue
+		}
+		for i := range receiver.SlackConfigs {
+			webhookName := fmt.Sprintf("%s.%s.%d", receiver.Name, "slack", i)
+			notifications = append(notifications, webhookNameToAlertNotification(webhookName))
+		}
+		for i := range receiver.OpsGenieConfigs {
+			webhookName := fmt.Sprintf("%s.%s.%d", receiver.Name, "opsgenie", i)
+			notifications = append(notifications, webhookNameToAlertNotification(webhookName))
+		}
+	}
+
+	return []coralogixv1alpha1.NotificationGroup{{Notifications: notifications}}
+}
+
+func webhookNameToAlertNotification(webhookName string) coralogixv1alpha1.Notification {
 	return coralogixv1alpha1.Notification{
-		IntegrationName:           pointer.String(webhook.Name),
+		IntegrationName:           pointer.String(webhookName),
 		RetriggeringPeriodMinutes: 5,
 	}
 }
@@ -224,15 +238,7 @@ func getReceiverByName(receivers []prometheus.Receiver, receiver string) *promet
 	return nil
 }
 
-func shouldTrackIntegrations(alertmanager *prometheus.AlertmanagerConfig) bool {
-	//if alertmanagerConfiguration := alertmanager.Labels["coralogix.com/alertmanager-configuration"]; alertmanagerConfiguration == "true" {
-	//	return true
-	//}
-	//return false
-	return true
-}
-
-func GetLabelSet(a *coralogixv1alpha1.Alert) model.LabelSet {
+func getLabelSet(a *coralogixv1alpha1.Alert) model.LabelSet {
 	lset := model.LabelSet{}
 	for k, v := range a.Spec.Labels {
 		lset[model.LabelName(k)] = model.LabelValue(v)
