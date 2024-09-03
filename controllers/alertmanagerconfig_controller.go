@@ -68,25 +68,27 @@ func (r *AlertmanagerConfigReconciler) Reconcile(ctx context.Context, req ctrl.R
 	log := log.FromContext(ctx)
 
 	alertmanagerConfig := &prometheus.AlertmanagerConfig{}
-	if err := r.Get(ctx, req.NamespacedName, alertmanagerConfig); err != nil && !errors.IsNotFound(err) {
+	if err := r.Get(ctx, req.NamespacedName, alertmanagerConfig); err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
+			if err = r.deleteWebhooksFromRelatedAlerts(ctx, alertmanagerConfig); err != nil {
+				log.Error(err, "Received an error while trying to delete webhooks from related Alerts")
+				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			}
 			return ctrl.Result{}, nil
 		}
 		// Error reading the object - requeue the request
 		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 	}
 
-	err := r.convertAlertmanagerConfigToCxIntegrations(ctx, alertmanagerConfig)
-	if err != nil {
+	if err := r.convertAlertmanagerConfigToCxIntegrations(ctx, alertmanagerConfig); err != nil {
 		log.Error(err, "Received an error while trying to convert AlertmanagerConfig to Integration CRD")
 		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 	}
 
-	err = r.linkCxAlertToCxIntegrations(ctx, alertmanagerConfig)
-	if err != nil {
+	if err := r.linkCxAlertToCxIntegrations(ctx, alertmanagerConfig); err != nil {
 		log.Error(err, "Received an error while trying to link Alert to Integration CRD")
 		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 	}
@@ -168,8 +170,12 @@ func (r *AlertmanagerConfigReconciler) convertAlertmanagerConfigToCxIntegrations
 }
 
 func (r *AlertmanagerConfigReconciler) linkCxAlertToCxIntegrations(ctx context.Context, config *prometheus.AlertmanagerConfig) error {
+	if config.Spec.Route == nil {
+		return nil
+	}
+
 	var alerts coralogixv1alpha1.AlertList
-	if err := r.List(ctx, &alerts, client.InNamespace(config.Namespace), client.HasLabels([]string{"app.kubernetes.io/managed-by"})); err != nil {
+	if err := r.List(ctx, &alerts, client.InNamespace(config.Namespace), client.MatchingLabels{"app.coralogix.com/managed-by-alertmanger-config": "true"}); err != nil {
 		return fmt.Errorf("received an error while trying to list Alerts: %w", err)
 	}
 
@@ -182,9 +188,26 @@ func (r *AlertmanagerConfigReconciler) linkCxAlertToCxIntegrations(ctx context.C
 
 		matchedReceivers := matchedRoutesToMatchedReceivers(matchRoutes, config.Spec.Receivers)
 		alert.Spec.NotificationGroups = generateNotificationGroupOutOfMatchedReceivers(matchedReceivers)
-
 		if err = r.Update(ctx, &alert); err != nil {
 			return fmt.Errorf("received an error while trying to update OutboundWebhook CRD from AlertmanagerConfig: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func (r *AlertmanagerConfigReconciler) deleteWebhooksFromRelatedAlerts(ctx context.Context, config *prometheus.AlertmanagerConfig) error {
+	var alerts coralogixv1alpha1.AlertList
+	if err := r.List(ctx, &alerts, client.InNamespace(config.Namespace), client.MatchingLabels{"app.coralogix.com/managed-by-alertmanger-config": "true"}); err != nil {
+		return fmt.Errorf("received an error while trying to list Alerts: %w", err)
+	}
+
+	for _, alert := range alerts.Items {
+		alert.Spec.NotificationGroups = []coralogixv1alpha1.NotificationGroup{
+			{},
+		}
+		if err := r.Update(ctx, &alert); err != nil {
+			return fmt.Errorf("received an error while trying to update Alert CRD from AlertmanagerConfig: %w", err)
 		}
 	}
 
