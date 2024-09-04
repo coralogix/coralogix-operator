@@ -59,7 +59,6 @@ status:
   severity: Critical
 
 ---
-
 apiVersion: coralogix.com/v1alpha1
 kind: Alert
 metadata:
@@ -128,7 +127,6 @@ status:
   severity: Info
 
 ---
-
 apiVersion: coralogix.com/v1alpha1
 kind: Alert
 metadata:

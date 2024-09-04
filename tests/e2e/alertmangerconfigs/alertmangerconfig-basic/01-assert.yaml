@@ -21,7 +21,6 @@ status:
       url: https://api.opsgenie.com/
 
 ---
-
 apiVersion: coralogix.com/v1alpha1
 kind: OutboundWebhook
 metadata:
@@ -45,7 +44,6 @@ status:
       url: https://slack.com/api/chat.postMessage
 
 ---
-
 apiVersion: coralogix.com/v1alpha1
 kind: OutboundWebhook
 metadata:

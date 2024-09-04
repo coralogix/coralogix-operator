@@ -41,7 +41,6 @@ spec:
         - sendResolved: true
 
 ---
-
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
