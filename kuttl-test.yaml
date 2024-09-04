@@ -6,5 +6,6 @@ testDirs:
   - tests/e2e/recordingrulegroupsets
   - tests/e2e/promatheusrules
   - tests/e2e/outboundwebhooks
+  - tests/e2e/alertmangerconfigs
 namespace: default
 timeout: 60

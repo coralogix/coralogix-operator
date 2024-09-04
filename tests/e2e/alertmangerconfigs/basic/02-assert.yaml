@@ -1,0 +1,186 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Alert
+metadata:
+  finalizers:
+    - alert.coralogix.com/finalizer
+  labels:
+    app.coralogix.com/managed-by-alertmanger-config: "true"
+    app.kubernetes.io/managed-by: prometheus-example-rules
+  name: prometheus-example-rules-app-latency-0
+  namespace: default
+  ownerReferences:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      name: prometheus-example-rules
+spec:
+  active: true
+  alertType:
+    metric:
+      promql:
+        conditions:
+          alertWhen: More
+          minNonNullValuesPercentage: 0
+          sampleThresholdPercentage: 100
+          threshold: "0"
+          timeWindow: FiveMinutes
+        searchQuery: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m]))
+          by (le, destination_workload)) > 0.2
+  labels:
+    severity: critical
+    slack_channel: '#observability'
+  name: app-latency
+  notificationGroups:
+    - notifications:
+        - integrationName: slack-general.slack.0
+          retriggeringPeriodMinutes: 5
+  severity: Critical
+status:
+  active: true
+  alertType:
+    metric:
+      promql:
+        conditions:
+          alertWhen: More
+          minNonNullValuesPercentage: 0
+          sampleThresholdPercentage: 100
+          threshold: "0"
+          timeWindow: FiveMinutes
+        searchQuery: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m]))
+          by (le, destination_workload)) > 0.2
+  labels:
+    severity: critical
+    slack_channel: '#observability'
+  name: app-latency
+  notificationGroups:
+    - notifications:
+        - integrationName: slack-general.slack.0
+          notifyOn: TriggeredOnly
+          retriggeringPeriodMinutes: 5
+  severity: Critical
+
+---
+
+apiVersion: coralogix.com/v1alpha1
+kind: Alert
+metadata:
+  finalizers:
+    - alert.coralogix.com/finalizer
+  labels:
+    app.coralogix.com/managed-by-alertmanger-config: "true"
+    app.kubernetes.io/managed-by: prometheus-example-rules
+  name: prometheus-example-rules-app-latency-1
+  namespace: default
+  ownerReferences:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      name: prometheus-example-rules
+spec:
+  active: true
+  alertType:
+    metric:
+      promql:
+        conditions:
+          alertWhen: More
+          minNonNullValuesPercentage: 0
+          sampleThresholdPercentage: 100
+          threshold: "0"
+          timeWindow: FiveMinutes
+        searchQuery: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m]))
+          by (le, destination_workload)) > 0.2
+  labels:
+    opsgenie_team: team1
+    severity: info
+    slack_channel: '#observability'
+  name: app-latency
+  notificationGroups:
+    - notifications:
+        - integrationName: slack-general.slack.0
+          retriggeringPeriodMinutes: 5
+        - integrationName: opsgenie-general.opsgenie.0
+          retriggeringPeriodMinutes: 5
+  severity: Info
+status:
+  active: true
+  alertType:
+    metric:
+      promql:
+        conditions:
+          alertWhen: More
+          minNonNullValuesPercentage: 0
+          sampleThresholdPercentage: 100
+          threshold: "0"
+          timeWindow: FiveMinutes
+        searchQuery: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m]))
+          by (le, destination_workload)) > 0.2
+  labels:
+    opsgenie_team: team1
+    severity: info
+    slack_channel: '#observability'
+  name: app-latency
+  notificationGroups:
+    - notifications:
+        - integrationName: opsgenie-general.opsgenie.0
+          notifyOn: TriggeredOnly
+          retriggeringPeriodMinutes: 5
+        - integrationName: slack-general.slack.0
+          notifyOn: TriggeredOnly
+          retriggeringPeriodMinutes: 5
+  severity: Info
+
+---
+
+apiVersion: coralogix.com/v1alpha1
+kind: Alert
+metadata:
+  labels:
+    app.coralogix.com/managed-by-alertmanger-config: "true"
+    app.kubernetes.io/managed-by: prometheus-example-rules
+  name: prometheus-example-rules-app-latency-2
+  namespace: default
+  ownerReferences:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      name: prometheus-example-rules
+spec:
+  active: true
+  alertType:
+    metric:
+      promql:
+        conditions:
+          alertWhen: More
+          minNonNullValuesPercentage: 0
+          sampleThresholdPercentage: 100
+          threshold: "0"
+          timeWindow: FiveMinutes
+        searchQuery: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m]))
+          by (le, destination_workload)) > 0.2
+  labels:
+    managed-by: coralogix-operator
+  name: app-latency
+  notificationGroups:
+    - notifications:
+        - integrationName: slack-default.slack.0
+          retriggeringPeriodMinutes: 5
+  severity: Info
+status:
+  active: true
+  alertType:
+    metric:
+      promql:
+        conditions:
+          alertWhen: More
+          minNonNullValuesPercentage: 0
+          sampleThresholdPercentage: 100
+          threshold: "0"
+          timeWindow: FiveMinutes
+        searchQuery: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m]))
+          by (le, destination_workload)) > 0.2
+  labels:
+    managed-by: coralogix-operator
+  name: app-latency
+  notificationGroups:
+    - notifications:
+        - integrationName: slack-default.slack.0
+          notifyOn: TriggeredOnly
+          retriggeringPeriodMinutes: 5
+  severity: Info

@@ -1,0 +1,92 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: config-example
+  labels:
+    alertmanagerConfig: example
+    app.coralogix.com/track-alertmanger-config: "true"
+spec:
+  route:
+    groupBy:
+      - alertname
+      - cluster
+      - alert_group
+      - job
+      - namespace
+      - severity
+      - priority
+    receiver: slack-default
+    routes:
+      - receiver: slack-general
+        matchers:
+          - matchType: "=~"
+            name: slack_channel
+            value: ".+"
+        continue: true
+      - receiver: opsgenie-general
+        matchers:
+          - matchType: "=~"
+            name: opsgenie_team
+            value: ".+"
+  receivers:
+    - name: slack-general
+      slackConfigs:
+        - sendResolved: true
+    - name: opsgenie-general
+      opsgenieConfigs:
+        - sendResolved: true
+          apiURL: https://api.opsgenie.com/
+    - name: slack-default
+      slackConfigs:
+        - sendResolved: true
+
+---
+
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: example
+    role: alert-rules
+    app.coralogix.com/track-recording-rules: "true"
+    app.coralogix.com/track-alerting-rules: "true"
+    app.coralogix.com/managed-by-alertmanger-config: "true"
+  name: prometheus-example-rules
+spec:
+  groups:
+    - name: example.rules
+      interval: "60s"
+      rules:
+        - record: ExampleRecord
+          expr: vector(1)
+        - record: ExampleRecord2
+          expr: vector(2)
+        - alert: app-latency
+          expr: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m])) by (le, destination_workload)) > 0.2
+          for: 5m
+          annotations:
+            cxMinNonNullValuesPercentage: "20"
+          labels:
+            severity: critical
+            slack_channel: "#observability"
+    - name: example.rules2
+      interval: "70s"
+      rules:
+        - record: ExampleRecord
+          expr: vector(3)
+        - record: ExampleRecord
+          expr: vector(4)
+        - alert: app-latency
+          expr: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m])) by (le, destination_workload)) > 0.2
+          for: 5m
+          annotations:
+            cxMinNonNullValuesPercentage: "20"
+          labels:
+            severity: info
+            slack_channel: "#observability"
+            opsgenie_team: "team1"
+        - alert: app-latency
+          expr: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m])) by (le, destination_workload)) > 0.2
+          for: 5m
+          annotations:
+            cxMinNonNullValuesPercentage: "20"
