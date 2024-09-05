@@ -97,70 +97,66 @@ func (r *AlertmanagerConfigReconciler) Reconcile(ctx context.Context, req ctrl.R
 }
 
 func (r *AlertmanagerConfigReconciler) convertAlertmanagerConfigToCxIntegrations(ctx context.Context, alertmanagerConfig *prometheus.AlertmanagerConfig) error {
+	outboundWebhook := &coralogixv1alpha1.OutboundWebhook{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: alertmanagerConfig.Namespace,
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion: alertmanagerConfig.APIVersion,
+					Kind:       alertmanagerConfig.Kind,
+					Name:       alertmanagerConfig.Name,
+					UID:        alertmanagerConfig.UID,
+				},
+			},
+		},
+	}
 	for _, receiver := range alertmanagerConfig.Spec.Receivers {
 		for i, opsGenieConfig := range receiver.OpsGenieConfigs {
-			name := fmt.Sprintf("%s.%s.%d", receiver.Name, "opsgenie", i)
-			outboundWebhook := &coralogixv1alpha1.OutboundWebhook{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: alertmanagerConfig.Namespace}}
-			if err := r.Get(ctx, client.ObjectKeyFromObject(outboundWebhook), outboundWebhook); err != nil {
+			opsGenieWebhook := outboundWebhook.DeepCopy()
+			opsGenieWebhook.Name = fmt.Sprintf("%s.%s.%d", receiver.Name, "opsgenie", i)
+			if err := r.Get(ctx, client.ObjectKeyFromObject(opsGenieWebhook), opsGenieWebhook); err != nil {
 				if errors.IsNotFound(err) {
-					outboundWebhook.Spec = coralogixv1alpha1.OutboundWebhookSpec{
-						Name: name,
-
+					opsGenieWebhook.Spec = coralogixv1alpha1.OutboundWebhookSpec{
+						Name: opsGenieWebhook.Name,
 						OutboundWebhookType: coralogixv1alpha1.OutboundWebhookType{
 							Opsgenie: &coralogixv1alpha1.Opsgenie{
 								Url: opsGenieConfig.APIURL,
 							},
 						},
 					}
-					outboundWebhook.OwnerReferences = []metav1.OwnerReference{
-						{
-							APIVersion: alertmanagerConfig.APIVersion,
-							Kind:       alertmanagerConfig.Kind,
-							Name:       alertmanagerConfig.Name,
-							UID:        alertmanagerConfig.UID,
-						},
-					}
-					if err = r.Create(ctx, outboundWebhook); err != nil {
+					if err = r.Create(ctx, opsGenieWebhook); err != nil {
 						return fmt.Errorf("received an error while trying to create OutboundWebhook CRD from alertmanagerConfig: %w", err)
 					}
 				} else {
 					return fmt.Errorf("received an error while trying to get OutboundWebhook CRD from alertmanagerConfig: %w", err)
 				}
 			} else {
-				if err = r.Update(ctx, outboundWebhook); err != nil {
+				if err = r.Update(ctx, opsGenieWebhook); err != nil {
 					return fmt.Errorf("received an error while trying to update OutboundWebhook CRD from alertmanagerConfig: %w", err)
 				}
 			}
 		}
 		for i := range receiver.SlackConfigs {
-			name := fmt.Sprintf("%s.%s.%d", receiver.Name, "slack", i)
-			outboundWebhook := &coralogixv1alpha1.OutboundWebhook{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: alertmanagerConfig.Namespace}}
-			if err := r.Get(ctx, client.ObjectKeyFromObject(outboundWebhook), outboundWebhook); err != nil {
+			slackWebhook := outboundWebhook.DeepCopy()
+			slackWebhook.Name = fmt.Sprintf("%s.%s.%d", receiver.Name, "slack", i)
+			if err := r.Get(ctx, client.ObjectKeyFromObject(slackWebhook), slackWebhook); err != nil {
 				if errors.IsNotFound(err) {
-					outboundWebhook.Spec = coralogixv1alpha1.OutboundWebhookSpec{
-						Name: name,
+					slackWebhook.Spec = coralogixv1alpha1.OutboundWebhookSpec{
+						Name: slackWebhook.Name,
 						OutboundWebhookType: coralogixv1alpha1.OutboundWebhookType{
 							Slack: &coralogixv1alpha1.Slack{
 								Url: "https://slack.com/api/chat.postMessage",
 							},
 						},
 					}
-					outboundWebhook.OwnerReferences = []metav1.OwnerReference{
-						{
-							APIVersion: alertmanagerConfig.APIVersion,
-							Kind:       alertmanagerConfig.Kind,
-							Name:       alertmanagerConfig.Name,
-							UID:        alertmanagerConfig.UID,
-						},
-					}
-					if err = r.Create(ctx, outboundWebhook); err != nil {
+					if err = r.Create(ctx, slackWebhook); err != nil {
 						return fmt.Errorf("received an error while trying to create OutboundWebhook CRD from alertmanagerConfig: %w", err)
 					}
 				} else {
 					return fmt.Errorf("received an error while trying to get OutboundWebhook CRD from alertmanagerConfig: %w", err)
 				}
 			} else {
-				if err = r.Update(ctx, outboundWebhook); err != nil {
+				if err = r.Update(ctx, slackWebhook); err != nil {
 					return fmt.Errorf("received an error while trying to update OutboundWebhook CRD from alertmanagerConfig: %w", err)
 				}
 			}
