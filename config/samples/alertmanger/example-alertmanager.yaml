@@ -22,12 +22,14 @@ spec:
           - matchType: "=~"
             name: slack_channel
             value: ".+"
+        repeatInterval: 3h
         continue: true
       - receiver: opsgenie-general
         matchers:
           - matchType: "=~"
             name: opsgenie_team
             value: ".+"
+        repeatInterval: 4m
   receivers:
     - name: slack-general
       slackConfigs:

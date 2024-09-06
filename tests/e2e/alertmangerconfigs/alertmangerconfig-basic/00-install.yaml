@@ -16,6 +16,7 @@ spec:
       - severity
       - priority
     receiver: slack-default
+    repeatInterval: 2m
     routes:
       - receiver: slack-general
         matchers:
@@ -23,11 +24,13 @@ spec:
             name: slack_channel
             value: ".+"
         continue: true
+        repeatInterval: 3m
       - receiver: opsgenie-general
         matchers:
           - matchType: "=~"
             name: opsgenie_team
             value: ".+"
+        repeatInterval: 4m
   receivers:
     - name: slack-general
       slackConfigs:
@@ -56,10 +59,10 @@ spec:
     - name: example.rules
       interval: "60s"
       rules:
-        - record: ExampleRecord
-          expr: vector(1)
-        - record: ExampleRecord2
-          expr: vector(2)
+#        - record: ExampleRecord
+#          expr: vector(1)
+#        - record: ExampleRecord2
+#          expr: vector(2)
         - alert: app-latency
           expr: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m])) by (le, destination_workload)) > 0.2
           for: 5m
@@ -71,10 +74,10 @@ spec:
     - name: example.rules2
       interval: "70s"
       rules:
-        - record: ExampleRecord
-          expr: vector(3)
-        - record: ExampleRecord
-          expr: vector(4)
+#        - record: ExampleRecord
+#          expr: vector(3)
+#        - record: ExampleRecord
+#          expr: vector(4)
         - alert: app-latency
           expr: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m])) by (le, destination_workload)) > 0.2
           for: 5m

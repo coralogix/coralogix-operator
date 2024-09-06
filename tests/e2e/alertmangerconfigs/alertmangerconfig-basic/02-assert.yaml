@@ -32,7 +32,7 @@ spec:
   notificationGroups:
     - notifications:
         - integrationName: slack-general.slack.0
-          retriggeringPeriodMinutes: 5
+          retriggeringPeriodMinutes: 3
   severity: Critical
 status:
   active: true
@@ -55,7 +55,7 @@ status:
     - notifications:
         - integrationName: slack-general.slack.0
           notifyOn: TriggeredOnly
-          retriggeringPeriodMinutes: 5
+          retriggeringPeriodMinutes: 3
   severity: Critical
 
 ---
@@ -94,9 +94,9 @@ spec:
   notificationGroups:
     - notifications:
         - integrationName: slack-general.slack.0
-          retriggeringPeriodMinutes: 5
+          retriggeringPeriodMinutes: 3
         - integrationName: opsgenie-general.opsgenie.0
-          retriggeringPeriodMinutes: 5
+          retriggeringPeriodMinutes: 4
   severity: Info
 status:
   active: true
@@ -120,10 +120,10 @@ status:
     - notifications:
         - integrationName: opsgenie-general.opsgenie.0
           notifyOn: TriggeredOnly
-          retriggeringPeriodMinutes: 5
+          retriggeringPeriodMinutes: 4
         - integrationName: slack-general.slack.0
           notifyOn: TriggeredOnly
-          retriggeringPeriodMinutes: 5
+          retriggeringPeriodMinutes: 3
   severity: Info
 
 ---
@@ -158,7 +158,7 @@ spec:
   notificationGroups:
     - notifications:
         - integrationName: slack-default.slack.0
-          retriggeringPeriodMinutes: 5
+          retriggeringPeriodMinutes: 2
   severity: Info
 status:
   active: true
@@ -180,5 +180,5 @@ status:
     - notifications:
         - integrationName: slack-default.slack.0
           notifyOn: TriggeredOnly
-          retriggeringPeriodMinutes: 5
+          retriggeringPeriodMinutes: 2
   severity: Info
