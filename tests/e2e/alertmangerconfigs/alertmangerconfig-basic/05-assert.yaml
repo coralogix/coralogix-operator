@@ -30,7 +30,15 @@ spec:
     slack_channel: '#observability'
   name: app-latency
   notificationGroups:
-    - notifications:
+    - groupByFields:
+        - alertname
+        - cluster
+        - alert_group
+        - job
+        - namespace
+        - severity
+        - priority
+      notifications:
         - integrationName: slack-general.slack.0
           retriggeringPeriodMinutes: 4
   severity: Critical
@@ -52,7 +60,15 @@ status:
     slack_channel: '#observability'
   name: app-latency
   notificationGroups:
-    - notifications:
+    - groupByFields:
+        - alertname
+        - cluster
+        - alert_group
+        - job
+        - namespace
+        - severity
+        - priority
+      notifications:
         - integrationName: slack-general.slack.0
           notifyOn: TriggeredOnly
           retriggeringPeriodMinutes: 4
@@ -92,7 +108,15 @@ spec:
     slack_channel: '#observability'
   name: app-latency
   notificationGroups:
-    - notifications:
+    - groupByFields:
+        - alertname
+        - cluster
+        - alert_group
+        - job
+        - namespace
+        - severity
+        - priority
+      notifications:
         - integrationName: slack-general.slack.0
           retriggeringPeriodMinutes: 4
   severity: Info
@@ -115,7 +139,15 @@ status:
     slack_channel: '#observability'
   name: app-latency
   notificationGroups:
-    - notifications:
+    - groupByFields:
+        - alertname
+        - cluster
+        - alert_group
+        - job
+        - namespace
+        - severity
+        - priority
+      notifications:
         - integrationName: slack-general.slack.0
           notifyOn: TriggeredOnly
           retriggeringPeriodMinutes: 4
@@ -125,6 +157,8 @@ status:
 apiVersion: coralogix.com/v1alpha1
 kind: Alert
 metadata:
+  finalizers:
+    - alert.coralogix.com/finalizer
   labels:
     app.coralogix.com/managed-by-alertmanger-config: "true"
     app.kubernetes.io/managed-by: prometheus-example-rules
@@ -147,11 +181,17 @@ spec:
           timeWindow: FiveMinutes
         searchQuery: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m]))
           by (le, destination_workload)) > 0.2
-  labels:
-    managed-by: coralogix-operator
   name: app-latency
   notificationGroups:
-    - notifications:
+    - groupByFields:
+        - alertname
+        - cluster
+        - alert_group
+        - job
+        - namespace
+        - severity
+        - priority
+      notifications:
         - integrationName: slack-default.slack.0
           retriggeringPeriodMinutes: 3
   severity: Info
@@ -172,8 +212,17 @@ status:
     managed-by: coralogix-operator
   name: app-latency
   notificationGroups:
-    - notifications:
+    - groupByFields:
+        - alertname
+        - cluster
+        - alert_group
+        - job
+        - namespace
+        - severity
+        - priority
+      notifications:
         - integrationName: slack-default.slack.0
           notifyOn: TriggeredOnly
           retriggeringPeriodMinutes: 3
   severity: Info
+

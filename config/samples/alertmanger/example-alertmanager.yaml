@@ -16,15 +16,17 @@ spec:
       - severity
       - priority
     receiver: slack-default
+    repeatInterval: 3h
     routes:
       - receiver: slack-general
         matchers:
           - matchType: "=~"
             name: slack_channel
             value: ".+"
-        repeatInterval: 3h
         continue: true
       - receiver: opsgenie-general
+        groupBy:
+          - alertname
         matchers:
           - matchType: "=~"
             name: opsgenie_team

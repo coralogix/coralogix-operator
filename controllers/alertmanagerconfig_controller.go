@@ -224,33 +224,48 @@ func matchedRoutesToMatchedReceiversMap(matchedRoutes []*prometheus.Route, allRe
 }
 
 func generateNotificationGroupFromRoutes(matchedRouts []*prometheus.Route, matchedReceivers map[string]*prometheus.Receiver) ([]coralogixv1alpha1.NotificationGroup, error) {
-	var notifications []coralogixv1alpha1.Notification
+	var notificationsGroups []coralogixv1alpha1.NotificationGroup
 	for _, route := range matchedRouts {
 		receiver, ok := matchedReceivers[route.Receiver]
 		if !ok || receiver == nil {
 			continue
 		}
 
-		if route.RepeatInterval == "" {
-			route.RepeatInterval = "4h"
-		}
-		RepeatIntervalDuration, err := time.ParseDuration(route.RepeatInterval)
+		retriggeringPeriodMinutes, err := getRetriggeringPeriodMinutes(route)
 		if err != nil {
-			return nil, fmt.Errorf("received an error while trying to parse RepeatInterval: %w", err)
+			return nil, err
 		}
-		retriggeringPeriodMinutes := int32(RepeatIntervalDuration.Minutes())
+
+		var notificationsGroup = coralogixv1alpha1.NotificationGroup{
+			GroupByFields: route.GroupBy,
+			Notifications: []coralogixv1alpha1.Notification{},
+		}
 
 		for i := range receiver.SlackConfigs {
 			webhookName := fmt.Sprintf("%s.%s.%d", receiver.Name, "slack", i)
-			notifications = append(notifications, webhookNameToAlertNotification(webhookName, retriggeringPeriodMinutes))
+			notificationsGroup.Notifications = append(notificationsGroup.Notifications, webhookNameToAlertNotification(webhookName, retriggeringPeriodMinutes))
 		}
 		for i := range receiver.OpsGenieConfigs {
 			webhookName := fmt.Sprintf("%s.%s.%d", receiver.Name, "opsgenie", i)
-			notifications = append(notifications, webhookNameToAlertNotification(webhookName, retriggeringPeriodMinutes))
+			notificationsGroup.Notifications = append(notificationsGroup.Notifications, webhookNameToAlertNotification(webhookName, retriggeringPeriodMinutes))
 		}
+
+		notificationsGroups = append(notificationsGroups, notificationsGroup)
 	}
 
-	return []coralogixv1alpha1.NotificationGroup{{Notifications: notifications}}, nil
+	return notificationsGroups, nil
+}
+
+func getRetriggeringPeriodMinutes(route *prometheus.Route) (int32, error) {
+	if route.RepeatInterval == "" {
+		route.RepeatInterval = "4h"
+	}
+	RepeatIntervalDuration, err := time.ParseDuration(route.RepeatInterval)
+	if err != nil {
+		return 0, fmt.Errorf("received an error while trying to parse RepeatInterval: %w", err)
+	}
+	retriggeringPeriodMinutes := int32(RepeatIntervalDuration.Minutes())
+	return retriggeringPeriodMinutes, nil
 }
 
 func webhookNameToAlertNotification(webhookName string, retriggeringPeriodMinutes int32) coralogixv1alpha1.Notification {
@@ -296,6 +311,12 @@ func Match(r *prometheus.Route, lset model.LabelSet) ([]*prometheus.Route, error
 	}
 
 	for _, cr := range crs {
+		if cr.RepeatInterval == "" {
+			cr.RepeatInterval = r.RepeatInterval
+		}
+		if cr.GroupBy == nil {
+			cr.GroupBy = append([]string{}, r.GroupBy...)
+		}
 		matches, err := Match(&cr, lset)
 		if err != nil {
 			return nil, err
