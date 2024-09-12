@@ -35,11 +35,14 @@ spec:
   receivers:
     - name: slack-general
       slackConfigs:
-        - sendResolved: true
+        - apiURL:
+            name: "slack-webhook-secret" # Name of the Kubernetes Secret
+            key: "webhook-url"          # Key in the Kubernetes Secret
     - name: opsgenie-general
       opsgenieConfigs:
-        - sendResolved: true
-          apiURL: https://api.opsgenie.com/
+        - apiURL: https://api.opsgenie.com/v2/alerts
     - name: slack-default
       slackConfigs:
-        - sendResolved: true
+        - apiURL:
+            name: "slack-webhook-secret" # Name of the Kubernetes Secret
+            key: "webhook-url"          # Key in the Kubernetes Secret
