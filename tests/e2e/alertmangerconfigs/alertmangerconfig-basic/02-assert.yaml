@@ -1,240 +1,67 @@
 apiVersion: coralogix.com/v1alpha1
-kind: Alert
+kind: OutboundWebhook
 metadata:
   finalizers:
-    - alert.coralogix.com/finalizer
-  labels:
-    app.coralogix.com/managed-by-alertmanger-config: "true"
-    app.kubernetes.io/managed-by: prometheus-example-rules
-  name: prometheus-example-rules-app-latency-0
+    - outbound-webhook.coralogix.com/finalizer
+  name: opsgenie-general.opsgenie.0
   namespace: default
   ownerReferences:
-    - apiVersion: monitoring.coreos.com/v1
-      kind: PrometheusRule
-      name: prometheus-example-rules
+    - apiVersion: monitoring.coreos.com/v1alpha1
+      kind: AlertmanagerConfig
+      name: config-example
 spec:
-  active: true
-  alertType:
-    metric:
-      promql:
-        conditions:
-          alertWhen: More
-          minNonNullValuesPercentage: 0
-          sampleThresholdPercentage: 100
-          threshold: "0"
-          timeWindow: FiveMinutes
-        searchQuery: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m]))
-          by (le, destination_workload)) > 0.2
-  labels:
-    severity: critical
-    slack_channel: '#observability'
-  name: app-latency
-  notificationGroups:
-    - groupByFields:
-        - alertname
-        - cluster
-        - alert_group
-        - job
-        - namespace
-        - severity
-        - priority
-      notifications:
-        - integrationName: slack-general.slack.0
-          retriggeringPeriodMinutes: 3
-  severity: Critical
+  name: opsgenie-general.opsgenie.0
+  outboundWebhookType:
+    opsgenie:
+      url: https://api.opsgenie.com/
 status:
-  active: true
-  alertType:
-    metric:
-      promql:
-        conditions:
-          alertWhen: More
-          minNonNullValuesPercentage: 0
-          sampleThresholdPercentage: 100
-          threshold: "0"
-          timeWindow: FiveMinutes
-        searchQuery: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m]))
-          by (le, destination_workload)) > 0.2
-  labels:
-    severity: critical
-    slack_channel: '#observability'
-  name: app-latency
-  notificationGroups:
-    - groupByFields:
-        - alertname
-        - cluster
-        - alert_group
-        - job
-        - namespace
-        - severity
-        - priority
-      notifications:
-        - integrationName: slack-general.slack.0
-          notifyOn: TriggeredOnly
-          retriggeringPeriodMinutes: 3
-  severity: Critical
+  name: opsgenie-general.opsgenie.0
+  outboundWebhookType:
+    opsgenie:
+      url: https://api.opsgenie.com/
 
 ---
 apiVersion: coralogix.com/v1alpha1
-kind: Alert
+kind: OutboundWebhook
 metadata:
   finalizers:
-    - alert.coralogix.com/finalizer
-  labels:
-    app.coralogix.com/managed-by-alertmanger-config: "true"
-    app.kubernetes.io/managed-by: prometheus-example-rules
-  name: prometheus-example-rules-app-latency-1
+    - outbound-webhook.coralogix.com/finalizer
+  name: slack-default.slack.0
   namespace: default
   ownerReferences:
-    - apiVersion: monitoring.coreos.com/v1
-      kind: PrometheusRule
-      name: prometheus-example-rules
+    - apiVersion: monitoring.coreos.com/v1alpha1
+      kind: AlertmanagerConfig
+      name: config-example
 spec:
-  active: true
-  alertType:
-    metric:
-      promql:
-        conditions:
-          alertWhen: More
-          minNonNullValuesPercentage: 0
-          sampleThresholdPercentage: 100
-          threshold: "0"
-          timeWindow: FiveMinutes
-        searchQuery: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m]))
-          by (le, destination_workload)) > 0.2
-  labels:
-    opsgenie_team: team1
-    severity: info
-    slack_channel: '#observability'
-  name: app-latency
-  notificationGroups:
-    - groupByFields:
-        - alertname
-        - cluster
-        - alert_group
-        - job
-        - namespace
-        - severity
-        - priority
-      notifications:
-        - integrationName: slack-general.slack.0
-          retriggeringPeriodMinutes: 3
-    - groupByFields:
-        - coralogix.metadata.sdkId
-      notifications:
-        - integrationName: opsgenie-general.opsgenie.0
-          retriggeringPeriodMinutes: 2
-  severity: Info
+  name: slack-default.slack.0
+  outboundWebhookType:
+    slack:
+      url: https://slack.com/api/chat.postMessage
 status:
-  active: true
-  alertType:
-    metric:
-      promql:
-        conditions:
-          alertWhen: More
-          minNonNullValuesPercentage: 0
-          sampleThresholdPercentage: 100
-          threshold: "0"
-          timeWindow: FiveMinutes
-        searchQuery: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m]))
-          by (le, destination_workload)) > 0.2
-  labels:
-    opsgenie_team: team1
-    severity: info
-    slack_channel: '#observability'
-  name: app-latency
-  notificationGroups:
-    - groupByFields:
-        - alertname
-        - cluster
-        - alert_group
-        - job
-        - namespace
-        - severity
-        - priority
-      notifications:
-        - integrationName: slack-general.slack.0
-          notifyOn: TriggeredOnly
-          retriggeringPeriodMinutes: 3
-    - groupByFields:
-        - coralogix.metadata.sdkId
-      notifications:
-        - integrationName: opsgenie-general.opsgenie.0
-          notifyOn: TriggeredOnly
-          retriggeringPeriodMinutes: 2
-  severity: Info
-
+  name: slack-default.slack.0
+  outboundWebhookType:
+    slack:
+      url: https://slack.com/api/chat.postMessage
 
 ---
 apiVersion: coralogix.com/v1alpha1
-kind: Alert
+kind: OutboundWebhook
 metadata:
   finalizers:
-    - alert.coralogix.com/finalizer
-  labels:
-    app.coralogix.com/managed-by-alertmanger-config: "true"
-    app.kubernetes.io/managed-by: prometheus-example-rules
-  name: prometheus-example-rules-app-latency-2
+    - outbound-webhook.coralogix.com/finalizer
+  name: slack-general.slack.0
   namespace: default
   ownerReferences:
-    - apiVersion: monitoring.coreos.com/v1
-      kind: PrometheusRule
-      name: prometheus-example-rules
+    - apiVersion: monitoring.coreos.com/v1alpha1
+      kind: AlertmanagerConfig
+      name: config-example
 spec:
-  active: true
-  alertType:
-    metric:
-      promql:
-        conditions:
-          alertWhen: More
-          minNonNullValuesPercentage: 0
-          sampleThresholdPercentage: 100
-          threshold: "0"
-          timeWindow: FiveMinutes
-        searchQuery: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m]))
-          by (le, destination_workload)) > 0.2
-  name: app-latency
-  notificationGroups:
-    - groupByFields:
-        - alertname
-        - cluster
-        - alert_group
-        - job
-        - namespace
-        - severity
-        - priority
-      notifications:
-        - integrationName: slack-default.slack.0
-          retriggeringPeriodMinutes: 2
-  severity: Info
+  name: slack-general.slack.0
+  outboundWebhookType:
+    slack:
+      url: https://slack.com/api/chat.postMessage
 status:
-  active: true
-  alertType:
-    metric:
-      promql:
-        conditions:
-          alertWhen: More
-          minNonNullValuesPercentage: 0
-          sampleThresholdPercentage: 100
-          threshold: "0"
-          timeWindow: FiveMinutes
-        searchQuery: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m]))
-          by (le, destination_workload)) > 0.2
-  labels:
-    managed-by: coralogix-operator
-  name: app-latency
-  notificationGroups:
-    - groupByFields:
-        - alertname
-        - cluster
-        - alert_group
-        - job
-        - namespace
-        - severity
-        - priority
-      notifications:
-        - integrationName: slack-default.slack.0
-          notifyOn: TriggeredOnly
-          retriggeringPeriodMinutes: 2
-  severity: Info
-
+  name: slack-general.slack.0
+  outboundWebhookType:
+    slack:
+      url: https://slack.com/api/chat.postMessage
