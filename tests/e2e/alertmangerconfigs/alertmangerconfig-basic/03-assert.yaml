@@ -193,19 +193,21 @@ spec:
           timeWindow: FiveMinutes
         searchQuery: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m]))
           by (le, destination_workload)) > 0.2
+  labels:
+    managed-by: coralogix-operator
   name: app-latency
-  notificationGroups:
-    - groupByFields:
-        - alertname
-        - cluster
-        - alert_group
-        - job
-        - namespace
-        - severity
-        - priority
-      notifications:
-        - integrationName: slack-default.slack.0
-          retriggeringPeriodMinutes: 2
+#  notificationGroups:
+#    - groupByFields:
+#        - alertname
+#        - cluster
+#        - alert_group
+#        - job
+#        - namespace
+#        - severity
+#        - priority
+#      notifications:
+#        - integrationName: slack-default.slack.0
+#          retriggeringPeriodMinutes: 2
   severity: Info
 status:
   active: true
@@ -223,18 +225,18 @@ status:
   labels:
     managed-by: coralogix-operator
   name: app-latency
-  notificationGroups:
-    - groupByFields:
-        - alertname
-        - cluster
-        - alert_group
-        - job
-        - namespace
-        - severity
-        - priority
-      notifications:
-        - integrationName: slack-default.slack.0
-          notifyOn: TriggeredOnly
-          retriggeringPeriodMinutes: 2
+#  notificationGroups:
+#    - groupByFields:
+#        - alertname
+#        - cluster
+#        - alert_group
+#        - job
+#        - namespace
+#        - severity
+#        - priority
+#      notifications:
+#        - integrationName: slack-default.slack.0
+#          notifyOn: TriggeredOnly
+#          retriggeringPeriodMinutes: 2
   severity: Info
 
