@@ -22,6 +22,7 @@ import (
 	"os"
 
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	prometheusv1alpha "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"k8s.io/utils/strings/slices"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
@@ -64,6 +65,8 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(coralogixv1alpha1.AddToScheme(scheme))
+
+	utilruntime.Must(prometheusv1alpha.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -176,6 +179,16 @@ func main() {
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "OutboundWebhook")
 		os.Exit(1)
+	}
+	if prometheusRuleController {
+		if err = (&controllers.AlertmanagerConfigReconciler{
+			CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),
+			Client:             mgr.GetClient(),
+			Scheme:             mgr.GetScheme(),
+		}).SetupWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", "RecordingRuleGroup")
+			os.Exit(1)
+		}
 	}
 	//+kubebuilder:scaffold:builder
 

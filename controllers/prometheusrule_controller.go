@@ -51,7 +51,7 @@ func (r *PrometheusRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	log := log.FromContext(ctx)
 
 	prometheusRule := &prometheus.PrometheusRule{}
-	if err := r.Get(ctx, req.NamespacedName, prometheusRule); err != nil && !errors.IsNotFound(err) {
+	if err := r.Get(ctx, req.NamespacedName, prometheusRule); err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
@@ -184,6 +184,9 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 						},
 					}
 					alertCRD.Labels = map[string]string{"app.kubernetes.io/managed-by": prometheusRule.Name}
+					if val, ok := prometheusRule.Labels["app.coralogix.com/managed-by-alertmanger-config"]; ok {
+						alertCRD.Labels["app.coralogix.com/managed-by-alertmanger-config"] = val
+					}
 					if err = r.Create(ctx, alertCRD); err != nil {
 						return fmt.Errorf("received an error while trying to create Alert CRD: %w", err)
 					}
@@ -202,6 +205,9 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 					Name:       prometheusRule.Name,
 					UID:        prometheusRule.UID,
 				},
+			}
+			if val, ok := prometheusRule.Labels["app.coralogix.com/managed-by-alertmanger-config"]; ok {
+				alertCRD.Labels["app.coralogix.com/managed-by-alertmanger-config"] = val
 			}
 			if err := r.Update(ctx, alertCRD); err != nil {
 				return fmt.Errorf("received an error while trying to update Alert CRD: %w", err)
@@ -317,6 +323,7 @@ func prometheusRuleToCoralogixAlertSpec(prometheusRule prometheus.Rule) coralogi
 				},
 			},
 		},
+		Labels: prometheusRule.Labels,
 	}
 }
 

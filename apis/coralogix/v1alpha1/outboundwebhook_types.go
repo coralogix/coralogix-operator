@@ -287,7 +287,9 @@ var (
 )
 
 type Slack struct {
-	Digests     []SlackConfigDigest     `json:"digests"`
+	// +optional
+	Digests []SlackConfigDigest `json:"digests"`
+	// +optional
 	Attachments []SlackConfigAttachment `json:"attachments"`
 	Url         string                  `json:"url"`
 }

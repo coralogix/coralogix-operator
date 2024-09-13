@@ -178,8 +178,6 @@ spec:
                       url:
                         type: string
                     required:
-                    - attachments
-                    - digests
                     - url
                     type: object
                 type: object
@@ -342,8 +340,6 @@ spec:
                       url:
                         type: string
                     required:
-                    - attachments
-                    - digests
                     - url
                     type: object
                 type: object
