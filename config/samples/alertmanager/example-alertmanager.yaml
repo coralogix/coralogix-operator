@@ -7,6 +7,14 @@ metadata:
     app.coralogix.com/track-alertmanger-config: "true"
 spec:
   route:
+    groupBy:
+      - alertname
+      - cluster
+      - alert_group
+      - job
+      - namespace
+      - severity
+      - priority
     receiver: slack-default
     repeatInterval: 3h
     routes:
@@ -17,6 +25,8 @@ spec:
             value: ".+"
         continue: true
       - receiver: opsgenie-general
+        groupBy:
+          - alertname
         matchers:
           - matchType: "=~"
             name: opsgenie_team
