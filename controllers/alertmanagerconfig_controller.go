@@ -286,9 +286,9 @@ func matchedRoutesToMatchedReceiversMap(matchedRoutes []*prometheus.Route, allRe
 	return matchedReceiversMap
 }
 
-func generateNotificationGroupFromRoutes(matchedRouts []*prometheus.Route, matchedReceivers map[string]*prometheus.Receiver) ([]coralogixv1alpha1.NotificationGroup, error) {
+func generateNotificationGroupFromRoutes(matchedRoutes []*prometheus.Route, matchedReceivers map[string]*prometheus.Receiver) ([]coralogixv1alpha1.NotificationGroup, error) {
 	var notificationsGroups []coralogixv1alpha1.NotificationGroup
-	for _, route := range matchedRouts {
+	for _, route := range matchedRoutes {
 		receiver, ok := matchedReceivers[route.Receiver]
 		if !ok || receiver == nil {
 			continue
@@ -304,13 +304,13 @@ func generateNotificationGroupFromRoutes(matchedRouts []*prometheus.Route, match
 			Notifications: []coralogixv1alpha1.Notification{},
 		}
 
-		for i := range receiver.SlackConfigs {
+		for i, conf := range receiver.SlackConfigs {
 			webhookName := fmt.Sprintf("%s.%s.%d", receiver.Name, "slack", i)
-			notificationsGroup.Notifications = append(notificationsGroup.Notifications, webhookNameToAlertNotification(webhookName, retriggeringPeriodMinutes))
+			notificationsGroup.Notifications = append(notificationsGroup.Notifications, webhookNameToAlertNotification(webhookName, retriggeringPeriodMinutes, conf.SendResolved))
 		}
-		for i := range receiver.OpsGenieConfigs {
+		for i, conf := range receiver.OpsGenieConfigs {
 			webhookName := fmt.Sprintf("%s.%s.%d", receiver.Name, "opsgenie", i)
-			notificationsGroup.Notifications = append(notificationsGroup.Notifications, webhookNameToAlertNotification(webhookName, retriggeringPeriodMinutes))
+			notificationsGroup.Notifications = append(notificationsGroup.Notifications, webhookNameToAlertNotification(webhookName, retriggeringPeriodMinutes, conf.SendResolved))
 		}
 
 		notificationsGroups = append(notificationsGroups, notificationsGroup)
@@ -331,10 +331,17 @@ func getRetriggeringPeriodMinutes(route *prometheus.Route) (int32, error) {
 	return retriggeringPeriodMinutes, nil
 }
 
-func webhookNameToAlertNotification(webhookName string, retriggeringPeriodMinutes int32) coralogixv1alpha1.Notification {
+func webhookNameToAlertNotification(webhookName string, retriggeringPeriodMinutes int32, notifyOnResolve *bool) coralogixv1alpha1.Notification {
+	var notifyOn string
+	if notifyOnResolve != nil && *notifyOnResolve {
+		notifyOn = coralogixv1alpha1.NotifyOnTriggeredAndResolved
+	} else {
+		notifyOn = coralogixv1alpha1.NotifyOnTriggeredOnly
+	}
 	return coralogixv1alpha1.Notification{
 		IntegrationName:           pointer.String(webhookName),
 		RetriggeringPeriodMinutes: retriggeringPeriodMinutes,
+		NotifyOn:                  coralogixv1alpha1.NotifyOn(notifyOn),
 	}
 }
 
