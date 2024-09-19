@@ -317,9 +317,8 @@ func generateNotificationGroupFromRoutes(matchedRoutes []*prometheus.Route, matc
 	}
 	if len(notificationsGroups) == 0 {
 		return nil, nil
-	} else {
-		return notificationsGroups, nil
 	}
+	return notificationsGroups, nil
 }
 
 func getRetriggeringPeriodMinutes(route *prometheus.Route) (int32, error) {
