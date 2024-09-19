@@ -4,7 +4,7 @@ testDirs:
   - tests/e2e/alerts
   - tests/e2e/rulegroups
   - tests/e2e/recordingrulegroupsets
-  - tests/e2e/promatheusrules
+  - tests/e2e/prometheusrules
   - tests/e2e/outboundwebhooks
   - tests/e2e/alertmangerconfigs
 namespace: default
