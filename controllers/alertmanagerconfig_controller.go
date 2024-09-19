@@ -257,7 +257,7 @@ func (r *AlertmanagerConfigReconciler) deleteWebhooksFromRelatedAlerts(ctx conte
 	}
 
 	for _, alert := range alerts.Items {
-		alert.Spec.NotificationGroups = []coralogixv1alpha1.NotificationGroup{{}}
+		alert.Spec.NotificationGroups = nil
 		if err := r.Update(ctx, &alert); err != nil {
 			return fmt.Errorf("received an error while trying to update Alert CRD from AlertmanagerConfig: %w", err)
 		}
