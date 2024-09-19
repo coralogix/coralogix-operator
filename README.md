@@ -29,22 +29,25 @@ You’ll need a Kubernetes cluster to run against. You can use [KIND](https://si
 make install
 ```
 
-2. Install Instances of Custom Resources:
-
+2. Add the api key and region as environment variables (or later as flags):
 ```sh
-kubectl apply -f config/samples/
+$ export CORALOGIX_API_KEY="<api-key>"
+$ export CORALOGIX_REGION="<region>"
 ```
 
 3. Build and push your image to the location specified by `IMG`:
-	
 ```sh
 make docker-build docker-push IMG=<some-registry>/coralogix-operator:tag
 ```
-	
-4. Deploy the controller to the cluster with the image specified by `IMG`:
 
+4. Deploy the controller to the cluster with the image specified by `IMG`:
 ```sh
 make deploy IMG=<some-registry>/coralogix-operator:tag
+```
+
+5. Install custom resources samples into the cluster:
+```sh
+kubectl apply -R -f config/samples/
 ```
 
 ### Uninstall CRDs
