@@ -49,12 +49,17 @@ var (
 	setupLog        = ctrl.Log.WithName("setup")
 	regionToGrpcUrl = map[string]string{
 		"APAC1":   "ng-api-grpc.app.coralogix.in:443",
+		"AP1":     "ng-api-grpc.app.coralogix.in:443",
 		"APAC2":   "ng-api-grpc.coralogixsg.com:443",
+		"AP2":     "ng-api-grpc.coralogixsg.com:443",
 		"EUROPE1": "ng-api-grpc.coralogix.com:443",
+		"EU1":     "ng-api-grpc.coralogix.com:443",
 		"EUROPE2": "ng-api-grpc.eu2.coralogix.com:443",
+		"EU2":     "ng-api-grpc.eu2.coralogix.com:443",
 		"USA1":    "ng-api-grpc.coralogix.us:443",
-		"STG":     "ng-api-grpc.app.staging.coralogix.net:443",
+		"US1":     "ng-api-grpc.coralogix.us:443",
 		"USA2":    "ng-api-grpc.cx498.coralogix.com:443",
+		"US2":     "ng-api-grpc.cx498.coralogix.com:443",
 	}
 	validRegions = utils.GetKeys(regionToGrpcUrl)
 )

@@ -54,4 +54,4 @@ spec:
         - "--metrics-bind-address=127.0.0.1:8080"
         - "--leader-elect"
         - "--api-key=xxx"
-        - "--region=EUROPE2"
+        - "--region=EU2"

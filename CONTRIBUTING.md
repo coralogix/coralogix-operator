@@ -34,7 +34,7 @@ Add the region and api-key as environment variables (or later as flags).
 
 ```sh
 $ export CORALOGIX_API_KEY="xxx-xxx-xxx"
-$ export CORALOGIX_REGION = "EUROPE2"
+$ export CORALOGIX_REGION = "EU2"
 ```
 
 Run the operator locally
@@ -43,7 +43,7 @@ $ go run main.go
 ```
 Or with `regin` and `api-key` flags
 ```sh
-$ go run main.go -region EUROPE2 -api-key xxx-xxx-xxx
+$ go run main.go -region EU2 -api-key xxx-xxx-xxx
 ```
 For not running the prometheusRule controller set the `prometheus-rule-controller` flag to `false`
 ```sh
