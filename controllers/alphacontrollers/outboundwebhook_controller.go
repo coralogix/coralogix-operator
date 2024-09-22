@@ -47,9 +47,9 @@ type OutboundWebhookReconciler struct {
 	Scheme                 *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=coralogix.coralogix.com,resources=outboundwebhooks,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=coralogix.coralogix.com,resources=outboundwebhooks/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=coralogix.coralogix.com,resources=outboundwebhooks/finalizers,verbs=update
+//+kubebuilder:rbac:groups=coralogix.com,resources=outboundwebhooks,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=coralogix.com,resources=outboundwebhooks/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=coralogix.com,resources=outboundwebhooks/finalizers,verbs=update
 
 var (
 	outboundWebhookFinalizerName = "outbound-webhook.coralogix.com/finalizer"
