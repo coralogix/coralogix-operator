@@ -36,6 +36,6 @@ jobs:
           CORALOGIX_REGION: ${{ secrets.CORALOGIX_REGION }}
           CORALOGIX_API_KEY: ${{ secrets.CORALOGIX_API_KEY }}
         run: |
-          go run main.go &
+          go run -ldflags="-X google.golang.org/protobuf/reflect/protoregistry.conflictPolicy=warn" main.go &
           sleep 30s
           make e2e
