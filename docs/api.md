@@ -5122,26 +5122,26 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#outboundwebhookspecoutboundwebhooktypeslackattachmentsindex">attachments</a></b></td>
-        <td>[]object</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b><a href="#outboundwebhookspecoutboundwebhooktypeslackdigestsindex">digests</a></b></td>
-        <td>[]object</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>url</b></td>
         <td>string</td>
         <td>
           <br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypeslackattachmentsindex">attachments</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypeslackdigestsindex">digests</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -5719,26 +5719,26 @@ OutboundWebhookStatus defines the observed state of OutboundWebhook
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#outboundwebhookstatusoutboundwebhooktypeslackattachmentsindex">attachments</a></b></td>
-        <td>[]object</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b><a href="#outboundwebhookstatusoutboundwebhooktypeslackdigestsindex">digests</a></b></td>
-        <td>[]object</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>url</b></td>
         <td>string</td>
         <td>
           <br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookstatusoutboundwebhooktypeslackattachmentsindex">attachments</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookstatusoutboundwebhooktypeslackdigestsindex">digests</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -5930,7 +5930,8 @@ RecordingRuleGroupSetSpec defines the desired state of RecordingRuleGroupSet
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          INSERT ADDITIONAL SPEC FIELDS - desired state of cluster Important: Run "make" to regenerate code after modifying this file<br/>
+          INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+Important: Run "make" to regenerate code after modifying this file<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6043,7 +6044,6 @@ RecordingRuleGroupSetStatus defines the observed state of RecordingRuleGroupSet
           <br/>
             <i>Format</i>: int32<br/>
             <i>Default</i>: 60<br/>
-            <i>Minimum</i>: 60<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6059,7 +6059,8 @@ RecordingRuleGroupSetStatus defines the observed state of RecordingRuleGroupSet
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          INSERT ADDITIONAL SPEC FIELDS - desired state of cluster Important: Run "make" to regenerate code after modifying this file<br/>
+          INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+Important: Run "make" to regenerate code after modifying this file<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6814,7 +6815,8 @@ RuleGroupStatus defines the observed state of RuleGroup
         <td><b>id</b></td>
         <td>string</td>
         <td>
-          INSERT ADDITIONAL STATUS FIELD - define observed state of cluster Important: Run "make" to regenerate code after modifying this file<br/>
+          INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+Important: Run "make" to regenerate code after modifying this file<br/>
         </td>
         <td>true</td>
       </tr><tr>

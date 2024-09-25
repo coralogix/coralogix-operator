@@ -7,5 +7,5 @@
 {{ end }}
 
 {{- if (eq .Values.coralogixOperator.region "") }}
-{{ fail "[ERROR] 'coralogixOperator.region' must be set. Please select one of APAC1,APAC2,EUROPE1,EUROPE2,USA1,USA2 regions. See https://coralogix.com/docs/coralogix-domain/ for more information." }}
+{{ fail "[ERROR] 'coralogixOperator.region' must be set. Please select one of APAC1,AP1,APAC2,AP2,EUROPE1,EU1,EUROPE2,EU2,USA1,US1,USA2,US2 regions. See https://coralogix.com/docs/coralogix-domain/ for more information." }}
 {{ end }}
