@@ -25,6 +25,7 @@ import (
 	prometheusv1alpha "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"k8s.io/utils/strings/slices"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	utils "github.com/coralogix/coralogix-operator/apis"
 	"github.com/coralogix/coralogix-operator/controllers/clientset"
@@ -98,6 +99,9 @@ func main() {
 	var recordingRuleGroupSetSuffix string
 	flag.StringVar(&recordingRuleGroupSetSuffix, "recording-rule-group-set-suffix", "", "Suffix to be added to the RecordingRuleGroupSet")
 
+	var webhookCertDir string
+	flag.StringVar(&webhookCertDir, "webhook-cert-dir", "/tmp/k8s-webhook-server/serving-certs", "Directory containing the webhook certs")
+
 	opts := zap.Options{}
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
@@ -119,11 +123,16 @@ func main() {
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		MetricsBindAddress:     metricsAddr,
-		Port:                   9443,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "9e1892e3.coralogix",
 		PprofBindAddress:       "0.0.0.0:8888",
+		WebhookServer: &webhook.DefaultServer{
+			Options: webhook.Options{
+				Port:    9443,
+				CertDir: webhookCertDir,
+			},
+		},
 		// LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
 		// when the Manager ends. This requires the binary to immediately end when the
 		// Manager is stopped, otherwise, this setting is unsafe. Setting this significantly
@@ -194,6 +203,10 @@ func main() {
 			setupLog.Error(err, "unable to create controller", "controller", "RecordingRuleGroup")
 			os.Exit(1)
 		}
+	}
+	if err = (&coralogixv1alpha1.OutboundWebhook{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "OutboundWebhook")
+		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder
 

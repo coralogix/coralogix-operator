@@ -15,12 +15,14 @@ spec:
     spec:
       containers:
         - name: manager
-          image: coralogixrepo/coralogix-operator:latest
+          image:
           command:
             - /manager
           args:
-            - --region=EUROPE2
-            - --api-key=64abc519-bb6f-4e56-8583-4946c70f3242
+            - --enable-leader-election
+            - --metrics-bind-address=:8080
+            - --health-probe-bind-address=:8081
+            - --webhook-port=9443  # Webhook listens on this port
           ports:
             - containerPort: 9443
           readinessProbe:
