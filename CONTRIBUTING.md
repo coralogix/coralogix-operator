@@ -90,13 +90,27 @@ When creating or updating CRDs remember to run
 make manifests
 ````
 
-Tests
+Running E2E Tests
 ---------------------
-We use [kuttl](https://kuttl.dev/) for end-to-end tests.
-The test files are located at [./tests/e2e/](./tests/e2e)
-In order to run the full suite of `kuttl` tests, run -
+The test files are located at [./tests/e2e/](./tests/e2e).
+In order to run the full e2e tests suite:
+1. Add the api key and region as environment variables:
 ```sh
-$ make e2e
+$ export CORALOGIX_API_KEY="<api-key>"
+$ export CORALOGIX_REGION="<region>"
+```
+2. Run the tests:
+```sh
+$ make e2e-tests
+````
+
+Running Integration Tests
+---------------------
+We use [kuttl](https://kuttl.dev/) for integration tests.
+The test files are located at [./tests/integration/](./tests/integration).
+In order to run the full integration tests suite, run:
+```sh
+$ make integration-tests
 ````
 
 *Note:* `kuttl` tests create real resources and in a case of failure some resources may not be removed.
