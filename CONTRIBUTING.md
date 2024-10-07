@@ -36,6 +36,7 @@ Add the region and api-key as environment variables (or later as flags).
 $ export CORALOGIX_API_KEY="xxx-xxx-xxx"
 $ export CORALOGIX_REGION = "EU2"
 ```
+For private domain the `domain` field or the environment variable `CORALOGIX_DOMAIN` have to be defined.
 
 Run the operator locally
 ```sh
