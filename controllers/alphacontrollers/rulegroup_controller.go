@@ -20,8 +20,8 @@ import (
 	"context"
 	"fmt"
 
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	"github.com/coralogix/coralogix-operator/controllers/clientset"
-	rulesgroups "github.com/coralogix/coralogix-operator/controllers/clientset/grpc/rules-groups/v1"
 
 	"github.com/golang/protobuf/jsonpb"
 	"google.golang.org/grpc/codes"
@@ -102,9 +102,9 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			}
 
 			ruleGroupId := *ruleGroupCRD.Status.ID
-			deleteRuleGroupReq := &rulesgroups.DeleteRuleGroupRequest{GroupId: ruleGroupId}
+			deleteRuleGroupReq := &cxsdk.DeleteRuleGroupRequest{GroupId: ruleGroupId}
 			log.V(1).Info("Deleting Rule-Group", "Rule-Group ID", ruleGroupId)
-			if _, err := rulesGroupsClient.DeleteRuleGroup(ctx, deleteRuleGroupReq); err != nil {
+			if _, err := rulesGroupsClient.Delete(ctx, deleteRuleGroupReq); err != nil {
 				// if fail to delete the external dependency here, return with error
 				// so that it can be retried unless it is deleted manually.
 				log.Error(err, "Received an error while Deleting a Rule-Group", "Rule-Group ID", ruleGroupId)
@@ -138,7 +138,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		log.V(1).Info("ruleGroup wasn't created")
 		notFound = true
 	} else {
-		getRuleGroupResp, err := rulesGroupsClient.GetRuleGroup(ctx, &rulesgroups.GetRuleGroupRequest{GroupId: *id})
+		getRuleGroupResp, err := rulesGroupsClient.Get(ctx, &cxsdk.GetRuleGroupRequest{GroupId: *id})
 		switch {
 		case status.Code(err) == codes.NotFound:
 			log.V(1).Info("ruleGroup doesn't exist in Coralogix backend")
@@ -159,7 +159,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		createRuleGroupReq := ruleGroupCRD.Spec.ExtractCreateRuleGroupRequest()
 		jstr, _ := jsm.MarshalToString(createRuleGroupReq)
 		log.V(1).Info("Creating Rule-Group", "ruleGroup", jstr)
-		if createRuleGroupResp, err := rulesGroupsClient.CreateRuleGroup(ctx, createRuleGroupReq); err == nil {
+		if createRuleGroupResp, err := rulesGroupsClient.Create(ctx, createRuleGroupReq); err == nil {
 			jstr, _ := jsm.MarshalToString(createRuleGroupResp)
 			log.V(1).Info("Rule-Group was updated", "ruleGroup", jstr)
 
@@ -193,7 +193,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	if equal, diff := ruleGroupCRD.Spec.DeepEqual(*actualState); !equal {
 		log.V(1).Info("Find diffs between spec and the actual state", "Diff", diff)
 		updateRuleGroupReq := ruleGroupCRD.Spec.ExtractUpdateRuleGroupRequest(*ruleGroupCRD.Status.ID)
-		updateRuleGroupResp, err := rulesGroupsClient.UpdateRuleGroup(ctx, updateRuleGroupReq)
+		updateRuleGroupResp, err := rulesGroupsClient.Update(ctx, updateRuleGroupReq)
 		if err != nil {
 			log.Error(err, "Received an error while updating a Rule-Group", "ruleGroup", updateRuleGroupReq)
 			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
@@ -205,7 +205,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	return ctrl.Result{}, nil
 }
 
-func flattenRuleGroup(ruleGroup *rulesgroups.RuleGroup) (*coralogixv1alpha1.RuleGroupStatus, error) {
+func flattenRuleGroup(ruleGroup *cxsdk.RuleGroup) (*coralogixv1alpha1.RuleGroupStatus, error) {
 	var status coralogixv1alpha1.RuleGroupStatus
 
 	status.ID = new(string)
@@ -238,7 +238,7 @@ func flattenRuleGroup(ruleGroup *rulesgroups.RuleGroup) (*coralogixv1alpha1.Rule
 	return &status, nil
 }
 
-func flattenRuleSubGroups(subgroups []*rulesgroups.RuleSubgroup) ([]coralogixv1alpha1.RuleSubGroup, error) {
+func flattenRuleSubGroups(subgroups []*cxsdk.RuleSubgroup) ([]coralogixv1alpha1.RuleSubGroup, error) {
 	result := make([]coralogixv1alpha1.RuleSubGroup, 0, len(subgroups))
 	for _, sg := range subgroups {
 		subgroup, err := flattenRuleSubGroup(sg)
@@ -250,7 +250,7 @@ func flattenRuleSubGroups(subgroups []*rulesgroups.RuleSubgroup) ([]coralogixv1a
 	return result, nil
 }
 
-func flattenRuleSubGroup(subGroup *rulesgroups.RuleSubgroup) (coralogixv1alpha1.RuleSubGroup, error) {
+func flattenRuleSubGroup(subGroup *cxsdk.RuleSubgroup) (coralogixv1alpha1.RuleSubGroup, error) {
 	var result coralogixv1alpha1.RuleSubGroup
 
 	result.ID = new(string)
@@ -269,7 +269,7 @@ func flattenRuleSubGroup(subGroup *rulesgroups.RuleSubgroup) (coralogixv1alpha1.
 	return result, nil
 }
 
-func flattenRules(rules []*rulesgroups.Rule) ([]coralogixv1alpha1.Rule, error) {
+func flattenRules(rules []*cxsdk.Rule) ([]coralogixv1alpha1.Rule, error) {
 	result := make([]coralogixv1alpha1.Rule, 0, len(rules))
 	for _, r := range rules {
 		rule, err := flattenRule(r)
@@ -281,26 +281,26 @@ func flattenRules(rules []*rulesgroups.Rule) ([]coralogixv1alpha1.Rule, error) {
 	return result, nil
 }
 
-func flattenRule(rule *rulesgroups.Rule) (coralogixv1alpha1.Rule, error) {
+func flattenRule(rule *cxsdk.Rule) (coralogixv1alpha1.Rule, error) {
 	var result coralogixv1alpha1.Rule
 	result.Name = rule.GetName().GetValue()
 	result.Active = rule.GetEnabled().GetValue()
 	result.Description = rule.GetDescription().GetValue()
 
 	switch ruleParams := rule.GetParameters().GetRuleParameters().(type) {
-	case *rulesgroups.RuleParameters_ExtractParameters:
+	case *cxsdk.RuleParametersExtractParameters:
 		extractParameters := ruleParams.ExtractParameters
 		result.Extract = &coralogixv1alpha1.Extract{
 			Regex:       extractParameters.GetRule().GetValue(),
 			SourceField: rule.GetSourceField().GetValue(),
 		}
-	case *rulesgroups.RuleParameters_JsonExtractParameters:
+	case *cxsdk.RuleParametersJSONExtractParameters:
 		jsonExtractParameters := ruleParams.JsonExtractParameters
 		result.JsonExtract = &coralogixv1alpha1.JsonExtract{
 			JsonKey:          jsonExtractParameters.GetRule().GetValue(),
 			DestinationField: coralogixv1alpha1.RulesProtoSeverityDestinationFieldToSchemaDestinationField[jsonExtractParameters.GetDestinationField()],
 		}
-	case *rulesgroups.RuleParameters_ReplaceParameters:
+	case *cxsdk.RuleParametersReplaceParameters:
 		replaceParameters := ruleParams.ReplaceParameters
 		result.Replace = &coralogixv1alpha1.Replace{
 			SourceField:       rule.GetSourceField().GetValue(),
@@ -308,14 +308,14 @@ func flattenRule(rule *rulesgroups.Rule) (coralogixv1alpha1.Rule, error) {
 			Regex:             replaceParameters.GetRule().GetValue(),
 			ReplacementString: replaceParameters.GetReplaceNewVal().GetValue(),
 		}
-	case *rulesgroups.RuleParameters_ParseParameters:
+	case *cxsdk.RuleParametersParseParameters:
 		parseParameters := ruleParams.ParseParameters
 		result.Parse = &coralogixv1alpha1.Parse{
 			SourceField:      rule.GetSourceField().GetValue(),
 			DestinationField: parseParameters.GetDestinationField().GetValue(),
 			Regex:            parseParameters.GetRule().GetValue(),
 		}
-	case *rulesgroups.RuleParameters_AllowParameters:
+	case *cxsdk.RuleParametersAllowParameters:
 		allowParameters := ruleParams.AllowParameters
 		result.Block = &coralogixv1alpha1.Block{
 			SourceField:               rule.GetSourceField().GetValue(),
@@ -323,7 +323,7 @@ func flattenRule(rule *rulesgroups.Rule) (coralogixv1alpha1.Rule, error) {
 			KeepBlockedLogs:           allowParameters.GetKeepBlockedLogs().GetValue(),
 			BlockingAllMatchingBlocks: false,
 		}
-	case *rulesgroups.RuleParameters_BlockParameters:
+	case *cxsdk.RuleParametersBlockParameters:
 		blockParameters := ruleParams.BlockParameters
 		result.Block = &coralogixv1alpha1.Block{
 			SourceField:               rule.GetSourceField().GetValue(),
@@ -331,26 +331,26 @@ func flattenRule(rule *rulesgroups.Rule) (coralogixv1alpha1.Rule, error) {
 			KeepBlockedLogs:           blockParameters.GetKeepBlockedLogs().GetValue(),
 			BlockingAllMatchingBlocks: true,
 		}
-	case *rulesgroups.RuleParameters_ExtractTimestampParameters:
+	case *cxsdk.RuleParametersExtractTimestampParameters:
 		extractTimestampParameters := ruleParams.ExtractTimestampParameters
 		result.ExtractTimestamp = &coralogixv1alpha1.ExtractTimestamp{
 			SourceField:         rule.GetSourceField().GetValue(),
 			TimeFormat:          extractTimestampParameters.GetFormat().GetValue(),
 			FieldFormatStandard: coralogixv1alpha1.RulesProtoFormatStandardToSchemaFormatStandard[extractTimestampParameters.GetStandard()],
 		}
-	case *rulesgroups.RuleParameters_RemoveFieldsParameters:
+	case *cxsdk.RuleParametersRemoveFieldsParameters:
 		removeFieldsParameters := ruleParams.RemoveFieldsParameters
 		result.RemoveFields = &coralogixv1alpha1.RemoveFields{
 			ExcludedFields: removeFieldsParameters.GetFields(),
 		}
-	case *rulesgroups.RuleParameters_JsonStringifyParameters:
+	case *cxsdk.RuleParametersJSONStringifyParameters:
 		jsonStringifyParameters := ruleParams.JsonStringifyParameters
 		result.JsonStringify = &coralogixv1alpha1.JsonStringify{
 			SourceField:      rule.GetSourceField().GetValue(),
 			DestinationField: jsonStringifyParameters.GetDestinationField().GetValue(),
 			KeepSourceField:  !(jsonStringifyParameters.GetDeleteSource().GetValue()),
 		}
-	case *rulesgroups.RuleParameters_JsonParseParameters:
+	case *cxsdk.RuleParametersJSONParseParameters:
 		jsonParseParameters := ruleParams.JsonParseParameters
 		result.ParseJsonField = &coralogixv1alpha1.ParseJsonField{
 			SourceField:          rule.GetSourceField().GetValue(),
@@ -364,14 +364,14 @@ func flattenRule(rule *rulesgroups.Rule) (coralogixv1alpha1.Rule, error) {
 	return result, nil
 }
 
-func flattenRuleMatcher(ruleMatchers []*rulesgroups.RuleMatcher) (applications, subsystems []string, severities []coralogixv1alpha1.RuleSeverity, err error) {
+func flattenRuleMatcher(ruleMatchers []*cxsdk.RuleMatcher) (applications, subsystems []string, severities []coralogixv1alpha1.RuleSeverity, err error) {
 	for _, ruleMatcher := range ruleMatchers {
 		switch matcher := ruleMatcher.Constraint.(type) {
-		case *rulesgroups.RuleMatcher_ApplicationName:
+		case *cxsdk.RuleMatcherApplicationName:
 			applications = append(applications, matcher.ApplicationName.GetValue().GetValue())
-		case *rulesgroups.RuleMatcher_SubsystemName:
+		case *cxsdk.RuleMatcherSubsystemName:
 			subsystems = append(subsystems, matcher.SubsystemName.GetValue().GetValue())
-		case *rulesgroups.RuleMatcher_Severity:
+		case *cxsdk.RuleMatcherSeverity:
 			severity := matcher.Severity.GetValue()
 			severities = append(severities, coralogixv1alpha1.RulesProtoSeverityToSchemaSeverity[severity])
 		default:

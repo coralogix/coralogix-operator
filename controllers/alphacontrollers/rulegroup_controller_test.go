@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"testing"
 
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/controllers/clientset"
-	rulesgroups "github.com/coralogix/coralogix-operator/controllers/clientset/grpc/rules-groups/v1"
 	"github.com/coralogix/coralogix-operator/controllers/mock_clientset"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -24,28 +24,28 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
-var ruleGroupBackendSchema = &rulesgroups.RuleGroup{
+var ruleGroupBackendSchema = &cxsdk.RuleGroup{
 	Id:           wrapperspb.String("id"),
 	Name:         wrapperspb.String("name"),
 	Description:  wrapperspb.String("description"),
 	Creator:      wrapperspb.String("creator"),
 	Enabled:      wrapperspb.Bool(true),
 	Hidden:       wrapperspb.Bool(false),
-	RuleMatchers: []*rulesgroups.RuleMatcher{},
-	RuleSubgroups: []*rulesgroups.RuleSubgroup{
+	RuleMatchers: []*cxsdk.RuleMatcher{},
+	RuleSubgroups: []*cxsdk.RuleSubgroup{
 		{
 			Id:    wrapperspb.String("subgroup_id"),
 			Order: wrapperspb.UInt32(1),
-			Rules: []*rulesgroups.Rule{
+			Rules: []*cxsdk.Rule{
 				{
 					Id:          wrapperspb.String("rule_id"),
 					Name:        wrapperspb.String("rule_name"),
 					Description: wrapperspb.String("rule_description"),
 					SourceField: wrapperspb.String("text"),
-					Parameters: &rulesgroups.RuleParameters{
-						RuleParameters: &rulesgroups.RuleParameters_JsonExtractParameters{
-							JsonExtractParameters: &rulesgroups.JsonExtractParameters{
-								DestinationField: rulesgroups.JsonExtractParameters_DESTINATION_FIELD_SEVERITY,
+					Parameters: &cxsdk.RuleParameters{
+						RuleParameters: &cxsdk.RuleParametersJSONExtractParameters{
+							JsonExtractParameters: &cxsdk.JSONExtractParameters{
+								DestinationField: cxsdk.JSONExtractParametersDestinationFieldSeverity,
 								Rule:             wrapperspb.String(`{"severity": "info"}`),
 							},
 						},
@@ -91,23 +91,23 @@ func expectedRuleGroupCRD() *coralogixv1alpha1.RuleGroup {
 }
 
 func TestFlattenRuleGroupsErrorsOnBadResponse(t *testing.T) {
-	ruleGroup := &rulesgroups.RuleGroup{
+	ruleGroup := &cxsdk.RuleGroup{
 		Id:           wrapperspb.String("id"),
 		Name:         wrapperspb.String("name"),
 		Description:  wrapperspb.String("description"),
 		Creator:      wrapperspb.String("creator"),
 		Enabled:      wrapperspb.Bool(true),
 		Hidden:       wrapperspb.Bool(false),
-		RuleMatchers: []*rulesgroups.RuleMatcher{},
-		RuleSubgroups: []*rulesgroups.RuleSubgroup{
+		RuleMatchers: []*cxsdk.RuleMatcher{},
+		RuleSubgroups: []*cxsdk.RuleSubgroup{
 			{
-				Rules: []*rulesgroups.Rule{
+				Rules: []*cxsdk.Rule{
 					{
 						Id:          wrapperspb.String("rule_id"),
 						Name:        wrapperspb.String("rule_name"),
 						Description: wrapperspb.String("rule_description"),
 						SourceField: wrapperspb.String("text"),
-						Parameters: &rulesgroups.RuleParameters{
+						Parameters: &cxsdk.RuleParameters{
 							RuleParameters: nil,
 						},
 						Enabled: wrapperspb.Bool(true),
@@ -212,8 +212,8 @@ func TestRuleGroupReconciler_Reconcile(t *testing.T) {
 	if !assert.NotNil(t, id) {
 		return
 	}
-	getRuleGroupRequest := &rulesgroups.GetRuleGroupRequest{GroupId: *id}
-	actualRuleGroup, err := r.CoralogixClientSet.RuleGroups().GetRuleGroup(ctx, getRuleGroupRequest)
+	getRuleGroupRequest := &cxsdk.GetRuleGroupRequest{GroupId: *id}
+	actualRuleGroup, err := r.CoralogixClientSet.RuleGroups().Get(ctx, getRuleGroupRequest)
 	assert.NoError(t, err)
 	assert.EqualValues(t, ruleGroupBackendSchema, actualRuleGroup.GetRuleGroup())
 
@@ -224,7 +224,7 @@ func TestRuleGroupReconciler_Reconcile(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, false, result.Requeue)
 
-	actualRuleGroup, err = r.CoralogixClientSet.RuleGroups().GetRuleGroup(ctx, getRuleGroupRequest)
+	actualRuleGroup, err = r.CoralogixClientSet.RuleGroups().Get(ctx, getRuleGroupRequest)
 	assert.Nil(t, actualRuleGroup)
 	assert.Error(t, err)
 }
@@ -279,8 +279,8 @@ func TestRuleGroupReconciler_Reconcile_5XX_StatusError(t *testing.T) {
 	if !assert.NotNil(t, id) {
 		return
 	}
-	getRuleGroupRequest := &rulesgroups.GetRuleGroupRequest{GroupId: *id}
-	actualRuleGroup, err := r.CoralogixClientSet.RuleGroups().GetRuleGroup(ctx, getRuleGroupRequest)
+	getRuleGroupRequest := &cxsdk.GetRuleGroupRequest{GroupId: *id}
+	actualRuleGroup, err := r.CoralogixClientSet.RuleGroups().Get(ctx, getRuleGroupRequest)
 	assert.NoError(t, err)
 	assert.EqualValues(t, ruleGroupBackendSchema, actualRuleGroup.GetRuleGroup())
 
@@ -296,24 +296,24 @@ func createRuleGroupClientSimpleMock(mockCtrl *gomock.Controller) clientset.Rule
 	var ruleGroupExist bool
 
 	mockRuleGroupsClient.EXPECT().
-		CreateRuleGroup(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, _ *rulesgroups.CreateRuleGroupRequest) (*rulesgroups.CreateRuleGroupResponse, error) {
+		Create(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, _ *cxsdk.CreateRuleGroupRequest) (*cxsdk.CreateRuleGroupResponse, error) {
 		ruleGroupExist = true
-		return &rulesgroups.CreateRuleGroupResponse{RuleGroup: ruleGroupBackendSchema}, nil
+		return &cxsdk.CreateRuleGroupResponse{RuleGroup: ruleGroupBackendSchema}, nil
 	}).AnyTimes()
 
 	mockRuleGroupsClient.EXPECT().
-		GetRuleGroup(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, req *rulesgroups.GetRuleGroupRequest) (*rulesgroups.GetRuleGroupResponse, error) {
+		Get(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, req *cxsdk.GetRuleGroupRequest) (*cxsdk.GetRuleGroupResponse, error) {
 		if ruleGroupExist {
-			return &rulesgroups.GetRuleGroupResponse{RuleGroup: ruleGroupBackendSchema}, nil
+			return &cxsdk.GetRuleGroupResponse{RuleGroup: ruleGroupBackendSchema}, nil
 		}
 		return nil, errors.NewNotFound(schema.GroupResource{}, "id1")
 	}).AnyTimes()
 
 	mockRuleGroupsClient.EXPECT().
-		DeleteRuleGroup(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, req *rulesgroups.DeleteRuleGroupRequest) (*rulesgroups.DeleteRuleGroupResponse, error) {
+		Delete(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, req *cxsdk.DeleteRuleGroupRequest) (*cxsdk.DeleteRuleGroupResponse, error) {
 		if ruleGroupExist {
 			ruleGroupExist = false
-			return &rulesgroups.DeleteRuleGroupResponse{}, nil
+			return &cxsdk.DeleteRuleGroupResponse{}, nil
 		}
 		return nil, errors.NewNotFound(schema.GroupResource{}, "id1")
 	}).AnyTimes()
@@ -328,28 +328,28 @@ func createRecordingRuleGroupClientSimpleMockWith5XXStatusError(mockCtrl *gomock
 	var ruleGroupExist, wasCalled bool
 
 	mockRuleGroupsClient.EXPECT().
-		CreateRuleGroup(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, _ *rulesgroups.CreateRuleGroupRequest) (*rulesgroups.CreateRuleGroupResponse, error) {
+		Create(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, _ *cxsdk.CreateRuleGroupRequest) (*cxsdk.CreateRuleGroupResponse, error) {
 		if !wasCalled {
 			wasCalled = true
 			return nil, errors.NewInternalError(fmt.Errorf("internal error"))
 		}
 		ruleGroupExist = true
-		return &rulesgroups.CreateRuleGroupResponse{RuleGroup: ruleGroupBackendSchema}, nil
+		return &cxsdk.CreateRuleGroupResponse{RuleGroup: ruleGroupBackendSchema}, nil
 	}).AnyTimes()
 
 	mockRuleGroupsClient.EXPECT().
-		GetRuleGroup(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, req *rulesgroups.GetRuleGroupRequest) (*rulesgroups.GetRuleGroupResponse, error) {
+		Get(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, req *cxsdk.GetRuleGroupRequest) (*cxsdk.GetRuleGroupResponse, error) {
 		if ruleGroupExist {
-			return &rulesgroups.GetRuleGroupResponse{RuleGroup: ruleGroupBackendSchema}, nil
+			return &cxsdk.GetRuleGroupResponse{RuleGroup: ruleGroupBackendSchema}, nil
 		}
 		return nil, errors.NewNotFound(schema.GroupResource{}, "id1")
 	}).AnyTimes()
 
 	mockRuleGroupsClient.EXPECT().
-		DeleteRuleGroup(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, req *rulesgroups.DeleteRuleGroupRequest) (*rulesgroups.DeleteRuleGroupResponse, error) {
+		Delete(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, req *cxsdk.DeleteRuleGroupRequest) (*cxsdk.DeleteRuleGroupResponse, error) {
 		if ruleGroupExist {
 			ruleGroupExist = false
-			return &rulesgroups.DeleteRuleGroupResponse{}, nil
+			return &cxsdk.DeleteRuleGroupResponse{}, nil
 		}
 		return nil, errors.NewNotFound(schema.GroupResource{}, "id1")
 	}).AnyTimes()
