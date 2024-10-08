@@ -172,7 +172,7 @@ integration-tests:
 
 .PHONY: e2e-tests
 e2e-tests:
-	go test ./tests/e2e/ -ldflags $(LDFLAGS) -ginkgo.v
+	go test ./tests/e2e/ -ldflags $(LDFLAGS) -ginkgo.v -v
 
 .PHONY: helm-check-crd-version
 helm-check-crd-version:
