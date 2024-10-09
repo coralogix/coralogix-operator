@@ -18,7 +18,7 @@ metadata:
   namespace: system
   labels:
     control-plane: controller-manager
-    app.kubernetes.io/name: deployment
+    app.kubernetes.io/name: coralogix-operator-controller-manager
     app.kubernetes.io/instance: controller-manager
     app.kubernetes.io/component: manager
     app.kubernetes.io/created-by: coralogix-operator
@@ -70,6 +70,10 @@ spec:
         - /manager
         args:
         - --leader-elect
+        - --health-probe-bind-address=:8081
+        - --metrics-bind-address=127.0.0.1:8080
+        - --api-key=${CORALOGIX_API_KEY}
+        - --region=${CORALOGIX_REGION}
         image: controller:latest
         name: manager
         securityContext:

@@ -55,9 +55,9 @@ fmt: ## Run go fmt against code.
 vet: ## Run go vet against code.
 	go vet ./...
 
-.PHONY: test
-test: manifests generate fmt vet envtest ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -ldflags $(LDFLAGS) -coverprofile cover.out
+.PHONY: unit-tests
+unit-tests: manifests generate fmt vet envtest ## Run tests.
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./controllers/ -ldflags $(LDFLAGS) -coverprofile cover.out
 
 ##@ Documentation
 .PHONY: generate-api-docs
@@ -122,7 +122,7 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 .PHONY: deploy
 deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
+	$(KUSTOMIZE) build config/default | envsubst |kubectl apply -f -
 
 .PHONY: undeploy
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
@@ -166,8 +166,13 @@ crdoc: $(CRDOC) ## Download crdoc locally if necessary.
 $(CRDOC): $(LOCALBIN)
 	test -s $(LOCALBIN)/crdoc || GOBIN=$(LOCALBIN) go install fybrik.io/crdoc@latest
 
-e2e:
+.PHONY: integration-tests
+integration-tests:
 	kubectl kuttl test
+
+.PHONY: e2e-tests
+e2e-tests:
+	go test ./tests/e2e/ -ldflags $(LDFLAGS) -ginkgo.v
 
 .PHONY: helm-check-crd-version
 helm-check-crd-version:

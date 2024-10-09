@@ -1,0 +1,41 @@
+name: integration-tests
+on:
+  schedule:
+    - cron: 0 0 * * *
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "charts/**"
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - "charts/**"
+jobs:
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Create k8s Kind Cluster
+        uses: helm/kind-action@v1.4.0
+      - name: Install kuttl
+        run: |
+          curl -Lo /usr/local/bin/kubectl-kuttl https://github.com/kudobuilder/kuttl/releases/download/v0.12.1/kubectl-kuttl_0.12.1_linux_x86_64
+          chmod +x /usr/local/bin/kubectl-kuttl
+      - name: Install CRDs
+        run: make install
+      - name: Install Go
+        uses: actions/setup-go@37335c7bb261b353407cff977110895fa0b4f7d8
+        with:
+          go-version: 1.22.x
+      - name: Running operator and Tests
+        env:
+          CORALOGIX_REGION: ${{ secrets.CORALOGIX_REGION }}
+          CORALOGIX_API_KEY: ${{ secrets.CORALOGIX_API_KEY }}
+        run: |
+          go run -ldflags="-X google.golang.org/protobuf/reflect/protoregistry.conflictPolicy=warn" main.go &
+          sleep 30s
+          make integration-tests
