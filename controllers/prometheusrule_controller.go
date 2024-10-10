@@ -299,7 +299,8 @@ func prometheusInnerRulesToCoralogixInnerRules(rules []prometheus.Rule) []coralo
 
 func prometheusRuleToCoralogixAlertSpec(rule prometheus.Rule) coralogixv1alpha1.AlertSpec {
 	return coralogixv1alpha1.AlertSpec{
-		Severity: getSeverity(rule),
+		Description: rule.Annotations["description"],
+		Severity:    getSeverity(rule),
 		NotificationGroups: []coralogixv1alpha1.NotificationGroup{
 			{
 				Notifications: []coralogixv1alpha1.Notification{

@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"time"
 
-	webhooks "github.com/coralogix/coralogix-operator/controllers/clientset/grpc/outbound-webhooks"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -36,6 +35,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	utils "github.com/coralogix/coralogix-operator/apis"
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
@@ -995,7 +996,7 @@ func flattenNotificationGroups(ctx context.Context, log logr.Logger, notificatio
 
 func getWebhooksIdsToNames(ctx context.Context, log logr.Logger) (map[uint32]string, error) {
 	log.V(1).Info("get all webhooks")
-	webhooks, err := coralogixv1alpha1.WebhooksClient.ListAllOutgoingWebhooks(ctx, &webhooks.ListAllOutgoingWebhooksRequest{})
+	webhooks, err := coralogixv1alpha1.WebhooksClient.List(ctx, &cxsdk.ListAllOutgoingWebhooksRequest{})
 	if err != nil {
 		return nil, fmt.Errorf("error on get all webhooks - %w", err)
 	}
