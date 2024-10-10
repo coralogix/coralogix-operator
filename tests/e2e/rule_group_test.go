@@ -50,13 +50,14 @@ var _ = Describe("Rule Group", Ordered, func() {
 
 	It("Should be created successfully", func(ctx context.Context) {
 		By("Defining a RuleGroup resource")
+		ruleGroupName := "json-extract-rule"
 		ruleGroup = &coralogixv1alpha1.RuleGroup{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "json-extract-rule",
-				Namespace: "default",
+				Name:      ruleGroupName,
+				Namespace: testNamespace,
 			},
 			Spec: coralogixv1alpha1.RuleGroupSpec{
-				Name:        "json-extract-rule",
+				Name:        ruleGroupName,
 				Description: "rule-group from k8s operator",
 				RuleSubgroups: []coralogixv1alpha1.RuleSubGroup{
 					{
@@ -81,7 +82,7 @@ var _ = Describe("Rule Group", Ordered, func() {
 		By("Fetching the RuleGroup ID")
 		fetchedRuleGroup := &coralogixv1alpha1.RuleGroup{}
 		Eventually(func(g Gomega) error {
-			err := crClient.Get(ctx, types.NamespacedName{Name: "json-extract-rule", Namespace: "default"}, fetchedRuleGroup)
+			err := crClient.Get(ctx, types.NamespacedName{Name: ruleGroupName, Namespace: testNamespace}, fetchedRuleGroup)
 			g.Expect(err).NotTo(HaveOccurred())
 
 			if fetchedRuleGroup.Status.ID != nil {
@@ -101,7 +102,7 @@ var _ = Describe("Rule Group", Ordered, func() {
 
 	It("Should be updated successfully", func(ctx context.Context) {
 		By("Patching the RuleGroup resource")
-		const newRuleGroupName = "json-extract-rule-updated"
+		newRuleGroupName := "json-extract-rule-updated"
 		modifiedRuleGroup := ruleGroup.DeepCopy()
 		modifiedRuleGroup.Spec.Name = newRuleGroupName
 		err := crClient.Patch(ctx, modifiedRuleGroup, client.MergeFrom(ruleGroup))
