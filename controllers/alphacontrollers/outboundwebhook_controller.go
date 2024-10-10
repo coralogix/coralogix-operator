@@ -19,12 +19,9 @@ package alphacontrollers
 import (
 	"context"
 	"fmt"
+	"github.com/coralogix/coralogix-operator/controllers/clientset"
 	"strconv"
 
-	utils "github.com/coralogix/coralogix-operator/apis"
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
-	"github.com/coralogix/coralogix-operator/controllers/clientset"
-	outboundwebhooks "github.com/coralogix/coralogix-operator/controllers/clientset/grpc/outbound-webhooks"
 	"github.com/go-logr/logr"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc/codes"
@@ -38,6 +35,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+
+	utils "github.com/coralogix/coralogix-operator/apis"
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
 )
 
 // OutboundWebhookReconciler reconciles a OutboundWebhook object
@@ -118,7 +120,7 @@ func (r *OutboundWebhookReconciler) create(ctx context.Context, log logr.Logger,
 	}
 
 	log.V(int(zapcore.DebugLevel)).Info(fmt.Sprintf("Creating outbound-webhook-\n%s", protojson.Format(createRequest)))
-	createResponse, err := r.OutboundWebhooksClient.CreateOutboundWebhook(ctx, createRequest)
+	createResponse, err := r.OutboundWebhooksClient.Create(ctx, createRequest)
 	if err != nil {
 		return fmt.Errorf("error to create remote outbound-webhook - %s\n%w", protojson.Format(createRequest), err)
 	}
@@ -133,9 +135,9 @@ func (r *OutboundWebhookReconciler) create(ctx context.Context, log logr.Logger,
 		return fmt.Errorf("error to update outbound-webhook status -\n%v", webhook)
 	}
 
-	readRequest := &outboundwebhooks.GetOutgoingWebhookRequest{Id: createResponse.Id}
+	readRequest := &cxsdk.GetOutgoingWebhookRequest{Id: createResponse.Id}
 	log.V(int(zapcore.DebugLevel)).Info(fmt.Sprintf("Getting outbound-webhook -\n%s", protojson.Format(readRequest)))
-	readResponse, err := r.OutboundWebhooksClient.GetOutboundWebhook(ctx, readRequest)
+	readResponse, err := r.OutboundWebhooksClient.Get(ctx, readRequest)
 	if err != nil {
 		return fmt.Errorf("error to get outbound-webhook -\n%v", webhook)
 	}
@@ -161,7 +163,7 @@ func (r *OutboundWebhookReconciler) create(ctx context.Context, log logr.Logger,
 	return nil
 }
 
-func getOutboundWebhookStatus(webhook *outboundwebhooks.OutgoingWebhook) (*coralogixv1alpha1.OutboundWebhookStatus, error) {
+func getOutboundWebhookStatus(webhook *cxsdk.OutgoingWebhook) (*coralogixv1alpha1.OutboundWebhookStatus, error) {
 	if webhook == nil {
 		return nil, fmt.Errorf("outbound-webhook is nil")
 	}
@@ -181,32 +183,32 @@ func getOutboundWebhookStatus(webhook *outboundwebhooks.OutgoingWebhook) (*coral
 	return status, nil
 }
 
-func getOutboundWebhookTypeStatus(webhook *outboundwebhooks.OutgoingWebhook) (*coralogixv1alpha1.OutboundWebhookTypeStatus, error) {
+func getOutboundWebhookTypeStatus(webhook *cxsdk.OutgoingWebhook) (*coralogixv1alpha1.OutboundWebhookTypeStatus, error) {
 	if webhook == nil {
 		return nil, fmt.Errorf("outbound-webhook is nil")
 	}
 
 	outboundWebhooks := &coralogixv1alpha1.OutboundWebhookTypeStatus{}
 	switch webhookType := webhook.Config.(type) {
-	case *outboundwebhooks.OutgoingWebhook_GenericWebhook:
+	case *cxsdk.GenericWebhook:
 		outboundWebhooks.GenericWebhook = getOutboundWebhookGenericTypeStatus(webhookType.GenericWebhook, webhook.Url)
-	case *outboundwebhooks.OutgoingWebhook_Slack:
+	case *cxsdk.SlackWebhook:
 		outboundWebhooks.Slack = getOutgoingWebhookSlackStatus(webhookType.Slack, webhook.Url)
-	case *outboundwebhooks.OutgoingWebhook_PagerDuty:
+	case *cxsdk.PagerDutyWebhook:
 		outboundWebhooks.PagerDuty = getOutgoingWebhookPagerDutyStatus(webhookType.PagerDuty)
-	case *outboundwebhooks.OutgoingWebhook_SendLog:
+	case *cxsdk.SendLogWebhook:
 		outboundWebhooks.SendLog = getOutgoingWebhookSendLogStatus(webhookType.SendLog, webhook.Url)
-	case *outboundwebhooks.OutgoingWebhook_EmailGroup:
+	case *cxsdk.EmailGroupWebhook:
 		outboundWebhooks.EmailGroup = getOutgoingWebhookEmailGroupStatus(webhookType.EmailGroup)
-	case *outboundwebhooks.OutgoingWebhook_MicrosoftTeams:
+	case *cxsdk.MicrosoftTeamsWebhook:
 		outboundWebhooks.MicrosoftTeams = getOutgoingWebhookMicrosoftTeamsStatus(webhookType.MicrosoftTeams, webhook.Url)
-	case *outboundwebhooks.OutgoingWebhook_Jira:
+	case *cxsdk.JiraWebhook:
 		outboundWebhooks.Jira = getOutboundWebhookJiraStatus(webhookType.Jira, webhook.Url)
-	case *outboundwebhooks.OutgoingWebhook_Opsgenie:
+	case *cxsdk.OpsgenieWebhook:
 		outboundWebhooks.Opsgenie = getOutboundWebhookOpsgenieStatus(webhookType.Opsgenie, webhook.Url)
-	case *outboundwebhooks.OutgoingWebhook_Demisto:
+	case *cxsdk.DemistoWebhook:
 		outboundWebhooks.Demisto = getOutboundWebhookDemistoStatus(webhookType.Demisto, webhook.Url)
-	case *outboundwebhooks.OutgoingWebhook_AwsEventBridge:
+	case *cxsdk.AwsEventBridgeWebhook:
 		outboundWebhooks.AwsEventBridge = getOutboundWebhookAwsEventBridgeStatus(webhookType.AwsEventBridge)
 	default:
 		return nil, fmt.Errorf("unsupported outbound-webhook type %T", webhookType)
@@ -215,7 +217,7 @@ func getOutboundWebhookTypeStatus(webhook *outboundwebhooks.OutgoingWebhook) (*c
 	return outboundWebhooks, nil
 }
 
-func getOutboundWebhookAwsEventBridgeStatus(awsEventBridge *outboundwebhooks.AwsEventBridgeConfig) *coralogixv1alpha1.AwsEventBridge {
+func getOutboundWebhookAwsEventBridgeStatus(awsEventBridge *cxsdk.AwsEventBridgeConfig) *coralogixv1alpha1.AwsEventBridge {
 	if awsEventBridge == nil {
 		return nil
 	}
@@ -229,7 +231,7 @@ func getOutboundWebhookAwsEventBridgeStatus(awsEventBridge *outboundwebhooks.Aws
 	}
 }
 
-func getOutboundWebhookGenericTypeStatus(generic *outboundwebhooks.GenericWebhookConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.GenericWebhookStatus {
+func getOutboundWebhookGenericTypeStatus(generic *cxsdk.GenericWebhookConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.GenericWebhookStatus {
 	if generic == nil {
 		return nil
 	}
@@ -243,7 +245,7 @@ func getOutboundWebhookGenericTypeStatus(generic *outboundwebhooks.GenericWebhoo
 	}
 }
 
-func getOutgoingWebhookSlackStatus(slack *outboundwebhooks.SlackConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.Slack {
+func getOutgoingWebhookSlackStatus(slack *cxsdk.SlackConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.Slack {
 	if slack == nil {
 		return nil
 	}
@@ -255,7 +257,7 @@ func getOutgoingWebhookSlackStatus(slack *outboundwebhooks.SlackConfig, url *wra
 	}
 }
 
-func getOutgoingWebhookPagerDutyStatus(pagerDuty *outboundwebhooks.PagerDutyConfig) *coralogixv1alpha1.PagerDuty {
+func getOutgoingWebhookPagerDutyStatus(pagerDuty *cxsdk.PagerDutyConfig) *coralogixv1alpha1.PagerDuty {
 	if pagerDuty == nil {
 		return nil
 	}
@@ -265,7 +267,7 @@ func getOutgoingWebhookPagerDutyStatus(pagerDuty *outboundwebhooks.PagerDutyConf
 	}
 }
 
-func getOutgoingWebhookMicrosoftTeamsStatus(teams *outboundwebhooks.MicrosoftTeamsConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.MicrosoftTeams {
+func getOutgoingWebhookMicrosoftTeamsStatus(teams *cxsdk.MicrosoftTeamsConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.MicrosoftTeams {
 	if teams == nil {
 		return nil
 	}
@@ -275,7 +277,7 @@ func getOutgoingWebhookMicrosoftTeamsStatus(teams *outboundwebhooks.MicrosoftTea
 	}
 }
 
-func getOutboundWebhookJiraStatus(jira *outboundwebhooks.JiraConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.Jira {
+func getOutboundWebhookJiraStatus(jira *cxsdk.JiraConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.Jira {
 	if jira == nil {
 		return nil
 	}
@@ -288,7 +290,7 @@ func getOutboundWebhookJiraStatus(jira *outboundwebhooks.JiraConfig, url *wrappe
 	}
 }
 
-func getOutboundWebhookOpsgenieStatus(opsgenie *outboundwebhooks.OpsgenieConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.Opsgenie {
+func getOutboundWebhookOpsgenieStatus(opsgenie *cxsdk.OpsgenieConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.Opsgenie {
 	if opsgenie == nil {
 		return nil
 	}
@@ -298,7 +300,7 @@ func getOutboundWebhookOpsgenieStatus(opsgenie *outboundwebhooks.OpsgenieConfig,
 	}
 }
 
-func getOutboundWebhookDemistoStatus(demisto *outboundwebhooks.DemistoConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.Demisto {
+func getOutboundWebhookDemistoStatus(demisto *cxsdk.DemistoConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.Demisto {
 	if demisto == nil {
 		return nil
 	}
@@ -310,7 +312,7 @@ func getOutboundWebhookDemistoStatus(demisto *outboundwebhooks.DemistoConfig, ur
 	}
 }
 
-func flattenSlackDigests(digests []*outboundwebhooks.SlackConfig_Digest) []coralogixv1alpha1.SlackConfigDigest {
+func flattenSlackDigests(digests []*cxsdk.SlackConfigDigest) []coralogixv1alpha1.SlackConfigDigest {
 	flattenedSlackDigests := make([]coralogixv1alpha1.SlackConfigDigest, 0, len(digests))
 	for _, digest := range digests {
 		flattenedSlackDigests = append(flattenedSlackDigests, coralogixv1alpha1.SlackConfigDigest{
@@ -321,7 +323,7 @@ func flattenSlackDigests(digests []*outboundwebhooks.SlackConfig_Digest) []coral
 	return flattenedSlackDigests
 }
 
-func flattenSlackConfigAttachments(attachments []*outboundwebhooks.SlackConfig_Attachment) []coralogixv1alpha1.SlackConfigAttachment {
+func flattenSlackConfigAttachments(attachments []*cxsdk.SlackConfigAttachment) []coralogixv1alpha1.SlackConfigAttachment {
 	flattenedSlackConfigAttachments := make([]coralogixv1alpha1.SlackConfigAttachment, 0, len(attachments))
 	for _, attachment := range attachments {
 		flattenedSlackConfigAttachments = append(flattenedSlackConfigAttachments, coralogixv1alpha1.SlackConfigAttachment{
@@ -332,7 +334,7 @@ func flattenSlackConfigAttachments(attachments []*outboundwebhooks.SlackConfig_A
 	return flattenedSlackConfigAttachments
 }
 
-func getOutgoingWebhookSendLogStatus(sendLog *outboundwebhooks.SendLogConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.SendLogStatus {
+func getOutgoingWebhookSendLogStatus(sendLog *cxsdk.SendLogConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.SendLogStatus {
 	if sendLog == nil {
 		return nil
 	}
@@ -344,7 +346,7 @@ func getOutgoingWebhookSendLogStatus(sendLog *outboundwebhooks.SendLogConfig, ur
 	}
 }
 
-func getOutgoingWebhookEmailGroupStatus(group *outboundwebhooks.EmailGroupConfig) *coralogixv1alpha1.EmailGroup {
+func getOutgoingWebhookEmailGroupStatus(group *cxsdk.EmailGroupConfig) *coralogixv1alpha1.EmailGroup {
 	if group == nil {
 		return nil
 	}
@@ -361,7 +363,7 @@ func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger,
 	}
 
 	log.V(int(zapcore.DebugLevel)).Info(fmt.Sprintf("updating outbound-webhook\n%s", protojson.Format(updateReq)))
-	_, err = r.OutboundWebhooksClient.UpdateOutboundWebhook(ctx, updateReq)
+	_, err = r.OutboundWebhooksClient.Update(ctx, updateReq)
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
 			webhook.Status = coralogixv1alpha1.OutboundWebhookStatus{}
@@ -374,8 +376,8 @@ func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger,
 	}
 
 	log.V(int(zapcore.DebugLevel)).Info("Getting outbound-webhook from remote", "id", webhook.Status.ID)
-	remoteOutboundWebhook, err := r.OutboundWebhooksClient.GetOutboundWebhook(ctx,
-		&outboundwebhooks.GetOutgoingWebhookRequest{
+	remoteOutboundWebhook, err := r.OutboundWebhooksClient.Get(ctx,
+		&cxsdk.GetOutgoingWebhookRequest{
 			Id: utils.StringPointerToWrapperspbString(webhook.Status.ID),
 		},
 	)
@@ -398,8 +400,8 @@ func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger,
 
 func (r *OutboundWebhookReconciler) delete(ctx context.Context, log logr.Logger, webhook *coralogixv1alpha1.OutboundWebhook) error {
 	log.V(int(zapcore.DebugLevel)).Info("Deleting outbound-webhook from remote", "id", webhook.Status.ID)
-	if _, err := r.OutboundWebhooksClient.DeleteOutboundWebhook(ctx,
-		&outboundwebhooks.DeleteOutgoingWebhookRequest{Id: wrapperspb.String(*webhook.Status.ID)}); err != nil && status.Code(err) != codes.NotFound {
+	if _, err := r.OutboundWebhooksClient.Delete(ctx,
+		&cxsdk.DeleteOutgoingWebhookRequest{Id: wrapperspb.String(*webhook.Status.ID)}); err != nil && status.Code(err) != codes.NotFound {
 		return fmt.Errorf("error to delete outbound-webhook -\n%v", webhook)
 	}
 	log.V(int(zapcore.DebugLevel)).Info("outbound-webhook was deleted from remote", "id", webhook.Status.ID)

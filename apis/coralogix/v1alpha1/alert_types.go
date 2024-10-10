@@ -25,14 +25,16 @@ import (
 	"time"
 
 	utils "github.com/coralogix/coralogix-operator/apis"
-	"github.com/coralogix/coralogix-operator/controllers/clientset"
-	alerts "github.com/coralogix/coralogix-operator/controllers/clientset/grpc/alerts/v2"
-	webhooks "github.com/coralogix/coralogix-operator/controllers/clientset/grpc/outbound-webhooks"
 	"github.com/go-logr/logr"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
+
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+
+	"github.com/coralogix/coralogix-operator/controllers/clientset"
+	alerts "github.com/coralogix/coralogix-operator/controllers/clientset/grpc/alerts/v2"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -1011,7 +1013,7 @@ func expandNotificationGroups(ctx context.Context, log logr.Logger, notification
 func getWebhooksNamesToIds(ctx context.Context, log logr.Logger) (map[string]uint32, error) {
 	webhooksNamesToIds := make(map[string]uint32)
 	log.V(1).Info("Listing all outgoing webhooks")
-	listWebhooksResp, err := WebhooksClient.ListAllOutgoingWebhooks(ctx, &webhooks.ListAllOutgoingWebhooksRequest{})
+	listWebhooksResp, err := WebhooksClient.List(ctx, &cxsdk.ListAllOutgoingWebhooksRequest{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list all outgoing webhooks %w", err)
 	}

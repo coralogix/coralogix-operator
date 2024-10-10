@@ -14,7 +14,7 @@ type ClientSet struct {
 	ruleGroups          *cxsdk.RuleGroupsClient
 	alerts              *AlertsClient
 	recordingRuleGroups *RecordingRulesGroupsClient
-	outboundWebhooks    *OutboundWebhooksClient
+	outboundWebhooks    *cxsdk.WebhooksClient
 }
 
 func (c *ClientSet) RuleGroups() RuleGroupsClientInterface {
@@ -41,6 +41,6 @@ func NewClientSet(targetUrl, apiKey string) ClientSetInterface {
 		ruleGroups:          cxsdk.NewRuleGroupsClient(SDKAPIKeyCPC),
 		alerts:              NewAlertsClient(apikeyCPC),
 		recordingRuleGroups: NewRecordingRuleGroupsClient(apikeyCPC),
-		outboundWebhooks:    NewOutboundWebhooksClient(apikeyCPC),
+		outboundWebhooks:    cxsdk.NewWebhooksClient(SDKAPIKeyCPC),
 	}
 }

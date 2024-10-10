@@ -4,9 +4,6 @@ import (
 	"context"
 	"testing"
 
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
-	ow "github.com/coralogix/coralogix-operator/controllers/clientset/grpc/outbound-webhooks"
-	"github.com/coralogix/coralogix-operator/controllers/mock_clientset"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -19,6 +16,11 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/controllers/mock_clientset"
 )
 
 func setupOutboundWebhooksReconciler(t *testing.T, ctx context.Context, outboundWebhooksClient *mock_clientset.MockOutboundWebhooksClientInterface) (OutboundWebhookReconciler, watch.Interface) {
@@ -67,17 +69,17 @@ func TestOutboundWebhooksCreation(t *testing.T) {
 			name:       "outbound-webhook creation success",
 			shouldFail: false,
 			params: func(params PrepareOutboundWebhooksParams) {
-				params.outboundWebhooksClient.EXPECT().CreateOutboundWebhook(params.ctx, gomock.Any()).Return(&ow.CreateOutgoingWebhookResponse{Id: wrapperspb.String("id")}, nil)
-				params.outboundWebhooksClient.EXPECT().GetOutboundWebhook(params.ctx, gomock.Any()).Return(&ow.GetOutgoingWebhookResponse{
-					Webhook: &ow.OutgoingWebhook{
+				params.outboundWebhooksClient.EXPECT().Create(params.ctx, gomock.Any()).Return(&cxsdk.CreateOutgoingWebhookResponse{Id: wrapperspb.String("id")}, nil)
+				params.outboundWebhooksClient.EXPECT().Get(params.ctx, gomock.Any()).Return(&cxsdk.GetOutgoingWebhookResponse{
+					Webhook: &cxsdk.OutgoingWebhook{
 						Id:   wrapperspb.String("id"),
 						Name: wrapperspb.String("name"),
-						Type: ow.WebhookType_GENERIC,
+						Type: cxsdk.WebhookTypeGeneric,
 						Url:  wrapperspb.String("url"),
-						Config: &ow.OutgoingWebhook_GenericWebhook{
-							GenericWebhook: &ow.GenericWebhookConfig{
+						Config: &cxsdk.GenericWebhook{
+							GenericWebhook: &cxsdk.GenericWebhookConfig{
 								Uuid:    wrapperspb.String("uuid"),
-								Method:  ow.GenericWebhookConfig_GET,
+								Method:  cxsdk.GenericWebhookConfigGet,
 								Headers: map[string]string{"key": "value"},
 								Payload: wrapperspb.String("payload"),
 							},
@@ -158,34 +160,34 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 			name:       "outbound-webhook update success",
 			shouldFail: false,
 			params: func(params PrepareOutboundWebhooksParams) {
-				params.outboundWebhooksClient.EXPECT().CreateOutboundWebhook(params.ctx, gomock.Any()).Return(&ow.CreateOutgoingWebhookResponse{Id: wrapperspb.String("id")}, nil)
-				params.outboundWebhooksClient.EXPECT().GetOutboundWebhook(params.ctx, gomock.Any()).Return(&ow.GetOutgoingWebhookResponse{
-					Webhook: &ow.OutgoingWebhook{
+				params.outboundWebhooksClient.EXPECT().Create(params.ctx, gomock.Any()).Return(&cxsdk.CreateOutgoingWebhookResponse{Id: wrapperspb.String("id")}, nil)
+				params.outboundWebhooksClient.EXPECT().Get(params.ctx, gomock.Any()).Return(&cxsdk.GetOutgoingWebhookResponse{
+					Webhook: &cxsdk.OutgoingWebhook{
 						Id:   wrapperspb.String("id"),
 						Name: wrapperspb.String("name"),
-						Type: ow.WebhookType_GENERIC,
+						Type: cxsdk.WebhookTypeGeneric,
 						Url:  wrapperspb.String("url"),
-						Config: &ow.OutgoingWebhook_GenericWebhook{
-							GenericWebhook: &ow.GenericWebhookConfig{
+						Config: &cxsdk.GenericWebhook{
+							GenericWebhook: &cxsdk.GenericWebhookConfig{
 								Uuid:    wrapperspb.String("uuid"),
-								Method:  ow.GenericWebhookConfig_GET,
+								Method:  cxsdk.GenericWebhookConfigGet,
 								Headers: map[string]string{"key": "value"},
 								Payload: wrapperspb.String("payload"),
 							},
 						},
 					},
 				}, nil)
-				params.outboundWebhooksClient.EXPECT().UpdateOutboundWebhook(params.ctx, gomock.Any()).Return(&ow.UpdateOutgoingWebhookResponse{}, nil)
-				params.outboundWebhooksClient.EXPECT().GetOutboundWebhook(params.ctx, gomock.Any()).Return(&ow.GetOutgoingWebhookResponse{
-					Webhook: &ow.OutgoingWebhook{
+				params.outboundWebhooksClient.EXPECT().Update(params.ctx, gomock.Any()).Return(&cxsdk.UpdateOutgoingWebhookResponse{}, nil)
+				params.outboundWebhooksClient.EXPECT().Get(params.ctx, gomock.Any()).Return(&cxsdk.GetOutgoingWebhookResponse{
+					Webhook: &cxsdk.OutgoingWebhook{
 						Id:   wrapperspb.String("id"),
 						Name: wrapperspb.String("updated-name"),
-						Type: ow.WebhookType_GENERIC,
+						Type: cxsdk.WebhookTypeGeneric,
 						Url:  wrapperspb.String("updated-url"),
-						Config: &ow.OutgoingWebhook_GenericWebhook{
-							GenericWebhook: &ow.GenericWebhookConfig{
+						Config: &cxsdk.GenericWebhook{
+							GenericWebhook: &cxsdk.GenericWebhookConfig{
 								Uuid:    wrapperspb.String("updated-uuid"),
-								Method:  ow.GenericWebhookConfig_POST,
+								Method:  cxsdk.GenericWebhookConfigPost,
 								Headers: map[string]string{"updated-key": "updated-value"},
 								Payload: wrapperspb.String("updated-payload"),
 							},
@@ -312,24 +314,24 @@ func TestOutboundWebhookDeletion(t *testing.T) {
 			name:       "outbound-webhook deletion success",
 			shouldFail: false,
 			params: func(params PrepareOutboundWebhooksParams) {
-				params.outboundWebhooksClient.EXPECT().CreateOutboundWebhook(params.ctx, gomock.Any()).Return(&ow.CreateOutgoingWebhookResponse{Id: wrapperspb.String("id")}, nil)
-				params.outboundWebhooksClient.EXPECT().GetOutboundWebhook(params.ctx, gomock.Any()).Return(&ow.GetOutgoingWebhookResponse{
-					Webhook: &ow.OutgoingWebhook{
+				params.outboundWebhooksClient.EXPECT().Create(params.ctx, gomock.Any()).Return(&cxsdk.CreateOutgoingWebhookResponse{Id: wrapperspb.String("id")}, nil)
+				params.outboundWebhooksClient.EXPECT().Get(params.ctx, gomock.Any()).Return(&cxsdk.GetOutgoingWebhookResponse{
+					Webhook: &cxsdk.OutgoingWebhook{
 						Id:   wrapperspb.String("id"),
 						Name: wrapperspb.String("name"),
-						Type: ow.WebhookType_GENERIC,
+						Type: cxsdk.WebhookTypeGeneric,
 						Url:  wrapperspb.String("url"),
-						Config: &ow.OutgoingWebhook_GenericWebhook{
-							GenericWebhook: &ow.GenericWebhookConfig{
+						Config: &cxsdk.GenericWebhook{
+							GenericWebhook: &cxsdk.GenericWebhookConfig{
 								Uuid:    wrapperspb.String("uuid"),
-								Method:  ow.GenericWebhookConfig_GET,
+								Method:  cxsdk.GenericWebhookConfigGet,
 								Headers: map[string]string{"key": "value"},
 								Payload: wrapperspb.String("payload"),
 							},
 						},
 					},
 				}, nil)
-				params.outboundWebhooksClient.EXPECT().DeleteOutboundWebhook(params.ctx, gomock.Any()).Return(&ow.DeleteOutgoingWebhookResponse{}, nil)
+				params.outboundWebhooksClient.EXPECT().Delete(params.ctx, gomock.Any()).Return(&cxsdk.DeleteOutgoingWebhookResponse{}, nil)
 			},
 			outboundWebhook: coralogixv1alpha1.OutboundWebhook{
 				ObjectMeta: metav1.ObjectMeta{
