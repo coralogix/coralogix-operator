@@ -296,25 +296,26 @@ func prometheusInnerRulesToCoralogixInnerRules(rules []prometheus.Rule) []coralo
 	return result
 }
 
-func prometheusRuleToCoralogixAlertSpec(prometheusRule prometheus.Rule) coralogixv1alpha1.AlertSpec {
+func prometheusRuleToCoralogixAlertSpec(rule prometheus.Rule) coralogixv1alpha1.AlertSpec {
 	return coralogixv1alpha1.AlertSpec{
-		Severity: getSeverity(prometheusRule),
+		Description: rule.Annotations["description"],
+		Severity:    getSeverity(rule),
 		NotificationGroups: []coralogixv1alpha1.NotificationGroup{
 			{
 				Notifications: []coralogixv1alpha1.Notification{
 					{
-						RetriggeringPeriodMinutes: getNotificationPeriod(prometheusRule),
+						RetriggeringPeriodMinutes: getNotificationPeriod(rule),
 					},
 				},
 			},
 		},
-		Name: prometheusRule.Alert,
+		Name: rule.Alert,
 		AlertType: coralogixv1alpha1.AlertType{
 			Metric: &coralogixv1alpha1.Metric{
 				Promql: &coralogixv1alpha1.Promql{
-					SearchQuery: prometheusRule.Expr.StrVal,
+					SearchQuery: rule.Expr.StrVal,
 					Conditions: coralogixv1alpha1.PromqlConditions{
-						TimeWindow:                 getTimeWindow(prometheusRule),
+						TimeWindow:                 getTimeWindow(rule),
 						AlertWhen:                  coralogixv1alpha1.PromqlAlertWhenMoreThan,
 						Threshold:                  resource.MustParse("0"),
 						SampleThresholdPercentage:  100,
@@ -323,28 +324,28 @@ func prometheusRuleToCoralogixAlertSpec(prometheusRule prometheus.Rule) coralogi
 				},
 			},
 		},
-		Labels: prometheusRule.Labels,
+		Labels: rule.Labels,
 	}
 }
 
-func getSeverity(prometheusRule prometheus.Rule) coralogixv1alpha1.AlertSeverity {
+func getSeverity(rule prometheus.Rule) coralogixv1alpha1.AlertSeverity {
 	severity := coralogixv1alpha1.AlertSeverityInfo
-	if severityStr, ok := prometheusRule.Labels["severity"]; ok && severityStr != "" {
+	if severityStr, ok := rule.Labels["severity"]; ok && severityStr != "" {
 		severityStr = strings.ToUpper(severityStr[:1]) + strings.ToLower(severityStr[1:])
 		severity = coralogixv1alpha1.AlertSeverity(severityStr)
 	}
 	return severity
 }
 
-func getTimeWindow(prometheusRule prometheus.Rule) coralogixv1alpha1.MetricTimeWindow {
-	if timeWindow, ok := prometheusAlertForToCoralogixPromqlAlertTimeWindow[prometheusRule.For]; ok {
+func getTimeWindow(rule prometheus.Rule) coralogixv1alpha1.MetricTimeWindow {
+	if timeWindow, ok := prometheusAlertForToCoralogixPromqlAlertTimeWindow[rule.For]; ok {
 		return timeWindow
 	}
 	return prometheusAlertForToCoralogixPromqlAlertTimeWindow["1m"]
 }
 
-func getNotificationPeriod(prometheusRule prometheus.Rule) int32 {
-	if cxNotifyEveryMin, ok := prometheusRule.Annotations["cxNotifyEveryMin"]; ok {
+func getNotificationPeriod(rule prometheus.Rule) int32 {
+	if cxNotifyEveryMin, ok := rule.Annotations["cxNotifyEveryMin"]; ok {
 		if notificationPeriod, err := strconv.Atoi(cxNotifyEveryMin); err == nil {
 			if notificationPeriod > 0 {
 				return int32(notificationPeriod)
@@ -352,7 +353,7 @@ func getNotificationPeriod(prometheusRule prometheus.Rule) int32 {
 		}
 	}
 
-	if duration, err := time.ParseDuration(string(prometheusRule.For)); err == nil {
+	if duration, err := time.ParseDuration(string(rule.For)); err == nil {
 		notificationPeriod := int(duration.Minutes())
 		if notificationPeriod > 0 {
 			return int32(notificationPeriod)
