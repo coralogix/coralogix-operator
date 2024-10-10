@@ -17,7 +17,8 @@ limitations under the License.
 package e2e
 
 import (
-	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	prometheusv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
@@ -47,7 +48,10 @@ func (c *Clients) InitControllerRuntimeClient() error {
 		if err != nil {
 			return err
 		}
-		if err = prometheus.AddToScheme(crClient.Scheme()); err != nil {
+		if err = prometheusv1.AddToScheme(crClient.Scheme()); err != nil {
+			return err
+		}
+		if err = prometheusv1alpha1.AddToScheme(crClient.Scheme()); err != nil {
 			return err
 		}
 		if err = coralogixv1alpha1.AddToScheme(crClient.Scheme()); err != nil {
