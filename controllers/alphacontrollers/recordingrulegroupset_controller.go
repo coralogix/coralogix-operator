@@ -20,20 +20,20 @@ import (
 	"context"
 	"fmt"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/controllers/clientset"
-	rrg "github.com/coralogix/coralogix-operator/controllers/clientset/grpc/recording-rules-groups/v2"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-	"k8s.io/apimachinery/pkg/api/errors"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 var recordingRuleGroupSetFinalizerName = "recordingrulegroupset.coralogix.com/finalizer"
@@ -97,7 +97,7 @@ func (r *RecordingRuleGroupSetReconciler) Reconcile(ctx context.Context, req ctr
 func (r *RecordingRuleGroupSetReconciler) create(ctx context.Context, recordingRuleGroupSet *coralogixv1alpha1.RecordingRuleGroupSet) error {
 	response, err := r.CoralogixClientSet.
 		RecordingRuleGroups().
-		CreateRecordingRuleGroupSet(ctx, &rrg.CreateRuleGroupSet{
+		Create(ctx, &cxsdk.CreateRuleGroupSetRequest{
 			Name:   ptr.To(fmt.Sprintf("%s%s", recordingRuleGroupSet.Name, r.RecordingRuleGroupSetSuffix)),
 			Groups: recordingRuleGroupSet.Spec.ExtractRecordingRuleGroups(),
 		})
@@ -124,7 +124,7 @@ func (r *RecordingRuleGroupSetReconciler) create(ctx context.Context, recordingR
 }
 
 func (r *RecordingRuleGroupSetReconciler) update(ctx context.Context, recordingRuleGroupSet *coralogixv1alpha1.RecordingRuleGroupSet) error {
-	remoteRecordingRule, err := r.CoralogixClientSet.RecordingRuleGroups().GetRecordingRuleGroupSet(ctx, &rrg.FetchRuleGroupSet{
+	remoteRecordingRule, err := r.CoralogixClientSet.RecordingRuleGroups().Get(ctx, &cxsdk.GetRuleGroupSetRequest{
 		Id: *recordingRuleGroupSet.Status.ID,
 	})
 
@@ -141,10 +141,9 @@ func (r *RecordingRuleGroupSetReconciler) update(ctx context.Context, recordingR
 
 	if _, err := r.CoralogixClientSet.
 		RecordingRuleGroups().
-		UpdateRecordingRuleGroupSet(ctx, &rrg.UpdateRuleGroupSet{
+		Update(ctx, &cxsdk.UpdateRuleGroupSetRequest{
 			Id:     remoteRecordingRule.Id,
 			Groups: recordingRuleGroupSet.Spec.ExtractRecordingRuleGroups(),
-			Name:   ptr.To(fmt.Sprintf("%s%s", recordingRuleGroupSet.Name, r.RecordingRuleGroupSetSuffix)),
 		}); err != nil {
 		return fmt.Errorf("failed to update recording rule groupSet: %w", err)
 	}
@@ -153,7 +152,7 @@ func (r *RecordingRuleGroupSetReconciler) update(ctx context.Context, recordingR
 }
 
 func (r *RecordingRuleGroupSetReconciler) delete(ctx context.Context, recordingRuleGroupSet *coralogixv1alpha1.RecordingRuleGroupSet) error {
-	_, err := r.CoralogixClientSet.RecordingRuleGroups().DeleteRecordingRuleGroupSet(ctx, &rrg.DeleteRuleGroupSet{
+	_, err := r.CoralogixClientSet.RecordingRuleGroups().Delete(ctx, &cxsdk.DeleteRuleGroupSetRequest{
 		Id: *recordingRuleGroupSet.Status.ID,
 	})
 

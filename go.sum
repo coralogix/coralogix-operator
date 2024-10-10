@@ -35,6 +35,10 @@ github.com/coralogix/coralogix-management-sdk v0.2.2-0.20241008112818-bba7c7320c
 github.com/coralogix/coralogix-management-sdk v0.2.2-0.20241008112818-bba7c7320cdf/go.mod h1:1aa/coMEMe5M1NvnRymOrBF2iCdefaWR0CMaMjPu0oI=
 github.com/coralogix/coralogix-management-sdk v0.2.2-0.20241008113746-f3f707f6e406 h1:OHRc3ApkMc0oKieebWDtcc2yEUvASPJ3jRcZ4ho0j3c=
 github.com/coralogix/coralogix-management-sdk v0.2.2-0.20241008113746-f3f707f6e406/go.mod h1:1aa/coMEMe5M1NvnRymOrBF2iCdefaWR0CMaMjPu0oI=
+github.com/coralogix/coralogix-management-sdk v0.2.2-0.20241010082835-a716a0125e89 h1:wTO2+KdtGL50vpRfxLmcqPg/XNeLv4W9BQyEpB4Sf+8=
+github.com/coralogix/coralogix-management-sdk v0.2.2-0.20241010082835-a716a0125e89/go.mod h1:1aa/coMEMe5M1NvnRymOrBF2iCdefaWR0CMaMjPu0oI=
+github.com/coralogix/coralogix-management-sdk v0.2.2-0.20241010083215-2b986bff8a4e h1:YZhAgtvQdlavo+RlLe1dF7ogmlPlltqX7eCM78GrGqI=
+github.com/coralogix/coralogix-management-sdk v0.2.2-0.20241010083215-2b986bff8a4e/go.mod h1:1aa/coMEMe5M1NvnRymOrBF2iCdefaWR0CMaMjPu0oI=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
