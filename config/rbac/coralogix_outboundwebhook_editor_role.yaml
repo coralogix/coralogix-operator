@@ -12,7 +12,7 @@ metadata:
   name: outboundwebhook-editor-role
 rules:
 - apiGroups:
-  - coralogix.coralogix.com
+  - coralogix.com
   resources:
   - outboundwebhooks
   verbs:
