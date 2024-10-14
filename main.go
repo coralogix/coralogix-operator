@@ -88,10 +88,13 @@ func main() {
 			"Enabling this will ensure there is only one active controller manager.")
 
 	region := os.Getenv("CORALOGIX_REGION")
-	flag.StringVar(&region, "region", region, fmt.Sprintf("The region of your Coralogix cluster. Can be one of %q.", validRegions))
+	flag.StringVar(&region, "region", region, fmt.Sprintf("The region of your Coralogix cluster. Can be one of %q. Conflicts with 'domain'.", validRegions))
+
+	domain := os.Getenv("CORALOGIX_DOMAIN")
+	flag.StringVar(&domain, "domain", domain, "The domain of your Coralogix cluster. Conflicts with 'region'.")
 
 	apiKey := os.Getenv("CORALOGIX_API_KEY")
-	flag.StringVar(&apiKey, "api-key", apiKey, "The proper api-key based on your Coralogix cluster's region")
+	flag.StringVar(&apiKey, "api-key", apiKey, "The proper api-key based on your Coralogix cluster's region.")
 
 	var prometheusRuleController bool
 	flag.BoolVar(&prometheusRuleController, "prometheus-rule-controller", true, "Determine if the prometheus rule controller should be started. Default is true.")
@@ -108,10 +111,28 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
-	if !slices.Contains(validRegions, region) {
-		err := fmt.Errorf("region value is '%s', but can be one of %q", region, validRegions)
+	if region != "" && domain != "" {
+		err := fmt.Errorf("region and domain flags are mutually exclusive")
 		setupLog.Error(err, "invalid arguments for running operator")
 		os.Exit(1)
+	}
+
+	if region == "" && domain == "" {
+		err := fmt.Errorf("region or domain must be set")
+		setupLog.Error(err, "invalid arguments for running operator")
+		os.Exit(1)
+	}
+
+	var targetUrl string
+	if region != "" {
+		if !slices.Contains(validRegions, region) {
+			err := fmt.Errorf("region value is '%s', but can be one of %q", region, validRegions)
+			setupLog.Error(err, "invalid arguments for running operator")
+			os.Exit(1)
+		}
+		targetUrl = regionToGrpcUrl[region]
+	} else if domain != "" {
+		targetUrl = fmt.Sprintf("ng-api-grpc.%s:443", domain)
 	}
 
 	if apiKey == "" {
@@ -150,7 +171,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	targetUrl := regionToGrpcUrl[region]
 	if err = (&alphacontrollers.RuleGroupReconciler{
 		CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),
 		Client:             mgr.GetClient(),

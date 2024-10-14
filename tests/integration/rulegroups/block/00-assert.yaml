@@ -1,0 +1,27 @@
+apiVersion: coralogix.com/v1alpha1
+kind: RuleGroup
+metadata:
+  labels:
+    app.kubernetes.io/name: rulegroup
+    app.kubernetes.io/instance: rulegroup-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: block-rule
+status:
+  active: true
+  description: rule-group from k8s operator
+  name: block-rule
+  order: 1
+  subgroups:
+    - active: true
+      order: 1
+      rules:
+        - active: true
+          block:
+            blockingAllMatchingBlocks: true
+            keepBlockedLogs: false
+            regex: sql_error_code\\s*=\\s*28000
+            sourceField: text
+          description: Block 2800 pg error
+          name: Block 28000

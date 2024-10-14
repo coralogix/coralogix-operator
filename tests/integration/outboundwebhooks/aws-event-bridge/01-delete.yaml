@@ -1,0 +1,4 @@
+apiVersion: coralogix.com/v1alpha1
+kind: OutboundWebhook
+metadata:
+  name: aws-event-bridge-webhook

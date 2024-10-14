@@ -1,11 +1,11 @@
 apiVersion: kuttl.dev/v1beta1
 kind: TestSuite
 testDirs:
-  - tests/e2e/alerts
-  - tests/e2e/rulegroups
-  - tests/e2e/recordingrulegroupsets
-  - tests/e2e/prometheusrules
-  - tests/e2e/outboundwebhooks
-  - tests/e2e/alertmangerconfigs
+  - tests/integration/alerts
+  - tests/integration/rulegroups
+  - tests/integration/recordingrulegroupsets
+  - tests/integration/prometheusrules
+  - tests/integration/outboundwebhooks
+  - tests/integration/alertmangerconfigs
 namespace: default
 timeout: 60

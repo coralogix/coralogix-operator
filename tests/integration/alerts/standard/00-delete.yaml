@@ -1,0 +1,4 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Alert
+metadata:
+  name: standard-alert-example

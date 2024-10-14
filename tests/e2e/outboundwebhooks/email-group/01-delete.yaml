@@ -1,4 +1,0 @@
-apiVersion: coralogix.com/v1alpha1
-kind: OutboundWebhook
-metadata:
-  name: email-group-webhook

@@ -16,26 +16,28 @@ jobs:
   tests:
     name: Tests
     runs-on: ubuntu-latest
+    env:
+      IMG: tests.com/coralogix-operator:v0.0.1
+      CORALOGIX_REGION: ${{ secrets.CORALOGIX_REGION }}
+      CORALOGIX_API_KEY: ${{ secrets.CORALOGIX_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build the controller-manager Docker image
+        run: |
+          make docker-build
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1.4.0
-      - name: Install kuttl
+      - name: Load the controller-manager image into Kind
         run: |
-          curl -Lo /usr/local/bin/kubectl-kuttl https://github.com/kudobuilder/kuttl/releases/download/v0.12.1/kubectl-kuttl_0.12.1_linux_x86_64
-          chmod +x /usr/local/bin/kubectl-kuttl
+          kind load docker-image ${{ env.IMG }} --name chart-testing
       - name: Install CRDs
         run: make install
-      - name: Install Go
-        uses: actions/setup-go@37335c7bb261b353407cff977110895fa0b4f7d8
-        with:
-          go-version: 1.22.x
-      - name: Running operator and Tests
-        env:
-          CORALOGIX_REGION: ${{ secrets.CORALOGIX_REGION }}
-          CORALOGIX_API_KEY: ${{ secrets.CORALOGIX_API_KEY }}
+      - name: Deploy the controller-manager
         run: |
-          go run main.go &
-          sleep 30s
-          make e2e
+          make deploy
+      - name: Run e2e Tests
+        run: |
+          make e2e-tests

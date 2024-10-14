@@ -1,4 +1,0 @@
-apiVersion: coralogix.com/v1alpha1
-kind: RuleGroup
-metadata:
-  name: mixed-rulegroup

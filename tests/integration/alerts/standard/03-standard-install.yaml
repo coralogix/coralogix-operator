@@ -1,0 +1,36 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/name: alert
+    app.kubernetes.io/instance: alert-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: standard-alert-example-03
+spec:
+  name: standard alert example
+  description: alert from k8s operator
+  severity: Error
+  labels:
+    alert_type: security
+    security_severity: high
+  notificationGroups:
+    - notifications:
+        - notifyOn: TriggeredOnly
+          integrationName: WebhookAlerts
+          retriggeringPeriodMinutes: 1
+  scheduling:
+    daysEnabled: [ "Wednesday", "Thursday" ]
+    timeZone: UTC+02
+    startTime: 08:00
+    endTime: 20:00
+  alertType:
+    standard:
+      filters:
+        searchQuery: remote_addr_enriched:/.*/
+        applications: [ "filter:contains:nginx" ]
+        subsystems: [ "filter:startsWith:subsystem-name" ]
+        severities: [ "Warning", "Info" ]
+      conditions:
+        alertWhen: Immediately

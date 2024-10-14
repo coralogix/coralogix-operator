@@ -1,0 +1,20 @@
+apiVersion: coralogix.com/v1alpha1
+kind: RecordingRuleGroupSet
+metadata:
+  name: recording-rule-group-set.example
+spec:
+  groups:
+    - name: example.rules
+      intervalSeconds: 70
+      rules:
+        - expr: vector(1)
+          record: ExampleRecord
+        - expr: vector(2)
+          record: ExampleRecord2
+    - name: example.rules2
+      intervalSeconds: 60
+      rules:
+        - expr: vector(3)
+          record: ExampleRecord
+        - expr: vector(4)
+          record: ExampleRecord

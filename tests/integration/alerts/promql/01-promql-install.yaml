@@ -1,0 +1,45 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/name: alert
+    app.kubernetes.io/instance: alert-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: promql-alert-example-2
+spec:
+  name: promql alert example
+  description: alert from k8s operator
+  severity: Critical
+  notificationGroups:
+    - notifications:
+        - notifyOn: TriggeredOnly
+          integrationName: WebhookAlerts
+          retriggeringPeriodMinutes: 1
+        - notifyOn: TriggeredAndResolved
+          emailRecipients: [ "example@coralogix.com" ]
+          retriggeringPeriodMinutes: 1440
+    - groupByFields: [ "coralogix.metadata.sdkId" ]
+      notifications:
+        - notifyOn: TriggeredOnly
+          integrationName: WebhookAlerts
+          retriggeringPeriodMinutes: 1
+        - notifyOn: TriggeredAndResolved
+          emailRecipients: [ "example2@coralogix.com" ]
+          retriggeringPeriodMinutes: 1440
+  scheduling:
+    daysEnabled: ["Wednesday", "Thursday"]
+    timeZone: UTC+02
+    startTime: 08:30
+    endTime: 20:30
+  alertType:
+    metric:
+      promql:
+        searchQuery: http_requests_total{status!~\"4..\"}
+        conditions:
+          alertWhen: MoreThanUsual
+          threshold: 3
+          sampleThresholdPercentage: 50
+          timeWindow: TwelveHours
+          minNonNullValuesPercentage: 10

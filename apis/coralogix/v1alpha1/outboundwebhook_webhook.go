@@ -48,43 +48,51 @@ func (r *OutboundWebhook) ValidateCreate() (warnings admission.Warnings, err err
 		return admission.Warnings{"at least one webhook type should be set"}, fmt.Errorf("at least one webhook type should be set")
 	}
 
+	if valid, WebhookTypes := onlyOneWebhookTypeIsSet(r.Spec.OutboundWebhookType); !valid {
+		return admission.Warnings{"only one webhook type should be set"}, fmt.Errorf("only one webhook type should be set, but got: %v", WebhookTypes)
+	}
+
+	return nil, nil
+}
+
+func onlyOneWebhookTypeIsSet(webhookType OutboundWebhookType) (bool, []string) {
 	var typesSet []string
-	if r.Spec.OutboundWebhookType.GenericWebhook != nil {
+	if webhookType.GenericWebhook != nil {
 		typesSet = append(typesSet, "GenericWebhook")
 	}
-	if r.Spec.OutboundWebhookType.Opsgenie != nil {
+	if webhookType.Opsgenie != nil {
 		typesSet = append(typesSet, "Opsgenie")
 	}
-	if r.Spec.OutboundWebhookType.Slack != nil {
+	if webhookType.Slack != nil {
 		typesSet = append(typesSet, "Slack")
 	}
-	if r.Spec.OutboundWebhookType.SendLog != nil {
+	if webhookType.SendLog != nil {
 		typesSet = append(typesSet, "SendLog")
 	}
-	if r.Spec.OutboundWebhookType.EmailGroup != nil {
+	if webhookType.EmailGroup != nil {
 		typesSet = append(typesSet, "EmailGroup")
 	}
-	if r.Spec.OutboundWebhookType.MicrosoftTeams != nil {
+	if webhookType.MicrosoftTeams != nil {
 		typesSet = append(typesSet, "MicrosoftTeams")
 	}
-	if r.Spec.OutboundWebhookType.PagerDuty != nil {
+	if webhookType.PagerDuty != nil {
 		typesSet = append(typesSet, "PagerDuty")
 	}
-	if r.Spec.OutboundWebhookType.Jira != nil {
+	if webhookType.Jira != nil {
 		typesSet = append(typesSet, "Jira")
 	}
-	if r.Spec.OutboundWebhookType.Demisto != nil {
+	if webhookType.Demisto != nil {
 		typesSet = append(typesSet, "Demisto")
 	}
-	if r.Spec.OutboundWebhookType.AwsEventBridge != nil {
+	if webhookType.AwsEventBridge != nil {
 		typesSet = append(typesSet, "AwsEventBridge")
 	}
 
 	if len(typesSet) > 1 {
-		return admission.Warnings{"only one webhook type should be set"}, fmt.Errorf("all of the webhook types are set: %v, but only one should be set", typesSet)
+		return false, typesSet
 	}
 
-	return nil, nil
+	return true, typesSet
 }
 
 func atLeastOneWebhookTypeIsSet(webhookType OutboundWebhookType) bool {
@@ -106,16 +114,18 @@ func atLeastOneWebhookTypeIsSet(webhookType OutboundWebhookType) bool {
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (r *OutboundWebhook) ValidateUpdate(old runtime.Object) (warnings admission.Warnings, err error) {
-	outboundwebhooklog.Info("validate update", "name", r.Name)
+	if !atLeastOneWebhookTypeIsSet(r.Spec.OutboundWebhookType) {
+		return admission.Warnings{"at least one webhook type should be set"}, fmt.Errorf("at least one webhook type should be set")
+	}
 
-	// TODO(user): fill in your validation logic upon object update.
+	if valid, WebhookTypes := onlyOneWebhookTypeIsSet(r.Spec.OutboundWebhookType); !valid {
+		return admission.Warnings{"only one webhook type should be set"}, fmt.Errorf("only one webhook type should be set, but got: %v", WebhookTypes)
+	}
+
 	return nil, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
 func (r *OutboundWebhook) ValidateDelete() (warnings admission.Warnings, err error) {
-	outboundwebhooklog.Info("validate delete", "name", r.Name)
-
-	// TODO(user): fill in your validation logic upon object deletion.
 	return nil, nil
 }

@@ -34,6 +34,7 @@ make install
 $ export CORALOGIX_API_KEY="<api-key>"
 $ export CORALOGIX_REGION="<region>"
 ```
+For private domain the `domain` field or the environment variable `CORALOGIX_DOMAIN` have to be defined.
 
 3. Build and push your image to the location specified by `IMG`:
 ```sh

@@ -5,6 +5,7 @@ IMG ?= controller:latest
 ENABLE_WEBHOOKS ?= true
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.25.0
+LDFLAGS ?= "-X google.golang.org/protobuf/reflect/protoregistry.conflictPolicy=warn"
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -56,9 +57,9 @@ fmt: ## Run go fmt against code.
 vet: ## Run go vet against code.
 	go vet ./...
 
-.PHONY: test
-test: manifests generate fmt vet envtest ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -coverprofile cover.out
+.PHONY: unit-tests
+unit-tests: manifests generate fmt vet envtest ## Run tests.
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./controllers/ -ldflags $(LDFLAGS) -coverprofile cover.out
 
 ##@ Documentation
 .PHONY: generate-api-docs
@@ -69,18 +70,18 @@ generate-api-docs: crdoc ## Generate API documentation.
 
 .PHONY: build
 build: generate fmt vet ## Build manager binary.
-	go build -o bin/manager main.go
+	go build -ldflags=$(LDFLAGS) -o bin/manager main.go
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
-	go run ./main.go
+	go run -ldflags=$(LDFLAGS) ./main.go
 
 # If you wish built the manager image targeting other platforms you can use the --platform flag.
 # (i.e. docker build --platform linux/arm64 ). However, you must enable docker buildKit for it.
 # More info: https://docs.docker.com/develop/develop-images/build_enhancements/
 .PHONY: docker-build
-docker-build: test ## Build docker image with the manager.
-	docker build -t ${IMG} .
+docker-build:  ## Build docker image with the manager.
+	docker build --build-arg LDFLAGS=${LDFLAGS} -t ${IMG} .
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
@@ -138,7 +139,7 @@ deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 
 	# Step 5: Build and apply the updated configuration to the cluster
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
+	$(KUSTOMIZE) build config/default | envsubst |kubectl apply -f -
 
 .PHONY: undeploy
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
@@ -182,8 +183,13 @@ crdoc: $(CRDOC) ## Download crdoc locally if necessary.
 $(CRDOC): $(LOCALBIN)
 	test -s $(LOCALBIN)/crdoc || GOBIN=$(LOCALBIN) go install fybrik.io/crdoc@latest
 
-e2e:
+.PHONY: integration-tests
+integration-tests:
 	kubectl kuttl test
+
+.PHONY: e2e-tests
+e2e-tests:
+	go test ./tests/e2e/ -ldflags $(LDFLAGS) -ginkgo.v -v
 
 .PHONY: helm-check-crd-version
 helm-check-crd-version:

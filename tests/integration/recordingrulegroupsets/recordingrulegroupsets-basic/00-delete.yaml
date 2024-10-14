@@ -1,0 +1,4 @@
+apiVersion: coralogix.com/v1alpha1
+kind: RecordingRuleGroupSet
+metadata:
+  name: recording-rule-group-set.example

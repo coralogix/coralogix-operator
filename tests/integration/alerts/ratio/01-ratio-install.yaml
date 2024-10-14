@@ -1,0 +1,58 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/name: alert
+    app.kubernetes.io/instance: alert-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: ratio-alert-example
+spec:
+  name: ratio alert example
+  description: alert from k8s operator
+  severity: Critical
+  notificationGroups:
+    - notifications:
+        - notifyOn: TriggeredOnly
+          integrationName: WebhookAlerts
+          retriggeringPeriodMinutes: 1
+        - notifyOn: TriggeredAndResolved
+          emailRecipients: [ "example@coralogix.com" ]
+          retriggeringPeriodMinutes: 1440
+    - groupByFields: [ "coralogix.metadata.sdkId" ]
+      notifications:
+        - notifyOn: TriggeredOnly
+          integrationName: WebhookAlerts
+          retriggeringPeriodMinutes: 1
+        - notifyOn: TriggeredAndResolved
+          emailRecipients: [ "example2@coralogix.com" ]
+          retriggeringPeriodMinutes: 1440
+  scheduling:
+    daysEnabled: ["Wednesday", "Thursday"]
+    timeZone: UTC+02
+    startTime: 08:30
+    endTime: 20:30
+  alertType:
+    ratio:
+      q1Filters:
+        alias: Q1-updated
+        searchQuery: remote_addr_enriched:/.*/
+        applications: ["filter:contains:nginx"]
+        subsystems: ["filter:startsWith:subsystem-name"]
+        severities: ["Warning", "Info"]
+      q2Filters:
+        alias: Q2-updated
+        searchQuery: remote_addr_enriched:/.*/
+        applications: ["filter:contains:nginx"]
+        subsystems: ["filter:startsWith:updated-subsystem-name"]
+        severities: ["Critical", "Warning"]
+      conditions:
+        alertWhen: Less
+        ratio: 2
+        timeWindow: TenMinutes
+        groupBy: ["coralogix.metadata.sdkId"]
+        groupByFor: Q1
+        manageUndetectedValues:
+          enableTriggeringOnUndetectedValues: true
+          autoRetireRatio: TwelveHours
