@@ -4,9 +4,6 @@ import (
 	"context"
 	"testing"
 
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
-	rrg "github.com/coralogix/coralogix-operator/controllers/clientset/grpc/recording-rules-groups/v2"
-	"github.com/coralogix/coralogix-operator/controllers/mock_clientset"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -19,6 +16,11 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/controllers/mock_clientset"
 )
 
 func setupRecordingRuleReconciler(t *testing.T, ctx context.Context, clientSet *mock_clientset.MockClientSetInterface) (RecordingRuleGroupSetReconciler, watch.Interface) {
@@ -68,7 +70,7 @@ func TestRecordingRuleCreation(t *testing.T) {
 			name:       "Recording rule creation success",
 			shouldFail: false,
 			params: func(params PrepareRecordingRulesParams) {
-				params.recordingRuleClient.EXPECT().CreateRecordingRuleGroupSet(params.ctx, gomock.Any()).Return(&rrg.CreateRuleGroupSetResult{Id: "id1"}, nil)
+				params.recordingRuleClient.EXPECT().Create(params.ctx, gomock.Any()).Return(&cxsdk.CreateRuleGroupSetResponse{Id: "id1"}, nil)
 			},
 			recordingRule: coralogixv1alpha1.RecordingRuleGroupSet{
 				ObjectMeta: metav1.ObjectMeta{
@@ -150,15 +152,15 @@ func TestRecordingRuleUpdate(t *testing.T) {
 			name:       "Recording rule update success",
 			shouldFail: false,
 			params: func(params PrepareRecordingRulesParams) {
-				params.recordingRuleClient.EXPECT().CreateRecordingRuleGroupSet(params.ctx, gomock.Any()).Return(&rrg.CreateRuleGroupSetResult{Id: "id1"}, nil)
-				params.recordingRuleClient.EXPECT().GetRecordingRuleGroupSet(params.ctx, gomock.Any()).Return(&rrg.OutRuleGroupSet{
+				params.recordingRuleClient.EXPECT().Create(params.ctx, gomock.Any()).Return(&cxsdk.CreateRuleGroupSetResponse{Id: "id1"}, nil)
+				params.recordingRuleClient.EXPECT().Get(params.ctx, gomock.Any()).Return(&cxsdk.GetRuleGroupSetResponse{
 					Id: "id1",
-					Groups: []*rrg.OutRuleGroup{
+					Groups: []*cxsdk.OutRuleGroup{
 						{
 							Name:     "name",
 							Interval: pointer.Uint32(60),
 							Limit:    pointer.Uint64(100),
-							Rules: []*rrg.OutRule{
+							Rules: []*cxsdk.OutRule{
 								{
 									Record: "record",
 									Expr:   "vector(1)",
@@ -168,7 +170,7 @@ func TestRecordingRuleUpdate(t *testing.T) {
 						},
 					},
 				}, nil)
-				params.recordingRuleClient.EXPECT().UpdateRecordingRuleGroupSet(params.ctx, gomock.Any()).Return(&emptypb.Empty{}, nil)
+				params.recordingRuleClient.EXPECT().Update(params.ctx, gomock.Any()).Return(&emptypb.Empty{}, nil)
 			},
 			recordingRule: coralogixv1alpha1.RecordingRuleGroupSet{
 				ObjectMeta: metav1.ObjectMeta{
