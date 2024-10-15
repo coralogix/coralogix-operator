@@ -27,12 +27,12 @@ jobs:
         uses: docker/setup-buildx-action@v2
       - name: Build the controller-manager Docker image
         run: |
-           make docker-build IMG=${IMG}
+          make docker-build
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1.4.0
       - name: Load the controller-manager image into Kind
         run: |
-          kind load docker-image ${{ env.IMG }}
+          kind load docker-image ${{ env.IMG }} --name chart-testing
       - name: Deploy the controller-manager
         run: |
           make deploy IMG=${IMG}
