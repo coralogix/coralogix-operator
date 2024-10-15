@@ -31,6 +31,8 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 )
 
+const testNamespace = "coralogix-e2e-test"
+
 func TestE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Coralogix operator E2E test suite")
@@ -45,13 +47,28 @@ var _ = BeforeSuite(func(ctx context.Context) {
 	Expect(ClientsInstance.InitControllerRuntimeClient()).To(Succeed())
 	Expect(ClientsInstance.InitK8sClient()).To(Succeed())
 
+	k8sClient := ClientsInstance.GetK8sClient()
+
+	By("Creating test namespace")
+	_, err := k8sClient.CoreV1().Namespaces().Create(ctx, &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: testNamespace,
+		},
+	}, metav1.CreateOptions{})
+	Expect(err).NotTo(HaveOccurred())
+
 	By("Validating that the controller-manager pod is running")
 	Eventually(func() corev1.PodPhase {
-		k8sClient := ClientsInstance.GetK8sClient()
 		podList, err := k8sClient.CoreV1().
 			Pods("coralogix-operator-system").
 			List(ctx, metav1.ListOptions{LabelSelector: "control-plane=controller-manager"})
 		Expect(err).NotTo(HaveOccurred())
 		return podList.Items[0].Status.Phase
 	}, time.Minute, time.Second).Should(Equal(corev1.PodRunning))
+})
+
+var _ = AfterSuite(func(ctx context.Context) {
+	By("Deleting test namespace")
+	k8sClient := ClientsInstance.GetK8sClient()
+	Expect(k8sClient.CoreV1().Namespaces().Delete(ctx, testNamespace, metav1.DeleteOptions{})).To(Succeed())
 })
