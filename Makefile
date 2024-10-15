@@ -2,7 +2,7 @@
 # Image URL to use all building/pushing image targets
 IMG ?= controller:latest
 # Enable Webhooks for the operator
-ENABLE_WEBHOOKS ?= true
+ENABLE_WEBHOOKS ?= false
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.25.0
 LDFLAGS ?= "-X google.golang.org/protobuf/reflect/protoregistry.conflictPolicy=warn"
@@ -123,23 +123,21 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 
 .PHONY: deploy
 deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
-	# Step 1: Build and apply the configuration (including namespace) to the cluster
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
+	# Step 1: Set the image in the manager deployment
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 
-	# Step 2: Wait for the namespace to be ready
+	# Step 2: Build and apply the configuration (including namespace) to the cluster
+	$(KUSTOMIZE) build config/default | envsubst |kubectl apply -f -
+
+	# Step 3: Wait for the namespace to be ready
 	NAMESPACE=$(kubectl get namespace -l app.kubernetes.io/instance=coralogix-operator-system -o=jsonpath='{.items[0].metadata.name}')
 	while ! kubectl get namespace $$NAMESPACE; do sleep 1; done
 
-	# Step 3: If webhooks are enabled, run the certificate generation script
+	# Step 4: If webhooks are enabled, run the certificate generation script
 	@if [ "$(ENABLE_WEBHOOKS)" = "true" ]; then \
 		bash config/webhook/setup-webhook-and-certs.sh $$NAMESPACE ; \
 	fi
 
-	# Step 4: Set the image in the manager deployment
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-
-	# Step 5: Build and apply the updated configuration to the cluster
-	$(KUSTOMIZE) build config/default | envsubst |kubectl apply -f -
 
 .PHONY: undeploy
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
