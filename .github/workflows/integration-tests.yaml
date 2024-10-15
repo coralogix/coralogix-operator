@@ -17,7 +17,7 @@ jobs:
     name: Tests
     runs-on: ubuntu-latest
     env:
-      IMG: tests.com/coralogix-operator:v0.0.1
+      IMG: coralogix-operator:latest
       CORALOGIX_REGION: ${{ secrets.CORALOGIX_REGION }}
       CORALOGIX_API_KEY: ${{ secrets.CORALOGIX_API_KEY }}
     steps:
@@ -27,15 +27,15 @@ jobs:
         uses: docker/setup-buildx-action@v2
       - name: Build the controller-manager Docker image
         run: |
-           make docker-build
+           make docker-build IMG=${IMG}
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1.4.0
       - name: Load the controller-manager image into Kind
         run: |
-          kind load docker-image ${{ env.IMG }} --name chart-testing
+          kind load docker-image ${{ env.IMG }} .
       - name: Deploy the controller-manager
         run: |
-          make deploy
+          make deploy IMG=${IMG}
       - name: Install kuttl
         run: |
           curl -Lo /usr/local/bin/kubectl-kuttl https://github.com/kudobuilder/kuttl/releases/download/v0.12.1/kubectl-kuttl_0.12.1_linux_x86_64
