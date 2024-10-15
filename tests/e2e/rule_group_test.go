@@ -35,28 +35,29 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
 )
 
-var _ = Describe("Rule Group", Ordered, func() {
+var _ = Describe("RuleGroup", Ordered, func() {
 	var (
-		crClient        client.Client
-		ruleGroupClient *cxsdk.RuleGroupsClient
-		ruleGroupID     string
-		ruleGroup       *coralogixv1alpha1.RuleGroup
+		crClient         client.Client
+		ruleGroupsClient *cxsdk.RuleGroupsClient
+		ruleGroupID      string
+		ruleGroup        *coralogixv1alpha1.RuleGroup
 	)
 
 	BeforeAll(func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
-		ruleGroupClient = ClientsInstance.GetCoralogixClientSet().RuleGroups()
+		ruleGroupsClient = ClientsInstance.GetCoralogixClientSet().RuleGroups()
 	})
 
 	It("Should be created successfully", func(ctx context.Context) {
-		By("Defining a RuleGroup resource")
+		By("Creating RuleGroup")
+		ruleGroupName := "json-extract-rule"
 		ruleGroup = &coralogixv1alpha1.RuleGroup{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "json-extract-rule",
-				Namespace: "default",
+				Name:      ruleGroupName,
+				Namespace: testNamespace,
 			},
 			Spec: coralogixv1alpha1.RuleGroupSpec{
-				Name:        "json-extract-rule",
+				Name:        ruleGroupName,
 				Description: "rule-group from k8s operator",
 				RuleSubgroups: []coralogixv1alpha1.RuleSubGroup{
 					{
@@ -74,16 +75,12 @@ var _ = Describe("Rule Group", Ordered, func() {
 				},
 			},
 		}
-
-		By("Creating the RuleGroup resource in the cluster")
 		Expect(crClient.Create(ctx, ruleGroup)).To(Succeed())
 
 		By("Fetching the RuleGroup ID")
 		fetchedRuleGroup := &coralogixv1alpha1.RuleGroup{}
 		Eventually(func(g Gomega) error {
-			err := crClient.Get(ctx, types.NamespacedName{Name: "json-extract-rule", Namespace: "default"}, fetchedRuleGroup)
-			g.Expect(err).NotTo(HaveOccurred())
-
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: ruleGroupName, Namespace: testNamespace}, fetchedRuleGroup)).To(Succeed())
 			if fetchedRuleGroup.Status.ID != nil {
 				ruleGroupID = *fetchedRuleGroup.Status.ID
 				return nil
@@ -94,35 +91,33 @@ var _ = Describe("Rule Group", Ordered, func() {
 
 		By("Verifying RuleGroup exists in Coralogix backend")
 		Eventually(func() error {
-			_, err := ruleGroupClient.Get(ctx, &cxsdk.GetRuleGroupRequest{GroupId: ruleGroupID})
+			_, err := ruleGroupsClient.Get(ctx, &cxsdk.GetRuleGroupRequest{GroupId: ruleGroupID})
 			return err
 		}, time.Minute, time.Second).Should(Succeed())
 	})
 
 	It("Should be updated successfully", func(ctx context.Context) {
-		By("Patching the RuleGroup resource")
-		const newRuleGroupName = "json-extract-rule-updated"
+		By("Patching the RuleGroup")
+		newRuleGroupName := "json-extract-rule-updated"
 		modifiedRuleGroup := ruleGroup.DeepCopy()
 		modifiedRuleGroup.Spec.Name = newRuleGroupName
-		err := crClient.Patch(ctx, modifiedRuleGroup, client.MergeFrom(ruleGroup))
-		Expect(err).NotTo(HaveOccurred())
+		Expect(crClient.Patch(ctx, modifiedRuleGroup, client.MergeFrom(ruleGroup))).To(Succeed())
 
 		By("Verifying RuleGroup is updated in Coralogix backend")
-		Eventually(func(g Gomega) string {
-			getRuleGroupRes, err := ruleGroupClient.Get(ctx, &cxsdk.GetRuleGroupRequest{GroupId: ruleGroupID})
-			g.Expect(err).NotTo(HaveOccurred())
+		Eventually(func() string {
+			getRuleGroupRes, err := ruleGroupsClient.Get(ctx, &cxsdk.GetRuleGroupRequest{GroupId: ruleGroupID})
+			Expect(err).ToNot(HaveOccurred())
 			return getRuleGroupRes.GetRuleGroup().GetName().GetValue()
 		}, time.Minute, time.Second).Should(Equal(newRuleGroupName))
 	})
 
 	It("Should be deleted successfully", func(ctx context.Context) {
-		By("Deleting the RuleGroup resource")
-		err := crClient.Delete(ctx, ruleGroup)
-		Expect(err).NotTo(HaveOccurred())
+		By("Deleting the RuleGroup")
+		Expect(crClient.Delete(ctx, ruleGroup)).To(Succeed())
 
 		By("Verifying RuleGroup is deleted from Coralogix backend")
 		Eventually(func() codes.Code {
-			_, err = ruleGroupClient.Get(ctx, &cxsdk.GetRuleGroupRequest{GroupId: ruleGroupID})
+			_, err := ruleGroupsClient.Get(ctx, &cxsdk.GetRuleGroupRequest{GroupId: ruleGroupID})
 			return status.Code(err)
 		}).Should(Equal(codes.NotFound))
 	})

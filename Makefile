@@ -126,14 +126,17 @@ deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in
 	# Step 1: Set the image in the manager deployment
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 
-	# Step 2: Build and apply the configuration (including namespace) to the cluster
-	$(KUSTOMIZE) build config/default | envsubst |kubectl apply -f -
+	# Step 2: Export the ENABLE_WEBHOOKS variable to envsubst
+	export ENABLE_WEBHOOKS=$(ENABLE_WEBHOOKS)
 
-	# Step 3: Wait for the namespace to be ready
+	# Step 3: Build and apply the configuration (including namespace) to the cluster
+	$(KUSTOMIZE) build config/default | envsubst | kubectl apply -f -
+
+	# Step 4: Wait for the namespace to be ready
 	NAMESPACE=$(kubectl get namespace -l app.kubernetes.io/instance=coralogix-operator-system -o=jsonpath='{.items[0].metadata.name}')
 	while ! kubectl get namespace $$NAMESPACE; do sleep 1; done
 
-	# Step 4: If webhooks are enabled, run the certificate generation script
+	# Step 5: If webhooks are enabled, run the certificate generation script
 	@if [ "$(ENABLE_WEBHOOKS)" = "true" ]; then \
 		bash config/webhook/setup-webhook-and-certs.sh $$NAMESPACE ; \
 	fi

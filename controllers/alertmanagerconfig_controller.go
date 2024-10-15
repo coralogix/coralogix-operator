@@ -35,6 +35,8 @@ import (
 //+kubebuilder:rbac:groups=coralogix.com,resources=alerts/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=coralogix.com,resources=alerts/finalizers,verbs=update
 
+//+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
+
 // AlertmanagerConfigReconciler reconciles a AlertmanagerConfig object
 type AlertmanagerConfigReconciler struct {
 	client.Client

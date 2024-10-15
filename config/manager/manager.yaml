@@ -74,6 +74,7 @@ spec:
         - --metrics-bind-address=127.0.0.1:8080
         - --api-key=${CORALOGIX_API_KEY}
         - --region=${CORALOGIX_REGION}
+        - --enable-webhooks=${ENABLE_WEBHOOKS}
         image: coralogix-operator-image:latest
         name: manager
         imagePullPolicy: IfNotPresent

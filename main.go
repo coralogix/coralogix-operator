@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/coralogix/coralogix-operator/controllers"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	prometheusv1alpha "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"k8s.io/utils/strings/slices"
@@ -35,7 +36,6 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
-	"github.com/coralogix/coralogix-operator/controllers"
 	"github.com/coralogix/coralogix-operator/controllers/alphacontrollers"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -96,6 +96,9 @@ func main() {
 	apiKey := os.Getenv("CORALOGIX_API_KEY")
 	flag.StringVar(&apiKey, "api-key", apiKey, "The proper api-key based on your Coralogix cluster's region.")
 
+	enableWebhooks := os.Getenv("ENABLE_WEBHOOKS")
+	flag.StringVar(&enableWebhooks, "enable-webhooks", enableWebhooks, "Enable webhooks for the operator. Default is false.")
+
 	var prometheusRuleController bool
 	flag.BoolVar(&prometheusRuleController, "prometheus-rule-controller", true, "Determine if the prometheus rule controller should be started. Default is true.")
 
@@ -141,31 +144,26 @@ func main() {
 		os.Exit(1)
 	}
 
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	mgrOpts := ctrl.Options{
 		Scheme:                 scheme,
 		MetricsBindAddress:     metricsAddr,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "9e1892e3.coralogix",
 		PprofBindAddress:       "0.0.0.0:8888",
-		WebhookServer: &webhook.DefaultServer{
+	}
+
+	// Check if webhooks are enabled before setting up the webhook server
+	if enableWebhooks == "true" {
+		mgrOpts.WebhookServer = &webhook.DefaultServer{
 			Options: webhook.Options{
 				Port:    9443,
 				CertDir: webhookCertDir,
 			},
-		},
-		// LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
-		// when the Manager ends. This requires the binary to immediately end when the
-		// Manager is stopped, otherwise, this setting is unsafe. Setting this significantly
-		// speeds up voluntary leader transitions as the new leader don't have to wait
-		// LeaseDuration time first.
-		//
-		// In the default scaffold provided, the program ends immediately after
-		// the manager stops, so would be fine to enable this option. However,
-		// if you are doing or is intended to do any operation such as perform cleanups
-		// after the manager stops then its usage might be unsafe.
-		// LeaderElectionReleaseOnCancel: true,
-	})
+		}
+	}
+
+	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), mgrOpts)
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
@@ -206,6 +204,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "RecordingRuleGroupSet")
 		os.Exit(1)
 	}
+
 	if err = (&alphacontrollers.OutboundWebhookReconciler{
 		OutboundWebhooksClient: clientset.NewClientSet(targetUrl, apiKey).OutboundWebhooks(),
 		Client:                 mgr.GetClient(),
@@ -214,6 +213,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "OutboundWebhook")
 		os.Exit(1)
 	}
+
 	if prometheusRuleController {
 		if err = (&controllers.AlertmanagerConfigReconciler{
 			CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),
@@ -224,9 +224,14 @@ func main() {
 			os.Exit(1)
 		}
 	}
-	if err = (&coralogixv1alpha1.OutboundWebhook{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "OutboundWebhook")
-		os.Exit(1)
+
+	if enableWebhooks == "true" {
+		if err = (&coralogixv1alpha1.OutboundWebhook{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "OutboundWebhook")
+			os.Exit(1)
+		}
+	} else {
+		setupLog.Info("Webhooks are disabled")
 	}
 	//+kubebuilder:scaffold:builder
 
