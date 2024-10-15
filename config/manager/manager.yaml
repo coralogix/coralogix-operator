@@ -74,8 +74,9 @@ spec:
         - --metrics-bind-address=127.0.0.1:8080
         - --api-key=${CORALOGIX_API_KEY}
         - --region=${CORALOGIX_REGION}
-        image: controller:latest
+        image: coralogix-operator-image:latest
         name: manager
+        imagePullPolicy: IfNotPresent
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -102,6 +103,10 @@ spec:
           requests:
             cpu: 10m
             memory: 64Mi
+        volumeMounts:
+          - name: webhook-certs
+            mountPath: /tmp/k8s-webhook-server/serving-certs
+            readOnly: true
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10
       volumes:
