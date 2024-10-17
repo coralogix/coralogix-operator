@@ -14,6 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/utils/pointer"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
@@ -292,6 +293,7 @@ func prometheusRuleToCoralogixAlertSpec(rule prometheus.Rule) coralogixv1alpha1.
 				Notifications: []coralogixv1alpha1.Notification{
 					{
 						RetriggeringPeriodMinutes: getNotificationPeriod(rule),
+						IntegrationName:           getNotificationIntegrationName(rule),
 					},
 				},
 			},
@@ -348,6 +350,14 @@ func getNotificationPeriod(rule prometheus.Rule) int32 {
 	}
 
 	return defaultCoralogixNotificationPeriod
+}
+
+func getNotificationIntegrationName(rule prometheus.Rule) *string {
+	if integrationName, ok := rule.Annotations["cxNotificationName"]; ok {
+		return pointer.String(integrationName)
+	}
+
+	return nil
 }
 
 var prometheusAlertForToCoralogixPromqlAlertTimeWindow = map[prometheus.Duration]coralogixv1alpha1.MetricTimeWindow{
