@@ -74,8 +74,10 @@ spec:
         - --metrics-bind-address=127.0.0.1:8080
         - --api-key=${CORALOGIX_API_KEY}
         - --region=${CORALOGIX_REGION}
-        image: controller:latest
+        - --enable-webhooks=${ENABLE_WEBHOOKS}
         name: manager
+        image: controller
+        imagePullPolicy: IfNotPresent
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:

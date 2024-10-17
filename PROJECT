@@ -42,4 +42,7 @@ resources:
   kind: OutboundWebhook
   path: coralogix-operator/apis/coralogix/v1alpha1
   version: v1alpha1
+  webhooks:
+    validation: true
+    webhookVersion: v1
 version: "3"
