@@ -35,27 +35,29 @@ func (r *OutboundWebhook) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-// TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-
-// TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //+kubebuilder:webhook:path=/validate-coralogix-com-v1alpha1-outboundwebhook,mutating=false,failurePolicy=fail,sideEffects=None,groups=coralogix.com,resources=outboundwebhooks,verbs=create;update,versions=v1alpha1,name=outboundwebhook.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Validator = &OutboundWebhook{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
 func (r *OutboundWebhook) ValidateCreate() (warnings admission.Warnings, err error) {
-	if !atLeastOneWebhookTypeIsSet(r.Spec.OutboundWebhookType) {
+	return validateWebhookType(r.Spec.OutboundWebhookType)
+}
+
+func validateWebhookType(webhookType OutboundWebhookType) (admission.Warnings, error) {
+	webhookTypes := webhookTypesBeingSet(webhookType)
+	if len(webhookTypes) == 0 {
 		return admission.Warnings{"at least one webhook type should be set"}, fmt.Errorf("at least one webhook type should be set")
 	}
 
-	if valid, WebhookTypes := onlyOneWebhookTypeIsSet(r.Spec.OutboundWebhookType); !valid {
-		return admission.Warnings{"only one webhook type should be set"}, fmt.Errorf("only one webhook type should be set, but got: %v", WebhookTypes)
+	if len(webhookTypes) > 1 {
+		return admission.Warnings{"only one webhook type should be set"}, fmt.Errorf("only one webhook type should be set, but got: %v", webhookTypes)
 	}
 
 	return nil, nil
 }
 
-func onlyOneWebhookTypeIsSet(webhookType OutboundWebhookType) (bool, []string) {
+func webhookTypesBeingSet(webhookType OutboundWebhookType) []string {
 	var typesSet []string
 	if webhookType.GenericWebhook != nil {
 		typesSet = append(typesSet, "GenericWebhook")
@@ -88,41 +90,12 @@ func onlyOneWebhookTypeIsSet(webhookType OutboundWebhookType) (bool, []string) {
 		typesSet = append(typesSet, "AwsEventBridge")
 	}
 
-	if len(typesSet) > 1 {
-		return false, typesSet
-	}
-
-	return true, typesSet
-}
-
-func atLeastOneWebhookTypeIsSet(webhookType OutboundWebhookType) bool {
-	if webhookType.GenericWebhook != nil ||
-		webhookType.Opsgenie != nil ||
-		webhookType.Slack != nil ||
-		webhookType.SendLog != nil ||
-		webhookType.EmailGroup != nil ||
-		webhookType.MicrosoftTeams != nil ||
-		webhookType.PagerDuty != nil ||
-		webhookType.Jira != nil ||
-		webhookType.Demisto != nil ||
-		webhookType.AwsEventBridge != nil {
-		return true
-	}
-
-	return false
+	return typesSet
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *OutboundWebhook) ValidateUpdate(old runtime.Object) (warnings admission.Warnings, err error) {
-	if !atLeastOneWebhookTypeIsSet(r.Spec.OutboundWebhookType) {
-		return admission.Warnings{"at least one webhook type should be set"}, fmt.Errorf("at least one webhook type should be set")
-	}
-
-	if valid, WebhookTypes := onlyOneWebhookTypeIsSet(r.Spec.OutboundWebhookType); !valid {
-		return admission.Warnings{"only one webhook type should be set"}, fmt.Errorf("only one webhook type should be set, but got: %v", WebhookTypes)
-	}
-
-	return nil, nil
+func (r *OutboundWebhook) ValidateUpdate(_ runtime.Object) (warnings admission.Warnings, err error) {
+	return validateWebhookType(r.Spec.OutboundWebhookType)
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type

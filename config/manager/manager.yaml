@@ -75,8 +75,8 @@ spec:
         - --api-key=${CORALOGIX_API_KEY}
         - --region=${CORALOGIX_REGION}
         - --enable-webhooks=${ENABLE_WEBHOOKS}
-        image: coralogix-operator-image:latest
         name: manager
+        image: controller
         imagePullPolicy: IfNotPresent
         securityContext:
           allowPrivilegeEscalation: false
@@ -104,14 +104,14 @@ spec:
           requests:
             cpu: 10m
             memory: 64Mi
-        volumeMounts:
-          - name: webhook-certs
-            mountPath: /tmp/k8s-webhook-server/serving-certs
-            readOnly: true
+#        volumeMounts:
+#          - name: webhook-certs
+#            mountPath: /tmp/k8s-webhook-server/serving-certs
+#            readOnly: true
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10
-      volumes:
-        - name: webhook-certs
-          secret:
-            secretName: webhook-server-cert
-            optional: true
+#      volumes:
+#        - name: webhook-certs
+#          secret:
+#            secretName: webhook-server-cert
+#            optional: true

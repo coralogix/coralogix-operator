@@ -35,7 +35,7 @@ jobs:
           kind load docker-image ${{ env.IMG }} --name chart-testing
       - name: Deploy the controller-manager
         run: |
-          make deploy IMG=${IMG}
+          make deploy
       - name: Install kuttl
         run: |
           curl -Lo /usr/local/bin/kubectl-kuttl https://github.com/kudobuilder/kuttl/releases/download/v0.12.1/kubectl-kuttl_0.12.1_linux_x86_64
