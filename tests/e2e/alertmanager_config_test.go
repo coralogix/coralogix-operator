@@ -35,8 +35,9 @@ import (
 
 var _ = Describe("AlertmanagerConfig", Ordered, func() {
 	var (
-		crClient client.Client
-		config   *prometheus.AlertmanagerConfig
+		crClient        client.Client
+		config          *prometheus.AlertmanagerConfig
+		outboundWebhook = &coralogixv1alpha1.OutboundWebhook{}
 	)
 
 	BeforeAll(func() {
@@ -115,10 +116,21 @@ var _ = Describe("AlertmanagerConfig", Ordered, func() {
 		Expect(crClient.Create(ctx, config)).To(Succeed())
 
 		By("Verifying underlying OutboundWebhook was created")
-		fetchedOutboundWebhook := &coralogixv1alpha1.OutboundWebhook{}
 		Eventually(func() error {
-			return crClient.Get(ctx, types.NamespacedName{Name: "slack-general.slack.0", Namespace: testNamespace}, fetchedOutboundWebhook)
+			return crClient.Get(ctx, types.NamespacedName{Name: "slack-general.slack.0", Namespace: testNamespace}, outboundWebhook)
 		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should recreate underlying OutboundWebhook when it is deleted", func(ctx context.Context) {
+		By("Deleting underlying OutboundWebhook")
+		webhookInitialUID := outboundWebhook.GetUID()
+		Expect(crClient.Delete(ctx, outboundWebhook)).To(Succeed())
+
+		By("Verifying underlying OutboundWebhook was recreated")
+		Eventually(func(g Gomega) bool {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: "slack-general.slack.0", Namespace: testNamespace}, outboundWebhook)).To(Succeed())
+			return outboundWebhook.GetUID() != webhookInitialUID && outboundWebhook.GetUID() != ""
+		}, time.Minute, time.Second).Should(BeTrue())
 	})
 
 	It("Should be updated successfully", func(ctx context.Context) {
@@ -129,8 +141,7 @@ var _ = Describe("AlertmanagerConfig", Ordered, func() {
 
 		By("Verifying underlying outboundWebhook was updated")
 		Eventually(func() error {
-			fetchedOutboundWebhook := &coralogixv1alpha1.OutboundWebhook{}
-			return crClient.Get(ctx, types.NamespacedName{Name: "slack-general-updated.slack.0", Namespace: testNamespace}, fetchedOutboundWebhook)
+			return crClient.Get(ctx, types.NamespacedName{Name: "slack-general-updated.slack.0", Namespace: testNamespace}, outboundWebhook)
 		}, time.Minute, time.Second).Should(Succeed())
 	})
 
@@ -139,9 +150,8 @@ var _ = Describe("AlertmanagerConfig", Ordered, func() {
 		Expect(crClient.Delete(ctx, config)).To(Succeed())
 
 		By("Verifying underlying outboundWebhook was deleted")
-		fetchedOutboundWebhook := &coralogixv1alpha1.OutboundWebhook{}
 		Eventually(func() bool {
-			err := crClient.Get(ctx, types.NamespacedName{Name: "slack-general-updated.slack.0", Namespace: testNamespace}, fetchedOutboundWebhook)
+			err := crClient.Get(ctx, types.NamespacedName{Name: "slack-general-updated.slack.0", Namespace: testNamespace}, outboundWebhook)
 			return errors.IsNotFound(err)
 		}, time.Minute, time.Second).Should(BeTrue())
 	})
