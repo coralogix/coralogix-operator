@@ -129,38 +129,8 @@ func TestFlattenRuleGroups(t *testing.T) {
 	assert.NoError(t, err)
 
 	id := "id"
-	subgroupId := "subgroup_id"
 	expectedStatus := &coralogixv1alpha1.RuleGroupStatus{
-		ID:           &id,
-		Name:         "name",
-		Description:  "description",
-		Active:       true,
-		Applications: nil,
-		Subsystems:   nil,
-		Severities:   nil,
-		Hidden:       false,
-		Creator:      "creator",
-		Order:        pointer.Int32(1),
-		RuleSubgroups: []coralogixv1alpha1.RuleSubGroup{
-			{
-				ID:     &subgroupId,
-				Active: false,
-				Order:  pointer.Int32(1),
-				Rules: []coralogixv1alpha1.Rule{
-					{
-						Name:        "rule_name",
-						Description: "rule_description",
-						Active:      true,
-						Parse:       nil,
-						Block:       nil,
-						JsonExtract: &coralogixv1alpha1.JsonExtract{
-							DestinationField: coralogixv1alpha1.DestinationFieldRuleSeverity,
-							JsonKey:          "{\"severity\": \"info\"}",
-						},
-					},
-				},
-			},
-		},
+		ID: &id,
 	}
 
 	assert.Equal(t, expectedStatus, actualStatus)

@@ -71,28 +71,6 @@ type OutboundWebhookType struct {
 	AwsEventBridge *AwsEventBridge `json:"awsEventBridge,omitempty"`
 }
 
-type OutboundWebhookTypeStatus struct {
-	GenericWebhook *GenericWebhookStatus `json:"genericWebhook,omitempty"`
-
-	Slack *Slack `json:"slack,omitempty"`
-
-	PagerDuty *PagerDuty `json:"pagerDuty,omitempty"`
-
-	SendLog *SendLogStatus `json:"sendLog,omitempty"`
-
-	EmailGroup *EmailGroup `json:"emailGroup,omitempty"`
-
-	MicrosoftTeams *MicrosoftTeams `json:"microsoftTeams,omitempty"`
-
-	Jira *Jira `json:"jira,omitempty"`
-
-	Opsgenie *Opsgenie `json:"opsgenie,omitempty"`
-
-	Demisto *Demisto `json:"demisto,omitempty"`
-
-	AwsEventBridge *AwsEventBridge `json:"awsEventBridge,omitempty"`
-}
-
 func (in *OutboundWebhookType) appendOutgoingWebhookConfig(data *cxsdk.OutgoingWebhookInputData) (*cxsdk.OutgoingWebhookInputData, error) {
 	if genericWebhook := in.GenericWebhook; genericWebhook != nil {
 		data.Config = genericWebhook.extractGenericWebhookConfig()
@@ -136,55 +114,6 @@ func (in *OutboundWebhookType) appendOutgoingWebhookConfig(data *cxsdk.OutgoingW
 	}
 
 	return data, nil
-}
-
-func (in *OutboundWebhookType) DeepEqual(webhookType *OutboundWebhookTypeStatus) (bool, utils.Diff) {
-	if webhookType == nil {
-		return false, utils.Diff{
-			Name:    "OutboundWebhookType",
-			Desired: utils.PointerToString(in),
-			Actual:  nil,
-		}
-	}
-
-	equal, diff := true, utils.Diff{}
-	if desiredGenericWebhook, actualGenericWebhook := in.GenericWebhook, webhookType.GenericWebhook; desiredGenericWebhook != nil {
-		equal, diff = desiredGenericWebhook.DeepEqual(actualGenericWebhook)
-	} else if desiredSlack, actualSlack := in.Slack, webhookType.Slack; desiredSlack != nil {
-		equal, diff = desiredSlack.DeepEqual(actualSlack)
-	} else if desiredPagerDuty, actualPagerDuty := in.PagerDuty, webhookType.PagerDuty; desiredPagerDuty != nil {
-		equal, diff = desiredPagerDuty.DeepEqual(actualPagerDuty)
-	} else if desiredSendLog, actualSendLog := in.SendLog, webhookType.SendLog; desiredSendLog != nil {
-		equal, diff = desiredSendLog.DeepEqual(actualSendLog)
-	} else if desiredEmailGroup, actualEmailGroup := in.EmailGroup, webhookType.EmailGroup; desiredEmailGroup != nil {
-		equal, diff = desiredEmailGroup.DeepEqual(actualEmailGroup)
-	} else if desiredMicrosoftTeams, actualMicrosoftTeams := in.MicrosoftTeams, webhookType.MicrosoftTeams; desiredMicrosoftTeams != nil {
-		equal, diff = desiredMicrosoftTeams.DeepEqual(actualMicrosoftTeams)
-	} else if desiredJira, actualJira := in.Jira, webhookType.Jira; desiredJira != nil {
-		equal, diff = desiredJira.DeepEqual(actualJira)
-	} else if desiredOpsgenie, actualOpsgenie := in.Opsgenie, webhookType.Opsgenie; desiredOpsgenie != nil {
-		equal, diff = desiredOpsgenie.DeepEqual(actualOpsgenie)
-	} else if desiredDemisto, actualDemisto := in.Demisto, webhookType.Demisto; desiredDemisto != nil {
-		equal, diff = desiredDemisto.DeepEqual(actualDemisto)
-	} else if desiredAwsEventBridge, actualAwsEventBridge := in.AwsEventBridge, webhookType.AwsEventBridge; desiredAwsEventBridge != nil {
-		equal, diff = desiredAwsEventBridge.DeepEqual(actualAwsEventBridge)
-	} else {
-		return false, utils.Diff{
-			Name:    "OutboundWebhookType",
-			Desired: utils.PointerToString(in),
-			Actual:  utils.PointerToString(webhookType),
-		}
-	}
-
-	if !equal {
-		return false, utils.Diff{
-			Name:    fmt.Sprintf("OutboundWebhookType.%s", diff.Name),
-			Desired: diff.Desired,
-			Actual:  diff.Actual,
-		}
-	}
-
-	return true, utils.Diff{}
 }
 
 type GenericWebhook struct {
@@ -767,10 +696,6 @@ type OutboundWebhookStatus struct {
 
 	// +optional
 	ExternalID *string `json:"externalId"`
-
-	Name string `json:"name"`
-
-	OutboundWebhookType *OutboundWebhookTypeStatus `json:"outboundWebhookType"`
 }
 
 //+kubebuilder:object:root=true
@@ -810,35 +735,6 @@ func (in *OutboundWebhook) ExtractUpdateOutboundWebhookRequest() (*cxsdk.UpdateO
 		Id:   *in.Status.ID,
 		Data: webhookData,
 	}, nil
-}
-
-func (in *OutboundWebhookSpec) DeepEqual(status *OutboundWebhookStatus) (bool, utils.Diff) {
-	if status == nil {
-		return false, utils.Diff{
-			Name:    "OutboundWebhookStatus",
-			Desired: utils.PointerToString(in),
-			Actual:  nil,
-		}
-	}
-
-	if in.Name != status.Name {
-		return false, utils.Diff{
-			Name:    "OutboundWebhookStatus.Name",
-			Desired: in.Name,
-			Actual:  status.Name,
-		}
-	}
-
-	equal, diff := in.OutboundWebhookType.DeepEqual(status.OutboundWebhookType)
-	if !equal {
-		return false, utils.Diff{
-			Name:    fmt.Sprintf("OutboundWebhookStatus.OutboundWebhookType.%s", diff.Name),
-			Desired: diff.Desired,
-			Actual:  diff.Actual,
-		}
-	}
-
-	return true, utils.Diff{}
 }
 
 func (in *OutboundWebhookSpec) ExtractOutgoingWebhookInputData() (*cxsdk.OutgoingWebhookInputData, error) {

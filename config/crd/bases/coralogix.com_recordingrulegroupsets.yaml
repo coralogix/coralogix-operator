@@ -78,36 +78,6 @@ spec:
             description: RecordingRuleGroupSetStatus defines the observed state of
               RecordingRuleGroupSet
             properties:
-              groups:
-                items:
-                  properties:
-                    intervalSeconds:
-                      default: 60
-                      format: int32
-                      type: integer
-                    limit:
-                      format: int64
-                      type: integer
-                    name:
-                      description: |-
-                        INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-                        Important: Run "make" to regenerate code after modifying this file
-                      type: string
-                    rules:
-                      items:
-                        properties:
-                          expr:
-                            type: string
-                          labels:
-                            additionalProperties:
-                              type: string
-                            type: object
-                          record:
-                            type: string
-                        type: object
-                      type: array
-                  type: object
-                type: array
               id:
                 type: string
             required:

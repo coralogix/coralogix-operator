@@ -336,11 +336,7 @@ func TestAlertUpdate(t *testing.T) {
 					AlertType:          defaultAlertType,
 				},
 				Status: coralogixv1alpha1.AlertStatus{
-					ID:          pointer.String("AlertUpdateSuccess"),
-					Name:        "AlertUpdateSuccess",
-					Description: "AlertUpdateSuccess",
-					Active:      true,
-					Severity:    "Critical",
+					ID: pointer.String("AlertUpdateSuccess"),
 				},
 			},
 			remoteAlert: &alerts.Alert{
@@ -404,11 +400,7 @@ func TestAlertUpdate(t *testing.T) {
 					AlertType:          defaultAlertType,
 				},
 				Status: coralogixv1alpha1.AlertStatus{
-					ID:          pointer.String("AlertUpdateCleanStatus"),
-					Name:        "AlertUpdateCleanStatus",
-					Description: "AlertUpdateCleanStatus",
-					Active:      true,
-					Severity:    "Critical",
+					ID: pointer.String("AlertUpdateCleanStatus"),
 				},
 			},
 			remoteAlert: &alerts.Alert{
@@ -618,11 +610,7 @@ func TestAlertDelete(t *testing.T) {
 					AlertType:          defaultAlertType,
 				},
 				Status: coralogixv1alpha1.AlertStatus{
-					ID:          pointer.String("AlertDeleteSuccess"),
-					Name:        "AlertDeleteSuccess",
-					Description: "AlertDeleteSuccess",
-					Active:      true,
-					Severity:    "Critical",
+					ID: pointer.String("AlertDeleteSuccess"),
 				},
 			},
 			remoteAlert: &alerts.Alert{
@@ -793,28 +781,7 @@ func TestFlattenAlerts(t *testing.T) {
 	assert.NoError(t, err)
 
 	expected := &coralogixv1alpha1.AlertStatus{
-		ID:          pointer.String("id1"),
-		Name:        "name",
-		Description: "description",
-		Active:      true,
-		Severity:    "Critical",
-		Labels:      map[string]string{"key": "value"},
-		AlertType: coralogixv1alpha1.AlertType{
-			Metric: &coralogixv1alpha1.Metric{
-				Promql: &coralogixv1alpha1.Promql{
-					SearchQuery: "http_requests_total{status!~\"4..\"}",
-					Conditions: coralogixv1alpha1.PromqlConditions{
-						AlertWhen:                   "MoreThanUsual",
-						Threshold:                   utils.FloatToQuantity(3.0),
-						TimeWindow:                  coralogixv1alpha1.MetricTimeWindow("TwelveHours"),
-						MinNonNullValuesPercentage:  pointer.Int(10),
-						ReplaceMissingValueWithZero: false,
-					},
-				},
-			},
-		},
-		NotificationGroups: []coralogixv1alpha1.NotificationGroup{},
-		PayloadFilters:     []string{},
+		ID: pointer.String("id1"),
 	}
 
 	assert.EqualValues(t, expected, &status)
