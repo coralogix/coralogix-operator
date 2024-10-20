@@ -127,9 +127,7 @@ func (r *OutboundWebhookReconciler) create(ctx context.Context, log logr.Logger,
 	log.V(int(zapcore.DebugLevel)).Info(fmt.Sprintf("outbound-webhook was created- %s", protojson.Format(createResponse)))
 
 	webhook.Status = coralogixv1alpha1.OutboundWebhookStatus{
-		ID:                  ptr.To(createResponse.Id.GetValue()),
-		Name:                webhook.Name,
-		OutboundWebhookType: &coralogixv1alpha1.OutboundWebhookTypeStatus{},
+		ID: ptr.To(createResponse.Id.GetValue()),
 	}
 	if err = r.Status().Update(ctx, webhook); err != nil {
 		return fmt.Errorf("error to update outbound-webhook status -\n%v", webhook)
@@ -168,192 +166,12 @@ func getOutboundWebhookStatus(webhook *cxsdk.OutgoingWebhook) (*coralogixv1alpha
 		return nil, fmt.Errorf("outbound-webhook is nil")
 	}
 
-	outboundWebhookType, err := getOutboundWebhookTypeStatus(webhook)
-	if err != nil {
-		return nil, err
-	}
-
 	status := &coralogixv1alpha1.OutboundWebhookStatus{
-		ID:                  ptr.To(webhook.Id.GetValue()),
-		ExternalID:          ptr.To(strconv.Itoa(int(webhook.ExternalId.GetValue()))),
-		Name:                webhook.Name.GetValue(),
-		OutboundWebhookType: outboundWebhookType,
+		ID:         ptr.To(webhook.Id.GetValue()),
+		ExternalID: ptr.To(strconv.Itoa(int(webhook.ExternalId.GetValue()))),
 	}
 
 	return status, nil
-}
-
-func getOutboundWebhookTypeStatus(webhook *cxsdk.OutgoingWebhook) (*coralogixv1alpha1.OutboundWebhookTypeStatus, error) {
-	if webhook == nil {
-		return nil, fmt.Errorf("outbound-webhook is nil")
-	}
-
-	outboundWebhooks := &coralogixv1alpha1.OutboundWebhookTypeStatus{}
-	switch webhookType := webhook.Config.(type) {
-	case *cxsdk.GenericWebhook:
-		outboundWebhooks.GenericWebhook = getOutboundWebhookGenericTypeStatus(webhookType.GenericWebhook, webhook.Url)
-	case *cxsdk.SlackWebhook:
-		outboundWebhooks.Slack = getOutgoingWebhookSlackStatus(webhookType.Slack, webhook.Url)
-	case *cxsdk.PagerDutyWebhook:
-		outboundWebhooks.PagerDuty = getOutgoingWebhookPagerDutyStatus(webhookType.PagerDuty)
-	case *cxsdk.SendLogWebhook:
-		outboundWebhooks.SendLog = getOutgoingWebhookSendLogStatus(webhookType.SendLog, webhook.Url)
-	case *cxsdk.EmailGroupWebhook:
-		outboundWebhooks.EmailGroup = getOutgoingWebhookEmailGroupStatus(webhookType.EmailGroup)
-	case *cxsdk.MicrosoftTeamsWebhook:
-		outboundWebhooks.MicrosoftTeams = getOutgoingWebhookMicrosoftTeamsStatus(webhookType.MicrosoftTeams, webhook.Url)
-	case *cxsdk.JiraWebhook:
-		outboundWebhooks.Jira = getOutboundWebhookJiraStatus(webhookType.Jira, webhook.Url)
-	case *cxsdk.OpsgenieWebhook:
-		outboundWebhooks.Opsgenie = getOutboundWebhookOpsgenieStatus(webhookType.Opsgenie, webhook.Url)
-	case *cxsdk.DemistoWebhook:
-		outboundWebhooks.Demisto = getOutboundWebhookDemistoStatus(webhookType.Demisto, webhook.Url)
-	case *cxsdk.AwsEventBridgeWebhook:
-		outboundWebhooks.AwsEventBridge = getOutboundWebhookAwsEventBridgeStatus(webhookType.AwsEventBridge)
-	default:
-		return nil, fmt.Errorf("unsupported outbound-webhook type %T", webhookType)
-	}
-
-	return outboundWebhooks, nil
-}
-
-func getOutboundWebhookAwsEventBridgeStatus(awsEventBridge *cxsdk.AwsEventBridgeConfig) *coralogixv1alpha1.AwsEventBridge {
-	if awsEventBridge == nil {
-		return nil
-	}
-
-	return &coralogixv1alpha1.AwsEventBridge{
-		EventBusArn: awsEventBridge.EventBusArn.GetValue(),
-		Detail:      awsEventBridge.Detail.GetValue(),
-		DetailType:  awsEventBridge.DetailType.GetValue(),
-		Source:      awsEventBridge.Source.GetValue(),
-		RoleName:    awsEventBridge.RoleName.GetValue(),
-	}
-}
-
-func getOutboundWebhookGenericTypeStatus(generic *cxsdk.GenericWebhookConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.GenericWebhookStatus {
-	if generic == nil {
-		return nil
-	}
-
-	return &coralogixv1alpha1.GenericWebhookStatus{
-		Uuid:    generic.Uuid.GetValue(),
-		Url:     url.GetValue(),
-		Method:  coralogixv1alpha1.GenericWebhookMethodTypeFromProto[generic.Method],
-		Headers: generic.Headers,
-		Payload: utils.WrapperspbStringToStringPointer(generic.Payload),
-	}
-}
-
-func getOutgoingWebhookSlackStatus(slack *cxsdk.SlackConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.Slack {
-	if slack == nil {
-		return nil
-	}
-
-	return &coralogixv1alpha1.Slack{
-		Url:         url.GetValue(),
-		Digests:     flattenSlackDigests(slack.Digests),
-		Attachments: flattenSlackConfigAttachments(slack.Attachments),
-	}
-}
-
-func getOutgoingWebhookPagerDutyStatus(pagerDuty *cxsdk.PagerDutyConfig) *coralogixv1alpha1.PagerDuty {
-	if pagerDuty == nil {
-		return nil
-	}
-
-	return &coralogixv1alpha1.PagerDuty{
-		ServiceKey: pagerDuty.ServiceKey.GetValue(),
-	}
-}
-
-func getOutgoingWebhookMicrosoftTeamsStatus(teams *cxsdk.MicrosoftTeamsConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.MicrosoftTeams {
-	if teams == nil {
-		return nil
-	}
-
-	return &coralogixv1alpha1.MicrosoftTeams{
-		Url: url.GetValue(),
-	}
-}
-
-func getOutboundWebhookJiraStatus(jira *cxsdk.JiraConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.Jira {
-	if jira == nil {
-		return nil
-	}
-
-	return &coralogixv1alpha1.Jira{
-		ApiToken:   jira.ApiToken.GetValue(),
-		Email:      jira.Email.GetValue(),
-		ProjectKey: jira.ProjectKey.GetValue(),
-		Url:        url.GetValue(),
-	}
-}
-
-func getOutboundWebhookOpsgenieStatus(opsgenie *cxsdk.OpsgenieConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.Opsgenie {
-	if opsgenie == nil {
-		return nil
-	}
-
-	return &coralogixv1alpha1.Opsgenie{
-		Url: url.GetValue(),
-	}
-}
-
-func getOutboundWebhookDemistoStatus(demisto *cxsdk.DemistoConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.Demisto {
-	if demisto == nil {
-		return nil
-	}
-
-	return &coralogixv1alpha1.Demisto{
-		Uuid:    demisto.Uuid.GetValue(),
-		Payload: demisto.Payload.GetValue(),
-		Url:     url.GetValue(),
-	}
-}
-
-func flattenSlackDigests(digests []*cxsdk.SlackConfigDigest) []coralogixv1alpha1.SlackConfigDigest {
-	flattenedSlackDigests := make([]coralogixv1alpha1.SlackConfigDigest, 0, len(digests))
-	for _, digest := range digests {
-		flattenedSlackDigests = append(flattenedSlackDigests, coralogixv1alpha1.SlackConfigDigest{
-			Type:     coralogixv1alpha1.SlackConfigDigestTypeFromProto[digest.Type],
-			IsActive: digest.IsActive.GetValue(),
-		})
-	}
-	return flattenedSlackDigests
-}
-
-func flattenSlackConfigAttachments(attachments []*cxsdk.SlackConfigAttachment) []coralogixv1alpha1.SlackConfigAttachment {
-	flattenedSlackConfigAttachments := make([]coralogixv1alpha1.SlackConfigAttachment, 0, len(attachments))
-	for _, attachment := range attachments {
-		flattenedSlackConfigAttachments = append(flattenedSlackConfigAttachments, coralogixv1alpha1.SlackConfigAttachment{
-			Type:     coralogixv1alpha1.SlackConfigAttachmentTypeFromProto[attachment.Type],
-			IsActive: attachment.IsActive.GetValue(),
-		})
-	}
-	return flattenedSlackConfigAttachments
-}
-
-func getOutgoingWebhookSendLogStatus(sendLog *cxsdk.SendLogConfig, url *wrapperspb.StringValue) *coralogixv1alpha1.SendLogStatus {
-	if sendLog == nil {
-		return nil
-	}
-
-	return &coralogixv1alpha1.SendLogStatus{
-		Payload: sendLog.Payload.GetValue(),
-		Uuid:    sendLog.Payload.GetValue(),
-		Url:     url.GetValue(),
-	}
-}
-
-func getOutgoingWebhookEmailGroupStatus(group *cxsdk.EmailGroupConfig) *coralogixv1alpha1.EmailGroup {
-	if group == nil {
-		return nil
-	}
-
-	return &coralogixv1alpha1.EmailGroup{
-		EmailAddresses: utils.WrappedStringSliceToStringSlice(group.EmailAddresses),
-	}
 }
 
 func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger, webhook *coralogixv1alpha1.OutboundWebhook) error {
