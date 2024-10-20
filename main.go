@@ -42,6 +42,9 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
+
+	coralogixv1beta1 "coralogix-operator/apis/coralogix/v1beta1"
+	coralogixcontrollers "coralogix-operator/controllers/coralogix"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -73,6 +76,7 @@ func init() {
 	utilruntime.Must(coralogixv1alpha1.AddToScheme(scheme))
 
 	utilruntime.Must(prometheusv1alpha.AddToScheme(scheme))
+	utilruntime.Must(coralogixv1beta1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -232,6 +236,13 @@ func main() {
 		}
 	} else {
 		setupLog.Info("Webhooks are disabled")
+	}
+	if err = (&coralogixcontrollers.AlertReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Alert")
+		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder
 

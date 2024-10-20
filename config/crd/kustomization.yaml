@@ -6,6 +6,7 @@ resources:
   - bases/coralogix.com_alerts.yaml
   - bases/coralogix.com_recordingrulegroupsets.yaml
   - bases/coralogix.com_outboundwebhooks.yaml
+- bases/coralogix.coralogix.com_alerts.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
