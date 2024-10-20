@@ -7,24 +7,23 @@ import (
 	"strings"
 	"time"
 
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/controllers/clientset"
 	"github.com/go-logr/logr"
-	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"go.uber.org/zap/zapcore"
+
+	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
-	"github.com/coralogix/coralogix-operator/controllers/clientset"
 )
 
 const (
@@ -93,12 +92,16 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleRecordingRuleToCxRecordi
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: prometheusRule.Namespace,
 			Name:      prometheusRule.Name,
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion: prometheusRule.APIVersion,
+					Kind:       prometheusRule.Kind,
+					Name:       prometheusRule.Name,
+					UID:        prometheusRule.UID,
+				},
+			},
 		},
 		Spec: recordingRuleGroupSetSpec,
-	}
-
-	if err := ctrl.SetControllerReference(prometheusRule, recordingRuleGroupSet, r.Scheme); err != nil {
-		return fmt.Errorf("received an error while trying to create RecordingRuleGroupSet CRD: %w", err)
 	}
 
 	if err := r.Client.Get(ctx, req.NamespacedName, recordingRuleGroupSet); err != nil {
@@ -172,8 +175,13 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 					alertCRD.Spec = prometheusRuleToCoralogixAlertSpec(rule)
 					alertCRD.Namespace = prometheusRule.Namespace
 					alertCRD.Name = alertCRDName
-					if err := ctrl.SetControllerReference(prometheusRule, alertCRD, r.Scheme); err != nil {
-						return fmt.Errorf("received an error while trying to create Alert CRD: %w", err)
+					alertCRD.OwnerReferences = []metav1.OwnerReference{
+						{
+							APIVersion: prometheusRule.APIVersion,
+							Kind:       prometheusRule.Kind,
+							Name:       prometheusRule.Name,
+							UID:        prometheusRule.UID,
+						},
 					}
 					alertCRD.Labels = map[string]string{"app.kubernetes.io/managed-by": prometheusRule.Name}
 					if val, ok := prometheusRule.Labels["app.coralogix.com/managed-by-alertmanger-config"]; ok {
@@ -190,8 +198,13 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 
 			//Converting the PrometheusRule to the desired Alert.
 			alertCRD.Spec = prometheusRuleToCoralogixAlertSpec(rule)
-			if err := ctrl.SetControllerReference(prometheusRule, alertCRD, r.Scheme); err != nil {
-				return fmt.Errorf("received an error while trying to create Alert CRD: %w", err)
+			alertCRD.OwnerReferences = []metav1.OwnerReference{
+				{
+					APIVersion: prometheusRule.APIVersion,
+					Kind:       prometheusRule.Kind,
+					Name:       prometheusRule.Name,
+					UID:        prometheusRule.UID,
+				},
 			}
 			if val, ok := prometheusRule.Labels["app.coralogix.com/managed-by-alertmanger-config"]; ok {
 				alertCRD.Labels["app.coralogix.com/managed-by-alertmanger-config"] = val
@@ -378,7 +391,8 @@ func (r *PrometheusRuleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&prometheus.PrometheusRule{}, builder.WithPredicates(predicate.Funcs{
+		For(&prometheus.PrometheusRule{}).
+		WithEventFilter(predicate.Funcs{
 			CreateFunc: func(e event.CreateEvent) bool {
 				return shouldTrackPrometheusRules(e.Object.GetLabels())
 			},
@@ -387,9 +401,7 @@ func (r *PrometheusRuleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			},
 			DeleteFunc: func(e event.DeleteEvent) bool {
 				return shouldTrackPrometheusRules(e.Object.GetLabels())
-			}},
-		)).
-		Owns(&coralogixv1alpha1.RecordingRuleGroupSet{}).
-		Owns(&coralogixv1alpha1.Alert{}).
+			},
+		}).
 		Complete(r)
 }

@@ -34,15 +34,13 @@ import (
 
 var _ = Describe("PrometheusRule", Ordered, func() {
 	var (
-		crClient              client.Client
-		promRule              *prometheus.PrometheusRule
-		promRuleName          = "prometheus-rules"
-		alert                 = &coralogixv1alpha1.Alert{}
-		recordingRuleGroupSet = &coralogixv1alpha1.RecordingRuleGroupSet{}
-		alertName             = "test-alert"
-		alertResourceName     = promRuleName + "-" + alertName + "-0"
-		newAlertName          = "test-alert-updated"
-		newAlertResourceName  = promRuleName + "-" + newAlertName + "-0"
+		crClient             client.Client
+		promRule             *prometheus.PrometheusRule
+		promRuleName         = "prometheus-rules"
+		alertName            = "test-alert"
+		alertResourceName    = promRuleName + "-" + alertName + "-0"
+		newAlertName         = "test-alert-updated"
+		newAlertResourceName = promRuleName + "-" + newAlertName + "-0"
 	)
 
 	BeforeAll(func() {
@@ -90,37 +88,15 @@ var _ = Describe("PrometheusRule", Ordered, func() {
 		Expect(crClient.Create(ctx, promRule)).To(Succeed())
 
 		By("Verifying underlying Alert and RecordingRuleGroupSet were created")
+		fetchedAlert := &coralogixv1alpha1.Alert{}
 		Eventually(func() error {
-			return crClient.Get(ctx, types.NamespacedName{Name: alertResourceName, Namespace: testNamespace}, alert)
+			return crClient.Get(ctx, types.NamespacedName{Name: alertResourceName, Namespace: testNamespace}, fetchedAlert)
 		}, time.Minute, time.Second).Should(Succeed())
 
+		fetchedRecordingRuleGroupSet := &coralogixv1alpha1.RecordingRuleGroupSet{}
 		Eventually(func() error {
-			return crClient.Get(ctx, types.NamespacedName{Name: promRuleName, Namespace: testNamespace}, recordingRuleGroupSet)
+			return crClient.Get(ctx, types.NamespacedName{Name: promRuleName, Namespace: testNamespace}, fetchedRecordingRuleGroupSet)
 		}, time.Minute, time.Second).Should(Succeed())
-	})
-
-	It("Should recreate underlying resources when they are deleted", func(ctx context.Context) {
-		By("Deleting underlying Alert")
-		alertInitialUID := alert.GetUID()
-		Expect(crClient.Delete(ctx, alert)).To(Succeed())
-
-		By("Verifying underlying Alert was recreated")
-		Eventually(func(g Gomega) bool {
-			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertResourceName, Namespace: testNamespace}, alert)).To(Succeed())
-			return alert.GetUID() != alertInitialUID && alert.GetUID() != ""
-		}, time.Minute, time.Second).Should(BeTrue())
-
-		By("Deleting underlying RecordingRuleGroupSet")
-		recordingRuleGroupSetInitialUID := recordingRuleGroupSet.GetUID()
-		Expect(crClient.Delete(ctx, recordingRuleGroupSet)).To(Succeed())
-
-		By("Verifying underlying RecordingRuleGroupSet was recreated")
-		Eventually(func(g Gomega) bool {
-			g.Expect(crClient.Get(ctx,
-				types.NamespacedName{Name: promRuleName, Namespace: testNamespace}, recordingRuleGroupSet)).To(Succeed())
-			return recordingRuleGroupSet.GetUID() != recordingRuleGroupSetInitialUID &&
-				recordingRuleGroupSet.GetUID() != ""
-		}, time.Minute, time.Second).Should(BeTrue())
 	})
 
 	It("Should be updated successfully", func(ctx context.Context) {
@@ -131,7 +107,8 @@ var _ = Describe("PrometheusRule", Ordered, func() {
 
 		By("Verifying underlying Alert was updated")
 		Eventually(func() error {
-			return crClient.Get(ctx, types.NamespacedName{Name: newAlertResourceName, Namespace: testNamespace}, alert)
+			fetchedAlert := &coralogixv1alpha1.Alert{}
+			return crClient.Get(ctx, types.NamespacedName{Name: newAlertResourceName, Namespace: testNamespace}, fetchedAlert)
 		}, time.Minute, time.Second).Should(Succeed())
 	})
 
@@ -140,13 +117,15 @@ var _ = Describe("PrometheusRule", Ordered, func() {
 		Expect(crClient.Delete(ctx, promRule)).To(Succeed())
 
 		By("Verifying underlying Alert and RecordingRuleGroupSet were deleted")
+		fetchedAlert := &coralogixv1alpha1.Alert{}
 		Eventually(func() bool {
-			err := crClient.Get(ctx, types.NamespacedName{Name: newAlertResourceName, Namespace: testNamespace}, alert)
+			err := crClient.Get(ctx, types.NamespacedName{Name: newAlertResourceName, Namespace: testNamespace}, fetchedAlert)
 			return errors.IsNotFound(err)
 		}, time.Minute, time.Second).Should(BeTrue())
 
+		fetchedRecordingRuleGroupSet := &coralogixv1alpha1.RecordingRuleGroupSet{}
 		Eventually(func() bool {
-			err := crClient.Get(ctx, types.NamespacedName{Name: promRuleName, Namespace: testNamespace}, recordingRuleGroupSet)
+			err := crClient.Get(ctx, types.NamespacedName{Name: promRuleName, Namespace: testNamespace}, fetchedRecordingRuleGroupSet)
 			return errors.IsNotFound(err)
 		}, time.Minute, time.Second).Should(BeTrue())
 	})
