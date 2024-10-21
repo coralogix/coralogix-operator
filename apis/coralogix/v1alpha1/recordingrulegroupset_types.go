@@ -36,28 +36,6 @@ type RecordingRuleGroupSetSpec struct {
 	Groups []RecordingRuleGroup `json:"groups"`
 }
 
-func (in *RecordingRuleGroupSetSpec) DeepEqual(status RecordingRuleGroupSetStatus) (bool, utils.Diff) {
-	if length, actualLength := len(in.Groups), len(status.Groups); length != actualLength {
-		return false, utils.Diff{
-			Name:    "Groups.Length",
-			Desired: length,
-			Actual:  actualLength,
-		}
-	}
-
-	for i := range in.Groups {
-		if equal, diff := in.Groups[i].DeepEqual(status.Groups[i]); !equal {
-			return false, utils.Diff{
-				Name:    fmt.Sprintf("Groups.%d.%s", i, diff.Name),
-				Desired: diff.Desired,
-				Actual:  diff.Actual,
-			}
-		}
-	}
-
-	return true, utils.Diff{}
-}
-
 func (in *RecordingRuleGroupSetSpec) ExtractRecordingRuleGroups() []*cxsdk.InRuleGroup {
 	result := make([]*cxsdk.InRuleGroup, 0, len(in.Groups))
 	for _, ruleGroup := range in.Groups {
@@ -208,8 +186,6 @@ type RecordingRule struct {
 // RecordingRuleGroupSetStatus defines the observed state of RecordingRuleGroupSet
 type RecordingRuleGroupSetStatus struct {
 	ID *string `json:"id"`
-
-	Groups []RecordingRuleGroup `json:"groups,omitempty"`
 }
 
 //+kubebuilder:object:root=true
