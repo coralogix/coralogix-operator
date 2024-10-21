@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"regexp"
 	"time"
 
@@ -237,16 +238,25 @@ func (r *AlertmanagerConfigReconciler) linkCxAlertToCxIntegrations(ctx context.C
 		}
 
 		matchedReceiversMap := matchedRoutesToMatchedReceiversMap(matchRoutes, config.Spec.Receivers)
-		alert.Spec.NotificationGroups, err = generateNotificationGroupFromRoutes(matchRoutes, matchedReceiversMap)
+		notificationGroups, err := generateNotificationGroupFromRoutes(matchRoutes, matchedReceiversMap)
 		if err != nil {
 			succeed = false
 			log.Error(err, "Received an error while trying to generate NotificationGroup from routes")
 			continue
 		}
-		if err = r.Update(ctx, &alert); err != nil {
-			succeed = false
-			log.Error(err, "Received an error while trying to update Alert CRD from AlertmanagerConfig")
-			continue
+
+		if !reflect.DeepEqual(alert.Spec.NotificationGroups, notificationGroups) {
+			if err = r.Client.Get(ctx, client.ObjectKey{Namespace: alert.Namespace, Name: alert.Name}, &alert); err != nil {
+				succeed = false
+				log.Error(err, "Received an error while trying to get Alert CRD from AlertmanagerConfig")
+			}
+
+			alert.Spec.NotificationGroups = notificationGroups
+			if err = r.Update(ctx, &alert); err != nil {
+				succeed = false
+				log.Error(err, "Received an error while trying to update Alert CRD from AlertmanagerConfig")
+				continue
+			}
 		}
 	}
 
@@ -260,9 +270,11 @@ func (r *AlertmanagerConfigReconciler) deleteWebhooksFromRelatedAlerts(ctx conte
 	}
 
 	for _, alert := range alerts.Items {
-		alert.Spec.NotificationGroups = nil
-		if err := r.Update(ctx, &alert); err != nil {
-			return fmt.Errorf("received an error while trying to update Alert CRD from AlertmanagerConfig: %w", err)
+		if alert.Spec.NotificationGroups != nil {
+			alert.Spec.NotificationGroups = nil
+			if err := r.Update(ctx, &alert); err != nil {
+				return fmt.Errorf("received an error while trying to update Alert CRD from AlertmanagerConfig: %w", err)
+			}
 		}
 	}
 
