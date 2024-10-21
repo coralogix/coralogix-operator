@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"time"
 
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/controllers/clientset"
 	"github.com/go-logr/logr"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus/common/model"
@@ -15,15 +17,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
-	"github.com/coralogix/coralogix-operator/controllers/clientset"
 )
 
 //+kubebuilder:rbac:groups=monitoring.coreos.com,resources=prometheusrules,verbs=get;list;watch
@@ -56,7 +54,8 @@ func (r *AlertmanagerConfigReconciler) SetupWithManager(mgr ctrl.Manager) error 
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&prometheus.AlertmanagerConfig{}, builder.WithPredicates(predicate.Funcs{
+		For(&prometheus.AlertmanagerConfig{}).
+		WithEventFilter(predicate.Funcs{
 			CreateFunc: func(e event.CreateEvent) bool {
 				return shouldTrackAlertmanagerConfigs(e.Object.GetLabels())
 			},
@@ -65,9 +64,8 @@ func (r *AlertmanagerConfigReconciler) SetupWithManager(mgr ctrl.Manager) error 
 			},
 			DeleteFunc: func(e event.DeleteEvent) bool {
 				return shouldTrackAlertmanagerConfigs(e.Object.GetLabels())
-			}},
-		)).
-		Owns(&coralogixv1alpha1.OutboundWebhook{}).
+			},
+		}).
 		Complete(r)
 }
 
@@ -104,13 +102,16 @@ func (r *AlertmanagerConfigReconciler) convertAlertmanagerConfigToCxIntegrations
 	outboundWebhook := &coralogixv1alpha1.OutboundWebhook{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: alertmanagerConfig.Namespace,
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion: alertmanagerConfig.APIVersion,
+					Kind:       alertmanagerConfig.Kind,
+					Name:       alertmanagerConfig.Name,
+					UID:        alertmanagerConfig.UID,
+				},
+			},
 		},
 	}
-
-	if err := ctrl.SetControllerReference(alertmanagerConfig, outboundWebhook, r.Scheme); err != nil {
-		log.Error(err, "Received an error while trying to create OutboundWebhook CRD from alertmanagerConfig")
-	}
-
 	for _, receiver := range alertmanagerConfig.Spec.Receivers {
 		for i, opsGenieConfig := range receiver.OpsGenieConfigs {
 			opsGenieWebhook := outboundWebhook.DeepCopy()
