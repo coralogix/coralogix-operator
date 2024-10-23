@@ -1,4 +1,4 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: prometheus-example-rules
+  name: prometheus-example-rules-test

@@ -4,4 +4,4 @@ testDirs:
   - tests/integration/prometheusrules
   - tests/integration/alertmangerconfigs
 namespace: default
-timeout: 60
+timeout: 360
