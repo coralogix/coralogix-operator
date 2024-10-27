@@ -4,34 +4,37 @@
 # More info: https://book.kubebuilder.io/reference/project-config.html
 domain: coralogix.com
 layout:
-- go.kubebuilder.io/v3
+- go.kubebuilder.io/v4
 multigroup: true
 projectName: coralogix-operator
-repo: coralogix-operator
+repo: github.com/coralogix/coralogix-operator
 resources:
 - api:
     crdVersion: v1
     namespaced: true
   controller: true
   domain: coralogix.com
+  group: coralogix
   kind: Alert
-  path: coralogix-operator/apis/coralogix/v1alpha1
+  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
     namespaced: true
   controller: true
   domain: coralogix.com
+  group: coralogix
   kind: RecordingRuleGroupSet
-  path: coralogix-operator/apis/coralogix/v1alpha1
+  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
     namespaced: true
   controller: true
   domain: coralogix.com
+  group: coralogix
   kind: RuleGroup
-  path: coralogix-operator/apis/coralogix/v1alpha1
+  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -40,7 +43,7 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: OutboundWebhook
-  path: coralogix-operator/apis/coralogix/v1alpha1
+  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
   version: v1alpha1
   webhooks:
     validation: true
