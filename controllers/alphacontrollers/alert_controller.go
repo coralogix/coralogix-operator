@@ -18,8 +18,8 @@ package alphacontrollers
 
 import (
 	"context"
-	stdErr "errors"
 	"fmt"
+
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -106,9 +106,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	return ctrl.Result{}, nil
 }
 
-func (r *AlertReconciler) update(ctx context.Context,
-	log logr.Logger,
-	alert *coralogixv1alpha1.Alert) error {
+func (r *AlertReconciler) update(ctx context.Context, log logr.Logger, alert *coralogixv1alpha1.Alert) error {
 	alertRequest, err := alert.Spec.ExtractUpdateAlertRequest(ctx, log, *alert.Status.ID)
 	if err != nil {
 		return fmt.Errorf("error to parse alert request: %w", err)
@@ -123,33 +121,15 @@ func (r *AlertReconciler) update(ctx context.Context,
 			if err = r.Status().Update(ctx, alert); err != nil {
 				return fmt.Errorf("error on updating alert status: %w", err)
 			}
-			return fmt.Errorf("alert not found on remote, recreating it: %w", err)
+			return fmt.Errorf("alert not found on remote: %w", err)
 		}
 		return fmt.Errorf("error on updating alert: %w", err)
 	}
 	log.V(1).Info("Remote alert updated", "alert", protojson.Format(remoteUpdatedAlert))
-
-	status, err := getStatus(ctx, log, remoteUpdatedAlert.GetAlert(), alert.Spec)
-	if err != nil {
-		return fmt.Errorf("error on getting status: %w", err)
-	}
-
-	if err = r.Get(ctx, client.ObjectKeyFromObject(alert), alert); err != nil {
-		return fmt.Errorf("error on getting alert: %w", err)
-	}
-	alert.Status = status
-
-	if err = r.Status().Update(ctx, alert); err != nil {
-		return fmt.Errorf("error on updating alert status: %w", err)
-	}
-
 	return nil
 }
 
-func (r *AlertReconciler) delete(ctx context.Context,
-	log logr.Logger,
-	alert *coralogixv1alpha1.Alert) error {
-
+func (r *AlertReconciler) delete(ctx context.Context, log logr.Logger, alert *coralogixv1alpha1.Alert) error {
 	log.V(1).Info("Deleting remote alert", "alert", *alert.Status.ID)
 	_, err := r.CoralogixClientSet.Alerts().DeleteAlert(ctx, &alerts.DeleteAlertByUniqueIdRequest{
 		Id: wrapperspb.String(*alert.Status.ID),
@@ -167,23 +147,7 @@ func (r *AlertReconciler) delete(ctx context.Context,
 	return nil
 }
 
-func (r *AlertReconciler) create(
-	ctx context.Context,
-	log logr.Logger,
-	alert *coralogixv1alpha1.Alert) error {
-
-	if alert.Spec.Labels == nil {
-		alert.Spec.Labels = make(map[string]string)
-	}
-
-	if value, ok := alert.Spec.Labels["managed-by"]; !ok || value == "" {
-		alert.Spec.Labels["managed-by"] = "coralogix-operator"
-	}
-
-	if err := r.Update(ctx, alert); err != nil {
-		return fmt.Errorf("error on updating alert: %w", err)
-	}
-
+func (r *AlertReconciler) create(ctx context.Context, log logr.Logger, alert *coralogixv1alpha1.Alert) error {
 	alertRequest, err := alert.ExtractCreateAlertRequest(ctx, log)
 	if err != nil {
 		return fmt.Errorf("error to parse alert request: %w", err)
@@ -201,38 +165,32 @@ func (r *AlertReconciler) create(
 	}
 
 	alert.Status.ID = pointer.String(response.GetAlert().GetUniqueIdentifier().GetValue())
-	if err = r.Update(ctx, alert); err != nil {
-		return fmt.Errorf("error on updating alert: %w", err)
-	}
-
-	if alert.Status, err = getStatus(ctx, log, response.GetAlert(), alert.Spec); err != nil {
-		return fmt.Errorf("error on getting status: %w", err)
-	}
 	if err = r.Status().Update(ctx, alert); err != nil {
 		return fmt.Errorf("error on updating alert status: %w", err)
 	}
 
+	updated := false
+	if alert.Spec.Labels == nil {
+		alert.Spec.Labels = make(map[string]string)
+	}
+
+	if value, ok := alert.Spec.Labels["managed-by"]; !ok || value == "" {
+		alert.Spec.Labels["managed-by"] = "coralogix-operator"
+		updated = true
+	}
+
 	if !controllerutil.ContainsFinalizer(alert, alertFinalizerName) {
 		controllerutil.AddFinalizer(alert, alertFinalizerName)
+		updated = true
 	}
-	if err = r.Client.Update(ctx, alert); err != nil {
-		return fmt.Errorf("error on updating alert: %w", err)
+
+	if updated {
+		if err = r.Client.Update(ctx, alert); err != nil {
+			return fmt.Errorf("error on updating alert: %w", err)
+		}
 	}
 
 	return nil
-}
-
-func getStatus(ctx context.Context, log logr.Logger, actualAlert *alerts.Alert, spec coralogixv1alpha1.AlertSpec) (coralogixv1alpha1.AlertStatus, error) {
-	if actualAlert == nil {
-		return coralogixv1alpha1.AlertStatus{}, stdErr.New("alert is nil")
-	}
-
-	var status coralogixv1alpha1.AlertStatus
-	var err error
-
-	status.ID = utils.WrapperspbStringToStringPointer(actualAlert.GetUniqueIdentifier())
-
-	return status, err
 }
 
 // SetupWithManager sets up the controller with the Manager.

@@ -5,13 +5,13 @@ metadata:
     - alert.coralogix.com/finalizer
   labels:
     app.coralogix.com/managed-by-alertmanger-config: "true"
-    app.kubernetes.io/managed-by: prometheus-example-rules
-  name: prometheus-example-rules-app-latency-0
+    app.kubernetes.io/managed-by: prometheus-example-rules-test
+  name: prometheus-example-rules-test-app-latency-0
   namespace: default
   ownerReferences:
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
-      name: prometheus-example-rules
+      name: prometheus-example-rules-test
 spec:
   active: true
   alertType:
@@ -51,13 +51,13 @@ metadata:
     - alert.coralogix.com/finalizer
   labels:
     app.coralogix.com/managed-by-alertmanger-config: "true"
-    app.kubernetes.io/managed-by: prometheus-example-rules
-  name: prometheus-example-rules-app-latency-1
+    app.kubernetes.io/managed-by: prometheus-example-rules-test
+  name: prometheus-example-rules-test-app-latency-1
   namespace: default
   ownerReferences:
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
-      name: prometheus-example-rules
+      name: prometheus-example-rules-test
 spec:
   active: true
   alertType:
@@ -98,13 +98,13 @@ metadata:
     - alert.coralogix.com/finalizer
   labels:
     app.coralogix.com/managed-by-alertmanger-config: "true"
-    app.kubernetes.io/managed-by: prometheus-example-rules
-  name: prometheus-example-rules-app-latency-2
+    app.kubernetes.io/managed-by: prometheus-example-rules-test
+  name: prometheus-example-rules-test-app-latency-2
   namespace: default
   ownerReferences:
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
-      name: prometheus-example-rules
+      name: prometheus-example-rules-test
 spec:
   active: true
   alertType:

@@ -17,7 +17,6 @@ import (
 	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
@@ -761,14 +760,7 @@ func TestFlattenAlerts(t *testing.T) {
 		},
 	}
 
-	spec := coralogixv1alpha1.AlertSpec{
-		Scheduling: &coralogixv1alpha1.Scheduling{
-			TimeZone: coralogixv1alpha1.TimeZone("UTC+02"),
-		},
-	}
-
 	ctx := context.Background()
-	log := log.FromContext(ctx)
 
 	controller := gomock.NewController(t)
 	defer controller.Finish()
@@ -777,12 +769,11 @@ func TestFlattenAlerts(t *testing.T) {
 	webhookMock.EXPECT().List(ctx, gomock.Any()).Return(&cxsdk.ListAllOutgoingWebhooksResponse{}, nil).AnyTimes()
 	coralogixv1alpha1.WebhooksClient = webhookMock
 
-	status, err := getStatus(ctx, log, alert, spec)
-	assert.NoError(t, err)
+	alertStatus := coralogixv1alpha1.AlertStatus{ID: utils.WrapperspbStringToStringPointer(alert.GetUniqueIdentifier())}
 
 	expected := &coralogixv1alpha1.AlertStatus{
 		ID: pointer.String("id1"),
 	}
 
-	assert.EqualValues(t, expected, &status)
+	assert.EqualValues(t, expected, &alertStatus)
 }
