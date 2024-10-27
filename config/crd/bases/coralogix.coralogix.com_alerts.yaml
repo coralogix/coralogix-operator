@@ -35,13 +35,160 @@ spec:
           spec:
             description: AlertSpec defines the desired state of Alert
             properties:
-              foo:
-                description: Foo is an example field of Alert. Edit alert_types.go
-                  to remove/update
+              alertType:
+                properties:
+                  flow:
+                    type: object
+                  logsImmediate:
+                    properties:
+                      logsFilter:
+                        properties:
+                          filterType:
+                            properties:
+                              simpleFilter:
+                                properties:
+                                  labelFilters:
+                                    properties:
+                                      applicationName:
+                                        items:
+                                          properties:
+                                            operation:
+                                              enum:
+                                              - Or
+                                              - Includes
+                                              - EndsWith
+                                              - StartsWith
+                                              type: string
+                                            value:
+                                              minLength: 0
+                                              type: string
+                                          required:
+                                          - operation
+                                          - value
+                                          type: object
+                                        type: array
+                                      severity:
+                                        items:
+                                          enum:
+                                          - Debug
+                                          - Info
+                                          - Warning
+                                          - Error
+                                          - Critical
+                                          type: string
+                                        type: array
+                                      subsystemName:
+                                        items:
+                                          properties:
+                                            operation:
+                                              enum:
+                                              - Or
+                                              - Includes
+                                              - EndsWith
+                                              - StartsWith
+                                              type: string
+                                            value:
+                                              minLength: 0
+                                              type: string
+                                          required:
+                                          - operation
+                                          - value
+                                          type: object
+                                        type: array
+                                    type: object
+                                  luceneQuery:
+                                    type: string
+                                type: object
+                            type: object
+                        type: object
+                      notificationPayloadFilter:
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                  logsNewValue:
+                    type: object
+                  logsRatioThreshold:
+                    type: object
+                  logsThreshold:
+                    type: object
+                  logsTimeRelativeThreshold:
+                    type: object
+                  logsUniqueCount:
+                    type: object
+                  logsUnusual:
+                    type: object
+                  metricThreshold:
+                    type: object
+                  metricUnusual:
+                    type: object
+                  tracingThreshold:
+                    type: object
+                type: object
+              description:
                 type: string
+              enabled:
+                default: true
+                type: boolean
+              groupBy:
+                items:
+                  type: string
+                type: array
+              labels:
+                additionalProperties:
+                  type: string
+                type: object
+              name:
+                minLength: 0
+                type: string
+              phantomMode:
+                default: false
+                type: boolean
+              schedule:
+                properties:
+                  activeOn:
+                    properties:
+                      dayOfWeek:
+                        items:
+                          enum:
+                          - Sunday
+                          - Monday
+                          - Tuesday
+                          - Wednesday
+                          - Thursday
+                          - Friday
+                          - Saturday
+                          type: string
+                        type: array
+                      end_time:
+                        properties:
+                          hours:
+                            format: int32
+                            type: integer
+                          minutes:
+                            format: int32
+                            type: integer
+                        type: object
+                      start_time:
+                        properties:
+                          hours:
+                            format: int32
+                            type: integer
+                          minutes:
+                            format: int32
+                            type: integer
+                        type: object
+                    type: object
+                type: object
+            required:
+            - alertType
+            - name
             type: object
           status:
             description: AlertStatus defines the observed state of Alert
+            properties:
+              id:
+                type: string
             type: object
         type: object
     served: true

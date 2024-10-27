@@ -5,6 +5,5 @@ import (
 )
 
 const (
-	defaultRequeuePeriod    = 30 * time.Second
-	defaultErrRequeuePeriod = 60 * time.Second
+	DefaultErrRequeuePeriod = 60 * time.Second
 )

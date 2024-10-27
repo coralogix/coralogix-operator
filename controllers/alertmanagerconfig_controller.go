@@ -80,18 +80,18 @@ func (r *AlertmanagerConfigReconciler) Reconcile(ctx context.Context, req ctrl.R
 			// Return and don't requeue
 			if err = r.deleteWebhooksFromRelatedAlerts(ctx, alertmanagerConfig); err != nil {
 				log.Error(err, "Received an error while trying to delete webhooks from related Alerts")
-				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+				return ctrl.Result{RequeueAfter: DefaultErrRequeuePeriod}, err
 			}
 			return ctrl.Result{}, nil
 		}
 		// Error reading the object - requeue the request
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		return ctrl.Result{RequeueAfter: DefaultErrRequeuePeriod}, err
 	}
 
 	succeedConvertAlertmanager := r.convertAlertmanagerConfigToCxIntegrations(ctx, log, alertmanagerConfig)
 	succeedLinkAlerts := r.linkCxAlertToCxIntegrations(ctx, log, alertmanagerConfig)
 	if !succeedConvertAlertmanager || !succeedLinkAlerts {
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, fmt.Errorf("received an error while trying to convert AlertmanagerConfig to OutboundWebhook CRD")
+		return ctrl.Result{RequeueAfter: DefaultErrRequeuePeriod}, fmt.Errorf("received an error while trying to convert AlertmanagerConfig to OutboundWebhook CRD")
 	}
 
 	return reconcile.Result{RequeueAfter: 5 * time.Minute}, nil

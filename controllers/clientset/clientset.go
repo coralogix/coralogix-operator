@@ -8,6 +8,7 @@ type ClientSetInterface interface {
 	Alerts() AlertsClientInterface
 	RecordingRuleGroups() RecordingRulesGroupsClientInterface
 	OutboundWebhooks() OutboundWebhooksClientInterface
+	AlertsV3() *cxsdk.AlertsClient
 }
 
 type ClientSet struct {
@@ -15,6 +16,7 @@ type ClientSet struct {
 	alerts              *AlertsClient
 	recordingRuleGroups *cxsdk.RecordingRuleGroupSetsClient
 	outboundWebhooks    *cxsdk.WebhooksClient
+	alertsV3            *cxsdk.AlertsClient
 }
 
 func (c *ClientSet) RuleGroups() RuleGroupsClientInterface {
@@ -33,6 +35,10 @@ func (c *ClientSet) OutboundWebhooks() OutboundWebhooksClientInterface {
 	return c.outboundWebhooks
 }
 
+func (c *ClientSet) AlertsV3() *cxsdk.AlertsClient {
+	return c.alertsV3
+}
+
 func NewClientSet(targetUrl, apiKey string) ClientSetInterface {
 	apikeyCPC := NewCallPropertiesCreator(targetUrl, apiKey)
 	SDKAPIKeyCPC := cxsdk.NewCallPropertiesCreator(targetUrl, cxsdk.NewAuthContext(apiKey, apiKey))
@@ -42,5 +48,6 @@ func NewClientSet(targetUrl, apiKey string) ClientSetInterface {
 		alerts:              NewAlertsClient(apikeyCPC),
 		recordingRuleGroups: cxsdk.NewRecordingRuleGroupSetsClient(SDKAPIKeyCPC),
 		outboundWebhooks:    cxsdk.NewWebhooksClient(SDKAPIKeyCPC),
+		alertsV3:            cxsdk.NewAlertsClient(SDKAPIKeyCPC),
 	}
 }

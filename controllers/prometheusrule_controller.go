@@ -59,14 +59,14 @@ func (r *PrometheusRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 			return ctrl.Result{}, nil
 		}
 		// Error reading the object - requeue the request
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		return ctrl.Result{RequeueAfter: DefaultErrRequeuePeriod}, err
 	}
 
 	if shouldTrackRecordingRules(prometheusRule) {
 		err := r.convertPrometheusRuleRecordingRuleToCxRecordingRule(ctx, log, prometheusRule, req)
 		if err != nil {
 			log.Error(err, "Received an error while trying to convert PrometheusRule to RecordingRule CRD")
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			return ctrl.Result{RequeueAfter: DefaultErrRequeuePeriod}, err
 		}
 	}
 
@@ -74,7 +74,7 @@ func (r *PrometheusRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		err := r.convertPrometheusRuleAlertToCxAlert(ctx, prometheusRule)
 		if err != nil {
 			log.Error(err, "Received an error while trying to convert PrometheusRule to Alert CRD")
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			return ctrl.Result{RequeueAfter: DefaultErrRequeuePeriod}, err
 		}
 	}
 
