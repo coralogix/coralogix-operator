@@ -3,20 +3,19 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
-	"github.com/coralogix/coralogix-operator/controllers/clientset"
 	"github.com/go-logr/logr"
-	"go.uber.org/zap/zapcore"
-
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/utils/pointer"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -24,6 +23,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/controllers/clientset"
 )
 
 const (
@@ -84,22 +86,14 @@ func (r *PrometheusRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 func (r *PrometheusRuleReconciler) convertPrometheusRuleRecordingRuleToCxRecordingRule(ctx context.Context, log logr.Logger, prometheusRule *prometheus.PrometheusRule, req reconcile.Request) error {
 	recordingRuleGroupSetSpec := prometheusRuleToRecordingRuleToRuleGroupSet(log, prometheusRule)
 	if len(recordingRuleGroupSetSpec.Groups) == 0 {
-		log.V(int(zapcore.DebugLevel)).Info("No recording rules found in PrometheusRule")
 		return nil
 	}
 
 	recordingRuleGroupSet := &coralogixv1alpha1.RecordingRuleGroupSet{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: prometheusRule.Namespace,
-			Name:      prometheusRule.Name,
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion: prometheusRule.APIVersion,
-					Kind:       prometheusRule.Kind,
-					Name:       prometheusRule.Name,
-					UID:        prometheusRule.UID,
-				},
-			},
+			Namespace:       prometheusRule.Namespace,
+			Name:            prometheusRule.Name,
+			OwnerReferences: []metav1.OwnerReference{getOwnerReference(prometheusRule)},
 		},
 		Spec: recordingRuleGroupSetSpec,
 	}
@@ -175,14 +169,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 					alertCRD.Spec = prometheusRuleToCoralogixAlertSpec(rule)
 					alertCRD.Namespace = prometheusRule.Namespace
 					alertCRD.Name = alertCRDName
-					alertCRD.OwnerReferences = []metav1.OwnerReference{
-						{
-							APIVersion: prometheusRule.APIVersion,
-							Kind:       prometheusRule.Kind,
-							Name:       prometheusRule.Name,
-							UID:        prometheusRule.UID,
-						},
-					}
+					alertCRD.OwnerReferences = []metav1.OwnerReference{getOwnerReference(prometheusRule)}
 					alertCRD.Labels = map[string]string{"app.kubernetes.io/managed-by": prometheusRule.Name}
 					if val, ok := prometheusRule.Labels["app.coralogix.com/managed-by-alertmanger-config"]; ok {
 						alertCRD.Labels["app.coralogix.com/managed-by-alertmanger-config"] = val
@@ -196,21 +183,32 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 				}
 			}
 
-			//Converting the PrometheusRule to the desired Alert.
-			alertCRD.Spec = prometheusRuleToCoralogixAlertSpec(rule)
-			alertCRD.OwnerReferences = []metav1.OwnerReference{
-				{
-					APIVersion: prometheusRule.APIVersion,
-					Kind:       prometheusRule.Kind,
-					Name:       prometheusRule.Name,
-					UID:        prometheusRule.UID,
-				},
+			updated := false
+			desiredSpec := prometheusRuleToCoralogixAlertSpec(rule)
+			// We keep NotificationGroups on update, to not override AlertmanagerConfig controller settings
+			desiredSpec.NotificationGroups = alertCRD.Spec.NotificationGroups
+			if !reflect.DeepEqual(alertCRD.Spec, desiredSpec) {
+				desiredSpec.DeepCopyInto(&alertCRD.Spec)
+				updated = true
 			}
-			if val, ok := prometheusRule.Labels["app.coralogix.com/managed-by-alertmanger-config"]; ok {
-				alertCRD.Labels["app.coralogix.com/managed-by-alertmanger-config"] = val
+
+			desiredOwnerReferences := []metav1.OwnerReference{getOwnerReference(prometheusRule)}
+			if !reflect.DeepEqual(alertCRD.OwnerReferences, desiredOwnerReferences) {
+				alertCRD.OwnerReferences = desiredOwnerReferences
+				updated = true
 			}
-			if err := r.Update(ctx, alertCRD); err != nil {
-				return fmt.Errorf("received an error while trying to update Alert CRD: %w", err)
+
+			if promRuleVal, ok := prometheusRule.Labels["app.coralogix.com/managed-by-alertmanger-config"]; ok {
+				if alertVal, ok := alertCRD.Labels["app.coralogix.com/managed-by-alertmanger-config"]; !ok || alertVal != promRuleVal {
+					alertCRD.Labels["app.coralogix.com/managed-by-alertmanger-config"] = promRuleVal
+					updated = true
+				}
+			}
+
+			if updated {
+				if err := r.Update(ctx, alertCRD); err != nil {
+					return fmt.Errorf("received an error while trying to update Alert CRD: %w", err)
+				}
 			}
 		}
 	}
@@ -297,7 +295,7 @@ func prometheusInnerRulesToCoralogixInnerRules(rules []prometheus.Rule) []coralo
 }
 
 func prometheusRuleToCoralogixAlertSpec(rule prometheus.Rule) coralogixv1alpha1.AlertSpec {
-	return coralogixv1alpha1.AlertSpec{
+	alertSpec := coralogixv1alpha1.AlertSpec{
 		Description: rule.Annotations["description"],
 		Severity:    getSeverity(rule),
 		NotificationGroups: []coralogixv1alpha1.NotificationGroup{
@@ -305,6 +303,7 @@ func prometheusRuleToCoralogixAlertSpec(rule prometheus.Rule) coralogixv1alpha1.
 				Notifications: []coralogixv1alpha1.Notification{
 					{
 						RetriggeringPeriodMinutes: getNotificationPeriod(rule),
+						IntegrationName:           getNotificationIntegrationName(rule),
 					},
 				},
 			},
@@ -326,6 +325,8 @@ func prometheusRuleToCoralogixAlertSpec(rule prometheus.Rule) coralogixv1alpha1.
 		},
 		Labels: rule.Labels,
 	}
+
+	return alertSpec
 }
 
 func getSeverity(rule prometheus.Rule) coralogixv1alpha1.AlertSeverity {
@@ -363,6 +364,14 @@ func getNotificationPeriod(rule prometheus.Rule) int32 {
 	return defaultCoralogixNotificationPeriod
 }
 
+func getNotificationIntegrationName(rule prometheus.Rule) *string {
+	if integrationName, ok := rule.Annotations["cxNotificationName"]; ok {
+		return pointer.String(integrationName)
+	}
+
+	return nil
+}
+
 var prometheusAlertForToCoralogixPromqlAlertTimeWindow = map[prometheus.Duration]coralogixv1alpha1.MetricTimeWindow{
 	"1m":  coralogixv1alpha1.MetricTimeWindow(coralogixv1alpha1.TimeWindowMinute),
 	"5m":  coralogixv1alpha1.MetricTimeWindow(coralogixv1alpha1.TimeWindowFiveMinutes),
@@ -376,6 +385,15 @@ var prometheusAlertForToCoralogixPromqlAlertTimeWindow = map[prometheus.Duration
 	"6h":  coralogixv1alpha1.MetricTimeWindow(coralogixv1alpha1.TimeWindowSixHours),
 	"12":  coralogixv1alpha1.MetricTimeWindow(coralogixv1alpha1.TimeWindowTwelveHours),
 	"24h": coralogixv1alpha1.MetricTimeWindow(coralogixv1alpha1.TimeWindowTwentyFourHours),
+}
+
+func getOwnerReference(promRule *prometheus.PrometheusRule) metav1.OwnerReference {
+	return metav1.OwnerReference{
+		APIVersion: promRule.APIVersion,
+		Kind:       promRule.Kind,
+		Name:       promRule.Name,
+		UID:        promRule.UID,
+	}
 }
 
 // SetupWithManager sets up the controller with the Manager.

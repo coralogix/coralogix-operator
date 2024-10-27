@@ -710,103 +710,6 @@ func (in *RuleGroupSpec) ToString() string {
 	return string(str)
 }
 
-func (in *RuleGroupSpec) DeepEqual(actualRuleGroup RuleGroupStatus) (bool, utils.Diff) {
-	if actualName := actualRuleGroup.Name; in.Name != actualName {
-		return false, utils.Diff{
-			Name:    "Name",
-			Desired: in.Name,
-			Actual:  actualName,
-		}
-	}
-
-	if actualDescription := actualRuleGroup.Description; in.Description != actualDescription {
-		return false, utils.Diff{
-			Name:    "Description",
-			Desired: in.Description,
-			Actual:  actualDescription,
-		}
-	}
-
-	if actualActive := actualRuleGroup.Active; in.Active != actualActive {
-		return false, utils.Diff{
-			Name:    "Active",
-			Desired: in.Active,
-			Actual:  actualActive,
-		}
-	}
-
-	if actualHidden := actualRuleGroup.Hidden; in.Hidden != actualHidden {
-		return false, utils.Diff{
-			Name:    "Hidden",
-			Desired: in.Hidden,
-			Actual:  actualHidden,
-		}
-	}
-
-	if actualCreator := actualRuleGroup.Creator; in.Creator != actualCreator {
-		return false, utils.Diff{
-			Name:    "Creator",
-			Desired: in.Creator,
-			Actual:  actualCreator,
-		}
-	}
-
-	if in.Order == nil {
-		in.Order = new(int32)
-		*in.Order = *actualRuleGroup.Order
-	} else if actualOrder := actualRuleGroup.Order; *in.Order != *actualOrder {
-		return false, utils.Diff{
-			Name:    "Order",
-			Desired: *in.Order,
-			Actual:  actualOrder,
-		}
-	}
-
-	if !utils.SlicesWithUniqueValuesEqual(in.Applications, actualRuleGroup.Applications) {
-		return false, utils.Diff{
-			Name:    "Applications",
-			Desired: in.Applications,
-			Actual:  actualRuleGroup.Applications,
-		}
-	}
-
-	if !utils.SlicesWithUniqueValuesEqual(in.Subsystems, actualRuleGroup.Subsystems) {
-		return false, utils.Diff{
-			Name:    "Subsystems",
-			Desired: in.Subsystems,
-			Actual:  actualRuleGroup.Subsystems,
-		}
-	}
-
-	if !utils.SlicesWithUniqueValuesEqual(in.Severities, actualRuleGroup.Severities) {
-		return false, utils.Diff{
-			Name:    "Severities",
-			Desired: in.Severities,
-			Actual:  actualRuleGroup.Severities,
-		}
-	}
-
-	if len(in.RuleSubgroups) != len(actualRuleGroup.RuleSubgroups) {
-		return false, utils.Diff{
-			Name:    "RuleSubgroups length",
-			Desired: len(in.RuleSubgroups),
-			Actual:  len(actualRuleGroup.RuleSubgroups),
-		}
-	}
-
-	for i := range in.RuleSubgroups {
-		if equal, diff := in.RuleSubgroups[i].DeepEqual(actualRuleGroup.RuleSubgroups[i]); !equal {
-			return false, utils.Diff{
-				Name:    fmt.Sprintf("RuleSubgroups[%d].%s", i, diff.Name),
-				Desired: diff.Desired,
-				Actual:  diff.Actual,
-			}
-		}
-	}
-
-	return true, utils.Diff{}
-}
-
 func (in *RuleGroupSpec) ExtractUpdateRuleGroupRequest(id string) *cxsdk.UpdateRuleGroupRequest {
 	ruleGroup := in.ExtractCreateRuleGroupRequest()
 	return &cxsdk.UpdateRuleGroupRequest{
@@ -1051,26 +954,6 @@ type RuleGroupStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 	ID *string `json:"id"`
-
-	Name string `json:"name,omitempty"`
-
-	Description string `json:"description,omitempty"`
-
-	Active bool `json:"active,omitempty"`
-
-	Applications []string `json:"applications,omitempty"`
-
-	Subsystems []string `json:"subsystems,omitempty"`
-
-	Severities []RuleSeverity `json:"severities,omitempty"`
-
-	Hidden bool `json:"hidden,omitempty"`
-
-	Creator string `json:"creator,omitempty"`
-
-	Order *int32 `json:"order,omitempty"`
-
-	RuleSubgroups []RuleSubGroup `json:"subgroups,omitempty"`
 }
 
 //+kubebuilder:object:root=true

@@ -18,7 +18,6 @@ package alphacontrollers
 
 import (
 	"context"
-	"fmt"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	"github.com/coralogix/coralogix-operator/controllers/clientset"
@@ -129,16 +128,15 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	var (
-		notFound    bool
-		err         error
-		actualState *coralogixv1alpha1.RuleGroupStatus
+		notFound bool
+		err      error
 	)
 
 	if id := ruleGroupCRD.Status.ID; id == nil {
 		log.V(1).Info("ruleGroup wasn't created")
 		notFound = true
 	} else {
-		getRuleGroupResp, err := rulesGroupsClient.Get(ctx, &cxsdk.GetRuleGroupRequest{GroupId: *id})
+		_, err := rulesGroupsClient.Get(ctx, &cxsdk.GetRuleGroupRequest{GroupId: *id})
 		switch {
 		case status.Code(err) == codes.NotFound:
 			log.V(1).Info("ruleGroup doesn't exist in Coralogix backend")
@@ -146,12 +144,6 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		case err != nil:
 			log.Error(err, "Received an error while getting RuleGroup")
 			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
-		case err == nil:
-			actualState, err = flattenRuleGroup(getRuleGroupResp.GetRuleGroup())
-			if err != nil {
-				log.Error(err, "Error mapping coralogix API response", "Name", ruleGroupCRD.Name, "Namespace", ruleGroupCRD.Namespace)
-				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
-			}
 		}
 	}
 
@@ -190,17 +182,15 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 	}
 
-	if equal, diff := ruleGroupCRD.Spec.DeepEqual(*actualState); !equal {
-		log.V(1).Info("Find diffs between spec and the actual state", "Diff", diff)
-		updateRuleGroupReq := ruleGroupCRD.Spec.ExtractUpdateRuleGroupRequest(*ruleGroupCRD.Status.ID)
-		updateRuleGroupResp, err := rulesGroupsClient.Update(ctx, updateRuleGroupReq)
-		if err != nil {
-			log.Error(err, "Received an error while updating a Rule-Group", "ruleGroup", updateRuleGroupReq)
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
-		}
-		jstr, _ := jsm.MarshalToString(updateRuleGroupResp)
-		log.V(1).Info("Rule-Group was updated", "ruleGroup", jstr)
+	log.V(1).Info("Updating Rule-Group", "ruleGroup")
+	updateRuleGroupReq := ruleGroupCRD.Spec.ExtractUpdateRuleGroupRequest(*ruleGroupCRD.Status.ID)
+	updateRuleGroupResp, err := rulesGroupsClient.Update(ctx, updateRuleGroupReq)
+	if err != nil {
+		log.Error(err, "Received an error while updating a Rule-Group", "ruleGroup", updateRuleGroupReq)
+		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 	}
+	jstr, _ := jsm.MarshalToString(updateRuleGroupResp)
+	log.V(1).Info("Rule-Group was updated", "ruleGroup", jstr)
 
 	return ctrl.Result{}, nil
 }
@@ -211,175 +201,7 @@ func flattenRuleGroup(ruleGroup *cxsdk.RuleGroup) (*coralogixv1alpha1.RuleGroupS
 	status.ID = new(string)
 	*status.ID = ruleGroup.GetId().GetValue()
 
-	status.Name = ruleGroup.GetName().GetValue()
-
-	status.Active = ruleGroup.GetEnabled().GetValue()
-
-	var err error
-	status.Applications, status.Subsystems, status.Severities, err = flattenRuleMatcher(ruleGroup.GetRuleMatchers())
-	if err != nil {
-		return nil, fmt.Errorf("flattenRuleGroup name: %s: %w", ruleGroup.GetName().GetValue(), err)
-	}
-
-	status.Description = ruleGroup.Description.GetValue()
-
-	status.Order = new(int32)
-	*status.Order = int32(ruleGroup.GetOrder().GetValue())
-
-	status.Creator = ruleGroup.GetCreator().GetValue()
-
-	status.Hidden = ruleGroup.GetHidden().GetValue()
-
-	subGroups, err := flattenRuleSubGroups(ruleGroup.GetRuleSubgroups())
-	if err != nil {
-		return nil, fmt.Errorf("flattenRuleGroup name: %s: %w", ruleGroup.GetName().GetValue(), err)
-	}
-	status.RuleSubgroups = subGroups
 	return &status, nil
-}
-
-func flattenRuleSubGroups(subgroups []*cxsdk.RuleSubgroup) ([]coralogixv1alpha1.RuleSubGroup, error) {
-	result := make([]coralogixv1alpha1.RuleSubGroup, 0, len(subgroups))
-	for _, sg := range subgroups {
-		subgroup, err := flattenRuleSubGroup(sg)
-		if err != nil {
-			return nil, fmt.Errorf("flattenRuleSubGroups subGroupId: %s: %w", sg.GetId().GetValue(), err)
-		}
-		result = append(result, subgroup)
-	}
-	return result, nil
-}
-
-func flattenRuleSubGroup(subGroup *cxsdk.RuleSubgroup) (coralogixv1alpha1.RuleSubGroup, error) {
-	var result coralogixv1alpha1.RuleSubGroup
-
-	result.ID = new(string)
-	*result.ID = subGroup.Id.GetValue()
-
-	result.Active = subGroup.GetEnabled().GetValue()
-
-	result.Order = new(int32)
-	*result.Order = int32(subGroup.GetOrder().GetValue())
-
-	rules, err := flattenRules(subGroup.Rules)
-	if err != nil {
-		return coralogixv1alpha1.RuleSubGroup{}, fmt.Errorf("flattenRuleSubGroup: %w", err)
-	}
-	result.Rules = rules
-	return result, nil
-}
-
-func flattenRules(rules []*cxsdk.Rule) ([]coralogixv1alpha1.Rule, error) {
-	result := make([]coralogixv1alpha1.Rule, 0, len(rules))
-	for _, r := range rules {
-		rule, err := flattenRule(r)
-		if err != nil {
-			return nil, fmt.Errorf("flattenRules: %w", err)
-		}
-		result = append(result, rule)
-	}
-	return result, nil
-}
-
-func flattenRule(rule *cxsdk.Rule) (coralogixv1alpha1.Rule, error) {
-	var result coralogixv1alpha1.Rule
-	result.Name = rule.GetName().GetValue()
-	result.Active = rule.GetEnabled().GetValue()
-	result.Description = rule.GetDescription().GetValue()
-
-	switch ruleParams := rule.GetParameters().GetRuleParameters().(type) {
-	case *cxsdk.RuleParametersExtractParameters:
-		extractParameters := ruleParams.ExtractParameters
-		result.Extract = &coralogixv1alpha1.Extract{
-			Regex:       extractParameters.GetRule().GetValue(),
-			SourceField: rule.GetSourceField().GetValue(),
-		}
-	case *cxsdk.RuleParametersJSONExtractParameters:
-		jsonExtractParameters := ruleParams.JsonExtractParameters
-		result.JsonExtract = &coralogixv1alpha1.JsonExtract{
-			JsonKey:          jsonExtractParameters.GetRule().GetValue(),
-			DestinationField: coralogixv1alpha1.RulesProtoSeverityDestinationFieldToSchemaDestinationField[jsonExtractParameters.GetDestinationField()],
-		}
-	case *cxsdk.RuleParametersReplaceParameters:
-		replaceParameters := ruleParams.ReplaceParameters
-		result.Replace = &coralogixv1alpha1.Replace{
-			SourceField:       rule.GetSourceField().GetValue(),
-			DestinationField:  replaceParameters.GetDestinationField().GetValue(),
-			Regex:             replaceParameters.GetRule().GetValue(),
-			ReplacementString: replaceParameters.GetReplaceNewVal().GetValue(),
-		}
-	case *cxsdk.RuleParametersParseParameters:
-		parseParameters := ruleParams.ParseParameters
-		result.Parse = &coralogixv1alpha1.Parse{
-			SourceField:      rule.GetSourceField().GetValue(),
-			DestinationField: parseParameters.GetDestinationField().GetValue(),
-			Regex:            parseParameters.GetRule().GetValue(),
-		}
-	case *cxsdk.RuleParametersAllowParameters:
-		allowParameters := ruleParams.AllowParameters
-		result.Block = &coralogixv1alpha1.Block{
-			SourceField:               rule.GetSourceField().GetValue(),
-			Regex:                     allowParameters.GetRule().GetValue(),
-			KeepBlockedLogs:           allowParameters.GetKeepBlockedLogs().GetValue(),
-			BlockingAllMatchingBlocks: false,
-		}
-	case *cxsdk.RuleParametersBlockParameters:
-		blockParameters := ruleParams.BlockParameters
-		result.Block = &coralogixv1alpha1.Block{
-			SourceField:               rule.GetSourceField().GetValue(),
-			Regex:                     blockParameters.GetRule().GetValue(),
-			KeepBlockedLogs:           blockParameters.GetKeepBlockedLogs().GetValue(),
-			BlockingAllMatchingBlocks: true,
-		}
-	case *cxsdk.RuleParametersExtractTimestampParameters:
-		extractTimestampParameters := ruleParams.ExtractTimestampParameters
-		result.ExtractTimestamp = &coralogixv1alpha1.ExtractTimestamp{
-			SourceField:         rule.GetSourceField().GetValue(),
-			TimeFormat:          extractTimestampParameters.GetFormat().GetValue(),
-			FieldFormatStandard: coralogixv1alpha1.RulesProtoFormatStandardToSchemaFormatStandard[extractTimestampParameters.GetStandard()],
-		}
-	case *cxsdk.RuleParametersRemoveFieldsParameters:
-		removeFieldsParameters := ruleParams.RemoveFieldsParameters
-		result.RemoveFields = &coralogixv1alpha1.RemoveFields{
-			ExcludedFields: removeFieldsParameters.GetFields(),
-		}
-	case *cxsdk.RuleParametersJSONStringifyParameters:
-		jsonStringifyParameters := ruleParams.JsonStringifyParameters
-		result.JsonStringify = &coralogixv1alpha1.JsonStringify{
-			SourceField:      rule.GetSourceField().GetValue(),
-			DestinationField: jsonStringifyParameters.GetDestinationField().GetValue(),
-			KeepSourceField:  !(jsonStringifyParameters.GetDeleteSource().GetValue()),
-		}
-	case *cxsdk.RuleParametersJSONParseParameters:
-		jsonParseParameters := ruleParams.JsonParseParameters
-		result.ParseJsonField = &coralogixv1alpha1.ParseJsonField{
-			SourceField:          rule.GetSourceField().GetValue(),
-			DestinationField:     jsonParseParameters.GetDestinationField().GetValue(),
-			KeepSourceField:      !(jsonParseParameters.GetDeleteSource().GetValue()),
-			KeepDestinationField: !(jsonParseParameters.GetOverrideDest().GetValue()),
-		}
-	default:
-		return coralogixv1alpha1.Rule{}, fmt.Errorf("unexpected type %T for rule parameters, name: %s", ruleParams, rule.GetName().GetValue())
-	}
-	return result, nil
-}
-
-func flattenRuleMatcher(ruleMatchers []*cxsdk.RuleMatcher) (applications, subsystems []string, severities []coralogixv1alpha1.RuleSeverity, err error) {
-	for _, ruleMatcher := range ruleMatchers {
-		switch matcher := ruleMatcher.Constraint.(type) {
-		case *cxsdk.RuleMatcherApplicationName:
-			applications = append(applications, matcher.ApplicationName.GetValue().GetValue())
-		case *cxsdk.RuleMatcherSubsystemName:
-			subsystems = append(subsystems, matcher.SubsystemName.GetValue().GetValue())
-		case *cxsdk.RuleMatcherSeverity:
-			severity := matcher.Severity.GetValue()
-			severities = append(severities, coralogixv1alpha1.RulesProtoSeverityToSchemaSeverity[severity])
-		default:
-			return nil, nil, nil, fmt.Errorf("unexpected type %T for rule matcher", ruleMatcher)
-		}
-	}
-
-	return
 }
 
 // SetupWithManager sets up the controller with the Manager.

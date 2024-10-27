@@ -58,7 +58,7 @@ metadata:
     app.coralogix.com/track-recording-rules: "true"
     app.coralogix.com/track-alerting-rules: "true"
     app.coralogix.com/managed-by-alertmanger-config: "true"
-  name: prometheus-example-rules
+  name: prometheus-example-rules-test
 spec:
   groups:
     - name: example.rules

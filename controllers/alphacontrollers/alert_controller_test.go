@@ -17,7 +17,6 @@ import (
 	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
@@ -336,11 +335,7 @@ func TestAlertUpdate(t *testing.T) {
 					AlertType:          defaultAlertType,
 				},
 				Status: coralogixv1alpha1.AlertStatus{
-					ID:          pointer.String("AlertUpdateSuccess"),
-					Name:        "AlertUpdateSuccess",
-					Description: "AlertUpdateSuccess",
-					Active:      true,
-					Severity:    "Critical",
+					ID: pointer.String("AlertUpdateSuccess"),
 				},
 			},
 			remoteAlert: &alerts.Alert{
@@ -404,11 +399,7 @@ func TestAlertUpdate(t *testing.T) {
 					AlertType:          defaultAlertType,
 				},
 				Status: coralogixv1alpha1.AlertStatus{
-					ID:          pointer.String("AlertUpdateCleanStatus"),
-					Name:        "AlertUpdateCleanStatus",
-					Description: "AlertUpdateCleanStatus",
-					Active:      true,
-					Severity:    "Critical",
+					ID: pointer.String("AlertUpdateCleanStatus"),
 				},
 			},
 			remoteAlert: &alerts.Alert{
@@ -618,11 +609,7 @@ func TestAlertDelete(t *testing.T) {
 					AlertType:          defaultAlertType,
 				},
 				Status: coralogixv1alpha1.AlertStatus{
-					ID:          pointer.String("AlertDeleteSuccess"),
-					Name:        "AlertDeleteSuccess",
-					Description: "AlertDeleteSuccess",
-					Active:      true,
-					Severity:    "Critical",
+					ID: pointer.String("AlertDeleteSuccess"),
 				},
 			},
 			remoteAlert: &alerts.Alert{
@@ -773,14 +760,7 @@ func TestFlattenAlerts(t *testing.T) {
 		},
 	}
 
-	spec := coralogixv1alpha1.AlertSpec{
-		Scheduling: &coralogixv1alpha1.Scheduling{
-			TimeZone: coralogixv1alpha1.TimeZone("UTC+02"),
-		},
-	}
-
 	ctx := context.Background()
-	log := log.FromContext(ctx)
 
 	controller := gomock.NewController(t)
 	defer controller.Finish()
@@ -789,33 +769,11 @@ func TestFlattenAlerts(t *testing.T) {
 	webhookMock.EXPECT().List(ctx, gomock.Any()).Return(&cxsdk.ListAllOutgoingWebhooksResponse{}, nil).AnyTimes()
 	coralogixv1alpha1.WebhooksClient = webhookMock
 
-	status, err := getStatus(ctx, log, alert, spec)
-	assert.NoError(t, err)
+	alertStatus := coralogixv1alpha1.AlertStatus{ID: utils.WrapperspbStringToStringPointer(alert.GetUniqueIdentifier())}
 
 	expected := &coralogixv1alpha1.AlertStatus{
-		ID:          pointer.String("id1"),
-		Name:        "name",
-		Description: "description",
-		Active:      true,
-		Severity:    "Critical",
-		Labels:      map[string]string{"key": "value"},
-		AlertType: coralogixv1alpha1.AlertType{
-			Metric: &coralogixv1alpha1.Metric{
-				Promql: &coralogixv1alpha1.Promql{
-					SearchQuery: "http_requests_total{status!~\"4..\"}",
-					Conditions: coralogixv1alpha1.PromqlConditions{
-						AlertWhen:                   "MoreThanUsual",
-						Threshold:                   utils.FloatToQuantity(3.0),
-						TimeWindow:                  coralogixv1alpha1.MetricTimeWindow("TwelveHours"),
-						MinNonNullValuesPercentage:  pointer.Int(10),
-						ReplaceMissingValueWithZero: false,
-					},
-				},
-			},
-		},
-		NotificationGroups: []coralogixv1alpha1.NotificationGroup{},
-		PayloadFilters:     []string{},
+		ID: pointer.String("id1"),
 	}
 
-	assert.EqualValues(t, expected, &status)
+	assert.EqualValues(t, expected, &alertStatus)
 }

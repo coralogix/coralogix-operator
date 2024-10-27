@@ -33,6 +33,8 @@ jobs:
       - name: Load the controller-manager image into Kind
         run: |
           kind load docker-image ${{ env.IMG }} --name chart-testing
+      - name: Install CRDs
+        run: make install
       - name: Deploy the controller-manager
         run: |
           make deploy
