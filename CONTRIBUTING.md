@@ -40,15 +40,15 @@ For private domain the `domain` field or the environment variable `CORALOGIX_DOM
 
 Run the operator locally
 ```sh
-$ go run main.go
+$ go run cmd/main.go
 ```
 Or with `regin` and `api-key` flags
 ```sh
-$ go run main.go -region EU2 -api-key xxx-xxx-xxx
+$ go run cmd/main.go -region EU2 -api-key xxx-xxx-xxx
 ```
 For not running the prometheusRule controller set the `prometheus-rule-controller` flag to `false`
 ```sh
-$ go run main.go -prometheus-rule-controller=false
+$ go run cmd/main.go -prometheus-rule-controller=false
 ```
 Or build and push your image to a registry
 ```sh

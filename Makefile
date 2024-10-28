@@ -59,7 +59,7 @@ vet: ## Run go vet against code.
 
 .PHONY: unit-tests
 unit-tests: manifests generate fmt vet envtest ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./controllers/ -ldflags $(LDFLAGS) -coverprofile cover.out
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./internal/controller/ -ldflags $(LDFLAGS) -coverprofile cover.out
 
 ##@ Documentation
 .PHONY: generate-api-docs
@@ -70,11 +70,11 @@ generate-api-docs: crdoc ## Generate API documentation.
 
 .PHONY: build
 build: generate fmt vet ## Build manager binary.
-	go build -ldflags=$(LDFLAGS) -o bin/manager main.go
+	go build -ldflags=$(LDFLAGS) -o bin/manager cmd/main.go
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
-	go run -ldflags=$(LDFLAGS) ./main.go
+	go run -ldflags=$(LDFLAGS) cmd/main.go
 
 # If you wish built the manager image targeting other platforms you can use the --platform flag.
 # (i.e. docker build --platform linux/arm64 ). However, you must enable docker buildKit for it.
@@ -160,7 +160,7 @@ ENVTEST ?= $(LOCALBIN)/setup-envtest
 CRDOC ?= $(LOCALBIN)/crdoc
 
 ## Tool Versions
-KUSTOMIZE_VERSION ?= v3.8.7
+KUSTOMIZE_VERSION ?= v5.3.0
 CONTROLLER_TOOLS_VERSION ?= v0.15.0
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"

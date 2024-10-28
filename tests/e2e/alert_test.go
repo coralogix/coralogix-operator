@@ -34,8 +34,8 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
-	utils "github.com/coralogix/coralogix-operator/apis"
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
+	utils "github.com/coralogix/coralogix-operator/api"
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 )
 
 var _ = Describe("Alert", Ordered, func() {
