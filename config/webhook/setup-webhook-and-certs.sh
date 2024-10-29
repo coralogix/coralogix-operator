@@ -86,20 +86,28 @@ if [[ -f "${CERT_DIR}/ca.crt" && -f "${CERT_DIR}/tls.crt" && -f "${CERT_DIR}/tls
     # Extract the base64-encoded CA certificate
     CA_BUNDLE=$(cat ${CERT_DIR}/ca.crt | base64 | tr -d '\n')
 
-    # Update the caBundle in the webhook config file
-    sed -i '' "s|caBundle: .*|caBundle: ${CA_BUNDLE}|" "${WEBHOOK_CONFIG_PATH}"
+    # Function to use appropriate sed command based on OS
+    function sed_inplace() {
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "$1" "$2"
+        else
+            sed -i "$1" "$2"
+        fi
+    }
 
+    # Update the caBundle in the webhook config file
+    sed_inplace "s|caBundle: .*|caBundle: ${CA_BUNDLE}|" "${WEBHOOK_CONFIG_PATH}"
 
     # Replace the namespace in the service YAML file with the correct namespace
-    sed -i '' "s|namespace:.*|namespace: ${NAMESPACE}|" "${SERVICE_WEBHOOK_CONFIG_PATH}"
+    sed_inplace "s|namespace:.*|namespace: ${NAMESPACE}|" "${SERVICE_WEBHOOK_CONFIG_PATH}"
 
     # Replace the service namespace in the ValidatingWebhookConfiguration YAML file
-    sed -i '' "s|namespace:.*|namespace: ${NAMESPACE}|" "${WEBHOOK_CONFIG_PATH}"
+    sed_inplace "s|namespace:.*|namespace: ${NAMESPACE}|" "${WEBHOOK_CONFIG_PATH}"
 
     # Check if caBundle exists in the YAML file
     if grep -q "caBundle:" "${WEBHOOK_CONFIG_PATH}"; then
         # Replace the existing caBundle value with the new CA_BUNDLE
-        sed -i '' "s|caBundle: .*|caBundle: ${CA_BUNDLE}|" "${WEBHOOK_CONFIG_PATH}"
+        sed_inplace "s|caBundle: .*|caBundle: ${CA_BUNDLE}|" "${WEBHOOK_CONFIG_PATH}"
         echo "Updated ${WEBHOOK_CONFIG_PATH} with the new CA_BUNDLE."
     else
         # Add the caBundle field under clientConfig with proper indentation

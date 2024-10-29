@@ -19,7 +19,6 @@ package e2e
 import (
 	"context"
 	"fmt"
-
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -41,16 +40,12 @@ var _ = Describe("RuleGroup", Ordered, func() {
 		ruleGroupsClient *cxsdk.RuleGroupsClient
 		ruleGroupID      string
 		ruleGroup        *coralogixv1alpha1.RuleGroup
+		ruleGroupName    = "json-extract-rule"
 	)
 
-	BeforeAll(func() {
+	BeforeEach(func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		ruleGroupsClient = ClientsInstance.GetCoralogixClientSet().RuleGroups()
-	})
-
-	It("Should be created successfully", func(ctx context.Context) {
-		By("Creating RuleGroup")
-		ruleGroupName := "json-extract-rule"
 		ruleGroup = &coralogixv1alpha1.RuleGroup{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      ruleGroupName,
@@ -75,6 +70,10 @@ var _ = Describe("RuleGroup", Ordered, func() {
 				},
 			},
 		}
+	})
+
+	It("Should be created successfully", func(ctx context.Context) {
+		By("Creating RuleGroup")
 		Expect(crClient.Create(ctx, ruleGroup)).To(Succeed())
 
 		By("Fetching the RuleGroup ID")
@@ -120,5 +119,44 @@ var _ = Describe("RuleGroup", Ordered, func() {
 			_, err := ruleGroupsClient.Get(ctx, &cxsdk.GetRuleGroupRequest{GroupId: ruleGroupID})
 			return status.Code(err)
 		}).Should(Equal(codes.NotFound))
+	})
+
+	It("should deny creation of RuleGroup with typeless rule", func(ctx context.Context) {
+		ruleGroup.Spec.RuleSubgroups = []coralogixv1alpha1.RuleSubGroup{
+			{
+				Rules: []coralogixv1alpha1.Rule{
+					{
+						Name:        "Worker to category",
+						Description: "Extracts value from 'worker' and populates 'Category'",
+					},
+				},
+			},
+		}
+		err := crClient.Create(ctx, ruleGroup)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("at least one rule type should be set in rule 'Worker to category'"))
+	})
+
+	It("should deny creation of RuleGroup with rule of two types", func(ctx context.Context) {
+		ruleGroup.Spec.RuleSubgroups = []coralogixv1alpha1.RuleSubGroup{
+			{
+				Rules: []coralogixv1alpha1.Rule{
+					{
+						Name:        "Worker to category",
+						Description: "Extracts value from 'worker' and populates 'Category'",
+						JsonExtract: &coralogixv1alpha1.JsonExtract{
+							DestinationField: "Category",
+							JsonKey:          "worker",
+						},
+						Block: &coralogixv1alpha1.Block{
+							SourceField: "text",
+							Regex:       "sql_error_code\\s*=\\s*28000",
+						},
+					},
+				},
+			},
+		}
+		err := crClient.Create(ctx, ruleGroup)
+		Expect(err.Error()).To(ContainSubstring("only one rule type should be set in rule 'Worker to category', but got: [Block JsonExtract]"))
 	})
 })

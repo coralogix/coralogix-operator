@@ -108,6 +108,9 @@ var _ = BeforeSuite(func() {
 	err = SetupOutboundWebhookWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
+	err = SetupRuleGroupWebhookWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
 	//+kubebuilder:scaffold:webhook
 
 	go func() {
