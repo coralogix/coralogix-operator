@@ -47,15 +47,12 @@ func SetupOutboundWebhookWebhookWithManager(mgr ctrl.Manager) error {
 //
 // NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
 // as this struct is used only for temporary operations and does not need to be deeply copied.
-type OutboundWebhookCustomValidator struct {
-	//TODO(user): Add more fields as needed for validation
-}
+type OutboundWebhookCustomValidator struct{}
 
 var _ webhook.CustomValidator = &OutboundWebhookCustomValidator{}
 
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type OutboundWebhook.
 func (v *OutboundWebhookCustomValidator) ValidateCreate(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	outboundwebhooklog.Info("Validation for OutboundWebhook upon creation", "name", obj.(*coralogixv1alpha1.OutboundWebhook).GetName())
 	outboundWebhook, ok := obj.(*coralogixv1alpha1.OutboundWebhook)
 	if !ok {
 		return nil, fmt.Errorf("expected a OutboundWebhook object but got %T", obj)

@@ -26,6 +26,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
@@ -71,4 +72,8 @@ var _ = AfterSuite(func(ctx context.Context) {
 	By("Deleting test namespace")
 	k8sClient := ClientsInstance.GetK8sClient()
 	Expect(k8sClient.CoreV1().Namespaces().Delete(ctx, testNamespace, metav1.DeleteOptions{})).To(Succeed())
+	Eventually(func() bool {
+		_, err := k8sClient.CoreV1().Namespaces().Get(ctx, testNamespace, metav1.GetOptions{})
+		return errors.IsNotFound(err)
+	}, time.Minute, time.Second).Should(BeTrue())
 })
