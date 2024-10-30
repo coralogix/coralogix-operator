@@ -2978,7 +2978,7 @@ func NewDefaultAlertStatus() *AlertStatus {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-//+kubebuilder:storageversion
+// +kubebuilder:resource:path=alerts,scope=Namespaced
 
 // Alert is the Schema for the alerts API
 type Alert struct {

@@ -20,9 +20,14 @@ import (
 	"context"
 	"fmt"
 
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	coralogixv1beta1 "github.com/coralogix/coralogix-operator/apis/coralogix/path"
 	"github.com/coralogix/coralogix-operator/controllers/clientset"
 	"github.com/go-logr/logr"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/pointer"
@@ -32,9 +37,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	coralogixv1beta1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1beta1"
 	utils "github.com/coralogix/coralogix-operator/controllers"
 )
+
+var alertFinalizerName = "alert.coralogix.com/finalizer"
 
 // AlertReconciler reconciles a Alert object
 type AlertReconciler struct {
@@ -101,26 +107,13 @@ func (r *AlertReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *AlertReconciler) create(ctx context.Context, logger logr.Logger, alert *coralogixv1beta1.Alert) error {
-	if alert.Spec.Labels == nil {
-		alert.Spec.Labels = make(map[string]string)
-	}
-
-	if value, ok := alert.Spec.Labels["managed-by"]; !ok || value == "" {
-		alert.Spec.Labels["managed-by"] = "coralogix-operator"
-	}
-
-	if err := r.Update(ctx, alert); err != nil {
-		return fmt.Errorf("error on updating alert: %w", err)
-	}
-
-	alertRequest, err := alert.ExtractCreateAlertRequest()
-	if err != nil {
-		return fmt.Errorf("error to parse alert request: %w", err)
+func (r *AlertReconciler) create(ctx context.Context, log logr.Logger, alert *coralogixv1beta1.Alert) error {
+	alertRequest := &cxsdk.CreateAlertDefRequest{
+		AlertDefProperties: alert.Spec.ExtractAlertProperties(),
 	}
 
 	log.V(1).Info("Creating remote alert", "alert", protojson.Format(alertRequest))
-	response, err := r.CoralogixClientSet.Alerts().CreateAlert(ctx, alertRequest)
+	response, err := r.CoralogixClientSet.AlertsV3().Create(ctx, alertRequest)
 	if err != nil {
 		return fmt.Errorf("error on creating alert: %w", err)
 	}
@@ -130,32 +123,72 @@ func (r *AlertReconciler) create(ctx context.Context, logger logr.Logger, alert 
 		return fmt.Errorf("error on getting alert: %w", err)
 	}
 
-	alert.Status.ID = pointer.String(response.GetAlert().GetUniqueIdentifier().GetValue())
-	if err = r.Update(ctx, alert); err != nil {
-		return fmt.Errorf("error on updating alert: %w", err)
-	}
-
-	if alert.Status, err = getStatus(ctx, log, response.GetAlert(), alert.Spec); err != nil {
-		return fmt.Errorf("error on getting status: %w", err)
-	}
+	alert.Status.ID = pointer.String(response.GetAlertDef().GetId().GetValue())
 	if err = r.Status().Update(ctx, alert); err != nil {
 		return fmt.Errorf("error on updating alert status: %w", err)
 	}
 
+	updated := false
+	if alert.Spec.Labels == nil {
+		alert.Spec.Labels = make(map[string]string)
+	}
+
+	if value, ok := alert.Spec.Labels["managed-by"]; !ok || value == "" {
+		alert.Spec.Labels["managed-by"] = "coralogix-operator"
+		updated = true
+	}
+
 	if !controllerutil.ContainsFinalizer(alert, alertFinalizerName) {
 		controllerutil.AddFinalizer(alert, alertFinalizerName)
+		updated = true
 	}
-	if err = r.Client.Update(ctx, alert); err != nil {
+
+	if updated {
+		if err = r.Client.Update(ctx, alert); err != nil {
+			return fmt.Errorf("error on updating alert: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func (r *AlertReconciler) delete(ctx context.Context, log logr.Logger, alert *coralogixv1beta1.Alert) error {
+	log.V(1).Info("Deleting remote alert", "alert", *alert.Status.ID)
+	_, err := r.CoralogixClientSet.AlertsV3().Delete(ctx, &cxsdk.DeleteAlertDefRequest{
+		Id: wrapperspb.String(*alert.Status.ID),
+	})
+	if err != nil && status.Code(err) != codes.NotFound {
+		return fmt.Errorf("error on deleting alert: %w", err)
+	}
+	log.V(1).Info("Remote alert deleted", "alert", *alert.Status.ID)
+
+	controllerutil.RemoveFinalizer(alert, alertFinalizerName)
+	if err = r.Update(ctx, alert); err != nil {
 		return fmt.Errorf("error on updating alert: %w", err)
 	}
 
 	return nil
 }
 
-func (r *AlertReconciler) delete(ctx context.Context, logger logr.Logger, alert *coralogixv1beta1.Alert) error {
+func (r *AlertReconciler) update(ctx context.Context, log logr.Logger, alert *coralogixv1beta1.Alert) error {
+	updateAlertReq := &cxsdk.ReplaceAlertDefRequest{
+		AlertDefProperties: alert.Spec.ExtractAlertProperties(),
+		Id:                 wrapperspb.String(*alert.Status.ID),
+	}
 
-}
-
-func (r *AlertReconciler) update(ctx context.Context, logger logr.Logger, alert *coralogixv1beta1.Alert) error {
-
+	log.V(1).Info("Updating remote alert", "alert", protojson.Format(updateAlertReq))
+	remoteUpdatedAlert, err := r.CoralogixClientSet.AlertsV3().Replace(ctx, updateAlertReq)
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			log.Info("alert not found on remote, recreating it")
+			alert.Status = *coralogixv1beta1.NewDefaultAlertStatus()
+			if err = r.Status().Update(ctx, alert); err != nil {
+				return fmt.Errorf("error on updating alert status: %w", err)
+			}
+			return fmt.Errorf("alert not found on remote: %w", err)
+		}
+		return fmt.Errorf("error on updating alert: %w", err)
+	}
+	log.V(1).Info("Remote alert updated", "alert", protojson.Format(remoteUpdatedAlert))
+	return nil
 }

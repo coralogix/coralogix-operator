@@ -1,0 +1,35 @@
+apiVersion: coralogix.com/v1beta1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/name: alert
+    app.kubernetes.io/instance: alert-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: logs-immediate-alert
+spec:
+  name: logs-immediate alert example
+  description: alert from k8s operator
+  labels:
+    alert_type: security
+    security_severity: high
+  alertType:
+    logsImmediate:
+      logsFilter:
+        filterType:
+          simpleFilter:
+            luceneQuery: remote_addr_enriched:/.*/
+            labelFilters:
+              applicationName:
+                - value: nginx
+                  operation: Includes
+                - value: subsystem-name
+                  operation: StartsWith
+              subsystemName:
+                - value: Warning
+                  operation: Or
+                - value: Info
+                  operation: EndsWith
+              severity: ["Warning", "Info"]
+      notificationPayloadFilter: ["coralogix.metadata.sdkId"]

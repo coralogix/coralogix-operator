@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 
+	coralogixv1beta1 "github.com/coralogix/coralogix-operator/apis/coralogix/path"
 	"github.com/coralogix/coralogix-operator/controllers"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	prometheusv1alpha "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -36,15 +37,14 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
-	"github.com/coralogix/coralogix-operator/controllers/alphacontrollers"
+	alphacontrollers "github.com/coralogix/coralogix-operator/controllers/alphacontrollers"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 
-	coralogixv1beta1 "coralogix-operator/apis/coralogix/v1beta1"
-	coralogixcontrollers "coralogix-operator/controllers/coralogix"
+	betacontrollers "github.com/coralogix/coralogix-operator/controllers/betacontrollers"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -76,6 +76,7 @@ func init() {
 	utilruntime.Must(coralogixv1alpha1.AddToScheme(scheme))
 
 	utilruntime.Must(prometheusv1alpha.AddToScheme(scheme))
+
 	utilruntime.Must(coralogixv1beta1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
@@ -237,17 +238,15 @@ func main() {
 	} else {
 		setupLog.Info("Webhooks are disabled")
 	}
-	if err = (&coralogixcontrollers.AlertReconciler{
+
+	if err = (&betacontrollers.AlertReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Alert")
 		os.Exit(1)
 	}
-	if err = (&coralogixv1alpha1.RuleGroup{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "RuleGroup")
-		os.Exit(1)
-	}
+
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {

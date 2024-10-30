@@ -143,17 +143,3 @@ func WrapperspbStringToStringPointer(s *wrapperspb.StringValue) *string {
 	}
 	return &s.Value
 }
-
-func WrapperspbBoolToBoolPointer(s *wrapperspb.BoolValue) *bool {
-	if s == nil {
-		return nil
-	}
-	return &s.Value
-}
-
-func WrapperspbInt32ToInt32Pointer(s *wrapperspb.Int32Value) *int32 {
-	if s == nil {
-		return nil
-	}
-	return &s.Value
-}

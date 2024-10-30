@@ -14,17 +14,98 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1beta1
+package path
 
 import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	utils "github.com/coralogix/coralogix-operator/apis"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+var (
+	AlertPriorityToProtoPriority = map[AlertPriority]cxsdk.AlertDefPriority{
+		AlertPriorityP1: cxsdk.AlertDefPriorityP1,
+		AlertPriorityP2: cxsdk.AlertDefPriorityP2,
+		AlertPriorityP3: cxsdk.AlertDefPriorityP3,
+		AlertPriorityP4: cxsdk.AlertDefPriorityP4,
+	}
+	LogSeverityToProtoSeverity = map[LogSeverity]cxsdk.LogSeverity{
+		LogSeverityDebug:    cxsdk.LogSeverityDebug,
+		LogSeverityInfo:     cxsdk.LogSeverityInfo,
+		LogSeverityWarning:  cxsdk.LogSeverityWarning,
+		LogSeverityError:    cxsdk.LogSeverityError,
+		LogSeverityCritical: cxsdk.LogSeverityCritical,
+	}
+	LogsFiltersOperationToProtoOperation = map[LogFilterOperationType]cxsdk.LogFilterOperationType{
+		LogFilterOperationTypeOr:               cxsdk.LogFilterOperationIsOrUnspecified,
+		LogFilterOperationTypeIncludes:         cxsdk.LogFilterOperationIncludes,
+		LogFilterOperationTypeEndWith:          cxsdk.LogFilterOperationStartsWith,
+		LogFilterOperationTypeEndWithStartWith: cxsdk.LogFilterOperationEndsWith,
+	}
+	DaysOfWeekToProtoDayOfWeek = map[DayOfWeek]cxsdk.AlertDayOfWeek{
+		DayOfWeekSunday:    cxsdk.AlertDayOfWeekSunday,
+		DayOfWeekMonday:    cxsdk.AlertDayOfWeekMonday,
+		DayOfWeekTuesday:   cxsdk.AlertDayOfWeekTuesday,
+		DayOfWeekWednesday: cxsdk.AlertDayOfWeekWednesday,
+		DayOfWeekThursday:  cxsdk.AlertDayOfWeekThursday,
+		DayOfWeekFriday:    cxsdk.AlertDayOfWeekFriday,
+		DayOfWeekSaturday:  cxsdk.AlertDayOfWeekSaturday,
+	}
+)
+
+//+kubebuilder:object:root=true
+//+kubebuilder:subresource:status
+//+kubebuilder:storageversion
+// +kubebuilder:resource:path=alerts,scope=Namespaced
+
+// Alert is the Schema for the alerts API
+type Alert struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   AlertSpec   `json:"spec,omitempty"`
+	Status AlertStatus `json:"status,omitempty"`
+}
+
+//+kubebuilder:object:root=true
+
+// AlertList contains a list of Alert
+type AlertList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Alert `json:"items"`
+}
+
+// AlertSpec defines the desired state of Alert
+type AlertSpec struct {
+	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+	// Important: Run "make" to regenerate code after modifying this file
+
+	//+kubebuilder:validation:MinLength=0
+	Name string `json:"name"`
+	// +optional
+	Description string `json:"description,omitempty"`
+	//+kubebuilder:validation:Enum=P1;P2;P3;P4
+	Priority AlertPriority `json:"priority"`
+	//+kubebuilder:default=true
+	Enabled bool `json:"enabled,omitempty"`
+	// +optional
+	GroupBy []string `json:"groupBy,omitempty"`
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
+	//+kubebuilder:default=false
+	PhantomMode bool `json:"phantomMode,omitempty"`
+	// +optional
+	Schedule       *AlertSchedule      `json:"schedule,omitempty"`
+	TypeDefinition AlertTypeDefinition `json:"alertType"`
+}
+
+// AlertStatus defines the observed state of Alert
+type AlertStatus struct {
+	ID *string `json:"id,omitempty"`
+}
 
 type AlertSchedule struct {
 	// +optional
@@ -54,28 +135,6 @@ const (
 	DayOfWeekFriday    DayOfWeek = "Friday"
 	DayOfWeekSaturday  DayOfWeek = "Saturday"
 )
-
-// AlertSpec defines the desired state of Alert
-type AlertSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	//+kubebuilder:validation:MinLength=0
-	Name string `json:"name"`
-	// +optional
-	Description string `json:"description,omitempty"`
-	//+kubebuilder:default=true
-	Enabled bool `json:"enabled,omitempty"`
-	// +optional
-	GroupBy []string `json:"groupBy,omitempty"`
-	// +optional
-	Labels map[string]string `json:"labels,omitempty"`
-	//+kubebuilder:default=false
-	PhantomMode bool `json:"phantomMode,omitempty"`
-	// +optional
-	Schedule       *AlertSchedule      `json:"schedule,omitempty"`
-	TypeDefinition AlertTypeDefinition `json:"alertType"`
-}
 
 type AlertTypeDefinition struct {
 	// +optional
@@ -189,11 +248,6 @@ const (
 	LogSeverityCritical LogSeverity = "Critical"
 )
 
-// AlertStatus defines the observed state of Alert
-type AlertStatus struct {
-	ID *string `json:"id,omitempty"`
-}
-
 // +kubebuilder:validation:Enum=P1;P2;P3;P4
 type AlertPriority string
 
@@ -204,50 +258,17 @@ const (
 	AlertPriorityP4 AlertPriority = "P4"
 )
 
-var (
-	AlertPriorityToProtoPriority = map[AlertPriority]cxsdk.AlertDefPriority{
-		AlertPriorityP1: cxsdk.AlertDefPriorityP1,
-		AlertPriorityP2: cxsdk.AlertDefPriorityP2,
-		AlertPriorityP3: cxsdk.AlertDefPriorityP3,
-		AlertPriorityP4: cxsdk.AlertDefPriorityP4,
-	}
-	LogSeverityToProtoSeverity = map[LogSeverity]cxsdk.LogSeverity{
-		LogSeverityDebug:    cxsdk.LogSeverityDebug,
-		LogSeverityInfo:     cxsdk.LogSeverityInfo,
-		LogSeverityWarning:  cxsdk.LogSeverityWarning,
-		LogSeverityError:    cxsdk.LogSeverityError,
-		LogSeverityCritical: cxsdk.LogSeverityCritical,
-	}
-	LogsFiltersOperationToProtoOperation = map[LogFilterOperationType]cxsdk.LogFilterOperationType{
-		LogFilterOperationTypeOr:               cxsdk.LogFilterOperationIsOrUnspecified,
-		LogFilterOperationTypeIncludes:         cxsdk.LogFilterOperationIncludes,
-		LogFilterOperationTypeEndWith:          cxsdk.LogFilterOperationStartsWith,
-		LogFilterOperationTypeEndWithStartWith: cxsdk.LogFilterOperationEndsWith,
-	}
-	DaysOfWeekToProtoDayOfWeek = map[DayOfWeek]cxsdk.AlertDayOfWeek{
-		DayOfWeekSunday:    cxsdk.AlertDayOfWeekSunday,
-		DayOfWeekMonday:    cxsdk.AlertDayOfWeekMonday,
-		DayOfWeekTuesday:   cxsdk.AlertDayOfWeekTuesday,
-		DayOfWeekWednesday: cxsdk.AlertDayOfWeekWednesday,
-		DayOfWeekThursday:  cxsdk.AlertDayOfWeekThursday,
-		DayOfWeekFriday:    cxsdk.AlertDayOfWeekFriday,
-		DayOfWeekSaturday:  cxsdk.AlertDayOfWeekSaturday,
-	}
-)
-
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
-
-// Alert is the Schema for the alerts API
-type Alert struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	Spec   AlertSpec   `json:"spec,omitempty"`
-	Status AlertStatus `json:"status,omitempty"`
+func init() {
+	SchemeBuilder.Register(&Alert{}, &AlertList{})
 }
 
-func (in AlertSpec) ExtractCreateAlertRequest() (*cxsdk.CreateAlertDefRequest, error) {
+func NewDefaultAlertStatus() *AlertStatus {
+	return &AlertStatus{
+		ID: ptr.To(""),
+	}
+}
+
+func (in AlertSpec) ExtractAlertProperties() *cxsdk.AlertDefProperties {
 	alertDefProperties := &cxsdk.AlertDefProperties{
 		Name:              wrapperspb.String(in.Name),
 		Description:       wrapperspb.String(in.Description),
@@ -262,9 +283,7 @@ func (in AlertSpec) ExtractCreateAlertRequest() (*cxsdk.CreateAlertDefRequest, e
 	alertDefProperties = expandAlertSchedule(alertDefProperties, in.Schedule)
 	alertDefProperties = expandAlertTypeDefinition(alertDefProperties, in.TypeDefinition)
 
-	return &cxsdk.CreateAlertDefRequest{
-		AlertDefProperties: alertDefProperties,
-	}, nil
+	return alertDefProperties
 }
 
 func expandAlertSchedule(alertProperties *cxsdk.AlertDefProperties, alertSchedule *AlertSchedule) *cxsdk.AlertDefProperties {
@@ -399,17 +418,4 @@ func expandLabelFilterTypes(name []LabelFilterType) []*cxsdk.LabelFilterType {
 	}
 
 	return result
-}
-
-//+kubebuilder:object:root=true
-
-// AlertList contains a list of Alert
-type AlertList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Alert `json:"items"`
-}
-
-func init() {
-	SchemeBuilder.Register(&Alert{}, &AlertList{})
 }
