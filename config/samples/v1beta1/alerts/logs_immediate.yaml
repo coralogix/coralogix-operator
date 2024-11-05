@@ -11,6 +11,7 @@ metadata:
 spec:
   name: logs-immediate alert example
   description: alert from k8s operator
+  priority: P1
   labels:
     alert_type: security
     security_severity: high
@@ -33,3 +34,16 @@ spec:
                   operation: EndsWith
               severity: ["Warning", "Info"]
       notificationPayloadFilter: ["coralogix.metadata.sdkId"]
+  notificationGroup:
+    groupByFields:
+      - alertname
+      - cluster
+      - alert_group
+      - job
+      - namespace
+      - severity
+      - priority
+    targets:
+      simple:
+        integrations:
+          IntegrationId

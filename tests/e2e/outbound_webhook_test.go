@@ -19,7 +19,6 @@ package e2e
 import (
 	"context"
 	"fmt"
-
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -33,7 +32,7 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/apis/coralogix/v1alpha1"
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 )
 
 var _ = Describe("OutboundWebhook", Ordered, func() {
@@ -41,18 +40,14 @@ var _ = Describe("OutboundWebhook", Ordered, func() {
 		crClient               client.Client
 		OutboundWebhooksClient *cxsdk.WebhooksClient
 		outboundWebhookID      string
-		outBoundWebhhok        *coralogixv1alpha1.OutboundWebhook
+		outboundWebhookName    = "slack-outbound-webhook"
+		outBoundWebhook        *coralogixv1alpha1.OutboundWebhook
 	)
 
-	BeforeAll(func() {
+	BeforeEach(func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		OutboundWebhooksClient = ClientsInstance.GetCoralogixClientSet().Webhooks()
-	})
-
-	It("Should be created successfully", func(ctx context.Context) {
-		By("Creating OutboundWebhook")
-		outboundWebhookName := "slack-outbound-webhook"
-		outBoundWebhhok = &coralogixv1alpha1.OutboundWebhook{
+		outBoundWebhook = &coralogixv1alpha1.OutboundWebhook{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      outboundWebhookName,
 				Namespace: testNamespace,
@@ -60,25 +55,17 @@ var _ = Describe("OutboundWebhook", Ordered, func() {
 			Spec: coralogixv1alpha1.OutboundWebhookSpec{
 				Name: outboundWebhookName,
 				OutboundWebhookType: coralogixv1alpha1.OutboundWebhookType{
-					Slack: &coralogixv1alpha1.Slack{
-						Url: "https://hooks.slack.com/services",
-						Attachments: []coralogixv1alpha1.SlackConfigAttachment{
-							{
-								Type:     "MetricSnapshot",
-								IsActive: true,
-							},
-						},
-						Digests: []coralogixv1alpha1.SlackConfigDigest{
-							{
-								Type:     "FlowAnomalies",
-								IsActive: true,
-							},
-						},
+					PagerDuty: &coralogixv1alpha1.PagerDuty{
+						ServiceKey: "12345678-1234-1234-1234-123456789012",
 					},
 				},
 			},
 		}
-		Expect(crClient.Create(ctx, outBoundWebhhok)).To(Succeed())
+	})
+
+	It("Should be created successfully", func(ctx context.Context) {
+		By("Creating OutboundWebhook")
+		Expect(crClient.Create(ctx, outBoundWebhook)).To(Succeed())
 
 		By("Fetching the OutboundWebhook ID")
 		fetchedOutboundWebhook := &coralogixv1alpha1.OutboundWebhook{}
@@ -101,9 +88,9 @@ var _ = Describe("OutboundWebhook", Ordered, func() {
 	It("Should be updated successfully", func(ctx context.Context) {
 		By("Patching the OutboundWebhook")
 		newOutboundWebhookName := "slack-outbound-webhook-updated"
-		modifiedOutboundWebhook := outBoundWebhhok.DeepCopy()
+		modifiedOutboundWebhook := outBoundWebhook.DeepCopy()
 		modifiedOutboundWebhook.Spec.Name = newOutboundWebhookName
-		Expect(crClient.Patch(ctx, modifiedOutboundWebhook, client.MergeFrom(outBoundWebhhok))).To(Succeed())
+		Expect(crClient.Patch(ctx, modifiedOutboundWebhook, client.MergeFrom(outBoundWebhook))).To(Succeed())
 
 		By("Verifying OutboundWebhook is updated in Coralogix backend")
 		Eventually(func() string {
@@ -115,12 +102,28 @@ var _ = Describe("OutboundWebhook", Ordered, func() {
 
 	It("Should be deleted successfully", func(ctx context.Context) {
 		By("Deleting the OutboundWebhook")
-		Expect(crClient.Delete(ctx, outBoundWebhhok)).To(Succeed())
+		Expect(crClient.Delete(ctx, outBoundWebhook)).To(Succeed())
 
 		By("Verifying OutboundWebhook is deleted from Coralogix backend")
 		Eventually(func() codes.Code {
 			_, err := OutboundWebhooksClient.Get(ctx, &cxsdk.GetOutgoingWebhookRequest{Id: wrapperspb.String(outboundWebhookID)})
 			return status.Code(err)
 		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
+	})
+
+	It("should deny creation of OutboundWebhook without type", func(ctx context.Context) {
+		outBoundWebhook.Spec.OutboundWebhookType = coralogixv1alpha1.OutboundWebhookType{}
+		err := crClient.Create(ctx, outBoundWebhook)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("at least one webhook type should be set"))
+	})
+
+	It("should deny creation of OutboundWebhook with two types", func(ctx context.Context) {
+		outBoundWebhook.Spec.OutboundWebhookType.SendLog = &coralogixv1alpha1.SendLog{
+			Payload: `{"key1": "value1", "key2": "value2"}`,
+			Url:     "https://example.com",
+		}
+		err := crClient.Create(ctx, outBoundWebhook)
+		Expect(err.Error()).To(ContainSubstring("only one webhook type should be set, but got: [SendLog PagerDuty]"))
 	})
 })
