@@ -985,10 +985,10 @@ spec:
                                           properties:
                                             operation:
                                               enum:
-                                              - Or
-                                              - Includes
-                                              - EndsWith
-                                              - StartsWith
+                                              - or
+                                              - includes
+                                              - endsWith
+                                              - startsWith
                                               type: string
                                             value:
                                               minLength: 0
@@ -1001,11 +1001,11 @@ spec:
                                       severity:
                                         items:
                                           enum:
-                                          - Debug
-                                          - Info
-                                          - Warning
-                                          - Error
-                                          - Critical
+                                          - debug
+                                          - info
+                                          - warning
+                                          - error
+                                          - critical
                                           type: string
                                         type: array
                                       subsystemName:
@@ -1013,10 +1013,10 @@ spec:
                                           properties:
                                             operation:
                                               enum:
-                                              - Or
-                                              - Includes
-                                              - EndsWith
-                                              - StartsWith
+                                              - or
+                                              - includes
+                                              - endsWith
+                                              - startsWith
                                               type: string
                                             value:
                                               minLength: 0
@@ -1042,6 +1042,127 @@ spec:
                   logsRatioThreshold:
                     type: object
                   logsThreshold:
+                    properties:
+                      logsFilter:
+                        properties:
+                          filterType:
+                            properties:
+                              simpleFilter:
+                                properties:
+                                  labelFilters:
+                                    properties:
+                                      applicationName:
+                                        items:
+                                          properties:
+                                            operation:
+                                              enum:
+                                              - or
+                                              - includes
+                                              - endsWith
+                                              - startsWith
+                                              type: string
+                                            value:
+                                              minLength: 0
+                                              type: string
+                                          required:
+                                          - operation
+                                          - value
+                                          type: object
+                                        type: array
+                                      severity:
+                                        items:
+                                          enum:
+                                          - debug
+                                          - info
+                                          - warning
+                                          - error
+                                          - critical
+                                          type: string
+                                        type: array
+                                      subsystemName:
+                                        items:
+                                          properties:
+                                            operation:
+                                              enum:
+                                              - or
+                                              - includes
+                                              - endsWith
+                                              - startsWith
+                                              type: string
+                                            value:
+                                              minLength: 0
+                                              type: string
+                                          required:
+                                          - operation
+                                          - value
+                                          type: object
+                                        type: array
+                                    type: object
+                                  luceneQuery:
+                                    type: string
+                                type: object
+                            type: object
+                        type: object
+                      notificationPayloadFilter:
+                        items:
+                          type: string
+                        type: array
+                      rules:
+                        items:
+                          properties:
+                            condition:
+                              properties:
+                                logsThresholdConditionType:
+                                  enum:
+                                  - moreThan
+                                  - lessThan
+                                  type: string
+                                logsTimeWindow:
+                                  enum:
+                                  - 5m
+                                  - 10m
+                                  - 15m
+                                  - 30m
+                                  - 1h
+                                  - 2h
+                                  - 6h
+                                  - 12h
+                                  - 24h
+                                  - 36h
+                                  type: string
+                                threshold:
+                                  pattern: ^-?\d+(\.\d+)?$
+                                  type: string
+                              required:
+                              - logsThresholdConditionType
+                              - logsTimeWindow
+                              - threshold
+                              type: object
+                          required:
+                          - condition
+                          type: object
+                        type: array
+                      undetectedValuesManagement:
+                        properties:
+                          autoRetireTimeframe:
+                            default: never
+                            enum:
+                            - never
+                            - 5m
+                            - 10m
+                            - 1h
+                            - 2h
+                            - 6h
+                            - 12h
+                            - 24h
+                            type: string
+                          triggerUndetectedValues:
+                            default: false
+                            type: boolean
+                        required:
+                        - autoRetireTimeframe
+                        - triggerUndetectedValues
+                        type: object
                     type: object
                   logsTimeRelativeThreshold:
                     type: object
@@ -1068,10 +1189,10 @@ spec:
               incidentsSettings:
                 properties:
                   notifyOn:
-                    default: TRIGGERED_ONLY
+                    default: triggeredOnly
                     enum:
-                    - TRIGGERED_ONLY
-                    - TRIGGERED_AND_RESOLVED
+                    - triggeredOnly
+                    - triggeredAndResolved
                     type: string
                   retriggeringPeriod:
                     properties:
@@ -1104,10 +1225,10 @@ spec:
                                   format: int32
                                   type: integer
                                 notifyOn:
-                                  default: TRIGGERED_ONLY
+                                  default: triggeredOnly
                                   enum:
-                                  - TRIGGERED_ONLY
-                                  - TRIGGERED_AND_RESOLVED
+                                  - triggeredOnly
+                                  - triggeredAndResolved
                                   type: string
                                 recipients:
                                   items:
@@ -1145,17 +1266,11 @@ spec:
                 default: false
                 type: boolean
               priority:
-                allOf:
-                - enum:
-                  - P1
-                  - P2
-                  - P3
-                  - P4
-                - enum:
-                  - P1
-                  - P2
-                  - P3
-                  - P4
+                enum:
+                - p1
+                - p2
+                - p3
+                - p4
                 type: string
               schedule:
                 properties:
@@ -1164,13 +1279,13 @@ spec:
                       dayOfWeek:
                         items:
                           enum:
-                          - Sunday
-                          - Monday
-                          - Tuesday
-                          - Wednesday
-                          - Thursday
-                          - Friday
-                          - Saturday
+                          - sunday
+                          - monday
+                          - tuesday
+                          - wednesday
+                          - thursday
+                          - friday
+                          - saturday
                           type: string
                         type: array
                       end_time:

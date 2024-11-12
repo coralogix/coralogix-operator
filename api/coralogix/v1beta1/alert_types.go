@@ -17,6 +17,8 @@ limitations under the License.
 package v1beta1
 
 import (
+	"strconv"
+
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	utils "github.com/coralogix/coralogix-operator/api"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -64,10 +66,10 @@ var (
 		LogSeverityCritical: cxsdk.LogSeverityCritical,
 	}
 	LogsFiltersOperationToProtoOperation = map[LogFilterOperationType]cxsdk.LogFilterOperationType{
-		LogFilterOperationTypeOr:               cxsdk.LogFilterOperationIsOrUnspecified,
-		LogFilterOperationTypeIncludes:         cxsdk.LogFilterOperationIncludes,
-		LogFilterOperationTypeEndWith:          cxsdk.LogFilterOperationStartsWith,
-		LogFilterOperationTypeEndWithStartWith: cxsdk.LogFilterOperationEndsWith,
+		LogFilterOperationTypeOr:         cxsdk.LogFilterOperationIsOrUnspecified,
+		LogFilterOperationTypeIncludes:   cxsdk.LogFilterOperationIncludes,
+		LogFilterOperationTypeEndWith:    cxsdk.LogFilterOperationEndsWith,
+		LogFilterOperationTypeStartsWith: cxsdk.LogFilterOperationStartsWith,
 	}
 	DaysOfWeekToProtoDayOfWeek = map[DayOfWeek]cxsdk.AlertDayOfWeek{
 		DayOfWeekSunday:    cxsdk.AlertDayOfWeekSunday,
@@ -82,19 +84,41 @@ var (
 		NotifyOnTriggeredOnly:        cxsdk.AlertNotifyOnTriggeredOnlyUnspecified,
 		NotifyOnTriggeredAndResolved: cxsdk.AlertNotifyOnTriggeredAndResolved,
 	}
+	AutoRetireTimeframeToProtoAutoRetireTimeframe = map[AutoRetireTimeframe]cxsdk.AutoRetireTimeframe{
+		AutoRetireTimeframeNeverOrUnspecified: cxsdk.AutoRetireTimeframeNeverOrUnspecified,
+		AutoRetireTimeframe5M:                 cxsdk.AutoRetireTimeframe5Minutes,
+		AutoRetireTimeframe10M:                cxsdk.AutoRetireTimeframe10Minutes,
+		AutoRetireTimeframe1H:                 cxsdk.AutoRetireTimeframe1Hour,
+		AutoRetireTimeframe2H:                 cxsdk.AutoRetireTimeframe2Hours,
+		AutoRetireTimeframe6H:                 cxsdk.AutoRetireTimeframe6Hours,
+		AutoRetireTimeframe12H:                cxsdk.AutoRetireTimeframe12Hours,
+		AutoRetireTimeframe24H:                cxsdk.AutoRetireTimeframe24Hours,
+	}
+	LogsTimeWindowToProtoLogsTimeWindow = map[LogsTimeWindow]cxsdk.LogsTimeWindowValue{
+		LogsTimeWindowLast5Minutes:  cxsdk.LogsTimeWindowValue5MinutesOrUnspecified,
+		LogsTimeWindowLast10Minutes: cxsdk.LogsTimeWindow10Minutes,
+		LogsTimeWindowLast15Minutes: cxsdk.LogsTimeWindow15Minutes,
+		LogsTimeWindowLast30Minutes: cxsdk.LogsTimeWindow30Minutes,
+		LogsTimeWindowLastHour:      cxsdk.LogsTimeWindow1Hour,
+		LogsTimeWindowLast2Hours:    cxsdk.LogsTimeWindow2Hours,
+		LogsTimeWindowLast6Hours:    cxsdk.LogsTimeWindow6Hours,
+		LogsTimeWindowLast12Hours:   cxsdk.LogsTimeWindow12Hours,
+		LogsTimeWindowLast24Hours:   cxsdk.LogsTimeWindow24Hours,
+		LogsTimeWindowLast36Hours:   cxsdk.LogsTimeWindow36Hours,
+	}
+	LogsThresholdConditionTypeToProto = map[LogsThresholdConditionType]cxsdk.LogsThresholdConditionType{
+		LogsThresholdConditionTypeMoreThan: cxsdk.LogsThresholdConditionTypeMoreThanOrUnspecified,
+		LogsThresholdConditionTypeLessThan: cxsdk.LogsThresholdConditionTypeLessThan,
+	}
 )
 
 // AlertSpec defines the desired state of Alert
 type AlertSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
 	//+kubebuilder:validation:MinLength=0
 	Name string `json:"name"`
 	// +optional
-	Description string `json:"description,omitempty"`
-	//+kubebuilder:validation:Enum=P1;P2;P3;P4
-	Priority AlertPriority `json:"priority"`
+	Description string        `json:"description,omitempty"`
+	Priority    AlertPriority `json:"priority"`
 	//+kubebuilder:default=true
 	Enabled bool `json:"enabled,omitempty"`
 	// +optional
@@ -123,17 +147,31 @@ type AlertSchedule struct {
 }
 
 type IncidentsSettings struct {
-	//+kubebuilder:default=TRIGGERED_ONLY
+	//+kubebuilder:default=triggeredOnly
 	NotifyOn           NotifyOn           `json:"notifyOn,omitempty"`
 	RetriggeringPeriod RetriggeringPeriod `json:"retriggeringPeriod,omitempty"`
 }
 
-// +kubebuilder:validation:Enum=TRIGGERED_ONLY;TRIGGERED_AND_RESOLVED
+// +kubebuilder:validation:Enum=triggeredOnly;triggeredAndResolved
 type NotifyOn string
 
 const (
-	NotifyOnTriggeredOnly        NotifyOn = "TRIGGERED_ONLY"
-	NotifyOnTriggeredAndResolved NotifyOn = "TRIGGERED_AND_RESOLVED"
+	NotifyOnTriggeredOnly        NotifyOn = "triggeredOnly"
+	NotifyOnTriggeredAndResolved NotifyOn = "triggeredAndResolved"
+)
+
+// +kubebuilder:validation:Enum={"never","5m","10m","1h","2h","6h","12h","24h"}
+type AutoRetireTimeframe string
+
+const (
+	AutoRetireTimeframeNeverOrUnspecified AutoRetireTimeframe = "never"
+	AutoRetireTimeframe5M                 AutoRetireTimeframe = "5m"
+	AutoRetireTimeframe10M                AutoRetireTimeframe = "10m"
+	AutoRetireTimeframe1H                 AutoRetireTimeframe = "1h"
+	AutoRetireTimeframe2H                 AutoRetireTimeframe = "2h"
+	AutoRetireTimeframe6H                 AutoRetireTimeframe = "6h"
+	AutoRetireTimeframe12H                AutoRetireTimeframe = "12h"
+	AutoRetireTimeframe24H                AutoRetireTimeframe = "24h"
 )
 
 type RetriggeringPeriod struct {
@@ -174,7 +212,7 @@ type AdvancedTargetsSettings struct {
 	IntegrationId *uint32 `json:"integrationId,omitempty"`
 	// +optional
 	Recipients []string `json:"recipients,omitempty"`
-	//+kubebuilder:default=TRIGGERED_ONLY
+	//+kubebuilder:default=triggeredOnly
 	NotifyOn                  NotifyOn `json:"notifyOn"`
 	RetriggeringPeriodMinutes uint32   `json:"retriggeringPeriodMinutes"`
 }
@@ -190,17 +228,17 @@ type TimeOfDay struct {
 	Minutes int32 `json:"minutes,omitempty"`
 }
 
-// +kubebuilder:validation:Enum=Sunday;Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;
+// +kubebuilder:validation:Enum=sunday;monday;tuesday;wednesday;thursday;friday;saturday
 type DayOfWeek string
 
 const (
-	DayOfWeekSunday    DayOfWeek = "Sunday"
-	DayOfWeekMonday    DayOfWeek = "Monday"
-	DayOfWeekTuesday   DayOfWeek = "Tuesday"
-	DayOfWeekWednesday DayOfWeek = "Wednesday"
-	DayOfWeekThursday  DayOfWeek = "Thursday"
-	DayOfWeekFriday    DayOfWeek = "Friday"
-	DayOfWeekSaturday  DayOfWeek = "Saturday"
+	DayOfWeekSunday    DayOfWeek = "sunday"
+	DayOfWeekMonday    DayOfWeek = "monday"
+	DayOfWeekTuesday   DayOfWeek = "tuesday"
+	DayOfWeekWednesday DayOfWeek = "wednesday"
+	DayOfWeekThursday  DayOfWeek = "thursday"
+	DayOfWeekFriday    DayOfWeek = "friday"
+	DayOfWeekSaturday  DayOfWeek = "saturday"
 )
 
 type AlertTypeDefinition struct {
@@ -229,12 +267,56 @@ type AlertTypeDefinition struct {
 }
 
 type LogsImmediate struct {
-	LogsFilter                *LogsFilter `json:"logsFilter,omitempty"`
-	NotificationPayloadFilter []string    `json:"notificationPayloadFilter,omitempty"`
+	// +optional
+	LogsFilter *LogsFilter `json:"logsFilter,omitempty"`
+	// +optional
+	NotificationPayloadFilter []string `json:"notificationPayloadFilter,omitempty"`
 }
 
 type LogsThreshold struct {
+	// +optional
+	LogsFilter *LogsFilter `json:"logsFilter,omitempty"`
+	// +optional
+	UndetectedValuesManagement *UndetectedValuesManagement `json:"undetectedValuesManagement,omitempty"`
+	Rules                      []LogsThresholdRule         `json:"rules,omitempty"`
+	// +optional
+	NotificationPayloadFilter []string `json:"notificationPayloadFilter,omitempty"`
 }
+
+type LogsThresholdRule struct {
+	Condition LogsThresholdRuleCondition `json:"condition"`
+}
+
+type LogsThresholdRuleCondition struct {
+	LogsTimeWindow LogsTimeWindow `json:"logsTimeWindow"`
+	// +kubebuilder:validation:Pattern=`^-?\d+(\.\d+)?$`
+	Threshold                  string                     `json:"threshold"`
+	LogsThresholdConditionType LogsThresholdConditionType `json:"logsThresholdConditionType"`
+}
+
+// +kubebuilder:validation:Enum={"5m","10m","15m","30m","1h","2h","6h","12h","24h","36h"}
+type LogsTimeWindow string
+
+const (
+	LogsTimeWindowLast5Minutes  LogsTimeWindow = "5m"
+	LogsTimeWindowLast10Minutes LogsTimeWindow = "10m"
+	LogsTimeWindowLast15Minutes LogsTimeWindow = "15m"
+	LogsTimeWindowLast30Minutes LogsTimeWindow = "30m"
+	LogsTimeWindowLastHour      LogsTimeWindow = "1h"
+	LogsTimeWindowLast2Hours    LogsTimeWindow = "2h"
+	LogsTimeWindowLast6Hours    LogsTimeWindow = "6h"
+	LogsTimeWindowLast12Hours   LogsTimeWindow = "12h"
+	LogsTimeWindowLast24Hours   LogsTimeWindow = "24h"
+	LogsTimeWindowLast36Hours   LogsTimeWindow = "36h"
+)
+
+// +kubebuilder:validation:Enum=moreThan;lessThan
+type LogsThresholdConditionType string
+
+const (
+	LogsThresholdConditionTypeMoreThan LogsThresholdConditionType = "moreThan"
+	LogsThresholdConditionTypeLessThan LogsThresholdConditionType = "lessThan"
+)
 
 type LogsRatioThreshold struct {
 }
@@ -294,35 +376,42 @@ type LabelFilterType struct {
 	Operation LogFilterOperationType `json:"operation"`
 }
 
-// +kubebuilder:validation:Enum=Or;Includes;EndsWith;StartsWith
+type UndetectedValuesManagement struct {
+	//+kubebuilder:default=false
+	TriggerUndetectedValues bool `json:"triggerUndetectedValues"`
+	//+kubebuilder:default=never
+	AutoRetireTimeframe AutoRetireTimeframe `json:"autoRetireTimeframe"`
+}
+
+// +kubebuilder:validation:Enum=or;includes;endsWith;startsWith
 type LogFilterOperationType string
 
 const (
-	LogFilterOperationTypeOr               LogFilterOperationType = "Or"
-	LogFilterOperationTypeIncludes         LogFilterOperationType = "Includes"
-	LogFilterOperationTypeEndWith          LogFilterOperationType = "EndsWith"
-	LogFilterOperationTypeEndWithStartWith LogFilterOperationType = "StartsWith"
+	LogFilterOperationTypeOr         LogFilterOperationType = "or"
+	LogFilterOperationTypeIncludes   LogFilterOperationType = "includes"
+	LogFilterOperationTypeEndWith    LogFilterOperationType = "endsWith"
+	LogFilterOperationTypeStartsWith LogFilterOperationType = "startsWith"
 )
 
-// +kubebuilder:validation:Enum=Debug;Info;Warning;Error;Critical
+// +kubebuilder:validation:Enum=debug;info;warning;error;critical
 type LogSeverity string
 
 const (
-	LogSeverityDebug    LogSeverity = "Debug"
-	LogSeverityInfo     LogSeverity = "Info"
-	LogSeverityWarning  LogSeverity = "Warning"
-	LogSeverityError    LogSeverity = "Error"
-	LogSeverityCritical LogSeverity = "Critical"
+	LogSeverityDebug    LogSeverity = "debug"
+	LogSeverityInfo     LogSeverity = "info"
+	LogSeverityWarning  LogSeverity = "warning"
+	LogSeverityError    LogSeverity = "error"
+	LogSeverityCritical LogSeverity = "critical"
 )
 
-// +kubebuilder:validation:Enum=P1;P2;P3;P4
+// +kubebuilder:validation:Enum=p1;p2;p3;p4
 type AlertPriority string
 
 const (
-	AlertPriorityP1 AlertPriority = "P1"
-	AlertPriorityP2 AlertPriority = "P2"
-	AlertPriorityP3 AlertPriority = "P3"
-	AlertPriorityP4 AlertPriority = "P4"
+	AlertPriorityP1 AlertPriority = "p1"
+	AlertPriorityP2 AlertPriority = "p2"
+	AlertPriorityP3 AlertPriority = "p3"
+	AlertPriorityP4 AlertPriority = "p4"
 )
 
 func NewDefaultAlertStatus() *AlertStatus {
@@ -513,10 +602,9 @@ func expandTimeOfDay(time *TimeOfDay) *cxsdk.AlertTimeOfDay {
 func expandAlertTypeDefinition(properties *cxsdk.AlertDefProperties, definition AlertTypeDefinition) *cxsdk.AlertDefProperties {
 	if logsImmediate := definition.LogsImmediate; logsImmediate != nil {
 		properties.TypeDefinition = expandLogsImmediate(logsImmediate)
-	}
-	//} else if logsThreshold := definition.LogsThreshold; logsThreshold != nil {
-	//	properties.TypeDefinition = expandLogsThreshold(logsThreshold)
-	//} else if logsRatioThreshold := definition.LogsRatioThreshold; logsRatioThreshold != nil {
+	} else if logsThreshold := definition.LogsThreshold; logsThreshold != nil {
+		properties.TypeDefinition = expandLogsThreshold(logsThreshold)
+	} // else if logsRatioThreshold := definition.LogsRatioThreshold; logsRatioThreshold != nil {
 	//	properties.TypeDefinition = expandLogsRatioThreshold(logsRatioThreshold)
 	//} else if logsTimeRelativeThreshold := definition.LogsTimeRelativeThreshold; logsTimeRelativeThreshold != nil {
 	//	properties.TypeDefinition = expandLogsTimeRelativeThreshold(logsTimeRelativeThreshold)
@@ -544,6 +632,17 @@ func expandLogsImmediate(immediate *LogsImmediate) *cxsdk.AlertDefPropertiesLogs
 		LogsImmediate: &cxsdk.LogsImmediateType{
 			LogsFilter:                expandLogsFilter(immediate.LogsFilter),
 			NotificationPayloadFilter: utils.StringSliceToWrappedStringSlice(immediate.NotificationPayloadFilter),
+		},
+	}
+}
+
+func expandLogsThreshold(logsThreshold *LogsThreshold) *cxsdk.AlertDefPropertiesLogsThreshold {
+	return &cxsdk.AlertDefPropertiesLogsThreshold{
+		LogsThreshold: &cxsdk.LogsThresholdType{
+			LogsFilter:                 expandLogsFilter(logsThreshold.LogsFilter),
+			UndetectedValuesManagement: expandUndetectedValuesManagement(logsThreshold.UndetectedValuesManagement),
+			Rules:                      expandLogsThresholdRules(logsThreshold.Rules),
+			NotificationPayloadFilter:  utils.StringSliceToWrappedStringSlice(logsThreshold.NotificationPayloadFilter),
 		},
 	}
 }
@@ -600,6 +699,45 @@ func expandLabelFilterTypes(name []LabelFilterType) []*cxsdk.LabelFilterType {
 	}
 
 	return result
+}
+
+func expandUndetectedValuesManagement(management *UndetectedValuesManagement) *cxsdk.UndetectedValuesManagement {
+	if management == nil {
+		return nil
+	}
+	autoRetireTimeframe := AutoRetireTimeframeToProtoAutoRetireTimeframe[management.AutoRetireTimeframe]
+	return &cxsdk.UndetectedValuesManagement{
+		TriggerUndetectedValues: wrapperspb.Bool(management.TriggerUndetectedValues),
+		AutoRetireTimeframe:     &autoRetireTimeframe,
+	}
+}
+
+func expandLogsThresholdRules(rules []LogsThresholdRule) []*cxsdk.LogsThresholdRule {
+	result := make([]*cxsdk.LogsThresholdRule, len(rules))
+	for i := range rules {
+		result[i] = expandLogsThresholdRule(rules[i])
+	}
+
+	return result
+}
+
+func expandLogsThresholdRule(rule LogsThresholdRule) *cxsdk.LogsThresholdRule {
+	return &cxsdk.LogsThresholdRule{
+		Condition: expandLogsThresholdRuleCondition(rule.Condition),
+	}
+}
+
+func expandLogsThresholdRuleCondition(condition LogsThresholdRuleCondition) *cxsdk.LogsThresholdCondition {
+	threshold, _ := strconv.ParseFloat(condition.Threshold, 64)
+	return &cxsdk.LogsThresholdCondition{
+		Threshold: wrapperspb.Double(threshold),
+		TimeWindow: &cxsdk.LogsTimeWindow{
+			Type: &cxsdk.LogsTimeWindowSpecificValue{
+				LogsTimeWindowSpecificValue: LogsTimeWindowToProtoLogsTimeWindow[condition.LogsTimeWindow],
+			},
+		},
+		ConditionType: LogsThresholdConditionTypeToProto[condition.LogsThresholdConditionType],
+	}
 }
 
 func NewAlert() *Alert {
