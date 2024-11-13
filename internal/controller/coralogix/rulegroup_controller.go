@@ -16,7 +16,9 @@ package coralogix
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/go-logr/logr"
 	"github.com/golang/protobuf/jsonpb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -98,17 +100,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			}
 
 			ruleGroupId := *ruleGroupCRD.Status.ID
-			deleteRuleGroupReq := &cxsdk.DeleteRuleGroupRequest{GroupId: ruleGroupId}
-			log.V(1).Info("Deleting Rule-Group", "Rule-Group ID", ruleGroupId)
-			if _, err := rulesGroupsClient.Delete(ctx, deleteRuleGroupReq); err != nil {
-				// if fail to delete the external dependency here, return with error
-				// so that it can be retried unless it is deleted manually.
-				log.Error(err, "Received an error while Deleting a Rule-Group", "Rule-Group ID", ruleGroupId)
-				if status.Code(err) == codes.NotFound {
-					controllerutil.RemoveFinalizer(ruleGroupCRD, ruleGroupFinalizerName)
-					err := r.Update(ctx, ruleGroupCRD)
-					return ctrl.Result{}, err
-				}
+			if err := r.deleteRemoteRuleGroup(ctx, log, &ruleGroupId); err != nil {
 				return ctrl.Result{}, err
 			}
 
@@ -156,6 +148,10 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			id := createRuleGroupResp.GetRuleGroup().GetId().GetValue()
 			ruleGroupCRD.Status = coralogixv1alpha1.RuleGroupStatus{ID: &id}
 			if err := r.Status().Update(ctx, ruleGroupCRD); err != nil {
+				if err := r.deleteRemoteRuleGroup(ctx, log, ruleGroupCRD.Status.ID); err != nil {
+					log.Error(err, "Error on deleting RecordingRuleGroupSet after status update error", "Name", ruleGroupCRD.Name, "Namespace", ruleGroupCRD.Namespace)
+					return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+				}
 				log.Error(err, "Error on updating RecordingRuleGroupSet status", "Name", ruleGroupCRD.Name, "Namespace", ruleGroupCRD.Namespace)
 				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 			}
@@ -190,6 +186,18 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	log.V(1).Info("Rule-Group was updated", "ruleGroup", jstr)
 
 	return ctrl.Result{}, nil
+}
+
+func (r *RuleGroupReconciler) deleteRemoteRuleGroup(ctx context.Context, log logr.Logger, ruleGroupId *string) error {
+	deleteRuleGroupReq := &cxsdk.DeleteRuleGroupRequest{GroupId: *ruleGroupId}
+	log.V(1).Info("Deleting Rule-Group", "Rule-Group ID", ruleGroupId)
+	if _, err := r.CoralogixClientSet.RuleGroups().Delete(ctx, deleteRuleGroupReq); err != nil && status.Code(err) != codes.NotFound {
+		log.V(1).Error(err, "Received an error while Deleting a Rule-Group", "Rule-Group ID", ruleGroupId)
+		return fmt.Errorf("error on deleting Rule-Group: %w", err)
+	}
+
+	log.V(1).Info("Rule-Group was deleted", "Rule-Group ID", ruleGroupId)
+	return nil
 }
 
 func flattenRuleGroup(ruleGroup *cxsdk.RuleGroup) (*coralogixv1alpha1.RuleGroupStatus, error) {

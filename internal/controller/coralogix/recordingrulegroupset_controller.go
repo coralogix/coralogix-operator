@@ -107,6 +107,9 @@ func (r *RecordingRuleGroupSetReconciler) create(ctx context.Context, recordingR
 	recordingRuleGroupSet.Status.ID = ptr.To(response.Id)
 
 	if err := r.Status().Update(ctx, recordingRuleGroupSet); err != nil {
+		if err := r.deleteRemoteRecordingRuleGroupSet(ctx, recordingRuleGroupSet.Status.ID); err != nil {
+			return fmt.Errorf("failed to delete recording rule groupSet after status update error: %w", err)
+		}
 		return fmt.Errorf("failed to update recording rule groupSet status: %w", err)
 	}
 
@@ -150,19 +153,23 @@ func (r *RecordingRuleGroupSetReconciler) update(ctx context.Context, recordingR
 }
 
 func (r *RecordingRuleGroupSetReconciler) delete(ctx context.Context, recordingRuleGroupSet *coralogixv1alpha1.RecordingRuleGroupSet) error {
-	_, err := r.CoralogixClientSet.RecordingRuleGroups().Delete(ctx, &cxsdk.DeleteRuleGroupSetRequest{
-		Id: *recordingRuleGroupSet.Status.ID,
-	})
-
-	if err != nil && status.Code(err) != codes.NotFound {
+	if err := r.deleteRemoteRecordingRuleGroupSet(ctx, recordingRuleGroupSet.Status.ID); err != nil {
 		return fmt.Errorf("failed to delete recording rule groupSet: %w", err)
 	}
 
 	controllerutil.RemoveFinalizer(recordingRuleGroupSet, recordingRuleGroupSetFinalizerName)
-	if err = r.Update(ctx, recordingRuleGroupSet); err != nil {
+	if err := r.Update(ctx, recordingRuleGroupSet); err != nil {
 		return fmt.Errorf("failed to remove finalizer from recording rule groupSet: %w", err)
 	}
 
+	return nil
+}
+
+func (r *RecordingRuleGroupSetReconciler) deleteRemoteRecordingRuleGroupSet(ctx context.Context, id *string) error {
+	if _, err := r.CoralogixClientSet.RecordingRuleGroups().Delete(ctx, &cxsdk.DeleteRuleGroupSetRequest{
+		Id: *id}); err != nil && status.Code(err) != codes.NotFound {
+		return fmt.Errorf("failed to delete recording rule groupSet: %w", err)
+	}
 	return nil
 }
 

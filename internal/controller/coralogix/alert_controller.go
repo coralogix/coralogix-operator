@@ -128,17 +128,12 @@ func (r *AlertReconciler) update(ctx context.Context, log logr.Logger, alert *co
 }
 
 func (r *AlertReconciler) delete(ctx context.Context, log logr.Logger, alert *coralogixv1alpha1.Alert) error {
-	log.V(1).Info("Deleting remote alert", "alert", *alert.Status.ID)
-	_, err := r.CoralogixClientSet.Alerts().DeleteAlert(ctx, &alerts.DeleteAlertByUniqueIdRequest{
-		Id: wrapperspb.String(*alert.Status.ID),
-	})
-	if err != nil && status.Code(err) != codes.NotFound {
-		return fmt.Errorf("error on deleting alert: %w", err)
+	if err := r.deleteRemoteAlert(ctx, log, alert.Status.ID); err != nil {
+		return fmt.Errorf("error on deleting remote alert: %w", err)
 	}
-	log.V(1).Info("Remote alert deleted", "alert", *alert.Status.ID)
 
 	controllerutil.RemoveFinalizer(alert, alertFinalizerName)
-	if err = r.Update(ctx, alert); err != nil {
+	if err := r.Update(ctx, alert); err != nil {
 		return fmt.Errorf("error on updating alert: %w", err)
 	}
 
@@ -164,6 +159,9 @@ func (r *AlertReconciler) create(ctx context.Context, log logr.Logger, alert *co
 
 	alert.Status.ID = pointer.String(response.GetAlert().GetUniqueIdentifier().GetValue())
 	if err = r.Status().Update(ctx, alert); err != nil {
+		if err = r.deleteRemoteAlert(ctx, log, alert.Status.ID); err != nil {
+			return fmt.Errorf("error on deleting remote alert after status update error: %w", err)
+		}
 		return fmt.Errorf("error on updating alert status: %w", err)
 	}
 
@@ -188,6 +186,18 @@ func (r *AlertReconciler) create(ctx context.Context, log logr.Logger, alert *co
 		}
 	}
 
+	return nil
+}
+
+func (r *AlertReconciler) deleteRemoteAlert(ctx context.Context, log logr.Logger, alertID *string) error {
+	log.V(1).Info("Deleting remote alert", "alert", alertID)
+	if _, err := r.CoralogixClientSet.Alerts().DeleteAlert(ctx, &alerts.DeleteAlertByUniqueIdRequest{
+		Id: wrapperspb.String(*alertID)}); err != nil && status.Code(err) != codes.NotFound {
+		log.V(1).Error(err, "Error on deleting remote alert", "alert", alertID)
+		return fmt.Errorf("error on deleting alert: %w", err)
+	}
+
+	log.V(1).Info("Remote alert deleted", "alert", alertID)
 	return nil
 }
 
