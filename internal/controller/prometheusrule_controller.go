@@ -332,7 +332,7 @@ func prometheusRuleToCoralogixAlertSpec(rule prometheus.Rule) coralogixv1alpha1.
 						AlertWhen:                  coralogixv1alpha1.PromqlAlertWhenMoreThan,
 						Threshold:                  resource.MustParse("0"),
 						SampleThresholdPercentage:  100,
-						MinNonNullValuesPercentage: ptr.To(0),
+						MinNonNullValuesPercentage: getMinNonNullValuesPercentage(rule),
 					},
 				},
 			},
@@ -384,6 +384,16 @@ func getNotificationIntegrationName(rule prometheus.Rule) *string {
 	}
 
 	return nil
+}
+
+func getMinNonNullValuesPercentage(rule prometheus.Rule) *int {
+	if minNonNullValuesPercentage, ok := rule.Annotations["cxMinNonNullValuesPercentage"]; ok {
+		if minNonNullValuesPercentageInt, err := strconv.Atoi(minNonNullValuesPercentage); err == nil {
+			return ptr.To(minNonNullValuesPercentageInt)
+		}
+	}
+
+	return ptr.To(0)
 }
 
 var prometheusAlertForToCoralogixPromqlAlertTimeWindow = map[prometheus.Duration]coralogixv1alpha1.MetricTimeWindow{
