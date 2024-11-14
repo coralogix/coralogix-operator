@@ -19,7 +19,7 @@ spec:
       promql:
         conditions:
           alertWhen: More
-          minNonNullValuesPercentage: 0
+          minNonNullValuesPercentage: 20
           sampleThresholdPercentage: 100
           threshold: "0"
           timeWindow: FiveMinutes
@@ -65,7 +65,7 @@ spec:
       promql:
         conditions:
           alertWhen: More
-          minNonNullValuesPercentage: 0
+          minNonNullValuesPercentage: 20
           sampleThresholdPercentage: 100
           threshold: "0"
           timeWindow: FiveMinutes
@@ -117,7 +117,7 @@ spec:
       promql:
         conditions:
           alertWhen: More
-          minNonNullValuesPercentage: 0
+          minNonNullValuesPercentage: 20
           sampleThresholdPercentage: 100
           threshold: "0"
           timeWindow: FiveMinutes
