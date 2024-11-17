@@ -69,7 +69,7 @@ var _ = Describe("AlertmanagerConfig", Ordered, func() {
 				Name:      "slack-config",
 				Namespace: testNamespace,
 				Labels: map[string]string{
-					"app.coralogix.com/track-alertmanger-config": "true",
+					"app.coralogix.com/track-alertmanager-config": "true",
 				},
 			},
 			Spec: prometheus.AlertmanagerConfigSpec{

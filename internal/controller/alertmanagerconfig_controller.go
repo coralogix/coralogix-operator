@@ -63,7 +63,7 @@ type AlertmanagerConfigReconciler struct {
 // SetupWithManager sets up the controller with the Manager.
 func (r *AlertmanagerConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	shouldTrackAlertmanagerConfigs := func(labels map[string]string) bool {
-		if value, ok := labels["app.coralogix.com/track-alertmanger-config"]; ok && value == "true" {
+		if value, ok := labels["app.coralogix.com/track-alertmanager-config"]; ok && value == "true" {
 			return true
 		}
 		return false
@@ -238,7 +238,7 @@ func (r *AlertmanagerConfigReconciler) linkCxAlertToCxIntegrations(ctx context.C
 	}
 
 	var alerts coralogixv1alpha1.AlertList
-	if err := r.List(ctx, &alerts, client.InNamespace(config.Namespace), client.MatchingLabels{"app.coralogix.com/managed-by-alertmanger-config": "true"}); err != nil {
+	if err := r.List(ctx, &alerts, client.InNamespace(config.Namespace), client.MatchingLabels{"app.coralogix.com/managed-by-alertmanager-config": "true"}); err != nil {
 		log.Error(err, "Received an error while trying to list Alerts")
 		return false
 	}
@@ -280,7 +280,7 @@ func (r *AlertmanagerConfigReconciler) linkCxAlertToCxIntegrations(ctx context.C
 
 func (r *AlertmanagerConfigReconciler) deleteWebhooksFromRelatedAlerts(ctx context.Context, config *prometheus.AlertmanagerConfig) error {
 	var alerts coralogixv1alpha1.AlertList
-	if err := r.List(ctx, &alerts, client.InNamespace(config.Namespace), client.MatchingLabels{"app.coralogix.com/managed-by-alertmanger-config": "true"}); err != nil {
+	if err := r.List(ctx, &alerts, client.InNamespace(config.Namespace), client.MatchingLabels{"app.coralogix.com/managed-by-alertmanager-config": "true"}); err != nil {
 		return fmt.Errorf("received an error while trying to list Alerts: %w", err)
 	}
 

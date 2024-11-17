@@ -185,8 +185,8 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 					alertCRD.Name = alertCRDName
 					alertCRD.OwnerReferences = []metav1.OwnerReference{getOwnerReference(prometheusRule)}
 					alertCRD.Labels = map[string]string{"app.kubernetes.io/managed-by": prometheusRule.Name}
-					if val, ok := prometheusRule.Labels["app.coralogix.com/managed-by-alertmanger-config"]; ok {
-						alertCRD.Labels["app.coralogix.com/managed-by-alertmanger-config"] = val
+					if val, ok := prometheusRule.Labels["app.coralogix.com/managed-by-alertmanager-config"]; ok {
+						alertCRD.Labels["app.coralogix.com/managed-by-alertmanager-config"] = val
 					}
 					if err = r.Create(ctx, alertCRD); err != nil {
 						return fmt.Errorf("received an error while trying to create Alert CRD: %w", err)
@@ -212,9 +212,9 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 				updated = true
 			}
 
-			if promRuleVal, ok := prometheusRule.Labels["app.coralogix.com/managed-by-alertmanger-config"]; ok {
-				if alertVal, ok := alertCRD.Labels["app.coralogix.com/managed-by-alertmanger-config"]; !ok || alertVal != promRuleVal {
-					alertCRD.Labels["app.coralogix.com/managed-by-alertmanger-config"] = promRuleVal
+			if promRuleVal, ok := prometheusRule.Labels["app.coralogix.com/managed-by-alertmanager-config"]; ok {
+				if alertVal, ok := alertCRD.Labels["app.coralogix.com/managed-by-alertmanager-config"]; !ok || alertVal != promRuleVal {
+					alertCRD.Labels["app.coralogix.com/managed-by-alertmanager-config"] = promRuleVal
 					updated = true
 				}
 			}

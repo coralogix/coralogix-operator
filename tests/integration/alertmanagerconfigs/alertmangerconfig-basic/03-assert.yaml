@@ -4,7 +4,7 @@ metadata:
   finalizers:
     - alert.coralogix.com/finalizer
   labels:
-    app.coralogix.com/managed-by-alertmanger-config: "true"
+    app.coralogix.com/managed-by-alertmanager-config: "true"
     app.kubernetes.io/managed-by: prometheus-example-rules-test
   name: prometheus-example-rules-test-app-latency-0
   namespace: default
@@ -50,7 +50,7 @@ metadata:
   finalizers:
     - alert.coralogix.com/finalizer
   labels:
-    app.coralogix.com/managed-by-alertmanger-config: "true"
+    app.coralogix.com/managed-by-alertmanager-config: "true"
     app.kubernetes.io/managed-by: prometheus-example-rules-test
   name: prometheus-example-rules-test-app-latency-1
   namespace: default
@@ -102,7 +102,7 @@ metadata:
   finalizers:
     - alert.coralogix.com/finalizer
   labels:
-    app.coralogix.com/managed-by-alertmanger-config: "true"
+    app.coralogix.com/managed-by-alertmanager-config: "true"
     app.kubernetes.io/managed-by: prometheus-example-rules-test
   name: prometheus-example-rules-test-app-latency-2
   namespace: default
