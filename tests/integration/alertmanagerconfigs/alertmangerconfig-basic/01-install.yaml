@@ -68,7 +68,7 @@ spec:
           expr: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m])) by (le, destination_workload)) > 0.2
           for: 5m
           annotations:
-            cxMinNonNullValuesPercentage: "20"
+            description: "This is an app latency alert"
           labels:
             severity: critical
             slack_channel: "#observability"
@@ -79,7 +79,7 @@ spec:
           expr: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m])) by (le, destination_workload)) > 0.2
           for: 5m
           annotations:
-            cxMinNonNullValuesPercentage: "20"
+            description: "This is an app latency alert"
           labels:
             severity: info
             slack_channel: "#observability"
@@ -88,4 +88,4 @@ spec:
           expr: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m])) by (le, destination_workload)) > 0.2
           for: 5m
           annotations:
-            cxMinNonNullValuesPercentage: "20"
+            description: "This is an app latency alert"
