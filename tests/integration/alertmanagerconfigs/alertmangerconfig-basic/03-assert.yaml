@@ -4,7 +4,7 @@ metadata:
   finalizers:
     - alert.coralogix.com/finalizer
   labels:
-    app.coralogix.com/managed-by-alertmanger-config: "true"
+    app.coralogix.com/managed-by-alertmanager-config: "true"
     app.kubernetes.io/managed-by: prometheus-example-rules-test
   name: prometheus-example-rules-test-app-latency-0
   namespace: default
@@ -29,6 +29,7 @@ spec:
     severity: critical
     slack_channel: '#observability'
   name: app-latency
+  description: This is an app latency alert
   notificationGroups:
     - groupByFields:
         - alertname
@@ -50,7 +51,7 @@ metadata:
   finalizers:
     - alert.coralogix.com/finalizer
   labels:
-    app.coralogix.com/managed-by-alertmanger-config: "true"
+    app.coralogix.com/managed-by-alertmanager-config: "true"
     app.kubernetes.io/managed-by: prometheus-example-rules-test
   name: prometheus-example-rules-test-app-latency-1
   namespace: default
@@ -76,6 +77,7 @@ spec:
     severity: info
     slack_channel: '#observability'
   name: app-latency
+  description: This is an app latency alert
   notificationGroups:
     - groupByFields:
         - alertname
@@ -102,7 +104,7 @@ metadata:
   finalizers:
     - alert.coralogix.com/finalizer
   labels:
-    app.coralogix.com/managed-by-alertmanger-config: "true"
+    app.coralogix.com/managed-by-alertmanager-config: "true"
     app.kubernetes.io/managed-by: prometheus-example-rules-test
   name: prometheus-example-rules-test-app-latency-2
   namespace: default
@@ -126,7 +128,8 @@ spec:
   labels:
     managed-by: coralogix-operator
   name: app-latency
-#  notificationGroups:
+  description: This is an app latency alert
+  #  notificationGroups:
 #    - groupByFields:
 #        - alertname
 #        - cluster

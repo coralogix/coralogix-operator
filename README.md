@@ -5,114 +5,68 @@
 ![e2e-tests](https://github.com/coralogix/coralogix-operator/actions/workflows/e2e-tests.yaml/badge.svg?style=plastic)
 
 ## Overview
-The Coralogix Operator provides Kubernetes native deployment and management of Coralogix and related components. The purpose of this project is to simplify and automate the configuration of a Coralogix APIs for Kubernetes clusters.
+The Coralogix Operator provides Kubernetes-native deployment and management for Coralogix, 
+designed to simplify and automate the configuration of Coralogix APIs through Kubernetes [custom resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/).
 
-The Coralogix operator includes, but is not limited to, the following features:
+The operator integrates with Kubernetes by supporting a variety of custom resources and controllers to simplify Coralogix management, including:
 
-Kubernetes Custom Resources: Use Kubernetes custom resources to deploy and manage 
+- **Custom Resources for Coralogix:** Easily deploy and manage Coralogix features, using custom resources like
 [Alerts](https://github.com/coralogix/coralogix-operator/tree/master/config/samples/alerts), 
 [RecordingRuleGroupSets](https://github.com/coralogix/coralogix-operator/tree/master/config/samples/recordingrulegroupset),
-[RuleGroups](https://github.com/coralogix/coralogix-operator/tree/master/config/samples/rulegroups) and related components.
-
-# Guides
-
-- [Contributing](CONTRIBUTING.md)
-
+[RuleGroups](https://github.com/coralogix/coralogix-operator/tree/master/config/samples/rulegroups), [OutboundWebhooks](https://github.com/coralogix/coralogix-operator/tree/master/config/samples/outboundwebhooks) and others.
+For a complete list of available APIs and their details, refer to the [API documentation](https://github.com/coralogix/coralogix-operator/tree/master/docs/api.md).
+- **Prometheus Operator Integration:** The Operator leverages [Prometheus Operator](https://prometheus-operator.dev/) CRDs like PrometheusRule and AlertmanagerConfig,
+to simplify the transition to Coralogix by utilizing existing monitoring configurations.
+For more details on this integration, see the [Prometheus Integration documentation](https://github.com/coralogix/coralogix-operator/tree/master/docs/prometheus-integration.md).
 
 ## Getting Started
 You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
-**Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
 
 ### Running on the cluster
-1. Install the CRDs into the cluster:
+1. Clone the operator repository and navigate to the project directory:
+```
+git clone https://github.com/coralogix/coralogix-operator.git 
+cd coralogix-operator
+```
+
+2. Install the CRDs into the cluster:
 ```sh
 make install
 ```
 
-2. Add the api key and region as environment variables (or later as flags):
+3. Set the Coralogix API key and region as environment variables:
 ```sh
 $ export CORALOGIX_API_KEY="<api-key>"
 $ export CORALOGIX_REGION="<region>"
 ```
-For private domain the `domain` field or the environment variable `CORALOGIX_DOMAIN` have to be defined.
+For private domain set the `CORALOGIX_DOMAIN` environment variable.
 
-3. Build and push your image to the location specified by `IMG`:
+4. For a custom operator image, build and push your image to the location specified by `IMG`:
 ```sh
 make docker-build docker-push IMG=<some-registry>/coralogix-operator:tag
 ```
 
-4. Deploy the controller to the cluster with the image specified by `IMG`:
+5. Deploy the operator to the cluster with the image specified by `IMG`:
 ```sh
-make deploy IMG=<some-registry>/coralogix-operator:tag
+make deploy IMG=coralogixoperator/coralogix-operator:latest
 ```
 
-5. Install custom resources samples into the cluster:
+6. Verify that the operator's pod is running:
 ```sh
-kubectl apply -R -f config/samples/
-```
-
-### Uninstall CRDs
-To delete the CRDs from the cluster:
-
-```sh
-make uninstall
+kubectl get pods -n coralogix-operator-system
 ```
 
 ### Undeploy controller
-UnDeploy the controller to the cluster:
+Undeploy the controller to the cluster:
 
 ```sh
 make undeploy
 ```
 
 ## Contributing
-Please refer to [CONTRIBUTING.md](CONTRIBUTING.md)
+Please refer to [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### How it works
-This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)
-
+This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/).
 It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/) 
-which provides a reconcile function responsible for synchronizing resources untile the Desired state is reached on the cluster 
-
-### Test It Out
-1. Install the CRDs into the cluster:
-
-```sh
-make install
-```
-
-2. Run your controller (this will run in the foreground, so switch to a new terminal if you want to leave it running):
-
-```sh
-make run
-```
-
-**NOTE:** You can also run this in one step by running: `make install run`
-
-### Modifying the API definitions
-If you are editing the API definitions, generate the manifests such as CRs or CRDs using:
-
-```sh
-make manifests
-```
-
-**NOTE:** Run `make --help` for more information on all potential `make` targets
-
-More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
-
-## License
-
-Copyright 2023.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
+which provides a reconcile function responsible for synchronizing resources until the Desired state is reached on the cluster.

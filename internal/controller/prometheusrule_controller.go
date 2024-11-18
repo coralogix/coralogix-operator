@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"strconv"
 	"strings"
 	"time"
 
@@ -29,7 +28,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/utils/pointer"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -175,20 +173,28 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 	alertsToKeep := make(map[string]bool)
 	for alertName, rules := range alertMap {
 		for i, rule := range rules {
-			alertCRD := &coralogixv1alpha1.Alert{}
-			alertCRDName := fmt.Sprintf("%s-%s-%d", prometheusRule.Name, alertName, i)
-			alertsToKeep[alertCRDName] = true
-			if err := r.Client.Get(ctx, client.ObjectKey{Namespace: prometheusRule.Namespace, Name: alertCRDName}, alertCRD); err != nil {
+			alert := &coralogixv1alpha1.Alert{}
+			alertName := fmt.Sprintf("%s-%s-%d", prometheusRule.Name, alertName, i)
+			alertsToKeep[alertName] = true
+			if err := r.Client.Get(ctx, client.ObjectKey{Namespace: prometheusRule.Namespace, Name: alertName}, alert); err != nil {
 				if errors.IsNotFound(err) {
-					alertCRD.Spec = prometheusRuleToCoralogixAlertSpec(rule)
-					alertCRD.Namespace = prometheusRule.Namespace
-					alertCRD.Name = alertCRDName
-					alertCRD.OwnerReferences = []metav1.OwnerReference{getOwnerReference(prometheusRule)}
-					alertCRD.Labels = map[string]string{"app.kubernetes.io/managed-by": prometheusRule.Name}
-					if val, ok := prometheusRule.Labels["app.coralogix.com/managed-by-alertmanger-config"]; ok {
-						alertCRD.Labels["app.coralogix.com/managed-by-alertmanger-config"] = val
+					alert.Name = alertName
+					alert.Namespace = prometheusRule.Namespace
+					alert.Labels = map[string]string{"app.kubernetes.io/managed-by": prometheusRule.Name}
+					if val, ok := prometheusRule.Labels["app.coralogix.com/managed-by-alertmanager-config"]; ok {
+						alert.Labels["app.coralogix.com/managed-by-alertmanager-config"] = val
 					}
-					if err = r.Create(ctx, alertCRD); err != nil {
+					alert.OwnerReferences = []metav1.OwnerReference{getOwnerReference(prometheusRule)}
+					alert.Spec.Name = rule.Alert
+					alert.Spec.Description = rule.Annotations["description"]
+					alert.Spec.Labels = rule.Labels
+					alert.Spec.Severity = getSeverity(rule)
+					alert.Spec.AlertType = coralogixv1alpha1.AlertType{
+						Metric: &coralogixv1alpha1.Metric{
+							Promql: prometheusAlertToPromqlTypeSpec(rule),
+						},
+					}
+					if err = r.Create(ctx, alert); err != nil {
 						return fmt.Errorf("received an error while trying to create Alert CRD: %w", err)
 					}
 					continue
@@ -198,29 +204,50 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 			}
 
 			updated := false
-			desiredSpec := prometheusRuleToCoralogixAlertSpec(rule)
-			// We keep NotificationGroups on update, to not override AlertmanagerConfig controller settings
-			desiredSpec.NotificationGroups = alertCRD.Spec.NotificationGroups
-			if !reflect.DeepEqual(alertCRD.Spec, desiredSpec) {
-				desiredSpec.DeepCopyInto(&alertCRD.Spec)
+			desiredDescription := rule.Annotations["description"]
+			if alert.Spec.Description != desiredDescription {
+				alert.Spec.Description = desiredDescription
+				updated = true
+			}
+
+			desiredLabels := rule.Labels
+			if !reflect.DeepEqual(alert.Spec.Labels, desiredLabels) {
+				alert.Spec.Labels = desiredLabels
+				updated = true
+			}
+
+			desiredSeverity := getSeverity(rule)
+			if alert.Spec.Severity != desiredSeverity {
+				alert.Spec.Severity = desiredSeverity
+				updated = true
+			}
+
+			desiredAlertTypeSpec := coralogixv1alpha1.AlertType{
+				Metric: &coralogixv1alpha1.Metric{
+					Promql: prometheusAlertToPromqlTypeSpec(rule),
+				},
+			}
+			desiredAlertTypeSpec.Metric.Promql.Conditions.MinNonNullValuesPercentage = alert.Spec.AlertType.Metric.Promql.Conditions.MinNonNullValuesPercentage
+			if !reflect.DeepEqual(alert.Spec.AlertType, desiredAlertTypeSpec) {
+				alert.Spec.AlertType = desiredAlertTypeSpec
 				updated = true
 			}
 
 			desiredOwnerReferences := []metav1.OwnerReference{getOwnerReference(prometheusRule)}
-			if !reflect.DeepEqual(alertCRD.OwnerReferences, desiredOwnerReferences) {
-				alertCRD.OwnerReferences = desiredOwnerReferences
+			if !reflect.DeepEqual(alert.OwnerReferences, desiredOwnerReferences) {
+				alert.OwnerReferences = desiredOwnerReferences
 				updated = true
 			}
 
-			if promRuleVal, ok := prometheusRule.Labels["app.coralogix.com/managed-by-alertmanger-config"]; ok {
-				if alertVal, ok := alertCRD.Labels["app.coralogix.com/managed-by-alertmanger-config"]; !ok || alertVal != promRuleVal {
-					alertCRD.Labels["app.coralogix.com/managed-by-alertmanger-config"] = promRuleVal
+			if promRuleVal, ok := prometheusRule.Labels["app.coralogix.com/managed-by-alertmanager-config"]; ok {
+				if alertVal, ok := alert.Labels["app.coralogix.com/managed-by-alertmanager-config"]; !ok || alertVal != promRuleVal {
+					alert.Labels["app.coralogix.com/managed-by-alertmanager-config"] = promRuleVal
 					updated = true
 				}
 			}
 
 			if updated {
-				if err := r.Update(ctx, alertCRD); err != nil {
+				if err := r.Update(ctx, alert); err != nil {
 					return fmt.Errorf("received an error while trying to update Alert CRD: %w", err)
 				}
 			}
@@ -308,39 +335,19 @@ func prometheusInnerRulesToCoralogixInnerRules(rules []prometheus.Rule) []coralo
 	return result
 }
 
-func prometheusRuleToCoralogixAlertSpec(rule prometheus.Rule) coralogixv1alpha1.AlertSpec {
-	alertSpec := coralogixv1alpha1.AlertSpec{
-		Description: rule.Annotations["description"],
-		Severity:    getSeverity(rule),
-		NotificationGroups: []coralogixv1alpha1.NotificationGroup{
-			{
-				Notifications: []coralogixv1alpha1.Notification{
-					{
-						RetriggeringPeriodMinutes: getNotificationPeriod(rule),
-						IntegrationName:           getNotificationIntegrationName(rule),
-					},
-				},
-			},
+func prometheusAlertToPromqlTypeSpec(rule prometheus.Rule) *coralogixv1alpha1.Promql {
+	promqlType := &coralogixv1alpha1.Promql{
+		SearchQuery: rule.Expr.StrVal,
+		Conditions: coralogixv1alpha1.PromqlConditions{
+			TimeWindow:                 getTimeWindow(rule),
+			AlertWhen:                  coralogixv1alpha1.PromqlAlertWhenMoreThan,
+			Threshold:                  resource.MustParse("0"),
+			SampleThresholdPercentage:  100,
+			MinNonNullValuesPercentage: ptr.To(0),
 		},
-		Name: rule.Alert,
-		AlertType: coralogixv1alpha1.AlertType{
-			Metric: &coralogixv1alpha1.Metric{
-				Promql: &coralogixv1alpha1.Promql{
-					SearchQuery: rule.Expr.StrVal,
-					Conditions: coralogixv1alpha1.PromqlConditions{
-						TimeWindow:                 getTimeWindow(rule),
-						AlertWhen:                  coralogixv1alpha1.PromqlAlertWhenMoreThan,
-						Threshold:                  resource.MustParse("0"),
-						SampleThresholdPercentage:  100,
-						MinNonNullValuesPercentage: ptr.To(0),
-					},
-				},
-			},
-		},
-		Labels: rule.Labels,
 	}
 
-	return alertSpec
+	return promqlType
 }
 
 func getSeverity(rule prometheus.Rule) coralogixv1alpha1.AlertSeverity {
@@ -357,33 +364,6 @@ func getTimeWindow(rule prometheus.Rule) coralogixv1alpha1.MetricTimeWindow {
 		return timeWindow
 	}
 	return prometheusAlertForToCoralogixPromqlAlertTimeWindow["1m"]
-}
-
-func getNotificationPeriod(rule prometheus.Rule) int32 {
-	if cxNotifyEveryMin, ok := rule.Annotations["cxNotifyEveryMin"]; ok {
-		if notificationPeriod, err := strconv.Atoi(cxNotifyEveryMin); err == nil {
-			if notificationPeriod > 0 {
-				return int32(notificationPeriod)
-			}
-		}
-	}
-
-	if duration, err := time.ParseDuration(string(rule.For)); err == nil {
-		notificationPeriod := int(duration.Minutes())
-		if notificationPeriod > 0 {
-			return int32(notificationPeriod)
-		}
-	}
-
-	return defaultCoralogixNotificationPeriod
-}
-
-func getNotificationIntegrationName(rule prometheus.Rule) *string {
-	if integrationName, ok := rule.Annotations["cxNotificationName"]; ok {
-		return pointer.String(integrationName)
-	}
-
-	return nil
 }
 
 var prometheusAlertForToCoralogixPromqlAlertTimeWindow = map[prometheus.Duration]coralogixv1alpha1.MetricTimeWindow{

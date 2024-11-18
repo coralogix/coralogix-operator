@@ -67,7 +67,7 @@ var _ = Describe("PrometheusRule", Ordered, func() {
 								Expr:  intstr.FromString("up == 0"), // Short test expression
 								For:   "5m",
 								Annotations: map[string]string{
-									"cxMinNonNullValuesPercentage": "20",
+									"description": "example alert description",
 								},
 								Labels: map[string]string{
 									"severity":      "critical",
