@@ -36,6 +36,7 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	alerts "github.com/coralogix/coralogix-operator/internal/controller/clientset/grpc/alerts/v2"
+	"github.com/coralogix/coralogix-operator/internal/monitoring"
 )
 
 var (
@@ -83,6 +84,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			log.Error(err, "Error on creating alert")
 			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 		}
+		monitoring.AlertInfoMetric.WithLabelValues(alert.Name, alert.Namespace, getAlertType(alert)).Set(1)
 		return ctrl.Result{}, nil
 	}
 
@@ -92,6 +94,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			log.Error(err, "Error on deleting alert")
 			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 		}
+		monitoring.AlertInfoMetric.DeleteLabelValues(alert.Name, alert.Namespace, getAlertType(alert))
 		return ctrl.Result{}, nil
 	}
 
@@ -100,6 +103,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		log.Error(err, "Error on updating alert")
 		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 	}
+	monitoring.AlertInfoMetric.WithLabelValues(alert.Name, alert.Namespace, getAlertType(alert)).Set(1)
 
 	return ctrl.Result{}, nil
 }
@@ -199,6 +203,34 @@ func (r *AlertReconciler) deleteRemoteAlert(ctx context.Context, log logr.Logger
 
 	log.V(1).Info("Remote alert deleted", "alert", alertID)
 	return nil
+}
+
+func getAlertType(alert *coralogixv1alpha1.Alert) string {
+	if alert.Spec.AlertType.Standard != nil {
+		return "standard"
+	}
+	if alert.Spec.AlertType.Ratio != nil {
+		return "ratio"
+	}
+	if alert.Spec.AlertType.NewValue != nil {
+		return "new_value"
+	}
+	if alert.Spec.AlertType.UniqueCount != nil {
+		return "unique_count"
+	}
+	if alert.Spec.AlertType.TimeRelative != nil {
+		return "time_relative"
+	}
+	if alert.Spec.AlertType.Metric != nil {
+		return "metric"
+	}
+	if alert.Spec.AlertType.Tracing != nil {
+		return "tracing"
+	}
+	if alert.Spec.AlertType.Flow != nil {
+		return "flow"
+	}
+	return "unknown"
 }
 
 // SetupWithManager sets up the controller with the Manager.

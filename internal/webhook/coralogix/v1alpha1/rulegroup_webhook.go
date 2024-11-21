@@ -25,6 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/monitoring"
 )
 
 // nolint:unused
@@ -98,6 +99,7 @@ func validateRulesTypesSet(ruleGroup coralogixv1alpha1.RuleGroup) (admission.War
 	}
 
 	if len(errorsMessages) > 0 {
+		monitoring.TotalRejectedRulesGroupsMetric.Inc()
 		return warnings, fmt.Errorf("%v", errorsMessages)
 	}
 
