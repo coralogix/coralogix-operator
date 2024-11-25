@@ -32,6 +32,7 @@ import (
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
+	"github.com/coralogix/coralogix-operator/internal/monitoring"
 )
 
 var recordingRuleGroupSetFinalizerName = "recordingrulegroupset.coralogix.com/finalizer"
@@ -73,6 +74,7 @@ func (r *RecordingRuleGroupSetReconciler) Reconcile(ctx context.Context, req ctr
 			log.Error(err, "Failed to create RecordingRuleGroupSet", "error", err)
 			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 		}
+		monitoring.RecordingRuleGroupSetInfoMetric.WithLabelValues(recordingRuleGroupSet.Name, recordingRuleGroupSet.Namespace).Set(1)
 		return ctrl.Result{}, nil
 	}
 
@@ -81,6 +83,7 @@ func (r *RecordingRuleGroupSetReconciler) Reconcile(ctx context.Context, req ctr
 			log.Error(err, "Failed to delete RecordingRuleGroupSet", "error", err)
 			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 		}
+		monitoring.RecordingRuleGroupSetInfoMetric.DeleteLabelValues(recordingRuleGroupSet.Name, recordingRuleGroupSet.Namespace)
 		return ctrl.Result{}, nil
 	}
 
@@ -88,6 +91,7 @@ func (r *RecordingRuleGroupSetReconciler) Reconcile(ctx context.Context, req ctr
 		log.Error(err, "Failed to update RecordingRuleGroupSet", "error", err)
 		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 	}
+	monitoring.RecordingRuleGroupSetInfoMetric.WithLabelValues(recordingRuleGroupSet.Name, recordingRuleGroupSet.Namespace).Set(1)
 
 	return ctrl.Result{}, nil
 }

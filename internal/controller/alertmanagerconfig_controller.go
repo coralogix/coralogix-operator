@@ -38,6 +38,7 @@ import (
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
+	"github.com/coralogix/coralogix-operator/internal/monitoring"
 )
 
 //+kubebuilder:rbac:groups=monitoring.coreos.com,resources=prometheusrules,verbs=get;list;watch
@@ -91,6 +92,7 @@ func (r *AlertmanagerConfigReconciler) Reconcile(ctx context.Context, req ctrl.R
 	alertmanagerConfig := &prometheus.AlertmanagerConfig{}
 	if err := r.Get(ctx, req.NamespacedName, alertmanagerConfig); err != nil {
 		if errors.IsNotFound(err) {
+			monitoring.AlertmanagerConfigInfoMetric.DeleteLabelValues(req.Name, req.Namespace)
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
@@ -103,6 +105,7 @@ func (r *AlertmanagerConfigReconciler) Reconcile(ctx context.Context, req ctrl.R
 		// Error reading the object - requeue the request
 		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 	}
+	monitoring.AlertmanagerConfigInfoMetric.WithLabelValues(alertmanagerConfig.Name, alertmanagerConfig.Namespace).Set(1)
 
 	succeedConvertAlertmanager := r.convertAlertmanagerConfigToCxIntegrations(ctx, log, alertmanagerConfig)
 	succeedLinkAlerts := r.linkCxAlertToCxIntegrations(ctx, log, alertmanagerConfig)

@@ -33,6 +33,7 @@ import (
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
+	"github.com/coralogix/coralogix-operator/internal/monitoring"
 )
 
 var ruleGroupFinalizerName = "rulegroup.coralogix.com/finalizer"
@@ -112,6 +113,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			}
 		}
 
+		monitoring.RuleGroupInfoMetric.DeleteLabelValues(ruleGroupCRD.Name, ruleGroupCRD.Namespace)
 		// Stop reconciliation as the item is being deleted
 		return ctrl.Result{}, nil
 	}
@@ -165,6 +167,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			if err := r.Status().Update(ctx, ruleGroupCRD); err != nil {
 				log.V(1).Error(err, "updating crd")
 			}
+			monitoring.RuleGroupInfoMetric.WithLabelValues(ruleGroupCRD.Name, ruleGroupCRD.Namespace).Set(1)
 			return ctrl.Result{}, nil
 		} else {
 			log.Error(err, "Received an error while creating a Rule-Group", "ruleGroup", createRuleGroupReq)
@@ -184,6 +187,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 	jstr, _ := jsm.MarshalToString(updateRuleGroupResp)
 	log.V(1).Info("Rule-Group was updated", "ruleGroup", jstr)
+	monitoring.RuleGroupInfoMetric.WithLabelValues(ruleGroupCRD.Name, ruleGroupCRD.Namespace).Set(1)
 
 	return ctrl.Result{}, nil
 }

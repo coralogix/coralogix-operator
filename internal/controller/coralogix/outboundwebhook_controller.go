@@ -38,6 +38,7 @@ import (
 	utils "github.com/coralogix/coralogix-operator/api"
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
+	"github.com/coralogix/coralogix-operator/internal/monitoring"
 )
 
 // OutboundWebhookReconciler reconciles a OutboundWebhook object
@@ -83,6 +84,7 @@ func (r *OutboundWebhookReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			log.Error(err, "Error on creating outbound-webhook")
 			return resultError, err
 		}
+		monitoring.OutboundWebhookInfoMetric.WithLabelValues(outboundWebhook.Name, outboundWebhook.Namespace, getWebhookType(outboundWebhook)).Set(1)
 		return ctrl.Result{}, nil
 	}
 
@@ -92,6 +94,7 @@ func (r *OutboundWebhookReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			log.Error(err, "Error on deleting outbound-webhook")
 			return resultError, err
 		}
+		monitoring.OutboundWebhookInfoMetric.DeleteLabelValues(outboundWebhook.Name, outboundWebhook.Namespace, getWebhookType(outboundWebhook))
 		return ctrl.Result{}, nil
 	}
 
@@ -100,6 +103,7 @@ func (r *OutboundWebhookReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		log.Error(err, "Error on updating outbound-webhook")
 		return resultError, err
 	}
+	monitoring.OutboundWebhookInfoMetric.WithLabelValues(outboundWebhook.Name, outboundWebhook.Namespace, getWebhookType(outboundWebhook)).Set(1)
 
 	return ctrl.Result{}, nil
 }
@@ -239,4 +243,48 @@ func (r *OutboundWebhookReconciler) deleteRemoteWebhook(ctx context.Context, log
 	log.V(int(zapcore.DebugLevel)).Info("outbound-webhook was deleted from remote", "id", webhookID)
 
 	return nil
+}
+
+func getWebhookType(webhook *coralogixv1alpha1.OutboundWebhook) string {
+	if webhook.Spec.OutboundWebhookType.GenericWebhook != nil {
+		return "genericWebhook"
+	}
+
+	if webhook.Spec.OutboundWebhookType.Slack != nil {
+		return "slack"
+	}
+
+	if webhook.Spec.OutboundWebhookType.PagerDuty != nil {
+		return "pager_duty"
+	}
+
+	if webhook.Spec.OutboundWebhookType.SendLog != nil {
+		return "send_log"
+	}
+
+	if webhook.Spec.OutboundWebhookType.EmailGroup != nil {
+		return "email_group"
+	}
+
+	if webhook.Spec.OutboundWebhookType.MicrosoftTeams != nil {
+		return "microsoft_teams"
+	}
+
+	if webhook.Spec.OutboundWebhookType.Jira != nil {
+		return "jira"
+	}
+
+	if webhook.Spec.OutboundWebhookType.Opsgenie != nil {
+		return "opsgenie"
+	}
+
+	if webhook.Spec.OutboundWebhookType.Demisto != nil {
+		return "demisto"
+	}
+
+	if webhook.Spec.OutboundWebhookType.AwsEventBridge != nil {
+		return "aws_event_bridge"
+	}
+
+	return "unknown"
 }

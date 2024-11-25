@@ -40,6 +40,7 @@ import (
 	controllers "github.com/coralogix/coralogix-operator/internal/controller"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	coralogixcontrollers "github.com/coralogix/coralogix-operator/internal/controller/coralogix"
+	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	webhookcoralogixv1alpha1 "github.com/coralogix/coralogix-operator/internal/webhook/coralogix/v1alpha1"
 	//+kubebuilder:scaffold:imports
 )
@@ -245,6 +246,11 @@ func main() {
 	}
 	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up ready check")
+		os.Exit(1)
+	}
+
+	if err := monitoring.RegisterMetrics(); err != nil {
+		setupLog.Error(err, "unable to register metrics")
 		os.Exit(1)
 	}
 
