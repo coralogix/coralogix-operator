@@ -210,6 +210,10 @@ func flattenRuleGroup(ruleGroup *cxsdk.RuleGroup) (*coralogixv1alpha1.RuleGroupS
 	status.ID = new(string)
 	*status.ID = ruleGroup.GetId().GetValue()
 
+	if *status.ID == "" {
+		return nil, fmt.Errorf("RuleGroup ID is empty")
+	}
+
 	return &status, nil
 }
 

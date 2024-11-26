@@ -109,7 +109,6 @@ func expectedRuleGroupCRD() *coralogixv1alpha1.RuleGroup {
 
 func TestFlattenRuleGroupsErrorsOnBadResponse(t *testing.T) {
 	ruleGroup := &cxsdk.RuleGroup{
-		Id:           wrapperspb.String("id"),
 		Name:         wrapperspb.String("name"),
 		Description:  wrapperspb.String("description"),
 		Creator:      wrapperspb.String("creator"),
