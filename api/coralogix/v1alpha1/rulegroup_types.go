@@ -831,8 +831,8 @@ func expandSourceFiledAndParameters(rule Rule) (sourceField *wrapperspb.StringVa
 		parameters = &cxsdk.RuleParameters{
 			RuleParameters: &cxsdk.RuleParametersJSONExtractParameters{
 				JsonExtractParameters: &cxsdk.JSONExtractParameters{
-					DestinationField: destinationField,
-					Rule:             jsonKey,
+					DestinationFieldType: destinationField,
+					Rule:                 jsonKey,
 				},
 			},
 		}

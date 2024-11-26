@@ -62,8 +62,8 @@ var ruleGroupBackendSchema = &cxsdk.RuleGroup{
 					Parameters: &cxsdk.RuleParameters{
 						RuleParameters: &cxsdk.RuleParametersJSONExtractParameters{
 							JsonExtractParameters: &cxsdk.JSONExtractParameters{
-								DestinationField: cxsdk.JSONExtractParametersDestinationFieldSeverity,
-								Rule:             wrapperspb.String(`{"severity": "info"}`),
+								DestinationFieldType: cxsdk.JSONExtractParametersDestinationFieldSeverity,
+								Rule:                 wrapperspb.String(`{"severity": "info"}`),
 							},
 						},
 					},
