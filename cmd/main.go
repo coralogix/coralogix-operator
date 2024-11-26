@@ -213,6 +213,14 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "OutboundWebhook")
 		os.Exit(1)
 	}
+	if err = (&coralogixcontrollers.ApiKeyReconciler{
+		ApiKeysClient: clientset.NewClientSet(targetUrl, apiKey).ApiKeys(),
+		Client:        mgr.GetClient(),
+		Scheme:        mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ApiKey")
+		os.Exit(1)
+	}
 
 	if prometheusRuleController {
 		if err = (&controllers.AlertmanagerConfigReconciler{
@@ -233,6 +241,11 @@ func main() {
 
 		if err = webhookcoralogixv1alpha1.SetupRuleGroupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "RuleGroup")
+			os.Exit(1)
+		}
+
+		if err = webhookcoralogixv1alpha1.SetupApiKeyWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "ApiKey")
 			os.Exit(1)
 		}
 	} else {

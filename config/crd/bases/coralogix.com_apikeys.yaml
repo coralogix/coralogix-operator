@@ -1,0 +1,80 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.15.0
+  name: apikeys.coralogix.com
+spec:
+  group: coralogix.com
+  names:
+    kind: ApiKey
+    listKind: ApiKeyList
+    plural: apikeys
+    singular: apikey
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: ApiKey is the Schema for the apikeys API.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ApiKeySpec defines the desired state of ApiKey.
+            properties:
+              active:
+                default: true
+                type: boolean
+              name:
+                minLength: 0
+                type: string
+              owner:
+                properties:
+                  teamId:
+                    format: int32
+                    type: integer
+                  userId:
+                    type: string
+                type: object
+              permissions:
+                items:
+                  type: string
+                type: array
+              presets:
+                items:
+                  type: string
+                type: array
+            required:
+            - name
+            - owner
+            type: object
+          status:
+            description: ApiKeyStatus defines the observed state of ApiKey.
+            properties:
+              id:
+                type: string
+            required:
+            - id
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

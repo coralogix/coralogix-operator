@@ -48,6 +48,13 @@ var (
 		},
 		[]string{"name", "namespace", "webhook_type"},
 	)
+	ApiKeyInfoMetric = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cx_operator_apikey_info",
+			Help: "Coralogix Operator Apikey information.",
+		},
+		[]string{"name", "namespace"},
+	)
 	PrometheusRuleInfoMetric = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cx_operator_tracked_prometheus_rule_info",
@@ -65,13 +72,19 @@ var (
 	TotalRejectedRulesGroupsMetric = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: "cx_operator_rejected_rule_groups_total",
-			Help: "Total number of rejected rule groups.",
+			Help: "The total count of rule groups rejections by Coralogix Operator validation webhook.",
 		},
 	)
 	TotalRejectedOutboundWebhooksMetric = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: "cx_operator_rejected_outbound_webhooks_total",
-			Help: "Total number of rejected outbound webhooks.",
+			Help: "The total count of outbound webhooks rejections by Coralogix Operator validation webhook.",
+		},
+	)
+	TotalRejectedApiKeysMetric = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "cx_operator_rejected_api_keys_total",
+			Help: "The total count of API keys rejections by Coralogix Operator validation webhook.",
 		},
 	)
 )
@@ -82,10 +95,12 @@ func RegisterMetrics() error {
 		RuleGroupInfoMetric,
 		RecordingRuleGroupSetInfoMetric,
 		OutboundWebhookInfoMetric,
+		ApiKeyInfoMetric,
 		PrometheusRuleInfoMetric,
 		AlertmanagerConfigInfoMetric,
 		TotalRejectedRulesGroupsMetric,
 		TotalRejectedOutboundWebhooksMetric,
+		TotalRejectedApiKeysMetric,
 	}
 
 	for _, metric := range metricsList {

@@ -9,7 +9,27 @@ webhooks:
   clientConfig:
     service:
       name: webhook-service
-      namespace: coralogix-operator-system
+      namespace: system
+      path: /validate-coralogix-com-v1alpha1-apikey
+  failurePolicy: Fail
+  name: vapikey-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - coralogix.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - apikeys
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /validate-coralogix-com-v1alpha1-outboundwebhook
   failurePolicy: Fail
   name: voutboundwebhook-v1alpha1.kb.io
@@ -29,7 +49,7 @@ webhooks:
   clientConfig:
     service:
       name: webhook-service
-      namespace: coralogix-operator-system
+      namespace: system
       path: /validate-coralogix-com-v1alpha1-rulegroup
   failurePolicy: Fail
   name: vrulegroup-v1alpha1.kb.io
