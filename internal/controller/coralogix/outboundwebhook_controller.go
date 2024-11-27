@@ -132,7 +132,7 @@ func (r *OutboundWebhookReconciler) create(ctx context.Context, log logr.Logger,
 		ID: ptr.To(createResponse.Id.GetValue()),
 	}
 	if err = r.Status().Update(ctx, webhook); err != nil {
-		if err := r.deleteRemoteWebhook(ctx, log, webhook.Status.ID, r.OutboundWebhooksClient); err != nil {
+		if err := r.deleteRemoteWebhook(ctx, log, webhook.Status.ID); err != nil {
 			return fmt.Errorf("error to delete outbound-webhook after status update error -\n%v", webhook)
 		}
 		return fmt.Errorf("error to update outbound-webhook status -\n%v", webhook)
@@ -222,7 +222,7 @@ func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger,
 }
 
 func (r *OutboundWebhookReconciler) delete(ctx context.Context, log logr.Logger, webhook *coralogixv1alpha1.OutboundWebhook) error {
-	if err := r.deleteRemoteWebhook(ctx, log, webhook.Status.ID, r.OutboundWebhooksClient); err != nil {
+	if err := r.deleteRemoteWebhook(ctx, log, webhook.Status.ID); err != nil {
 		return fmt.Errorf("error to delete outbound-webhook -\n%v", webhook)
 	}
 
@@ -234,9 +234,9 @@ func (r *OutboundWebhookReconciler) delete(ctx context.Context, log logr.Logger,
 	return nil
 }
 
-func (r *OutboundWebhookReconciler) deleteRemoteWebhook(ctx context.Context, log logr.Logger, webhookID *string, client clientset.OutboundWebhooksClientInterface) error {
+func (r *OutboundWebhookReconciler) deleteRemoteWebhook(ctx context.Context, log logr.Logger, webhookID *string) error {
 	log.V(int(zapcore.DebugLevel)).Info("Deleting outbound-webhook from remote", "id", webhookID)
-	if _, err := client.Delete(ctx, &cxsdk.DeleteOutgoingWebhookRequest{Id: wrapperspb.String(*webhookID)}); err != nil && status.Code(err) != codes.NotFound {
+	if _, err := r.OutboundWebhooksClient.Delete(ctx, &cxsdk.DeleteOutgoingWebhookRequest{Id: wrapperspb.String(*webhookID)}); err != nil && status.Code(err) != codes.NotFound {
 		log.V(int(zapcore.DebugLevel)).Error(err, "Error on deleting outbound-webhook", "id", webhookID)
 		return fmt.Errorf("error to delete outbound-webhook -\n%v", webhookID)
 	}

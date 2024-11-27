@@ -16,12 +16,13 @@ package clientset
 
 import cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
-//go:generate mockgen -destination=../mock_clientset/mock_clientset.go -package=mock_clientset github.com/coralogix/coralogix-operator/controllers/clientset ClientSetInterface
+//go:generate mockgen -destination=../mock_clientset/mock_clientset.go -package=mock_clientset -source=clientset.go ClientSetInterface
 type ClientSetInterface interface {
 	RuleGroups() RuleGroupsClientInterface
 	Alerts() AlertsClientInterface
 	RecordingRuleGroups() RecordingRulesGroupsClientInterface
 	OutboundWebhooks() OutboundWebhooksClientInterface
+	ApiKeys() ApiKeysClientInterface
 }
 
 type ClientSet struct {
@@ -29,6 +30,7 @@ type ClientSet struct {
 	alerts              *AlertsClient
 	recordingRuleGroups *cxsdk.RecordingRuleGroupSetsClient
 	outboundWebhooks    *cxsdk.WebhooksClient
+	apiKeys             *cxsdk.ApikeysClient
 }
 
 func (c *ClientSet) RuleGroups() RuleGroupsClientInterface {
@@ -47,6 +49,10 @@ func (c *ClientSet) OutboundWebhooks() OutboundWebhooksClientInterface {
 	return c.outboundWebhooks
 }
 
+func (c *ClientSet) ApiKeys() ApiKeysClientInterface {
+	return c.apiKeys
+}
+
 func NewClientSet(targetUrl, apiKey string) ClientSetInterface {
 	apikeyCPC := NewCallPropertiesCreator(targetUrl, apiKey)
 	SDKAPIKeyCPC := cxsdk.NewCallPropertiesCreator(targetUrl, cxsdk.NewAuthContext(apiKey, apiKey))
@@ -56,5 +62,6 @@ func NewClientSet(targetUrl, apiKey string) ClientSetInterface {
 		alerts:              NewAlertsClient(apikeyCPC),
 		recordingRuleGroups: cxsdk.NewRecordingRuleGroupSetsClient(SDKAPIKeyCPC),
 		outboundWebhooks:    cxsdk.NewWebhooksClient(SDKAPIKeyCPC),
+		apiKeys:             cxsdk.NewAPIKeysClient(SDKAPIKeyCPC),
 	}
 }

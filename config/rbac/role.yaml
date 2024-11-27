@@ -9,8 +9,12 @@ rules:
   resources:
   - secrets
   verbs:
+  - create
+  - delete
   - get
   - list
+  - patch
+  - update
   - watch
 - apiGroups:
   - coralogix.com
@@ -34,6 +38,32 @@ rules:
   - coralogix.com
   resources:
   - alerts/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - apikeys
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - apikeys/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - apikeys/status
   verbs:
   - get
   - patch

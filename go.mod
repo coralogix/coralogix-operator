@@ -3,7 +3,7 @@ module github.com/coralogix/coralogix-operator
 go 1.23.0
 
 require (
-	github.com/coralogix/coralogix-management-sdk v0.2.2-0.20241014095957-bf7f4990a58f
+	github.com/coralogix/coralogix-management-sdk v0.2.2-0.20241127142407-ab411df2f4ad
 	github.com/go-logr/logr v1.4.2
 	github.com/golang/protobuf v1.5.4
 	github.com/google/uuid v1.6.0
@@ -11,6 +11,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.19.0
 	github.com/onsi/gomega v1.33.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.64.1
+	github.com/prometheus/client_golang v1.19.1
 	github.com/prometheus/common v0.55.0
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/mock v0.5.0
@@ -53,7 +54,6 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/prometheus/client_golang v1.19.1 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect

@@ -91,7 +91,7 @@ coralogixOperator:
     enabled: true
   # --  Coralogix operator Image
   image:
-    repository: coralogixrepo/coralogix-operator
+    repository: assafad1/coralogix-operator
     tag: ""
     pullPolicy: IfNotPresent
 
