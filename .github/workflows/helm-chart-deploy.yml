@@ -32,4 +32,4 @@ jobs:
       - name: use-jfrog-cli
         run: |
           cd charts/coralogix-operator
-          jfrog rt upload --access-token ${{ secrets.ARTIFACTORY_NONUSER_ACCESS_TOKEN }} "${{ env.CHART_NAME }}-*.tgz" coralogix-charts --url ${{ env.ARTIFACTORY_URL }}
+          jfrog rt upload --user "${{ secrets.JFROG_USER }}" --password "${{ secrets.JFROG_PASSWORD }}" "${{ env.CHART_NAME }}-*.tgz" coralogix-charts --url ${{ env.ARTIFACTORY_URL }}
