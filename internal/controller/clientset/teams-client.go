@@ -20,10 +20,10 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 )
 
-//go:generate mockgen -destination=../mock_clientset/mock_apikeys-client.go -package=mock_clientset -source=api-keys-client.go ApiKeysClientInterface
-type ApiKeysClientInterface interface {
-	Create(ctx context.Context, req *cxsdk.CreateAPIKeyRequest) (*cxsdk.CreateAPIKeyResponse, error)
-	Get(ctx context.Context, req *cxsdk.GetAPIKeyRequest) (*cxsdk.GetAPIKeyResponse, error)
-	Update(ctx context.Context, req *cxsdk.UpdateAPIKeyRequest) (*cxsdk.UpdateAPIKeyResponse, error)
-	Delete(ctx context.Context, req *cxsdk.DeleteAPIKeyRequest) (*cxsdk.DeleteAPIKeyResponse, error)
+//go:generate mockgen -destination=../mock_clientset/mock_teams-client.go -package=mock_clientset -source=teams-client.go TeamsClientInterface
+type TeamsClientInterface interface {
+	Create(ctx context.Context, req *cxsdk.CreateTeamInOrgRequest) (*cxsdk.CreateTeamInOrgResponse, error)
+	Get(ctx context.Context, req *cxsdk.GetTeamRequest) (*cxsdk.GetTeamResponse, error)
+	Update(ctx context.Context, req *cxsdk.UpdateTeamRequest) (*cxsdk.UpdateTeamResponse, error)
+	Delete(ctx context.Context, req *cxsdk.DeleteTeamRequest) (*cxsdk.DeleteTeamResponse, error)
 }

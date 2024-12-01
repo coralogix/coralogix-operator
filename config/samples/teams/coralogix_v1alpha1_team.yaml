@@ -1,0 +1,16 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Team
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: team-sample
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/created-by: coralogix-operator
+  name: team-sample
+spec:
+  name: exampleTeamNameNew
+  adminsEmails:
+    - admin@coralogix.com
+    - admin2@coralogix.com
+  dailyQuota: 0.02

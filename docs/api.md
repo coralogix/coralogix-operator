@@ -18,6 +18,8 @@ Resource Types:
 
 - [RuleGroup](#rulegroup)
 
+- [Team](#team)
+
 
 
 
@@ -4092,6 +4094,138 @@ RuleGroupStatus defines the observed state of RuleGroup
         <td>
           INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 Important: Run "make" to regenerate code after modifying this file<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+## Team
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+Team is the Schema for the teams API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>Team</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#teamspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          TeamSpec defines the desired state of Team.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#teamstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          TeamStatus defines the observed state of Team.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Team.spec
+<sup><sup>[↩ Parent](#team)</sup></sup>
+
+
+
+TeamSpec defines the desired state of Team.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>adminsEmails</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>dailyQuota</b></td>
+        <td>int or string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Team.status
+<sup><sup>[↩ Parent](#team)</sup></sup>
+
+
+
+TeamStatus defines the observed state of Team.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>retention</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Format</i>: int32<br/>
         </td>
         <td>true</td>
       </tr></tbody>

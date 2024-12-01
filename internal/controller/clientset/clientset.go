@@ -23,6 +23,7 @@ type ClientSetInterface interface {
 	RecordingRuleGroups() RecordingRulesGroupsClientInterface
 	OutboundWebhooks() OutboundWebhooksClientInterface
 	ApiKeys() ApiKeysClientInterface
+	Teams() TeamsClientInterface
 }
 
 type ClientSet struct {
@@ -31,6 +32,7 @@ type ClientSet struct {
 	recordingRuleGroups *cxsdk.RecordingRuleGroupSetsClient
 	outboundWebhooks    *cxsdk.WebhooksClient
 	apiKeys             *cxsdk.ApikeysClient
+	teams               *cxsdk.TeamsClient
 }
 
 func (c *ClientSet) RuleGroups() RuleGroupsClientInterface {
@@ -53,9 +55,13 @@ func (c *ClientSet) ApiKeys() ApiKeysClientInterface {
 	return c.apiKeys
 }
 
+func (c *ClientSet) Teams() TeamsClientInterface {
+	return c.teams
+}
+
 func NewClientSet(targetUrl, apiKey string) ClientSetInterface {
 	apikeyCPC := NewCallPropertiesCreator(targetUrl, apiKey)
-	SDKAPIKeyCPC := cxsdk.NewCallPropertiesCreator(targetUrl, cxsdk.NewAuthContext(apiKey, apiKey))
+	SDKAPIKeyCPC := cxsdk.NewCallPropertiesCreator(targetUrl, cxsdk.NewAuthContext(apiKey, apiKey, apiKey))
 
 	return &ClientSet{
 		ruleGroups:          cxsdk.NewRuleGroupsClient(SDKAPIKeyCPC),
@@ -63,5 +69,6 @@ func NewClientSet(targetUrl, apiKey string) ClientSetInterface {
 		recordingRuleGroups: cxsdk.NewRecordingRuleGroupSetsClient(SDKAPIKeyCPC),
 		outboundWebhooks:    cxsdk.NewWebhooksClient(SDKAPIKeyCPC),
 		apiKeys:             cxsdk.NewAPIKeysClient(SDKAPIKeyCPC),
+		teams:               cxsdk.NewTeamsClient(SDKAPIKeyCPC),
 	}
 }

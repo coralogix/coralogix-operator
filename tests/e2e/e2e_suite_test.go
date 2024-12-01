@@ -42,7 +42,7 @@ var _ = BeforeSuite(func(ctx context.Context) {
 	apiKey := os.Getenv("CORALOGIX_API_KEY")
 
 	By("Initializing clients")
-	ClientsInstance.InitCoralogixClientSet(cxsdk.CoralogixGrpcEndpointFromRegion(region), apiKey, apiKey)
+	ClientsInstance.InitCoralogixClientSet(cxsdk.CoralogixGrpcEndpointFromRegion(region), apiKey, apiKey, "")
 	Expect(ClientsInstance.InitControllerRuntimeClient()).To(Succeed())
 	Expect(ClientsInstance.InitK8sClient()).To(Succeed())
 

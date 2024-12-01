@@ -147,6 +147,32 @@ rules:
   - patch
   - update
 - apiGroups:
+  - coralogix.com
+  resources:
+  - teams
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - teams/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - teams/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - monitoring.coreos.com
   resources:
   - alertmanagerconfigs

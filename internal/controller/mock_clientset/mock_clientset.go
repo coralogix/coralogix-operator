@@ -107,3 +107,17 @@ func (mr *MockClientSetInterfaceMockRecorder) RuleGroups() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RuleGroups", reflect.TypeOf((*MockClientSetInterface)(nil).RuleGroups))
 }
+
+// Teams mocks base method.
+func (m *MockClientSetInterface) Teams() clientset.TeamsClientInterface {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Teams")
+	ret0, _ := ret[0].(clientset.TeamsClientInterface)
+	return ret0
+}
+
+// Teams indicates an expected call of Teams.
+func (mr *MockClientSetInterfaceMockRecorder) Teams() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Teams", reflect.TypeOf((*MockClientSetInterface)(nil).Teams))
+}
