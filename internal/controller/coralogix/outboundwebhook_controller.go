@@ -20,7 +20,6 @@ import (
 	"strconv"
 
 	"github.com/go-logr/logr"
-	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -121,12 +120,12 @@ func (r *OutboundWebhookReconciler) create(ctx context.Context, log logr.Logger,
 		return fmt.Errorf("error to extract create-request out of the outbound-webhook -\n%v", webhook)
 	}
 
-	log.V(int(zapcore.DebugLevel)).Info(fmt.Sprintf("Creating outbound-webhook-\n%s", protojson.Format(createRequest)))
+	log.V(1).Info(fmt.Sprintf("Creating outbound-webhook-\n%s", protojson.Format(createRequest)))
 	createResponse, err := r.OutboundWebhooksClient.Create(ctx, createRequest)
 	if err != nil {
 		return fmt.Errorf("error to create remote outbound-webhook - %s\n%w", protojson.Format(createRequest), err)
 	}
-	log.V(int(zapcore.DebugLevel)).Info(fmt.Sprintf("outbound-webhook was created- %s", protojson.Format(createResponse)))
+	log.V(1).Info(fmt.Sprintf("outbound-webhook was created- %s", protojson.Format(createResponse)))
 
 	webhook.Status = coralogixv1alpha1.OutboundWebhookStatus{
 		ID: ptr.To(createResponse.Id.GetValue()),
@@ -139,12 +138,12 @@ func (r *OutboundWebhookReconciler) create(ctx context.Context, log logr.Logger,
 	}
 
 	readRequest := &cxsdk.GetOutgoingWebhookRequest{Id: createResponse.Id}
-	log.V(int(zapcore.DebugLevel)).Info(fmt.Sprintf("Getting outbound-webhook -\n%s", protojson.Format(readRequest)))
+	log.V(1).Info(fmt.Sprintf("Getting outbound-webhook -\n%s", protojson.Format(readRequest)))
 	readResponse, err := r.OutboundWebhooksClient.Get(ctx, readRequest)
 	if err != nil {
 		return fmt.Errorf("error to get outbound-webhook -\n%v", webhook)
 	}
-	log.V(int(zapcore.DebugLevel)).Info(fmt.Sprintf("outbound-webhook was read -\n%s", protojson.Format(readResponse)))
+	log.V(1).Info(fmt.Sprintf("outbound-webhook was read -\n%s", protojson.Format(readResponse)))
 
 	status, err := getOutboundWebhookStatus(readResponse.GetWebhook())
 	if err != nil {
@@ -185,7 +184,7 @@ func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger,
 		return fmt.Errorf("error to parse update outbound-webhook request -\n%v", webhook)
 	}
 
-	log.V(int(zapcore.DebugLevel)).Info(fmt.Sprintf("updating outbound-webhook\n%s", protojson.Format(updateReq)))
+	log.V(1).Info(fmt.Sprintf("updating outbound-webhook\n%s", protojson.Format(updateReq)))
 	_, err = r.OutboundWebhooksClient.Update(ctx, updateReq)
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
@@ -198,7 +197,7 @@ func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger,
 		return fmt.Errorf("error to update outbound-webhook -\n%v", webhook)
 	}
 
-	log.V(int(zapcore.DebugLevel)).Info("Getting outbound-webhook from remote", "id", webhook.Status.ID)
+	log.V(1).Info("Getting outbound-webhook from remote", "id", webhook.Status.ID)
 	remoteOutboundWebhook, err := r.OutboundWebhooksClient.Get(ctx,
 		&cxsdk.GetOutgoingWebhookRequest{
 			Id: utils.StringPointerToWrapperspbString(webhook.Status.ID),
@@ -207,7 +206,7 @@ func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger,
 	if err != nil {
 		return fmt.Errorf("error to get outbound-webhook -\n%v", webhook)
 	}
-	log.V(int(zapcore.DebugLevel)).Info(fmt.Sprintf("outbound-webhook was read\n%s", protojson.Format(remoteOutboundWebhook)))
+	log.V(1).Info(fmt.Sprintf("outbound-webhook was read\n%s", protojson.Format(remoteOutboundWebhook)))
 
 	status, err := getOutboundWebhookStatus(remoteOutboundWebhook.GetWebhook())
 	if err != nil {
@@ -235,12 +234,12 @@ func (r *OutboundWebhookReconciler) delete(ctx context.Context, log logr.Logger,
 }
 
 func (r *OutboundWebhookReconciler) deleteRemoteWebhook(ctx context.Context, log logr.Logger, webhookID *string) error {
-	log.V(int(zapcore.DebugLevel)).Info("Deleting outbound-webhook from remote", "id", webhookID)
+	log.V(1).Info("Deleting outbound-webhook from remote", "id", webhookID)
 	if _, err := r.OutboundWebhooksClient.Delete(ctx, &cxsdk.DeleteOutgoingWebhookRequest{Id: wrapperspb.String(*webhookID)}); err != nil && status.Code(err) != codes.NotFound {
-		log.V(int(zapcore.DebugLevel)).Error(err, "Error on deleting outbound-webhook", "id", webhookID)
+		log.V(1).Error(err, "Error on deleting outbound-webhook", "id", webhookID)
 		return fmt.Errorf("error to delete outbound-webhook -\n%v", webhookID)
 	}
-	log.V(int(zapcore.DebugLevel)).Info("outbound-webhook was deleted from remote", "id", webhookID)
+	log.V(1).Info("outbound-webhook was deleted from remote", "id", webhookID)
 
 	return nil
 }

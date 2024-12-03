@@ -118,7 +118,7 @@ func (r *AlertReconciler) update(ctx context.Context, log logr.Logger, alert *co
 	remoteUpdatedAlert, err := r.CoralogixClientSet.Alerts().UpdateAlert(ctx, alertRequest)
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
-			log.Info("alert not found on remote, recreating it")
+			log.V(1).Info("alert not found on remote, recreating it")
 			alert.Status = *coralogixv1alpha1.NewDefaultAlertStatus()
 			if err = r.Status().Update(ctx, alert); err != nil {
 				return fmt.Errorf("error on updating alert status: %w", err)
