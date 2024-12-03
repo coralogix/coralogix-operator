@@ -34,9 +34,9 @@ type Clients struct {
 	K8sClient   *kubernetes.Clientset
 }
 
-func (c *Clients) InitCoralogixClientSet(targetURL, teamsLevelAPIKey string, userLevelAPIKey string) {
+func (c *Clients) InitCoralogixClientSet(targetURL, teamsLevelAPIKey, userLevelAPIKey, orgLevelAPIKey string) {
 	if c.CxClientSet == nil {
-		c.CxClientSet = cxsdk.NewClientSet(targetURL, teamsLevelAPIKey, userLevelAPIKey)
+		c.CxClientSet = cxsdk.NewClientSet(targetURL, teamsLevelAPIKey, userLevelAPIKey, orgLevelAPIKey)
 	}
 }
 
