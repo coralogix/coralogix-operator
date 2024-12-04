@@ -59,7 +59,7 @@ vet: ## Run go vet against code.
 
 .PHONY: unit-tests
 unit-tests: manifests generate fmt vet envtest ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./internal/controller/ -ldflags $(LDFLAGS) -coverprofile cover.out
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./internal/controller/... -ldflags $(LDFLAGS) -coverprofile cover.out
 
 ##@ Documentation
 .PHONY: generate-api-docs
