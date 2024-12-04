@@ -148,7 +148,7 @@ func (r *ApiKeyReconciler) update(ctx context.Context, log logr.Logger, apiKey *
 	updateResponse, err := r.ApiKeysClient.Update(ctx, updateRequest)
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
-			log.Info("api-key not found on remote, removing id from status")
+			log.V(1).Info("api-key not found on remote, removing id from status")
 			apiKey.Status = coralogixv1alpha1.ApiKeyStatus{
 				Id: ptr.To(""),
 			}
@@ -170,7 +170,7 @@ func (r *ApiKeyReconciler) update(ctx context.Context, log logr.Logger, apiKey *
 	err = r.Client.Get(ctx, client.ObjectKey{Name: apiKey.Name + "-secret", Namespace: apiKey.Namespace}, existsSecret)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			log.Info("secret is not found, probably was deleted, recreating it")
+			log.V(1).Info("secret is not found, probably was deleted, recreating it")
 			if err := r.Client.Create(ctx, buildSecret(apiKey, getResponse.KeyInfo.GetValue())); err != nil {
 				return fmt.Errorf("error on recreating secret: %w", err)
 			}
@@ -181,7 +181,7 @@ func (r *ApiKeyReconciler) update(ctx context.Context, log logr.Logger, apiKey *
 
 	desiredSecretKeyValue := getResponse.KeyInfo.GetValue()
 	if string(existsSecret.Data["key-value"]) != desiredSecretKeyValue {
-		log.Info("updating secret", "secret", apiKey.Name+"-secret")
+		log.V(1).Info("updating secret", "secret", apiKey.Name+"-secret")
 		existsSecret.Data["key-value"] = []byte(desiredSecretKeyValue)
 		if err := r.Client.Update(ctx, existsSecret); err != nil {
 			return fmt.Errorf("error on updating secret: %w", err)
