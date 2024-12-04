@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -24,7 +25,7 @@ import (
 	"github.com/go-logr/logr"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"go.uber.org/zap/zapcore"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -67,7 +68,7 @@ func (r *PrometheusRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 
 	prometheusRule := &prometheus.PrometheusRule{}
 	if err := r.Get(ctx, req.NamespacedName, prometheusRule); err != nil {
-		if errors.IsNotFound(err) {
+		if k8serrors.IsNotFound(err) {
 			monitoring.PrometheusRuleInfoMetric.DeleteLabelValues(req.Name, req.Namespace)
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
@@ -114,7 +115,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleRecordingRuleToCxRecordi
 	}
 
 	if err := r.Client.Get(ctx, req.NamespacedName, recordingRuleGroupSet); err != nil {
-		if errors.IsNotFound(err) {
+		if k8serrors.IsNotFound(err) {
 			if err = r.Create(ctx, recordingRuleGroupSet); err != nil {
 				return fmt.Errorf("received an error while trying to create RecordingRuleGroupSet CRD: %w", err)
 			}
@@ -174,13 +175,14 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 	}
 
 	alertsToKeep := make(map[string]bool)
+	var errorsEncountered []error
 	for alertName, rules := range alertMap {
 		for i, rule := range rules {
 			alert := &coralogixv1alpha1.Alert{}
 			alertName := fmt.Sprintf("%s-%s-%d", prometheusRule.Name, alertName, i)
 			alertsToKeep[alertName] = true
 			if err := r.Client.Get(ctx, client.ObjectKey{Namespace: prometheusRule.Namespace, Name: alertName}, alert); err != nil {
-				if errors.IsNotFound(err) {
+				if k8serrors.IsNotFound(err) {
 					alert.Name = alertName
 					alert.Namespace = prometheusRule.Namespace
 					alert.Labels = map[string]string{"app.kubernetes.io/managed-by": prometheusRule.Name}
@@ -198,11 +200,12 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 						},
 					}
 					if err = r.Create(ctx, alert); err != nil {
-						return fmt.Errorf("received an error while trying to create Alert CRD: %w", err)
+						errorsEncountered = append(errorsEncountered, fmt.Errorf("error creating Alert CRD %s: %w", alertName, err))
 					}
 					continue
 				} else {
-					return fmt.Errorf("received an error while trying to get Alert CRD: %w", err)
+					errorsEncountered = append(errorsEncountered, fmt.Errorf("error getting Alert CRD %s: %w", alertName, err))
+					continue
 				}
 			}
 
@@ -251,7 +254,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 
 			if updated {
 				if err := r.Update(ctx, alert); err != nil {
-					return fmt.Errorf("received an error while trying to update Alert CRD: %w", err)
+					errorsEncountered = append(errorsEncountered, fmt.Errorf("error updating Alert CRD %s: %w", alertName, err))
 				}
 			}
 		}
@@ -265,9 +268,13 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 	for _, alert := range childAlerts.Items {
 		if !alertsToKeep[alert.Name] {
 			if err := r.Delete(ctx, &alert); err != nil {
-				return fmt.Errorf("received an error while trying to delete Alert CRD: %w", err)
+				errorsEncountered = append(errorsEncountered, fmt.Errorf("error deleting Alert CRD %s: %w", alert.Name, err))
 			}
 		}
+	}
+
+	if len(errorsEncountered) > 0 {
+		return errors.Join(errorsEncountered...)
 	}
 	return nil
 }
