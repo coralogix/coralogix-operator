@@ -1,6 +1,6 @@
 
 # Image URL to use all building/pushing image targets
-IMG ?= controller:latest
+IMG ?= coralogixrepo/coralogix-operator:latest
 # Enable Webhooks for the operator
 ENABLE_WEBHOOKS ?= false
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
@@ -113,34 +113,25 @@ endif
 .PHONY: install
 install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/crd | kubectl apply -f -
-	kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/master/example/prometheus-operator-crd-full/monitoring.coreos.com_prometheusrules.yaml
-	kubectl apply --server-side -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/jsonnet/prometheus-operator/alertmanagerconfigs-crd.json
-
 
 .PHONY: uninstall
 uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
 	$(KUSTOMIZE) build config/crd | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
 
+.PHONY: install-prometheus-crds
+install-prometheus-crds:
+	kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/master/example/prometheus-operator-crd-full/monitoring.coreos.com_prometheusrules.yaml
+	kubectl apply --server-side -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/jsonnet/prometheus-operator/alertmanagerconfigs-crd.json
+
+.PHONY: install-cert-manager
+install-cert-manager:
+		kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/$(CERT_MANAGER_VERSION)/cert-manager.yaml
+		kubectl wait --namespace cert-manager --for=condition=Available --timeout=300s deployments --all
+
 .PHONY: deploy
-deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
-	# Step 1: Set the image in the manager deployment
+deploy: manifests kustomize install-prometheus-crds install-cert-manager
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-
-	# Step 2: Export the ENABLE_WEBHOOKS variable to envsubst
-	export ENABLE_WEBHOOKS=$(ENABLE_WEBHOOKS)
-
-	# Step 3: Build and apply the configuration (including namespace) to the cluster
 	$(KUSTOMIZE) build config/default | envsubst | kubectl apply -f -
-
-	# Step 4: Wait for the namespace to be ready
-	NAMESPACE=$(kubectl get namespace -l app.kubernetes.io/instance=coralogix-operator-system -o=jsonpath='{.items[0].metadata.name}')
-	while ! kubectl get namespace $$NAMESPACE; do sleep 1; done
-
-	# Step 5: If webhooks are enabled, run the certificate generation script
-	@if [ "$(ENABLE_WEBHOOKS)" = "true" ]; then \
-		bash config/webhook/setup-webhook-and-certs.sh $$NAMESPACE ; \
-	fi
-
 
 .PHONY: undeploy
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
@@ -162,6 +153,7 @@ CRDOC ?= $(LOCALBIN)/crdoc
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.3.0
 CONTROLLER_TOOLS_VERSION ?= v0.15.0
+CERT_MANAGER_VERSION ?= v1.16.1
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize

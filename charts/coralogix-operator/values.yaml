@@ -86,9 +86,13 @@ kubeRbacProxy:
 # -- Coralogix operator container config
 coralogixOperator:
   # Set this is to true if Prometheus Operator is installed and
-  # PrometheusRule CRD is available in cluster.
+  # PrometheusRule and AlertmanagerConfig CRDs are available in cluster.
   prometheusRules: 
     enabled: true
+  # Set this is to true if you want to enable validation webhooks.
+  # It assumes you have cert-manager installed in your cluster.
+  webhooks:
+    enabled: false
   # --  Coralogix operator Image
   image:
     repository: coralogixrepo/coralogix-operator
