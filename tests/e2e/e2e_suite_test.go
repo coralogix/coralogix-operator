@@ -23,6 +23,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -56,14 +57,21 @@ var _ = BeforeSuite(func(ctx context.Context) {
 	}, metav1.CreateOptions{})
 	Expect(err).NotTo(HaveOccurred())
 
-	By("Validating that the controller-manager pod is running")
-	Eventually(func() corev1.PodPhase {
-		podList, err := k8sClient.CoreV1().
-			Pods("coralogix-operator-system").
-			List(ctx, metav1.ListOptions{LabelSelector: "control-plane=controller-manager"})
+	By("Validating that the operator deployment is available")
+	Eventually(func() bool {
+		depList, err := k8sClient.AppsV1().
+			Deployments("coralogix-operator-system").
+			List(ctx, metav1.ListOptions{})
 		Expect(err).NotTo(HaveOccurred())
-		return podList.Items[0].Status.Phase
-	}, time.Minute, time.Second).Should(Equal(corev1.PodRunning))
+
+		dep := depList.Items[0]
+		for _, condition := range dep.Status.Conditions {
+			if condition.Type == appsv1.DeploymentAvailable && condition.Status == corev1.ConditionTrue {
+				return true
+			}
+		}
+		return false
+	}, time.Minute, time.Second).Should(BeTrue())
 })
 
 var _ = AfterSuite(func(ctx context.Context) {
@@ -74,4 +82,7 @@ var _ = AfterSuite(func(ctx context.Context) {
 		_, err := k8sClient.CoreV1().Namespaces().Get(ctx, testNamespace, metav1.GetOptions{})
 		return errors.IsNotFound(err)
 	}, time.Minute, time.Second).Should(BeTrue())
+
+	By("Giving the operator some time to clean up")
+	time.Sleep(30 * time.Second)
 })

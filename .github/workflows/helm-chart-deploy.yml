@@ -7,7 +7,6 @@ on:
       - main
     paths:
       - charts/coralogix-operator/Chart.yaml
-      - charts/coralogix-operator/values.yaml
 
 env:
   CHART_VERSION: $(yq eval '.version' charts/coralogix-operator/Chart.yaml)
