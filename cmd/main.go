@@ -35,6 +35,8 @@ import (
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+
 	utils "github.com/coralogix/coralogix-operator/api"
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	controllers "github.com/coralogix/coralogix-operator/internal/controller"
@@ -214,7 +216,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&coralogixcontrollers.ApiKeyReconciler{
-		ApiKeysClient: clientset.NewClientSet(targetUrl, apiKey).ApiKeys(),
+		ApiKeysClient: *cxsdk.NewClientSet(targetUrl, apiKey, apiKey).APIKeys(),
 		Client:        mgr.GetClient(),
 		Scheme:        mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {

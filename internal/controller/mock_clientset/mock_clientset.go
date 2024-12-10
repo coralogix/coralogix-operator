@@ -52,20 +52,6 @@ func (mr *MockClientSetInterfaceMockRecorder) Alerts() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Alerts", reflect.TypeOf((*MockClientSetInterface)(nil).Alerts))
 }
 
-// ApiKeys mocks base method.
-func (m *MockClientSetInterface) ApiKeys() clientset.ApiKeysClientInterface {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ApiKeys")
-	ret0, _ := ret[0].(clientset.ApiKeysClientInterface)
-	return ret0
-}
-
-// ApiKeys indicates an expected call of ApiKeys.
-func (mr *MockClientSetInterfaceMockRecorder) ApiKeys() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ApiKeys", reflect.TypeOf((*MockClientSetInterface)(nil).ApiKeys))
-}
-
 // OutboundWebhooks mocks base method.
 func (m *MockClientSetInterface) OutboundWebhooks() clientset.OutboundWebhooksClientInterface {
 	m.ctrl.T.Helper()
