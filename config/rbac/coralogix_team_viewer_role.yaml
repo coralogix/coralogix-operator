@@ -1,0 +1,23 @@
+# permissions for end users to view teams.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: coralogix-team-viewer-role
+rules:
+- apiGroups:
+  - coralogix.com
+  resources:
+  - teams
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - teams/status
+  verbs:
+  - get

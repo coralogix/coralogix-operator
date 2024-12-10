@@ -8,8 +8,10 @@ github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UF
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
-github.com/coralogix/coralogix-management-sdk v0.2.2-0.20241127142407-ab411df2f4ad h1:9YlOjPPem5CSxR6H+WxZH8KjsHD3kJTvkpr0fLomPsI=
-github.com/coralogix/coralogix-management-sdk v0.2.2-0.20241127142407-ab411df2f4ad/go.mod h1:uzwDFELXs6WhN980S+vQRsAOZxnmpu3kAg1NRHIslLA=
+github.com/coralogix/coralogix-management-sdk v0.2.2-0.20241201094133-6c56276803be h1:qdUhIAPMljjZy4ejXFL0d/puDmTj5DwqLOdbASLIh+k=
+github.com/coralogix/coralogix-management-sdk v0.2.2-0.20241201094133-6c56276803be/go.mod h1:uzwDFELXs6WhN980S+vQRsAOZxnmpu3kAg1NRHIslLA=
+github.com/coralogix/coralogix-management-sdk v0.2.2-0.20241201133402-1c98265694a1 h1:xG3OyVXxjjQwPsmJ8CU6uxLaWGnoTX+0//i6a9hqSWs=
+github.com/coralogix/coralogix-management-sdk v0.2.2-0.20241201133402-1c98265694a1/go.mod h1:uzwDFELXs6WhN980S+vQRsAOZxnmpu3kAg1NRHIslLA=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
