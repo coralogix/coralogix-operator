@@ -19,7 +19,6 @@ import (
 	"fmt"
 
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/ptr"
@@ -134,7 +133,7 @@ func (r *RecordingRuleGroupSetReconciler) update(ctx context.Context, recordingR
 	})
 
 	if err != nil {
-		if status.Code(err) == codes.NotFound {
+		if cxsdk.Code(err) == codes.NotFound {
 			recordingRuleGroupSet.Status.ID = nil
 			if err := r.Status().Update(ctx, recordingRuleGroupSet); err != nil {
 				return fmt.Errorf("failed to update recording rule groupSet status: %w", err)
@@ -171,7 +170,7 @@ func (r *RecordingRuleGroupSetReconciler) delete(ctx context.Context, recordingR
 
 func (r *RecordingRuleGroupSetReconciler) deleteRemoteRecordingRuleGroupSet(ctx context.Context, id *string) error {
 	if _, err := r.CoralogixClientSet.RecordingRuleGroups().Delete(ctx, &cxsdk.DeleteRuleGroupSetRequest{
-		Id: *id}); err != nil && status.Code(err) != codes.NotFound {
+		Id: *id}); err != nil && cxsdk.Code(err) != codes.NotFound {
 		return fmt.Errorf("failed to delete recording rule groupSet: %w", err)
 	}
 	return nil

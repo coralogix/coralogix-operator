@@ -21,7 +21,6 @@ import (
 
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -187,7 +186,7 @@ func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger,
 	log.V(1).Info(fmt.Sprintf("updating outbound-webhook\n%s", protojson.Format(updateReq)))
 	_, err = r.OutboundWebhooksClient.Update(ctx, updateReq)
 	if err != nil {
-		if status.Code(err) == codes.NotFound {
+		if cxsdk.Code(err) == codes.NotFound {
 			webhook.Status = coralogixv1alpha1.OutboundWebhookStatus{}
 			if err = r.Status().Update(ctx, webhook); err != nil {
 				return fmt.Errorf("error to update outbound-webhook status -\n%v", webhook)
@@ -235,7 +234,7 @@ func (r *OutboundWebhookReconciler) delete(ctx context.Context, log logr.Logger,
 
 func (r *OutboundWebhookReconciler) deleteRemoteWebhook(ctx context.Context, log logr.Logger, webhookID *string) error {
 	log.V(1).Info("Deleting outbound-webhook from remote", "id", webhookID)
-	if _, err := r.OutboundWebhooksClient.Delete(ctx, &cxsdk.DeleteOutgoingWebhookRequest{Id: wrapperspb.String(*webhookID)}); err != nil && status.Code(err) != codes.NotFound {
+	if _, err := r.OutboundWebhooksClient.Delete(ctx, &cxsdk.DeleteOutgoingWebhookRequest{Id: wrapperspb.String(*webhookID)}); err != nil && cxsdk.Code(err) != codes.NotFound {
 		log.V(1).Error(err, "Error on deleting outbound-webhook", "id", webhookID)
 		return fmt.Errorf("error to delete outbound-webhook -\n%v", webhookID)
 	}

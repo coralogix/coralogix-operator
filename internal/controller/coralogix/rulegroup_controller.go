@@ -21,7 +21,6 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/golang/protobuf/jsonpb"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -129,7 +128,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	} else {
 		_, err := rulesGroupsClient.Get(ctx, &cxsdk.GetRuleGroupRequest{GroupId: *id})
 		switch {
-		case status.Code(err) == codes.NotFound:
+		case cxsdk.Code(err) == codes.NotFound:
 			log.V(1).Info("ruleGroup doesn't exist in Coralogix backend")
 			notFound = true
 		case err != nil:
@@ -195,7 +194,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 func (r *RuleGroupReconciler) deleteRemoteRuleGroup(ctx context.Context, log logr.Logger, ruleGroupId *string) error {
 	deleteRuleGroupReq := &cxsdk.DeleteRuleGroupRequest{GroupId: *ruleGroupId}
 	log.V(1).Info("Deleting Rule-Group", "Rule-Group ID", ruleGroupId)
-	if _, err := r.CoralogixClientSet.RuleGroups().Delete(ctx, deleteRuleGroupReq); err != nil && status.Code(err) != codes.NotFound {
+	if _, err := r.CoralogixClientSet.RuleGroups().Delete(ctx, deleteRuleGroupReq); err != nil && cxsdk.Code(err) != codes.NotFound {
 		log.V(1).Error(err, "Received an error while Deleting a Rule-Group", "Rule-Group ID", ruleGroupId)
 		return fmt.Errorf("error on deleting Rule-Group: %w", err)
 	}

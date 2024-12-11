@@ -22,7 +22,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -105,7 +104,7 @@ var _ = Describe("OutboundWebhook", Ordered, func() {
 		By("Verifying OutboundWebhook is deleted from Coralogix backend")
 		Eventually(func() codes.Code {
 			_, err := OutboundWebhooksClient.Get(ctx, &cxsdk.GetOutgoingWebhookRequest{Id: wrapperspb.String(outboundWebhookID)})
-			return status.Code(err)
+			return cxsdk.Code(err)
 		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
 	})
 

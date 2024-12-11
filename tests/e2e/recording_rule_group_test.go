@@ -23,7 +23,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -113,7 +112,7 @@ var _ = Describe("RecordingRuleGroupSet", Ordered, func() {
 		By("Verifying RecordingRuleGroupSet is deleted from Coralogix backend")
 		Eventually(func() codes.Code {
 			_, err := recordingRuleGroupSetsClient.Get(ctx, &cxsdk.GetRuleGroupSetRequest{Id: recordingRuleGroupSetID})
-			return status.Code(err)
+			return cxsdk.Code(err)
 		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
 	})
 })

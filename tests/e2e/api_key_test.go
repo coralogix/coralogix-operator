@@ -22,7 +22,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -120,7 +119,7 @@ var _ = Describe("ApiKey", Ordered, func() {
 		By("Verifying ApiKey is deleted from Coralogix backend")
 		Eventually(func() codes.Code {
 			_, err := ApiKeysClient.Get(ctx, &cxsdk.GetAPIKeyRequest{KeyId: apiKeyID})
-			return status.Code(err)
+			return cxsdk.Code(err)
 		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
 	})
 
