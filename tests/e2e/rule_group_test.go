@@ -22,7 +22,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -115,7 +114,7 @@ var _ = Describe("RuleGroup", Ordered, func() {
 		By("Verifying RuleGroup is deleted from Coralogix backend")
 		Eventually(func() codes.Code {
 			_, err := ruleGroupsClient.Get(ctx, &cxsdk.GetRuleGroupRequest{GroupId: ruleGroupID})
-			return status.Code(err)
+			return cxsdk.Code(err)
 		}).Should(Equal(codes.NotFound))
 	})
 

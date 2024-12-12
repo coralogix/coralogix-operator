@@ -20,7 +20,6 @@ import (
 
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -147,7 +146,7 @@ func (r *ApiKeyReconciler) update(ctx context.Context, log logr.Logger, apiKey *
 	log.V(1).Info("Updating remote api-key", "api-key", protojson.Format(updateRequest))
 	updateResponse, err := r.ApiKeysClient.Update(ctx, updateRequest)
 	if err != nil {
-		if status.Code(err) == codes.NotFound {
+		if cxsdk.Code(err) == codes.NotFound {
 			log.V(1).Info("api-key not found on remote, removing id from status")
 			apiKey.Status = coralogixv1alpha1.ApiKeyStatus{
 				Id: ptr.To(""),
@@ -226,7 +225,7 @@ func buildSecret(apiKey *coralogixv1alpha1.ApiKey, keyValue string) *corev1.Secr
 
 func (r *ApiKeyReconciler) deleteRemoteApiKey(ctx context.Context, log logr.Logger, apiKeyId *string) error {
 	log.V(1).Info("Deleting api-key from remote", "id", apiKeyId)
-	if _, err := r.ApiKeysClient.Delete(ctx, &cxsdk.DeleteAPIKeyRequest{KeyId: *apiKeyId}); err != nil && status.Code(err) != codes.NotFound {
+	if _, err := r.ApiKeysClient.Delete(ctx, &cxsdk.DeleteAPIKeyRequest{KeyId: *apiKeyId}); err != nil && cxsdk.Code(err) != codes.NotFound {
 		log.V(1).Error(err, "Error on deleting remote api-key", "id", apiKeyId)
 		return fmt.Errorf("error to delete remote api-key -\n%v", apiKeyId)
 	}
