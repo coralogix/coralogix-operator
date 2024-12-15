@@ -1,0 +1,28 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Connector
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: slack-sample
+spec:
+  name: IAC testing
+  description: This is the connector to use for Notification Center testing.
+  connectorType:
+    slack:
+      general:
+        rawConfig:
+          integrationId: slack
+          channel: general
+          fallbackChannel: fallback_general
+        structuredConfig:
+          integrationId: slack
+          channel: general
+          fallbackChannel: fallback_general
+      overrides:
+        - entityType: alerts
+          structuredConfig:
+            channel: override
+          rawConfig:
+            channel: override
+
