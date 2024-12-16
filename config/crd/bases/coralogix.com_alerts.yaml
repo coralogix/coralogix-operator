@@ -969,6 +969,169 @@ spec:
               alertType:
                 properties:
                   flow:
+                    properties:
+                      enforceSuppression:
+                        type: boolean
+                      stages:
+                        items:
+                          properties:
+                            flowStagesType:
+                              properties:
+                                groups:
+                                  items:
+                                    properties:
+                                      alertDefs:
+                                        items:
+                                          properties:
+                                            id:
+                                              type: string
+                                            not:
+                                              type: boolean
+                                          required:
+                                          - id
+                                          - not
+                                          type: object
+                                        type: array
+                                      alertsOp:
+                                        enum:
+                                        - unspecified
+                                        - and
+                                        - or
+                                        type: string
+                                      nextOp:
+                                        enum:
+                                        - unspecified
+                                        - and
+                                        - or
+                                        type: string
+                                    required:
+                                    - alertDefs
+                                    - alertsOp
+                                    - nextOp
+                                    type: object
+                                  type: array
+                              required:
+                              - groups
+                              type: object
+                            timeframeMs:
+                              format: int64
+                              type: integer
+                            timeframeType:
+                              enum:
+                              - unspecified
+                              - upTo
+                              type: string
+                          required:
+                          - flowStagesType
+                          - timeframeMs
+                          - timeframeType
+                          type: object
+                        type: array
+                    required:
+                    - enforceSuppression
+                    - stages
+                    type: object
+                  logsAnomaly:
+                    properties:
+                      logsFilter:
+                        properties:
+                          filterType:
+                            properties:
+                              simpleFilter:
+                                properties:
+                                  labelFilters:
+                                    properties:
+                                      applicationName:
+                                        items:
+                                          properties:
+                                            operation:
+                                              enum:
+                                              - or
+                                              - includes
+                                              - endsWith
+                                              - startsWith
+                                              type: string
+                                            value:
+                                              minLength: 0
+                                              type: string
+                                          required:
+                                          - operation
+                                          - value
+                                          type: object
+                                        type: array
+                                      severity:
+                                        items:
+                                          enum:
+                                          - debug
+                                          - info
+                                          - warning
+                                          - error
+                                          - critical
+                                          type: string
+                                        type: array
+                                      subsystemName:
+                                        items:
+                                          properties:
+                                            operation:
+                                              enum:
+                                              - or
+                                              - includes
+                                              - endsWith
+                                              - startsWith
+                                              type: string
+                                            value:
+                                              minLength: 0
+                                              type: string
+                                          required:
+                                          - operation
+                                          - value
+                                          type: object
+                                        type: array
+                                    type: object
+                                  luceneQuery:
+                                    type: string
+                                type: object
+                            type: object
+                        type: object
+                      notificationPayloadFilter:
+                        items:
+                          type: string
+                        type: array
+                      rules:
+                        items:
+                          properties:
+                            condition:
+                              properties:
+                                minimumThreshold:
+                                  anyOf:
+                                  - type: integer
+                                  - type: string
+                                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                  x-kubernetes-int-or-string: true
+                                timeWindow:
+                                  properties:
+                                    specificValue:
+                                      enum:
+                                      - 5m
+                                      - 10m
+                                      - 15m
+                                      - 30m
+                                      - 1h
+                                      - 2h
+                                      - 6h
+                                      - 12h
+                                      - 24h
+                                      - 36h
+                                      type: string
+                                  type: object
+                              required:
+                              - minimumThreshold
+                              - timeWindow
+                              type: object
+                          required:
+                          - condition
+                          type: object
+                        type: array
                     type: object
                   logsImmediate:
                     properties:
@@ -1038,8 +1201,289 @@ spec:
                         type: array
                     type: object
                   logsNewValue:
+                    properties:
+                      logsFilter:
+                        properties:
+                          filterType:
+                            properties:
+                              simpleFilter:
+                                properties:
+                                  labelFilters:
+                                    properties:
+                                      applicationName:
+                                        items:
+                                          properties:
+                                            operation:
+                                              enum:
+                                              - or
+                                              - includes
+                                              - endsWith
+                                              - startsWith
+                                              type: string
+                                            value:
+                                              minLength: 0
+                                              type: string
+                                          required:
+                                          - operation
+                                          - value
+                                          type: object
+                                        type: array
+                                      severity:
+                                        items:
+                                          enum:
+                                          - debug
+                                          - info
+                                          - warning
+                                          - error
+                                          - critical
+                                          type: string
+                                        type: array
+                                      subsystemName:
+                                        items:
+                                          properties:
+                                            operation:
+                                              enum:
+                                              - or
+                                              - includes
+                                              - endsWith
+                                              - startsWith
+                                              type: string
+                                            value:
+                                              minLength: 0
+                                              type: string
+                                          required:
+                                          - operation
+                                          - value
+                                          type: object
+                                        type: array
+                                    type: object
+                                  luceneQuery:
+                                    type: string
+                                type: object
+                            type: object
+                        type: object
+                      notificationPayloadFilter:
+                        items:
+                          type: string
+                        type: array
+                      rules:
+                        items:
+                          properties:
+                            condition:
+                              properties:
+                                keypathToTrack:
+                                  type: string
+                                timeWindow:
+                                  properties:
+                                    specificValue:
+                                      enum:
+                                      - 12h
+                                      - 24h
+                                      - 48h
+                                      - 72h
+                                      - 1w
+                                      - 1mo
+                                      - 2mo
+                                      - 3mo
+                                      type: string
+                                  type: object
+                              required:
+                              - keypathToTrack
+                              - timeWindow
+                              type: object
+                          required:
+                          - condition
+                          type: object
+                        type: array
+                    required:
+                    - logsFilter
+                    - notificationPayloadFilter
+                    - rules
                     type: object
                   logsRatioThreshold:
+                    properties:
+                      denominator:
+                        properties:
+                          filterType:
+                            properties:
+                              simpleFilter:
+                                properties:
+                                  labelFilters:
+                                    properties:
+                                      applicationName:
+                                        items:
+                                          properties:
+                                            operation:
+                                              enum:
+                                              - or
+                                              - includes
+                                              - endsWith
+                                              - startsWith
+                                              type: string
+                                            value:
+                                              minLength: 0
+                                              type: string
+                                          required:
+                                          - operation
+                                          - value
+                                          type: object
+                                        type: array
+                                      severity:
+                                        items:
+                                          enum:
+                                          - debug
+                                          - info
+                                          - warning
+                                          - error
+                                          - critical
+                                          type: string
+                                        type: array
+                                      subsystemName:
+                                        items:
+                                          properties:
+                                            operation:
+                                              enum:
+                                              - or
+                                              - includes
+                                              - endsWith
+                                              - startsWith
+                                              type: string
+                                            value:
+                                              minLength: 0
+                                              type: string
+                                          required:
+                                          - operation
+                                          - value
+                                          type: object
+                                        type: array
+                                    type: object
+                                  luceneQuery:
+                                    type: string
+                                type: object
+                            type: object
+                        type: object
+                      denominatorAlias:
+                        type: string
+                      numerator:
+                        properties:
+                          filterType:
+                            properties:
+                              simpleFilter:
+                                properties:
+                                  labelFilters:
+                                    properties:
+                                      applicationName:
+                                        items:
+                                          properties:
+                                            operation:
+                                              enum:
+                                              - or
+                                              - includes
+                                              - endsWith
+                                              - startsWith
+                                              type: string
+                                            value:
+                                              minLength: 0
+                                              type: string
+                                          required:
+                                          - operation
+                                          - value
+                                          type: object
+                                        type: array
+                                      severity:
+                                        items:
+                                          enum:
+                                          - debug
+                                          - info
+                                          - warning
+                                          - error
+                                          - critical
+                                          type: string
+                                        type: array
+                                      subsystemName:
+                                        items:
+                                          properties:
+                                            operation:
+                                              enum:
+                                              - or
+                                              - includes
+                                              - endsWith
+                                              - startsWith
+                                              type: string
+                                            value:
+                                              minLength: 0
+                                              type: string
+                                          required:
+                                          - operation
+                                          - value
+                                          type: object
+                                        type: array
+                                    type: object
+                                  luceneQuery:
+                                    type: string
+                                type: object
+                            type: object
+                        type: object
+                      numeratorAlias:
+                        type: string
+                      rules:
+                        items:
+                          properties:
+                            condition:
+                              properties:
+                                conditionType:
+                                  enum:
+                                  - moreThan
+                                  - lessThan
+                                  type: string
+                                threshold:
+                                  anyOf:
+                                  - type: integer
+                                  - type: string
+                                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                  x-kubernetes-int-or-string: true
+                                timeWindow:
+                                  enum:
+                                  - 5m
+                                  - 10m
+                                  - 15m
+                                  - 30m
+                                  - 1h
+                                  - 2h
+                                  - 4h
+                                  - 6h
+                                  - 12h
+                                  - 24h
+                                  - 36h
+                                  type: string
+                              required:
+                              - conditionType
+                              - threshold
+                              - timeWindow
+                              type: object
+                            override:
+                              properties:
+                                priority:
+                                  enum:
+                                  - p1
+                                  - p2
+                                  - p3
+                                  - p4
+                                  type: string
+                              required:
+                              - priority
+                              type: object
+                          required:
+                          - condition
+                          - override
+                          type: object
+                        type: array
+                    required:
+                    - denominator
+                    - denominatorAlias
+                    - numerator
+                    - numeratorAlias
+                    - rules
                     type: object
                   logsThreshold:
                     properties:
@@ -1117,29 +1561,48 @@ spec:
                                   - moreThan
                                   - lessThan
                                   type: string
-                                logsTimeWindow:
-                                  enum:
-                                  - 5m
-                                  - 10m
-                                  - 15m
-                                  - 30m
-                                  - 1h
-                                  - 2h
-                                  - 6h
-                                  - 12h
-                                  - 24h
-                                  - 36h
-                                  type: string
                                 threshold:
-                                  pattern: ^-?\d+(\.\d+)?$
-                                  type: string
+                                  anyOf:
+                                  - type: integer
+                                  - type: string
+                                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                  x-kubernetes-int-or-string: true
+                                timeWindow:
+                                  properties:
+                                    specificValue:
+                                      enum:
+                                      - 5m
+                                      - 10m
+                                      - 15m
+                                      - 30m
+                                      - 1h
+                                      - 2h
+                                      - 6h
+                                      - 12h
+                                      - 24h
+                                      - 36h
+                                      type: string
+                                  type: object
                               required:
                               - logsThresholdConditionType
-                              - logsTimeWindow
                               - threshold
+                              - timeWindow
+                              type: object
+                            override:
+                              properties:
+                                priority:
+                                  enum:
+                                  - p1
+                                  - p2
+                                  - p3
+                                  - p4
+                                  type: string
+                              required:
+                              - priority
                               type: object
                           required:
                           - condition
+                          - override
                           type: object
                         type: array
                       undetectedValuesManagement:
@@ -1165,16 +1628,581 @@ spec:
                         type: object
                     type: object
                   logsTimeRelativeThreshold:
+                    properties:
+                      ignoreInfinity:
+                        type: boolean
+                      logsFilter:
+                        properties:
+                          filterType:
+                            properties:
+                              simpleFilter:
+                                properties:
+                                  labelFilters:
+                                    properties:
+                                      applicationName:
+                                        items:
+                                          properties:
+                                            operation:
+                                              enum:
+                                              - or
+                                              - includes
+                                              - endsWith
+                                              - startsWith
+                                              type: string
+                                            value:
+                                              minLength: 0
+                                              type: string
+                                          required:
+                                          - operation
+                                          - value
+                                          type: object
+                                        type: array
+                                      severity:
+                                        items:
+                                          enum:
+                                          - debug
+                                          - info
+                                          - warning
+                                          - error
+                                          - critical
+                                          type: string
+                                        type: array
+                                      subsystemName:
+                                        items:
+                                          properties:
+                                            operation:
+                                              enum:
+                                              - or
+                                              - includes
+                                              - endsWith
+                                              - startsWith
+                                              type: string
+                                            value:
+                                              minLength: 0
+                                              type: string
+                                          required:
+                                          - operation
+                                          - value
+                                          type: object
+                                        type: array
+                                    type: object
+                                  luceneQuery:
+                                    type: string
+                                type: object
+                            type: object
+                        type: object
+                      notificationPayloadFilter:
+                        items:
+                          type: string
+                        type: array
+                      rules:
+                        items:
+                          properties:
+                            condition:
+                              properties:
+                                comparedTo:
+                                  enum:
+                                  - previousHour
+                                  - sameHourYesterday
+                                  - sameHourLastWeek
+                                  - yesterday
+                                  - sameDayLastWeek
+                                  - sameDayLastMonth
+                                  type: string
+                                conditionType:
+                                  enum:
+                                  - moreThan
+                                  - lessThan
+                                  type: string
+                                threshold:
+                                  anyOf:
+                                  - type: integer
+                                  - type: string
+                                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                  x-kubernetes-int-or-string: true
+                              required:
+                              - comparedTo
+                              - conditionType
+                              - threshold
+                              type: object
+                            override:
+                              properties:
+                                priority:
+                                  enum:
+                                  - p1
+                                  - p2
+                                  - p3
+                                  - p4
+                                  type: string
+                              required:
+                              - priority
+                              type: object
+                          required:
+                          - condition
+                          - override
+                          type: object
+                        type: array
+                      undetectedValuesManagement:
+                        properties:
+                          autoRetireTimeframe:
+                            default: never
+                            enum:
+                            - never
+                            - 5m
+                            - 10m
+                            - 1h
+                            - 2h
+                            - 6h
+                            - 12h
+                            - 24h
+                            type: string
+                          triggerUndetectedValues:
+                            default: false
+                            type: boolean
+                        required:
+                        - autoRetireTimeframe
+                        - triggerUndetectedValues
+                        type: object
+                    required:
+                    - ignoreInfinity
+                    - logsFilter
+                    - notificationPayloadFilter
+                    - rules
                     type: object
                   logsUniqueCount:
+                    properties:
+                      logsFilter:
+                        properties:
+                          filterType:
+                            properties:
+                              simpleFilter:
+                                properties:
+                                  labelFilters:
+                                    properties:
+                                      applicationName:
+                                        items:
+                                          properties:
+                                            operation:
+                                              enum:
+                                              - or
+                                              - includes
+                                              - endsWith
+                                              - startsWith
+                                              type: string
+                                            value:
+                                              minLength: 0
+                                              type: string
+                                          required:
+                                          - operation
+                                          - value
+                                          type: object
+                                        type: array
+                                      severity:
+                                        items:
+                                          enum:
+                                          - debug
+                                          - info
+                                          - warning
+                                          - error
+                                          - critical
+                                          type: string
+                                        type: array
+                                      subsystemName:
+                                        items:
+                                          properties:
+                                            operation:
+                                              enum:
+                                              - or
+                                              - includes
+                                              - endsWith
+                                              - startsWith
+                                              type: string
+                                            value:
+                                              minLength: 0
+                                              type: string
+                                          required:
+                                          - operation
+                                          - value
+                                          type: object
+                                        type: array
+                                    type: object
+                                  luceneQuery:
+                                    type: string
+                                type: object
+                            type: object
+                        type: object
+                      maxUniqueCountPerGroupByKey:
+                        format: int64
+                        type: integer
+                      notificationPayloadFilter:
+                        items:
+                          type: string
+                        type: array
+                      rules:
+                        items:
+                          properties:
+                            condition:
+                              properties:
+                                threshold:
+                                  format: int64
+                                  type: integer
+                                timeWindow:
+                                  properties:
+                                    specificValue:
+                                      enum:
+                                      - 5m
+                                      - 10m
+                                      - 15m
+                                      - 30m
+                                      - 1h
+                                      - 2h
+                                      - 6h
+                                      - 12h
+                                      - 24h
+                                      - 36h
+                                      type: string
+                                  required:
+                                  - specificValue
+                                  type: object
+                              required:
+                              - threshold
+                              - timeWindow
+                              type: object
+                          required:
+                          - condition
+                          type: object
+                        type: array
+                      uniqueCountKeypath:
+                        type: string
+                    required:
+                    - logsFilter
+                    - maxUniqueCountPerGroupByKey
+                    - notificationPayloadFilter
+                    - rules
+                    - uniqueCountKeypath
                     type: object
-                  logsUnusual:
+                  metricAnomaly:
+                    properties:
+                      metricFilter:
+                        type: object
+                      rules:
+                        items:
+                          properties:
+                            condition:
+                              properties:
+                                conditionType:
+                                  type: string
+                                forOverPct:
+                                  format: int32
+                                  type: integer
+                                minNonNullValuesPct:
+                                  format: int32
+                                  type: integer
+                                ofTheLast:
+                                  properties:
+                                    specificValue:
+                                      enum:
+                                      - 1m
+                                      - 5m
+                                      - 10m
+                                      - 15m
+                                      - 20m
+                                      - 30m
+                                      - 1h
+                                      - 2h
+                                      - 4h
+                                      - 6h
+                                      - 12h
+                                      - 24h
+                                      - 36h
+                                      type: string
+                                  type: object
+                                threshold:
+                                  anyOf:
+                                  - type: integer
+                                  - type: string
+                                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                  x-kubernetes-int-or-string: true
+                              required:
+                              - conditionType
+                              - forOverPct
+                              - minNonNullValuesPct
+                              - ofTheLast
+                              - threshold
+                              type: object
+                          required:
+                          - condition
+                          type: object
+                        type: array
+                    required:
+                    - metricFilter
+                    - rules
                     type: object
                   metricThreshold:
-                    type: object
-                  metricUnusual:
+                    properties:
+                      metricFilter:
+                        type: object
+                      missingValues:
+                        properties:
+                          minNonNullValuesPct:
+                            format: int32
+                            type: integer
+                          replaceWithZero:
+                            type: boolean
+                        type: object
+                      rules:
+                        items:
+                          properties:
+                            condition:
+                              properties:
+                                conditionType:
+                                  enum:
+                                  - moreThan
+                                  - lessThan
+                                  type: string
+                                forOverPct:
+                                  format: int32
+                                  type: integer
+                                ofTheLast:
+                                  properties:
+                                    specificValue:
+                                      enum:
+                                      - 1m
+                                      - 5m
+                                      - 10m
+                                      - 15m
+                                      - 20m
+                                      - 30m
+                                      - 1h
+                                      - 2h
+                                      - 4h
+                                      - 6h
+                                      - 12h
+                                      - 24h
+                                      - 36h
+                                      type: string
+                                  type: object
+                                threshold:
+                                  anyOf:
+                                  - type: integer
+                                  - type: string
+                                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                  x-kubernetes-int-or-string: true
+                              required:
+                              - conditionType
+                              - forOverPct
+                              - ofTheLast
+                              - threshold
+                              type: object
+                            override:
+                              properties:
+                                priority:
+                                  enum:
+                                  - p1
+                                  - p2
+                                  - p3
+                                  - p4
+                                  type: string
+                              required:
+                              - priority
+                              type: object
+                          required:
+                          - condition
+                          - override
+                          type: object
+                        type: array
+                      undetectedValuesManagement:
+                        properties:
+                          autoRetireTimeframe:
+                            default: never
+                            enum:
+                            - never
+                            - 5m
+                            - 10m
+                            - 1h
+                            - 2h
+                            - 6h
+                            - 12h
+                            - 24h
+                            type: string
+                          triggerUndetectedValues:
+                            default: false
+                            type: boolean
+                        required:
+                        - autoRetireTimeframe
+                        - triggerUndetectedValues
+                        type: object
+                    required:
+                    - metricFilter
+                    - missingValues
+                    - rules
                     type: object
                   tracingThreshold:
+                    properties:
+                      notificationPayloadFilter:
+                        items:
+                          type: string
+                        type: array
+                      rules:
+                        items:
+                          properties:
+                            condition:
+                              properties:
+                                spanAmount:
+                                  anyOf:
+                                  - type: integer
+                                  - type: string
+                                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                  x-kubernetes-int-or-string: true
+                                timeWindow:
+                                  properties:
+                                    specificValue:
+                                      enum:
+                                      - 5m
+                                      - 10m
+                                      - 15m
+                                      - 20m
+                                      - 30m
+                                      - 1h
+                                      - 2h
+                                      - 4h
+                                      - 6h
+                                      - 12h
+                                      - 24h
+                                      - 36h
+                                      type: string
+                                  type: object
+                              required:
+                              - spanAmount
+                              - timeWindow
+                              type: object
+                          required:
+                          - condition
+                          type: object
+                        type: array
+                      tracingFilter:
+                        properties:
+                          tracingFilterType:
+                            properties:
+                              simple:
+                                properties:
+                                  latencyThresholdMs:
+                                    format: int64
+                                    type: integer
+                                  tracingLabelFilters:
+                                    properties:
+                                      applicationName:
+                                        items:
+                                          properties:
+                                            operation:
+                                              enum:
+                                              - or
+                                              - includes
+                                              - endsWith
+                                              - startsWith
+                                              - isNot
+                                              type: string
+                                            values:
+                                              items:
+                                                type: string
+                                              type: array
+                                          required:
+                                          - operation
+                                          - values
+                                          type: object
+                                        type: array
+                                      operationName:
+                                        items:
+                                          properties:
+                                            operation:
+                                              enum:
+                                              - or
+                                              - includes
+                                              - endsWith
+                                              - startsWith
+                                              - isNot
+                                              type: string
+                                            values:
+                                              items:
+                                                type: string
+                                              type: array
+                                          required:
+                                          - operation
+                                          - values
+                                          type: object
+                                        type: array
+                                      serviceName:
+                                        items:
+                                          properties:
+                                            operation:
+                                              enum:
+                                              - or
+                                              - includes
+                                              - endsWith
+                                              - startsWith
+                                              - isNot
+                                              type: string
+                                            values:
+                                              items:
+                                                type: string
+                                              type: array
+                                          required:
+                                          - operation
+                                          - values
+                                          type: object
+                                        type: array
+                                      spanFields:
+                                        items:
+                                          properties:
+                                            filterType:
+                                              properties:
+                                                operation:
+                                                  enum:
+                                                  - or
+                                                  - includes
+                                                  - endsWith
+                                                  - startsWith
+                                                  - isNot
+                                                  type: string
+                                                values:
+                                                  items:
+                                                    type: string
+                                                  type: array
+                                              required:
+                                              - operation
+                                              - values
+                                              type: object
+                                            key:
+                                              type: string
+                                          required:
+                                          - filterType
+                                          - key
+                                          type: object
+                                        type: array
+                                      subsystemName:
+                                        items:
+                                          properties:
+                                            operation:
+                                              enum:
+                                              - or
+                                              - includes
+                                              - endsWith
+                                              - startsWith
+                                              - isNot
+                                              type: string
+                                            values:
+                                              items:
+                                                type: string
+                                              type: array
+                                          required:
+                                          - operation
+                                          - values
+                                          type: object
+                                        type: array
+                                    type: object
+                                type: object
+                            type: object
+                        type: object
                     type: object
                 type: object
               description:
@@ -1182,7 +2210,11 @@ spec:
               enabled:
                 default: true
                 type: boolean
-              groupBy:
+              entityLabels:
+                additionalProperties:
+                  type: string
+                type: object
+              groupByKeys:
                 items:
                   type: string
                 type: array
@@ -1201,66 +2233,46 @@ spec:
                         type: integer
                     type: object
                 type: object
-              labels:
-                additionalProperties:
-                  type: string
-                type: object
               name:
                 minLength: 0
                 type: string
               notificationGroup:
                 properties:
-                  groupByFields:
+                  groupByKeys:
                     items:
                       type: string
                     type: array
-                  targets:
-                    properties:
-                      advanced:
-                        properties:
-                          advancedTargetsSettings:
-                            items:
-                              properties:
-                                integrationId:
-                                  format: int32
-                                  type: integer
-                                notifyOn:
-                                  default: triggeredOnly
-                                  enum:
-                                  - triggeredOnly
-                                  - triggeredAndResolved
-                                  type: string
-                                recipients:
-                                  items:
-                                    type: string
-                                  type: array
-                                retriggeringPeriodMinutes:
-                                  format: int32
-                                  type: integer
-                              required:
-                              - notifyOn
-                              - retriggeringPeriodMinutes
-                              type: object
-                            type: array
-                        type: object
-                      simple:
-                        properties:
-                          integrations:
-                            items:
-                              properties:
-                                integrationId:
-                                  format: int32
-                                  type: integer
-                                recipients:
-                                  items:
-                                    type: string
-                                  type: array
-                              type: object
-                            type: array
-                        type: object
-                    type: object
+                  webhooks:
+                    items:
+                      properties:
+                        integration:
+                          properties:
+                            integrationId:
+                              format: int32
+                              type: integer
+                            recipients:
+                              items:
+                                type: string
+                              type: array
+                          type: object
+                        notifyOn:
+                          enum:
+                          - triggeredOnly
+                          - triggeredAndResolved
+                          type: string
+                        retriggeringPeriod:
+                          properties:
+                            minutes:
+                              format: int32
+                              type: integer
+                          type: object
+                      required:
+                      - integration
+                      - retriggeringPeriod
+                      type: object
+                    type: array
                 required:
-                - targets
+                - webhooks
                 type: object
               phantomMode:
                 default: false

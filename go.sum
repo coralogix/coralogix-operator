@@ -10,6 +10,8 @@ github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDk
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/coralogix/coralogix-management-sdk v0.2.2-0.20241014095957-bf7f4990a58f h1:ozdFympEWsevKCVKyKThMTI6/n5pAdA7HEWadY9v2GA=
 github.com/coralogix/coralogix-management-sdk v0.2.2-0.20241014095957-bf7f4990a58f/go.mod h1:1aa/coMEMe5M1NvnRymOrBF2iCdefaWR0CMaMjPu0oI=
+github.com/coralogix/coralogix-management-sdk v0.2.2-0.20241204104948-bccb60aa38ee h1:3iitCZqQBvl70sYUzXTswvj/9nlg5U/Wem8M5ze7cXY=
+github.com/coralogix/coralogix-management-sdk v0.2.2-0.20241204104948-bccb60aa38ee/go.mod h1:uzwDFELXs6WhN980S+vQRsAOZxnmpu3kAg1NRHIslLA=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

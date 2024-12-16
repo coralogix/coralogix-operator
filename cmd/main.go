@@ -182,14 +182,14 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "RuleGroup")
 		os.Exit(1)
 	}
-	if err = (&v1alpha1controllers.AlertReconciler{
-		CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),
-		Client:             mgr.GetClient(),
-		Scheme:             mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Alert")
-		os.Exit(1)
-	}
+	//if err = (&v1alpha1controllers.AlertReconciler{
+	//	CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),
+	//	Client:             mgr.GetClient(),
+	//	Scheme:             mgr.GetScheme(),
+	//}).SetupWithManager(mgr); err != nil {
+	//	setupLog.Error(err, "unable to create controller", "controller", "Alert")
+	//	os.Exit(1)
+	//}
 	if prometheusRuleController {
 		if err = (&controllers.PrometheusRuleReconciler{
 			CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),

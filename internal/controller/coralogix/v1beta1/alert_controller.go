@@ -146,7 +146,7 @@ func (r *AlertReconciler) create(ctx context.Context, log logr.Logger, alert *co
 		AlertDefProperties: alert.Spec.ExtractAlertProperties(),
 	}
 
-	log.V(1).Info("Creating remote alert", "alert", protojson.Format(alertRequest))
+	log.V(1).Error(fmt.Errorf("Creating remote alert"), "alert", protojson.Format(alertRequest))
 	response, err := r.CoralogixClientSet.AlertsV3().Create(ctx, alertRequest)
 	if err != nil {
 		return fmt.Errorf("error on creating alert: %w", err)
@@ -163,12 +163,12 @@ func (r *AlertReconciler) create(ctx context.Context, log logr.Logger, alert *co
 	}
 
 	updated := false
-	if alert.Spec.Labels == nil {
-		alert.Spec.Labels = make(map[string]string)
+	if alert.Spec.EntityLabels == nil {
+		alert.Spec.EntityLabels = make(map[string]string)
 	}
 
-	if value, ok := alert.Spec.Labels["managed-by"]; !ok || value == "" {
-		alert.Spec.Labels["managed-by"] = "coralogix-operator"
+	if value, ok := alert.Spec.EntityLabels["managed-by"]; !ok || value == "" {
+		alert.Spec.EntityLabels["managed-by"] = "coralogix-operator"
 		updated = true
 	}
 
