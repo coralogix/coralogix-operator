@@ -1,9 +1,10 @@
-name: helm-lint-and-test
+name: helm-sync-check
 
 on:
   pull_request:
     paths:
       - "charts/coralogix-operator/**"
+      - "config/**"
     branches:
       - main
 
@@ -13,6 +14,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Check if Helm CRDs templates are updated
         run: |
-          make helm-check-crd-version
+          make helm-sync-check

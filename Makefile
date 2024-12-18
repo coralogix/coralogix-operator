@@ -184,9 +184,9 @@ integration-tests:
 e2e-tests:
 	go test ./tests/e2e/ -ldflags $(LDFLAGS) -ginkgo.v -v
 
-.PHONY: helm-check-crd-version
-helm-check-crd-version:
-	sh scripts/helm-check-crd-version.sh
+.PHONY: helm-sync-check
+helm-sync-check:
+	sh scripts/helm-sync-check.sh
 
 .PHONY: helm-update-crds
 helm-update-crds:
