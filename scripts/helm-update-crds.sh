@@ -1,20 +1,31 @@
 #!/bin/bash
-# This shell script will update the helm CRDs files
+# This shell script will update the Helm CRD files
 
+set -e
+
+# Paths
 crds_path="charts/coralogix-operator/templates/crds"
 bases_path="config/crd/bases"
 
-# Get a list of YAML files in the two paths
-crds_files=$(find "$crds_path" -type f -name "*.yaml")
+echo "Updating Helm CRDs from $bases_path to $crds_path..."
 
-# Replace the contents of corresponding files
-for crd_file in $crds_files; do
-    base_file="$bases_path/$(basename $crd_file)"
-    
-    if [ -f "$base_file" ]; then
-        cp "$base_file" "$crd_file"
-        echo "Replaced CRD file: $crd_file"
-    else
-        echo "Base file not found for $crd_file"
+# Ensure the target CRDs directory exists
+mkdir -p "$crds_path"
+
+# Copy all files from config/crd/bases to the chart directory
+for base_file in "$bases_path"/*.yaml; do
+    crd_file="$crds_path/$(basename "$base_file")"
+    cp "$base_file" "$crd_file"
+    echo "Copied or updated CRD file: $crd_file"
+done
+
+# Cleanup: Remove files in the chart directory that no longer exist in config/crd/bases
+for crd_file in "$crds_path"/*.yaml; do
+    base_file="$bases_path/$(basename "$crd_file")"
+    if [ ! -f "$base_file" ]; then
+        rm "$crd_file"
+        echo "Removed obsolete CRD file: $crd_file"
     fi
 done
+
+echo "Helm CRDs update completed successfully."
