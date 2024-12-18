@@ -35,6 +35,8 @@ import (
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+
 	utils "github.com/coralogix/coralogix-operator/api"
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	controllers "github.com/coralogix/coralogix-operator/internal/controller"
@@ -169,6 +171,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	SDKClientSet := cxsdk.NewClientSet(targetUrl, apiKey, apiKey)
+
 	if err = (&coralogixcontrollers.RuleGroupReconciler{
 		CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),
 		Client:             mgr.GetClient(),
@@ -221,6 +225,14 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "ApiKey")
 		os.Exit(1)
 	}
+	if err = (&coralogixcontrollers.PresetReconciler{
+		NotificationsClient: *SDKClientSet.Notifications(),
+		Client:              mgr.GetClient(),
+		Scheme:              mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Preset")
+		os.Exit(1)
+	}
 
 	if prometheusRuleController {
 		if err = (&controllers.AlertmanagerConfigReconciler{
@@ -246,6 +258,10 @@ func main() {
 
 		if err = webhookcoralogixv1alpha1.SetupApiKeyWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "ApiKey")
+			os.Exit(1)
+		}
+		if err = webhookcoralogixv1alpha1.SetupPresetWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Preset")
 			os.Exit(1)
 		}
 	} else {
