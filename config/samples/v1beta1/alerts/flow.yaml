@@ -1,0 +1,38 @@
+apiVersion: coralogix.com/v1beta1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/name: alert
+    app.kubernetes.io/instance: alert-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: flow
+spec:
+  name: flow alert example
+  description: alert from k8s operator
+  priority: p1
+  entityLabels:
+    alert_type: security
+    security_severity: high
+  alertType:
+    flow:
+      stages:
+        - timeframeMs: 1000
+          timeframeType: upTo
+          flowStagesType:
+            groups:
+              - alertDefs:
+                  - id: 58f99b58-76bd-4a3f-a5b8-2312b03a5371
+                    not: false
+                  - id: 3e2fb24e-8d81-42f3-b087-fe4433e7e456
+                    not: true
+                nextOp: and
+                alertsOp: or
+      enforceSuppression: false
+  notificationGroup:
+    webhooks:
+      - retriggeringPeriod:
+          minutes: 5
+        integration:
+          integrationId: 70824

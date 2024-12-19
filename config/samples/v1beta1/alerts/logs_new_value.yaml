@@ -7,16 +7,16 @@ metadata:
     app.kubernetes.io/part-of: coralogix-operator
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/created-by: coralogix-operator
-  name: logs-threshold
+  name: logs-new-value
 spec:
-  name: logs-threshold alert example
+  name: logs-new-value alert example
   description: alert from k8s operator
   priority: p1
   entityLabels:
     alert_type: security
     security_severity: high
   alertType:
-    logsThreshold:
+    logsNewValue:
       logsFilter:
         filterType:
           simpleFilter:
@@ -33,13 +33,12 @@ spec:
                 - value: info
                   operation: endsWith
               severity: ["warning", "info"]
-      notificationPayloadFilter: ["coralogix.metadata.sdkId"]
       rules:
         - condition:
+            keypathToTrack: "response_time"
             timeWindow:
-              specificValue: 5m
-            threshold: "100.4"
-            logsThresholdConditionType: moreThan
+              specificValue: 12h
+      notificationPayloadFilter: ["coralogix.metadata.sdkId"]
   notificationGroup:
     webhooks:
       - retriggeringPeriod:

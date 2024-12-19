@@ -971,6 +971,7 @@ spec:
                   flow:
                     properties:
                       enforceSuppression:
+                        default: false
                         type: boolean
                       stages:
                         items:
@@ -986,6 +987,7 @@ spec:
                                             id:
                                               type: string
                                             not:
+                                              default: false
                                               type: boolean
                                           required:
                                           - id
@@ -994,13 +996,11 @@ spec:
                                         type: array
                                       alertsOp:
                                         enum:
-                                        - unspecified
                                         - and
                                         - or
                                         type: string
                                       nextOp:
                                         enum:
-                                        - unspecified
                                         - and
                                         - or
                                         type: string
@@ -1602,7 +1602,6 @@ spec:
                               type: object
                           required:
                           - condition
-                          - override
                           type: object
                         type: array
                       undetectedValuesManagement:
@@ -1630,6 +1629,7 @@ spec:
                   logsTimeRelativeThreshold:
                     properties:
                       ignoreInfinity:
+                        default: false
                         type: boolean
                       logsFilter:
                         properties:
@@ -1739,7 +1739,6 @@ spec:
                               type: object
                           required:
                           - condition
-                          - override
                           type: object
                         type: array
                       undetectedValuesManagement:
@@ -1850,12 +1849,15 @@ spec:
                                   properties:
                                     specificValue:
                                       enum:
+                                      - 1m
                                       - 5m
                                       - 10m
                                       - 15m
+                                      - 20m
                                       - 30m
                                       - 1h
                                       - 2h
+                                      - 4h
                                       - 6h
                                       - 12h
                                       - 24h
@@ -1884,6 +1886,9 @@ spec:
                   metricAnomaly:
                     properties:
                       metricFilter:
+                        properties:
+                          promql:
+                            type: string
                         type: object
                       rules:
                         items:
@@ -1891,6 +1896,9 @@ spec:
                             condition:
                               properties:
                                 conditionType:
+                                  enum:
+                                  - moreThan
+                                  - lessThan
                                   type: string
                                 forOverPct:
                                   format: int32
@@ -1941,6 +1949,9 @@ spec:
                   metricThreshold:
                     properties:
                       metricFilter:
+                        properties:
+                          promql:
+                            type: string
                         type: object
                       missingValues:
                         properties:
@@ -2008,7 +2019,6 @@ spec:
                               type: object
                           required:
                           - condition
-                          - override
                           type: object
                         type: array
                       undetectedValuesManagement:
@@ -2082,17 +2092,77 @@ spec:
                         type: array
                       tracingFilter:
                         properties:
-                          tracingFilterType:
+                          simple:
                             properties:
-                              simple:
+                              latencyThresholdMs:
+                                format: int64
+                                type: integer
+                              tracingLabelFilters:
                                 properties:
-                                  latencyThresholdMs:
-                                    format: int64
-                                    type: integer
-                                  tracingLabelFilters:
-                                    properties:
-                                      applicationName:
-                                        items:
+                                  applicationName:
+                                    items:
+                                      properties:
+                                        operation:
+                                          enum:
+                                          - or
+                                          - includes
+                                          - endsWith
+                                          - startsWith
+                                          - isNot
+                                          type: string
+                                        values:
+                                          items:
+                                            type: string
+                                          type: array
+                                      required:
+                                      - operation
+                                      - values
+                                      type: object
+                                    type: array
+                                  operationName:
+                                    items:
+                                      properties:
+                                        operation:
+                                          enum:
+                                          - or
+                                          - includes
+                                          - endsWith
+                                          - startsWith
+                                          - isNot
+                                          type: string
+                                        values:
+                                          items:
+                                            type: string
+                                          type: array
+                                      required:
+                                      - operation
+                                      - values
+                                      type: object
+                                    type: array
+                                  serviceName:
+                                    items:
+                                      properties:
+                                        operation:
+                                          enum:
+                                          - or
+                                          - includes
+                                          - endsWith
+                                          - startsWith
+                                          - isNot
+                                          type: string
+                                        values:
+                                          items:
+                                            type: string
+                                          type: array
+                                      required:
+                                      - operation
+                                      - values
+                                      type: object
+                                    type: array
+                                  spanFields:
+                                    items:
+                                      properties:
+                                        filterType:
                                           properties:
                                             operation:
                                               enum:
@@ -2110,96 +2180,33 @@ spec:
                                           - operation
                                           - values
                                           type: object
-                                        type: array
-                                      operationName:
-                                        items:
-                                          properties:
-                                            operation:
-                                              enum:
-                                              - or
-                                              - includes
-                                              - endsWith
-                                              - startsWith
-                                              - isNot
-                                              type: string
-                                            values:
-                                              items:
-                                                type: string
-                                              type: array
-                                          required:
-                                          - operation
-                                          - values
-                                          type: object
-                                        type: array
-                                      serviceName:
-                                        items:
-                                          properties:
-                                            operation:
-                                              enum:
-                                              - or
-                                              - includes
-                                              - endsWith
-                                              - startsWith
-                                              - isNot
-                                              type: string
-                                            values:
-                                              items:
-                                                type: string
-                                              type: array
-                                          required:
-                                          - operation
-                                          - values
-                                          type: object
-                                        type: array
-                                      spanFields:
-                                        items:
-                                          properties:
-                                            filterType:
-                                              properties:
-                                                operation:
-                                                  enum:
-                                                  - or
-                                                  - includes
-                                                  - endsWith
-                                                  - startsWith
-                                                  - isNot
-                                                  type: string
-                                                values:
-                                                  items:
-                                                    type: string
-                                                  type: array
-                                              required:
-                                              - operation
-                                              - values
-                                              type: object
-                                            key:
-                                              type: string
-                                          required:
-                                          - filterType
-                                          - key
-                                          type: object
-                                        type: array
-                                      subsystemName:
-                                        items:
-                                          properties:
-                                            operation:
-                                              enum:
-                                              - or
-                                              - includes
-                                              - endsWith
-                                              - startsWith
-                                              - isNot
-                                              type: string
-                                            values:
-                                              items:
-                                                type: string
-                                              type: array
-                                          required:
-                                          - operation
-                                          - values
-                                          type: object
-                                        type: array
-                                    type: object
+                                        key:
+                                          type: string
+                                      required:
+                                      - filterType
+                                      - key
+                                      type: object
+                                    type: array
+                                  subsystemName:
+                                    items:
+                                      properties:
+                                        operation:
+                                          enum:
+                                          - or
+                                          - includes
+                                          - endsWith
+                                          - startsWith
+                                          - isNot
+                                          type: string
+                                        values:
+                                          items:
+                                            type: string
+                                          type: array
+                                      required:
+                                      - operation
+                                      - values
+                                      type: object
+                                    type: array
                                 type: object
                             type: object
                         type: object
@@ -2256,6 +2263,7 @@ spec:
                               type: array
                           type: object
                         notifyOn:
+                          default: triggeredOnly
                           enum:
                           - triggeredOnly
                           - triggeredAndResolved
@@ -2300,7 +2308,7 @@ spec:
                           - saturday
                           type: string
                         type: array
-                      end_time:
+                      endTime:
                         properties:
                           hours:
                             format: int32
@@ -2309,7 +2317,7 @@ spec:
                             format: int32
                             type: integer
                         type: object
-                      start_time:
+                      startTime:
                         properties:
                           hours:
                             format: int32

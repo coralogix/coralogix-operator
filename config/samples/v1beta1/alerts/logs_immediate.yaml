@@ -39,4 +39,4 @@ spec:
       - retriggeringPeriod:
           minutes: 5
         integration:
-          integrationId: 61271
+          integrationId: 70824

@@ -298,7 +298,7 @@ type NotificationGroup struct {
 
 type WebhookSettings struct {
 	RetriggeringPeriod RetriggeringPeriod `json:"retriggeringPeriod"`
-	// +default=triggeredOnly
+	// +kubebuilder:default=triggeredOnly
 	NotifyOn    NotifyOn        `json:"notifyOn,omitempty"`
 	Integration IntegrationType `json:"integration"`
 }
@@ -312,8 +312,8 @@ type IntegrationType struct {
 
 type ActiveOn struct {
 	DayOfWeek []DayOfWeek `json:"dayOfWeek,omitempty"`
-	StartTime *TimeOfDay  `protobuf:"bytes,2,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
-	EndTime   *TimeOfDay  `protobuf:"bytes,3,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	StartTime *TimeOfDay  `json:"startTime,omitempty"`
+	EndTime   *TimeOfDay  `json:"endTime,omitempty"`
 }
 
 type TimeOfDay struct {
@@ -378,7 +378,8 @@ type LogsThreshold struct {
 
 type LogsThresholdRule struct {
 	Condition LogsThresholdRuleCondition `json:"condition"`
-	Override  AlertOverride              `json:"override"`
+	// +optional
+	Override AlertOverride `json:"override"`
 }
 
 type LogsThresholdRuleCondition struct {
@@ -465,7 +466,8 @@ const (
 
 type LogsTimeRelativeRule struct {
 	Condition LogsTimeRelativeCondition `json:"condition"`
-	Override  AlertOverride             `json:"override"`
+	// +optional
+	Override AlertOverride `json:"override"`
 }
 
 type LogsTimeRelativeCondition struct {
@@ -497,7 +499,7 @@ const (
 type LogsTimeRelativeThreshold struct {
 	LogsFilter LogsFilter             `json:"logsFilter"`
 	Rules      []LogsTimeRelativeRule `json:"rules"`
-	// +default=false
+	//+kubebuilder:default=false
 	IgnoreInfinity            bool     `json:"ignoreInfinity"`
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 	// +optional
@@ -513,11 +515,13 @@ type MetricThreshold struct {
 }
 
 type MetricFilter struct {
+	Promql string `json:"promql,omitempty"`
 }
 
 type MetricThresholdRule struct {
 	Condition MetricThresholdRuleCondition `json:"condition"`
-	Override  AlertOverride                `json:"override"`
+	// +optional
+	Override AlertOverride `json:"override"`
 }
 
 type MetricThresholdRuleCondition struct {
@@ -576,16 +580,12 @@ type TracingThreshold struct {
 }
 
 type TracingFilter struct {
-	FilterType TracingFilterFilterType `json:"tracingFilterType,omitempty"`
+	Simple *TracingSimpleFilter `json:"simple,omitempty"`
 }
 
 type TracingFilterType struct {
 	Values    []string                   `json:"values"`
 	Operation TracingFilterOperationType `json:"operation"`
-}
-
-type TracingFilterFilterType struct {
-	Simple *TracingSimpleFilter `json:"simple,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=or;includes;endsWith;startsWith;isNot
@@ -653,16 +653,10 @@ const (
 	TracingTimeWindowValue36Hours   TracingTimeWindowSpecificValue = "36h"
 )
 
-// +kubebuilder:validation:Enum=moreThan
-type TracingThresholdConditionType string
-
-const (
-	TracingThresholdConditionTypeMoreThan TracingThresholdConditionType = "moreThan"
-)
-
 type Flow struct {
-	Stages             []FlowStage `json:"stages"`
-	EnforceSuppression bool        `json:"enforceSuppression"`
+	Stages []FlowStage `json:"stages"`
+	// +kubebuilder:default=false
+	EnforceSuppression bool `json:"enforceSuppression"`
 }
 
 type FlowStage struct {
@@ -682,11 +676,12 @@ type FlowStageGroup struct {
 }
 
 type FlowStagesGroupsAlertDefs struct {
-	Id  string `json:"id"`
-	Not bool   `json:"not"`
+	Id string `json:"id"`
+	// +kubebuilder:default=false
+	Not bool `json:"not"`
 }
 
-// +kubebuilder:validation:Enum=unspecified;and;or
+// +kubebuilder:validation:Enum=and;or
 type FlowStageGroupAlertsOp string
 
 const (
@@ -1027,26 +1022,37 @@ func expandTimeOfDay(time *TimeOfDay) *cxsdk.AlertTimeOfDay {
 func expandAlertTypeDefinition(properties *cxsdk.AlertDefProperties, definition AlertTypeDefinition) *cxsdk.AlertDefProperties {
 	if logsImmediate := definition.LogsImmediate; logsImmediate != nil {
 		properties.TypeDefinition = expandLogsImmediate(logsImmediate)
+		properties.Type = cxsdk.AlertDefTypeLogsImmediateOrUnspecified
 	} else if logsThreshold := definition.LogsThreshold; logsThreshold != nil {
 		properties.TypeDefinition = expandLogsThreshold(logsThreshold)
+		properties.Type = cxsdk.AlertDefTypeLogsThreshold
 	} else if logsRatioThreshold := definition.LogsRatioThreshold; logsRatioThreshold != nil {
 		properties.TypeDefinition = expandLogsRatioThreshold(logsRatioThreshold)
+		properties.Type = cxsdk.AlertDefTypeLogsRatioThreshold
 	} else if logsTimeRelativeThreshold := definition.LogsTimeRelativeThreshold; logsTimeRelativeThreshold != nil {
 		properties.TypeDefinition = expandLogsTimeRelativeThreshold(logsTimeRelativeThreshold)
+		properties.Type = cxsdk.AlertDefTypeLogsTimeRelativeThreshold
 	} else if metricThreshold := definition.MetricThreshold; metricThreshold != nil {
 		properties.TypeDefinition = expandMetricThreshold(metricThreshold)
+		properties.Type = cxsdk.AlertDefTypeMetricThreshold
 	} else if tracingThreshold := definition.TracingThreshold; tracingThreshold != nil {
 		properties.TypeDefinition = expandTracingThreshold(tracingThreshold)
+		properties.Type = cxsdk.AlertDefTypeTracingThreshold
 	} else if flow := definition.Flow; flow != nil {
 		properties.TypeDefinition = expandFlow(flow)
+		properties.Type = cxsdk.AlertDefTypeFlow
 	} else if logsAnomaly := definition.LogsAnomaly; logsAnomaly != nil {
 		properties.TypeDefinition = expandLogsAnomaly(logsAnomaly)
+		properties.Type = cxsdk.AlertDefTypeLogsAnomaly
 	} else if metricAnomaly := definition.MetricAnomaly; metricAnomaly != nil {
 		properties.TypeDefinition = expandMetricAnomaly(metricAnomaly)
+		properties.Type = cxsdk.AlertDefTypeMetricAnomaly
 	} else if logsNewValue := definition.LogsNewValue; logsNewValue != nil {
 		properties.TypeDefinition = expandLogsNewValue(logsNewValue)
+		properties.Type = cxsdk.AlertDefTypeLogsNewValue
 	} else if logsUniqueCount := definition.LogsUniqueCount; logsUniqueCount != nil {
 		properties.TypeDefinition = expandLogsUniqueCount(logsUniqueCount)
+		properties.Type = cxsdk.AlertDefTypeLogsUniqueCount
 	}
 
 	return properties
@@ -1137,8 +1143,12 @@ func expandLogsNewValueTimeWindow(timeWindow LogsNewValueTimeWindow) *cxsdk.Logs
 func expandMetricAnomaly(metricAnomaly *MetricAnomaly) *cxsdk.AlertDefPropertiesMetricAnomaly {
 	return &cxsdk.AlertDefPropertiesMetricAnomaly{
 		MetricAnomaly: &cxsdk.MetricAnomalyType{
-			MetricFilter: &cxsdk.MetricFilter{},
-			Rules:        expandMetricAnomalyRules(metricAnomaly.Rules),
+			MetricFilter: &cxsdk.MetricFilter{
+				Type: &cxsdk.MetricFilterPromql{
+					Promql: wrapperspb.String(metricAnomaly.MetricFilter.Promql),
+				},
+			},
+			Rules: expandMetricAnomalyRules(metricAnomaly.Rules),
 		},
 	}
 
@@ -1289,21 +1299,16 @@ func expandTracingFilter(filter *TracingFilter) *cxsdk.TracingFilter {
 	}
 
 	return &cxsdk.TracingFilter{
-		FilterType: expandTracingFilterFilterType(filter.FilterType),
+		FilterType: expandTracingSimpleFilter(filter.Simple),
 	}
 }
 
-func expandTracingFilterFilterType(filterType TracingFilterFilterType) *cxsdk.TracingFilterSimpleFilter {
+func expandTracingSimpleFilter(filter *TracingSimpleFilter) *cxsdk.TracingFilterSimpleFilter {
 	return &cxsdk.TracingFilterSimpleFilter{
-		SimpleFilter: expandTracingSimpleFilter(filterType.Simple),
-	}
-
-}
-
-func expandTracingSimpleFilter(filter *TracingSimpleFilter) *cxsdk.TracingSimpleFilter {
-	return &cxsdk.TracingSimpleFilter{
-		TracingLabelFilters: expandTracingLabelFilters(filter.TracingLabelFilters),
-		LatencyThresholdMs:  wrapperspb.UInt64(*filter.LatencyThresholdMs),
+		SimpleFilter: &cxsdk.TracingSimpleFilter{
+			TracingLabelFilters: expandTracingLabelFilters(filter.TracingLabelFilters),
+			LatencyThresholdMs:  wrapperspb.UInt64(*filter.LatencyThresholdMs),
+		},
 	}
 }
 
@@ -1387,7 +1392,7 @@ func expandTracingTimeWindow(timeWindow TracingTimeWindow) *cxsdk.TracingTimeWin
 func expandMetricThreshold(threshold *MetricThreshold) *cxsdk.AlertDefPropertiesMetricThreshold {
 	return &cxsdk.AlertDefPropertiesMetricThreshold{
 		MetricThreshold: &cxsdk.MetricThresholdType{
-			MetricFilter:               expandMetricFilter(&threshold.MetricFilter),
+			MetricFilter:               expandMetricFilter(threshold.MetricFilter),
 			MissingValues:              expandMetricMissingValues(&threshold.MissingValues),
 			Rules:                      expandMetricThresholdRules(threshold.Rules),
 			UndetectedValuesManagement: expandUndetectedValuesManagement(threshold.UndetectedValuesManagement),
@@ -1395,13 +1400,11 @@ func expandMetricThreshold(threshold *MetricThreshold) *cxsdk.AlertDefProperties
 	}
 }
 
-func expandMetricFilter(metricFilter *MetricFilter) *cxsdk.MetricFilter {
-	if metricFilter == nil {
-		return nil
-	}
-
+func expandMetricFilter(metricFilter MetricFilter) *cxsdk.MetricFilter {
 	return &cxsdk.MetricFilter{
-		Type: &cxsdk.MetricFilterPromql{},
+		Type: &cxsdk.MetricFilterPromql{
+			Promql: wrapperspb.String(metricFilter.Promql),
+		},
 	}
 }
 

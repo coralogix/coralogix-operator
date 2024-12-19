@@ -1,0 +1,36 @@
+apiVersion: coralogix.com/v1beta1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/name: alert
+    app.kubernetes.io/instance: alert-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: metric-anomaly-alert
+spec:
+  name: metric-anomaly alert example
+  description: alert from k8s operator
+  priority: p1
+  entityLabels:
+    alert_type: security
+    security_severity: high
+  alertType:
+    metricAnomaly:
+      metricFilter:
+        promql: |
+          sum(rate(http_requests_total{job="api-server"}[5m])) by (status)
+      rules:
+        - condition:
+            threshold: "100.4"
+            forOverPct: 20
+            ofTheLast:
+              specificValue: 15m
+            minNonNullValuesPct: 60
+            conditionType: moreThan
+  notificationGroup:
+    webhooks:
+      - retriggeringPeriod:
+          minutes: 5
+        integration:
+          integrationId: 70824

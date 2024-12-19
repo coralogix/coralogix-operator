@@ -1,0 +1,45 @@
+apiVersion: coralogix.com/v1beta1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/name: alert
+    app.kubernetes.io/instance: alert-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: tracing-threshold
+spec:
+  name: tracing-threshold alert example
+  description: alert from k8s operator
+  priority: p1
+  entityLabels:
+    alert_type: security
+    security_severity: high
+  alertType:
+    tracingThreshold:
+      tracingFilter:
+        simple:
+          latencyThresholdMs: 30
+          tracingLabelFilters:
+            applicationName:
+              - values: [nginx]
+                operation: includes
+              - values: [subsystem-name]
+                operation: startsWith
+            subsystemName:
+              - values: [warning]
+                operation: or
+              - values: [info]
+                operation: endsWith
+      notificationPayloadFilter: [ "coralogix.metadata.sdkId" ]
+      rules:
+        - condition:
+            spanAmount: 100
+            timeWindow:
+              specificValue: 5m
+  notificationGroup:
+    webhooks:
+      - retriggeringPeriod:
+          minutes: 5
+        integration:
+          integrationId: 70824
