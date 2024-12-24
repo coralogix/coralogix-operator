@@ -16,6 +16,7 @@ package v1alpha1
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -79,28 +80,28 @@ func (v *RuleGroupCustomValidator) ValidateDelete(ctx context.Context, obj runti
 
 func validateRulesTypesSet(ruleGroup coralogixv1alpha1.RuleGroup) (admission.Warnings, error) {
 	var warnings admission.Warnings
-	var errorsMessages []string
+	var errs error
 
 	for _, subGroup := range ruleGroup.Spec.RuleSubgroups {
 		for _, rule := range subGroup.Rules {
 			typesSet := getRuleTypesSet(rule)
 			if len(typesSet) == 0 {
-				msg := fmt.Sprintf("at least one rule type should be set in rule '%s'", rule.Name)
-				warnings = append(warnings, msg)
-				errorsMessages = append(errorsMessages, msg)
+				err := fmt.Errorf("at least one rule type should be set in rule '%s'", rule.Name)
+				warnings = append(warnings, err.Error())
+				errs = errors.Join(errs, err)
 			}
 
 			if len(typesSet) > 1 {
-				msg := fmt.Sprintf("only one rule type should be set in rule '%s', but got: %v", rule.Name, typesSet)
-				warnings = append(warnings, msg)
-				errorsMessages = append(errorsMessages, msg)
+				err := fmt.Errorf("only one rule type should be set in rule '%s', but got: %v", rule.Name, typesSet)
+				warnings = append(warnings, err.Error())
+				errs = errors.Join(errs, err)
 			}
 		}
 	}
 
-	if len(errorsMessages) > 0 {
+	if errs != nil {
 		monitoring.TotalRejectedRulesGroupsMetric.Inc()
-		return warnings, fmt.Errorf("%v", errorsMessages)
+		return warnings, errs
 	}
 
 	return nil, nil

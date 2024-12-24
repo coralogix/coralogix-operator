@@ -44,7 +44,7 @@ A [certificate](./charts/coralogix-operator/templates/certificate.yaml) and an [
 helm delete <my-release>
 ```
  
-### Local Installation with Make
+### Local Installation with Kustomize
 1. Clone the operator repository and navigate to the project directory:
 ```
 git clone https://github.com/coralogix/coralogix-operator.git 
@@ -67,6 +67,7 @@ make docker-build docker-push IMG=<some-registry>/coralogix-operator:<tag>
 ```sh
 make deploy IMG=<some-registry>/coralogix-operator:<tag> 
 ```
+Note: This will install cert-manager on the cluster if it is not already installed.
 
 5. To uninstall the operator, run:
 ```sh
