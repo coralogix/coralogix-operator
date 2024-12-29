@@ -15,14 +15,9 @@
 package v1alpha1
 
 import (
-	"fmt"
-	"reflect"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-
-	utils "github.com/coralogix/coralogix-operator/api"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -75,88 +70,6 @@ func extractRecordingRule(rule RecordingRule) *cxsdk.InRule {
 		Expr:   rule.Expr,
 		Labels: rule.Labels,
 	}
-}
-
-func (in *RecordingRuleGroup) DeepEqual(actual RecordingRuleGroup) (bool, utils.Diff) {
-	if limit, actualLimit := in.Limit, actual.Limit; limit != actualLimit {
-		return false, utils.Diff{
-			Name:    "Limit",
-			Desired: limit,
-			Actual:  actualLimit,
-		}
-	}
-
-	if name, actualName := in.Name, actual.Name; name != actualName {
-		return false, utils.Diff{
-			Name:    "Name",
-			Desired: name,
-			Actual:  actualName,
-		}
-	}
-
-	if interval, actualInterval := in.IntervalSeconds, actual.IntervalSeconds; interval != actualInterval {
-		return false, utils.Diff{
-			Name:    "Interval",
-			Desired: interval,
-			Actual:  actualInterval,
-		}
-	}
-
-	if equal, diff := DeepEqualRecordingRules(in.Rules, actual.Rules); !equal {
-		return false, diff
-	}
-
-	return true, utils.Diff{}
-}
-
-func DeepEqualRecordingRules(desiredRules, actualRule []RecordingRule) (bool, utils.Diff) {
-	if length, actualLength := len(desiredRules), len(actualRule); length != actualLength {
-		return false, utils.Diff{
-			Name:    "Rules.length",
-			Desired: length,
-			Actual:  actualLength,
-		}
-	}
-
-	for i := range desiredRules {
-		if equal, diff := desiredRules[i].DeepEqual(actualRule[i]); !equal {
-			return false, utils.Diff{
-				Name:    fmt.Sprintf("Rules.%d.%s", i, diff.Name),
-				Desired: diff.Desired,
-				Actual:  diff.Actual,
-			}
-		}
-	}
-
-	return true, utils.Diff{}
-}
-
-func (in *RecordingRule) DeepEqual(rule RecordingRule) (bool, utils.Diff) {
-	if expr, actualExpr := in.Expr, rule.Expr; expr != actualExpr {
-		return false, utils.Diff{
-			Name:    "Expr",
-			Desired: expr,
-			Actual:  actualExpr,
-		}
-	}
-
-	if record, actualRecord := in.Record, rule.Record; record != actualRecord {
-		return false, utils.Diff{
-			Name:    "Record",
-			Desired: record,
-			Actual:  actualRecord,
-		}
-	}
-
-	if labels, actualLabels := in.Labels, rule.Labels; !reflect.DeepEqual(labels, actualLabels) {
-		return false, utils.Diff{
-			Name:    "Labels",
-			Desired: labels,
-			Actual:  actualLabels,
-		}
-	}
-
-	return true, utils.Diff{}
 }
 
 type RecordingRuleGroup struct {
