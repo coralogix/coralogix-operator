@@ -7,6 +7,8 @@ resources:
   - bases/coralogix.com_recordingrulegroupsets.yaml
   - bases/coralogix.com_outboundwebhooks.yaml
   - bases/coralogix.com_apikeys.yaml
+  - bases/coralogix.com_presets.yaml
+  - bases/coralogix.com_connectors.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
@@ -16,6 +18,8 @@ patchesStrategicMerge:
 #- patches/webhook_in_alerts.yaml
 #- patches/webhook_in_recordingrulegroupsets.yaml
 #- patches/webhook_in_outboundwebhooks.yaml
+#- patches/webhook_in_presets.yaml
+#- patches/webhook_in_connectors.yaml
 #+kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # [CERTMANAGER] To enable cert-manager, uncomment all the sections with [CERTMANAGER] prefix.
@@ -25,6 +29,8 @@ patchesStrategicMerge:
 #- patches/cainjection_in_recordingrulegroupsets.yaml
 #- patches/cainjection_in_outboundwebhooks.yaml
 #- patches/cainjection_in_coralogix_apikeys.yaml
+#- patches/cainjection_in_coralogix_presets.yaml
+#- patches/cainjection_in_coralogix_connectors.yaml
 #+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # the following config is for teaching kustomize how to do kustomization for CRDs.

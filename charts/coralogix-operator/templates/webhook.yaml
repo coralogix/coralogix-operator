@@ -54,6 +54,26 @@ webhooks:
       service:
         name: {{ include "coralogixOperator.fullname" . }}-webhook-service
         namespace: {{ .Release.Namespace }}
+        path: /validate-coralogix-com-v1alpha1-preset
+    failurePolicy: Fail
+    name: vpreset-v1alpha1.kb.io
+    rules:
+      - apiGroups:
+          - coralogix.com
+        apiVersions:
+          - v1alpha1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - presets
+    sideEffects: None
+  - admissionReviewVersions:
+      - v1
+    clientConfig:
+      service:
+        name: {{ include "coralogixOperator.fullname" . }}-webhook-service
+        namespace: {{ .Release.Namespace }}
         path: /validate-coralogix-com-v1alpha1-rulegroup
     failurePolicy: Fail
     name: vrulegroup-v1alpha1.kb.io
