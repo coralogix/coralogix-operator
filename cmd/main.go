@@ -37,6 +37,8 @@ import (
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+
 	utils "github.com/coralogix/coralogix-operator/api"
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	controllers "github.com/coralogix/coralogix-operator/internal/controller"
@@ -203,6 +205,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	sdkClientSet := cxsdk.NewClientSet(targetUrl, apiKey, apiKey)
+
 	if err = (&coralogixcontrollers.RuleGroupReconciler{
 		CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),
 		Client:             mgr.GetClient(),
@@ -253,6 +257,14 @@ func main() {
 		Scheme:        mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ApiKey")
+		os.Exit(1)
+	}
+	if err = (&coralogixcontrollers.CustomRoleReconciler{
+		CustomRolesClient: sdkClientSet.Roles(),
+		Client:            mgr.GetClient(),
+		Scheme:            mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "CustomRole")
 		os.Exit(1)
 	}
 

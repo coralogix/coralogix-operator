@@ -6,7 +6,7 @@ set -e
 crds_path="config/crd/bases"
 chart_crds_path="charts/coralogix-operator/templates/crds"
 role_file="config/rbac/role.yaml"
-chart_role_file="charts/coralogix-operator/templates/clusterrole.yaml"
+chart_role_file="charts/coralogix-operator/templates/cluster_role.yaml"
 webhook_file="config/webhook/manifests.yaml"
 chart_webhook_file="charts/coralogix-operator/templates/webhook.yaml"
 
