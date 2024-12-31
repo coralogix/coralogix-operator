@@ -35,23 +35,10 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
-      - name: kube-rbac-proxy
-        args:
-        - --secure-listen-address=0.0.0.0:8443
-        - --upstream=http://127.0.0.1:8080/
-        - --logtostderr=true
-        - --v=0
-        image: {{ .Values.kubeRbacProxy.image }}
-        ports:
-        - containerPort: 8443
-          name: https
-          protocol: TCP
-        resources:
-          {{- toYaml .Values.kubeRbacProxy.resources | nindent 12 }}
       - name: {{ .Chart.Name }}
         args:
         - -health-probe-bind-address=:8081
-        - -metrics-bind-address=127.0.0.1:8080
+        - -metrics-bind-address=:8443
         - -leader-elect
         - -prometheus-rule-controller={{.Values.coralogixOperator.prometheusRules.enabled}}
         - -enable-webhooks={{.Values.coralogixOperator.webhooks.enabled }}

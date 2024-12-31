@@ -9,6 +9,6 @@ spec:
   - name: https
     port: 8443
     protocol: TCP
-    targetPort: https
+    targetPort: 8443
   selector:
     {{- include "coralogixOperator.selectorLabels" . | nindent 4 }}

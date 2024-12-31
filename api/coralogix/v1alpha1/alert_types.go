@@ -1142,10 +1142,6 @@ type ExpirationDate struct {
 	Year int32 `json:"year,omitempty"`
 }
 
-func (in *ExpirationDate) DeepEqual(date *alerts.Date) bool {
-	return in.Year != date.Year || in.Month != date.Month || in.Day != date.Day
-}
-
 type NotificationGroup struct {
 	// +optional
 	GroupByFields []string `json:"groupByFields,omitempty"`

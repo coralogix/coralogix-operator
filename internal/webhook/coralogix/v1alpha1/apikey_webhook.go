@@ -16,6 +16,7 @@ package v1alpha1
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -60,28 +61,28 @@ func (v *ApiKeyCustomValidator) ValidateCreate(ctx context.Context, obj runtime.
 	apikeylog.Info("Validation for ApiKey upon creation", "name", apikey.GetName())
 
 	var warnings admission.Warnings
-	var errorsMessages []string
-	errorMsg := validateOwner(apikey.Spec.Owner)
-	if errorMsg != "" {
-		warnings = append(warnings, errorMsg)
-		errorsMessages = append(errorsMessages, errorMsg)
+	var errs error
+	err := validateOwner(apikey.Spec.Owner)
+	if err != nil {
+		warnings = append(warnings, err.Error())
+		errs = errors.Join(errs, err)
 	}
 
-	errorMsg = validatePresetsAndPermissions(apikey.Spec.Presets, apikey.Spec.Permissions)
-	if errorMsg != "" {
-		warnings = append(warnings, errorMsg)
-		errorsMessages = append(errorsMessages, errorMsg)
+	err = validatePresetsAndPermissions(apikey.Spec.Presets, apikey.Spec.Permissions)
+	if err != nil {
+		warnings = append(warnings, err.Error())
+		errs = errors.Join(errs, err)
 	}
 
-	errorMsg = validateActive(apikey.Spec.Active)
-	if errorMsg != "" {
-		warnings = append(warnings, errorMsg)
-		errorsMessages = append(errorsMessages, errorMsg)
+	err = validateActive(apikey.Spec.Active)
+	if err != nil {
+		warnings = append(warnings, err.Error())
+		errs = errors.Join(errs, err)
 	}
 
-	if len(errorsMessages) > 0 {
+	if errs != nil {
 		monitoring.TotalRejectedApiKeysMetric.Inc()
-		return warnings, fmt.Errorf("validation failed: %v", errorsMessages)
+		return warnings, errs
 	}
 	return nil, nil
 }
@@ -95,22 +96,22 @@ func (v *ApiKeyCustomValidator) ValidateUpdate(ctx context.Context, oldObj, newO
 	apikeylog.Info("Validation for ApiKey upon update", "name", apikey.GetName())
 
 	var warnings admission.Warnings
-	var errorsMessages []string
-	errorMsg := validateOwner(apikey.Spec.Owner)
-	if errorMsg != "" {
-		warnings = append(warnings, errorMsg)
-		errorsMessages = append(errorsMessages, errorMsg)
+	var errs error
+	err := validateOwner(apikey.Spec.Owner)
+	if err != nil {
+		warnings = append(warnings, err.Error())
+		errs = errors.Join(errs, err)
 	}
 
-	errorMsg = validatePresetsAndPermissions(apikey.Spec.Presets, apikey.Spec.Permissions)
-	if errorMsg != "" {
-		warnings = append(warnings, errorMsg)
-		errorsMessages = append(errorsMessages, errorMsg)
+	err = validatePresetsAndPermissions(apikey.Spec.Presets, apikey.Spec.Permissions)
+	if err != nil {
+		warnings = append(warnings, err.Error())
+		errs = errors.Join(errs, err)
 	}
 
-	if len(errorsMessages) > 0 {
+	if errs != nil {
 		monitoring.TotalRejectedApiKeysMetric.Inc()
-		return warnings, fmt.Errorf("validation failed: %v", errorsMessages)
+		return warnings, errs
 	}
 	return nil, nil
 }
@@ -120,23 +121,23 @@ func (v *ApiKeyCustomValidator) ValidateDelete(ctx context.Context, obj runtime.
 	return nil, nil
 }
 
-func validateOwner(owner coralogixv1alpha1.ApiKeyOwner) string {
+func validateOwner(owner coralogixv1alpha1.ApiKeyOwner) error {
 	if owner.UserId != nil && owner.TeamId != nil {
-		return "Only one of the owner user ID or owner team ID can be set"
+		return fmt.Errorf("only one of the owner user ID or owner team ID can be set")
 	}
-	return ""
+	return nil
 }
 
-func validatePresetsAndPermissions(presets, permissions []string) string {
-	if (presets == nil || len(presets) == 0) && (permissions == nil || len(permissions) == 0) {
-		return "At least one of the presets or permissions fields must be set"
+func validatePresetsAndPermissions(presets, permissions []string) error {
+	if presets == nil && permissions == nil {
+		return fmt.Errorf("at least one of the presets or permissions fields must be set")
 	}
-	return ""
+	return nil
 }
 
-func validateActive(active bool) string {
+func validateActive(active bool) error {
 	if !active {
-		return "ApiKey must be activated on creation"
+		return fmt.Errorf("ApiKey must be activated on creation")
 	}
-	return ""
+	return nil
 }
