@@ -178,6 +178,32 @@ rules:
   - patch
   - update
 - apiGroups:
+  - coralogix.com
+  resources:
+  - scopes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - scopes/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - scopes/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - monitoring.coreos.com
   resources:
   - prometheusrules
