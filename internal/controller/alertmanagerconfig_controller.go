@@ -1,4 +1,18 @@
-package controller
+// Copyright 2024 Coralogix Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package controllers
 
 import (
 	"context"
@@ -24,6 +38,7 @@ import (
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
+	"github.com/coralogix/coralogix-operator/internal/monitoring"
 )
 
 //+kubebuilder:rbac:groups=monitoring.coreos.com,resources=prometheusrules,verbs=get;list;watch
@@ -49,7 +64,7 @@ type AlertmanagerConfigReconciler struct {
 // SetupWithManager sets up the controller with the Manager.
 func (r *AlertmanagerConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	shouldTrackAlertmanagerConfigs := func(labels map[string]string) bool {
-		if value, ok := labels["app.coralogix.com/track-alertmanger-config"]; ok && value == "true" {
+		if value, ok := labels["app.coralogix.com/track-alertmanager-config"]; ok && value == "true" {
 			return true
 		}
 		return false
@@ -77,23 +92,25 @@ func (r *AlertmanagerConfigReconciler) Reconcile(ctx context.Context, req ctrl.R
 	alertmanagerConfig := &prometheus.AlertmanagerConfig{}
 	if err := r.Get(ctx, req.NamespacedName, alertmanagerConfig); err != nil {
 		if errors.IsNotFound(err) {
+			monitoring.AlertmanagerConfigInfoMetric.DeleteLabelValues(req.Name, req.Namespace)
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
 			if err = r.deleteWebhooksFromRelatedAlerts(ctx, alertmanagerConfig); err != nil {
 				log.Error(err, "Received an error while trying to delete webhooks from related Alerts")
-				return ctrl.Result{RequeueAfter: DefaultErrRequeuePeriod}, err
+				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 			}
 			return ctrl.Result{}, nil
 		}
 		// Error reading the object - requeue the request
-		return ctrl.Result{RequeueAfter: DefaultErrRequeuePeriod}, err
+		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
 	}
+	monitoring.AlertmanagerConfigInfoMetric.WithLabelValues(alertmanagerConfig.Name, alertmanagerConfig.Namespace).Set(1)
 
 	succeedConvertAlertmanager := r.convertAlertmanagerConfigToCxIntegrations(ctx, log, alertmanagerConfig)
 	succeedLinkAlerts := r.linkCxAlertToCxIntegrations(ctx, log, alertmanagerConfig)
 	if !succeedConvertAlertmanager || !succeedLinkAlerts {
-		return ctrl.Result{RequeueAfter: DefaultErrRequeuePeriod}, fmt.Errorf("received an error while trying to convert AlertmanagerConfig to OutboundWebhook CRD")
+		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, fmt.Errorf("received an error while trying to convert AlertmanagerConfig to OutboundWebhook CRD")
 	}
 
 	return reconcile.Result{RequeueAfter: 5 * time.Minute}, nil
@@ -224,7 +241,7 @@ func (r *AlertmanagerConfigReconciler) linkCxAlertToCxIntegrations(ctx context.C
 	}
 
 	var alerts coralogixv1alpha1.AlertList
-	if err := r.List(ctx, &alerts, client.InNamespace(config.Namespace), client.MatchingLabels{"app.coralogix.com/managed-by-alertmanger-config": "true"}); err != nil {
+	if err := r.List(ctx, &alerts, client.InNamespace(config.Namespace), client.MatchingLabels{"app.coralogix.com/managed-by-alertmanager-config": "true"}); err != nil {
 		log.Error(err, "Received an error while trying to list Alerts")
 		return false
 	}
@@ -266,7 +283,7 @@ func (r *AlertmanagerConfigReconciler) linkCxAlertToCxIntegrations(ctx context.C
 
 func (r *AlertmanagerConfigReconciler) deleteWebhooksFromRelatedAlerts(ctx context.Context, config *prometheus.AlertmanagerConfig) error {
 	var alerts coralogixv1alpha1.AlertList
-	if err := r.List(ctx, &alerts, client.InNamespace(config.Namespace), client.MatchingLabels{"app.coralogix.com/managed-by-alertmanger-config": "true"}); err != nil {
+	if err := r.List(ctx, &alerts, client.InNamespace(config.Namespace), client.MatchingLabels{"app.coralogix.com/managed-by-alertmanager-config": "true"}); err != nil {
 		return fmt.Errorf("received an error while trying to list Alerts: %w", err)
 	}
 

@@ -21,16 +21,19 @@ import (
 	"fmt"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-	utils "github.com/coralogix/coralogix-operator/api"
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
+	alerts "github.com/coralogix/coralogix-operator/internal/controller/clientset/grpc/alerts/v2"
 	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
+	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/utils/pointer"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -79,6 +82,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			log.Error(err, "Error on creating alert")
 			return ctrl.Result{RequeueAfter: coralogix.DefaultErrRequeuePeriod}, err
 		}
+		monitoring.AlertInfoMetric.WithLabelValues(alert.Name, alert.Namespace, getAlertType(alert)).Set(1)
 		return ctrl.Result{}, nil
 	}
 
@@ -88,6 +92,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			log.Error(err, "Error on deleting alert")
 			return ctrl.Result{RequeueAfter: coralogix.DefaultErrRequeuePeriod}, err
 		}
+		monitoring.AlertInfoMetric.DeleteLabelValues(alert.Name, alert.Namespace, getAlertType(alert))
 		return ctrl.Result{}, nil
 	}
 
@@ -96,6 +101,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		log.Error(err, "Error on updating alert")
 		return ctrl.Result{RequeueAfter: coralogix.DefaultErrRequeuePeriod}, err
 	}
+	monitoring.AlertInfoMetric.WithLabelValues(alert.Name, alert.Namespace, getAlertType(alert)).Set(1)
 
 	return ctrl.Result{}, nil
 }
@@ -103,14 +109,14 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 func (r *AlertReconciler) update(ctx context.Context, log logr.Logger, alert *coralogixv1beta1.Alert) error {
 	alertRequest := &cxsdk.ReplaceAlertDefRequest{
 		AlertDefProperties: alert.Spec.ExtractAlertProperties(),
-		Id:                 utils.StringPointerToWrapperspbString(alert.Status.ID),
+		Id:                 wrapperspb.String(*alert.Status.ID),
 	}
 
 	log.V(1).Info("Updating remote alert", "alert", protojson.Format(alertRequest))
 	remoteUpdatedAlert, err := r.CoralogixClientSet.AlertsV3().Replace(ctx, alertRequest)
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
-			log.Info("alert not found on remote, recreating it")
+			log.V(1).Info("alert not found on remote, recreating it")
 			alert.Status = *coralogixv1beta1.NewDefaultAlertStatus()
 			if err = r.Status().Update(ctx, alert); err != nil {
 				return fmt.Errorf("error on updating alert status: %w", err)
@@ -124,17 +130,12 @@ func (r *AlertReconciler) update(ctx context.Context, log logr.Logger, alert *co
 }
 
 func (r *AlertReconciler) delete(ctx context.Context, log logr.Logger, alert *coralogixv1beta1.Alert) error {
-	log.V(1).Info("Deleting remote alert", "alert", *alert.Status.ID)
-	_, err := r.CoralogixClientSet.AlertsV3().Delete(ctx, &cxsdk.DeleteAlertDefRequest{
-		Id: utils.StringPointerToWrapperspbString(alert.Status.ID),
-	})
-	if err != nil && status.Code(err) != codes.NotFound {
-		return fmt.Errorf("error on deleting alert: %w", err)
+	if err := r.deleteRemoteAlert(ctx, log, alert.Status.ID); err != nil {
+		return fmt.Errorf("error on deleting remote alert: %w", err)
 	}
-	log.V(1).Info("Remote alert deleted", "alert", *alert.Status.ID)
 
 	controllerutil.RemoveFinalizer(alert, alertFinalizerName)
-	if err = r.Update(ctx, alert); err != nil {
+	if err := r.Update(ctx, alert); err != nil {
 		return fmt.Errorf("error on updating alert: %w", err)
 	}
 
@@ -146,7 +147,7 @@ func (r *AlertReconciler) create(ctx context.Context, log logr.Logger, alert *co
 		AlertDefProperties: alert.Spec.ExtractAlertProperties(),
 	}
 
-	log.V(1).Error(fmt.Errorf("Creating remote alert"), "alert", protojson.Format(alertRequest))
+	log.V(1).Info("Creating remote alert", "alert", protojson.Format(alertRequest))
 	response, err := r.CoralogixClientSet.AlertsV3().Create(ctx, alertRequest)
 	if err != nil {
 		return fmt.Errorf("error on creating alert: %w", err)
@@ -157,8 +158,11 @@ func (r *AlertReconciler) create(ctx context.Context, log logr.Logger, alert *co
 		return fmt.Errorf("error on getting alert: %w", err)
 	}
 
-	alert.Status.ID = utils.WrapperspbStringToStringPointer(response.GetAlertDef().GetId())
+	alert.Status.ID = pointer.String(response.GetAlertDef().GetId().GetValue())
 	if err = r.Status().Update(ctx, alert); err != nil {
+		if err = r.deleteRemoteAlert(ctx, log, alert.Status.ID); err != nil {
+			return fmt.Errorf("error on deleting remote alert after status update error: %w", err)
+		}
 		return fmt.Errorf("error on updating alert status: %w", err)
 	}
 
@@ -186,10 +190,48 @@ func (r *AlertReconciler) create(ctx context.Context, log logr.Logger, alert *co
 	return nil
 }
 
+func (r *AlertReconciler) deleteRemoteAlert(ctx context.Context, log logr.Logger, alertID *string) error {
+	log.V(1).Info("Deleting remote alert", "alert", alertID)
+	if _, err := r.CoralogixClientSet.Alerts().DeleteAlert(ctx, &alerts.DeleteAlertByUniqueIdRequest{
+		Id: wrapperspb.String(*alertID)}); err != nil && status.Code(err) != codes.NotFound {
+		log.V(1).Error(err, "Error on deleting remote alert", "alert", alertID)
+		return fmt.Errorf("error on deleting alert: %w", err)
+	}
+
+	log.V(1).Info("Remote alert deleted", "alert", alertID)
+	return nil
+}
+
+func getAlertType(alert *coralogixv1beta1.Alert) string {
+	if alert.Spec.TypeDefinition.Flow != nil {
+		return "flow"
+	} else if alert.Spec.TypeDefinition.MetricAnomaly != nil {
+		return "metric-anomaly"
+	} else if alert.Spec.TypeDefinition.LogsAnomaly != nil {
+		return "logs-anomaly"
+	} else if alert.Spec.TypeDefinition.LogsImmediate != nil {
+		return "logs-immediate"
+	} else if alert.Spec.TypeDefinition.LogsNewValue != nil {
+		return "logs-new-value"
+	} else if alert.Spec.TypeDefinition.LogsRatioThreshold != nil {
+		return "logs-ratio-threshold"
+	} else if alert.Spec.TypeDefinition.LogsUniqueCount != nil {
+		return "logs-unique-count"
+	} else if alert.Spec.TypeDefinition.MetricThreshold != nil {
+		return "metric-threshold"
+	} else if alert.Spec.TypeDefinition.TracingThreshold != nil {
+		return "tracing-threshold"
+	} else if alert.Spec.TypeDefinition.LogsThreshold != nil {
+		return "logs-threshold"
+	} else if alert.Spec.TypeDefinition.LogsTimeRelativeThreshold != nil {
+		return "logs-time-relative-threshold"
+	}
+	return "unknown"
+}
+
 // SetupWithManager sets up the controller with the Manager.
 func (r *AlertReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1beta1.Alert{}).
-		Named("alert-v3").
 		Complete(r)
 }

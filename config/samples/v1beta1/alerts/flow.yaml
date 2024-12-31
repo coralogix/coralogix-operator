@@ -23,9 +23,9 @@ spec:
           flowStagesType:
             groups:
               - alertDefs:
-                  - id: 58f99b58-76bd-4a3f-a5b8-2312b03a5371
+                  - id: 2fc62d02-c96a-444c-b416-538182b880b5
                     not: false
-                  - id: 3e2fb24e-8d81-42f3-b087-fe4433e7e456
+                  - id: bce79502-3a88-4640-8bd5-489b07e1fcc7
                     not: true
                 nextOp: and
                 alertsOp: or

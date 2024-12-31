@@ -1,18 +1,16 @@
-/*
-Copyright 2023.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2024 Coralogix Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package v1alpha1
 
@@ -153,50 +151,6 @@ func (in *GenericWebhook) extractGenericWebhookConfig() *cxsdk.GenericWebhookInp
 	}
 }
 
-func (in *GenericWebhook) DeepEqual(webhook *GenericWebhookStatus) (bool, utils.Diff) {
-	if webhook == nil {
-		return false, utils.Diff{
-			Name:    "GenericWebhook",
-			Desired: utils.PointerToString(in),
-			Actual:  nil,
-		}
-	}
-
-	if in.Url != webhook.Url {
-		return false, utils.Diff{
-			Name:    "GenericWebhook.Url",
-			Desired: in.Url,
-			Actual:  webhook.Url,
-		}
-	}
-
-	if in.Method != webhook.Method {
-		return false, utils.Diff{
-			Name:    "GenericWebhook.Method",
-			Desired: in.Method,
-			Actual:  webhook.Method,
-		}
-	}
-
-	if !utils.StringMapEqual(in.Headers, webhook.Headers) {
-		return false, utils.Diff{
-			Name:    "GenericWebhook.Headers",
-			Desired: in.Headers,
-			Actual:  webhook.Headers,
-		}
-	}
-
-	if utils.PointerToString(in.Payload) != utils.PointerToString(webhook.Payload) {
-		return false, utils.Diff{
-			Name:    "GenericWebhook.Payload",
-			Desired: in.Payload,
-			Actual:  webhook.Payload,
-		}
-	}
-
-	return true, utils.Diff{}
-}
-
 // +kubebuilder:validation:Enum=Unkown;Get;Post;Put
 type GenericWebhookMethodType string
 
@@ -248,42 +202,6 @@ func (in *Slack) extractSlackConfig() *cxsdk.SlackWebhookInputData {
 			Attachments: attachments,
 		},
 	}
-}
-
-func (in *Slack) DeepEqual(slack *Slack) (bool, utils.Diff) {
-	if slack == nil {
-		return false, utils.Diff{
-			Name:    "Slack",
-			Desired: utils.PointerToString(in),
-			Actual:  nil,
-		}
-	}
-
-	if !utils.SlicesWithUniqueValuesEqual(in.Digests, slack.Digests) {
-		return false, utils.Diff{
-			Name:    "Slack.Digests",
-			Desired: in.Digests,
-			Actual:  slack.Digests,
-		}
-	}
-
-	if !utils.SlicesWithUniqueValuesEqual(in.Attachments, slack.Attachments) {
-		return false, utils.Diff{
-			Name:    "Slack.Attachments",
-			Desired: in.Attachments,
-			Actual:  slack.Attachments,
-		}
-	}
-
-	if in.Url != slack.Url {
-		return false, utils.Diff{
-			Name:    "Slack.Url",
-			Desired: in.Url,
-			Actual:  slack.Url,
-		}
-	}
-
-	return true, utils.Diff{}
 }
 
 type SlackConfigDigestType string
@@ -346,26 +264,6 @@ func (in *PagerDuty) extractPagerDutyConfig() *cxsdk.PagerDutyWebhookInputData {
 	}
 }
 
-func (in *PagerDuty) DeepEqual(pagerDuty *PagerDuty) (bool, utils.Diff) {
-	if pagerDuty == nil {
-		return false, utils.Diff{
-			Name:    "PagerDuty",
-			Desired: utils.PointerToString(in),
-			Actual:  nil,
-		}
-	}
-
-	if in.ServiceKey != pagerDuty.ServiceKey {
-		return false, utils.Diff{
-			Name:    "PagerDuty.ServiceKey",
-			Desired: in.ServiceKey,
-			Actual:  pagerDuty.ServiceKey,
-		}
-	}
-
-	return true, utils.Diff{}
-}
-
 type SendLog struct {
 	Payload string `json:"payload"`
 	Url     string `json:"url"`
@@ -375,34 +273,6 @@ type SendLogStatus struct {
 	Payload string `json:"payload"`
 	Url     string `json:"url"`
 	Uuid    string `json:"uuid"`
-}
-
-func (in *SendLog) DeepEqual(sendLog *SendLogStatus) (bool, utils.Diff) {
-	if sendLog == nil {
-		return false, utils.Diff{
-			Name:    "SendLog",
-			Desired: utils.PointerToString(in),
-			Actual:  nil,
-		}
-	}
-
-	if in.Payload != sendLog.Payload {
-		return false, utils.Diff{
-			Name:    "SendLog.Payload",
-			Desired: in.Payload,
-			Actual:  sendLog.Payload,
-		}
-	}
-
-	if in.Url != sendLog.Url {
-		return false, utils.Diff{
-			Name:    "SendLog.Url",
-			Desired: in.Url,
-			Actual:  sendLog.Url,
-		}
-	}
-
-	return true, utils.Diff{}
 }
 
 func (in *SendLog) extractSendLogConfig() *cxsdk.SendLogWebhookInputData {
@@ -416,26 +286,6 @@ func (in *SendLog) extractSendLogConfig() *cxsdk.SendLogWebhookInputData {
 
 type EmailGroup struct {
 	EmailAddresses []string `json:"emailAddresses"`
-}
-
-func (in *EmailGroup) DeepEqual(emailGroup *EmailGroup) (bool, utils.Diff) {
-	if emailGroup == nil {
-		return false, utils.Diff{
-			Name:    "EmailGroup",
-			Desired: utils.PointerToString(in),
-			Actual:  nil,
-		}
-	}
-
-	if !utils.SlicesWithUniqueValuesEqual(in.EmailAddresses, emailGroup.EmailAddresses) {
-		return false, utils.Diff{
-			Name:    "EmailGroup.EmailAddresses",
-			Desired: in.EmailAddresses,
-			Actual:  emailGroup.EmailAddresses,
-		}
-	}
-
-	return true, utils.Diff{}
 }
 
 func (in *EmailGroup) extractEmailGroupConfig() *cxsdk.EmailGroupWebhookInputData {
@@ -456,26 +306,6 @@ func (in *MicrosoftTeams) extractMicrosoftTeamsConfig() *cxsdk.MicrosoftTeamsWeb
 	}
 }
 
-func (in *MicrosoftTeams) DeepEqual(microsoftTeams *MicrosoftTeams) (bool, utils.Diff) {
-	if microsoftTeams == nil {
-		return false, utils.Diff{
-			Name:    "MicrosoftTeams",
-			Desired: utils.PointerToString(in),
-			Actual:  nil,
-		}
-	}
-
-	if in.Url != microsoftTeams.Url {
-		return false, utils.Diff{
-			Name:    "MicrosoftTeams.Url",
-			Desired: in.Url,
-			Actual:  microsoftTeams.Url,
-		}
-	}
-
-	return true, utils.Diff{}
-}
-
 type Jira struct {
 	ApiToken   string `json:"apiToken"`
 	Email      string `json:"email"`
@@ -493,50 +323,6 @@ func (in *Jira) extractJiraConfig() *cxsdk.JiraWebhookInputData {
 	}
 }
 
-func (in *Jira) DeepEqual(jira *Jira) (bool, utils.Diff) {
-	if jira == nil {
-		return false, utils.Diff{
-			Name:    "Jira",
-			Desired: utils.PointerToString(in),
-			Actual:  nil,
-		}
-	}
-
-	if in.ApiToken != jira.ApiToken {
-		return false, utils.Diff{
-			Name:    "Jira.ApiToken",
-			Desired: in.ApiToken,
-			Actual:  jira.ApiToken,
-		}
-	}
-
-	if in.Email != jira.Email {
-		return false, utils.Diff{
-			Name:    "Jira.Email",
-			Desired: in.Email,
-			Actual:  jira.Email,
-		}
-	}
-
-	if in.ProjectKey != jira.ProjectKey {
-		return false, utils.Diff{
-			Name:    "Jira.ProjectKey",
-			Desired: in.ProjectKey,
-			Actual:  jira.ProjectKey,
-		}
-	}
-
-	if in.Url != jira.Url {
-		return false, utils.Diff{
-			Name:    "Jira.Url",
-			Desired: in.Url,
-			Actual:  jira.Url,
-		}
-	}
-
-	return true, utils.Diff{}
-}
-
 type Opsgenie struct {
 	Url string `json:"url"`
 }
@@ -545,26 +331,6 @@ func (in *Opsgenie) extractOpsgenieConfig() *cxsdk.OpsgenieWebhookInputData {
 	return &cxsdk.OpsgenieWebhookInputData{
 		Opsgenie: &cxsdk.OpsgenieConfig{},
 	}
-}
-
-func (in *Opsgenie) DeepEqual(opsgenie *Opsgenie) (bool, utils.Diff) {
-	if opsgenie == nil {
-		return false, utils.Diff{
-			Name:    "Opsgenie",
-			Desired: utils.PointerToString(in),
-			Actual:  nil,
-		}
-	}
-
-	if in.Url != opsgenie.Url {
-		return false, utils.Diff{
-			Name:    "Opsgenie.Url",
-			Desired: in.Url,
-			Actual:  opsgenie.Url,
-		}
-	}
-
-	return true, utils.Diff{}
 }
 
 type Demisto struct {
@@ -580,42 +346,6 @@ func (in *Demisto) extractDemistoConfig() *cxsdk.DemistoWebhookInputData {
 			Payload: wrapperspb.String(in.Payload),
 		},
 	}
-}
-
-func (in *Demisto) DeepEqual(demisto *Demisto) (bool, utils.Diff) {
-	if demisto == nil {
-		return false, utils.Diff{
-			Name:    "Demisto",
-			Desired: utils.PointerToString(in),
-			Actual:  nil,
-		}
-	}
-
-	if in.Uuid != demisto.Uuid {
-		return false, utils.Diff{
-			Name:    "Demisto.Uuid",
-			Desired: in.Uuid,
-			Actual:  demisto.Uuid,
-		}
-	}
-
-	if in.Payload != demisto.Payload {
-		return false, utils.Diff{
-			Name:    "Demisto.Payload",
-			Desired: in.Payload,
-			Actual:  demisto.Payload,
-		}
-	}
-
-	if in.Url != demisto.Url {
-		return false, utils.Diff{
-			Name:    "Demisto.Url",
-			Desired: in.Url,
-			Actual:  demisto.Url,
-		}
-	}
-
-	return true, utils.Diff{}
 }
 
 type AwsEventBridge struct {
@@ -636,58 +366,6 @@ func (in *AwsEventBridge) extractAwsEventBridgeConfig() *cxsdk.AwsEventBridgeWeb
 			RoleName:    wrapperspb.String(in.RoleName),
 		},
 	}
-}
-
-func (in *AwsEventBridge) DeepEqual(awsEventBridge *AwsEventBridge) (bool, utils.Diff) {
-	if awsEventBridge == nil {
-		return false, utils.Diff{
-			Name:    "AwsEventBridge",
-			Desired: utils.PointerToString(in),
-			Actual:  nil,
-		}
-	}
-
-	if in.EventBusArn != awsEventBridge.EventBusArn {
-		return false, utils.Diff{
-			Name:    "AwsEventBridge.EventBusArn",
-			Desired: in.EventBusArn,
-			Actual:  awsEventBridge.EventBusArn,
-		}
-	}
-
-	if in.Detail != awsEventBridge.Detail {
-		return false, utils.Diff{
-			Name:    "AwsEventBridge.Detail",
-			Desired: in.Detail,
-			Actual:  awsEventBridge.Detail,
-		}
-	}
-
-	if in.DetailType != awsEventBridge.DetailType {
-		return false, utils.Diff{
-			Name:    "AwsEventBridge.DetailType",
-			Desired: in.DetailType,
-			Actual:  awsEventBridge.DetailType,
-		}
-	}
-
-	if in.Source != awsEventBridge.Source {
-		return false, utils.Diff{
-			Name:    "AwsEventBridge.Source",
-			Desired: in.Source,
-			Actual:  awsEventBridge.Source,
-		}
-	}
-
-	if in.RoleName != awsEventBridge.RoleName {
-		return false, utils.Diff{
-			Name:    "AwsEventBridge.RoleName",
-			Desired: in.RoleName,
-			Actual:  awsEventBridge.RoleName,
-		}
-	}
-
-	return true, utils.Diff{}
 }
 
 // OutboundWebhookStatus defines the observed state of OutboundWebhook

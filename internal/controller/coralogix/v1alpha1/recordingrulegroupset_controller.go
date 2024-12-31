@@ -1,18 +1,16 @@
-/*
-Copyright 2023.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2024 Coralogix Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package v1alpha1
 
@@ -22,7 +20,6 @@ import (
 
 	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/ptr"
@@ -35,6 +32,7 @@ import (
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
+	"github.com/coralogix/coralogix-operator/internal/monitoring"
 )
 
 var recordingRuleGroupSetFinalizerName = "recordingrulegroupset.coralogix.com/finalizer"
@@ -76,6 +74,7 @@ func (r *RecordingRuleGroupSetReconciler) Reconcile(ctx context.Context, req ctr
 			log.Error(err, "Failed to create RecordingRuleGroupSet", "error", err)
 			return ctrl.Result{RequeueAfter: coralogix.DefaultErrRequeuePeriod}, err
 		}
+		monitoring.RecordingRuleGroupSetInfoMetric.WithLabelValues(recordingRuleGroupSet.Name, recordingRuleGroupSet.Namespace).Set(1)
 		return ctrl.Result{}, nil
 	}
 
@@ -84,6 +83,7 @@ func (r *RecordingRuleGroupSetReconciler) Reconcile(ctx context.Context, req ctr
 			log.Error(err, "Failed to delete RecordingRuleGroupSet", "error", err)
 			return ctrl.Result{RequeueAfter: coralogix.DefaultErrRequeuePeriod}, err
 		}
+		monitoring.RecordingRuleGroupSetInfoMetric.DeleteLabelValues(recordingRuleGroupSet.Name, recordingRuleGroupSet.Namespace)
 		return ctrl.Result{}, nil
 	}
 
@@ -91,6 +91,7 @@ func (r *RecordingRuleGroupSetReconciler) Reconcile(ctx context.Context, req ctr
 		log.Error(err, "Failed to update RecordingRuleGroupSet", "error", err)
 		return ctrl.Result{RequeueAfter: coralogix.DefaultErrRequeuePeriod}, err
 	}
+	monitoring.RecordingRuleGroupSetInfoMetric.WithLabelValues(recordingRuleGroupSet.Name, recordingRuleGroupSet.Namespace).Set(1)
 
 	return ctrl.Result{}, nil
 }
@@ -110,6 +111,9 @@ func (r *RecordingRuleGroupSetReconciler) create(ctx context.Context, recordingR
 	recordingRuleGroupSet.Status.ID = ptr.To(response.Id)
 
 	if err := r.Status().Update(ctx, recordingRuleGroupSet); err != nil {
+		if err := r.deleteRemoteRecordingRuleGroupSet(ctx, recordingRuleGroupSet.Status.ID); err != nil {
+			return fmt.Errorf("failed to delete recording rule groupSet after status update error: %w", err)
+		}
 		return fmt.Errorf("failed to update recording rule groupSet status: %w", err)
 	}
 
@@ -130,7 +134,7 @@ func (r *RecordingRuleGroupSetReconciler) update(ctx context.Context, recordingR
 	})
 
 	if err != nil {
-		if status.Code(err) == codes.NotFound {
+		if cxsdk.Code(err) == codes.NotFound {
 			recordingRuleGroupSet.Status.ID = nil
 			if err := r.Status().Update(ctx, recordingRuleGroupSet); err != nil {
 				return fmt.Errorf("failed to update recording rule groupSet status: %w", err)
@@ -153,19 +157,23 @@ func (r *RecordingRuleGroupSetReconciler) update(ctx context.Context, recordingR
 }
 
 func (r *RecordingRuleGroupSetReconciler) delete(ctx context.Context, recordingRuleGroupSet *coralogixv1alpha1.RecordingRuleGroupSet) error {
-	_, err := r.CoralogixClientSet.RecordingRuleGroups().Delete(ctx, &cxsdk.DeleteRuleGroupSetRequest{
-		Id: *recordingRuleGroupSet.Status.ID,
-	})
-
-	if err != nil && status.Code(err) != codes.NotFound {
+	if err := r.deleteRemoteRecordingRuleGroupSet(ctx, recordingRuleGroupSet.Status.ID); err != nil {
 		return fmt.Errorf("failed to delete recording rule groupSet: %w", err)
 	}
 
 	controllerutil.RemoveFinalizer(recordingRuleGroupSet, recordingRuleGroupSetFinalizerName)
-	if err = r.Update(ctx, recordingRuleGroupSet); err != nil {
+	if err := r.Update(ctx, recordingRuleGroupSet); err != nil {
 		return fmt.Errorf("failed to remove finalizer from recording rule groupSet: %w", err)
 	}
 
+	return nil
+}
+
+func (r *RecordingRuleGroupSetReconciler) deleteRemoteRecordingRuleGroupSet(ctx context.Context, id *string) error {
+	if _, err := r.CoralogixClientSet.RecordingRuleGroups().Delete(ctx, &cxsdk.DeleteRuleGroupSetRequest{
+		Id: *id}); err != nil && cxsdk.Code(err) != codes.NotFound {
+		return fmt.Errorf("failed to delete recording rule groupSet: %w", err)
+	}
 	return nil
 }
 

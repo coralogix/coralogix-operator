@@ -1,3 +1,17 @@
+// Copyright 2024 Coralogix Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package v1alpha1
 
 import (
@@ -49,8 +63,8 @@ var ruleGroupBackendSchema = &cxsdk.RuleGroup{
 					Parameters: &cxsdk.RuleParameters{
 						RuleParameters: &cxsdk.RuleParametersJSONExtractParameters{
 							JsonExtractParameters: &cxsdk.JSONExtractParameters{
-								DestinationField: cxsdk.JSONExtractParametersDestinationFieldSeverity,
-								Rule:             wrapperspb.String(`{"severity": "info"}`),
+								DestinationFieldType: cxsdk.JSONExtractParametersDestinationFieldSeverity,
+								Rule:                 wrapperspb.String(`{"severity": "info"}`),
 							},
 						},
 					},
@@ -96,7 +110,6 @@ func expectedRuleGroupCRD() *coralogixv1alpha1.RuleGroup {
 
 func TestFlattenRuleGroupsErrorsOnBadResponse(t *testing.T) {
 	ruleGroup := &cxsdk.RuleGroup{
-		Id:           wrapperspb.String("id"),
 		Name:         wrapperspb.String("name"),
 		Description:  wrapperspb.String("description"),
 		Creator:      wrapperspb.String("creator"),
@@ -239,7 +252,7 @@ func TestRuleGroupReconciler_Reconcile_5XX_StatusError(t *testing.T) {
 
 	result, err := r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
 	assert.Error(t, err)
-	assert.Equal(t, coralogix.defaultErrRequeuePeriod, result.RequeueAfter)
+	assert.Equal(t, coralogix.DefaultErrRequeuePeriod, result.RequeueAfter)
 
 	result, err = r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
 	assert.NoError(t, err)

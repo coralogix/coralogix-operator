@@ -1,28 +1,27 @@
-/*
-Copyright 2023.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2024 Coralogix Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package v1alpha1
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
+	"github.com/go-logr/logr"
 	"github.com/golang/protobuf/jsonpb"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -34,6 +33,7 @@ import (
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
+	"github.com/coralogix/coralogix-operator/internal/monitoring"
 )
 
 var ruleGroupFinalizerName = "rulegroup.coralogix.com/finalizer"
@@ -101,17 +101,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			}
 
 			ruleGroupId := *ruleGroupCRD.Status.ID
-			deleteRuleGroupReq := &cxsdk.DeleteRuleGroupRequest{GroupId: ruleGroupId}
-			log.V(1).Info("Deleting Rule-Group", "Rule-Group ID", ruleGroupId)
-			if _, err := rulesGroupsClient.Delete(ctx, deleteRuleGroupReq); err != nil {
-				// if fail to delete the external dependency here, return with error
-				// so that it can be retried unless it is deleted manually.
-				log.Error(err, "Received an error while Deleting a Rule-Group", "Rule-Group ID", ruleGroupId)
-				if status.Code(err) == codes.NotFound {
-					controllerutil.RemoveFinalizer(ruleGroupCRD, ruleGroupFinalizerName)
-					err := r.Update(ctx, ruleGroupCRD)
-					return ctrl.Result{}, err
-				}
+			if err := r.deleteRemoteRuleGroup(ctx, log, &ruleGroupId); err != nil {
 				return ctrl.Result{}, err
 			}
 
@@ -123,6 +113,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			}
 		}
 
+		monitoring.RuleGroupInfoMetric.DeleteLabelValues(ruleGroupCRD.Name, ruleGroupCRD.Namespace)
 		// Stop reconciliation as the item is being deleted
 		return ctrl.Result{}, nil
 	}
@@ -138,7 +129,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	} else {
 		_, err := rulesGroupsClient.Get(ctx, &cxsdk.GetRuleGroupRequest{GroupId: *id})
 		switch {
-		case status.Code(err) == codes.NotFound:
+		case cxsdk.Code(err) == codes.NotFound:
 			log.V(1).Info("ruleGroup doesn't exist in Coralogix backend")
 			notFound = true
 		case err != nil:
@@ -159,6 +150,10 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			id := createRuleGroupResp.GetRuleGroup().GetId().GetValue()
 			ruleGroupCRD.Status = coralogixv1alpha1.RuleGroupStatus{ID: &id}
 			if err := r.Status().Update(ctx, ruleGroupCRD); err != nil {
+				if err := r.deleteRemoteRuleGroup(ctx, log, ruleGroupCRD.Status.ID); err != nil {
+					log.Error(err, "Error on deleting RecordingRuleGroupSet after status update error", "Name", ruleGroupCRD.Name, "Namespace", ruleGroupCRD.Namespace)
+					return ctrl.Result{RequeueAfter: coralogix.DefaultErrRequeuePeriod}, err
+				}
 				log.Error(err, "Error on updating RecordingRuleGroupSet status", "Name", ruleGroupCRD.Name, "Namespace", ruleGroupCRD.Namespace)
 				return ctrl.Result{RequeueAfter: coralogix.DefaultErrRequeuePeriod}, err
 			}
@@ -172,6 +167,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			if err := r.Status().Update(ctx, ruleGroupCRD); err != nil {
 				log.V(1).Error(err, "updating crd")
 			}
+			monitoring.RuleGroupInfoMetric.WithLabelValues(ruleGroupCRD.Name, ruleGroupCRD.Namespace).Set(1)
 			return ctrl.Result{}, nil
 		} else {
 			log.Error(err, "Received an error while creating a Rule-Group", "ruleGroup", createRuleGroupReq)
@@ -191,8 +187,21 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 	jstr, _ := jsm.MarshalToString(updateRuleGroupResp)
 	log.V(1).Info("Rule-Group was updated", "ruleGroup", jstr)
+	monitoring.RuleGroupInfoMetric.WithLabelValues(ruleGroupCRD.Name, ruleGroupCRD.Namespace).Set(1)
 
 	return ctrl.Result{}, nil
+}
+
+func (r *RuleGroupReconciler) deleteRemoteRuleGroup(ctx context.Context, log logr.Logger, ruleGroupId *string) error {
+	deleteRuleGroupReq := &cxsdk.DeleteRuleGroupRequest{GroupId: *ruleGroupId}
+	log.V(1).Info("Deleting Rule-Group", "Rule-Group ID", ruleGroupId)
+	if _, err := r.CoralogixClientSet.RuleGroups().Delete(ctx, deleteRuleGroupReq); err != nil && cxsdk.Code(err) != codes.NotFound {
+		log.V(1).Error(err, "Received an error while Deleting a Rule-Group", "Rule-Group ID", ruleGroupId)
+		return fmt.Errorf("error on deleting Rule-Group: %w", err)
+	}
+
+	log.V(1).Info("Rule-Group was deleted", "Rule-Group ID", ruleGroupId)
+	return nil
 }
 
 func flattenRuleGroup(ruleGroup *cxsdk.RuleGroup) (*coralogixv1alpha1.RuleGroupStatus, error) {
@@ -200,6 +209,10 @@ func flattenRuleGroup(ruleGroup *cxsdk.RuleGroup) (*coralogixv1alpha1.RuleGroupS
 
 	status.ID = new(string)
 	*status.ID = ruleGroup.GetId().GetValue()
+
+	if *status.ID == "" {
+		return nil, fmt.Errorf("RuleGroup ID is empty")
+	}
 
 	return &status, nil
 }

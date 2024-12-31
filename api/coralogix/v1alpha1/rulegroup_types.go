@@ -1,24 +1,21 @@
-/*
-Copyright 2023.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2024 Coralogix Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package v1alpha1
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -99,216 +96,12 @@ type Rule struct {
 	ParseJsonField *ParseJsonField `json:"parseJsonField,omitempty"`
 }
 
-func (in *Rule) DeepEqual(actualRule Rule) (bool, utils.Diff) {
-	if actualActive := actualRule.Active; in.Active != actualActive {
-		return false, utils.Diff{
-			Name:    "Active",
-			Desired: in.Active,
-			Actual:  actualActive,
-		}
-	}
-
-	if actualDescription := actualRule.Description; in.Description != actualDescription {
-		return false, utils.Diff{
-			Name:    "Description",
-			Desired: in.Description,
-			Actual:  actualDescription,
-		}
-	}
-
-	if actualName := actualRule.Name; in.Name != actualName {
-		return false, utils.Diff{
-			Name:    "Name",
-			Desired: in.Name,
-			Actual:  actualName,
-		}
-	}
-
-	return in.DeepEqualRuleType(actualRule)
-}
-
-func (in *Rule) DeepEqualRuleType(rule Rule) (bool, utils.Diff) {
-	if extract, actualExtract := in.Extract, rule.Extract; extract != nil {
-		if actualExtract == nil {
-			return false, utils.Diff{
-				Name:    "Extract",
-				Desired: *extract,
-				Actual:  actualExtract,
-			}
-		} else if equal, diff := extract.DeepEqual(*actualExtract); !equal {
-			return false, utils.Diff{
-				Name:    fmt.Sprintf("Extract.%s", diff.Name),
-				Desired: diff.Desired,
-				Actual:  diff.Actual,
-			}
-		}
-	}
-
-	if extractTimestamp, actualExtractTimestamp := in.ExtractTimestamp, rule.ExtractTimestamp; extractTimestamp != nil {
-		if actualExtractTimestamp == nil {
-			return false, utils.Diff{
-				Name:    "ExtractTimestamp",
-				Desired: *extractTimestamp,
-				Actual:  actualExtractTimestamp,
-			}
-		} else if equal, diff := extractTimestamp.DeepEqual(*actualExtractTimestamp); !equal {
-			return false, utils.Diff{
-				Name:    fmt.Sprintf("ExtractTimestamp.%s", diff.Name),
-				Desired: diff.Desired,
-				Actual:  diff.Actual,
-			}
-		}
-	}
-
-	if jsonExtract, actualJsonExtract := in.JsonExtract, rule.JsonExtract; jsonExtract != nil {
-		if actualJsonExtract == nil {
-			return false, utils.Diff{
-				Name:    "JsonExtract",
-				Desired: *jsonExtract,
-				Actual:  actualJsonExtract,
-			}
-		} else if equal, diff := jsonExtract.DeepEqual(*actualJsonExtract); !equal {
-			return false, utils.Diff{
-				Name:    fmt.Sprintf("JsonExtract.%s", diff.Name),
-				Desired: diff.Desired,
-				Actual:  diff.Actual,
-			}
-		}
-	}
-
-	if parseJsonField, actualParseJsonField := in.ParseJsonField, rule.ParseJsonField; parseJsonField != nil {
-		if parseJsonField == nil {
-			return false, utils.Diff{
-				Name:    "ParseJsonField",
-				Desired: *parseJsonField,
-				Actual:  actualParseJsonField,
-			}
-		} else if equal, diff := parseJsonField.DeepEqual(*actualParseJsonField); !equal {
-			return false, utils.Diff{
-				Name:    fmt.Sprintf("ParseJsonField.%s", diff.Name),
-				Desired: diff.Desired,
-				Actual:  diff.Actual,
-			}
-		}
-	}
-
-	if parse, actualParse := in.Parse, rule.Parse; parse != nil {
-		if actualParse == nil {
-			return false, utils.Diff{
-				Name:    "Parse",
-				Desired: *parse,
-				Actual:  actualParse,
-			}
-		} else if equal, diff := parse.DeepEqual(*actualParse); !equal {
-			return false, utils.Diff{
-				Name:    fmt.Sprintf("Parse.%s", diff.Name),
-				Desired: diff.Desired,
-				Actual:  diff.Actual,
-			}
-		}
-	}
-
-	if block, actualBlock := in.Block, rule.Block; block != nil {
-		if actualBlock == nil {
-			return false, utils.Diff{
-				Name:    "Block",
-				Desired: *block,
-				Actual:  actualBlock,
-			}
-		} else if equal, diff := block.DeepEqual(*actualBlock); !equal {
-			return false, utils.Diff{
-				Name:    fmt.Sprintf("Block.%s", diff.Name),
-				Desired: diff.Desired,
-				Actual:  diff.Actual,
-			}
-		}
-	}
-
-	if jsonStringify, actualJsonStringify := in.JsonStringify, rule.JsonStringify; jsonStringify != nil {
-		if jsonStringify == nil {
-			return false, utils.Diff{
-				Name:    "JsonStringify",
-				Desired: *jsonStringify,
-				Actual:  actualJsonStringify,
-			}
-		} else if equal, diff := jsonStringify.DeepEqual(*actualJsonStringify); !equal {
-			return false, utils.Diff{
-				Name:    fmt.Sprintf("JsonStringify.%s", diff.Name),
-				Desired: diff.Desired,
-				Actual:  diff.Actual,
-			}
-		}
-	}
-
-	if removeFields, actualRemoveFields := in.RemoveFields, rule.RemoveFields; removeFields != nil {
-		if actualRemoveFields == nil {
-			return false, utils.Diff{
-				Name:    "RemoveFields",
-				Desired: *removeFields,
-				Actual:  actualRemoveFields,
-			}
-		} else if equal, diff := removeFields.DeepEqual(*actualRemoveFields); !equal {
-			return false, utils.Diff{
-				Name:    fmt.Sprintf("RemoveFields.%s", diff.Name),
-				Desired: diff.Desired,
-				Actual:  diff.Actual,
-			}
-		}
-	}
-
-	if replace, actualReplace := in.Replace, rule.Replace; replace != nil {
-		if actualReplace == nil {
-			return false, utils.Diff{
-				Name:    "Replace",
-				Desired: *replace,
-				Actual:  actualReplace,
-			}
-		} else if equal, diff := replace.DeepEqual(*actualReplace); !equal {
-			return false, utils.Diff{
-				Name:    fmt.Sprintf("Replace.%s", diff.Name),
-				Desired: diff.Desired,
-				Actual:  diff.Actual,
-			}
-		}
-	}
-
-	return true, utils.Diff{}
-}
-
 type Parse struct {
 	SourceField string `json:"sourceField"`
 
 	DestinationField string `json:"destinationField"`
 
 	Regex string `json:"regex"`
-}
-
-func (in *Parse) DeepEqual(parse Parse) (bool, utils.Diff) {
-	if regex, actualRegex := in.Regex, parse.Regex; regex != actualRegex {
-		return false, utils.Diff{
-			Name:    "Regex",
-			Desired: regex,
-			Actual:  actualRegex,
-		}
-	}
-
-	if sourceField, actualSourceField := in.SourceField, parse.SourceField; sourceField != actualSourceField {
-		return false, utils.Diff{
-			Name:    "SourceField",
-			Desired: sourceField,
-			Actual:  actualSourceField,
-		}
-	}
-
-	if destinationField, actualDestinationField := in.DestinationField, parse.DestinationField; destinationField != actualDestinationField {
-		return false, utils.Diff{
-			Name:    "DestinationField",
-			Desired: destinationField,
-			Actual:  actualDestinationField,
-		}
-	}
-
-	return true, utils.Diff{}
 }
 
 type Block struct {
@@ -321,42 +114,6 @@ type Block struct {
 
 	//+kubebuilder:default=true
 	BlockingAllMatchingBlocks bool `json:"blockingAllMatchingBlocks,omitempty"`
-}
-
-func (in *Block) DeepEqual(block Block) (bool, utils.Diff) {
-	if keepBlockedLogs, actualKeepBlockedLogs := in.KeepBlockedLogs, block.KeepBlockedLogs; keepBlockedLogs != actualKeepBlockedLogs {
-		return false, utils.Diff{
-			Name:    "KeepBlockedLogs",
-			Desired: keepBlockedLogs,
-			Actual:  actualKeepBlockedLogs,
-		}
-	}
-
-	if blockingAllMatchingBlocks, actualBlockingAllMatchingBlocks := in.BlockingAllMatchingBlocks, block.BlockingAllMatchingBlocks; blockingAllMatchingBlocks != actualBlockingAllMatchingBlocks {
-		return false, utils.Diff{
-			Name:    "BlockingAllMatchingBlocks",
-			Desired: blockingAllMatchingBlocks,
-			Actual:  actualBlockingAllMatchingBlocks,
-		}
-	}
-
-	if regex, actualRegex := in.Regex, block.Regex; regex != actualRegex {
-		return false, utils.Diff{
-			Name:    "Regex",
-			Desired: regex,
-			Actual:  actualRegex,
-		}
-	}
-
-	if sourceField, actualSourceField := in.SourceField, block.SourceField; sourceField != actualSourceField {
-		return false, utils.Diff{
-			Name:    "SourceField",
-			Desired: sourceField,
-			Actual:  actualSourceField,
-		}
-	}
-
-	return true, utils.Diff{}
 }
 
 // +kubebuilder:validation:Enum=Category;CLASSNAME;METHODNAME;THREADID;SEVERITY
@@ -376,26 +133,6 @@ type JsonExtract struct {
 	JsonKey string `json:"jsonKey"`
 }
 
-func (in *JsonExtract) DeepEqual(jsonExtract JsonExtract) (bool, utils.Diff) {
-	if destinationField, actualDestinationField := in.DestinationField, jsonExtract.DestinationField; destinationField != actualDestinationField {
-		return false, utils.Diff{
-			Name:    "DestinationField",
-			Desired: destinationField,
-			Actual:  actualDestinationField,
-		}
-	}
-
-	if jsonKey, actualJsonKey := in.JsonKey, jsonExtract.JsonKey; jsonKey != actualJsonKey {
-		return false, utils.Diff{
-			Name:    "JsonKey",
-			Desired: jsonKey,
-			Actual:  actualJsonKey,
-		}
-	}
-
-	return true, utils.Diff{}
-}
-
 type Replace struct {
 	SourceField string `json:"sourceField"`
 
@@ -404,42 +141,6 @@ type Replace struct {
 	Regex string `json:"regex"`
 
 	ReplacementString string `json:"replacementString"`
-}
-
-func (in *Replace) DeepEqual(replace Replace) (bool, utils.Diff) {
-	if regex, actualRegex := in.Regex, replace.Regex; regex != actualRegex {
-		return false, utils.Diff{
-			Name:    "Regex",
-			Desired: regex,
-			Actual:  actualRegex,
-		}
-	}
-
-	if sourceField, actualSourceField := in.SourceField, replace.SourceField; sourceField != actualSourceField {
-		return false, utils.Diff{
-			Name:    "SourceField",
-			Desired: sourceField,
-			Actual:  actualSourceField,
-		}
-	}
-
-	if destinationField, actualDestinationField := in.DestinationField, replace.DestinationField; destinationField != actualDestinationField {
-		return false, utils.Diff{
-			Name:    "DestinationField",
-			Desired: destinationField,
-			Actual:  actualDestinationField,
-		}
-	}
-
-	if replacementString, actualReplacementString := in.ReplacementString, replace.ReplacementString; replacementString != actualReplacementString {
-		return false, utils.Diff{
-			Name:    "ReplacementString",
-			Desired: replacementString,
-			Actual:  actualReplacementString,
-		}
-	}
-
-	return true, utils.Diff{}
 }
 
 // +kubebuilder:validation:Enum=Strftime;JavaSDF;Golang;SecondTS;MilliTS;MicroTS;NanoTS
@@ -463,48 +164,8 @@ type ExtractTimestamp struct {
 	TimeFormat string `json:"timeFormat"`
 }
 
-func (in *ExtractTimestamp) DeepEqual(extractTimestamp ExtractTimestamp) (bool, utils.Diff) {
-	if timeFormat, actualTimeFormat := extractTimestamp.TimeFormat, extractTimestamp.TimeFormat; timeFormat != actualTimeFormat {
-		return false, utils.Diff{
-			Name:    "TimeFormat",
-			Desired: timeFormat,
-			Actual:  actualTimeFormat,
-		}
-	}
-
-	if fieldFormatStandard, actualFieldFormatStandard := extractTimestamp.FieldFormatStandard, extractTimestamp.FieldFormatStandard; fieldFormatStandard != actualFieldFormatStandard {
-		return false, utils.Diff{
-			Name:    "FieldFormatStandard",
-			Desired: fieldFormatStandard,
-			Actual:  actualFieldFormatStandard,
-		}
-	}
-
-	if sourceField, actualTSourceField := extractTimestamp.SourceField, extractTimestamp.SourceField; sourceField != actualTSourceField {
-		return false, utils.Diff{
-			Name:    "SourceField",
-			Desired: sourceField,
-			Actual:  actualTSourceField,
-		}
-	}
-
-	return true, utils.Diff{}
-}
-
 type RemoveFields struct {
 	ExcludedFields []string `json:"excludedFields"`
-}
-
-func (in *RemoveFields) DeepEqual(removeFields RemoveFields) (bool, utils.Diff) {
-	if excludedFields, actualExcludedFields := in.ExcludedFields, removeFields.ExcludedFields; !utils.SlicesWithUniqueValuesEqual(excludedFields, actualExcludedFields) {
-		return false, utils.Diff{
-			Name:    "ExcludedFields",
-			Desired: excludedFields,
-			Actual:  actualExcludedFields,
-		}
-	}
-
-	return true, utils.Diff{}
 }
 
 type JsonStringify struct {
@@ -516,59 +177,10 @@ type JsonStringify struct {
 	KeepSourceField bool `json:"keepSourceField,omitempty"`
 }
 
-func (in *JsonStringify) DeepEqual(jsonStringify JsonStringify) (bool, utils.Diff) {
-	if keepSourceField, actualKeepSourceField := in.KeepSourceField, jsonStringify.KeepSourceField; keepSourceField != actualKeepSourceField {
-		return false, utils.Diff{
-			Name:    "KeepSourceField",
-			Desired: keepSourceField,
-			Actual:  actualKeepSourceField,
-		}
-	}
-
-	if sourceField, actualSourceField := in.SourceField, jsonStringify.SourceField; sourceField != actualSourceField {
-		return false, utils.Diff{
-			Name:    "SourceField",
-			Desired: sourceField,
-			Actual:  actualSourceField,
-		}
-	}
-
-	if destinationField, actualDestinationField := in.DestinationField, jsonStringify.DestinationField; destinationField != actualDestinationField {
-		return false, utils.Diff{
-			Name:    "DestinationField",
-			Desired: destinationField,
-			Actual:  actualDestinationField,
-		}
-	}
-
-	return true, utils.Diff{}
-
-}
-
 type Extract struct {
 	SourceField string `json:"sourceField"`
 
 	Regex string `json:"regex"`
-}
-
-func (in *Extract) DeepEqual(extract Extract) (bool, utils.Diff) {
-	if regex, actualRegex := in.Regex, extract.Regex; regex != actualRegex {
-		return false, utils.Diff{
-			Name:    "Regex",
-			Desired: regex,
-			Actual:  actualRegex,
-		}
-	}
-
-	if sourceField, actualSourceField := in.SourceField, extract.SourceField; sourceField != actualSourceField {
-		return false, utils.Diff{
-			Name:    "SourceField",
-			Desired: sourceField,
-			Actual:  actualSourceField,
-		}
-	}
-
-	return true, utils.Diff{}
 }
 
 type ParseJsonField struct {
@@ -579,42 +191,6 @@ type ParseJsonField struct {
 	KeepSourceField bool `json:"keepSourceField"`
 
 	KeepDestinationField bool `json:"keepDestinationField"`
-}
-
-func (in *ParseJsonField) DeepEqual(field ParseJsonField) (bool, utils.Diff) {
-	if keepDestinationField, actualKeepDestinationField := in.KeepDestinationField, field.KeepDestinationField; keepDestinationField != actualKeepDestinationField {
-		return false, utils.Diff{
-			Name:    "KeepDestinationField",
-			Desired: keepDestinationField,
-			Actual:  actualKeepDestinationField,
-		}
-	}
-
-	if keepSourceField, actualKeepSourceField := in.KeepSourceField, field.KeepSourceField; keepSourceField != actualKeepSourceField {
-		return false, utils.Diff{
-			Name:    "KeepSourceField",
-			Desired: keepSourceField,
-			Actual:  actualKeepSourceField,
-		}
-	}
-
-	if destinationField, actualDestinationField := in.DestinationField, field.DestinationField; destinationField != actualDestinationField {
-		return false, utils.Diff{
-			Name:    "DestinationField",
-			Desired: destinationField,
-			Actual:  actualDestinationField,
-		}
-	}
-
-	if sourceField, actualSourceField := in.SourceField, field.SourceField; sourceField != actualSourceField {
-		return false, utils.Diff{
-			Name:    "SourceField",
-			Desired: sourceField,
-			Actual:  actualSourceField,
-		}
-	}
-
-	return true, utils.Diff{}
 }
 
 type RuleSubGroup struct {
@@ -629,36 +205,6 @@ type RuleSubGroup struct {
 
 	// +optional
 	Rules []Rule `json:"rules,omitempty"`
-}
-
-func (in *RuleSubGroup) DeepEqual(actualSubgroup RuleSubGroup) (bool, utils.Diff) {
-	if actualActive := actualSubgroup.Active; in.Active != actualActive {
-		return false, utils.Diff{
-			Name:    "Active",
-			Desired: in.Active,
-			Actual:  actualActive,
-		}
-	}
-
-	if len(in.Rules) != len(actualSubgroup.Rules) {
-		return false, utils.Diff{
-			Name:    "Rules.length",
-			Desired: len(in.Rules),
-			Actual:  len(actualSubgroup.Rules),
-		}
-	}
-
-	for i := range in.Rules {
-		if equal, diff := in.Rules[i].DeepEqual(actualSubgroup.Rules[i]); !equal {
-			return false, utils.Diff{
-				Name:    fmt.Sprintf("Rules[%d].%s", i, diff.Name),
-				Desired: diff.Desired,
-				Actual:  diff.Actual,
-			}
-		}
-	}
-
-	return true, utils.Diff{}
 }
 
 // RuleGroupSpec defines the Desired state of RuleGroup

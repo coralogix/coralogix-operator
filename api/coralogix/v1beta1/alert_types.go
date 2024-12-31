@@ -17,6 +17,9 @@ limitations under the License.
 package v1beta1
 
 import (
+	"strconv"
+	"strings"
+
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	utils "github.com/coralogix/coralogix-operator/api"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -56,6 +59,7 @@ var (
 		AlertPriorityP2: cxsdk.AlertDefPriorityP2,
 		AlertPriorityP3: cxsdk.AlertDefPriorityP3,
 		AlertPriorityP4: cxsdk.AlertDefPriorityP4,
+		AlertPriorityP5: cxsdk.AlertDefPriorityP5OrUnspecified,
 	}
 	LogSeverityToProtoSeverity = map[LogSeverity]cxsdk.LogSeverity{
 		LogSeverityDebug:    cxsdk.LogSeverityDebug,
@@ -63,6 +67,7 @@ var (
 		LogSeverityWarning:  cxsdk.LogSeverityWarning,
 		LogSeverityError:    cxsdk.LogSeverityError,
 		LogSeverityCritical: cxsdk.LogSeverityCritical,
+		LogSeverityVerbose:  cxsdk.LogSeverityVerboseUnspecified,
 	}
 	LogsFiltersOperationToProtoOperation = map[LogFilterOperationType]cxsdk.LogFilterOperationType{
 		LogFilterOperationTypeOr:         cxsdk.LogFilterOperationIsOrUnspecified,
@@ -94,27 +99,27 @@ var (
 		AutoRetireTimeframe24H:                cxsdk.AutoRetireTimeframe24Hours,
 	}
 	LogsTimeWindowToProto = map[LogsTimeWindowValue]cxsdk.LogsTimeWindowValue{
-		LogsTimeWindowLast5Minutes:  cxsdk.LogsTimeWindowValue5MinutesOrUnspecified,
-		LogsTimeWindowLast10Minutes: cxsdk.LogsTimeWindow10Minutes,
-		LogsTimeWindowLast15Minutes: cxsdk.LogsTimeWindow15Minutes,
-		LogsTimeWindowLast30Minutes: cxsdk.LogsTimeWindow30Minutes,
-		LogsTimeWindowLastHour:      cxsdk.LogsTimeWindow1Hour,
-		LogsTimeWindowLast2Hours:    cxsdk.LogsTimeWindow2Hours,
-		LogsTimeWindowLast6Hours:    cxsdk.LogsTimeWindow6Hours,
-		LogsTimeWindowLast12Hours:   cxsdk.LogsTimeWindow12Hours,
-		LogsTimeWindowLast24Hours:   cxsdk.LogsTimeWindow24Hours,
-		LogsTimeWindowLast36Hours:   cxsdk.LogsTimeWindow36Hours,
+		LogsTimeWindow5Minutes:  cxsdk.LogsTimeWindowValue5MinutesOrUnspecified,
+		LogsTimeWindow10Minutes: cxsdk.LogsTimeWindow10Minutes,
+		LogsTimeWindow15Minutes: cxsdk.LogsTimeWindow15Minutes,
+		LogsTimeWindow30Minutes: cxsdk.LogsTimeWindow30Minutes,
+		LogsTimeWindowHour:      cxsdk.LogsTimeWindow1Hour,
+		LogsTimeWindow2Hours:    cxsdk.LogsTimeWindow2Hours,
+		LogsTimeWindow6Hours:    cxsdk.LogsTimeWindow6Hours,
+		LogsTimeWindow12Hours:   cxsdk.LogsTimeWindow12Hours,
+		LogsTimeWindow24Hours:   cxsdk.LogsTimeWindow24Hours,
+		LogsTimeWindow36Hours:   cxsdk.LogsTimeWindow36Hours,
 	}
 	LogsThresholdConditionTypeToProto = map[LogsThresholdConditionType]cxsdk.LogsThresholdConditionType{
 		LogsThresholdConditionTypeMoreThan: cxsdk.LogsThresholdConditionTypeMoreThanOrUnspecified,
 		LogsThresholdConditionTypeLessThan: cxsdk.LogsThresholdConditionTypeLessThan,
 	}
-	LogsRatioTimeWindowToProto = map[LogsRatioTimeWindow]cxsdk.LogsRatioTimeWindowValue{
+	LogsRatioTimeWindowToProto = map[LogsRatioTimeWindowValue]cxsdk.LogsRatioTimeWindowValue{
 		LogsRatioTimeWindowMinutes5:  cxsdk.LogsRatioTimeWindowValue5MinutesOrUnspecified,
 		LogsRatioTimeWindowMinutes10: cxsdk.LogsRatioTimeWindowValue10Minutes,
 		LogsRatioTimeWindowMinutes15: cxsdk.LogsRatioTimeWindowValue15Minutes,
 		LogsRatioTimeWindowMinutes30: cxsdk.LogsRatioTimeWindowValue30Minutes,
-		LogsRatioTimeWindowHour1:     cxsdk.LogsRatioTimeWindowValue1Hour,
+		LogsRatioTimeWindow1Hour:     cxsdk.LogsRatioTimeWindowValue1Hour,
 		LogsRatioTimeWindowHours2:    cxsdk.LogsRatioTimeWindowValue2Hours,
 		LogsRatioTimeWindowHours4:    cxsdk.LogsRatioTimeWindowValue4Hours,
 		LogsRatioTimeWindowHours6:    cxsdk.LogsRatioTimeWindowValue6Hours,
@@ -239,6 +244,8 @@ type AlertSpec struct {
 	// +optional
 	NotificationGroup *NotificationGroup `json:"notificationGroup,omitempty"`
 	// +optional
+	NotificationGroupExcess []NotificationGroup `json:"notificationGroupExcess,omitempty"`
+	// +optional
 	EntityLabels map[string]string `json:"entityLabels,omitempty"`
 	//+kubebuilder:default=false
 	PhantomMode bool `json:"phantomMode,omitempty"`
@@ -252,7 +259,13 @@ type AlertStatus struct {
 	ID *string `json:"id,omitempty"`
 }
 
+// +kubebuilder:validation:Pattern=`^UTC[+-]\d{2}$`
+// +kubebuilder:default=UTC+00
+type TimeZone string
+
 type AlertSchedule struct {
+	// +optional
+	TimeZone TimeZone `json:"timeZone"`
 	// +optional
 	ActiveOn *ActiveOn `json:"activeOn,omitempty"`
 }
@@ -312,14 +325,14 @@ type IntegrationType struct {
 
 type ActiveOn struct {
 	DayOfWeek []DayOfWeek `json:"dayOfWeek,omitempty"`
-	StartTime *TimeOfDay  `json:"startTime,omitempty"`
-	EndTime   *TimeOfDay  `json:"endTime,omitempty"`
+	// +kubebuilder:default="00:00"
+	StartTime *TimeOfDay `json:"startTime,omitempty"`
+	// +kubebuilder:default="23:59"
+	EndTime *TimeOfDay `json:"endTime,omitempty"`
 }
 
-type TimeOfDay struct {
-	Hours   int32 `json:"hours,omitempty"`
-	Minutes int32 `json:"minutes,omitempty"`
-}
+// +kubebuilder:validation:Pattern=`^(0\d|1\d|2[0-3]):[0-5]\d$`
+type TimeOfDay string
 
 // +kubebuilder:validation:Enum=sunday;monday;tuesday;wednesday;thursday;friday;saturday
 type DayOfWeek string
@@ -396,16 +409,16 @@ type LogsTimeWindow struct {
 type LogsTimeWindowValue string
 
 const (
-	LogsTimeWindowLast5Minutes  LogsTimeWindowValue = "5m"
-	LogsTimeWindowLast10Minutes LogsTimeWindowValue = "10m"
-	LogsTimeWindowLast15Minutes LogsTimeWindowValue = "15m"
-	LogsTimeWindowLast30Minutes LogsTimeWindowValue = "30m"
-	LogsTimeWindowLastHour      LogsTimeWindowValue = "1h"
-	LogsTimeWindowLast2Hours    LogsTimeWindowValue = "2h"
-	LogsTimeWindowLast6Hours    LogsTimeWindowValue = "6h"
-	LogsTimeWindowLast12Hours   LogsTimeWindowValue = "12h"
-	LogsTimeWindowLast24Hours   LogsTimeWindowValue = "24h"
-	LogsTimeWindowLast36Hours   LogsTimeWindowValue = "36h"
+	LogsTimeWindow5Minutes  LogsTimeWindowValue = "5m"
+	LogsTimeWindow10Minutes LogsTimeWindowValue = "10m"
+	LogsTimeWindow15Minutes LogsTimeWindowValue = "15m"
+	LogsTimeWindow30Minutes LogsTimeWindowValue = "30m"
+	LogsTimeWindowHour      LogsTimeWindowValue = "1h"
+	LogsTimeWindow2Hours    LogsTimeWindowValue = "2h"
+	LogsTimeWindow6Hours    LogsTimeWindowValue = "6h"
+	LogsTimeWindow12Hours   LogsTimeWindowValue = "12h"
+	LogsTimeWindow24Hours   LogsTimeWindowValue = "24h"
+	LogsTimeWindow36Hours   LogsTimeWindowValue = "36h"
 )
 
 // +kubebuilder:validation:Enum=moreThan;lessThan
@@ -439,21 +452,25 @@ type LogsRatioCondition struct {
 	ConditionType LogsRatioConditionType `json:"conditionType"`
 }
 
+type LogsRatioTimeWindow struct {
+	SpecificValue LogsRatioTimeWindowValue `json:"specificValue,omitempty"`
+}
+
 // +kubebuilder:validation:Enum={"5m","10m","15m","30m","1h","2h","4h","6h","12h","24h","36h"}
-type LogsRatioTimeWindow string
+type LogsRatioTimeWindowValue string
 
 const (
-	LogsRatioTimeWindowMinutes5  LogsRatioTimeWindow = "5m"
-	LogsRatioTimeWindowMinutes10 LogsRatioTimeWindow = "10m"
-	LogsRatioTimeWindowMinutes15 LogsRatioTimeWindow = "15m"
-	LogsRatioTimeWindowMinutes30 LogsRatioTimeWindow = "30m"
-	LogsRatioTimeWindowHour1     LogsRatioTimeWindow = "1h"
-	LogsRatioTimeWindowHours2    LogsRatioTimeWindow = "2h"
-	LogsRatioTimeWindowHours4    LogsRatioTimeWindow = "4h"
-	LogsRatioTimeWindowHours6    LogsRatioTimeWindow = "6h"
-	LogsRatioTimeWindowHours12   LogsRatioTimeWindow = "12h"
-	LogsRatioTimeWindowHours24   LogsRatioTimeWindow = "24h"
-	LogsRatioTimeWindowHours36   LogsRatioTimeWindow = "36h"
+	LogsRatioTimeWindowMinutes5  LogsRatioTimeWindowValue = "5m"
+	LogsRatioTimeWindowMinutes10 LogsRatioTimeWindowValue = "10m"
+	LogsRatioTimeWindowMinutes15 LogsRatioTimeWindowValue = "15m"
+	LogsRatioTimeWindowMinutes30 LogsRatioTimeWindowValue = "30m"
+	LogsRatioTimeWindow1Hour     LogsRatioTimeWindowValue = "1h"
+	LogsRatioTimeWindowHours2    LogsRatioTimeWindowValue = "2h"
+	LogsRatioTimeWindowHours4    LogsRatioTimeWindowValue = "4h"
+	LogsRatioTimeWindowHours6    LogsRatioTimeWindowValue = "6h"
+	LogsRatioTimeWindowHours12   LogsRatioTimeWindowValue = "12h"
+	LogsRatioTimeWindowHours24   LogsRatioTimeWindowValue = "24h"
+	LogsRatioTimeWindowHours36   LogsRatioTimeWindowValue = "36h"
 )
 
 // +kubebuilder:validation:Enum=moreThan;lessThan
@@ -503,7 +520,7 @@ type LogsTimeRelativeThreshold struct {
 	IgnoreInfinity            bool     `json:"ignoreInfinity"`
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 	// +optional
-	UndetectedValuesManagement UndetectedValuesManagement `json:"undetectedValuesManagement"`
+	UndetectedValuesManagement *UndetectedValuesManagement `json:"undetectedValuesManagement"`
 }
 
 type MetricThreshold struct {
@@ -525,7 +542,8 @@ type MetricThresholdRule struct {
 }
 
 type MetricThresholdRuleCondition struct {
-	Threshold     resource.Quantity            `json:"threshold"`
+	Threshold resource.Quantity `json:"threshold"`
+	// +kubebuilder:validation:Maximum:=100
 	ForOverPct    uint32                       `json:"forOverPct"`
 	OfTheLast     MetricTimeWindow             `json:"ofTheLast"`
 	ConditionType MetricThresholdConditionType `json:"conditionType"`
@@ -568,6 +586,7 @@ type MetricMissingValues struct {
 	// +optional
 	ReplaceWithZero *bool `json:"replaceWithZero,omitempty"`
 	// +optional
+	// +kubebuilder:validation:Maximum:=100
 	MinNonNullValuesPct *uint32 `json:"minNonNullValuesPct,omitempty"`
 }
 
@@ -632,7 +651,7 @@ type TracingThresholdRuleCondition struct {
 }
 
 type TracingTimeWindow struct {
-	SpecificValue *TracingTimeWindowSpecificValue `json:"specificValue,omitempty"`
+	SpecificValue TracingTimeWindowSpecificValue `json:"specificValue,omitempty"`
 }
 
 // +kubebuilder:validation:Enum={"5m","10m","15m","20m","30m","1h","2h","4h","6h","12h","24h","36h"}
@@ -715,19 +734,21 @@ type LogsAnomalyCondition struct {
 }
 
 type MetricAnomaly struct {
-	MetricFilter *MetricFilter        `json:"metricFilter"`
-	Rules        []*MetricAnomalyRule `json:"rules"`
+	MetricFilter MetricFilter        `json:"metricFilter"`
+	Rules        []MetricAnomalyRule `json:"rules"`
 }
 
 type MetricAnomalyCondition struct {
-	Threshold           resource.Quantity          `json:"threshold"`
-	ForOverPct          uint32                     `json:"forOverPct"`
-	OfTheLast           MetricTimeWindow           `json:"ofTheLast"`
+	Threshold resource.Quantity `json:"threshold"`
+	// +kubebuilder:validation:Maximum:=100
+	ForOverPct uint32           `json:"forOverPct"`
+	OfTheLast  MetricTimeWindow `json:"ofTheLast"`
+	// +kubebuilder:validation:Maximum:=100
 	MinNonNullValuesPct uint32                     `json:"minNonNullValuesPct"`
 	ConditionType       MetricAnomalyConditionType `json:"conditionType"`
 }
 
-// +kubebuilder:validation:Enum=moreThan;lessThan
+// +kubebuilder:validation:Enum=moreThan;lessThan;moreThanOrEquals;lessThanOrEquals
 type MetricAnomalyConditionType string
 
 const (
@@ -755,7 +776,7 @@ type LogsNewValueRuleCondition struct {
 }
 
 type LogsNewValueTimeWindow struct {
-	SpecificValue *LogsNewValueTimeWindowSpecificValue `json:"specificValue,omitempty"`
+	SpecificValue LogsNewValueTimeWindowSpecificValue `json:"specificValue,omitempty"`
 }
 
 // +kubebuilder:validation:Enum={"12h","24h","48h","72h","1w","1mo","2mo","3mo"}
@@ -777,7 +798,7 @@ type LogsUniqueCount struct {
 	Rules                       []LogsUniqueCountRule `json:"rules"`
 	NotificationPayloadFilter   []string              `json:"notificationPayloadFilter"`
 	MaxUniqueCountPerGroupByKey *uint64               `json:"maxUniqueCountPerGroupByKey"`
-	UniqueCountKeypath          *string               `json:"uniqueCountKeypath"`
+	UniqueCountKeypath          string                `json:"uniqueCountKeypath"`
 }
 
 type LogsUniqueCountCondition struct {
@@ -813,17 +834,13 @@ type LogsUniqueCountRule struct {
 }
 
 type LogsFilter struct {
-	FilterType LogsFilterType `json:"filterType,omitempty"`
-}
-
-type LogsFilterType struct {
-	// +optional
-	SimpleFilter *LogsSimpleFilter `json:"simpleFilter,omitempty"`
+	SimpleFilter LogsSimpleFilter `json:"simpleFilter,omitempty"`
 }
 
 type LogsSimpleFilter struct {
 	// +optional
-	LuceneQuery  *string       `json:"luceneQuery,omitempty"`
+	LuceneQuery *string `json:"luceneQuery,omitempty"`
+	// +optional
 	LabelFilters *LabelFilters `json:"labelFilters,omitempty"`
 }
 
@@ -839,7 +856,7 @@ type LabelFilters struct {
 type LabelFilterType struct {
 	//+kubebuilder:validation:MinLength=0
 	Value string `json:"value"`
-
+	//+kubebuilder:default=or
 	Operation LogFilterOperationType `json:"operation"`
 }
 
@@ -860,7 +877,7 @@ const (
 	LogFilterOperationTypeStartsWith LogFilterOperationType = "startsWith"
 )
 
-// +kubebuilder:validation:Enum=debug;info;warning;error;critical
+// +kubebuilder:validation:Enum=debug;info;warning;error;critical;verbose
 type LogSeverity string
 
 const (
@@ -869,6 +886,7 @@ const (
 	LogSeverityWarning  LogSeverity = "warning"
 	LogSeverityError    LogSeverity = "error"
 	LogSeverityCritical LogSeverity = "critical"
+	LogSeverityVerbose  LogSeverity = "verbose"
 )
 
 // +kubebuilder:validation:Enum=p1;p2;p3;p4
@@ -879,6 +897,7 @@ const (
 	AlertPriorityP2 AlertPriority = "p2"
 	AlertPriorityP3 AlertPriority = "p3"
 	AlertPriorityP4 AlertPriority = "p4"
+	AlertPriorityP5 AlertPriority = "p5"
 )
 
 func NewDefaultAlertStatus() *AlertStatus {
@@ -889,17 +908,18 @@ func NewDefaultAlertStatus() *AlertStatus {
 
 func (in AlertSpec) ExtractAlertProperties() *cxsdk.AlertDefProperties {
 	alertDefProperties := &cxsdk.AlertDefProperties{
-		Name:              wrapperspb.String(in.Name),
-		Description:       wrapperspb.String(in.Description),
-		Enabled:           wrapperspb.Bool(in.Enabled),
-		Priority:          AlertPriorityToProtoPriority[in.Priority],
-		GroupByKeys:       utils.StringSliceToWrappedStringSlice(in.GroupByKeys),
-		IncidentsSettings: expandIncidentsSettings(in.IncidentsSettings),
-		NotificationGroup: expandNotificationGroup(in.NotificationGroup),
-		EntityLabels:      in.EntityLabels,
-		PhantomMode:       wrapperspb.Bool(in.PhantomMode),
+		Name:                    wrapperspb.String(in.Name),
+		Description:             wrapperspb.String(in.Description),
+		Enabled:                 wrapperspb.Bool(in.Enabled),
+		Priority:                AlertPriorityToProtoPriority[in.Priority],
+		GroupByKeys:             utils.StringSliceToWrappedStringSlice(in.GroupByKeys),
+		IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+		NotificationGroup:       expandNotificationGroup(in.NotificationGroup),
+		NotificationGroupExcess: expandNotificationGroupExcess(in.NotificationGroupExcess),
+		EntityLabels:            in.EntityLabels,
+		PhantomMode:             wrapperspb.Bool(in.PhantomMode),
+		Schedule:                expandAlertSchedule(in.Schedule),
 	}
-	alertDefProperties = expandAlertSchedule(alertDefProperties, in.Schedule)
 	alertDefProperties = expandAlertTypeDefinition(alertDefProperties, in.TypeDefinition)
 
 	return alertDefProperties
@@ -925,6 +945,14 @@ func expandRetriggeringPeriod(alertDefIncidentSettings *cxsdk.AlertDefIncidentSe
 	}
 
 	return alertDefIncidentSettings
+}
+
+func expandNotificationGroupExcess(excess []NotificationGroup) []*cxsdk.AlertDefNotificationGroup {
+	result := make([]*cxsdk.AlertDefNotificationGroup, len(excess))
+	for i, group := range excess {
+		result[i] = expandNotificationGroup(&group)
+	}
+	return result
 }
 
 func expandNotificationGroup(notificationGroup *NotificationGroup) *cxsdk.AlertDefNotificationGroup {
@@ -977,26 +1005,86 @@ func expandIntegration(integration IntegrationType) *cxsdk.AlertDefIntegrationTy
 	return nil
 }
 
-func expandAlertSchedule(alertProperties *cxsdk.AlertDefProperties, alertSchedule *AlertSchedule) *cxsdk.AlertDefProperties {
+func expandAlertSchedule(alertSchedule *AlertSchedule) *cxsdk.AlertDefPropertiesActiveOn {
 	if alertSchedule == nil {
-		return alertProperties
+		return nil
 	}
 
-	if activeOn := alertSchedule.ActiveOn; activeOn != nil {
-		alertProperties.Schedule = &cxsdk.AlertDefPropertiesActiveOn{
-			ActiveOn: expandActivitySchedule(activeOn),
+	utc := extractUTC(alertSchedule.TimeZone)
+	daysOfWeek := expandDaysOfWeek(alertSchedule.ActiveOn.DayOfWeek)
+	start := expandTime(alertSchedule.ActiveOn.StartTime)
+	end := expandTime(alertSchedule.ActiveOn.EndTime)
+
+	start, end, daysOfWeek = convertTimeFramesToGMT(start, end, daysOfWeek, utc)
+
+	return &cxsdk.AlertDefPropertiesActiveOn{
+		ActiveOn: &cxsdk.AlertsActivitySchedule{
+			DayOfWeek: daysOfWeek,
+			StartTime: start,
+			EndTime:   end,
+		},
+	}
+
+}
+
+func extractUTC(timeZone TimeZone) int32 {
+	parts := strings.Split(string(timeZone), "UTC")
+	if len(parts) < 2 {
+		return 0
+	}
+	utcStr := parts[1]
+	utc, err := strconv.Atoi(utcStr)
+	if err != nil {
+		return 0
+	}
+	return int32(utc)
+}
+
+func expandTime(time *TimeOfDay) *cxsdk.AlertTimeOfDay {
+	if time == nil {
+		return nil
+	}
+
+	timeArr := strings.Split(string(*time), ":")
+	hours, _ := strconv.Atoi(timeArr[0])
+	minutes, _ := strconv.Atoi(timeArr[1])
+
+	return &cxsdk.AlertTimeOfDay{
+		Hours:   int32(hours),
+		Minutes: int32(minutes),
+	}
+}
+
+func convertTimeFramesToGMT(start, end *cxsdk.AlertTimeOfDay, daysOfWeek []cxsdk.AlertDayOfWeek, utc int32) (*cxsdk.AlertTimeOfDay, *cxsdk.AlertTimeOfDay, []cxsdk.AlertDayOfWeek) {
+	daysOfWeekOffset := daysOfWeekOffsetToGMT(start, utc)
+	start.Hours = convertUtcToGmt(start.GetHours(), utc)
+	end.Hours = convertUtcToGmt(end.GetHours(), utc)
+	if daysOfWeekOffset != 0 {
+		for i, d := range daysOfWeek {
+			daysOfWeek[i] = cxsdk.AlertDayOfWeek((int32(d) + daysOfWeekOffset) % 7)
 		}
 	}
 
-	return alertProperties
+	return start, end, daysOfWeek
 }
 
-func expandActivitySchedule(activeOn *ActiveOn) *cxsdk.AlertsActivitySchedule {
-	return &cxsdk.AlertsActivitySchedule{
-		DayOfWeek: expandDaysOfWeek(activeOn.DayOfWeek),
-		StartTime: expandTimeOfDay(activeOn.StartTime),
-		EndTime:   &cxsdk.AlertTimeOfDay{},
+func daysOfWeekOffsetToGMT(start *cxsdk.AlertTimeOfDay, utc int32) int32 {
+	daysOfWeekOffset := int32(start.Hours-utc) / 24
+	if daysOfWeekOffset < 0 {
+		daysOfWeekOffset += 7
 	}
+	return daysOfWeekOffset
+}
+
+func convertUtcToGmt(hours, utc int32) int32 {
+	hours -= utc
+	if hours < 0 {
+		hours += 24
+	} else if hours >= 24 {
+		hours -= 24
+	}
+
+	return hours
 }
 
 func expandDaysOfWeek(week []DayOfWeek) []cxsdk.AlertDayOfWeek {
@@ -1006,17 +1094,6 @@ func expandDaysOfWeek(week []DayOfWeek) []cxsdk.AlertDayOfWeek {
 	}
 
 	return result
-}
-
-func expandTimeOfDay(time *TimeOfDay) *cxsdk.AlertTimeOfDay {
-	if time == nil {
-		return nil
-	}
-
-	return &cxsdk.AlertTimeOfDay{
-		Hours:   time.Hours,
-		Minutes: time.Minutes,
-	}
 }
 
 func expandAlertTypeDefinition(properties *cxsdk.AlertDefProperties, definition AlertTypeDefinition) *cxsdk.AlertDefProperties {
@@ -1065,7 +1142,7 @@ func expandLogsUniqueCount(uniqueCount *LogsUniqueCount) *cxsdk.AlertDefProperti
 			Rules:                       expandLogsUniqueCountRules(uniqueCount.Rules),
 			NotificationPayloadFilter:   utils.StringSliceToWrappedStringSlice(uniqueCount.NotificationPayloadFilter),
 			MaxUniqueCountPerGroupByKey: wrapperspb.Int64(int64(*uniqueCount.MaxUniqueCountPerGroupByKey)),
-			UniqueCountKeypath:          wrapperspb.String(*uniqueCount.UniqueCountKeypath),
+			UniqueCountKeypath:          wrapperspb.String(uniqueCount.UniqueCountKeypath),
 		},
 	}
 }
@@ -1135,7 +1212,7 @@ func expandLogsNewValueRuleCondition(condition LogsNewValueRuleCondition) *cxsdk
 func expandLogsNewValueTimeWindow(timeWindow LogsNewValueTimeWindow) *cxsdk.LogsNewValueTimeWindow {
 	return &cxsdk.LogsNewValueTimeWindow{
 		Type: &cxsdk.LogsNewValueTimeWindowSpecificValue{
-			LogsNewValueTimeWindowSpecificValue: LogsNewValueTimeWindowValueToProto[*timeWindow.SpecificValue],
+			LogsNewValueTimeWindowSpecificValue: LogsNewValueTimeWindowValueToProto[timeWindow.SpecificValue],
 		},
 	}
 }
@@ -1154,7 +1231,7 @@ func expandMetricAnomaly(metricAnomaly *MetricAnomaly) *cxsdk.AlertDefProperties
 
 }
 
-func expandMetricAnomalyRules(rules []*MetricAnomalyRule) []*cxsdk.MetricAnomalyRule {
+func expandMetricAnomalyRules(rules []MetricAnomalyRule) []*cxsdk.MetricAnomalyRule {
 	result := make([]*cxsdk.MetricAnomalyRule, len(rules))
 	for i := range rules {
 		result[i] = expandMetricAnomalyRule(rules[i])
@@ -1163,11 +1240,7 @@ func expandMetricAnomalyRules(rules []*MetricAnomalyRule) []*cxsdk.MetricAnomaly
 	return result
 }
 
-func expandMetricAnomalyRule(rule *MetricAnomalyRule) *cxsdk.MetricAnomalyRule {
-	if rule == nil {
-		return nil
-	}
-
+func expandMetricAnomalyRule(rule MetricAnomalyRule) *cxsdk.MetricAnomalyRule {
 	return &cxsdk.MetricAnomalyRule{
 		Condition: expandMetricAnomalyCondition(rule.Condition),
 	}
@@ -1384,7 +1457,7 @@ func expandTracingThresholdCondition(condition TracingThresholdRuleCondition) *c
 func expandTracingTimeWindow(timeWindow TracingTimeWindow) *cxsdk.TracingTimeWindow {
 	return &cxsdk.TracingTimeWindow{
 		Type: &cxsdk.TracingTimeWindowSpecificValue{
-			TracingTimeWindowValue: TracingTimeWindowSpecificValueToProto[*timeWindow.SpecificValue],
+			TracingTimeWindowValue: TracingTimeWindowSpecificValueToProto[timeWindow.SpecificValue],
 		},
 	}
 }
@@ -1500,7 +1573,7 @@ func expandLogsTimeRelativeThreshold(threshold *LogsTimeRelativeThreshold) *cxsd
 			Rules:                      expandLogsTimeRelativeRules(threshold.Rules),
 			IgnoreInfinity:             wrapperspb.Bool(threshold.IgnoreInfinity),
 			NotificationPayloadFilter:  utils.StringSliceToWrappedStringSlice(threshold.NotificationPayloadFilter),
-			UndetectedValuesManagement: expandUndetectedValuesManagement(&threshold.UndetectedValuesManagement),
+			UndetectedValuesManagement: expandUndetectedValuesManagement(threshold.UndetectedValuesManagement),
 		},
 	}
 }
@@ -1555,7 +1628,7 @@ func expandLogsRatioCondition(condition LogsRatioCondition) *cxsdk.LogsRatioCond
 func expandLogsRatioTimeWindow(timeWindow LogsRatioTimeWindow) *cxsdk.LogsRatioTimeWindow {
 	return &cxsdk.LogsRatioTimeWindow{
 		Type: &cxsdk.LogsRatioTimeWindowSpecificValue{
-			LogsRatioTimeWindowSpecificValue: LogsRatioTimeWindowToProto[timeWindow],
+			LogsRatioTimeWindowSpecificValue: LogsRatioTimeWindowToProto[timeWindow.SpecificValue],
 		},
 	}
 }
@@ -1571,18 +1644,12 @@ func expandLogsFilter(filter *LogsFilter) *cxsdk.LogsFilter {
 		return nil
 	}
 
-	return expandLogsFilterType(&cxsdk.LogsFilter{}, filter.FilterType)
-}
-
-func expandLogsFilterType(filter *cxsdk.LogsFilter, filterType LogsFilterType) *cxsdk.LogsFilter {
-	if simpleFilter := filterType.SimpleFilter; simpleFilter != nil {
-		filter.FilterType = expandSimpleFilter(simpleFilter)
+	return &cxsdk.LogsFilter{
+		FilterType: expandSimpleFilter(filter.SimpleFilter),
 	}
-
-	return filter
 }
 
-func expandSimpleFilter(filter *LogsSimpleFilter) *cxsdk.LogsFilterSimpleFilter {
+func expandSimpleFilter(filter LogsSimpleFilter) *cxsdk.LogsFilterSimpleFilter {
 	return &cxsdk.LogsFilterSimpleFilter{
 		SimpleFilter: &cxsdk.SimpleFilter{
 			LuceneQuery:  utils.StringPointerToWrapperspbString(filter.LuceneQuery),

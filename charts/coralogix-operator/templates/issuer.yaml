@@ -1,0 +1,10 @@
+{{- if .Values.coralogixOperator.webhooks.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  labels:
+    {{- include "coralogixOperator.labels" . | nindent 4 }}
+  name: selfsigned-issuer
+spec:
+  selfSigned: {}
+{{- end }}

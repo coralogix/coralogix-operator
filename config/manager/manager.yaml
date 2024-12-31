@@ -72,9 +72,10 @@ spec:
         - --leader-elect
         - --health-probe-bind-address=:8081
         - --metrics-bind-address=127.0.0.1:8080
+        - --zap-log-level=debug
         - --api-key=${CORALOGIX_API_KEY}
         - --region=${CORALOGIX_REGION}
-        - --enable-webhooks=${ENABLE_WEBHOOKS}
+        - --enable-webhooks=true
         name: manager
         image: controller
         imagePullPolicy: IfNotPresent

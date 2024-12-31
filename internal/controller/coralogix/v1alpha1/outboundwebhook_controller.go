@@ -1,18 +1,16 @@
-/*
-Copyright 2023.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2024 Coralogix Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package v1alpha1
 
@@ -22,9 +20,7 @@ import (
 	"strconv"
 
 	"github.com/go-logr/logr"
-	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -40,6 +36,7 @@ import (
 	utils "github.com/coralogix/coralogix-operator/api"
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
+	"github.com/coralogix/coralogix-operator/internal/monitoring"
 )
 
 // OutboundWebhookReconciler reconciles a OutboundWebhook object
@@ -85,6 +82,7 @@ func (r *OutboundWebhookReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			log.Error(err, "Error on creating outbound-webhook")
 			return resultError, err
 		}
+		monitoring.OutboundWebhookInfoMetric.WithLabelValues(outboundWebhook.Name, outboundWebhook.Namespace, getWebhookType(outboundWebhook)).Set(1)
 		return ctrl.Result{}, nil
 	}
 
@@ -94,6 +92,7 @@ func (r *OutboundWebhookReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			log.Error(err, "Error on deleting outbound-webhook")
 			return resultError, err
 		}
+		monitoring.OutboundWebhookInfoMetric.DeleteLabelValues(outboundWebhook.Name, outboundWebhook.Namespace, getWebhookType(outboundWebhook))
 		return ctrl.Result{}, nil
 	}
 
@@ -102,6 +101,7 @@ func (r *OutboundWebhookReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		log.Error(err, "Error on updating outbound-webhook")
 		return resultError, err
 	}
+	monitoring.OutboundWebhookInfoMetric.WithLabelValues(outboundWebhook.Name, outboundWebhook.Namespace, getWebhookType(outboundWebhook)).Set(1)
 
 	return ctrl.Result{}, nil
 }
@@ -119,27 +119,30 @@ func (r *OutboundWebhookReconciler) create(ctx context.Context, log logr.Logger,
 		return fmt.Errorf("error to extract create-request out of the outbound-webhook -\n%v", webhook)
 	}
 
-	log.V(int(zapcore.DebugLevel)).Info(fmt.Sprintf("Creating outbound-webhook-\n%s", protojson.Format(createRequest)))
+	log.V(1).Info(fmt.Sprintf("Creating outbound-webhook-\n%s", protojson.Format(createRequest)))
 	createResponse, err := r.OutboundWebhooksClient.Create(ctx, createRequest)
 	if err != nil {
 		return fmt.Errorf("error to create remote outbound-webhook - %s\n%w", protojson.Format(createRequest), err)
 	}
-	log.V(int(zapcore.DebugLevel)).Info(fmt.Sprintf("outbound-webhook was created- %s", protojson.Format(createResponse)))
+	log.V(1).Info(fmt.Sprintf("outbound-webhook was created- %s", protojson.Format(createResponse)))
 
 	webhook.Status = coralogixv1alpha1.OutboundWebhookStatus{
 		ID: ptr.To(createResponse.Id.GetValue()),
 	}
 	if err = r.Status().Update(ctx, webhook); err != nil {
+		if err := r.deleteRemoteWebhook(ctx, log, webhook.Status.ID); err != nil {
+			return fmt.Errorf("error to delete outbound-webhook after status update error -\n%v", webhook)
+		}
 		return fmt.Errorf("error to update outbound-webhook status -\n%v", webhook)
 	}
 
 	readRequest := &cxsdk.GetOutgoingWebhookRequest{Id: createResponse.Id}
-	log.V(int(zapcore.DebugLevel)).Info(fmt.Sprintf("Getting outbound-webhook -\n%s", protojson.Format(readRequest)))
+	log.V(1).Info(fmt.Sprintf("Getting outbound-webhook -\n%s", protojson.Format(readRequest)))
 	readResponse, err := r.OutboundWebhooksClient.Get(ctx, readRequest)
 	if err != nil {
 		return fmt.Errorf("error to get outbound-webhook -\n%v", webhook)
 	}
-	log.V(int(zapcore.DebugLevel)).Info(fmt.Sprintf("outbound-webhook was read -\n%s", protojson.Format(readResponse)))
+	log.V(1).Info(fmt.Sprintf("outbound-webhook was read -\n%s", protojson.Format(readResponse)))
 
 	status, err := getOutboundWebhookStatus(readResponse.GetWebhook())
 	if err != nil {
@@ -180,10 +183,10 @@ func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger,
 		return fmt.Errorf("error to parse update outbound-webhook request -\n%v", webhook)
 	}
 
-	log.V(int(zapcore.DebugLevel)).Info(fmt.Sprintf("updating outbound-webhook\n%s", protojson.Format(updateReq)))
+	log.V(1).Info(fmt.Sprintf("updating outbound-webhook\n%s", protojson.Format(updateReq)))
 	_, err = r.OutboundWebhooksClient.Update(ctx, updateReq)
 	if err != nil {
-		if status.Code(err) == codes.NotFound {
+		if cxsdk.Code(err) == codes.NotFound {
 			webhook.Status = coralogixv1alpha1.OutboundWebhookStatus{}
 			if err = r.Status().Update(ctx, webhook); err != nil {
 				return fmt.Errorf("error to update outbound-webhook status -\n%v", webhook)
@@ -193,7 +196,7 @@ func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger,
 		return fmt.Errorf("error to update outbound-webhook -\n%v", webhook)
 	}
 
-	log.V(int(zapcore.DebugLevel)).Info("Getting outbound-webhook from remote", "id", webhook.Status.ID)
+	log.V(1).Info("Getting outbound-webhook from remote", "id", webhook.Status.ID)
 	remoteOutboundWebhook, err := r.OutboundWebhooksClient.Get(ctx,
 		&cxsdk.GetOutgoingWebhookRequest{
 			Id: utils.StringPointerToWrapperspbString(webhook.Status.ID),
@@ -202,7 +205,7 @@ func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger,
 	if err != nil {
 		return fmt.Errorf("error to get outbound-webhook -\n%v", webhook)
 	}
-	log.V(int(zapcore.DebugLevel)).Info(fmt.Sprintf("outbound-webhook was read\n%s", protojson.Format(remoteOutboundWebhook)))
+	log.V(1).Info(fmt.Sprintf("outbound-webhook was read\n%s", protojson.Format(remoteOutboundWebhook)))
 
 	status, err := getOutboundWebhookStatus(remoteOutboundWebhook.GetWebhook())
 	if err != nil {
@@ -217,12 +220,9 @@ func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger,
 }
 
 func (r *OutboundWebhookReconciler) delete(ctx context.Context, log logr.Logger, webhook *coralogixv1alpha1.OutboundWebhook) error {
-	log.V(int(zapcore.DebugLevel)).Info("Deleting outbound-webhook from remote", "id", webhook.Status.ID)
-	if _, err := r.OutboundWebhooksClient.Delete(ctx,
-		&cxsdk.DeleteOutgoingWebhookRequest{Id: wrapperspb.String(*webhook.Status.ID)}); err != nil && status.Code(err) != codes.NotFound {
+	if err := r.deleteRemoteWebhook(ctx, log, webhook.Status.ID); err != nil {
 		return fmt.Errorf("error to delete outbound-webhook -\n%v", webhook)
 	}
-	log.V(int(zapcore.DebugLevel)).Info("outbound-webhook was deleted from remote", "id", webhook.Status.ID)
 
 	controllerutil.RemoveFinalizer(webhook, outboundWebhookFinalizerName)
 	if err := r.Update(ctx, webhook); err != nil {
@@ -230,4 +230,59 @@ func (r *OutboundWebhookReconciler) delete(ctx context.Context, log logr.Logger,
 	}
 
 	return nil
+}
+
+func (r *OutboundWebhookReconciler) deleteRemoteWebhook(ctx context.Context, log logr.Logger, webhookID *string) error {
+	log.V(1).Info("Deleting outbound-webhook from remote", "id", webhookID)
+	if _, err := r.OutboundWebhooksClient.Delete(ctx, &cxsdk.DeleteOutgoingWebhookRequest{Id: wrapperspb.String(*webhookID)}); err != nil && cxsdk.Code(err) != codes.NotFound {
+		log.V(1).Error(err, "Error on deleting outbound-webhook", "id", webhookID)
+		return fmt.Errorf("error to delete outbound-webhook -\n%v", webhookID)
+	}
+	log.V(1).Info("outbound-webhook was deleted from remote", "id", webhookID)
+
+	return nil
+}
+
+func getWebhookType(webhook *coralogixv1alpha1.OutboundWebhook) string {
+	if webhook.Spec.OutboundWebhookType.GenericWebhook != nil {
+		return "genericWebhook"
+	}
+
+	if webhook.Spec.OutboundWebhookType.Slack != nil {
+		return "slack"
+	}
+
+	if webhook.Spec.OutboundWebhookType.PagerDuty != nil {
+		return "pager_duty"
+	}
+
+	if webhook.Spec.OutboundWebhookType.SendLog != nil {
+		return "send_log"
+	}
+
+	if webhook.Spec.OutboundWebhookType.EmailGroup != nil {
+		return "email_group"
+	}
+
+	if webhook.Spec.OutboundWebhookType.MicrosoftTeams != nil {
+		return "microsoft_teams"
+	}
+
+	if webhook.Spec.OutboundWebhookType.Jira != nil {
+		return "jira"
+	}
+
+	if webhook.Spec.OutboundWebhookType.Opsgenie != nil {
+		return "opsgenie"
+	}
+
+	if webhook.Spec.OutboundWebhookType.Demisto != nil {
+		return "demisto"
+	}
+
+	if webhook.Spec.OutboundWebhookType.AwsEventBridge != nil {
+		return "aws_event_bridge"
+	}
+
+	return "unknown"
 }
