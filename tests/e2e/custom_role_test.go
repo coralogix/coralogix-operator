@@ -44,21 +44,7 @@ var _ = Describe("CustomRole", Ordered, func() {
 	BeforeEach(func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		rolesClient = ClientsInstance.GetCoralogixClientSet().Roles()
-		customRole = &coralogixv1alpha1.CustomRole{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      customRoleName,
-				Namespace: testNamespace,
-			},
-			Spec: coralogixv1alpha1.CustomRoleSpec{
-				Name:           customRoleName,
-				Description:    "This is a sample custom role",
-				ParentRoleName: "Standard User",
-				Permissions: []string{
-					"team-actions:UpdateConfig",
-					"TEAM-CUSTOM-API-KEYS:READCONFIG",
-				},
-			},
-		}
+		customRole = getSampleCustomRole(customRoleName, testNamespace)
 	})
 
 	It("Should be created successfully", func(ctx context.Context) {
@@ -111,3 +97,21 @@ var _ = Describe("CustomRole", Ordered, func() {
 		}).Should(Equal(codes.NotFound))
 	})
 })
+
+func getSampleCustomRole(name, namespace string) *coralogixv1alpha1.CustomRole {
+	return &coralogixv1alpha1.CustomRole{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: coralogixv1alpha1.CustomRoleSpec{
+			Name:           name,
+			Description:    "This is a sample custom role",
+			ParentRoleName: "Standard User",
+			Permissions: []string{
+				"team-actions:UpdateConfig",
+				"TEAM-CUSTOM-API-KEYS:READCONFIG",
+			},
+		},
+	}
+}
