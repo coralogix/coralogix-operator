@@ -19,6 +19,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	prometheusv1alpha "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -205,7 +206,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	sdkClientSet := cxsdk.NewClientSet(targetUrl, apiKey, apiKey)
+	sdkClientSet := cxsdk.NewClientSet(strings.ToLower(region), apiKey, apiKey)
 
 	if err = (&coralogixcontrollers.RuleGroupReconciler{
 		CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),
@@ -273,6 +274,14 @@ func main() {
 		Scheme:       mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Scope")
+		os.Exit(1)
+	}
+	if err = (&coralogixcontrollers.GroupReconciler{
+		CXClientSet: sdkClientSet,
+		Client:      mgr.GetClient(),
+		Scheme:      mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Group")
 		os.Exit(1)
 	}
 

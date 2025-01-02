@@ -18,6 +18,14 @@ github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDk
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/coralogix/coralogix-management-sdk v0.12.2-0.20241230141909-7424ae8fb966 h1:s3p8BP5lvn/7FMpJBUuKN3IVAw+44RqmgvioYkOFT8w=
 github.com/coralogix/coralogix-management-sdk v0.12.2-0.20241230141909-7424ae8fb966/go.mod h1:4j43DiCGPC8pQghrZRgQp+V3dTzObZ2ohRXswnRkIrE=
+github.com/coralogix/coralogix-management-sdk v0.12.2-0.20250102120648-389288f5d2db h1:VZEIQ/kLqnuMHhX4uRbVqOP+F3I2LfXCrMjgK5VgUDk=
+github.com/coralogix/coralogix-management-sdk v0.12.2-0.20250102120648-389288f5d2db/go.mod h1:4j43DiCGPC8pQghrZRgQp+V3dTzObZ2ohRXswnRkIrE=
+github.com/coralogix/coralogix-management-sdk v0.12.2-0.20250102124822-eb61850ae35e h1:SD4w8PmThqeLVJyYLJ9aeKlhhNR73am83nh7xi8rWdc=
+github.com/coralogix/coralogix-management-sdk v0.12.2-0.20250102124822-eb61850ae35e/go.mod h1:4j43DiCGPC8pQghrZRgQp+V3dTzObZ2ohRXswnRkIrE=
+github.com/coralogix/coralogix-management-sdk v0.12.2-0.20250102124933-d52dd6747897 h1:jA8ycWRQ21i1wbQFkUDzXY2AvBx9j0KPSyg9G27DL2s=
+github.com/coralogix/coralogix-management-sdk v0.12.2-0.20250102124933-d52dd6747897/go.mod h1:4j43DiCGPC8pQghrZRgQp+V3dTzObZ2ohRXswnRkIrE=
+github.com/coralogix/coralogix-management-sdk v0.12.2-0.20250102141113-3e49395b8686 h1:YyNQ1uDv2PSVBeitblFrE9h4cr2AuW/NEjCfb2kSvLs=
+github.com/coralogix/coralogix-management-sdk v0.12.2-0.20250102141113-3e49395b8686/go.mod h1:4j43DiCGPC8pQghrZRgQp+V3dTzObZ2ohRXswnRkIrE=
 github.com/cpuguy83/go-md2man/v2 v2.0.4/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

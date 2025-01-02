@@ -1,0 +1,23 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Group
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: group-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: group-sample
+spec:
+  name: group-sample
+  description: "This is a sample group"
+  members:
+    - email: example1@coralogix.com
+    - email: example2@coralogix.com
+  scope:
+    scopeRef: scope-sample
+  customRoles:
+    - customRoleRef: custom-role-sample
+
+
+
