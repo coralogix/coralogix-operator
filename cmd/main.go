@@ -267,6 +267,14 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "CustomRole")
 		os.Exit(1)
 	}
+	if err = (&coralogixcontrollers.ScopeReconciler{
+		ScopesClient: sdkClientSet.Scopes(),
+		Client:       mgr.GetClient(),
+		Scheme:       mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Scope")
+		os.Exit(1)
+	}
 
 	if prometheusRuleController {
 		if err = (&controllers.AlertmanagerConfigReconciler{
