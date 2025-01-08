@@ -21,6 +21,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"google.golang.org/grpc/codes"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
@@ -43,27 +44,7 @@ var _ = Describe("Scope", Ordered, func() {
 	BeforeEach(func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		scopesClient = ClientsInstance.GetCoralogixClientSet().Scopes()
-		scope = &coralogixv1alpha1.Scope{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      scopeName,
-				Namespace: testNamespace,
-			},
-			Spec: coralogixv1alpha1.ScopeSpec{
-				Name:        scopeName,
-				Description: ptr.To("This is a sample scope"),
-				Filters: []coralogixv1alpha1.ScopeFilter{
-					{
-						EntityType: "logs",
-						Expression: "<v1>(subsystemName == 'purchases') || (subsystemName == 'signups')",
-					},
-					{
-						EntityType: "spans",
-						Expression: "<v1>(subsystemName == 'clothing') || (subsystemName == 'electronics')",
-					},
-				},
-				DefaultExpression: "<v1>true",
-			},
-		}
+		scope = getSampleScope(scopeName, testNamespace)
 	})
 
 	It("Should be created successfully", func(ctx context.Context) {
@@ -112,12 +93,35 @@ var _ = Describe("Scope", Ordered, func() {
 		Expect(crClient.Delete(ctx, scope)).To(Succeed())
 
 		By("Verifying Scope is deleted from Coralogix backend")
-		Eventually(func() int {
-			getScopeRes, err := scopesClient.Get(ctx, &cxsdk.GetTeamScopesByIDsRequest{
+		Eventually(func() codes.Code {
+			_, err := scopesClient.Get(ctx, &cxsdk.GetTeamScopesByIDsRequest{
 				Ids: []string{scopeID},
 			})
-			Expect(err).ToNot(HaveOccurred())
-			return len(getScopeRes.Scopes)
-		}, time.Minute, time.Second).Should(Equal(0))
+			return cxsdk.Code(err)
+		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
 	})
 })
+
+func getSampleScope(name, namespace string) *coralogixv1alpha1.Scope {
+	return &coralogixv1alpha1.Scope{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: coralogixv1alpha1.ScopeSpec{
+			Name:        name,
+			Description: ptr.To("This is a sample scope"),
+			Filters: []coralogixv1alpha1.ScopeFilter{
+				{
+					EntityType: "logs",
+					Expression: "<v1>(subsystemName == 'purchases') || (subsystemName == 'signups')",
+				},
+				{
+					EntityType: "spans",
+					Expression: "<v1>(subsystemName == 'clothing') || (subsystemName == 'electronics')",
+				},
+			},
+			DefaultExpression: "<v1>true",
+		},
+	}
+}
