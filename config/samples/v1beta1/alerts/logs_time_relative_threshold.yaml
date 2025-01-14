@@ -18,22 +18,21 @@ spec:
   alertType:
     logsTimeRelativeThreshold:
       logsFilter:
-        filterType:
-          simpleFilter:
-            luceneQuery: remote_addr_enriched:/.*/
-            labelFilters:
-              applicationName:
-                - value: nginx
-                  operation: includes
-                - value: subsystem-name
-                  operation: startsWith
-              subsystemName:
-                - value: warning
-                  operation: or
-                - value: info
-                  operation: endsWith
-              severity: ["warning", "info"]
-      notificationPayloadFilter: ["coralogix.metadata.sdkId"]
+        simpleFilter:
+          luceneQuery: remote_addr_enriched:/.*/
+          labelFilters:
+            applicationName:
+              - value: nginx
+                operation: includes
+              - value: subsystem-name
+                operation: startsWith
+            subsystemName:
+              - value: warning
+                operation: or
+              - value: info
+                operation: endsWith
+            severity: [ "warning", "info" ]
+      notificationPayloadFilter: [ "coralogix.metadata.sdkId" ]
       rules:
         - condition:
             threshold: "100.4"
@@ -42,6 +41,7 @@ spec:
   notificationGroup:
     webhooks:
       - retriggeringPeriod:
-          minutes: 5
+          minutes: 1440
         integration:
-          integrationId: 70824
+          integrationRef:
+            name: slack-webhook

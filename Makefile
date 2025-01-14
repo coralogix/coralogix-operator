@@ -41,9 +41,17 @@ help: ## Display this help.
 
 ##@ Development
 
+#.PHONY: manifests
+#manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
+#	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 .PHONY: manifests
-manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
+manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole, and CustomResourceDefinition objects.
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	@echo "Overriding CRD version for OutboundWebhook to v1alpha1..."
+	sed -i '' 's/name: common/name: v1alpha1/' config/crd/bases/coralogix.com_outboundwebhooks.yaml
+
+
+
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.

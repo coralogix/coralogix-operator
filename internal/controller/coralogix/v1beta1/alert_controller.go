@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	"github.com/coralogix/coralogix-operator/api/coralogix/common"
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	alerts "github.com/coralogix/coralogix-operator/internal/controller/clientset/grpc/alerts/v2"
@@ -107,8 +108,20 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 }
 
 func (r *AlertReconciler) update(ctx context.Context, log logr.Logger, alert *coralogixv1beta1.Alert) error {
+	alertDefProperties, err := alert.Spec.ExtractAlertProperties(
+		&common.ListingAlertsAndWebhooksProperties{
+			Clientset: r.CoralogixClientSet,
+			Ctx:       ctx,
+			Log:       log,
+			Client:    r.Client,
+			Namespace: alert.Namespace,
+		})
+	if err != nil {
+		return fmt.Errorf("error on extracting alert properties: %w", err)
+	}
+
 	alertRequest := &cxsdk.ReplaceAlertDefRequest{
-		AlertDefProperties: alert.Spec.ExtractAlertProperties(),
+		AlertDefProperties: alertDefProperties,
 		Id:                 wrapperspb.String(*alert.Status.ID),
 	}
 
@@ -119,7 +132,7 @@ func (r *AlertReconciler) update(ctx context.Context, log logr.Logger, alert *co
 			log.V(1).Info("alert not found on remote, recreating it")
 			alert.Status = *coralogixv1beta1.NewDefaultAlertStatus()
 			if err = r.Status().Update(ctx, alert); err != nil {
-				return fmt.Errorf("error on updating alert status: %w", err)
+				return fmt.Errorf("error on updating alert status 1: %v", err)
 			}
 			return fmt.Errorf("alert not found on remote: %w", err)
 		}
@@ -143,8 +156,21 @@ func (r *AlertReconciler) delete(ctx context.Context, log logr.Logger, alert *co
 }
 
 func (r *AlertReconciler) create(ctx context.Context, log logr.Logger, alert *coralogixv1beta1.Alert) error {
+	alertDefProperties, err := alert.Spec.ExtractAlertProperties(
+		&common.ListingAlertsAndWebhooksProperties{
+			Ctx:       ctx,
+			Log:       log,
+			Client:    r.Client,
+			Clientset: r.CoralogixClientSet,
+			Namespace: alert.Namespace,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("error on extracting alert properties: %w", err)
+	}
+
 	alertRequest := &cxsdk.CreateAlertDefRequest{
-		AlertDefProperties: alert.Spec.ExtractAlertProperties(),
+		AlertDefProperties: alertDefProperties,
 	}
 
 	log.V(1).Info("Creating remote alert", "alert", protojson.Format(alertRequest))
@@ -160,10 +186,10 @@ func (r *AlertReconciler) create(ctx context.Context, log logr.Logger, alert *co
 
 	alert.Status.ID = pointer.String(response.GetAlertDef().GetId().GetValue())
 	if err = r.Status().Update(ctx, alert); err != nil {
-		if err = r.deleteRemoteAlert(ctx, log, alert.Status.ID); err != nil {
-			return fmt.Errorf("error on deleting remote alert after status update error: %w", err)
+		if err2 := r.deleteRemoteAlert(ctx, log, alert.Status.ID); err2 != nil {
+			return fmt.Errorf("error on deleting remote alert after status update error: %w", err2)
 		}
-		return fmt.Errorf("error on updating alert status: %w", err)
+		return fmt.Errorf("error on updating alert status: %v %v", err, alert)
 	}
 
 	updated := false
@@ -231,6 +257,7 @@ func getAlertType(alert *coralogixv1beta1.Alert) string {
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *AlertReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	coralogixv1beta1.ClientSet = r.CoralogixClientSet
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1beta1.Alert{}).
 		Complete(r)

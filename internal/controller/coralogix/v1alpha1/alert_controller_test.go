@@ -18,6 +18,8 @@ import (
 	"context"
 	"testing"
 
+	utils "github.com/coralogix/coralogix-operator/api/coralogix"
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -37,8 +39,6 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
-	utils "github.com/coralogix/coralogix-operator/api"
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	alerts "github.com/coralogix/coralogix-operator/internal/controller/clientset/grpc/alerts/v2"
 	"github.com/coralogix/coralogix-operator/internal/controller/mock_clientset"
 )

@@ -18,6 +18,8 @@ import (
 	"context"
 	"fmt"
 
+	utils "github.com/coralogix/coralogix-operator/api/coralogix"
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
@@ -33,8 +35,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	utils "github.com/coralogix/coralogix-operator/api"
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	alerts "github.com/coralogix/coralogix-operator/internal/controller/clientset/grpc/alerts/v2"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"

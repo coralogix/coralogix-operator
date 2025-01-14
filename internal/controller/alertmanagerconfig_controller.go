@@ -21,6 +21,8 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/coralogix/coralogix-operator/api/coralogix/common"
+	"github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/go-logr/logr"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus/common/model"
@@ -36,7 +38,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
 )
@@ -118,7 +119,7 @@ func (r *AlertmanagerConfigReconciler) Reconcile(ctx context.Context, req ctrl.R
 
 func (r *AlertmanagerConfigReconciler) convertAlertmanagerConfigToCxIntegrations(ctx context.Context, log logr.Logger, alertmanagerConfig *prometheus.AlertmanagerConfig) (succeed bool) {
 	succeed = true
-	outboundWebhook := &coralogixv1alpha1.OutboundWebhook{
+	outboundWebhook := &common.OutboundWebhook{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: alertmanagerConfig.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
@@ -138,7 +139,7 @@ func (r *AlertmanagerConfigReconciler) convertAlertmanagerConfigToCxIntegrations
 			if err := r.Get(ctx, client.ObjectKeyFromObject(opsGenieWebhook), opsGenieWebhook); err != nil {
 				if errors.IsNotFound(err) {
 					opsGenieWebhookType := opsgenieToOutboundWebhookType(opsGenieConfig)
-					opsGenieWebhook.Spec = coralogixv1alpha1.OutboundWebhookSpec{
+					opsGenieWebhook.Spec = common.OutboundWebhookSpec{
 						Name:                opsGenieWebhook.Name,
 						OutboundWebhookType: opsGenieWebhookType,
 					}
@@ -171,7 +172,7 @@ func (r *AlertmanagerConfigReconciler) convertAlertmanagerConfigToCxIntegrations
 						log.Error(err, "Received an error while trying to convert SlackConfig to OutboundWebhookType")
 						continue
 					}
-					slackWebhook.Spec = coralogixv1alpha1.OutboundWebhookSpec{
+					slackWebhook.Spec = common.OutboundWebhookSpec{
 						Name:                slackWebhook.Name,
 						OutboundWebhookType: outboundWebhookType,
 					}
@@ -198,13 +199,13 @@ func (r *AlertmanagerConfigReconciler) convertAlertmanagerConfigToCxIntegrations
 	return
 }
 
-func (r *AlertmanagerConfigReconciler) slackConfigToOutboundWebhookType(ctx context.Context, config prometheus.SlackConfig, namespace string) (coralogixv1alpha1.OutboundWebhookType, error) {
+func (r *AlertmanagerConfigReconciler) slackConfigToOutboundWebhookType(ctx context.Context, config prometheus.SlackConfig, namespace string) (common.OutboundWebhookType, error) {
 	url, err := r.getSecret(ctx, config.APIURL, namespace)
 	if err != nil {
-		return coralogixv1alpha1.OutboundWebhookType{}, fmt.Errorf("received an error while trying to get API URL from secret: %w", err)
+		return common.OutboundWebhookType{}, fmt.Errorf("received an error while trying to get API URL from secret: %w", err)
 	}
-	return coralogixv1alpha1.OutboundWebhookType{
-		Slack: &coralogixv1alpha1.Slack{
+	return common.OutboundWebhookType{
+		Slack: &common.Slack{
 			Url: url,
 		},
 	}, nil
@@ -240,7 +241,7 @@ func (r *AlertmanagerConfigReconciler) linkCxAlertToCxIntegrations(ctx context.C
 		return false
 	}
 
-	var alerts coralogixv1alpha1.AlertList
+	var alerts v1alpha1.AlertList
 	if err := r.List(ctx, &alerts, client.InNamespace(config.Namespace), client.MatchingLabels{"app.coralogix.com/managed-by-alertmanager-config": "true"}); err != nil {
 		log.Error(err, "Received an error while trying to list Alerts")
 		return false
@@ -282,7 +283,7 @@ func (r *AlertmanagerConfigReconciler) linkCxAlertToCxIntegrations(ctx context.C
 }
 
 func (r *AlertmanagerConfigReconciler) deleteWebhooksFromRelatedAlerts(ctx context.Context, config *prometheus.AlertmanagerConfig) error {
-	var alerts coralogixv1alpha1.AlertList
+	var alerts v1alpha1.AlertList
 	if err := r.List(ctx, &alerts, client.InNamespace(config.Namespace), client.MatchingLabels{"app.coralogix.com/managed-by-alertmanager-config": "true"}); err != nil {
 		return fmt.Errorf("received an error while trying to list Alerts: %w", err)
 	}
@@ -299,9 +300,9 @@ func (r *AlertmanagerConfigReconciler) deleteWebhooksFromRelatedAlerts(ctx conte
 	return nil
 }
 
-func opsgenieToOutboundWebhookType(opsGenieConfig prometheus.OpsGenieConfig) coralogixv1alpha1.OutboundWebhookType {
-	return coralogixv1alpha1.OutboundWebhookType{
-		Opsgenie: &coralogixv1alpha1.Opsgenie{
+func opsgenieToOutboundWebhookType(opsGenieConfig prometheus.OpsGenieConfig) common.OutboundWebhookType {
+	return common.OutboundWebhookType{
+		Opsgenie: &common.Opsgenie{
 			Url: opsGenieConfig.APIURL,
 		},
 	}
@@ -319,8 +320,8 @@ func matchedRoutesToMatchedReceiversMap(matchedRoutes []*prometheus.Route, allRe
 	return matchedReceiversMap
 }
 
-func generateNotificationGroupFromRoutes(matchedRoutes []*prometheus.Route, matchedReceivers map[string]*prometheus.Receiver) ([]coralogixv1alpha1.NotificationGroup, error) {
-	var notificationsGroups []coralogixv1alpha1.NotificationGroup
+func generateNotificationGroupFromRoutes(matchedRoutes []*prometheus.Route, matchedReceivers map[string]*prometheus.Receiver) ([]v1alpha1.NotificationGroup, error) {
+	var notificationsGroups []v1alpha1.NotificationGroup
 	for _, route := range matchedRoutes {
 		receiver, ok := matchedReceivers[route.Receiver]
 		if !ok || receiver == nil {
@@ -332,9 +333,9 @@ func generateNotificationGroupFromRoutes(matchedRoutes []*prometheus.Route, matc
 			return nil, err
 		}
 
-		var notificationsGroup = coralogixv1alpha1.NotificationGroup{
+		var notificationsGroup = v1alpha1.NotificationGroup{
 			GroupByFields: route.GroupBy,
-			Notifications: []coralogixv1alpha1.Notification{},
+			Notifications: []v1alpha1.Notification{},
 		}
 
 		for i, conf := range receiver.SlackConfigs {
@@ -366,17 +367,17 @@ func getRetriggeringPeriodMinutes(route *prometheus.Route) (int32, error) {
 	return retriggeringPeriodMinutes, nil
 }
 
-func webhookNameToAlertNotification(webhookName string, retriggeringPeriodMinutes int32, notifyOnResolve *bool) coralogixv1alpha1.Notification {
+func webhookNameToAlertNotification(webhookName string, retriggeringPeriodMinutes int32, notifyOnResolve *bool) v1alpha1.Notification {
 	var notifyOn string
 	if notifyOnResolve != nil && *notifyOnResolve {
-		notifyOn = coralogixv1alpha1.NotifyOnTriggeredAndResolved
+		notifyOn = v1alpha1.NotifyOnTriggeredAndResolved
 	} else {
-		notifyOn = coralogixv1alpha1.NotifyOnTriggeredOnly
+		notifyOn = v1alpha1.NotifyOnTriggeredOnly
 	}
-	return coralogixv1alpha1.Notification{
+	return v1alpha1.Notification{
 		IntegrationName:           pointer.String(webhookName),
 		RetriggeringPeriodMinutes: retriggeringPeriodMinutes,
-		NotifyOn:                  coralogixv1alpha1.NotifyOn(notifyOn),
+		NotifyOn:                  v1alpha1.NotifyOn(notifyOn),
 	}
 }
 
@@ -389,7 +390,7 @@ func getReceiverByName(receivers []prometheus.Receiver, receiver string) *promet
 	return nil
 }
 
-func getLabelSet(a *coralogixv1alpha1.Alert) model.LabelSet {
+func getLabelSet(a *v1alpha1.Alert) model.LabelSet {
 	lset := model.LabelSet{}
 	for k, v := range a.Spec.Labels {
 		lset[model.LabelName(k)] = model.LabelValue(v)

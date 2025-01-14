@@ -17,7 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -28,8 +28,6 @@ var alertlog = logf.Log.WithName("alert-resource")
 
 // SetupAlertWebhookWithManager registers the webhook for Alert in the manager.
 func SetupAlertWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&coralogixv1alpha1.Alert{}).
+	return ctrl.NewWebhookManagedBy(mgr).For(&coralogixv1beta1.Alert{}).
 		Complete()
 }
-
-// TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!

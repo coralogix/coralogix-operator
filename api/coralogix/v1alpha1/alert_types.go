@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	utils "github.com/coralogix/coralogix-operator/api/coralogix"
 	"github.com/go-logr/logr"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -29,7 +30,6 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
-	utils "github.com/coralogix/coralogix-operator/api"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	alerts "github.com/coralogix/coralogix-operator/internal/controller/clientset/grpc/alerts/v2"
 )
@@ -104,8 +104,8 @@ var (
 		ArithmeticOperatorPercentile: alerts.MetricAlertConditionParameters_ARITHMETIC_OPERATOR_PERCENTILE,
 	}
 	AlertSchemaFlowOperatorToProtoFlowOperator = map[FlowOperator]alerts.FlowOperator{
-		"And": alerts.FlowOperator_AND,
-		"Or":  alerts.FlowOperator_OR,
+		FlowOperatorAnd: alerts.FlowOperator_AND,
+		FlowOperatorOr:  alerts.FlowOperator_OR,
 	}
 	AlertSchemaNotifyOnToProtoNotifyOn = map[NotifyOn]alerts.NotifyOn{
 		NotifyOnTriggeredOnly:        alerts.NotifyOn_TRIGGERED_ONLY,
@@ -113,6 +113,7 @@ var (
 	}
 	msInHour       = int(time.Hour.Milliseconds())
 	msInMinute     = int(time.Minute.Milliseconds())
+	msInSecond     = int(time.Second.Milliseconds())
 	WebhooksClient clientset.OutboundWebhooksClientInterface
 )
 
@@ -708,6 +709,7 @@ func expandFlowStage(stage FlowStage) *alerts.FlowStage {
 func expandTimeToMS(t FlowStageTimeFrame) int {
 	timeMS := msInHour * t.Hours
 	timeMS += msInMinute * t.Minutes
+	timeMS += msInSecond * t.Seconds
 
 	return timeMS
 }
@@ -1500,7 +1502,7 @@ const (
 	AlertWhenMoreThan AlertWhen = "More"
 )
 
-// +kubebuilder:validation:Enum=More;Less;MoreThanUsual
+// +kubebuilder:validation:Enum=More;Less;MoreOrEqual;LessOrEqual;MoreThanUsual;LessThanUsual
 type PromqlAlertWhen string
 
 const (
@@ -1509,6 +1511,7 @@ const (
 	PromqlAlertWhenMoreOrEqual   PromqlAlertWhen = "MoreOrEqual"
 	PromqlAlertWhenLessOrEqual   PromqlAlertWhen = "LessOrEqual"
 	PromqlAlertWhenMoreThanUsual PromqlAlertWhen = "MoreThanUsual"
+	PromqlAlertWhenLessThanUsual PromqlAlertWhen = "LessThanUsual"
 )
 
 // +kubebuilder:validation:Enum=More;Less;Immediately;MoreThanUsual
@@ -1754,8 +1757,14 @@ type InnerFlowAlert struct {
 // +kubebuilder:validation:Enum=And;Or
 type FlowOperator string
 
+const (
+	FlowOperatorAnd FlowOperator = "And"
+	FlowOperatorOr  FlowOperator = "Or"
+)
+
 // AlertStatus defines the observed state of Alert
 type AlertStatus struct {
+	// +optional
 	ID *string `json:"id"`
 }
 

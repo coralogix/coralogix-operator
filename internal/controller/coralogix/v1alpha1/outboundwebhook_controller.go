@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"strconv"
 
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix"
+	"github.com/coralogix/coralogix-operator/api/coralogix/common"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -33,8 +35,6 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
-	utils "github.com/coralogix/coralogix-operator/api"
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
 )
@@ -65,7 +65,7 @@ func (r *OutboundWebhookReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		"namespace", req.NamespacedName.Namespace,
 	)
 
-	outboundWebhook := &coralogixv1alpha1.OutboundWebhook{}
+	outboundWebhook := &common.OutboundWebhook{}
 	if err = r.Client.Get(ctx, req.NamespacedName, outboundWebhook); err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -109,11 +109,11 @@ func (r *OutboundWebhookReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 // SetupWithManager sets up the controller with the Manager.
 func (r *OutboundWebhookReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&coralogixv1alpha1.OutboundWebhook{}).
+		For(&common.OutboundWebhook{}).
 		Complete(r)
 }
 
-func (r *OutboundWebhookReconciler) create(ctx context.Context, log logr.Logger, webhook *coralogixv1alpha1.OutboundWebhook) error {
+func (r *OutboundWebhookReconciler) create(ctx context.Context, log logr.Logger, webhook *common.OutboundWebhook) error {
 	createRequest, err := webhook.ExtractCreateOutboundWebhookRequest()
 	if err != nil {
 		return fmt.Errorf("error to extract create-request out of the outbound-webhook -\n%v", webhook)
@@ -126,7 +126,7 @@ func (r *OutboundWebhookReconciler) create(ctx context.Context, log logr.Logger,
 	}
 	log.V(1).Info(fmt.Sprintf("outbound-webhook was created- %s", protojson.Format(createResponse)))
 
-	webhook.Status = coralogixv1alpha1.OutboundWebhookStatus{
+	webhook.Status = common.OutboundWebhookStatus{
 		ID: ptr.To(createResponse.Id.GetValue()),
 	}
 	if err = r.Status().Update(ctx, webhook); err != nil {
@@ -164,12 +164,12 @@ func (r *OutboundWebhookReconciler) create(ctx context.Context, log logr.Logger,
 	return nil
 }
 
-func getOutboundWebhookStatus(webhook *cxsdk.OutgoingWebhook) (*coralogixv1alpha1.OutboundWebhookStatus, error) {
+func getOutboundWebhookStatus(webhook *cxsdk.OutgoingWebhook) (*common.OutboundWebhookStatus, error) {
 	if webhook == nil {
 		return nil, fmt.Errorf("outbound-webhook is nil")
 	}
 
-	status := &coralogixv1alpha1.OutboundWebhookStatus{
+	status := &common.OutboundWebhookStatus{
 		ID:         ptr.To(webhook.Id.GetValue()),
 		ExternalID: ptr.To(strconv.Itoa(int(webhook.ExternalId.GetValue()))),
 	}
@@ -177,7 +177,7 @@ func getOutboundWebhookStatus(webhook *cxsdk.OutgoingWebhook) (*coralogixv1alpha
 	return status, nil
 }
 
-func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger, webhook *coralogixv1alpha1.OutboundWebhook) error {
+func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger, webhook *common.OutboundWebhook) error {
 	updateReq, err := webhook.ExtractUpdateOutboundWebhookRequest()
 	if err != nil {
 		return fmt.Errorf("error to parse update outbound-webhook request -\n%v", webhook)
@@ -187,7 +187,7 @@ func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger,
 	_, err = r.OutboundWebhooksClient.Update(ctx, updateReq)
 	if err != nil {
 		if cxsdk.Code(err) == codes.NotFound {
-			webhook.Status = coralogixv1alpha1.OutboundWebhookStatus{}
+			webhook.Status = common.OutboundWebhookStatus{}
 			if err = r.Status().Update(ctx, webhook); err != nil {
 				return fmt.Errorf("error to update outbound-webhook status -\n%v", webhook)
 			}
@@ -199,7 +199,7 @@ func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger,
 	log.V(1).Info("Getting outbound-webhook from remote", "id", webhook.Status.ID)
 	remoteOutboundWebhook, err := r.OutboundWebhooksClient.Get(ctx,
 		&cxsdk.GetOutgoingWebhookRequest{
-			Id: utils.StringPointerToWrapperspbString(webhook.Status.ID),
+			Id: coralogixv1alpha1.StringPointerToWrapperspbString(webhook.Status.ID),
 		},
 	)
 	if err != nil {
@@ -219,7 +219,7 @@ func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger,
 	return nil
 }
 
-func (r *OutboundWebhookReconciler) delete(ctx context.Context, log logr.Logger, webhook *coralogixv1alpha1.OutboundWebhook) error {
+func (r *OutboundWebhookReconciler) delete(ctx context.Context, log logr.Logger, webhook *common.OutboundWebhook) error {
 	if err := r.deleteRemoteWebhook(ctx, log, webhook.Status.ID); err != nil {
 		return fmt.Errorf("error to delete outbound-webhook -\n%v", webhook)
 	}
@@ -243,7 +243,7 @@ func (r *OutboundWebhookReconciler) deleteRemoteWebhook(ctx context.Context, log
 	return nil
 }
 
-func getWebhookType(webhook *coralogixv1alpha1.OutboundWebhook) string {
+func getWebhookType(webhook *common.OutboundWebhook) string {
 	if webhook.Spec.OutboundWebhookType.GenericWebhook != nil {
 		return "genericWebhook"
 	}

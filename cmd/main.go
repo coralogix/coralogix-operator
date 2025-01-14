@@ -20,6 +20,9 @@ import (
 	"fmt"
 	"os"
 
+	utils "github.com/coralogix/coralogix-operator/api/coralogix"
+	"github.com/coralogix/coralogix-operator/api/coralogix/common"
+	"github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	prometheusv1alpha "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -41,8 +44,6 @@ import (
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
-	utils "github.com/coralogix/coralogix-operator/api"
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
@@ -76,7 +77,9 @@ func init() {
 
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
-	utilruntime.Must(coralogixv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(v1alpha1.AddToScheme(scheme))
+
+	utilruntime.Must(common.AddToScheme(scheme))
 
 	utilruntime.Must(prometheusv1alpha.AddToScheme(scheme))
 
@@ -217,14 +220,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "RuleGroup")
 		os.Exit(1)
 	}
-	//if err = (&v1alpha1controllers.AlertReconciler{
-	//	CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),
-	//	Client:             mgr.GetClient(),
-	//	Scheme:             mgr.GetScheme(),
-	//}).SetupWithManager(mgr); err != nil {
-	//	setupLog.Error(err, "unable to create controller", "controller", "Alert")
-	//	os.Exit(1)
-	//}
+
 	if prometheusRuleController {
 		if err = (&controllers.PrometheusRuleReconciler{
 			CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),

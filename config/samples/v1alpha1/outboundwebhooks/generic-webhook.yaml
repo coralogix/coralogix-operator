@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/created-by: coralogix-operator
   name: generic-webhook
 spec:
-    name: generic-webhook
+    name: WebhookAlerts
     outboundWebhookType:
         genericWebhook:
           headers:

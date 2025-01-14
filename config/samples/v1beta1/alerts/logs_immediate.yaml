@@ -11,7 +11,7 @@ metadata:
 spec:
   name: logs-immediate alert example
   description: alert from k8s operator
-  priority: p1
+  priority: p2
   entityLabels:
     alert_type: security
     security_severity: high
@@ -36,9 +36,10 @@ spec:
   notificationGroup:
     webhooks:
       - retriggeringPeriod:
-          minutes: 5
+          minutes: 1440
         integration:
-          integrationId: 70824
+          integrationRef:
+            name: slack-webhook
   schedule:
     timeZone: UTC+02
     activeOn:

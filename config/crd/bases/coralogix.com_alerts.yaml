@@ -194,7 +194,10 @@ spec:
                                 enum:
                                 - More
                                 - Less
+                                - MoreOrEqual
+                                - LessOrEqual
                                 - MoreThanUsual
+                                - LessThanUsual
                                 type: string
                               manageUndetectedValues:
                                 properties:
@@ -941,8 +944,6 @@ spec:
             properties:
               id:
                 type: string
-            required:
-            - id
             type: object
         type: object
     served: true
@@ -987,13 +988,26 @@ spec:
                                       alertDefs:
                                         items:
                                           properties:
-                                            id:
-                                              type: string
+                                            alertRef:
+                                              properties:
+                                                crdName:
+                                                  description: Reference by the CRD
+                                                    Name in the cluster.
+                                                  type: string
+                                                id:
+                                                  description: Reference by ID in
+                                                    the backend system.
+                                                  type: string
+                                                name:
+                                                  description: Reference by the Name
+                                                    in the backend system.
+                                                  type: string
+                                              type: object
                                             not:
                                               default: false
                                               type: boolean
                                           required:
-                                          - id
+                                          - alertRef
                                           - not
                                           type: object
                                         type: array
@@ -1109,6 +1123,7 @@ spec:
                                   anyOf:
                                   - type: integer
                                   - type: string
+                                  default: 0
                                   pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                   x-kubernetes-int-or-string: true
                                 timeWindow:
@@ -1300,7 +1315,6 @@ spec:
                         type: array
                     required:
                     - logsFilter
-                    - notificationPayloadFilter
                     - rules
                     type: object
                   logsRatioThreshold:
@@ -1475,13 +1489,13 @@ spec:
                                   - p2
                                   - p3
                                   - p4
+                                  - p5
                                   type: string
                               required:
                               - priority
                               type: object
                           required:
                           - condition
-                          - override
                           type: object
                         type: array
                     required:
@@ -1602,6 +1616,7 @@ spec:
                                   - p2
                                   - p3
                                   - p4
+                                  - p5
                                   type: string
                               required:
                               - priority
@@ -1739,6 +1754,7 @@ spec:
                                   - p2
                                   - p3
                                   - p4
+                                  - p5
                                   type: string
                               required:
                               - priority
@@ -1771,7 +1787,6 @@ spec:
                     required:
                     - ignoreInfinity
                     - logsFilter
-                    - notificationPayloadFilter
                     - rules
                     type: object
                   logsUniqueCount:
@@ -1884,8 +1899,6 @@ spec:
                         type: string
                     required:
                     - logsFilter
-                    - maxUniqueCountPerGroupByKey
-                    - notificationPayloadFilter
                     - rules
                     - uniqueCountKeypath
                     type: object
@@ -1903,10 +1916,8 @@ spec:
                               properties:
                                 conditionType:
                                   enum:
-                                  - moreThan
-                                  - lessThan
-                                  - moreThanOrEquals
-                                  - lessThanOrEquals
+                                  - moreThanUsual
+                                  - lessThanUsual
                                   type: string
                                 forOverPct:
                                   format: int32
@@ -1970,6 +1981,7 @@ spec:
                             maximum: 100
                             type: integer
                           replaceWithZero:
+                            default: false
                             type: boolean
                         type: object
                       rules:
@@ -2025,6 +2037,7 @@ spec:
                                   - p2
                                   - p3
                                   - p4
+                                  - p5
                                   type: string
                               required:
                               - priority
@@ -2058,6 +2071,133 @@ spec:
                     - metricFilter
                     - missingValues
                     - rules
+                    type: object
+                  tracingImmediate:
+                    properties:
+                      notificationPayloadFilter:
+                        items:
+                          type: string
+                        type: array
+                      tracingFilter:
+                        properties:
+                          simple:
+                            properties:
+                              latencyThresholdMs:
+                                format: int64
+                                type: integer
+                              tracingLabelFilters:
+                                properties:
+                                  applicationName:
+                                    items:
+                                      properties:
+                                        operation:
+                                          enum:
+                                          - or
+                                          - includes
+                                          - endsWith
+                                          - startsWith
+                                          - isNot
+                                          type: string
+                                        values:
+                                          items:
+                                            type: string
+                                          type: array
+                                      required:
+                                      - operation
+                                      - values
+                                      type: object
+                                    type: array
+                                  operationName:
+                                    items:
+                                      properties:
+                                        operation:
+                                          enum:
+                                          - or
+                                          - includes
+                                          - endsWith
+                                          - startsWith
+                                          - isNot
+                                          type: string
+                                        values:
+                                          items:
+                                            type: string
+                                          type: array
+                                      required:
+                                      - operation
+                                      - values
+                                      type: object
+                                    type: array
+                                  serviceName:
+                                    items:
+                                      properties:
+                                        operation:
+                                          enum:
+                                          - or
+                                          - includes
+                                          - endsWith
+                                          - startsWith
+                                          - isNot
+                                          type: string
+                                        values:
+                                          items:
+                                            type: string
+                                          type: array
+                                      required:
+                                      - operation
+                                      - values
+                                      type: object
+                                    type: array
+                                  spanFields:
+                                    items:
+                                      properties:
+                                        filterType:
+                                          properties:
+                                            operation:
+                                              enum:
+                                              - or
+                                              - includes
+                                              - endsWith
+                                              - startsWith
+                                              - isNot
+                                              type: string
+                                            values:
+                                              items:
+                                                type: string
+                                              type: array
+                                          required:
+                                          - operation
+                                          - values
+                                          type: object
+                                        key:
+                                          type: string
+                                      required:
+                                      - filterType
+                                      - key
+                                      type: object
+                                    type: array
+                                  subsystemName:
+                                    items:
+                                      properties:
+                                        operation:
+                                          enum:
+                                          - or
+                                          - includes
+                                          - endsWith
+                                          - startsWith
+                                          - isNot
+                                          type: string
+                                        values:
+                                          items:
+                                            type: string
+                                          type: array
+                                      required:
+                                      - operation
+                                      - values
+                                      type: object
+                                    type: array
+                                type: object
+                            type: object
+                        type: object
                     type: object
                   tracingThreshold:
                     properties:
@@ -2266,9 +2406,16 @@ spec:
                       properties:
                         integration:
                           properties:
-                            integrationId:
-                              format: int32
-                              type: integer
+                            integrationRef:
+                              properties:
+                                crdName:
+                                  type: string
+                                id:
+                                  format: int32
+                                  type: integer
+                                name:
+                                  type: string
+                              type: object
                             recipients:
                               items:
                                 type: string
@@ -2306,9 +2453,16 @@ spec:
                         properties:
                           integration:
                             properties:
-                              integrationId:
-                                format: int32
-                                type: integer
+                              integrationRef:
+                                properties:
+                                  crdName:
+                                    type: string
+                                  id:
+                                    format: int32
+                                    type: integer
+                                  name:
+                                    type: string
+                                type: object
                               recipients:
                                 items:
                                   type: string
@@ -2344,6 +2498,7 @@ spec:
                 - p2
                 - p3
                 - p4
+                - p5
                 type: string
               schedule:
                 properties:
@@ -2390,14 +2545,3 @@ spec:
     storage: true
     subresources:
       status: {}
-  conversion:
-    strategy: Webhook
-    webhook:
-      clientConfig:
-        service:
-          namespace: coralogix-operator-system
-          name: webhook-service
-          path: /convert
-      conversionReviewVersions:
-        - v1alpha1
-        - v1beta1

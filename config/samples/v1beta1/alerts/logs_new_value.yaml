@@ -11,37 +11,37 @@ metadata:
 spec:
   name: logs-new-value alert example
   description: alert from k8s operator
-  priority: p1
+  priority: p3
   entityLabels:
     alert_type: security
     security_severity: high
   alertType:
     logsNewValue:
       logsFilter:
-        filterType:
-          simpleFilter:
-            luceneQuery: remote_addr_enriched:/.*/
-            labelFilters:
-              applicationName:
-                - value: nginx
-                  operation: includes
-                - value: subsystem-name
-                  operation: startsWith
-              subsystemName:
-                - value: warning
-                  operation: or
-                - value: info
-                  operation: endsWith
-              severity: ["warning", "info"]
+        simpleFilter:
+          luceneQuery: remote_addr_enriched:/.*/
+          labelFilters:
+            applicationName:
+              - value: nginx
+                operation: includes
+              - value: subsystem-name
+                operation: startsWith
+            subsystemName:
+              - value: warning
+                operation: or
+              - value: info
+                operation: endsWith
+            severity: [ "warning", "info" ]
       rules:
         - condition:
             keypathToTrack: "response_time"
             timeWindow:
               specificValue: 12h
-      notificationPayloadFilter: ["coralogix.metadata.sdkId"]
+      notificationPayloadFilter: [ "coralogix.metadata.sdkId" ]
   notificationGroup:
     webhooks:
       - retriggeringPeriod:
-          minutes: 5
+          minutes: 1440
         integration:
-          integrationId: 70824
+          integrationRef:
+            name: slack-webhook

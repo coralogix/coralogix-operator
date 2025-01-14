@@ -13,7 +13,7 @@ patchesStrategicMerge:
 # [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix.
 # patches here are for enabling the conversion webhook for each CRD
 #- patches/webhook_in_rulegroups.yaml
-#- patches/webhook_in_alerts.yaml
+- patches/webhook_in_alerts.yaml
 #- patches/webhook_in_recordingrulegroupsets.yaml
 #- patches/webhook_in_outboundwebhooks.yaml
 #+kubebuilder:scaffold:crdkustomizewebhookpatch
@@ -21,7 +21,7 @@ patchesStrategicMerge:
 # [CERTMANAGER] To enable cert-manager, uncomment all the sections with [CERTMANAGER] prefix.
 # patches here are for enabling the CA injection for each CRD
 #- patches/cainjection_in_rulegroups.yaml
-#- patches/cainjection_in_alerts.yaml
+- patches/cainjection_in_alerts.yaml
 #- patches/cainjection_in_recordingrulegroupsets.yaml
 #- patches/cainjection_in_outboundwebhooks.yaml
 #- patches/cainjection_in_coralogix_apikeys.yaml

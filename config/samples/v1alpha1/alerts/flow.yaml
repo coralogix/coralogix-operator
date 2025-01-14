@@ -1,0 +1,46 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/name: alert
+    app.kubernetes.io/instance: alert-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: flow-alert-example
+spec:
+  name: flow alert example
+  description: alert from k8s operator
+  severity: Critical
+  notificationGroups:
+     - notifications:
+        - notifyOn: TriggeredAndResolved
+          emailRecipients: [ "example@coralogix.com" ]
+          retriggeringPeriodMinutes: 1440
+  scheduling:
+    daysEnabled: ["Wednesday", "Thursday"]
+    timeZone: UTC+02
+    startTime: 08:30
+    endTime: 20:30
+  alertType:
+    flow:
+      stages:
+        - groups:
+            - innerFlowAlerts:
+                alerts:
+                  - userAlertId: 47e3b4f7-cc83-4348-b521-a3c8edd82154
+                  - not: true
+                    userAlertId: 21eb0496-e403-49cd-a940-e4df83bfce84
+                operator: And
+              nextOperator: And
+          timeWindow:
+            minutes: 20
+        - groups:
+            - innerFlowAlerts:
+                alerts:
+                  - not: true
+                    userAlertId: 6850a6cd-5189-4b47-a6ba-03382b669619
+                operator: And
+              nextOperator: Or
+          timeWindow:
+            minutes: 20

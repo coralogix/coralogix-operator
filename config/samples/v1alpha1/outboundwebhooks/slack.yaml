@@ -7,9 +7,9 @@ metadata:
     app.kubernetes.io/part-of: coralogix-operator
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/created-by: coralogix-operator
-  name: slack-outboundwebhook-sample
+  name: slack-webhook
 spec:
-  name: slack-outboundwebhook-sample
+  name: slack-webhook
   outboundWebhookType:
     slack:
       url: https://hooks.slack.com/services
