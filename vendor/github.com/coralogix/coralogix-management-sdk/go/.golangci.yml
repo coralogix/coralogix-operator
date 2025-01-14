@@ -1,8 +1,0 @@
-linters:
-  enable:
-    - revive
-
-issues:
-  include:
-    - EXC0012
-    - EXC0014
