@@ -20,6 +20,8 @@ github.com/coralogix/coralogix-management-sdk v0.12.2-0.20250106131343-1086b344c
 github.com/coralogix/coralogix-management-sdk v0.12.2-0.20250106131343-1086b344cdf2/go.mod h1:4j43DiCGPC8pQghrZRgQp+V3dTzObZ2ohRXswnRkIrE=
 github.com/coralogix/coralogix-management-sdk v0.12.2-0.20250114180424-5098798ff567 h1:IpXI/6RnZszD8Nucb8gqrqTtgBrKAEkOYD1xOxWCFhg=
 github.com/coralogix/coralogix-management-sdk v0.12.2-0.20250114180424-5098798ff567/go.mod h1:0iFeGvthVXF1BOYMTmUzK7IACH51ExnTtkNI1qNcNU4=
+github.com/coralogix/coralogix-management-sdk v1.1.0 h1:4w3cmTmJVk2R8UdsIEcwWi4X/a58mfA+lsThlycexwE=
+github.com/coralogix/coralogix-management-sdk v1.1.0/go.mod h1:0iFeGvthVXF1BOYMTmUzK7IACH51ExnTtkNI1qNcNU4=
 github.com/cpuguy83/go-md2man/v2 v2.0.4/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
