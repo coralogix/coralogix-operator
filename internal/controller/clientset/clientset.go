@@ -55,7 +55,7 @@ func (c *ClientSet) ApiKeys() ApiKeysClientInterface {
 
 func NewClientSet(targetUrl, apiKey string) ClientSetInterface {
 	apikeyCPC := NewCallPropertiesCreator(targetUrl, apiKey)
-	SDKAPIKeyCPC := cxsdk.NewCallPropertiesCreator(targetUrl, cxsdk.NewAuthContext(apiKey, apiKey))
+	SDKAPIKeyCPC := cxsdk.NewCallPropertiesCreatorOperator(targetUrl, cxsdk.NewAuthContext(apiKey, apiKey), "0.0.1")
 
 	return &ClientSet{
 		ruleGroups:          cxsdk.NewRuleGroupsClient(SDKAPIKeyCPC),
