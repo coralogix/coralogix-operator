@@ -19,6 +19,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	prometheusv1alpha "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -45,7 +46,7 @@ import (
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
-	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	webhookcoralogixv1alpha1 "github.com/coralogix/coralogix-operator/internal/webhook/coralogix/v1alpha1"
@@ -83,8 +84,6 @@ func init() {
 	utilruntime.Must(common.AddToScheme(scheme))
 
 	utilruntime.Must(prometheusv1alpha.AddToScheme(scheme))
-
-	utilruntime.Must(coralogixv1beta1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -213,6 +212,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	sdkClientSet := cxsdk.NewClientSet(strings.ToLower(region), apiKey, apiKey)
+
 	if err = (&v1alpha1controllers.RuleGroupReconciler{
 		CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),
 		Client:             mgr.GetClient(),
@@ -256,6 +257,30 @@ func main() {
 		Scheme:        mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ApiKey")
+		os.Exit(1)
+	}
+	if err = (&v1alpha1controllers.CustomRoleReconciler{
+		CustomRolesClient: sdkClientSet.Roles(),
+		Client:            mgr.GetClient(),
+		Scheme:            mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "CustomRole")
+		os.Exit(1)
+	}
+	if err = (&v1alpha1controllers.ScopeReconciler{
+		ScopesClient: sdkClientSet.Scopes(),
+		Client:       mgr.GetClient(),
+		Scheme:       mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Scope")
+		os.Exit(1)
+	}
+	if err = (&v1alpha1controllers.GroupReconciler{
+		CXClientSet: sdkClientSet,
+		Client:      mgr.GetClient(),
+		Scheme:      mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Group")
 		os.Exit(1)
 	}
 

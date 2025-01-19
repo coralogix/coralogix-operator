@@ -72,6 +72,58 @@ rules:
 - apiGroups:
   - coralogix.com
   resources:
+  - customroles
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - customroles/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - customroles/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - groups
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - groups/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - groups/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
   - outboundwebhooks
   verbs:
   - create
@@ -143,6 +195,32 @@ rules:
   - coralogix.com
   resources:
   - rulegroups/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - scopes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - scopes/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - scopes/status
   verbs:
   - get
   - patch

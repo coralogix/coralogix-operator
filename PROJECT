@@ -76,4 +76,31 @@ resources:
     conversion: true
     validation: true
     webhookVersion: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: coralogix.com
+  group: coralogix
+  kind: CustomRole
+  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: coralogix.com
+  group: coralogix
+  kind: Scope
+  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: coralogix.com
+  group: coralogix
+  kind: Group
+  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
+  version: v1alpha1
 version: "3"

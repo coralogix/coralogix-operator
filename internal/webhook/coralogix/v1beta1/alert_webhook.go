@@ -391,7 +391,5 @@ func (v *AlertCustomValidator) ValidateDelete(ctx context.Context, obj runtime.O
 	}
 	alertlog.Info("Validation for Alert upon deletion", "name", alert.GetName())
 
-	// TODO(user): fill in your validation logic upon object deletion.
-
 	return nil, nil
 }
