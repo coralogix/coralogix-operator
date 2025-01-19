@@ -24,9 +24,11 @@ spec:
             groups:
               - alertDefs:
                   - alertRef:
-                      id: f90cb116-ed07-4100-802b-e17a2d2d3779
+                      resourceRef:
+                        name: logs-new-value
                   - alertRef:
-                      name: metric-threshold alert example
+                      resourceRef:
+                        name: metric-threshold alert example
                     not: true
                 nextOp: and
                 alertsOp: or
@@ -36,9 +38,11 @@ spec:
             groups:
               - alertDefs:
                   - alertRef:
-                      crdName: logs-new-value
+                      resourceRef:
+                        name: logs-new-value
                   - alertRef:
-                      crdName: logs-ratio-threshold
+                      resourceRef:
+                        name: logs-ratio-threshold
                     not: true
                 nextOp: and
                 alertsOp: or
@@ -49,4 +53,5 @@ spec:
           minutes: 1440
         integration:
           integrationRef:
-            crdName: slack-webhook
+            resourceRef:
+              name: slack-webhook

@@ -5,10 +5,9 @@ import cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 //go:generate mockgen -destination=../mock_clientset/mock_clientset.go -package=mock_clientset github.com/coralogix/coralogix-operator/controllers/clientset ClientSetInterface
 type ClientSetInterface interface {
 	RuleGroups() RuleGroupsClientInterface
-	Alerts() AlertsClientInterface
 	RecordingRuleGroups() RecordingRulesGroupsClientInterface
 	OutboundWebhooks() OutboundWebhooksClientInterface
-	AlertsV3() *cxsdk.AlertsClient
+	Alerts() *cxsdk.AlertsClient
 	ApiKeys() ApiKeysClientInterface
 }
 
@@ -25,10 +24,6 @@ func (c *ClientSet) RuleGroups() RuleGroupsClientInterface {
 	return c.ruleGroups
 }
 
-func (c *ClientSet) Alerts() AlertsClientInterface {
-	return c.alerts
-}
-
 func (c *ClientSet) RecordingRuleGroups() RecordingRulesGroupsClientInterface {
 	return c.recordingRuleGroups
 }
@@ -37,7 +32,7 @@ func (c *ClientSet) OutboundWebhooks() OutboundWebhooksClientInterface {
 	return c.outboundWebhooks
 }
 
-func (c *ClientSet) AlertsV3() *cxsdk.AlertsClient {
+func (c *ClientSet) Alerts() *cxsdk.AlertsClient {
 	return c.alertsV3
 }
 

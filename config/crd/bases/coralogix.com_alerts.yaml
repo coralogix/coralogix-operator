@@ -990,18 +990,20 @@ spec:
                                           properties:
                                             alertRef:
                                               properties:
-                                                crdName:
-                                                  description: Reference by the CRD
-                                                    Name in the cluster.
-                                                  type: string
-                                                id:
-                                                  description: Reference by ID in
-                                                    the backend system.
-                                                  type: string
-                                                name:
-                                                  description: Reference by the Name
-                                                    in the backend system.
-                                                  type: string
+                                                backendRef:
+                                                  properties:
+                                                    id:
+                                                      type: string
+                                                    name:
+                                                      type: string
+                                                  type: object
+                                                resourceRef:
+                                                  properties:
+                                                    name:
+                                                      type: string
+                                                    namespace:
+                                                      type: string
+                                                  type: object
                                               type: object
                                             not:
                                               default: false
@@ -2408,13 +2410,21 @@ spec:
                           properties:
                             integrationRef:
                               properties:
-                                crdName:
-                                  type: string
-                                id:
-                                  format: int32
-                                  type: integer
-                                name:
-                                  type: string
+                                backendRef:
+                                  properties:
+                                    id:
+                                      format: int32
+                                      type: integer
+                                    name:
+                                      type: string
+                                  type: object
+                                resourceRef:
+                                  properties:
+                                    name:
+                                      type: string
+                                    namespace:
+                                      type: string
+                                  type: object
                               type: object
                             recipients:
                               items:
@@ -2455,13 +2465,21 @@ spec:
                             properties:
                               integrationRef:
                                 properties:
-                                  crdName:
-                                    type: string
-                                  id:
-                                    format: int32
-                                    type: integer
-                                  name:
-                                    type: string
+                                  backendRef:
+                                    properties:
+                                      id:
+                                        format: int32
+                                        type: integer
+                                      name:
+                                        type: string
+                                    type: object
+                                  resourceRef:
+                                    properties:
+                                      name:
+                                        type: string
+                                      namespace:
+                                        type: string
+                                    type: object
                                 type: object
                               recipients:
                                 items:

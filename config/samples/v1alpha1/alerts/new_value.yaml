@@ -13,8 +13,7 @@ spec:
   description: alert from k8s operator bla bla
   severity: Critical
   notificationGroups:
-    - groupByFields: [ "remote_addr_geoip.country_name" ]
-      notifications:
+    - notifications:
         - notifyOn: TriggeredOnly
           integrationName: WebhookAlerts
           retriggeringPeriodMinutes: 1

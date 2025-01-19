@@ -22,11 +22,6 @@ type MockClientSetInterface struct {
 	recorder *MockClientSetInterfaceMockRecorder
 }
 
-func (m *MockClientSetInterface) AlertsV3() *cxsdk.AlertsClient {
-	//TODO implement me
-	panic("implement me")
-}
-
 // MockClientSetInterfaceMockRecorder is the mock recorder for MockClientSetInterface.
 type MockClientSetInterfaceMockRecorder struct {
 	mock *MockClientSetInterface
@@ -45,10 +40,10 @@ func (m *MockClientSetInterface) EXPECT() *MockClientSetInterfaceMockRecorder {
 }
 
 // Alerts mocks base method.
-func (m *MockClientSetInterface) Alerts() clientset.AlertsClientInterface {
+func (m *MockClientSetInterface) Alerts() *cxsdk.AlertsClient {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Alerts")
-	ret0, _ := ret[0].(clientset.AlertsClientInterface)
+	ret0, _ := ret[0].(*cxsdk.AlertsClient)
 	return ret0
 }
 

@@ -24,7 +24,7 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	utils "github.com/coralogix/coralogix-operator/api/coralogix"
-	common "github.com/coralogix/coralogix-operator/api/coralogix/common"
+	"github.com/coralogix/coralogix-operator/api/coralogix/common"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -332,11 +332,29 @@ type IntegrationType struct {
 
 type IntegrationRef struct {
 	// +optional
+	BackendRef *OutboundWebhookBackendRef `json:"backendRef"`
+	// +optional
+	ResourceRef *ResourceRef `json:"resourceRef"`
+}
+
+type OutboundWebhookBackendRef struct {
+	// +optional
 	ID *uint32 `json:"id,omitempty"`
 	// +optional
 	Name *string `json:"name,omitempty"`
+}
+
+type AlertBackendRef struct {
 	// +optional
-	CRDName *string `json:"crdName,omitempty"`
+	ID *string `json:"id,omitempty"`
+	// +optional
+	Name *string `json:"name,omitempty"`
+}
+
+type ResourceRef struct {
+	Name string `json:"name,omitempty"`
+	// +optional
+	Namespace *string `json:"namespace,omitempty"`
 }
 
 type ActiveOn struct {
@@ -728,17 +746,10 @@ type FlowStagesGroupsAlertDefs struct {
 }
 
 type AlertRef struct {
-	// Reference by ID in the backend system.
 	// +optional
-	ID *string `json:"id,omitempty"`
-
-	// Reference by the Name in the backend system.
+	BackendRef *AlertBackendRef `json:"backendRef"`
 	// +optional
-	Name *string `json:"name,omitempty"`
-
-	// Reference by the CRD Name in the cluster.
-	// +optional
-	CrdName *string `json:"crdName,omitempty"`
+	ResourceRef *ResourceRef `json:"resourceRef"`
 }
 
 // +kubebuilder:validation:Enum=and;or
@@ -1078,21 +1089,28 @@ func expandIntegration(integration IntegrationType, listingWebhooksProperties *c
 	if integrationRef := integration.IntegrationRef; integrationRef != nil {
 		var integrationID *wrapperspb.UInt32Value
 		var err error
-		if id := integrationRef.ID; id != nil {
-			integrationID = wrapperspb.UInt32(*id)
-		} else if crdName := integrationRef.CRDName; crdName != nil {
-			integrationID, err = common.ConvertCRDNameToIntegrationID(*crdName, listingWebhooksProperties)
+
+		if resourceRef := integrationRef.ResourceRef; resourceRef != nil {
+			if namespace := resourceRef.Namespace; namespace != nil {
+				listingWebhooksProperties.Namespace = *namespace
+			}
+			integrationID, err = common.ConvertCRDNameToIntegrationID(resourceRef.Name, listingWebhooksProperties)
 			if err != nil {
 				return nil, fmt.Errorf("failed to convert CRD name to integration ID: %w", err)
 			}
-		} else if name := integrationRef.Name; name != nil {
-			integrationID, err = convertNameToIntegrationID(*name, listingWebhooksProperties)
-			if err != nil {
-				return nil, fmt.Errorf("failed to convert name to integration ID: %w", err)
+		} else if backendRef := integrationRef.BackendRef; backendRef != nil {
+			if id := backendRef.ID; id != nil {
+				integrationID = wrapperspb.UInt32(*id)
+			} else if name := backendRef.Name; name != nil {
+				integrationID, err = convertNameToIntegrationID(*name, listingWebhooksProperties)
+				if err != nil {
+					return nil, fmt.Errorf("failed to convert name to integration ID: %w", err)
+				}
 			}
 		} else {
 			return nil, fmt.Errorf("integration type not found")
 		}
+
 		return &cxsdk.AlertDefIntegrationType{
 			IntegrationType: &cxsdk.AlertDefIntegrationTypeIntegrationID{
 				IntegrationId: integrationID,
@@ -1548,15 +1566,20 @@ func expandFlowStagesGroupsAlertDef(listingAlertsProperties *common.ListingAlert
 }
 
 func expandAlertRef(listingAlertsProperties *common.ListingAlertsAndWebhooksProperties, ref AlertRef) (*wrapperspb.StringValue, error) {
-	if ref.ID != nil {
-		return wrapperspb.String(*ref.ID), nil
-	} else if name := ref.Name; name != nil {
-		return convertAlertNameToID(listingAlertsProperties, *name)
-	} else if crdName := ref.CrdName; crdName != nil {
-		return convertAlertCrdNameToID(listingAlertsProperties, *crdName)
+	if backendRef := ref.BackendRef; backendRef != nil {
+		if id := backendRef.ID; id != nil {
+			return wrapperspb.String(*id), nil
+		} else if name := backendRef.Name; name != nil {
+			return convertAlertNameToID(listingAlertsProperties, *name)
+		}
+	} else if resourceRef := ref.ResourceRef; resourceRef != nil {
+		if namespace := resourceRef.Namespace; namespace != nil {
+			listingAlertsProperties.Namespace = *namespace
+		}
+		return convertAlertCrdNameToID(listingAlertsProperties, resourceRef.Name)
 	}
 
-	return nil, fmt.Errorf("alert ref must have either ID, Name, or CrdName")
+	return nil, fmt.Errorf("alert ref not found")
 }
 
 func convertAlertCrdNameToID(listingAlertsProperties *common.ListingAlertsAndWebhooksProperties, alertCrdName string) (*wrapperspb.StringValue, error) {
@@ -1577,7 +1600,7 @@ func convertAlertCrdNameToID(listingAlertsProperties *common.ListingAlertsAndWeb
 func convertAlertNameToID(listingAlertsProperties *common.ListingAlertsAndWebhooksProperties, alertName string) (*wrapperspb.StringValue, error) {
 	if listingAlertsProperties.AlertNameToId == nil {
 		listingAlertsProperties.AlertNameToId = make(map[string]string)
-		log, alertsClient, ctx := listingAlertsProperties.Log, listingAlertsProperties.Clientset.AlertsV3(), listingAlertsProperties.Ctx
+		log, alertsClient, ctx := listingAlertsProperties.Log, listingAlertsProperties.Clientset.Alerts(), listingAlertsProperties.Ctx
 		log.V(1).Info("Listing all alerts")
 		listAlertsResp, err := alertsClient.List(ctx, &cxsdk.ListAlertDefsRequest{})
 		if err != nil {

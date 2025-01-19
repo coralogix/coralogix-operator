@@ -39,10 +39,25 @@ spec:
           minutes: 1440
         integration:
           integrationRef:
-            name: slack-webhook
+            resourceRef:
+              name: slack-webhook
   schedule:
     timeZone: UTC+02
     activeOn:
       dayOfWeek: [ "wednesday", "thursday" ]
       startTime: 08:30
       endTime: 20:30
+
+---
+
+apiVersion: coralogix.com/v1alpha1
+kind: OutboundWebhook
+metadata:
+  labels:
+    app.kubernetes.io/created-by: coralogix-operator
+  name: slack-webhook
+spec:
+  name: slack-webhook
+  outboundWebhookType:
+    slack:
+      url: https://hooks.slack.com/services

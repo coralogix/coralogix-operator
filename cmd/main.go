@@ -20,9 +20,6 @@ import (
 	"fmt"
 	"os"
 
-	utils "github.com/coralogix/coralogix-operator/api/coralogix"
-	"github.com/coralogix/coralogix-operator/api/coralogix/common"
-	"github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	prometheusv1alpha "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -35,6 +32,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/metrics/filters"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+
+	utils "github.com/coralogix/coralogix-operator/api/coralogix"
+	"github.com/coralogix/coralogix-operator/api/coralogix/common"
+	"github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 
 	controllers "github.com/coralogix/coralogix-operator/internal/controller"
 	v1beta1controllers "github.com/coralogix/coralogix-operator/internal/controller/coralogix/v1beta1"
@@ -299,6 +300,13 @@ func main() {
 	// nolint:goconst
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
 		if err = webhookcoralogixv1beta1.SetupAlertWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Alert")
+			os.Exit(1)
+		}
+	}
+	// nolint:goconst
+	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
+		if err = webhookcoralogixv1alpha1.SetupAlertWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "Alert")
 			os.Exit(1)
 		}

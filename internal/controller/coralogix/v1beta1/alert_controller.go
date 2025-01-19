@@ -24,12 +24,10 @@ import (
 	"github.com/coralogix/coralogix-operator/api/coralogix/common"
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
-	alerts "github.com/coralogix/coralogix-operator/internal/controller/clientset/grpc/alerts/v2"
 	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -126,9 +124,9 @@ func (r *AlertReconciler) update(ctx context.Context, log logr.Logger, alert *co
 	}
 
 	log.V(1).Info("Updating remote alert", "alert", protojson.Format(alertRequest))
-	remoteUpdatedAlert, err := r.CoralogixClientSet.AlertsV3().Replace(ctx, alertRequest)
+	remoteUpdatedAlert, err := r.CoralogixClientSet.Alerts().Replace(ctx, alertRequest)
 	if err != nil {
-		if status.Code(err) == codes.NotFound {
+		if cxsdk.Code(err) == codes.NotFound {
 			log.V(1).Info("alert not found on remote, recreating it")
 			alert.Status = *coralogixv1beta1.NewDefaultAlertStatus()
 			if err = r.Status().Update(ctx, alert); err != nil {
@@ -174,7 +172,7 @@ func (r *AlertReconciler) create(ctx context.Context, log logr.Logger, alert *co
 	}
 
 	log.V(1).Info("Creating remote alert", "alert", protojson.Format(alertRequest))
-	response, err := r.CoralogixClientSet.AlertsV3().Create(ctx, alertRequest)
+	response, err := r.CoralogixClientSet.Alerts().Create(ctx, alertRequest)
 	if err != nil {
 		return fmt.Errorf("error on creating alert: %w", err)
 	}
@@ -218,8 +216,8 @@ func (r *AlertReconciler) create(ctx context.Context, log logr.Logger, alert *co
 
 func (r *AlertReconciler) deleteRemoteAlert(ctx context.Context, log logr.Logger, alertID *string) error {
 	log.V(1).Info("Deleting remote alert", "alert", alertID)
-	if _, err := r.CoralogixClientSet.Alerts().DeleteAlert(ctx, &alerts.DeleteAlertByUniqueIdRequest{
-		Id: wrapperspb.String(*alertID)}); err != nil && status.Code(err) != codes.NotFound {
+	req := &cxsdk.DeleteAlertDefRequest{Id: wrapperspb.String(*alertID)}
+	if _, err := r.CoralogixClientSet.Alerts().Delete(ctx, req); err != nil && cxsdk.Code(err) != codes.NotFound {
 		log.V(1).Error(err, "Error on deleting remote alert", "alert", alertID)
 		return fmt.Errorf("error on deleting alert: %w", err)
 	}

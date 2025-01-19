@@ -38,4 +38,5 @@ spec:
           minutes: 1440
         integration:
           integrationRef:
-            name: slack-webhook
+            resourceRef:
+              name: slack-webhook

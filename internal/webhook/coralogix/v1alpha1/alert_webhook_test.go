@@ -14,28 +14,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1beta1
+package v1alpha1
 
 import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	// TODO (user): Add any additional imports if needed
 )
 
 var _ = Describe("Alert Webhook", func() {
 	var (
-		obj       *coralogixv1beta1.Alert
-		oldObj    *coralogixv1beta1.Alert
-		validator AlertCustomValidator
+		obj    *coralogixv1alpha1.Alert
+		oldObj *coralogixv1alpha1.Alert
 	)
 
 	BeforeEach(func() {
-		obj = &coralogixv1beta1.Alert{}
-		oldObj = &coralogixv1beta1.Alert{}
-		validator = AlertCustomValidator{}
-		Expect(validator).NotTo(BeNil(), "Expected validator to be initialized")
+		obj = &coralogixv1alpha1.Alert{}
+		oldObj = &coralogixv1alpha1.Alert{}
 		Expect(oldObj).NotTo(BeNil(), "Expected oldObj to be initialized")
 		Expect(obj).NotTo(BeNil(), "Expected obj to be initialized")
 		// TODO (user): Add any setup logic common to all tests
@@ -45,34 +42,11 @@ var _ = Describe("Alert Webhook", func() {
 		// TODO (user): Add any teardown logic common to all tests
 	})
 
-	Context("When creating or updating Alert under Validating Webhook", func() {
-		// TODO (user): Add logic for validating webhooks
-		// Example:
-		// It("Should deny creation if a required field is missing", func() {
-		//     By("simulating an invalid creation scenario")
-		//     obj.SomeRequiredField = ""
-		//     Expect(validator.ValidateCreate(ctx, obj)).Error().To(HaveOccurred())
-		// })
-		//
-		// It("Should admit creation if all required fields are present", func() {
-		//     By("simulating an invalid creation scenario")
-		//     obj.SomeRequiredField = "valid_value"
-		//     Expect(validator.ValidateCreate(ctx, obj)).To(BeNil())
-		// })
-		//
-		// It("Should validate updates correctly", func() {
-		//     By("simulating a valid update scenario")
-		//     oldObj.SomeRequiredField = "updated_value"
-		//     obj.SomeRequiredField = "updated_value"
-		//     Expect(validator.ValidateUpdate(ctx, oldObj, obj)).To(BeNil())
-		// })
-	})
-
 	Context("When creating Alert under Conversion Webhook", func() {
 		// TODO (user): Add logic to convert the object to the desired version and verify the conversion
 		// Example:
 		// It("Should convert the object correctly", func() {
-		//     convertedObj := &coralogixv1beta1.Alert{}
+		//     convertedObj := &coralogixv1alpha1.Alert{}
 		//     Expect(obj.ConvertTo(convertedObj)).To(Succeed())
 		//     Expect(convertedObj).ToNot(BeNil())
 		// })

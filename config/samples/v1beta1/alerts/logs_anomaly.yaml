@@ -44,7 +44,8 @@ spec:
           minutes: 1440
         integration:
           integrationRef:
-            crdName: slack-webhook
+            resourceRef:
+              name: slack-webhook
       - retriggeringPeriod:
           minutes: 1440
         integration:

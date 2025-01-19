@@ -514,8 +514,8 @@ func convertFlowAlertsV1beta1ToV1alpha1(defs []v1beta1.FlowStagesGroupsAlertDefs
 		innerFlowAlerts[i] = InnerFlowAlert{
 			Not: def.Not,
 		}
-		if id := def.AlertRef.ID; id != nil {
-			innerFlowAlerts[i].UserAlertId = *def.AlertRef.ID
+		if id := def.AlertRef.BackendRef; id != nil {
+			innerFlowAlerts[i].UserAlertId = *def.AlertRef.BackendRef.ID
 		}
 	}
 	return InnerFlowAlerts{
@@ -1081,7 +1081,7 @@ func convertFlowAlertDefsV1alpha1ToV1beta1(alerts []InnerFlowAlert) []v1beta1.Fl
 	result := make([]v1beta1.FlowStagesGroupsAlertDefs, len(alerts))
 	for i, alert := range alerts {
 		result[i] = v1beta1.FlowStagesGroupsAlertDefs{
-			AlertRef: v1beta1.AlertRef{ID: pointer.String(alert.UserAlertId)},
+			AlertRef: v1beta1.AlertRef{BackendRef: &v1beta1.AlertBackendRef{ID: &alert.UserAlertId}},
 			Not:      alert.Not,
 		}
 	}
@@ -1219,7 +1219,9 @@ func convertToIntegrationTypeV1alpha1ToV1beta1(notification Notification) v1beta
 	if integrationName := notification.IntegrationName; integrationName != nil {
 		return v1beta1.IntegrationType{
 			IntegrationRef: &v1beta1.IntegrationRef{
-				Name: pointer.String(*integrationName),
+				BackendRef: &v1beta1.OutboundWebhookBackendRef{
+					Name: pointer.String(*integrationName),
+				},
 			},
 		}
 	}
