@@ -4,22 +4,22 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-  name: tcologspolicies.coralogix.com
+  name: tcotracespolicies.coralogix.com
 spec:
   group: coralogix.com
   names:
-    kind: TCOLogsPolicies
-    listKind: TCOLogsPoliciesList
-    plural: tcologspolicies
-    singular: tcologspolicies
+    kind: TCOTracesPolicies
+    listKind: TCOTracesPoliciesList
+    plural: tcotracespolicies
+    singular: tcotracespolicies
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
         description: |-
-          TCOLogsPolicies is the Schema for the tcologspolicies API.
-          NOTE: This resource performs an atomic overwrite of all existing TCO logs policies
+          TCOTracesPolicies is the Schema for the tcotracespolicies API.
+          NOTE: This resource performs an atomic overwrite of all existing TCO traces policies
           in the backend. Any existing policies not defined in this resource will be
           removed. Use with caution as this operation is destructive.
         properties:
@@ -41,11 +41,28 @@ spec:
           metadata:
             type: object
           spec:
-            description: TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
+            description: TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
             properties:
               policies:
                 items:
                   properties:
+                    actions:
+                      properties:
+                        names:
+                          items:
+                            type: string
+                          type: array
+                        ruleType:
+                          enum:
+                          - is
+                          - is_not
+                          - start_with
+                          - includes
+                          type: string
+                      required:
+                      - names
+                      - ruleType
+                      type: object
                     applications:
                       properties:
                         names:
@@ -76,6 +93,23 @@ spec:
                       - medium
                       - low
                       type: string
+                    services:
+                      properties:
+                        names:
+                          items:
+                            type: string
+                          type: array
+                        ruleType:
+                          enum:
+                          - is
+                          - is_not
+                          - start_with
+                          - includes
+                          type: string
+                      required:
+                      - names
+                      - ruleType
+                      type: object
                     severities:
                       items:
                         enum:
@@ -104,6 +138,29 @@ spec:
                       - names
                       - ruleType
                       type: object
+                    tags:
+                      items:
+                        properties:
+                          name:
+                            pattern: ^tags\..*
+                            type: string
+                          ruleType:
+                            enum:
+                            - is
+                            - is_not
+                            - start_with
+                            - includes
+                            type: string
+                          values:
+                            items:
+                              type: string
+                            type: array
+                        required:
+                        - name
+                        - ruleType
+                        - values
+                        type: object
+                      type: array
                   required:
                   - name
                   - priority
@@ -114,7 +171,7 @@ spec:
             - policies
             type: object
           status:
-            description: TCOLogsPoliciesStatus defines the observed state of TCOLogsPolicies.
+            description: TCOTracesPoliciesStatus defines the observed state of TCOTracesPolicies.
             type: object
         type: object
     served: true
