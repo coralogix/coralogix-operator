@@ -21,6 +21,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	prometheusv1alpha "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -80,6 +81,8 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(v1alpha1.AddToScheme(scheme))
+
+	utilruntime.Must(v1beta1.AddToScheme(scheme))
 
 	utilruntime.Must(common.AddToScheme(scheme))
 
