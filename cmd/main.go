@@ -284,6 +284,14 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Group")
 		os.Exit(1)
 	}
+	if err = (&coralogixcontrollers.TCOLogsPoliciesReconciler{
+		TCOClient: sdkClientSet.TCOPolicies(),
+		Client:    mgr.GetClient(),
+		Scheme:    mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "TCOLogsPolicies")
+		os.Exit(1)
+	}
 
 	if prometheusRuleController {
 		if err = (&controllers.AlertmanagerConfigReconciler{
