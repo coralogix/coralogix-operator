@@ -206,7 +206,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	sdkClientSet := cxsdk.NewClientSet(strings.ToLower(region), apiKey, apiKey)
+	cpc := cxsdk.NewCallPropertiesCreatorOperator(strings.ToLower(region), cxsdk.NewAuthContext(apiKey, apiKey), "0.0.1")
+	sdkClientSet := cxsdk.NewClientSet(cpc)
 
 	if err = (&coralogixcontrollers.RuleGroupReconciler{
 		CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),
