@@ -207,36 +207,36 @@ func main() {
 	}
 
 	cpc := cxsdk.NewCallPropertiesCreatorOperator(strings.ToLower(region), cxsdk.NewAuthContext(apiKey, apiKey), "0.0.1")
-	sdkClientSet := cxsdk.NewClientSet(cpc)
+	clientSet := cxsdk.NewClientSet(cpc)
 
 	if err = (&coralogixcontrollers.RuleGroupReconciler{
-		CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),
-		Client:             mgr.GetClient(),
-		Scheme:             mgr.GetScheme(),
+		RuleGroupClient: clientSet.RuleGroups(),
+		Client:          mgr.GetClient(),
+		Scheme:          mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RuleGroup")
 		os.Exit(1)
 	}
 	if err = (&coralogixcontrollers.AlertReconciler{
-		CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),
-		Client:             mgr.GetClient(),
-		Scheme:             mgr.GetScheme(),
+		AlertsClient:   clientset.NewAlertsClient(clientset.NewCallPropertiesCreator(targetUrl, apiKey)),
+		WebhooksClient: clientSet.Webhooks(),
+		Client:         mgr.GetClient(),
+		Scheme:         mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Alert")
 		os.Exit(1)
 	}
 	if prometheusRuleController {
 		if err = (&controllers.PrometheusRuleReconciler{
-			CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),
-			Client:             mgr.GetClient(),
-			Scheme:             mgr.GetScheme(),
+			Client: mgr.GetClient(),
+			Scheme: mgr.GetScheme(),
 		}).SetupWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "RecordingRuleGroup")
 			os.Exit(1)
 		}
 	}
 	if err = (&coralogixcontrollers.RecordingRuleGroupSetReconciler{
-		CoralogixClientSet:          clientset.NewClientSet(targetUrl, apiKey),
+		RecordingRuleGroupSetClient: clientSet.RecordingRuleGroups(),
 		Client:                      mgr.GetClient(),
 		Scheme:                      mgr.GetScheme(),
 		RecordingRuleGroupSetSuffix: recordingRuleGroupSetSuffix,
@@ -246,7 +246,7 @@ func main() {
 	}
 
 	if err = (&coralogixcontrollers.OutboundWebhookReconciler{
-		OutboundWebhooksClient: clientset.NewClientSet(targetUrl, apiKey).OutboundWebhooks(),
+		OutboundWebhooksClient: clientSet.Webhooks(),
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
@@ -254,7 +254,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&coralogixcontrollers.ApiKeyReconciler{
-		ApiKeysClient: clientset.NewClientSet(targetUrl, apiKey).ApiKeys(),
+		ApiKeysClient: clientSet.APIKeys(),
 		Client:        mgr.GetClient(),
 		Scheme:        mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
@@ -262,7 +262,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&coralogixcontrollers.CustomRoleReconciler{
-		CustomRolesClient: sdkClientSet.Roles(),
+		CustomRolesClient: clientSet.Roles(),
 		Client:            mgr.GetClient(),
 		Scheme:            mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
@@ -270,7 +270,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&coralogixcontrollers.ScopeReconciler{
-		ScopesClient: sdkClientSet.Scopes(),
+		ScopesClient: clientSet.Scopes(),
 		Client:       mgr.GetClient(),
 		Scheme:       mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
@@ -278,7 +278,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&coralogixcontrollers.GroupReconciler{
-		CXClientSet: sdkClientSet,
+		CXClientSet: clientSet,
 		Client:      mgr.GetClient(),
 		Scheme:      mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
@@ -286,7 +286,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&coralogixcontrollers.TCOLogsPoliciesReconciler{
-		TCOClient: sdkClientSet.TCOPolicies(),
+		TCOClient: clientSet.TCOPolicies(),
 		Client:    mgr.GetClient(),
 		Scheme:    mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
@@ -294,7 +294,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&coralogixcontrollers.TCOTracesPoliciesReconciler{
-		TCOClient: sdkClientSet.TCOPolicies(),
+		TCOClient: clientSet.TCOPolicies(),
 		Client:    mgr.GetClient(),
 		Scheme:    mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
@@ -304,9 +304,8 @@ func main() {
 
 	if prometheusRuleController {
 		if err = (&controllers.AlertmanagerConfigReconciler{
-			CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),
-			Client:             mgr.GetClient(),
-			Scheme:             mgr.GetScheme(),
+			Client: mgr.GetClient(),
+			Scheme: mgr.GetScheme(),
 		}).SetupWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "RecordingRuleGroup")
 			os.Exit(1)
