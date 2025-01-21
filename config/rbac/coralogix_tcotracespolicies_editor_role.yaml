@@ -1,0 +1,27 @@
+# permissions for end users to edit tcotracespolicies.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: coralogix-tcotracespolicies-editor-role
+rules:
+- apiGroups:
+  - coralogix.com
+  resources:
+  - tcotracespolicies
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - tcotracespolicies/status
+  verbs:
+  - get

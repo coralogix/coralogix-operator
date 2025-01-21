@@ -19,7 +19,7 @@ spec:
       openAPIV3Schema:
         description: |-
           TCOLogsPolicies is the Schema for the tcologspolicies API.
-          NOTE: This resource performs an atomic overwrite of all existing TCO log policies
+          NOTE: This resource performs an atomic overwrite of all existing TCO logs policies
           in the backend. Any existing policies not defined in this resource will be
           removed. Use with caution as this operation is destructive.
         properties:
@@ -56,7 +56,7 @@ spec:
                           enum:
                           - is
                           - is_not
-                          - starts_with
+                          - start_with
                           - includes
                           type: string
                       required:
@@ -97,7 +97,7 @@ spec:
                           enum:
                           - is
                           - is_not
-                          - starts_with
+                          - start_with
                           - includes
                           type: string
                       required:

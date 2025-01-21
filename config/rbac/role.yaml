@@ -251,6 +251,32 @@ rules:
   - patch
   - update
 - apiGroups:
+  - coralogix.com
+  resources:
+  - tcotracespolicies
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - tcotracespolicies/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - tcotracespolicies/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - monitoring.coreos.com
   resources:
   - alertmanagerconfigs

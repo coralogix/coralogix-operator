@@ -1,0 +1,56 @@
+apiVersion: coralogix.com/v1alpha1
+kind: TCOTracesPolicies
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: tco-traces-policies-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: tco-traces-policies-sample
+spec:
+  policies:
+    - name: first policy
+      priority: high
+      severities:
+        - critical
+      description: This is the first policy
+      actions:
+        names:
+          - action1
+          - action2
+        ruleType: is
+      services:
+        names:
+          - service
+          - system
+        ruleType: includes
+      tags:
+        - name: tags.http
+          ruleType: is
+          values:
+            - GET
+            - POST
+        - name: tags.env
+          ruleType: is
+          values:
+            - prod
+            - dev
+    - name: second policy
+      priority: low
+      severities:
+          - warning
+      description: This is the second policy
+      actions:
+          names:
+          - action3
+          ruleType: is
+      services:
+          names:
+          - service
+          ruleType: is
+      tags:
+        - name: tags.http
+          ruleType: is
+          values:
+              - GET

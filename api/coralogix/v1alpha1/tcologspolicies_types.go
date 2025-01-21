@@ -59,7 +59,7 @@ type TCOPolicySeverity string
 type TCOPolicyRule struct {
 	Names []string `json:"names"`
 
-	// +kubebuilder:validation:Enum=is;is_not;starts_with;includes
+	// +kubebuilder:validation:Enum=is;is_not;start_with;includes
 	RuleType string `json:"ruleType"`
 }
 
@@ -180,7 +180,7 @@ type TCOLogsPoliciesStatus struct{}
 // +kubebuilder:subresource:status
 
 // TCOLogsPolicies is the Schema for the tcologspolicies API.
-// NOTE: This resource performs an atomic overwrite of all existing TCO log policies
+// NOTE: This resource performs an atomic overwrite of all existing TCO logs policies
 // in the backend. Any existing policies not defined in this resource will be
 // removed. Use with caution as this operation is destructive.
 type TCOLogsPolicies struct {
