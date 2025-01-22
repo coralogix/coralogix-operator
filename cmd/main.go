@@ -40,7 +40,6 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
-	utils "github.com/coralogix/coralogix-operator/api"
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	controllers "github.com/coralogix/coralogix-operator/internal/controller"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
@@ -51,23 +50,8 @@ import (
 )
 
 var (
-	scheme          = runtime.NewScheme()
-	setupLog        = ctrl.Log.WithName("setup")
-	regionToGrpcUrl = map[string]string{
-		"APAC1":   "ng-api-grpc.app.coralogix.in:443",
-		"AP1":     "ng-api-grpc.app.coralogix.in:443",
-		"APAC2":   "ng-api-grpc.coralogixsg.com:443",
-		"AP2":     "ng-api-grpc.coralogixsg.com:443",
-		"EUROPE1": "ng-api-grpc.coralogix.com:443",
-		"EU1":     "ng-api-grpc.coralogix.com:443",
-		"EUROPE2": "ng-api-grpc.eu2.coralogix.com:443",
-		"EU2":     "ng-api-grpc.eu2.coralogix.com:443",
-		"USA1":    "ng-api-grpc.coralogix.us:443",
-		"US1":     "ng-api-grpc.coralogix.us:443",
-		"USA2":    "ng-api-grpc.cx498.coralogix.com:443",
-		"US2":     "ng-api-grpc.cx498.coralogix.com:443",
-	}
-	validRegions = utils.GetKeys(regionToGrpcUrl)
+	scheme   = runtime.NewScheme()
+	setupLog = ctrl.Log.WithName("setup")
 )
 
 func init() {
@@ -99,7 +83,7 @@ func main() {
 		"If set, HTTP/2 will be enabled for the metrics and webhook servers")
 
 	region := os.Getenv("CORALOGIX_REGION")
-	flag.StringVar(&region, "region", region, fmt.Sprintf("The region of your Coralogix cluster. Can be one of %q. Conflicts with 'domain'.", validRegions))
+	flag.StringVar(&region, "region", region, fmt.Sprintf("The region of your Coralogix cluster. Can be one of %q. Conflicts with 'domain'.", clientset.ValidRegions))
 
 	domain := os.Getenv("CORALOGIX_DOMAIN")
 	flag.StringVar(&domain, "domain", domain, "The domain of your Coralogix cluster. Conflicts with 'region'.")
@@ -139,14 +123,14 @@ func main() {
 
 	var targetUrl string
 	if region != "" {
-		if !slices.Contains(validRegions, region) {
-			err := fmt.Errorf("region value is '%s', but can be one of %q", region, validRegions)
+		if !slices.Contains(clientset.ValidRegions, region) {
+			err := fmt.Errorf("region value is '%s', but can be one of %q", region, clientset.ValidRegions)
 			setupLog.Error(err, "invalid arguments for running operator")
 			os.Exit(1)
 		}
-		targetUrl = regionToGrpcUrl[region]
+		targetUrl = region
 	} else if domain != "" {
-		targetUrl = fmt.Sprintf("ng-api-grpc.%s:443", domain)
+		targetUrl = domain
 	}
 
 	if apiKey == "" {
@@ -206,7 +190,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	cpc := cxsdk.NewCallPropertiesCreatorOperator(strings.ToLower(region), cxsdk.NewAuthContext(apiKey, apiKey), "0.0.1")
+	cpc := cxsdk.NewCallPropertiesCreatorOperator(strings.ToLower(targetUrl), cxsdk.NewAuthContext(apiKey, apiKey), "0.0.1")
 	clientSet := cxsdk.NewClientSet(cpc)
 
 	if err = (&coralogixcontrollers.RuleGroupReconciler{
