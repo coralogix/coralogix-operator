@@ -85,8 +85,12 @@ func (v *AlertCustomValidator) ValidateCreate(ctx context.Context, obj runtime.O
 }
 
 func validateAlertNotificationGroup(group *coralogixv1beta1.NotificationGroup, groupBy []string) (admission.Warnings, error) {
-	if group != nil && !isSubset(groupBy, group.GroupByKeys) {
-		return admission.Warnings{"group by keys must be subset of notification group group by keys"}, fmt.Errorf("group by keys must be subset of notification group group by keys")
+	if group == nil {
+		return nil, nil
+	}
+
+	if !isSubset(groupBy, group.GroupByKeys) {
+		return admission.Warnings{"group by keys must be a subset of the group by keys in the alert type"}, fmt.Errorf("group by keys must be a subset of the group by keys in the alert type")
 	}
 
 	var warnings admission.Warnings

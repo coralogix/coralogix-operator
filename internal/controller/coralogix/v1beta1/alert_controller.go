@@ -130,7 +130,7 @@ func (r *AlertReconciler) update(ctx context.Context, log logr.Logger, alert *co
 			log.V(1).Info("alert not found on remote, recreating it")
 			alert.Status = *coralogixv1beta1.NewDefaultAlertStatus()
 			if err = r.Status().Update(ctx, alert); err != nil {
-				return fmt.Errorf("error on updating alert status 1: %v", err)
+				return fmt.Errorf("error on updating alert status: %v", err)
 			}
 			return fmt.Errorf("alert not found on remote: %w", err)
 		}
