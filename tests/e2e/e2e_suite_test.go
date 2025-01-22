@@ -27,8 +27,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 )
 
 const testNamespace = "coralogix-e2e-test"
@@ -43,7 +41,7 @@ var _ = BeforeSuite(func(ctx context.Context) {
 	apiKey := os.Getenv("CORALOGIX_API_KEY")
 
 	By("Initializing clients")
-	ClientsInstance.InitCoralogixClientSet(cxsdk.CoralogixGrpcEndpointFromRegion(region), apiKey, apiKey)
+	ClientsInstance.InitCoralogixClientSet(region, apiKey, apiKey)
 	Expect(ClientsInstance.InitControllerRuntimeClient()).To(Succeed())
 	Expect(ClientsInstance.InitK8sClient()).To(Succeed())
 

@@ -32,10 +32,9 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
-	"github.com/coralogix/coralogix-operator/internal/controller/mock_clientset"
 )
 
-func setupReconciler(t *testing.T, ctx context.Context, clientSet *mock_clientset.MockClientSetInterface) (PrometheusRuleReconciler, watch.Interface, client.Client) {
+func setupReconciler(t *testing.T, ctx context.Context) (PrometheusRuleReconciler, watch.Interface, client.Client) {
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
 	scheme := runtime.NewScheme()
@@ -59,9 +58,8 @@ func setupReconciler(t *testing.T, ctx context.Context, clientSet *mock_clientse
 
 	assert.NoError(t, err)
 	r := PrometheusRuleReconciler{
-		Client:             withWatch,
-		Scheme:             mgr.GetScheme(),
-		CoralogixClientSet: clientSet,
+		Client: withWatch,
+		Scheme: mgr.GetScheme(),
 	}
 	r.SetupWithManager(mgr)
 
@@ -70,9 +68,8 @@ func setupReconciler(t *testing.T, ctx context.Context, clientSet *mock_clientse
 }
 
 type PrepareParams struct {
-	ctx       context.Context
-	client    client.Client
-	clientSet *mock_clientset.MockClientSetInterface
+	ctx    context.Context
+	client client.Client
 }
 
 func TestPrometheusRulesConvertionToCxParsingRules(t *testing.T) {
@@ -171,18 +168,15 @@ func TestPrometheusRulesConvertionToCxParsingRules(t *testing.T) {
 			controller := gomock.NewController(t)
 			defer controller.Finish()
 
-			clientSet := mock_clientset.NewMockClientSetInterface(controller)
-
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			reconciler, watcher, client := setupReconciler(t, ctx, clientSet)
+			reconciler, watcher, client := setupReconciler(t, ctx)
 
 			if tt.prepare != nil {
 				tt.prepare(PrepareParams{
-					ctx:       ctx,
-					client:    client,
-					clientSet: clientSet,
+					ctx:    ctx,
+					client: client,
 				})
 			}
 
@@ -306,18 +300,15 @@ func TestPrometheusRulesConvertionToCxAlert(t *testing.T) {
 			controller := gomock.NewController(t)
 			defer controller.Finish()
 
-			clientSet := mock_clientset.NewMockClientSetInterface(controller)
-
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			reconciler, watcher, client := setupReconciler(t, ctx, clientSet)
+			reconciler, watcher, client := setupReconciler(t, ctx)
 
 			if tt.prepare != nil {
 				tt.prepare(PrepareParams{
-					ctx:       ctx,
-					client:    client,
-					clientSet: clientSet,
+					ctx:    ctx,
+					client: client,
 				})
 			}
 

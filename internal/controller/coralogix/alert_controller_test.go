@@ -42,7 +42,7 @@ import (
 	"github.com/coralogix/coralogix-operator/internal/controller/mock_clientset"
 )
 
-func setupReconciler(t *testing.T, ctx context.Context, clientSet *mock_clientset.MockClientSetInterface) (AlertReconciler, watch.Interface) {
+func setupReconciler(t *testing.T, ctx context.Context, alertsClient *mock_clientset.MockAlertsClientInterface, webhooksClient *mock_clientset.MockOutboundWebhooksClientInterface) (AlertReconciler, watch.Interface) {
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
 	scheme := runtime.NewScheme()
@@ -62,9 +62,10 @@ func setupReconciler(t *testing.T, ctx context.Context, clientSet *mock_clientse
 
 	assert.NoError(t, err)
 	r := AlertReconciler{
-		Client:             withWatch,
-		Scheme:             mgr.GetScheme(),
-		CoralogixClientSet: clientSet,
+		Client:         withWatch,
+		Scheme:         mgr.GetScheme(),
+		AlertsClient:   alertsClient,
+		WebhooksClient: webhooksClient,
 	}
 	r.SetupWithManager(mgr)
 
@@ -74,7 +75,6 @@ func setupReconciler(t *testing.T, ctx context.Context, clientSet *mock_clientse
 
 type PrepareParams struct {
 	ctx            context.Context
-	clientSet      *mock_clientset.MockClientSetInterface
 	alertsClient   *mock_clientset.MockAlertsClientInterface
 	webhooksClient *mock_clientset.MockOutboundWebhooksClientInterface
 	alert          *coralogixv1alpha1.Alert
@@ -209,18 +209,11 @@ func TestAlertCreation(t *testing.T) {
 			controller := gomock.NewController(t)
 			defer controller.Finish()
 
-			// Creating client set.
-			clientSet := mock_clientset.NewMockClientSetInterface(controller)
-
 			// Creating alerts client.
 			alertsClient := mock_clientset.NewMockAlertsClientInterface(controller)
 
 			// Creating webhooks client.
 			webhooksClient := mock_clientset.NewMockOutboundWebhooksClientInterface(controller)
-
-			// Preparing common mocks.
-			clientSet.EXPECT().Alerts().MaxTimes(1).MinTimes(1).Return(alertsClient)
-			clientSet.EXPECT().OutboundWebhooks().MaxTimes(1).MinTimes(1).Return(webhooksClient)
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
@@ -228,7 +221,6 @@ func TestAlertCreation(t *testing.T) {
 			if tt.prepare != nil {
 				tt.prepare(PrepareParams{
 					ctx:            ctx,
-					clientSet:      clientSet,
 					alertsClient:   alertsClient,
 					webhooksClient: webhooksClient,
 					alert:          tt.alert,
@@ -236,7 +228,7 @@ func TestAlertCreation(t *testing.T) {
 				})
 			}
 
-			reconciler, watcher := setupReconciler(t, ctx, clientSet)
+			reconciler, watcher := setupReconciler(t, ctx, alertsClient, webhooksClient)
 
 			err := reconciler.Client.Create(ctx, tt.alert)
 
@@ -464,18 +456,11 @@ func TestAlertUpdate(t *testing.T) {
 			controller := gomock.NewController(t)
 			defer controller.Finish()
 
-			// Creating client set.
-			clientSet := mock_clientset.NewMockClientSetInterface(controller)
-
 			// Creating alerts client.
 			alertsClient := mock_clientset.NewMockAlertsClientInterface(controller)
 
 			// Creating webhooks client.
 			webhooksClient := mock_clientset.NewMockOutboundWebhooksClientInterface(controller)
-
-			// Preparing common mocks.
-			clientSet.EXPECT().Alerts().MaxTimes(1).MinTimes(1).Return(alertsClient)
-			clientSet.EXPECT().OutboundWebhooks().Return(webhooksClient).AnyTimes()
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
@@ -483,7 +468,6 @@ func TestAlertUpdate(t *testing.T) {
 			if tt.prepare != nil {
 				tt.prepare(PrepareParams{
 					ctx:            ctx,
-					clientSet:      clientSet,
 					alertsClient:   alertsClient,
 					webhooksClient: webhooksClient,
 					alert:          tt.alert,
@@ -491,7 +475,7 @@ func TestAlertUpdate(t *testing.T) {
 				})
 			}
 
-			reconciler, watcher := setupReconciler(t, ctx, clientSet)
+			reconciler, watcher := setupReconciler(t, ctx, alertsClient, webhooksClient)
 
 			err := reconciler.Client.Create(ctx, tt.alert)
 			assert.NoError(t, err)
@@ -674,18 +658,11 @@ func TestAlertDelete(t *testing.T) {
 			controller := gomock.NewController(t)
 			defer controller.Finish()
 
-			// Creating client set.
-			clientSet := mock_clientset.NewMockClientSetInterface(controller)
-
 			// Creating alerts client.
 			alertsClient := mock_clientset.NewMockAlertsClientInterface(controller)
 
 			// Creating webhooks client.
 			webhooksClient := mock_clientset.NewMockOutboundWebhooksClientInterface(controller)
-
-			// Preparing common mocks.
-			clientSet.EXPECT().Alerts().MaxTimes(1).MinTimes(1).Return(alertsClient)
-			clientSet.EXPECT().OutboundWebhooks().Return(webhooksClient).AnyTimes()
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
@@ -693,7 +670,6 @@ func TestAlertDelete(t *testing.T) {
 			if tt.prepare != nil {
 				tt.prepare(PrepareParams{
 					ctx:            ctx,
-					clientSet:      clientSet,
 					alertsClient:   alertsClient,
 					webhooksClient: webhooksClient,
 					alert:          tt.alert,
@@ -701,7 +677,7 @@ func TestAlertDelete(t *testing.T) {
 				})
 			}
 
-			reconciler, watcher := setupReconciler(t, ctx, clientSet)
+			reconciler, watcher := setupReconciler(t, ctx, alertsClient, webhooksClient)
 
 			err := reconciler.Client.Create(ctx, tt.alert)
 			assert.NoError(t, err)

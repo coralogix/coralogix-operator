@@ -37,7 +37,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
-	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
 )
 
@@ -57,8 +56,7 @@ import (
 // AlertmanagerConfigReconciler reconciles a AlertmanagerConfig object
 type AlertmanagerConfigReconciler struct {
 	client.Client
-	CoralogixClientSet clientset.ClientSetInterface
-	Scheme             *runtime.Scheme
+	Scheme *runtime.Scheme
 }
 
 // SetupWithManager sets up the controller with the Manager.

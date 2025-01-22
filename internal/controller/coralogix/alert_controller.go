@@ -47,8 +47,9 @@ var (
 // AlertReconciler reconciles a Alert object
 type AlertReconciler struct {
 	client.Client
-	CoralogixClientSet clientset.ClientSetInterface
-	Scheme             *runtime.Scheme
+	AlertsClient   clientset.AlertsClientInterface
+	WebhooksClient clientset.OutboundWebhooksClientInterface
+	Scheme         *runtime.Scheme
 }
 
 //+kubebuilder:rbac:groups=coralogix.com,resources=alerts,verbs=get;list;watch;create;update;patch;delete
@@ -65,7 +66,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	)
 
 	log.V(1).Info("Reconciling Alert")
-	coralogixv1alpha1.WebhooksClient = r.CoralogixClientSet.OutboundWebhooks()
+	coralogixv1alpha1.WebhooksClient = r.WebhooksClient
 	alert := coralogixv1alpha1.NewAlert()
 
 	if err = r.Client.Get(ctx, req.NamespacedName, alert); err != nil {
@@ -115,7 +116,7 @@ func (r *AlertReconciler) update(ctx context.Context, log logr.Logger, alert *co
 	}
 
 	log.V(1).Info("Updating remote alert", "alert", protojson.Format(alertRequest))
-	remoteUpdatedAlert, err := r.CoralogixClientSet.Alerts().UpdateAlert(ctx, alertRequest)
+	remoteUpdatedAlert, err := r.AlertsClient.UpdateAlert(ctx, alertRequest)
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
 			log.V(1).Info("alert not found on remote, recreating it")
@@ -151,7 +152,7 @@ func (r *AlertReconciler) create(ctx context.Context, log logr.Logger, alert *co
 	}
 
 	log.V(1).Info("Creating remote alert", "alert", protojson.Format(alertRequest))
-	response, err := r.CoralogixClientSet.Alerts().CreateAlert(ctx, alertRequest)
+	response, err := r.AlertsClient.CreateAlert(ctx, alertRequest)
 	if err != nil {
 		return fmt.Errorf("error on creating alert: %w", err)
 	}
@@ -195,7 +196,7 @@ func (r *AlertReconciler) create(ctx context.Context, log logr.Logger, alert *co
 
 func (r *AlertReconciler) deleteRemoteAlert(ctx context.Context, log logr.Logger, alertID *string) error {
 	log.V(1).Info("Deleting remote alert", "alert", alertID)
-	if _, err := r.CoralogixClientSet.Alerts().DeleteAlert(ctx, &alerts.DeleteAlertByUniqueIdRequest{
+	if _, err := r.AlertsClient.DeleteAlert(ctx, &alerts.DeleteAlertByUniqueIdRequest{
 		Id: wrapperspb.String(*alertID)}); err != nil && status.Code(err) != codes.NotFound {
 		log.V(1).Error(err, "Error on deleting remote alert", "alert", alertID)
 		return fmt.Errorf("error on deleting alert: %w", err)

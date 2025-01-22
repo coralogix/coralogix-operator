@@ -155,8 +155,6 @@ func TestFlattenRuleGroups(t *testing.T) {
 func TestRuleGroupReconciler_Reconcile(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	ruleGroupClient := createRuleGroupClientSimpleMock(mockCtrl)
-	mockClientSet := mock_clientset.NewMockClientSetInterface(mockCtrl)
-	mockClientSet.EXPECT().RuleGroups().Return(ruleGroupClient).AnyTimes()
 
 	scheme := runtime.NewScheme()
 	utilruntime.Must(coralogixv1alpha1.AddToScheme(scheme))
@@ -173,9 +171,9 @@ func TestRuleGroupReconciler_Reconcile(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	r := RuleGroupReconciler{
-		Client:             withWatch,
-		Scheme:             mgr.GetScheme(),
-		CoralogixClientSet: mockClientSet,
+		Client:          withWatch,
+		Scheme:          mgr.GetScheme(),
+		RuleGroupClient: ruleGroupClient,
 	}
 	r.SetupWithManager(mgr)
 
@@ -199,7 +197,7 @@ func TestRuleGroupReconciler_Reconcile(t *testing.T) {
 		return
 	}
 	getRuleGroupRequest := &cxsdk.GetRuleGroupRequest{GroupId: *id}
-	actualRuleGroup, err := r.CoralogixClientSet.RuleGroups().Get(ctx, getRuleGroupRequest)
+	actualRuleGroup, err := r.RuleGroupClient.Get(ctx, getRuleGroupRequest)
 	assert.NoError(t, err)
 	assert.EqualValues(t, ruleGroupBackendSchema, actualRuleGroup.GetRuleGroup())
 
@@ -210,7 +208,7 @@ func TestRuleGroupReconciler_Reconcile(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, false, result.Requeue)
 
-	actualRuleGroup, err = r.CoralogixClientSet.RuleGroups().Get(ctx, getRuleGroupRequest)
+	actualRuleGroup, err = r.RuleGroupClient.Get(ctx, getRuleGroupRequest)
 	assert.Nil(t, actualRuleGroup)
 	assert.Error(t, err)
 }
@@ -218,8 +216,6 @@ func TestRuleGroupReconciler_Reconcile(t *testing.T) {
 func TestRuleGroupReconciler_Reconcile_5XX_StatusError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	ruleGroupClient := createRecordingRuleGroupClientSimpleMockWith5XXStatusError(mockCtrl)
-	mockClientSet := mock_clientset.NewMockClientSetInterface(mockCtrl)
-	mockClientSet.EXPECT().RuleGroups().Return(ruleGroupClient).AnyTimes()
 
 	scheme := runtime.NewScheme()
 	utilruntime.Must(coralogixv1alpha1.AddToScheme(scheme))
@@ -236,9 +232,9 @@ func TestRuleGroupReconciler_Reconcile_5XX_StatusError(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	r := RuleGroupReconciler{
-		Client:             withWatch,
-		Scheme:             mgr.GetScheme(),
-		CoralogixClientSet: mockClientSet,
+		Client:          withWatch,
+		Scheme:          mgr.GetScheme(),
+		RuleGroupClient: ruleGroupClient,
 	}
 	r.SetupWithManager(mgr)
 
@@ -266,7 +262,7 @@ func TestRuleGroupReconciler_Reconcile_5XX_StatusError(t *testing.T) {
 		return
 	}
 	getRuleGroupRequest := &cxsdk.GetRuleGroupRequest{GroupId: *id}
-	actualRuleGroup, err := r.CoralogixClientSet.RuleGroups().Get(ctx, getRuleGroupRequest)
+	actualRuleGroup, err := r.RuleGroupClient.Get(ctx, getRuleGroupRequest)
 	assert.NoError(t, err)
 	assert.EqualValues(t, ruleGroupBackendSchema, actualRuleGroup.GetRuleGroup())
 

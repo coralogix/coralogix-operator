@@ -8,9 +8,6 @@ on:
   pull_request:
     branches:
       - main
-concurrency:
-  group: e2e-tests-concurrency
-  cancel-in-progress: false
 jobs:
   tests:
     name: Tests
