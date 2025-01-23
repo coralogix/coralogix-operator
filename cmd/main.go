@@ -128,7 +128,7 @@ func main() {
 			setupLog.Error(err, "invalid arguments for running operator")
 			os.Exit(1)
 		}
-		targetUrl = region
+		targetUrl = clientset.OperatorRegionToSdkRegion[region]
 	} else if domain != "" {
 		targetUrl = domain
 	}
