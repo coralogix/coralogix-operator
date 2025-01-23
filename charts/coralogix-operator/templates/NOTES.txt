@@ -6,6 +6,10 @@
 {{ fail "[ERROR] 'secret.secretKeyReference' is required when 'secret.create' is false." }}
 {{ end }}
 
-{{- if (eq .Values.coralogixOperator.region "") }}
-{{ fail "[ERROR] 'coralogixOperator.region' must be set. Please select one of APAC1,AP1,APAC2,AP2,EUROPE1,EU1,EUROPE2,EU2,USA1,US1,USA2,US2 regions. See https://coralogix.com/docs/coralogix-domain/ for more information." }}
+{{- if and (eq .Values.coralogixOperator.region "") (eq .Values.coralogixOperator.domain "") }}
+{{ fail "[ERROR] 'coralogixOperator.region' or 'coralogixOperator.domain' must be set. See https://coralogix.com/docs/coralogix-domain/ for more information." }}
+{{ end }}
+
+{{- if and (ne .Values.coralogixOperator.region "") (ne .Values.coralogixOperator.domain "") }}
+{{ fail "[ERROR] 'coralogixOperator.region' and coralogixOperator.domain flags are mutually exclusive. See https://coralogix.com/docs/coralogix-domain/ for more information." }}
 {{ end }}

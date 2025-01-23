@@ -102,6 +102,9 @@ coralogixOperator:
   # -- Coralogix Account Region
   region: ""
 
+  # -- Coralogix Account Domain
+  domain: ""
+
   # -- resource config for Coralogix operator
   resources: {}
 

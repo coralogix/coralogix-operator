@@ -75,6 +75,7 @@ spec:
         - --zap-log-level=debug
         - --api-key=${CORALOGIX_API_KEY}
         - --region=${CORALOGIX_REGION}
+        - --domain=${CORALOGIX_DOMAIN}
         - --enable-webhooks=true
         name: manager
         image: controller

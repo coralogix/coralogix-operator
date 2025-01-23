@@ -45,12 +45,28 @@ var (
 		"USA2":    "ng-api-grpc.cx498.coralogix.com:443",
 		"US2":     "ng-api-grpc.cx498.coralogix.com:443",
 	}
+	OperatorRegionToSdkRegion = map[string]string{
+		"APAC1":   "AP1",
+		"AP1":     "AP1",
+		"APAC2":   "AP2",
+		"AP2":     "AP2",
+		"APAC3":   "AP3",
+		"AP3":     "AP3",
+		"EUROPE1": "EU1",
+		"EU1":     "EU1",
+		"EUROPE2": "EU2",
+		"EU2":     "EU2",
+		"USA1":    "US1",
+		"US1":     "US1",
+		"USA2":    "US2",
+		"US2":     "US2",
+	}
 	ValidRegions = utils.GetKeys(RegionToGrpcUrl)
 )
 
 type CallPropertiesCreator struct {
-	targetUrl string
-	apiKey    string
+	region string
+	apiKey string
 	//allowRetry bool
 }
 
@@ -63,7 +79,14 @@ type CallProperties struct {
 func (c CallPropertiesCreator) GetCallProperties(ctx context.Context) (*CallProperties, error) {
 	ctx = createAuthContext(ctx, c.apiKey)
 
-	conn, err := createSecureConnection(RegionToGrpcUrl[c.targetUrl])
+	var targetUrl string
+	if _, ok := RegionToGrpcUrl[c.region]; ok {
+		targetUrl = RegionToGrpcUrl[c.region]
+	} else {
+		targetUrl = fmt.Sprintf("ng-api-grpc.%s:443", c.region)
+	}
+
+	conn, err := createSecureConnection(targetUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -91,9 +114,9 @@ func createAuthContext(ctx context.Context, apiKey string) context.Context {
 	return ctx
 }
 
-func NewCallPropertiesCreator(targetUrl, apiKey string) *CallPropertiesCreator {
+func NewCallPropertiesCreator(region, apiKey string) *CallPropertiesCreator {
 	return &CallPropertiesCreator{
-		targetUrl: targetUrl,
-		apiKey:    apiKey,
+		region: region,
+		apiKey: apiKey,
 	}
 }
