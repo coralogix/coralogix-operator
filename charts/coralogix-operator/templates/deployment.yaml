@@ -45,6 +45,8 @@ spec:
         env:
           - name: CORALOGIX_REGION
             value: {{ .Values.coralogixOperator.region | quote }}
+          - name: CORALOGIX_DOMAIN
+            value: {{ .Values.coralogixOperator.domain | quote }}
           - name: CORALOGIX_API_KEY
             valueFrom:
               secretKeyRef:
