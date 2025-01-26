@@ -63,10 +63,8 @@ func setupReconciler(t *testing.T, ctx context.Context, alertsClient *mock_clien
 
 	assert.NoError(t, err)
 	r := AlertReconciler{
-		Client:         withWatch,
-		Scheme:         mgr.GetScheme(),
-		AlertsClient:   alertsClient,
-		WebhooksClient: webhooksClient,
+		Client: withWatch,
+		Scheme: mgr.GetScheme(),
 	}
 	r.SetupWithManager(mgr)
 
