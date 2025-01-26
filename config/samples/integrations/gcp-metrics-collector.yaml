@@ -1,0 +1,43 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Integration
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: integration-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: gcp-metrics-collector-integration
+spec:
+  integrationKey: gcp-metrics-collector
+  version: 1.0.0
+  parameters:
+    ApplicationName: cxo
+    SubsystemName: gcp-metrics-collector
+    IntegrationName: cxo-integration-setup
+    MetricPrefixes:
+      - appengine.googleapis.com
+      - cloudfunctions.googleapis.com
+      - cloudkms.googleapis.com
+      - cloudsql.googleapis.com
+      - compute.googleapis.com
+      - container.googleapis.com
+      - datastream.googleapis.com
+      - firestore.googleapis.com
+      - loadbalancing.googleapis.com
+      - network.googleapis.com
+      - run.googleapis.com
+      - storage.googleapis.com
+    ServiceAccountKey: >
+      {
+        "type": "service_account",
+        "project_id": "redacted",
+        "private_key_id": "redacted",
+        "private_key": "-----BEGIN PRIVATE KEY-----\nredacted\n-----END PRIVATE KEY-----",
+        "client_email": "redacted@project-id.iam.gserviceaccount.com",
+        "client_id": "redacted",
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+        "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/redacted@project-id.iam.gserviceaccount.com"
+      }
