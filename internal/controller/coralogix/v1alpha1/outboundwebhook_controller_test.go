@@ -59,9 +59,9 @@ func setupOutboundWebhooksReconciler(t *testing.T, ctx context.Context, outbound
 
 	assert.NoError(t, err)
 	r := OutboundWebhookReconciler{
-		Client:                 withWatch,
-		Scheme:                 mgr.GetScheme(),
-		OutboundWebhooksClient: outboundWebhooksClient,
+		Client: withWatch,
+		Scheme: mgr.GetScheme(),
+		//OutboundWebhooksClient: outboundWebhooksClient,
 	}
 	r.SetupWithManager(mgr)
 
