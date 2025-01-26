@@ -19,8 +19,9 @@ import (
 	"fmt"
 	"time"
 
-	utils "github.com/coralogix/coralogix-operator/api/coralogix"
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/api/coralogix"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,6 +30,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 )
 
 var _ = Describe("Alert", Ordered, func() {
@@ -80,7 +83,7 @@ var _ = Describe("Alert", Ordered, func() {
 							SearchQuery: "http_requests_total{status!~\"4..\"}",
 							Conditions: coralogixv1alpha1.PromqlConditions{
 								AlertWhen:                  "More",
-								Threshold:                  utils.FloatToQuantity(3),
+								Threshold:                  coralogix.FloatToQuantity(3),
 								SampleThresholdPercentage:  50,
 								TimeWindow:                 "TwelveHours",
 								MinNonNullValuesPercentage: ptr.To(10),
