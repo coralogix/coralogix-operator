@@ -231,7 +231,8 @@ var (
 		LogsUniqueCountTimeWindowValue24Hours:   cxsdk.LogsUniqueValueTimeWindowValue24Hours,
 		LogsUniqueCountTimeWindowValue36Hours:   cxsdk.LogsUniqueValueTimeWindowValue36Hours,
 	}
-	ClientSet clientset.ClientSetInterface
+	alertClient    clientset.AlertsClientInterface
+	webhooksClient clientset.OutboundWebhooksClientInterface
 )
 
 // AlertSpec defines the desired state of Alert
@@ -1145,9 +1146,9 @@ func convertNameToIntegrationID(name string, properties *common.ListingAlertsAnd
 }
 
 func fillWebhookNameToId(properties *common.ListingAlertsAndWebhooksProperties) error {
-	log, clientset, ctx := properties.Log, properties.Clientset, properties.Ctx
+	log, client, ctx := properties.Log, properties.Clientset.Webhooks(), properties.Ctx
 	log.V(1).Info("Listing webhooks from the backend")
-	webhooks, err := clientset.OutboundWebhooks().List(ctx, &cxsdk.ListAllOutgoingWebhooksRequest{})
+	webhooks, err := client.List(ctx, &cxsdk.ListAllOutgoingWebhooksRequest{})
 	if err != nil {
 		return err
 	}

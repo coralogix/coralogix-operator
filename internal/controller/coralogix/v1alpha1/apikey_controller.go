@@ -35,14 +35,13 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
-	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
 )
 
 // ApiKeyReconciler reconciles a ApiKey object
 type ApiKeyReconciler struct {
 	client.Client
-	ApiKeysClient clientset.ApiKeysClientInterface
+	ApiKeysClient *cxsdk.ApikeysClient
 	Scheme        *runtime.Scheme
 }
 

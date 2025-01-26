@@ -32,7 +32,6 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
-	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
 )
 
@@ -41,8 +40,8 @@ var ruleGroupFinalizerName = "rulegroup.coralogix.com/finalizer"
 // RuleGroupReconciler reconciles a RuleGroup object
 type RuleGroupReconciler struct {
 	client.Client
-	CoralogixClientSet clientset.ClientSetInterface
-	Scheme             *runtime.Scheme
+	RuleGroupClient *cxsdk.RuleGroupsClient
+	Scheme          *runtime.Scheme
 }
 
 //+kubebuilder:rbac:groups=coralogix.com,resources=rulegroups,verbs=get;list;watch;create;update;patch;delete
@@ -63,7 +62,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	jsm := &jsonpb.Marshaler{
 		EmitDefaults: true,
 	}
-	rulesGroupsClient := r.CoralogixClientSet.RuleGroups()
+	rulesGroupsClient := r.RuleGroupClient
 
 	//Get ruleGroupCRD
 	ruleGroupCRD := &coralogixv1alpha1.RuleGroup{}
@@ -195,7 +194,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 func (r *RuleGroupReconciler) deleteRemoteRuleGroup(ctx context.Context, log logr.Logger, ruleGroupId *string) error {
 	deleteRuleGroupReq := &cxsdk.DeleteRuleGroupRequest{GroupId: *ruleGroupId}
 	log.V(1).Info("Deleting Rule-Group", "Rule-Group ID", ruleGroupId)
-	if _, err := r.CoralogixClientSet.RuleGroups().Delete(ctx, deleteRuleGroupReq); err != nil && cxsdk.Code(err) != codes.NotFound {
+	if _, err := r.RuleGroupClient.Delete(ctx, deleteRuleGroupReq); err != nil && cxsdk.Code(err) != codes.NotFound {
 		log.V(1).Error(err, "Received an error while Deleting a Rule-Group", "Rule-Group ID", ruleGroupId)
 		return fmt.Errorf("error on deleting Rule-Group: %w", err)
 	}

@@ -38,7 +38,7 @@ import (
 	"github.com/coralogix/coralogix-operator/internal/controller/mock_clientset"
 )
 
-func setupRecordingRuleReconciler(t *testing.T, ctx context.Context, clientSet *mock_clientset.MockClientSetInterface) (RecordingRuleGroupSetReconciler, watch.Interface) {
+func setupRecordingRuleReconciler(t *testing.T, ctx context.Context, recordingRuleGroupSetClient *mock_clientset.MockRecordingRulesGroupsClientInterface) (RecordingRuleGroupSetReconciler, watch.Interface) {
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
 	scheme := runtime.NewScheme()
@@ -58,9 +58,9 @@ func setupRecordingRuleReconciler(t *testing.T, ctx context.Context, clientSet *
 
 	assert.NoError(t, err)
 	r := RecordingRuleGroupSetReconciler{
-		Client:             withWatch,
-		Scheme:             mgr.GetScheme(),
-		CoralogixClientSet: clientSet,
+		Client: withWatch,
+		Scheme: mgr.GetScheme(),
+		//RecordingRuleGroupSetClient: recordingRuleGroupSetClient,
 	}
 	r.SetupWithManager(mgr)
 
@@ -70,7 +70,6 @@ func setupRecordingRuleReconciler(t *testing.T, ctx context.Context, clientSet *
 
 type PrepareRecordingRulesParams struct {
 	ctx                 context.Context
-	clientSet           *mock_clientset.MockClientSetInterface
 	recordingRuleClient *mock_clientset.MockRecordingRulesGroupsClientInterface
 }
 
@@ -117,9 +116,7 @@ func TestRecordingRuleCreation(t *testing.T) {
 			controller := gomock.NewController(t)
 			defer controller.Finish()
 
-			clientSet := mock_clientset.NewMockClientSetInterface(controller)
 			recordingRuleClient := mock_clientset.NewMockRecordingRulesGroupsClientInterface(controller)
-			clientSet.EXPECT().RecordingRuleGroups().Return(recordingRuleClient).AnyTimes()
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
@@ -127,12 +124,11 @@ func TestRecordingRuleCreation(t *testing.T) {
 			if tt.params != nil {
 				tt.params(PrepareRecordingRulesParams{
 					ctx:                 ctx,
-					clientSet:           clientSet,
 					recordingRuleClient: recordingRuleClient,
 				})
 			}
 
-			reconciler, watcher := setupRecordingRuleReconciler(t, ctx, clientSet)
+			reconciler, watcher := setupRecordingRuleReconciler(t, ctx, recordingRuleClient)
 
 			err := reconciler.Client.Create(ctx, &tt.recordingRule)
 
@@ -217,9 +213,7 @@ func TestRecordingRuleUpdate(t *testing.T) {
 			controller := gomock.NewController(t)
 			defer controller.Finish()
 
-			clientSet := mock_clientset.NewMockClientSetInterface(controller)
 			recordingRuleClient := mock_clientset.NewMockRecordingRulesGroupsClientInterface(controller)
-			clientSet.EXPECT().RecordingRuleGroups().Return(recordingRuleClient).AnyTimes()
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
@@ -227,12 +221,11 @@ func TestRecordingRuleUpdate(t *testing.T) {
 			if tt.params != nil {
 				tt.params(PrepareRecordingRulesParams{
 					ctx:                 ctx,
-					clientSet:           clientSet,
 					recordingRuleClient: recordingRuleClient,
 				})
 			}
 
-			reconciler, watcher := setupRecordingRuleReconciler(t, ctx, clientSet)
+			reconciler, watcher := setupRecordingRuleReconciler(t, ctx, recordingRuleClient)
 
 			err := reconciler.Client.Create(ctx, &tt.recordingRule)
 

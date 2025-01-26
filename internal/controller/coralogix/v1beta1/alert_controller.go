@@ -23,7 +23,6 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	"github.com/coralogix/coralogix-operator/api/coralogix/common"
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
-	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	"github.com/go-logr/logr"
@@ -46,7 +45,7 @@ var alertFinalizerName = "alert.coralogix.com/finalizer"
 type AlertReconciler struct {
 	client.Client
 	Scheme             *runtime.Scheme
-	CoralogixClientSet clientset.ClientSetInterface
+	CoralogixClientSet *cxsdk.ClientSet
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=alerts,verbs=get;list;watch;create;update;patch;delete
@@ -255,7 +254,7 @@ func getAlertType(alert *coralogixv1beta1.Alert) string {
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *AlertReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	coralogixv1beta1.ClientSet = r.CoralogixClientSet
+	//coralogixv1beta1 = r.CoralogixClientSet
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1beta1.Alert{}).
 		Complete(r)

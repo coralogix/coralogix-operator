@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/coralogix/coralogix-operator/api/coralogix/common"
-	"github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/go-logr/logr"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus/common/model"
@@ -38,7 +37,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
 )
 
@@ -58,8 +57,7 @@ import (
 // AlertmanagerConfigReconciler reconciles a AlertmanagerConfig object
 type AlertmanagerConfigReconciler struct {
 	client.Client
-	CoralogixClientSet clientset.ClientSetInterface
-	Scheme             *runtime.Scheme
+	Scheme *runtime.Scheme
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -241,7 +239,7 @@ func (r *AlertmanagerConfigReconciler) linkCxAlertToCxIntegrations(ctx context.C
 		return false
 	}
 
-	var alerts v1alpha1.AlertList
+	var alerts coralogixv1alpha1.AlertList
 	if err := r.List(ctx, &alerts, client.InNamespace(config.Namespace), client.MatchingLabels{"app.coralogix.com/managed-by-alertmanager-config": "true"}); err != nil {
 		log.Error(err, "Received an error while trying to list Alerts")
 		return false
@@ -283,7 +281,7 @@ func (r *AlertmanagerConfigReconciler) linkCxAlertToCxIntegrations(ctx context.C
 }
 
 func (r *AlertmanagerConfigReconciler) deleteWebhooksFromRelatedAlerts(ctx context.Context, config *prometheus.AlertmanagerConfig) error {
-	var alerts v1alpha1.AlertList
+	var alerts coralogixv1alpha1.AlertList
 	if err := r.List(ctx, &alerts, client.InNamespace(config.Namespace), client.MatchingLabels{"app.coralogix.com/managed-by-alertmanager-config": "true"}); err != nil {
 		return fmt.Errorf("received an error while trying to list Alerts: %w", err)
 	}
@@ -320,8 +318,8 @@ func matchedRoutesToMatchedReceiversMap(matchedRoutes []*prometheus.Route, allRe
 	return matchedReceiversMap
 }
 
-func generateNotificationGroupFromRoutes(matchedRoutes []*prometheus.Route, matchedReceivers map[string]*prometheus.Receiver) ([]v1alpha1.NotificationGroup, error) {
-	var notificationsGroups []v1alpha1.NotificationGroup
+func generateNotificationGroupFromRoutes(matchedRoutes []*prometheus.Route, matchedReceivers map[string]*prometheus.Receiver) ([]coralogixv1alpha1.NotificationGroup, error) {
+	var notificationsGroups []coralogixv1alpha1.NotificationGroup
 	for _, route := range matchedRoutes {
 		receiver, ok := matchedReceivers[route.Receiver]
 		if !ok || receiver == nil {
@@ -333,9 +331,9 @@ func generateNotificationGroupFromRoutes(matchedRoutes []*prometheus.Route, matc
 			return nil, err
 		}
 
-		var notificationsGroup = v1alpha1.NotificationGroup{
+		var notificationsGroup = coralogixv1alpha1.NotificationGroup{
 			GroupByFields: route.GroupBy,
-			Notifications: []v1alpha1.Notification{},
+			Notifications: []coralogixv1alpha1.Notification{},
 		}
 
 		for i, conf := range receiver.SlackConfigs {
@@ -367,17 +365,17 @@ func getRetriggeringPeriodMinutes(route *prometheus.Route) (int32, error) {
 	return retriggeringPeriodMinutes, nil
 }
 
-func webhookNameToAlertNotification(webhookName string, retriggeringPeriodMinutes int32, notifyOnResolve *bool) v1alpha1.Notification {
+func webhookNameToAlertNotification(webhookName string, retriggeringPeriodMinutes int32, notifyOnResolve *bool) coralogixv1alpha1.Notification {
 	var notifyOn string
 	if notifyOnResolve != nil && *notifyOnResolve {
-		notifyOn = v1alpha1.NotifyOnTriggeredAndResolved
+		notifyOn = coralogixv1alpha1.NotifyOnTriggeredAndResolved
 	} else {
-		notifyOn = v1alpha1.NotifyOnTriggeredOnly
+		notifyOn = coralogixv1alpha1.NotifyOnTriggeredOnly
 	}
-	return v1alpha1.Notification{
+	return coralogixv1alpha1.Notification{
 		IntegrationName:           pointer.String(webhookName),
 		RetriggeringPeriodMinutes: retriggeringPeriodMinutes,
-		NotifyOn:                  v1alpha1.NotifyOn(notifyOn),
+		NotifyOn:                  coralogixv1alpha1.NotifyOn(notifyOn),
 	}
 }
 
@@ -390,7 +388,7 @@ func getReceiverByName(receivers []prometheus.Receiver, receiver string) *promet
 	return nil
 }
 
-func getLabelSet(a *v1alpha1.Alert) model.LabelSet {
+func getLabelSet(a *coralogixv1alpha1.Alert) model.LabelSet {
 	lset := model.LabelSet{}
 	for k, v := range a.Spec.Labels {
 		lset[model.LabelName(k)] = model.LabelValue(v)

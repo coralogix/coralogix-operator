@@ -20,15 +20,52 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/coralogix/coralogix-operator/api/coralogix"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 )
 
+var (
+	RegionToGrpcUrl = map[string]string{
+		"APAC1":   "ng-api-grpc.app.coralogix.in:443",
+		"AP1":     "ng-api-grpc.app.coralogix.in:443",
+		"APAC2":   "ng-api-grpc.coralogixsg.com:443",
+		"AP2":     "ng-api-grpc.coralogixsg.com:443",
+		"APAC3":   "ng-api-grpc.ap3.coralogix.com:443",
+		"AP3":     "ng-api-grpc.ap3.coralogix.com:443",
+		"EUROPE1": "ng-api-grpc.coralogix.com:443",
+		"EU1":     "ng-api-grpc.coralogix.com:443",
+		"EUROPE2": "ng-api-grpc.eu2.coralogix.com:443",
+		"EU2":     "ng-api-grpc.eu2.coralogix.com:443",
+		"USA1":    "ng-api-grpc.coralogix.us:443",
+		"US1":     "ng-api-grpc.coralogix.us:443",
+		"USA2":    "ng-api-grpc.cx498.coralogix.com:443",
+		"US2":     "ng-api-grpc.cx498.coralogix.com:443",
+	}
+	OperatorRegionToSdkRegion = map[string]string{
+		"APAC1":   "AP1",
+		"AP1":     "AP1",
+		"APAC2":   "AP2",
+		"AP2":     "AP2",
+		"APAC3":   "AP3",
+		"AP3":     "AP3",
+		"EUROPE1": "EU1",
+		"EU1":     "EU1",
+		"EUROPE2": "EU2",
+		"EU2":     "EU2",
+		"USA1":    "US1",
+		"US1":     "US1",
+		"USA2":    "US2",
+		"US2":     "US2",
+	}
+	ValidRegions = coralogix.GetKeys(RegionToGrpcUrl)
+)
+
 type CallPropertiesCreator struct {
-	targetUrl string
-	apiKey    string
+	region string
+	apiKey string
 	//allowRetry bool
 }
 
@@ -41,7 +78,14 @@ type CallProperties struct {
 func (c CallPropertiesCreator) GetCallProperties(ctx context.Context) (*CallProperties, error) {
 	ctx = createAuthContext(ctx, c.apiKey)
 
-	conn, err := createSecureConnection(c.targetUrl)
+	var targetUrl string
+	if _, ok := RegionToGrpcUrl[c.region]; ok {
+		targetUrl = RegionToGrpcUrl[c.region]
+	} else {
+		targetUrl = fmt.Sprintf("ng-api-grpc.%s:443", c.region)
+	}
+
+	conn, err := createSecureConnection(targetUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -69,9 +113,9 @@ func createAuthContext(ctx context.Context, apiKey string) context.Context {
 	return ctx
 }
 
-func NewCallPropertiesCreator(targetUrl, apiKey string) *CallPropertiesCreator {
+func NewCallPropertiesCreator(region, apiKey string) *CallPropertiesCreator {
 	return &CallPropertiesCreator{
-		targetUrl: targetUrl,
-		apiKey:    apiKey,
+		region: region,
+		apiKey: apiKey,
 	}
 }

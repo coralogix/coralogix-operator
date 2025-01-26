@@ -35,7 +35,6 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	utils "github.com/coralogix/coralogix-operator/api/coralogix"
 	"github.com/coralogix/coralogix-operator/api/coralogix/common"
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 
@@ -48,6 +47,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	webhookcoralogixv1alpha1 "github.com/coralogix/coralogix-operator/internal/webhook/coralogix/v1alpha1"
@@ -56,23 +56,8 @@ import (
 )
 
 var (
-	scheme          = runtime.NewScheme()
-	setupLog        = ctrl.Log.WithName("setup")
-	regionToGrpcUrl = map[string]string{
-		"APAC1":   "ng-api-grpc.app.coralogix.in:443",
-		"AP1":     "ng-api-grpc.app.coralogix.in:443",
-		"APAC2":   "ng-api-grpc.coralogixsg.com:443",
-		"AP2":     "ng-api-grpc.coralogixsg.com:443",
-		"EUROPE1": "ng-api-grpc.coralogix.com:443",
-		"EU1":     "ng-api-grpc.coralogix.com:443",
-		"EUROPE2": "ng-api-grpc.eu2.coralogix.com:443",
-		"EU2":     "ng-api-grpc.eu2.coralogix.com:443",
-		"USA1":    "ng-api-grpc.coralogix.us:443",
-		"US1":     "ng-api-grpc.coralogix.us:443",
-		"USA2":    "ng-api-grpc.cx498.coralogix.com:443",
-		"US2":     "ng-api-grpc.cx498.coralogix.com:443",
-	}
-	validRegions = utils.GetKeys(regionToGrpcUrl)
+	scheme   = runtime.NewScheme()
+	setupLog = ctrl.Log.WithName("setup")
 )
 
 func init() {
@@ -108,7 +93,7 @@ func main() {
 		"If set, HTTP/2 will be enabled for the metrics and webhook servers")
 
 	region := os.Getenv("CORALOGIX_REGION")
-	flag.StringVar(&region, "region", region, fmt.Sprintf("The region of your Coralogix cluster. Can be one of %q. Conflicts with 'domain'.", validRegions))
+	flag.StringVar(&region, "region", region, fmt.Sprintf("The region of your Coralogix cluster. Can be one of %q. Conflicts with 'domain'.", clientset.ValidRegions))
 
 	domain := os.Getenv("CORALOGIX_DOMAIN")
 	flag.StringVar(&domain, "domain", domain, "The domain of your Coralogix cluster. Conflicts with 'region'.")
@@ -148,14 +133,14 @@ func main() {
 
 	var targetUrl string
 	if region != "" {
-		if !slices.Contains(validRegions, region) {
-			err := fmt.Errorf("region value is '%s', but can be one of %q", region, validRegions)
+		if !slices.Contains(clientset.ValidRegions, region) {
+			err := fmt.Errorf("region value is '%s', but can be one of %q", region, clientset.ValidRegions)
 			setupLog.Error(err, "invalid arguments for running operator")
 			os.Exit(1)
 		}
-		targetUrl = regionToGrpcUrl[region]
+		targetUrl = clientset.OperatorRegionToSdkRegion[region]
 	} else if domain != "" {
-		targetUrl = fmt.Sprintf("ng-api-grpc.%s:443", domain)
+		targetUrl = domain
 	}
 
 	if apiKey == "" {
@@ -215,29 +200,36 @@ func main() {
 		os.Exit(1)
 	}
 
-	sdkClientSet := cxsdk.NewClientSet(strings.ToLower(region), apiKey, apiKey)
+	cpc := cxsdk.NewCallPropertiesCreatorOperator(strings.ToLower(targetUrl), cxsdk.NewAuthContext(apiKey, apiKey), "0.0.1")
+	clientSet := cxsdk.NewClientSet(cpc)
 
 	if err = (&v1alpha1controllers.RuleGroupReconciler{
-		CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),
-		Client:             mgr.GetClient(),
-		Scheme:             mgr.GetScheme(),
+		RuleGroupClient: clientSet.RuleGroups(),
+		Client:          mgr.GetClient(),
+		Scheme:          mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RuleGroup")
 		os.Exit(1)
 	}
-
+	if err = (&v1beta1controllers.AlertReconciler{
+		CoralogixClientSet: clientSet,
+		Client:             mgr.GetClient(),
+		Scheme:             mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Alert")
+		os.Exit(1)
+	}
 	if prometheusRuleController {
 		if err = (&controllers.PrometheusRuleReconciler{
-			CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),
-			Client:             mgr.GetClient(),
-			Scheme:             mgr.GetScheme(),
+			Client: mgr.GetClient(),
+			Scheme: mgr.GetScheme(),
 		}).SetupWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "RecordingRuleGroup")
 			os.Exit(1)
 		}
 	}
 	if err = (&v1alpha1controllers.RecordingRuleGroupSetReconciler{
-		CoralogixClientSet:          clientset.NewClientSet(targetUrl, apiKey),
+		RecordingRuleGroupSetClient: clientSet.RecordingRuleGroups(),
 		Client:                      mgr.GetClient(),
 		Scheme:                      mgr.GetScheme(),
 		RecordingRuleGroupSetSuffix: recordingRuleGroupSetSuffix,
@@ -247,7 +239,7 @@ func main() {
 	}
 
 	if err = (&v1alpha1controllers.OutboundWebhookReconciler{
-		OutboundWebhooksClient: clientset.NewClientSet(targetUrl, apiKey).OutboundWebhooks(),
+		OutboundWebhooksClient: clientSet.Webhooks(),
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
@@ -255,7 +247,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.ApiKeyReconciler{
-		ApiKeysClient: clientset.NewClientSet(targetUrl, apiKey).ApiKeys(),
+		ApiKeysClient: clientSet.APIKeys(),
 		Client:        mgr.GetClient(),
 		Scheme:        mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
@@ -263,7 +255,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.CustomRoleReconciler{
-		CustomRolesClient: sdkClientSet.Roles(),
+		CustomRolesClient: clientSet.Roles(),
 		Client:            mgr.GetClient(),
 		Scheme:            mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
@@ -271,7 +263,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.ScopeReconciler{
-		ScopesClient: sdkClientSet.Scopes(),
+		ScopesClient: clientSet.Scopes(),
 		Client:       mgr.GetClient(),
 		Scheme:       mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
@@ -279,19 +271,34 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.GroupReconciler{
-		CXClientSet: sdkClientSet,
+		CXClientSet: clientSet,
 		Client:      mgr.GetClient(),
 		Scheme:      mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Group")
 		os.Exit(1)
 	}
+	if err = (&v1alpha1controllers.TCOLogsPoliciesReconciler{
+		TCOClient: clientSet.TCOPolicies(),
+		Client:    mgr.GetClient(),
+		Scheme:    mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "TCOLogsPolicies")
+		os.Exit(1)
+	}
+	if err = (&v1alpha1controllers.TCOTracesPoliciesReconciler{
+		TCOClient: clientSet.TCOPolicies(),
+		Client:    mgr.GetClient(),
+		Scheme:    mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "TCOTracesPolicies")
+		os.Exit(1)
+	}
 
 	if prometheusRuleController {
 		if err = (&controllers.AlertmanagerConfigReconciler{
-			CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),
-			Client:             mgr.GetClient(),
-			Scheme:             mgr.GetScheme(),
+			Client: mgr.GetClient(),
+			Scheme: mgr.GetScheme(),
 		}).SetupWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "RecordingRuleGroup")
 			os.Exit(1)
@@ -317,14 +324,6 @@ func main() {
 		setupLog.Info("Webhooks are disabled")
 	}
 
-	if err = (&v1beta1controllers.AlertReconciler{
-		Client:             mgr.GetClient(),
-		Scheme:             mgr.GetScheme(),
-		CoralogixClientSet: clientset.NewClientSet(targetUrl, apiKey),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Alert")
-		os.Exit(1)
-	}
 	// nolint:goconst
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
 		if err = webhookcoralogixv1beta1.SetupAlertWebhookWithManager(mgr); err != nil {

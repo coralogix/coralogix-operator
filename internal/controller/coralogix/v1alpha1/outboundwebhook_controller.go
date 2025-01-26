@@ -35,14 +35,13 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
-	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
 )
 
 // OutboundWebhookReconciler reconciles a OutboundWebhook object
 type OutboundWebhookReconciler struct {
 	client.Client
-	OutboundWebhooksClient clientset.OutboundWebhooksClientInterface
+	OutboundWebhooksClient *cxsdk.WebhooksClient
 	Scheme                 *runtime.Scheme
 }
 

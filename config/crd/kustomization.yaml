@@ -10,6 +10,8 @@ resources:
   - bases/coralogix.com_customroles.yaml
   - bases/coralogix.com_scopes.yaml
   - bases/coralogix.com_groups.yaml
+  - bases/coralogix.com_tcologspolicies.yaml
+  - bases/coralogix.com_tcotracespolicies.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
@@ -31,6 +33,8 @@ patchesStrategicMerge:
 #- patches/cainjection_in_coralogix_customroles.yaml
 #- patches/cainjection_in_coralogix_scopes.yaml
 #- patches/cainjection_in_coralogix_groups.yaml
+#- patches/cainjection_in_coralogix_tcologspolicies.yaml
+#- patches/cainjection_in_coralogix_tcotracespolicies.yaml
 #+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # the following config is for teaching kustomize how to do kustomization for CRDs.

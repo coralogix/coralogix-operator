@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	"github.com/go-logr/logr"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/types"
@@ -19,7 +19,7 @@ type ListingAlertsAndWebhooksProperties struct {
 	Client          client.Client
 	AlertNameToId   map[string]string
 	WebhookNameToId map[string]uint32
-	Clientset       clientset.ClientSetInterface
+	Clientset       *cxsdk.ClientSet
 	Namespace       string
 }
 
