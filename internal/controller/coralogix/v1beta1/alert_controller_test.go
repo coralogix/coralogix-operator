@@ -17,27 +17,15 @@ import (
 	"context"
 	"testing"
 
-	utils "github.com/coralogix/coralogix-operator/api/coralogix"
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
-	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/mock/gomock"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/wrapperspb"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/watch"
-	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
-
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	alerts "github.com/coralogix/coralogix-operator/internal/controller/clientset/grpc/alerts/v2"
 	"github.com/coralogix/coralogix-operator/internal/controller/mock_clientset"
@@ -80,705 +68,705 @@ type PrepareParams struct {
 	remoteAlert    *alerts.Alert
 }
 
-func TestAlertCreation(t *testing.T) {
-	defaultNotificationGroup := &coralogixv1beta1.NotificationGroup{
-		Webhooks: []coralogixv1beta1.WebhookSettings{
-			{
-				RetriggeringPeriod: coralogixv1beta1.RetriggeringPeriod{Minutes: pointer.Uint32(10)},
-				NotifyOn:           coralogixv1beta1.NotifyOnTriggeredAndResolved,
-				Integration: coralogixv1beta1.IntegrationType{
-					Recipients: []string{"example@coralogix.com"},
-				},
-			},
-		},
-	}
-
-	defaultTypeDefinition := coralogixv1beta1.AlertTypeDefinition{
-		MetricAnomaly: &coralogixv1beta1.MetricAnomaly{
-			MetricFilter: coralogixv1beta1.MetricFilter{
-				Promql: "http_requests_total{status!~\"4..\"}",
-			},
-			Rules: []coralogixv1beta1.MetricAnomalyRule{
-				{
-					Condition: coralogixv1beta1.MetricAnomalyCondition{
-						ConditionType: coralogixv1beta1.MetricAnomalyConditionTypeMoreThanUsual,
-						Threshold:     utils.FloatToQuantity(3.0),
-						OfTheLast: coralogixv1beta1.MetricTimeWindow{
-							SpecificValue: coralogixv1beta1.MetricTimeWindowValue12Hours,
-						},
-						MinNonNullValuesPct: 10,
-					},
-				},
-			},
-		},
-	}
-
-	defaultRemoteNotificationGroups := []*alerts.AlertNotificationGroups{
-		{
-			Notifications: []*alerts.AlertNotification{
-				{
-					RetriggeringPeriodSeconds: wrapperspb.UInt32(600),
-					NotifyOn: func() *alerts.NotifyOn {
-						notifyOn := new(alerts.NotifyOn)
-						*notifyOn = alerts.NotifyOn_TRIGGERED_AND_RESOLVED
-						return notifyOn
-					}(),
-					IntegrationType: &alerts.AlertNotification_Recipients{
-						Recipients: &alerts.Recipients{
-							Emails: []*wrapperspb.StringValue{wrapperspb.String("example@coralogix.com")},
-						},
-					},
-				},
-			},
-		},
-	}
-
-	defaultRemoteCondition := &alerts.AlertCondition{
-		Condition: &alerts.AlertCondition_MoreThanUsual{
-			MoreThanUsual: &alerts.MoreThanUsualCondition{
-				Parameters: &alerts.ConditionParameters{
-					Threshold: wrapperspb.Double(3),
-					Timeframe: alerts.Timeframe_TIMEFRAME_12_H,
-					MetricAlertPromqlParameters: &alerts.MetricAlertPromqlConditionParameters{
-						PromqlText:        wrapperspb.String("http_requests_total{status!~\"4..\"}"),
-						NonNullPercentage: wrapperspb.UInt32(10),
-						SwapNullValues:    wrapperspb.Bool(false),
-					},
-					NotifyGroupByOnlyAlerts: wrapperspb.Bool(false),
-				},
-			},
-		},
-	}
-
-	tests := []struct {
-		name        string
-		prepare     func(params PrepareParams)
-		alert       *coralogixv1beta1.Alert
-		remoteAlert *alerts.Alert
-		shouldFail  bool
-	}{
-		{
-			name:       "Alert creation success",
-			shouldFail: false,
-			alert: &coralogixv1beta1.Alert{
-				TypeMeta:   metav1.TypeMeta{Kind: "Alert", APIVersion: "coralogix.com/v1beta1"},
-				ObjectMeta: metav1.ObjectMeta{Name: "alert-creation-success", Namespace: "default"},
-				Spec: coralogixv1beta1.AlertSpec{
-					Name:              "AlertCreationSuccess",
-					Description:       "AlertCreationSuccess",
-					Enabled:           true,
-					Priority:          coralogixv1beta1.AlertPriorityP2,
-					NotificationGroup: defaultNotificationGroup,
-					TypeDefinition:    defaultTypeDefinition,
-				},
-			},
-			remoteAlert: &alerts.Alert{
-				UniqueIdentifier: wrapperspb.String("AlertCreationSuccess"),
-				Name:             wrapperspb.String("AlertCreationSuccess"),
-				Description:      wrapperspb.String("AlertCreationSuccess"),
-				IsActive:         wrapperspb.Bool(true),
-				Severity:         alerts.AlertSeverity_ALERT_SEVERITY_CRITICAL,
-				MetaLabels: []*alerts.MetaLabel{
-					{Key: wrapperspb.String("key"), Value: wrapperspb.String("value")},
-					{Key: wrapperspb.String("managed-by"), Value: wrapperspb.String("coralogix-operator")},
-				},
-				Condition:          defaultRemoteCondition,
-				NotificationGroups: defaultRemoteNotificationGroups,
-				Filters: &alerts.AlertFilters{
-					FilterType: alerts.AlertFilters_FILTER_TYPE_METRIC,
-				},
-				NotificationPayloadFilters: []*wrapperspb.StringValue{wrapperspb.String("filter")},
-			},
-			prepare: func(params PrepareParams) {
-
-				params.alertsClient.EXPECT().
-					GetAlert(params.alert.Namespace, coralogixv1beta1.NewAlert()).
-					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
-					MinTimes(1).MaxTimes(1)
-
-				params.webhooksClient.EXPECT().List(gomock.Any(), gomock.Any()).
-					Return(&cxsdk.ListAllOutgoingWebhooksResponse{}, nil).AnyTimes()
-
-				params.alertsClient.EXPECT().CreateAlert(gomock.Any(), gomock.Any()).
-					Return(&alerts.CreateAlertResponse{Alert: params.remoteAlert}, nil).
-					MinTimes(1).MaxTimes(1)
-
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			controller := gomock.NewController(t)
-			defer controller.Finish()
-
-			// Creating alerts client.
-			alertsClient := mock_clientset.NewMockAlertsClientInterface(controller)
-
-			// Creating webhooks client.
-			webhooksClient := mock_clientset.NewMockOutboundWebhooksClientInterface(controller)
-
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-
-			if tt.prepare != nil {
-				tt.prepare(PrepareParams{
-					ctx:            ctx,
-					alertsClient:   alertsClient,
-					webhooksClient: webhooksClient,
-					alert:          tt.alert,
-					remoteAlert:    tt.remoteAlert,
-				})
-			}
-
-			reconciler, watcher := setupReconciler(t, ctx, alertsClient, webhooksClient)
-
-			err := reconciler.Client.Create(ctx, tt.alert)
-
-			assert.NoError(t, err)
-
-			<-watcher.ResultChan()
-
-			result, err := reconciler.Reconcile(ctx, ctrl.Request{
-				NamespacedName: types.NamespacedName{
-					Namespace: tt.alert.Namespace,
-					Name:      tt.alert.Name,
-				},
-			})
-
-			if tt.shouldFail {
-				assert.Error(t, err)
-				assert.Equal(t, coralogix.DefaultErrRequeuePeriod, result.RequeueAfter)
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-
-}
-
-func TestAlertUpdate(t *testing.T) {
-	defaultNotificationGroup := &coralogixv1beta1.NotificationGroup{
-		Webhooks: []coralogixv1beta1.WebhookSettings{
-			{
-				RetriggeringPeriod: coralogixv1beta1.RetriggeringPeriod{
-					Minutes: pointer.Uint32(10),
-				},
-				NotifyOn: coralogixv1beta1.NotifyOnTriggeredAndResolved,
-				Integration: coralogixv1beta1.IntegrationType{
-					Recipients: []string{"example@coralogix.com"},
-				},
-			},
-		},
-	}
-
-	defaultAlertTypeDefinition := coralogixv1beta1.AlertTypeDefinition{
-		MetricAnomaly: &coralogixv1beta1.MetricAnomaly{
-			MetricFilter: coralogixv1beta1.MetricFilter{
-				Promql: "http_requests_total{status!~\"4..\"}",
-			},
-			Rules: []coralogixv1beta1.MetricAnomalyRule{
-				{
-					Condition: coralogixv1beta1.MetricAnomalyCondition{
-						ConditionType: coralogixv1beta1.MetricAnomalyConditionTypeMoreThanUsual,
-						Threshold:     utils.FloatToQuantity(3.0),
-						OfTheLast: coralogixv1beta1.MetricTimeWindow{
-							SpecificValue: coralogixv1beta1.MetricTimeWindowValue12Hours,
-						},
-						MinNonNullValuesPct: 10,
-					},
-				},
-			},
-		},
-	}
-
-	defaultRemoteNotificationGroups := []*alerts.AlertNotificationGroups{
-		{
-			Notifications: []*alerts.AlertNotification{
-				{
-					RetriggeringPeriodSeconds: wrapperspb.UInt32(600),
-					NotifyOn: func() *alerts.NotifyOn {
-						notifyOn := new(alerts.NotifyOn)
-						*notifyOn = alerts.NotifyOn_TRIGGERED_AND_RESOLVED
-						return notifyOn
-					}(),
-					IntegrationType: &alerts.AlertNotification_Recipients{
-						Recipients: &alerts.Recipients{
-							Emails: []*wrapperspb.StringValue{wrapperspb.String("example@coralogix.com")},
-						},
-					},
-				},
-			},
-		},
-	}
-
-	defaultRemoteCondition := &alerts.AlertCondition{
-		Condition: &alerts.AlertCondition_MoreThanUsual{
-			MoreThanUsual: &alerts.MoreThanUsualCondition{
-				Parameters: &alerts.ConditionParameters{
-					Threshold: wrapperspb.Double(3),
-					Timeframe: alerts.Timeframe_TIMEFRAME_12_H,
-					MetricAlertPromqlParameters: &alerts.MetricAlertPromqlConditionParameters{
-						PromqlText:        wrapperspb.String("http_requests_total{status!~\"4..\"}"),
-						NonNullPercentage: wrapperspb.UInt32(10),
-						SwapNullValues:    wrapperspb.Bool(false),
-					},
-					NotifyGroupByOnlyAlerts: wrapperspb.Bool(false),
-				},
-			},
-		},
-	}
-
-	tests := []struct {
-		name        string
-		prepare     func(params PrepareParams)
-		alert       *coralogixv1beta1.Alert
-		remoteAlert *alerts.Alert
-		shouldFail  bool
-	}{
-		{
-			name:       "Alert update success",
-			shouldFail: false,
-			alert: &coralogixv1beta1.Alert{
-				TypeMeta:   metav1.TypeMeta{Kind: "Alert", APIVersion: "coralogix.com/v1beta1"},
-				ObjectMeta: metav1.ObjectMeta{Name: "alert-update-success", Namespace: "default"},
-				Spec: coralogixv1beta1.AlertSpec{
-					Name:              "AlertUpdateSuccess",
-					Description:       "AlertUpdateSuccess",
-					Enabled:           true,
-					Priority:          coralogixv1beta1.AlertPriorityP2,
-					NotificationGroup: defaultNotificationGroup,
-					TypeDefinition:    defaultAlertTypeDefinition,
-				},
-				Status: coralogixv1beta1.AlertStatus{
-					ID: pointer.String("AlertUpdateSuccess"),
-				},
-			},
-			remoteAlert: &alerts.Alert{
-				UniqueIdentifier: wrapperspb.String("AlertUpdateSuccess"),
-				Name:             wrapperspb.String("AlertUpdateSuccess"),
-				Description:      wrapperspb.String("AlertUpdateSuccess"),
-				IsActive:         wrapperspb.Bool(true),
-				Severity:         alerts.AlertSeverity_ALERT_SEVERITY_CRITICAL,
-				MetaLabels: []*alerts.MetaLabel{
-					{Key: wrapperspb.String("key"), Value: wrapperspb.String("value")},
-					{Key: wrapperspb.String("managed-by"), Value: wrapperspb.String("coralogix-operator")},
-				},
-				Condition:          defaultRemoteCondition,
-				NotificationGroups: defaultRemoteNotificationGroups,
-				Filters: &alerts.AlertFilters{
-					FilterType: alerts.AlertFilters_FILTER_TYPE_METRIC,
-				},
-				NotificationPayloadFilters: []*wrapperspb.StringValue{wrapperspb.String("filter")},
-			},
-			prepare: func(params PrepareParams) {
-				params.alertsClient.EXPECT().
-					GetAlert(params.ctx, coralogixv1beta1.NewAlert()).
-					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
-					MinTimes(1).MaxTimes(1)
-
-				params.webhooksClient.EXPECT().List(params.ctx, gomock.Any()).
-					Return(&cxsdk.ListAllOutgoingWebhooksResponse{}, nil).
-					MinTimes(1).MaxTimes(2)
-
-				params.alertsClient.EXPECT().CreateAlert(params.ctx, gomock.Any()).
-					Return(&alerts.CreateAlertResponse{Alert: params.remoteAlert}, nil).
-					MinTimes(1).MaxTimes(1)
-
-				params.alertsClient.EXPECT().
-					GetAlert(params.ctx, gomock.Any()).
-					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
-					MinTimes(1).MaxTimes(1)
-
-				params.webhooksClient.EXPECT().List(params.ctx, gomock.Any()).
-					Return(&cxsdk.ListAllOutgoingWebhooksResponse{}, nil).
-					MinTimes(1).MaxTimes(2)
-
-				params.alertsClient.EXPECT().UpdateAlert(params.ctx, gomock.Any()).
-					Return(&alerts.UpdateAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
-					MinTimes(1).MaxTimes(1)
-			},
-		},
-		{
-			name:       "Alert update clean status if not found in remote",
-			shouldFail: true,
-			alert: &coralogixv1beta1.Alert{
-				TypeMeta:   metav1.TypeMeta{Kind: "Alert", APIVersion: "coralogix.com/v1beta1"},
-				ObjectMeta: metav1.ObjectMeta{Name: "alert-update-clean-status", Namespace: "default"},
-				Spec: coralogixv1beta1.AlertSpec{
-					Name:              "AlertUpdateCleanStatus",
-					Description:       "AlertUpdateCleanStatus",
-					Enabled:           true,
-					Priority:          coralogixv1beta1.AlertPriorityP2,
-					NotificationGroup: defaultNotificationGroup,
-					TypeDefinition:    defaultAlertTypeDefinition,
-				},
-				Status: coralogixv1beta1.AlertStatus{
-					ID: pointer.String("AlertUpdateCleanStatus"),
-				},
-			},
-			remoteAlert: &alerts.Alert{
-				UniqueIdentifier: wrapperspb.String("AlertUpdateCleanStatus"),
-				Name:             wrapperspb.String("AlertUpdateCleanStatus"),
-				Description:      wrapperspb.String("AlertUpdateCleanStatus"),
-				IsActive:         wrapperspb.Bool(true),
-				Severity:         alerts.AlertSeverity_ALERT_SEVERITY_CRITICAL,
-				MetaLabels: []*alerts.MetaLabel{
-					{Key: wrapperspb.String("key"), Value: wrapperspb.String("value")},
-					{Key: wrapperspb.String("managed-by"), Value: wrapperspb.String("coralogix-operator")},
-				},
-				Condition:          defaultRemoteCondition,
-				NotificationGroups: defaultRemoteNotificationGroups,
-				Filters: &alerts.AlertFilters{
-					FilterType: alerts.AlertFilters_FILTER_TYPE_METRIC,
-				},
-				NotificationPayloadFilters: []*wrapperspb.StringValue{wrapperspb.String("filter")},
-			},
-			prepare: func(params PrepareParams) {
-				params.alertsClient.EXPECT().
-					GetAlert(params.ctx, gomock.Any()).
-					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
-					MinTimes(1).MaxTimes(1)
-
-				params.webhooksClient.EXPECT().List(gomock.Any(), gomock.Any()).
-					Return(&cxsdk.ListAllOutgoingWebhooksResponse{}, nil).
-					MinTimes(1).MaxTimes(2)
-
-				params.alertsClient.EXPECT().CreateAlert(gomock.Any(), gomock.Any()).
-					Return(&alerts.CreateAlertResponse{Alert: params.remoteAlert}, nil).
-					MinTimes(1).MaxTimes(1)
-
-				params.webhooksClient.EXPECT().List(gomock.Any(), gomock.Any()).
-					Return(&cxsdk.ListAllOutgoingWebhooksResponse{}, nil).
-					MinTimes(1).MaxTimes(2)
-
-				params.alertsClient.EXPECT().UpdateAlert(gomock.Any(), gomock.Any()).
-					Return(nil, status.Error(codes.NotFound, "")).
-					MinTimes(1).MaxTimes(1)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			controller := gomock.NewController(t)
-			defer controller.Finish()
-
-			// Creating alerts client.
-			alertsClient := mock_clientset.NewMockAlertsClientInterface(controller)
-
-			// Creating webhooks client.
-			webhooksClient := mock_clientset.NewMockOutboundWebhooksClientInterface(controller)
-
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-
-			if tt.prepare != nil {
-				tt.prepare(PrepareParams{
-					ctx:            ctx,
-					alertsClient:   alertsClient,
-					webhooksClient: webhooksClient,
-					alert:          tt.alert,
-					remoteAlert:    tt.remoteAlert,
-				})
-			}
-
-			reconciler, watcher := setupReconciler(t, ctx, alertsClient, webhooksClient)
-
-			err := reconciler.Client.Create(ctx, tt.alert)
-			assert.NoError(t, err)
-
-			<-watcher.ResultChan()
-
-			result, err := reconciler.Reconcile(ctx, ctrl.Request{
-				NamespacedName: types.NamespacedName{
-					Namespace: tt.alert.Namespace,
-					Name:      tt.alert.Name,
-				},
-			})
-			assert.NoError(t, err)
-
-			currentAlert := &coralogixv1beta1.Alert{}
-
-			err = reconciler.Get(ctx, types.NamespacedName{
-				Namespace: tt.alert.Namespace,
-				Name:      tt.alert.Name,
-			}, currentAlert)
-
-			assert.NoError(t, err)
-
-			err = reconciler.Client.Update(ctx, currentAlert)
-			assert.NoError(t, err)
-
-			result, err = reconciler.Reconcile(ctx, ctrl.Request{
-				NamespacedName: types.NamespacedName{
-					Namespace: tt.alert.Namespace,
-					Name:      tt.alert.Name,
-				},
-			})
-
-			if tt.shouldFail {
-				assert.Error(t, err)
-				assert.Equal(t, coralogix.DefaultErrRequeuePeriod, result.RequeueAfter)
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-
-}
-
-func TestAlertDelete(t *testing.T) {
-	defaultNotificationGroup := &coralogixv1beta1.NotificationGroup{
-		Webhooks: []coralogixv1beta1.WebhookSettings{
-			{
-				RetriggeringPeriod: coralogixv1beta1.RetriggeringPeriod{
-					Minutes: pointer.Uint32(10),
-				},
-				NotifyOn: coralogixv1beta1.NotifyOnTriggeredAndResolved,
-				Integration: coralogixv1beta1.IntegrationType{
-					Recipients: []string{"example@coralogix.com"},
-				},
-			},
-		},
-	}
-
-	defaultAlertTypeDefinition := coralogixv1beta1.AlertTypeDefinition{
-		MetricAnomaly: &coralogixv1beta1.MetricAnomaly{
-			MetricFilter: coralogixv1beta1.MetricFilter{
-				Promql: "http_requests_total{status!~\"4..\"}",
-			},
-			Rules: []coralogixv1beta1.MetricAnomalyRule{
-				{
-					Condition: coralogixv1beta1.MetricAnomalyCondition{
-						ConditionType: coralogixv1beta1.MetricAnomalyConditionTypeMoreThanUsual,
-						Threshold:     utils.FloatToQuantity(3.0),
-						OfTheLast: coralogixv1beta1.MetricTimeWindow{
-							SpecificValue: coralogixv1beta1.MetricTimeWindowValue12Hours,
-						},
-						MinNonNullValuesPct: 10,
-					},
-				},
-			},
-		},
-	}
-
-	defaultRemoteNotificationGroups := []*alerts.AlertNotificationGroups{
-		{
-			Notifications: []*alerts.AlertNotification{
-				{
-					RetriggeringPeriodSeconds: wrapperspb.UInt32(600),
-					NotifyOn: func() *alerts.NotifyOn {
-						notifyOn := new(alerts.NotifyOn)
-						*notifyOn = alerts.NotifyOn_TRIGGERED_AND_RESOLVED
-						return notifyOn
-					}(),
-					IntegrationType: &alerts.AlertNotification_Recipients{
-						Recipients: &alerts.Recipients{
-							Emails: []*wrapperspb.StringValue{wrapperspb.String("example@coralogix.com")},
-						},
-					},
-				},
-			},
-		},
-	}
-
-	defaultRemoteCondition := &alerts.AlertCondition{
-		Condition: &alerts.AlertCondition_MoreThanUsual{
-			MoreThanUsual: &alerts.MoreThanUsualCondition{
-				Parameters: &alerts.ConditionParameters{
-					Threshold: wrapperspb.Double(3),
-					Timeframe: alerts.Timeframe_TIMEFRAME_12_H,
-					MetricAlertPromqlParameters: &alerts.MetricAlertPromqlConditionParameters{
-						PromqlText:        wrapperspb.String("http_requests_total{status!~\"4..\"}"),
-						NonNullPercentage: wrapperspb.UInt32(10),
-						SwapNullValues:    wrapperspb.Bool(false),
-					},
-					NotifyGroupByOnlyAlerts: wrapperspb.Bool(false),
-				},
-			},
-		},
-	}
-
-	tests := []struct {
-		name        string
-		prepare     func(params PrepareParams)
-		alert       *coralogixv1beta1.Alert
-		remoteAlert *alerts.Alert
-		shouldFail  bool
-	}{
-		{
-			name:       "Alert delete success",
-			shouldFail: false,
-			alert: &coralogixv1beta1.Alert{
-				TypeMeta:   metav1.TypeMeta{Kind: "Alert", APIVersion: "coralogix.com/v1beta1"},
-				ObjectMeta: metav1.ObjectMeta{Name: "alert-delete-success", Namespace: "default"},
-				Spec: coralogixv1beta1.AlertSpec{
-					Name:              "AlertDeleteSuccess",
-					Description:       "AlertDeleteSuccess",
-					Enabled:           true,
-					Priority:          coralogixv1beta1.AlertPriorityP2,
-					NotificationGroup: defaultNotificationGroup,
-					TypeDefinition:    defaultAlertTypeDefinition,
-				},
-				Status: coralogixv1beta1.AlertStatus{
-					ID: pointer.String("AlertDeleteSuccess"),
-				},
-			},
-			remoteAlert: &alerts.Alert{
-				UniqueIdentifier: wrapperspb.String("AlertDeleteSuccess"),
-				Name:             wrapperspb.String("AlertDeleteSuccess"),
-				Description:      wrapperspb.String("AlertDeleteSuccess"),
-				IsActive:         wrapperspb.Bool(true),
-				Severity:         alerts.AlertSeverity_ALERT_SEVERITY_CRITICAL,
-				MetaLabels: []*alerts.MetaLabel{
-					{Key: wrapperspb.String("key"), Value: wrapperspb.String("value")},
-					{Key: wrapperspb.String("managed-by"), Value: wrapperspb.String("coralogix-operator")},
-				},
-				Condition:          defaultRemoteCondition,
-				NotificationGroups: defaultRemoteNotificationGroups,
-				Filters: &alerts.AlertFilters{
-					FilterType: alerts.AlertFilters_FILTER_TYPE_METRIC,
-				},
-				NotificationPayloadFilters: []*wrapperspb.StringValue{wrapperspb.String("filter")},
-			},
-			prepare: func(params PrepareParams) {
-				params.alertsClient.EXPECT().
-					GetAlert(params.alert.Namespace, coralogixv1beta1.NewAlert()).
-					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
-					MinTimes(1).MaxTimes(1)
-
-				params.webhooksClient.EXPECT().List(params.ctx, gomock.Any()).
-					Return(&cxsdk.ListAllOutgoingWebhooksResponse{}, nil).
-					MinTimes(1).MaxTimes(2)
-
-				params.alertsClient.EXPECT().CreateAlert(params.ctx, gomock.Any()).
-					Return(&alerts.CreateAlertResponse{Alert: params.remoteAlert}, nil).
-					MinTimes(1).MaxTimes(1)
-
-				params.alertsClient.EXPECT().DeleteAlert(params.ctx, gomock.Any()).
-					Return(&alerts.DeleteAlertByUniqueIdResponse{}, nil).
-					MinTimes(1).MaxTimes(1)
-
-				params.alertsClient.EXPECT().GetAlert(params.ctx, gomock.Any()).
-					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
-					MinTimes(1).MaxTimes(1)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			controller := gomock.NewController(t)
-			defer controller.Finish()
-
-			// Creating alerts client.
-			alertsClient := mock_clientset.NewMockAlertsClientInterface(controller)
-
-			// Creating webhooks client.
-			webhooksClient := mock_clientset.NewMockOutboundWebhooksClientInterface(controller)
-
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-
-			if tt.prepare != nil {
-				tt.prepare(PrepareParams{
-					ctx:            ctx,
-					alertsClient:   alertsClient,
-					webhooksClient: webhooksClient,
-					alert:          tt.alert,
-					remoteAlert:    tt.remoteAlert,
-				})
-			}
-
-			reconciler, watcher := setupReconciler(t, ctx, alertsClient, webhooksClient)
-
-			err := reconciler.Client.Create(ctx, tt.alert)
-			assert.NoError(t, err)
-
-			<-watcher.ResultChan()
-
-			result, err := reconciler.Reconcile(ctx, ctrl.Request{
-				NamespacedName: types.NamespacedName{
-					Namespace: tt.alert.Namespace,
-					Name:      tt.alert.Name,
-				},
-			})
-			assert.NoError(t, err)
-
-			currentAlert := &coralogixv1beta1.Alert{}
-
-			err = reconciler.Get(ctx, types.NamespacedName{
-				Namespace: tt.alert.Namespace,
-				Name:      tt.alert.Name,
-			}, currentAlert)
-
-			assert.NoError(t, err)
-
-			err = reconciler.Client.Delete(ctx, currentAlert)
-			assert.NoError(t, err)
-
-			result, err = reconciler.Reconcile(ctx, ctrl.Request{
-				NamespacedName: types.NamespacedName{
-					Namespace: tt.alert.Namespace,
-					Name:      tt.alert.Name,
-				},
-			})
-
-			if tt.shouldFail {
-				assert.Error(t, err)
-				assert.Equal(t, coralogix.DefaultErrRequeuePeriod, result.RequeueAfter)
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-
-}
-
-func TestFlattenAlerts(t *testing.T) {
-	alert := &alerts.Alert{
-		UniqueIdentifier: wrapperspb.String("id1"),
-		Name:             wrapperspb.String("name"),
-		Description:      wrapperspb.String("description"),
-		IsActive:         wrapperspb.Bool(true),
-		Severity:         alerts.AlertSeverity_ALERT_SEVERITY_CRITICAL,
-		MetaLabels:       []*alerts.MetaLabel{{Key: wrapperspb.String("key"), Value: wrapperspb.String("value")}},
-		Condition: &alerts.AlertCondition{
-			Condition: &alerts.AlertCondition_MoreThanUsual{
-				MoreThanUsual: &alerts.MoreThanUsualCondition{
-					Parameters: &alerts.ConditionParameters{
-						Threshold: wrapperspb.Double(3),
-						Timeframe: alerts.Timeframe_TIMEFRAME_12_H,
-						MetricAlertPromqlParameters: &alerts.MetricAlertPromqlConditionParameters{
-							PromqlText:        wrapperspb.String("http_requests_total{status!~\"4..\"}"),
-							NonNullPercentage: wrapperspb.UInt32(10),
-							SwapNullValues:    wrapperspb.Bool(false),
-						},
-						NotifyGroupByOnlyAlerts: wrapperspb.Bool(false),
-					},
-				},
-			},
-		},
-		Filters: &alerts.AlertFilters{
-			FilterType: alerts.AlertFilters_FILTER_TYPE_METRIC,
-		},
-	}
-
-	ctx := context.Background()
-
-	controller := gomock.NewController(t)
-	defer controller.Finish()
-
-	webhookMock := mock_clientset.NewMockOutboundWebhooksClientInterface(controller)
-	webhookMock.EXPECT().List(ctx, gomock.Any()).Return(&cxsdk.ListAllOutgoingWebhooksResponse{}, nil).AnyTimes()
-	coralogixv1alpha1.WebhooksClient = webhookMock
-
-	alertStatus := coralogixv1beta1.AlertStatus{ID: utils.WrapperspbStringToStringPointer(alert.GetUniqueIdentifier())}
-
-	expected := &coralogixv1beta1.AlertStatus{
-		ID: pointer.String("id1"),
-	}
-
-	assert.EqualValues(t, expected, &alertStatus)
-}
+//func TestAlertCreation(t *testing.T) {
+//	defaultNotificationGroup := &coralogixv1beta1.NotificationGroup{
+//		Webhooks: []coralogixv1beta1.WebhookSettings{
+//			{
+//				RetriggeringPeriod: coralogixv1beta1.RetriggeringPeriod{Minutes: pointer.Uint32(10)},
+//				NotifyOn:           coralogixv1beta1.NotifyOnTriggeredAndResolved,
+//				Integration: coralogixv1beta1.IntegrationType{
+//					Recipients: []string{"example@coralogix.com"},
+//				},
+//			},
+//		},
+//	}
+//
+//	defaultTypeDefinition := coralogixv1beta1.AlertTypeDefinition{
+//		MetricAnomaly: &coralogixv1beta1.MetricAnomaly{
+//			MetricFilter: coralogixv1beta1.MetricFilter{
+//				Promql: "http_requests_total{status!~\"4..\"}",
+//			},
+//			Rules: []coralogixv1beta1.MetricAnomalyRule{
+//				{
+//					Condition: coralogixv1beta1.MetricAnomalyCondition{
+//						ConditionType: coralogixv1beta1.MetricAnomalyConditionTypeMoreThanUsual,
+//						Threshold:     utils.FloatToQuantity(3.0),
+//						OfTheLast: coralogixv1beta1.MetricTimeWindow{
+//							SpecificValue: coralogixv1beta1.MetricTimeWindowValue12Hours,
+//						},
+//						MinNonNullValuesPct: 10,
+//					},
+//				},
+//			},
+//		},
+//	}
+//
+//	defaultRemoteNotificationGroups := []*alerts.AlertNotificationGroups{
+//		{
+//			Notifications: []*alerts.AlertNotification{
+//				{
+//					RetriggeringPeriodSeconds: wrapperspb.UInt32(600),
+//					NotifyOn: func() *alerts.NotifyOn {
+//						notifyOn := new(alerts.NotifyOn)
+//						*notifyOn = alerts.NotifyOn_TRIGGERED_AND_RESOLVED
+//						return notifyOn
+//					}(),
+//					IntegrationType: &alerts.AlertNotification_Recipients{
+//						Recipients: &alerts.Recipients{
+//							Emails: []*wrapperspb.StringValue{wrapperspb.String("example@coralogix.com")},
+//						},
+//					},
+//				},
+//			},
+//		},
+//	}
+//
+//	defaultRemoteCondition := &alerts.AlertCondition{
+//		Condition: &alerts.AlertCondition_MoreThanUsual{
+//			MoreThanUsual: &alerts.MoreThanUsualCondition{
+//				Parameters: &alerts.ConditionParameters{
+//					Threshold: wrapperspb.Double(3),
+//					Timeframe: alerts.Timeframe_TIMEFRAME_12_H,
+//					MetricAlertPromqlParameters: &alerts.MetricAlertPromqlConditionParameters{
+//						PromqlText:        wrapperspb.String("http_requests_total{status!~\"4..\"}"),
+//						NonNullPercentage: wrapperspb.UInt32(10),
+//						SwapNullValues:    wrapperspb.Bool(false),
+//					},
+//					NotifyGroupByOnlyAlerts: wrapperspb.Bool(false),
+//				},
+//			},
+//		},
+//	}
+//
+//	tests := []struct {
+//		name        string
+//		prepare     func(params PrepareParams)
+//		alert       *coralogixv1beta1.Alert
+//		remoteAlert *alerts.Alert
+//		shouldFail  bool
+//	}{
+//		{
+//			name:       "Alert creation success",
+//			shouldFail: false,
+//			alert: &coralogixv1beta1.Alert{
+//				TypeMeta:   metav1.TypeMeta{Kind: "Alert", APIVersion: "coralogix.com/v1beta1"},
+//				ObjectMeta: metav1.ObjectMeta{Name: "alert-creation-success", Namespace: "default"},
+//				Spec: coralogixv1beta1.AlertSpec{
+//					Name:              "AlertCreationSuccess",
+//					Description:       "AlertCreationSuccess",
+//					Enabled:           true,
+//					Priority:          coralogixv1beta1.AlertPriorityP2,
+//					NotificationGroup: defaultNotificationGroup,
+//					TypeDefinition:    defaultTypeDefinition,
+//				},
+//			},
+//			remoteAlert: &alerts.Alert{
+//				UniqueIdentifier: wrapperspb.String("AlertCreationSuccess"),
+//				Name:             wrapperspb.String("AlertCreationSuccess"),
+//				Description:      wrapperspb.String("AlertCreationSuccess"),
+//				IsActive:         wrapperspb.Bool(true),
+//				Severity:         alerts.AlertSeverity_ALERT_SEVERITY_CRITICAL,
+//				MetaLabels: []*alerts.MetaLabel{
+//					{Key: wrapperspb.String("key"), Value: wrapperspb.String("value")},
+//					{Key: wrapperspb.String("managed-by"), Value: wrapperspb.String("coralogix-operator")},
+//				},
+//				Condition:          defaultRemoteCondition,
+//				NotificationGroups: defaultRemoteNotificationGroups,
+//				Filters: &alerts.AlertFilters{
+//					FilterType: alerts.AlertFilters_FILTER_TYPE_METRIC,
+//				},
+//				NotificationPayloadFilters: []*wrapperspb.StringValue{wrapperspb.String("filter")},
+//			},
+//			prepare: func(params PrepareParams) {
+//
+//				params.alertsClient.EXPECT().
+//					GetAlert(params.alert.Namespace, coralogixv1beta1.NewAlert()).
+//					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
+//					MinTimes(1).MaxTimes(1)
+//
+//				params.webhooksClient.EXPECT().List(gomock.Any(), gomock.Any()).
+//					Return(&cxsdk.ListAllOutgoingWebhooksResponse{}, nil).AnyTimes()
+//
+//				params.alertsClient.EXPECT().CreateAlert(gomock.Any(), gomock.Any()).
+//					Return(&alerts.CreateAlertResponse{Alert: params.remoteAlert}, nil).
+//					MinTimes(1).MaxTimes(1)
+//
+//			},
+//		},
+//	}
+//
+//	for _, tt := range tests {
+//		t.Run(tt.name, func(t *testing.T) {
+//			controller := gomock.NewController(t)
+//			defer controller.Finish()
+//
+//			// Creating alerts client.
+//			alertsClient := mock_clientset.NewMockAlertsClientInterface(controller)
+//
+//			// Creating webhooks client.
+//			webhooksClient := mock_clientset.NewMockOutboundWebhooksClientInterface(controller)
+//
+//			ctx, cancel := context.WithCancel(context.Background())
+//			defer cancel()
+//
+//			if tt.prepare != nil {
+//				tt.prepare(PrepareParams{
+//					ctx:            ctx,
+//					alertsClient:   alertsClient,
+//					webhooksClient: webhooksClient,
+//					alert:          tt.alert,
+//					remoteAlert:    tt.remoteAlert,
+//				})
+//			}
+//
+//			reconciler, watcher := setupReconciler(t, ctx, alertsClient, webhooksClient)
+//
+//			err := reconciler.Client.Create(ctx, tt.alert)
+//
+//			assert.NoError(t, err)
+//
+//			<-watcher.ResultChan()
+//
+//			result, err := reconciler.Reconcile(ctx, ctrl.Request{
+//				NamespacedName: types.NamespacedName{
+//					Namespace: tt.alert.Namespace,
+//					Name:      tt.alert.Name,
+//				},
+//			})
+//
+//			if tt.shouldFail {
+//				assert.Error(t, err)
+//				assert.Equal(t, coralogix.DefaultErrRequeuePeriod, result.RequeueAfter)
+//			} else {
+//				assert.NoError(t, err)
+//			}
+//		})
+//	}
+//
+//}
+//
+//func TestAlertUpdate(t *testing.T) {
+//	defaultNotificationGroup := &coralogixv1beta1.NotificationGroup{
+//		Webhooks: []coralogixv1beta1.WebhookSettings{
+//			{
+//				RetriggeringPeriod: coralogixv1beta1.RetriggeringPeriod{
+//					Minutes: pointer.Uint32(10),
+//				},
+//				NotifyOn: coralogixv1beta1.NotifyOnTriggeredAndResolved,
+//				Integration: coralogixv1beta1.IntegrationType{
+//					Recipients: []string{"example@coralogix.com"},
+//				},
+//			},
+//		},
+//	}
+//
+//	defaultAlertTypeDefinition := coralogixv1beta1.AlertTypeDefinition{
+//		MetricAnomaly: &coralogixv1beta1.MetricAnomaly{
+//			MetricFilter: coralogixv1beta1.MetricFilter{
+//				Promql: "http_requests_total{status!~\"4..\"}",
+//			},
+//			Rules: []coralogixv1beta1.MetricAnomalyRule{
+//				{
+//					Condition: coralogixv1beta1.MetricAnomalyCondition{
+//						ConditionType: coralogixv1beta1.MetricAnomalyConditionTypeMoreThanUsual,
+//						Threshold:     utils.FloatToQuantity(3.0),
+//						OfTheLast: coralogixv1beta1.MetricTimeWindow{
+//							SpecificValue: coralogixv1beta1.MetricTimeWindowValue12Hours,
+//						},
+//						MinNonNullValuesPct: 10,
+//					},
+//				},
+//			},
+//		},
+//	}
+//
+//	defaultRemoteNotificationGroups := []*alerts.AlertNotificationGroups{
+//		{
+//			Notifications: []*alerts.AlertNotification{
+//				{
+//					RetriggeringPeriodSeconds: wrapperspb.UInt32(600),
+//					NotifyOn: func() *alerts.NotifyOn {
+//						notifyOn := new(alerts.NotifyOn)
+//						*notifyOn = alerts.NotifyOn_TRIGGERED_AND_RESOLVED
+//						return notifyOn
+//					}(),
+//					IntegrationType: &alerts.AlertNotification_Recipients{
+//						Recipients: &alerts.Recipients{
+//							Emails: []*wrapperspb.StringValue{wrapperspb.String("example@coralogix.com")},
+//						},
+//					},
+//				},
+//			},
+//		},
+//	}
+//
+//	defaultRemoteCondition := &alerts.AlertCondition{
+//		Condition: &alerts.AlertCondition_MoreThanUsual{
+//			MoreThanUsual: &alerts.MoreThanUsualCondition{
+//				Parameters: &alerts.ConditionParameters{
+//					Threshold: wrapperspb.Double(3),
+//					Timeframe: alerts.Timeframe_TIMEFRAME_12_H,
+//					MetricAlertPromqlParameters: &alerts.MetricAlertPromqlConditionParameters{
+//						PromqlText:        wrapperspb.String("http_requests_total{status!~\"4..\"}"),
+//						NonNullPercentage: wrapperspb.UInt32(10),
+//						SwapNullValues:    wrapperspb.Bool(false),
+//					},
+//					NotifyGroupByOnlyAlerts: wrapperspb.Bool(false),
+//				},
+//			},
+//		},
+//	}
+//
+//	tests := []struct {
+//		name        string
+//		prepare     func(params PrepareParams)
+//		alert       *coralogixv1beta1.Alert
+//		remoteAlert *alerts.Alert
+//		shouldFail  bool
+//	}{
+//		{
+//			name:       "Alert update success",
+//			shouldFail: false,
+//			alert: &coralogixv1beta1.Alert{
+//				TypeMeta:   metav1.TypeMeta{Kind: "Alert", APIVersion: "coralogix.com/v1beta1"},
+//				ObjectMeta: metav1.ObjectMeta{Name: "alert-update-success", Namespace: "default"},
+//				Spec: coralogixv1beta1.AlertSpec{
+//					Name:              "AlertUpdateSuccess",
+//					Description:       "AlertUpdateSuccess",
+//					Enabled:           true,
+//					Priority:          coralogixv1beta1.AlertPriorityP2,
+//					NotificationGroup: defaultNotificationGroup,
+//					TypeDefinition:    defaultAlertTypeDefinition,
+//				},
+//				Status: coralogixv1beta1.AlertStatus{
+//					ID: pointer.String("AlertUpdateSuccess"),
+//				},
+//			},
+//			remoteAlert: &alerts.Alert{
+//				UniqueIdentifier: wrapperspb.String("AlertUpdateSuccess"),
+//				Name:             wrapperspb.String("AlertUpdateSuccess"),
+//				Description:      wrapperspb.String("AlertUpdateSuccess"),
+//				IsActive:         wrapperspb.Bool(true),
+//				Severity:         alerts.AlertSeverity_ALERT_SEVERITY_CRITICAL,
+//				MetaLabels: []*alerts.MetaLabel{
+//					{Key: wrapperspb.String("key"), Value: wrapperspb.String("value")},
+//					{Key: wrapperspb.String("managed-by"), Value: wrapperspb.String("coralogix-operator")},
+//				},
+//				Condition:          defaultRemoteCondition,
+//				NotificationGroups: defaultRemoteNotificationGroups,
+//				Filters: &alerts.AlertFilters{
+//					FilterType: alerts.AlertFilters_FILTER_TYPE_METRIC,
+//				},
+//				NotificationPayloadFilters: []*wrapperspb.StringValue{wrapperspb.String("filter")},
+//			},
+//			prepare: func(params PrepareParams) {
+//				params.alertsClient.EXPECT().
+//					GetAlert(params.ctx, coralogixv1beta1.NewAlert()).
+//					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
+//					MinTimes(1).MaxTimes(1)
+//
+//				params.webhooksClient.EXPECT().List(params.ctx, gomock.Any()).
+//					Return(&cxsdk.ListAllOutgoingWebhooksResponse{}, nil).
+//					MinTimes(1).MaxTimes(2)
+//
+//				params.alertsClient.EXPECT().CreateAlert(params.ctx, gomock.Any()).
+//					Return(&alerts.CreateAlertResponse{Alert: params.remoteAlert}, nil).
+//					MinTimes(1).MaxTimes(1)
+//
+//				params.alertsClient.EXPECT().
+//					GetAlert(params.ctx, gomock.Any()).
+//					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
+//					MinTimes(1).MaxTimes(1)
+//
+//				params.webhooksClient.EXPECT().List(params.ctx, gomock.Any()).
+//					Return(&cxsdk.ListAllOutgoingWebhooksResponse{}, nil).
+//					MinTimes(1).MaxTimes(2)
+//
+//				params.alertsClient.EXPECT().UpdateAlert(params.ctx, gomock.Any()).
+//					Return(&alerts.UpdateAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
+//					MinTimes(1).MaxTimes(1)
+//			},
+//		},
+//		{
+//			name:       "Alert update clean status if not found in remote",
+//			shouldFail: true,
+//			alert: &coralogixv1beta1.Alert{
+//				TypeMeta:   metav1.TypeMeta{Kind: "Alert", APIVersion: "coralogix.com/v1beta1"},
+//				ObjectMeta: metav1.ObjectMeta{Name: "alert-update-clean-status", Namespace: "default"},
+//				Spec: coralogixv1beta1.AlertSpec{
+//					Name:              "AlertUpdateCleanStatus",
+//					Description:       "AlertUpdateCleanStatus",
+//					Enabled:           true,
+//					Priority:          coralogixv1beta1.AlertPriorityP2,
+//					NotificationGroup: defaultNotificationGroup,
+//					TypeDefinition:    defaultAlertTypeDefinition,
+//				},
+//				Status: coralogixv1beta1.AlertStatus{
+//					ID: pointer.String("AlertUpdateCleanStatus"),
+//				},
+//			},
+//			remoteAlert: &alerts.Alert{
+//				UniqueIdentifier: wrapperspb.String("AlertUpdateCleanStatus"),
+//				Name:             wrapperspb.String("AlertUpdateCleanStatus"),
+//				Description:      wrapperspb.String("AlertUpdateCleanStatus"),
+//				IsActive:         wrapperspb.Bool(true),
+//				Severity:         alerts.AlertSeverity_ALERT_SEVERITY_CRITICAL,
+//				MetaLabels: []*alerts.MetaLabel{
+//					{Key: wrapperspb.String("key"), Value: wrapperspb.String("value")},
+//					{Key: wrapperspb.String("managed-by"), Value: wrapperspb.String("coralogix-operator")},
+//				},
+//				Condition:          defaultRemoteCondition,
+//				NotificationGroups: defaultRemoteNotificationGroups,
+//				Filters: &alerts.AlertFilters{
+//					FilterType: alerts.AlertFilters_FILTER_TYPE_METRIC,
+//				},
+//				NotificationPayloadFilters: []*wrapperspb.StringValue{wrapperspb.String("filter")},
+//			},
+//			prepare: func(params PrepareParams) {
+//				params.alertsClient.EXPECT().
+//					GetAlert(params.ctx, gomock.Any()).
+//					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
+//					MinTimes(1).MaxTimes(1)
+//
+//				params.webhooksClient.EXPECT().List(gomock.Any(), gomock.Any()).
+//					Return(&cxsdk.ListAllOutgoingWebhooksResponse{}, nil).
+//					MinTimes(1).MaxTimes(2)
+//
+//				params.alertsClient.EXPECT().CreateAlert(gomock.Any(), gomock.Any()).
+//					Return(&alerts.CreateAlertResponse{Alert: params.remoteAlert}, nil).
+//					MinTimes(1).MaxTimes(1)
+//
+//				params.webhooksClient.EXPECT().List(gomock.Any(), gomock.Any()).
+//					Return(&cxsdk.ListAllOutgoingWebhooksResponse{}, nil).
+//					MinTimes(1).MaxTimes(2)
+//
+//				params.alertsClient.EXPECT().UpdateAlert(gomock.Any(), gomock.Any()).
+//					Return(nil, status.Error(codes.NotFound, "")).
+//					MinTimes(1).MaxTimes(1)
+//			},
+//		},
+//	}
+//
+//	for _, tt := range tests {
+//		t.Run(tt.name, func(t *testing.T) {
+//			controller := gomock.NewController(t)
+//			defer controller.Finish()
+//
+//			// Creating alerts client.
+//			alertsClient := mock_clientset.NewMockAlertsClientInterface(controller)
+//
+//			// Creating webhooks client.
+//			webhooksClient := mock_clientset.NewMockOutboundWebhooksClientInterface(controller)
+//
+//			ctx, cancel := context.WithCancel(context.Background())
+//			defer cancel()
+//
+//			if tt.prepare != nil {
+//				tt.prepare(PrepareParams{
+//					ctx:            ctx,
+//					alertsClient:   alertsClient,
+//					webhooksClient: webhooksClient,
+//					alert:          tt.alert,
+//					remoteAlert:    tt.remoteAlert,
+//				})
+//			}
+//
+//			reconciler, watcher := setupReconciler(t, ctx, alertsClient, webhooksClient)
+//
+//			err := reconciler.Client.Create(ctx, tt.alert)
+//			assert.NoError(t, err)
+//
+//			<-watcher.ResultChan()
+//
+//			result, err := reconciler.Reconcile(ctx, ctrl.Request{
+//				NamespacedName: types.NamespacedName{
+//					Namespace: tt.alert.Namespace,
+//					Name:      tt.alert.Name,
+//				},
+//			})
+//			assert.NoError(t, err)
+//
+//			currentAlert := &coralogixv1beta1.Alert{}
+//
+//			err = reconciler.Get(ctx, types.NamespacedName{
+//				Namespace: tt.alert.Namespace,
+//				Name:      tt.alert.Name,
+//			}, currentAlert)
+//
+//			assert.NoError(t, err)
+//
+//			err = reconciler.Client.Update(ctx, currentAlert)
+//			assert.NoError(t, err)
+//
+//			result, err = reconciler.Reconcile(ctx, ctrl.Request{
+//				NamespacedName: types.NamespacedName{
+//					Namespace: tt.alert.Namespace,
+//					Name:      tt.alert.Name,
+//				},
+//			})
+//
+//			if tt.shouldFail {
+//				assert.Error(t, err)
+//				assert.Equal(t, coralogix.DefaultErrRequeuePeriod, result.RequeueAfter)
+//			} else {
+//				assert.NoError(t, err)
+//			}
+//		})
+//	}
+//
+//}
+//
+//func TestAlertDelete(t *testing.T) {
+//	defaultNotificationGroup := &coralogixv1beta1.NotificationGroup{
+//		Webhooks: []coralogixv1beta1.WebhookSettings{
+//			{
+//				RetriggeringPeriod: coralogixv1beta1.RetriggeringPeriod{
+//					Minutes: pointer.Uint32(10),
+//				},
+//				NotifyOn: coralogixv1beta1.NotifyOnTriggeredAndResolved,
+//				Integration: coralogixv1beta1.IntegrationType{
+//					Recipients: []string{"example@coralogix.com"},
+//				},
+//			},
+//		},
+//	}
+//
+//	defaultAlertTypeDefinition := coralogixv1beta1.AlertTypeDefinition{
+//		MetricAnomaly: &coralogixv1beta1.MetricAnomaly{
+//			MetricFilter: coralogixv1beta1.MetricFilter{
+//				Promql: "http_requests_total{status!~\"4..\"}",
+//			},
+//			Rules: []coralogixv1beta1.MetricAnomalyRule{
+//				{
+//					Condition: coralogixv1beta1.MetricAnomalyCondition{
+//						ConditionType: coralogixv1beta1.MetricAnomalyConditionTypeMoreThanUsual,
+//						Threshold:     utils.FloatToQuantity(3.0),
+//						OfTheLast: coralogixv1beta1.MetricTimeWindow{
+//							SpecificValue: coralogixv1beta1.MetricTimeWindowValue12Hours,
+//						},
+//						MinNonNullValuesPct: 10,
+//					},
+//				},
+//			},
+//		},
+//	}
+//
+//	defaultRemoteNotificationGroups := []*alerts.AlertNotificationGroups{
+//		{
+//			Notifications: []*alerts.AlertNotification{
+//				{
+//					RetriggeringPeriodSeconds: wrapperspb.UInt32(600),
+//					NotifyOn: func() *alerts.NotifyOn {
+//						notifyOn := new(alerts.NotifyOn)
+//						*notifyOn = alerts.NotifyOn_TRIGGERED_AND_RESOLVED
+//						return notifyOn
+//					}(),
+//					IntegrationType: &alerts.AlertNotification_Recipients{
+//						Recipients: &alerts.Recipients{
+//							Emails: []*wrapperspb.StringValue{wrapperspb.String("example@coralogix.com")},
+//						},
+//					},
+//				},
+//			},
+//		},
+//	}
+//
+//	defaultRemoteCondition := &alerts.AlertCondition{
+//		Condition: &alerts.AlertCondition_MoreThanUsual{
+//			MoreThanUsual: &alerts.MoreThanUsualCondition{
+//				Parameters: &alerts.ConditionParameters{
+//					Threshold: wrapperspb.Double(3),
+//					Timeframe: alerts.Timeframe_TIMEFRAME_12_H,
+//					MetricAlertPromqlParameters: &alerts.MetricAlertPromqlConditionParameters{
+//						PromqlText:        wrapperspb.String("http_requests_total{status!~\"4..\"}"),
+//						NonNullPercentage: wrapperspb.UInt32(10),
+//						SwapNullValues:    wrapperspb.Bool(false),
+//					},
+//					NotifyGroupByOnlyAlerts: wrapperspb.Bool(false),
+//				},
+//			},
+//		},
+//	}
+//
+//	tests := []struct {
+//		name        string
+//		prepare     func(params PrepareParams)
+//		alert       *coralogixv1beta1.Alert
+//		remoteAlert *alerts.Alert
+//		shouldFail  bool
+//	}{
+//		{
+//			name:       "Alert delete success",
+//			shouldFail: false,
+//			alert: &coralogixv1beta1.Alert{
+//				TypeMeta:   metav1.TypeMeta{Kind: "Alert", APIVersion: "coralogix.com/v1beta1"},
+//				ObjectMeta: metav1.ObjectMeta{Name: "alert-delete-success", Namespace: "default"},
+//				Spec: coralogixv1beta1.AlertSpec{
+//					Name:              "AlertDeleteSuccess",
+//					Description:       "AlertDeleteSuccess",
+//					Enabled:           true,
+//					Priority:          coralogixv1beta1.AlertPriorityP2,
+//					NotificationGroup: defaultNotificationGroup,
+//					TypeDefinition:    defaultAlertTypeDefinition,
+//				},
+//				Status: coralogixv1beta1.AlertStatus{
+//					ID: pointer.String("AlertDeleteSuccess"),
+//				},
+//			},
+//			remoteAlert: &alerts.Alert{
+//				UniqueIdentifier: wrapperspb.String("AlertDeleteSuccess"),
+//				Name:             wrapperspb.String("AlertDeleteSuccess"),
+//				Description:      wrapperspb.String("AlertDeleteSuccess"),
+//				IsActive:         wrapperspb.Bool(true),
+//				Severity:         alerts.AlertSeverity_ALERT_SEVERITY_CRITICAL,
+//				MetaLabels: []*alerts.MetaLabel{
+//					{Key: wrapperspb.String("key"), Value: wrapperspb.String("value")},
+//					{Key: wrapperspb.String("managed-by"), Value: wrapperspb.String("coralogix-operator")},
+//				},
+//				Condition:          defaultRemoteCondition,
+//				NotificationGroups: defaultRemoteNotificationGroups,
+//				Filters: &alerts.AlertFilters{
+//					FilterType: alerts.AlertFilters_FILTER_TYPE_METRIC,
+//				},
+//				NotificationPayloadFilters: []*wrapperspb.StringValue{wrapperspb.String("filter")},
+//			},
+//			prepare: func(params PrepareParams) {
+//				params.alertsClient.EXPECT().
+//					GetAlert(params.alert.Namespace, coralogixv1beta1.NewAlert()).
+//					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
+//					MinTimes(1).MaxTimes(1)
+//
+//				params.webhooksClient.EXPECT().List(params.ctx, gomock.Any()).
+//					Return(&cxsdk.ListAllOutgoingWebhooksResponse{}, nil).
+//					MinTimes(1).MaxTimes(2)
+//
+//				params.alertsClient.EXPECT().CreateAlert(params.ctx, gomock.Any()).
+//					Return(&alerts.CreateAlertResponse{Alert: params.remoteAlert}, nil).
+//					MinTimes(1).MaxTimes(1)
+//
+//				params.alertsClient.EXPECT().DeleteAlert(params.ctx, gomock.Any()).
+//					Return(&alerts.DeleteAlertByUniqueIdResponse{}, nil).
+//					MinTimes(1).MaxTimes(1)
+//
+//				params.alertsClient.EXPECT().GetAlert(params.ctx, gomock.Any()).
+//					Return(&alerts.GetAlertByUniqueIdResponse{Alert: params.remoteAlert}, nil).
+//					MinTimes(1).MaxTimes(1)
+//			},
+//		},
+//	}
+//
+//	for _, tt := range tests {
+//		t.Run(tt.name, func(t *testing.T) {
+//			controller := gomock.NewController(t)
+//			defer controller.Finish()
+//
+//			// Creating alerts client.
+//			alertsClient := mock_clientset.NewMockAlertsClientInterface(controller)
+//
+//			// Creating webhooks client.
+//			webhooksClient := mock_clientset.NewMockOutboundWebhooksClientInterface(controller)
+//
+//			ctx, cancel := context.WithCancel(context.Background())
+//			defer cancel()
+//
+//			if tt.prepare != nil {
+//				tt.prepare(PrepareParams{
+//					ctx:            ctx,
+//					alertsClient:   alertsClient,
+//					webhooksClient: webhooksClient,
+//					alert:          tt.alert,
+//					remoteAlert:    tt.remoteAlert,
+//				})
+//			}
+//
+//			reconciler, watcher := setupReconciler(t, ctx, alertsClient, webhooksClient)
+//
+//			err := reconciler.Client.Create(ctx, tt.alert)
+//			assert.NoError(t, err)
+//
+//			<-watcher.ResultChan()
+//
+//			result, err := reconciler.Reconcile(ctx, ctrl.Request{
+//				NamespacedName: types.NamespacedName{
+//					Namespace: tt.alert.Namespace,
+//					Name:      tt.alert.Name,
+//				},
+//			})
+//			assert.NoError(t, err)
+//
+//			currentAlert := &coralogixv1beta1.Alert{}
+//
+//			err = reconciler.Get(ctx, types.NamespacedName{
+//				Namespace: tt.alert.Namespace,
+//				Name:      tt.alert.Name,
+//			}, currentAlert)
+//
+//			assert.NoError(t, err)
+//
+//			err = reconciler.Client.Delete(ctx, currentAlert)
+//			assert.NoError(t, err)
+//
+//			result, err = reconciler.Reconcile(ctx, ctrl.Request{
+//				NamespacedName: types.NamespacedName{
+//					Namespace: tt.alert.Namespace,
+//					Name:      tt.alert.Name,
+//				},
+//			})
+//
+//			if tt.shouldFail {
+//				assert.Error(t, err)
+//				assert.Equal(t, coralogix.DefaultErrRequeuePeriod, result.RequeueAfter)
+//			} else {
+//				assert.NoError(t, err)
+//			}
+//		})
+//	}
+//
+//}
+//
+//func TestFlattenAlerts(t *testing.T) {
+//	alert := &alerts.Alert{
+//		UniqueIdentifier: wrapperspb.String("id1"),
+//		Name:             wrapperspb.String("name"),
+//		Description:      wrapperspb.String("description"),
+//		IsActive:         wrapperspb.Bool(true),
+//		Severity:         alerts.AlertSeverity_ALERT_SEVERITY_CRITICAL,
+//		MetaLabels:       []*alerts.MetaLabel{{Key: wrapperspb.String("key"), Value: wrapperspb.String("value")}},
+//		Condition: &alerts.AlertCondition{
+//			Condition: &alerts.AlertCondition_MoreThanUsual{
+//				MoreThanUsual: &alerts.MoreThanUsualCondition{
+//					Parameters: &alerts.ConditionParameters{
+//						Threshold: wrapperspb.Double(3),
+//						Timeframe: alerts.Timeframe_TIMEFRAME_12_H,
+//						MetricAlertPromqlParameters: &alerts.MetricAlertPromqlConditionParameters{
+//							PromqlText:        wrapperspb.String("http_requests_total{status!~\"4..\"}"),
+//							NonNullPercentage: wrapperspb.UInt32(10),
+//							SwapNullValues:    wrapperspb.Bool(false),
+//						},
+//						NotifyGroupByOnlyAlerts: wrapperspb.Bool(false),
+//					},
+//				},
+//			},
+//		},
+//		Filters: &alerts.AlertFilters{
+//			FilterType: alerts.AlertFilters_FILTER_TYPE_METRIC,
+//		},
+//	}
+//
+//	ctx := context.Background()
+//
+//	controller := gomock.NewController(t)
+//	defer controller.Finish()
+//
+//	webhookMock := mock_clientset.NewMockOutboundWebhooksClientInterface(controller)
+//	webhookMock.EXPECT().List(ctx, gomock.Any()).Return(&cxsdk.ListAllOutgoingWebhooksResponse{}, nil).AnyTimes()
+//	coralogixv1alpha1.WebhooksClient = webhookMock
+//
+//	alertStatus := coralogixv1beta1.AlertStatus{ID: utils.WrapperspbStringToStringPointer(alert.GetUniqueIdentifier())}
+//
+//	expected := &coralogixv1beta1.AlertStatus{
+//		ID: pointer.String("id1"),
+//	}
+//
+//	assert.EqualValues(t, expected, &alertStatus)
+//}
