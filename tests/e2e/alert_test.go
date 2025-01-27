@@ -80,7 +80,7 @@ var _ = Describe("Alert", Ordered, func() {
 				AlertType: coralogixv1alpha1.AlertType{
 					Metric: &coralogixv1alpha1.Metric{
 						Promql: &coralogixv1alpha1.Promql{
-							SearchQuery: "http_requests_total{status!~\"4..\"}",
+							SearchQuery: "http_requests_total{status!~\"4..\"} by coralogix.metadata.sdkId",
 							Conditions: coralogixv1alpha1.PromqlConditions{
 								AlertWhen:                  "More",
 								Threshold:                  coralogix.FloatToQuantity(3),
