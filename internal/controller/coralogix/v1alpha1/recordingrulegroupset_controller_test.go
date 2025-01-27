@@ -58,9 +58,9 @@ func setupRecordingRuleReconciler(t *testing.T, ctx context.Context, recordingRu
 
 	assert.NoError(t, err)
 	r := RecordingRuleGroupSetReconciler{
-		Client: withWatch,
-		Scheme: mgr.GetScheme(),
-		//RecordingRuleGroupSetClient: recordingRuleGroupSetClient,
+		Client:                      withWatch,
+		Scheme:                      mgr.GetScheme(),
+		RecordingRuleGroupSetClient: recordingRuleGroupSetClient,
 	}
 	r.SetupWithManager(mgr)
 

@@ -31,6 +31,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
 )
 
@@ -39,7 +40,7 @@ var recordingRuleGroupSetFinalizerName = "recordingrulegroupset.coralogix.com/fi
 // RecordingRuleGroupSetReconciler reconciles a RecordingRuleGroupSet object
 type RecordingRuleGroupSetReconciler struct {
 	client.Client
-	RecordingRuleGroupSetClient *cxsdk.RecordingRuleGroupSetsClient
+	RecordingRuleGroupSetClient clientset.RecordingRulesGroupsClientInterface
 	Scheme                      *runtime.Scheme
 	RecordingRuleGroupSetSuffix string
 }

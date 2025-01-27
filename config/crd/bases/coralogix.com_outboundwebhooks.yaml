@@ -11,14 +11,13 @@ spec:
     kind: OutboundWebhook
     listKind: OutboundWebhookList
     plural: outboundwebhooks
-    shortNames:
-    - owb
     singular: outboundwebhook
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
+        description: OutboundWebhook is the Schema for the outboundwebhooks API
         properties:
           apiVersion:
             description: |-

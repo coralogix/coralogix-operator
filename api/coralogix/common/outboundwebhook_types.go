@@ -375,13 +375,10 @@ type OutboundWebhookStatus struct {
 	ExternalID *string `json:"externalId"`
 }
 
-// OutboundWebhook is the Schema for the outboundwebhooks API
+//+kubebuilder:object:root=true
+//+kubebuilder:subresource:status
 
-// +kubebuilder:object:root=true
-// +kubebuilder:subresource:status
-// +kubebuilder:resource:path=outboundwebhooks,scope=Namespaced,shortName=owb
-// +kubebuilder:crd:version=v1alpha1
-// +kubebuilder:storageversion
+// OutboundWebhook is the Schema for the outboundwebhooks API
 type OutboundWebhook struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

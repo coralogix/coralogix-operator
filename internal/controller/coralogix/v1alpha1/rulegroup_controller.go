@@ -32,6 +32,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
 )
 
@@ -40,7 +41,7 @@ var ruleGroupFinalizerName = "rulegroup.coralogix.com/finalizer"
 // RuleGroupReconciler reconciles a RuleGroup object
 type RuleGroupReconciler struct {
 	client.Client
-	RuleGroupClient *cxsdk.RuleGroupsClient
+	RuleGroupClient clientset.RuleGroupsClientInterface
 	Scheme          *runtime.Scheme
 }
 

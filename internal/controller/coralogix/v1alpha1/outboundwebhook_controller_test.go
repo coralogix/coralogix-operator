@@ -18,8 +18,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/coralogix/coralogix-operator/api/coralogix/common"
-	"github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/common"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -43,7 +42,7 @@ func setupOutboundWebhooksReconciler(t *testing.T, ctx context.Context, outbound
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
 	scheme := runtime.NewScheme()
-	utilruntime.Must(v1alpha1.AddToScheme(scheme))
+	utilruntime.Must(coralogixv1alpha1.AddToScheme(scheme))
 
 	mgr, _ := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:  scheme,
@@ -59,13 +58,13 @@ func setupOutboundWebhooksReconciler(t *testing.T, ctx context.Context, outbound
 
 	assert.NoError(t, err)
 	r := OutboundWebhookReconciler{
-		Client: withWatch,
-		Scheme: mgr.GetScheme(),
-		//OutboundWebhooksClient: outboundWebhooksClient,
+		Client:                 withWatch,
+		Scheme:                 mgr.GetScheme(),
+		OutboundWebhooksClient: outboundWebhooksClient,
 	}
 	r.SetupWithManager(mgr)
 
-	watcher, _ := r.Client.(client.WithWatch).Watch(ctx, &common.OutboundWebhookList{})
+	watcher, _ := r.Client.(client.WithWatch).Watch(ctx, &coralogixv1alpha1.OutboundWebhookList{})
 	return r, watcher
 }
 
@@ -78,7 +77,7 @@ func TestOutboundWebhooksCreation(t *testing.T) {
 	tests := []struct {
 		name            string
 		params          func(params PrepareOutboundWebhooksParams)
-		outboundWebhook common.OutboundWebhook
+		outboundWebhook coralogixv1alpha1.OutboundWebhook
 		shouldFail      bool
 	}{
 		{
@@ -103,15 +102,15 @@ func TestOutboundWebhooksCreation(t *testing.T) {
 					},
 				}, nil)
 			},
-			outboundWebhook: common.OutboundWebhook{
+			outboundWebhook: coralogixv1alpha1.OutboundWebhook{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "outbound-webhook-creation-success",
 					Namespace: "default",
 				},
-				Spec: common.OutboundWebhookSpec{
+				Spec: coralogixv1alpha1.OutboundWebhookSpec{
 					Name: "name",
-					OutboundWebhookType: common.OutboundWebhookType{
-						GenericWebhook: &common.GenericWebhook{
+					OutboundWebhookType: coralogixv1alpha1.OutboundWebhookType{
+						GenericWebhook: &coralogixv1alpha1.GenericWebhook{
 							Url:     "url",
 							Method:  "Get",
 							Headers: map[string]string{"key": "value"},
@@ -168,8 +167,8 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 	tests := []struct {
 		name            string
 		params          func(params PrepareOutboundWebhooksParams)
-		outboundWebhook common.OutboundWebhook
-		updatedWebhook  common.OutboundWebhook
+		outboundWebhook coralogixv1alpha1.OutboundWebhook
+		updatedWebhook  coralogixv1alpha1.OutboundWebhook
 		shouldFail      bool
 	}{
 		{
@@ -211,15 +210,15 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 					},
 				}, nil)
 			},
-			outboundWebhook: common.OutboundWebhook{
+			outboundWebhook: coralogixv1alpha1.OutboundWebhook{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "outbound-webhook-update-success",
 					Namespace: "default",
 				},
-				Spec: common.OutboundWebhookSpec{
+				Spec: coralogixv1alpha1.OutboundWebhookSpec{
 					Name: "name",
-					OutboundWebhookType: common.OutboundWebhookType{
-						GenericWebhook: &common.GenericWebhook{
+					OutboundWebhookType: coralogixv1alpha1.OutboundWebhookType{
+						GenericWebhook: &coralogixv1alpha1.GenericWebhook{
 							Url:     "url",
 							Method:  "Get",
 							Headers: map[string]string{"key": "value"},
@@ -228,15 +227,15 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 					},
 				},
 			},
-			updatedWebhook: common.OutboundWebhook{
+			updatedWebhook: coralogixv1alpha1.OutboundWebhook{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "outbound-webhook-update-success",
 					Namespace: "default",
 				},
-				Spec: common.OutboundWebhookSpec{
+				Spec: coralogixv1alpha1.OutboundWebhookSpec{
 					Name: "updated-name",
-					OutboundWebhookType: common.OutboundWebhookType{
-						GenericWebhook: &common.GenericWebhook{
+					OutboundWebhookType: coralogixv1alpha1.OutboundWebhookType{
+						GenericWebhook: &coralogixv1alpha1.GenericWebhook{
 							Url:     "updated-url",
 							Method:  "Post",
 							Headers: map[string]string{"updated-key": "updated-value"},
@@ -282,7 +281,7 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 
 			assert.NoError(t, err)
 
-			outboundWebhook := &common.OutboundWebhook{}
+			outboundWebhook := &coralogixv1alpha1.OutboundWebhook{}
 
 			err = reconciler.Get(ctx, types.NamespacedName{
 				Namespace: tt.outboundWebhook.Namespace,
@@ -304,7 +303,7 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 				},
 			})
 
-			outboundWebhook = &common.OutboundWebhook{}
+			outboundWebhook = &coralogixv1alpha1.OutboundWebhook{}
 			err = reconciler.Get(ctx, types.NamespacedName{
 				Namespace: tt.updatedWebhook.Namespace,
 				Name:      tt.updatedWebhook.Name,
@@ -323,7 +322,7 @@ func TestOutboundWebhookDeletion(t *testing.T) {
 	tests := []struct {
 		name            string
 		params          func(params PrepareOutboundWebhooksParams)
-		outboundWebhook common.OutboundWebhook
+		outboundWebhook coralogixv1alpha1.OutboundWebhook
 		shouldFail      bool
 	}{
 		{
@@ -349,15 +348,15 @@ func TestOutboundWebhookDeletion(t *testing.T) {
 				}, nil)
 				params.outboundWebhooksClient.EXPECT().Delete(params.ctx, gomock.Any()).Return(&cxsdk.DeleteOutgoingWebhookResponse{}, nil)
 			},
-			outboundWebhook: common.OutboundWebhook{
+			outboundWebhook: coralogixv1alpha1.OutboundWebhook{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "outbound-webhook-deletion-success",
 					Namespace: "default",
 				},
-				Spec: common.OutboundWebhookSpec{
+				Spec: coralogixv1alpha1.OutboundWebhookSpec{
 					Name: "name",
-					OutboundWebhookType: common.OutboundWebhookType{
-						GenericWebhook: &common.GenericWebhook{
+					OutboundWebhookType: coralogixv1alpha1.OutboundWebhookType{
+						GenericWebhook: &coralogixv1alpha1.GenericWebhook{
 							Url:     "url",
 							Method:  "Get",
 							Headers: map[string]string{"key": "value"},
