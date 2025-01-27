@@ -67,13 +67,15 @@ func (v *AlertCustomValidator) ValidateCreate(ctx context.Context, obj runtime.O
 	var warnings admission.Warnings
 	var errs error
 
-	warns, err := validateAlertNotificationGroup(alert.Spec.NotificationGroup, alert.Spec.GroupByKeys)
+	warns, err := validateAlertType(alert.Spec.TypeDefinition, alert.Spec.GroupByKeys)
 	warns = append(warnings, warns...)
 	errs = errors.Join(errs, err)
 
-	warns, err = validateAlertType(alert.Spec.TypeDefinition, alert.Spec.GroupByKeys)
-	warns = append(warnings, warns...)
-	errs = errors.Join(errs, err)
+	if typeDef := alert.Spec.TypeDefinition; typeDef.MetricAnomaly == nil && typeDef.MetricThreshold == nil {
+		warns, err = validateAlertNotificationGroup(alert.Spec.NotificationGroup, alert.Spec.GroupByKeys)
+		warns = append(warnings, warns...)
+		errs = errors.Join(errs, err)
+	}
 
 	if errs != nil {
 		monitoring.TotalRejectedAlertsMetric.Inc()
