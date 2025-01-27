@@ -48,7 +48,12 @@ help: ## Display this help.
 manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole, and CustomResourceDefinition objects.
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 	@echo "Overriding CRD version for OutboundWebhook to v1alpha1..."
-	sed -i '' 's/name: common/name: v1alpha1/' config/crd/bases/coralogix.com_outboundwebhooks.yaml
+	@if [ "$(shell uname)" = "Darwin" ]; then \
+		sed -i '' 's/name: common/name: v1alpha1/' config/crd/bases/coralogix.com_outboundwebhooks.yaml; \
+	else \
+		sed -i 's/name: common/name: v1alpha1/' config/crd/bases/coralogix.com_outboundwebhooks.yaml; \
+	fi
+
 
 
 
