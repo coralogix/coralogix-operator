@@ -26,12 +26,13 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/pointer"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 )
 
 var _ = Describe("Alert", Ordered, func() {
@@ -39,7 +40,7 @@ var _ = Describe("Alert", Ordered, func() {
 		crClient     client.Client
 		alertsClient *cxsdk.AlertsClient
 		alertID      string
-		alert        *coralogixv1alpha1.Alert
+		alert        *coralogixv1beta1.Alert
 	)
 
 	BeforeAll(func() {
@@ -50,42 +51,58 @@ var _ = Describe("Alert", Ordered, func() {
 	It("Should be created successfully", func(ctx context.Context) {
 		By("Creating Alert")
 		alertName := "promql-alert"
-		alert = &coralogixv1alpha1.Alert{
+		alert = &coralogixv1beta1.Alert{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      alertName,
 				Namespace: testNamespace,
 			},
-			Spec: coralogixv1alpha1.AlertSpec{
+			Spec: coralogixv1beta1.AlertSpec{
 				Name:        alertName,
 				Description: "alert from k8s operator",
-				Severity:    "Critical",
-				NotificationGroups: []coralogixv1alpha1.NotificationGroup{
-					{
-						Notifications: []coralogixv1alpha1.Notification{
-							{
-								NotifyOn:                  "TriggeredOnly",
-								IntegrationName:           ptr.To("Email"),
-								RetriggeringPeriodMinutes: 1,
+				Priority:    coralogixv1beta1.AlertPriorityP1,
+				NotificationGroup: &coralogixv1beta1.NotificationGroup{
+					Webhooks: []coralogixv1beta1.WebhookSettings{
+						{
+							NotifyOn: coralogixv1beta1.NotifyOnTriggeredOnly,
+							RetriggeringPeriod: coralogixv1beta1.RetriggeringPeriod{
+								Minutes: pointer.Uint32(1),
+							},
+							Integration: coralogixv1beta1.IntegrationType{
+								IntegrationRef: &coralogixv1beta1.IntegrationRef{
+									BackendRef: &coralogixv1beta1.OutboundWebhookBackendRef{
+										Name: pointer.String("Email"),
+									},
+								},
 							},
 						},
 					},
 				},
-				Scheduling: &coralogixv1alpha1.Scheduling{
-					DaysEnabled: []coralogixv1alpha1.Day{"Wednesday", "Thursday"},
-					TimeZone:    "UTC+02",
-					StartTime:   ptr.To(coralogixv1alpha1.Time("08:30")),
-					EndTime:     ptr.To(coralogixv1alpha1.Time("20:30")),
+				Schedule: &coralogixv1beta1.AlertSchedule{
+					TimeZone: "UTC+02",
+					ActiveOn: &coralogixv1beta1.ActiveOn{
+						DayOfWeek: []coralogixv1beta1.DayOfWeek{coralogixv1beta1.DayOfWeekWednesday, coralogixv1beta1.DayOfWeekThursday},
+						StartTime: ptr.To(coralogixv1beta1.TimeOfDay("08:30")),
+						EndTime:   ptr.To(coralogixv1beta1.TimeOfDay("20:30")),
+					},
 				},
-				AlertType: coralogixv1alpha1.AlertType{
-					Metric: &coralogixv1alpha1.Metric{
-						Promql: &coralogixv1alpha1.Promql{
-							SearchQuery: "http_requests_total{status!~\"4..\"}",
-							Conditions: coralogixv1alpha1.PromqlConditions{
-								AlertWhen:                  "More",
-								Threshold:                  coralogix.FloatToQuantity(3),
-								SampleThresholdPercentage:  50,
-								TimeWindow:                 "TwelveHours",
-								MinNonNullValuesPercentage: ptr.To(10),
+				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
+					MetricThreshold: &coralogixv1beta1.MetricThreshold{
+						MissingValues: coralogixv1beta1.MetricMissingValues{
+							MinNonNullValuesPct: pointer.Uint32(10),
+						},
+						MetricFilter: coralogixv1beta1.MetricFilter{
+							Promql: "http_requests_total{status!~\"4..\"}",
+						},
+						Rules: []coralogixv1beta1.MetricThresholdRule{
+							{
+								Condition: coralogixv1beta1.MetricThresholdRuleCondition{
+									Threshold:     coralogix.FloatToQuantity(3),
+									ForOverPct:    50,
+									ConditionType: coralogixv1beta1.MetricThresholdConditionTypeMoreThan,
+									OfTheLast: coralogixv1beta1.MetricTimeWindow{
+										SpecificValue: coralogixv1beta1.MetricTimeWindowValue12Hours,
+									},
+								},
 							},
 						},
 					},
@@ -95,7 +112,7 @@ var _ = Describe("Alert", Ordered, func() {
 		Expect(crClient.Create(ctx, alert)).To(Succeed())
 
 		By("Fetching the Alert ID")
-		fetchedAlert := &coralogixv1alpha1.Alert{}
+		fetchedAlert := &coralogixv1beta1.Alert{}
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, fetchedAlert)).To(Succeed())
 			if fetchedAlert.Status.ID != nil {
