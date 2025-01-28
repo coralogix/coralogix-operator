@@ -161,7 +161,7 @@ spec:
               name: slack-default.slack.0
         notifyOn: triggeredOnly
         retriggeringPeriod:
-          minutes: 4
+          minutes: 3
   phantomMode: false
   priority: p4
 
