@@ -33,6 +33,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // CustomRoleReconciler reconciles a CustomRole object
@@ -64,14 +65,14 @@ func (r *CustomRoleReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			// Return and don't requeue
 			return ctrl.Result{}, nil
 		}
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
 
 	if ptr.Deref(customRole.Status.ID, "") == "" {
 		err := r.create(ctx, log, customRole)
 		if err != nil {
 			log.Error(err, "Error on creating CustomRole")
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
 		return ctrl.Result{}, nil
 	}
@@ -80,7 +81,16 @@ func (r *CustomRoleReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		err := r.delete(ctx, log, customRole)
 		if err != nil {
 			log.Error(err, "Error on deleting CustomRole")
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
+		}
+		return ctrl.Result{}, nil
+	}
+
+	if !utils.GetLabelFilter().Matches(customRole.GetLabels()) {
+		err := r.deleteRemoteCustomRole(ctx, log, *customRole.Status.ID)
+		if err != nil {
+			log.Error(err, "Error on deleting CustomRole")
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
 		return ctrl.Result{}, nil
 	}
@@ -88,7 +98,7 @@ func (r *CustomRoleReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	err := r.update(ctx, log, customRole)
 	if err != nil {
 		log.Error(err, "Error on updating CustomRole")
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
 
 	return ctrl.Result{}, nil
@@ -185,5 +195,6 @@ func (r *CustomRoleReconciler) deleteRemoteCustomRole(ctx context.Context, log l
 func (r *CustomRoleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.CustomRole{}).
+		WithEventFilter(utils.GetLabelFilter().Predicate()).
 		Complete(r)
 }

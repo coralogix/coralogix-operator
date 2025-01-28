@@ -37,6 +37,7 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
+	util "github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // OutboundWebhookReconciler reconciles a OutboundWebhook object
@@ -96,6 +97,16 @@ func (r *OutboundWebhookReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return ctrl.Result{}, nil
 	}
 
+	if !util.GetLabelFilter().Matches(outboundWebhook.GetLabels()) {
+		err = r.deleteRemoteWebhook(ctx, log, outboundWebhook.Status.ID)
+		if err != nil {
+			log.Error(err, "Error on deleting OutboundWebhook")
+			return ctrl.Result{RequeueAfter: util.DefaultErrRequeuePeriod}, err
+		}
+		monitoring.OutboundWebhookInfoMetric.DeleteLabelValues(outboundWebhook.Name, outboundWebhook.Namespace, getWebhookType(outboundWebhook))
+		return ctrl.Result{}, nil
+	}
+
 	err = r.update(ctx, log, outboundWebhook)
 	if err != nil {
 		log.Error(err, "Error on updating outbound-webhook")
@@ -110,6 +121,7 @@ func (r *OutboundWebhookReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 func (r *OutboundWebhookReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.OutboundWebhook{}).
+		WithEventFilter(util.GetLabelFilter().Predicate()).
 		Complete(r)
 }
 

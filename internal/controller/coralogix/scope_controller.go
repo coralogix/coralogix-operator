@@ -32,6 +32,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // ScopeReconciler reconciles a Scope object
@@ -63,14 +64,14 @@ func (r *ScopeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			// Return and don't requeue
 			return ctrl.Result{}, nil
 		}
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
 
 	if ptr.Deref(scope.Status.ID, "") == "" {
 		err := r.create(ctx, log, scope)
 		if err != nil {
 			log.Error(err, "Error on creating Scope")
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
 		return ctrl.Result{}, nil
 	}
@@ -79,7 +80,16 @@ func (r *ScopeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		err := r.delete(ctx, log, scope)
 		if err != nil {
 			log.Error(err, "Error on deleting Scope")
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
+		}
+		return ctrl.Result{}, nil
+	}
+
+	if !utils.GetLabelFilter().Matches(scope.GetLabels()) {
+		err := r.deleteRemoteScope(ctx, log, *scope.Status.ID)
+		if err != nil {
+			log.Error(err, "Error on deleting Scope")
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
 		return ctrl.Result{}, nil
 	}
@@ -87,7 +97,7 @@ func (r *ScopeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	err := r.update(ctx, log, scope)
 	if err != nil {
 		log.Error(err, "Error on updating Scope")
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
 
 	return ctrl.Result{}, nil
@@ -181,5 +191,6 @@ func (r *ScopeReconciler) deleteRemoteScope(ctx context.Context, log logr.Logger
 func (r *ScopeReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.Scope{}).
+		WithEventFilter(utils.GetLabelFilter().Predicate()).
 		Complete(r)
 }

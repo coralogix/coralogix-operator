@@ -40,6 +40,7 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	alerts "github.com/coralogix/coralogix-operator/internal/controller/clientset/grpc/alerts/v2"
 	"github.com/coralogix/coralogix-operator/internal/controller/mock_clientset"
+	util "github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 func setupReconciler(t *testing.T, ctx context.Context, alertsClient *mock_clientset.MockAlertsClientInterface, webhooksClient *mock_clientset.MockOutboundWebhooksClientInterface) (AlertReconciler, watch.Interface) {
@@ -245,7 +246,7 @@ func TestAlertCreation(t *testing.T) {
 
 			if tt.shouldFail {
 				assert.Error(t, err)
-				assert.Equal(t, defaultErrRequeuePeriod, result.RequeueAfter)
+				assert.Equal(t, util.DefaultErrRequeuePeriod, result.RequeueAfter)
 			} else {
 				assert.NoError(t, err)
 			}
@@ -511,7 +512,7 @@ func TestAlertUpdate(t *testing.T) {
 
 			if tt.shouldFail {
 				assert.Error(t, err)
-				assert.Equal(t, defaultErrRequeuePeriod, result.RequeueAfter)
+				assert.Equal(t, util.DefaultErrRequeuePeriod, result.RequeueAfter)
 			} else {
 				assert.NoError(t, err)
 			}
@@ -713,7 +714,7 @@ func TestAlertDelete(t *testing.T) {
 
 			if tt.shouldFail {
 				assert.Error(t, err)
-				assert.Equal(t, defaultErrRequeuePeriod, result.RequeueAfter)
+				assert.Equal(t, util.DefaultErrRequeuePeriod, result.RequeueAfter)
 			} else {
 				assert.NoError(t, err)
 			}

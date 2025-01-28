@@ -38,6 +38,7 @@ import (
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 //+kubebuilder:rbac:groups=monitoring.coreos.com,resources=prometheusrules,verbs=get;list;watch
@@ -96,19 +97,19 @@ func (r *AlertmanagerConfigReconciler) Reconcile(ctx context.Context, req ctrl.R
 			// Return and don't requeue
 			if err = r.deleteWebhooksFromRelatedAlerts(ctx, alertmanagerConfig); err != nil {
 				log.Error(err, "Received an error while trying to delete webhooks from related Alerts")
-				return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+				return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 			}
 			return ctrl.Result{}, nil
 		}
 		// Error reading the object - requeue the request
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
 	monitoring.AlertmanagerConfigInfoMetric.WithLabelValues(alertmanagerConfig.Name, alertmanagerConfig.Namespace).Set(1)
 
 	succeedConvertAlertmanager := r.convertAlertmanagerConfigToCxIntegrations(ctx, log, alertmanagerConfig)
 	succeedLinkAlerts := r.linkCxAlertToCxIntegrations(ctx, log, alertmanagerConfig)
 	if !succeedConvertAlertmanager || !succeedLinkAlerts {
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, fmt.Errorf("received an error while trying to convert AlertmanagerConfig to OutboundWebhook CRD")
+		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, fmt.Errorf("received an error while trying to convert AlertmanagerConfig to OutboundWebhook CRD")
 	}
 
 	return reconcile.Result{RequeueAfter: 5 * time.Minute}, nil

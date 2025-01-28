@@ -39,6 +39,7 @@ import (
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 const (
@@ -74,7 +75,7 @@ func (r *PrometheusRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 			return ctrl.Result{}, nil
 		}
 		// Error reading the object - requeue the request
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
 	monitoring.PrometheusRuleInfoMetric.WithLabelValues(prometheusRule.Name, prometheusRule.Namespace).Set(1)
 
@@ -82,7 +83,7 @@ func (r *PrometheusRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		err := r.convertPrometheusRuleRecordingRuleToCxRecordingRule(ctx, log, prometheusRule, req)
 		if err != nil {
 			log.Error(err, "Received an error while trying to convert PrometheusRule to RecordingRule CRD")
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
 	}
 
@@ -90,7 +91,7 @@ func (r *PrometheusRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		err := r.convertPrometheusRuleAlertToCxAlert(ctx, prometheusRule)
 		if err != nil {
 			log.Error(err, "Received an error while trying to convert PrometheusRule to Alert CRD")
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
 	}
 

@@ -76,6 +76,7 @@ spec:
         - --api-key=${CORALOGIX_API_KEY}
         - --region=${CORALOGIX_REGION}
         - --domain=${CORALOGIX_DOMAIN}
+        - --label-selector=${LABEL_SELECTOR}
         - --enable-webhooks=true
         name: manager
         image: controller

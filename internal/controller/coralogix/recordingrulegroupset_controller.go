@@ -32,6 +32,7 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 var recordingRuleGroupSetFinalizerName = "recordingrulegroupset.coralogix.com/finalizer"
@@ -65,13 +66,13 @@ func (r *RecordingRuleGroupSetReconciler) Reconcile(ctx context.Context, req ctr
 			return ctrl.Result{}, nil
 		}
 		// Error reading the object - requeue the request
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
 
 	if ptr.Deref(recordingRuleGroupSet.Status.ID, "") == "" {
 		if err := r.create(ctx, recordingRuleGroupSet); err != nil {
 			log.Error(err, "Failed to create RecordingRuleGroupSet", "error", err)
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
 		monitoring.RecordingRuleGroupSetInfoMetric.WithLabelValues(recordingRuleGroupSet.Name, recordingRuleGroupSet.Namespace).Set(1)
 		return ctrl.Result{}, nil
@@ -80,7 +81,17 @@ func (r *RecordingRuleGroupSetReconciler) Reconcile(ctx context.Context, req ctr
 	if !recordingRuleGroupSet.ObjectMeta.DeletionTimestamp.IsZero() {
 		if err := r.delete(ctx, recordingRuleGroupSet); err != nil {
 			log.Error(err, "Failed to delete RecordingRuleGroupSet", "error", err)
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
+		}
+		monitoring.RecordingRuleGroupSetInfoMetric.DeleteLabelValues(recordingRuleGroupSet.Name, recordingRuleGroupSet.Namespace)
+		return ctrl.Result{}, nil
+	}
+
+	if !utils.GetLabelFilter().Matches(recordingRuleGroupSet.GetLabels()) {
+		err := r.deleteRemoteRecordingRuleGroupSet(ctx, recordingRuleGroupSet.Status.ID)
+		if err != nil {
+			log.Error(err, "Error on deleting RecordingRuleGroupSet")
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
 		monitoring.RecordingRuleGroupSetInfoMetric.DeleteLabelValues(recordingRuleGroupSet.Name, recordingRuleGroupSet.Namespace)
 		return ctrl.Result{}, nil
@@ -88,7 +99,7 @@ func (r *RecordingRuleGroupSetReconciler) Reconcile(ctx context.Context, req ctr
 
 	if err := r.update(ctx, recordingRuleGroupSet); err != nil {
 		log.Error(err, "Failed to update RecordingRuleGroupSet", "error", err)
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
 	monitoring.RecordingRuleGroupSetInfoMetric.WithLabelValues(recordingRuleGroupSet.Name, recordingRuleGroupSet.Namespace).Set(1)
 
@@ -177,5 +188,6 @@ func (r *RecordingRuleGroupSetReconciler) deleteRemoteRecordingRuleGroupSet(ctx 
 func (r *RecordingRuleGroupSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.RecordingRuleGroupSet{}).
+		WithEventFilter(utils.GetLabelFilter().Predicate()).
 		Complete(r)
 }

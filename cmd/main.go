@@ -45,6 +45,7 @@ import (
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	coralogixcontrollers "github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 	webhookcoralogixv1alpha1 "github.com/coralogix/coralogix-operator/internal/webhook/coralogix/v1alpha1"
 	//+kubebuilder:scaffold:imports
 )
@@ -91,6 +92,9 @@ func main() {
 	apiKey := os.Getenv("CORALOGIX_API_KEY")
 	flag.StringVar(&apiKey, "api-key", apiKey, "The proper api-key based on your Coralogix cluster's region.")
 
+	labelSelector := os.Getenv("LABEL_SELECTOR")
+	flag.StringVar(&labelSelector, "label-selector", labelSelector, "A comma-separated list of key=value labels to filter custom resources.")
+
 	enableWebhooks := os.Getenv("ENABLE_WEBHOOKS")
 	flag.StringVar(&enableWebhooks, "enable-webhooks", enableWebhooks, "Enable webhooks for the operator. Default is false.")
 
@@ -136,6 +140,11 @@ func main() {
 	if apiKey == "" {
 		err := fmt.Errorf("api-key can not be empty")
 		setupLog.Error(err, "invalid arguments for running operator")
+		os.Exit(1)
+	}
+
+	if err := utils.InitLabelFilter(labelSelector); err != nil {
+		setupLog.Error(err, "unable to initialize label filter")
 		os.Exit(1)
 	}
 
