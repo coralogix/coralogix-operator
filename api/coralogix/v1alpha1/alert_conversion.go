@@ -370,6 +370,11 @@ func convertFlowV1beta1ToV1alpha1(flow *v1beta1.Flow) *Flow {
 
 func convertMetricThresholdV1beta1ToMetricV1alpha1(metricThreshold *v1beta1.MetricThreshold) *Metric {
 	condition := metricThreshold.Rules[0].Condition
+	var minNonValuePct *int
+	if metricThreshold.MissingValues.MinNonNullValuesPct != nil {
+		minNonValuePct = pointer.Int(int(*metricThreshold.MissingValues.MinNonNullValuesPct))
+	}
+
 	return &Metric{
 		Promql: &Promql{
 			SearchQuery: metricThreshold.MetricFilter.Promql,
@@ -378,7 +383,7 @@ func convertMetricThresholdV1beta1ToMetricV1alpha1(metricThreshold *v1beta1.Metr
 				Threshold:                  condition.Threshold.DeepCopy(),
 				SampleThresholdPercentage:  int(condition.ForOverPct),
 				TimeWindow:                 metricTimeWindowV1beta1ToV1alpha1[condition.OfTheLast.SpecificValue],
-				MinNonNullValuesPercentage: pointer.Int(int(condition.ForOverPct)),
+				MinNonNullValuesPercentage: minNonValuePct,
 				ManageUndetectedValues:     convertUndetectedValuesManagementV1beta1ToV1alpha1(metricThreshold.UndetectedValuesManagement),
 			},
 		},
@@ -659,8 +664,6 @@ func convertDaysOfWeekV1beta1ToV1alpha1(week []v1beta1.DayOfWeek) []Day {
 
 	return result
 }
-
-// ConvertFrom converts from the Hub version (v1alpha1) to this version (v1beta1)
 
 func convertSchedulingV1alpha1ToV1beta1(scheduling *Scheduling) *v1beta1.AlertSchedule {
 	if scheduling == nil {

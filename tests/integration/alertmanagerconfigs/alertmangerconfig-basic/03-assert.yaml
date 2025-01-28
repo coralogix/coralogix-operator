@@ -27,7 +27,7 @@ spec:
             ofTheLast:
               specificValue: 5m
             threshold: "0"
-  description: app latency alert
+  description: This is an app latency alert
   enabled: true
   entityLabels:
     managed-by: coralogix-operator
@@ -50,7 +50,7 @@ spec:
               name: slack-general.slack.0
         notifyOn: triggeredOnly
         retriggeringPeriod:
-          minutes: 180
+          minutes: 3
   priority: p1
 
 
@@ -85,7 +85,7 @@ spec:
             ofTheLast:
               specificValue: 5m
             threshold: "0"
-  description: app latency alert
+  description: This is an app latency alert
   enabled: true
   entityLabels:
     opsgenie_team: team1
@@ -101,7 +101,7 @@ spec:
               name: opsgenie-general.opsgenie.0
         notifyOn: triggeredAndResolved
         retriggeringPeriod:
-          minutes: 4
+          minutes: 2
   phantomMode: false
   priority: p4
 
@@ -136,7 +136,7 @@ spec:
             ofTheLast:
               specificValue: 5m
             threshold: "0"
-  description: app latency alert
+  description: This is an app latency alert
   enabled: true
   name: app-latency
   notificationGroup:
@@ -155,6 +155,6 @@ spec:
               name: slack-default.slack.0
         notifyOn: triggeredOnly
         retriggeringPeriod:
-          minutes: 180
+          minutes: 2
   phantomMode: false
   priority: p4

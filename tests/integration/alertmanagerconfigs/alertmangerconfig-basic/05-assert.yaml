@@ -28,7 +28,7 @@ spec:
             ofTheLast:
               specificValue: 5m
             threshold: "0"
-  description: app latency alert
+  description: This is an app latency alert
   enabled: true
   entityLabels:
     severity: critical
@@ -85,7 +85,7 @@ spec:
             ofTheLast:
               specificValue: 5m
             threshold: "0"
-  description: app latency alert
+  description: This is an app latency alert
   enabled: true
   entityLabels:
     opsgenie_team: team1
@@ -107,7 +107,7 @@ spec:
               name: opsgenie-general.opsgenie.0
         notifyOn: triggeredAndResolved
         retriggeringPeriod:
-          minutes: 5
+          minutes: 4
   phantomMode: false
   priority: p4
 
@@ -142,7 +142,7 @@ spec:
             ofTheLast:
               specificValue: 5m
             threshold: "0"
-  description: app latency alert
+  description: This is an app latency alert
   enabled: true
   name: app-latency
   notificationGroup:
