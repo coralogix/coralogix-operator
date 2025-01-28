@@ -104,10 +104,17 @@ spec:
       - integration:
           integrationRef:
             backendRef:
+              name: slack-general.slack.0
+        notifyOn: triggeredOnly
+        retriggeringPeriod:
+          minutes: 3
+      - integration:
+          integrationRef:
+            backendRef:
               name: opsgenie-general.opsgenie.0
         notifyOn: triggeredAndResolved
         retriggeringPeriod:
-          minutes: 4
+          minutes: 2
   phantomMode: false
   priority: p4
 
