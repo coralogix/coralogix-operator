@@ -16,6 +16,7 @@ package e2e
 
 import (
 	"github.com/coralogix/coralogix-operator/api/coralogix/common"
+	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	prometheusv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"k8s.io/client-go/kubernetes"
@@ -55,6 +56,9 @@ func (c *Clients) InitControllerRuntimeClient() error {
 			return err
 		}
 		if err = coralogixv1alpha1.AddToScheme(crClient.Scheme()); err != nil {
+			return err
+		}
+		if err = coralogixv1beta1.AddToScheme(crClient.Scheme()); err != nil {
 			return err
 		}
 		if err = common.AddToScheme(crClient.Scheme()); err != nil {
