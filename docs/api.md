@@ -17,6 +17,8 @@ Resource Types:
 
 - [Group](#group)
 
+- [Integration](#integration)
+
 - [OutboundWebhook](#outboundwebhook)
 
 - [RecordingRuleGroupSet](#recordingrulegroupset)
@@ -2934,6 +2936,127 @@ GroupSpec defines the desired state of Group.
 
 
 GroupStatus defines the observed state of Group.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+## Integration
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+Integration is the Schema for the integrations API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>Integration</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#integrationspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          IntegrationSpec defines the desired state of Integration.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#integrationstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          IntegrationStatus defines the observed state of Integration.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Integration.spec
+<sup><sup>[↩ Parent](#integration)</sup></sup>
+
+
+
+IntegrationSpec defines the desired state of Integration.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>integrationKey</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>parameters</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>version</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Integration.status
+<sup><sup>[↩ Parent](#integration)</sup></sup>
+
+
+
+IntegrationStatus defines the observed state of Integration.
 
 <table>
     <thead>
