@@ -19,7 +19,7 @@ spec:
         promql: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m]))
           by (le, destination_workload)) > 0.2
       missingValues:
-        minNonNullValuesPct: 100
+        minNonNullValuesPct: 0
         replaceWithZero: false
       rules:
         - condition:
@@ -76,7 +76,7 @@ spec:
         promql: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m]))
           by (le, destination_workload)) > 0.2
       missingValues:
-        minNonNullValuesPct: 100
+        minNonNullValuesPct: 0
         replaceWithZero: false
       rules:
         - condition:
@@ -133,7 +133,7 @@ spec:
         promql: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m]))
           by (le, destination_workload)) > 0.2
       missingValues:
-        minNonNullValuesPct: 100
+        minNonNullValuesPct: 0
         replaceWithZero: false
       rules:
         - condition:
