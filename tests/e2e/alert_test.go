@@ -19,7 +19,9 @@ import (
 	"fmt"
 	"time"
 
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	"github.com/coralogix/coralogix-operator/api/coralogix"
+	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
@@ -29,10 +31,6 @@ import (
 	"k8s.io/utils/pointer"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-
-	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 )
 
 var _ = Describe("Alert", Ordered, func() {
@@ -68,11 +66,6 @@ var _ = Describe("Alert", Ordered, func() {
 								Minutes: pointer.Uint32(1),
 							},
 							Integration: coralogixv1beta1.IntegrationType{
-								IntegrationRef: &coralogixv1beta1.IntegrationRef{
-									BackendRef: &coralogixv1beta1.OutboundWebhookBackendRef{
-										Name: pointer.String("Email"),
-									},
-								},
 								Recipients: []string{"example@coralogix.com"},
 							},
 						},
