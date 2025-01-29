@@ -73,6 +73,7 @@ var _ = Describe("Alert", Ordered, func() {
 										Name: pointer.String("Email"),
 									},
 								},
+								Recipients: []string{"example@coralogix.com"},
 							},
 						},
 					},
