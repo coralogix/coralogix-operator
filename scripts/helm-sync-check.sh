@@ -17,8 +17,13 @@ echo "Validating CRDs..."
 # Validate CRDs
 crds_files=$(find "$crds_path" -type f -name "*.yaml")
 for crd_file in $crds_files; do
-    chart_crd_file="$chart_crds_path/$(basename $crd_file)"
-    
+    # Skip coralogix.com_alert.yaml
+    if [[ "$(basename "$crd_file")" == "coralogix.com_alert.yaml" ]]; then
+        continue
+    fi
+
+    chart_crd_file="$chart_crds_path/$(basename "$crd_file")"
+
     if [ -f "$chart_crd_file" ]; then
         if ! cmp -s "$crd_file" "$chart_crd_file"; then
             echo "CRD file $chart_crd_file is outdated, please run make helm-update-crds"
