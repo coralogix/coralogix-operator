@@ -17,8 +17,8 @@ echo "Validating CRDs..."
 # Validate CRDs
 crds_files=$(find "$crds_path" -type f -name "*.yaml")
 for crd_file in $crds_files; do
-    # Skip coralogix.com_alert.yaml
-    if [[ "$(basename "$crd_file")" == "coralogix.com_alert.yaml" ]]; then
+    # Skip coralogix.com_alerts.yaml
+    if [[ "$(basename "$crd_file")" == "coralogix.com_alerts.yaml" ]]; then
         continue
     fi
 
