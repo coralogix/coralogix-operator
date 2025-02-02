@@ -64,6 +64,11 @@ func (v *AlertCustomValidator) ValidateCreate(ctx context.Context, obj runtime.O
 	}
 	alertlog.Info("Validation for Alert upon creation", "name", alert.GetName())
 
+	return validateAlert(alert)
+
+}
+
+func validateAlert(alert *coralogixv1beta1.Alert) (admission.Warnings, error) {
 	var warnings admission.Warnings
 	var errs error
 
@@ -80,7 +85,6 @@ func (v *AlertCustomValidator) ValidateCreate(ctx context.Context, obj runtime.O
 	if errs != nil {
 		monitoring.TotalRejectedAlertsMetric.Inc()
 	}
-
 	return warns, errs
 }
 
@@ -186,41 +190,14 @@ func validateAlertType(alertType coralogixv1beta1.AlertTypeDefinition, groupBy [
 		if len(groupBy) > 0 {
 			return admission.Warnings{"group by is not supported for LogsImmediate alert type"}, fmt.Errorf("group by is not supported for LogsImmediate alert type")
 		}
-		return validateLogsImmediate(alertType.LogsImmediate)
-	case alertType.LogsThreshold != nil:
-		return validateLogsThreshold(alertType.LogsThreshold)
-	case alertType.LogsNewValue != nil:
-		return validateLogsNewValue(alertType.LogsNewValue)
-	case alertType.LogsAnomaly != nil:
-		return validateLogsAnomaly(alertType.LogsAnomaly)
-	case alertType.LogsTimeRelativeThreshold != nil:
-		return validateLogsTimeRelativeThreshold(alertType.LogsTimeRelativeThreshold)
-	case alertType.LogsRatioThreshold != nil:
-		return validateLogsRatioThreshold(alertType.LogsRatioThreshold)
-	case alertType.LogsUniqueCount != nil:
-		return validateLogsUniqueCount(alertType.LogsUniqueCount)
 	case alertType.TracingImmediate != nil:
 		if len(groupBy) > 0 {
 			return admission.Warnings{"group by is not supported for TracingImmediate alert type"}, fmt.Errorf("group by is not supported for TracingImmediate alert type")
 		}
-	case alertType.TracingThreshold != nil:
-		return validateTracingThreshold(alertType.TracingThreshold)
 	case alertType.Flow != nil:
 		return validateFlow(alertType.Flow)
-	case alertType.MetricThreshold != nil:
-		return validateMetricThreshold(alertType.MetricThreshold)
-	case alertType.MetricAnomaly != nil:
-		return validateMetricAnomaly(alertType.MetricAnomaly)
 	}
 
-	return nil, nil
-}
-
-func validateMetricAnomaly(anomaly *coralogixv1beta1.MetricAnomaly) (admission.Warnings, error) {
-	return nil, nil
-}
-
-func validateMetricThreshold(threshold *coralogixv1beta1.MetricThreshold) (admission.Warnings, error) {
 	return nil, nil
 }
 
@@ -298,42 +275,6 @@ func validateAlertBackendRef(ref *coralogixv1beta1.AlertBackendRef) (admission.W
 	return nil, nil
 }
 
-func validateTracingThreshold(threshold *coralogixv1beta1.TracingThreshold) (admission.Warnings, error) {
-	return nil, nil
-}
-
-func validateTracingImmediate(immediate *coralogixv1beta1.TracingImmediate) (admission.Warnings, error) {
-	return nil, nil
-}
-
-func validateLogsUniqueCount(count *coralogixv1beta1.LogsUniqueCount) (admission.Warnings, error) {
-	return nil, nil
-}
-
-func validateLogsRatioThreshold(threshold *coralogixv1beta1.LogsRatioThreshold) (admission.Warnings, error) {
-	return nil, nil
-}
-
-func validateLogsTimeRelativeThreshold(threshold *coralogixv1beta1.LogsTimeRelativeThreshold) (admission.Warnings, error) {
-	return nil, nil
-}
-
-func validateLogsAnomaly(anomaly *coralogixv1beta1.LogsAnomaly) (admission.Warnings, error) {
-	return nil, nil
-}
-
-func validateLogsNewValue(value *coralogixv1beta1.LogsNewValue) (admission.Warnings, error) {
-	return nil, nil
-}
-
-func validateLogsThreshold(threshold *coralogixv1beta1.LogsThreshold) (admission.Warnings, error) {
-	return nil, nil
-}
-
-func validateLogsImmediate(logsImmediate *coralogixv1beta1.LogsImmediate) (admission.Warnings, error) {
-	return nil, nil
-}
-
 func alertTypesBeingSet(alertType coralogixv1beta1.AlertTypeDefinition) []string {
 	var typesSet []string
 	if alertType.LogsThreshold != nil {
@@ -384,16 +325,10 @@ func (v *AlertCustomValidator) ValidateUpdate(ctx context.Context, oldObj, newOb
 	}
 	alertlog.Info("Validation for Alert upon update", "name", alert.GetName())
 
-	return nil, nil
+	return validateAlert(alert)
 }
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type Alert.
 func (v *AlertCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	alert, ok := obj.(*coralogixv1beta1.Alert)
-	if !ok {
-		return nil, fmt.Errorf("expected a Alert object but got %T", obj)
-	}
-	alertlog.Info("Validation for Alert upon deletion", "name", alert.GetName())
-
 	return nil, nil
 }

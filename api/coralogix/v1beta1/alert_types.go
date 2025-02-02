@@ -22,7 +22,8 @@ import (
 	"strings"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-	utils "github.com/coralogix/coralogix-operator/api/coralogix"
+	coralogix "github.com/coralogix/coralogix-operator/api/coralogix"
+	utils "github.com/coralogix/coralogix-operator/internal/utils"
 	"github.com/go-logr/logr"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -977,7 +978,7 @@ func (in AlertSpec) ExtractAlertProperties(listingAlertsAndWebhooksProperties *L
 		Description:             wrapperspb.String(in.Description),
 		Enabled:                 wrapperspb.Bool(in.Enabled),
 		Priority:                AlertPriorityToProtoPriority[in.Priority],
-		GroupByKeys:             utils.StringSliceToWrappedStringSlice(in.GroupByKeys),
+		GroupByKeys:             coralogix.StringSliceToWrappedStringSlice(in.GroupByKeys),
 		IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 		NotificationGroup:       notificationGroup,
 		NotificationGroupExcess: notificationGroupExcess,
@@ -1046,7 +1047,7 @@ func expandNotificationGroup(notificationGroup *NotificationGroup, listingAlerts
 	}
 
 	return &cxsdk.AlertDefNotificationGroup{
-		GroupByKeys: utils.StringSliceToWrappedStringSlice(notificationGroup.GroupByKeys),
+		GroupByKeys: coralogix.StringSliceToWrappedStringSlice(notificationGroup.GroupByKeys),
 		Webhooks:    webhooks,
 	}, nil
 }
@@ -1119,7 +1120,7 @@ func expandIntegration(integration IntegrationType, listingWebhooksProperties *L
 		return &cxsdk.AlertDefIntegrationType{
 			IntegrationType: &cxsdk.AlertDefIntegrationTypeRecipients{
 				Recipients: &cxsdk.AlertDefRecipients{
-					Emails: utils.StringSliceToWrappedStringSlice(recipients),
+					Emails: coralogix.StringSliceToWrappedStringSlice(recipients),
 				},
 			},
 		}, nil
@@ -1302,7 +1303,7 @@ func expandLogsUniqueCount(uniqueCount *LogsUniqueCount) *cxsdk.AlertDefProperti
 		LogsUniqueCount: &cxsdk.LogsUniqueCountType{
 			LogsFilter:                  expandLogsFilter(uniqueCount.LogsFilter),
 			Rules:                       expandLogsUniqueCountRules(uniqueCount.Rules),
-			NotificationPayloadFilter:   utils.StringSliceToWrappedStringSlice(uniqueCount.NotificationPayloadFilter),
+			NotificationPayloadFilter:   coralogix.StringSliceToWrappedStringSlice(uniqueCount.NotificationPayloadFilter),
 			MaxUniqueCountPerGroupByKey: wrapperspb.Int64(int64(*uniqueCount.MaxUniqueCountPerGroupByKey)),
 			UniqueCountKeypath:          wrapperspb.String(uniqueCount.UniqueCountKeypath),
 		},
@@ -1344,7 +1345,7 @@ func expandLogsNewValue(logsNewValue *LogsNewValue) *cxsdk.AlertDefPropertiesLog
 		LogsNewValue: &cxsdk.LogsNewValueType{
 			LogsFilter:                expandLogsFilter(logsNewValue.LogsFilter),
 			Rules:                     expandLogsNewValueRules(logsNewValue.Rules),
-			NotificationPayloadFilter: utils.StringSliceToWrappedStringSlice(logsNewValue.NotificationPayloadFilter),
+			NotificationPayloadFilter: coralogix.StringSliceToWrappedStringSlice(logsNewValue.NotificationPayloadFilter),
 		},
 	}
 }
@@ -1423,7 +1424,7 @@ func expandLogsAnomaly(anomaly *LogsAnomaly) *cxsdk.AlertDefPropertiesLogsAnomal
 		LogsAnomaly: &cxsdk.LogsAnomalyType{
 			LogsFilter:                expandLogsFilter(anomaly.LogsFilter),
 			Rules:                     expandLogsAnomalyRules(anomaly.Rules),
-			NotificationPayloadFilter: utils.StringSliceToWrappedStringSlice(anomaly.NotificationPayloadFilter),
+			NotificationPayloadFilter: coralogix.StringSliceToWrappedStringSlice(anomaly.NotificationPayloadFilter),
 		},
 	}
 }
@@ -1624,7 +1625,7 @@ func expandTracingThreshold(tracingThreshold *TracingThreshold) *cxsdk.AlertDefP
 		TracingThreshold: &cxsdk.TracingThresholdType{
 			TracingFilter:             expandTracingFilter(tracingThreshold.TracingFilter),
 			Rules:                     expandTracingThresholdRules(tracingThreshold.Rules),
-			NotificationPayloadFilter: utils.StringSliceToWrappedStringSlice(tracingThreshold.NotificationPayloadFilter),
+			NotificationPayloadFilter: coralogix.StringSliceToWrappedStringSlice(tracingThreshold.NotificationPayloadFilter),
 		},
 	}
 }
@@ -1633,7 +1634,7 @@ func expandTracingImmediate(tracingImmediate *TracingImmediate) *cxsdk.AlertDefP
 	return &cxsdk.AlertDefPropertiesTracingImmediate{
 		TracingImmediate: &cxsdk.TracingImmediateType{
 			TracingFilter:             expandTracingFilter(tracingImmediate.TracingFilter),
-			NotificationPayloadFilter: utils.StringSliceToWrappedStringSlice(tracingImmediate.NotificationPayloadFilter),
+			NotificationPayloadFilter: coralogix.StringSliceToWrappedStringSlice(tracingImmediate.NotificationPayloadFilter),
 		},
 	}
 }
@@ -1682,7 +1683,7 @@ func expandTracingFilterTypes(filters []TracingFilterType) []*cxsdk.TracingFilte
 
 func expandTracingFilterType(filterType TracingFilterType) *cxsdk.TracingFilterType {
 	return &cxsdk.TracingFilterType{
-		Values:    utils.StringSliceToWrappedStringSlice(filterType.Values),
+		Values:    coralogix.StringSliceToWrappedStringSlice(filterType.Values),
 		Operation: TracingFilterOperationTypeToProto[filterType.Operation],
 	}
 }
@@ -1810,7 +1811,7 @@ func expandLogsImmediate(immediate *LogsImmediate) *cxsdk.AlertDefPropertiesLogs
 	return &cxsdk.AlertDefPropertiesLogsImmediate{
 		LogsImmediate: &cxsdk.LogsImmediateType{
 			LogsFilter:                expandLogsFilter(immediate.LogsFilter),
-			NotificationPayloadFilter: utils.StringSliceToWrappedStringSlice(immediate.NotificationPayloadFilter),
+			NotificationPayloadFilter: coralogix.StringSliceToWrappedStringSlice(immediate.NotificationPayloadFilter),
 		},
 	}
 }
@@ -1821,7 +1822,7 @@ func expandLogsThreshold(logsThreshold *LogsThreshold) *cxsdk.AlertDefProperties
 			LogsFilter:                 expandLogsFilter(logsThreshold.LogsFilter),
 			UndetectedValuesManagement: expandUndetectedValuesManagement(logsThreshold.UndetectedValuesManagement),
 			Rules:                      expandLogsThresholdRules(logsThreshold.Rules),
-			NotificationPayloadFilter:  utils.StringSliceToWrappedStringSlice(logsThreshold.NotificationPayloadFilter),
+			NotificationPayloadFilter:  coralogix.StringSliceToWrappedStringSlice(logsThreshold.NotificationPayloadFilter),
 		},
 	}
 }
@@ -1844,7 +1845,7 @@ func expandLogsTimeRelativeThreshold(threshold *LogsTimeRelativeThreshold) *cxsd
 			LogsFilter:                 expandLogsFilter(&threshold.LogsFilter),
 			Rules:                      expandLogsTimeRelativeRules(threshold.Rules),
 			IgnoreInfinity:             wrapperspb.Bool(threshold.IgnoreInfinity),
-			NotificationPayloadFilter:  utils.StringSliceToWrappedStringSlice(threshold.NotificationPayloadFilter),
+			NotificationPayloadFilter:  coralogix.StringSliceToWrappedStringSlice(threshold.NotificationPayloadFilter),
 			UndetectedValuesManagement: expandUndetectedValuesManagement(threshold.UndetectedValuesManagement),
 		},
 	}
@@ -1928,7 +1929,7 @@ func expandLogsFilter(filter *LogsFilter) *cxsdk.LogsFilter {
 func expandSimpleFilter(filter LogsSimpleFilter) *cxsdk.LogsFilterSimpleFilter {
 	return &cxsdk.LogsFilterSimpleFilter{
 		SimpleFilter: &cxsdk.SimpleFilter{
-			LuceneQuery:  utils.StringPointerToWrapperspbString(filter.LuceneQuery),
+			LuceneQuery:  coralogix.StringPointerToWrapperspbString(filter.LuceneQuery),
 			LabelFilters: expandLabelFilters(filter.LabelFilters),
 		},
 	}
@@ -2037,6 +2038,10 @@ func convertCRNameToIntegrationID(name string, properties *ListingAlertsAndWebho
 
 	if err := c.Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
 		return nil, fmt.Errorf("failed to get webhook, name: %s, namespace: %s, error: %w", name, namespace, err)
+	}
+
+	if !utils.GetLabelFilter().Matches(u.GetLabels()) {
+		return nil, fmt.Errorf("outbound webhook %s does not match label selector", u.GetName())
 	}
 
 	externalID, found, err := unstructured.NestedString(u.Object, "status", "externalId")
