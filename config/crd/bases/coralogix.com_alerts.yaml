@@ -2454,6 +2454,7 @@ spec:
                           type: object
                       required:
                       - integration
+                      - notifyOn
                       - retriggeringPeriod
                       type: object
                     type: array
@@ -2509,6 +2510,7 @@ spec:
                             type: object
                         required:
                         - integration
+                        - notifyOn
                         - retriggeringPeriod
                         type: object
                       type: array
@@ -2553,8 +2555,11 @@ spec:
                         type: string
                     type: object
                   timeZone:
+                    default: UTC+00
                     pattern: ^UTC[+-]\d{2}$
                     type: string
+                required:
+                - timeZone
                 type: object
             required:
             - alertType

@@ -1,18 +1,16 @@
-/*
-Copyright 2024.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2024 Coralogix Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package v1beta1
 
@@ -25,7 +23,6 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	utils "github.com/coralogix/coralogix-operator/api/coralogix"
-	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/go-logr/logr"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -234,8 +231,6 @@ var (
 		LogsUniqueCountTimeWindowValue24Hours:   cxsdk.LogsUniqueValueTimeWindowValue24Hours,
 		LogsUniqueCountTimeWindowValue36Hours:   cxsdk.LogsUniqueValueTimeWindowValue36Hours,
 	}
-	alertClient    clientset.AlertsClientInterface
-	webhooksClient clientset.OutboundWebhooksClientInterface
 )
 
 // AlertSpec defines the desired state of Alert
@@ -275,7 +270,7 @@ type AlertStatus struct {
 type TimeZone string
 
 type AlertSchedule struct {
-	// +optional
+	//+kubebuilder:default=UTC+00
 	TimeZone TimeZone `json:"timeZone"`
 	// +optional
 	ActiveOn *ActiveOn `json:"activeOn,omitempty"`
@@ -323,7 +318,7 @@ type NotificationGroup struct {
 type WebhookSettings struct {
 	RetriggeringPeriod RetriggeringPeriod `json:"retriggeringPeriod"`
 	// +kubebuilder:default=triggeredOnly
-	NotifyOn    NotifyOn        `json:"notifyOn,omitempty"`
+	NotifyOn    NotifyOn        `json:"notifyOn"`
 	Integration IntegrationType `json:"integration"`
 }
 
@@ -336,7 +331,7 @@ type IntegrationType struct {
 
 type IntegrationRef struct {
 	// +optional
-	BackendRef *OutboundWebhookBackendRef `json:"backendRef"`
+	BackendRef *OutboundWebhookBackendRef `json:"backendRef,omitempty"`
 	// +optional
 	ResourceRef *ResourceRef `json:"resourceRef"`
 }
@@ -1098,9 +1093,9 @@ func expandIntegration(integration IntegrationType, listingWebhooksProperties *L
 			if namespace := resourceRef.Namespace; namespace != nil {
 				listingWebhooksProperties.Namespace = *namespace
 			}
-			integrationID, err = convertCRDNameToIntegrationID(resourceRef.Name, listingWebhooksProperties)
+			integrationID, err = convertCRNameToIntegrationID(resourceRef.Name, listingWebhooksProperties)
 			if err != nil {
-				return nil, fmt.Errorf("failed to convert CRD name to integration ID: %w", err)
+				return nil, fmt.Errorf("failed to convert CR name to integration ID: %w", err)
 			}
 		} else if backendRef := integrationRef.BackendRef; backendRef != nil {
 			if id := backendRef.ID; id != nil {
@@ -1580,25 +1575,25 @@ func expandAlertRef(listingAlertsProperties *ListingAlertsAndWebhooksProperties,
 		if namespace := resourceRef.Namespace; namespace != nil {
 			listingAlertsProperties.Namespace = *namespace
 		}
-		return convertAlertCrdNameToID(listingAlertsProperties, resourceRef.Name)
+		return convertAlertCrNameToID(listingAlertsProperties, resourceRef.Name)
 	}
 
 	return nil, fmt.Errorf("alert ref not found")
 }
 
-func convertAlertCrdNameToID(listingAlertsProperties *ListingAlertsAndWebhooksProperties, alertCrdName string) (*wrapperspb.StringValue, error) {
-	crdClient, ctx, namespace := listingAlertsProperties.Client, listingAlertsProperties.Ctx, listingAlertsProperties.Namespace
-	alertCRD := &Alert{}
-	err := crdClient.Get(ctx, client.ObjectKey{Name: alertCrdName, Namespace: namespace}, alertCRD)
+func convertAlertCrNameToID(listingAlertsProperties *ListingAlertsAndWebhooksProperties, alertCrName string) (*wrapperspb.StringValue, error) {
+	c, ctx, namespace := listingAlertsProperties.Client, listingAlertsProperties.Ctx, listingAlertsProperties.Namespace
+	alertCR := &Alert{}
+	err := c.Get(ctx, client.ObjectKey{Name: alertCrName, Namespace: namespace}, alertCR)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get alert %w", err)
 	}
 
-	if alertCRD.Status.ID == nil {
-		return nil, fmt.Errorf("alert with name %s has no ID", alertCrdName)
+	if alertCR.Status.ID == nil {
+		return nil, fmt.Errorf("alert with name %s has no ID", alertCrName)
 	}
 
-	return wrapperspb.String(*alertCRD.Status.ID), nil
+	return wrapperspb.String(*alertCR.Status.ID), nil
 }
 
 func convertAlertNameToID(listingAlertsProperties *ListingAlertsAndWebhooksProperties, alertName string) (*wrapperspb.StringValue, error) {
@@ -2030,7 +2025,7 @@ type ListingAlertsAndWebhooksProperties struct {
 	Namespace       string
 }
 
-func convertCRDNameToIntegrationID(name string, properties *ListingAlertsAndWebhooksProperties) (*wrapperspb.UInt32Value, error) {
+func convertCRNameToIntegrationID(name string, properties *ListingAlertsAndWebhooksProperties) (*wrapperspb.UInt32Value, error) {
 	c, ctx, namespace := properties.Client, properties.Ctx, properties.Namespace
 
 	u := &unstructured.Unstructured{}

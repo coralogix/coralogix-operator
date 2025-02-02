@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
+	webhookcoralogixv1beta1 "github.com/coralogix/coralogix-operator/internal/webhook/coralogix/v1beta1"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	prometheusv1alpha "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -51,7 +52,6 @@ import (
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 	webhookcoralogixv1alpha1 "github.com/coralogix/coralogix-operator/internal/webhook/coralogix/v1alpha1"
-	webhookcoralogixv1beta1 "github.com/coralogix/coralogix-operator/internal/webhook/coralogix/v1beta1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -103,7 +103,7 @@ func main() {
 	flag.StringVar(&labelSelector, "label-selector", labelSelector, "A comma-separated list of key=value labels to filter custom resources.")
 
 	enableWebhooks := os.Getenv("ENABLE_WEBHOOKS")
-	flag.StringVar(&enableWebhooks, "enable-webhooks", enableWebhooks, "Enable webhooks for the operator. Default is false.")
+	flag.StringVar(&enableWebhooks, "enable-webhooks", "true", "Enable webhooks for the operator. Default is true.")
 
 	var prometheusRuleController bool
 	flag.BoolVar(&prometheusRuleController, "prometheus-rule-controller", true, "Determine if the prometheus rule controller should be started. Default is true.")
@@ -334,17 +334,15 @@ func main() {
 			setupLog.Error(err, "unable to create webhook", "webhook", "ApiKey")
 			os.Exit(1)
 		}
-	} else {
-		setupLog.Info("Webhooks are disabled")
-	}
 
-	// nolint:goconst
-	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
 		if err = webhookcoralogixv1beta1.SetupAlertWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "Alert")
 			os.Exit(1)
 		}
+	} else {
+		setupLog.Info("Webhooks are disabled")
 	}
+
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {

@@ -9867,13 +9867,6 @@ AlertSpec defines the desired state of Alert
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b><a href="#alertspecnotificationgroupwebhooksindexretriggeringperiod">retriggeringPeriod</a></b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>notifyOn</b></td>
         <td>enum</td>
         <td>
@@ -9882,7 +9875,14 @@ AlertSpec defines the desired state of Alert
             <i>Enum</i>: triggeredOnly, triggeredAndResolved<br/>
             <i>Default</i>: triggeredOnly<br/>
         </td>
-        <td>false</td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupwebhooksindexretriggeringperiod">retriggeringPeriod</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
@@ -10112,13 +10112,6 @@ AlertSpec defines the desired state of Alert
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b><a href="#alertspecnotificationgroupexcessindexwebhooksindexretriggeringperiod">retriggeringPeriod</a></b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>notifyOn</b></td>
         <td>enum</td>
         <td>
@@ -10127,7 +10120,14 @@ AlertSpec defines the desired state of Alert
             <i>Enum</i>: triggeredOnly, triggeredAndResolved<br/>
             <i>Default</i>: triggeredOnly<br/>
         </td>
-        <td>false</td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexwebhooksindexretriggeringperiod">retriggeringPeriod</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
@@ -10316,15 +10316,17 @@ AlertSpec defines the desired state of Alert
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#alertspecscheduleactiveon">activeOn</a></b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>timeZone</b></td>
         <td>string</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: UTC+00<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecscheduleactiveon">activeOn</a></b></td>
+        <td>object</td>
         <td>
           <br/>
         </td>

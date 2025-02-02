@@ -1,5 +1,0 @@
-## Append samples of your project ##
-resources:
-- coralogix_v1beta1_alert.yaml
-- v1beta1_alert.yaml
-# +kubebuilder:scaffold:manifestskustomizesamples
