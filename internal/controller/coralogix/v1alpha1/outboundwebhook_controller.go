@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"strconv"
 
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix"
+	utils "github.com/coralogix/coralogix-operator/api/coralogix"
 	"github.com/coralogix/coralogix-operator/api/coralogix/common"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
@@ -37,6 +37,7 @@ import (
 
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
+	util "github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // OutboundWebhookReconciler reconciles a OutboundWebhook object
@@ -91,6 +92,16 @@ func (r *OutboundWebhookReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		if err != nil {
 			log.Error(err, "Error on deleting outbound-webhook")
 			return resultError, err
+		}
+		monitoring.OutboundWebhookInfoMetric.DeleteLabelValues(outboundWebhook.Name, outboundWebhook.Namespace, getWebhookType(outboundWebhook))
+		return ctrl.Result{}, nil
+	}
+
+	if !util.GetLabelFilter().Matches(outboundWebhook.GetLabels()) {
+		err = r.deleteRemoteWebhook(ctx, log, outboundWebhook.Status.ID)
+		if err != nil {
+			log.Error(err, "Error on deleting OutboundWebhook")
+			return ctrl.Result{RequeueAfter: util.DefaultErrRequeuePeriod}, err
 		}
 		monitoring.OutboundWebhookInfoMetric.DeleteLabelValues(outboundWebhook.Name, outboundWebhook.Namespace, getWebhookType(outboundWebhook))
 		return ctrl.Result{}, nil
@@ -199,7 +210,7 @@ func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger,
 	log.V(1).Info("Getting outbound-webhook from remote", "id", webhook.Status.ID)
 	remoteOutboundWebhook, err := r.OutboundWebhooksClient.Get(ctx,
 		&cxsdk.GetOutgoingWebhookRequest{
-			Id: coralogixv1alpha1.StringPointerToWrapperspbString(webhook.Status.ID),
+			Id: utils.StringPointerToWrapperspbString(webhook.Status.ID),
 		},
 	)
 	if err != nil {

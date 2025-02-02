@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	"github.com/go-logr/logr"
 	"github.com/golang/protobuf/jsonpb"
 	"google.golang.org/grpc/codes"
@@ -34,6 +33,7 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 var ruleGroupFinalizerName = "rulegroup.coralogix.com/finalizer"
@@ -76,7 +76,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			return ctrl.Result{}, nil
 		}
 		// Error reading the object - requeue the request
-		return ctrl.Result{RequeueAfter: coralogix.DefaultErrRequeuePeriod}, err
+		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
 
 	// examine DeletionTimestamp to determine if object is under deletion
@@ -134,7 +134,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			notFound = true
 		case err != nil:
 			log.Error(err, "Received an error while getting RuleGroup")
-			return ctrl.Result{RequeueAfter: coralogix.DefaultErrRequeuePeriod}, err
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
 	}
 
@@ -152,16 +152,16 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			if err := r.Status().Update(ctx, ruleGroupCRD); err != nil {
 				if err := r.deleteRemoteRuleGroup(ctx, log, ruleGroupCRD.Status.ID); err != nil {
 					log.Error(err, "Error on deleting RecordingRuleGroupSet after status update error", "Name", ruleGroupCRD.Name, "Namespace", ruleGroupCRD.Namespace)
-					return ctrl.Result{RequeueAfter: coralogix.DefaultErrRequeuePeriod}, err
+					return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 				}
 				log.Error(err, "Error on updating RecordingRuleGroupSet status", "Name", ruleGroupCRD.Name, "Namespace", ruleGroupCRD.Namespace)
-				return ctrl.Result{RequeueAfter: coralogix.DefaultErrRequeuePeriod}, err
+				return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 			}
 
 			status, err := flattenRuleGroup(createRuleGroupResp.GetRuleGroup())
 			if err != nil {
 				log.Error(err, "Error mapping coralogix API response", "Name", ruleGroupCRD.Name, "Namespace", ruleGroupCRD.Namespace)
-				return ctrl.Result{RequeueAfter: coralogix.DefaultErrRequeuePeriod}, err
+				return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 			}
 			ruleGroupCRD.Status = *status
 			if err := r.Status().Update(ctx, ruleGroupCRD); err != nil {
@@ -171,11 +171,21 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			return ctrl.Result{}, nil
 		} else {
 			log.Error(err, "Received an error while creating a Rule-Group", "ruleGroup", createRuleGroupReq)
-			return ctrl.Result{RequeueAfter: coralogix.DefaultErrRequeuePeriod}, err
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
 	} else if err != nil {
 		log.Error(err, "Received an error while reading a Rule-Group", "ruleGroup ID", *ruleGroupCRD.Status.ID)
-		return ctrl.Result{RequeueAfter: coralogix.DefaultErrRequeuePeriod}, err
+		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
+	}
+
+	if !utils.GetLabelFilter().Matches(ruleGroupCRD.GetLabels()) {
+		err := r.deleteRemoteRuleGroup(ctx, log, ruleGroupCRD.Status.ID)
+		if err != nil {
+			log.Error(err, "Error on deleting Rule-Group")
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
+		}
+		monitoring.RuleGroupInfoMetric.DeleteLabelValues(ruleGroupCRD.Name, ruleGroupCRD.Namespace)
+		return ctrl.Result{}, nil
 	}
 
 	log.V(1).Info("Updating Rule-Group", "ruleGroup")
@@ -183,7 +193,7 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	updateRuleGroupResp, err := rulesGroupsClient.Update(ctx, updateRuleGroupReq)
 	if err != nil {
 		log.Error(err, "Received an error while updating a Rule-Group", "ruleGroup", updateRuleGroupReq)
-		return ctrl.Result{RequeueAfter: coralogix.DefaultErrRequeuePeriod}, err
+		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
 	jstr, _ := jsm.MarshalToString(updateRuleGroupResp)
 	log.V(1).Info("Rule-Group was updated", "ruleGroup", jstr)
@@ -221,5 +231,6 @@ func flattenRuleGroup(ruleGroup *cxsdk.RuleGroup) (*coralogixv1alpha1.RuleGroupS
 func (r *RuleGroupReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.RuleGroup{}).
+		WithEventFilter(utils.GetLabelFilter().Predicate()).
 		Complete(r)
 }

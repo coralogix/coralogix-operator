@@ -25,6 +25,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // GroupSpec defines the desired state of Group.
@@ -186,6 +188,10 @@ func (g *Group) getRoleIDFromCustomRole(k8sClient client.Client, customRole Grou
 		return nil, err
 	}
 
+	if !utils.GetLabelFilter().Matches(cr.Labels) {
+		return nil, fmt.Errorf("custom role %s does not match label selector", cr.Name)
+	}
+
 	if cr.Status.ID == nil {
 		return nil, fmt.Errorf("ID is not populated for CustomRole %s", customRole.ResourceRef.Name)
 	}
@@ -213,6 +219,10 @@ func (g *Group) ExtractScopeId(k8sClient client.Client) (*string, error) {
 	sc := &Scope{}
 	if err := k8sClient.Get(context.Background(), client.ObjectKey{Name: g.Spec.Scope.ResourceRef.Name, Namespace: namespace}, sc); err != nil {
 		return nil, err
+	}
+
+	if !utils.GetLabelFilter().Matches(sc.Labels) {
+		return nil, fmt.Errorf("scope %s does not match label selector", sc.Name)
 	}
 
 	if sc.Status.ID == nil {

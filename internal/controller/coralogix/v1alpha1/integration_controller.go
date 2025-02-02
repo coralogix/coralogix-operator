@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -34,6 +33,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // IntegrationReconciler reconciles a Integration object
@@ -65,14 +65,14 @@ func (r *IntegrationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			// Return and don't requeue
 			return ctrl.Result{}, nil
 		}
-		return ctrl.Result{RequeueAfter: coralogix.DefaultErrRequeuePeriod}, err
+		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
 
 	if ptr.Deref(integration.Status.Id, "") == "" {
 		err := r.create(ctx, log, integration)
 		if err != nil {
 			log.Error(err, "Error on creating Integration")
-			return ctrl.Result{RequeueAfter: coralogix.DefaultErrRequeuePeriod}, err
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
 		return ctrl.Result{}, nil
 	}
@@ -81,7 +81,16 @@ func (r *IntegrationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		err := r.delete(ctx, log, integration)
 		if err != nil {
 			log.Error(err, "Error on deleting Integration")
-			return ctrl.Result{RequeueAfter: coralogix.DefaultErrRequeuePeriod}, err
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
+		}
+		return ctrl.Result{}, nil
+	}
+
+	if !utils.GetLabelFilter().Matches(integration.GetLabels()) {
+		err := r.deleteRemoteIntegration(ctx, log, *integration.Status.Id)
+		if err != nil {
+			log.Error(err, "Error on deleting Integration")
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
 		return ctrl.Result{}, nil
 	}
@@ -89,7 +98,7 @@ func (r *IntegrationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	err := r.update(ctx, log, integration)
 	if err != nil {
 		log.Error(err, "Error on updating Integration")
-		return ctrl.Result{RequeueAfter: coralogix.DefaultErrRequeuePeriod}, err
+		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
 
 	return ctrl.Result{}, nil
@@ -183,5 +192,6 @@ func (r *IntegrationReconciler) deleteRemoteIntegration(ctx context.Context, log
 func (r *IntegrationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.Integration{}).
+		WithEventFilter(utils.GetLabelFilter().Predicate()).
 		Complete(r)
 }

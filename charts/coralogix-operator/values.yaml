@@ -105,6 +105,9 @@ coralogixOperator:
   # -- Coralogix Account Domain
   domain: ""
 
+    # -- A comma-separated list of key=value labels to filter custom resources
+  labelSelector: ""
+
   # -- resource config for Coralogix operator
   resources: {}
 
