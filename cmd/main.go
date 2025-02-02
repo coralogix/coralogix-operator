@@ -21,6 +21,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/coralogix/coralogix-operator/api/coralogix"
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	webhookcoralogixv1beta1 "github.com/coralogix/coralogix-operator/internal/webhook/coralogix/v1beta1"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -48,7 +49,6 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
-	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 	webhookcoralogixv1alpha1 "github.com/coralogix/coralogix-operator/internal/webhook/coralogix/v1alpha1"
@@ -56,8 +56,25 @@ import (
 )
 
 var (
-	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
+	scheme                    = runtime.NewScheme()
+	setupLog                  = ctrl.Log.WithName("setup")
+	operatorRegionToSdkRegion = map[string]string{
+		"APAC1":   "AP1",
+		"AP1":     "AP1",
+		"APAC2":   "AP2",
+		"AP2":     "AP2",
+		"APAC3":   "AP3",
+		"AP3":     "AP3",
+		"EUROPE1": "EU1",
+		"EU1":     "EU1",
+		"EUROPE2": "EU2",
+		"EU2":     "EU2",
+		"USA1":    "US1",
+		"US1":     "US1",
+		"USA2":    "US2",
+		"US2":     "US2",
+	}
+	validRegions = coralogix.GetKeys(operatorRegionToSdkRegion)
 )
 
 func init() {
@@ -91,7 +108,7 @@ func main() {
 		"If set, HTTP/2 will be enabled for the metrics and webhook servers")
 
 	region := os.Getenv("CORALOGIX_REGION")
-	flag.StringVar(&region, "region", region, fmt.Sprintf("The region of your Coralogix cluster. Can be one of %q. Conflicts with 'domain'.", clientset.ValidRegions))
+	flag.StringVar(&region, "region", region, fmt.Sprintf("The region of your Coralogix cluster. Can be one of %q. Conflicts with 'domain'.", validRegions))
 
 	domain := os.Getenv("CORALOGIX_DOMAIN")
 	flag.StringVar(&domain, "domain", domain, "The domain of your Coralogix cluster. Conflicts with 'region'.")
@@ -134,12 +151,12 @@ func main() {
 
 	var targetUrl string
 	if region != "" {
-		if !slices.Contains(clientset.ValidRegions, region) {
-			err := fmt.Errorf("region value is '%s', but can be one of %q", region, clientset.ValidRegions)
+		if !slices.Contains(validRegions, region) {
+			err := fmt.Errorf("region value is '%s', but can be one of %q", region, validRegions)
 			setupLog.Error(err, "invalid arguments for running operator")
 			os.Exit(1)
 		}
-		targetUrl = clientset.OperatorRegionToSdkRegion[region]
+		targetUrl = operatorRegionToSdkRegion[region]
 	} else if domain != "" {
 		targetUrl = domain
 	}
