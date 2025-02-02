@@ -33,6 +33,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // GroupReconciler reconciles a Group object
@@ -64,14 +65,14 @@ func (r *GroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			// Return and don't requeue
 			return ctrl.Result{}, nil
 		}
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
 
 	if ptr.Deref(group.Status.ID, "") == "" {
 		err := r.create(ctx, log, group)
 		if err != nil {
 			log.Error(err, "Error on creating Group")
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
 		return ctrl.Result{}, nil
 	}
@@ -80,7 +81,16 @@ func (r *GroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		err := r.delete(ctx, log, group)
 		if err != nil {
 			log.Error(err, "Error on deleting Group")
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
+		}
+		return ctrl.Result{}, nil
+	}
+
+	if !utils.GetLabelFilter().Matches(group.GetLabels()) {
+		err := r.deleteRemoteGroup(ctx, log, *group.Status.ID)
+		if err != nil {
+			log.Error(err, "Error on deleting Group")
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
 		return ctrl.Result{}, nil
 	}
@@ -88,7 +98,7 @@ func (r *GroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	err := r.update(ctx, log, group)
 	if err != nil {
 		log.Error(err, "Error on updating Group")
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
 
 	return ctrl.Result{}, nil
@@ -191,5 +201,6 @@ func (r *GroupReconciler) deleteRemoteGroup(ctx context.Context, log logr.Logger
 func (r *GroupReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.Group{}).
+		WithEventFilter(utils.GetLabelFilter().Predicate()).
 		Complete(r)
 }

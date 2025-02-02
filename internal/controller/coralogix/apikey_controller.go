@@ -36,6 +36,7 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // ApiKeyReconciler reconciles a ApiKey object
@@ -69,14 +70,14 @@ func (r *ApiKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			// Return and don't requeue
 			return ctrl.Result{}, nil
 		}
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
 
 	if ptr.Deref(apiKey.Status.Id, "") == "" {
 		err := r.create(ctx, log, apiKey)
 		if err != nil {
 			log.Error(err, "Error on creating ApiKey")
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
 		monitoring.ApiKeyInfoMetric.WithLabelValues(apiKey.Name, apiKey.Namespace).Set(1)
 		return ctrl.Result{}, nil
@@ -86,7 +87,17 @@ func (r *ApiKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		err := r.delete(ctx, log, apiKey)
 		if err != nil {
 			log.Error(err, "Error on deleting ApiKey")
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
+		}
+		monitoring.ApiKeyInfoMetric.DeleteLabelValues(apiKey.Name, apiKey.Namespace)
+		return ctrl.Result{}, nil
+	}
+
+	if !utils.GetLabelFilter().Matches(apiKey.GetLabels()) {
+		err := r.deleteRemoteApiKey(ctx, log, apiKey.Status.Id)
+		if err != nil {
+			log.Error(err, "Error on deleting ApiKey")
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
 		monitoring.ApiKeyInfoMetric.DeleteLabelValues(apiKey.Name, apiKey.Namespace)
 		return ctrl.Result{}, nil
@@ -95,7 +106,7 @@ func (r *ApiKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	err := r.update(ctx, log, apiKey)
 	if err != nil {
 		log.Error(err, "Error on updating ApiKey")
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
 	monitoring.ApiKeyInfoMetric.WithLabelValues(apiKey.Name, apiKey.Namespace).Set(1)
 
@@ -237,6 +248,6 @@ func (r *ApiKeyReconciler) deleteRemoteApiKey(ctx context.Context, log logr.Logg
 func (r *ApiKeyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.ApiKey{}).
-		Owns(&corev1.Secret{}).
+		WithEventFilter(utils.GetLabelFilter().Predicate()).
 		Complete(r)
 }

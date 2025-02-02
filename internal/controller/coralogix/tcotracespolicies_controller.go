@@ -31,6 +31,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // TCOTracesPoliciesReconciler reconciles a TCOTracesPolicies object
@@ -62,14 +63,23 @@ func (r *TCOTracesPoliciesReconciler) Reconcile(ctx context.Context, req ctrl.Re
 			// Return and don't requeue
 			return ctrl.Result{}, nil
 		}
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
 
 	if !tcoTracesPolicies.ObjectMeta.DeletionTimestamp.IsZero() {
 		err := r.delete(ctx, log, tcoTracesPolicies)
 		if err != nil {
 			log.Error(err, "Error on deleting TCOTracesPolicies")
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
+		}
+		return ctrl.Result{}, nil
+	}
+
+	if !utils.GetLabelFilter().Matches(tcoTracesPolicies.GetLabels()) {
+		err := r.deleteRemoteTCOTracesPolicies(ctx, log)
+		if err != nil {
+			log.Error(err, "Error on deleting TCOTracesPolicies")
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
 		return ctrl.Result{}, nil
 	}
@@ -77,7 +87,7 @@ func (r *TCOTracesPoliciesReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	err := r.overwrite(ctx, log, tcoTracesPolicies)
 	if err != nil {
 		log.Error(err, "Error on overwriting TCOTracesPolicies")
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
 
 	return ctrl.Result{}, nil
@@ -107,10 +117,9 @@ func (r *TCOTracesPoliciesReconciler) overwrite(ctx context.Context, log logr.Lo
 }
 
 func (r *TCOTracesPoliciesReconciler) delete(ctx context.Context, log logr.Logger, tcoTracesPolicies *coralogixv1alpha1.TCOTracesPolicies) error {
-	if _, err := r.TCOClient.OverwriteTCOTracesPolicies(ctx, &cxsdk.AtomicOverwriteSpanPoliciesRequest{}); err != nil && cxsdk.Code(err) != codes.NotFound {
-		return fmt.Errorf("error to delete remote tco-Traces-policies: %w", err)
+	if err := r.deleteRemoteTCOTracesPolicies(ctx, log); err != nil {
+		return fmt.Errorf("error on deleting TCOTracesPolicies: %w", err)
 	}
-	log.V(1).Info("tco-Traces-policies was deleted from remote", "name", tcoTracesPolicies.Name)
 
 	log.V(1).Info("Removing finalizer from TCOTracesPolicies")
 	controllerutil.RemoveFinalizer(tcoTracesPolicies, tcoTracesPoliciesFinalizerName)
@@ -121,9 +130,22 @@ func (r *TCOTracesPoliciesReconciler) delete(ctx context.Context, log logr.Logge
 	return nil
 }
 
+func (r *TCOTracesPoliciesReconciler) deleteRemoteTCOTracesPolicies(ctx context.Context, log logr.Logger) error {
+	deleteTCOTracesPoliciesRequest := &cxsdk.AtomicOverwriteSpanPoliciesRequest{}
+	log.V(1).Info("Deleting TCOTracesPolicies")
+	if _, err := r.TCOClient.OverwriteTCOTracesPolicies(ctx, deleteTCOTracesPoliciesRequest); err != nil && cxsdk.Code(err) != codes.NotFound {
+		log.V(1).Error(err, "Received an error while Deleting a TCOTracesPolicies")
+		return err
+	}
+
+	log.V(1).Info("tco-traces-policies was deleted from remote")
+	return nil
+}
+
 // SetupWithManager sets up the controller with the Manager.
 func (r *TCOTracesPoliciesReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.TCOTracesPolicies{}).
+		WithEventFilter(utils.GetLabelFilter().Predicate()).
 		Complete(r)
 }

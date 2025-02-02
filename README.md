@@ -17,6 +17,9 @@ For a complete list of available APIs and their details, refer to the [API docum
 - **Prometheus Operator Integration:** The Operator leverages [Prometheus Operator](https://prometheus-operator.dev/) CRDs like PrometheusRule and AlertmanagerConfig,
 to simplify the transition to Coralogix by utilizing existing monitoring configurations.
 For more details on this integration, see the [Prometheus Integration documentation](https://github.com/coralogix/coralogix-operator/tree/master/docs/prometheus-integration.md).
+- **Running Multiple Instances:** The operator supports running multiple instances within a single cluster by using label selectors.
+For more details, see the [Running Multiple Instances documentation](https://github.com/coralogix/coralogix-operator/tree/master/docs/multi-instance-operator.md).
+
 
 ## Getting Started
 You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.

@@ -39,6 +39,7 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/coralogix/coralogix-operator/internal/controller/mock_clientset"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 var ruleGroupBackendSchema = &cxsdk.RuleGroup{
@@ -247,7 +248,7 @@ func TestRuleGroupReconciler_Reconcile_5XX_StatusError(t *testing.T) {
 
 	result, err := r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
 	assert.Error(t, err)
-	assert.Equal(t, defaultErrRequeuePeriod, result.RequeueAfter)
+	assert.Equal(t, utils.DefaultErrRequeuePeriod, result.RequeueAfter)
 
 	result, err = r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
 	assert.NoError(t, err)

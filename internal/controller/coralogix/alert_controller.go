@@ -37,6 +37,7 @@ import (
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	alerts "github.com/coralogix/coralogix-operator/internal/controller/clientset/grpc/alerts/v2"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
+	util "github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 var (
@@ -76,14 +77,14 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			// Return and don't requeue
 			return ctrl.Result{}, nil
 		}
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		return ctrl.Result{RequeueAfter: util.DefaultErrRequeuePeriod}, err
 	}
 
 	if ptr.Deref(alert.Status.ID, "") == "" {
 		err = r.create(ctx, log, alert)
 		if err != nil {
 			log.Error(err, "Error on creating alert")
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			return ctrl.Result{RequeueAfter: util.DefaultErrRequeuePeriod}, err
 		}
 		monitoring.AlertInfoMetric.WithLabelValues(alert.Name, alert.Namespace, getAlertType(alert)).Set(1)
 		return ctrl.Result{}, nil
@@ -93,7 +94,17 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		err = r.delete(ctx, log, alert)
 		if err != nil {
 			log.Error(err, "Error on deleting alert")
-			return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+			return ctrl.Result{RequeueAfter: util.DefaultErrRequeuePeriod}, err
+		}
+		monitoring.AlertInfoMetric.DeleteLabelValues(alert.Name, alert.Namespace, getAlertType(alert))
+		return ctrl.Result{}, nil
+	}
+
+	if !util.GetLabelFilter().Matches(alert.GetLabels()) {
+		err = r.deleteRemoteAlert(ctx, log, alert.Status.ID)
+		if err != nil {
+			log.Error(err, "Error on deleting Alert")
+			return ctrl.Result{RequeueAfter: util.DefaultErrRequeuePeriod}, err
 		}
 		monitoring.AlertInfoMetric.DeleteLabelValues(alert.Name, alert.Namespace, getAlertType(alert))
 		return ctrl.Result{}, nil
@@ -102,7 +113,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	err = r.update(ctx, log, alert)
 	if err != nil {
 		log.Error(err, "Error on updating alert")
-		return ctrl.Result{RequeueAfter: defaultErrRequeuePeriod}, err
+		return ctrl.Result{RequeueAfter: util.DefaultErrRequeuePeriod}, err
 	}
 	monitoring.AlertInfoMetric.WithLabelValues(alert.Name, alert.Namespace, getAlertType(alert)).Set(1)
 
@@ -238,5 +249,6 @@ func getAlertType(alert *coralogixv1alpha1.Alert) string {
 func (r *AlertReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.Alert{}).
+		WithEventFilter(util.GetLabelFilter().Predicate()).
 		Complete(r)
 }
