@@ -18,11 +18,13 @@ package v1alpha1
 import (
 	"fmt"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-	utils "github.com/coralogix/coralogix-operator/api/coralogix"
 	gouuid "github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+
+	utils "github.com/coralogix/coralogix-operator/api/coralogix"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!

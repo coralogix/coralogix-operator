@@ -106,7 +106,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 func (r *AlertReconciler) update(ctx context.Context, log logr.Logger, alert *coralogixv1beta1.Alert) error {
 	alertDefProperties, err := alert.Spec.ExtractAlertProperties(
-		&coralogixv1beta1.ListingAlertsAndWebhooksProperties{
+		&coralogixv1beta1.GetResourceRefProperties{
 			Clientset: r.CoralogixClientSet,
 			Ctx:       ctx,
 			Log:       log,
@@ -154,7 +154,7 @@ func (r *AlertReconciler) delete(ctx context.Context, log logr.Logger, alert *co
 
 func (r *AlertReconciler) create(ctx context.Context, log logr.Logger, alert *coralogixv1beta1.Alert) error {
 	alertDefProperties, err := alert.Spec.ExtractAlertProperties(
-		&coralogixv1beta1.ListingAlertsAndWebhooksProperties{
+		&coralogixv1beta1.GetResourceRefProperties{
 			Ctx:       ctx,
 			Log:       log,
 			Client:    r.Client,

@@ -103,7 +103,7 @@ func main() {
 	flag.StringVar(&labelSelector, "label-selector", labelSelector, "A comma-separated list of key=value labels to filter custom resources.")
 
 	enableWebhooks := os.Getenv("ENABLE_WEBHOOKS")
-	flag.StringVar(&enableWebhooks, "enable-webhooks", "true", "Enable webhooks for the operator. Default is true.")
+	flag.StringVar(&enableWebhooks, "enable-webhooks", enableWebhooks, "Enable webhooks for the operator. Default is true.")
 
 	var prometheusRuleController bool
 	flag.BoolVar(&prometheusRuleController, "prometheus-rule-controller", true, "Determine if the prometheus rule controller should be started. Default is true.")
@@ -194,7 +194,7 @@ func main() {
 	}
 
 	// Check if webhooks are enabled before setting up the webhook server
-	if enableWebhooks == "true" {
+	if enableWebhooks != "false" {
 		mgrOpts.WebhookServer = webhook.NewServer(webhook.Options{
 			TLSOpts: tlsOpts,
 		})
@@ -319,7 +319,7 @@ func main() {
 		}
 	}
 
-	if enableWebhooks == "true" {
+	if strings.ToLower(enableWebhooks) != "false" {
 		if err = webhookcoralogixv1alpha1.SetupOutboundWebhookWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "OutboundWebhook")
 			os.Exit(1)

@@ -19,11 +19,12 @@ import (
 	"fmt"
 	"strings"
 
-	utils "github.com/coralogix/coralogix-operator/api/coralogix"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+
+	utils "github.com/coralogix/coralogix-operator/api/coralogix"
 )
 
 // TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
