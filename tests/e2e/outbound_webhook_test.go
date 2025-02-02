@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"time"
 
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
@@ -28,8 +29,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/common"
 )
 
 var _ = Describe("OutboundWebhook", Ordered, func() {

@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -24,11 +25,13 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	utils "github.com/coralogix/coralogix-operator/api/coralogix"
-	"github.com/coralogix/coralogix-operator/api/coralogix/common"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
+	"github.com/go-logr/logr"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -963,7 +966,7 @@ func NewDefaultAlertStatus() *AlertStatus {
 	}
 }
 
-func (in AlertSpec) ExtractAlertProperties(listingAlertsAndWebhooksProperties *common.ListingAlertsAndWebhooksProperties) (*cxsdk.AlertDefProperties, error) {
+func (in AlertSpec) ExtractAlertProperties(listingAlertsAndWebhooksProperties *ListingAlertsAndWebhooksProperties) (*cxsdk.AlertDefProperties, error) {
 	notificationGroup, err := expandNotificationGroup(in.NotificationGroup, listingAlertsAndWebhooksProperties)
 	if err != nil {
 		return nil, fmt.Errorf("failed to expand notification group: %w", err)
@@ -1018,7 +1021,7 @@ func expandRetriggeringPeriod(alertDefIncidentSettings *cxsdk.AlertDefIncidentSe
 	return alertDefIncidentSettings
 }
 
-func expandNotificationGroupExcess(excess []NotificationGroup, listingAlertsAndWebhooksProperties *common.ListingAlertsAndWebhooksProperties) ([]*cxsdk.AlertDefNotificationGroup, error) {
+func expandNotificationGroupExcess(excess []NotificationGroup, listingAlertsAndWebhooksProperties *ListingAlertsAndWebhooksProperties) ([]*cxsdk.AlertDefNotificationGroup, error) {
 	result := make([]*cxsdk.AlertDefNotificationGroup, len(excess))
 	var errs error
 	for _, group := range excess {
@@ -1037,7 +1040,7 @@ func expandNotificationGroupExcess(excess []NotificationGroup, listingAlertsAndW
 	return result, nil
 }
 
-func expandNotificationGroup(notificationGroup *NotificationGroup, listingAlertsAndWebhooksProperties *common.ListingAlertsAndWebhooksProperties) (*cxsdk.AlertDefNotificationGroup, error) {
+func expandNotificationGroup(notificationGroup *NotificationGroup, listingAlertsAndWebhooksProperties *ListingAlertsAndWebhooksProperties) (*cxsdk.AlertDefNotificationGroup, error) {
 	if notificationGroup == nil {
 		return nil, nil
 	}
@@ -1053,7 +1056,7 @@ func expandNotificationGroup(notificationGroup *NotificationGroup, listingAlerts
 	}, nil
 }
 
-func expandWebhooksSettings(webhooksSettings []WebhookSettings, listingAlertsAndWebhooksProperties *common.ListingAlertsAndWebhooksProperties) ([]*cxsdk.AlertDefWebhooksSettings, error) {
+func expandWebhooksSettings(webhooksSettings []WebhookSettings, listingAlertsAndWebhooksProperties *ListingAlertsAndWebhooksProperties) ([]*cxsdk.AlertDefWebhooksSettings, error) {
 	result := make([]*cxsdk.AlertDefWebhooksSettings, len(webhooksSettings))
 	var errs error
 	for i, setting := range webhooksSettings {
@@ -1071,7 +1074,7 @@ func expandWebhooksSettings(webhooksSettings []WebhookSettings, listingAlertsAnd
 	return result, nil
 }
 
-func expandWebhookSetting(webhooksSetting WebhookSettings, listingAlertsAndWebhooksProperties *common.ListingAlertsAndWebhooksProperties) (*cxsdk.AlertDefWebhooksSettings, error) {
+func expandWebhookSetting(webhooksSetting WebhookSettings, listingAlertsAndWebhooksProperties *ListingAlertsAndWebhooksProperties) (*cxsdk.AlertDefWebhooksSettings, error) {
 	notifyOn := NotifyOnToProtoNotifyOn[webhooksSetting.NotifyOn]
 	integration, err := expandIntegration(webhooksSetting.Integration, listingAlertsAndWebhooksProperties)
 	if err != nil {
@@ -1086,7 +1089,7 @@ func expandWebhookSetting(webhooksSetting WebhookSettings, listingAlertsAndWebho
 	}, nil
 }
 
-func expandIntegration(integration IntegrationType, listingWebhooksProperties *common.ListingAlertsAndWebhooksProperties) (*cxsdk.AlertDefIntegrationType, error) {
+func expandIntegration(integration IntegrationType, listingWebhooksProperties *ListingAlertsAndWebhooksProperties) (*cxsdk.AlertDefIntegrationType, error) {
 	if integrationRef := integration.IntegrationRef; integrationRef != nil {
 		var integrationID *wrapperspb.UInt32Value
 		var err error
@@ -1095,7 +1098,7 @@ func expandIntegration(integration IntegrationType, listingWebhooksProperties *c
 			if namespace := resourceRef.Namespace; namespace != nil {
 				listingWebhooksProperties.Namespace = *namespace
 			}
-			integrationID, err = common.ConvertCRDNameToIntegrationID(resourceRef.Name, listingWebhooksProperties)
+			integrationID, err = convertCRDNameToIntegrationID(resourceRef.Name, listingWebhooksProperties)
 			if err != nil {
 				return nil, fmt.Errorf("failed to convert CRD name to integration ID: %w", err)
 			}
@@ -1130,7 +1133,7 @@ func expandIntegration(integration IntegrationType, listingWebhooksProperties *c
 	return nil, fmt.Errorf("integration type not found")
 }
 
-func convertNameToIntegrationID(name string, properties *common.ListingAlertsAndWebhooksProperties) (*wrapperspb.UInt32Value, error) {
+func convertNameToIntegrationID(name string, properties *ListingAlertsAndWebhooksProperties) (*wrapperspb.UInt32Value, error) {
 	if properties.WebhookNameToId == nil {
 		if err := fillWebhookNameToId(properties); err != nil {
 			return nil, err
@@ -1145,7 +1148,7 @@ func convertNameToIntegrationID(name string, properties *common.ListingAlertsAnd
 	return wrapperspb.UInt32(id), nil
 }
 
-func fillWebhookNameToId(properties *common.ListingAlertsAndWebhooksProperties) error {
+func fillWebhookNameToId(properties *ListingAlertsAndWebhooksProperties) error {
 	log, client, ctx := properties.Log, properties.Clientset.Webhooks(), properties.Ctx
 	log.V(1).Info("Listing webhooks from the backend")
 	webhooks, err := client.List(ctx, &cxsdk.ListAllOutgoingWebhooksRequest{})
@@ -1251,7 +1254,7 @@ func expandDaysOfWeek(week []DayOfWeek) []cxsdk.AlertDayOfWeek {
 	return result
 }
 
-func expandAlertTypeDefinition(properties *cxsdk.AlertDefProperties, definition AlertTypeDefinition, listingWebhooksProperties *common.ListingAlertsAndWebhooksProperties) (*cxsdk.AlertDefProperties, error) {
+func expandAlertTypeDefinition(properties *cxsdk.AlertDefProperties, definition AlertTypeDefinition, listingWebhooksProperties *ListingAlertsAndWebhooksProperties) (*cxsdk.AlertDefProperties, error) {
 	if logsImmediate := definition.LogsImmediate; logsImmediate != nil {
 		properties.TypeDefinition = expandLogsImmediate(logsImmediate)
 		properties.Type = cxsdk.AlertDefTypeLogsImmediateOrUnspecified
@@ -1453,7 +1456,7 @@ func expandLogsAnomalyRuleCondition(condition LogsAnomalyCondition) *cxsdk.LogsA
 	}
 }
 
-func expandFlow(listingAlertsProperties *common.ListingAlertsAndWebhooksProperties, flow *Flow) (*cxsdk.AlertDefPropertiesFlow, error) {
+func expandFlow(listingAlertsProperties *ListingAlertsAndWebhooksProperties, flow *Flow) (*cxsdk.AlertDefPropertiesFlow, error) {
 	stages, err := expandFlowStages(listingAlertsProperties, flow.Stages)
 	if err != nil {
 		return nil, err
@@ -1466,7 +1469,7 @@ func expandFlow(listingAlertsProperties *common.ListingAlertsAndWebhooksProperti
 	}, nil
 }
 
-func expandFlowStages(listingAlertsProperties *common.ListingAlertsAndWebhooksProperties, stages []FlowStage) ([]*cxsdk.FlowStages, error) {
+func expandFlowStages(listingAlertsProperties *ListingAlertsAndWebhooksProperties, stages []FlowStage) ([]*cxsdk.FlowStages, error) {
 	result := make([]*cxsdk.FlowStages, len(stages))
 	var errs error
 	for i, stage := range stages {
@@ -1481,7 +1484,7 @@ func expandFlowStages(listingAlertsProperties *common.ListingAlertsAndWebhooksPr
 	return result, errs
 }
 
-func expandFlowStage(listingAlertsProperties *common.ListingAlertsAndWebhooksProperties, stage FlowStage) (*cxsdk.FlowStages, error) {
+func expandFlowStage(listingAlertsProperties *ListingAlertsAndWebhooksProperties, stage FlowStage) (*cxsdk.FlowStages, error) {
 	flowStages, err := expandFlowStagesType(listingAlertsProperties, stage.FlowStagesType)
 	if err != nil {
 		return nil, err
@@ -1494,7 +1497,7 @@ func expandFlowStage(listingAlertsProperties *common.ListingAlertsAndWebhooksPro
 	}, nil
 }
 
-func expandFlowStagesType(listingAlertsProperties *common.ListingAlertsAndWebhooksProperties, stagesType FlowStagesType) (*cxsdk.FlowStagesGroups, error) {
+func expandFlowStagesType(listingAlertsProperties *ListingAlertsAndWebhooksProperties, stagesType FlowStagesType) (*cxsdk.FlowStagesGroups, error) {
 	groups, err := expandFlowStagesGroups(listingAlertsProperties, stagesType.Groups)
 	if err != nil {
 		return nil, err
@@ -1507,7 +1510,7 @@ func expandFlowStagesType(listingAlertsProperties *common.ListingAlertsAndWebhoo
 	}, nil
 }
 
-func expandFlowStagesGroups(listingAlertsProperties *common.ListingAlertsAndWebhooksProperties, groups []FlowStageGroup) ([]*cxsdk.FlowStagesGroup, error) {
+func expandFlowStagesGroups(listingAlertsProperties *ListingAlertsAndWebhooksProperties, groups []FlowStageGroup) ([]*cxsdk.FlowStagesGroup, error) {
 	result := make([]*cxsdk.FlowStagesGroup, len(groups))
 	var errs error
 	for i, group := range groups {
@@ -1526,7 +1529,7 @@ func expandFlowStagesGroups(listingAlertsProperties *common.ListingAlertsAndWebh
 	return result, nil
 }
 
-func expandFlowStagesGroup(listingWebhooksProperties *common.ListingAlertsAndWebhooksProperties, group FlowStageGroup) (*cxsdk.FlowStagesGroup, error) {
+func expandFlowStagesGroup(listingWebhooksProperties *ListingAlertsAndWebhooksProperties, group FlowStageGroup) (*cxsdk.FlowStagesGroup, error) {
 	alertDefs, err := expandFlowStagesGroupsAlertDefs(listingWebhooksProperties, group.AlertDefs)
 	if err != nil {
 		return nil, err
@@ -1539,7 +1542,7 @@ func expandFlowStagesGroup(listingWebhooksProperties *common.ListingAlertsAndWeb
 	}, nil
 }
 
-func expandFlowStagesGroupsAlertDefs(listingAlertsProperties *common.ListingAlertsAndWebhooksProperties, alertDefs []FlowStagesGroupsAlertDefs) ([]*cxsdk.FlowStagesGroupsAlertDefs, error) {
+func expandFlowStagesGroupsAlertDefs(listingAlertsProperties *ListingAlertsAndWebhooksProperties, alertDefs []FlowStagesGroupsAlertDefs) ([]*cxsdk.FlowStagesGroupsAlertDefs, error) {
 	result := make([]*cxsdk.FlowStagesGroupsAlertDefs, len(alertDefs))
 	var errs error
 	for i := range alertDefs {
@@ -1554,7 +1557,7 @@ func expandFlowStagesGroupsAlertDefs(listingAlertsProperties *common.ListingAler
 	return result, nil
 }
 
-func expandFlowStagesGroupsAlertDef(listingAlertsProperties *common.ListingAlertsAndWebhooksProperties, defs FlowStagesGroupsAlertDefs) (*cxsdk.FlowStagesGroupsAlertDefs, error) {
+func expandFlowStagesGroupsAlertDef(listingAlertsProperties *ListingAlertsAndWebhooksProperties, defs FlowStagesGroupsAlertDefs) (*cxsdk.FlowStagesGroupsAlertDefs, error) {
 	id, err := expandAlertRef(listingAlertsProperties, defs.AlertRef)
 	if err != nil {
 		return nil, err
@@ -1566,7 +1569,7 @@ func expandFlowStagesGroupsAlertDef(listingAlertsProperties *common.ListingAlert
 	}, nil
 }
 
-func expandAlertRef(listingAlertsProperties *common.ListingAlertsAndWebhooksProperties, ref AlertRef) (*wrapperspb.StringValue, error) {
+func expandAlertRef(listingAlertsProperties *ListingAlertsAndWebhooksProperties, ref AlertRef) (*wrapperspb.StringValue, error) {
 	if backendRef := ref.BackendRef; backendRef != nil {
 		if id := backendRef.ID; id != nil {
 			return wrapperspb.String(*id), nil
@@ -1583,12 +1586,12 @@ func expandAlertRef(listingAlertsProperties *common.ListingAlertsAndWebhooksProp
 	return nil, fmt.Errorf("alert ref not found")
 }
 
-func convertAlertCrdNameToID(listingAlertsProperties *common.ListingAlertsAndWebhooksProperties, alertCrdName string) (*wrapperspb.StringValue, error) {
+func convertAlertCrdNameToID(listingAlertsProperties *ListingAlertsAndWebhooksProperties, alertCrdName string) (*wrapperspb.StringValue, error) {
 	crdClient, ctx, namespace := listingAlertsProperties.Client, listingAlertsProperties.Ctx, listingAlertsProperties.Namespace
 	alertCRD := &Alert{}
 	err := crdClient.Get(ctx, client.ObjectKey{Name: alertCrdName, Namespace: namespace}, alertCRD)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get outbound webhook %w", err)
+		return nil, fmt.Errorf("failed to get alert %w", err)
 	}
 
 	if alertCRD.Status.ID == nil {
@@ -1598,7 +1601,7 @@ func convertAlertCrdNameToID(listingAlertsProperties *common.ListingAlertsAndWeb
 	return wrapperspb.String(*alertCRD.Status.ID), nil
 }
 
-func convertAlertNameToID(listingAlertsProperties *common.ListingAlertsAndWebhooksProperties, alertName string) (*wrapperspb.StringValue, error) {
+func convertAlertNameToID(listingAlertsProperties *ListingAlertsAndWebhooksProperties, alertName string) (*wrapperspb.StringValue, error) {
 	if listingAlertsProperties.AlertNameToId == nil {
 		listingAlertsProperties.AlertNameToId = make(map[string]string)
 		log, alertsClient, ctx := listingAlertsProperties.Log, listingAlertsProperties.Clientset.Alerts(), listingAlertsProperties.Ctx
@@ -2014,4 +2017,45 @@ func NewAlert() *Alert {
 			EntityLabels: make(map[string]string),
 		},
 	}
+}
+
+// +k8s:deepcopy-gen=false
+type ListingAlertsAndWebhooksProperties struct {
+	Ctx             context.Context
+	Log             logr.Logger
+	Client          client.Client
+	AlertNameToId   map[string]string
+	WebhookNameToId map[string]uint32
+	Clientset       *cxsdk.ClientSet
+	Namespace       string
+}
+
+func convertCRDNameToIntegrationID(name string, properties *ListingAlertsAndWebhooksProperties) (*wrapperspb.UInt32Value, error) {
+	c, ctx, namespace := properties.Client, properties.Ctx, properties.Namespace
+
+	u := &unstructured.Unstructured{}
+	u.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "coralogix.com",
+		Kind:    "OutboundWebhook",
+		Version: "v1alpha1",
+	})
+
+	if err := c.Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
+		return nil, fmt.Errorf("failed to get webhook, name: %s, namespace: %s, error: %w", name, namespace, err)
+	}
+
+	externalID, found, err := unstructured.NestedString(u.Object, "status", "externalId")
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, fmt.Errorf("status.externalID not found")
+	}
+
+	externalIDInt, err := strconv.Atoi(externalID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert externalID to int, externalID: %s, error: %w", externalID, err)
+	}
+
+	return wrapperspb.UInt32(uint32(externalIDInt)), nil
 }

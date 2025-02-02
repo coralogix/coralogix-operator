@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // +groupName=coralogix.com
-package common
+package v1alpha1
 
 import (
 	"fmt"

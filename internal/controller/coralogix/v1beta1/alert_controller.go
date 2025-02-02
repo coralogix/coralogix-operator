@@ -21,7 +21,6 @@ import (
 	"fmt"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-	"github.com/coralogix/coralogix-operator/api/coralogix/common"
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	"github.com/coralogix/coralogix-operator/internal/utils"
@@ -107,7 +106,7 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 func (r *AlertReconciler) update(ctx context.Context, log logr.Logger, alert *coralogixv1beta1.Alert) error {
 	alertDefProperties, err := alert.Spec.ExtractAlertProperties(
-		&common.ListingAlertsAndWebhooksProperties{
+		&coralogixv1beta1.ListingAlertsAndWebhooksProperties{
 			Clientset: r.CoralogixClientSet,
 			Ctx:       ctx,
 			Log:       log,
@@ -155,7 +154,7 @@ func (r *AlertReconciler) delete(ctx context.Context, log logr.Logger, alert *co
 
 func (r *AlertReconciler) create(ctx context.Context, log logr.Logger, alert *coralogixv1beta1.Alert) error {
 	alertDefProperties, err := alert.Spec.ExtractAlertProperties(
-		&common.ListingAlertsAndWebhooksProperties{
+		&coralogixv1beta1.ListingAlertsAndWebhooksProperties{
 			Ctx:       ctx,
 			Log:       log,
 			Client:    r.Client,

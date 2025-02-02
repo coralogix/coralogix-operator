@@ -46,7 +46,7 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: OutboundWebhook
-  path: github.com/coralogix/coralogix-operator/api/coralogix/common
+  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
   version: v1alpha1
   webhooks:
     validation: true

@@ -21,7 +21,6 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/coralogix/coralogix-operator/api/coralogix/common"
 	"github.com/go-logr/logr"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus/common/model"
@@ -118,7 +117,7 @@ func (r *AlertmanagerConfigReconciler) Reconcile(ctx context.Context, req ctrl.R
 
 func (r *AlertmanagerConfigReconciler) convertAlertmanagerConfigToCxIntegrations(ctx context.Context, log logr.Logger, alertmanagerConfig *prometheus.AlertmanagerConfig) (succeed bool) {
 	succeed = true
-	outboundWebhook := &common.OutboundWebhook{
+	outboundWebhook := &coralogixv1alpha1.OutboundWebhook{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: alertmanagerConfig.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
@@ -138,7 +137,7 @@ func (r *AlertmanagerConfigReconciler) convertAlertmanagerConfigToCxIntegrations
 			if err := r.Get(ctx, client.ObjectKeyFromObject(opsGenieWebhook), opsGenieWebhook); err != nil {
 				if errors.IsNotFound(err) {
 					opsGenieWebhookType := opsgenieToOutboundWebhookType(opsGenieConfig)
-					opsGenieWebhook.Spec = common.OutboundWebhookSpec{
+					opsGenieWebhook.Spec = coralogixv1alpha1.OutboundWebhookSpec{
 						Name:                opsGenieWebhook.Name,
 						OutboundWebhookType: opsGenieWebhookType,
 					}
@@ -171,7 +170,7 @@ func (r *AlertmanagerConfigReconciler) convertAlertmanagerConfigToCxIntegrations
 						log.Error(err, "Received an error while trying to convert SlackConfig to OutboundWebhookType")
 						continue
 					}
-					slackWebhook.Spec = common.OutboundWebhookSpec{
+					slackWebhook.Spec = coralogixv1alpha1.OutboundWebhookSpec{
 						Name:                slackWebhook.Name,
 						OutboundWebhookType: outboundWebhookType,
 					}
@@ -198,13 +197,13 @@ func (r *AlertmanagerConfigReconciler) convertAlertmanagerConfigToCxIntegrations
 	return
 }
 
-func (r *AlertmanagerConfigReconciler) slackConfigToOutboundWebhookType(ctx context.Context, config prometheus.SlackConfig, namespace string) (common.OutboundWebhookType, error) {
+func (r *AlertmanagerConfigReconciler) slackConfigToOutboundWebhookType(ctx context.Context, config prometheus.SlackConfig, namespace string) (coralogixv1alpha1.OutboundWebhookType, error) {
 	url, err := r.getSecret(ctx, config.APIURL, namespace)
 	if err != nil {
-		return common.OutboundWebhookType{}, fmt.Errorf("received an error while trying to get API URL from secret: %w", err)
+		return coralogixv1alpha1.OutboundWebhookType{}, fmt.Errorf("received an error while trying to get API URL from secret: %w", err)
 	}
-	return common.OutboundWebhookType{
-		Slack: &common.Slack{
+	return coralogixv1alpha1.OutboundWebhookType{
+		Slack: &coralogixv1alpha1.Slack{
 			Url: url,
 		},
 	}, nil
@@ -299,9 +298,9 @@ func (r *AlertmanagerConfigReconciler) deleteWebhooksFromRelatedAlerts(ctx conte
 	return nil
 }
 
-func opsgenieToOutboundWebhookType(opsGenieConfig prometheus.OpsGenieConfig) common.OutboundWebhookType {
-	return common.OutboundWebhookType{
-		Opsgenie: &common.Opsgenie{
+func opsgenieToOutboundWebhookType(opsGenieConfig prometheus.OpsGenieConfig) coralogixv1alpha1.OutboundWebhookType {
+	return coralogixv1alpha1.OutboundWebhookType{
+		Opsgenie: &coralogixv1alpha1.Opsgenie{
 			Url: opsGenieConfig.APIURL,
 		},
 	}

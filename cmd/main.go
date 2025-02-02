@@ -35,7 +35,6 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	"github.com/coralogix/coralogix-operator/api/coralogix/common"
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 
 	controllers "github.com/coralogix/coralogix-operator/internal/controller"
@@ -69,8 +68,6 @@ func init() {
 	utilruntime.Must(v1alpha1.AddToScheme(scheme))
 
 	utilruntime.Must(v1beta1.AddToScheme(scheme))
-
-	utilruntime.Must(common.AddToScheme(scheme))
 
 	utilruntime.Must(prometheusv1alpha.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme

@@ -519,8 +519,8 @@ func convertFlowAlertsV1beta1ToV1alpha1(defs []v1beta1.FlowStagesGroupsAlertDefs
 		innerFlowAlerts[i] = InnerFlowAlert{
 			Not: def.Not,
 		}
-		if id := def.AlertRef.BackendRef; id != nil {
-			innerFlowAlerts[i].UserAlertId = *def.AlertRef.BackendRef.ID
+		if backendRef := def.AlertRef.BackendRef; backendRef != nil && backendRef.ID != nil {
+			innerFlowAlerts[i].UserAlertId = *backendRef.ID
 		}
 	}
 	return InnerFlowAlerts{
