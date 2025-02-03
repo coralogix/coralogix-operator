@@ -19,9 +19,6 @@ import (
 	"fmt"
 	"time"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-	"github.com/coralogix/coralogix-operator/api/coralogix"
-	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
@@ -31,6 +28,10 @@ import (
 	"k8s.io/utils/pointer"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	"github.com/coralogix/coralogix-operator/api/coralogix"
+	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 )
 
 var _ = Describe("Alert", Ordered, func() {
@@ -148,5 +149,97 @@ var _ = Describe("Alert", Ordered, func() {
 			_, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(alertID)})
 			return cxsdk.Code(err)
 		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
+	})
+
+	It("Should deny creation of Alert without Alert-Type", func(ctx context.Context) {
+		By("Creating Alert")
+		alert = &coralogixv1beta1.Alert{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "alertName",
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1beta1.AlertSpec{
+				Name:        "alertName",
+				Description: "alert from k8s operator",
+				Priority:    coralogixv1beta1.AlertPriorityP1,
+				NotificationGroup: &coralogixv1beta1.NotificationGroup{
+					Webhooks: []coralogixv1beta1.WebhookSettings{
+						{
+							Integration: coralogixv1beta1.IntegrationType{
+								Recipients: []string{"example@coralogix.com"},
+							},
+						},
+					},
+				},
+				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{},
+			},
+		}
+		err := crClient.Create(ctx, alert)
+		Expect(err.Error()).To(ContainSubstring("no alert type is set"))
+	})
+
+	It("Should deny creation of Alert with more then one  Alert-Type", func(ctx context.Context) {
+		By("Creating Alert")
+		alert = &coralogixv1beta1.Alert{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "alertName",
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1beta1.AlertSpec{
+				Name:        "alertName",
+				Description: "alert from k8s operator",
+				Priority:    coralogixv1beta1.AlertPriorityP1,
+				NotificationGroup: &coralogixv1beta1.NotificationGroup{
+					Webhooks: []coralogixv1beta1.WebhookSettings{
+						{
+							Integration: coralogixv1beta1.IntegrationType{
+								Recipients: []string{"example@coralogix.com"},
+							},
+						},
+					},
+				},
+				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
+					MetricThreshold: &coralogixv1beta1.MetricThreshold{
+						MissingValues: coralogixv1beta1.MetricMissingValues{
+							MinNonNullValuesPct: pointer.Uint32(10),
+						},
+						MetricFilter: coralogixv1beta1.MetricFilter{
+							Promql: "http_requests_total{status!~\"4..\"}",
+						},
+						Rules: []coralogixv1beta1.MetricThresholdRule{
+							{
+								Condition: coralogixv1beta1.MetricThresholdRuleCondition{
+									Threshold:     coralogix.FloatToQuantity(3),
+									ForOverPct:    50,
+									ConditionType: coralogixv1beta1.MetricThresholdConditionTypeMoreThan,
+									OfTheLast: coralogixv1beta1.MetricTimeWindow{
+										SpecificValue: coralogixv1beta1.MetricTimeWindowValue12Hours,
+									},
+								},
+							},
+						},
+					},
+					MetricAnomaly: &coralogixv1beta1.MetricAnomaly{
+						MetricFilter: coralogixv1beta1.MetricFilter{
+							Promql: "http_requests_total{status!~\"4..\"}",
+						},
+						Rules: []coralogixv1beta1.MetricAnomalyRule{
+							{
+								Condition: coralogixv1beta1.MetricAnomalyCondition{
+									Threshold:     coralogix.FloatToQuantity(3),
+									ForOverPct:    50,
+									ConditionType: coralogixv1beta1.MetricAnomalyConditionTypeMoreThanUsual,
+									OfTheLast: coralogixv1beta1.MetricTimeWindow{
+										SpecificValue: coralogixv1beta1.MetricTimeWindowValue12Hours,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		err := crClient.Create(ctx, alert)
+		Expect(err.Error()).To(ContainSubstring("only one alert type is allowed"))
 	})
 })
