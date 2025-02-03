@@ -151,34 +151,7 @@ var _ = Describe("Alert", Ordered, func() {
 		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
 	})
 
-	It("Should deny creation of Alert without Alert-Type", func(ctx context.Context) {
-		By("Creating Alert")
-		alert = &coralogixv1beta1.Alert{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "alertName",
-				Namespace: testNamespace,
-			},
-			Spec: coralogixv1beta1.AlertSpec{
-				Name:        "alertName",
-				Description: "alert from k8s operator",
-				Priority:    coralogixv1beta1.AlertPriorityP1,
-				NotificationGroup: &coralogixv1beta1.NotificationGroup{
-					Webhooks: []coralogixv1beta1.WebhookSettings{
-						{
-							Integration: coralogixv1beta1.IntegrationType{
-								Recipients: []string{"example@coralogix.com"},
-							},
-						},
-					},
-				},
-				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{},
-			},
-		}
-		err := crClient.Create(ctx, alert)
-		Expect(err.Error()).To(ContainSubstring("no alert type is set"))
-	})
-
-	It("Should deny creation of Alert with more then one  Alert-Type", func(ctx context.Context) {
+	It("Should deny creation of Alert with more then one alert type", func(ctx context.Context) {
 		By("Creating Alert")
 		alert = &coralogixv1beta1.Alert{
 			ObjectMeta: metav1.ObjectMeta{
