@@ -123,7 +123,6 @@ func (r *AlertReconciler) update(ctx context.Context, log logr.Logger, alert *co
 	}
 
 	log.V(1).Info("Updating remote alert", "alert", protojson.Format(alertRequest))
-	monitoring.TotalAlertsAPIRequestsMetric.Inc()
 	remoteUpdatedAlert, err := r.CoralogixClientSet.Alerts().Replace(ctx, alertRequest)
 	if err != nil {
 		if cxsdk.Code(err) == codes.NotFound {
