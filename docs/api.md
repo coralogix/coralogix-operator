@@ -988,6 +988,8 @@ AlertSpec defines the desired state of Alert.
         <td>[]enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: Debug, Verbose, Info, Warning, Critical, Error<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1235,6 +1237,8 @@ AlertSpec defines the desired state of Alert.
         <td>[]enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: Debug, Verbose, Info, Warning, Critical, Error<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1290,6 +1294,8 @@ AlertSpec defines the desired state of Alert.
         <td>[]enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: Debug, Verbose, Info, Warning, Critical, Error<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1512,6 +1518,8 @@ AlertSpec defines the desired state of Alert.
         <td>[]enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: Debug, Verbose, Info, Warning, Critical, Error<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1743,6 +1751,8 @@ AlertSpec defines the desired state of Alert.
         <td>[]enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: Debug, Verbose, Info, Warning, Critical, Error<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2103,6 +2113,8 @@ AlertSpec defines the desired state of Alert.
         <td>[]enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: Debug, Verbose, Info, Warning, Critical, Error<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2276,6 +2288,8 @@ AlertSpec defines the desired state of Alert.
         <td>[]enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4066,6 +4080,8 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td>[]enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: Debug, Verbose, Info, Warning, Error, Critical<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4930,6 +4946,8 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
         <td>[]enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: info, warning, critical, error, debug, verbose<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -5156,6 +5174,8 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
         <td>[]enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: info, warning, critical, error, debug, verbose<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -6095,6 +6115,8 @@ AlertSpec defines the desired state of Alert
         <td>[]enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6397,6 +6419,8 @@ AlertSpec defines the desired state of Alert
         <td>[]enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6614,6 +6638,8 @@ AlertSpec defines the desired state of Alert
         <td>[]enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6935,6 +6961,8 @@ AlertSpec defines the desired state of Alert
         <td>[]enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -7111,6 +7139,8 @@ AlertSpec defines the desired state of Alert
         <td>[]enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -7470,6 +7500,8 @@ AlertSpec defines the desired state of Alert
         <td>[]enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -7877,6 +7909,8 @@ AlertSpec defines the desired state of Alert
         <td>[]enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -8257,6 +8291,8 @@ AlertSpec defines the desired state of Alert
         <td>[]enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -10356,6 +10392,8 @@ AlertSpec defines the desired state of Alert
         <td>[]enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: sunday, monday, tuesday, wednesday, thursday, friday, saturday<br/>
         </td>
         <td>false</td>
       </tr><tr>
