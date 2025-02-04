@@ -24,6 +24,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 )
 
 var ClientsInstance = &Clients{}
@@ -54,6 +55,9 @@ func (c *Clients) InitControllerRuntimeClient() error {
 			return err
 		}
 		if err = coralogixv1alpha1.AddToScheme(crClient.Scheme()); err != nil {
+			return err
+		}
+		if err = coralogixv1beta1.AddToScheme(crClient.Scheme()); err != nil {
 			return err
 		}
 		c.CrClient = crClient

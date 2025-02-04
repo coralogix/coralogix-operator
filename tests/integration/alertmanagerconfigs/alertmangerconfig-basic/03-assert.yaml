@@ -1,4 +1,4 @@
-apiVersion: coralogix.com/v1alpha1
+apiVersion: coralogix.com/v1beta1
 kind: Alert
 metadata:
   finalizers:
@@ -13,39 +13,49 @@ metadata:
       kind: PrometheusRule
       name: prometheus-example-rules-test
 spec:
-  active: true
   alertType:
-    metric:
-      promql:
-        conditions:
-          alertWhen: More
-          minNonNullValuesPercentage: 0
-          sampleThresholdPercentage: 100
-          threshold: "0"
-          timeWindow: FiveMinutes
-        searchQuery: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m]))
+    metricThreshold:
+      metricFilter:
+        promql: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m]))
           by (le, destination_workload)) > 0.2
-  labels:
+      missingValues:
+        minNonNullValuesPct: 0
+      rules:
+        - condition:
+            conditionType: moreThan
+            forOverPct: 100
+            ofTheLast:
+              specificValue: 5m
+            threshold: "0"
+  description: This is an app latency alert
+  enabled: true
+  entityLabels:
+    managed-by: coralogix-operator
     severity: critical
     slack_channel: '#observability'
   name: app-latency
-  description: This is an app latency alert
-  notificationGroups:
-    - groupByFields:
-        - alertname
-        - cluster
-        - alert_group
-        - job
-        - namespace
-        - severity
-        - priority
-      notifications:
-        - integrationName: slack-general.slack.0
-          retriggeringPeriodMinutes: 3
-  severity: Critical
+  notificationGroup:
+    groupByKeys:
+      - alertname
+      - cluster
+      - alert_group
+      - job
+      - namespace
+      - severity
+      - priority
+    webhooks:
+      - integration:
+          integrationRef:
+            backendRef:
+              name: slack-general.slack.0
+        notifyOn: triggeredOnly
+        retriggeringPeriod:
+          minutes: 3
+  priority: p1
+
 
 ---
-apiVersion: coralogix.com/v1alpha1
+apiVersion: coralogix.com/v1beta1
 kind: Alert
 metadata:
   finalizers:
@@ -60,45 +70,60 @@ metadata:
       kind: PrometheusRule
       name: prometheus-example-rules-test
 spec:
-  active: true
   alertType:
-    metric:
-      promql:
-        conditions:
-          alertWhen: More
-          minNonNullValuesPercentage: 0
-          sampleThresholdPercentage: 100
-          threshold: "0"
-          timeWindow: FiveMinutes
-        searchQuery: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m]))
+    metricThreshold:
+      metricFilter:
+        promql: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m]))
           by (le, destination_workload)) > 0.2
-  labels:
+      missingValues:
+        minNonNullValuesPct: 0
+        replaceWithZero: false
+      rules:
+        - condition:
+            conditionType: moreThan
+            forOverPct: 100
+            ofTheLast:
+              specificValue: 5m
+            threshold: "0"
+  description: This is an app latency alert
+  enabled: true
+  entityLabels:
     opsgenie_team: team1
     severity: info
-    slack_channel: '#observability'
   name: app-latency
-  description: This is an app latency alert
-  notificationGroups:
-    - groupByFields:
-        - alertname
-        - cluster
-        - alert_group
-        - job
-        - namespace
-        - severity
-        - priority
-      notifications:
-        - integrationName: slack-general.slack.0
-          retriggeringPeriodMinutes: 3
-    - groupByFields:
+  notificationGroup:
+    groupByKeys:
+      - alertname
+      - cluster
+      - alert_group
+      - job
+      - namespace
+      - severity
+      - priority
+    webhooks:
+      - integration:
+          integrationRef:
+            backendRef:
+              name: slack-general.slack.0
+        notifyOn: triggeredOnly
+        retriggeringPeriod:
+          minutes: 3
+  notificationGroupExcess:
+    - groupByKeys:
         - coralogix.metadata.sdkId
-      notifications:
-        - integrationName: opsgenie-general.opsgenie.0
-          retriggeringPeriodMinutes: 2
-  severity: Info
+      webhooks:
+        - integration:
+            integrationRef:
+              backendRef:
+                name: opsgenie-general.opsgenie.0
+          notifyOn: triggeredAndResolved
+          retriggeringPeriod:
+            minutes: 2
+  phantomMode: false
+  priority: p4
 
 ---
-apiVersion: coralogix.com/v1alpha1
+apiVersion: coralogix.com/v1beta1
 kind: Alert
 metadata:
   finalizers:
@@ -113,32 +138,40 @@ metadata:
       kind: PrometheusRule
       name: prometheus-example-rules-test
 spec:
-  active: true
   alertType:
-    metric:
-      promql:
-        conditions:
-          alertWhen: More
-          minNonNullValuesPercentage: 0
-          sampleThresholdPercentage: 100
-          threshold: "0"
-          timeWindow: FiveMinutes
-        searchQuery: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m]))
+    metricThreshold:
+      metricFilter:
+        promql: histogram_quantile(0.99, sum(irate(istio_request_duration_seconds_bucket{reporter="source",destination_service=~"ingress-annotation-test-svc.example-app.svc.cluster.local"}[1m]))
           by (le, destination_workload)) > 0.2
-  labels:
-    managed-by: coralogix-operator
-  name: app-latency
+      missingValues:
+        minNonNullValuesPct: 0
+        replaceWithZero: false
+      rules:
+        - condition:
+            conditionType: moreThan
+            forOverPct: 100
+            ofTheLast:
+              specificValue: 5m
+            threshold: "0"
   description: This is an app latency alert
-  #  notificationGroups:
-#    - groupByFields:
-#        - alertname
-#        - cluster
-#        - alert_group
-#        - job
-#        - namespace
-#        - severity
-#        - priority
-#      notifications:
-#        - integrationName: slack-default.slack.0
-#          retriggeringPeriodMinutes: 2
-  severity: Info
+  enabled: true
+  name: app-latency
+  notificationGroup:
+    groupByKeys:
+      - alertname
+      - cluster
+      - alert_group
+      - job
+      - namespace
+      - severity
+      - priority
+    webhooks:
+      - integration:
+          integrationRef:
+            backendRef:
+              name: slack-default.slack.0
+        notifyOn: triggeredOnly
+        retriggeringPeriod:
+          minutes: 2
+  phantomMode: false
+  priority: p4

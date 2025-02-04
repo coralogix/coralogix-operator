@@ -24,7 +24,7 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
-	utils "github.com/coralogix/coralogix-operator/api"
+	utils "github.com/coralogix/coralogix-operator/api/coralogix"
 )
 
 // TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.

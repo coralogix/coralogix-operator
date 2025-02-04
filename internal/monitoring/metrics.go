@@ -87,6 +87,12 @@ var (
 			Help: "The total count of API keys rejections by Coralogix Operator validation webhook.",
 		},
 	)
+	TotalRejectedAlertsMetric = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "cx_operator_rejected_alerts_total",
+			Help: "The total count of alerts rejections by Coralogix Operator validation webhook.",
+		},
+	)
 )
 
 func RegisterMetrics() error {

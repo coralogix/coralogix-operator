@@ -1,0 +1,67 @@
+apiVersion: coralogix.com/v1beta1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/name: alert
+    app.kubernetes.io/instance: alert-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: logs-ratio-threshold
+spec:
+  name: logs-ratio-threshold alert example
+  description: alert from k8s operator
+  priority: p4
+  entityLabels:
+    alert_type: security
+    security_severity: high
+  alertType:
+    logsRatioThreshold:
+      numerator:
+        simpleFilter:
+          luceneQuery: "mod_date:[20030101 TO 20040101]"
+          labelFilters:
+            applicationName:
+              - value: nginx
+                operation: includes
+              - value: subsystem-name
+                operation: startsWith
+            subsystemName:
+              - value: warning
+                operation: or
+              - value: info
+                operation: endsWith
+            severity: [ "warning", "info" ]
+      numeratorAlias: "numerator"
+      denominator:
+        simpleFilter:
+          luceneQuery: "mod_date:[20020101 TO 20030101]"
+          labelFilters:
+            applicationName:
+              - value: nginx
+                operation: includes
+              - value: subsystem-name
+                operation: startsWith
+            subsystemName:
+              - value: warning
+                operation: or
+              - value: info
+                operation: endsWith
+            severity: [ "warning", "info" ]
+      denominatorAlias: "denominator"
+      rules:
+        - condition:
+            timeWindow:
+              specificValue: 5m
+            threshold: "100.4"
+            conditionType: moreThan
+          override:
+            priority: p2
+  notificationGroup:
+    webhooks:
+      - retriggeringPeriod:
+          minutes: 1440
+        integration:
+          integrationRef:
+            resourceRef:
+              name: slack-webhook

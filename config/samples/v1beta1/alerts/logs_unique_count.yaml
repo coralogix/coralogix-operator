@@ -1,0 +1,49 @@
+apiVersion: coralogix.com/v1beta1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/name: alert
+    app.kubernetes.io/instance: alert-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: logs-unique-count
+spec:
+  name: logs-unqiue-count alert example
+  description: alert from k8s operator
+  priority: p2
+  groupByKeys:
+    - response_time
+  alertType:
+    logsUniqueCount:
+      logsFilter:
+        simpleFilter:
+          luceneQuery: remote_addr_enriched:/.*/
+          labelFilters:
+            applicationName:
+              - value: nginx
+                operation: includes
+              - value: subsystem-name
+                operation: startsWith
+            subsystemName:
+              - value: warning
+                operation: or
+              - value: info
+                operation: endsWith
+            severity: [ "warning", "info" ]
+      notificationPayloadFilter: [ "coralogix.metadata.sdkId" ]
+      rules:
+        - condition:
+            timeWindow:
+              specificValue: 5m
+            threshold: 100
+      maxUniqueCountPerGroupByKey: 100
+      uniqueCountKeypath: "response_time"
+  notificationGroup:
+    webhooks:
+      - retriggeringPeriod:
+          minutes: 1440
+        integration:
+          integrationRef:
+            resourceRef:
+              name: slack-webhook

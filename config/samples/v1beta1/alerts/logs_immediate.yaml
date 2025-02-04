@@ -1,0 +1,63 @@
+apiVersion: coralogix.com/v1beta1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/name: alert
+    app.kubernetes.io/instance: alert-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: logs-immediate-alert
+spec:
+  name: logs-immediate alert example
+  description: alert from k8s operator
+  priority: p2
+  entityLabels:
+    alert_type: security
+    security_severity: high
+  alertType:
+    logsImmediate:
+      logsFilter:
+        simpleFilter:
+          luceneQuery: remote_addr_enriched:/.*/
+          labelFilters:
+            applicationName:
+              - value: nginx
+                operation: includes
+              - value: subsystem-name
+                operation: startsWith
+            subsystemName:
+              - value: warning
+                operation: or
+              - value: info
+                operation: endsWith
+            severity: [ "warning", "info" ]
+      notificationPayloadFilter: [ "coralogix.metadata.sdkId" ]
+  notificationGroup:
+    webhooks:
+      - retriggeringPeriod:
+          minutes: 1440
+        integration:
+          integrationRef:
+            resourceRef:
+              name: slack-webhook
+  schedule:
+    timeZone: UTC+02
+    activeOn:
+      dayOfWeek: [ "wednesday", "thursday" ]
+      startTime: 08:30
+      endTime: 20:30
+
+---
+
+apiVersion: coralogix.com/v1alpha1
+kind: OutboundWebhook
+metadata:
+  labels:
+    app.kubernetes.io/created-by: coralogix-operator
+  name: slack-webhook
+spec:
+  name: slack-webhook
+  outboundWebhookType:
+    slack:
+      url: https://hooks.slack.com/services

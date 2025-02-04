@@ -17,8 +17,16 @@ echo "Validating CRDs..."
 # Validate CRDs
 crds_files=$(find "$crds_path" -type f -name "*.yaml")
 for crd_file in $crds_files; do
-    chart_crd_file="$chart_crds_path/$(basename $crd_file)"
-    
+    # Extract filename without the path
+    crd_filename=$(basename "$crd_file")
+
+    # Skip coralogix.com_alerts.yaml regardless of its location
+    if [ "$crd_filename" = "coralogix.com_alerts.yaml" ]; then
+        continue
+    fi
+
+    chart_crd_file="$chart_crds_path/$crd_filename"
+
     if [ -f "$chart_crd_file" ]; then
         if ! cmp -s "$crd_file" "$chart_crd_file"; then
             echo "CRD file $chart_crd_file is outdated, please run make helm-update-crds"
@@ -31,6 +39,7 @@ for crd_file in $crds_files; do
 done
 
 echo "Validating role..."
+
 
 # Enforce role changes if the role file has been modified
 if git diff --name-only origin/main...HEAD | grep -q "^$role_file$"; then

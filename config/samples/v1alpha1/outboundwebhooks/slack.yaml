@@ -1,0 +1,21 @@
+apiVersion: coralogix.com/v1alpha1
+kind: OutboundWebhook
+metadata:
+  labels:
+    app.kubernetes.io/name: outboundwebhook
+    app.kubernetes.io/instance: outboundwebhook-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: slack-webhook
+spec:
+  name: slack-webhook
+  outboundWebhookType:
+    slack:
+      url: https://hooks.slack.com/services
+      attachments:
+        - type: "MetricSnapshot"
+          isActive: true
+      digests:
+        - type: "FlowAnomalies"
+          isActive: true

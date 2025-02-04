@@ -64,3 +64,23 @@ webhooks:
     resources:
     - rulegroups
   sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-coralogix-com-v1beta1-alert
+  failurePolicy: Fail
+  name: valert-v1beta1.kb.io
+  rules:
+  - apiGroups:
+    - coralogix.com
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - alerts
+  sideEffects: None
