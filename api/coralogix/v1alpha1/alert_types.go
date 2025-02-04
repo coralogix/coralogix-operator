@@ -20,7 +20,7 @@ import (
 	"k8s.io/utils/ptr"
 )
 
-// AlertSpec defines the desired state of Alert. v1alpha1 alert is going to be deprecated, consider using v1beta1.Alert instead.
+// AlertSpec defines the desired state of Alert.
 type AlertSpec struct {
 	//+kubebuilder:validation:MinLength=0
 	Name string `json:"name"`
@@ -712,21 +712,13 @@ func NewDefaultAlertStatus() *AlertStatus {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// Alert is the Schema for the alerts API
+// Alert is the v1alpha1 version Schema for the alerts API. v1alpha1 Alert is going to be deprecated, consider using v1beta1.Alert instead.
 type Alert struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	Spec   AlertSpec   `json:"spec,omitempty"`
 	Status AlertStatus `json:"status,omitempty"`
-}
-
-func NewAlert() *Alert {
-	return &Alert{
-		Spec: AlertSpec{
-			Labels: make(map[string]string),
-		},
-	}
 }
 
 //+kubebuilder:object:root=true

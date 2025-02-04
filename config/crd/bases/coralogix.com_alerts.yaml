@@ -17,7 +17,8 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Alert is the Schema for the alerts API
+        description: Alert is the v1alpha1 version Schema for the alerts API. v1alpha1
+          Alert is going to be deprecated, consider using v1beta1.Alert instead.
         properties:
           apiVersion:
             description: |-
@@ -37,8 +38,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: AlertSpec defines the desired state of Alert. v1alpha1 alert
-              is going to be deprecated, consider using v1beta1.Alert instead.
+            description: AlertSpec defines the desired state of Alert.
             properties:
               active:
                 default: true
