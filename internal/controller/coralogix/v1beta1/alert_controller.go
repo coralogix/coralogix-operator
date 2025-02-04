@@ -94,6 +94,16 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, nil
 	}
 
+	if !util.GetLabelFilter().Matches(alert.GetLabels()) {
+		err = r.deleteRemoteAlert(ctx, log, alert.Status.ID)
+		if err != nil {
+			log.Error(err, "Error on deleting Alert")
+			return ctrl.Result{RequeueAfter: util.DefaultErrRequeuePeriod}, err
+		}
+		monitoring.AlertInfoMetric.DeleteLabelValues(alert.Name, alert.Namespace, getAlertType(alert))
+		return ctrl.Result{}, nil
+	}
+
 	err = r.update(ctx, log, alert)
 	if err != nil {
 		log.Error(err, "Error on updating alert")

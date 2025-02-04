@@ -44,7 +44,7 @@ A [certificate](./charts/coralogix-operator/templates/certificate.yaml) and an [
  - The Prometheus-Operator integration assumes its CRDs are installed. If you wish to disable this integration, add the `--set prometheusOperator.prometheusRules.enabled=false` flag.
 
 ## **A note regarding webhooks and cert-manager**
-Webhooks are used to validate the custom resources before they are created in the cluster.They are also used to convert the old schema to the new schema.
+Webhooks are used to validate the custom resources before they are created in the cluster. They are also used to convert the old schema to the new schema.
 For the webhook to work, cert-manager should be installed in the cluster.
 Webhooks will be enabled by default in the operator installation, so make sure cert-manager is installed in the cluster.
 
