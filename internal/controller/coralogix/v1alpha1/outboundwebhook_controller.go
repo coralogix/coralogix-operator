@@ -19,8 +19,6 @@ import (
 	"fmt"
 	"strconv"
 
-	utils "github.com/coralogix/coralogix-operator/api/coralogix"
-	"github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -35,6 +33,8 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
+	"github.com/coralogix/coralogix-operator/api/coralogix"
+	"github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	util "github.com/coralogix/coralogix-operator/internal/utils"
@@ -121,6 +121,7 @@ func (r *OutboundWebhookReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 func (r *OutboundWebhookReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.OutboundWebhook{}).
+		WithEventFilter(util.GetLabelFilter().Predicate()).
 		Complete(r)
 }
 
@@ -210,7 +211,7 @@ func (r *OutboundWebhookReconciler) update(ctx context.Context, log logr.Logger,
 	log.V(1).Info("Getting outbound-webhook from remote", "id", webhook.Status.ID)
 	remoteOutboundWebhook, err := r.OutboundWebhooksClient.Get(ctx,
 		&cxsdk.GetOutgoingWebhookRequest{
-			Id: utils.StringPointerToWrapperspbString(webhook.Status.ID),
+			Id: coralogix.StringPointerToWrapperspbString(webhook.Status.ID),
 		},
 	)
 	if err != nil {

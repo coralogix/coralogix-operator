@@ -15,7 +15,6 @@
 package e2e
 
 import (
-	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	prometheusv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"k8s.io/client-go/kubernetes"
@@ -25,6 +24,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 )
 
 var ClientsInstance = &Clients{}

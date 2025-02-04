@@ -1,18 +1,16 @@
-/*
-Copyright 2024.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2024 Coralogix Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package v1beta1
 
@@ -20,11 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
-	"github.com/coralogix/coralogix-operator/internal/monitoring"
-	"github.com/coralogix/coralogix-operator/internal/utils"
-	util "github.com/coralogix/coralogix-operator/internal/utils"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -37,6 +30,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+
+	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
+	"github.com/coralogix/coralogix-operator/internal/monitoring"
+	"github.com/coralogix/coralogix-operator/internal/utils"
+	util "github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 var alertFinalizerName = "alert.coralogix.com/finalizer"
@@ -254,7 +254,6 @@ func getAlertType(alert *coralogixv1beta1.Alert) string {
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *AlertReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	//coralogixv1beta1 = r.CoralogixClientSet
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1beta1.Alert{}).
 		WithEventFilter(util.GetLabelFilter().Predicate()).
