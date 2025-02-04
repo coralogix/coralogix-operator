@@ -51,7 +51,6 @@ import (
 	"github.com/coralogix/coralogix-operator/internal/utils"
 	webhookcoralogixv1alpha1 "github.com/coralogix/coralogix-operator/internal/webhook/coralogix/v1alpha1"
 	webhookcoralogixv1beta1 "github.com/coralogix/coralogix-operator/internal/webhook/coralogix/v1beta1"
-
 	//+kubebuilder:scaffold:imports
 )
 
@@ -128,9 +127,6 @@ func main() {
 
 	var recordingRuleGroupSetSuffix string
 	flag.StringVar(&recordingRuleGroupSetSuffix, "recording-rule-group-set-suffix", "", "Suffix to be added to the RecordingRuleGroupSet")
-
-	var webhookCertDir string
-	flag.StringVar(&webhookCertDir, "webhook-cert-dir", "/tmp/k8s-webhook-server/serving-certs", "Directory containing the webhook certs")
 
 	opts := zap.Options{}
 	opts.BindFlags(flag.CommandLine)

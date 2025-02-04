@@ -77,7 +77,7 @@ spec:
         - --region=${CORALOGIX_REGION}
         - --domain=${CORALOGIX_DOMAIN}
         - --label-selector=${LABEL_SELECTOR}
-        - --enable-webhooks=true
+        - --enable-webhooks=${ENABLE_WEBHOOKS}
         name: manager
         image: controller
         imagePullPolicy: IfNotPresent

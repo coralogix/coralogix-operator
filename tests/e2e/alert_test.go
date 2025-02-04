@@ -153,60 +153,18 @@ var _ = Describe("Alert", Ordered, func() {
 
 	It("Should deny creation of Alert with more then one alert type", func(ctx context.Context) {
 		By("Creating Alert")
-		alert = &coralogixv1beta1.Alert{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "alertName",
-				Namespace: testNamespace,
+		alert.Spec.TypeDefinition.MetricAnomaly = &coralogixv1beta1.MetricAnomaly{
+			MetricFilter: coralogixv1beta1.MetricFilter{
+				Promql: "http_requests_total{status!~\"4..\"}",
 			},
-			Spec: coralogixv1beta1.AlertSpec{
-				Name:        "alertName",
-				Description: "alert from k8s operator",
-				Priority:    coralogixv1beta1.AlertPriorityP1,
-				NotificationGroup: &coralogixv1beta1.NotificationGroup{
-					Webhooks: []coralogixv1beta1.WebhookSettings{
-						{
-							Integration: coralogixv1beta1.IntegrationType{
-								Recipients: []string{"example@coralogix.com"},
-							},
-						},
-					},
-				},
-				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
-					MetricThreshold: &coralogixv1beta1.MetricThreshold{
-						MissingValues: coralogixv1beta1.MetricMissingValues{
-							MinNonNullValuesPct: pointer.Uint32(10),
-						},
-						MetricFilter: coralogixv1beta1.MetricFilter{
-							Promql: "http_requests_total{status!~\"4..\"}",
-						},
-						Rules: []coralogixv1beta1.MetricThresholdRule{
-							{
-								Condition: coralogixv1beta1.MetricThresholdRuleCondition{
-									Threshold:     coralogix.FloatToQuantity(3),
-									ForOverPct:    50,
-									ConditionType: coralogixv1beta1.MetricThresholdConditionTypeMoreThan,
-									OfTheLast: coralogixv1beta1.MetricTimeWindow{
-										SpecificValue: coralogixv1beta1.MetricTimeWindowValue12Hours,
-									},
-								},
-							},
-						},
-					},
-					MetricAnomaly: &coralogixv1beta1.MetricAnomaly{
-						MetricFilter: coralogixv1beta1.MetricFilter{
-							Promql: "http_requests_total{status!~\"4..\"}",
-						},
-						Rules: []coralogixv1beta1.MetricAnomalyRule{
-							{
-								Condition: coralogixv1beta1.MetricAnomalyCondition{
-									Threshold:     coralogix.FloatToQuantity(3),
-									ForOverPct:    50,
-									ConditionType: coralogixv1beta1.MetricAnomalyConditionTypeMoreThanUsual,
-									OfTheLast: coralogixv1beta1.MetricTimeWindow{
-										SpecificValue: coralogixv1beta1.MetricTimeWindowValue12Hours,
-									},
-								},
-							},
+			Rules: []coralogixv1beta1.MetricAnomalyRule{
+				{
+					Condition: coralogixv1beta1.MetricAnomalyCondition{
+						Threshold:     coralogix.FloatToQuantity(3),
+						ForOverPct:    50,
+						ConditionType: coralogixv1beta1.MetricAnomalyConditionTypeMoreThanUsual,
+						OfTheLast: coralogixv1beta1.MetricTimeWindow{
+							SpecificValue: coralogixv1beta1.MetricTimeWindowValue12Hours,
 						},
 					},
 				},
