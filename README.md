@@ -38,15 +38,14 @@ helm install <my-release> coralogix/coralogix-operator \
   --set secret.data.apiKey="<api-key>" \
   --set coralogixOperator.region="<region>"
 ```
- - To install the operator with its validation webhooks, add the `--set coralogixOperator.webhooks.enabled=true` flag. 
-This requires cert-manager to be installed in the cluster. 
-A [certificate](./charts/coralogix-operator/templates/certificate.yaml) and an [issuer](./charts/coralogix-operator/templates/issuer.yaml) will be installed on the cluster.
+
  - The Prometheus-Operator integration assumes its CRDs are installed. If you wish to disable this integration, add the `--set prometheusOperator.prometheusRules.enabled=false` flag.
 
 ## **A note regarding webhooks and cert-manager**
 Webhooks are used to validate the custom resources before they are created in the cluster. They are also used to convert the old schema to the new schema.
 For the webhook to work, cert-manager should be installed in the cluster.
 Webhooks will be enabled by default in the operator installation, so make sure cert-manager is installed in the cluster.
+A [certificate](./charts/coralogix-operator/templates/certificate.yaml) and an [issuer](./charts/coralogix-operator/templates/issuer.yaml) will be installed on the cluster as part of the cert-manager installation.
 
 ### consequences of disabling webhooks
 If you disable the webhooks, the operator will not be able to validate the custom resources before they are created in the cluster.
