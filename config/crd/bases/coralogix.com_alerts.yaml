@@ -37,7 +37,8 @@ spec:
           metadata:
             type: object
           spec:
-            description: AlertSpec defines the desired state of Alert
+            description: AlertSpec defines the desired state of Alert. v1alpha1 alert
+              is going to be deprecated, consider using v1beta1.Alert instead.
             properties:
               active:
                 default: true

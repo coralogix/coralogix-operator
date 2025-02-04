@@ -74,7 +74,7 @@ Alert is the Schema for the alerts API
         <td><b><a href="#alertspec">spec</a></b></td>
         <td>object</td>
         <td>
-          AlertSpec defines the desired state of Alert<br/>
+          AlertSpec defines the desired state of Alert. v1alpha1 alert is going to be deprecated, consider using v1beta1.Alert instead.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -93,7 +93,7 @@ Alert is the Schema for the alerts API
 
 
 
-AlertSpec defines the desired state of Alert
+AlertSpec defines the desired state of Alert. v1alpha1 alert is going to be deprecated, consider using v1beta1.Alert instead.
 
 <table>
     <thead>
