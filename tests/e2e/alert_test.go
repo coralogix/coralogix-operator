@@ -171,6 +171,6 @@ var _ = Describe("Alert", Ordered, func() {
 			},
 		}
 		err := crClient.Create(ctx, alert)
-		Expect(err.Error()).To(ContainSubstring("only one alert type is allowed"))
+		Expect(err.Error()).To(ContainSubstring("only one alert type should be set"))
 	})
 })

@@ -84,3 +84,9 @@ Please refer to [CONTRIBUTING.md](CONTRIBUTING.md).
 This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/).
 It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/) 
 which provides a reconcile function responsible for synchronizing resources until the Desired state is reached on the cluster.
+
+## v1beta1 Alerts
+Alerts are recently supported in the Coralogix Operator with a new schema.
+For users who are using the previous schema, we recommend migrating to the new schema.
+The operator supports conversion webhook for the old schema to the new schema automatically. For supporting the conversion webhook, cert-manager should be installed in the cluster.
+**Be aware that v1alpha1 alerts won't be supported without the conversion webhook on the new version of the operator.**
