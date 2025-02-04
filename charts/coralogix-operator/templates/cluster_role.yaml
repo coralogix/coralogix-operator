@@ -76,6 +76,32 @@ rules:
 - apiGroups:
   - coralogix.com
   resources:
+  - presets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - presets/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - presets/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
   - recordingrulegroupsets
   verbs:
   - create
@@ -121,6 +147,32 @@ rules:
   - coralogix.com
   resources:
   - rulegroups/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - connectors
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - connectors/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - connectors/status
   verbs:
   - get
   - patch
