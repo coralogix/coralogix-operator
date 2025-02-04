@@ -21,9 +21,6 @@ import (
 	"strconv"
 	"strings"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-	coralogix "github.com/coralogix/coralogix-operator/api/coralogix"
-	utils "github.com/coralogix/coralogix-operator/internal/utils"
 	"github.com/go-logr/logr"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -32,6 +29,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+
+	"github.com/coralogix/coralogix-operator/api/coralogix"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // +kubebuilder:object:root=true

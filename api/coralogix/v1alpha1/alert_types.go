@@ -20,7 +20,7 @@ import (
 	"k8s.io/utils/ptr"
 )
 
-// AlertSpec defines the desired state of Alert
+// AlertSpec defines the desired state of Alert. v1alpha1 alert is going to be deprecated, consider using v1beta1.Alert instead.
 type AlertSpec struct {
 	//+kubebuilder:validation:MinLength=0
 	Name string `json:"name"`
