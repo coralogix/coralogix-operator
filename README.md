@@ -52,7 +52,7 @@ If you disable the webhooks, the operator will not be able to validate the custo
 If you are using an old schema of the custom resources, the operator will not be able to convert them to the new schema.
 That means you will have to manually update the custom resources to the new schema.
 v1alpha1/Alerts won't be supported if webhooks are disabled, as the storage version is v1beta1.
-prometheusRules and alertmanagerConfigs will not be supported if webhooks are disabled, as their controller are currently using v1alpha1/Alert.
+prometheusRules and alertmanagerConfigs controllers won't be able to track alerts that were created in a v1alpha1 schema.
 
 3. To uninstall the operator, run:
 ```sh

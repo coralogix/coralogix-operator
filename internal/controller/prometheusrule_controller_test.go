@@ -32,6 +32,7 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 )
 
 func setupReconciler(t *testing.T, ctx context.Context) (PrometheusRuleReconciler, watch.Interface, client.Client) {
@@ -40,6 +41,7 @@ func setupReconciler(t *testing.T, ctx context.Context) (PrometheusRuleReconcile
 	scheme := runtime.NewScheme()
 	utilruntime.Must(prometheus.AddToScheme(scheme))
 	utilruntime.Must(coralogixv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(coralogixv1beta1.AddToScheme(scheme))
 
 	mgr, _ := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:  scheme,
@@ -72,7 +74,7 @@ type PrepareParams struct {
 	client client.Client
 }
 
-func TestPrometheusRulesConvertionToCxParsingRules(t *testing.T) {
+func TestPrometheusRulesConversionToCxParsingRules(t *testing.T) {
 	tests := []struct {
 		name           string
 		prepare        func(params PrepareParams)
@@ -204,134 +206,134 @@ func TestPrometheusRulesConvertionToCxParsingRules(t *testing.T) {
 	}
 }
 
-//func TestPrometheusRulesConvertionToCxAlert(t *testing.T) {
-//	tests := []struct {
-//		name           string
-//		prepare        func(params PrepareParams)
-//		prometheusRule *prometheus.PrometheusRule
-//		shouldFail     bool
-//		shouldCreate   bool
-//	}{
-//		{
-//			name:         "PrometheusRule with empty groups",
-//			shouldFail:   false,
-//			shouldCreate: true,
-//			prepare: func(params PrepareParams) {
-//
-//			},
-//			prometheusRule: &prometheus.PrometheusRule{
-//				ObjectMeta: ctrl.ObjectMeta{
-//					Name:      "test-alert",
-//					Namespace: "default",
-//					Labels: map[string]string{
-//						"app.coralogix.com/track-alerting-rules": "true",
-//					},
-//				},
-//				Spec: prometheus.PrometheusRuleSpec{
-//					Groups: []prometheus.RuleGroup{},
-//				},
-//			},
-//		},
-//		{
-//			name:         "New PrometheusRule with one group and one rule",
-//			shouldFail:   false,
-//			prepare:      func(params PrepareParams) {},
-//			shouldCreate: true,
-//			prometheusRule: &prometheus.PrometheusRule{
-//				ObjectMeta: ctrl.ObjectMeta{
-//					Name:      "new-with-alerting-rules",
-//					Namespace: "default",
-//					Labels: map[string]string{
-//						"app.coralogix.com/track-alerting-rules": "true",
-//					},
-//				},
-//				Spec: prometheus.PrometheusRuleSpec{
-//					Groups: []prometheus.RuleGroup{
-//						{
-//							Name:     "test_1",
-//							Interval: "60s",
-//							Rules: []prometheus.Rule{
-//								{
-//									Alert: "ExampleAlert",
-//									Expr:  intstr.FromString("vector(1)"),
-//								},
-//							},
-//						},
-//					},
-//				},
-//			},
-//		},
-//		{
-//			name:       "Existing PrometheusRule with one group and one rule",
-//			shouldFail: false,
-//			prepare:    func(params PrepareParams) {},
-//			prometheusRule: &prometheus.PrometheusRule{
-//				ObjectMeta: ctrl.ObjectMeta{
-//					Name:      "new-with-alerting-rules",
-//					Namespace: "default",
-//					Labels: map[string]string{
-//						"app.coralogix.com/track-alerting-rules": "true",
-//					},
-//				},
-//				Spec: prometheus.PrometheusRuleSpec{
-//					Groups: []prometheus.RuleGroup{
-//						{
-//							Name:     "test_1",
-//							Interval: "60s",
-//							Rules: []prometheus.Rule{
-//								{
-//									Alert: "ExampleAlert",
-//									Expr:  intstr.FromString("vector(1)"),
-//								},
-//								{
-//									Alert: "ExampleAlert",
-//									Expr:  intstr.FromString("vector(2)"),
-//								},
-//							},
-//						},
-//					},
-//				},
-//			},
-//		},
-//	}
-//
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			controller := gomock.NewController(t)
-//			defer controller.Finish()
-//
-//			ctx, cancel := context.WithCancel(context.Background())
-//			defer cancel()
-//
-//			reconciler, watcher, client := setupReconciler(t, ctx)
-//
-//			if tt.prepare != nil {
-//				tt.prepare(PrepareParams{
-//					ctx:    ctx,
-//					client: client,
-//				})
-//			}
-//
-//			var err error
-//			if tt.shouldCreate {
-//				err = reconciler.Client.Create(ctx, tt.prometheusRule)
-//				assert.NoError(t, err)
-//			}
-//
-//			<-watcher.ResultChan()
-//
-//			_, err = reconciler.Reconcile(ctx, ctrl.Request{
-//				NamespacedName: types.NamespacedName{
-//					Namespace: tt.prometheusRule.Namespace,
-//					Name:      tt.prometheusRule.Name,
-//				},
-//			})
-//
-//			if tt.shouldFail {
-//				assert.Error(t, err)
-//			} else {
-//				assert.NoError(t, err)
-//			}
-//		})
-//	}
-//}
+func TestPrometheusRulesConvertionToCxAlert(t *testing.T) {
+	tests := []struct {
+		name           string
+		prepare        func(params PrepareParams)
+		prometheusRule *prometheus.PrometheusRule
+		shouldFail     bool
+		shouldCreate   bool
+	}{
+		{
+			name:         "PrometheusRule with empty groups",
+			shouldFail:   false,
+			shouldCreate: true,
+			prepare: func(params PrepareParams) {
+
+			},
+			prometheusRule: &prometheus.PrometheusRule{
+				ObjectMeta: ctrl.ObjectMeta{
+					Name:      "test-alert",
+					Namespace: "default",
+					Labels: map[string]string{
+						"app.coralogix.com/track-alerting-rules": "true",
+					},
+				},
+				Spec: prometheus.PrometheusRuleSpec{
+					Groups: []prometheus.RuleGroup{},
+				},
+			},
+		},
+		{
+			name:         "New PrometheusRule with one group and one rule",
+			shouldFail:   false,
+			prepare:      func(params PrepareParams) {},
+			shouldCreate: true,
+			prometheusRule: &prometheus.PrometheusRule{
+				ObjectMeta: ctrl.ObjectMeta{
+					Name:      "new-with-alerting-rules",
+					Namespace: "default",
+					Labels: map[string]string{
+						"app.coralogix.com/track-alerting-rules": "true",
+					},
+				},
+				Spec: prometheus.PrometheusRuleSpec{
+					Groups: []prometheus.RuleGroup{
+						{
+							Name:     "test_1",
+							Interval: "60s",
+							Rules: []prometheus.Rule{
+								{
+									Alert: "ExampleAlert",
+									Expr:  intstr.FromString("vector(1)"),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:       "Existing PrometheusRule with one group and one rule",
+			shouldFail: false,
+			prepare:    func(params PrepareParams) {},
+			prometheusRule: &prometheus.PrometheusRule{
+				ObjectMeta: ctrl.ObjectMeta{
+					Name:      "new-with-alerting-rules",
+					Namespace: "default",
+					Labels: map[string]string{
+						"app.coralogix.com/track-alerting-rules": "true",
+					},
+				},
+				Spec: prometheus.PrometheusRuleSpec{
+					Groups: []prometheus.RuleGroup{
+						{
+							Name:     "test_1",
+							Interval: "60s",
+							Rules: []prometheus.Rule{
+								{
+									Alert: "ExampleAlert",
+									Expr:  intstr.FromString("vector(1)"),
+								},
+								{
+									Alert: "ExampleAlert",
+									Expr:  intstr.FromString("vector(2)"),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			controller := gomock.NewController(t)
+			defer controller.Finish()
+
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			reconciler, watcher, client := setupReconciler(t, ctx)
+
+			if tt.prepare != nil {
+				tt.prepare(PrepareParams{
+					ctx:    ctx,
+					client: client,
+				})
+			}
+
+			var err error
+			if tt.shouldCreate {
+				err = reconciler.Client.Create(ctx, tt.prometheusRule)
+				assert.NoError(t, err)
+			}
+
+			<-watcher.ResultChan()
+
+			_, err = reconciler.Reconcile(ctx, ctrl.Request{
+				NamespacedName: types.NamespacedName{
+					Namespace: tt.prometheusRule.Namespace,
+					Name:      tt.prometheusRule.Name,
+				},
+			})
+
+			if tt.shouldFail {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
