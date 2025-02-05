@@ -38,6 +38,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
@@ -79,11 +80,12 @@ func (r *PrometheusRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	}
 	monitoring.PrometheusRuleInfoMetric.WithLabelValues(prometheusRule.Name, prometheusRule.Namespace).Set(1)
 
+	var errs error
 	if shouldTrackRecordingRules(prometheusRule) {
 		err := r.convertPrometheusRuleRecordingRuleToCxRecordingRule(ctx, log, prometheusRule, req)
 		if err != nil {
 			log.Error(err, "Received an error while trying to convert PrometheusRule to RecordingRule CRD")
-			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
+			errs = errors.Join(errs, err)
 		}
 	}
 
@@ -91,8 +93,12 @@ func (r *PrometheusRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		err := r.convertPrometheusRuleAlertToCxAlert(ctx, prometheusRule)
 		if err != nil {
 			log.Error(err, "Received an error while trying to convert PrometheusRule to Alert CRD")
-			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
+			errs = errors.Join(errs, err)
 		}
+	}
+
+	if errs != nil {
+		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, errs
 	}
 
 	return reconcile.Result{}, nil
@@ -177,7 +183,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 	var errorsEncountered []error
 	for alertName, rules := range alertMap {
 		for i, rule := range rules {
-			alert := &coralogixv1alpha1.Alert{}
+			alert := &coralogixv1beta1.Alert{}
 			alertName := fmt.Sprintf("%s-%s-%d", prometheusRule.Name, alertName, i)
 			alertsToKeep[alertName] = true
 			if err := r.Client.Get(ctx, client.ObjectKey{Namespace: prometheusRule.Namespace, Name: alertName}, alert); err != nil {
@@ -191,12 +197,10 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 					alert.OwnerReferences = []metav1.OwnerReference{getOwnerReference(prometheusRule)}
 					alert.Spec.Name = rule.Alert
 					alert.Spec.Description = rule.Annotations["description"]
-					alert.Spec.Labels = rule.Labels
-					alert.Spec.Severity = getSeverity(rule)
-					alert.Spec.AlertType = coralogixv1alpha1.AlertType{
-						Metric: &coralogixv1alpha1.Metric{
-							Promql: prometheusAlertToPromqlTypeSpec(rule),
-						},
+					alert.Spec.EntityLabels = rule.Labels
+					alert.Spec.Priority = getPriority(rule)
+					alert.Spec.TypeDefinition = coralogixv1beta1.AlertTypeDefinition{
+						MetricThreshold: prometheusAlertToMetricThreshold(rule),
 					}
 					if err = r.Create(ctx, alert); err != nil {
 						errorsEncountered = append(errorsEncountered, fmt.Errorf("error creating Alert CRD %s: %w", alertName, err))
@@ -216,25 +220,23 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 			}
 
 			desiredLabels := rule.Labels
-			if !reflect.DeepEqual(alert.Spec.Labels, desiredLabels) {
-				alert.Spec.Labels = desiredLabels
+			if !reflect.DeepEqual(alert.Spec.EntityLabels, desiredLabels) {
+				alert.Spec.EntityLabels = desiredLabels
 				updated = true
 			}
 
-			desiredSeverity := getSeverity(rule)
-			if alert.Spec.Severity != desiredSeverity {
-				alert.Spec.Severity = desiredSeverity
+			desiredPriority := getPriority(rule)
+			if alert.Spec.Priority != desiredPriority {
+				alert.Spec.Priority = desiredPriority
 				updated = true
 			}
 
-			desiredAlertTypeSpec := coralogixv1alpha1.AlertType{
-				Metric: &coralogixv1alpha1.Metric{
-					Promql: prometheusAlertToPromqlTypeSpec(rule),
-				},
+			desiredTypeDefinition := coralogixv1beta1.AlertTypeDefinition{
+				MetricThreshold: prometheusAlertToMetricThreshold(rule),
 			}
-			desiredAlertTypeSpec.Metric.Promql.Conditions.MinNonNullValuesPercentage = alert.Spec.AlertType.Metric.Promql.Conditions.MinNonNullValuesPercentage
-			if !reflect.DeepEqual(alert.Spec.AlertType, desiredAlertTypeSpec) {
-				alert.Spec.AlertType = desiredAlertTypeSpec
+			desiredTypeDefinition.MetricThreshold.MissingValues.MinNonNullValuesPct = alert.Spec.TypeDefinition.MetricThreshold.MissingValues.MinNonNullValuesPct
+			if !reflect.DeepEqual(alert.Spec.TypeDefinition, desiredTypeDefinition) {
+				alert.Spec.TypeDefinition = desiredTypeDefinition
 				updated = true
 			}
 
@@ -259,7 +261,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 		}
 	}
 
-	var childAlerts coralogixv1alpha1.AlertList
+	var childAlerts coralogixv1beta1.AlertList
 	if err := r.List(ctx, &childAlerts, client.InNamespace(prometheusRule.Namespace), client.MatchingLabels{"app.kubernetes.io/managed-by": prometheusRule.Name}); err != nil {
 		return fmt.Errorf("received an error while trying to list Alerts: %w", err)
 	}
@@ -344,50 +346,59 @@ func prometheusInnerRulesToCoralogixInnerRules(rules []prometheus.Rule) []coralo
 	return result
 }
 
-func prometheusAlertToPromqlTypeSpec(rule prometheus.Rule) *coralogixv1alpha1.Promql {
-	promqlType := &coralogixv1alpha1.Promql{
-		SearchQuery: rule.Expr.StrVal,
-		Conditions: coralogixv1alpha1.PromqlConditions{
-			TimeWindow:                 getTimeWindow(rule),
-			AlertWhen:                  coralogixv1alpha1.PromqlAlertWhenMoreThan,
-			Threshold:                  resource.MustParse("0"),
-			SampleThresholdPercentage:  100,
-			MinNonNullValuesPercentage: ptr.To(0),
+func prometheusAlertToMetricThreshold(rule prometheus.Rule) *coralogixv1beta1.MetricThreshold {
+	return &coralogixv1beta1.MetricThreshold{
+		MetricFilter: coralogixv1beta1.MetricFilter{
+			Promql: rule.Expr.StrVal,
+		},
+		Rules: []coralogixv1beta1.MetricThresholdRule{
+			{
+				Condition: coralogixv1beta1.MetricThresholdRuleCondition{
+					Threshold:  resource.MustParse("0"),
+					ForOverPct: 100,
+					OfTheLast: coralogixv1beta1.MetricTimeWindow{
+						SpecificValue: getTimeWindow(rule),
+					},
+					ConditionType: coralogixv1beta1.MetricThresholdConditionTypeMoreThan,
+				},
+			},
+		},
+		MissingValues: coralogixv1beta1.MetricMissingValues{
+			MinNonNullValuesPct: ptr.To(uint32(0)),
 		},
 	}
-
-	return promqlType
 }
 
-func getSeverity(rule prometheus.Rule) coralogixv1alpha1.AlertSeverity {
+func getPriority(rule prometheus.Rule) coralogixv1beta1.AlertPriority {
 	severity := coralogixv1alpha1.AlertSeverityInfo
 	if severityStr, ok := rule.Labels["severity"]; ok && severityStr != "" {
 		severityStr = strings.ToUpper(severityStr[:1]) + strings.ToLower(severityStr[1:])
 		severity = coralogixv1alpha1.AlertSeverity(severityStr)
 	}
-	return severity
+	return coralogixv1alpha1.SeveritiesV1alpha1ToV1beta1[severity]
 }
 
-func getTimeWindow(rule prometheus.Rule) coralogixv1alpha1.MetricTimeWindow {
+func getTimeWindow(rule prometheus.Rule) coralogixv1beta1.MetricTimeWindowSpecificValue {
 	if timeWindow, ok := prometheusAlertForToCoralogixPromqlAlertTimeWindow[rule.For]; ok {
 		return timeWindow
 	}
 	return prometheusAlertForToCoralogixPromqlAlertTimeWindow["1m"]
 }
 
-var prometheusAlertForToCoralogixPromqlAlertTimeWindow = map[prometheus.Duration]coralogixv1alpha1.MetricTimeWindow{
-	"1m":  coralogixv1alpha1.MetricTimeWindow(coralogixv1alpha1.TimeWindowMinute),
-	"5m":  coralogixv1alpha1.MetricTimeWindow(coralogixv1alpha1.TimeWindowFiveMinutes),
-	"10m": coralogixv1alpha1.MetricTimeWindow(coralogixv1alpha1.TimeWindowTenMinutes),
-	"15m": coralogixv1alpha1.MetricTimeWindow(coralogixv1alpha1.TimeWindowFifteenMinutes),
-	"20m": coralogixv1alpha1.MetricTimeWindow(coralogixv1alpha1.TimeWindowTwentyMinutes),
-	"30m": coralogixv1alpha1.MetricTimeWindow(coralogixv1alpha1.TimeWindowThirtyMinutes),
-	"1h":  coralogixv1alpha1.MetricTimeWindow(coralogixv1alpha1.TimeWindowHour),
-	"2h":  coralogixv1alpha1.MetricTimeWindow(coralogixv1alpha1.TimeWindowTwelveHours),
-	"4h":  coralogixv1alpha1.MetricTimeWindow(coralogixv1alpha1.TimeWindowFourHours),
-	"6h":  coralogixv1alpha1.MetricTimeWindow(coralogixv1alpha1.TimeWindowSixHours),
-	"12":  coralogixv1alpha1.MetricTimeWindow(coralogixv1alpha1.TimeWindowTwelveHours),
-	"24h": coralogixv1alpha1.MetricTimeWindow(coralogixv1alpha1.TimeWindowTwentyFourHours),
+var prometheusAlertForToCoralogixPromqlAlertTimeWindow = map[prometheus.Duration]coralogixv1beta1.MetricTimeWindowSpecificValue{
+	"1m":  coralogixv1beta1.MetricTimeWindowValue1Minute,
+	"5m":  coralogixv1beta1.MetricTimeWindowValue5Minutes,
+	"10m": coralogixv1beta1.MetricTimeWindowValue10Minutes,
+	"15m": coralogixv1beta1.MetricTimeWindowValue15Minutes,
+	"20m": coralogixv1beta1.MetricTimeWindowValue20Minutes,
+	"30m": coralogixv1beta1.MetricTimeWindowValue30Minutes,
+	"1h":  coralogixv1beta1.MetricTimeWindowValue1Hour,
+	"2h":  coralogixv1beta1.MetricTimeWindowValue2Hours,
+	"4h":  coralogixv1beta1.MetricTimeWindowValue4Hours,
+	"6h":  coralogixv1beta1.MetricTimeWindowValue6Hours,
+	"12":  coralogixv1beta1.MetricTimeWindowValue12Hours,
+	"24h": coralogixv1beta1.MetricTimeWindowValue24Hours,
+	"36h": coralogixv1beta1.MetricTimeWindowValue36Hours,
 }
 
 func getOwnerReference(promRule *prometheus.PrometheusRule) metav1.OwnerReference {

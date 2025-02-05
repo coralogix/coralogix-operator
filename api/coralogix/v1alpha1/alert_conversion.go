@@ -28,14 +28,14 @@ import (
 )
 
 var (
-	severitiesV1alpha1ToV1beta1 = map[AlertSeverity]v1beta1.AlertPriority{
+	SeveritiesV1alpha1ToV1beta1 = map[AlertSeverity]v1beta1.AlertPriority{
 		AlertSeverityCritical: v1beta1.AlertPriorityP1,
 		AlertSeverityError:    v1beta1.AlertPriorityP2,
 		AlertSeverityWarning:  v1beta1.AlertPriorityP3,
 		AlertSeverityInfo:     v1beta1.AlertPriorityP4,
 		AlertSeverityLow:      v1beta1.AlertPriorityP5,
 	}
-	severitiesV1beta1ToV1alpha1 = coralogix.ReverseMap(severitiesV1alpha1ToV1beta1)
+	severitiesV1beta1ToV1alpha1 = coralogix.ReverseMap(SeveritiesV1alpha1ToV1beta1)
 	notifyOnV1alpha1ToV1beta1   = map[NotifyOn]v1beta1.NotifyOn{
 		NotifyOnTriggeredOnly:        v1beta1.NotifyOnTriggeredOnly,
 		NotifyOnTriggeredAndResolved: v1beta1.NotifyOnTriggeredAndResolved,
@@ -231,7 +231,7 @@ func (src *Alert) ConvertTo(dstRaw conversion.Hub) error {
 	dstSpec := v1beta1.AlertSpec{
 		Name:         src.Spec.Name,
 		Description:  src.Spec.Description,
-		Priority:     severitiesV1alpha1ToV1beta1[src.Spec.Severity],
+		Priority:     SeveritiesV1alpha1ToV1beta1[src.Spec.Severity],
 		Enabled:      src.Spec.Active,
 		EntityLabels: src.Spec.Labels,
 		Schedule:     convertSchedulingV1alpha1ToV1beta1(src.Spec.Scheduling),
