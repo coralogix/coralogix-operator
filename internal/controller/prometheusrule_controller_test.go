@@ -31,6 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 )
 
@@ -39,6 +40,7 @@ func setupReconciler(t *testing.T, ctx context.Context) (PrometheusRuleReconcile
 
 	scheme := runtime.NewScheme()
 	utilruntime.Must(prometheus.AddToScheme(scheme))
+	utilruntime.Must(coralogixv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(coralogixv1beta1.AddToScheme(scheme))
 
 	mgr, _ := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{

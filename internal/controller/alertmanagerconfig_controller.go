@@ -21,7 +21,6 @@ import (
 	"regexp"
 	"time"
 
-	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	"github.com/go-logr/logr"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus/common/model"
@@ -38,6 +37,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
