@@ -3,11 +3,10 @@ module github.com/coralogix/coralogix-operator
 go 1.23.0
 
 require (
-	github.com/coralogix/coralogix-management-sdk v1.1.2-0.20250127153102-1feeeef19f6d
+	github.com/coralogix/coralogix-management-sdk v1.1.3-0.20250204080504-9ec507001c56
 	github.com/go-logr/logr v1.4.2
 	github.com/golang/protobuf v1.5.4
 	github.com/google/uuid v1.6.0
-	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/onsi/ginkgo/v2 v2.19.0
 	github.com/onsi/gomega v1.33.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.64.1
@@ -52,6 +51,7 @@ require (
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/pprof v0.0.0-20240525223248-4bfdf5a9a2af // indirect
+	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.25.1 // indirect
 	github.com/imdario/mergo v0.3.6 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect

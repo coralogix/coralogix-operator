@@ -321,6 +321,22 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Integration")
 		os.Exit(1)
 	}
+	if err = (&v1alpha1controllers.ConnectorReconciler{
+		NotificationsClient: clientSet.Notifications(),
+		Client:              mgr.GetClient(),
+		Scheme:              mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Connector")
+		os.Exit(1)
+	}
+	if err = (&v1alpha1controllers.PresetReconciler{
+		NotificationsClient: clientSet.Notifications(),
+		Client:              mgr.GetClient(),
+		Scheme:              mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Preset")
+		os.Exit(1)
+	}
 
 	if prometheusRuleController {
 		if err = (&controllers.AlertmanagerConfigReconciler{
@@ -350,6 +366,14 @@ func main() {
 
 		if err = webhookcoralogixv1beta1.SetupAlertWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "Alert")
+			os.Exit(1)
+		}
+		if err = webhookcoralogixv1alpha1.SetupConnectorWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Connector")
+			os.Exit(1)
+		}
+		if err = webhookcoralogixv1alpha1.SetupPresetWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Preset")
 			os.Exit(1)
 		}
 	} else {

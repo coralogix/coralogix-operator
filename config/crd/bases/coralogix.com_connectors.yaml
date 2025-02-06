@@ -1,0 +1,168 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.15.0
+  name: connectors.coralogix.com
+spec:
+  group: coralogix.com
+  names:
+    kind: Connector
+    listKind: ConnectorList
+    plural: connectors
+    singular: connector
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Connector is the Schema for the connectors API.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ConnectorSpec defines the desired state of Connector.
+            properties:
+              connectorType:
+                properties:
+                  genericHttps:
+                    properties:
+                      config:
+                        properties:
+                          additionalBodyFields:
+                            type: string
+                          additionalHeaders:
+                            type: string
+                          method:
+                            enum:
+                            - get
+                            - post
+                            - put
+                            type: string
+                          url:
+                            type: string
+                        required:
+                        - url
+                        type: object
+                    required:
+                    - config
+                    type: object
+                  slack:
+                    properties:
+                      commonFields:
+                        properties:
+                          rawConfig:
+                            properties:
+                              channel:
+                                type: string
+                              fallbackChannel:
+                                type: string
+                              integration:
+                                properties:
+                                  backendRef:
+                                    properties:
+                                      id:
+                                        type: string
+                                    required:
+                                    - id
+                                    type: object
+                                required:
+                                - backendRef
+                                type: object
+                            required:
+                            - fallbackChannel
+                            - integration
+                            type: object
+                          structuredConfig:
+                            properties:
+                              channel:
+                                type: string
+                              fallbackChannel:
+                                type: string
+                              integration:
+                                properties:
+                                  backendRef:
+                                    properties:
+                                      id:
+                                        type: string
+                                    required:
+                                    - id
+                                    type: object
+                                required:
+                                - backendRef
+                                type: object
+                            required:
+                            - fallbackChannel
+                            - integration
+                            type: object
+                        required:
+                        - rawConfig
+                        - structuredConfig
+                        type: object
+                      overrides:
+                        items:
+                          properties:
+                            entityType:
+                              type: string
+                            rawConfig:
+                              properties:
+                                channel:
+                                  type: string
+                              required:
+                              - channel
+                              type: object
+                            structuredConfig:
+                              properties:
+                                channel:
+                                  type: string
+                              required:
+                              - channel
+                              type: object
+                          required:
+                          - entityType
+                          - rawConfig
+                          - structuredConfig
+                          type: object
+                        type: array
+                    required:
+                    - commonFields
+                    type: object
+                type: object
+              description:
+                type: string
+              name:
+                type: string
+            required:
+            - connectorType
+            - description
+            - name
+            type: object
+          status:
+            description: ConnectorStatus defines the observed state of Connector.
+            properties:
+              id:
+                type: string
+            required:
+            - id
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
