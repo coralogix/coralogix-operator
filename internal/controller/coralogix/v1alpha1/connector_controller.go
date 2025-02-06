@@ -176,7 +176,7 @@ func (r *ConnectorReconciler) deleteRemoteConnector(ctx context.Context, log log
 	_, err := r.NotificationsClient.DeleteConnector(ctx, &cxsdk.DeleteConnectorRequest{
 		Id: *id,
 	})
-	if err != nil {
+	if err != nil && cxsdk.Code(err) != codes.NotFound {
 		return fmt.Errorf("error on deleting remote connector: %w", err)
 	}
 	log.V(1).Info("Remote connector deleted", "id", *id)

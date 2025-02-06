@@ -80,6 +80,14 @@ func validateAlert(alert *coralogixv1beta1.Alert) (admission.Warnings, error) {
 		errs = errors.Join(errs, err)
 	}
 
+	if notificationGroup := alert.Spec.NotificationGroup; notificationGroup != nil {
+		if destinations := notificationGroup.Destinations; len(destinations) > 0 {
+			warns, err = validateDestinations(destinations)
+			warns = append(warnings, warns...)
+			errs = errors.Join(errs, err)
+		}
+	}
+
 	if errs != nil {
 		monitoring.TotalRejectedAlertsMetric.Inc()
 	}
@@ -154,6 +162,57 @@ func validateWebhookBackendRef(ref *coralogixv1beta1.OutboundWebhookBackendRef) 
 	}
 
 	return nil, nil
+}
+
+func validateDestinations(destinations []coralogixv1beta1.Destination) (admission.Warnings, error) {
+	var warnings admission.Warnings
+	var errs error
+	for i, destination := range destinations {
+		warns, err := validateDestination(destination)
+		if err != nil {
+			warnings = append(warnings, warns...)
+			errs = errors.Join(fmt.Errorf("error in destination %d: %v", i, err.Error()))
+		}
+	}
+
+	return warnings, errs
+}
+
+func validateDestination(destination coralogixv1beta1.Destination) (admission.Warnings, error) {
+	var warnings admission.Warnings
+	var errs error
+	if destination.DestinationType.Slack == nil && destination.DestinationType.GenericHttps == nil {
+		warnings = append(warnings, "destination type must be set")
+		errs = errors.Join(errs, fmt.Errorf("destination type must be set"))
+	}
+
+	if destination.DestinationType.Slack != nil && destination.DestinationType.GenericHttps != nil {
+		warnings = append(warnings, "only one destination type should be set")
+		errs = errors.Join(errs, fmt.Errorf("only one destination type should be set"))
+	}
+
+	if slack := destination.DestinationType.Slack; slack != nil {
+		if slack.ConnectorRef.ResourceRef != nil && slack.ConnectorRef.BackendRef != nil {
+			warnings = append(warnings, "only one of resource reference or backend reference should be set")
+			errs = errors.Join(errs, fmt.Errorf("only one of resource reference or backend reference should be set"))
+		}
+		if slack.PresetRef.ResourceRef != nil && slack.PresetRef.BackendRef != nil {
+			warnings = append(warnings, "only one of resource reference or backend reference should be set")
+			errs = errors.Join(errs, fmt.Errorf("only one of resource reference or backend reference should be set"))
+		}
+	}
+	if genericHttps := destination.DestinationType.GenericHttps; genericHttps != nil {
+		if genericHttps.ConnectorRef.ResourceRef != nil && genericHttps.ConnectorRef.BackendRef != nil {
+			warnings = append(warnings, "only one of resource reference or backend reference should be set")
+			errs = errors.Join(errs, fmt.Errorf("only one of resource reference or backend reference should be set"))
+		}
+		if genericHttps.PresetRef.ResourceRef != nil && genericHttps.PresetRef.BackendRef != nil {
+			warnings = append(warnings, "only one of resource reference or backend reference should be set")
+			errs = errors.Join(errs, fmt.Errorf("only one of resource reference or backend reference should be set"))
+		}
+	}
+
+	return warnings, errs
 }
 
 func isSubset(mainArray, subArray []string) bool {

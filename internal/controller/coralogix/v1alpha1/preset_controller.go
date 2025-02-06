@@ -180,7 +180,7 @@ func (r *PresetReconciler) deleteRemotePreset(ctx context.Context, log logr.Logg
 			},
 		},
 	})
-	if err != nil {
+	if err != nil && cxsdk.Code(err) != codes.NotFound {
 		return fmt.Errorf("error on deleting remote preset: %w", err)
 	}
 	log.V(1).Info("Remote preset deleted", "id", *id)

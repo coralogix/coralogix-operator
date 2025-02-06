@@ -49,6 +49,16 @@ var _ = Describe("Alert", Ordered, func() {
 	})
 
 	It("Should be created successfully", func(ctx context.Context) {
+		By("Creating Slack Connector")
+		connectorName := "slack-connector-for-alert"
+		connector := getSampleSlackConnector(connectorName, testNamespace)
+		Expect(crClient.Create(ctx, connector)).To(Succeed())
+
+		By("Creating Slack Preset")
+		presetName := "slack-preset-for-alert"
+		preset := getSampleSlackPreset(presetName, testNamespace)
+		Expect(crClient.Create(ctx, preset)).To(Succeed())
+
 		By("Creating Alert")
 		alertName := "promql-alert"
 		alert = &coralogixv1beta1.Alert{
@@ -69,6 +79,36 @@ var _ = Describe("Alert", Ordered, func() {
 							},
 							Integration: coralogixv1beta1.IntegrationType{
 								Recipients: []string{"example@coralogix.com"},
+							},
+						},
+					},
+					Destinations: []coralogixv1beta1.Destination{
+						{
+							NotifyOn: coralogixv1beta1.NotifyOnTriggeredOnly,
+							DestinationType: coralogixv1beta1.DestinationType{
+								Slack: &coralogixv1beta1.SlackDestination{
+									ConnectorRef: &coralogixv1beta1.NCRef{
+										ResourceRef: &coralogixv1beta1.ResourceRef{
+											Name: connectorName,
+										},
+									},
+									PresetRef: &coralogixv1beta1.NCRef{
+										ResourceRef: &coralogixv1beta1.ResourceRef{
+											Name: presetName,
+										}},
+									TriggeredRoutingOverride: &coralogixv1beta1.SlackRoutingOverride{
+										ConnectorOverride: &coralogixv1beta1.SlackConnectorOverride{
+											Channel: "override",
+										},
+										PresetOverride: &coralogixv1beta1.SlackPresetOverride{
+											StructuredFields: &coralogixv1beta1.PresetSlackStructuredFields{
+												Title:       ptr.To("Override Title"),
+												Description: ptr.To("Override Description"),
+												Footer:      ptr.To("Override Footer"),
+											},
+										},
+									},
+								},
 							},
 						},
 					},
@@ -133,12 +173,11 @@ var _ = Describe("Alert", Ordered, func() {
 		Expect(crClient.Patch(ctx, modifiedAlert, client.MergeFrom(alert))).To(Succeed())
 
 		By("Verifying Alert is updated in Coralogix backend")
-		Eventually(func() bool {
+		Eventually(func() *wrapperspb.StringValue {
 			getAlertRes, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(alertID)})
 			Expect(err).ToNot(HaveOccurred())
-			return getAlertRes.GetAlertDef().GetUpdatedTime().AsTime().
-				After(getAlertRes.GetAlertDef().GetCreatedTime().AsTime())
-		}, time.Minute, time.Second).Should(BeTrue())
+			return getAlertRes.GetAlertDef().AlertDefProperties.GetName()
+		}, time.Minute, time.Second).Should(Equal(wrapperspb.String(newAlertName)))
 	})
 
 	It("Should be deleted successfully", func(ctx context.Context) {
@@ -173,5 +212,22 @@ var _ = Describe("Alert", Ordered, func() {
 		}
 		err := crClient.Create(ctx, alert)
 		Expect(err.Error()).To(ContainSubstring("only one alert type should be set"))
+	})
+
+	It("Should deny creation of Alert with destination with two types", func(ctx context.Context) {
+		By("Creating Alert")
+		alert.Spec.NotificationGroup.Destinations[0].DestinationType.GenericHttps = &coralogixv1beta1.GenericHttpsDestination{
+			ConnectorRef: &coralogixv1beta1.NCRef{
+				ResourceRef: &coralogixv1beta1.ResourceRef{
+					Name: "generic-https-connector",
+				},
+			},
+			PresetRef: &coralogixv1beta1.NCRef{
+				ResourceRef: &coralogixv1beta1.ResourceRef{
+					Name: "generic-https-preset",
+				}},
+		}
+		err := crClient.Create(ctx, alert)
+		Expect(err.Error()).To(ContainSubstring("only one destination type should be set"))
 	})
 })
