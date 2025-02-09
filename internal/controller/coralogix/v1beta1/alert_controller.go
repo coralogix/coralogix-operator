@@ -74,7 +74,12 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
 
-	if ptr.Deref(alert.Status.ID, "") == "" {
+	alertExists, err := r.isExists(ctx, log, alert)
+	if err != nil {
+		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
+	}
+
+	if alertExists {
 		err = r.create(ctx, log, alert)
 		if err != nil {
 			log.Error(err, "Error on creating alert")
@@ -233,6 +238,27 @@ func (r *AlertReconciler) deleteRemoteAlert(ctx context.Context, log logr.Logger
 
 	log.V(1).Info("Remote alert deleted", "alert", alertID)
 	return nil
+}
+
+func (r *AlertReconciler) isExists(ctx context.Context, log logr.Logger, alert *coralogixv1beta1.Alert) (bool, error) {
+	if ptr.Deref(alert.Status.ID, "") == "" {
+		return false, nil
+	}
+	alertID := *alert.Status.ID
+
+	log.V(1).Info("Checking remote alert existence", "alert", alertID)
+	req := &cxsdk.ListAlertDefsRequest{}
+	responseList, err := r.CoralogixClientSet.Alerts().List(ctx, req)
+	if err != nil {
+		log.V(1).Error(err, "Error on listing remote alert", "alert", alertID)
+		return false, fmt.Errorf("error on listing remote alert: %w", err)
+	}
+	for _, alertDef := range responseList.AlertDefs {
+		if alertDef.Id.String() == alertID {
+			return true, nil
+		}
+	}
+	return true, nil
 }
 
 func getAlertType(alert *coralogixv1beta1.Alert) string {
