@@ -6,9 +6,9 @@ metadata:
     {{- include "coralogixOperator.labels" . | nindent 4 }}
 spec:
   ports:
-  - name: https
-    port: 8443
+  - name: http
+    port: 8080
     protocol: TCP
-    targetPort: 8443
+    targetPort: 8080
   selector:
     {{- include "coralogixOperator.selectorLabels" . | nindent 4 }}
