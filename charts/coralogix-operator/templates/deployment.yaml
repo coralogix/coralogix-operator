@@ -38,7 +38,7 @@ spec:
       - name: {{ .Chart.Name }}
         args:
         - -health-probe-bind-address=:8081
-        - -metrics-bind-address=:8443
+        - -metrics-bind-address=:8080
         - -leader-elect
         - -prometheus-rule-controller={{.Values.coralogixOperator.prometheusRules.enabled}}
         - -enable-webhooks={{.Values.coralogixOperator.webhooks.enabled }}
