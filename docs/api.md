@@ -7141,7 +7141,7 @@ AlertSpec defines the desired state of Alert
         <td>
           <br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr><tr>
         <td><b>namespace</b></td>
         <td>string</td>
@@ -11030,15 +11030,1017 @@ AlertSpec defines the desired state of Alert
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindex">destinations</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>groupByKeys</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#alertspecnotificationgroupwebhooksindex">webhooks</a></b></td>
         <td>[]object</td>
         <td>
           <br/>
         </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index]
+<sup><sup>[↩ Parent](#alertspecnotificationgroup)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtype">destinationType</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
         <td>true</td>
       </tr><tr>
-        <td><b>groupByKeys</b></td>
-        <td>[]string</td>
+        <td><b>notifyOn</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: triggeredOnly, triggeredAndResolved<br/>
+            <i>Default</i>: triggeredOnly<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttps">genericHttps</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslack">slack</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.genericHttps
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtype)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpsconnectorref">connectorRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpspresetref">presetRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpsresolvedroutingoverride">resolvedRoutingOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpstriggeredroutingoverride">triggeredRoutingOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.genericHttps.connectorRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttps)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpsconnectorrefbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpsconnectorrefresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.genericHttps.connectorRef.backendRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpsconnectorref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.genericHttps.connectorRef.resourceRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpsconnectorref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.genericHttps.presetRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttps)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpspresetrefbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpspresetrefresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.genericHttps.presetRef.backendRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpspresetref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.genericHttps.presetRef.resourceRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpspresetref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.genericHttps.resolvedRoutingOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttps)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpsresolvedroutingoverridepresetoverride">presetOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.genericHttps.resolvedRoutingOverride.presetOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpsresolvedroutingoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>body</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>headers</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.genericHttps.triggeredRoutingOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttps)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpstriggeredroutingoverridepresetoverride">presetOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.genericHttps.triggeredRoutingOverride.presetOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpstriggeredroutingoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>body</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>headers</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtype)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslackconnectorref">connectorRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslackpresetref">presetRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslackresolvedroutingoverride">resolvedRoutingOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslacktriggeredroutingoverride">triggeredRoutingOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.connectorRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslack)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslackconnectorrefbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslackconnectorrefresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.connectorRef.backendRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslackconnectorref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.connectorRef.resourceRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslackconnectorref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.presetRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslack)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslackpresetrefbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslackpresetrefresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.presetRef.backendRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslackpresetref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.presetRef.resourceRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslackpresetref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.resolvedRoutingOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslack)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslackresolvedroutingoverrideconnectoroverride">connectorOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslackresolvedroutingoverridepresetoverride">presetOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.resolvedRoutingOverride.connectorOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslackresolvedroutingoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>channel</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.resolvedRoutingOverride.presetOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslackresolvedroutingoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslackresolvedroutingoverridepresetoverriderawfields">rawFields</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslackresolvedroutingoverridepresetoverridestructuredfields">structuredFields</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.resolvedRoutingOverride.presetOverride.rawFields
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslackresolvedroutingoverridepresetoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>payload</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.resolvedRoutingOverride.presetOverride.structuredFields
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslackresolvedroutingoverridepresetoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>footer</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>title</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.triggeredRoutingOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslack)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslacktriggeredroutingoverrideconnectoroverride">connectorOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslacktriggeredroutingoverridepresetoverride">presetOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.triggeredRoutingOverride.connectorOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslacktriggeredroutingoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>channel</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.triggeredRoutingOverride.presetOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslacktriggeredroutingoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslacktriggeredroutingoverridepresetoverriderawfields">rawFields</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslacktriggeredroutingoverridepresetoverridestructuredfields">structuredFields</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.triggeredRoutingOverride.presetOverride.rawFields
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslacktriggeredroutingoverridepresetoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>payload</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.triggeredRoutingOverride.presetOverride.structuredFields
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslacktriggeredroutingoverridepresetoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>footer</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>title</b></td>
+        <td>string</td>
         <td>
           <br/>
         </td>
@@ -11217,7 +12219,7 @@ AlertSpec defines the desired state of Alert
         <td>
           <br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr><tr>
         <td><b>namespace</b></td>
         <td>string</td>
@@ -11275,15 +12277,1017 @@ AlertSpec defines the desired state of Alert
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindex">destinations</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>groupByKeys</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#alertspecnotificationgroupexcessindexwebhooksindex">webhooks</a></b></td>
         <td>[]object</td>
         <td>
           <br/>
         </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index]
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtype">destinationType</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
         <td>true</td>
       </tr><tr>
-        <td><b>groupByKeys</b></td>
-        <td>[]string</td>
+        <td><b>notifyOn</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: triggeredOnly, triggeredAndResolved<br/>
+            <i>Default</i>: triggeredOnly<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttps">genericHttps</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslack">slack</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.genericHttps
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtype)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpsconnectorref">connectorRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpspresetref">presetRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpsresolvedroutingoverride">resolvedRoutingOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpstriggeredroutingoverride">triggeredRoutingOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.genericHttps.connectorRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttps)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpsconnectorrefbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpsconnectorrefresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.genericHttps.connectorRef.backendRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpsconnectorref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.genericHttps.connectorRef.resourceRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpsconnectorref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.genericHttps.presetRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttps)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpspresetrefbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpspresetrefresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.genericHttps.presetRef.backendRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpspresetref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.genericHttps.presetRef.resourceRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpspresetref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.genericHttps.resolvedRoutingOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttps)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpsresolvedroutingoverridepresetoverride">presetOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.genericHttps.resolvedRoutingOverride.presetOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpsresolvedroutingoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>body</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>headers</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.genericHttps.triggeredRoutingOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttps)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpstriggeredroutingoverridepresetoverride">presetOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.genericHttps.triggeredRoutingOverride.presetOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpstriggeredroutingoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>body</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>headers</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtype)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackconnectorref">connectorRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackpresetref">presetRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackresolvedroutingoverride">resolvedRoutingOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslacktriggeredroutingoverride">triggeredRoutingOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.connectorRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslack)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackconnectorrefbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackconnectorrefresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.connectorRef.backendRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackconnectorref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.connectorRef.resourceRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackconnectorref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.presetRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslack)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackpresetrefbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackpresetrefresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.presetRef.backendRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackpresetref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.presetRef.resourceRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackpresetref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.resolvedRoutingOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslack)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackresolvedroutingoverrideconnectoroverride">connectorOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackresolvedroutingoverridepresetoverride">presetOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.resolvedRoutingOverride.connectorOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackresolvedroutingoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>channel</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.resolvedRoutingOverride.presetOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackresolvedroutingoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackresolvedroutingoverridepresetoverriderawfields">rawFields</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackresolvedroutingoverridepresetoverridestructuredfields">structuredFields</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.resolvedRoutingOverride.presetOverride.rawFields
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackresolvedroutingoverridepresetoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>payload</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.resolvedRoutingOverride.presetOverride.structuredFields
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackresolvedroutingoverridepresetoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>footer</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>title</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.triggeredRoutingOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslack)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslacktriggeredroutingoverrideconnectoroverride">connectorOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslacktriggeredroutingoverridepresetoverride">presetOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.triggeredRoutingOverride.connectorOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslacktriggeredroutingoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>channel</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.triggeredRoutingOverride.presetOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslacktriggeredroutingoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslacktriggeredroutingoverridepresetoverriderawfields">rawFields</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslacktriggeredroutingoverridepresetoverridestructuredfields">structuredFields</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.triggeredRoutingOverride.presetOverride.rawFields
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslacktriggeredroutingoverridepresetoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>payload</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.triggeredRoutingOverride.presetOverride.structuredFields
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslacktriggeredroutingoverridepresetoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>footer</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>title</b></td>
+        <td>string</td>
         <td>
           <br/>
         </td>
@@ -11462,7 +13466,7 @@ AlertSpec defines the desired state of Alert
         <td>
           <br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr><tr>
         <td><b>namespace</b></td>
         <td>string</td>

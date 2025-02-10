@@ -31,9 +31,41 @@ spec:
             conditionType: moreThan
   notificationGroup:
     webhooks:
-      - retriggeringPeriod:
+      - notifyOn: triggeredOnly
+        retriggeringPeriod:
           minutes: 1440
         integration:
           integrationRef:
             resourceRef:
               name: slack-webhook
+    destinations:
+      - notifyOn: triggeredOnly
+        destinationType:
+            slack:
+              connectorRef:
+                resourceRef:
+                  name: slack-sample
+              presetRef:
+                backendRef:
+                  id: 0c98eadc-e6ac-438d-9a6e-c6a29125e526
+              triggeredRoutingOverride:
+                connectorOverride:
+                  channel: "override-channel"
+                presetOverride:
+                  structuredFields:
+                    title: "override-title"
+                    description: "override-description"
+                    footer: "override-footer"
+      - notifyOn: triggeredOnly
+        destinationType:
+            genericHttps:
+              connectorRef:
+                resourceRef:
+                  name: generic-https-sample
+              presetRef:
+                backendRef:
+                  id: bf56a54f-2111-424d-bb37-4d4080861995
+              triggeredRoutingOverride:
+                presetOverride:
+                  headers: "{\"Content-Type\": \"override\"}"
+                  body: "{\"text\": \"This is an overridden preset\"}"

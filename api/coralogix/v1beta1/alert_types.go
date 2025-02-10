@@ -234,6 +234,17 @@ var (
 		LogsUniqueCountTimeWindowValue24Hours:   cxsdk.LogsUniqueValueTimeWindowValue24Hours,
 		LogsUniqueCountTimeWindowValue36Hours:   cxsdk.LogsUniqueValueTimeWindowValue36Hours,
 	}
+
+	defaultOutputSchemaId    = "default"
+	rawOutputSchemaId        = "raw"
+	structuredOutputSchemaId = "structured"
+	fieldNameHeaders         = "headers"
+	fieldNameBody            = "body"
+	fieldNamePayload         = "payload"
+	fieldNameTitle           = "title"
+	fieldNameDescription     = "description"
+	fieldNameFooter          = "footer"
+	fieldNameChannel         = "channel"
 )
 
 // AlertSpec defines the desired state of Alert
@@ -314,8 +325,11 @@ type RetriggeringPeriod struct {
 
 type NotificationGroup struct {
 	// +optional
-	GroupByKeys []string          `json:"groupByKeys,omitempty"`
-	Webhooks    []WebhookSettings `json:"webhooks"`
+	GroupByKeys []string `json:"groupByKeys,omitempty"`
+	// +optional
+	Webhooks []WebhookSettings `json:"webhooks,omitempty"`
+	// +optional
+	Destinations []Destination `json:"destinations,omitempty"`
 }
 
 type WebhookSettings struct {
@@ -346,6 +360,97 @@ type OutboundWebhookBackendRef struct {
 	Name *string `json:"name,omitempty"`
 }
 
+type Destination struct {
+	// +kubebuilder:default=triggeredOnly
+	NotifyOn NotifyOn `json:"notifyOn"`
+
+	DestinationType DestinationType `json:"destinationType"`
+}
+
+type DestinationType struct {
+	// +optional
+	Slack *SlackDestination `json:"slack,omitempty"`
+	// +optional
+	GenericHttps *GenericHttpsDestination `json:"genericHttps,omitempty"`
+}
+
+type SlackDestination struct {
+	ConnectorRef *NCRef `json:"connectorRef"`
+	// +optional
+	PresetRef *NCRef `json:"presetRef,omitempty"`
+	// +optional
+	TriggeredRoutingOverride *SlackRoutingOverride `json:"triggeredRoutingOverride,omitempty"`
+	// +optional
+	ResolvedRoutingOverride *SlackRoutingOverride `json:"resolvedRoutingOverride,omitempty"`
+}
+
+type GenericHttpsDestination struct {
+	ConnectorRef *NCRef `json:"connectorRef"`
+	// +optional
+	PresetRef *NCRef `json:"presetRef,omitempty"`
+	// +optional
+	TriggeredRoutingOverride *GenericHttpsRoutingOverride `json:"triggeredRoutingOverride,omitempty"`
+	// +optional
+	ResolvedRoutingOverride *GenericHttpsRoutingOverride `json:"resolvedRoutingOverride,omitempty"`
+}
+
+type NCRef struct {
+	// +optional
+	BackendRef *NCBackendRef `json:"backendRef,omitempty"`
+	// +optional
+	ResourceRef *ResourceRef `json:"resourceRef,omitempty"`
+}
+
+type NCBackendRef struct {
+	ID string `json:"id"`
+}
+
+type SlackRoutingOverride struct {
+	// +optional
+	ConnectorOverride *SlackConnectorOverride `json:"connectorOverride,omitempty"`
+	// +optional
+	PresetOverride *SlackPresetOverride `json:"presetOverride,omitempty"`
+}
+
+type SlackConnectorOverride struct {
+	Channel string `json:"channel"`
+}
+
+type SlackPresetOverride struct {
+	// +optional
+	RawFields *PresetSlackRawFields `json:"rawFields,omitempty"`
+
+	// +optional
+	StructuredFields *PresetSlackStructuredFields `json:"structuredFields,omitempty"`
+}
+
+type PresetSlackRawFields struct {
+	Payload string `json:"payload"`
+}
+
+type PresetSlackStructuredFields struct {
+	// +optional
+	Title *string `json:"title,omitempty"`
+
+	// +optional
+	Description *string `json:"description,omitempty"`
+
+	// +optional
+	Footer *string `json:"footer,omitempty"`
+}
+
+type GenericHttpsRoutingOverride struct {
+	PresetOverride *GenericHttpsPresetOverride `json:"presetOverride"`
+}
+
+type GenericHttpsPresetOverride struct {
+	// +optional
+	Headers *string `json:"headers,omitempty"`
+
+	// +optional
+	Body *string `json:"body,omitempty"`
+}
+
 type AlertBackendRef struct {
 	// +optional
 	ID *string `json:"id,omitempty"`
@@ -354,7 +459,7 @@ type AlertBackendRef struct {
 }
 
 type ResourceRef struct {
-	Name string `json:"name,omitempty"`
+	Name string `json:"name"`
 	// +optional
 	Namespace *string `json:"namespace,omitempty"`
 }
@@ -1048,9 +1153,15 @@ func expandNotificationGroup(notificationGroup *NotificationGroup, listingAlerts
 		return nil, fmt.Errorf("failed to expand webhooks settings: %w", err)
 	}
 
+	destinations, err := expandDestinations(notificationGroup.Destinations, listingAlertsAndWebhooksProperties)
+	if err != nil {
+		return nil, fmt.Errorf("failed to expand destinations: %w", err)
+	}
+
 	return &cxsdk.AlertDefNotificationGroup{
-		GroupByKeys: coralogix.StringSliceToWrappedStringSlice(notificationGroup.GroupByKeys),
-		Webhooks:    webhooks,
+		GroupByKeys:  coralogix.StringSliceToWrappedStringSlice(notificationGroup.GroupByKeys),
+		Webhooks:     webhooks,
+		Destinations: destinations,
 	}, nil
 }
 
@@ -1160,6 +1271,219 @@ func fillWebhookNameToId(properties *GetResourceRefProperties) error {
 	}
 
 	return nil
+}
+
+func expandDestinations(destinations []Destination, resourceRefProperties *GetResourceRefProperties) ([]*cxsdk.NotificationDestination, error) {
+	var result []*cxsdk.NotificationDestination
+	var errs error
+
+	for _, destination := range destinations {
+		expandedDestination, err := expandDestination(destination, resourceRefProperties)
+		if err != nil {
+			errs = errors.Join(errs, fmt.Errorf("failed to expand destination: %w", err))
+			continue
+		}
+		result = append(result, expandedDestination)
+	}
+
+	if errs != nil {
+		return nil, errs
+	}
+	return result, nil
+}
+
+func expandDestination(destination Destination, resourceRefProperties *GetResourceRefProperties) (*cxsdk.NotificationDestination, error) {
+	var result *cxsdk.NotificationDestination
+	var err error
+
+	switch {
+	case destination.DestinationType.Slack != nil:
+		result, err = expandSlackDestination(destination.DestinationType.Slack, resourceRefProperties)
+	case destination.DestinationType.GenericHttps != nil:
+		result, err = expandGenericHttpsDestination(destination.DestinationType.GenericHttps, resourceRefProperties)
+	default:
+		return nil, fmt.Errorf("destination type not found")
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to expand destination: %w", err)
+	}
+
+	result.NotifyOn = NotifyOnToProtoNotifyOn[destination.NotifyOn]
+	return result, nil
+}
+func expandSlackDestination(destination *SlackDestination, resourceRefProperties *GetResourceRefProperties) (*cxsdk.NotificationDestination, error) {
+	connectorId, err := getConnectorID(destination.ConnectorRef, resourceRefProperties)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get connector ID: %w", err)
+	}
+
+	result := &cxsdk.NotificationDestination{ConnectorId: connectorId}
+
+	if destination.PresetRef != nil {
+		presetId, err := getPresetID(destination.PresetRef, resourceRefProperties)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get preset ID: %w", err)
+		}
+		result.PresetId = ptr.To(presetId)
+	}
+	if destination.TriggeredRoutingOverride != nil {
+		result.TriggeredRoutingOverrides = expandSlackRoutingOverride(destination.TriggeredRoutingOverride)
+	}
+	if destination.ResolvedRoutingOverride != nil {
+		result.ResolvedRouteOverrides = expandSlackRoutingOverride(destination.ResolvedRoutingOverride)
+	}
+
+	return result, nil
+}
+
+func expandGenericHttpsDestination(destination *GenericHttpsDestination, resourceRefProperties *GetResourceRefProperties) (*cxsdk.NotificationDestination, error) {
+	connectorId, err := getConnectorID(destination.ConnectorRef, resourceRefProperties)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get connector ID: %w", err)
+	}
+
+	result := &cxsdk.NotificationDestination{ConnectorId: connectorId}
+
+	if destination.PresetRef != nil {
+		presetId, err := getPresetID(destination.PresetRef, resourceRefProperties)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get preset ID: %w", err)
+		}
+		result.PresetId = ptr.To(presetId)
+	}
+	if destination.TriggeredRoutingOverride != nil {
+		result.TriggeredRoutingOverrides = expandGenericHttpsRoutingOverride(destination.TriggeredRoutingOverride)
+	}
+	if destination.ResolvedRoutingOverride != nil {
+		result.ResolvedRouteOverrides = expandGenericHttpsRoutingOverride(destination.ResolvedRoutingOverride)
+	}
+
+	return result, nil
+}
+
+func getConnectorID(connectorRef *NCRef, resourceRefProperties *GetResourceRefProperties) (string, error) {
+	if connectorRef.BackendRef != nil {
+		return connectorRef.BackendRef.ID, nil
+	}
+	if connectorRef.ResourceRef != nil {
+		return getConnectorIDFromResourceRef(connectorRef.ResourceRef, resourceRefProperties)
+	}
+
+	return "", fmt.Errorf("connector ref not found")
+}
+
+func getConnectorIDFromResourceRef(resourceRef *ResourceRef, resourceRefProperties *GetResourceRefProperties) (string, error) {
+	if resourceRef.Namespace != nil {
+		resourceRefProperties.Namespace = *resourceRef.Namespace
+	}
+
+	connectorID, err := convertCRNameToConnectorID(resourceRef.Name, resourceRefProperties)
+	if err != nil {
+		return "", fmt.Errorf("failed to convert CR name to connector ID: %w", err)
+	}
+
+	return connectorID, nil
+}
+
+func getPresetID(presetRef *NCRef, resourceRefProperties *GetResourceRefProperties) (string, error) {
+	if presetRef.BackendRef != nil {
+		return presetRef.BackendRef.ID, nil
+	}
+	if presetRef.ResourceRef != nil {
+		return getPresetIDFromResourceRef(presetRef.ResourceRef, resourceRefProperties)
+	}
+
+	return "", fmt.Errorf("preset ref not found")
+}
+
+func getPresetIDFromResourceRef(resourceRef *ResourceRef, resourceRefProperties *GetResourceRefProperties) (string, error) {
+	if resourceRef.Namespace != nil {
+		resourceRefProperties.Namespace = *resourceRef.Namespace
+	}
+
+	presetID, err := convertCRNameToPresetID(resourceRef.Name, resourceRefProperties)
+	if err != nil {
+		return "", fmt.Errorf("failed to convert CR name to preset ID: %w", err)
+	}
+
+	return presetID, nil
+}
+
+func expandSlackRoutingOverride(routingOverride *SlackRoutingOverride) *cxsdk.NotificationRouting {
+	notificationRouting := &cxsdk.NotificationRouting{
+		ConfigOverrides: &cxsdk.SourceOverrides{},
+	}
+
+	if routingOverride.ConnectorOverride != nil {
+		notificationRouting.ConfigOverrides.ConnectorConfigFields = []*cxsdk.AlertsConnectorConfigField{
+			{
+				FieldName: fieldNameChannel,
+				Template:  routingOverride.ConnectorOverride.Channel,
+			},
+		}
+	}
+
+	if presetOverride := routingOverride.PresetOverride; presetOverride != nil {
+		if presetOverride.RawFields != nil {
+			notificationRouting.ConfigOverrides.OutputSchemaId = rawOutputSchemaId
+			notificationRouting.ConfigOverrides.MessageConfigFields = []*cxsdk.AlertsMessageConfigField{
+				{
+					FieldName: fieldNamePayload,
+					Template:  presetOverride.RawFields.Payload,
+				},
+			}
+		} else if presetOverride.StructuredFields != nil {
+			notificationRouting.ConfigOverrides.OutputSchemaId = structuredOutputSchemaId
+			var structuredFields []*cxsdk.AlertsMessageConfigField
+			if presetOverride.StructuredFields.Title != nil {
+				structuredFields = append(structuredFields, &cxsdk.AlertsMessageConfigField{
+					FieldName: fieldNameTitle,
+					Template:  *presetOverride.StructuredFields.Title,
+				})
+			}
+			if presetOverride.StructuredFields.Description != nil {
+				structuredFields = append(structuredFields, &cxsdk.AlertsMessageConfigField{
+					FieldName: fieldNameDescription,
+					Template:  *presetOverride.StructuredFields.Description,
+				})
+			}
+			if presetOverride.StructuredFields.Footer != nil {
+				structuredFields = append(structuredFields, &cxsdk.AlertsMessageConfigField{
+					FieldName: fieldNameFooter,
+					Template:  *presetOverride.StructuredFields.Footer,
+				})
+			}
+			notificationRouting.ConfigOverrides.MessageConfigFields = structuredFields
+		}
+	}
+
+	return notificationRouting
+}
+
+func expandGenericHttpsRoutingOverride(routingOverride *GenericHttpsRoutingOverride) *cxsdk.NotificationRouting {
+	var messageConfigFields []*cxsdk.AlertsMessageConfigField
+	if presetOverride := routingOverride.PresetOverride; presetOverride != nil {
+		if presetOverride.Headers != nil {
+			messageConfigFields = append(messageConfigFields, &cxsdk.AlertsMessageConfigField{
+				FieldName: fieldNameHeaders,
+				Template:  *presetOverride.Headers,
+			})
+		}
+		if presetOverride.Body != nil {
+			messageConfigFields = append(messageConfigFields, &cxsdk.AlertsMessageConfigField{
+				FieldName: fieldNameBody,
+				Template:  *presetOverride.Body,
+			})
+		}
+	}
+
+	return &cxsdk.NotificationRouting{
+		ConfigOverrides: &cxsdk.SourceOverrides{
+			MessageConfigFields: messageConfigFields,
+			OutputSchemaId:      defaultOutputSchemaId,
+		},
+	}
 }
 
 func expandAlertSchedule(alertSchedule *AlertSchedule) *cxsdk.AlertDefPropertiesActiveOn {
@@ -2060,4 +2384,62 @@ func convertCRNameToIntegrationID(name string, properties *GetResourceRefPropert
 	}
 
 	return wrapperspb.UInt32(uint32(externalIDInt)), nil
+}
+
+func convertCRNameToConnectorID(name string, properties *GetResourceRefProperties) (string, error) {
+	c, ctx, namespace := properties.Client, properties.Ctx, properties.Namespace
+
+	u := &unstructured.Unstructured{}
+	u.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "coralogix.com",
+		Kind:    "Connector",
+		Version: "v1alpha1",
+	})
+
+	if err := c.Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
+		return "", fmt.Errorf("failed to get connector: %w", err)
+	}
+
+	if !utils.GetLabelFilter().Matches(u.GetLabels()) {
+		return "", fmt.Errorf("outbound webhook %s does not match label selector", u.GetName())
+	}
+
+	id, found, err := unstructured.NestedString(u.Object, "status", "id")
+	if err != nil {
+		return "", err
+	}
+	if !found {
+		return "", fmt.Errorf("connector %s does not have an ID", u.GetName())
+	}
+
+	return id, nil
+}
+
+func convertCRNameToPresetID(name string, properties *GetResourceRefProperties) (string, error) {
+	c, ctx, namespace := properties.Client, properties.Ctx, properties.Namespace
+
+	u := &unstructured.Unstructured{}
+	u.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "coralogix.com",
+		Kind:    "Preset",
+		Version: "v1alpha1",
+	})
+
+	if err := c.Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
+		return "", fmt.Errorf("failed to get preset: %w", err)
+	}
+
+	if !utils.GetLabelFilter().Matches(u.GetLabels()) {
+		return "", fmt.Errorf("preset %s does not match label selector", u.GetName())
+	}
+
+	id, found, err := unstructured.NestedString(u.Object, "status", "id")
+	if err != nil {
+		return "", err
+	}
+	if !found {
+		return "", fmt.Errorf("preset %s does not have an ID", u.GetName())
+	}
+
+	return id, nil
 }

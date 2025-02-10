@@ -42,6 +42,9 @@ func (f *LabelFilter) Predicate() predicate.Funcs {
 		DeleteFunc: func(e event.DeleteEvent) bool {
 			return f.Matches(e.Object.GetLabels())
 		},
+		GenericFunc: func(e event.GenericEvent) bool {
+			return f.Matches(e.Object.GetLabels())
+		},
 	}
 }
 
