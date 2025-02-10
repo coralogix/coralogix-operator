@@ -21,17 +21,15 @@ import (
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
@@ -50,60 +48,15 @@ var (
 	scopeFinalizerName = "scope.coralogix.com/finalizer"
 )
 
+var _ coralogix.CoralogixReconciler = &ScopeReconciler{}
+
 func (r *ScopeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx).WithValues(
-		"scope", req.NamespacedName.Name,
-		"namespace", req.NamespacedName.Namespace,
-	)
+	return coralogix.ReconcileResource(ctx, req, r.Client, &coralogixv1alpha1.Scope{}, r)
 
-	scope := &coralogixv1alpha1.Scope{}
-	if err := r.Get(ctx, req.NamespacedName, scope); err != nil {
-		if errors.IsNotFound(err) {
-			// Request object not found, could have been deleted after reconcile request.
-			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-			// Return and don't requeue
-			return ctrl.Result{}, nil
-		}
-		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
-	}
-
-	if ptr.Deref(scope.Status.ID, "") == "" {
-		err := r.create(ctx, log, scope)
-		if err != nil {
-			log.Error(err, "Error on creating Scope")
-			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
-		}
-		return ctrl.Result{}, nil
-	}
-
-	if !scope.ObjectMeta.DeletionTimestamp.IsZero() {
-		err := r.delete(ctx, log, scope)
-		if err != nil {
-			log.Error(err, "Error on deleting Scope")
-			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
-		}
-		return ctrl.Result{}, nil
-	}
-
-	if !utils.GetLabelFilter().Matches(scope.GetLabels()) {
-		err := r.deleteRemoteScope(ctx, log, *scope.Status.ID)
-		if err != nil {
-			log.Error(err, "Error on deleting Scope")
-			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
-		}
-		return ctrl.Result{}, nil
-	}
-
-	err := r.update(ctx, log, scope)
-	if err != nil {
-		log.Error(err, "Error on updating Scope")
-		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
-	}
-
-	return ctrl.Result{}, nil
 }
 
-func (r *ScopeReconciler) create(ctx context.Context, log logr.Logger, scope *coralogixv1alpha1.Scope) error {
+func (r *ScopeReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
+	scope := obj.(*coralogixv1alpha1.Scope)
 	createRequest, err := scope.Spec.ExtractCreateScopeRequest()
 	if err != nil {
 		return fmt.Errorf("error on extracting create request: %w", err)
@@ -121,24 +74,17 @@ func (r *ScopeReconciler) create(ctx context.Context, log logr.Logger, scope *co
 
 	log.V(1).Info("Updating Scope status", "id", createResponse.Scope.Id)
 	if err = r.Status().Update(ctx, scope); err != nil {
-		if deleteErr := r.deleteRemoteScope(ctx, log, *scope.Status.ID); deleteErr != nil {
-			return fmt.Errorf("error to delete scope after status update error. Update error: %w. Deletion error: %w", err, deleteErr)
+		if deleteErr := r.HandleDeletion(ctx, log, obj); deleteErr != nil {
+			return fmt.Errorf("error deleting scope after status update error. Update error: %w. Deletion error: %w", err, deleteErr)
 		}
 		return fmt.Errorf("error to update scope status: %w", err)
-	}
-
-	if !controllerutil.ContainsFinalizer(scope, scopeFinalizerName) {
-		log.V(1).Info("Updating Scope to add finalizer", "id", createResponse.Scope.Id)
-		controllerutil.AddFinalizer(scope, scopeFinalizerName)
-		if err := r.Update(ctx, scope); err != nil {
-			return fmt.Errorf("error on updating Scope: %w", err)
-		}
 	}
 
 	return nil
 }
 
-func (r *ScopeReconciler) update(ctx context.Context, log logr.Logger, scope *coralogixv1alpha1.Scope) error {
+func (r *ScopeReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
+	scope := obj.(*coralogixv1alpha1.Scope)
 	updateRequest, err := scope.Spec.ExtractUpdateScopeRequest(*scope.Status.ID)
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
@@ -147,10 +93,8 @@ func (r *ScopeReconciler) update(ctx context.Context, log logr.Logger, scope *co
 	updateResponse, err := r.ScopesClient.Update(ctx, updateRequest)
 	if err != nil {
 		if cxsdk.Code(err) == codes.NotFound {
-			log.V(1).Info("scope not found on remote, removing id from status")
-			scope.Status = coralogixv1alpha1.ScopeStatus{
-				ID: ptr.To(""),
-			}
+			log.V(1).Info("Scope not found on remote, removing ID from status")
+			scope.Status = coralogixv1alpha1.ScopeStatus{ID: nil}
 			if err = r.Status().Update(ctx, scope); err != nil {
 				return fmt.Errorf("error on updating Scope status: %w", err)
 			}
@@ -163,27 +107,43 @@ func (r *ScopeReconciler) update(ctx context.Context, log logr.Logger, scope *co
 	return nil
 }
 
-func (r *ScopeReconciler) delete(ctx context.Context, log logr.Logger, scope *coralogixv1alpha1.Scope) error {
-	if err := r.deleteRemoteScope(ctx, log, *scope.Status.ID); err != nil {
-		return fmt.Errorf("error on deleting remote scope: %w", err)
-	}
+func (r *ScopeReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
+	scope := obj.(*coralogixv1alpha1.Scope)
 
-	log.V(1).Info("Removing finalizer from Scope")
-	controllerutil.RemoveFinalizer(scope, scopeFinalizerName)
-	if err := r.Update(ctx, scope); err != nil {
-		return fmt.Errorf("error on updating Scope: %w", err)
+	log.V(1).Info("Deleting scope from remote system", "id", *scope.Status.ID)
+	_, err := r.ScopesClient.Delete(ctx, &cxsdk.DeleteScopeRequest{Id: *scope.Status.ID})
+	if err != nil && cxsdk.Code(err) != codes.NotFound {
+		log.V(1).Error(err, "Error deleting remote scope", "id", *scope.Status.ID)
+		return fmt.Errorf("error deleting remote scope %s: %w", *scope.Status.ID, err)
 	}
-
+	log.V(1).Info("Scope deleted from remote system", "id", *scope.Status.ID)
 	return nil
 }
 
-func (r *ScopeReconciler) deleteRemoteScope(ctx context.Context, log logr.Logger, scopeID string) error {
-	log.V(1).Info("Deleting scope from remote", "id", scopeID)
-	if _, err := r.ScopesClient.Delete(ctx, &cxsdk.DeleteScopeRequest{Id: scopeID}); err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.V(1).Error(err, "Error on deleting remote scope", "id", scopeID)
-		return fmt.Errorf("error to delete remote scope %s: %w", scopeID, err)
+func (r *ScopeReconciler) CheckIDInStatus(obj client.Object) bool {
+	scope := obj.(*coralogixv1alpha1.Scope)
+	return scope.Status.ID != nil && *scope.Status.ID != ""
+}
+
+func (r *ScopeReconciler) AddFinalizer(ctx context.Context, log logr.Logger, obj client.Object) error {
+	scope := obj.(*coralogixv1alpha1.Scope)
+	if !controllerutil.ContainsFinalizer(scope, scopeFinalizerName) {
+		log.V(1).Info("Adding finalizer to Scope")
+		controllerutil.AddFinalizer(scope, scopeFinalizerName)
+		if err := r.Update(ctx, scope); err != nil {
+			return fmt.Errorf("error updating Scope: %w", err)
+		}
 	}
-	log.V(1).Info("scope was deleted from remote", "id", scopeID)
+	return nil
+}
+
+func (r *ScopeReconciler) RemoveFinalizer(ctx context.Context, log logr.Logger, obj client.Object) error {
+	scope := obj.(*coralogixv1alpha1.Scope)
+	log.V(1).Info("Removing finalizer from Scope")
+	controllerutil.RemoveFinalizer(scope, scopeFinalizerName)
+	if err := r.Update(ctx, scope); err != nil {
+		return fmt.Errorf("error updating Scope: %w", err)
+	}
 	return nil
 }
 
