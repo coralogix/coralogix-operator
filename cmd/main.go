@@ -298,17 +298,17 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.TCOLogsPoliciesReconciler{
-		TCOClient: clientSet.TCOPolicies(),
-		Client:    mgr.GetClient(),
-		Scheme:    mgr.GetScheme(),
+		CoralogixClientSet: clientSet,
+		Client:             mgr.GetClient(),
+		Scheme:             mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "TCOLogsPolicies")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.TCOTracesPoliciesReconciler{
-		TCOClient: clientSet.TCOPolicies(),
-		Client:    mgr.GetClient(),
-		Scheme:    mgr.GetScheme(),
+		CoralogixClientSet: clientSet,
+		Client:             mgr.GetClient(),
+		Scheme:             mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "TCOTracesPolicies")
 		os.Exit(1)

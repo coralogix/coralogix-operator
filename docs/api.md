@@ -6126,8 +6126,8 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>archiveRetentionId</b></td>
-        <td>string</td>
+        <td><b><a href="#tcologspoliciesspecpoliciesindexarchiveretention">archiveRetention</a></b></td>
+        <td>object</td>
         <td>
           <br/>
         </td>
@@ -6180,6 +6180,60 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
           <br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### TCOLogsPolicies.spec.policies[index].archiveRetention
+<sup><sup>[↩ Parent](#tcologspoliciesspecpoliciesindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#tcologspoliciesspecpoliciesindexarchiveretentionbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### TCOLogsPolicies.spec.policies[index].archiveRetention.backendRef
+<sup><sup>[↩ Parent](#tcologspoliciesspecpoliciesindexarchiveretention)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -6361,8 +6415,8 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>archiveRetentionId</b></td>
-        <td>string</td>
+        <td><b><a href="#tcotracespoliciesspecpoliciesindexarchiveretention">archiveRetention</a></b></td>
+        <td>object</td>
         <td>
           <br/>
         </td>
@@ -6465,6 +6519,60 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
           <br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### TCOTracesPolicies.spec.policies[index].archiveRetention
+<sup><sup>[↩ Parent](#tcotracespoliciesspecpoliciesindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#tcotracespoliciesspecpoliciesindexarchiveretentionbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### TCOTracesPolicies.spec.policies[index].archiveRetention.backendRef
+<sup><sup>[↩ Parent](#tcotracespoliciesspecpoliciesindexarchiveretention)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
         </td>
         <td>true</td>
       </tr></tbody>

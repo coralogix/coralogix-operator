@@ -36,6 +36,9 @@ spec:
           values:
             - prod
             - dev
+      archiveRetention:
+        backendRef:
+          name: Default
     - name: second policy
       priority: low
       severities:

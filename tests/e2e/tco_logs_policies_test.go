@@ -60,6 +60,11 @@ var _ = Describe("TCOLogsPolicies", Ordered, func() {
 							Names:    []string{"mobile"},
 							RuleType: "is",
 						},
+						ArchiveRetention: &coralogixv1alpha1.ArchiveRetention{
+							BackendRef: &coralogixv1alpha1.ArchiveRetentionBackendRef{
+								Name: "Default",
+							},
+						},
 					},
 				},
 			},
