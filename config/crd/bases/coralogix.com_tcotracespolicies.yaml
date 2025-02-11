@@ -80,8 +80,18 @@ spec:
                       - names
                       - ruleType
                       type: object
-                    archiveRetentionId:
-                      type: string
+                    archiveRetention:
+                      properties:
+                        backendRef:
+                          properties:
+                            name:
+                              type: string
+                          required:
+                          - name
+                          type: object
+                      required:
+                      - backendRef
+                      type: object
                     description:
                       type: string
                     name:

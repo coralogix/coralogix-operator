@@ -37,8 +37,8 @@ import (
 // TCOTracesPoliciesReconciler reconciles a TCOTracesPolicies object
 type TCOTracesPoliciesReconciler struct {
 	client.Client
-	TCOClient *cxsdk.TCOPoliciesClient
-	Scheme    *runtime.Scheme
+	CoralogixClientSet *cxsdk.ClientSet
+	Scheme             *runtime.Scheme
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=tcotracespolicies,verbs=get;list;watch;create;update;patch;delete
@@ -94,12 +94,12 @@ func (r *TCOTracesPoliciesReconciler) Reconcile(ctx context.Context, req ctrl.Re
 }
 
 func (r *TCOTracesPoliciesReconciler) overwrite(ctx context.Context, log logr.Logger, tcoTracesPolicies *coralogixv1alpha1.TCOTracesPolicies) error {
-	overwriteRequest, err := tcoTracesPolicies.Spec.ExtractOverwriteTracesPoliciesRequest()
+	overwriteRequest, err := tcoTracesPolicies.Spec.ExtractOverwriteTracesPoliciesRequest(ctx, r.CoralogixClientSet)
 	if err != nil {
 		return fmt.Errorf("error on extracting overwrite log policies request: %w", err)
 	}
 	log.V(1).Info("Overwriting remote tco-Traces-policies", "tco-Traces-policies", protojson.Format(overwriteRequest))
-	overwriteResponse, err := r.TCOClient.OverwriteTCOTracesPolicies(ctx, overwriteRequest)
+	overwriteResponse, err := r.CoralogixClientSet.TCOPolicies().OverwriteTCOTracesPolicies(ctx, overwriteRequest)
 	if err != nil {
 		return fmt.Errorf("error on overwriting remote tco-Traces-policies: %w", err)
 	}
@@ -133,7 +133,7 @@ func (r *TCOTracesPoliciesReconciler) delete(ctx context.Context, log logr.Logge
 func (r *TCOTracesPoliciesReconciler) deleteRemoteTCOTracesPolicies(ctx context.Context, log logr.Logger) error {
 	deleteTCOTracesPoliciesRequest := &cxsdk.AtomicOverwriteSpanPoliciesRequest{}
 	log.V(1).Info("Deleting TCOTracesPolicies")
-	if _, err := r.TCOClient.OverwriteTCOTracesPolicies(ctx, deleteTCOTracesPoliciesRequest); err != nil && cxsdk.Code(err) != codes.NotFound {
+	if _, err := r.CoralogixClientSet.TCOPolicies().OverwriteTCOTracesPolicies(ctx, deleteTCOTracesPoliciesRequest); err != nil && cxsdk.Code(err) != codes.NotFound {
 		log.V(1).Error(err, "Received an error while Deleting a TCOTracesPolicies")
 		return err
 	}

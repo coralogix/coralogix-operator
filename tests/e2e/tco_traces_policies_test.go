@@ -80,6 +80,11 @@ var _ = Describe("TCOTracesPolicies", Ordered, func() {
 								RuleType: "is",
 							},
 						},
+						ArchiveRetention: &coralogixv1alpha1.ArchiveRetention{
+							BackendRef: &coralogixv1alpha1.ArchiveRetentionBackendRef{
+								Name: "Default",
+							},
+						},
 					},
 				},
 			},

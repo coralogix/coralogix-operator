@@ -15,6 +15,7 @@
 package v1alpha1
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -44,7 +45,7 @@ type TCOTracesPolicy struct {
 	Severities []TCOPolicySeverity `json:"severities"`
 
 	// +optional
-	ArchiveRetentionID *string `json:"archiveRetentionId,omitempty"`
+	ArchiveRetention *ArchiveRetention `json:"archiveRetention,omitempty"`
 
 	// +optional
 	Applications *TCOPolicyRule `json:"applications,omitempty"`
@@ -72,12 +73,12 @@ type TCOPolicyTag struct {
 	RuleType string `json:"ruleType"`
 }
 
-func (s *TCOTracesPoliciesSpec) ExtractOverwriteTracesPoliciesRequest() (*cxsdk.AtomicOverwriteSpanPoliciesRequest, error) {
+func (s *TCOTracesPoliciesSpec) ExtractOverwriteTracesPoliciesRequest(ctx context.Context, coralogixClientSet *cxsdk.ClientSet) (*cxsdk.AtomicOverwriteSpanPoliciesRequest, error) {
 	var policies []*cxsdk.CreateSpanPolicyRequest
 	var errs error
 
 	for _, policy := range s.Policies {
-		policyReq, err := policy.ExtractCreateSpanPolicyRequest()
+		policyReq, err := policy.ExtractCreateSpanPolicyRequest(ctx, coralogixClientSet)
 		if err != nil {
 			errs = errors.Join(errs, err)
 		} else {
@@ -92,7 +93,7 @@ func (s *TCOTracesPoliciesSpec) ExtractOverwriteTracesPoliciesRequest() (*cxsdk.
 	return &cxsdk.AtomicOverwriteSpanPoliciesRequest{Policies: policies}, nil
 }
 
-func (p *TCOTracesPolicy) ExtractCreateSpanPolicyRequest() (*cxsdk.CreateSpanPolicyRequest, error) {
+func (p *TCOTracesPolicy) ExtractCreateSpanPolicyRequest(ctx context.Context, coralogixClientSet *cxsdk.ClientSet) (*cxsdk.CreateSpanPolicyRequest, error) {
 	var errs error
 	priority, err := expandTCOPolicyPriority(p.Priority)
 	if err != nil {
@@ -124,6 +125,11 @@ func (p *TCOTracesPolicy) ExtractCreateSpanPolicyRequest() (*cxsdk.CreateSpanPol
 		errs = errors.Join(errs, err)
 	}
 
+	archiveRetentionID, err := expandArchiveRetention(ctx, coralogixClientSet, p.ArchiveRetention)
+	if err != nil {
+		errs = errors.Join(errs, err)
+	}
+
 	if errs != nil {
 		return nil, errs
 	}
@@ -135,7 +141,7 @@ func (p *TCOTracesPolicy) ExtractCreateSpanPolicyRequest() (*cxsdk.CreateSpanPol
 			Priority:         priority,
 			ApplicationRule:  applicationRule,
 			SubsystemRule:    subsystemRule,
-			ArchiveRetention: expandArchiveRetention(p.ArchiveRetentionID),
+			ArchiveRetention: archiveRetentionID,
 		},
 		SpanRules: &cxsdk.TCOSpanRules{
 			ServiceRule: serviceRule,

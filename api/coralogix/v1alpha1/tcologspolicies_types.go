@@ -15,6 +15,7 @@
 package v1alpha1
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -44,13 +45,21 @@ type TCOLogsPolicy struct {
 	Severities []TCOPolicySeverity `json:"severities"`
 
 	// +optional
-	ArchiveRetentionID *string `json:"archiveRetentionId,omitempty"`
+	ArchiveRetention *ArchiveRetention `json:"archiveRetention,omitempty"`
 
 	// +optional
 	Applications *TCOPolicyRule `json:"applications,omitempty"`
 
 	// +optional
 	Subsystems *TCOPolicyRule `json:"subsystems,omitempty"`
+}
+
+type ArchiveRetention struct {
+	BackendRef *ArchiveRetentionBackendRef `json:"backendRef"`
+}
+
+type ArchiveRetentionBackendRef struct {
+	Name string `json:"name"`
 }
 
 // +kubebuilder:validation:Enum=info;warning;critical;error;debug;verbose
@@ -63,12 +72,12 @@ type TCOPolicyRule struct {
 	RuleType string `json:"ruleType"`
 }
 
-func (s *TCOLogsPoliciesSpec) ExtractOverwriteLogPoliciesRequest() (*cxsdk.AtomicOverwriteLogPoliciesRequest, error) {
+func (s *TCOLogsPoliciesSpec) ExtractOverwriteLogPoliciesRequest(ctx context.Context, coralogixClientSet *cxsdk.ClientSet) (*cxsdk.AtomicOverwriteLogPoliciesRequest, error) {
 	var policies []*cxsdk.CreateLogPolicyRequest
 	var errs error
 
 	for _, policy := range s.Policies {
-		policyReq, err := policy.ExtractCreateLogPolicyRequest()
+		policyReq, err := policy.ExtractCreateLogPolicyRequest(ctx, coralogixClientSet)
 		if err != nil {
 			errs = errors.Join(errs, err)
 		} else {
@@ -83,7 +92,7 @@ func (s *TCOLogsPoliciesSpec) ExtractOverwriteLogPoliciesRequest() (*cxsdk.Atomi
 	return &cxsdk.AtomicOverwriteLogPoliciesRequest{Policies: policies}, nil
 }
 
-func (p *TCOLogsPolicy) ExtractCreateLogPolicyRequest() (*cxsdk.CreateLogPolicyRequest, error) {
+func (p *TCOLogsPolicy) ExtractCreateLogPolicyRequest(ctx context.Context, coralogixClientSet *cxsdk.ClientSet) (*cxsdk.CreateLogPolicyRequest, error) {
 	var errs error
 	priority, err := expandTCOPolicyPriority(p.Priority)
 	if err != nil {
@@ -105,6 +114,11 @@ func (p *TCOLogsPolicy) ExtractCreateLogPolicyRequest() (*cxsdk.CreateLogPolicyR
 		errs = errors.Join(errs, err)
 	}
 
+	archiveRetentionID, err := expandArchiveRetention(ctx, coralogixClientSet, p.ArchiveRetention)
+	if err != nil {
+		errs = errors.Join(errs, err)
+	}
+
 	if errs != nil {
 		return nil, errs
 	}
@@ -116,7 +130,7 @@ func (p *TCOLogsPolicy) ExtractCreateLogPolicyRequest() (*cxsdk.CreateLogPolicyR
 			Priority:         priority,
 			ApplicationRule:  applicationRule,
 			SubsystemRule:    subsystemRule,
-			ArchiveRetention: expandArchiveRetention(p.ArchiveRetentionID),
+			ArchiveRetention: archiveRetentionID,
 		},
 		LogRules: &cxsdk.TCOLogRules{
 			Severities: severities,
@@ -163,14 +177,25 @@ func expandTCOPolicySeverities(severities []TCOPolicySeverity) ([]cxsdk.TCOPolic
 	return result, nil
 }
 
-func expandArchiveRetention(archiveRetentionID *string) *cxsdk.ArchiveRetention {
-	if archiveRetentionID == nil {
-		return nil
+func expandArchiveRetention(ctx context.Context, coralogixClientSet *cxsdk.ClientSet, archiveRetention *ArchiveRetention) (*cxsdk.ArchiveRetention, error) {
+	if archiveRetention == nil {
+		return nil, nil
 	}
 
-	return &cxsdk.ArchiveRetention{
-		Id: wrapperspb.String(*archiveRetentionID),
+	ArchiveRetentions, err := coralogixClientSet.ArchiveRetentions().Get(ctx, &cxsdk.GetRetentionsRequest{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get archive retentions: %w", err)
 	}
+
+	var archiveRetentionID *wrapperspb.StringValue
+	for _, retention := range ArchiveRetentions.Retentions {
+		if *utils.WrapperspbStringToStringPointer(retention.Name) == archiveRetention.BackendRef.Name {
+			archiveRetentionID = retention.Id
+			break
+		}
+	}
+
+	return &cxsdk.ArchiveRetention{Id: archiveRetentionID}, nil
 }
 
 // TCOLogsPoliciesStatus defines the observed state of TCOLogsPolicies.

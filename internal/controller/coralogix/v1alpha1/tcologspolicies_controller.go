@@ -37,8 +37,8 @@ import (
 // TCOLogsPoliciesReconciler reconciles a TCOLogsPolicies object
 type TCOLogsPoliciesReconciler struct {
 	client.Client
-	TCOClient *cxsdk.TCOPoliciesClient
-	Scheme    *runtime.Scheme
+	CoralogixClientSet *cxsdk.ClientSet
+	Scheme             *runtime.Scheme
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=tcologspolicies,verbs=get;list;watch;create;update;patch;delete
@@ -94,12 +94,12 @@ func (r *TCOLogsPoliciesReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 }
 
 func (r *TCOLogsPoliciesReconciler) overwrite(ctx context.Context, log logr.Logger, tcoLogsPolicies *coralogixv1alpha1.TCOLogsPolicies) error {
-	overwriteRequest, err := tcoLogsPolicies.Spec.ExtractOverwriteLogPoliciesRequest()
+	overwriteRequest, err := tcoLogsPolicies.Spec.ExtractOverwriteLogPoliciesRequest(ctx, r.CoralogixClientSet)
 	if err != nil {
 		return fmt.Errorf("error on extracting overwrite log policies request: %w", err)
 	}
 	log.V(1).Info("Overwriting remote tco-logs-policies", "tco-logs-policies", protojson.Format(overwriteRequest))
-	overwriteResponse, err := r.TCOClient.OverwriteTCOLogsPolicies(ctx, overwriteRequest)
+	overwriteResponse, err := r.CoralogixClientSet.TCOPolicies().OverwriteTCOLogsPolicies(ctx, overwriteRequest)
 	if err != nil {
 		return fmt.Errorf("error on overwriting remote tco-logs-policies: %w", err)
 	}
@@ -133,7 +133,7 @@ func (r *TCOLogsPoliciesReconciler) delete(ctx context.Context, log logr.Logger,
 func (r *TCOLogsPoliciesReconciler) deleteRemoteTCOLogsPolicies(ctx context.Context, log logr.Logger) error {
 	deleteTCOLogsPoliciesRequest := &cxsdk.AtomicOverwriteLogPoliciesRequest{}
 	log.V(1).Info("Deleting TCOLogsPolicies")
-	if _, err := r.TCOClient.OverwriteTCOLogsPolicies(ctx, deleteTCOLogsPoliciesRequest); err != nil && cxsdk.Code(err) != codes.NotFound {
+	if _, err := r.CoralogixClientSet.TCOPolicies().OverwriteTCOLogsPolicies(ctx, deleteTCOLogsPoliciesRequest); err != nil && cxsdk.Code(err) != codes.NotFound {
 		log.V(1).Error(err, "Received an error while Deleting a TCOLogsPolicies")
 		return err
 	}
