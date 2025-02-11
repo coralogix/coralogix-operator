@@ -17,7 +17,6 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
-	"github.com/coralogix/coralogix-operator/internal/utils"
 
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
@@ -33,6 +32,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // PresetReconciler reconciles a Preset object

@@ -47,7 +47,7 @@ spec:
                   name: slack-sample
               presetRef:
                 backendRef:
-                  id: 0c98eadc-e6ac-438d-9a6e-c6a29125e526
+                  id: 0c98eadc-e6ac-438d-9a6e-c6a29125e526 # can be user facing id once backend supports it
               triggeredRoutingOverride:
                 connectorOverride:
                   channel: "override-channel"
@@ -64,7 +64,7 @@ spec:
                   name: generic-https-sample
               presetRef:
                 backendRef:
-                  id: bf56a54f-2111-424d-bb37-4d4080861995
+                  id: bf56a54f-2111-424d-bb37-4d4080861995 # can be user facing id once backend supports it
               triggeredRoutingOverride:
                 presetOverride:
                   headers: "{\"Content-Type\": \"override\"}"
