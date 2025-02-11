@@ -113,8 +113,8 @@ func (r *BaseReconciler) ReconcileResource(ctx context.Context, req ctrl.Request
 	if err := r.coralogixReconciler.HandleUpdate(ctx, log, obj); err != nil {
 		if cxsdk.Code(err) == codes.NotFound {
 			log.V(1).Info(fmt.Sprintf("%s not found on remote, recreating it", kind))
-			if err := unstructured.SetNestedField(obj.(*unstructured.Unstructured).Object, "", "status", "id"); err != nil {
-				return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, fmt.Errorf("error on updating %s status: %v", kind, err)
+			if err2 := unstructured.SetNestedField(obj.(*unstructured.Unstructured).Object, "", "status", "id"); err2 != nil {
+				return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, fmt.Errorf("error on updating %s status: %v", kind, err2)
 			}
 			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, fmt.Errorf("%s not found on remote: %w", kind, err)
 		}
@@ -128,12 +128,10 @@ func (r *BaseReconciler) CheckIDInStatus(ctx context.Context, obj client.Object)
 	u := &unstructured.Unstructured{}
 	u.SetGroupVersionKind(obj.GetObjectKind().GroupVersionKind())
 
-	err := r.coralogixReconciler.GetClient().Get(ctx, types.NamespacedName{
+	if err := r.coralogixReconciler.GetClient().Get(ctx, types.NamespacedName{
 		Namespace: obj.GetNamespace(),
 		Name:      obj.GetName(),
-	}, u)
-
-	if err != nil {
+	}, u); err != nil {
 		return false, err
 	}
 
@@ -143,7 +141,7 @@ func (r *BaseReconciler) CheckIDInStatus(ctx context.Context, obj client.Object)
 
 func (r *BaseReconciler) AddFinalizer(ctx context.Context, log logr.Logger, obj client.Object) error {
 	if !controllerutil.ContainsFinalizer(obj, r.coralogixReconciler.FinalizerName()) {
-		log.V(1).Info("Adding finalizer to Scope")
+		log.V(1).Info(fmt.Sprintf("Adding finalizer to %s", obj.GetObjectKind().GroupVersionKind().Kind))
 		controllerutil.AddFinalizer(obj, r.coralogixReconciler.FinalizerName())
 		if err := r.coralogixReconciler.GetClient().Update(ctx, obj); err != nil {
 			return fmt.Errorf("error updating %s: %w", obj.GetObjectKind().GroupVersionKind(), err)
