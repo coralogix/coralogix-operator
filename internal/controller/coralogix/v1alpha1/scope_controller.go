@@ -18,15 +18,13 @@ import (
 	"context"
 	"fmt"
 
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
@@ -35,36 +33,40 @@ import (
 
 // ScopeReconciler reconciles a Scope object
 type ScopeReconciler struct {
-	client.Client
-	ScopesClient *cxsdk.ScopesClient
-	Scheme       *runtime.Scheme
+	BaseReconciler coralogix.BaseReconciler
+	Client         client.Client
+	ScopesClient   *cxsdk.ScopesClient
+	Scheme         *runtime.Scheme
+}
+
+func (r *ScopeReconciler) GetClient() client.Client {
+	return r.Client
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=scopes,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=coralogix.com,resources=scopes/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=coralogix.com,resources=scopes/finalizers,verbs=update
 
-var (
-	scopeFinalizerName = "scope.coralogix.com/finalizer"
-)
-
 var _ coralogix.CoralogixReconciler = &ScopeReconciler{}
 
 func (r *ScopeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return coralogix.ReconcileResource(ctx, req, r.Client, &coralogixv1alpha1.Scope{}, r)
-
+	return r.BaseReconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.Scope{})
 }
 
-func (r *ScopeReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
+func (r *ScopeReconciler) FinalizerName() string {
+	return "scope.coralogix.com/finalizer"
+}
+
+func (r *ScopeReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) (client.Object, error) {
 	scope := obj.(*coralogixv1alpha1.Scope)
 	createRequest, err := scope.Spec.ExtractCreateScopeRequest()
 	if err != nil {
-		return fmt.Errorf("error on extracting create request: %w", err)
+		return nil, fmt.Errorf("error on extracting create request: %w", err)
 	}
 	log.V(1).Info("Creating remote scope", "scope", protojson.Format(createRequest))
 	createResponse, err := r.ScopesClient.Create(ctx, createRequest)
 	if err != nil {
-		return fmt.Errorf("error on creating remote scope: %w", err)
+		return nil, fmt.Errorf("error on creating remote scope: %w", err)
 	}
 	log.V(1).Info("Remote scope created", "response", protojson.Format(createResponse))
 
@@ -72,15 +74,7 @@ func (r *ScopeReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 		ID: &createResponse.Scope.Id,
 	}
 
-	log.V(1).Info("Updating Scope status", "id", createResponse.Scope.Id)
-	if err = r.Status().Update(ctx, scope); err != nil {
-		if deleteErr := r.HandleDeletion(ctx, log, obj); deleteErr != nil {
-			return fmt.Errorf("error deleting scope after status update error. Update error: %w. Deletion error: %w", err, deleteErr)
-		}
-		return fmt.Errorf("error to update scope status: %w", err)
-	}
-
-	return nil
+	return scope, nil
 }
 
 func (r *ScopeReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
@@ -91,17 +85,6 @@ func (r *ScopeReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 	}
 	log.V(1).Info("Updating remote scope", "scope", protojson.Format(updateRequest))
 	updateResponse, err := r.ScopesClient.Update(ctx, updateRequest)
-	if err != nil {
-		if cxsdk.Code(err) == codes.NotFound {
-			log.V(1).Info("Scope not found on remote, removing ID from status")
-			scope.Status = coralogixv1alpha1.ScopeStatus{ID: nil}
-			if err = r.Status().Update(ctx, scope); err != nil {
-				return fmt.Errorf("error on updating Scope status: %w", err)
-			}
-			return fmt.Errorf("scope not found on remote: %w", err)
-		}
-		return fmt.Errorf("error on updating scope: %w", err)
-	}
 	log.V(1).Info("Remote scope updated", "scope", protojson.Format(updateResponse))
 
 	return nil
@@ -117,33 +100,6 @@ func (r *ScopeReconciler) HandleDeletion(ctx context.Context, log logr.Logger, o
 		return fmt.Errorf("error deleting remote scope %s: %w", *scope.Status.ID, err)
 	}
 	log.V(1).Info("Scope deleted from remote system", "id", *scope.Status.ID)
-	return nil
-}
-
-func (r *ScopeReconciler) CheckIDInStatus(obj client.Object) bool {
-	scope := obj.(*coralogixv1alpha1.Scope)
-	return scope.Status.ID != nil && *scope.Status.ID != ""
-}
-
-func (r *ScopeReconciler) AddFinalizer(ctx context.Context, log logr.Logger, obj client.Object) error {
-	scope := obj.(*coralogixv1alpha1.Scope)
-	if !controllerutil.ContainsFinalizer(scope, scopeFinalizerName) {
-		log.V(1).Info("Adding finalizer to Scope")
-		controllerutil.AddFinalizer(scope, scopeFinalizerName)
-		if err := r.Update(ctx, scope); err != nil {
-			return fmt.Errorf("error updating Scope: %w", err)
-		}
-	}
-	return nil
-}
-
-func (r *ScopeReconciler) RemoveFinalizer(ctx context.Context, log logr.Logger, obj client.Object) error {
-	scope := obj.(*coralogixv1alpha1.Scope)
-	log.V(1).Info("Removing finalizer from Scope")
-	controllerutil.RemoveFinalizer(scope, scopeFinalizerName)
-	if err := r.Update(ctx, scope); err != nil {
-		return fmt.Errorf("error updating Scope: %w", err)
-	}
 	return nil
 }
 
