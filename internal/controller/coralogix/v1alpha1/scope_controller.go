@@ -33,10 +33,9 @@ import (
 
 // ScopeReconciler reconciles a Scope object
 type ScopeReconciler struct {
-	BaseReconciler coralogix.BaseReconciler
-	Client         client.Client
-	ScopesClient   *cxsdk.ScopesClient
-	Scheme         *runtime.Scheme
+	client.Client
+	ScopesClient *cxsdk.ScopesClient
+	Scheme       *runtime.Scheme
 }
 
 func (r *ScopeReconciler) GetClient() client.Client {
@@ -50,7 +49,7 @@ func (r *ScopeReconciler) GetClient() client.Client {
 var _ coralogix.CoralogixReconciler = &ScopeReconciler{}
 
 func (r *ScopeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return r.BaseReconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.Scope{})
+	return coralogix.ReconcileResource(ctx, req, &coralogixv1alpha1.Scope{}, r)
 }
 
 func (r *ScopeReconciler) FinalizerName() string {

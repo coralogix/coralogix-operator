@@ -41,43 +41,35 @@ type CoralogixReconciler interface {
 	FinalizerName() string
 }
 
-type BaseReconciler struct {
-	coralogixReconciler CoralogixReconciler
-}
-
-func NewBaseReconciler(coralogixReconciler CoralogixReconciler) *BaseReconciler {
-	return &BaseReconciler{coralogixReconciler: coralogixReconciler}
-}
-
-func (r *BaseReconciler) ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object) (ctrl.Result, error) {
+func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object, r CoralogixReconciler) (ctrl.Result, error) {
 	kind := obj.GetObjectKind().GroupVersionKind().Kind
 	log := log.FromContext(ctx).WithValues(
 		"kind", kind,
 		"name", req.NamespacedName.Name, "namespace", req.NamespacedName.Namespace)
 
-	if err := r.coralogixReconciler.GetClient().Get(ctx, req.NamespacedName, obj); err != nil {
+	if err := r.GetClient().Get(ctx, req.NamespacedName, obj); err != nil {
 		if errors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
 		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
 
-	hasID, err := r.CheckIDInStatus(ctx, obj)
+	hasID, err := CheckIDInStatus(ctx, obj, r)
 	if err != nil {
 		log.Error(err, "Error checking for ID in status")
 		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
 	if !hasID {
 		log.V(1).Info("Resource ID is missing; handling creation for resource")
-		if createdObj, err := r.coralogixReconciler.HandleCreation(ctx, log, obj); err != nil {
+		if createdObj, err := r.HandleCreation(ctx, log, obj); err != nil {
 			log.Error(err, "Error handling creation")
 			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
-		} else if err = r.coralogixReconciler.GetClient().Status().Update(ctx, createdObj); err != nil {
+		} else if err = r.GetClient().Status().Update(ctx, createdObj); err != nil {
 			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
 
 		log.V(1).Info("Adding finalizer")
-		if err := r.AddFinalizer(ctx, log, obj); err != nil {
+		if err := AddFinalizer(ctx, log, obj, r); err != nil {
 			log.Error(err, "Error adding finalizer")
 			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
@@ -86,13 +78,13 @@ func (r *BaseReconciler) ReconcileResource(ctx context.Context, req ctrl.Request
 
 	if !obj.GetDeletionTimestamp().IsZero() {
 		log.V(1).Info("Resource is being deleted; handling deletion")
-		if err := r.coralogixReconciler.HandleDeletion(ctx, log, obj); err != nil {
+		if err := r.HandleDeletion(ctx, log, obj); err != nil {
 			log.Error(err, "Error handling deletion")
 			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
 
 		log.V(1).Info("Removing finalizer")
-		if err := r.RemoveFinalizer(ctx, log, obj); err != nil {
+		if err := RemoveFinalizer(ctx, log, obj, r); err != nil {
 			log.Error(err, "Error removing finalizer")
 			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
@@ -102,7 +94,7 @@ func (r *BaseReconciler) ReconcileResource(ctx context.Context, req ctrl.Request
 
 	if !utils.GetLabelFilter().Matches(obj.GetLabels()) {
 		log.V(1).Info("Resource labels do not match label filter; handling deletion")
-		if err := r.coralogixReconciler.HandleDeletion(ctx, log, obj); err != nil {
+		if err := r.HandleDeletion(ctx, log, obj); err != nil {
 			log.Error(err, "Error deleting from remote")
 			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
@@ -110,7 +102,7 @@ func (r *BaseReconciler) ReconcileResource(ctx context.Context, req ctrl.Request
 	}
 
 	log.V(1).Info("Handling update")
-	if err := r.coralogixReconciler.HandleUpdate(ctx, log, obj); err != nil {
+	if err := r.HandleUpdate(ctx, log, obj); err != nil {
 		if cxsdk.Code(err) == codes.NotFound {
 			log.V(1).Info(fmt.Sprintf("%s not found on remote, recreating it", kind))
 			if err2 := unstructured.SetNestedField(obj.(*unstructured.Unstructured).Object, "", "status", "id"); err2 != nil {
@@ -124,11 +116,11 @@ func (r *BaseReconciler) ReconcileResource(ctx context.Context, req ctrl.Request
 	return ctrl.Result{}, nil
 }
 
-func (r *BaseReconciler) CheckIDInStatus(ctx context.Context, obj client.Object) (bool, error) {
+func CheckIDInStatus(ctx context.Context, obj client.Object, r CoralogixReconciler) (bool, error) {
 	u := &unstructured.Unstructured{}
 	u.SetGroupVersionKind(obj.GetObjectKind().GroupVersionKind())
 
-	if err := r.coralogixReconciler.GetClient().Get(ctx, types.NamespacedName{
+	if err := r.GetClient().Get(ctx, types.NamespacedName{
 		Namespace: obj.GetNamespace(),
 		Name:      obj.GetName(),
 	}, u); err != nil {
@@ -139,21 +131,21 @@ func (r *BaseReconciler) CheckIDInStatus(ctx context.Context, obj client.Object)
 	return found, err
 }
 
-func (r *BaseReconciler) AddFinalizer(ctx context.Context, log logr.Logger, obj client.Object) error {
-	if !controllerutil.ContainsFinalizer(obj, r.coralogixReconciler.FinalizerName()) {
+func AddFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r CoralogixReconciler) error {
+	if !controllerutil.ContainsFinalizer(obj, r.FinalizerName()) {
 		log.V(1).Info(fmt.Sprintf("Adding finalizer to %s", obj.GetObjectKind().GroupVersionKind().Kind))
-		controllerutil.AddFinalizer(obj, r.coralogixReconciler.FinalizerName())
-		if err := r.coralogixReconciler.GetClient().Update(ctx, obj); err != nil {
+		controllerutil.AddFinalizer(obj, r.FinalizerName())
+		if err := r.GetClient().Update(ctx, obj); err != nil {
 			return fmt.Errorf("error updating %s: %w", obj.GetObjectKind().GroupVersionKind(), err)
 		}
 	}
 	return nil
 }
 
-func (r *BaseReconciler) RemoveFinalizer(ctx context.Context, log logr.Logger, obj client.Object) error {
+func RemoveFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r CoralogixReconciler) error {
 	log.V(1).Info(fmt.Sprintf("Removing finalizer from %s", obj.GetObjectKind().GroupVersionKind()))
-	controllerutil.RemoveFinalizer(obj, r.coralogixReconciler.FinalizerName())
-	if err := r.coralogixReconciler.GetClient().Update(ctx, obj); err != nil {
+	controllerutil.RemoveFinalizer(obj, r.FinalizerName())
+	if err := r.GetClient().Update(ctx, obj); err != nil {
 		return fmt.Errorf("error updating %s: %w", obj.GetObjectKind().GroupVersionKind(), err)
 	}
 	return nil

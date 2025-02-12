@@ -21,7 +21,6 @@ import (
 	"os"
 	"strings"
 
-	coralogix2 "github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	prometheusv1alpha "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -282,13 +281,12 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "CustomRole")
 		os.Exit(1)
 	}
-	scopeReconciler := &v1alpha1controllers.ScopeReconciler{
+
+	if err = (&v1alpha1controllers.ScopeReconciler{
 		ScopesClient: clientSet.Scopes(),
 		Client:       mgr.GetClient(),
 		Scheme:       mgr.GetScheme(),
-	}
-	scopeReconciler.BaseReconciler = *coralogix2.NewBaseReconciler(scopeReconciler)
-	if err = (scopeReconciler).SetupWithManager(mgr); err != nil {
+	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Scope")
 		os.Exit(1)
 	}
