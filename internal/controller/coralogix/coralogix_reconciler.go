@@ -38,7 +38,7 @@ type CoralogixReconciler interface {
 	HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error
 	HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error
 	FinalizerName() string
-	CheckIDInStatus(ctx context.Context, obj client.Object) (bool, error)
+	CheckIDInStatus(obj client.Object) bool
 }
 
 func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object, r CoralogixReconciler) (ctrl.Result, error) {
@@ -54,12 +54,7 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
 
-	hasID, err := r.CheckIDInStatus(ctx, obj)
-	if err != nil {
-		log.Error(err, "Error checking for ID in status")
-		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
-	}
-	if !hasID {
+	if !r.CheckIDInStatus(obj) {
 		log.V(1).Info("Resource ID is missing; handling creation for resource")
 		if createdObj, err := r.HandleCreation(ctx, log, obj); err != nil {
 			log.Error(err, "Error handling creation")
