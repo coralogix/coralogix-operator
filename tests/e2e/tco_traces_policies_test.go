@@ -49,9 +49,8 @@ var _ = Describe("TCOTracesPolicies", Ordered, func() {
 			Spec: coralogixv1alpha1.TCOTracesPoliciesSpec{
 				Policies: []coralogixv1alpha1.TCOTracesPolicy{
 					{
-						Name:       "sample policy",
-						Priority:   "high",
-						Severities: []coralogixv1alpha1.TCOPolicySeverity{"critical", "error"},
+						Name:     "sample policy",
+						Priority: "high",
 						Applications: &coralogixv1alpha1.TCOPolicyRule{
 							Names:    []string{"prod"},
 							RuleType: "is",

@@ -42,8 +42,6 @@ type TCOTracesPolicy struct {
 	// +kubebuilder:validation:Enum=block;high;medium;low
 	Priority string `json:"priority"`
 
-	Severities []TCOPolicySeverity `json:"severities"`
-
 	// +optional
 	ArchiveRetention *ArchiveRetention `json:"archiveRetention,omitempty"`
 

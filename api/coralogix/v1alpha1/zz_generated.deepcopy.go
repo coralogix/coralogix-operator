@@ -3565,11 +3565,6 @@ func (in *TCOTracesPolicy) DeepCopyInto(out *TCOTracesPolicy) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.Severities != nil {
-		in, out := &in.Severities, &out.Severities
-		*out = make([]TCOPolicySeverity, len(*in))
-		copy(*out, *in)
-	}
 	if in.ArchiveRetention != nil {
 		in, out := &in.ArchiveRetention, &out.ArchiveRetention
 		*out = new(ArchiveRetention)

@@ -120,17 +120,6 @@ spec:
                       - names
                       - ruleType
                       type: object
-                    severities:
-                      items:
-                        enum:
-                        - info
-                        - warning
-                        - critical
-                        - error
-                        - debug
-                        - verbose
-                        type: string
-                      type: array
                     subsystems:
                       properties:
                         names:
@@ -174,7 +163,6 @@ spec:
                   required:
                   - name
                   - priority
-                  - severities
                   type: object
                 type: array
             required:
