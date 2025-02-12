@@ -102,6 +102,23 @@ func (r *ScopeReconciler) HandleDeletion(ctx context.Context, log logr.Logger, o
 	return nil
 }
 
+func (r *ScopeReconciler) CheckIDInStatus(ctx context.Context, obj client.Object) (bool, error) {
+	scope := obj.(*coralogixv1alpha1.Scope)
+	if scope.Status.ID == nil {
+		return false, nil
+	}
+
+	if err := r.Get(ctx, client.ObjectKeyFromObject(scope), obj); err != nil {
+		return false, err
+	}
+
+	if scope.Status.ID == nil {
+		return false, nil
+	}
+
+	return true, nil
+}
+
 // SetupWithManager sets up the controller with the Manager.
 func (r *ScopeReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).

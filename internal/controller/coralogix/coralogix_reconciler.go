@@ -23,7 +23,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -39,6 +38,7 @@ type CoralogixReconciler interface {
 	HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error
 	HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error
 	FinalizerName() string
+	CheckIDInStatus(ctx context.Context, obj client.Object) (bool, error)
 }
 
 func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object, r CoralogixReconciler) (ctrl.Result, error) {
@@ -54,7 +54,7 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
 
-	hasID, err := CheckIDInStatus(ctx, obj, r)
+	hasID, err := r.CheckIDInStatus(ctx, obj)
 	if err != nil {
 		log.Error(err, "Error checking for ID in status")
 		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
@@ -114,21 +114,6 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 	}
 
 	return ctrl.Result{}, nil
-}
-
-func CheckIDInStatus(ctx context.Context, obj client.Object, r CoralogixReconciler) (bool, error) {
-	u := &unstructured.Unstructured{}
-	u.SetGroupVersionKind(obj.GetObjectKind().GroupVersionKind())
-
-	if err := r.GetClient().Get(ctx, types.NamespacedName{
-		Namespace: obj.GetNamespace(),
-		Name:      obj.GetName(),
-	}, u); err != nil {
-		return false, err
-	}
-
-	_, found, err := unstructured.NestedString(u.Object, "status", "id")
-	return found, err
 }
 
 func AddFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r CoralogixReconciler) error {
