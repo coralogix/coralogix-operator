@@ -38,10 +38,6 @@ type ScopeReconciler struct {
 	Scheme       *runtime.Scheme
 }
 
-func (r *ScopeReconciler) GetClient() client.Client {
-	return r.Client
-}
-
 // +kubebuilder:rbac:groups=coralogix.com,resources=scopes,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=coralogix.com,resources=scopes/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=coralogix.com,resources=scopes/finalizers,verbs=update
@@ -50,6 +46,10 @@ var _ coralogix.CoralogixReconciler = &ScopeReconciler{}
 
 func (r *ScopeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	return coralogix.ReconcileResource(ctx, req, &coralogixv1alpha1.Scope{}, r)
+}
+
+func (r *ScopeReconciler) GetClient() client.Client {
+	return r.Client
 }
 
 func (r *ScopeReconciler) FinalizerName() string {
