@@ -18,18 +18,14 @@ import (
 	"context"
 	"fmt"
 
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/log"
-
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/utils"
@@ -46,142 +42,63 @@ type ConnectorReconciler struct {
 // +kubebuilder:rbac:groups=coralogix.com,resources=connectors/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=coralogix.com,resources=connectors/finalizers,verbs=update
 
-var (
-	connectorFinalizerName = "connector.coralogix.com/finalizer"
-)
-
 func (r *ConnectorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx).WithValues(
-		"connector", req.NamespacedName.Name,
-		"namespace", req.NamespacedName.Namespace,
-	)
-
-	connector := &coralogixv1alpha1.Connector{}
-	if err := r.Client.Get(ctx, req.NamespacedName, connector); err != nil {
-		if errors.IsNotFound(err) {
-			// Request object not found, could have been deleted after reconcile request.
-			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-			// Return and don't requeue
-			return ctrl.Result{}, nil
-		}
-		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
-	}
-
-	if ptr.Deref(connector.Status.Id, "") == "" {
-		err := r.create(ctx, log, connector)
-		if err != nil {
-			log.Error(err, "Error on creating Connector")
-			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
-		}
-		return ctrl.Result{}, nil
-	}
-
-	if !connector.ObjectMeta.DeletionTimestamp.IsZero() {
-		err := r.delete(ctx, log, connector)
-		if err != nil {
-			log.Error(err, "Error on deleting Connector")
-			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
-		}
-		return ctrl.Result{}, nil
-	}
-
-	if !utils.GetLabelFilter().Matches(connector.GetLabels()) {
-		err := r.deleteRemoteConnector(ctx, log, connector.Status.Id)
-		if err != nil {
-			log.Error(err, "Error on deleting Connector")
-			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
-		}
-		return ctrl.Result{}, nil
-	}
-
-	err := r.update(ctx, log, connector)
-	if err != nil {
-		log.Error(err, "Error on updating Connector")
-		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
-	}
-
-	return ctrl.Result{}, nil
+	return coralogix.ReconcileResource(ctx, req, &coralogixv1alpha1.Connector{}, r)
 }
 
-func (r *ConnectorReconciler) create(ctx context.Context, log logr.Logger, connector *coralogixv1alpha1.Connector) error {
-	createReq := connector.Spec.ExtractCreateConnectorRequest()
-	log.V(1).Info("Creating remote connector", "connector", protojson.Format(createReq))
-	createRes, err := r.NotificationsClient.CreateConnector(ctx, createReq)
+func (r *ConnectorReconciler) GetClient() client.Client {
+	return r.Client
+}
+
+func (r *ConnectorReconciler) FinalizerName() string {
+	return "connector.coralogix.com/finalizer"
+}
+
+func (r *ConnectorReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) (client.Object, error) {
+	connector := obj.(*coralogixv1alpha1.Connector)
+	createRequest := connector.Spec.ExtractCreateConnectorRequest()
+	log.V(1).Info("Creating remote connector", "connector", protojson.Format(createRequest))
+	createResponse, err := r.NotificationsClient.CreateConnector(ctx, createRequest)
 	if err != nil {
-		return fmt.Errorf("error on creating remote connector: %w", err)
+		return nil, fmt.Errorf("error on creating remote connector: %w", err)
 	}
-	log.V(1).Info("Remote connector created", "response", protojson.Format(createRes))
+	log.V(1).Info("Remote connector created", "response", protojson.Format(createResponse))
 
 	connector.Status = coralogixv1alpha1.ConnectorStatus{
-		Id: createRes.Connector.Id,
+		Id: createResponse.Connector.Id,
 	}
 
-	log.V(1).Info("Updating Connector status", "id", createRes.Connector.Id)
-	if err = r.Status().Update(ctx, connector); err != nil {
-		if err := r.deleteRemoteConnector(ctx, log, connector.Status.Id); err != nil {
-			return fmt.Errorf("error to delete connector after status update error -\n%v", connector)
-		}
-		return fmt.Errorf("error to update connector status -\n%v", connector)
-	}
-
-	if !controllerutil.ContainsFinalizer(connector, connectorFinalizerName) {
-		log.V(1).Info("Updating Connector to add finalizer", "id", createRes.Connector.Id)
-		controllerutil.AddFinalizer(connector, connectorFinalizerName)
-		if err := r.Update(ctx, connector); err != nil {
-			return fmt.Errorf("error on updating Connector: %w", err)
-		}
-	}
-
-	return nil
+	return connector, nil
 }
 
-func (r *ConnectorReconciler) update(ctx context.Context, log logr.Logger, connector *coralogixv1alpha1.Connector) error {
-	replaceReq := connector.Spec.ExtractReplaceConnectorRequest(connector.Status.Id)
-	log.V(1).Info("Updating remote connector", "connector", protojson.Format(replaceReq))
-	replaceRes, err := r.NotificationsClient.ReplaceConnector(ctx, replaceReq)
+func (r *ConnectorReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
+	connector := obj.(*coralogixv1alpha1.Connector)
+	updateRequest := connector.Spec.ExtractReplaceConnectorRequest(connector.Status.Id)
+	log.V(1).Info("Updating remote connector", "connector", protojson.Format(updateRequest))
+	updateResponse, err := r.NotificationsClient.ReplaceConnector(ctx, updateRequest)
 	if err != nil {
-		if cxsdk.Code(err) == codes.NotFound {
-			log.V(1).Info("connector not found on remote, removing id from status")
-			connector.Status = coralogixv1alpha1.ConnectorStatus{
-				Id: ptr.To(""),
-			}
-			if err = r.Status().Update(ctx, connector); err != nil {
-				return fmt.Errorf("error on updating Connector status: %w", err)
-			}
-			return fmt.Errorf("connector not found on remote: %w", err)
-		}
-		return fmt.Errorf("error on updating connector: %w", err)
+		return fmt.Errorf("error on updating remote connector: %w", err)
 	}
-	log.V(1).Info("Remote connector updated", "connector", protojson.Format(replaceRes))
+	log.V(1).Info("Remote connector updated", "connector", protojson.Format(updateResponse))
 
 	return nil
 }
 
-func (r *ConnectorReconciler) delete(ctx context.Context, log logr.Logger, connector *coralogixv1alpha1.Connector) error {
-	if err := r.deleteRemoteConnector(ctx, log, connector.Status.Id); err != nil {
-		return fmt.Errorf("error on deleting remote connector: %w", err)
+func (r *ConnectorReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
+	connector := obj.(*coralogixv1alpha1.Connector)
+	log.V(1).Info("Deleting connector from remote system", "id", *connector.Status.Id)
+	_, err := r.NotificationsClient.DeleteConnector(ctx, &cxsdk.DeleteConnectorRequest{Id: *connector.Status.Id})
+	if err != nil && cxsdk.Code(err) != codes.NotFound {
+		log.V(1).Error(err, "Error deleting remote connector", "id", *connector.Status.Id)
+		return fmt.Errorf("error deleting remote connector %s: %w", *connector.Status.Id, err)
 	}
-
-	log.V(1).Info("Removing finalizer from Connector")
-	controllerutil.RemoveFinalizer(connector, connectorFinalizerName)
-	if err := r.Update(ctx, connector); err != nil {
-		return fmt.Errorf("error on updating Connector: %w", err)
-	}
-
+	log.V(1).Info("Connector deleted from remote system", "id", *connector.Status.Id)
 	return nil
 }
 
-func (r *ConnectorReconciler) deleteRemoteConnector(ctx context.Context, log logr.Logger, id *string) error {
-	log.V(1).Info("Deleting remote connector", "id", *id)
-	_, err := r.NotificationsClient.DeleteConnector(ctx, &cxsdk.DeleteConnectorRequest{
-		Id: *id,
-	})
-	if err != nil {
-		return fmt.Errorf("error on deleting remote connector: %w", err)
-	}
-	log.V(1).Info("Remote connector deleted", "id", *id)
-
-	return nil
+func (r *ConnectorReconciler) CheckIDInStatus(obj client.Object) bool {
+	connector := obj.(*coralogixv1alpha1.Connector)
+	return connector.Status.Id != nil && *connector.Status.Id != ""
 }
 
 // SetupWithManager sets up the controller with the Manager.

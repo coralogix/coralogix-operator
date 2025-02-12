@@ -84,6 +84,9 @@ func (r *ScopeReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 	}
 	log.V(1).Info("Updating remote scope", "scope", protojson.Format(updateRequest))
 	updateResponse, err := r.ScopesClient.Update(ctx, updateRequest)
+	if err != nil {
+		return fmt.Errorf("error on updating remote scope: %w", err)
+	}
 	log.V(1).Info("Remote scope updated", "scope", protojson.Format(updateResponse))
 
 	return nil
