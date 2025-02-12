@@ -86,6 +86,7 @@ spec:
                       type: object
                   required:
                   - connector
+                  - preset
                   type: object
                 type: array
               name:
@@ -140,6 +141,7 @@ spec:
                             type: object
                         required:
                         - connector
+                        - preset
                         type: object
                       type: array
                   required:

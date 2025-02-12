@@ -12,8 +12,6 @@ spec:
   policies:
     - name: first policy
       priority: high
-      severities:
-        - critical
       description: This is the first policy
       actions:
         names:
@@ -41,8 +39,6 @@ spec:
           name: Default
     - name: second policy
       priority: low
-      severities:
-          - warning
       description: This is the second policy
       actions:
           names:

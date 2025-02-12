@@ -3415,7 +3415,7 @@ GlobalRouterSpec defines the desired state of GlobalRouter.
         <td>
           <br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
@@ -3680,7 +3680,7 @@ GlobalRouterSpec defines the desired state of GlobalRouter.
         <td>
           <br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
@@ -7015,15 +7015,6 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
           <br/>
           <br/>
             <i>Enum</i>: block, high, medium, low<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>severities</b></td>
-        <td>[]enum</td>
-        <td>
-          <br/>
-          <br/>
-            <i>Enum</i>: info, warning, critical, error, debug, verbose<br/>
         </td>
         <td>true</td>
       </tr><tr>
