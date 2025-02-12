@@ -337,6 +337,14 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Preset")
 		os.Exit(1)
 	}
+	if err = (&v1alpha1controllers.GlobalRouterReconciler{
+		NotificationsClient: clientSet.Notifications(),
+		Client:              mgr.GetClient(),
+		Scheme:              mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GlobalRouter")
+		os.Exit(1)
+	}
 
 	if prometheusRuleController {
 		if err = (&controllers.AlertmanagerConfigReconciler{
