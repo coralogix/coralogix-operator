@@ -248,29 +248,51 @@ var (
 	fieldNameChannel         = "channel"
 )
 
-// AlertSpec defines the desired state of Alert
+// AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
 type AlertSpec struct {
+	// Name of the alert
 	//+kubebuilder:validation:MinLength=0
 	Name string `json:"name"`
+
+	// Description of the alert
 	// +optional
-	Description string        `json:"description,omitempty"`
-	Priority    AlertPriority `json:"priority"`
+	Description string `json:"description,omitempty"`
+
+	// Priority of the alert.
+	Priority AlertPriority `json:"priority"`
+
+	// Enable/disable the alert.
 	//+kubebuilder:default=true
 	Enabled bool `json:"enabled,omitempty"`
+
+	// Grouping fields for multiple alerts.
 	// +optional
 	GroupByKeys []string `json:"groupByKeys,omitempty"`
+
+	// Settings for the attached incidents.
 	// +optional
 	IncidentsSettings *IncidentsSettings `json:"incidentsSettings,omitempty"`
+
+	// Where notifications should be sent to.
 	// +optional
 	NotificationGroup *NotificationGroup `json:"notificationGroup,omitempty"`
+
+	// Do not use.
+	// Deprecated: Legacy field for when multiple notification groups were attached.
 	// +optional
 	NotificationGroupExcess []NotificationGroup `json:"notificationGroupExcess,omitempty"`
+
+	// Labels attached to the alert.
 	// +optional
 	EntityLabels map[string]string `json:"entityLabels,omitempty"`
 	//+kubebuilder:default=false
 	PhantomMode bool `json:"phantomMode,omitempty"`
+
+	// Alert activity schedule. Will be activated all the time if not specified.
 	// +optional
-	Schedule       *AlertSchedule      `json:"schedule,omitempty"`
+	Schedule *AlertSchedule `json:"schedule,omitempty"`
+
+	// Type of alert.
 	TypeDefinition AlertTypeDefinition `json:"alertType"`
 }
 
@@ -290,23 +312,34 @@ func (a *Alert) SetConditions(conditions []metav1.Condition) {
 	a.Status.Conditions = conditions
 }
 
+// A time zone expressed in UTC offsets.
 // +kubebuilder:validation:Pattern=`^UTC[+-]\d{2}$`
 // +kubebuilder:default=UTC+00
 type TimeZone string
 
+// The schedule for when the alert is active.
 type AlertSchedule struct {
+	// Time zone.
 	//+kubebuilder:default=UTC+00
 	TimeZone TimeZone `json:"timeZone"`
+
+	// Schedule to have the alert active.
 	// +optional
 	ActiveOn *ActiveOn `json:"activeOn,omitempty"`
 }
 
+// Settings for attached incidents.
 type IncidentsSettings struct {
+
+	// When to notify.
 	//+kubebuilder:default=triggeredOnly
-	NotifyOn           NotifyOn           `json:"notifyOn,omitempty"`
+	NotifyOn NotifyOn `json:"notifyOn,omitempty"`
+
+	// When to re-notify.
 	RetriggeringPeriod RetriggeringPeriod `json:"retriggeringPeriod,omitempty"`
 }
 
+// When to notify.
 // +kubebuilder:validation:Enum=triggeredOnly;triggeredAndResolved
 type NotifyOn string
 
@@ -315,6 +348,7 @@ const (
 	NotifyOnTriggeredAndResolved NotifyOn = "triggeredAndResolved"
 )
 
+// Automatically retire the alert after...
 // +kubebuilder:validation:Enum={"never","5m","10m","1h","2h","6h","12h","24h"}
 type AutoRetireTimeframe string
 
@@ -329,78 +363,132 @@ const (
 	AutoRetireTimeframe24H                AutoRetireTimeframe = "24h"
 )
 
+// When to re-trigger the alert.
 type RetriggeringPeriod struct {
+	// Delay between re-triggered alerts.
 	// +optional
 	Minutes *uint32 `json:"minutes,omitempty"`
 }
 
+// Notification group to use for alert notifications.
 type NotificationGroup struct {
+
+	// Group notification by these keys.
 	// +optional
 	GroupByKeys []string `json:"groupByKeys"`
+
+	// Webhooks to trigger for notifications.
 	// +optional
 	Webhooks []WebhookSettings `json:"webhooks"`
+
+	// Other destinations using the notification center.
 	// +optional
 	Destinations []Destination `json:"destinations"`
 }
 
+// Settings for a notification webhook.
 type WebhookSettings struct {
+
+	// When to re-trigger.
 	RetriggeringPeriod RetriggeringPeriod `json:"retriggeringPeriod"`
+
 	// +kubebuilder:default=triggeredOnly
-	NotifyOn    NotifyOn        `json:"notifyOn"`
+	// When to notify.
+	NotifyOn NotifyOn `json:"notifyOn"`
+
+	// Type and spec of webhook.
 	Integration IntegrationType `json:"integration"`
 }
 
+// Type and spec of the webhook.
 type IntegrationType struct {
+
+	// Reference to the webhook.
 	// +optional
 	IntegrationRef *IntegrationRef `json:"integrationRef,omitempty"`
+
+	// Recipients for the notification.
 	// +optional
 	Recipients []string `json:"recipients"`
 }
 
+// Reference to the integration.
 type IntegrationRef struct {
+
+	// Backend reference for the outbound webhook.
 	// +optional
 	BackendRef *OutboundWebhookBackendRef `json:"backendRef,omitempty"`
+
+	// Resource reference for use with the alert notification.
 	// +optional
 	ResourceRef *ResourceRef `json:"resourceRef"`
 }
 
+// Outbound webhook reference.
 type OutboundWebhookBackendRef struct {
+	// Webhook Id.
 	// +optional
 	ID *uint32 `json:"id,omitempty"`
+
+	// Name of the webhook.
 	// +optional
 	Name *string `json:"name,omitempty"`
 }
 
+// Notification center destination for a notification.
 type Destination struct {
+
+	// When to notify.
 	// +kubebuilder:default=triggeredOnly
 	NotifyOn NotifyOn `json:"notifyOn"`
 
+	// Type of notification to send.
 	DestinationType DestinationType `json:"destinationType"`
 }
 
+// Type of notification to send.
 type DestinationType struct {
+	// Slack app.
 	// +optional
 	Slack *SlackDestination `json:"slack,omitempty"`
+
+	// HTTPS webhook.
 	// +optional
 	GenericHttps *GenericHttpsDestination `json:"genericHttps,omitempty"`
 }
 
+// Slack notification configuration.
 type SlackDestination struct {
+	// Connector
 	ConnectorRef *NCRef `json:"connectorRef"`
+
+	// Preset for the notification.
 	// +optional
 	PresetRef *NCRef `json:"presetRef,omitempty"`
+
+	// Routing override for when the notification is triggered.
 	// +optional
 	TriggeredRoutingOverride *SlackRoutingOverride `json:"triggeredRoutingOverride,omitempty"`
+
+	// Routing override for when the notification is resolved.
 	// +optional
 	ResolvedRoutingOverride *SlackRoutingOverride `json:"resolvedRoutingOverride,omitempty"`
 }
 
+// Generic HTTPS notification configuration.
 type GenericHttpsDestination struct {
+	// Connector
 	ConnectorRef *NCRef `json:"connectorRef"`
+
+	// Preset for the notification.
 	// +optional
 	PresetRef *NCRef `json:"presetRef,omitempty"`
+
+	// Routing override for when the notification is triggered.
 	// +optional
 	TriggeredRoutingOverride *GenericHttpsRoutingOverride `json:"triggeredRoutingOverride,omitempty"`
+
+	// Routing override for when the notification is resolved.
 	// +optional
 	ResolvedRoutingOverride *GenericHttpsRoutingOverride `json:"resolvedRoutingOverride,omitempty"`
 }

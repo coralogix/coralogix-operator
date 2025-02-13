@@ -19,7 +19,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// AlertSpec defines the desired state of Alert.
+// AlertSpec defines the desired state of a Coralogix Alert.
+// Deprecated: Upgrade to v1beta1.
 type AlertSpec struct {
 	//+kubebuilder:validation:MinLength=0
 	Name string `json:"name"`

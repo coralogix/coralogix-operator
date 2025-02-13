@@ -25,12 +25,16 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 )
 
-// IntegrationSpec defines the desired state of Integration.
+// IntegrationSpec defines the desired state of a Coralogix (managed) integration.
 type IntegrationSpec struct {
-	IntegrationKey string `json:"integrationKey"`
 
+	// Unique name of the integration.
+	IntegrationKey string `json:"integrationKey"`
+	
+	// Desired version of the integration
 	Version string `json:"version"`
 
+	// Parameters required by the integration. 
 	// +kubebuilder:pruning:PreserveUnknownFields
 	Parameters runtime.RawExtension `json:"parameters"`
 }
@@ -148,7 +152,7 @@ type Integration struct {
 
 // +kubebuilder:object:root=true
 
-// IntegrationList contains a list of Integration.
+// IntegrationList contains a list of Integrations.
 type IntegrationList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
