@@ -69,16 +69,22 @@ func (r *TCOLogsPoliciesReconciler) HandleCreation(ctx context.Context, log logr
 	if err := r.overwrite(ctx, log, tcoLogsPolicies); err != nil {
 		return nil, err
 	}
+	if err := coralogix.AddFinalizer(ctx, log, tcoLogsPolicies, r); err != nil {
+		return nil, err
+	}
 	return tcoLogsPolicies, nil
 }
 
 func (r *TCOLogsPoliciesReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	tcoLogsPolicies := obj.(*coralogixv1alpha1.TCOLogsPolicies)
-	return r.overwrite(ctx, log, tcoLogsPolicies)
+	if err := r.overwrite(ctx, log, tcoLogsPolicies); err != nil {
+		return err
+	}
+	return coralogix.AddFinalizer(ctx, log, tcoLogsPolicies, r)
 }
 
 func (r *TCOLogsPoliciesReconciler) HandleDeletion(ctx context.Context, log logr.Logger, _ client.Object) error {
-	deleteTCOLogsPoliciesRequest := &cxsdk.AtomicOverwriteLogPoliciesRequest{}
+	deleteTCOLogsPoliciesRequest := &cxsdk.AtomicOverwriteLogPoliciesRequest{Policies: nil}
 	log.V(1).Info("Deleting TCOLogsPolicies")
 	if _, err := r.CoralogixClientSet.TCOPolicies().OverwriteTCOLogsPolicies(ctx, deleteTCOLogsPoliciesRequest); err != nil && cxsdk.Code(err) != codes.NotFound {
 		log.V(1).Error(err, "Received an error while Deleting a TCOLogsPolicies")
