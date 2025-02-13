@@ -23,6 +23,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -39,13 +40,13 @@ type CoralogixReconciler interface {
 	HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error
 	HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error
 	FinalizerName() string
+	GVK() schema.GroupVersionKind
 	CheckIDInStatus(obj client.Object) bool
 }
 
 func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object, r CoralogixReconciler) (ctrl.Result, error) {
-	kind := obj.GetObjectKind().GroupVersionKind().Kind
 	log := log.FromContext(ctx).WithValues(
-		"kind", kind,
+		"gvk", r.GVK(),
 		"name", req.NamespacedName.Name, "namespace", req.NamespacedName.Namespace)
 
 	if err := Client.Get(ctx, req.NamespacedName, obj); err != nil {
@@ -100,13 +101,13 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 	log.V(1).Info("Handling update")
 	if err := r.HandleUpdate(ctx, log, obj); err != nil {
 		if cxsdk.Code(err) == codes.NotFound {
-			log.V(1).Info(fmt.Sprintf("%s not found on remote, recreating it", kind))
+			log.V(1).Info(fmt.Sprintf("%s not found on remote, recreating it", r.GVK()))
 			if err2 := unstructured.SetNestedField(obj.(*unstructured.Unstructured).Object, "", "status", "id"); err2 != nil {
-				return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, fmt.Errorf("error on updating %s status: %v", kind, err2)
+				return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, fmt.Errorf("error on updating %s status: %v", r.GVK(), err2)
 			}
-			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, fmt.Errorf("%s not found on remote: %w", kind, err)
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, fmt.Errorf("%s not found on remote: %w", r.GVK(), err)
 		}
-		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, fmt.Errorf("error on updating %s: %w", kind, err)
+		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, fmt.Errorf("error on updating %s: %w", r.GVK(), err)
 	}
 
 	return ctrl.Result{}, nil

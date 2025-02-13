@@ -25,6 +25,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -105,6 +106,10 @@ func (r *GroupReconciler) HandleDeletion(ctx context.Context, log logr.Logger, o
 func (r *GroupReconciler) CheckIDInStatus(obj client.Object) bool {
 	group := obj.(*coralogixv1alpha1.Group)
 	return group.Status.ID != nil && *group.Status.ID != ""
+}
+
+func (r *GroupReconciler) GVK() schema.GroupVersionKind {
+	return new(coralogixv1alpha1.Group).GroupVersionKind()
 }
 
 // SetupWithManager sets up the controller with the Manager.

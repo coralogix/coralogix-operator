@@ -26,6 +26,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -48,14 +49,6 @@ type OutboundWebhookReconciler struct {
 
 func (r *OutboundWebhookReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	return coralogixreconcile.ReconcileResource(ctx, req, &v1alpha1.OutboundWebhook{}, r)
-}
-
-// SetupWithManager sets up the controller with the Manager.
-func (r *OutboundWebhookReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&v1alpha1.OutboundWebhook{}).
-		WithEventFilter(util.GetLabelFilter().Predicate()).
-		Complete(r)
 }
 
 func (r *OutboundWebhookReconciler) FinalizerName() string {
@@ -143,6 +136,10 @@ func (r *OutboundWebhookReconciler) CheckIDInStatus(obj client.Object) bool {
 	return outboundWebhook.Status.ID != nil && *outboundWebhook.Status.ID != ""
 }
 
+func (r *OutboundWebhookReconciler) GVK() schema.GroupVersionKind {
+	return new(v1alpha1.OutboundWebhook).GroupVersionKind()
+}
+
 func getWebhookType(webhook *v1alpha1.OutboundWebhook) string {
 	if webhook.Spec.OutboundWebhookType.GenericWebhook != nil {
 		return "genericWebhook"
@@ -185,4 +182,12 @@ func getWebhookType(webhook *v1alpha1.OutboundWebhook) string {
 	}
 
 	return "unknown"
+}
+
+// SetupWithManager sets up the controller with the Manager.
+func (r *OutboundWebhookReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&v1alpha1.OutboundWebhook{}).
+		WithEventFilter(util.GetLabelFilter().Predicate()).
+		Complete(r)
 }

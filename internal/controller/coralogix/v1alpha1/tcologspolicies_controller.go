@@ -24,6 +24,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -90,6 +91,10 @@ func (r *TCOLogsPoliciesReconciler) HandleDeletion(ctx context.Context, log logr
 
 func (r *TCOLogsPoliciesReconciler) CheckIDInStatus(_ client.Object) bool {
 	return true
+}
+
+func (r *TCOLogsPoliciesReconciler) GVK() schema.GroupVersionKind {
+	return new(coralogixv1alpha1.TCOLogsPolicies).GroupVersionKind()
 }
 
 // SetupWithManager sets up the controller with the Manager.

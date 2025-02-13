@@ -23,6 +23,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -202,6 +203,10 @@ func (r *GlobalRouterReconciler) deleteRemoteGlobalRouter(ctx context.Context, l
 	}
 	log.V(1).Info("global-router was deleted from remote", "id", globalRouterID)
 	return nil
+}
+
+func (r *GlobalRouterReconciler) GVK() schema.GroupVersionKind {
+	return new(coralogixv1alpha1.GlobalRouter).GroupVersionKind()
 }
 
 // SetupWithManager sets up the controller with the Manager.

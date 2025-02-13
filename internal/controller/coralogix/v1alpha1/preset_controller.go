@@ -26,6 +26,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -97,6 +98,10 @@ func (r *PresetReconciler) HandleDeletion(ctx context.Context, log logr.Logger, 
 func (r *PresetReconciler) CheckIDInStatus(obj client.Object) bool {
 	preset := obj.(*coralogixv1alpha1.Preset)
 	return preset.Status.Id != nil && *preset.Status.Id != ""
+}
+
+func (r *PresetReconciler) GVK() schema.GroupVersionKind {
+	return new(coralogixv1alpha1.Preset).GroupVersionKind()
 }
 
 // SetupWithManager sets up the controller with the Manager.

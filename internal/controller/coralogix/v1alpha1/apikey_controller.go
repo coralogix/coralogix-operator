@@ -28,6 +28,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -99,6 +100,10 @@ func (r *ApiKeyReconciler) HandleDeletion(ctx context.Context, log logr.Logger, 
 func (r *ApiKeyReconciler) CheckIDInStatus(obj client.Object) bool {
 	apiKey := obj.(*coralogixv1alpha1.ApiKey)
 	return apiKey.Status.Id != nil && *apiKey.Status.Id != ""
+}
+
+func (r *ApiKeyReconciler) GVK() schema.GroupVersionKind {
+	return new(coralogixv1alpha1.ApiKey).GroupVersionKind()
 }
 
 // SetupWithManager sets up the controller with the Manager.

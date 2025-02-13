@@ -25,6 +25,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -105,6 +106,10 @@ func (r *IntegrationReconciler) HandleDeletion(ctx context.Context, log logr.Log
 func (r *IntegrationReconciler) CheckIDInStatus(obj client.Object) bool {
 	integration := obj.(*coralogixv1alpha1.Integration)
 	return integration.Status.Id != nil && *integration.Status.Id != ""
+}
+
+func (r *IntegrationReconciler) GVK() schema.GroupVersionKind {
+	return new(coralogixv1alpha1.Integration).GroupVersionKind()
 }
 
 // SetupWithManager sets up the controller with the Manager.

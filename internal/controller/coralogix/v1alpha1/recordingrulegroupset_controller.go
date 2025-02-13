@@ -24,6 +24,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -106,6 +107,10 @@ func (r *RecordingRuleGroupSetReconciler) HandleDeletion(ctx context.Context, lo
 func (r *RecordingRuleGroupSetReconciler) CheckIDInStatus(obj client.Object) bool {
 	recordingRuleGroupSet := obj.(*coralogixv1alpha1.RecordingRuleGroupSet)
 	return recordingRuleGroupSet.Status.ID != nil && *recordingRuleGroupSet.Status.ID != ""
+}
+
+func (r *RecordingRuleGroupSetReconciler) GVK() schema.GroupVersionKind {
+	return new(coralogixv1alpha1.RecordingRuleGroupSet).GroupVersionKind()
 }
 
 func (r *RecordingRuleGroupSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
