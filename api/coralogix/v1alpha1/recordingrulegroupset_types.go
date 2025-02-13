@@ -23,8 +23,9 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// RecordingRuleGroupSetSpec defines the desired state of RecordingRuleGroupSet
+// RecordingRuleGroupSetSpec defines the desired state of a set of Coralogix recording rule groups.
 type RecordingRuleGroupSetSpec struct {
+	// Recording rule groups.
 	// +kubebuilder:validation:MinItems=1
 	Groups []RecordingRuleGroup `json:"groups"`
 }
@@ -72,25 +73,35 @@ func extractRecordingRule(rule RecordingRule) *cxsdk.InRule {
 	}
 }
 
+// A Coralogix recording rule group.
 type RecordingRuleGroup struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	
+	// The (unique) rule group name.
 	Name string `json:"name,omitempty"`
 
+	// How often rules in the group are evaluated (in seconds).
 	//+kubebuilder:default=60
 	IntervalSeconds int32 `json:"intervalSeconds,omitempty"`
 
+	// Limits the number of alerts an alerting rule and series a recording-rule can produce. 0 is no limit.
 	// +optional
 	Limit int64 `json:"limit,omitempty"`
 
+	// Rules of this group.
 	Rules []RecordingRule `json:"rules,omitempty"`
 }
 
+// A recording rule.
 type RecordingRule struct {
+
+	// The name of the time series to output to. Must be a valid metric name.
 	Record string `json:"record,omitempty"`
 
+	// The PromQL expression to evaluate.
+  // Every evaluation cycle this is evaluated at the current time, and the result recorded as a new set of time series with the metric name as given by 'record'.
 	Expr string `json:"expr,omitempty"`
 
+	// Labels to add or overwrite before storing the result.
 	Labels map[string]string `json:"labels,omitempty"`
 }
 

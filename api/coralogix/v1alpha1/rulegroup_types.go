@@ -55,67 +55,90 @@ var (
 	RulesProtoFormatStandardToSchemaFormatStandard = utils.ReverseMap(RulesSchemaFormatStandardToProtoFormatStandard)
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
+// A rule to change data extraction.
 type Rule struct {
+
+	// Name of the rule.
 	//+kubebuilder:validation:MinLength=0
 	Name string `json:"name"`
 
+	// Description of the rule.
 	// +optional
 	Description string `json:"description,omitempty"`
 
+	// Whether the rule will be activated.
 	//+kubebuilder:default=true
 	Active bool `json:"active,omitempty"`
 
+	// Parse unstructured logs into JSON format using named Regular Expression groups.
 	// +optional
 	Parse *Parse `json:"parse,omitempty"`
 
+	// Block rules allow for refined filtering of incoming logs with a Regular Expression.
 	// +optional
 	Block *Block `json:"block,omitempty"`
 
+	// Name a JSON field to extract its value directly into a Coralogix metadata field
 	// +optional
 	JsonExtract *JsonExtract `json:"jsonExtract,omitempty"`
 
+	// Replace rules are used to strings in order to fix log structure, change log severity, or obscure information.
 	// +optional
 	Replace *Replace `json:"replace,omitempty"`
 
+	// Replace rules are used to replace logs timestamp with JSON field.
 	// +optional
 	ExtractTimestamp *ExtractTimestamp `json:"extractTimestamp,omitempty"`
 
+	// Remove Fields allows to select fields that will not be indexed.
 	// +optional
 	RemoveFields *RemoveFields `json:"removeFields,omitempty"`
-
+	
+	// Convert JSON object to JSON string.
 	// +optional
 	JsonStringify *JsonStringify `json:"jsonStringify,omitempty"`
 
+	// Use a named Regular Expression group to extract specific values you need as JSON getKeysStrings without having to parse the entire log.
 	// +optional
 	Extract *Extract `json:"extract,omitempty"`
 
+	// Convert JSON string to JSON object.
 	// +optional
 	ParseJsonField *ParseJsonField `json:"parseJsonField,omitempty"`
 }
 
+// Parsing instructions for unstructured fields.
 type Parse struct {
+
+	// The field on which the Regular Expression will operate on.
 	SourceField string `json:"sourceField"`
 
+	// The field that will be populated by the results of the Regular Expression operation.
 	DestinationField string `json:"destinationField"`
 
+	// Regular Expression. More info: https://coralogix.com/blog/regex-101/
 	Regex string `json:"regex"`
 }
 
+// Blocking instructions
 type Block struct {
+	
+	// The field on which the Regular Expression will operate on.
 	SourceField string `json:"sourceField"`
 
+	// Regular Expression. More info: https://coralogix.com/blog/regex-101/
 	Regex string `json:"regex"`
 
+	// Determines if to view blocked logs in LiveTail and archive to S3.
 	//+kubebuilder:default=false
 	KeepBlockedLogs bool `json:"keepBlockedLogs,omitempty"`
 
+	// Block Logic. If true or nor set - blocking all matching blocks, if false - blocking all non-matching blocks.
 	//+kubebuilder:default=true
 	BlockingAllMatchingBlocks bool `json:"blockingAllMatchingBlocks,omitempty"`
 }
 
+// The field that will be populated by the results of the Regular Expression operation.
 // +kubebuilder:validation:Enum=Category;CLASSNAME;METHODNAME;THREADID;SEVERITY
 type DestinationField string
 
@@ -126,23 +149,32 @@ const (
 	DestinationFieldThreadID     DestinationField = "THREADID"
 	DestinationFieldRuleSeverity DestinationField = "SEVERITY"
 )
-
-type JsonExtract struct {
+// JsonExtract instructions.
+type JsonExtract struct 
+	// The field that will be populated by the results of the Regular Expression operation.
 	DestinationField DestinationField `json:"destinationField"`
 
+	// JSON key to extract its value directly into a Coralogix metadata field.
 	JsonKey string `json:"jsonKey"`
 }
 
+// Instructions to replace data.
 type Replace struct {
+	
+	// The field on which the Regular Expression will operate on.
 	SourceField string `json:"sourceField"`
 
+	// The field that will be populated by the results of the Regular Expression operation.
 	DestinationField string `json:"destinationField"`
 
+	// Regular Expression. More info: https://coralogix.com/blog/regex-101/
 	Regex string `json:"regex"`
-
+	
+	// The string that will replace the matched Regular Expression
 	ReplacementString string `json:"replacementString"`
 }
 
+// The format standard you want to use
 // +kubebuilder:validation:Enum=Strftime;JavaSDF;Golang;SecondTS;MilliTS;MicroTS;NanoTS
 type FieldFormatStandard string
 
@@ -156,87 +188,120 @@ const (
 	FieldFormatStandardNanoTS   FieldFormatStandard = "NanoTS"
 )
 
+// Timestamp extraction instructions.
 type ExtractTimestamp struct {
+	// The field on which the Regular Expression will operate on.
 	SourceField string `json:"sourceField"`
 
+	// The format standard to parse the timestamp.
 	FieldFormatStandard FieldFormatStandard `json:"fieldFormatStandard"`
 
+	// A time formatting string that matches the field format standard.
 	TimeFormat string `json:"timeFormat"`
 }
 
+// Instructions to remove fields from indexing.
 type RemoveFields struct {
+	// Excluded fields won't be indexed.
 	ExcludedFields []string `json:"excludedFields"`
 }
 
+// Instructions to convert a JSON object to JSON string.
 type JsonStringify struct {
+	// The field on which the Regular Expression will operate on.
 	SourceField string `json:"sourceField"`
-
+	
+	// The field that will be populated by the results of the Regular Expression
 	DestinationField string `json:"destinationField"`
 
 	//+kubebuilder:default=false
 	KeepSourceField bool `json:"keepSourceField,omitempty"`
 }
 
+// Extract instructions.
 type Extract struct {
+	// The field on which the Regular Expression will operate on.
 	SourceField string `json:"sourceField"`
 
+	// Regular Expression. More info: https://coralogix.com/blog/regex-101/
 	Regex string `json:"regex"`
 }
 
+// Parsing instructions for a JSON field from a JSON string.
 type ParseJsonField struct {
+	// The field on which the Regular Expression will operate on.
 	SourceField string `json:"sourceField"`
-
+	
+	// The field that will be populated by the results of the Regular Expression
 	DestinationField string `json:"destinationField"`
 
+	// Determines whether to keep or to delete the source field.
 	KeepSourceField bool `json:"keepSourceField"`
 
+	// Determines whether to keep or to delete the destination field.
 	KeepDestinationField bool `json:"keepDestinationField"`
 }
 
+// Sub group of rules.
 type RuleSubGroup struct {
+	// The rule id.
 	// +optional
 	ID *string `json:"id,omitempty"`
 
+	// Determines whether to rule will be active or not.
 	//+kubebuilder:default=true
 	Active bool `json:"active,omitempty"`
 
+	// Determines the index of the rule inside the rule-subgroup.
 	// +optional
 	Order *int32 `json:"order,omitempty"`
 
+	// List of rules associated with the sub group.
 	// +optional
 	Rules []Rule `json:"rules,omitempty"`
 }
 
 // RuleGroupSpec defines the Desired state of RuleGroup
 type RuleGroupSpec struct {
+	
+	// Name of the rule-group.
 	//+kubebuilder:validation:MinLength=0
 	Name string `json:"name"`
 
+	// Description of the rule-group.
 	// +optional
 	Description string `json:"description,omitempty"`
 
+	// Whether the rule-group is active.
 	//+kubebuilder:default=true
 	Active bool `json:"active,omitempty"`
 
+	// Rules will execute on logs that match the these applications.
 	// +optional
 	Applications []string `json:"applications,omitempty"`
 
+	// Rules will execute on logs that match the these subsystems.
 	// +optional
 	Subsystems []string `json:"subsystems,omitempty"`
 
+	// Rules will execute on logs that match the these severities.
 	// +optional
 	Severities []RuleSeverity `json:"severities,omitempty"`
 
+	// Hides the rule-group.
 	//+kubebuilder:default=false
 	Hidden bool `json:"hidden,omitempty"`
 
+	// Rule-group creator
 	// +optional
 	Creator string `json:"creator,omitempty"`
 
+	// The index of the rule-group between the other rule-groups.
 	// +optional
 	// +kubebuilder:validation:Minimum:=1
 	Order *int32 `json:"order,omitempty"`
 
+	// List of rule-subgroups. Every rule-subgroup is a list of rules linked with a logical 'OR' (||) operation.
 	// +optional
 	RuleSubgroups []RuleSubGroup `json:"subgroups,omitempty"`
 }
@@ -519,7 +584,7 @@ type RuleGroup struct {
 
 //+kubebuilder:object:root=true
 
-// RuleGroupList contains a list of RuleGroup
+// RuleGroupList contains a list of RuleGroups
 type RuleGroupList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

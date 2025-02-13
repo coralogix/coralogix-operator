@@ -28,45 +28,60 @@ import (
 	utils "github.com/coralogix/coralogix-operator/api/coralogix"
 )
 
-// TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
+// TCOTracesPoliciesSpec defines the desired state of Coralogix TCO policies for traces.
 type TCOTracesPoliciesSpec struct {
+	// Coralogix TCO-Policies-List. For more information - https://coralogix.com/docs/tco-optimizer-api.
 	Policies []TCOTracesPolicy `json:"policies"`
 }
 
+// Coralogix TCO policy for traces.
 type TCOTracesPolicy struct {
+	// Name of the policy.
 	Name string `json:"name"`
 
+	// Description of the policy.
 	// +optional
 	Description *string `json:"description,omitempty"`
 
+	// The policy priority.
 	// +kubebuilder:validation:Enum=block;high;medium;low
 	Priority string `json:"priority"`
 
+	// Matches the specified retention.
 	// +optional
 	ArchiveRetention *ArchiveRetention `json:"archiveRetention,omitempty"`
 
+	// The applications to apply the policy on. Applies the policy on all the applications by default.
 	// +optional
 	Applications *TCOPolicyRule `json:"applications,omitempty"`
-
+	
+	// The subsystems to apply the policy on. Applies the policy on all the subsystems by default.
 	// +optional
 	Subsystems *TCOPolicyRule `json:"subsystems,omitempty"`
 
+	// The actions to apply the policy on. Applies the policy on all the actions by default.
 	// +optional
 	Actions *TCOPolicyRule `json:"actions,omitempty"`
 
+	// The services to apply the policy on. Applies the policy on all the services by default.
 	// +optional
 	Services *TCOPolicyRule `json:"services,omitempty"`
 
+	// The tags to apply the policy on. Applies the policy on all the tags by default.
 	// +optional
 	Tags []TCOPolicyTag `json:"tags,omitempty"`
 }
 
+// TCO Policy tag matching rule.
 type TCOPolicyTag struct {
+	// Tag names to match.
 	// +kubebuilder:validation:Pattern=`^tags\..*`
 	Name string `json:"name"`
 
+	// Values to match for
 	Values []string `json:"values"`
 
+	// Operator to match with.
 	// +kubebuilder:validation:Enum=is;is_not;start_with;includes
 	RuleType string `json:"ruleType"`
 }
