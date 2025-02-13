@@ -41,7 +41,7 @@ var _ = Describe("Group", Ordered, func() {
 		customRole     *coralogixv1alpha1.CustomRole
 		group          *coralogixv1alpha1.Group
 		groupID        uint32
-		groupName      = "group-sample"
+		groupName      = fmt.Sprintf("group-sample-%d", time.Now().Unix())
 		scopeName      = "scope-for-group"
 		customRoleName = "custom-role-for-group"
 	)

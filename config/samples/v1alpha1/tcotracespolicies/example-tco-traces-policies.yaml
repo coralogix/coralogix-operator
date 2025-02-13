@@ -12,8 +12,6 @@ spec:
   policies:
     - name: first policy
       priority: high
-      severities:
-        - critical
       description: This is the first policy
       actions:
         names:
@@ -36,10 +34,11 @@ spec:
           values:
             - prod
             - dev
+      archiveRetention:
+        backendRef:
+          name: Default
     - name: second policy
       priority: low
-      severities:
-          - warning
       description: This is the second policy
       actions:
           names:

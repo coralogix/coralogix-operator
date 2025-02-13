@@ -3,9 +3,8 @@ module github.com/coralogix/coralogix-operator
 go 1.23.0
 
 require (
-	github.com/coralogix/coralogix-management-sdk v1.1.3-0.20250204080504-9ec507001c56
+	github.com/coralogix/coralogix-management-sdk v1.2.2-0.20250209152200-0c9734066a94
 	github.com/go-logr/logr v1.4.2
-	github.com/golang/protobuf v1.5.4
 	github.com/google/uuid v1.6.0
 	github.com/onsi/ginkgo/v2 v2.19.0
 	github.com/onsi/gomega v1.33.1
@@ -46,6 +45,7 @@ require (
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/cel-go v0.20.1 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect

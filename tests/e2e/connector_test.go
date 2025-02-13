@@ -47,51 +47,7 @@ var _ = Describe("Connector", Ordered, func() {
 	It("Should be created successfully", func(ctx context.Context) {
 		By("Creating Connector")
 		connectorName := "slack-connector"
-		connector = &coralogixv1alpha1.Connector{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      connectorName,
-				Namespace: testNamespace,
-			},
-			Spec: coralogixv1alpha1.ConnectorSpec{
-				Name:        "Slack Connector",
-				Description: "A connector for Slack integration",
-				ConnectorType: &coralogixv1alpha1.ConnectorType{
-					Slack: &coralogixv1alpha1.ConnectorSlack{
-						CommonFields: &coralogixv1alpha1.ConnectorSlackCommonFields{
-							RawConfig: &coralogixv1alpha1.ConnectorSlackConfig{
-								Integration: &coralogixv1alpha1.SlackIntegrationRef{
-									BackendRef: &coralogixv1alpha1.SlackIntegrationBackendRef{
-										Id: "slack_integration",
-									},
-								},
-								Channel:         ptr.To("general"),
-								FallbackChannel: "fallback_general",
-							},
-							StructuredConfig: &coralogixv1alpha1.ConnectorSlackConfig{
-								Integration: &coralogixv1alpha1.SlackIntegrationRef{
-									BackendRef: &coralogixv1alpha1.SlackIntegrationBackendRef{
-										Id: "slack_integration",
-									},
-								},
-								Channel:         ptr.To("general"),
-								FallbackChannel: "fallback_general",
-							},
-						},
-						Overrides: []coralogixv1alpha1.ConnectorSlackOverride{
-							{
-								EntityType: "alerts",
-								RawConfig: &coralogixv1alpha1.ConnectorSlackConfigOverride{
-									Channel: "override",
-								},
-								StructuredConfig: &coralogixv1alpha1.ConnectorSlackConfigOverride{
-									Channel: "override",
-								},
-							},
-						},
-					},
-				},
-			},
-		}
+		connector = getSampleSlackConnector(connectorName, testNamespace)
 		Expect(crClient.Create(ctx, connector)).To(Succeed())
 
 		By("Fetching the Connector ID")
@@ -158,3 +114,51 @@ var _ = Describe("Connector", Ordered, func() {
 		Expect(err.Error()).To(ContainSubstring("only one connector type should be set"))
 	})
 })
+
+func getSampleSlackConnector(name, namespace string) *coralogixv1alpha1.Connector {
+	return &coralogixv1alpha1.Connector{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: coralogixv1alpha1.ConnectorSpec{
+			Name:        "Slack Connector",
+			Description: "A connector for Slack integration",
+			ConnectorType: &coralogixv1alpha1.ConnectorType{
+				Slack: &coralogixv1alpha1.ConnectorSlack{
+					CommonFields: &coralogixv1alpha1.ConnectorSlackCommonFields{
+						RawConfig: &coralogixv1alpha1.ConnectorSlackConfig{
+							Integration: &coralogixv1alpha1.SlackIntegrationRef{
+								BackendRef: &coralogixv1alpha1.SlackIntegrationBackendRef{
+									Id: "slack_integration",
+								},
+							},
+							Channel:         ptr.To("general"),
+							FallbackChannel: "fallback_general",
+						},
+						StructuredConfig: &coralogixv1alpha1.ConnectorSlackConfig{
+							Integration: &coralogixv1alpha1.SlackIntegrationRef{
+								BackendRef: &coralogixv1alpha1.SlackIntegrationBackendRef{
+									Id: "slack_integration",
+								},
+							},
+							Channel:         ptr.To("general"),
+							FallbackChannel: "fallback_general",
+						},
+					},
+					Overrides: []coralogixv1alpha1.ConnectorSlackOverride{
+						{
+							EntityType: "alerts",
+							RawConfig: &coralogixv1alpha1.ConnectorSlackConfigOverride{
+								Channel: "override",
+							},
+							StructuredConfig: &coralogixv1alpha1.ConnectorSlackConfigOverride{
+								Channel: "override",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}

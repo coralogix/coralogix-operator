@@ -80,8 +80,18 @@ spec:
                       - names
                       - ruleType
                       type: object
-                    archiveRetentionId:
-                      type: string
+                    archiveRetention:
+                      properties:
+                        backendRef:
+                          properties:
+                            name:
+                              type: string
+                          required:
+                          - name
+                          type: object
+                      required:
+                      - backendRef
+                      type: object
                     description:
                       type: string
                     name:
@@ -110,17 +120,6 @@ spec:
                       - names
                       - ruleType
                       type: object
-                    severities:
-                      items:
-                        enum:
-                        - info
-                        - warning
-                        - critical
-                        - error
-                        - debug
-                        - verbose
-                        type: string
-                      type: array
                     subsystems:
                       properties:
                         names:
@@ -164,7 +163,6 @@ spec:
                   required:
                   - name
                   - priority
-                  - severities
                   type: object
                 type: array
             required:

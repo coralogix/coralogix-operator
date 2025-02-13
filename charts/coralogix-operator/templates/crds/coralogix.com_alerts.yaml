@@ -30,7 +30,8 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Alert is the Schema for the alerts API
+        description: Alert is the v1alpha1 version Schema for the alerts API. v1alpha1
+          Alert is going to be deprecated, consider using v1beta1.Alert instead.
         properties:
           apiVersion:
             description: |-
@@ -50,7 +51,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: AlertSpec defines the desired state of Alert
+            description: AlertSpec defines the desired state of Alert.
             properties:
               active:
                 default: true
@@ -1025,6 +1026,8 @@ spec:
                                                       type: string
                                                     namespace:
                                                       type: string
+                                                  required:
+                                                  - name
                                                   type: object
                                               type: object
                                             not:
@@ -2421,6 +2424,191 @@ spec:
                 type: string
               notificationGroup:
                 properties:
+                  destinations:
+                    items:
+                      properties:
+                        destinationType:
+                          properties:
+                            genericHttps:
+                              properties:
+                                connectorRef:
+                                  properties:
+                                    backendRef:
+                                      properties:
+                                        id:
+                                          type: string
+                                      required:
+                                      - id
+                                      type: object
+                                    resourceRef:
+                                      properties:
+                                        name:
+                                          type: string
+                                        namespace:
+                                          type: string
+                                      required:
+                                      - name
+                                      type: object
+                                  type: object
+                                presetRef:
+                                  properties:
+                                    backendRef:
+                                      properties:
+                                        id:
+                                          type: string
+                                      required:
+                                      - id
+                                      type: object
+                                    resourceRef:
+                                      properties:
+                                        name:
+                                          type: string
+                                        namespace:
+                                          type: string
+                                      required:
+                                      - name
+                                      type: object
+                                  type: object
+                                resolvedRoutingOverride:
+                                  properties:
+                                    presetOverride:
+                                      properties:
+                                        body:
+                                          type: string
+                                        headers:
+                                          type: string
+                                      type: object
+                                  required:
+                                  - presetOverride
+                                  type: object
+                                triggeredRoutingOverride:
+                                  properties:
+                                    presetOverride:
+                                      properties:
+                                        body:
+                                          type: string
+                                        headers:
+                                          type: string
+                                      type: object
+                                  required:
+                                  - presetOverride
+                                  type: object
+                              required:
+                              - connectorRef
+                              type: object
+                            slack:
+                              properties:
+                                connectorRef:
+                                  properties:
+                                    backendRef:
+                                      properties:
+                                        id:
+                                          type: string
+                                      required:
+                                      - id
+                                      type: object
+                                    resourceRef:
+                                      properties:
+                                        name:
+                                          type: string
+                                        namespace:
+                                          type: string
+                                      required:
+                                      - name
+                                      type: object
+                                  type: object
+                                presetRef:
+                                  properties:
+                                    backendRef:
+                                      properties:
+                                        id:
+                                          type: string
+                                      required:
+                                      - id
+                                      type: object
+                                    resourceRef:
+                                      properties:
+                                        name:
+                                          type: string
+                                        namespace:
+                                          type: string
+                                      required:
+                                      - name
+                                      type: object
+                                  type: object
+                                resolvedRoutingOverride:
+                                  properties:
+                                    connectorOverride:
+                                      properties:
+                                        channel:
+                                          type: string
+                                      required:
+                                      - channel
+                                      type: object
+                                    presetOverride:
+                                      properties:
+                                        rawFields:
+                                          properties:
+                                            payload:
+                                              type: string
+                                          required:
+                                          - payload
+                                          type: object
+                                        structuredFields:
+                                          properties:
+                                            description:
+                                              type: string
+                                            footer:
+                                              type: string
+                                            title:
+                                              type: string
+                                          type: object
+                                      type: object
+                                  type: object
+                                triggeredRoutingOverride:
+                                  properties:
+                                    connectorOverride:
+                                      properties:
+                                        channel:
+                                          type: string
+                                      required:
+                                      - channel
+                                      type: object
+                                    presetOverride:
+                                      properties:
+                                        rawFields:
+                                          properties:
+                                            payload:
+                                              type: string
+                                          required:
+                                          - payload
+                                          type: object
+                                        structuredFields:
+                                          properties:
+                                            description:
+                                              type: string
+                                            footer:
+                                              type: string
+                                            title:
+                                              type: string
+                                          type: object
+                                      type: object
+                                  type: object
+                              required:
+                              - connectorRef
+                              type: object
+                          type: object
+                        notifyOn:
+                          default: triggeredOnly
+                          enum:
+                          - triggeredOnly
+                          - triggeredAndResolved
+                          type: string
+                      required:
+                      - destinationType
+                      - notifyOn
+                      type: object
+                    type: array
                   groupByKeys:
                     items:
                       type: string
@@ -2446,6 +2634,8 @@ spec:
                                       type: string
                                     namespace:
                                       type: string
+                                  required:
+                                  - name
                                   type: object
                               type: object
                             recipients:
@@ -2467,15 +2657,199 @@ spec:
                           type: object
                       required:
                       - integration
+                      - notifyOn
                       - retriggeringPeriod
                       type: object
                     type: array
-                required:
-                - webhooks
                 type: object
               notificationGroupExcess:
                 items:
                   properties:
+                    destinations:
+                      items:
+                        properties:
+                          destinationType:
+                            properties:
+                              genericHttps:
+                                properties:
+                                  connectorRef:
+                                    properties:
+                                      backendRef:
+                                        properties:
+                                          id:
+                                            type: string
+                                        required:
+                                        - id
+                                        type: object
+                                      resourceRef:
+                                        properties:
+                                          name:
+                                            type: string
+                                          namespace:
+                                            type: string
+                                        required:
+                                        - name
+                                        type: object
+                                    type: object
+                                  presetRef:
+                                    properties:
+                                      backendRef:
+                                        properties:
+                                          id:
+                                            type: string
+                                        required:
+                                        - id
+                                        type: object
+                                      resourceRef:
+                                        properties:
+                                          name:
+                                            type: string
+                                          namespace:
+                                            type: string
+                                        required:
+                                        - name
+                                        type: object
+                                    type: object
+                                  resolvedRoutingOverride:
+                                    properties:
+                                      presetOverride:
+                                        properties:
+                                          body:
+                                            type: string
+                                          headers:
+                                            type: string
+                                        type: object
+                                    required:
+                                    - presetOverride
+                                    type: object
+                                  triggeredRoutingOverride:
+                                    properties:
+                                      presetOverride:
+                                        properties:
+                                          body:
+                                            type: string
+                                          headers:
+                                            type: string
+                                        type: object
+                                    required:
+                                    - presetOverride
+                                    type: object
+                                required:
+                                - connectorRef
+                                type: object
+                              slack:
+                                properties:
+                                  connectorRef:
+                                    properties:
+                                      backendRef:
+                                        properties:
+                                          id:
+                                            type: string
+                                        required:
+                                        - id
+                                        type: object
+                                      resourceRef:
+                                        properties:
+                                          name:
+                                            type: string
+                                          namespace:
+                                            type: string
+                                        required:
+                                        - name
+                                        type: object
+                                    type: object
+                                  presetRef:
+                                    properties:
+                                      backendRef:
+                                        properties:
+                                          id:
+                                            type: string
+                                        required:
+                                        - id
+                                        type: object
+                                      resourceRef:
+                                        properties:
+                                          name:
+                                            type: string
+                                          namespace:
+                                            type: string
+                                        required:
+                                        - name
+                                        type: object
+                                    type: object
+                                  resolvedRoutingOverride:
+                                    properties:
+                                      connectorOverride:
+                                        properties:
+                                          channel:
+                                            type: string
+                                        required:
+                                        - channel
+                                        type: object
+                                      presetOverride:
+                                        properties:
+                                          rawFields:
+                                            properties:
+                                              payload:
+                                                type: string
+                                            required:
+                                            - payload
+                                            type: object
+                                          structuredFields:
+                                            properties:
+                                              description:
+                                                type: string
+                                              footer:
+                                                type: string
+                                              title:
+                                                type: string
+                                            type: object
+                                        type: object
+                                    type: object
+                                  triggeredRoutingOverride:
+                                    properties:
+                                      connectorOverride:
+                                        properties:
+                                          channel:
+                                            type: string
+                                        required:
+                                        - channel
+                                        type: object
+                                      presetOverride:
+                                        properties:
+                                          rawFields:
+                                            properties:
+                                              payload:
+                                                type: string
+                                            required:
+                                            - payload
+                                            type: object
+                                          structuredFields:
+                                            properties:
+                                              description:
+                                                type: string
+                                              footer:
+                                                type: string
+                                              title:
+                                                type: string
+                                            type: object
+                                        type: object
+                                    type: object
+                                required:
+                                - connectorRef
+                                type: object
+                            type: object
+                          notifyOn:
+                            default: triggeredOnly
+                            enum:
+                            - triggeredOnly
+                            - triggeredAndResolved
+                            type: string
+                        required:
+                        - destinationType
+                        - notifyOn
+                        type: object
+                      type: array
                     groupByKeys:
                       items:
                         type: string
@@ -2501,6 +2875,8 @@ spec:
                                         type: string
                                       namespace:
                                         type: string
+                                    required:
+                                    - name
                                     type: object
                                 type: object
                               recipients:
@@ -2522,11 +2898,10 @@ spec:
                             type: object
                         required:
                         - integration
+                        - notifyOn
                         - retriggeringPeriod
                         type: object
                       type: array
-                  required:
-                  - webhooks
                   type: object
                 type: array
               phantomMode:
@@ -2566,8 +2941,11 @@ spec:
                         type: string
                     type: object
                   timeZone:
+                    default: UTC+00
                     pattern: ^UTC[+-]\d{2}$
                     type: string
+                required:
+                - timeZone
                 type: object
             required:
             - alertType
