@@ -259,7 +259,6 @@ func main() {
 
 	if err = (&v1alpha1controllers.OutboundWebhookReconciler{
 		OutboundWebhooksClient: clientSet.Webhooks(),
-		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "OutboundWebhook")
