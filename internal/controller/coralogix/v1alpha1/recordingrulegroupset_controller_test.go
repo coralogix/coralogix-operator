@@ -18,6 +18,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -56,15 +57,15 @@ func setupRecordingRuleReconciler(t *testing.T, ctx context.Context, recordingRu
 		Scheme: mgr.GetScheme(),
 	})
 
+	coralogix.Client = withWatch
 	assert.NoError(t, err)
 	r := RecordingRuleGroupSetReconciler{
-		Client:                      withWatch,
 		Scheme:                      mgr.GetScheme(),
 		RecordingRuleGroupSetClient: recordingRuleGroupSetClient,
 	}
 	r.SetupWithManager(mgr)
 
-	watcher, _ := r.Client.(client.WithWatch).Watch(ctx, &coralogixv1alpha1.RecordingRuleGroupSetList{})
+	watcher, _ := coralogix.Client.(client.WithWatch).Watch(ctx, &coralogixv1alpha1.RecordingRuleGroupSetList{})
 	return r, watcher
 }
 
@@ -130,7 +131,7 @@ func TestRecordingRuleCreation(t *testing.T) {
 
 			reconciler, watcher := setupRecordingRuleReconciler(t, ctx, recordingRuleClient)
 
-			err := reconciler.Client.Create(ctx, &tt.recordingRule)
+			err := coralogix.Client.Create(ctx, &tt.recordingRule)
 
 			assert.NoError(t, err)
 
@@ -227,7 +228,7 @@ func TestRecordingRuleUpdate(t *testing.T) {
 
 			reconciler, watcher := setupRecordingRuleReconciler(t, ctx, recordingRuleClient)
 
-			err := reconciler.Client.Create(ctx, &tt.recordingRule)
+			err := coralogix.Client.Create(ctx, &tt.recordingRule)
 
 			assert.NoError(t, err)
 
@@ -244,14 +245,14 @@ func TestRecordingRuleUpdate(t *testing.T) {
 
 			recordingRuleGroupSet := &coralogixv1alpha1.RecordingRuleGroupSet{}
 
-			err = reconciler.Get(ctx, types.NamespacedName{
+			err = coralogix.Client.Get(ctx, types.NamespacedName{
 				Namespace: tt.recordingRule.Namespace,
 				Name:      tt.recordingRule.Name,
 			}, recordingRuleGroupSet)
 
 			assert.NoError(t, err)
 
-			err = reconciler.Client.Update(ctx, recordingRuleGroupSet)
+			err = coralogix.Client.Update(ctx, recordingRuleGroupSet)
 			assert.NoError(t, err)
 
 			_, err = reconciler.Reconcile(ctx, ctrl.Request{

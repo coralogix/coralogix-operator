@@ -297,7 +297,6 @@ func main() {
 	}
 	if err = (&v1alpha1controllers.TCOLogsPoliciesReconciler{
 		CoralogixClientSet: clientSet,
-		Client:             mgr.GetClient(),
 		Scheme:             mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "TCOLogsPolicies")
@@ -305,7 +304,6 @@ func main() {
 	}
 	if err = (&v1alpha1controllers.TCOTracesPoliciesReconciler{
 		CoralogixClientSet: clientSet,
-		Client:             mgr.GetClient(),
 		Scheme:             mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "TCOTracesPolicies")
