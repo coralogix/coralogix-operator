@@ -26,7 +26,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -87,10 +87,11 @@ func (r *OutboundWebhookReconciler) HandleCreation(ctx context.Context, log logr
 	}
 	log.V(1).Info(fmt.Sprintf("outbound-webhook was read\n%s", protojson.Format(remoteOutboundWebhook)))
 
-	outboundWebhook.Status = v1alpha1.OutboundWebhookStatus{
-		ID:         &createResponse.Id.Value,
-		ExternalID: pointer.String(strconv.Itoa(int(remoteOutboundWebhook.Webhook.ExternalId.Value))),
+	status, err := getOutboundWebhookStatus(remoteOutboundWebhook.Webhook)
+	if err != nil {
+		return nil, fmt.Errorf("error on getting outbound-webhook status: %w", err)
 	}
+	outboundWebhook.Status = *status
 
 	return outboundWebhook, nil
 }
@@ -122,6 +123,19 @@ func (r *OutboundWebhookReconciler) HandleDeletion(ctx context.Context, log logr
 	}
 	log.V(1).Info("outbound-webhook deleted from remote system", "id", *outboundWebhook.Status.ID)
 	return nil
+}
+
+func getOutboundWebhookStatus(webhook *cxsdk.OutgoingWebhook) (*v1alpha1.OutboundWebhookStatus, error) {
+	if webhook == nil {
+		return nil, fmt.Errorf("outbound-webhook is nil")
+	}
+
+	status := &v1alpha1.OutboundWebhookStatus{
+		ID:         ptr.To(webhook.Id.GetValue()),
+		ExternalID: ptr.To(strconv.Itoa(int(webhook.ExternalId.GetValue()))),
+	}
+
+	return status, nil
 }
 
 func (r *OutboundWebhookReconciler) CheckIDInStatus(obj client.Object) bool {
