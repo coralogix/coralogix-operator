@@ -119,6 +119,7 @@ type PresetStatus struct {
 // +kubebuilder:subresource:status
 
 // Preset is the Schema for the presets API.
+// NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
 type Preset struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

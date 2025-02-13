@@ -108,6 +108,7 @@ type ConnectorStatus struct {
 // +kubebuilder:subresource:status
 
 // Connector is the Schema for the connectors API.
+// NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
 type Connector struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

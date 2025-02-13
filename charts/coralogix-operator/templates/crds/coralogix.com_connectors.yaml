@@ -17,7 +17,9 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Connector is the Schema for the connectors API.
+        description: |-
+          Connector is the Schema for the connectors API.
+          NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
         properties:
           apiVersion:
             description: |-

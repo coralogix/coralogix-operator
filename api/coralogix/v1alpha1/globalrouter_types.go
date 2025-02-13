@@ -36,7 +36,8 @@ type GlobalRouterSpec struct {
 
 	EntityType string `json:"entityType"`
 
-	Fallback []RoutingTarget `json:"fallback"`
+	// +optional
+	Fallback []RoutingTarget `json:"fallback,omitempty"`
 
 	// +optional
 	Rules []RoutingRule `json:"rules,omitempty"`
@@ -241,6 +242,7 @@ type GlobalRouterStatus struct {
 // +kubebuilder:subresource:status
 
 // GlobalRouter is the Schema for the globalrouters API.
+// NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
 type GlobalRouter struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

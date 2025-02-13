@@ -2573,6 +2573,7 @@ ApiKeyStatus defines the observed state of ApiKey.
 
 
 Connector is the Schema for the connectors API.
+NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
 
 <table>
     <thead>
@@ -3286,6 +3287,7 @@ CustomRoleStatus defines the observed state of CustomRole.
 
 
 GlobalRouter is the Schema for the globalrouters API.
+NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
 
 <table>
     <thead>
@@ -3362,19 +3364,19 @@ GlobalRouterSpec defines the desired state of GlobalRouter.
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b><a href="#globalrouterspecfallbackindex">fallback</a></b></td>
-        <td>[]object</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
           <br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspecfallbackindex">fallback</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr><tr>
         <td><b><a href="#globalrouterspecrulesindex">rules</a></b></td>
         <td>[]object</td>
@@ -4971,6 +4973,7 @@ OutboundWebhookStatus defines the observed state of OutboundWebhook
 
 
 Preset is the Schema for the presets API.
+NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
 
 <table>
     <thead>

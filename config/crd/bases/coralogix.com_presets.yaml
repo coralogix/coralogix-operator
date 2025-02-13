@@ -17,7 +17,9 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Preset is the Schema for the presets API.
+        description: |-
+          Preset is the Schema for the presets API.
+          NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
         properties:
           apiVersion:
             description: |-
