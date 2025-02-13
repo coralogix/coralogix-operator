@@ -38,7 +38,6 @@ import (
 
 // OutboundWebhookReconciler reconciles a OutboundWebhook object
 type OutboundWebhookReconciler struct {
-	client.Client
 	OutboundWebhooksClient clientset.OutboundWebhooksClientInterface
 	Scheme                 *runtime.Scheme
 }
@@ -57,10 +56,6 @@ func (r *OutboundWebhookReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&v1alpha1.OutboundWebhook{}).
 		WithEventFilter(util.GetLabelFilter().Predicate()).
 		Complete(r)
-}
-
-func (r *OutboundWebhookReconciler) GetClient() client.Client {
-	return r.Client
 }
 
 func (r *OutboundWebhookReconciler) FinalizerName() string {
