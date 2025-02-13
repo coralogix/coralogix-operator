@@ -70,12 +70,18 @@ func (r *TCOTracesPoliciesReconciler) HandleCreation(ctx context.Context, log lo
 	if err := r.overwrite(ctx, log, tcoTracesPolicies); err != nil {
 		return nil, err
 	}
+	if err := coralogix.AddFinalizer(ctx, log, tcoTracesPolicies, r); err != nil {
+		return nil, err
+	}
 	return tcoTracesPolicies, nil
 }
 
 func (r *TCOTracesPoliciesReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	tcoTracesPolicies := obj.(*coralogixv1alpha1.TCOTracesPolicies)
-	return r.overwrite(ctx, log, tcoTracesPolicies)
+	if err := r.overwrite(ctx, log, tcoTracesPolicies); err != nil {
+		return err
+	}
+	return coralogix.AddFinalizer(ctx, log, tcoTracesPolicies, r)
 }
 
 func (r *TCOTracesPoliciesReconciler) HandleDeletion(ctx context.Context, log logr.Logger, _ client.Object) error {
