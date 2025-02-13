@@ -17,7 +17,9 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: GlobalRouter is the Schema for the globalrouters API.
+        description: |-
+          GlobalRouter is the Schema for the globalrouters API.
+          NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
         properties:
           apiVersion:
             description: |-
@@ -153,7 +155,6 @@ spec:
             required:
             - description
             - entityType
-            - fallback
             - name
             type: object
           status:
