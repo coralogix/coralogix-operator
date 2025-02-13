@@ -33,7 +33,6 @@ import (
 
 // ConnectorReconciler reconciles a Connector object
 type ConnectorReconciler struct {
-	client.Client
 	NotificationsClient *cxsdk.NotificationsClient
 	Scheme              *runtime.Scheme
 }
@@ -44,10 +43,6 @@ type ConnectorReconciler struct {
 
 func (r *ConnectorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	return coralogix.ReconcileResource(ctx, req, &coralogixv1alpha1.Connector{}, r)
-}
-
-func (r *ConnectorReconciler) GetClient() client.Client {
-	return r.Client
 }
 
 func (r *ConnectorReconciler) FinalizerName() string {

@@ -47,10 +47,6 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	return coralogix.ReconcileResource(ctx, req, &coralogixv1beta1.Alert{}, r)
 }
 
-func (r *AlertReconciler) GetClient() client.Client {
-	return r.Client
-}
-
 func (r *AlertReconciler) FinalizerName() string {
 	return "alert.coralogix.com/finalizer"
 }

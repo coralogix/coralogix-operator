@@ -48,10 +48,6 @@ func (r *GroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	return coralogix.ReconcileResource(ctx, req, &coralogixv1alpha1.Group{}, r)
 }
 
-func (r *GroupReconciler) GetClient() client.Client {
-	return r.Client
-}
-
 func (r *GroupReconciler) FinalizerName() string {
 	return "group.coralogix.com/finalizer"
 }

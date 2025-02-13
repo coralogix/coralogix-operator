@@ -21,6 +21,7 @@ import (
 	"os"
 	"strings"
 
+	coralogixcontroller "github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	prometheusv1alpha "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -221,10 +222,10 @@ func main() {
 
 	cpc := cxsdk.NewCallPropertiesCreatorOperator(strings.ToLower(targetUrl), cxsdk.NewAuthContext(apiKey, apiKey), "0.0.1")
 	clientSet := cxsdk.NewClientSet(cpc)
+	coralogixcontroller.Client = mgr.GetClient()
 
 	if err = (&v1alpha1controllers.RuleGroupReconciler{
 		RuleGroupClient: clientSet.RuleGroups(),
-		Client:          mgr.GetClient(),
 		Scheme:          mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RuleGroup")
@@ -249,7 +250,6 @@ func main() {
 	}
 	if err = (&v1alpha1controllers.RecordingRuleGroupSetReconciler{
 		RecordingRuleGroupSetClient: clientSet.RecordingRuleGroups(),
-		Client:                      mgr.GetClient(),
 		Scheme:                      mgr.GetScheme(),
 		RecordingRuleGroupSetSuffix: recordingRuleGroupSetSuffix,
 	}).SetupWithManager(mgr); err != nil {
@@ -267,7 +267,6 @@ func main() {
 	}
 	if err = (&v1alpha1controllers.ApiKeyReconciler{
 		ApiKeysClient: clientSet.APIKeys(),
-		Client:        mgr.GetClient(),
 		Scheme:        mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ApiKey")
@@ -275,7 +274,6 @@ func main() {
 	}
 	if err = (&v1alpha1controllers.CustomRoleReconciler{
 		CustomRolesClient: clientSet.Roles(),
-		Client:            mgr.GetClient(),
 		Scheme:            mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CustomRole")
@@ -284,7 +282,6 @@ func main() {
 
 	if err = (&v1alpha1controllers.ScopeReconciler{
 		ScopesClient: clientSet.Scopes(),
-		Client:       mgr.GetClient(),
 		Scheme:       mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Scope")
@@ -316,7 +313,6 @@ func main() {
 	}
 	if err = (&v1alpha1controllers.IntegrationReconciler{
 		IntegrationsClient: clientSet.Integrations(),
-		Client:             mgr.GetClient(),
 		Scheme:             mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Integration")
@@ -324,7 +320,6 @@ func main() {
 	}
 	if err = (&v1alpha1controllers.ConnectorReconciler{
 		NotificationsClient: clientSet.Notifications(),
-		Client:              mgr.GetClient(),
 		Scheme:              mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Connector")
@@ -332,7 +327,6 @@ func main() {
 	}
 	if err = (&v1alpha1controllers.PresetReconciler{
 		NotificationsClient: clientSet.Notifications(),
-		Client:              mgr.GetClient(),
 		Scheme:              mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Preset")

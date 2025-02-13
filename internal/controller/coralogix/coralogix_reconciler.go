@@ -31,9 +31,10 @@ import (
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
+var Client client.Client
+
 // CoralogixReconciler defines the required methods for all Coralogix controllers.
 type CoralogixReconciler interface {
-	GetClient() client.Client
 	HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) (client.Object, error)
 	HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error
 	HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error
@@ -47,7 +48,7 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 		"kind", kind,
 		"name", req.NamespacedName.Name, "namespace", req.NamespacedName.Namespace)
 
-	if err := r.GetClient().Get(ctx, req.NamespacedName, obj); err != nil {
+	if err := Client.Get(ctx, req.NamespacedName, obj); err != nil {
 		if errors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
@@ -59,7 +60,7 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 		if createdObj, err := r.HandleCreation(ctx, log, obj); err != nil {
 			log.Error(err, "Error handling creation")
 			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
-		} else if err = r.GetClient().Status().Update(ctx, createdObj); err != nil {
+		} else if err = Client.Status().Update(ctx, createdObj); err != nil {
 			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
 
@@ -115,7 +116,7 @@ func AddFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r Cor
 	if !controllerutil.ContainsFinalizer(obj, r.FinalizerName()) {
 		log.V(1).Info(fmt.Sprintf("Adding finalizer to %s", obj.GetObjectKind().GroupVersionKind().Kind))
 		controllerutil.AddFinalizer(obj, r.FinalizerName())
-		if err := r.GetClient().Update(ctx, obj); err != nil {
+		if err := Client.Update(ctx, obj); err != nil {
 			return fmt.Errorf("error updating %s: %w", obj.GetObjectKind().GroupVersionKind(), err)
 		}
 	}
@@ -125,7 +126,7 @@ func AddFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r Cor
 func RemoveFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r CoralogixReconciler) error {
 	log.V(1).Info(fmt.Sprintf("Removing finalizer from %s", obj.GetObjectKind().GroupVersionKind()))
 	controllerutil.RemoveFinalizer(obj, r.FinalizerName())
-	if err := r.GetClient().Update(ctx, obj); err != nil {
+	if err := Client.Update(ctx, obj); err != nil {
 		return fmt.Errorf("error updating %s: %w", obj.GetObjectKind().GroupVersionKind(), err)
 	}
 	return nil

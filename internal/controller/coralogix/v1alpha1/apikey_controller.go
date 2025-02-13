@@ -34,7 +34,6 @@ import (
 
 // ApiKeyReconciler reconciles a ApiKey object
 type ApiKeyReconciler struct {
-	client.Client
 	ApiKeysClient clientset.ApiKeysClientInterface
 	Scheme        *runtime.Scheme
 }
@@ -42,21 +41,12 @@ type ApiKeyReconciler struct {
 // +kubebuilder:rbac:groups=coralogix.com,resources=apikeys,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=coralogix.com,resources=apikeys/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=coralogix.com,resources=apikeys/finalizers,verbs=update
-
 //+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;create;update;patch;delete
-
-var (
-	apiKeyFinalizerName = "api-key.coralogix.com/finalizer"
-)
 
 func (r *ApiKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	result, err := coralogix.ReconcileResource(ctx, req, &coralogixv1alpha1.ApiKey{}, r)
 	monitoring.ApiKeyInfoMetric.WithLabelValues(req.Name, req.Namespace).Set(1)
 	return result, err
-}
-
-func (r *ApiKeyReconciler) GetClient() client.Client {
-	return r.Client
 }
 
 func (r *ApiKeyReconciler) FinalizerName() string {
@@ -95,13 +85,14 @@ func (r *ApiKeyReconciler) HandleUpdate(ctx context.Context, log logr.Logger, ob
 
 func (r *ApiKeyReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
 	apiKey := obj.(*coralogixv1alpha1.ApiKey)
-	log.V(1).Info("Deleting api-key from remote system", "id", *apiKey.Status.Id)
-	_, err := r.ApiKeysClient.Delete(ctx, &cxsdk.DeleteAPIKeyRequest{KeyId: *apiKey.Status.Id})
+	id := *apiKey.Status.Id
+	log.V(1).Info("Deleting api-key from remote system", "id", id)
+	_, err := r.ApiKeysClient.Delete(ctx, &cxsdk.DeleteAPIKeyRequest{KeyId: id})
 	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.V(1).Error(err, "Error deleting remote api-key", "id", *apiKey.Status.Id)
-		return fmt.Errorf("error deleting remote api-key %s: %w", *apiKey.Status.Id, err)
+		log.V(1).Error(err, "Error deleting remote api-key", "id", id)
+		return fmt.Errorf("error deleting remote api-key %s: %w", id, err)
 	}
-	log.V(1).Info("Api-key deleted from remote system", "id", *apiKey.Status.Id)
+	log.V(1).Info("Api-key deleted from remote system", "id", id)
 	return nil
 }
 

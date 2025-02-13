@@ -35,7 +35,6 @@ import (
 
 // CustomRoleReconciler reconciles a CustomRole object
 type CustomRoleReconciler struct {
-	client.Client
 	CustomRolesClient *cxsdk.RolesClient
 	Scheme            *runtime.Scheme
 }
@@ -46,10 +45,6 @@ type CustomRoleReconciler struct {
 
 func (r *CustomRoleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	return coralogix.ReconcileResource(ctx, req, &coralogixv1alpha1.CustomRole{}, r)
-}
-
-func (r *CustomRoleReconciler) GetClient() client.Client {
-	return r.Client
 }
 
 func (r *CustomRoleReconciler) FinalizerName() string {

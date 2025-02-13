@@ -33,7 +33,6 @@ import (
 
 // ScopeReconciler reconciles a Scope object
 type ScopeReconciler struct {
-	client.Client
 	ScopesClient *cxsdk.ScopesClient
 	Scheme       *runtime.Scheme
 }
@@ -46,10 +45,6 @@ var _ coralogix.CoralogixReconciler = &ScopeReconciler{}
 
 func (r *ScopeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	return coralogix.ReconcileResource(ctx, req, &coralogixv1alpha1.Scope{}, r)
-}
-
-func (r *ScopeReconciler) GetClient() client.Client {
-	return r.Client
 }
 
 func (r *ScopeReconciler) FinalizerName() string {
@@ -94,14 +89,14 @@ func (r *ScopeReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 
 func (r *ScopeReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
 	scope := obj.(*coralogixv1alpha1.Scope)
-
-	log.V(1).Info("Deleting scope from remote system", "id", *scope.Status.ID)
-	_, err := r.ScopesClient.Delete(ctx, &cxsdk.DeleteScopeRequest{Id: *scope.Status.ID})
+	id := *scope.Status.ID
+	log.V(1).Info("Deleting scope from remote system", "id", id)
+	_, err := r.ScopesClient.Delete(ctx, &cxsdk.DeleteScopeRequest{Id: id})
 	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.V(1).Error(err, "Error deleting remote scope", "id", *scope.Status.ID)
-		return fmt.Errorf("error deleting remote scope %s: %w", *scope.Status.ID, err)
+		log.V(1).Error(err, "Error deleting remote scope", "id", id)
+		return fmt.Errorf("error deleting remote scope %s: %w", id, err)
 	}
-	log.V(1).Info("Scope deleted from remote system", "id", *scope.Status.ID)
+	log.V(1).Info("Scope deleted from remote system", "id", id)
 	return nil
 }
 
