@@ -108,7 +108,7 @@ func (r *CustomRoleReconciler) CheckIDInStatus(obj client.Object) bool {
 }
 
 func (r *CustomRoleReconciler) GVK() schema.GroupVersionKind {
-	return new(coralogixv1alpha1.CustomRole).GroupVersionKind()
+	return new(coralogixv1alpha1.CustomRole).GetObjectKind().GroupVersionKind()
 }
 
 // SetupWithManager sets up the controller with the Manager.

@@ -137,7 +137,7 @@ func (r *OutboundWebhookReconciler) CheckIDInStatus(obj client.Object) bool {
 }
 
 func (r *OutboundWebhookReconciler) GVK() schema.GroupVersionKind {
-	return new(v1alpha1.OutboundWebhook).GroupVersionKind()
+	return new(v1alpha1.OutboundWebhook).GetObjectKind().GroupVersionKind()
 }
 
 func getWebhookType(webhook *v1alpha1.OutboundWebhook) string {

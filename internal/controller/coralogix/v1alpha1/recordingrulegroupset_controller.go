@@ -110,7 +110,7 @@ func (r *RecordingRuleGroupSetReconciler) CheckIDInStatus(obj client.Object) boo
 }
 
 func (r *RecordingRuleGroupSetReconciler) GVK() schema.GroupVersionKind {
-	return new(coralogixv1alpha1.RecordingRuleGroupSet).GroupVersionKind()
+	return new(coralogixv1alpha1.RecordingRuleGroupSet).GetObjectKind().GroupVersionKind()
 }
 
 func (r *RecordingRuleGroupSetReconciler) SetupWithManager(mgr ctrl.Manager) error {

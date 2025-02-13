@@ -103,7 +103,7 @@ func (r *ApiKeyReconciler) CheckIDInStatus(obj client.Object) bool {
 }
 
 func (r *ApiKeyReconciler) GVK() schema.GroupVersionKind {
-	return new(coralogixv1alpha1.ApiKey).GroupVersionKind()
+	return new(coralogixv1alpha1.ApiKey).GetObjectKind().GroupVersionKind()
 }
 
 // SetupWithManager sets up the controller with the Manager.

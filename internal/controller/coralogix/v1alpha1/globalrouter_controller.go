@@ -206,7 +206,7 @@ func (r *GlobalRouterReconciler) deleteRemoteGlobalRouter(ctx context.Context, l
 }
 
 func (r *GlobalRouterReconciler) GVK() schema.GroupVersionKind {
-	return new(coralogixv1alpha1.GlobalRouter).GroupVersionKind()
+	return new(coralogixv1alpha1.GlobalRouter).GetObjectKind().GroupVersionKind()
 }
 
 // SetupWithManager sets up the controller with the Manager.

@@ -94,7 +94,7 @@ func (r *TCOLogsPoliciesReconciler) CheckIDInStatus(_ client.Object) bool {
 }
 
 func (r *TCOLogsPoliciesReconciler) GVK() schema.GroupVersionKind {
-	return new(coralogixv1alpha1.TCOLogsPolicies).GroupVersionKind()
+	return new(coralogixv1alpha1.TCOLogsPolicies).GetObjectKind().GroupVersionKind()
 }
 
 // SetupWithManager sets up the controller with the Manager.

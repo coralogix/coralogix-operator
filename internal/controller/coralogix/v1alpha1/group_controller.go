@@ -109,7 +109,7 @@ func (r *GroupReconciler) CheckIDInStatus(obj client.Object) bool {
 }
 
 func (r *GroupReconciler) GVK() schema.GroupVersionKind {
-	return new(coralogixv1alpha1.Group).GroupVersionKind()
+	return new(coralogixv1alpha1.Group).GetObjectKind().GroupVersionKind()
 }
 
 // SetupWithManager sets up the controller with the Manager.

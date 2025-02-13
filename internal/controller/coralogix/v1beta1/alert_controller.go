@@ -126,7 +126,7 @@ func (r *AlertReconciler) CheckIDInStatus(obj client.Object) bool {
 }
 
 func (r *AlertReconciler) GVK() schema.GroupVersionKind {
-	return new(coralogixv1beta1.Alert).GroupVersionKind()
+	return new(coralogixv1beta1.Alert).GetObjectKind().GroupVersionKind()
 }
 
 // SetupWithManager sets up the controller with the Manager.
