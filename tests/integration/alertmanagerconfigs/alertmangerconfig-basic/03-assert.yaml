@@ -30,7 +30,6 @@ spec:
   description: This is an app latency alert
   enabled: true
   entityLabels:
-    managed-by: coralogix-operator
     severity: critical
     slack_channel: '#observability'
   name: app-latency
