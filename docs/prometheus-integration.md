@@ -77,7 +77,6 @@ spec:
         searchQuery: vector(1) > 0
   description: app latency alert
   labels:
-    managed-by: coralogix-operator
     severity: critical
     slack_channel: '#observability'
   name: example-alert
