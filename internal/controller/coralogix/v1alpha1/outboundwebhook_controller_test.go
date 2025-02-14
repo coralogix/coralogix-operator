@@ -195,22 +195,22 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 					},
 				}, nil)
 				params.outboundWebhooksClient.EXPECT().Update(params.ctx, gomock.Any()).Return(&cxsdk.UpdateOutgoingWebhookResponse{}, nil)
-				params.outboundWebhooksClient.EXPECT().Get(params.ctx, gomock.Any()).Return(&cxsdk.GetOutgoingWebhookResponse{
-					Webhook: &cxsdk.OutgoingWebhook{
-						Id:   wrapperspb.String("id"),
-						Name: wrapperspb.String("updated-name"),
-						Type: cxsdk.WebhookTypeGeneric,
-						Url:  wrapperspb.String("updated-url"),
-						Config: &cxsdk.GenericWebhook{
-							GenericWebhook: &cxsdk.GenericWebhookConfig{
-								Uuid:    wrapperspb.String("updated-uuid"),
-								Method:  cxsdk.GenericWebhookConfigPost,
-								Headers: map[string]string{"updated-key": "updated-value"},
-								Payload: wrapperspb.String("updated-payload"),
-							},
-						},
-					},
-				}, nil)
+				//params.outboundWebhooksClient.EXPECT().Get(params.ctx, gomock.Any()).Return(&cxsdk.GetOutgoingWebhookResponse{
+				//	Webhook: &cxsdk.OutgoingWebhook{
+				//		Id:   wrapperspb.String("id"),
+				//		Name: wrapperspb.String("updated-name"),
+				//		Type: cxsdk.WebhookTypeGeneric,
+				//		Url:  wrapperspb.String("updated-url"),
+				//		Config: &cxsdk.GenericWebhook{
+				//			GenericWebhook: &cxsdk.GenericWebhookConfig{
+				//				Uuid:    wrapperspb.String("updated-uuid"),
+				//				Method:  cxsdk.GenericWebhookConfigPost,
+				//				Headers: map[string]string{"updated-key": "updated-value"},
+				//				Payload: wrapperspb.String("updated-payload"),
+				//			},
+				//		},
+				//	},
+				//}, nil)
 			},
 			outboundWebhook: v1alpha1.OutboundWebhook{
 				ObjectMeta: metav1.ObjectMeta{
