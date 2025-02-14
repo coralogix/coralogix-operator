@@ -61,13 +61,12 @@ func (r *RecordingRuleGroupSetReconciler) HandleCreation(ctx context.Context, lo
 		Groups: recordingRuleGroupSet.Spec.ExtractRecordingRuleGroups(),
 	}
 	log.V(1).Info("Creating remote recordingRuleGroupSet", "recordingRuleGroupSet", protojson.Format(createRequest))
-	monitoring.RecordingRuleGroupSetInfoMetric.WithLabelValues(recordingRuleGroupSet.Name, recordingRuleGroupSet.Namespace).Set(1)
 	createResponse, err := r.RecordingRuleGroupSetClient.Create(ctx, createRequest)
 	if err != nil {
 		return nil, fmt.Errorf("error on creating remote recordingRuleGroupSet: %w", err)
 	}
 	log.V(1).Info("Remote recordingRuleGroupSet created", "response", protojson.Format(createResponse))
-
+	monitoring.RecordingRuleGroupSetInfoMetric.WithLabelValues(recordingRuleGroupSet.Name, recordingRuleGroupSet.Namespace).Set(1)
 	recordingRuleGroupSet.Status = coralogixv1alpha1.RecordingRuleGroupSetStatus{
 		ID: &createResponse.Id,
 	}

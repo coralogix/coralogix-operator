@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
@@ -27,6 +28,7 @@ var _ = Describe("GlobalRouter", Ordered, func() {
 
 	BeforeAll(func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
+		coralogix.Client = crClient
 		notificationsClient = ClientsInstance.GetCoralogixClientSet().Notifications()
 	})
 
