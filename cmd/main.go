@@ -267,6 +267,7 @@ func main() {
 	if err = (&v1alpha1controllers.ApiKeyReconciler{
 		ApiKeysClient: clientSet.APIKeys(),
 		Scheme:        mgr.GetScheme(),
+		Client:        mgr.GetClient(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ApiKey")
 		os.Exit(1)

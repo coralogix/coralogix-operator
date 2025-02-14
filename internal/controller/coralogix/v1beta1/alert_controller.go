@@ -20,6 +20,7 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
+	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -74,7 +75,7 @@ func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 		return nil, fmt.Errorf("error on creating remote alert: %w", err)
 	}
 	log.V(1).Info("Remote alert created", "response", protojson.Format(createResponse))
-
+	monitoring.AlertInfoMetric.WithLabelValues(alert.Name, alert.Namespace, getAlertType(alert)).Set(1)
 	alert.Status = coralogixv1beta1.AlertStatus{ID: &createResponse.AlertDef.Id.Value}
 	return alert, nil
 }
@@ -104,7 +105,7 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 	log.V(1).Info("Updating remote alert", "alert", protojson.Format(updateRequest))
 	updateResponse, err := r.CoralogixClientSet.Alerts().Replace(ctx, updateRequest)
 	log.V(1).Info("Remote alert updated", "alert", protojson.Format(updateResponse))
-
+	monitoring.AlertInfoMetric.WithLabelValues(alert.Name, alert.Namespace, getAlertType(alert)).Set(1)
 	return nil
 }
 
@@ -127,6 +128,33 @@ func (r *AlertReconciler) CheckIDInStatus(obj client.Object) bool {
 
 func (r *AlertReconciler) GVK() schema.GroupVersionKind {
 	return new(coralogixv1beta1.Alert).GetObjectKind().GroupVersionKind()
+}
+
+func getAlertType(alert *coralogixv1beta1.Alert) string {
+	if alert.Spec.TypeDefinition.Flow != nil {
+		return "flow"
+	} else if alert.Spec.TypeDefinition.MetricAnomaly != nil {
+		return "metric-anomaly"
+	} else if alert.Spec.TypeDefinition.LogsAnomaly != nil {
+		return "logs-anomaly"
+	} else if alert.Spec.TypeDefinition.LogsImmediate != nil {
+		return "logs-immediate"
+	} else if alert.Spec.TypeDefinition.LogsNewValue != nil {
+		return "logs-new-value"
+	} else if alert.Spec.TypeDefinition.LogsRatioThreshold != nil {
+		return "logs-ratio-threshold"
+	} else if alert.Spec.TypeDefinition.LogsUniqueCount != nil {
+		return "logs-unique-count"
+	} else if alert.Spec.TypeDefinition.MetricThreshold != nil {
+		return "metric-threshold"
+	} else if alert.Spec.TypeDefinition.TracingThreshold != nil {
+		return "tracing-threshold"
+	} else if alert.Spec.TypeDefinition.LogsThreshold != nil {
+		return "logs-threshold"
+	} else if alert.Spec.TypeDefinition.LogsTimeRelativeThreshold != nil {
+		return "logs-time-relative-threshold"
+	}
+	return "unknown"
 }
 
 // SetupWithManager sets up the controller with the Manager.
