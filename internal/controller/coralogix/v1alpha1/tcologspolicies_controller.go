@@ -19,7 +19,6 @@ import (
 	"fmt"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -27,6 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
@@ -40,7 +40,7 @@ type TCOLogsPoliciesReconciler struct {
 // +kubebuilder:rbac:groups=coralogix.com,resources=tcologspolicies/finalizers,verbs=update
 
 func (r *TCOLogsPoliciesReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return coralogix.ReconcileResource(ctx, req, &coralogixv1alpha1.TCOLogsPolicies{}, r)
+	return coralogix_reconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.TCOLogsPolicies{}, r)
 }
 
 func (r *TCOLogsPoliciesReconciler) overwrite(ctx context.Context, log logr.Logger, tcoLogsPolicies *coralogixv1alpha1.TCOLogsPolicies) error {
@@ -66,7 +66,7 @@ func (r *TCOLogsPoliciesReconciler) HandleCreation(ctx context.Context, log logr
 	if err := r.overwrite(ctx, log, tcoLogsPolicies); err != nil {
 		return nil, err
 	}
-	if err := coralogix.AddFinalizer(ctx, log, tcoLogsPolicies, r); err != nil {
+	if err := coralogix_reconciler.AddFinalizer(ctx, log, tcoLogsPolicies, r); err != nil {
 		return nil, err
 	}
 	return tcoLogsPolicies, nil
@@ -77,7 +77,7 @@ func (r *TCOLogsPoliciesReconciler) HandleUpdate(ctx context.Context, log logr.L
 	if err := r.overwrite(ctx, log, tcoLogsPolicies); err != nil {
 		return err
 	}
-	return coralogix.AddFinalizer(ctx, log, tcoLogsPolicies, r)
+	return coralogix_reconciler.AddFinalizer(ctx, log, tcoLogsPolicies, r)
 }
 
 func (r *TCOLogsPoliciesReconciler) HandleDeletion(ctx context.Context, log logr.Logger, _ client.Object) error {

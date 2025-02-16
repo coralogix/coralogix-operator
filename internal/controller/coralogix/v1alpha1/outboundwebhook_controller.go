@@ -20,7 +20,7 @@ import (
 	"strconv"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-	coralogixreconcile "github.com/coralogix/coralogix-operator/internal/controller/coralogix"
+	coralogixreconcile "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"

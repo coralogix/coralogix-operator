@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package coralogix
+package coralogix_reconciler
 
 import (
 	"context"
@@ -45,17 +45,17 @@ type CoralogixReconciler interface {
 }
 
 func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object, r CoralogixReconciler) (ctrl.Result, error) {
-	gvk := objToGVK(obj)
-	log := log.FromContext(ctx).WithValues(
-		"gvk", gvk,
-		"name", req.NamespacedName.Name, "namespace", req.NamespacedName.Namespace)
-
 	if err := Client.Get(ctx, req.NamespacedName, obj); err != nil {
 		if errors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
 		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
+
+	gvk := obj.GetObjectKind().GroupVersionKind()
+	log := log.FromContext(ctx).WithValues(
+		"gvk", gvk,
+		"name", req.NamespacedName.Name, "namespace", req.NamespacedName.Namespace)
 
 	if !r.CheckIDInStatus(obj) {
 		log.V(1).Info("Resource ID is missing; handling creation for resource")
@@ -135,12 +135,4 @@ func RemoveFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r 
 		return fmt.Errorf("error updating %s: %w", obj.GetObjectKind().GroupVersionKind(), err)
 	}
 	return nil
-}
-
-func objToGVK(obj client.Object) string {
-	gvks, _, _ := Schema.ObjectKinds(obj)
-	if len(gvks) == 0 {
-		return ""
-	}
-	return gvks[0].String()
 }

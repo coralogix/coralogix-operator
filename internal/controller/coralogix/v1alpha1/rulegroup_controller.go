@@ -19,7 +19,6 @@ import (
 	"fmt"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
@@ -29,6 +28,7 @@ import (
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
+	"github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
@@ -42,7 +42,7 @@ type RuleGroupReconciler struct {
 //+kubebuilder:rbac:groups=coralogix.com,resources=rulegroups/finalizers,verbs=update
 
 func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return coralogix.ReconcileResource(ctx, req, &coralogixv1alpha1.RuleGroup{}, r)
+	return coralogix_reconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.RuleGroup{}, r)
 }
 
 func (r *RuleGroupReconciler) FinalizerName() string {

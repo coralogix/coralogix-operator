@@ -18,15 +18,16 @@ import (
 	"context"
 	"fmt"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
@@ -40,7 +41,7 @@ type ConnectorReconciler struct {
 // +kubebuilder:rbac:groups=coralogix.com,resources=connectors/finalizers,verbs=update
 
 func (r *ConnectorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return coralogix.ReconcileResource(ctx, req, &coralogixv1alpha1.Connector{}, r)
+	return coralogix_reconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.Connector{}, r)
 }
 
 func (r *ConnectorReconciler) FinalizerName() string {

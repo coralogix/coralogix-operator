@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -39,6 +38,7 @@ import (
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
+	"github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	"github.com/coralogix/coralogix-operator/internal/controller/mock_clientset"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
@@ -177,12 +177,12 @@ func TestRuleGroupReconciler_Reconcile(t *testing.T) {
 	}
 	r.SetupWithManager(mgr)
 
-	coralogix.Client = withWatch
-	coralogix.Schema = mgr.GetScheme()
-	watcher, _ := coralogix.Client.(client.WithWatch).Watch(ctx, &coralogixv1alpha1.RuleGroupList{})
+	coralogix_reconciler.Client = withWatch
+	coralogix_reconciler.Schema = mgr.GetScheme()
+	watcher, _ := coralogix_reconciler.Client.(client.WithWatch).Watch(ctx, &coralogixv1alpha1.RuleGroupList{})
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
-	err = coralogix.Client.Create(ctx, expectedRuleGroupCRD())
+	err = coralogix_reconciler.Client.Create(ctx, expectedRuleGroupCRD())
 	assert.NoError(t, err)
 	<-watcher.ResultChan()
 
@@ -191,7 +191,7 @@ func TestRuleGroupReconciler_Reconcile(t *testing.T) {
 
 	namespacedName := types.NamespacedName{Namespace: "default", Name: "test"}
 	actualRuleGroupCRD := &coralogixv1alpha1.RuleGroup{}
-	err = coralogix.Client.Get(ctx, namespacedName, actualRuleGroupCRD)
+	err = coralogix_reconciler.Client.Get(ctx, namespacedName, actualRuleGroupCRD)
 	assert.NoError(t, err)
 
 	id := actualRuleGroupCRD.Status.ID
@@ -203,7 +203,7 @@ func TestRuleGroupReconciler_Reconcile(t *testing.T) {
 	assert.NoError(t, err)
 	assert.EqualValues(t, ruleGroupBackendSchema, actualRuleGroup.GetRuleGroup())
 
-	err = coralogix.Client.Delete(ctx, actualRuleGroupCRD)
+	err = coralogix_reconciler.Client.Delete(ctx, actualRuleGroupCRD)
 	<-watcher.ResultChan()
 
 	result, err = r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
@@ -237,12 +237,12 @@ func TestRuleGroupReconciler_Reconcile_5XX_StatusError(t *testing.T) {
 		RuleGroupClient: ruleGroupClient,
 	}
 	r.SetupWithManager(mgr)
-	coralogix.Client = withWatch
-	coralogix.Schema = mgr.GetScheme()
-	watcher, _ := coralogix.Client.(client.WithWatch).Watch(ctx, &coralogixv1alpha1.RuleGroupList{})
+	coralogix_reconciler.Client = withWatch
+	coralogix_reconciler.Schema = mgr.GetScheme()
+	watcher, _ := coralogix_reconciler.Client.(client.WithWatch).Watch(ctx, &coralogixv1alpha1.RuleGroupList{})
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
-	err = coralogix.Client.Create(ctx, expectedRuleGroupCRD())
+	err = coralogix_reconciler.Client.Create(ctx, expectedRuleGroupCRD())
 	assert.NoError(t, err)
 	<-watcher.ResultChan()
 
@@ -255,7 +255,7 @@ func TestRuleGroupReconciler_Reconcile_5XX_StatusError(t *testing.T) {
 
 	namespacedName := types.NamespacedName{Namespace: "default", Name: "test"}
 	actualRuleGroupCRD := &coralogixv1alpha1.RuleGroup{}
-	err = coralogix.Client.Get(ctx, namespacedName, actualRuleGroupCRD)
+	err = coralogix_reconciler.Client.Get(ctx, namespacedName, actualRuleGroupCRD)
 	assert.NoError(t, err)
 
 	id := actualRuleGroupCRD.Status.ID
@@ -267,7 +267,7 @@ func TestRuleGroupReconciler_Reconcile_5XX_StatusError(t *testing.T) {
 	assert.NoError(t, err)
 	assert.EqualValues(t, ruleGroupBackendSchema, actualRuleGroup.GetRuleGroup())
 
-	err = coralogix.Client.Delete(ctx, actualRuleGroupCRD)
+	err = coralogix_reconciler.Client.Delete(ctx, actualRuleGroupCRD)
 	<-watcher.ResultChan()
 	r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
 }

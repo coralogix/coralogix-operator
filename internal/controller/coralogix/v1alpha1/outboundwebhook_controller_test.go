@@ -18,7 +18,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -37,6 +36,7 @@ import (
 
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	"github.com/coralogix/coralogix-operator/internal/controller/mock_clientset"
 )
 
@@ -59,15 +59,15 @@ func setupOutboundWebhooksReconciler(t *testing.T, ctx context.Context, outbound
 	})
 	assert.NoError(t, err)
 
-	coralogix.Client = withWatch
-	coralogix.Schema = mgr.GetScheme()
+	coralogix_reconciler.Client = withWatch
+	coralogix_reconciler.Schema = mgr.GetScheme()
 
 	r := OutboundWebhookReconciler{
 		OutboundWebhooksClient: outboundWebhooksClient,
 	}
 	r.SetupWithManager(mgr)
 
-	watcher, _ := coralogix.Client.(client.WithWatch).Watch(ctx, &v1alpha1.OutboundWebhookList{})
+	watcher, _ := coralogix_reconciler.Client.(client.WithWatch).Watch(ctx, &v1alpha1.OutboundWebhookList{})
 	return r, watcher
 }
 
@@ -144,7 +144,7 @@ func TestOutboundWebhooksCreation(t *testing.T) {
 
 			reconciler, watcher := setupOutboundWebhooksReconciler(t, ctx, outboundWebhooksClient)
 
-			err := coralogix.Client.Create(ctx, &tt.outboundWebhook)
+			err := coralogix_reconciler.Client.Create(ctx, &tt.outboundWebhook)
 
 			assert.NoError(t, err)
 
@@ -269,7 +269,7 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 
 			reconciler, watcher := setupOutboundWebhooksReconciler(t, ctx, outboundWebhookClient)
 
-			err := coralogix.Client.Create(ctx, &tt.outboundWebhook)
+			err := coralogix_reconciler.Client.Create(ctx, &tt.outboundWebhook)
 
 			assert.NoError(t, err)
 
@@ -286,7 +286,7 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 
 			outboundWebhook := &v1alpha1.OutboundWebhook{}
 
-			err = coralogix.Client.Get(ctx, types.NamespacedName{
+			err = coralogix_reconciler.Client.Get(ctx, types.NamespacedName{
 				Namespace: tt.outboundWebhook.Namespace,
 				Name:      tt.outboundWebhook.Name,
 			}, outboundWebhook)
@@ -294,7 +294,7 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 			assert.NoError(t, err)
 
 			tt.updatedWebhook.ObjectMeta.ResourceVersion = outboundWebhook.ObjectMeta.ResourceVersion
-			err = coralogix.Client.Update(ctx, &tt.updatedWebhook)
+			err = coralogix_reconciler.Client.Update(ctx, &tt.updatedWebhook)
 			assert.NoError(t, err)
 
 			<-watcher.ResultChan()
@@ -307,7 +307,7 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 			})
 
 			outboundWebhook = &v1alpha1.OutboundWebhook{}
-			err = coralogix.Client.Get(ctx, types.NamespacedName{
+			err = coralogix_reconciler.Client.Get(ctx, types.NamespacedName{
 				Namespace: tt.updatedWebhook.Namespace,
 				Name:      tt.updatedWebhook.Name,
 			}, outboundWebhook)
@@ -390,7 +390,7 @@ func TestOutboundWebhookDeletion(t *testing.T) {
 
 			reconciler, watcher := setupOutboundWebhooksReconciler(t, ctx, outboundWebhooksClient)
 
-			err := coralogix.Client.Create(ctx, &tt.outboundWebhook)
+			err := coralogix_reconciler.Client.Create(ctx, &tt.outboundWebhook)
 
 			assert.NoError(t, err)
 
@@ -403,7 +403,7 @@ func TestOutboundWebhookDeletion(t *testing.T) {
 				},
 			})
 
-			err = coralogix.Client.Delete(ctx, &tt.outboundWebhook)
+			err = coralogix_reconciler.Client.Delete(ctx, &tt.outboundWebhook)
 
 			assert.NoError(t, err)
 

@@ -26,7 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
-	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
+	"github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
@@ -39,10 +39,10 @@ type ScopeReconciler struct {
 // +kubebuilder:rbac:groups=coralogix.com,resources=scopes/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=coralogix.com,resources=scopes/finalizers,verbs=update
 
-var _ coralogix.CoralogixReconciler = &ScopeReconciler{}
+var _ coralogix_reconciler.CoralogixReconciler = &ScopeReconciler{}
 
 func (r *ScopeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return coralogix.ReconcileResource(ctx, req, &coralogixv1alpha1.Scope{}, r)
+	return coralogix_reconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.Scope{}, r)
 }
 
 func (r *ScopeReconciler) FinalizerName() string {

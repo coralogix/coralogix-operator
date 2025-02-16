@@ -19,7 +19,6 @@ import (
 	"fmt"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
@@ -29,6 +28,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
+	"github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	util "github.com/coralogix/coralogix-operator/internal/utils"
 )
 
@@ -43,7 +43,7 @@ type AlertReconciler struct {
 // +kubebuilder:rbac:groups=coralogix.com,resources=alerts/finalizers,verbs=update
 
 func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return coralogix.ReconcileResource(ctx, req, &coralogixv1beta1.Alert{}, r)
+	return coralogix_reconciler.ReconcileResource(ctx, req, &coralogixv1beta1.Alert{}, r)
 }
 
 func (r *AlertReconciler) FinalizerName() string {

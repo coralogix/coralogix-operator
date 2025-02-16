@@ -19,7 +19,6 @@ import (
 	"fmt"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -27,6 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
@@ -40,7 +40,7 @@ type TCOTracesPoliciesReconciler struct {
 // +kubebuilder:rbac:groups=coralogix.com,resources=tcotracespolicies/finalizers,verbs=update
 
 func (r *TCOTracesPoliciesReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return coralogix.ReconcileResource(ctx, req, &coralogixv1alpha1.TCOTracesPolicies{}, r)
+	return coralogix_reconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.TCOTracesPolicies{}, r)
 }
 
 func (r *TCOTracesPoliciesReconciler) overwrite(ctx context.Context, log logr.Logger, tcoTracesPolicies *coralogixv1alpha1.TCOTracesPolicies) error {
@@ -67,7 +67,7 @@ func (r *TCOTracesPoliciesReconciler) HandleCreation(ctx context.Context, log lo
 	if err := r.overwrite(ctx, log, tcoTracesPolicies); err != nil {
 		return nil, err
 	}
-	if err := coralogix.AddFinalizer(ctx, log, tcoTracesPolicies, r); err != nil {
+	if err := coralogix_reconciler.AddFinalizer(ctx, log, tcoTracesPolicies, r); err != nil {
 		return nil, err
 	}
 	return tcoTracesPolicies, nil
@@ -78,7 +78,7 @@ func (r *TCOTracesPoliciesReconciler) HandleUpdate(ctx context.Context, log logr
 	if err := r.overwrite(ctx, log, tcoTracesPolicies); err != nil {
 		return err
 	}
-	return coralogix.AddFinalizer(ctx, log, tcoTracesPolicies, r)
+	return coralogix_reconciler.AddFinalizer(ctx, log, tcoTracesPolicies, r)
 }
 
 func (r *TCOTracesPoliciesReconciler) HandleDeletion(ctx context.Context, log logr.Logger, _ client.Object) error {
