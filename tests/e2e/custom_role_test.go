@@ -38,7 +38,7 @@ var _ = Describe("CustomRole", Ordered, func() {
 		rolesClient    *cxsdk.RolesClient
 		customRoleID   uint32
 		customRole     *coralogixv1alpha1.CustomRole
-		customRoleName = "custom-role-sample"
+		customRoleName = fmt.Sprintf("custom-role-sample-%d", time.Now().Unix())
 	)
 
 	BeforeEach(func() {

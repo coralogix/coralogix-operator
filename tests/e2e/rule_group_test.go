@@ -37,7 +37,7 @@ var _ = Describe("RuleGroup", Ordered, func() {
 		ruleGroupsClient *cxsdk.RuleGroupsClient
 		ruleGroupID      string
 		ruleGroup        *coralogixv1alpha1.RuleGroup
-		ruleGroupName    = "json-extract-rule"
+		ruleGroupName    = fmt.Sprintf("json-extract-rule-%d", time.Now().Unix())
 	)
 
 	BeforeEach(func() {

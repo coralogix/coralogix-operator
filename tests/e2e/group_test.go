@@ -43,7 +43,7 @@ var _ = Describe("Group", Ordered, func() {
 		groupID        uint32
 		groupName      = fmt.Sprintf("group-sample-%d", time.Now().Unix())
 		scopeName      = "scope-for-group"
-		customRoleName = "custom-role-for-group"
+		customRoleName = fmt.Sprintf("custom-role-for-group-%d", time.Now().Unix())
 	)
 
 	BeforeEach(func() {

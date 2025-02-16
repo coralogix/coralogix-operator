@@ -52,3 +52,7 @@ jobs:
       - name: Run e2e Tests
         run: |
           make e2e-tests
+      - name: Collect Operator Logs
+        if: always()
+        run: |
+          scripts/collect-logs.sh
