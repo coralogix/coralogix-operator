@@ -59,15 +59,18 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 
 	if !r.CheckIDInStatus(obj) {
 		log.V(1).Info("Resource ID is missing; handling creation for resource")
-		if createdObj, err := r.HandleCreation(ctx, log, obj); err != nil {
+		var err error
+		if obj, err = r.HandleCreation(ctx, log, obj); err != nil {
 			log.Error(err, "Error handling creation")
 			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
-		} else if err = Client.Status().Update(ctx, createdObj); err != nil {
+		}
+
+		if err = Client.Status().Update(ctx, obj); err != nil {
 			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
 
 		log.V(1).Info("Adding finalizer")
-		if err := AddFinalizer(ctx, log, obj, r); err != nil {
+		if err = AddFinalizer(ctx, log, obj, r); err != nil {
 			log.Error(err, "Error adding finalizer")
 			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
@@ -91,7 +94,7 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 	}
 
 	if !utils.GetLabelFilter().Matches(obj.GetLabels()) {
-		log.V(1).Info("Resource labels do not match label filter; handling deletion")
+		log.V(1).Info("Error handling deletion")
 		if err := r.HandleDeletion(ctx, log, obj); err != nil {
 			log.Error(err, "Error deleting from remote")
 			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
@@ -126,7 +129,7 @@ func AddFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r Cor
 }
 
 func RemoveFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r CoralogixReconciler) error {
-	log.V(1).Info(fmt.Sprintf("Removing finalizer from %s", obj.GetObjectKind().GroupVersionKind()))
+	log.V(1).Info("Removing finalizer from %s", obj.GetObjectKind().GroupVersionKind())
 	controllerutil.RemoveFinalizer(obj, r.FinalizerName())
 	if err := Client.Update(ctx, obj); err != nil {
 		return fmt.Errorf("error updating %s: %w", obj.GetObjectKind().GroupVersionKind(), err)

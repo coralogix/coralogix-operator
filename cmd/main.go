@@ -21,7 +21,6 @@ import (
 	"os"
 	"strings"
 
-	coralogixcontroller "github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	prometheusv1alpha "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -45,6 +44,7 @@ import (
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	controllers "github.com/coralogix/coralogix-operator/internal/controller"
+	coralogixcontroller "github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	v1alpha1controllers "github.com/coralogix/coralogix-operator/internal/controller/coralogix/v1alpha1"
 	v1beta1controllers "github.com/coralogix/coralogix-operator/internal/controller/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"

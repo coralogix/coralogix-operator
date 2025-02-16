@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
@@ -42,7 +41,6 @@ var _ = Describe("RecordingRuleGroupSet", Ordered, func() {
 
 	BeforeAll(func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
-		coralogix.Client = crClient
 		recordingRuleGroupSetsClient = ClientsInstance.GetCoralogixClientSet().RecordingRuleGroups()
 	})
 

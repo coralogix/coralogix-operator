@@ -20,7 +20,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
@@ -44,7 +43,6 @@ var _ = Describe("CustomRole", Ordered, func() {
 
 	BeforeEach(func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
-		coralogix.Client = crClient
 		rolesClient = ClientsInstance.GetCoralogixClientSet().Roles()
 		customRole = getSampleCustomRole(customRoleName, testNamespace)
 	})
