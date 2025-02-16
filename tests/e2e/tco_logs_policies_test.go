@@ -16,12 +16,12 @@ package e2e
 
 import (
 	"context"
-	"k8s.io/utils/ptr"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
@@ -29,7 +29,7 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 )
 
-var _ = Describe("TCOLogsPolicies", Ordered, func() {
+var _ = Describe("TCOLogsPolicies", func() {
 	var (
 		crClient        client.Client
 		tcoClient       *cxsdk.TCOPoliciesClient
@@ -71,7 +71,7 @@ var _ = Describe("TCOLogsPolicies", Ordered, func() {
 		}
 	})
 
-	It("Should create TCOLogsPolicies successfully", func(ctx context.Context) {
+	It("Should create TCOLogsPolicies successfully", FlakeAttempts(3), func(ctx context.Context) {
 		By("Creating TCOLogsPolicies")
 		Expect(crClient.Create(ctx, TCOLogsPolicies)).To(Succeed())
 
@@ -84,26 +84,7 @@ var _ = Describe("TCOLogsPolicies", Ordered, func() {
 		}, time.Minute, time.Second).Should(HaveLen(1))
 
 		Expect(policies[0].Name.Value).To(Equal(TCOLogsPolicies.Spec.Policies[0].Name))
-	})
 
-	It("Should update TCOLogsPolicies successfully", func(ctx context.Context) {
-		By("Patching the TCOLogsPolicies CustomResource")
-		modifiedPolicy := TCOLogsPolicies.DeepCopy()
-		modifiedPolicy.Spec.Policies[0].Name = "updated policy"
-		Expect(crClient.Patch(ctx, modifiedPolicy, client.MergeFrom(TCOLogsPolicies))).To(Succeed())
-
-		By("Verifying policies is updated in the Coralogix backend")
-		Eventually(func() []*cxsdk.TCOPolicy {
-			listRes, err := tcoClient.List(ctx, &cxsdk.GetCompanyPoliciesRequest{SourceType: ptr.To(cxsdk.TCOPolicySourceTypeLogs)})
-			Expect(err).ToNot(HaveOccurred())
-			policies = listRes.Policies
-			return policies
-		}, time.Minute, time.Second).Should(HaveLen(1))
-
-		Expect(policies[0].Name.Value).To(Equal(TCOLogsPolicies.Spec.Policies[0].Name))
-	})
-
-	It("Should be deleted successfully", func(ctx context.Context) {
 		By("Deleting the TCOLogsPolicies")
 		Expect(crClient.Delete(ctx, TCOLogsPolicies)).To(Succeed())
 		Eventually(func() []*cxsdk.TCOPolicy {

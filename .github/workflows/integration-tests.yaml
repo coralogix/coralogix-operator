@@ -43,3 +43,7 @@ jobs:
       - name: Run Integration Tests
         run: |
           make integration-tests
+      - name: Collect Operator Logs
+        if: always()
+        run: |
+          scripts/collect-logs.sh

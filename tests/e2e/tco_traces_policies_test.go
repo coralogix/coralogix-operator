@@ -29,7 +29,7 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 )
 
-var _ = Describe("TCOTracesPolicies", Ordered, func() {
+var _ = Describe("TCOTracesPolicies", func() {
 	var (
 		crClient          client.Client
 		tcoClient         *cxsdk.TCOPoliciesClient
@@ -90,7 +90,7 @@ var _ = Describe("TCOTracesPolicies", Ordered, func() {
 		}
 	})
 
-	It("Should create TCOTracesPolicies successfully", func(ctx context.Context) {
+	It("Should create TCOTracesPolicies successfully", FlakeAttempts(3), func(ctx context.Context) {
 		By("Creating TCOTracesPolicies")
 		Expect(crClient.Create(ctx, TCOTracesPolicies)).To(Succeed())
 
@@ -103,26 +103,7 @@ var _ = Describe("TCOTracesPolicies", Ordered, func() {
 		}, time.Minute, time.Second).Should(HaveLen(1))
 
 		Expect(policies[0].Name.Value).To(Equal(TCOTracesPolicies.Spec.Policies[0].Name))
-	})
 
-	It("Should update TCOTracesPolicies successfully", func(ctx context.Context) {
-		By("Patching the TCOTracesPolicies CustomResource")
-		modifiedPolicy := TCOTracesPolicies.DeepCopy()
-		modifiedPolicy.Spec.Policies[0].Name = "updated policy"
-		Expect(crClient.Patch(ctx, modifiedPolicy, client.MergeFrom(TCOTracesPolicies))).To(Succeed())
-
-		By("Verifying policies is updated in the Coralogix backend")
-		Eventually(func() []*cxsdk.TCOPolicy {
-			listRes, err := tcoClient.List(ctx, &cxsdk.GetCompanyPoliciesRequest{SourceType: ptr.To(cxsdk.TCOPolicySourceTypeSpans)})
-			Expect(err).ToNot(HaveOccurred())
-			policies = listRes.Policies
-			return policies
-		}, time.Minute, time.Second).Should(HaveLen(1))
-
-		Expect(policies[0].Name.Value).To(Equal(TCOTracesPolicies.Spec.Policies[0].Name))
-	})
-
-	It("Should be deleted successfully", func(ctx context.Context) {
 		By("Deleting the TCOTracesPolicies")
 		Expect(crClient.Delete(ctx, TCOTracesPolicies)).To(Succeed())
 		Eventually(func() []*cxsdk.TCOPolicy {

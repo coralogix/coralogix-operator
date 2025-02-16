@@ -47,7 +47,7 @@ var _ = Describe("RecordingRuleGroupSet", Ordered, func() {
 
 	It("Should be created successfully", func(ctx context.Context) {
 		By("Creating RecordingRuleGroupSet")
-		recordingRuleGroupSetName := "recording-rule-group-set"
+		recordingRuleGroupSetName := fmt.Sprintf("recording-rule-group-set-%d", time.Now().Unix())
 		recordingRuleGroupSet = &coralogixv1alpha1.RecordingRuleGroupSet{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      recordingRuleGroupSetName,

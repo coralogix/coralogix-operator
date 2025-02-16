@@ -24,6 +24,7 @@ jobs:
           go-version-file: go.mod
       - name: Generate docs and manifests
         run: |
+          go mod tidy
           make generate
           make manifests
           make generate-api-docs
@@ -31,6 +32,7 @@ jobs:
         run: |
           if ! git diff --exit-code; then
             echo "Some files are out of date. Please run the following commands and commit the changes:"
+            echo "    go mod tidy"
             echo "    make generate-api-docs"
             echo "    make generate"
             echo "    make manifests"
