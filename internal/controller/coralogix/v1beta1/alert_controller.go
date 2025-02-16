@@ -115,6 +115,7 @@ func (r *AlertReconciler) HandleDeletion(ctx context.Context, log logr.Logger, o
 		return fmt.Errorf("error deleting remote alert %s: %w", *alert.Status.ID, err)
 	}
 	log.V(1).Info("Alert deleted from remote system", "id", *alert.Status.ID)
+	monitoring.AlertInfoMetric.DeleteLabelValues(alert.Name, alert.Namespace, getAlertType(alert))
 	return nil
 }
 

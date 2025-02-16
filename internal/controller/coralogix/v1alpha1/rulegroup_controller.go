@@ -20,6 +20,7 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	"github.com/coralogix/coralogix-operator/internal/controller/coralogix"
+	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -57,7 +58,7 @@ func (r *RuleGroupReconciler) HandleCreation(ctx context.Context, log logr.Logge
 		return nil, fmt.Errorf("error on creating remote ruleGroup: %w", err)
 	}
 	log.V(1).Info("Remote ruleGroup created", "response", protojson.Format(createResponse))
-
+	monitoring.RuleGroupInfoMetric.WithLabelValues(ruleGroup.Name, ruleGroup.Namespace).Set(1)
 	ruleGroup.Status = coralogixv1alpha1.RuleGroupStatus{
 		ID: &createResponse.RuleGroup.Id.Value,
 	}
@@ -74,7 +75,7 @@ func (r *RuleGroupReconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 		return fmt.Errorf("error on updating remote ruleGroup: %w", err)
 	}
 	log.V(1).Info("Remote ruleGroup updated", "ruleGroup", protojson.Format(updateResponse))
-
+	monitoring.RuleGroupInfoMetric.WithLabelValues(ruleGroup.Name, ruleGroup.Namespace).Set(1)
 	return nil
 }
 
@@ -88,6 +89,7 @@ func (r *RuleGroupReconciler) HandleDeletion(ctx context.Context, log logr.Logge
 		return fmt.Errorf("error deleting remote ruleGroup %s: %w", id, err)
 	}
 	log.V(1).Info("RuleGroup deleted from remote system", "id", id)
+	monitoring.RuleGroupInfoMetric.WithLabelValues(ruleGroup.Name, ruleGroup.Namespace).Set(0)
 	return nil
 }
 

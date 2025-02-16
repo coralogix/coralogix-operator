@@ -111,6 +111,7 @@ func (r *OutboundWebhookReconciler) HandleDeletion(ctx context.Context, log logr
 		return fmt.Errorf("error deleting remote outbound-webhook %s: %w", *outboundWebhook.Status.ID, err)
 	}
 	log.V(1).Info("outbound-webhook deleted from remote system", "id", *outboundWebhook.Status.ID)
+	monitoring.OutboundWebhookInfoMetric.WithLabelValues(outboundWebhook.Name, outboundWebhook.Namespace, getWebhookType(outboundWebhook)).Set(0)
 	return nil
 }
 
