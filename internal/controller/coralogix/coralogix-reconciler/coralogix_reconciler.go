@@ -134,7 +134,7 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 func AddFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r CoralogixReconciler) error {
 	gvk := objToGVK(obj)
 	if !controllerutil.ContainsFinalizer(obj, r.FinalizerName()) {
-		log.V(1).Info("Adding finalizer to %s", gvk)
+		log.V(1).Info("Adding finalizer", "gvk", gvk)
 		controllerutil.AddFinalizer(obj, r.FinalizerName())
 		if err := k8sClient.Update(ctx, obj); err != nil {
 			return fmt.Errorf("error updating %s: %w", gvk, err)
@@ -153,7 +153,7 @@ func objToGVK(obj client.Object) string {
 
 func RemoveFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r CoralogixReconciler) error {
 	gvk := objToGVK(obj)
-	log.V(1).Info("Removing finalizer from %s", gvk)
+	log.V(1).Info("Removing finalizer", "gvk", gvk)
 	controllerutil.RemoveFinalizer(obj, r.FinalizerName())
 	if err := k8sClient.Update(ctx, obj); err != nil {
 		return fmt.Errorf("error updating %s: %w", gvk, err)
