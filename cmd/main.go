@@ -233,7 +233,6 @@ func main() {
 	}
 	if err = (&v1beta1controllers.AlertReconciler{
 		CoralogixClientSet: clientSet,
-		Client:             mgr.GetClient(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Alert")
 		os.Exit(1)
@@ -283,7 +282,6 @@ func main() {
 	}
 	if err = (&v1alpha1controllers.GroupReconciler{
 		CXClientSet: clientSet,
-		Client:      mgr.GetClient(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Group")
 		os.Exit(1)

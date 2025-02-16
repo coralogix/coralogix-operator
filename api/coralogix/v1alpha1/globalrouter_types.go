@@ -25,6 +25,7 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
+	coralogix_reconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
@@ -183,7 +184,7 @@ func extractConnectorID(refProperties *ResourceRefProperties, connector *NCRef) 
 	}
 
 	c := &Connector{}
-	err := refProperties.Client.Get(context.Background(), client.ObjectKey{Name: connector.ResourceRef.Name, Namespace: namespace}, c)
+	err := coralogix_reconciler.GetClient().Get(context.Background(), client.ObjectKey{Name: connector.ResourceRef.Name, Namespace: namespace}, c)
 	if err != nil {
 		return "", err
 	}
@@ -212,7 +213,7 @@ func extractPresetID(refProperties *ResourceRefProperties, preset *NCRef) (*stri
 	}
 
 	p := &Preset{}
-	err := refProperties.Client.Get(context.Background(), client.ObjectKey{Name: preset.ResourceRef.Name, Namespace: namespace}, p)
+	err := coralogix_reconciler.GetClient().Get(context.Background(), client.ObjectKey{Name: preset.ResourceRef.Name, Namespace: namespace}, p)
 	if err != nil {
 		return nil, err
 	}
@@ -264,6 +265,5 @@ func init() {
 
 // +k8s:deepcopy-gen=false
 type ResourceRefProperties struct {
-	Client    client.Client
 	Namespace string
 }

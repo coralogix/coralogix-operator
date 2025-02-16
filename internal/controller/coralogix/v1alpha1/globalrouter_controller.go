@@ -103,7 +103,6 @@ func (r *GlobalRouterReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 func (r *GlobalRouterReconciler) create(ctx context.Context, log logr.Logger, globalRouter *coralogixv1alpha1.GlobalRouter) error {
 	createRequest, err := globalRouter.ExtractCreateGlobalRouterRequest(&coralogixv1alpha1.ResourceRefProperties{
-		Client:    r.Client,
 		Namespace: globalRouter.Namespace,
 	})
 	if err != nil {
@@ -142,7 +141,6 @@ func (r *GlobalRouterReconciler) create(ctx context.Context, log logr.Logger, gl
 
 func (r *GlobalRouterReconciler) update(ctx context.Context, log logr.Logger, globalRouter *coralogixv1alpha1.GlobalRouter) error {
 	updateRequest, err := globalRouter.ExtractUpdateGlobalRouterRequest(&coralogixv1alpha1.ResourceRefProperties{
-		Client:    r.Client,
 		Namespace: globalRouter.Namespace,
 	})
 	if err != nil {

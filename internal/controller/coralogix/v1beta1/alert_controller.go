@@ -34,7 +34,6 @@ import (
 
 // AlertReconciler reconciles a Alert object
 type AlertReconciler struct {
-	client.Client
 	CoralogixClientSet *cxsdk.ClientSet
 }
 
@@ -56,7 +55,6 @@ func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 		&coralogixv1beta1.GetResourceRefProperties{
 			Ctx:       ctx,
 			Log:       log,
-			Client:    r.Client,
 			Clientset: r.CoralogixClientSet,
 			Namespace: alert.Namespace,
 		},
@@ -83,7 +81,6 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 		&coralogixv1beta1.GetResourceRefProperties{
 			Ctx:       ctx,
 			Log:       log,
-			Client:    r.Client,
 			Clientset: r.CoralogixClientSet,
 			Namespace: alert.Namespace,
 		},

@@ -35,7 +35,6 @@ import (
 
 // GroupReconciler reconciles a Group object
 type GroupReconciler struct {
-	client.Client
 	CXClientSet *cxsdk.ClientSet
 }
 
@@ -53,7 +52,7 @@ func (r *GroupReconciler) FinalizerName() string {
 
 func (r *GroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) (client.Object, error) {
 	group := obj.(*coralogixv1alpha1.Group)
-	createRequest, err := group.ExtractCreateGroupRequest(ctx, r.Client, r.CXClientSet)
+	createRequest, err := group.ExtractCreateGroupRequest(ctx, r.CXClientSet)
 	log.V(1).Info("Creating remote group", "group", protojson.Format(createRequest))
 	createResponse, err := r.CXClientSet.Groups().Create(ctx, createRequest)
 	if err != nil {
@@ -70,7 +69,7 @@ func (r *GroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 
 func (r *GroupReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	group := obj.(*coralogixv1alpha1.Group)
-	updateRequest, err := group.ExtractUpdateGroupRequest(ctx, r.Client, r.CXClientSet, *group.Status.ID)
+	updateRequest, err := group.ExtractUpdateGroupRequest(ctx, r.CXClientSet, *group.Status.ID)
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
 	}

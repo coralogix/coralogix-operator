@@ -26,6 +26,7 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
+	coralogix_reconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
@@ -64,19 +65,19 @@ type ResourceRef struct {
 }
 
 func (g *Group) ExtractCreateGroupRequest(
-	ctx context.Context, k8sClient client.Client,
+	ctx context.Context,
 	cxClient *cxsdk.ClientSet) (*cxsdk.CreateTeamGroupRequest, error) {
 	usersIds, err := g.ExtractUsersIDs(ctx, cxClient)
 	if err != nil {
 		return nil, err
 	}
 
-	rolesIds, err := g.ExtractRolesIds(k8sClient)
+	rolesIds, err := g.ExtractRolesIds()
 	if err != nil {
 		return nil, err
 	}
 
-	scopeId, err := g.ExtractScopeId(k8sClient)
+	scopeId, err := g.ExtractScopeId()
 	if err != nil {
 		return nil, err
 	}
@@ -91,19 +92,19 @@ func (g *Group) ExtractCreateGroupRequest(
 }
 
 func (g *Group) ExtractUpdateGroupRequest(
-	ctx context.Context, k8sClient client.Client, cxClient *cxsdk.ClientSet,
+	ctx context.Context, cxClient *cxsdk.ClientSet,
 	groupID string) (*cxsdk.UpdateTeamGroupRequest, error) {
 	usersIds, err := g.ExtractUsersIDs(ctx, cxClient)
 	if err != nil {
 		return nil, err
 	}
 
-	rolesIds, err := g.ExtractRolesIds(k8sClient)
+	rolesIds, err := g.ExtractRolesIds()
 	if err != nil {
 		return nil, err
 	}
 
-	scopeId, err := g.ExtractScopeId(k8sClient)
+	scopeId, err := g.ExtractScopeId()
 	if err != nil {
 		return nil, err
 	}
@@ -156,11 +157,11 @@ func (g *Group) ExtractUsersIDs(ctx context.Context, cxClient *cxsdk.ClientSet) 
 	return usersIDs, nil
 }
 
-func (g *Group) ExtractRolesIds(k8sClient client.Client) ([]*cxsdk.RoleID, error) {
+func (g *Group) ExtractRolesIds() ([]*cxsdk.RoleID, error) {
 	var rolesIds []*cxsdk.RoleID
 	var errs error
 	for _, customRole := range g.Spec.CustomRoles {
-		roleID, err := g.getRoleIDFromCustomRole(k8sClient, customRole)
+		roleID, err := g.getRoleIDFromCustomRole(customRole)
 		if err != nil {
 			errs = errors.Join(errs, err)
 			continue
@@ -175,7 +176,7 @@ func (g *Group) ExtractRolesIds(k8sClient client.Client) ([]*cxsdk.RoleID, error
 	return rolesIds, nil
 }
 
-func (g *Group) getRoleIDFromCustomRole(k8sClient client.Client, customRole GroupCustomRole) (*cxsdk.RoleID, error) {
+func (g *Group) getRoleIDFromCustomRole(customRole GroupCustomRole) (*cxsdk.RoleID, error) {
 	var namespace string
 	if customRole.ResourceRef.Namespace != nil {
 		namespace = *customRole.ResourceRef.Namespace
@@ -184,7 +185,7 @@ func (g *Group) getRoleIDFromCustomRole(k8sClient client.Client, customRole Grou
 	}
 
 	cr := &CustomRole{}
-	if err := k8sClient.Get(context.Background(), client.ObjectKey{Name: customRole.ResourceRef.Name, Namespace: namespace}, cr); err != nil {
+	if err := coralogix_reconciler.GetClient().Get(context.Background(), client.ObjectKey{Name: customRole.ResourceRef.Name, Namespace: namespace}, cr); err != nil {
 		return nil, err
 	}
 
@@ -204,7 +205,7 @@ func (g *Group) getRoleIDFromCustomRole(k8sClient client.Client, customRole Grou
 	return &cxsdk.RoleID{Id: uint32(roleID)}, nil
 }
 
-func (g *Group) ExtractScopeId(k8sClient client.Client) (*string, error) {
+func (g *Group) ExtractScopeId() (*string, error) {
 	if g.Spec.Scope == nil {
 		return nil, nil
 	}
@@ -217,7 +218,7 @@ func (g *Group) ExtractScopeId(k8sClient client.Client) (*string, error) {
 	}
 
 	sc := &Scope{}
-	if err := k8sClient.Get(context.Background(), client.ObjectKey{Name: g.Spec.Scope.ResourceRef.Name, Namespace: namespace}, sc); err != nil {
+	if err := coralogix_reconciler.GetClient().Get(context.Background(), client.ObjectKey{Name: g.Spec.Scope.ResourceRef.Name, Namespace: namespace}, sc); err != nil {
 		return nil, err
 	}
 
