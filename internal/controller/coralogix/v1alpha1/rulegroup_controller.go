@@ -23,8 +23,6 @@ import (
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -36,7 +34,6 @@ import (
 // RuleGroupReconciler reconciles a RuleGroup object
 type RuleGroupReconciler struct {
 	RuleGroupClient clientset.RuleGroupsClientInterface
-	Scheme          *runtime.Scheme
 }
 
 //+kubebuilder:rbac:groups=coralogix.com,resources=rulegroups,verbs=get;list;watch;create;update;patch;delete
@@ -97,10 +94,6 @@ func (r *RuleGroupReconciler) HandleDeletion(ctx context.Context, log logr.Logge
 func (r *RuleGroupReconciler) CheckIDInStatus(obj client.Object) bool {
 	ruleGroup := obj.(*coralogixv1alpha1.RuleGroup)
 	return ruleGroup.Status.ID != nil && *ruleGroup.Status.ID != ""
-}
-
-func (r *RuleGroupReconciler) GVK() schema.GroupVersionKind {
-	return new(coralogixv1alpha1.RuleGroup).GetObjectKind().GroupVersionKind()
 }
 
 // SetupWithManager sets up the controller with the Manager.

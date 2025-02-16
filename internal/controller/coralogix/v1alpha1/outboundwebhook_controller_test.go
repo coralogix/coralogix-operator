@@ -57,13 +57,14 @@ func setupOutboundWebhooksReconciler(t *testing.T, ctx context.Context, outbound
 	withWatch, err := client.NewWithWatch(mgr.GetConfig(), client.Options{
 		Scheme: mgr.GetScheme(),
 	})
-
 	assert.NoError(t, err)
+
+	coralogix.Client = withWatch
+	coralogix.Schema = mgr.GetScheme()
+
 	r := OutboundWebhookReconciler{
-		Scheme:                 mgr.GetScheme(),
 		OutboundWebhooksClient: outboundWebhooksClient,
 	}
-	coralogix.Client = withWatch
 	r.SetupWithManager(mgr)
 
 	watcher, _ := coralogix.Client.(client.WithWatch).Watch(ctx, &v1alpha1.OutboundWebhookList{})

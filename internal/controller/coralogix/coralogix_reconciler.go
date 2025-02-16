@@ -23,7 +23,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -33,6 +33,7 @@ import (
 )
 
 var Client client.Client
+var Schema *runtime.Scheme
 
 // CoralogixReconciler defines the required methods for all Coralogix controllers.
 type CoralogixReconciler interface {
@@ -40,13 +41,13 @@ type CoralogixReconciler interface {
 	HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error
 	HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error
 	FinalizerName() string
-	GVK() schema.GroupVersionKind
 	CheckIDInStatus(obj client.Object) bool
 }
 
 func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object, r CoralogixReconciler) (ctrl.Result, error) {
+	gvk := objToGVK(obj)
 	log := log.FromContext(ctx).WithValues(
-		"gvk", r.GVK(),
+		"gvk", gvk,
 		"name", req.NamespacedName.Name, "namespace", req.NamespacedName.Namespace)
 
 	if err := Client.Get(ctx, req.NamespacedName, obj); err != nil {
@@ -101,13 +102,13 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 	log.V(1).Info("Handling update")
 	if err := r.HandleUpdate(ctx, log, obj); err != nil {
 		if cxsdk.Code(err) == codes.NotFound {
-			log.V(1).Info(fmt.Sprintf("%s not found on remote, recreating it", r.GVK()))
+			log.V(1).Info(fmt.Sprintf("%s not found on remote, recreating it", gvk))
 			if err2 := unstructured.SetNestedField(obj.(*unstructured.Unstructured).Object, "", "status", "id"); err2 != nil {
-				return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, fmt.Errorf("error on updating %s status: %v", r.GVK(), err2)
+				return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, fmt.Errorf("error on updating %s status: %v", gvk, err2)
 			}
-			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, fmt.Errorf("%s not found on remote: %w", r.GVK(), err)
+			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, fmt.Errorf("%s not found on remote: %w", gvk, err)
 		}
-		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, fmt.Errorf("error on updating %s: %w", r.GVK(), err)
+		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, fmt.Errorf("error on updating %s: %w", gvk, err)
 	}
 
 	return ctrl.Result{}, nil
@@ -131,4 +132,12 @@ func RemoveFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r 
 		return fmt.Errorf("error updating %s: %w", obj.GetObjectKind().GroupVersionKind(), err)
 	}
 	return nil
+}
+
+func objToGVK(obj client.Object) string {
+	gvks, _, _ := Schema.ObjectKinds(obj)
+	if len(gvks) == 0 {
+		return ""
+	}
+	return gvks[0].String()
 }

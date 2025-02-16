@@ -22,8 +22,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -40,7 +38,6 @@ import (
 type GlobalRouterReconciler struct {
 	client.Client
 	NotificationsClient *cxsdk.NotificationsClient
-	Scheme              *runtime.Scheme
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=globalrouters,verbs=get;list;watch;create;update;patch;delete
@@ -203,10 +200,6 @@ func (r *GlobalRouterReconciler) deleteRemoteGlobalRouter(ctx context.Context, l
 	}
 	log.V(1).Info("global-router was deleted from remote", "id", globalRouterID)
 	return nil
-}
-
-func (r *GlobalRouterReconciler) GVK() schema.GroupVersionKind {
-	return new(coralogixv1alpha1.GlobalRouter).GetObjectKind().GroupVersionKind()
 }
 
 // SetupWithManager sets up the controller with the Manager.

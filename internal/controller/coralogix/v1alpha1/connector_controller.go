@@ -23,8 +23,6 @@ import (
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -35,7 +33,6 @@ import (
 // ConnectorReconciler reconciles a Connector object
 type ConnectorReconciler struct {
 	NotificationsClient *cxsdk.NotificationsClient
-	Scheme              *runtime.Scheme
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=connectors,verbs=get;list;watch;create;update;patch;delete
@@ -95,10 +92,6 @@ func (r *ConnectorReconciler) HandleDeletion(ctx context.Context, log logr.Logge
 func (r *ConnectorReconciler) CheckIDInStatus(obj client.Object) bool {
 	connector := obj.(*coralogixv1alpha1.Connector)
 	return connector.Status.Id != nil && *connector.Status.Id != ""
-}
-
-func (r *ConnectorReconciler) GVK() schema.GroupVersionKind {
-	return new(coralogixv1alpha1.Connector).GetObjectKind().GroupVersionKind()
 }
 
 // SetupWithManager sets up the controller with the Manager.

@@ -25,8 +25,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/wrapperspb"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -37,7 +35,6 @@ import (
 // AlertReconciler reconciles a Alert object
 type AlertReconciler struct {
 	client.Client
-	Scheme             *runtime.Scheme
 	CoralogixClientSet *cxsdk.ClientSet
 }
 
@@ -124,10 +121,6 @@ func (r *AlertReconciler) HandleDeletion(ctx context.Context, log logr.Logger, o
 func (r *AlertReconciler) CheckIDInStatus(obj client.Object) bool {
 	alert := obj.(*coralogixv1beta1.Alert)
 	return alert.Status.ID != nil && *alert.Status.ID != ""
-}
-
-func (r *AlertReconciler) GVK() schema.GroupVersionKind {
-	return new(coralogixv1beta1.Alert).GetObjectKind().GroupVersionKind()
 }
 
 func getAlertType(alert *coralogixv1beta1.Alert) string {

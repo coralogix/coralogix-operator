@@ -24,8 +24,6 @@ import (
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -37,7 +35,6 @@ import (
 // CustomRoleReconciler reconciles a CustomRole object
 type CustomRoleReconciler struct {
 	CustomRolesClient *cxsdk.RolesClient
-	Scheme            *runtime.Scheme
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=customroles,verbs=get;list;watch;create;update;patch;delete
@@ -105,10 +102,6 @@ func (r *CustomRoleReconciler) HandleDeletion(ctx context.Context, log logr.Logg
 func (r *CustomRoleReconciler) CheckIDInStatus(obj client.Object) bool {
 	customRole := obj.(*coralogixv1alpha1.CustomRole)
 	return customRole.Status.ID != nil && *customRole.Status.ID != ""
-}
-
-func (r *CustomRoleReconciler) GVK() schema.GroupVersionKind {
-	return new(coralogixv1alpha1.CustomRole).GetObjectKind().GroupVersionKind()
 }
 
 // SetupWithManager sets up the controller with the Manager.

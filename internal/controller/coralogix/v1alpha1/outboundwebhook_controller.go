@@ -25,8 +25,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/wrapperspb"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -40,7 +38,6 @@ import (
 // OutboundWebhookReconciler reconciles a OutboundWebhook object
 type OutboundWebhookReconciler struct {
 	OutboundWebhooksClient clientset.OutboundWebhooksClientInterface
-	Scheme                 *runtime.Scheme
 }
 
 //+kubebuilder:rbac:groups=coralogix.com,resources=outboundwebhooks,verbs=get;list;watch;create;update;patch;delete
@@ -133,10 +130,6 @@ func getOutboundWebhookStatus(webhook *cxsdk.OutgoingWebhook) (*v1alpha1.Outboun
 func (r *OutboundWebhookReconciler) CheckIDInStatus(obj client.Object) bool {
 	outboundWebhook := obj.(*v1alpha1.OutboundWebhook)
 	return outboundWebhook.Status.ID != nil && *outboundWebhook.Status.ID != ""
-}
-
-func (r *OutboundWebhookReconciler) GVK() schema.GroupVersionKind {
-	return new(v1alpha1.OutboundWebhook).GetObjectKind().GroupVersionKind()
 }
 
 func getWebhookType(webhook *v1alpha1.OutboundWebhook) string {
