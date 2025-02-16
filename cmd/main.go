@@ -222,8 +222,8 @@ func main() {
 
 	cpc := cxsdk.NewCallPropertiesCreatorOperator(strings.ToLower(targetUrl), cxsdk.NewAuthContext(apiKey, apiKey), "0.0.1")
 	clientSet := cxsdk.NewClientSet(cpc)
-	coralogixcontroller.Client = mgr.GetClient()
-	coralogixcontroller.Schema = mgr.GetScheme()
+	coralogixcontroller.InitClient(mgr.GetClient())
+	coralogixcontroller.InitSchema(mgr.GetScheme())
 
 	if err = (&v1alpha1controllers.RuleGroupReconciler{
 		RuleGroupClient: clientSet.RuleGroups(),

@@ -32,8 +32,18 @@ import (
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
-var Client client.Client
-var Schema *runtime.Scheme
+var (
+	k8sClient client.Client
+	schema    *runtime.Scheme
+)
+
+func InitClient(c client.Client) {
+	k8sClient = c
+}
+
+func InitSchema(s *runtime.Scheme) {
+	schema = s
+}
 
 // CoralogixReconciler defines the required methods for all Coralogix controllers.
 type CoralogixReconciler interface {
@@ -45,17 +55,17 @@ type CoralogixReconciler interface {
 }
 
 func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object, r CoralogixReconciler) (ctrl.Result, error) {
-	if err := Client.Get(ctx, req.NamespacedName, obj); err != nil {
+	gvk := objToGVK(obj)
+	log := log.FromContext(ctx).WithValues(
+		"gvk", gvk,
+		"name", req.NamespacedName.Name, "namespace", req.NamespacedName.Namespace)
+
+	if err := k8sClient.Get(ctx, req.NamespacedName, obj); err != nil {
 		if errors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
 		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
-
-	gvk := obj.GetObjectKind().GroupVersionKind()
-	log := log.FromContext(ctx).WithValues(
-		"gvk", gvk,
-		"name", req.NamespacedName.Name, "namespace", req.NamespacedName.Namespace)
 
 	if !r.CheckIDInStatus(obj) {
 		log.V(1).Info("Resource ID is missing; handling creation for resource")
@@ -65,7 +75,7 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
 
-		if err = Client.Status().Update(ctx, obj); err != nil {
+		if err = k8sClient.Status().Update(ctx, obj); err != nil {
 			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
 
@@ -118,21 +128,31 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 }
 
 func AddFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r CoralogixReconciler) error {
+	gvk := objToGVK(obj)
 	if !controllerutil.ContainsFinalizer(obj, r.FinalizerName()) {
-		log.V(1).Info(fmt.Sprintf("Adding finalizer to %s", obj.GetObjectKind().GroupVersionKind().Kind))
+		log.V(1).Info("Adding finalizer to %s", gvk)
 		controllerutil.AddFinalizer(obj, r.FinalizerName())
-		if err := Client.Update(ctx, obj); err != nil {
-			return fmt.Errorf("error updating %s: %w", obj.GetObjectKind().GroupVersionKind(), err)
+		if err := k8sClient.Update(ctx, obj); err != nil {
+			return fmt.Errorf("error updating %s: %w", gvk, err)
 		}
 	}
 	return nil
 }
 
+func objToGVK(obj client.Object) string {
+	gvks, _, _ := schema.ObjectKinds(obj)
+	if len(gvks) == 0 {
+		return ""
+	}
+	return gvks[0].String()
+}
+
 func RemoveFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r CoralogixReconciler) error {
-	log.V(1).Info("Removing finalizer from %s", obj.GetObjectKind().GroupVersionKind())
+	gvk := objToGVK(obj)
+	log.V(1).Info("Removing finalizer from %s", gvk)
 	controllerutil.RemoveFinalizer(obj, r.FinalizerName())
-	if err := Client.Update(ctx, obj); err != nil {
-		return fmt.Errorf("error updating %s: %w", obj.GetObjectKind().GroupVersionKind(), err)
+	if err := k8sClient.Update(ctx, obj); err != nil {
+		return fmt.Errorf("error updating %s: %w", gvk, err)
 	}
 	return nil
 }
