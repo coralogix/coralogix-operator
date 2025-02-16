@@ -55,15 +55,15 @@ func setupRecordingRuleReconciler(t *testing.T, ctx context.Context, recordingRu
 	withWatch, err := client.NewWithWatch(mgr.GetConfig(), client.Options{
 		Scheme: mgr.GetScheme(),
 	})
-	coralogix_reconciler.Client = withWatch
-	coralogix_reconciler.Schema = mgr.GetScheme()
+	coralogix_reconciler.InitClient(withWatch)
+	coralogix_reconciler.InitSchema(mgr.GetScheme())
 	assert.NoError(t, err)
 	r := RecordingRuleGroupSetReconciler{
 		RecordingRuleGroupSetClient: recordingRuleGroupSetClient,
 	}
 	r.SetupWithManager(mgr)
 
-	watcher, _ := coralogix_reconciler.Client.(client.WithWatch).Watch(ctx, &coralogixv1alpha1.RecordingRuleGroupSetList{})
+	watcher, _ := withWatch.Watch(ctx, &coralogixv1alpha1.RecordingRuleGroupSetList{})
 	return r, watcher
 }
 
@@ -129,7 +129,7 @@ func TestRecordingRuleCreation(t *testing.T) {
 
 			reconciler, watcher := setupRecordingRuleReconciler(t, ctx, recordingRuleClient)
 
-			err := coralogix_reconciler.Client.Create(ctx, &tt.recordingRule)
+			err := coralogix_reconciler.GetClient().Create(ctx, &tt.recordingRule)
 
 			assert.NoError(t, err)
 
@@ -226,7 +226,7 @@ func TestRecordingRuleUpdate(t *testing.T) {
 
 			reconciler, watcher := setupRecordingRuleReconciler(t, ctx, recordingRuleClient)
 
-			err := coralogix_reconciler.Client.Create(ctx, &tt.recordingRule)
+			err := coralogix_reconciler.GetClient().Create(ctx, &tt.recordingRule)
 
 			assert.NoError(t, err)
 
@@ -243,14 +243,14 @@ func TestRecordingRuleUpdate(t *testing.T) {
 
 			recordingRuleGroupSet := &coralogixv1alpha1.RecordingRuleGroupSet{}
 
-			err = coralogix_reconciler.Client.Get(ctx, types.NamespacedName{
+			err = coralogix_reconciler.GetClient().Get(ctx, types.NamespacedName{
 				Namespace: tt.recordingRule.Namespace,
 				Name:      tt.recordingRule.Name,
 			}, recordingRuleGroupSet)
 
 			assert.NoError(t, err)
 
-			err = coralogix_reconciler.Client.Update(ctx, recordingRuleGroupSet)
+			err = coralogix_reconciler.GetClient().Update(ctx, recordingRuleGroupSet)
 			assert.NoError(t, err)
 
 			_, err = reconciler.Reconcile(ctx, ctrl.Request{

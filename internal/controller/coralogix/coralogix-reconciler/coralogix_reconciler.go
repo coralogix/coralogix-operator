@@ -41,6 +41,10 @@ func InitClient(c client.Client) {
 	k8sClient = c
 }
 
+func GetClient() client.Client {
+	return k8sClient
+}
+
 func InitSchema(s *runtime.Scheme) {
 	schema = s
 }
