@@ -21,13 +21,13 @@ import (
 	"regexp"
 	"time"
 
+	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	"github.com/go-logr/logr"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus/common/model"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -57,8 +57,6 @@ import (
 
 // AlertmanagerConfigReconciler reconciles a AlertmanagerConfig object
 type AlertmanagerConfigReconciler struct {
-	client.Client
-	Scheme *runtime.Scheme
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -90,7 +88,7 @@ func (r *AlertmanagerConfigReconciler) Reconcile(ctx context.Context, req ctrl.R
 	log := log.FromContext(ctx)
 
 	alertmanagerConfig := &prometheus.AlertmanagerConfig{}
-	if err := r.Get(ctx, req.NamespacedName, alertmanagerConfig); err != nil {
+	if err := coralogixreconciler.GetClient().Get(ctx, req.NamespacedName, alertmanagerConfig); err != nil {
 		if errors.IsNotFound(err) {
 			monitoring.AlertmanagerConfigInfoMetric.DeleteLabelValues(req.Name, req.Namespace)
 			// Request object not found, could have been deleted after reconcile request.
@@ -135,14 +133,14 @@ func (r *AlertmanagerConfigReconciler) convertAlertmanagerConfigToCxIntegrations
 		for i, opsGenieConfig := range receiver.OpsGenieConfigs {
 			opsGenieWebhook := outboundWebhook.DeepCopy()
 			opsGenieWebhook.Name = fmt.Sprintf("%s.%s.%d", receiver.Name, "opsgenie", i)
-			if err := r.Get(ctx, client.ObjectKeyFromObject(opsGenieWebhook), opsGenieWebhook); err != nil {
+			if err := coralogixreconciler.GetClient().Get(ctx, client.ObjectKeyFromObject(opsGenieWebhook), opsGenieWebhook); err != nil {
 				if errors.IsNotFound(err) {
 					opsGenieWebhookType := opsgenieToOutboundWebhookType(opsGenieConfig)
 					opsGenieWebhook.Spec = coralogixv1alpha1.OutboundWebhookSpec{
 						Name:                opsGenieWebhook.Name,
 						OutboundWebhookType: opsGenieWebhookType,
 					}
-					if err = r.Create(ctx, opsGenieWebhook); err != nil {
+					if err = coralogixreconciler.GetClient().Create(ctx, opsGenieWebhook); err != nil {
 						succeed = false
 						log.Error(err, "Received an error while trying to create OutboundWebhook CRD from alertmanagerConfig")
 						continue
@@ -153,7 +151,7 @@ func (r *AlertmanagerConfigReconciler) convertAlertmanagerConfigToCxIntegrations
 					continue
 				}
 			} else {
-				if err = r.Update(ctx, opsGenieWebhook); err != nil {
+				if err = coralogixreconciler.GetClient().Update(ctx, opsGenieWebhook); err != nil {
 					succeed = false
 					log.Error(err, "Received an error while trying to update OutboundWebhook CRD from alertmanagerConfig")
 					continue
@@ -163,7 +161,7 @@ func (r *AlertmanagerConfigReconciler) convertAlertmanagerConfigToCxIntegrations
 		for i, slackConfig := range receiver.SlackConfigs {
 			slackWebhook := outboundWebhook.DeepCopy()
 			slackWebhook.Name = fmt.Sprintf("%s.%s.%d", receiver.Name, "slack", i)
-			if err := r.Get(ctx, client.ObjectKeyFromObject(slackWebhook), slackWebhook); err != nil {
+			if err := coralogixreconciler.GetClient().Get(ctx, client.ObjectKeyFromObject(slackWebhook), slackWebhook); err != nil {
 				if errors.IsNotFound(err) {
 					outboundWebhookType, err := r.slackConfigToOutboundWebhookType(ctx, slackConfig, alertmanagerConfig.Namespace)
 					if err != nil {
@@ -175,7 +173,7 @@ func (r *AlertmanagerConfigReconciler) convertAlertmanagerConfigToCxIntegrations
 						Name:                slackWebhook.Name,
 						OutboundWebhookType: outboundWebhookType,
 					}
-					if err = r.Create(ctx, slackWebhook); err != nil {
+					if err = coralogixreconciler.GetClient().Create(ctx, slackWebhook); err != nil {
 						succeed = false
 						log.Error(err, "Received an error while trying to create OutboundWebhook CRD from alertmanagerConfig")
 						continue
@@ -186,7 +184,7 @@ func (r *AlertmanagerConfigReconciler) convertAlertmanagerConfigToCxIntegrations
 					continue
 				}
 			} else {
-				if err = r.Update(ctx, slackWebhook); err != nil {
+				if err = coralogixreconciler.GetClient().Update(ctx, slackWebhook); err != nil {
 					succeed = false
 					log.Error(err, "Received an error while trying to update OutboundWebhook CRD from alertmanagerConfig")
 					continue
@@ -220,7 +218,7 @@ func (r *AlertmanagerConfigReconciler) getSecret(ctx context.Context, secretKeyS
 
 	// Retrieve the secret from Kubernetes
 	var secret v1.Secret
-	err := r.Get(ctx, client.ObjectKey{Namespace: namespace, Name: secretName}, &secret)
+	err := coralogixreconciler.GetClient().Get(ctx, client.ObjectKey{Namespace: namespace, Name: secretName}, &secret)
 	if err != nil {
 		return "", fmt.Errorf("failed to get secret: %v", err)
 	}
@@ -241,7 +239,7 @@ func (r *AlertmanagerConfigReconciler) linkCxAlertToCxIntegrations(ctx context.C
 	}
 
 	var alerts coralogixv1beta1.AlertList
-	if err := r.List(ctx, &alerts, client.InNamespace(config.Namespace), client.MatchingLabels{"app.coralogix.com/managed-by-alertmanager-config": "true"}); err != nil {
+	if err := coralogixreconciler.GetClient().List(ctx, &alerts, client.InNamespace(config.Namespace), client.MatchingLabels{"app.coralogix.com/managed-by-alertmanager-config": "true"}); err != nil {
 		log.Error(err, "Received an error while trying to list Alerts")
 		return false
 	}
@@ -268,7 +266,7 @@ func (r *AlertmanagerConfigReconciler) linkCxAlertToCxIntegrations(ctx context.C
 			notificationGroupsSpec = append([]coralogixv1beta1.NotificationGroup{*alert.Spec.NotificationGroup}, notificationGroupsSpec...)
 		}
 		if !reflect.DeepEqual(notificationGroupsSpec, notificationGroups) {
-			if err = r.Client.Get(ctx, client.ObjectKey{Namespace: alert.Namespace, Name: alert.Name}, &alert); err != nil {
+			if err = coralogixreconciler.GetClient().Get(ctx, client.ObjectKey{Namespace: alert.Namespace, Name: alert.Name}, &alert); err != nil {
 				succeed = false
 				log.Error(err, "Received an error while trying to get Alert CRD from AlertmanagerConfig")
 			}
@@ -280,7 +278,7 @@ func (r *AlertmanagerConfigReconciler) linkCxAlertToCxIntegrations(ctx context.C
 				alert.Spec.NotificationGroupExcess = notificationGroups[1:]
 			}
 
-			if err = r.Update(ctx, &alert); err != nil {
+			if err = coralogixreconciler.GetClient().Update(ctx, &alert); err != nil {
 				succeed = false
 				log.Error(err, "Received an error while trying to update Alert CRD from AlertmanagerConfig")
 				continue
@@ -293,7 +291,7 @@ func (r *AlertmanagerConfigReconciler) linkCxAlertToCxIntegrations(ctx context.C
 
 func (r *AlertmanagerConfigReconciler) deleteWebhooksFromRelatedAlerts(ctx context.Context, config *prometheus.AlertmanagerConfig) error {
 	var alerts coralogixv1beta1.AlertList
-	if err := r.List(ctx, &alerts, client.InNamespace(config.Namespace), client.MatchingLabels{"app.coralogix.com/managed-by-alertmanager-config": "true"}); err != nil {
+	if err := coralogixreconciler.GetClient().List(ctx, &alerts, client.InNamespace(config.Namespace), client.MatchingLabels{"app.coralogix.com/managed-by-alertmanager-config": "true"}); err != nil {
 		return fmt.Errorf("received an error while trying to list Alerts: %w", err)
 	}
 
@@ -301,7 +299,7 @@ func (r *AlertmanagerConfigReconciler) deleteWebhooksFromRelatedAlerts(ctx conte
 		if alert.Spec.NotificationGroup != nil || len(alert.Spec.NotificationGroupExcess) > 0 {
 			alert.Spec.NotificationGroup = nil
 			alert.Spec.NotificationGroupExcess = nil
-			if err := r.Update(ctx, &alert); err != nil {
+			if err := coralogixreconciler.GetClient().Update(ctx, &alert); err != nil {
 				return fmt.Errorf("received an error while trying to update Alert CRD from AlertmanagerConfig: %w", err)
 			}
 		}

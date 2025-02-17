@@ -238,10 +238,7 @@ func main() {
 		os.Exit(1)
 	}
 	if prometheusRuleController {
-		if err = (&controllers.PrometheusRuleReconciler{
-			Client: mgr.GetClient(),
-			Scheme: mgr.GetScheme(),
-		}).SetupWithManager(mgr); err != nil {
+		if err = (&controllers.PrometheusRuleReconciler{}).SetupWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "RecordingRuleGroup")
 			os.Exit(1)
 		}
@@ -262,7 +259,6 @@ func main() {
 	}
 	if err = (&v1alpha1controllers.ApiKeyReconciler{
 		ApiKeysClient: clientSet.APIKeys(),
-		Client:        mgr.GetClient(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ApiKey")
 		os.Exit(1)
@@ -318,17 +314,13 @@ func main() {
 	}
 	if err = (&v1alpha1controllers.GlobalRouterReconciler{
 		NotificationsClient: clientSet.Notifications(),
-		Client:              mgr.GetClient(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GlobalRouter")
 		os.Exit(1)
 	}
 
 	if prometheusRuleController {
-		if err = (&controllers.AlertmanagerConfigReconciler{
-			Client: mgr.GetClient(),
-			Scheme: mgr.GetScheme(),
-		}).SetupWithManager(mgr); err != nil {
+		if err = (&controllers.AlertmanagerConfigReconciler{}).SetupWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "RecordingRuleGroup")
 			os.Exit(1)
 		}

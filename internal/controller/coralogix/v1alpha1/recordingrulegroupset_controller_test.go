@@ -163,23 +163,6 @@ func TestRecordingRuleUpdate(t *testing.T) {
 			shouldFail: false,
 			params: func(params PrepareRecordingRulesParams) {
 				params.recordingRuleClient.EXPECT().Create(params.ctx, gomock.Any()).Return(&cxsdk.CreateRuleGroupSetResponse{Id: "id1"}, nil)
-				//params.recordingRuleClient.EXPECT().Get(params.ctx, gomock.Any()).Return(&cxsdk.GetRuleGroupSetResponse{
-				//	Id: "id1",
-				//	Groups: []*cxsdk.OutRuleGroup{
-				//		{
-				//			Name:     "name",
-				//			Interval: pointer.Uint32(60),
-				//			Limit:    pointer.Uint64(100),
-				//			Rules: []*cxsdk.OutRule{
-				//				{
-				//					Record: "record",
-				//					Expr:   "vector(1)",
-				//					Labels: map[string]string{"key": "value"},
-				//				},
-				//			},
-				//		},
-				//	},
-				//}, nil)
 				params.recordingRuleClient.EXPECT().Update(params.ctx, gomock.Any()).Return(&emptypb.Empty{}, nil)
 			},
 			recordingRule: coralogixv1alpha1.RecordingRuleGroupSet{

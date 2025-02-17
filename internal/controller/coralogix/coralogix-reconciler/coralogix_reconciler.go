@@ -121,8 +121,15 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 	if err = r.HandleUpdate(ctx, log, obj); err != nil {
 		if cxsdk.Code(err) == codes.NotFound {
 			log.V(1).Info(fmt.Sprintf("%s not found on remote", gvk))
-			if err2 := unstructured.SetNestedField(obj.(*unstructured.Unstructured).Object, "", "status", "id"); err2 != nil {
+			uObj := &unstructured.Unstructured{}
+			if err2 := schema.Convert(obj, uObj, ctx); err2 != nil {
+				return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, fmt.Errorf("failed to convert object to unstructured: %w", err2)
+			}
+			if err2 := unstructured.SetNestedField(uObj.Object, "", "status", "id"); err2 != nil {
 				return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, fmt.Errorf("error on updating %s status: %v", gvk, err2)
+			}
+			if err2 := k8sClient.Status().Update(ctx, uObj); err2 != nil {
+				return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, fmt.Errorf("error on updating %s status: %w", gvk, err2)
 			}
 			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, fmt.Errorf("%s not found on remote: %w", gvk, err)
 		}
