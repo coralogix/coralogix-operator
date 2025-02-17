@@ -120,7 +120,7 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 	log.V(1).Info("Handling update")
 	if err = r.HandleUpdate(ctx, log, obj); err != nil {
 		if cxsdk.Code(err) == codes.NotFound {
-			log.V(1).Info(fmt.Sprintf("%s not found on remote", gvk))
+			log.V(1).Info("resource not found on remote")
 			uObj := &unstructured.Unstructured{}
 			if err2 := schema.Convert(obj, uObj, ctx); err2 != nil {
 				return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, fmt.Errorf("failed to convert object to unstructured: %w", err2)
@@ -140,23 +140,21 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 }
 
 func AddFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r CoralogixReconciler) error {
-	gvk := objToGVK(obj)
 	if !controllerutil.ContainsFinalizer(obj, r.FinalizerName()) {
-		log.V(1).Info("Adding finalizer", "gvk", gvk)
+		log.V(1).Info("Adding finalizer")
 		controllerutil.AddFinalizer(obj, r.FinalizerName())
 		if err := k8sClient.Update(ctx, obj); err != nil {
-			return fmt.Errorf("error updating %s: %w", gvk, err)
+			return fmt.Errorf("error updating k8s object: %w", err)
 		}
 	}
 	return nil
 }
 
 func RemoveFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r CoralogixReconciler) error {
-	gvk := objToGVK(obj)
-	log.V(1).Info("Removing finalizer", "gvk", gvk)
+	log.V(1).Info("Removing finalizer")
 	controllerutil.RemoveFinalizer(obj, r.FinalizerName())
 	if err := k8sClient.Update(ctx, obj); err != nil {
-		return fmt.Errorf("error updating %s: %w", gvk, err)
+		return fmt.Errorf("error updating k8s object: %w", err)
 	}
 	return nil
 }
