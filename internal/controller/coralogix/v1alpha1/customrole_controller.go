@@ -43,7 +43,7 @@ type CustomRoleReconciler struct {
 // +kubebuilder:rbac:groups=coralogix.com,resources=customroles/finalizers,verbs=update
 
 func (r *CustomRoleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return coralogix_reconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.CustomRole{}, r)
+	return coralogixreconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.CustomRole{}, r)
 }
 
 func (r *CustomRoleReconciler) FinalizerName() string {
@@ -76,7 +76,7 @@ func (r *CustomRoleReconciler) HandleUpdate(ctx context.Context, log logr.Logger
 	log.V(1).Info("Updating remote customRole", "customRole", protojson.Format(updateRequest))
 	updateResponse, err := r.CustomRolesClient.Update(ctx, updateRequest)
 	if err != nil {
-		return fmt.Errorf("error on updating remote customRole: %w", err)
+		return err
 	}
 	log.V(1).Info("Remote customRole updated", "customRole", protojson.Format(updateResponse))
 

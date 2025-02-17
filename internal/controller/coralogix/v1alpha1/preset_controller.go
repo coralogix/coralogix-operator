@@ -45,7 +45,7 @@ var (
 )
 
 func (r *PresetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return coralogix_reconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.Preset{}, r)
+	return coralogixreconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.Preset{}, r)
 }
 
 func (r *PresetReconciler) FinalizerName() string {
@@ -75,7 +75,7 @@ func (r *PresetReconciler) HandleUpdate(ctx context.Context, log logr.Logger, ob
 	log.V(1).Info("Updating remote preset", "preset", protojson.Format(updateRequest))
 	updateResponse, err := r.NotificationsClient.ReplaceCustomPreset(ctx, updateRequest)
 	if err != nil {
-		return fmt.Errorf("error on updating remote preset: %w", err)
+		err
 	}
 	log.V(1).Info("Remote preset updated", "preset", protojson.Format(updateResponse))
 

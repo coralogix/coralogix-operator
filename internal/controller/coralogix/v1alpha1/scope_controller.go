@@ -39,10 +39,10 @@ type ScopeReconciler struct {
 // +kubebuilder:rbac:groups=coralogix.com,resources=scopes/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=coralogix.com,resources=scopes/finalizers,verbs=update
 
-var _ coralogix_reconciler.CoralogixReconciler = &ScopeReconciler{}
+var _ coralogixreconciler.CoralogixReconciler = &ScopeReconciler{}
 
 func (r *ScopeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return coralogix_reconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.Scope{}, r)
+	return coralogixreconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.Scope{}, r)
 }
 
 func (r *ScopeReconciler) FinalizerName() string {
@@ -78,7 +78,7 @@ func (r *ScopeReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 	log.V(1).Info("Updating remote scope", "scope", protojson.Format(updateRequest))
 	updateResponse, err := r.ScopesClient.Update(ctx, updateRequest)
 	if err != nil {
-		return fmt.Errorf("error on updating remote scope: %w", err)
+		return err
 	}
 	log.V(1).Info("Remote scope updated", "scope", protojson.Format(updateResponse))
 

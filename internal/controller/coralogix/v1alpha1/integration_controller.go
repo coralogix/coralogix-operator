@@ -46,7 +46,7 @@ var (
 )
 
 func (r *IntegrationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return coralogix_reconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.Integration{}, r)
+	return coralogixreconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.Integration{}, r)
 }
 
 func (r *IntegrationReconciler) FinalizerName() string {
@@ -82,7 +82,7 @@ func (r *IntegrationReconciler) HandleUpdate(ctx context.Context, log logr.Logge
 	log.V(1).Info("Updating remote integration", "integration", protojson.Format(updateRequest))
 	updateResponse, err := r.IntegrationsClient.Update(ctx, updateRequest)
 	if err != nil {
-		return fmt.Errorf("error on updating remote integration: %w", err)
+		return err
 	}
 	log.V(1).Info("Remote integration updated", "integration", protojson.Format(updateResponse))
 

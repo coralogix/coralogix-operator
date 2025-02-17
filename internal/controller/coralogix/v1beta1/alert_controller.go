@@ -28,7 +28,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
-	"github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
+	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	util "github.com/coralogix/coralogix-operator/internal/utils"
 )
 
@@ -42,7 +42,7 @@ type AlertReconciler struct {
 // +kubebuilder:rbac:groups=coralogix.com,resources=alerts/finalizers,verbs=update
 
 func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return coralogix_reconciler.ReconcileResource(ctx, req, &coralogixv1beta1.Alert{}, r)
+	return coralogixreconciler.ReconcileResource(ctx, req, &coralogixv1beta1.Alert{}, r)
 }
 
 func (r *AlertReconciler) FinalizerName() string {
@@ -98,6 +98,9 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 	}
 	log.V(1).Info("Updating remote alert", "alert", protojson.Format(updateRequest))
 	updateResponse, err := r.CoralogixClientSet.Alerts().Replace(ctx, updateRequest)
+	if err != nil {
+		return err
+	}
 	log.V(1).Info("Remote alert updated", "alert", protojson.Format(updateResponse))
 	monitoring.AlertInfoMetric.WithLabelValues(alert.Name, alert.Namespace, getAlertType(alert)).Set(1)
 	return nil

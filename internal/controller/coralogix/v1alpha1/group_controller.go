@@ -43,7 +43,7 @@ type GroupReconciler struct {
 // +kubebuilder:rbac:groups=coralogix.com,resources=groups/finalizers,verbs=update
 
 func (r *GroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return coralogix_reconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.Group{}, r)
+	return coralogixreconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.Group{}, r)
 }
 
 func (r *GroupReconciler) FinalizerName() string {
@@ -76,7 +76,7 @@ func (r *GroupReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 	log.V(1).Info("Updating remote group", "group", protojson.Format(updateRequest))
 	updateResponse, err := r.CXClientSet.Groups().Update(ctx, updateRequest)
 	if err != nil {
-		return fmt.Errorf("error on updating remote group: %w", err)
+		return err
 	}
 	log.V(1).Info("Remote group updated", "group", protojson.Format(updateResponse))
 

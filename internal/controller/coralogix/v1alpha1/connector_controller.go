@@ -41,7 +41,7 @@ type ConnectorReconciler struct {
 // +kubebuilder:rbac:groups=coralogix.com,resources=connectors/finalizers,verbs=update
 
 func (r *ConnectorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return coralogix_reconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.Connector{}, r)
+	return coralogixreconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.Connector{}, r)
 }
 
 func (r *ConnectorReconciler) FinalizerName() string {
@@ -71,7 +71,7 @@ func (r *ConnectorReconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 	log.V(1).Info("Updating remote connector", "connector", protojson.Format(updateRequest))
 	updateResponse, err := r.NotificationsClient.ReplaceConnector(ctx, updateRequest)
 	if err != nil {
-		return fmt.Errorf("error on updating remote connector: %w", err)
+		return err
 	}
 	log.V(1).Info("Remote connector updated", "connector", protojson.Format(updateResponse))
 

@@ -26,7 +26,7 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
-	coralogix_reconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
+	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
@@ -185,7 +185,7 @@ func (g *Group) getRoleIDFromCustomRole(customRole GroupCustomRole) (*cxsdk.Role
 	}
 
 	cr := &CustomRole{}
-	if err := coralogix_reconciler.GetClient().Get(context.Background(), client.ObjectKey{Name: customRole.ResourceRef.Name, Namespace: namespace}, cr); err != nil {
+	if err := coralogixreconciler.GetClient().Get(context.Background(), client.ObjectKey{Name: customRole.ResourceRef.Name, Namespace: namespace}, cr); err != nil {
 		return nil, err
 	}
 
@@ -218,7 +218,7 @@ func (g *Group) ExtractScopeId() (*string, error) {
 	}
 
 	sc := &Scope{}
-	if err := coralogix_reconciler.GetClient().Get(context.Background(), client.ObjectKey{Name: g.Spec.Scope.ResourceRef.Name, Namespace: namespace}, sc); err != nil {
+	if err := coralogixreconciler.GetClient().Get(context.Background(), client.ObjectKey{Name: g.Spec.Scope.ResourceRef.Name, Namespace: namespace}, sc); err != nil {
 		return nil, err
 	}
 

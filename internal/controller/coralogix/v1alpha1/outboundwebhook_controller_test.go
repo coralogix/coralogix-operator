@@ -59,8 +59,8 @@ func setupOutboundWebhooksReconciler(t *testing.T, ctx context.Context, outbound
 	})
 	assert.NoError(t, err)
 
-	coralogix_reconciler.InitClient(withWatch)
-	coralogix_reconciler.InitSchema(mgr.GetScheme())
+	coralogixreconciler.InitClient(withWatch)
+	coralogixreconciler.InitSchema(mgr.GetScheme())
 
 	r := OutboundWebhookReconciler{
 		OutboundWebhooksClient: outboundWebhooksClient,
@@ -144,7 +144,7 @@ func TestOutboundWebhooksCreation(t *testing.T) {
 
 			reconciler, watcher := setupOutboundWebhooksReconciler(t, ctx, outboundWebhooksClient)
 
-			err := coralogix_reconciler.GetClient().Create(ctx, &tt.outboundWebhook)
+			err := coralogixreconciler.GetClient().Create(ctx, &tt.outboundWebhook)
 
 			assert.NoError(t, err)
 
@@ -196,22 +196,6 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 					},
 				}, nil)
 				params.outboundWebhooksClient.EXPECT().Update(params.ctx, gomock.Any()).Return(&cxsdk.UpdateOutgoingWebhookResponse{}, nil)
-				//params.outboundWebhooksClient.EXPECT().Get(params.ctx, gomock.Any()).Return(&cxsdk.GetOutgoingWebhookResponse{
-				//	Webhook: &cxsdk.OutgoingWebhook{
-				//		Id:   wrapperspb.String("id"),
-				//		Name: wrapperspb.String("updated-name"),
-				//		Type: cxsdk.WebhookTypeGeneric,
-				//		Url:  wrapperspb.String("updated-url"),
-				//		Config: &cxsdk.GenericWebhook{
-				//			GenericWebhook: &cxsdk.GenericWebhookConfig{
-				//				Uuid:    wrapperspb.String("updated-uuid"),
-				//				Method:  cxsdk.GenericWebhookConfigPost,
-				//				Headers: map[string]string{"updated-key": "updated-value"},
-				//				Payload: wrapperspb.String("updated-payload"),
-				//			},
-				//		},
-				//	},
-				//}, nil)
 			},
 			outboundWebhook: v1alpha1.OutboundWebhook{
 				ObjectMeta: metav1.ObjectMeta{
@@ -269,7 +253,7 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 
 			reconciler, watcher := setupOutboundWebhooksReconciler(t, ctx, outboundWebhookClient)
 
-			err := coralogix_reconciler.GetClient().Create(ctx, &tt.outboundWebhook)
+			err := coralogixreconciler.GetClient().Create(ctx, &tt.outboundWebhook)
 
 			assert.NoError(t, err)
 
@@ -286,7 +270,7 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 
 			outboundWebhook := &v1alpha1.OutboundWebhook{}
 
-			err = coralogix_reconciler.GetClient().Get(ctx, types.NamespacedName{
+			err = coralogixreconciler.GetClient().Get(ctx, types.NamespacedName{
 				Namespace: tt.outboundWebhook.Namespace,
 				Name:      tt.outboundWebhook.Name,
 			}, outboundWebhook)
@@ -294,7 +278,7 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 			assert.NoError(t, err)
 
 			tt.updatedWebhook.ObjectMeta.ResourceVersion = outboundWebhook.ObjectMeta.ResourceVersion
-			err = coralogix_reconciler.GetClient().Update(ctx, &tt.updatedWebhook)
+			err = coralogixreconciler.GetClient().Update(ctx, &tt.updatedWebhook)
 			assert.NoError(t, err)
 
 			<-watcher.ResultChan()
@@ -307,7 +291,7 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 			})
 
 			outboundWebhook = &v1alpha1.OutboundWebhook{}
-			err = coralogix_reconciler.GetClient().Get(ctx, types.NamespacedName{
+			err = coralogixreconciler.GetClient().Get(ctx, types.NamespacedName{
 				Namespace: tt.updatedWebhook.Namespace,
 				Name:      tt.updatedWebhook.Name,
 			}, outboundWebhook)
@@ -390,7 +374,7 @@ func TestOutboundWebhookDeletion(t *testing.T) {
 
 			reconciler, watcher := setupOutboundWebhooksReconciler(t, ctx, outboundWebhooksClient)
 
-			err := coralogix_reconciler.GetClient().Create(ctx, &tt.outboundWebhook)
+			err := coralogixreconciler.GetClient().Create(ctx, &tt.outboundWebhook)
 
 			assert.NoError(t, err)
 
@@ -403,7 +387,7 @@ func TestOutboundWebhookDeletion(t *testing.T) {
 				},
 			})
 
-			err = coralogix_reconciler.GetClient().Delete(ctx, &tt.outboundWebhook)
+			err = coralogixreconciler.GetClient().Delete(ctx, &tt.outboundWebhook)
 
 			assert.NoError(t, err)
 

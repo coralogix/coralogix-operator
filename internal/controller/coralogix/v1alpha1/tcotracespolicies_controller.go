@@ -40,7 +40,7 @@ type TCOTracesPoliciesReconciler struct {
 // +kubebuilder:rbac:groups=coralogix.com,resources=tcotracespolicies/finalizers,verbs=update
 
 func (r *TCOTracesPoliciesReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return coralogix_reconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.TCOTracesPolicies{}, r)
+	return coralogixreconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.TCOTracesPolicies{}, r)
 }
 
 func (r *TCOTracesPoliciesReconciler) overwrite(ctx context.Context, log logr.Logger, tcoTracesPolicies *coralogixv1alpha1.TCOTracesPolicies) error {
@@ -67,7 +67,7 @@ func (r *TCOTracesPoliciesReconciler) HandleCreation(ctx context.Context, log lo
 	if err := r.overwrite(ctx, log, tcoTracesPolicies); err != nil {
 		return nil, err
 	}
-	if err := coralogix_reconciler.AddFinalizer(ctx, log, tcoTracesPolicies, r); err != nil {
+	if err := coralogixreconciler.AddFinalizer(ctx, log, tcoTracesPolicies, r); err != nil {
 		return nil, err
 	}
 	return tcoTracesPolicies, nil
@@ -78,7 +78,7 @@ func (r *TCOTracesPoliciesReconciler) HandleUpdate(ctx context.Context, log logr
 	if err := r.overwrite(ctx, log, tcoTracesPolicies); err != nil {
 		return err
 	}
-	return coralogix_reconciler.AddFinalizer(ctx, log, tcoTracesPolicies, r)
+	return coralogixreconciler.AddFinalizer(ctx, log, tcoTracesPolicies, r)
 }
 
 func (r *TCOTracesPoliciesReconciler) HandleDeletion(ctx context.Context, log logr.Logger, _ client.Object) error {

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package coralogix_reconciler
+package coralogixreconciler
 
 import (
 	"context"
@@ -62,9 +62,11 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 	gvk := objToGVK(obj)
 	log := log.FromContext(ctx).WithValues(
 		"gvk", gvk,
-		"name", req.NamespacedName.Name, "namespace", req.NamespacedName.Namespace)
+		"name", req.NamespacedName.Name,
+		"namespace", req.NamespacedName.Namespace)
+	var err error
 
-	if err := k8sClient.Get(ctx, req.NamespacedName, obj); err != nil {
+	if err = k8sClient.Get(ctx, req.NamespacedName, obj); err != nil {
 		if errors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
@@ -73,7 +75,6 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 
 	if !r.CheckIDInStatus(obj) {
 		log.V(1).Info("Resource ID is missing; handling creation for resource")
-		var err error
 		if obj, err = r.HandleCreation(ctx, log, obj); err != nil {
 			log.Error(err, "Error handling creation")
 			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
@@ -93,13 +94,13 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 
 	if !obj.GetDeletionTimestamp().IsZero() {
 		log.V(1).Info("Resource is being deleted; handling deletion")
-		if err := r.HandleDeletion(ctx, log, obj); err != nil {
+		if err = r.HandleDeletion(ctx, log, obj); err != nil {
 			log.Error(err, "Error handling deletion")
 			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
 
 		log.V(1).Info("Removing finalizer")
-		if err := RemoveFinalizer(ctx, log, obj, r); err != nil {
+		if err = RemoveFinalizer(ctx, log, obj, r); err != nil {
 			log.Error(err, "Error removing finalizer")
 			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
@@ -108,8 +109,8 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 	}
 
 	if !utils.GetLabelFilter().Matches(obj.GetLabels()) {
-		log.V(1).Info("Error handling deletion")
-		if err := r.HandleDeletion(ctx, log, obj); err != nil {
+		log.V(1).Info("Resource doesn't match label filter, handling deletion")
+		if err = r.HandleDeletion(ctx, log, obj); err != nil {
 			log.Error(err, "Error deleting from remote")
 			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
@@ -117,9 +118,9 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 	}
 
 	log.V(1).Info("Handling update")
-	if err := r.HandleUpdate(ctx, log, obj); err != nil {
+	if err = r.HandleUpdate(ctx, log, obj); err != nil {
 		if cxsdk.Code(err) == codes.NotFound {
-			log.V(1).Info(fmt.Sprintf("%s not found on remote, recreating it", gvk))
+			log.V(1).Info(fmt.Sprintf("%s not found on remote", gvk))
 			if err2 := unstructured.SetNestedField(obj.(*unstructured.Unstructured).Object, "", "status", "id"); err2 != nil {
 				return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, fmt.Errorf("error on updating %s status: %v", gvk, err2)
 			}
@@ -143,14 +144,6 @@ func AddFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r Cor
 	return nil
 }
 
-func objToGVK(obj client.Object) string {
-	gvks, _, _ := schema.ObjectKinds(obj)
-	if len(gvks) == 0 {
-		return ""
-	}
-	return gvks[0].String()
-}
-
 func RemoveFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r CoralogixReconciler) error {
 	gvk := objToGVK(obj)
 	log.V(1).Info("Removing finalizer", "gvk", gvk)
@@ -159,4 +152,12 @@ func RemoveFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r 
 		return fmt.Errorf("error updating %s: %w", gvk, err)
 	}
 	return nil
+}
+
+func objToGVK(obj client.Object) string {
+	gvks, _, _ := schema.ObjectKinds(obj)
+	if len(gvks) == 0 {
+		return ""
+	}
+	return gvks[0].String()
 }

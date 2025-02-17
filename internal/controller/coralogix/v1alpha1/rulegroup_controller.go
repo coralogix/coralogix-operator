@@ -42,7 +42,7 @@ type RuleGroupReconciler struct {
 //+kubebuilder:rbac:groups=coralogix.com,resources=rulegroups/finalizers,verbs=update
 
 func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return coralogix_reconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.RuleGroup{}, r)
+	return coralogixreconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.RuleGroup{}, r)
 }
 
 func (r *RuleGroupReconciler) FinalizerName() string {
@@ -72,7 +72,7 @@ func (r *RuleGroupReconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 	log.V(1).Info("Updating remote ruleGroup", "ruleGroup", protojson.Format(updateRequest))
 	updateResponse, err := r.RuleGroupClient.Update(ctx, updateRequest)
 	if err != nil {
-		return fmt.Errorf("error on updating remote ruleGroup: %w", err)
+		return err
 	}
 	log.V(1).Info("Remote ruleGroup updated", "ruleGroup", protojson.Format(updateResponse))
 	monitoring.RuleGroupInfoMetric.WithLabelValues(ruleGroup.Name, ruleGroup.Namespace).Set(1)

@@ -33,7 +33,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	"github.com/coralogix/coralogix-operator/api/coralogix"
-	coralogix_reconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
+	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
@@ -1912,7 +1912,7 @@ func expandAlertRef(listingAlertsProperties *GetResourceRefProperties, ref Alert
 func convertAlertCrNameToID(listingAlertsProperties *GetResourceRefProperties, alertCrName string) (*wrapperspb.StringValue, error) {
 	ctx, namespace := listingAlertsProperties.Ctx, listingAlertsProperties.Namespace
 	alertCR := &Alert{}
-	err := coralogix_reconciler.GetClient().Get(ctx, client.ObjectKey{Name: alertCrName, Namespace: namespace}, alertCR)
+	err := coralogixreconciler.GetClient().Get(ctx, client.ObjectKey{Name: alertCrName, Namespace: namespace}, alertCR)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get alert %w", err)
 	}
@@ -2362,7 +2362,7 @@ func convertCRNameToIntegrationID(name string, properties *GetResourceRefPropert
 		Version: "v1alpha1",
 	})
 
-	if err := coralogix_reconciler.GetClient().Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
+	if err := coralogixreconciler.GetClient().Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
 		return nil, fmt.Errorf("failed to get webhook, name: %s, namespace: %s, error: %w", name, namespace, err)
 	}
 
@@ -2396,7 +2396,7 @@ func convertCRNameToConnectorID(name string, properties *GetResourceRefPropertie
 		Version: "v1alpha1",
 	})
 
-	if err := coralogix_reconciler.GetClient().Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
+	if err := coralogixreconciler.GetClient().Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
 		return "", fmt.Errorf("failed to get connector: %w", err)
 	}
 
@@ -2425,7 +2425,7 @@ func convertCRNameToPresetID(name string, properties *GetResourceRefProperties) 
 		Version: "v1alpha1",
 	})
 
-	if err := coralogix_reconciler.GetClient().Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
+	if err := coralogixreconciler.GetClient().Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
 		return "", fmt.Errorf("failed to get preset: %w", err)
 	}
 

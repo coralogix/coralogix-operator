@@ -44,7 +44,7 @@ type RecordingRuleGroupSetReconciler struct {
 //+kubebuilder:rbac:groups=coralogix.com,resources=recordingrulegroupsets/finalizers,verbs=update
 
 func (r *RecordingRuleGroupSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return coralogix_reconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.RecordingRuleGroupSet{}, r)
+	return coralogixreconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.RecordingRuleGroupSet{}, r)
 }
 
 func (r *RecordingRuleGroupSetReconciler) FinalizerName() string {
@@ -80,7 +80,7 @@ func (r *RecordingRuleGroupSetReconciler) HandleUpdate(ctx context.Context, log 
 	log.V(1).Info("Updating remote recordingRuleGroupSet", "recordingRuleGroupSet", protojson.Format(updateRequest))
 	updateResponse, err := r.RecordingRuleGroupSetClient.Update(ctx, updateRequest)
 	if err != nil {
-		return fmt.Errorf("error on updating remote recordingRuleGroupSet: %w", err)
+		return err
 	}
 	log.V(1).Info("Remote recordingRuleGroupSet updated", "recordingRuleGroupSet", protojson.Format(updateResponse))
 	monitoring.RecordingRuleGroupSetInfoMetric.WithLabelValues(recordingRuleGroupSet.Name, recordingRuleGroupSet.Namespace).Set(1)

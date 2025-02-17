@@ -21,7 +21,6 @@ import (
 	"os"
 	"strings"
 
-	coralogixcontroller "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	prometheusv1alpha "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -45,6 +44,7 @@ import (
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	controllers "github.com/coralogix/coralogix-operator/internal/controller"
+	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	v1alpha1controllers "github.com/coralogix/coralogix-operator/internal/controller/coralogix/v1alpha1"
 	v1beta1controllers "github.com/coralogix/coralogix-operator/internal/controller/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
@@ -222,8 +222,8 @@ func main() {
 
 	cpc := cxsdk.NewCallPropertiesCreatorOperator(strings.ToLower(targetUrl), cxsdk.NewAuthContext(apiKey, apiKey), "0.0.1")
 	clientSet := cxsdk.NewClientSet(cpc)
-	coralogixcontroller.InitClient(mgr.GetClient())
-	coralogixcontroller.InitSchema(mgr.GetScheme())
+	coralogixreconciler.InitClient(mgr.GetClient())
+	coralogixreconciler.InitSchema(mgr.GetScheme())
 
 	if err = (&v1alpha1controllers.RuleGroupReconciler{
 		RuleGroupClient: clientSet.RuleGroups(),

@@ -95,7 +95,7 @@ func (r *OutboundWebhookReconciler) HandleUpdate(ctx context.Context, log logr.L
 	log.V(1).Info("Updating remote outbound-webhook", "outbound-webhook", protojson.Format(updateRequest))
 	updateResponse, err := r.OutboundWebhooksClient.Update(ctx, updateRequest)
 	if err != nil {
-		return fmt.Errorf("error on updating remote outbound-webhook: %w", err)
+		return err
 	}
 	log.V(1).Info("Remote outbound-webhook updated", "outbound-webhook", protojson.Format(updateResponse))
 	monitoring.OutboundWebhookInfoMetric.WithLabelValues(outboundWebhook.Name, outboundWebhook.Namespace, getWebhookType(outboundWebhook)).Set(1)
