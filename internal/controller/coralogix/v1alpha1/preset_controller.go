@@ -75,7 +75,7 @@ func (r *PresetReconciler) HandleUpdate(ctx context.Context, log logr.Logger, ob
 	log.V(1).Info("Updating remote preset", "preset", protojson.Format(updateRequest))
 	updateResponse, err := r.NotificationsClient.ReplaceCustomPreset(ctx, updateRequest)
 	if err != nil {
-		err
+		return err
 	}
 	log.V(1).Info("Remote preset updated", "preset", protojson.Format(updateResponse))
 
