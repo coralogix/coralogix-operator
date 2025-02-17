@@ -44,6 +44,7 @@ import (
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	controllers "github.com/coralogix/coralogix-operator/internal/controller"
+	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	v1alpha1controllers "github.com/coralogix/coralogix-operator/internal/controller/coralogix/v1alpha1"
 	v1beta1controllers "github.com/coralogix/coralogix-operator/internal/controller/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
@@ -221,36 +222,29 @@ func main() {
 
 	cpc := cxsdk.NewCallPropertiesCreatorOperator(strings.ToLower(targetUrl), cxsdk.NewAuthContext(apiKey, apiKey), "0.0.1")
 	clientSet := cxsdk.NewClientSet(cpc)
+	coralogixreconciler.InitClient(mgr.GetClient())
+	coralogixreconciler.InitScheme(mgr.GetScheme())
 
 	if err = (&v1alpha1controllers.RuleGroupReconciler{
 		RuleGroupClient: clientSet.RuleGroups(),
-		Client:          mgr.GetClient(),
-		Scheme:          mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RuleGroup")
 		os.Exit(1)
 	}
 	if err = (&v1beta1controllers.AlertReconciler{
 		CoralogixClientSet: clientSet,
-		Client:             mgr.GetClient(),
-		Scheme:             mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Alert")
 		os.Exit(1)
 	}
 	if prometheusRuleController {
-		if err = (&controllers.PrometheusRuleReconciler{
-			Client: mgr.GetClient(),
-			Scheme: mgr.GetScheme(),
-		}).SetupWithManager(mgr); err != nil {
+		if err = (&controllers.PrometheusRuleReconciler{}).SetupWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "RecordingRuleGroup")
 			os.Exit(1)
 		}
 	}
 	if err = (&v1alpha1controllers.RecordingRuleGroupSetReconciler{
 		RecordingRuleGroupSetClient: clientSet.RecordingRuleGroups(),
-		Client:                      mgr.GetClient(),
-		Scheme:                      mgr.GetScheme(),
 		RecordingRuleGroupSetSuffix: recordingRuleGroupSetSuffix,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RecordingRuleGroupSet")
@@ -259,98 +253,74 @@ func main() {
 
 	if err = (&v1alpha1controllers.OutboundWebhookReconciler{
 		OutboundWebhooksClient: clientSet.Webhooks(),
-		Client:                 mgr.GetClient(),
-		Scheme:                 mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "OutboundWebhook")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.ApiKeyReconciler{
 		ApiKeysClient: clientSet.APIKeys(),
-		Client:        mgr.GetClient(),
-		Scheme:        mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ApiKey")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.CustomRoleReconciler{
 		CustomRolesClient: clientSet.Roles(),
-		Client:            mgr.GetClient(),
-		Scheme:            mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CustomRole")
 		os.Exit(1)
 	}
+
 	if err = (&v1alpha1controllers.ScopeReconciler{
 		ScopesClient: clientSet.Scopes(),
-		Client:       mgr.GetClient(),
-		Scheme:       mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Scope")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.GroupReconciler{
 		CXClientSet: clientSet,
-		Client:      mgr.GetClient(),
-		Scheme:      mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Group")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.TCOLogsPoliciesReconciler{
 		CoralogixClientSet: clientSet,
-		Client:             mgr.GetClient(),
-		Scheme:             mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "TCOLogsPolicies")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.TCOTracesPoliciesReconciler{
 		CoralogixClientSet: clientSet,
-		Client:             mgr.GetClient(),
-		Scheme:             mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "TCOTracesPolicies")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.IntegrationReconciler{
 		IntegrationsClient: clientSet.Integrations(),
-		Client:             mgr.GetClient(),
-		Scheme:             mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Integration")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.ConnectorReconciler{
 		NotificationsClient: clientSet.Notifications(),
-		Client:              mgr.GetClient(),
-		Scheme:              mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Connector")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.PresetReconciler{
 		NotificationsClient: clientSet.Notifications(),
-		Client:              mgr.GetClient(),
-		Scheme:              mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Preset")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.GlobalRouterReconciler{
 		NotificationsClient: clientSet.Notifications(),
-		Client:              mgr.GetClient(),
-		Scheme:              mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GlobalRouter")
 		os.Exit(1)
 	}
 
 	if prometheusRuleController {
-		if err = (&controllers.AlertmanagerConfigReconciler{
-			Client: mgr.GetClient(),
-			Scheme: mgr.GetScheme(),
-		}).SetupWithManager(mgr); err != nil {
+		if err = (&controllers.AlertmanagerConfigReconciler{}).SetupWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "RecordingRuleGroup")
 			os.Exit(1)
 		}

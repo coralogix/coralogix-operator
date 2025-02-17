@@ -33,6 +33,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	"github.com/coralogix/coralogix-operator/api/coralogix"
+	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
@@ -1909,9 +1910,9 @@ func expandAlertRef(listingAlertsProperties *GetResourceRefProperties, ref Alert
 }
 
 func convertAlertCrNameToID(listingAlertsProperties *GetResourceRefProperties, alertCrName string) (*wrapperspb.StringValue, error) {
-	c, ctx, namespace := listingAlertsProperties.Client, listingAlertsProperties.Ctx, listingAlertsProperties.Namespace
+	ctx, namespace := listingAlertsProperties.Ctx, listingAlertsProperties.Namespace
 	alertCR := &Alert{}
-	err := c.Get(ctx, client.ObjectKey{Name: alertCrName, Namespace: namespace}, alertCR)
+	err := coralogixreconciler.GetClient().Get(ctx, client.ObjectKey{Name: alertCrName, Namespace: namespace}, alertCR)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get alert %w", err)
 	}
@@ -2345,7 +2346,6 @@ func NewAlert() *Alert {
 type GetResourceRefProperties struct {
 	Ctx             context.Context
 	Log             logr.Logger
-	Client          client.Client
 	AlertNameToId   map[string]string
 	WebhookNameToId map[string]uint32
 	Clientset       *cxsdk.ClientSet
@@ -2353,7 +2353,7 @@ type GetResourceRefProperties struct {
 }
 
 func convertCRNameToIntegrationID(name string, properties *GetResourceRefProperties) (*wrapperspb.UInt32Value, error) {
-	c, ctx, namespace := properties.Client, properties.Ctx, properties.Namespace
+	ctx, namespace := properties.Ctx, properties.Namespace
 
 	u := &unstructured.Unstructured{}
 	u.SetGroupVersionKind(schema.GroupVersionKind{
@@ -2362,7 +2362,7 @@ func convertCRNameToIntegrationID(name string, properties *GetResourceRefPropert
 		Version: "v1alpha1",
 	})
 
-	if err := c.Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
+	if err := coralogixreconciler.GetClient().Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
 		return nil, fmt.Errorf("failed to get webhook, name: %s, namespace: %s, error: %w", name, namespace, err)
 	}
 
@@ -2387,7 +2387,7 @@ func convertCRNameToIntegrationID(name string, properties *GetResourceRefPropert
 }
 
 func convertCRNameToConnectorID(name string, properties *GetResourceRefProperties) (string, error) {
-	c, ctx, namespace := properties.Client, properties.Ctx, properties.Namespace
+	ctx, namespace := properties.Ctx, properties.Namespace
 
 	u := &unstructured.Unstructured{}
 	u.SetGroupVersionKind(schema.GroupVersionKind{
@@ -2396,7 +2396,7 @@ func convertCRNameToConnectorID(name string, properties *GetResourceRefPropertie
 		Version: "v1alpha1",
 	})
 
-	if err := c.Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
+	if err := coralogixreconciler.GetClient().Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
 		return "", fmt.Errorf("failed to get connector: %w", err)
 	}
 
@@ -2416,7 +2416,7 @@ func convertCRNameToConnectorID(name string, properties *GetResourceRefPropertie
 }
 
 func convertCRNameToPresetID(name string, properties *GetResourceRefProperties) (string, error) {
-	c, ctx, namespace := properties.Client, properties.Ctx, properties.Namespace
+	ctx, namespace := properties.Ctx, properties.Namespace
 
 	u := &unstructured.Unstructured{}
 	u.SetGroupVersionKind(schema.GroupVersionKind{
@@ -2425,7 +2425,7 @@ func convertCRNameToPresetID(name string, properties *GetResourceRefProperties) 
 		Version: "v1alpha1",
 	})
 
-	if err := c.Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
+	if err := coralogixreconciler.GetClient().Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
 		return "", fmt.Errorf("failed to get preset: %w", err)
 	}
 

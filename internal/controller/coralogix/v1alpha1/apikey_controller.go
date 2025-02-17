@@ -24,7 +24,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -35,15 +34,14 @@ import (
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
+	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // ApiKeyReconciler reconciles a ApiKey object
 type ApiKeyReconciler struct {
-	client.Client
 	ApiKeysClient clientset.ApiKeysClientInterface
-	Scheme        *runtime.Scheme
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=apikeys,verbs=get;list;watch;create;update;patch;delete
@@ -63,7 +61,7 @@ func (r *ApiKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	)
 
 	apiKey := &coralogixv1alpha1.ApiKey{}
-	if err := r.Get(ctx, req.NamespacedName, apiKey); err != nil {
+	if err := coralogixreconciler.GetClient().Get(ctx, req.NamespacedName, apiKey); err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
@@ -127,7 +125,7 @@ func (r *ApiKeyReconciler) create(ctx context.Context, log logr.Logger, apiKey *
 	}
 
 	log.V(1).Info("Updating ApiKey status", "id", createResponse.KeyId)
-	if err = r.Status().Update(ctx, apiKey); err != nil {
+	if err = coralogixreconciler.GetClient().Status().Update(ctx, apiKey); err != nil {
 		if err := r.deleteRemoteApiKey(ctx, log, apiKey.Status.Id); err != nil {
 			return fmt.Errorf("error to delete api-key after status update error -\n%v", apiKey)
 		}
@@ -137,14 +135,14 @@ func (r *ApiKeyReconciler) create(ctx context.Context, log logr.Logger, apiKey *
 	if !controllerutil.ContainsFinalizer(apiKey, apiKeyFinalizerName) {
 		log.V(1).Info("Updating ApiKey to add finalizer", "id", createResponse.KeyId)
 		controllerutil.AddFinalizer(apiKey, apiKeyFinalizerName)
-		if err := r.Update(ctx, apiKey); err != nil {
+		if err := coralogixreconciler.GetClient().Update(ctx, apiKey); err != nil {
 			return fmt.Errorf("error on updating ApiKey: %w", err)
 		}
 	}
 
 	log.V(1).Info("Creating secret for ApiKey", "id", createResponse.KeyId)
 	secret := buildSecret(apiKey, createResponse.GetValue())
-	err = r.Client.Create(ctx, secret)
+	err = coralogixreconciler.GetClient().Create(ctx, secret)
 	if err != nil {
 		return fmt.Errorf("error on creating secret: %w", err)
 	}
@@ -162,7 +160,7 @@ func (r *ApiKeyReconciler) update(ctx context.Context, log logr.Logger, apiKey *
 			apiKey.Status = coralogixv1alpha1.ApiKeyStatus{
 				Id: ptr.To(""),
 			}
-			if err = r.Status().Update(ctx, apiKey); err != nil {
+			if err = coralogixreconciler.GetClient().Status().Update(ctx, apiKey); err != nil {
 				return fmt.Errorf("error on updating ApiKey status: %w", err)
 			}
 			return fmt.Errorf("api-key not found on remote: %w", err)
@@ -177,11 +175,11 @@ func (r *ApiKeyReconciler) update(ctx context.Context, log logr.Logger, apiKey *
 	}
 
 	existsSecret := &corev1.Secret{}
-	err = r.Client.Get(ctx, client.ObjectKey{Name: apiKey.Name + "-secret", Namespace: apiKey.Namespace}, existsSecret)
+	err = coralogixreconciler.GetClient().Get(ctx, client.ObjectKey{Name: apiKey.Name + "-secret", Namespace: apiKey.Namespace}, existsSecret)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.V(1).Info("secret is not found, probably was deleted, recreating it")
-			if err := r.Client.Create(ctx, buildSecret(apiKey, getResponse.KeyInfo.GetValue())); err != nil {
+			if err := coralogixreconciler.GetClient().Create(ctx, buildSecret(apiKey, getResponse.KeyInfo.GetValue())); err != nil {
 				return fmt.Errorf("error on recreating secret: %w", err)
 			}
 			return nil
@@ -193,7 +191,7 @@ func (r *ApiKeyReconciler) update(ctx context.Context, log logr.Logger, apiKey *
 	if string(existsSecret.Data["key-value"]) != desiredSecretKeyValue {
 		log.V(1).Info("updating secret", "secret", apiKey.Name+"-secret")
 		existsSecret.Data["key-value"] = []byte(desiredSecretKeyValue)
-		if err := r.Client.Update(ctx, existsSecret); err != nil {
+		if err := coralogixreconciler.GetClient().Update(ctx, existsSecret); err != nil {
 			return fmt.Errorf("error on updating secret: %w", err)
 		}
 	}
@@ -208,7 +206,7 @@ func (r *ApiKeyReconciler) delete(ctx context.Context, log logr.Logger, apiKey *
 
 	log.V(1).Info("Removing finalizer from ApiKey")
 	controllerutil.RemoveFinalizer(apiKey, apiKeyFinalizerName)
-	if err := r.Update(ctx, apiKey); err != nil {
+	if err := coralogixreconciler.GetClient().Update(ctx, apiKey); err != nil {
 		return fmt.Errorf("error on updating ApiKey: %w", err)
 	}
 

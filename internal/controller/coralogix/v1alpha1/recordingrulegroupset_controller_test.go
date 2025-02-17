@@ -26,7 +26,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/watch"
-	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -35,6 +34,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	"github.com/coralogix/coralogix-operator/internal/controller/mock_clientset"
 )
 
@@ -55,16 +55,15 @@ func setupRecordingRuleReconciler(t *testing.T, ctx context.Context, recordingRu
 	withWatch, err := client.NewWithWatch(mgr.GetConfig(), client.Options{
 		Scheme: mgr.GetScheme(),
 	})
-
+	coralogixreconciler.InitClient(withWatch)
+	coralogixreconciler.InitScheme(mgr.GetScheme())
 	assert.NoError(t, err)
 	r := RecordingRuleGroupSetReconciler{
-		Client:                      withWatch,
-		Scheme:                      mgr.GetScheme(),
 		RecordingRuleGroupSetClient: recordingRuleGroupSetClient,
 	}
 	r.SetupWithManager(mgr)
 
-	watcher, _ := r.Client.(client.WithWatch).Watch(ctx, &coralogixv1alpha1.RecordingRuleGroupSetList{})
+	watcher, _ := withWatch.Watch(ctx, &coralogixv1alpha1.RecordingRuleGroupSetList{})
 	return r, watcher
 }
 
@@ -130,7 +129,7 @@ func TestRecordingRuleCreation(t *testing.T) {
 
 			reconciler, watcher := setupRecordingRuleReconciler(t, ctx, recordingRuleClient)
 
-			err := reconciler.Client.Create(ctx, &tt.recordingRule)
+			err := coralogixreconciler.GetClient().Create(ctx, &tt.recordingRule)
 
 			assert.NoError(t, err)
 
@@ -164,23 +163,6 @@ func TestRecordingRuleUpdate(t *testing.T) {
 			shouldFail: false,
 			params: func(params PrepareRecordingRulesParams) {
 				params.recordingRuleClient.EXPECT().Create(params.ctx, gomock.Any()).Return(&cxsdk.CreateRuleGroupSetResponse{Id: "id1"}, nil)
-				params.recordingRuleClient.EXPECT().Get(params.ctx, gomock.Any()).Return(&cxsdk.GetRuleGroupSetResponse{
-					Id: "id1",
-					Groups: []*cxsdk.OutRuleGroup{
-						{
-							Name:     "name",
-							Interval: pointer.Uint32(60),
-							Limit:    pointer.Uint64(100),
-							Rules: []*cxsdk.OutRule{
-								{
-									Record: "record",
-									Expr:   "vector(1)",
-									Labels: map[string]string{"key": "value"},
-								},
-							},
-						},
-					},
-				}, nil)
 				params.recordingRuleClient.EXPECT().Update(params.ctx, gomock.Any()).Return(&emptypb.Empty{}, nil)
 			},
 			recordingRule: coralogixv1alpha1.RecordingRuleGroupSet{
@@ -227,7 +209,7 @@ func TestRecordingRuleUpdate(t *testing.T) {
 
 			reconciler, watcher := setupRecordingRuleReconciler(t, ctx, recordingRuleClient)
 
-			err := reconciler.Client.Create(ctx, &tt.recordingRule)
+			err := coralogixreconciler.GetClient().Create(ctx, &tt.recordingRule)
 
 			assert.NoError(t, err)
 
@@ -244,14 +226,14 @@ func TestRecordingRuleUpdate(t *testing.T) {
 
 			recordingRuleGroupSet := &coralogixv1alpha1.RecordingRuleGroupSet{}
 
-			err = reconciler.Get(ctx, types.NamespacedName{
+			err = coralogixreconciler.GetClient().Get(ctx, types.NamespacedName{
 				Namespace: tt.recordingRule.Namespace,
 				Name:      tt.recordingRule.Name,
 			}, recordingRuleGroupSet)
 
 			assert.NoError(t, err)
 
-			err = reconciler.Client.Update(ctx, recordingRuleGroupSet)
+			err = coralogixreconciler.GetClient().Update(ctx, recordingRuleGroupSet)
 			assert.NoError(t, err)
 
 			_, err = reconciler.Reconcile(ctx, ctrl.Request{

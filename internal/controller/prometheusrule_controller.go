@@ -28,7 +28,6 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -39,6 +38,7 @@ import (
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
+	coralogixreconcile "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
@@ -59,15 +59,13 @@ const (
 
 // PrometheusRuleReconciler reconciles a PrometheusRule object
 type PrometheusRuleReconciler struct {
-	client.Client
-	Scheme *runtime.Scheme
 }
 
 func (r *PrometheusRuleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 
 	prometheusRule := &prometheus.PrometheusRule{}
-	if err := r.Get(ctx, req.NamespacedName, prometheusRule); err != nil {
+	if err := coralogixreconcile.GetClient().Get(ctx, req.NamespacedName, prometheusRule); err != nil {
 		if k8serrors.IsNotFound(err) {
 			monitoring.PrometheusRuleInfoMetric.DeleteLabelValues(req.Name, req.Namespace)
 			// Request object not found, could have been deleted after reconcile request.
@@ -119,9 +117,9 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleRecordingRuleToCxRecordi
 		Spec: recordingRuleGroupSetSpec,
 	}
 
-	if err := r.Client.Get(ctx, req.NamespacedName, recordingRuleGroupSet); err != nil {
+	if err := coralogixreconcile.GetClient().Get(ctx, req.NamespacedName, recordingRuleGroupSet); err != nil {
 		if k8serrors.IsNotFound(err) {
-			if err = r.Create(ctx, recordingRuleGroupSet); err != nil {
+			if err = coralogixreconcile.GetClient().Create(ctx, recordingRuleGroupSet); err != nil {
 				return fmt.Errorf("received an error while trying to create RecordingRuleGroupSet CRD: %w", err)
 			}
 			return nil
@@ -131,7 +129,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleRecordingRuleToCxRecordi
 	}
 
 	recordingRuleGroupSet.Spec = recordingRuleGroupSetSpec
-	if err := r.Client.Update(ctx, recordingRuleGroupSet); err != nil {
+	if err := coralogixreconcile.GetClient().Update(ctx, recordingRuleGroupSet); err != nil {
 		return fmt.Errorf("received an error while trying to update RecordingRuleGroupSet CRD: %w", err)
 	}
 
@@ -186,7 +184,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 			alert := &coralogixv1beta1.Alert{}
 			alertName := fmt.Sprintf("%s-%s-%d", prometheusRule.Name, alertName, i)
 			alertsToKeep[alertName] = true
-			if err := r.Client.Get(ctx, client.ObjectKey{Namespace: prometheusRule.Namespace, Name: alertName}, alert); err != nil {
+			if err := coralogixreconcile.GetClient().Get(ctx, client.ObjectKey{Namespace: prometheusRule.Namespace, Name: alertName}, alert); err != nil {
 				if k8serrors.IsNotFound(err) {
 					alert.Name = alertName
 					alert.Namespace = prometheusRule.Namespace
@@ -202,7 +200,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 					alert.Spec.TypeDefinition = coralogixv1beta1.AlertTypeDefinition{
 						MetricThreshold: prometheusAlertToMetricThreshold(rule),
 					}
-					if err = r.Create(ctx, alert); err != nil {
+					if err = coralogixreconcile.GetClient().Create(ctx, alert); err != nil {
 						errorsEncountered = append(errorsEncountered, fmt.Errorf("error creating Alert CRD %s: %w", alertName, err))
 					}
 					continue
@@ -254,7 +252,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 			}
 
 			if updated {
-				if err := r.Update(ctx, alert); err != nil {
+				if err := coralogixreconcile.GetClient().Update(ctx, alert); err != nil {
 					errorsEncountered = append(errorsEncountered, fmt.Errorf("error updating Alert CRD %s: %w", alertName, err))
 				}
 			}
@@ -262,13 +260,13 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 	}
 
 	var childAlerts coralogixv1beta1.AlertList
-	if err := r.List(ctx, &childAlerts, client.InNamespace(prometheusRule.Namespace), client.MatchingLabels{"app.kubernetes.io/managed-by": prometheusRule.Name}); err != nil {
+	if err := coralogixreconcile.GetClient().List(ctx, &childAlerts, client.InNamespace(prometheusRule.Namespace), client.MatchingLabels{"app.kubernetes.io/managed-by": prometheusRule.Name}); err != nil {
 		return fmt.Errorf("received an error while trying to list Alerts: %w", err)
 	}
 
 	for _, alert := range childAlerts.Items {
 		if !alertsToKeep[alert.Name] {
-			if err := r.Delete(ctx, &alert); err != nil {
+			if err := coralogixreconcile.GetClient().Delete(ctx, &alert); err != nil {
 				errorsEncountered = append(errorsEncountered, fmt.Errorf("error deleting Alert CRD %s: %w", alert.Name, err))
 			}
 		}

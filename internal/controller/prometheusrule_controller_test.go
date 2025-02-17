@@ -33,9 +33,10 @@ import (
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
+	coralogixreconcile "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 )
 
-func setupReconciler(t *testing.T, ctx context.Context) (PrometheusRuleReconciler, watch.Interface, client.Client) {
+func setupReconciler(t *testing.T, ctx context.Context) (PrometheusRuleReconciler, watch.Interface) {
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
 	scheme := runtime.NewScheme()
@@ -57,27 +58,19 @@ func setupReconciler(t *testing.T, ctx context.Context) (PrometheusRuleReconcile
 		Mapper:     mgr.GetRESTMapper(),
 		Cache:      &client.CacheOptions{Reader: mgr.GetCache()},
 	})
+	coralogixreconcile.InitClient(withWatch)
 
 	assert.NoError(t, err)
-	r := PrometheusRuleReconciler{
-		Client: withWatch,
-		Scheme: mgr.GetScheme(),
-	}
+	r := PrometheusRuleReconciler{}
 	r.SetupWithManager(mgr)
 
-	watcher, _ := r.Client.(client.WithWatch).Watch(ctx, &prometheus.PrometheusRuleList{})
-	return r, watcher, r.Client
-}
-
-type PrepareParams struct {
-	ctx    context.Context
-	client client.Client
+	watcher, _ := withWatch.Watch(ctx, &prometheus.PrometheusRuleList{})
+	return r, watcher
 }
 
 func TestPrometheusRulesConversionToCxParsingRules(t *testing.T) {
 	tests := []struct {
 		name           string
-		prepare        func(params PrepareParams)
 		prometheusRule *prometheus.PrometheusRule
 		shouldFail     bool
 		shouldCreate   bool
@@ -86,9 +79,6 @@ func TestPrometheusRulesConversionToCxParsingRules(t *testing.T) {
 			name:         "PrometheusRule with empty groups",
 			shouldFail:   false,
 			shouldCreate: true,
-			prepare: func(params PrepareParams) {
-
-			},
 			prometheusRule: &prometheus.PrometheusRule{
 				ObjectMeta: ctrl.ObjectMeta{
 					Name:      "test",
@@ -105,7 +95,6 @@ func TestPrometheusRulesConversionToCxParsingRules(t *testing.T) {
 		{
 			name:         "New PrometheusRule with one group and one rule",
 			shouldFail:   false,
-			prepare:      func(params PrepareParams) {},
 			shouldCreate: true,
 			prometheusRule: &prometheus.PrometheusRule{
 				ObjectMeta: ctrl.ObjectMeta{
@@ -134,7 +123,6 @@ func TestPrometheusRulesConversionToCxParsingRules(t *testing.T) {
 		{
 			name:       "Existing PrometheusRule with one group and one rule",
 			shouldFail: false,
-			prepare:    func(params PrepareParams) {},
 			prometheusRule: &prometheus.PrometheusRule{
 				ObjectMeta: ctrl.ObjectMeta{
 					Name:      "new-with-rules",
@@ -173,18 +161,11 @@ func TestPrometheusRulesConversionToCxParsingRules(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			reconciler, watcher, client := setupReconciler(t, ctx)
-
-			if tt.prepare != nil {
-				tt.prepare(PrepareParams{
-					ctx:    ctx,
-					client: client,
-				})
-			}
+			reconciler, watcher := setupReconciler(t, ctx)
 
 			var err error
 			if tt.shouldCreate {
-				err = reconciler.Client.Create(ctx, tt.prometheusRule)
+				err = coralogixreconcile.GetClient().Create(ctx, tt.prometheusRule)
 				assert.NoError(t, err)
 			}
 
@@ -209,7 +190,6 @@ func TestPrometheusRulesConversionToCxParsingRules(t *testing.T) {
 func TestPrometheusRulesConvertionToCxAlert(t *testing.T) {
 	tests := []struct {
 		name           string
-		prepare        func(params PrepareParams)
 		prometheusRule *prometheus.PrometheusRule
 		shouldFail     bool
 		shouldCreate   bool
@@ -218,9 +198,6 @@ func TestPrometheusRulesConvertionToCxAlert(t *testing.T) {
 			name:         "PrometheusRule with empty groups",
 			shouldFail:   false,
 			shouldCreate: true,
-			prepare: func(params PrepareParams) {
-
-			},
 			prometheusRule: &prometheus.PrometheusRule{
 				ObjectMeta: ctrl.ObjectMeta{
 					Name:      "test-alert",
@@ -237,7 +214,6 @@ func TestPrometheusRulesConvertionToCxAlert(t *testing.T) {
 		{
 			name:         "New PrometheusRule with one group and one rule",
 			shouldFail:   false,
-			prepare:      func(params PrepareParams) {},
 			shouldCreate: true,
 			prometheusRule: &prometheus.PrometheusRule{
 				ObjectMeta: ctrl.ObjectMeta{
@@ -266,7 +242,6 @@ func TestPrometheusRulesConvertionToCxAlert(t *testing.T) {
 		{
 			name:       "Existing PrometheusRule with one group and one rule",
 			shouldFail: false,
-			prepare:    func(params PrepareParams) {},
 			prometheusRule: &prometheus.PrometheusRule{
 				ObjectMeta: ctrl.ObjectMeta{
 					Name:      "new-with-alerting-rules",
@@ -305,18 +280,10 @@ func TestPrometheusRulesConvertionToCxAlert(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			reconciler, watcher, client := setupReconciler(t, ctx)
-
-			if tt.prepare != nil {
-				tt.prepare(PrepareParams{
-					ctx:    ctx,
-					client: client,
-				})
-			}
-
+			reconciler, watcher := setupReconciler(t, ctx)
 			var err error
 			if tt.shouldCreate {
-				err = reconciler.Client.Create(ctx, tt.prometheusRule)
+				err = coralogixreconcile.GetClient().Create(ctx, tt.prometheusRule)
 				assert.NoError(t, err)
 			}
 
