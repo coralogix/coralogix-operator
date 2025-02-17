@@ -178,7 +178,7 @@ func TestRuleGroupReconciler_Reconcile(t *testing.T) {
 	r.SetupWithManager(mgr)
 
 	coralogixreconciler.InitClient(withWatch)
-	coralogixreconciler.InitSchema(mgr.GetScheme())
+	coralogixreconciler.InitScheme(mgr.GetScheme())
 	watcher, _ := withWatch.Watch(ctx, &coralogixv1alpha1.RuleGroupList{})
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
@@ -238,7 +238,7 @@ func TestRuleGroupReconciler_Reconcile_5XX_StatusError(t *testing.T) {
 	}
 	r.SetupWithManager(mgr)
 	coralogixreconciler.InitClient(withWatch)
-	coralogixreconciler.InitSchema(mgr.GetScheme())
+	coralogixreconciler.InitScheme(mgr.GetScheme())
 	watcher, _ := withWatch.Watch(ctx, &coralogixv1alpha1.RuleGroupList{})
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 

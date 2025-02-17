@@ -56,7 +56,7 @@ func setupRecordingRuleReconciler(t *testing.T, ctx context.Context, recordingRu
 		Scheme: mgr.GetScheme(),
 	})
 	coralogixreconciler.InitClient(withWatch)
-	coralogixreconciler.InitSchema(mgr.GetScheme())
+	coralogixreconciler.InitScheme(mgr.GetScheme())
 	assert.NoError(t, err)
 	r := RecordingRuleGroupSetReconciler{
 		RecordingRuleGroupSetClient: recordingRuleGroupSetClient,

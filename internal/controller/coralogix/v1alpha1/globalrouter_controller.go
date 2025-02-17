@@ -21,11 +21,8 @@ import (
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
@@ -43,160 +40,76 @@ type GlobalRouterReconciler struct {
 // +kubebuilder:rbac:groups=coralogix.com,resources=globalrouters/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=coralogix.com,resources=globalrouters/finalizers,verbs=update
 
-var (
-	globalRouterFinalizerName = "global-router.coralogix.com/finalizer"
-)
-
 func (r *GlobalRouterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx).WithValues(
-		"globalRouter", req.NamespacedName.Name,
-		"namespace", req.NamespacedName.Namespace,
-	)
-
-	globalRouter := &coralogixv1alpha1.GlobalRouter{}
-	if err := coralogixreconcile.GetClient().Get(ctx, req.NamespacedName, globalRouter); err != nil {
-		if errors.IsNotFound(err) {
-			// Request object not found, could have been deleted after reconcile request.
-			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-			// Return and don't requeue
-			return ctrl.Result{}, nil
-		}
-		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
-	}
-
-	if ptr.Deref(globalRouter.Status.ID, "") == "" {
-		err := r.create(ctx, log, globalRouter)
-		if err != nil {
-			log.Error(err, "Error on creating GlobalRouter")
-			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
-		}
-		return ctrl.Result{}, nil
-	}
-
-	if !globalRouter.ObjectMeta.DeletionTimestamp.IsZero() {
-		err := r.delete(ctx, log, globalRouter)
-		if err != nil {
-			log.Error(err, "Error on deleting GlobalRouter")
-			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
-		}
-		return ctrl.Result{}, nil
-	}
-
-	if !utils.GetLabelFilter().Matches(globalRouter.GetLabels()) {
-		err := r.deleteRemoteGlobalRouter(ctx, log, *globalRouter.Status.ID)
-		if err != nil {
-			log.Error(err, "Error on deleting GlobalRouter")
-			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
-		}
-		return ctrl.Result{}, nil
-	}
-
-	err := r.update(ctx, log, globalRouter)
-	if err != nil {
-		log.Error(err, "Error on updating GlobalRouter")
-		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
-	}
-
-	return ctrl.Result{}, nil
+	return coralogixreconcile.ReconcileResource(ctx, req, &coralogixv1alpha1.GlobalRouter{}, r)
 }
 
-func (r *GlobalRouterReconciler) create(ctx context.Context, log logr.Logger, globalRouter *coralogixv1alpha1.GlobalRouter) error {
+func (r *GlobalRouterReconciler) FinalizerName() string {
+	return "global-router.coralogix.com/finalizer"
+}
+
+func (r *GlobalRouterReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) (client.Object, error) {
+	globalRouter := obj.(*coralogixv1alpha1.GlobalRouter)
 	createRequest, err := globalRouter.ExtractCreateGlobalRouterRequest(&coralogixv1alpha1.ResourceRefProperties{
 		Namespace: globalRouter.Namespace,
 	})
 	if err != nil {
-		return fmt.Errorf("error on extracting create request: %w", err)
+		return nil, fmt.Errorf("error on extracting create request: %w", err)
 	}
-	log.V(1).Info("Creating remote global-router", "global-router", protojson.Format(createRequest))
+	log.V(1).Info("Creating remote globalRouter", "globalRouter", protojson.Format(createRequest))
 	createResponse, err := r.NotificationsClient.CreateGlobalRouter(ctx, createRequest)
 	if err != nil {
-		return fmt.Errorf("error on creating remote global-router: %w", err)
+		return nil, fmt.Errorf("error on creating remote globalRouter: %w", err)
 	}
-	log.V(1).Info("Remote global-router created", "response", protojson.Format(createResponse))
+	log.V(1).Info("Remote globalRouter created", "response", protojson.Format(createResponse))
 
-	id := createResponse.GetRouter().GetId()
 	globalRouter.Status = coralogixv1alpha1.GlobalRouterStatus{
-		ID: &id,
+		ID: createResponse.GetRouter().Id,
 	}
 
-	log.V(1).Info("Updating GlobalRouter status", "id", id)
-	if err = coralogixreconcile.GetClient().Status().Update(ctx, globalRouter); err != nil {
-		if deleteErr := r.deleteRemoteGlobalRouter(ctx, log, *globalRouter.Status.ID); deleteErr != nil {
-			return fmt.Errorf("error to delete global-router after status update error. Update error: %w. Deletion error: %w", err, deleteErr)
-		}
-		return fmt.Errorf("error to update global-router status: %w", err)
-	}
-
-	if !controllerutil.ContainsFinalizer(globalRouter, globalRouterFinalizerName) {
-		log.V(1).Info("Updating GlobalRouter to add finalizer", "id", id)
-		controllerutil.AddFinalizer(globalRouter, globalRouterFinalizerName)
-		if err := coralogixreconcile.GetClient().Update(ctx, globalRouter); err != nil {
-			return fmt.Errorf("error on updating GlobalRouter: %w", err)
-		}
-	}
-
-	return nil
+	return globalRouter, nil
 }
 
-func (r *GlobalRouterReconciler) update(ctx context.Context, log logr.Logger, globalRouter *coralogixv1alpha1.GlobalRouter) error {
+func (r *GlobalRouterReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
+	globalRouter := obj.(*coralogixv1alpha1.GlobalRouter)
 	updateRequest, err := globalRouter.ExtractUpdateGlobalRouterRequest(&coralogixv1alpha1.ResourceRefProperties{
 		Namespace: globalRouter.Namespace,
 	})
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
 	}
-	log.V(1).Info("Updating remote global-router", "global-router", protojson.Format(updateRequest))
+	log.V(1).Info("Updating remote globalRouter", "globalRouter", protojson.Format(updateRequest))
 	updateResponse, err := r.NotificationsClient.ReplaceGlobalRouter(ctx, updateRequest)
 	if err != nil {
-		if cxsdk.Code(err) == codes.NotFound {
-			log.V(1).Info("global-router not found on remote, removing id from status")
-			globalRouter.Status = coralogixv1alpha1.GlobalRouterStatus{
-				ID: ptr.To(""),
-			}
-			if err = coralogixreconcile.GetClient().Status().Update(ctx, globalRouter); err != nil {
-				return fmt.Errorf("error on updating GlobalRouter status: %w", err)
-			}
-			return fmt.Errorf("global-router not found on remote: %w", err)
-		}
-		return fmt.Errorf("error on updating global-router: %w", err)
+		return err
 	}
-	log.V(1).Info("Remote global-router updated", "global-router", protojson.Format(updateResponse))
+	log.V(1).Info("Remote globalRouter updated", "globalRouter", protojson.Format(updateResponse))
 
 	return nil
 }
 
-func (r *GlobalRouterReconciler) delete(ctx context.Context, log logr.Logger, globalRouter *coralogixv1alpha1.GlobalRouter) error {
-	if err := r.deleteRemoteGlobalRouter(ctx, log, *globalRouter.Status.ID); err != nil {
-		return fmt.Errorf("error on deleting remote global-router: %w", err)
-	}
-
-	log.V(1).Info("Removing finalizer from GlobalRouter")
-	controllerutil.RemoveFinalizer(globalRouter, globalRouterFinalizerName)
-	if err := coralogixreconcile.GetClient().Update(ctx, globalRouter); err != nil {
-		return fmt.Errorf("error on updating GlobalRouter: %w", err)
-	}
-
-	return nil
-}
-
-func (r *GlobalRouterReconciler) deleteRemoteGlobalRouter(ctx context.Context, log logr.Logger, globalRouterID string) error {
-	log.V(1).Info("Deleting global-router from remote", "id", globalRouterID)
-
-	_, err := r.NotificationsClient.DeleteGlobalRouter(ctx,
-		&cxsdk.DeleteGlobalRouterRequest{
-			Identifier: &cxsdk.GlobalRouterIdentifier{
-				Value: &cxsdk.GlobalRouterIdentifierIDValue{
-					Id: globalRouterID,
-				},
+func (r *GlobalRouterReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
+	globalRouter := obj.(*coralogixv1alpha1.GlobalRouter)
+	id := *globalRouter.Status.ID
+	log.V(1).Info("Deleting globalRouter from remote system", "id", id)
+	_, err := r.NotificationsClient.DeleteGlobalRouter(ctx, &cxsdk.DeleteGlobalRouterRequest{
+		Identifier: &cxsdk.GlobalRouterIdentifier{
+			Value: &cxsdk.GlobalRouterIdentifierIDValue{
+				Id: id,
 			},
 		},
-	)
+	})
 	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.V(1).Error(err, "Error on deleting remote global-router", "id", globalRouterID)
-		return fmt.Errorf("error to delete remote global-router %s: %w", globalRouterID, err)
+		log.V(1).Error(err, "Error deleting remote globalRouter", "id", id)
+		return fmt.Errorf("error deleting remote globalRouter %s: %w", id, err)
 	}
-	log.V(1).Info("global-router was deleted from remote", "id", globalRouterID)
+	log.V(1).Info("GlobalRouter deleted from remote system", "id", id)
 	return nil
+}
+
+func (r *GlobalRouterReconciler) CheckIDInStatus(obj client.Object) bool {
+	globalRouter := obj.(*coralogixv1alpha1.GlobalRouter)
+	return globalRouter.Status.ID != nil && *globalRouter.Status.ID != ""
 }
 
 // SetupWithManager sets up the controller with the Manager.

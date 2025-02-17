@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -29,12 +28,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 var (
 	k8sClient client.Client
-	schema    *runtime.Scheme
+	scheme    *runtime.Scheme
 )
 
 func InitClient(c client.Client) {
@@ -45,8 +46,8 @@ func GetClient() client.Client {
 	return k8sClient
 }
 
-func InitSchema(s *runtime.Scheme) {
-	schema = s
+func InitScheme(s *runtime.Scheme) {
+	scheme = s
 }
 
 // CoralogixReconciler defines the required methods for all Coralogix controllers.
@@ -122,7 +123,7 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 		if cxsdk.Code(err) == codes.NotFound {
 			log.V(1).Info("resource not found on remote")
 			uObj := &unstructured.Unstructured{}
-			if err2 := schema.Convert(obj, uObj, ctx); err2 != nil {
+			if err2 := scheme.Convert(obj, uObj, ctx); err2 != nil {
 				return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, fmt.Errorf("failed to convert object to unstructured: %w", err2)
 			}
 			if err2 := unstructured.SetNestedField(uObj.Object, "", "status", "id"); err2 != nil {
@@ -160,7 +161,7 @@ func RemoveFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r 
 }
 
 func objToGVK(obj client.Object) string {
-	gvks, _, _ := schema.ObjectKinds(obj)
+	gvks, _, _ := scheme.ObjectKinds(obj)
 	if len(gvks) == 0 {
 		return ""
 	}

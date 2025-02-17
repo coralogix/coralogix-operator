@@ -60,7 +60,7 @@ func setupOutboundWebhooksReconciler(t *testing.T, ctx context.Context, outbound
 	assert.NoError(t, err)
 
 	coralogixreconciler.InitClient(withWatch)
-	coralogixreconciler.InitSchema(mgr.GetScheme())
+	coralogixreconciler.InitScheme(mgr.GetScheme())
 
 	r := OutboundWebhookReconciler{
 		OutboundWebhooksClient: outboundWebhooksClient,
