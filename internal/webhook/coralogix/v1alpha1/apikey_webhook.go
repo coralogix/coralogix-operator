@@ -81,7 +81,7 @@ func (v *ApiKeyCustomValidator) ValidateCreate(ctx context.Context, obj runtime.
 	}
 
 	if errs != nil {
-		monitoring.TotalRejectedApiKeysMetric.Inc()
+		monitoring.IncResourceRejectionsTotalMetric(apikey.Kind, apikey.Name, apikey.Namespace)
 		return warnings, errs
 	}
 	return nil, nil
@@ -110,7 +110,7 @@ func (v *ApiKeyCustomValidator) ValidateUpdate(ctx context.Context, oldObj, newO
 	}
 
 	if errs != nil {
-		monitoring.TotalRejectedApiKeysMetric.Inc()
+		monitoring.IncResourceRejectionsTotalMetric(apikey.Kind, apikey.Name, apikey.Namespace)
 		return warnings, errs
 	}
 	return nil, nil

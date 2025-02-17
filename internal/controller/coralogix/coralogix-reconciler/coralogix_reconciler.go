@@ -29,7 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-	
+
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
@@ -48,6 +48,10 @@ func GetClient() client.Client {
 
 func InitScheme(s *runtime.Scheme) {
 	scheme = s
+}
+
+func GetScheme() *runtime.Scheme {
+	return scheme
 }
 
 // CoralogixReconciler defines the required methods for all Coralogix controllers.

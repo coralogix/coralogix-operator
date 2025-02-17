@@ -39,7 +39,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	coralogixreconcile "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
@@ -67,7 +66,6 @@ func (r *PrometheusRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	prometheusRule := &prometheus.PrometheusRule{}
 	if err := coralogixreconcile.GetClient().Get(ctx, req.NamespacedName, prometheusRule); err != nil {
 		if k8serrors.IsNotFound(err) {
-			monitoring.PrometheusRuleInfoMetric.DeleteLabelValues(req.Name, req.Namespace)
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
@@ -76,7 +74,6 @@ func (r *PrometheusRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		// Error reading the object - requeue the request
 		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
-	monitoring.PrometheusRuleInfoMetric.WithLabelValues(prometheusRule.Name, prometheusRule.Namespace).Set(1)
 
 	var errs error
 	if shouldTrackRecordingRules(prometheusRule) {
@@ -189,8 +186,8 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 					alert.Name = alertName
 					alert.Namespace = prometheusRule.Namespace
 					alert.Labels = map[string]string{"app.kubernetes.io/managed-by": prometheusRule.Name}
-					if val, ok := prometheusRule.Labels["app.coralogix.com/managed-by-alertmanager-config"]; ok {
-						alert.Labels["app.coralogix.com/managed-by-alertmanager-config"] = val
+					if val, ok := prometheusRule.Labels[utils.ManagedByAlertmanagerConfigLabelKey]; ok {
+						alert.Labels[utils.ManagedByAlertmanagerConfigLabelKey] = val
 					}
 					alert.OwnerReferences = []metav1.OwnerReference{getOwnerReference(prometheusRule)}
 					alert.Spec.Name = rule.Alert
@@ -244,9 +241,9 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 				updated = true
 			}
 
-			if promRuleVal, ok := prometheusRule.Labels["app.coralogix.com/managed-by-alertmanager-config"]; ok {
-				if alertVal, ok := alert.Labels["app.coralogix.com/managed-by-alertmanager-config"]; !ok || alertVal != promRuleVal {
-					alert.Labels["app.coralogix.com/managed-by-alertmanager-config"] = promRuleVal
+			if promRuleVal, ok := prometheusRule.Labels[utils.ManagedByAlertmanagerConfigLabelKey]; ok {
+				if alertVal, ok := alert.Labels[utils.ManagedByAlertmanagerConfigLabelKey]; !ok || alertVal != promRuleVal {
+					alert.Labels[utils.ManagedByAlertmanagerConfigLabelKey] = promRuleVal
 					updated = true
 				}
 			}
@@ -279,14 +276,14 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 }
 
 func shouldTrackRecordingRules(prometheusRule *prometheus.PrometheusRule) bool {
-	if value, ok := prometheusRule.Labels["app.coralogix.com/track-recording-rules"]; ok && value == "true" {
+	if value, ok := prometheusRule.Labels[utils.TrackPrometheusRuleRecordingRulesLabelKey]; ok && value == "true" {
 		return true
 	}
 	return false
 }
 
 func shouldTrackAlerts(prometheusRule *prometheus.PrometheusRule) bool {
-	if value, ok := prometheusRule.Labels["app.coralogix.com/track-alerting-rules"]; ok && value == "true" {
+	if value, ok := prometheusRule.Labels[utils.TrackPrometheusRuleAlertsLabelKey]; ok && value == "true" {
 		return true
 	}
 	return false
@@ -411,10 +408,10 @@ func getOwnerReference(promRule *prometheus.PrometheusRule) metav1.OwnerReferenc
 // SetupWithManager sets up the controller with the Manager.
 func (r *PrometheusRuleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	shouldTrackPrometheusRules := func(labels map[string]string) bool {
-		if value, ok := labels["app.coralogix.com/track-recording-rules"]; ok && value == "true" {
+		if value, ok := labels[utils.TrackPrometheusRuleRecordingRulesLabelKey]; ok && value == "true" {
 			return true
 		}
-		if value, ok := labels["app.coralogix.com/track-alerting-rules"]; ok && value == "true" {
+		if value, ok := labels[utils.TrackPrometheusRuleAlertsLabelKey]; ok && value == "true" {
 			return true
 		}
 		return false

@@ -34,6 +34,7 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	coralogixreconcile "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 func setupReconciler(t *testing.T, ctx context.Context) (PrometheusRuleReconciler, watch.Interface) {
@@ -84,7 +85,7 @@ func TestPrometheusRulesConversionToCxParsingRules(t *testing.T) {
 					Name:      "test",
 					Namespace: "default",
 					Labels: map[string]string{
-						"app.coralogix.com/track-recording-rules": "true",
+						utils.TrackPrometheusRuleRecordingRulesLabelKey: "true",
 					},
 				},
 				Spec: prometheus.PrometheusRuleSpec{
@@ -101,7 +102,7 @@ func TestPrometheusRulesConversionToCxParsingRules(t *testing.T) {
 					Name:      "new-with-rules",
 					Namespace: "default",
 					Labels: map[string]string{
-						"app.coralogix.com/track-recording-rules": "true",
+						utils.TrackPrometheusRuleRecordingRulesLabelKey: "true",
 					},
 				},
 				Spec: prometheus.PrometheusRuleSpec{
@@ -128,7 +129,7 @@ func TestPrometheusRulesConversionToCxParsingRules(t *testing.T) {
 					Name:      "new-with-rules",
 					Namespace: "default",
 					Labels: map[string]string{
-						"app.coralogix.com/track-recording-rules": "true",
+						utils.TrackPrometheusRuleRecordingRulesLabelKey: "true",
 					},
 				},
 				Spec: prometheus.PrometheusRuleSpec{
@@ -203,7 +204,7 @@ func TestPrometheusRulesConvertionToCxAlert(t *testing.T) {
 					Name:      "test-alert",
 					Namespace: "default",
 					Labels: map[string]string{
-						"app.coralogix.com/track-alerting-rules": "true",
+						utils.TrackPrometheusRuleAlertsLabelKey: "true",
 					},
 				},
 				Spec: prometheus.PrometheusRuleSpec{
@@ -220,7 +221,7 @@ func TestPrometheusRulesConvertionToCxAlert(t *testing.T) {
 					Name:      "new-with-alerting-rules",
 					Namespace: "default",
 					Labels: map[string]string{
-						"app.coralogix.com/track-alerting-rules": "true",
+						utils.TrackPrometheusRuleAlertsLabelKey: "true",
 					},
 				},
 				Spec: prometheus.PrometheusRuleSpec{
@@ -247,7 +248,7 @@ func TestPrometheusRulesConvertionToCxAlert(t *testing.T) {
 					Name:      "new-with-alerting-rules",
 					Namespace: "default",
 					Labels: map[string]string{
-						"app.coralogix.com/track-alerting-rules": "true",
+						utils.TrackPrometheusRuleAlertsLabelKey: "true",
 					},
 				},
 				Spec: prometheus.PrometheusRuleSpec{
