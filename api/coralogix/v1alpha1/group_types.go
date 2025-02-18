@@ -57,21 +57,22 @@ type Member struct {
 
 // Custom role reference.
 type GroupCustomRole struct {
-	// Reference to the custom role.
+	// Reference to the custom role within the cluster.
 	ResourceRef *ResourceRef `json:"resourceRef"`
 }
 
 // Scope attached to the group.
 type GroupScope struct {
-	// Scope reference
+	// Scope reference.
 	ResourceRef *ResourceRef `json:"resourceRef"`
 }
 
-// Reference to a Coralogix resource.
+// Reference to a Coralogix resource within the cluster.
 type ResourceRef struct {
 	// Name of the resource (not id).
 	Name string `json:"name"`
 
+	// Kubernetes namespace.
 	// +optional
 	Namespace *string `json:"namespace,omitempty"`
 }

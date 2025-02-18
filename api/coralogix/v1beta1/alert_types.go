@@ -550,15 +550,24 @@ type GenericHttpsPresetOverride struct {
 	Body *string `json:"body,omitempty"`
 }
 
+// Reference to the alert on Coralogix.
 type AlertBackendRef struct {
+
+	// Alert ID.
 	// +optional
 	ID *string `json:"id,omitempty"`
+
+	// Name of the alert.
 	// +optional
 	Name *string `json:"name,omitempty"`
 }
 
+// Reference to a resource within the cluster.
 type ResourceRef struct {
+	// Name of the resource.
 	Name string `json:"name"`
+
+	// Kubernetes namespace.
 	// +optional
 	Namespace *string `json:"namespace,omitempty"`
 }
@@ -572,11 +581,14 @@ type ActiveOn struct {
 }
 
 // +kubebuilder:validation:Pattern=`^(0\d|1\d|2[0-3]):[0-5]\d$`
+// Time of day.
 type TimeOfDay string
 
 // +kubebuilder:validation:Enum=sunday;monday;tuesday;wednesday;thursday;friday;saturday
+// Day of the week.
 type DayOfWeek string
 
+// Day of the week values.
 const (
 	DayOfWeekSunday    DayOfWeek = "sunday"
 	DayOfWeekMonday    DayOfWeek = "monday"
@@ -587,17 +599,25 @@ const (
 	DayOfWeekSaturday  DayOfWeek = "saturday"
 )
 
+// Alert type definitions.
 type AlertTypeDefinition struct {
+	// Immediate alerts for logs.
 	// +optional
 	LogsImmediate *LogsImmediate `json:"logsImmediate,omitempty"`
+	// Alerts for when a log crosses a threshold.
 	// +optional
 	LogsThreshold *LogsThreshold `json:"logsThreshold,omitempty"`
+	// Alerts for when a log exceeds a defined ratio.
 	// +optional
 	LogsRatioThreshold *LogsRatioThreshold `json:"logsRatioThreshold,omitempty"`
+	// Alerts are sent when the number of logs matching a filter is more than or less than a threshold over a specific time window.
 	// +optional
 	LogsTimeRelativeThreshold *LogsTimeRelativeThreshold `json:"logsTimeRelativeThreshold,omitempty"`
+	// Alerts for when a metric crosses a threshold.
 	// +optional
 	MetricThreshold *MetricThreshold `json:"metricThreshold,omitempty"`
+
+	// Alerts for when traces crosses a threshold.
 	// +optional
 	TracingThreshold *TracingThreshold `json:"tracingThreshold,omitempty"`
 	// +optional

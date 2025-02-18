@@ -91,7 +91,7 @@ type Rule struct {
 	// Remove Fields allows to select fields that will not be indexed.
 	// +optional
 	RemoveFields *RemoveFields `json:"removeFields,omitempty"`
-	
+
 	// Convert JSON object to JSON string.
 	// +optional
 	JsonStringify *JsonStringify `json:"jsonStringify,omitempty"`
@@ -120,7 +120,7 @@ type Parse struct {
 
 // Blocking instructions
 type Block struct {
-	
+
 	// The field on which the Regular Expression will operate on.
 	SourceField string `json:"sourceField"`
 
@@ -147,8 +147,9 @@ const (
 	DestinationFieldThreadID     DestinationField = "THREADID"
 	DestinationFieldRuleSeverity DestinationField = "SEVERITY"
 )
+
 // JsonExtract instructions.
-type JsonExtract struct 
+type JsonExtract struct {
 	// The field that will be populated by the results of the Regular Expression operation.
 	DestinationField DestinationField `json:"destinationField"`
 
@@ -158,7 +159,7 @@ type JsonExtract struct
 
 // Instructions to replace data.
 type Replace struct {
-	
+
 	// The field on which the Regular Expression will operate on.
 	SourceField string `json:"sourceField"`
 
@@ -167,7 +168,7 @@ type Replace struct {
 
 	// Regular Expression. More info: https://coralogix.com/blog/regex-101/
 	Regex string `json:"regex"`
-	
+
 	// The string that will replace the matched Regular Expression
 	ReplacementString string `json:"replacementString"`
 }
@@ -208,7 +209,7 @@ type RemoveFields struct {
 type JsonStringify struct {
 	// The field on which the Regular Expression will operate on.
 	SourceField string `json:"sourceField"`
-	
+
 	// The field that will be populated by the results of the Regular Expression
 	DestinationField string `json:"destinationField"`
 
@@ -229,7 +230,7 @@ type Extract struct {
 type ParseJsonField struct {
 	// The field on which the Regular Expression will operate on.
 	SourceField string `json:"sourceField"`
-	
+
 	// The field that will be populated by the results of the Regular Expression
 	DestinationField string `json:"destinationField"`
 
@@ -261,7 +262,7 @@ type RuleSubGroup struct {
 
 // RuleGroupSpec defines the Desired state of RuleGroup
 type RuleGroupSpec struct {
-	
+
 	// Name of the rule-group.
 	//+kubebuilder:validation:MinLength=0
 	Name string `json:"name"`
