@@ -138,8 +138,8 @@ type Block struct {
 	BlockingAllMatchingBlocks bool `json:"blockingAllMatchingBlocks,omitempty"`
 }
 
-// The field that will be populated by the results of the Regular Expression operation.
 // +kubebuilder:validation:Enum=Category;CLASSNAME;METHODNAME;THREADID;SEVERITY
+// The field that will be populated by the results of the Regular Expression operation.
 type DestinationField string
 
 const (
@@ -174,8 +174,8 @@ type Replace struct {
 	ReplacementString string `json:"replacementString"`
 }
 
-// The format standard you want to use
 // +kubebuilder:validation:Enum=Strftime;JavaSDF;Golang;SecondTS;MilliTS;MicroTS;NanoTS
+// The format standard you want to use
 type FieldFormatStandard string
 
 const (
@@ -296,9 +296,9 @@ type RuleGroupSpec struct {
 	// +optional
 	Creator string `json:"creator,omitempty"`
 
+	// +kubebuilder:validation:Minimum:=1
 	// The index of the rule-group between the other rule-groups.
 	// +optional
-	// +kubebuilder:validation:Minimum:=1
 	Order *int32 `json:"order,omitempty"`
 
 	// List of rule-subgroups. Every rule-subgroup is a list of rules linked with a logical 'OR' (||) operation.
@@ -307,6 +307,7 @@ type RuleGroupSpec struct {
 }
 
 // +kubebuilder:validation:Enum=Debug;Verbose;Info;Warning;Error;Critical
+// Severity to match to.
 type RuleSeverity string
 
 const (

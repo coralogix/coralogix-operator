@@ -23,13 +23,14 @@ import (
 
 // ApiKeySpec defines the desired state of a Coralogix ApiKey.
 type ApiKeySpec struct {
-	// Name of the ApiKey
+
 	//+kubebuilder:validation:MinLength=0
+	// Name of the ApiKey
 	Name string `json:"name"`
 
+	//+kubebuilder:default=true
 	// Whether the ApiKey Is active.
 	// +optional
-	//+kubebuilder:default=true
 	Active bool `json:"active"`
 
 	// Owner of the ApiKey.
@@ -62,7 +63,6 @@ type ApiKeyStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-
 // ApiKey is the Schema for the apikeys API.
 type ApiKey struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -73,7 +73,6 @@ type ApiKey struct {
 }
 
 // +kubebuilder:object:root=true
-
 // ApiKeyList contains a list of ApiKeys.
 type ApiKeyList struct {
 	metav1.TypeMeta `json:",inline"`

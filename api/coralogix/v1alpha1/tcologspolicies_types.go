@@ -34,7 +34,7 @@ type TCOLogsPoliciesSpec struct {
 	Policies []TCOLogsPolicy `json:"policies"`
 }
 
-// A TCO policy for logs. 
+// A TCO policy for logs.
 type TCOLogsPolicy struct {
 	// Name of the policy.
 	Name string `json:"name"`
@@ -43,11 +43,11 @@ type TCOLogsPolicy struct {
 	// +optional
 	Description *string `json:"description,omitempty"`
 
-	// The policy priority.
 	// +kubebuilder:validation:Enum=block;high;medium;low
+	// The policy priority.
 	Priority string `json:"priority"`
 
-	// The severities to apply the policy on. 
+	// The severities to apply the policy on.
 	Severities []TCOPolicySeverity `json:"severities"`
 
 	// Matches the specified retention.
@@ -75,8 +75,8 @@ type ArchiveRetentionBackendRef struct {
 	Name string `json:"name"`
 }
 
-// The severities to apply the policy on. 
 // +kubebuilder:validation:Enum=info;warning;critical;error;debug;verbose
+// The severities to apply the policy on.
 type TCOPolicySeverity string
 
 // A sincle TCO policy rule.
@@ -84,8 +84,8 @@ type TCOPolicyRule struct {
 	// Names to match.
 	Names []string `json:"names"`
 
-	// Type of matching for the name.
 	// +kubebuilder:validation:Enum=is;is_not;start_with;includes
+	// Type of matching for the name.
 	RuleType string `json:"ruleType"`
 }
 

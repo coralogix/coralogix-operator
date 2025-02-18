@@ -20,13 +20,11 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // RecordingRuleGroupSetSpec defines the desired state of a set of Coralogix recording rule groups.
 type RecordingRuleGroupSetSpec struct {
-	// Recording rule groups.
+
 	// +kubebuilder:validation:MinItems=1
+	// Recording rule groups.
 	Groups []RecordingRuleGroup `json:"groups"`
 }
 
@@ -75,7 +73,7 @@ func extractRecordingRule(rule RecordingRule) *cxsdk.InRule {
 
 // A Coralogix recording rule group.
 type RecordingRuleGroup struct {
-	
+
 	// The (unique) rule group name.
 	Name string `json:"name,omitempty"`
 
@@ -98,7 +96,7 @@ type RecordingRule struct {
 	Record string `json:"record,omitempty"`
 
 	// The PromQL expression to evaluate.
-  // Every evaluation cycle this is evaluated at the current time, and the result recorded as a new set of time series with the metric name as given by 'record'.
+	// Every evaluation cycle this is evaluated at the current time, and the result recorded as a new set of time series with the metric name as given by 'record'.
 	Expr string `json:"expr,omitempty"`
 
 	// Labels to add or overwrite before storing the result.

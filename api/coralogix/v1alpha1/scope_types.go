@@ -32,11 +32,11 @@ type ScopeSpec struct {
 	// +optional
 	Description *string `json:"description,omitempty"`
 
-	// Filters applied to include data in the scope. 
+	// Filters applied to include data in the scope.
 	Filters []ScopeFilter `json:"filters"`
 
-	// Default expression to use when no filter matches the query. Until further notice, this is limited to `true` (everything is included) or `false` (nothing is included). Use a version tag (e.g `<v1>true` or `<v1>false`)
 	// +kubebuilder:validation:Enum=<v1>true;<v1>false
+	// Default expression to use when no filter matches the query. Until further notice, this is limited to `true` (everything is included) or `false` (nothing is included). Use a version tag (e.g `<v1>true` or `<v1>false`)
 	DefaultExpression string `json:"defaultExpression"`
 }
 
