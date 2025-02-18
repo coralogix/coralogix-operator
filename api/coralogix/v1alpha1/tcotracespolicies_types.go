@@ -43,8 +43,8 @@ type TCOTracesPolicy struct {
 	// +optional
 	Description *string `json:"description,omitempty"`
 
-	// The policy priority.
 	// +kubebuilder:validation:Enum=block;high;medium;low
+	// The policy priority.
 	Priority string `json:"priority"`
 
 	// Matches the specified retention.
@@ -54,7 +54,7 @@ type TCOTracesPolicy struct {
 	// The applications to apply the policy on. Applies the policy on all the applications by default.
 	// +optional
 	Applications *TCOPolicyRule `json:"applications,omitempty"`
-	
+
 	// The subsystems to apply the policy on. Applies the policy on all the subsystems by default.
 	// +optional
 	Subsystems *TCOPolicyRule `json:"subsystems,omitempty"`
@@ -74,15 +74,15 @@ type TCOTracesPolicy struct {
 
 // TCO Policy tag matching rule.
 type TCOPolicyTag struct {
-	// Tag names to match.
 	// +kubebuilder:validation:Pattern=`^tags\..*`
+	// Tag names to match.
 	Name string `json:"name"`
 
 	// Values to match for
 	Values []string `json:"values"`
 
-	// Operator to match with.
 	// +kubebuilder:validation:Enum=is;is_not;start_with;includes
+	// Operator to match with.
 	RuleType string `json:"ruleType"`
 }
 

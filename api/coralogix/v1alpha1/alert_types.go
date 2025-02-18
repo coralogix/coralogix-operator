@@ -22,9 +22,12 @@ import (
 // AlertSpec defines the desired state of a Coralogix Alert.
 // Deprecated: Upgrade to v1beta1.
 type AlertSpec struct {
+
+	// Alert name.
 	//+kubebuilder:validation:MinLength=0
 	Name string `json:"name"`
 
+	// Alert description.
 	// +optional
 	Description string `json:"description,omitempty"`
 

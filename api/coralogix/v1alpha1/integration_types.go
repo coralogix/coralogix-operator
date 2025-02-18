@@ -30,12 +30,12 @@ type IntegrationSpec struct {
 
 	// Unique name of the integration.
 	IntegrationKey string `json:"integrationKey"`
-	
+
 	// Desired version of the integration
 	Version string `json:"version"`
 
-	// Parameters required by the integration. 
 	// +kubebuilder:pruning:PreserveUnknownFields
+	// Parameters required by the integration.
 	Parameters runtime.RawExtension `json:"parameters"`
 }
 

@@ -312,15 +312,15 @@ func (a *Alert) SetConditions(conditions []metav1.Condition) {
 	a.Status.Conditions = conditions
 }
 
-// A time zone expressed in UTC offsets.
 // +kubebuilder:validation:Pattern=`^UTC[+-]\d{2}$`
 // +kubebuilder:default=UTC+00
+// A time zone expressed in UTC offsets.
 type TimeZone string
 
 // The schedule for when the alert is active.
 type AlertSchedule struct {
-	// Time zone.
 	//+kubebuilder:default=UTC+00
+	// Time zone.
 	TimeZone TimeZone `json:"timeZone"`
 
 	// Schedule to have the alert active.
@@ -339,8 +339,8 @@ type IncidentsSettings struct {
 	RetriggeringPeriod RetriggeringPeriod `json:"retriggeringPeriod,omitempty"`
 }
 
-// When to notify.
 // +kubebuilder:validation:Enum=triggeredOnly;triggeredAndResolved
+// When to notify.
 type NotifyOn string
 
 const (
@@ -348,8 +348,8 @@ const (
 	NotifyOnTriggeredAndResolved NotifyOn = "triggeredAndResolved"
 )
 
-// Automatically retire the alert after...
 // +kubebuilder:validation:Enum={"never","5m","10m","1h","2h","6h","12h","24h"}
+// Automatically retire the alert after...
 type AutoRetireTimeframe string
 
 const (
@@ -438,8 +438,8 @@ type OutboundWebhookBackendRef struct {
 // Notification center destination for a notification.
 type Destination struct {
 
-	// When to notify.
 	// +kubebuilder:default=triggeredOnly
+	// When to notify.
 	NotifyOn NotifyOn `json:"notifyOn"`
 
 	// Type of notification to send.
