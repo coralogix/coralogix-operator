@@ -31,10 +31,10 @@ type CustomRoleSpec struct {
 	// Description of the custom role.
 	Description string `json:"description"`
 
-	// Parent role name. 
+	// Parent role name.
 	ParentRoleName string `json:"parentRoleName"`
 
-	// Custom role permissions. 
+	// Custom role permissions.
 	Permissions []string `json:"permissions"`
 }
 
