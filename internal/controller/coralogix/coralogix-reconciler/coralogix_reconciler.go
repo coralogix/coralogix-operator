@@ -122,7 +122,7 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 			return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, err)
 		}
 
-		return ManageSuccessWithRequeue(ctx, log, obj, utils.ReasonRemoteDeletedSuccessfully)
+		return ctrl.Result{}, nil
 	}
 
 	if !utils.GetLabelFilter().Matches(obj.GetLabels()) {
@@ -205,12 +205,12 @@ func ManageErrorWithRequeue(ctx context.Context, log logr.Logger, obj client.Obj
 	return reconcile.Result{RequeueAfter: requeueAfter}, err
 }
 
-func ManageSuccessWithRequeue(context context.Context, log logr.Logger, obj client.Object, reason string) (reconcile.Result, error) {
+func ManageSuccessWithRequeue(ctx context.Context, log logr.Logger, obj client.Object, reason string) (reconcile.Result, error) {
 	if conditionsObj, ok := (obj).(utils.ConditionsObj); ok {
 		conditions := conditionsObj.GetConditions()
 		if utils.SetSyncedConditionTrue(&conditions, obj.GetGeneration(), reason) || meta.RemoveStatusCondition(&conditions, utils.ConditionTypeError) {
 			conditionsObj.SetConditions(conditions)
-			if err := GetClient().Status().Update(context, obj); err != nil {
+			if err := GetClient().Status().Update(ctx, obj); err != nil {
 				log.Error(err, "unable to update status")
 				return reconcile.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 			}
