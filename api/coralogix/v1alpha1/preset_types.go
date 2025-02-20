@@ -113,7 +113,7 @@ type PresetSlackStructuredFields struct {
 // PresetStatus defines the observed state of Preset.
 type PresetStatus struct {
 	// +optional
-	Id *string `json:"id, omitempty"`
+	Id *string `json:"id,omitempty"`
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
