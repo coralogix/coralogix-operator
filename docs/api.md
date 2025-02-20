@@ -2382,10 +2382,114 @@ AlertStatus defines the observed state of Alert
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#alertstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
           <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.status.conditions[index]
+<sup><sup>[↩ Parent](#alertstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -2555,12 +2659,116 @@ ApiKeyStatus defines the observed state of ApiKey.
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#apikeystatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
           <br/>
         </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiKey.status.conditions[index]
+<sup><sup>[↩ Parent](#apikeystatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -3141,12 +3349,116 @@ ConnectorStatus defines the observed state of Connector.
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#connectorstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
           <br/>
         </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.status.conditions[index]
+<sup><sup>[↩ Parent](#connectorstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -3269,12 +3581,116 @@ CustomRoleStatus defines the observed state of CustomRole.
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#customrolestatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
           <br/>
         </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### CustomRole.status.conditions[index]
+<sup><sup>[↩ Parent](#customrolestatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -3894,12 +4310,116 @@ GlobalRouterStatus defines the observed state of GlobalRouter.
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#globalrouterstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
           <br/>
         </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.status.conditions[index]
+<sup><sup>[↩ Parent](#globalrouterstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -4178,12 +4698,116 @@ GroupStatus defines the observed state of Group.
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#groupstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
           <br/>
         </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Group.status.conditions[index]
+<sup><sup>[↩ Parent](#groupstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -4299,12 +4923,116 @@ IntegrationStatus defines the observed state of Integration.
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#integrationstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
           <br/>
         </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Integration.status.conditions[index]
+<sup><sup>[↩ Parent](#integrationstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -4948,17 +5676,121 @@ OutboundWebhookStatus defines the observed state of OutboundWebhook
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>id</b></td>
-        <td>string</td>
+        <td><b><a href="#outboundwebhookstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
         <td>
           <br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr><tr>
         <td><b>externalId</b></td>
         <td>string</td>
         <td>
           <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### OutboundWebhook.status.conditions[index]
+<sup><sup>[↩ Parent](#outboundwebhookstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -5535,12 +6367,116 @@ PresetStatus defines the observed state of Preset.
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#presetstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
           <br/>
         </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Preset.status.conditions[index]
+<sup><sup>[↩ Parent](#presetstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -5737,12 +6673,116 @@ RecordingRuleGroupSetStatus defines the observed state of RecordingRuleGroupSet
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#recordingrulegroupsetstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
           <br/>
         </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### RecordingRuleGroupSet.status.conditions[index]
+<sup><sup>[↩ Parent](#recordingrulegroupsetstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -6446,13 +7486,116 @@ RuleGroupStatus defines the observed state of RuleGroup
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#rulegroupstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
-          INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-Important: Run "make" to regenerate code after modifying this file<br/>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### RuleGroup.status.conditions[index]
+<sup><sup>[↩ Parent](#rulegroupstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -6619,6 +7762,110 @@ ScopeStatus defines the observed state of Scope.
           <br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b><a href="#scopestatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Scope.status.conditions[index]
+<sup><sup>[↩ Parent](#scopestatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -6669,7 +7916,7 @@ removed. Use with caution as this operation is destructive.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>status</b></td>
+        <td><b><a href="#tcologspoliciesstatus">status</a></b></td>
         <td>object</td>
         <td>
           TCOLogsPoliciesStatus defines the observed state of TCOLogsPolicies.<br/>
@@ -6904,6 +8151,130 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
       </tr></tbody>
 </table>
 
+
+### TCOLogsPolicies.status
+<sup><sup>[↩ Parent](#tcologspolicies)</sup></sup>
+
+
+
+TCOLogsPoliciesStatus defines the observed state of TCOLogsPolicies.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#tcologspoliciesstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### TCOLogsPolicies.status.conditions[index]
+<sup><sup>[↩ Parent](#tcologspoliciesstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
 ## TCOTracesPolicies
 <sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
 
@@ -6951,7 +8322,7 @@ removed. Use with caution as this operation is destructive.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>status</b></td>
+        <td><b><a href="#tcotracespoliciesstatus">status</a></b></td>
         <td>object</td>
         <td>
           TCOTracesPoliciesStatus defines the observed state of TCOTracesPolicies.<br/>
@@ -7310,6 +8681,130 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
           <br/>
         </td>
         <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### TCOTracesPolicies.status
+<sup><sup>[↩ Parent](#tcotracespolicies)</sup></sup>
+
+
+
+TCOTracesPoliciesStatus defines the observed state of TCOTracesPolicies.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#tcotracespoliciesstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### TCOTracesPolicies.status.conditions[index]
+<sup><sup>[↩ Parent](#tcotracespoliciesstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -14335,7 +15830,7 @@ AlertStatus defines the observed state of Alert
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#alertstatusconditionsindex">conditions</a></b></td>
+        <td><b><a href="#alertstatusconditionsindex-1">conditions</a></b></td>
         <td>[]object</td>
         <td>
           <br/>

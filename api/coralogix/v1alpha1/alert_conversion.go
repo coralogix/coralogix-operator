@@ -215,7 +215,7 @@ func (dst *Alert) ConvertFrom(srcRaw conversion.Hub) error {
 		dst.Spec.AlertType = *alertType
 		dst.Spec.PayloadFilters = payloadFilters
 	} else {
-		return fmt.Errorf("failed to convert alert type")
+		return fmt.Errorf("failed to convert alert type %s", src.Name)
 	}
 
 	dst.Spec.NotificationGroups = convertingNotificationGroupsV1beta1ToV1alpha1(src.Spec.NotificationGroup, src.Spec.NotificationGroupExcess)

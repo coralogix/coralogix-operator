@@ -375,12 +375,12 @@ type OutboundWebhookStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
-func (in *OutboundWebhookStatus) GetConditions() []metav1.Condition {
-	return in.Conditions
+func (in *OutboundWebhook) GetConditions() []metav1.Condition {
+	return in.Status.Conditions
 }
 
-func (in *OutboundWebhookStatus) SetConditions(conditions []metav1.Condition) {
-	in.Conditions = conditions
+func (in *OutboundWebhook) SetConditions(conditions []metav1.Condition) {
+	in.Status.Conditions = conditions
 }
 
 //+kubebuilder:object:root=true
