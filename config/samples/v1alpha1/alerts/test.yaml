@@ -1,0 +1,35 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/instance: pyrra
+    app.kubernetes.io/name: pyrra
+  name: pyrra-argocd-app-out-of-sync
+  namespace: default
+spec:
+  alertType:
+    standard:
+      conditions:
+        alertWhen: More
+        threshold: 0
+        timeWindow: FiveMinutes
+      filters:
+        applications: [cx101]
+        searchQuery: level:WARNING AND cx_service_name:"pyrra" AND days_since_last_sync:[5
+          TO *]
+        severities: []
+        subsystems: [argocd-application-info]
+  description: Argocd application out of sync alert for service pyrra in one or
+    more environments
+  name: ArgocdApplicationOutOfSync alert - pyrra - observability
+  notificationGroups:
+    - notifications:
+        - integrationName: slack-webhook
+          notifyOn: TriggeredAndResolved
+          retriggeringPeriodMinutes: 90
+  scheduling:
+    daysEnabled: [Monday, Tuesday, Wednesday, Thursday]
+    endTime: 18:00
+    startTime: 08:00
+    timeZone: UTC+00
+  severity: Critical

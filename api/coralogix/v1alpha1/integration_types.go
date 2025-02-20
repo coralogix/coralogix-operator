@@ -120,7 +120,18 @@ func (s *IntegrationSpec) ExtractParameters() ([]*cxsdk.IntegrationParameter, er
 
 // IntegrationStatus defines the observed state of Integration.
 type IntegrationStatus struct {
-	Id *string `json:"id"`
+	// +optional
+	Id *string `json:"id,omitempty"`
+	// +optional
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+}
+
+func (i *Integration) GetConditions() []metav1.Condition {
+	return i.Status.Conditions
+}
+
+func (i *Integration) SetConditions(conditions []metav1.Condition) {
+	i.Status.Conditions = conditions
 }
 
 // +kubebuilder:object:root=true

@@ -17,7 +17,6 @@ package v1alpha1
 import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 )
 
 // AlertSpec defines the desired state of Alert.
@@ -701,12 +700,16 @@ const (
 type AlertStatus struct {
 	// +optional
 	ID *string `json:"id"`
+	// +optional
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
-func NewDefaultAlertStatus() *AlertStatus {
-	return &AlertStatus{
-		ID: ptr.To(""),
-	}
+func (a *Alert) GetConditions() []metav1.Condition {
+	return a.Status.Conditions
+}
+
+func (a *Alert) SetConditions(conditions []metav1.Condition) {
+	a.Status.Conditions = conditions
 }
 
 //+kubebuilder:object:root=true

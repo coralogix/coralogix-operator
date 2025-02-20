@@ -185,7 +185,18 @@ func expandTCOPolicyTagRule(tag TCOPolicyTag) (*cxsdk.TCOPolicyTagRule, error) {
 }
 
 // TCOTracesPoliciesStatus defines the observed state of TCOTracesPolicies.
-type TCOTracesPoliciesStatus struct{}
+type TCOTracesPoliciesStatus struct {
+	// +optional
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+}
+
+func (t *TCOTracesPolicies) GetConditions() []metav1.Condition {
+	return t.Status.Conditions
+}
+
+func (t *TCOTracesPolicies) SetConditions(conditions []metav1.Condition) {
+	t.Status.Conditions = conditions
+}
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status

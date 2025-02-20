@@ -199,7 +199,18 @@ func expandArchiveRetention(ctx context.Context, coralogixClientSet *cxsdk.Clien
 }
 
 // TCOLogsPoliciesStatus defines the observed state of TCOLogsPolicies.
-type TCOLogsPoliciesStatus struct{}
+type TCOLogsPoliciesStatus struct {
+	// +optional
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+}
+
+func (t *TCOLogsPolicies) GetConditions() []metav1.Condition {
+	return t.Status.Conditions
+}
+
+func (t *TCOLogsPolicies) SetConditions(conditions []metav1.Condition) {
+	t.Status.Conditions = conditions
+}
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status

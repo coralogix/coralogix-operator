@@ -26,9 +26,6 @@ import (
 	utils "github.com/coralogix/coralogix-operator/api/coralogix"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // OutboundWebhookSpec defines the desired state of OutboundWebhook
 type OutboundWebhookSpec struct {
 	//+kubebuilder:validation:MinLength=0
@@ -370,10 +367,20 @@ func (in *AwsEventBridge) extractAwsEventBridgeConfig() *cxsdk.AwsEventBridgeWeb
 
 // OutboundWebhookStatus defines the observed state of OutboundWebhook
 type OutboundWebhookStatus struct {
+	// +optional
 	ID *string `json:"id"`
-
 	// +optional
 	ExternalID *string `json:"externalId"`
+	// +optional
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+}
+
+func (in *OutboundWebhook) GetConditions() []metav1.Condition {
+	return in.Status.Conditions
+}
+
+func (in *OutboundWebhook) SetConditions(conditions []metav1.Condition) {
+	in.Status.Conditions = conditions
 }
 
 //+kubebuilder:object:root=true

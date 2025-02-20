@@ -20,9 +20,6 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // RecordingRuleGroupSetSpec defines the desired state of RecordingRuleGroupSet
 type RecordingRuleGroupSetSpec struct {
 	// +kubebuilder:validation:MinItems=1
@@ -96,7 +93,18 @@ type RecordingRule struct {
 
 // RecordingRuleGroupSetStatus defines the observed state of RecordingRuleGroupSet
 type RecordingRuleGroupSetStatus struct {
-	ID *string `json:"id"`
+	// +optional
+	ID *string `json:"id,omitempty"`
+	// +optional
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+}
+
+func (r *RecordingRuleGroupSet) GetConditions() []metav1.Condition {
+	return r.Status.Conditions
+}
+
+func (r *RecordingRuleGroupSet) SetConditions(conditions []metav1.Condition) {
+	r.Status.Conditions = conditions
 }
 
 //+kubebuilder:object:root=true

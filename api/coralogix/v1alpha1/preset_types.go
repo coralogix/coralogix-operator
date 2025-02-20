@@ -112,7 +112,18 @@ type PresetSlackStructuredFields struct {
 
 // PresetStatus defines the observed state of Preset.
 type PresetStatus struct {
-	Id *string `json:"id"`
+	// +optional
+	Id *string `json:"id,omitempty"`
+	// +optional
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+}
+
+func (p *Preset) GetConditions() []metav1.Condition {
+	return p.Status.Conditions
+}
+
+func (p *Preset) SetConditions(conditions []metav1.Condition) {
+	p.Status.Conditions = conditions
 }
 
 // +kubebuilder:object:root=true
