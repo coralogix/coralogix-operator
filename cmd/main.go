@@ -19,11 +19,12 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	prometheusv1alpha "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	"k8s.io/apimachinery/pkg/runtime"
+	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/utils/strings/slices"
@@ -54,8 +55,10 @@ import (
 	//+kubebuilder:scaffold:imports
 )
 
+const OperatorVersion = "0.3.2"
+
 var (
-	scheme                    = runtime.NewScheme()
+	scheme                    = k8sruntime.NewScheme()
 	setupLog                  = ctrl.Log.WithName("setup")
 	operatorRegionToSdkRegion = map[string]string{
 		"APAC1":   "AP1",
@@ -369,10 +372,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := monitoring.RegisterMetrics(); err != nil {
-		setupLog.Error(err, "unable to register metrics")
+	if err := monitoring.SetupMetrics(); err != nil {
+		setupLog.Error(err, "unable to set up metrics")
 		os.Exit(1)
 	}
+
+	monitoring.SetOperatorInfoMetric(
+		runtime.Version(),
+		OperatorVersion,
+		cxsdk.CoralogixGrpcEndpointFromRegion(strings.ToLower(targetUrl)),
+	)
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {

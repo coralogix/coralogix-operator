@@ -31,7 +31,6 @@ import (
 
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
-	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	util "github.com/coralogix/coralogix-operator/internal/utils"
 )
 
@@ -64,7 +63,6 @@ func (r *OutboundWebhookReconciler) HandleCreation(ctx context.Context, log logr
 		return nil, fmt.Errorf("error on creating remote outbound-webhook: %w", err)
 	}
 	log.V(1).Info("Remote outbound-webhook created", "response", protojson.Format(createResponse))
-	monitoring.OutboundWebhookInfoMetric.WithLabelValues(outboundWebhook.Name, outboundWebhook.Namespace, getWebhookType(outboundWebhook)).Set(1)
 
 	log.V(1).Info("Getting outbound-webhook from remote", "id", createResponse.Id.Value)
 	remoteOutboundWebhook, err := r.OutboundWebhooksClient.Get(ctx,
@@ -98,7 +96,6 @@ func (r *OutboundWebhookReconciler) HandleUpdate(ctx context.Context, log logr.L
 		return err
 	}
 	log.V(1).Info("Remote outbound-webhook updated", "outbound-webhook", protojson.Format(updateResponse))
-	monitoring.OutboundWebhookInfoMetric.WithLabelValues(outboundWebhook.Name, outboundWebhook.Namespace, getWebhookType(outboundWebhook)).Set(1)
 	return nil
 }
 
@@ -111,7 +108,6 @@ func (r *OutboundWebhookReconciler) HandleDeletion(ctx context.Context, log logr
 		return fmt.Errorf("error deleting remote outbound-webhook %s: %w", *outboundWebhook.Status.ID, err)
 	}
 	log.V(1).Info("outbound-webhook deleted from remote system", "id", *outboundWebhook.Status.ID)
-	monitoring.OutboundWebhookInfoMetric.WithLabelValues(outboundWebhook.Name, outboundWebhook.Namespace, getWebhookType(outboundWebhook)).Set(0)
 	return nil
 }
 

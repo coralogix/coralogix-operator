@@ -52,6 +52,10 @@ func (f *LabelFilter) Matches(resourceLabels map[string]string) bool {
 	return f.Selector.Matches(labels.Set(resourceLabels))
 }
 
+func (f *LabelFilter) String() string {
+	return f.Selector.String()
+}
+
 func InitLabelFilter(selector string) error {
 	parsedSelector, err := labels.Parse(selector)
 	if err != nil {

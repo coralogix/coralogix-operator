@@ -59,7 +59,13 @@ func (v *RuleGroupCustomValidator) ValidateCreate(ctx context.Context, obj runti
 	}
 	rulegrouplog.Info("Validation for RuleGroup upon creation", "name", rulegroup.GetName())
 
-	return validateRulesTypesSet(*rulegroup)
+	warnings, err := validateRulesTypesSet(*rulegroup)
+	if err != nil {
+		monitoring.IncResourceRejectionsTotalMetric(rulegroup.Kind, rulegroup.Name, rulegroup.Namespace)
+		return warnings, fmt.Errorf("validation failed: %v", err)
+	}
+
+	return nil, nil
 }
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type RuleGroup.
@@ -70,7 +76,13 @@ func (v *RuleGroupCustomValidator) ValidateUpdate(ctx context.Context, oldObj, n
 	}
 	rulegrouplog.Info("Validation for RuleGroup upon update", "name", rulegroup.GetName())
 
-	return validateRulesTypesSet(*rulegroup)
+	warnings, err := validateRulesTypesSet(*rulegroup)
+	if err != nil {
+		monitoring.IncResourceRejectionsTotalMetric(rulegroup.Kind, rulegroup.Name, rulegroup.Namespace)
+		return warnings, fmt.Errorf("validation failed: %v", err)
+	}
+
+	return nil, nil
 }
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type RuleGroup.
@@ -100,7 +112,6 @@ func validateRulesTypesSet(ruleGroup coralogixv1alpha1.RuleGroup) (admission.War
 	}
 
 	if errs != nil {
-		monitoring.TotalRejectedRulesGroupsMetric.Inc()
 		return warnings, errs
 	}
 

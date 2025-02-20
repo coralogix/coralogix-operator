@@ -35,7 +35,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
@@ -77,7 +76,6 @@ func (r *ApiKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			log.Error(err, "Error on creating ApiKey")
 			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
-		monitoring.ApiKeyInfoMetric.WithLabelValues(apiKey.Name, apiKey.Namespace).Set(1)
 		return ctrl.Result{}, nil
 	}
 
@@ -87,7 +85,6 @@ func (r *ApiKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			log.Error(err, "Error on deleting ApiKey")
 			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
-		monitoring.ApiKeyInfoMetric.DeleteLabelValues(apiKey.Name, apiKey.Namespace)
 		return ctrl.Result{}, nil
 	}
 
@@ -97,7 +94,6 @@ func (r *ApiKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			log.Error(err, "Error on deleting ApiKey")
 			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 		}
-		monitoring.ApiKeyInfoMetric.DeleteLabelValues(apiKey.Name, apiKey.Namespace)
 		return ctrl.Result{}, nil
 	}
 
@@ -106,7 +102,6 @@ func (r *ApiKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		log.Error(err, "Error on updating ApiKey")
 		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
 	}
-	monitoring.ApiKeyInfoMetric.WithLabelValues(apiKey.Name, apiKey.Namespace).Set(1)
 
 	return ctrl.Result{}, nil
 }

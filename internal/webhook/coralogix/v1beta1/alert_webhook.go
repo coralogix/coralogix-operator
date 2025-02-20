@@ -89,7 +89,7 @@ func validateAlert(alert *coralogixv1beta1.Alert) (admission.Warnings, error) {
 	}
 
 	if errs != nil {
-		monitoring.TotalRejectedAlertsMetric.Inc()
+		monitoring.IncResourceRejectionsTotalMetric(alert.Kind, alert.Name, alert.Namespace)
 	}
 	return warns, errs
 }

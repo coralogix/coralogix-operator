@@ -29,7 +29,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
@@ -63,7 +62,6 @@ func (r *RecordingRuleGroupSetReconciler) HandleCreation(ctx context.Context, lo
 		return nil, fmt.Errorf("error on creating remote recordingRuleGroupSet: %w", err)
 	}
 	log.V(1).Info("Remote recordingRuleGroupSet created", "response", protojson.Format(createResponse))
-	monitoring.RecordingRuleGroupSetInfoMetric.WithLabelValues(recordingRuleGroupSet.Name, recordingRuleGroupSet.Namespace).Set(1)
 	recordingRuleGroupSet.Status = coralogixv1alpha1.RecordingRuleGroupSetStatus{
 		ID: &createResponse.Id,
 	}
@@ -83,7 +81,6 @@ func (r *RecordingRuleGroupSetReconciler) HandleUpdate(ctx context.Context, log 
 		return err
 	}
 	log.V(1).Info("Remote recordingRuleGroupSet updated", "recordingRuleGroupSet", protojson.Format(updateResponse))
-	monitoring.RecordingRuleGroupSetInfoMetric.WithLabelValues(recordingRuleGroupSet.Name, recordingRuleGroupSet.Namespace).Set(1)
 	return nil
 }
 
@@ -96,7 +93,6 @@ func (r *RecordingRuleGroupSetReconciler) HandleDeletion(ctx context.Context, lo
 		return fmt.Errorf("error deleting remote recordingRuleGroupSet %s: %w", *recordingRuleGroupSet.Status.ID, err)
 	}
 	log.V(1).Info("RecordingRuleGroupSet deleted from remote system", "id", *recordingRuleGroupSet.Status.ID)
-	monitoring.RecordingRuleGroupSetInfoMetric.DeleteLabelValues(recordingRuleGroupSet.Name, recordingRuleGroupSet.Namespace)
 	return nil
 }
 

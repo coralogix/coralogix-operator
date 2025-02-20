@@ -16,105 +16,73 @@ package monitoring
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
+
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
-var (
-	AlertInfoMetric = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cx_operator_alert_info",
-			Help: "Coralogix Operator Alert information.",
-		},
-		[]string{"name", "namespace", "alert_type"},
-	)
-	RuleGroupInfoMetric = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cx_operator_rule_group_info",
-			Help: "Coralogix Operator RuleGroup information.",
-		},
-		[]string{"name", "namespace"},
-	)
-	RecordingRuleGroupSetInfoMetric = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cx_operator_recording_rule_group_set_info",
-			Help: "Coralogix Operator RecordingRuleGroupSet information.",
-		},
-		[]string{"name", "namespace"},
-	)
-	OutboundWebhookInfoMetric = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cx_operator_outbound_webhook_info",
-			Help: "Coralogix Operator OutboundWebhook information.",
-		},
-		[]string{"name", "namespace", "webhook_type"},
-	)
-	ApiKeyInfoMetric = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cx_operator_apikey_info",
-			Help: "Coralogix Operator Apikey information.",
-		},
-		[]string{"name", "namespace"},
-	)
-	PrometheusRuleInfoMetric = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cx_operator_tracked_prometheus_rule_info",
-			Help: "Coralogix Operator tracked PrometheusRule information.",
-		},
-		[]string{"name", "namespace"},
-	)
-	AlertmanagerConfigInfoMetric = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cx_operator_tracked_alertmanager_config_info",
-			Help: "Coralogix Operator tracked AlertmanagerConfig information.",
-		},
-		[]string{"name", "namespace"},
-	)
-	TotalRejectedRulesGroupsMetric = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "cx_operator_rejected_rule_groups_total",
-			Help: "The total count of rule groups rejections by Coralogix Operator validation webhook.",
-		},
-	)
-	TotalRejectedOutboundWebhooksMetric = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "cx_operator_rejected_outbound_webhooks_total",
-			Help: "The total count of outbound webhooks rejections by Coralogix Operator validation webhook.",
-		},
-	)
-	TotalRejectedApiKeysMetric = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "cx_operator_rejected_api_keys_total",
-			Help: "The total count of API keys rejections by Coralogix Operator validation webhook.",
-		},
-	)
-	TotalRejectedAlertsMetric = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "cx_operator_rejected_alerts_total",
-			Help: "The total count of alerts rejections by Coralogix Operator validation webhook.",
-		},
-	)
-)
+var metricsLog = logf.Log.WithName("metrics")
 
-func RegisterMetrics() error {
-	metricsList := []prometheus.Collector{
-		AlertInfoMetric,
-		RuleGroupInfoMetric,
-		RecordingRuleGroupSetInfoMetric,
-		OutboundWebhookInfoMetric,
-		ApiKeyInfoMetric,
-		PrometheusRuleInfoMetric,
-		AlertmanagerConfigInfoMetric,
-		TotalRejectedRulesGroupsMetric,
-		TotalRejectedOutboundWebhooksMetric,
-		TotalRejectedApiKeysMetric,
+func SetupMetrics() error {
+	metricsLog.V(1).Info("Setting up metrics")
+	if err := RegisterMetrics(); err != nil {
+		return err
 	}
 
+	if err := RegisterCollectors(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func RegisterMetrics() error {
+	metricsLog.V(1).Info("Registering metrics")
 	for _, metric := range metricsList {
 		err := metrics.Registry.Register(metric)
 		if err != nil {
+			metricsLog.Error(err, "Failed to register metric", "metric", metric)
 			return err
 		}
 	}
 
 	return nil
+}
+
+var metricsList = []prometheus.Collector{
+	operatorInfoMetric,
+	resourceRejectionsTotalMetric,
+}
+
+var operatorInfoMetric = prometheus.NewGaugeVec(
+	prometheus.GaugeOpts{
+		Name: "cx_operator_info",
+		Help: "Coralogix Operator information.",
+	},
+	[]string{"go_version", "operator_version", "coralogix_url", "label_selector"},
+)
+
+func SetOperatorInfoMetric(goVersion, operatorVersion, url string) {
+	labelSelector := utils.GetLabelFilter().String()
+	metricsLog.V(1).Info("Setting operator info metric",
+		"go_version", goVersion,
+		"operator_version", operatorVersion,
+		"coralogix_url", url,
+		"label_selector", labelSelector,
+	)
+	operatorInfoMetric.WithLabelValues(goVersion, operatorVersion, url, labelSelector).Set(1)
+}
+
+var resourceRejectionsTotalMetric = prometheus.NewCounterVec(
+	prometheus.CounterOpts{
+		Name: "cx_operator_resource_rejections_total",
+		Help: "The total count of rejections by Coralogix Operator validation webhook.",
+	},
+	[]string{"kind", "name", "namespace"},
+)
+
+func IncResourceRejectionsTotalMetric(kind, name, namespace string) {
+	metricsLog.V(1).Info("Incrementing resource total rejected metric", "kind", kind)
+	resourceRejectionsTotalMetric.WithLabelValues(kind, name, namespace).Inc()
 }
