@@ -20,7 +20,6 @@ import (
 
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func ReverseMap[K, V comparable](m map[K]V) map[V]K {
@@ -152,24 +151,4 @@ func WrapperspbStringToStringPointer(s *wrapperspb.StringValue) *string {
 		return nil
 	}
 	return &s.Value
-}
-
-const (
-	RemoteCreatedSuccessfully = "RemoteCreatedSuccessfully"
-	RemoteCreateFailed        = "RemoteCreateFailed"
-	RemoteUpdatedSuccessfully = "RemoteUpdatedSuccessfully"
-	RemoteUpdateFailed        = "RemoteUpdateFailed"
-	RemoteDeletionFailed      = "RemoteDeletionFailed"
-	RemoteDeletedSuccessfully = "RemoteDeletedSuccessfully"
-	RemoteResourceNotFound    = "RemoteResourceNotFound"
-	InternalK8sError          = "InternalK8sError"
-
-	ConditionTypeError        = "Error"
-	ConditionTypeRemoteSynced = "RemoteSynced"
-)
-
-// ConditionsAware represents a CRD type that has been enabled with metav1.Conditions, it can then benefit of a series of utility methods.
-type ConditionsAware interface {
-	GetConditions() []metav1.Condition
-	SetConditions(conditions []metav1.Condition)
 }
