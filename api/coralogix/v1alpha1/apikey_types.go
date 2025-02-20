@@ -49,7 +49,18 @@ type ApiKeyOwner struct {
 
 // ApiKeyStatus defines the observed state of ApiKey.
 type ApiKeyStatus struct {
-	Id *string `json:"id"`
+	// +optional
+	Id *string `json:"id,omitempty"`
+	// +optional
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+}
+
+func (a *ApiKey) GetConditions() []metav1.Condition {
+	return a.Status.Conditions
+}
+
+func (a *ApiKey) SetConditions(conditions []metav1.Condition) {
+	a.Status.Conditions = conditions
 }
 
 // +kubebuilder:object:root=true

@@ -235,7 +235,18 @@ func (g *Group) ExtractScopeId() (*string, error) {
 
 // GroupStatus defines the observed state of Group.
 type GroupStatus struct {
-	ID *string `json:"id"`
+	// +optional
+	ID *string `json:"id,omitempty"`
+	// +optional
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+}
+
+func (g *Group) GetConditions() []metav1.Condition {
+	return g.Status.Conditions
+}
+
+func (g *Group) SetConditions(conditions []metav1.Condition) {
+	g.Status.Conditions = conditions
 }
 
 // +kubebuilder:object:root=true

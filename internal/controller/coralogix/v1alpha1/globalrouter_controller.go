@@ -50,9 +50,7 @@ func (r *GlobalRouterReconciler) FinalizerName() string {
 
 func (r *GlobalRouterReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) (client.Object, error) {
 	globalRouter := obj.(*coralogixv1alpha1.GlobalRouter)
-	createRequest, err := globalRouter.ExtractCreateGlobalRouterRequest(&coralogixv1alpha1.ResourceRefProperties{
-		Namespace: globalRouter.Namespace,
-	})
+	createRequest, err := globalRouter.ExtractCreateGlobalRouterRequest(&globalRouter.Namespace)
 	if err != nil {
 		return nil, fmt.Errorf("error on extracting create request: %w", err)
 	}
@@ -72,9 +70,7 @@ func (r *GlobalRouterReconciler) HandleCreation(ctx context.Context, log logr.Lo
 
 func (r *GlobalRouterReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	globalRouter := obj.(*coralogixv1alpha1.GlobalRouter)
-	updateRequest, err := globalRouter.ExtractUpdateGlobalRouterRequest(&coralogixv1alpha1.ResourceRefProperties{
-		Namespace: globalRouter.Namespace,
-	})
+	updateRequest, err := globalRouter.ExtractUpdateGlobalRouterRequest(&globalRouter.Namespace)
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
 	}

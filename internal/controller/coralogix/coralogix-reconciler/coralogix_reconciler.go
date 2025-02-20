@@ -76,66 +76,60 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 		if errors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
-		return ManageErrorWithRequeue(ctx, log, obj, err, utils.InternalK8sError)
+		return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, err)
 	}
 
 	if !r.CheckIDInStatus(obj) {
 		log.V(1).Info("Resource ID is missing; handling creation for resource")
 		if ConditionsObj, ok := (obj).(utils.ConditionsObj); ok {
 			conditions := ConditionsObj.GetConditions()
-			syncingCondition := metav1.Condition{
-				Type:    utils.ConditionTypeRemoteSynced,
-				Status:  metav1.ConditionFalse,
-				Reason:  utils.RemoteResourceNotFound,
-				Message: "Syncing remote resource",
-			}
-			if meta.SetStatusCondition(&conditions, syncingCondition) {
+			if utils.SetSyncedConditionFalse(&conditions, obj.GetGeneration(), utils.ReasonRemoteResourceNotFound, "Syncing remote resource") {
 				ConditionsObj.SetConditions(conditions)
 				if err = k8sClient.Status().Update(ctx, obj); err != nil {
-					return ManageErrorWithRequeue(ctx, log, obj, err, utils.InternalK8sError)
+					return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, err)
 				}
 			}
 		}
 
 		if obj, err = r.HandleCreation(ctx, log, obj); err != nil {
 			log.Error(err, "Error handling creation")
-			return ManageErrorWithRequeue(ctx, log, obj, err, utils.RemoteCreationFailed)
+			return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonRemoteCreationFailed, err)
 		}
 
 		if err = k8sClient.Status().Update(ctx, obj); err != nil {
-			return ManageErrorWithRequeue(ctx, log, obj, err, utils.InternalK8sError)
+			return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, err)
 		}
 
 		log.V(1).Info("Adding finalizer")
 		if err = AddFinalizer(ctx, log, obj, r); err != nil {
 			log.Error(err, "Error adding finalizer")
-			return ManageErrorWithRequeue(ctx, log, obj, err, utils.InternalK8sError)
+			return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, err)
 		}
 
-		return ManageSuccessWithRequeue(ctx, log, obj, utils.RemoteCreatedSuccessfully)
+		return ManageSuccessWithRequeue(ctx, log, obj, utils.ReasonRemoteCreatedSuccessfully)
 	}
 
 	if !obj.GetDeletionTimestamp().IsZero() {
 		log.V(1).Info("Resource is being deleted; handling deletion")
 		if err = r.HandleDeletion(ctx, log, obj); err != nil {
 			log.Error(err, "Error handling deletion")
-			return ManageErrorWithRequeue(ctx, log, obj, err, utils.RemoteDeletionFailed)
+			return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonRemoteDeletionFailed, err)
 		}
 
 		log.V(1).Info("Removing finalizer")
 		if err = RemoveFinalizer(ctx, log, obj, r); err != nil {
 			log.Error(err, "Error removing finalizer")
-			return ManageErrorWithRequeue(ctx, log, obj, err, utils.InternalK8sError)
+			return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, err)
 		}
 
-		return ManageSuccessWithRequeue(ctx, log, obj, utils.RemoteDeletedSuccessfully)
+		return ManageSuccessWithRequeue(ctx, log, obj, utils.ReasonRemoteDeletedSuccessfully)
 	}
 
 	if !utils.GetLabelFilter().Matches(obj.GetLabels()) {
 		log.V(1).Info("Resource doesn't match label filter, handling deletion")
 		if err = r.HandleDeletion(ctx, log, obj); err != nil {
 			log.Error(err, "Error deleting from remote")
-			return ManageErrorWithRequeue(ctx, log, obj, err, utils.RemoteDeletionFailed)
+			return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonRemoteDeletionFailed, err)
 		}
 		return ctrl.Result{}, nil
 	}
@@ -146,20 +140,21 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 			log.V(1).Info("resource not found on remote")
 			uObj := &unstructured.Unstructured{}
 			if err2 := scheme.Convert(obj, uObj, ctx); err2 != nil {
-				return ManageErrorWithRequeue(ctx, log, obj, fmt.Errorf("failed to convert object to unstructured: %w", err2), utils.InternalK8sError)
+				return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, fmt.Errorf("failed to convert object to unstructured: %w", err2))
 			}
 			if err2 := unstructured.SetNestedField(uObj.Object, "", "status", "id"); err2 != nil {
-				return ManageErrorWithRequeue(ctx, log, obj, fmt.Errorf("error on updating %s status id: %v", gvk, err2), utils.InternalK8sError)
+				return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, fmt.Errorf("error on updating %s status id: %v", gvk, err2))
 			}
 			if err2 := k8sClient.Status().Update(ctx, uObj); err2 != nil {
-				return ManageErrorWithRequeue(ctx, log, obj, fmt.Errorf("error on updating %s status: %v", gvk, err2), utils.InternalK8sError)
+				return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, fmt.Errorf("error on updating %s status: %v", gvk, err2))
 			}
-			return ManageErrorWithRequeue(ctx, log, obj, fmt.Errorf("%s not found on remote: %w", gvk, err), utils.RemoteUpdateFailed)
+
+			return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonRemoteResourceNotFound, fmt.Errorf("%s not found on remote: %w", gvk, err))
 		}
-		return ManageErrorWithRequeue(ctx, log, obj, fmt.Errorf("error on updating %s: %w", gvk, err), utils.RemoteUpdateFailed)
+		return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonRemoteUpdateFailed, fmt.Errorf("error on updating %s: %w", gvk, err))
 	}
 
-	return ManageSuccessWithRequeue(ctx, log, obj, utils.RemoteUpdatedSuccessfully)
+	return ManageSuccessWithRequeue(ctx, log, obj, utils.ReasonRemoteUpdatedSuccessfully)
 }
 
 func AddFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r CoralogixReconciler) error {
@@ -182,12 +177,12 @@ func RemoveFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r 
 	return nil
 }
 
-func ManageErrorWithRequeue(ctx context.Context, log logr.Logger, obj client.Object, issue error, reason string) (reconcile.Result, error) {
+func ManageErrorWithRequeue(ctx context.Context, log logr.Logger, obj client.Object, reason string, err error) (reconcile.Result, error) {
 	requeueAfter := utils.DefaultErrRequeuePeriod
-	if ConditionsObj, updateStatus := (obj).(utils.ConditionsObj); updateStatus {
-		// if the last condition is an error, we will double the requeue period
-		meta.FindStatusCondition(ConditionsObj.GetConditions(), utils.ConditionTypeError)
-		if errCondition := meta.FindStatusCondition(ConditionsObj.GetConditions(), utils.ConditionTypeError); errCondition != nil && errCondition.Status == metav1.ConditionTrue {
+	if conditionsObj, ok := (obj).(utils.ConditionsObj); ok {
+		// if the error condition is already set, we increase the requeue period
+		conditions := conditionsObj.GetConditions()
+		if errCondition := meta.FindStatusCondition(conditions, utils.ConditionTypeError); errCondition != nil && errCondition.Status == metav1.ConditionTrue {
 			lastRequeuePeriod := metav1.Now().Sub(errCondition.LastTransitionTime.Time).Round(time.Second)
 			requeueAfter = time.Duration(
 				math.Max(float64(utils.MinErrRequeuePeriod),
@@ -198,46 +193,27 @@ func ManageErrorWithRequeue(ctx context.Context, log logr.Logger, obj client.Obj
 			requeueAfter = utils.MinErrRequeuePeriod
 		}
 
-		conditions := ConditionsObj.GetConditions()
-		meta.SetStatusCondition(&conditions, metav1.Condition{
-			Type:               utils.ConditionTypeError,
-			ObservedGeneration: obj.GetGeneration(),
-			Message:            issue.Error(),
-			Reason:             reason,
-			Status:             metav1.ConditionTrue,
-		})
-		if meta.IsStatusConditionTrue(conditions, utils.ConditionTypeError) {
-			meta.SetStatusCondition(&conditions, metav1.Condition{
-				Type:    utils.ConditionTypeRemoteSynced,
-				Status:  metav1.ConditionFalse,
-				Reason:  reason,
-				Message: issue.Error(),
-			})
-		}
-		ConditionsObj.SetConditions(conditions)
-		if err := k8sClient.Status().Update(ctx, obj); err != nil {
-			log.Error(err, "unable to update status")
-			return reconcile.Result{RequeueAfter: requeueAfter}, err
+		if utils.SetSyncedConditionFalse(&conditions, obj.GetGeneration(), reason, err.Error()) {
+			conditionsObj.SetConditions(conditions)
+			if err = k8sClient.Status().Update(ctx, obj); err != nil {
+				log.Error(err, "unable to update status")
+				return reconcile.Result{RequeueAfter: requeueAfter}, err
+			}
 		}
 	}
 
-	return reconcile.Result{RequeueAfter: requeueAfter}, issue
+	return reconcile.Result{RequeueAfter: requeueAfter}, err
 }
 
 func ManageSuccessWithRequeue(context context.Context, log logr.Logger, obj client.Object, reason string) (reconcile.Result, error) {
-	if conditionsAware, updateStatus := (obj).(utils.ConditionsObj); updateStatus {
-		conditions := conditionsAware.GetConditions()
-		meta.SetStatusCondition(&conditions, metav1.Condition{
-			Type:    utils.ConditionTypeRemoteSynced,
-			Status:  metav1.ConditionTrue,
-			Reason:  reason,
-			Message: "Remote resource synced",
-		})
-		meta.RemoveStatusCondition(&conditions, utils.ConditionTypeError)
-		conditionsAware.SetConditions(conditions)
-		if err := GetClient().Status().Update(context, obj); err != nil {
-			log.Error(err, "unable to update status")
-			return reconcile.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
+	if conditionsObj, ok := (obj).(utils.ConditionsObj); ok {
+		conditions := conditionsObj.GetConditions()
+		if utils.SetSyncedConditionTrue(&conditions, obj.GetGeneration(), reason) || meta.RemoveStatusCondition(&conditions, utils.ConditionTypeError) {
+			conditionsObj.SetConditions(conditions)
+			if err := GetClient().Status().Update(context, obj); err != nil {
+				log.Error(err, "unable to update status")
+				return reconcile.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
+			}
 		}
 	}
 
