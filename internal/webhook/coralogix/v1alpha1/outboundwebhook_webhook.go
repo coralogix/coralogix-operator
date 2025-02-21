@@ -58,7 +58,13 @@ func (v *OutboundWebhookCustomValidator) ValidateCreate(ctx context.Context, obj
 	}
 	outboundwebhooklog.Info("Validation for OutboundWebhook upon creation", "name", outboundWebhook.GetName())
 
-	return validateWebhookType(outboundWebhook.Spec.OutboundWebhookType)
+	warnings, err := validateWebhookType(outboundWebhook.Spec.OutboundWebhookType)
+	if err != nil {
+		monitoring.IncResourceRejectionsTotalMetric(outboundWebhook.Kind, outboundWebhook.Name, outboundWebhook.Namespace)
+		return warnings, fmt.Errorf("validation failed: %v", err)
+	}
+
+	return nil, nil
 }
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type OutboundWebhook.
@@ -69,7 +75,13 @@ func (v *OutboundWebhookCustomValidator) ValidateUpdate(ctx context.Context, old
 	}
 	outboundwebhooklog.Info("Validation for OutboundWebhook upon update", "name", outboundWebhook.GetName())
 
-	return validateWebhookType(outboundWebhook.Spec.OutboundWebhookType)
+	warnings, err := validateWebhookType(outboundWebhook.Spec.OutboundWebhookType)
+	if err != nil {
+		monitoring.IncResourceRejectionsTotalMetric(outboundWebhook.Kind, outboundWebhook.Name, outboundWebhook.Namespace)
+		return warnings, fmt.Errorf("validation failed: %v", err)
+	}
+
+	return nil, nil
 }
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type OutboundWebhook.
@@ -80,12 +92,10 @@ func (v *OutboundWebhookCustomValidator) ValidateDelete(ctx context.Context, obj
 func validateWebhookType(webhookType coralogixv1alpha1.OutboundWebhookType) (admission.Warnings, error) {
 	webhookTypes := webhookTypesBeingSet(webhookType)
 	if len(webhookTypes) == 0 {
-		monitoring.TotalRejectedOutboundWebhooksMetric.Inc()
 		return admission.Warnings{"at least one webhook type should be set"}, fmt.Errorf("at least one webhook type should be set")
 	}
 
 	if len(webhookTypes) > 1 {
-		monitoring.TotalRejectedOutboundWebhooksMetric.Inc()
 		return admission.Warnings{"only one webhook type should be set"}, fmt.Errorf("only one webhook type should be set, but got: %v", webhookTypes)
 	}
 
