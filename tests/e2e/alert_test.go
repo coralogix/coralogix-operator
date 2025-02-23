@@ -34,6 +34,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	"github.com/coralogix/coralogix-operator/api/coralogix"
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 )
 
@@ -206,7 +207,7 @@ var _ = Describe("Alert", Ordered, func() {
 	It("Should store err condition in status", func(ctx context.Context) {
 		By("Creating Alert")
 		alertName := "promql-alert"
-		alert = &coralogixv1beta1.Alert{
+		newAlert := &coralogixv1beta1.Alert{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      alertName,
 				Namespace: testNamespace,
@@ -225,7 +226,7 @@ var _ = Describe("Alert", Ordered, func() {
 							Integration: coralogixv1beta1.IntegrationType{
 								IntegrationRef: &coralogixv1beta1.IntegrationRef{
 									ResourceRef: &coralogixv1beta1.ResourceRef{
-										Name: "non-existing-integration",
+										Name: "non-existing-webhook",
 									},
 								},
 							},
@@ -264,9 +265,9 @@ var _ = Describe("Alert", Ordered, func() {
 				},
 			},
 		}
-		alert.Spec.Name = alertName
+		newAlert.Spec.Name = alertName
 
-		err := crClient.Create(ctx, alert)
+		err := crClient.Create(ctx, newAlert)
 		Expect(err).ToNot(HaveOccurred())
 
 		By("Fetching the Alert")
@@ -284,6 +285,48 @@ var _ = Describe("Alert", Ordered, func() {
 
 			if !meta.IsStatusConditionFalse(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced) {
 				return fmt.Errorf("alert status condition %s is not false", utils.ConditionTypeRemoteSynced)
+			}
+
+			return nil
+		}, time.Minute, time.Second).Should(Succeed())
+
+		webhook := &coralogixv1alpha1.OutboundWebhook{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "webhook",
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1alpha1.OutboundWebhookSpec{
+				Name: "webhook",
+				OutboundWebhookType: coralogixv1alpha1.OutboundWebhookType{
+					Slack: &coralogixv1alpha1.Slack{
+						Url: "https://slack.com",
+					},
+				},
+			},
+		}
+		Expect(crClient.Create(ctx, webhook)).To(Succeed())
+
+		By("Updating the Alert")
+		newAlert.Spec.NotificationGroup.Webhooks[0].Integration = coralogixv1beta1.IntegrationType{
+			IntegrationRef: &coralogixv1beta1.IntegrationRef{
+				ResourceRef: &coralogixv1beta1.ResourceRef{
+					Name: webhook.Name,
+				},
+			},
+		}
+		Expect(crClient.Update(ctx, alert)).To(Succeed())
+
+		By("Fetching the Alert again")
+		fetchedAlert = &coralogixv1beta1.Alert{}
+		Eventually(func(g Gomega) error {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: newAlert.Name, Namespace: newAlert.Namespace}, fetchedAlert)).To(Succeed())
+
+			if len(fetchedAlert.Status.Conditions) != 1 {
+				return fmt.Errorf("alert status conditions length is not 1, got %d", len(fetchedAlert.Status.Conditions))
+			}
+
+			if !meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced) {
+				return fmt.Errorf("alert status condition %s is not true", utils.ConditionTypeRemoteSynced)
 			}
 
 			return nil
@@ -315,6 +358,7 @@ var _ = Describe("Alert", Ordered, func() {
 
 	It("Should deny creation of Alert with destination with two types", func(ctx context.Context) {
 		By("Creating Alert")
+
 		alert.Spec.NotificationGroup.Destinations[0].DestinationType.GenericHttps = &coralogixv1beta1.GenericHttpsDestination{
 			ConnectorRef: &coralogixv1beta1.NCRef{
 				ResourceRef: &coralogixv1beta1.ResourceRef{
