@@ -205,16 +205,66 @@ var _ = Describe("Alert", Ordered, func() {
 
 	It("Should store err condition in status", func(ctx context.Context) {
 		By("Creating Alert")
-		alert = alert.DeepCopy()
 		alertName := "promql-alert"
-		alert.Spec.Name = alertName
-		alert.Spec.NotificationGroup.Webhooks[0].Integration = coralogixv1beta1.IntegrationType{
-			IntegrationRef: &coralogixv1beta1.IntegrationRef{
-				ResourceRef: &coralogixv1beta1.ResourceRef{
-					Name: "integration",
+		alert = &coralogixv1beta1.Alert{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      alertName,
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1beta1.AlertSpec{
+				Name:        alertName,
+				Description: "alert from k8s operator",
+				Priority:    coralogixv1beta1.AlertPriorityP1,
+				NotificationGroup: &coralogixv1beta1.NotificationGroup{
+					Webhooks: []coralogixv1beta1.WebhookSettings{
+						{
+							NotifyOn: coralogixv1beta1.NotifyOnTriggeredOnly,
+							RetriggeringPeriod: coralogixv1beta1.RetriggeringPeriod{
+								Minutes: pointer.Uint32(1),
+							},
+							Integration: coralogixv1beta1.IntegrationType{
+								IntegrationRef: &coralogixv1beta1.IntegrationRef{
+									ResourceRef: &coralogixv1beta1.ResourceRef{
+										Name: "non-existing-integration",
+									},
+								},
+							},
+						},
+					},
+				},
+				Schedule: &coralogixv1beta1.AlertSchedule{
+					TimeZone: "UTC+02",
+					ActiveOn: &coralogixv1beta1.ActiveOn{
+						DayOfWeek: []coralogixv1beta1.DayOfWeek{coralogixv1beta1.DayOfWeekWednesday, coralogixv1beta1.DayOfWeekThursday},
+						StartTime: ptr.To(coralogixv1beta1.TimeOfDay("08:30")),
+						EndTime:   ptr.To(coralogixv1beta1.TimeOfDay("20:30")),
+					},
+				},
+				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
+					MetricThreshold: &coralogixv1beta1.MetricThreshold{
+						MissingValues: coralogixv1beta1.MetricMissingValues{
+							MinNonNullValuesPct: pointer.Uint32(10),
+						},
+						MetricFilter: coralogixv1beta1.MetricFilter{
+							Promql: "http_requests_total{status!~\"4..\"}",
+						},
+						Rules: []coralogixv1beta1.MetricThresholdRule{
+							{
+								Condition: coralogixv1beta1.MetricThresholdRuleCondition{
+									Threshold:     coralogix.FloatToQuantity(3),
+									ForOverPct:    50,
+									ConditionType: coralogixv1beta1.MetricThresholdConditionTypeMoreThan,
+									OfTheLast: coralogixv1beta1.MetricTimeWindow{
+										SpecificValue: coralogixv1beta1.MetricTimeWindowValue12Hours,
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		}
+		alert.Spec.Name = alertName
 
 		err := crClient.Create(ctx, alert)
 		Expect(err).To(HaveOccurred())
