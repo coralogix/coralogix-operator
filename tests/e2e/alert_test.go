@@ -267,7 +267,7 @@ var _ = Describe("Alert", Ordered, func() {
 		alert.Spec.Name = alertName
 
 		err := crClient.Create(ctx, alert)
-		Expect(err).To(HaveOccurred())
+		Expect(err).ToNot(HaveOccurred())
 
 		By("Fetching the Alert")
 		fetchedAlert := &coralogixv1beta1.Alert{}
