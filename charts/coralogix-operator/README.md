@@ -29,13 +29,13 @@ Kubernetes: `>=1.16.0-0`
 | coralogixOperator.image | object | `{"pullPolicy":"IfNotPresent","repository":"coralogixrepo/coralogix-operator","tag":""}` | Coralogix operator Image |
 | coralogixOperator.region | string | `""` | Coralogix Account Region |
 | coralogixOperator.resources | object | `{}` | resource config for Coralogix operator |
-| coralogixOperator.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}` | Security ctx for Coralogix operator container |
+| coralogixOperator.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}` | Security context for Coralogix operator container |
 | fullnameOverride | string | `""` | Provide a name to substitute for the full names of resources |
 | imagePullSecrets | list | `[]` |  |
 | kubeRbacProxy | object | `{"image":"gcr.io/kubebuilder/kube-rbac-proxy:v0.13.0","resources":{},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}}` | kube-rbac-proxy container config |
 | kubeRbacProxy.image | string | `"gcr.io/kubebuilder/kube-rbac-proxy:v0.13.0"` | kube-rbac-proxy Image |
 | kubeRbacProxy.resources | object | `{}` | resource config for kube-rbac-proxy |
-| kubeRbacProxy.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}` | Security ctx for kube-rbac-proxy container |
+| kubeRbacProxy.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}` | Security context for kube-rbac-proxy container |
 | nameOverride | string | `""` | Provide a name in place of kube-prometheus-stack for `app:` labels |
 | nodeSelector | object | `{}` | ref: https://kubernetes.io/docs/user-guide/node-selection/ |
 | podAnnotations | object | `{}` | Annotations to add to the operator pod |
@@ -45,7 +45,7 @@ Kubernetes: `>=1.16.0-0`
 | secret.data | object | `{"apiKey":""}` | Coralogix operator secret data |
 | secret.labels | object | `{}` | Labels to add to the Coralogix operator secret |
 | secret.secretKeyReference | object | `{}` | secret.data and secret.secretKeyReference should be mutually exclusive. |
-| securityContext | object | `{"fsGroup":2000,"runAsGroup":2000,"runAsNonRoot":true,"runAsUser":2000,"seccompProfile":{"type":"RuntimeDefault"}}` | ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-ctx/ |
+| securityContext | object | `{"fsGroup":2000,"runAsGroup":2000,"runAsNonRoot":true,"runAsUser":2000,"seccompProfile":{"type":"RuntimeDefault"}}` | ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/ |
 | serviceAccount | object | `{"annotations":{},"create":true,"name":""}` | ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/ |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
