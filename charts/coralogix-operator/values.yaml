@@ -22,6 +22,11 @@ serviceAccount:
 # -- Annotations to add to the operator pod
 podAnnotations: {}
 
+# -- Service monitor for Prometheus to use.
+serviceMonitor:
+  # -- Specifies whether a service monitor should be created.
+  create: true
+
 # -- SecurityContext holds pod-level security attributes and common container settings.
 # -- This defaults to non root user with uid 2000 and gid 2000. *v1.PodSecurityContext  false
 # -- ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
@@ -80,8 +85,7 @@ secret:
 
 # -- Coralogix operator container config
 coralogixOperator:
-  # Set this is to true if Prometheus Operator is installed and
-  # PrometheusRule is available in cluster.
+  # Set this to false if PrometheusRule CRD is not available in the cluster.
   prometheusRules:
     enabled: true
   # Set this is to true if you want to enable validation webhooks.

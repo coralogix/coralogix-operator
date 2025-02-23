@@ -1,0 +1,15 @@
+{{- if .Values.serviceMonitor.create }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "coralogixOperator.fullname" . }}-service-monitor
+  labels:
+    {{- include "coralogixOperator.labels" . | nindent 4 }}
+spec:
+  endpoints:
+    - path: /metrics
+      port: http
+      scheme: http
+  selector:
+    {{- include "coralogixOperator.selectorLabels" . | nindent 4 }}
+{{- end }}

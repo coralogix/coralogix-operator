@@ -24,7 +24,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/selection"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 
 	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
@@ -59,16 +58,16 @@ func NewResourceInfoCollector() *ResourceInfoCollector {
 }
 
 func (c *ResourceInfoCollector) Describe(ch chan<- *prometheus.Desc) {
-	log.Log.V(1).Info("Describing metrics for ResourceInfoCollector")
+	metricsLog.V(1).Info("Describing metrics for ResourceInfoCollector")
 	ch <- c.resourceInfoMetric
 }
 
 func (c *ResourceInfoCollector) Collect(ch chan<- prometheus.Metric) {
-	log.Log.V(1).Info("Collecting metrics for ResourceInfoCollector")
+	metricsLog.V(1).Info("Collecting metrics for ResourceInfoCollector")
 	for _, gvk := range c.gvks {
 		resources, err := listResourcesInGVK(gvk)
 		if err != nil {
-			log.Log.Error(err, "Failed to list resources in GVK", "gvk", gvk)
+			metricsLog.Error(err, "Failed to list resources in GVK", "gvk", gvk)
 			continue
 		}
 
@@ -81,12 +80,12 @@ func (c *ResourceInfoCollector) Collect(ch chan<- prometheus.Metric) {
 					gvk.Kind,
 					resource.GetName(),
 					resource.GetNamespace(),
-					"", // status will be extracted from the resource conditions
+					getResourceStatus(resource),
 				}...,
 			)
 
 			if err != nil {
-				log.Log.Error(err, "Failed to create metric for custom resource",
+				metricsLog.Error(err, "Failed to create metric for custom resource",
 					"kind", gvk.Kind,
 					"name", resource.GetName(),
 					"namespace", resource.GetNamespace(),
@@ -104,14 +103,28 @@ func getGVKsToMonitor() []schema.GroupVersionKind {
 		{Group: utils.MonitoringAPIGroup, Version: utils.V1APIVersion, Kind: utils.PrometheusRuleKind},
 	}
 
-	cxGroupVersion := schema.GroupVersion{Group: utils.CoralogixAPIGroup, Version: utils.V1alpha1APIVersion}
-	knownTypes := coralogixreconciler.GetScheme().KnownTypes(cxGroupVersion)
+	result = append(result, getGVKsInVersion(utils.V1alpha1APIVersion)...)
+	result = append(result, getGVKsInVersion(utils.V1beta1APIVersion)...)
+	return result
+}
+
+func getGVKsInVersion(version string) []schema.GroupVersionKind {
+	var result []schema.GroupVersionKind
+
+	groupVersion := schema.GroupVersion{Group: utils.CoralogixAPIGroup, Version: version}
+	knownTypes := coralogixreconciler.GetScheme().KnownTypes(groupVersion)
 	for kind := range knownTypes {
-		// Skip List types. e.g. "AlertList".
-		if strings.HasSuffix(kind, "List") {
+		// Skip v1alpha Alert since we pick it up from v1beta1
+		if kind == "Alert" && version == utils.V1alpha1APIVersion {
 			continue
 		}
-		result = append(result, cxGroupVersion.WithKind(kind))
+		// skip List, Options and Event types. e.g. AlertList, ListOptions, WatchEvent
+		if strings.HasSuffix(kind, "List") ||
+			strings.HasSuffix(kind, "Options") ||
+			strings.HasSuffix(kind, "Event") {
+			continue
+		}
+		result = append(result, groupVersion.WithKind(kind))
 	}
 
 	return result
@@ -129,7 +142,12 @@ func listResourcesInGVK(gvk schema.GroupVersionKind) ([]unstructured.Unstructure
 		labelSelector = labelSelector.Add(*req)
 	}
 
-	for _, ns := range utils.GetSelector().NamespaceSelector {
+	namespaces := utils.GetSelector().NamespaceSelector
+	if len(namespaces) == 0 {
+		namespaces = []string{""} // Empty string means "all namespaces" in client.List
+	}
+
+	for _, ns := range namespaces {
 		resources := &unstructured.UnstructuredList{}
 		resources.SetGroupVersionKind(gvk)
 		if err := coralogixreconciler.GetClient().List(context.Background(), resources,
@@ -142,4 +160,34 @@ func listResourcesInGVK(gvk schema.GroupVersionKind) ([]unstructured.Unstructure
 	}
 
 	return result, nil
+}
+
+func getResourceStatus(resource unstructured.Unstructured) string {
+	if resource.GetKind() == utils.PrometheusRuleKind {
+		return ""
+	}
+
+	const unknownStatus = "unknown"
+	conditions, found, err := unstructured.NestedSlice(resource.Object, "status", "conditions")
+	if err != nil {
+		metricsLog.Error(err, "Error extracting conditions from resource", "kind", resource.GetKind(), "name", resource.GetName(), "namespace", resource.GetNamespace())
+		return unknownStatus
+	}
+	if !found {
+		metricsLog.V(1).Info("No conditions found for resource", "kind", resource.GetKind(), "name", resource.GetName(), "namespace", resource.GetNamespace())
+		return unknownStatus
+	}
+
+	for _, cond := range conditions {
+		if conditionMap, ok := cond.(map[string]interface{}); ok {
+			if conditionType, exists := conditionMap["type"].(string); exists &&
+				conditionType == utils.ConditionTypeRemoteSynced {
+				if reason, exists := conditionMap["reason"].(string); exists {
+					return reason
+				}
+			}
+		}
+	}
+
+	return unknownStatus
 }
