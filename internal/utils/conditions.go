@@ -52,3 +52,13 @@ func SetSyncedConditionTrue(conditions *[]metav1.Condition, observedGeneration i
 		ObservedGeneration: observedGeneration,
 	})
 }
+
+func SetErrorConditionTrue(conditions *[]metav1.Condition, observedGeneration int64, reason, message string) bool {
+	return meta.SetStatusCondition(conditions, metav1.Condition{
+		Type:               ConditionTypeError,
+		Status:             metav1.ConditionTrue,
+		Reason:             reason,
+		Message:            message,
+		ObservedGeneration: observedGeneration,
+	})
+}

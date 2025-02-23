@@ -61,7 +61,7 @@ func GetScheme() *runtime.Scheme {
 
 // CoralogixReconciler defines the required methods for all Coralogix controllers.
 type CoralogixReconciler interface {
-	HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) (client.Object, error)
+	HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error
 	HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error
 	HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error
 	FinalizerName() string
@@ -95,7 +95,7 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 			}
 		}
 
-		if obj, err = r.HandleCreation(ctx, log, obj); err != nil {
+		if err = r.HandleCreation(ctx, log, obj); err != nil {
 			log.Error(err, "Error handling creation")
 			return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonRemoteCreationFailed, err)
 		}
@@ -188,12 +188,12 @@ func ManageErrorWithRequeue(ctx context.Context, log logr.Logger, obj client.Obj
 		conditions := conditionsObj.GetConditions()
 		requeueAfter = calculateErrorRequeuePeriod(conditions)
 
-		if utils.SetSyncedConditionFalse(&conditions, obj.GetGeneration(), reason, err.Error()) {
-			conditionsObj.SetConditions(conditions)
-			if err = k8sClient.Status().Update(ctx, obj); err != nil {
-				log.Error(err, "unable to update status")
-				return reconcile.Result{RequeueAfter: requeueAfter}, err
-			}
+		utils.SetErrorConditionTrue(&conditions, (obj).GetGeneration(), reason, err.Error())
+		utils.SetSyncedConditionFalse(&conditions, (obj).GetGeneration(), reason, err.Error())
+		conditionsObj.SetConditions(conditions)
+		if err = k8sClient.Status().Update(ctx, obj); err != nil {
+			log.Error(err, "unable to update status")
+			return reconcile.Result{RequeueAfter: requeueAfter}, err
 		}
 	}
 

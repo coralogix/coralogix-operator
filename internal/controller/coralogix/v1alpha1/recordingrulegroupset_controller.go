@@ -50,7 +50,7 @@ func (r *RecordingRuleGroupSetReconciler) FinalizerName() string {
 	return "recordingrulegroupset.coralogix.com/finalizer"
 }
 
-func (r *RecordingRuleGroupSetReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) (client.Object, error) {
+func (r *RecordingRuleGroupSetReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	recordingRuleGroupSet := obj.(*coralogixv1alpha1.RecordingRuleGroupSet)
 	createRequest := &cxsdk.CreateRuleGroupSetRequest{
 		Name:   ptr.To(fmt.Sprintf("%s%s", recordingRuleGroupSet.Name, r.RecordingRuleGroupSetSuffix)),
@@ -59,14 +59,14 @@ func (r *RecordingRuleGroupSetReconciler) HandleCreation(ctx context.Context, lo
 	log.V(1).Info("Creating remote recordingRuleGroupSet", "recordingRuleGroupSet", protojson.Format(createRequest))
 	createResponse, err := r.RecordingRuleGroupSetClient.Create(ctx, createRequest)
 	if err != nil {
-		return nil, fmt.Errorf("error on creating remote recordingRuleGroupSet: %w", err)
+		return fmt.Errorf("error on creating remote recordingRuleGroupSet: %w", err)
 	}
 	log.V(1).Info("Remote recordingRuleGroupSet created", "response", protojson.Format(createResponse))
 	recordingRuleGroupSet.Status = coralogixv1alpha1.RecordingRuleGroupSetStatus{
 		ID: &createResponse.Id,
 	}
 
-	return recordingRuleGroupSet, nil
+	return nil
 }
 
 func (r *RecordingRuleGroupSetReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {

@@ -52,13 +52,13 @@ func (r *PresetReconciler) FinalizerName() string {
 	return "preset.coralogix.com/finalizer"
 }
 
-func (r *PresetReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) (client.Object, error) {
+func (r *PresetReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	preset := obj.(*coralogixv1alpha1.Preset)
 	createRequest := preset.Spec.ExtractCreatePresetRequest()
 	log.V(1).Info("Creating remote preset", "preset", protojson.Format(createRequest))
 	createResponse, err := r.NotificationsClient.CreateCustomPreset(ctx, createRequest)
 	if err != nil {
-		return nil, fmt.Errorf("error on creating remote preset: %w", err)
+		return fmt.Errorf("error on creating remote preset: %w", err)
 	}
 	log.V(1).Info("Remote preset created", "response", protojson.Format(createResponse))
 
@@ -66,7 +66,7 @@ func (r *PresetReconciler) HandleCreation(ctx context.Context, log logr.Logger, 
 		Id: createResponse.Preset.Id,
 	}
 
-	return preset, nil
+	return nil
 }
 
 func (r *PresetReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {

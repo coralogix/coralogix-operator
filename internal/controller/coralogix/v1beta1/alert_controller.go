@@ -48,7 +48,7 @@ func (r *AlertReconciler) FinalizerName() string {
 	return "alert.coralogix.com/finalizer"
 }
 
-func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) (client.Object, error) {
+func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	alert := obj.(*coralogixv1beta1.Alert)
 	alertDefProperties, err := alert.Spec.ExtractAlertProperties(
 		&coralogixv1beta1.GetResourceRefProperties{
@@ -59,18 +59,18 @@ func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("error on extracting alert properties: %w", err)
+		return fmt.Errorf("error on extracting alert properties: %w", err)
 	}
 
 	createRequest := &cxsdk.CreateAlertDefRequest{AlertDefProperties: alertDefProperties}
 	log.V(1).Info("Creating remote alert", "alert", protojson.Format(createRequest))
 	createResponse, err := r.CoralogixClientSet.Alerts().Create(ctx, createRequest)
 	if err != nil {
-		return nil, fmt.Errorf("error on creating remote alert: %w", err)
+		return fmt.Errorf("error on creating remote alert: %w", err)
 	}
 	log.V(1).Info("Remote alert created", "response", protojson.Format(createResponse))
 	alert.Status = coralogixv1beta1.AlertStatus{ID: &createResponse.AlertDef.Id.Value}
-	return alert, nil
+	return nil
 }
 
 func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {

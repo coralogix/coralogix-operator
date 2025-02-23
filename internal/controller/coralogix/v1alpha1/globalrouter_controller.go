@@ -48,16 +48,16 @@ func (r *GlobalRouterReconciler) FinalizerName() string {
 	return "global-router.coralogix.com/finalizer"
 }
 
-func (r *GlobalRouterReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) (client.Object, error) {
+func (r *GlobalRouterReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	globalRouter := obj.(*coralogixv1alpha1.GlobalRouter)
 	createRequest, err := globalRouter.ExtractCreateGlobalRouterRequest(&globalRouter.Namespace)
 	if err != nil {
-		return nil, fmt.Errorf("error on extracting create request: %w", err)
+		return fmt.Errorf("error on extracting create request: %w", err)
 	}
 	log.V(1).Info("Creating remote globalRouter", "globalRouter", protojson.Format(createRequest))
 	createResponse, err := r.NotificationsClient.CreateGlobalRouter(ctx, createRequest)
 	if err != nil {
-		return nil, fmt.Errorf("error on creating remote globalRouter: %w", err)
+		return fmt.Errorf("error on creating remote globalRouter: %w", err)
 	}
 	log.V(1).Info("Remote globalRouter created", "response", protojson.Format(createResponse))
 
@@ -65,7 +65,7 @@ func (r *GlobalRouterReconciler) HandleCreation(ctx context.Context, log logr.Lo
 		ID: createResponse.GetRouter().Id,
 	}
 
-	return globalRouter, nil
+	return nil
 }
 
 func (r *GlobalRouterReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
