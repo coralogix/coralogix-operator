@@ -223,8 +223,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	cpc := cxsdk.NewCallPropertiesCreatorOperator(strings.ToLower(targetUrl), cxsdk.NewAuthContext(apiKey, apiKey), "0.0.1")
-	clientSet := cxsdk.NewClientSet(cpc)
+	clientSet := cxsdk.NewClientSet(cxsdk.NewCallPropertiesCreatorOperator(
+		strings.ToLower(targetUrl),
+		cxsdk.NewAuthContext(apiKey, apiKey),
+		OperatorVersion))
 	coralogixreconciler.InitClient(mgr.GetClient())
 	coralogixreconciler.InitScheme(mgr.GetScheme())
 
@@ -320,13 +322,6 @@ func main() {
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GlobalRouter")
 		os.Exit(1)
-	}
-
-	if prometheusRuleController {
-		if err = (&controllers.AlertmanagerConfigReconciler{}).SetupWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create controller", "controller", "RecordingRuleGroup")
-			os.Exit(1)
-		}
 	}
 
 	if enableWebhooks != "false" {

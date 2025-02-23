@@ -389,7 +389,6 @@ rules:
   - monitoring.coreos.com
   resources:
   - prometheusrules
-  - alertmanagerconfigs
   verbs:
   - get
   - list

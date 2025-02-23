@@ -7,7 +7,6 @@ metadata:
     role: alert-rules
     app.coralogix.com/track-recording-rules: "true"
     app.coralogix.com/track-alerting-rules: "true"
-    app.coralogix.com/managed-by-alertmanager-config: "true"
   name: prometheus-example-rules
 spec:
   groups:

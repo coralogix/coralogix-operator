@@ -1,10 +1,9 @@
 # Prometheus Integration
-The Coralogix Operator integrates with [Prometheus Operator](https://prometheus-operator.dev/) CRDs, 
-such as PrometheusRule and AlertmanagerConfig, to simplify the transition to Coralogix. 
+The Coralogix Operator integrates with [Prometheus Operator](https://prometheus-operator.dev/) PrometheusRule CRD, to simplify the transition to Coralogix. 
 By using existing monitoring configurations, the operator makes it easier to adopt Coralogix’s advanced monitoring and alerting features.
 
-The operator watches PrometheusRule and AlertmanagerConfig resources and automatically creates Coralogix custom resources in the cluster, 
-including Alerts, RecordingRuleGroupSets and OutboundWebhooks.
+The operator watches PrometheusRule resources and automatically creates Coralogix custom resources in the cluster, 
+including Alerts and RecordingRuleGroupSets.
 
 ## PrometheusRule Integration
 ### Alerts:  
@@ -144,80 +143,4 @@ items:
               record: example-record-3
             - expr: vector(4)
               record: example-record-4
-```
-
-## AlertmanagerConfig Integration
-### Receivers: 
-Receivers defined in an AlertmanagerConfig resource can be used to create Coralogix OutboundWebhooks. 
-
-To enable the operator to monitor an AlertmanagerConfig, add the following annotation to the AlertmanagerConfig:
-```yaml
-app.coralogix.com/track-alertmanager-config: "true"
-```
-The operator will create a Coralogix OutboundWebhook in the AlertmanagerConfig namespace, for each receiver defined in the AlertmanagerConfig.
-
-#### Example:
-For the following receiver in an AlertmanagerConfig:
-```yaml
-  receivers:
-    - name: opsgenie-general
-      opsgenieConfigs:
-        - sendResolved: true
-          apiURL: https://api.opsgenie.com/
-```
-The following Coralogix OutboundWebhook will be created:
-```yaml
-apiVersion: coralogix.com/v1alpha1
-kind: OutboundWebhook
-metadata:
-  finalizers:
-    - outbound-webhook.coralogix.com/finalizer
-  name: opsgenie-general.opsgenie.0
-  namespace: default
-spec:
-  name: opsgenie-general.opsgenie.0
-  outboundWebhookType:
-    opsgenie:
-      url: https://api.opsgenie.com/
-```
-
-## Combining PrometheusRule and AlertmanagerConfig configurations
-The operator can link OutboundWebhooks created from an AlertmanagerConfig receivers to Alerts created from a PrometheusRule.
-This linkage is based on the routes defined in the AlertmanagerConfig. According to the routes matchers and grouping,
-the operator will populate the Alert's notification groups, which contain the relevant OutboundWebhooks.
-
-To enable this functionality, add the following annotation to the PrometheusRule:
-```yaml
-app.coralogix.com/managed-by-alertmanager-config: "true"
-```
-
-#### Example:
-Adding the following route to the AlertmanagerConfig:
-```yaml
-  route:
-    groupBy:
-      - alertname
-      - namespace
-      - severity
-    receiver: opsgenie-general
-    routes:
-      - receiver: opsgenie-general
-        matchers:
-          - matchType: "=~"
-            name: opsgenie_team
-            value: ".+"
-        groupBy:
-          - coralogix.metadata.sdkId
-```
-Will add the following notification group to the Coralogix Alert:
-```yaml
- notificationGroups:
-  - groupByFields:
-    - alertname
-    - namespace
-    - severity
-    notifications:
-    - integrationName: opsgenie-general.opsgenie.0
-      notifyOn: TriggeredAndResolved
-      retriggeringPeriodMinutes: 240
 ```

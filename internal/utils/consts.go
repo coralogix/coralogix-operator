@@ -22,11 +22,8 @@ const (
 	V1beta1APIVersion  = "v1beta1"
 	V1APIVersion       = "v1"
 
-	PrometheusRuleKind     = "PrometheusRule"
-	AlertmanagerConfigKind = "AlertmanagerConfig"
+	PrometheusRuleKind = "PrometheusRule"
 
 	TrackPrometheusRuleAlertsLabelKey         = "app.coralogix.com/track-alerting-rules"
 	TrackPrometheusRuleRecordingRulesLabelKey = "app.coralogix.com/track-recording-rules"
-	TrackAlertmanagerConfigLabelKey           = "app.coralogix.com/track-alertmanager-config"
-	ManagedByAlertmanagerConfigLabelKey       = "app.coralogix.com/managed-by-alertmanager-config"
 )
