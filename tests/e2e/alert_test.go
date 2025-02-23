@@ -19,10 +19,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/coralogix/coralogix-operator/internal/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/wrapperspb"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
@@ -151,11 +153,21 @@ var _ = Describe("Alert", Ordered, func() {
 		fetchedAlert := &coralogixv1beta1.Alert{}
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, fetchedAlert)).To(Succeed())
-			if fetchedAlert.Status.ID != nil {
-				alertID = *fetchedAlert.Status.ID
-				return nil
+			if fetchedAlert.Status.ID == nil {
+				fmt.Errorf("alert ID is not set")
 			}
-			return fmt.Errorf("Alert ID is not set")
+			alertID = *fetchedAlert.Status.ID
+
+			if len(fetchedAlert.Status.Conditions) != 1 {
+				return fmt.Errorf("alert status conditions length is not 1, got %d", len(fetchedAlert.Status.Conditions))
+			}
+
+			if !meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced) {
+				return fmt.Errorf("alert status condition %s is not true", utils.ConditionTypeRemoteSynced)
+			}
+
+			return nil
+
 		}, time.Minute, time.Second).Should(Succeed())
 
 		By("Verifying Alert exists in Coralogix backend")
@@ -189,6 +201,43 @@ var _ = Describe("Alert", Ordered, func() {
 			_, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(alertID)})
 			return cxsdk.Code(err)
 		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
+	})
+
+	It("Should store err condition in status", func(ctx context.Context) {
+		By("Creating Alert")
+		alert = alert.DeepCopy()
+		alertName := "promql-alert"
+		alert.Spec.Name = alertName
+		alert.Spec.NotificationGroup.Webhooks[0].Integration = coralogixv1beta1.IntegrationType{
+			IntegrationRef: &coralogixv1beta1.IntegrationRef{
+				ResourceRef: &coralogixv1beta1.ResourceRef{
+					Name: "integration",
+				},
+			},
+		}
+
+		err := crClient.Create(ctx, alert)
+		Expect(err).To(HaveOccurred())
+
+		By("Fetching the Alert")
+		fetchedAlert := &coralogixv1beta1.Alert{}
+		Eventually(func(g Gomega) error {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alert.Name, Namespace: alert.Namespace}, fetchedAlert)).To(Succeed())
+
+			if len(fetchedAlert.Status.Conditions) != 2 {
+				return fmt.Errorf("alert status conditions length is not 2, got %d", len(fetchedAlert.Status.Conditions))
+			}
+
+			if !meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeError) {
+				return fmt.Errorf("alert status condition %s is not true", utils.ConditionTypeError)
+			}
+
+			if !meta.IsStatusConditionFalse(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced) {
+				return fmt.Errorf("alert status condition %s is not false", utils.ConditionTypeRemoteSynced)
+			}
+
+			return nil
+		}, time.Minute, time.Second).Should(Succeed())
 	})
 
 	It("Should deny creation of Alert with more then one alert type", func(ctx context.Context) {
