@@ -11,7 +11,6 @@ const (
 	ReasonRemoteUpdatedSuccessfully = "RemoteUpdatedSuccessfully"
 	ReasonRemoteUpdateFailed        = "RemoteUpdateFailed"
 	ReasonRemoteDeletionFailed      = "RemoteDeletionFailed"
-	ReasonRemoteDeletedSuccessfully = "RemoteDeletedSuccessfully"
 	ReasonRemoteResourceNotFound    = "RemoteResourceNotFound"
 	ReasonInternalK8sError          = "InternalK8sError"
 

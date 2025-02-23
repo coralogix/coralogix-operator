@@ -182,16 +182,7 @@ func ManageErrorWithRequeue(ctx context.Context, log logr.Logger, obj client.Obj
 	if conditionsObj, ok := (obj).(utils.ConditionsObj); ok {
 		// if the error condition is already set, we increase the requeue period
 		conditions := conditionsObj.GetConditions()
-		if errCondition := meta.FindStatusCondition(conditions, utils.ConditionTypeError); errCondition != nil && errCondition.Status == metav1.ConditionTrue {
-			lastRequeuePeriod := metav1.Now().Sub(errCondition.LastTransitionTime.Time).Round(time.Second)
-			requeueAfter = time.Duration(
-				math.Max(float64(utils.MinErrRequeuePeriod),
-					math.Min(float64(utils.MaxErrRequeuePeriod), float64(lastRequeuePeriod.Nanoseconds()*2)),
-				),
-			)
-		} else {
-			requeueAfter = utils.MinErrRequeuePeriod
-		}
+		requeueAfter = calculateErrorRequeuePeriod(conditions)
 
 		if utils.SetSyncedConditionFalse(&conditions, obj.GetGeneration(), reason, err.Error()) {
 			conditionsObj.SetConditions(conditions)
@@ -203,6 +194,18 @@ func ManageErrorWithRequeue(ctx context.Context, log logr.Logger, obj client.Obj
 	}
 
 	return reconcile.Result{RequeueAfter: requeueAfter}, err
+}
+
+func calculateErrorRequeuePeriod(conditions []metav1.Condition) time.Duration {
+	if errCondition := meta.FindStatusCondition(conditions, utils.ConditionTypeError); errCondition != nil && errCondition.Status == metav1.ConditionTrue {
+		lastRequeuePeriod := metav1.Now().Sub(errCondition.LastTransitionTime.Time).Round(time.Second)
+		return time.Duration(
+			math.Max(float64(utils.MinErrRequeuePeriod),
+				math.Min(float64(utils.MaxErrRequeuePeriod), float64(lastRequeuePeriod.Nanoseconds()*2)),
+			),
+		)
+	}
+	return utils.MinErrRequeuePeriod
 }
 
 func ManageSuccessWithRequeue(ctx context.Context, log logr.Logger, obj client.Object, reason string) (reconcile.Result, error) {
