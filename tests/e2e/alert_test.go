@@ -307,14 +307,15 @@ var _ = Describe("Alert", Ordered, func() {
 		Expect(crClient.Create(ctx, webhook)).To(Succeed())
 
 		By("Updating the Alert")
-		newAlert.Spec.NotificationGroup.Webhooks[0].Integration = coralogixv1beta1.IntegrationType{
+		updateAlert := newAlert.DeepCopy()
+		updateAlert.Spec.NotificationGroup.Webhooks[0].Integration = coralogixv1beta1.IntegrationType{
 			IntegrationRef: &coralogixv1beta1.IntegrationRef{
 				ResourceRef: &coralogixv1beta1.ResourceRef{
 					Name: webhook.Name,
 				},
 			},
 		}
-		Expect(crClient.Update(ctx, alert)).To(Succeed())
+		Expect(crClient.Patch(ctx, updateAlert, client.MergeFrom(newAlert))).To(Succeed())
 
 		By("Fetching the Alert again")
 		fetchedAlert = &coralogixv1beta1.Alert{}
