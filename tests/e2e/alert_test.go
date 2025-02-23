@@ -154,7 +154,7 @@ var _ = Describe("Alert", Ordered, func() {
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, fetchedAlert)).To(Succeed())
 			if fetchedAlert.Status.ID == nil {
-				fmt.Errorf("alert ID is not set")
+				return fmt.Errorf("alert ID is not set")
 			}
 			alertID = *fetchedAlert.Status.ID
 
