@@ -23,6 +23,7 @@ import (
 	"go.uber.org/mock/gomock"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -246,15 +247,22 @@ func TestRuleGroupReconciler_Reconcile_5XX_StatusError(t *testing.T) {
 	assert.NoError(t, err)
 	<-watcher.ResultChan()
 
-	result, err := r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
+	_, err = r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
 	assert.Error(t, err)
-	assert.Equal(t, utils.DefaultErrRequeuePeriod, result.RequeueAfter)
-
-	result, err = r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
-	assert.NoError(t, err)
 
 	namespacedName := types.NamespacedName{Namespace: "default", Name: "test"}
 	actualRuleGroupCRD := &coralogixv1alpha1.RuleGroup{}
+	err = withWatch.Get(ctx, namespacedName, actualRuleGroupCRD)
+	assert.NoError(t, err)
+	conditions := actualRuleGroupCRD.Status.Conditions
+	assert.Len(t, conditions, 2)
+	assert.True(t, meta.IsStatusConditionTrue(conditions, utils.ConditionTypeError))
+	assert.True(t, meta.IsStatusConditionFalse(conditions, utils.ConditionTypeRemoteSynced))
+
+	_, err = r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
+	assert.NoError(t, err)
+
+	actualRuleGroupCRD = &coralogixv1alpha1.RuleGroup{}
 	err = withWatch.Get(ctx, namespacedName, actualRuleGroupCRD)
 	assert.NoError(t, err)
 
@@ -262,6 +270,10 @@ func TestRuleGroupReconciler_Reconcile_5XX_StatusError(t *testing.T) {
 	if !assert.NotNil(t, id) {
 		return
 	}
+	conditions = actualRuleGroupCRD.Status.Conditions
+	assert.Len(t, conditions, 1)
+	assert.True(t, meta.IsStatusConditionTrue(conditions, utils.ConditionTypeRemoteSynced))
+
 	getRuleGroupRequest := &cxsdk.GetRuleGroupRequest{GroupId: *id}
 	actualRuleGroup, err := r.RuleGroupClient.Get(ctx, getRuleGroupRequest)
 	assert.NoError(t, err)

@@ -192,7 +192,7 @@ func ManageErrorWithRequeue(ctx context.Context, log logr.Logger, obj client.Obj
 		utils.SetSyncedConditionFalse(&conditions, (obj).GetGeneration(), reason, err.Error())
 		conditionsObj.SetConditions(conditions)
 		if err2 := k8sClient.Status().Update(ctx, obj); err2 != nil {
-			log.Error(err, "unable to update status")
+			log.Error(err2, "unable to update status")
 			return reconcile.Result{RequeueAfter: requeueAfter}, err2
 		}
 	}
