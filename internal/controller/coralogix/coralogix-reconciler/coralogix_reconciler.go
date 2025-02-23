@@ -55,6 +55,10 @@ func InitScheme(s *runtime.Scheme) {
 	scheme = s
 }
 
+func GetScheme() *runtime.Scheme {
+	return scheme
+}
+
 // CoralogixReconciler defines the required methods for all Coralogix controllers.
 type CoralogixReconciler interface {
 	HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) (client.Object, error)

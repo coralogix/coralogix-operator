@@ -19,7 +19,6 @@ import (
 	"fmt"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -70,7 +69,6 @@ func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 		return nil, fmt.Errorf("error on creating remote alert: %w", err)
 	}
 	log.V(1).Info("Remote alert created", "response", protojson.Format(createResponse))
-	monitoring.AlertInfoMetric.WithLabelValues(alert.Name, alert.Namespace, getAlertType(alert)).Set(1)
 	alert.Status = coralogixv1beta1.AlertStatus{ID: &createResponse.AlertDef.Id.Value}
 	return alert, nil
 }
@@ -102,7 +100,6 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 		return err
 	}
 	log.V(1).Info("Remote alert updated", "alert", protojson.Format(updateResponse))
-	monitoring.AlertInfoMetric.WithLabelValues(alert.Name, alert.Namespace, getAlertType(alert)).Set(1)
 	return nil
 }
 
@@ -115,7 +112,6 @@ func (r *AlertReconciler) HandleDeletion(ctx context.Context, log logr.Logger, o
 		return fmt.Errorf("error deleting remote alert %s: %w", *alert.Status.ID, err)
 	}
 	log.V(1).Info("Alert deleted from remote system", "id", *alert.Status.ID)
-	monitoring.AlertInfoMetric.DeleteLabelValues(alert.Name, alert.Namespace, getAlertType(alert))
 	return nil
 }
 

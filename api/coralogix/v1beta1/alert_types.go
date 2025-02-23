@@ -2359,9 +2359,9 @@ func convertCRNameToIntegrationID(name string, properties *GetResourceRefPropert
 
 	u := &unstructured.Unstructured{}
 	u.SetGroupVersionKind(schema.GroupVersionKind{
-		Group:   "coralogix.com",
+		Group:   utils.CoralogixAPIGroup,
 		Kind:    "OutboundWebhook",
-		Version: "v1alpha1",
+		Version: utils.V1alpha1APIVersion,
 	})
 
 	if err := coralogixreconciler.GetClient().Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
@@ -2393,9 +2393,9 @@ func convertCRNameToConnectorID(name string, properties *GetResourceRefPropertie
 
 	u := &unstructured.Unstructured{}
 	u.SetGroupVersionKind(schema.GroupVersionKind{
-		Group:   "coralogix.com",
+		Group:   utils.CoralogixAPIGroup,
 		Kind:    "Connector",
-		Version: "v1alpha1",
+		Version: utils.V1alpha1APIVersion,
 	})
 
 	if err := coralogixreconciler.GetClient().Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
@@ -2422,9 +2422,9 @@ func convertCRNameToPresetID(name string, properties *GetResourceRefProperties) 
 
 	u := &unstructured.Unstructured{}
 	u.SetGroupVersionKind(schema.GroupVersionKind{
-		Group:   "coralogix.com",
+		Group:   utils.CoralogixAPIGroup,
 		Kind:    "Preset",
-		Version: "v1alpha1",
+		Version: utils.V1alpha1APIVersion,
 	})
 
 	if err := coralogixreconciler.GetClient().Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
