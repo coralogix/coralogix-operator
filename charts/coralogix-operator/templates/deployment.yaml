@@ -41,6 +41,7 @@ spec:
         - -metrics-bind-address=:8080
         - -leader-elect
         - -prometheus-rule-controller={{.Values.coralogixOperator.prometheusRules.enabled}}
+        - -enable-webhooks={{.Values.coralogixOperator.webhooks.enabled }}
         - -label-selector={{ .Values.coralogixOperator.labelSelector }}
         env:
           - name: CORALOGIX_REGION

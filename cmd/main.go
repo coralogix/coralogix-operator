@@ -121,6 +121,10 @@ func main() {
 	labelSelector := os.Getenv("LABEL_SELECTOR")
 	flag.StringVar(&labelSelector, "label-selector", labelSelector, "A comma-separated list of key=value labels to filter custom resources.")
 
+	enableWebhooks := os.Getenv("ENABLE_WEBHOOKS")
+	flag.StringVar(&enableWebhooks, "enable-webhooks", enableWebhooks, "Enable webhooks for the operator. Default is true.")
+	enableWebhooks = strings.ToLower(enableWebhooks)
+
 	var prometheusRuleController bool
 	flag.BoolVar(&prometheusRuleController, "prometheus-rule-controller", true, "Determine if the prometheus rule controller should be started. Default is true.")
 
@@ -204,9 +208,13 @@ func main() {
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "9e1892e3.coralogix",
 		PprofBindAddress:       "0.0.0.0:8888",
-		WebhookServer: webhook.NewServer(webhook.Options{
+	}
+
+	// Check if webhooks are enabled before setting up the webhook server
+	if enableWebhooks != "false" {
+		mgrOpts.WebhookServer = webhook.NewServer(webhook.Options{
 			TLSOpts: tlsOpts,
-		}),
+		})
 	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), mgrOpts)
@@ -321,45 +329,50 @@ func main() {
 		}
 	}
 
-	if err = webhookcoralogixv1alpha1.SetupOutboundWebhookWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "OutboundWebhook")
-		os.Exit(1)
-	}
+	if enableWebhooks != "false" {
+		if err = webhookcoralogixv1alpha1.SetupOutboundWebhookWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "OutboundWebhook")
+			os.Exit(1)
+		}
 
-	if err = webhookcoralogixv1alpha1.SetupRuleGroupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "RuleGroup")
-		os.Exit(1)
-	}
+		if err = webhookcoralogixv1alpha1.SetupRuleGroupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "RuleGroup")
+			os.Exit(1)
+		}
 
-	if err = webhookcoralogixv1alpha1.SetupApiKeyWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "ApiKey")
-		os.Exit(1)
-	}
+		if err = webhookcoralogixv1alpha1.SetupApiKeyWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "ApiKey")
+			os.Exit(1)
+		}
 
-	if err = webhookcoralogixv1beta1.SetupAlertWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "Alert")
-		os.Exit(1)
-	}
-	if err = webhookcoralogixv1alpha1.SetupConnectorWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "Connector")
-		os.Exit(1)
-	}
-	if err = webhookcoralogixv1alpha1.SetupPresetWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "Preset")
-		os.Exit(1)
+		if err = webhookcoralogixv1beta1.SetupAlertWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Alert")
+			os.Exit(1)
+		}
+		if err = webhookcoralogixv1alpha1.SetupConnectorWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Connector")
+			os.Exit(1)
+		}
+		if err = webhookcoralogixv1alpha1.SetupPresetWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Preset")
+			os.Exit(1)
+		}
+	} else {
+		setupLog.Info("Webhooks are disabled")
 	}
 
 	//+kubebuilder:scaffold:builder
 
-	if err = mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
+	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up health check")
 		os.Exit(1)
 	}
-	if err = mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
+	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up ready check")
 		os.Exit(1)
 	}
-	if err = monitoring.SetupMetrics(); err != nil {
+
+	if err := monitoring.SetupMetrics(); err != nil {
 		setupLog.Error(err, "unable to set up metrics")
 		os.Exit(1)
 	}
@@ -371,7 +384,7 @@ func main() {
 	)
 
 	setupLog.Info("starting manager")
-	if err = mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}

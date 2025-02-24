@@ -17,14 +17,11 @@ package coralogixreconciler
 import (
 	"context"
 	"fmt"
-	"math"
-	"time"
 
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -182,33 +179,17 @@ func RemoveFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r 
 }
 
 func ManageErrorWithRequeue(ctx context.Context, log logr.Logger, obj client.Object, reason string, err error) (reconcile.Result, error) {
-	requeueAfter := utils.DefaultErrRequeuePeriod
 	if conditionsObj, ok := (obj).(utils.ConditionsObj); ok {
-		// if the error condition is already set, we increase the requeue period
 		conditions := conditionsObj.GetConditions()
-		requeueAfter = calculateErrorRequeuePeriod(conditions)
-
 		utils.SetErrorConditionTrue(&conditions, (obj).GetGeneration(), reason, err.Error())
 		conditionsObj.SetConditions(conditions)
 		if err2 := k8sClient.Status().Update(ctx, obj); err2 != nil {
 			log.Error(err2, "unable to update status")
-			return reconcile.Result{RequeueAfter: requeueAfter}, err2
+			return reconcile.Result{}, err2
 		}
 	}
 
-	return reconcile.Result{RequeueAfter: requeueAfter}, err
-}
-
-func calculateErrorRequeuePeriod(conditions []metav1.Condition) time.Duration {
-	if errCondition := meta.FindStatusCondition(conditions, utils.ConditionTypeError); errCondition != nil && errCondition.Status == metav1.ConditionTrue {
-		lastRequeuePeriod := metav1.Now().Sub(errCondition.LastTransitionTime.Time).Round(time.Second)
-		return time.Duration(
-			math.Max(float64(utils.MinErrRequeuePeriod),
-				math.Min(float64(utils.MaxErrRequeuePeriod), float64(lastRequeuePeriod.Nanoseconds()*2)),
-			),
-		)
-	}
-	return utils.MinErrRequeuePeriod
+	return reconcile.Result{}, err
 }
 
 func ManageSuccessWithRequeue(ctx context.Context, log logr.Logger, obj client.Object, reason string) (reconcile.Result, error) {
