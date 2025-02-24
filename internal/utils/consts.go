@@ -14,7 +14,11 @@
 
 package utils
 
+import "time"
+
 const (
+	DefaultErrRequeuePeriod = 60 * time.Second
+
 	MonitoringAPIGroup = "monitoring.coreos.com"
 	CoralogixAPIGroup  = "coralogix.com"
 

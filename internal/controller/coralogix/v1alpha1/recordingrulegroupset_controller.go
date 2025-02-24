@@ -104,6 +104,6 @@ func (r *RecordingRuleGroupSetReconciler) CheckIDInStatus(obj client.Object) boo
 func (r *RecordingRuleGroupSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.RecordingRuleGroupSet{}).
-		WithEventFilter(utils.GetLabelFilter().Predicate()).
+		WithEventFilter(utils.GetSelector().Predicate()).
 		Complete(r)
 }

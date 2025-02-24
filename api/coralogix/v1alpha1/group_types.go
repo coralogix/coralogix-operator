@@ -189,8 +189,8 @@ func (g *Group) getRoleIDFromCustomRole(customRole GroupCustomRole) (*cxsdk.Role
 		return nil, err
 	}
 
-	if !utils.GetLabelFilter().Matches(cr.Labels) {
-		return nil, fmt.Errorf("custom role %s does not match label selector", cr.Name)
+	if !utils.GetSelector().Matches(cr.Labels, cr.Namespace) {
+		return nil, fmt.Errorf("custom role %s does not match selector", cr.Name)
 	}
 
 	if cr.Status.ID == nil {
@@ -222,8 +222,8 @@ func (g *Group) ExtractScopeId() (*string, error) {
 		return nil, err
 	}
 
-	if !utils.GetLabelFilter().Matches(sc.Labels) {
-		return nil, fmt.Errorf("scope %s does not match label selector", sc.Name)
+	if !utils.GetSelector().Matches(sc.Labels, sc.Namespace) {
+		return nil, fmt.Errorf("scope %s does not match selector", sc.Name)
 	}
 
 	if sc.Status.ID == nil {

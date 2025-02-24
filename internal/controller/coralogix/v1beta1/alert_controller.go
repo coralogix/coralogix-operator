@@ -151,6 +151,6 @@ func getAlertType(alert *coralogixv1beta1.Alert) string {
 func (r *AlertReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1beta1.Alert{}).
-		WithEventFilter(util.GetLabelFilter().Predicate()).
+		WithEventFilter(util.GetSelector().Predicate()).
 		Complete(r)
 }

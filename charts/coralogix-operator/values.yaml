@@ -103,6 +103,9 @@ coralogixOperator:
     # -- A comma-separated list of key=value labels to filter custom resources
   labelSelector: ""
 
+    # -- A list of namespaces to filter custom resources
+  namespaceSelector: ""
+
   # -- resource config for Coralogix operator
   resources: {}
 

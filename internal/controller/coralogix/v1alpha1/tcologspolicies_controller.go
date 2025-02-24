@@ -100,6 +100,6 @@ func (r *TCOLogsPoliciesReconciler) CheckIDInStatus(_ client.Object) bool {
 func (r *TCOLogsPoliciesReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.TCOLogsPolicies{}).
-		WithEventFilter(utils.GetLabelFilter().Predicate()).
+		WithEventFilter(utils.GetSelector().Predicate()).
 		Complete(r)
 }

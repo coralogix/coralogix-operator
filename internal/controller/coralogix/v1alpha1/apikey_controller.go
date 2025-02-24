@@ -88,7 +88,7 @@ func (r *ApiKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		return ctrl.Result{}, nil
 	}
 
-	if !utils.GetLabelFilter().Matches(apiKey.GetLabels()) {
+	if !utils.GetSelector().Matches(apiKey.GetLabels(), apiKey.GetNamespace()) {
 		err := r.deleteRemoteApiKey(ctx, log, apiKey.Status.Id)
 		if err != nil {
 			log.Error(err, "Error on deleting ApiKey")
@@ -241,6 +241,6 @@ func (r *ApiKeyReconciler) deleteRemoteApiKey(ctx context.Context, log logr.Logg
 func (r *ApiKeyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.ApiKey{}).
-		WithEventFilter(utils.GetLabelFilter().Predicate()).
+		WithEventFilter(utils.GetSelector().Predicate()).
 		Complete(r)
 }

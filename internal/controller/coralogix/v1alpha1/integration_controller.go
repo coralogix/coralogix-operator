@@ -110,6 +110,6 @@ func (r *IntegrationReconciler) CheckIDInStatus(obj client.Object) bool {
 func (r *IntegrationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.Integration{}).
-		WithEventFilter(utils.GetLabelFilter().Predicate()).
+		WithEventFilter(utils.GetSelector().Predicate()).
 		Complete(r)
 }
