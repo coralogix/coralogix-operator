@@ -158,11 +158,12 @@ var _ = Describe("Alert", Ordered, func() {
 				return fmt.Errorf("RemoteSynced condition is not true")
 			}
 
-			if fetchedAlert.Status.ID != nil {
-				alertID = *fetchedAlert.Status.ID
-				return nil
+			if fetchedAlert.Status.ID == nil {
+				return fmt.Errorf("Alert ID is not set")
 			}
-			return fmt.Errorf("Alert ID is not set")
+
+			alertID = *fetchedAlert.Status.ID
+			return nil
 
 		}, time.Minute, time.Second).Should(Succeed())
 
