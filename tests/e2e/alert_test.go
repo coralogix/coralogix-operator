@@ -263,7 +263,7 @@ var _ = Describe("Alert", Ordered, func() {
 		By("Fetching the Alert")
 		fetchedAlert := &coralogixv1beta1.Alert{}
 		Eventually(func(g Gomega) {
-			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alert.Name, Namespace: alert.Namespace}, fetchedAlert)).To(Succeed())
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: newAlert.Name, Namespace: newAlert.Namespace}, fetchedAlert)).To(Succeed())
 
 			Expect(fetchedAlert.Status.Conditions).To(HaveLen(2))
 
