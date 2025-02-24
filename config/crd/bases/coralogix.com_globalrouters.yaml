@@ -58,8 +58,10 @@ spec:
                           - id
                           type: object
                         resourceRef:
+                          description: Reference to a Coralogix resource.
                           properties:
                             name:
+                              description: Name of the resource (not id).
                               type: string
                             namespace:
                               type: string
@@ -77,8 +79,10 @@ spec:
                           - id
                           type: object
                         resourceRef:
+                          description: Reference to a Coralogix resource.
                           properties:
                             name:
+                              description: Name of the resource (not id).
                               type: string
                             namespace:
                               type: string
@@ -113,8 +117,10 @@ spec:
                                 - id
                                 type: object
                               resourceRef:
+                                description: Reference to a Coralogix resource.
                                 properties:
                                   name:
+                                    description: Name of the resource (not id).
                                     type: string
                                   namespace:
                                     type: string
@@ -132,8 +138,10 @@ spec:
                                 - id
                                 type: object
                               resourceRef:
+                                description: Reference to a Coralogix resource.
                                 properties:
                                   name:
+                                    description: Name of the resource (not id).
                                     type: string
                                   namespace:
                                     type: string
