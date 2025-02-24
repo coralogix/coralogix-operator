@@ -16,7 +16,6 @@ package e2e
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/coralogix/coralogix-operator/internal/utils"
@@ -152,22 +151,14 @@ var _ = Describe("Alert", Ordered, func() {
 
 		By("Fetching the Alert ID")
 		fetchedAlert := &coralogixv1beta1.Alert{}
-		Eventually(func(g Gomega) error {
+		Eventually(func(g Gomega) {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, fetchedAlert)).To(Succeed())
-			if fetchedAlert.Status.ID == nil {
-				return fmt.Errorf("alert ID is not set")
-			}
+			Expect(fetchedAlert.Status.ID).ToNot(BeNil())
 			alertID = *fetchedAlert.Status.ID
 
-			if len(fetchedAlert.Status.Conditions) != 1 {
-				return fmt.Errorf("alert status conditions length is not 1, got %d", len(fetchedAlert.Status.Conditions))
-			}
+			Expect(fetchedAlert.Status.Conditions).To(HaveLen(1))
 
-			if !meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced) {
-				return fmt.Errorf("alert status condition %s is not true", utils.ConditionTypeRemoteSynced)
-			}
-
-			return nil
+			Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 
 		}, time.Minute, time.Second).Should(Succeed())
 
@@ -204,8 +195,8 @@ var _ = Describe("Alert", Ordered, func() {
 		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
 	})
 
-	It("Should store err condition in status", func(ctx context.Context) {
-		By("Creating Alert")
+	It("Should store an err condition in status", func(ctx context.Context) {
+		By("Creating Alert with a non-existing webhook")
 		alertName := "promql-alert"
 		newAlert := &coralogixv1beta1.Alert{
 			ObjectMeta: metav1.ObjectMeta{
@@ -272,22 +263,15 @@ var _ = Describe("Alert", Ordered, func() {
 
 		By("Fetching the Alert")
 		fetchedAlert := &coralogixv1beta1.Alert{}
-		Eventually(func(g Gomega) error {
+		Eventually(func(g Gomega) {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alert.Name, Namespace: alert.Namespace}, fetchedAlert)).To(Succeed())
 
-			if len(fetchedAlert.Status.Conditions) != 2 {
-				return fmt.Errorf("alert status conditions length is not 2, got %d", len(fetchedAlert.Status.Conditions))
-			}
+			Expect(fetchedAlert.Status.Conditions).To(HaveLen(2))
 
-			if !meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeError) {
-				return fmt.Errorf("alert status condition %s is not true", utils.ConditionTypeError)
-			}
+			Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeError)).To(BeTrue())
 
-			if !meta.IsStatusConditionFalse(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced) {
-				return fmt.Errorf("alert status condition %s is not false", utils.ConditionTypeRemoteSynced)
-			}
+			Expect(meta.IsStatusConditionFalse(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 
-			return nil
 		}, time.Minute, time.Second).Should(Succeed())
 
 		webhook := &coralogixv1alpha1.OutboundWebhook{
@@ -306,7 +290,7 @@ var _ = Describe("Alert", Ordered, func() {
 		}
 		Expect(crClient.Create(ctx, webhook)).To(Succeed())
 
-		By("Updating the Alert")
+		By("Updating the Alert with a valid webhook")
 		updateAlert := newAlert.DeepCopy()
 		updateAlert.Spec.NotificationGroup.Webhooks[0].Integration = coralogixv1beta1.IntegrationType{
 			IntegrationRef: &coralogixv1beta1.IntegrationRef{
@@ -319,18 +303,13 @@ var _ = Describe("Alert", Ordered, func() {
 
 		By("Fetching the Alert again")
 		fetchedAlert = &coralogixv1beta1.Alert{}
-		Eventually(func(g Gomega) error {
+		Eventually(func(g Gomega) {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: newAlert.Name, Namespace: newAlert.Namespace}, fetchedAlert)).To(Succeed())
 
-			if len(fetchedAlert.Status.Conditions) != 1 {
-				return fmt.Errorf("alert status conditions length is not 1, got %d", len(fetchedAlert.Status.Conditions))
-			}
+			Expect(fetchedAlert.Status.Conditions).To(HaveLen(1))
 
-			if !meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced) {
-				return fmt.Errorf("alert status condition %s is not true", utils.ConditionTypeRemoteSynced)
-			}
+			Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 
-			return nil
 		}, time.Minute, time.Second).Should(Succeed())
 	})
 

@@ -83,18 +83,18 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 		return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, err)
 	}
 
-	if !r.CheckIDInStatus(obj) {
-		log.V(1).Info("Resource ID is missing; handling creation for resource")
-		if ConditionsObj, ok := (obj).(utils.ConditionsObj); ok {
-			conditions := ConditionsObj.GetConditions()
-			if utils.SetSyncedConditionFalse(&conditions, obj.GetGeneration(), utils.ReasonRemoteResourceNotFound, "Syncing remote resource") {
-				ConditionsObj.SetConditions(conditions)
-				if err = k8sClient.Status().Update(ctx, obj); err != nil {
-					return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, err)
-				}
+	if ConditionsObj, ok := (obj).(utils.ConditionsObj); ok {
+		conditions := ConditionsObj.GetConditions()
+		if utils.SetSyncedConditionFalse(&conditions, obj.GetGeneration(), utils.ReasonRemoteResourceNotFound, "Syncing remote resource") {
+			ConditionsObj.SetConditions(conditions)
+			if err = k8sClient.Status().Update(ctx, obj); err != nil {
+				return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, err)
 			}
 		}
+	}
 
+	if !r.CheckIDInStatus(obj) {
+		log.V(1).Info("Resource ID is missing; handling creation for resource")
 		if err = r.HandleCreation(ctx, log, obj); err != nil {
 			log.Error(err, "Error handling creation")
 			return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonRemoteCreationFailed, err)
@@ -116,7 +116,7 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 	if !obj.GetDeletionTimestamp().IsZero() {
 		log.V(1).Info("Resource is being deleted; handling deletion")
 		if err = r.HandleDeletion(ctx, log, obj); err != nil {
-			log.Error(err, "Error handling deletion")
+			log.Error(err, "Error deleting from remote")
 			return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonRemoteDeletionFailed, err)
 		}
 
@@ -189,7 +189,6 @@ func ManageErrorWithRequeue(ctx context.Context, log logr.Logger, obj client.Obj
 		requeueAfter = calculateErrorRequeuePeriod(conditions)
 
 		utils.SetErrorConditionTrue(&conditions, (obj).GetGeneration(), reason, err.Error())
-		utils.SetSyncedConditionFalse(&conditions, (obj).GetGeneration(), reason, err.Error())
 		conditionsObj.SetConditions(conditions)
 		if err2 := k8sClient.Status().Update(ctx, obj); err2 != nil {
 			log.Error(err2, "unable to update status")

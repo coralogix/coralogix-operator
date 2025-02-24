@@ -39,21 +39,15 @@ type ConditionsObj interface {
 	SetConditions(conditions []metav1.Condition)
 }
 
-// SetSyncedConditionFalse sets the RemoteSynced condition to False with the provided reason and message only if it is not already False.
-// returns true if the conditions are changed by this call
+// SetSyncedConditionFalse sets the RemoteSynced condition to False. returns true if the conditions are changed by this call.
 func SetSyncedConditionFalse(conditions *[]metav1.Condition, observedGeneration int64, reason, message string) bool {
-	if !meta.IsStatusConditionFalse(*conditions, ConditionTypeRemoteSynced) {
-		syncingCondition := metav1.Condition{
-			Type:               ConditionTypeRemoteSynced,
-			Status:             metav1.ConditionFalse,
-			Reason:             reason,
-			Message:            message,
-			ObservedGeneration: observedGeneration,
-		}
-		return meta.SetStatusCondition(conditions, syncingCondition)
-	}
-
-	return false
+	return meta.SetStatusCondition(conditions, metav1.Condition{
+		Type:               ConditionTypeRemoteSynced,
+		Status:             metav1.ConditionFalse,
+		Reason:             reason,
+		Message:            message,
+		ObservedGeneration: observedGeneration,
+	})
 }
 
 // SetSyncedConditionTrue sets the RemoteSynced condition to True. returns true if the conditions are changed by this call.
@@ -67,6 +61,7 @@ func SetSyncedConditionTrue(conditions *[]metav1.Condition, observedGeneration i
 	})
 }
 
+// SetErrorConditionTrue sets the Error condition to True. returns true if the conditions are changed by this call.
 func SetErrorConditionTrue(conditions *[]metav1.Condition, observedGeneration int64, reason, message string) bool {
 	return meta.SetStatusCondition(conditions, metav1.Condition{
 		Type:               ConditionTypeError,
