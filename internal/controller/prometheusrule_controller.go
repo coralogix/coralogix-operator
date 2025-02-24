@@ -186,9 +186,6 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 					alert.Name = alertName
 					alert.Namespace = prometheusRule.Namespace
 					alert.Labels = map[string]string{"app.kubernetes.io/managed-by": prometheusRule.Name}
-					if val, ok := prometheusRule.Labels[utils.ManagedByAlertmanagerConfigLabelKey]; ok {
-						alert.Labels[utils.ManagedByAlertmanagerConfigLabelKey] = val
-					}
 					alert.OwnerReferences = []metav1.OwnerReference{getOwnerReference(prometheusRule)}
 					alert.Spec.Name = rule.Alert
 					alert.Spec.Description = rule.Annotations["description"]
@@ -239,13 +236,6 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 			if !reflect.DeepEqual(alert.OwnerReferences, desiredOwnerReferences) {
 				alert.OwnerReferences = desiredOwnerReferences
 				updated = true
-			}
-
-			if promRuleVal, ok := prometheusRule.Labels[utils.ManagedByAlertmanagerConfigLabelKey]; ok {
-				if alertVal, ok := alert.Labels[utils.ManagedByAlertmanagerConfigLabelKey]; !ok || alertVal != promRuleVal {
-					alert.Labels[utils.ManagedByAlertmanagerConfigLabelKey] = promRuleVal
-					updated = true
-				}
 			}
 
 			if updated {

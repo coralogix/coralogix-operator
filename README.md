@@ -5,9 +5,10 @@
 ![e2e-tests](https://github.com/coralogix/coralogix-operator/actions/workflows/e2e-tests.yaml/badge.svg?style=plastic)
 
 ## Overview
-Please refer to the next note if you're using the latest version of the operator [A note regarding webhooks and cert-manager](README.md#a-note-regarding-webhooks-and-cert-manager)
 The Coralogix Operator provides Kubernetes-native deployment and management for Coralogix, 
 designed to simplify and automate the configuration of Coralogix APIs through Kubernetes [custom resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/).
+
+Please refer to the next note if you're using the latest version of the operator - [A note regarding webhooks and cert-manager](README.md#a-note-regarding-webhooks-and-cert-manager).
 
 The operator integrates with Kubernetes by supporting a variety of custom resources and controllers to simplify Coralogix management, including:
 - **Custom Resources for Coralogix:** Easily deploy and manage Coralogix features, using custom resources like
@@ -15,7 +16,8 @@ The operator integrates with Kubernetes by supporting a variety of custom resour
 [RecordingRuleGroupSets](https://github.com/coralogix/coralogix-operator/tree/master/config/samples/recordingrulegroupset),
 [RuleGroups](https://github.com/coralogix/coralogix-operator/tree/master/config/samples/rulegroups), [OutboundWebhooks](https://github.com/coralogix/coralogix-operator/tree/master/config/samples/outboundwebhooks) and others.
 For a complete list of available APIs and their details, refer to the [API documentation](https://github.com/coralogix/coralogix-operator/tree/master/docs/api.md).
-- **Prometheus Operator Integration:** The Operator leverages [Prometheus Operator](https://prometheus-operator.dev/) CRDs like PrometheusRule and AlertmanagerConfig,
+For examples of custom resources, see the [samples directory](https://github.com/coralogix/coralogix-operator/tree/main/config/samples).
+- **Prometheus Operator Integration:** The Operator leverages [Prometheus Operator](https://prometheus-operator.dev/)'s PrometheusRule CRD,
 to simplify the transition to Coralogix by utilizing existing monitoring configurations.
 For more details on this integration, see the [Prometheus Integration documentation](https://github.com/coralogix/coralogix-operator/tree/master/docs/prometheus-integration.md).
 - **Running Multiple Instances:** The operator supports running multiple instances within a single cluster by using label selectors.
@@ -39,7 +41,7 @@ helm install <my-release> coralogix/coralogix-operator \
   --set coralogixOperator.region="<region>"
 ```
 
- - The Prometheus-Operator integration assumes its CRDs are installed. If you wish to disable this integration, add the `--set prometheusOperator.prometheusRules.enabled=false` flag.
+ - The Prometheus-Operator integration assumes PrometheusRule CRD is installed. If you wish to disable this integration, add the `--set prometheusOperator.prometheusRules.enabled=false` flag.
 
 ## **A note regarding webhooks and cert-manager**
 Webhooks are used to validate the custom resources before they are created in the cluster. They are also used to convert the old schema to the new schema.
@@ -52,7 +54,7 @@ If you disable the webhooks, the operator will not be able to validate the custo
 If you are using an old schema of the custom resources, the operator will not be able to convert them to the new schema.
 That means you will have to manually update the custom resources to the new schema.
 v1alpha1/Alerts won't be supported if webhooks are disabled, as the storage version is v1beta1.
-prometheusRules and alertmanagerConfigs controllers won't be able to track alerts that were created in a v1alpha1 schema.
+The PrometheusRule controller won't be able to track alerts that were created in a v1alpha1 schema.
 
 3. To uninstall the operator, run:
 ```sh
@@ -82,7 +84,7 @@ make docker-build docker-push IMG=<some-registry>/coralogix-operator:<tag>
 ```sh
 make deploy IMG=<some-registry>/coralogix-operator:<tag> 
 ```
-Note: This will install cert-manager on the cluster if it is not already installed.
+Note: This will install cert-manager and PrometheusRule CRD on the cluster if not already installed.
 
 5. To uninstall the operator, run:
 ```sh

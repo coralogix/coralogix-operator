@@ -102,7 +102,6 @@ func (c *ResourceInfoCollector) Collect(ch chan<- prometheus.Metric) {
 func getGVKsToMonitor() []schema.GroupVersionKind {
 	result := []schema.GroupVersionKind{
 		{Group: utils.MonitoringAPIGroup, Version: utils.V1APIVersion, Kind: utils.PrometheusRuleKind},
-		{Group: utils.MonitoringAPIGroup, Version: utils.V1alpha1APIVersion, Kind: utils.AlertmanagerConfigKind},
 	}
 
 	cxGroupVersion := schema.GroupVersion{Group: utils.CoralogixAPIGroup, Version: utils.V1alpha1APIVersion}
@@ -122,14 +121,6 @@ func listResourcesInGVK(gvk schema.GroupVersionKind) ([]unstructured.Unstructure
 	resourceList := &unstructured.UnstructuredList{}
 	resourceList.SetGroupVersionKind(gvk)
 	labelSelector := utils.GetLabelFilter().Selector
-
-	if gvk.Kind == utils.AlertmanagerConfigKind {
-		req, err := labels.NewRequirement(utils.TrackAlertmanagerConfigLabelKey, selection.Equals, []string{"true"})
-		if err != nil {
-			return nil, err
-		}
-		labelSelector = labelSelector.Add(*req)
-	}
 
 	if gvk.Kind == utils.PrometheusRuleKind {
 		req, err := labels.NewRequirement(utils.TrackPrometheusRuleAlertsLabelKey, selection.Equals, []string{"true"})
