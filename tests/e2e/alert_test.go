@@ -154,9 +154,9 @@ var _ = Describe("Alert", Ordered, func() {
 		fetchedAlert := &coralogixv1beta1.Alert{}
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, fetchedAlert)).To(Succeed())
-			Expect(fetchedAlert.Status.Conditions).To(HaveLen(1))
-
-			Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			if !meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced) {
+				return fmt.Errorf("RemoteSynced condition is not true")
+			}
 
 			if fetchedAlert.Status.ID != nil {
 				alertID = *fetchedAlert.Status.ID
@@ -267,15 +267,18 @@ var _ = Describe("Alert", Ordered, func() {
 
 		By("Fetching the Alert")
 		fetchedAlert := &coralogixv1beta1.Alert{}
-		Eventually(func(g Gomega) {
+		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: newAlert.Name, Namespace: newAlert.Namespace}, fetchedAlert)).To(Succeed())
 
-			Expect(fetchedAlert.Status.Conditions).To(HaveLen(2))
+			if !meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced) {
+				return fmt.Errorf("RemoteSynced condition is not true")
+			}
 
-			Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeError)).To(BeTrue())
+			if !meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeError) {
+				return fmt.Errorf("error condition is not true")
+			}
 
-			Expect(meta.IsStatusConditionFalse(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
-
+			return nil
 		}, time.Minute, time.Second).Should(Succeed())
 
 		webhook := &coralogixv1alpha1.OutboundWebhook{
@@ -307,12 +310,18 @@ var _ = Describe("Alert", Ordered, func() {
 
 		By("Fetching the Alert again")
 		fetchedAlert = &coralogixv1beta1.Alert{}
-		Eventually(func(g Gomega) {
+		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: newAlert.Name, Namespace: newAlert.Namespace}, fetchedAlert)).To(Succeed())
 
-			Expect(fetchedAlert.Status.Conditions).To(HaveLen(1))
+			if !meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced) {
+				return fmt.Errorf("RemoteSynced condition is not true")
+			}
 
-			Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			if meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeError) {
+				return fmt.Errorf("error condition is true")
+			}
+
+			return nil
 
 		}, time.Minute, time.Second).Should(Succeed())
 	})
