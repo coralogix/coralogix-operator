@@ -489,40 +489,57 @@ type NCRef struct {
 	ResourceRef *ResourceRef `json:"resourceRef,omitempty"`
 }
 
+// Notification center reference on Coralogix
 type NCBackendRef struct {
+	// ID
 	ID string `json:"id"`
 }
 
+// Slack routing override for the notification center
 type SlackRoutingOverride struct {
+	// Override for the connector
 	// +optional
 	ConnectorOverride *SlackConnectorOverride `json:"connectorOverride,omitempty"`
+
+	// Override for the present
 	// +optional
 	PresetOverride *SlackPresetOverride `json:"presetOverride,omitempty"`
 }
 
+// Connector override for Slack
 type SlackConnectorOverride struct {
+	// (New) Channel for Slack
 	Channel string `json:"channel"`
 }
 
+// Preset override for Slack
 type SlackPresetOverride struct {
+	// New content for the Slack notification.
 	// +optional
 	RawFields *PresetSlackRawFields `json:"rawFields,omitempty"`
 
+	// New content for the Slack notification in structured fields.
 	// +optional
 	StructuredFields *PresetSlackStructuredFields `json:"structuredFields,omitempty"`
 }
 
+// Raw Slack notification payload
 type PresetSlackRawFields struct {
+	// Notification content.
 	Payload string `json:"payload"`
 }
 
+// Structured notification  payload.
 type PresetSlackStructuredFields struct {
+	// The title of the notification message.
 	// +optional
 	Title *string `json:"title,omitempty"`
 
+	// The body of the notification message.
 	// +optional
 	Description *string `json:"description,omitempty"`
 
+	// The footer of the notification message.
 	// +optional
 	Footer *string `json:"footer,omitempty"`
 }
