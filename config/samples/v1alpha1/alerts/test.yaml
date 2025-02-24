@@ -1,0 +1,66 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Alert
+metadata:
+  annotations:
+    meta.helm.sh/release-name: pipeline-handler
+    meta.helm.sh/release-namespace: cap
+  labels:
+    CX_AZ: eu-north-1a
+    CX_CLOUDFLARE_SITE_ID: e42d5372648c1e877835b0c4af7f81c4
+    CX_CLUSTER_DNS: cx101
+    CX_DEPLOYABLE: pipeline-handler
+    CX_DOMAIN: platform.coralogix.net
+    CX_ENV_CLASS: cx101
+    CX_ENV_ID: cx101
+    CX_ENV_TYPE: platform
+    CX_HOST_PROJECT: ''
+    CX_ORG: coralogix
+    CX_PRODUCT: idp
+    CX_REGION: eu-north-1
+    CX_REPOSITORY: eng-pipeline-handler
+    CX_SERVICE_NAME: pipeline-handler
+    CX_SERVICE_TYPE: application
+    CX_TEAM: idp
+    app.kubernetes.io/instance: pipeline-handler
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: pipeline-handler
+    argocd.argoproj.io/instance: pipeline-handler-cx101
+    pipelines.coralogix.net/managed-by: eng-pipelines
+  name: highamountofplatformworkflowstepsfailed-pipeline-handler
+spec:
+  alertType:
+    metric:
+      promql:
+        conditions:
+          alertWhen: More
+          minNonNullValuesPercentage: 0
+          replaceMissingValueWithZero: true
+          sampleThresholdPercentage: 100
+          threshold: 0
+          timeWindow: FiveMinutes
+        searchQuery: >-
+          sum(increase(argo_workflows_ci_step_status{ownership="platform",exit_code!="0",
+          exit_code!="1"}[15m])) by (step) / 
+          sum(increase(argo_workflows_ci_step_status{ownership="platform"}[15m]))
+          by (step) >= 0.25
+  description: >-
+    High amount of workflow steps that are managed by the pipeline handler
+    failed Managed by Pipeline - Do not change manually
+  name: high_amount_of_platform_workflow_steps_failed-pipeline-handler-cx101
+  notificationGroups:
+    - notifications:
+        - integrationName: slack-webhook
+          notifyOn: TriggeredAndResolved
+          retriggeringPeriodMinutes: 60
+  scheduling:
+    daysEnabled:
+      - Sunday
+      - Monday
+      - Tuesday
+      - Wednesday
+      - Thursday
+      - Friday
+    endTime: '18:00'
+    startTime: '08:00'
+    timeZone: UTC+00
+  severity: Critical

@@ -903,8 +903,12 @@ func convertMissingValuesV1alpha1ToV1beta1(conditions PromqlConditions) v1beta1.
 			ReplaceWithZero: true,
 		}
 	} else {
+		var minNonNullValuesPct *uint32
+		if conditions.MinNonNullValuesPercentage != nil {
+			minNonNullValuesPct = pointer.Uint32(uint32(*conditions.MinNonNullValuesPercentage))
+		}
 		return v1beta1.MetricMissingValues{
-			MinNonNullValuesPct: pointer.Uint32(uint32(*conditions.MinNonNullValuesPercentage)),
+			MinNonNullValuesPct: minNonNullValuesPct,
 		}
 	}
 }

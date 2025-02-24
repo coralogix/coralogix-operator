@@ -85,7 +85,7 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 
 	if ConditionsObj, ok := (obj).(utils.ConditionsObj); ok {
 		conditions := ConditionsObj.GetConditions()
-		if utils.SetSyncedConditionFalse(&conditions, obj.GetGeneration(), utils.ReasonRemoteResourceNotFound, "Syncing remote resource") {
+		if len(conditions) == 0 && utils.SetSyncedConditionFalse(&conditions, obj.GetGeneration(), utils.ReasonRemoteSyncPending, "Syncing remote resource") {
 			ConditionsObj.SetConditions(conditions)
 			if err = k8sClient.Status().Update(ctx, obj); err != nil {
 				return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, err)
