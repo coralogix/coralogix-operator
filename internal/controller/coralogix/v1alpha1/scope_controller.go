@@ -107,6 +107,6 @@ func (r *ScopeReconciler) CheckIDInStatus(obj client.Object) bool {
 func (r *ScopeReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.Scope{}).
-		WithEventFilter(utils.GetLabelFilter().Predicate()).
+		WithEventFilter(utils.GetSelector().Predicate()).
 		Complete(r)
 }

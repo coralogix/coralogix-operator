@@ -177,6 +177,6 @@ func getWebhookType(webhook *v1alpha1.OutboundWebhook) string {
 func (r *OutboundWebhookReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.OutboundWebhook{}).
-		WithEventFilter(util.GetLabelFilter().Predicate()).
+		WithEventFilter(util.GetSelector().Predicate()).
 		Complete(r)
 }

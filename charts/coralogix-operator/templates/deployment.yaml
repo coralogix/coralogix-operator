@@ -43,6 +43,7 @@ spec:
         - -prometheus-rule-controller={{.Values.coralogixOperator.prometheusRules.enabled}}
         - -enable-webhooks={{.Values.coralogixOperator.webhooks.enabled }}
         - -label-selector={{ .Values.coralogixOperator.labelSelector }}
+        - -namespace-selector={{ .Values.coralogixOperator.namespaceSelector }}
         env:
           - name: CORALOGIX_REGION
             value: {{ .Values.coralogixOperator.region | quote }}
