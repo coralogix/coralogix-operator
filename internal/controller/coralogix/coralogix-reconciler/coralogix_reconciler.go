@@ -199,7 +199,7 @@ func ManageSuccessWithRequeue(ctx context.Context, log logr.Logger, obj client.O
 			conditionsObj.SetConditions(conditions)
 			if err := GetClient().Status().Update(ctx, obj); err != nil {
 				log.Error(err, "unable to update status")
-				return reconcile.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
+				return reconcile.Result{}, err
 			}
 		}
 	}

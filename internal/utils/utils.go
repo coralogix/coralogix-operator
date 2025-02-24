@@ -25,8 +25,6 @@ import (
 
 const (
 	DefaultErrRequeuePeriod = 60 * time.Second
-	MinErrRequeuePeriod     = 30 * time.Second
-	MaxErrRequeuePeriod     = 6 * time.Hour
 )
 
 var labelFilter *LabelFilter
