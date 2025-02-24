@@ -271,8 +271,8 @@ var _ = Describe("Alert", Ordered, func() {
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: newAlert.Name, Namespace: newAlert.Namespace}, fetchedAlert)).To(Succeed())
 
-			if !meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced) {
-				return fmt.Errorf("RemoteSynced condition is not true")
+			if meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced) {
+				return fmt.Errorf("RemoteSynced condition is true")
 			}
 
 			if !meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeError) {
