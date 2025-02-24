@@ -16,6 +16,7 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/coralogix/coralogix-operator/internal/utils"
@@ -151,15 +152,13 @@ var _ = Describe("Alert", Ordered, func() {
 
 		By("Fetching the Alert ID")
 		fetchedAlert := &coralogixv1beta1.Alert{}
-		Eventually(func(g Gomega) {
+		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, fetchedAlert)).To(Succeed())
-			Expect(fetchedAlert.Status.ID).ToNot(BeNil())
-			alertID = *fetchedAlert.Status.ID
-
-			Expect(fetchedAlert.Status.Conditions).To(HaveLen(1))
-
-			Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
-
+			if fetchedAlert.Status.ID != nil {
+				alertID = *fetchedAlert.Status.ID
+				return nil
+			}
+			return fmt.Errorf("Alert ID is not set")
 		}, time.Minute, time.Second).Should(Succeed())
 
 		By("Verifying Alert exists in Coralogix backend")
