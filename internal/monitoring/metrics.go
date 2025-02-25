@@ -18,6 +18,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
+	"strings"
 
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
@@ -60,18 +61,20 @@ var operatorInfoMetric = prometheus.NewGaugeVec(
 		Name: "cx_operator_info",
 		Help: "Coralogix Operator information.",
 	},
-	[]string{"go_version", "operator_version", "coralogix_url", "label_selector"},
+	[]string{"go_version", "operator_version", "coralogix_url", "label_selector", "namespace_selector"},
 )
 
 func SetOperatorInfoMetric(goVersion, operatorVersion, url string) {
-	labelSelector := utils.GetLabelFilter().String()
+	labelSelector := utils.GetSelector().LabelSelector.String()
+	namespaceSelector := strings.Join(utils.GetSelector().NamespaceSelector, ",")
 	metricsLog.V(1).Info("Setting operator info metric",
 		"go_version", goVersion,
 		"operator_version", operatorVersion,
 		"coralogix_url", url,
 		"label_selector", labelSelector,
+		"namespace_selector", namespaceSelector,
 	)
-	operatorInfoMetric.WithLabelValues(goVersion, operatorVersion, url, labelSelector).Set(1)
+	operatorInfoMetric.WithLabelValues(goVersion, operatorVersion, url, labelSelector, namespaceSelector).Set(1)
 }
 
 var resourceRejectionsTotalMetric = prometheus.NewCounterVec(

@@ -187,8 +187,8 @@ func extractConnectorID(namespace *string, connector *NCRef) (string, error) {
 		return "", err
 	}
 
-	if !utils.GetLabelFilter().Matches(c.Labels) {
-		return "", fmt.Errorf("connector %s does not match label selector", c.Name)
+	if !utils.GetSelector().Matches(c.Labels, c.Namespace) {
+		return "", fmt.Errorf("connector %s does not match selector", c.Name)
 	}
 
 	if c.Status.Id == nil {
@@ -213,8 +213,8 @@ func extractPresetID(namespace *string, preset *NCRef) (*string, error) {
 		return nil, err
 	}
 
-	if !utils.GetLabelFilter().Matches(p.Labels) {
-		return nil, fmt.Errorf("Preset %s does not match label selector", p.Name)
+	if !utils.GetSelector().Matches(p.Labels, p.Namespace) {
+		return nil, fmt.Errorf("Preset %s does not match selector", p.Name)
 	}
 
 	if p.Status.Id == nil {

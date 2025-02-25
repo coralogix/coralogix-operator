@@ -102,7 +102,6 @@ func (c *ResourceInfoCollector) Collect(ch chan<- prometheus.Metric) {
 func getGVKsToMonitor() []schema.GroupVersionKind {
 	result := []schema.GroupVersionKind{
 		{Group: utils.MonitoringAPIGroup, Version: utils.V1APIVersion, Kind: utils.PrometheusRuleKind},
-		{Group: utils.MonitoringAPIGroup, Version: utils.V1alpha1APIVersion, Kind: utils.AlertmanagerConfigKind},
 	}
 
 	cxGroupVersion := schema.GroupVersion{Group: utils.CoralogixAPIGroup, Version: utils.V1alpha1APIVersion}
@@ -119,18 +118,9 @@ func getGVKsToMonitor() []schema.GroupVersionKind {
 }
 
 func listResourcesInGVK(gvk schema.GroupVersionKind) ([]unstructured.Unstructured, error) {
-	resourceList := &unstructured.UnstructuredList{}
-	resourceList.SetGroupVersionKind(gvk)
-	labelSelector := utils.GetLabelFilter().Selector
+	var result []unstructured.Unstructured
 
-	if gvk.Kind == utils.AlertmanagerConfigKind {
-		req, err := labels.NewRequirement(utils.TrackAlertmanagerConfigLabelKey, selection.Equals, []string{"true"})
-		if err != nil {
-			return nil, err
-		}
-		labelSelector = labelSelector.Add(*req)
-	}
-
+	labelSelector := utils.GetSelector().LabelSelector
 	if gvk.Kind == utils.PrometheusRuleKind {
 		req, err := labels.NewRequirement(utils.TrackPrometheusRuleAlertsLabelKey, selection.Equals, []string{"true"})
 		if err != nil {
@@ -139,10 +129,17 @@ func listResourcesInGVK(gvk schema.GroupVersionKind) ([]unstructured.Unstructure
 		labelSelector = labelSelector.Add(*req)
 	}
 
-	if err := coralogixreconciler.GetClient().List(context.Background(), resourceList,
-		&client.ListOptions{LabelSelector: labelSelector}); err != nil {
-		return nil, err
+	for _, ns := range utils.GetSelector().NamespaceSelector {
+		resources := &unstructured.UnstructuredList{}
+		resources.SetGroupVersionKind(gvk)
+		if err := coralogixreconciler.GetClient().List(context.Background(), resources,
+			&client.ListOptions{LabelSelector: labelSelector, Namespace: ns}); err != nil {
+			return nil, err
+		}
+
+		result = append(result, resources.Items...)
+
 	}
 
-	return resourceList.Items, nil
+	return result, nil
 }

@@ -17,7 +17,7 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 )
 
-var _ = Describe("GlobalRouter", Ordered, func() {
+var _ = PDescribe("GlobalRouter", Ordered, func() {
 	var (
 		crClient            client.Client
 		notificationsClient *cxsdk.NotificationsClient

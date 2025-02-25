@@ -98,6 +98,6 @@ func (r *RuleGroupReconciler) CheckIDInStatus(obj client.Object) bool {
 func (r *RuleGroupReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.RuleGroup{}).
-		WithEventFilter(utils.GetLabelFilter().Predicate()).
+		WithEventFilter(utils.GetSelector().Predicate()).
 		Complete(r)
 }

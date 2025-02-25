@@ -121,6 +121,9 @@ func main() {
 	labelSelector := os.Getenv("LABEL_SELECTOR")
 	flag.StringVar(&labelSelector, "label-selector", labelSelector, "A comma-separated list of key=value labels to filter custom resources.")
 
+	namespaceSelector := os.Getenv("NAMESPACE_SELECTOR")
+	flag.StringVar(&namespaceSelector, "namespace-selector", namespaceSelector, "A list of namespaces to filter custom resources.")
+
 	enableWebhooks := os.Getenv("ENABLE_WEBHOOKS")
 	flag.StringVar(&enableWebhooks, "enable-webhooks", enableWebhooks, "Enable webhooks for the operator. Default is true.")
 	enableWebhooks = strings.ToLower(enableWebhooks)
@@ -167,8 +170,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := utils.InitLabelFilter(labelSelector); err != nil {
-		setupLog.Error(err, "unable to initialize label filter")
+	if err := utils.InitSelector(labelSelector, namespaceSelector); err != nil {
+		setupLog.Error(err, "unable to initialize selector")
 		os.Exit(1)
 	}
 
@@ -223,8 +226,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	cpc := cxsdk.NewCallPropertiesCreatorOperator(strings.ToLower(targetUrl), cxsdk.NewAuthContext(apiKey, apiKey), "0.0.1")
-	clientSet := cxsdk.NewClientSet(cpc)
+	clientSet := cxsdk.NewClientSet(cxsdk.NewCallPropertiesCreatorOperator(
+		strings.ToLower(targetUrl),
+		cxsdk.NewAuthContext(apiKey, apiKey),
+		OperatorVersion))
 	coralogixreconciler.InitClient(mgr.GetClient())
 	coralogixreconciler.InitScheme(mgr.GetScheme())
 
@@ -320,13 +325,6 @@ func main() {
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GlobalRouter")
 		os.Exit(1)
-	}
-
-	if prometheusRuleController {
-		if err = (&controllers.AlertmanagerConfigReconciler{}).SetupWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create controller", "controller", "RecordingRuleGroup")
-			os.Exit(1)
-		}
 	}
 
 	if enableWebhooks != "false" {

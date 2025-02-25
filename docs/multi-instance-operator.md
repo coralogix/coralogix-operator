@@ -1,14 +1,16 @@
 # Running Multiple Instances of the Coralogix Operator
 
 The Coralogix Operator supports running multiple instances within the same Kubernetes cluster, each managing only a subset of custom resources. 
-This is achieved using the **`label-selector`** flag, which filters custom resources based on specific Kubernetes labels.
+This is achieved using **`label-selector`** flag, which filters custom resources based on specific labels,
+and **`namespace-selector`** flag, which filters custom resources based on the namespace they are deployed in.
 
 ## How It Works
 
-By setting the `--label-selector` flag, an instance of the operator will **only reconcile resources that match the specified label selector**. 
+- By setting the `--label-selector` flag, the operator will **only reconcile resources that match the specified label selector**. 
+- By setting the `--namespace-selector` flag, the operator will **only reconcile resources that are deployed in the specified namespaces**.
 This allows for multiple independent instances of the operator, each managing a different subset of resources.
 
-#### Example: Deploying an Operator for staging environment and team a
+#### Example: Deploying an Operator using the label-selector flag
 ```sh
 helm install coralogix-operator-staging coralogix/coralogix-operator \
   --set secret.data.apiKey="stg-api-key" \
@@ -25,8 +27,16 @@ metadata:
     ...
 ```
 
+#### Example: Deploying an Operator using the namespace-selector flag
+```sh
+helm install coralogix-operator-staging coralogix/coralogix-operator \
+  --set secret.data.apiKey="stg-api-key" \
+  --set coralogixOperator.domain="app.stg.domain" \
+  --set coralogixOperator.namespaceSelector="staging,production"
+```
+This instance will **only reconcile custom resources** deployed in either the `staging` or `production` namespaces.
+
 ---
  
 This setup requires **isolation** between multiple operator instances, to prevent conflicts between resources managed by different instances.
-Leaving the `--label-selector` flag empty will cause the operator to reconcile all resources, which may lead to conflicts between instances.
-
+Leaving both the `--label-selector` and `--namespace-selector` flags empty will cause the operator to reconcile all resources, which may lead to conflicts between instances.

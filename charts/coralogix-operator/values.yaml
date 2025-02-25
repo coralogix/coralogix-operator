@@ -67,11 +67,6 @@ secret:
   data:
     apiKey: ""
 
-# --  kube-rbac-proxy container config
-kubeRbacProxy:
-  # --  kube-rbac-proxy Image
-  image: gcr.io/kubebuilder/kube-rbac-proxy:v0.13.0
-
   # -- Security context for kube-rbac-proxy container
   securityContext:
     allowPrivilegeEscalation: false
@@ -86,7 +81,7 @@ kubeRbacProxy:
 # -- Coralogix operator container config
 coralogixOperator:
   # Set this is to true if Prometheus Operator is installed and
-  # PrometheusRule and AlertmanagerConfig CRDs are available in cluster.
+  # PrometheusRule is available in cluster.
   prometheusRules:
     enabled: true
   # Set this is to true if you want to enable validation webhooks.
@@ -107,6 +102,9 @@ coralogixOperator:
 
     # -- A comma-separated list of key=value labels to filter custom resources
   labelSelector: ""
+
+    # -- A list of namespaces to filter custom resources
+  namespaceSelector: ""
 
   # -- resource config for Coralogix operator
   resources: {}

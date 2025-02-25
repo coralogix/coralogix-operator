@@ -112,6 +112,6 @@ func (r *GlobalRouterReconciler) CheckIDInStatus(obj client.Object) bool {
 func (r *GlobalRouterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.GlobalRouter{}).
-		WithEventFilter(utils.GetLabelFilter().Predicate()).
+		WithEventFilter(utils.GetSelector().Predicate()).
 		Complete(r)
 }

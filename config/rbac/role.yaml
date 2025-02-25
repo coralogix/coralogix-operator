@@ -383,14 +383,6 @@ rules:
 - apiGroups:
   - monitoring.coreos.com
   resources:
-  - alertmanagerconfigs
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - monitoring.coreos.com
-  resources:
   - prometheusrules
   verbs:
   - get

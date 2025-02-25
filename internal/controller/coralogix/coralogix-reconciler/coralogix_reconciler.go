@@ -126,8 +126,8 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 		return ctrl.Result{}, nil
 	}
 
-	if !utils.GetLabelFilter().Matches(obj.GetLabels()) {
-		log.V(1).Info("Resource doesn't match label filter, handling deletion")
+	if !utils.GetSelector().Matches(obj.GetLabels(), obj.GetNamespace()) {
+		log.V(1).Info("Resource doesn't match selector; handling deletion")
 		if err = r.HandleDeletion(ctx, log, obj); err != nil {
 			log.Error(err, "Error deleting from remote")
 			return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonRemoteDeletionFailed, err)

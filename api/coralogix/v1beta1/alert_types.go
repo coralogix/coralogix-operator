@@ -2368,8 +2368,8 @@ func convertCRNameToIntegrationID(name string, properties *GetResourceRefPropert
 		return nil, fmt.Errorf("failed to get webhook, name: %s, namespace: %s, error: %w", name, namespace, err)
 	}
 
-	if !utils.GetLabelFilter().Matches(u.GetLabels()) {
-		return nil, fmt.Errorf("outbound webhook %s does not match label selector", u.GetName())
+	if !utils.GetSelector().Matches(u.GetLabels(), u.GetNamespace()) {
+		return nil, fmt.Errorf("outbound webhook %s does not match selector", u.GetName())
 	}
 
 	externalID, found, err := unstructured.NestedString(u.Object, "status", "externalId")
@@ -2402,8 +2402,8 @@ func convertCRNameToConnectorID(name string, properties *GetResourceRefPropertie
 		return "", fmt.Errorf("failed to get connector: %w", err)
 	}
 
-	if !utils.GetLabelFilter().Matches(u.GetLabels()) {
-		return "", fmt.Errorf("outbound webhook %s does not match label selector", u.GetName())
+	if !utils.GetSelector().Matches(u.GetLabels(), u.GetNamespace()) {
+		return "", fmt.Errorf("outbound webhook %s does not match selector", u.GetName())
 	}
 
 	id, found, err := unstructured.NestedString(u.Object, "status", "id")
@@ -2431,8 +2431,8 @@ func convertCRNameToPresetID(name string, properties *GetResourceRefProperties) 
 		return "", fmt.Errorf("failed to get preset: %w", err)
 	}
 
-	if !utils.GetLabelFilter().Matches(u.GetLabels()) {
-		return "", fmt.Errorf("preset %s does not match label selector", u.GetName())
+	if !utils.GetSelector().Matches(u.GetLabels(), u.GetNamespace()) {
+		return "", fmt.Errorf("preset %s does not match selector", u.GetName())
 	}
 
 	id, found, err := unstructured.NestedString(u.Object, "status", "id")
