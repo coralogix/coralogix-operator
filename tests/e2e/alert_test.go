@@ -275,10 +275,6 @@ var _ = Describe("Alert", Ordered, func() {
 				return fmt.Errorf("RemoteSynced condition is true")
 			}
 
-			if !meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeError) {
-				return fmt.Errorf("error condition is not true")
-			}
-
 			return nil
 		}, time.Minute, time.Second).Should(Succeed())
 
@@ -316,10 +312,6 @@ var _ = Describe("Alert", Ordered, func() {
 
 			if !meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced) {
 				return fmt.Errorf("RemoteSynced condition is not true")
-			}
-
-			if meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeError) {
-				return fmt.Errorf("error condition is true")
 			}
 
 			return nil

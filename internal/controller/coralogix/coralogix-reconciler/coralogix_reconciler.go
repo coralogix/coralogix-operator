@@ -21,7 +21,6 @@ import (
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -82,7 +81,8 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 
 	if ConditionsObj, ok := (obj).(utils.ConditionsObj); ok {
 		conditions := ConditionsObj.GetConditions()
-		if len(conditions) == 0 && utils.SetSyncedConditionFalse(&conditions, obj.GetGeneration(), utils.ReasonRemoteSyncPending, "Syncing remote resource") {
+		if len(conditions) == 0 {
+			utils.SetSyncedConditionFalse(&conditions, obj.GetGeneration(), utils.ReasonRemoteSyncPending, "Syncing remote resource")
 			ConditionsObj.SetConditions(conditions)
 			if err = k8sClient.Status().Update(ctx, obj); err != nil {
 				return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, err)
@@ -181,11 +181,12 @@ func RemoveFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r 
 func ManageErrorWithRequeue(ctx context.Context, log logr.Logger, obj client.Object, reason string, err error) (reconcile.Result, error) {
 	if conditionsObj, ok := (obj).(utils.ConditionsObj); ok {
 		conditions := conditionsObj.GetConditions()
-		utils.SetErrorConditionTrue(&conditions, (obj).GetGeneration(), reason, err.Error())
-		conditionsObj.SetConditions(conditions)
-		if err2 := k8sClient.Status().Update(ctx, obj); err2 != nil {
-			log.Error(err2, "unable to update status")
-			return reconcile.Result{}, err2
+		if utils.SetSyncedConditionFalse(&conditions, obj.GetGeneration(), reason, err.Error()) {
+			conditionsObj.SetConditions(conditions)
+			if err2 := k8sClient.Status().Update(ctx, obj); err2 != nil {
+				log.Error(err2, "unable to update status")
+				return reconcile.Result{}, err2
+			}
 		}
 	}
 
@@ -195,7 +196,7 @@ func ManageErrorWithRequeue(ctx context.Context, log logr.Logger, obj client.Obj
 func ManageSuccessWithRequeue(ctx context.Context, log logr.Logger, obj client.Object, reason string) (reconcile.Result, error) {
 	if conditionsObj, ok := (obj).(utils.ConditionsObj); ok {
 		conditions := conditionsObj.GetConditions()
-		if utils.SetSyncedConditionTrue(&conditions, obj.GetGeneration(), reason) || meta.RemoveStatusCondition(&conditions, utils.ConditionTypeError) {
+		if utils.SetSyncedConditionTrue(&conditions, obj.GetGeneration(), reason) {
 			conditionsObj.SetConditions(conditions)
 			if err := GetClient().Status().Update(ctx, obj); err != nil {
 				log.Error(err, "unable to update status")

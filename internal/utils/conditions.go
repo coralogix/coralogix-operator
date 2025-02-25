@@ -29,7 +29,6 @@ const (
 	ReasonRemoteResourceNotFound    = "RemoteResourceNotFound"
 	ReasonInternalK8sError          = "InternalK8sError"
 
-	ConditionTypeError        = "Error"
 	ConditionTypeRemoteSynced = "RemoteSynced"
 )
 
@@ -58,17 +57,6 @@ func SetSyncedConditionTrue(conditions *[]metav1.Condition, observedGeneration i
 		Status:             metav1.ConditionTrue,
 		Reason:             reason,
 		Message:            "Remote resource synced",
-		ObservedGeneration: observedGeneration,
-	})
-}
-
-// SetErrorConditionTrue sets the Error condition to True. returns true if the conditions are changed by this call.
-func SetErrorConditionTrue(conditions *[]metav1.Condition, observedGeneration int64, reason, message string) bool {
-	return meta.SetStatusCondition(conditions, metav1.Condition{
-		Type:               ConditionTypeError,
-		Status:             metav1.ConditionTrue,
-		Reason:             reason,
-		Message:            message,
 		ObservedGeneration: observedGeneration,
 	})
 }

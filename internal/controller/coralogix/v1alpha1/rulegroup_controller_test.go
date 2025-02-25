@@ -255,8 +255,7 @@ func TestRuleGroupReconciler_Reconcile_5XX_StatusError(t *testing.T) {
 	err = withWatch.Get(ctx, namespacedName, actualRuleGroupCRD)
 	assert.NoError(t, err)
 	conditions := actualRuleGroupCRD.Status.Conditions
-	assert.Len(t, conditions, 2)
-	assert.True(t, meta.IsStatusConditionTrue(conditions, utils.ConditionTypeError))
+	assert.Len(t, conditions, 1)
 	assert.True(t, meta.IsStatusConditionFalse(conditions, utils.ConditionTypeRemoteSynced))
 
 	_, err = r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})

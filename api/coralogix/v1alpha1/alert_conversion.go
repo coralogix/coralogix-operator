@@ -898,19 +898,13 @@ func convertPromqlThresholdV1alpha1ToV1beta1(promql *Promql) v1beta1.AlertTypeDe
 }
 
 func convertMissingValuesV1alpha1ToV1beta1(conditions PromqlConditions) v1beta1.MetricMissingValues {
+	metricMissingValues := v1beta1.MetricMissingValues{}
 	if conditions.ReplaceMissingValueWithZero {
-		return v1beta1.MetricMissingValues{
-			ReplaceWithZero: true,
-		}
-	} else {
-		var minNonNullValuesPct *uint32
-		if conditions.MinNonNullValuesPercentage != nil {
-			minNonNullValuesPct = pointer.Uint32(uint32(*conditions.MinNonNullValuesPercentage))
-		}
-		return v1beta1.MetricMissingValues{
-			MinNonNullValuesPct: minNonNullValuesPct,
-		}
+		metricMissingValues.ReplaceWithZero = true
+	} else if conditions.MinNonNullValuesPercentage != nil {
+		metricMissingValues.MinNonNullValuesPct = pointer.Uint32(uint32(*conditions.MinNonNullValuesPercentage))
 	}
+	return metricMissingValues
 }
 
 func convertPromqlMoreThanUsualV1alpha1ToV1beta1(promql *Promql) v1beta1.AlertTypeDefinition {
