@@ -215,7 +215,7 @@ func (dst *Alert) ConvertFrom(srcRaw conversion.Hub) error {
 		dst.Spec.AlertType = *alertType
 		dst.Spec.PayloadFilters = payloadFilters
 	} else {
-		return fmt.Errorf("failed to convert alert type")
+		return fmt.Errorf("failed to convert alert type %s", src.Name)
 	}
 
 	dst.Spec.NotificationGroups = convertingNotificationGroupsV1beta1ToV1alpha1(src.Spec.NotificationGroup, src.Spec.NotificationGroupExcess)
@@ -898,15 +898,13 @@ func convertPromqlThresholdV1alpha1ToV1beta1(promql *Promql) v1beta1.AlertTypeDe
 }
 
 func convertMissingValuesV1alpha1ToV1beta1(conditions PromqlConditions) v1beta1.MetricMissingValues {
+	metricMissingValues := v1beta1.MetricMissingValues{}
 	if conditions.ReplaceMissingValueWithZero {
-		return v1beta1.MetricMissingValues{
-			ReplaceWithZero: true,
-		}
-	} else {
-		return v1beta1.MetricMissingValues{
-			MinNonNullValuesPct: pointer.Uint32(uint32(*conditions.MinNonNullValuesPercentage)),
-		}
+		metricMissingValues.ReplaceWithZero = true
+	} else if conditions.MinNonNullValuesPercentage != nil {
+		metricMissingValues.MinNonNullValuesPct = pointer.Uint32(uint32(*conditions.MinNonNullValuesPercentage))
 	}
+	return metricMissingValues
 }
 
 func convertPromqlMoreThanUsualV1alpha1ToV1beta1(promql *Promql) v1beta1.AlertTypeDefinition {

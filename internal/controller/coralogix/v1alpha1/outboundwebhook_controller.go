@@ -51,16 +51,16 @@ func (r *OutboundWebhookReconciler) FinalizerName() string {
 	return "outbound-webhook.coralogix.com/finalizer"
 }
 
-func (r *OutboundWebhookReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) (client.Object, error) {
+func (r *OutboundWebhookReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	outboundWebhook := obj.(*v1alpha1.OutboundWebhook)
 	createRequest, err := outboundWebhook.ExtractCreateOutboundWebhookRequest()
 	if err != nil {
-		return nil, fmt.Errorf("error on extracting create outbound-webhook request: %w", err)
+		return fmt.Errorf("error on extracting create outbound-webhook request: %w", err)
 	}
 	log.V(1).Info("Creating remote outbound-webhook", "outbound-webhook", protojson.Format(createRequest))
 	createResponse, err := r.OutboundWebhooksClient.Create(ctx, createRequest)
 	if err != nil {
-		return nil, fmt.Errorf("error on creating remote outbound-webhook: %w", err)
+		return fmt.Errorf("error on creating remote outbound-webhook: %w", err)
 	}
 	log.V(1).Info("Remote outbound-webhook created", "response", protojson.Format(createResponse))
 
@@ -71,17 +71,17 @@ func (r *OutboundWebhookReconciler) HandleCreation(ctx context.Context, log logr
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("error to get outbound-webhook %w", err)
+		return fmt.Errorf("error to get outbound-webhook %w", err)
 	}
 	log.V(1).Info(fmt.Sprintf("outbound-webhook was read\n%s", protojson.Format(remoteOutboundWebhook)))
 
 	status, err := getOutboundWebhookStatus(remoteOutboundWebhook.Webhook)
 	if err != nil {
-		return nil, fmt.Errorf("error on getting outbound-webhook status: %w", err)
+		return fmt.Errorf("error on getting outbound-webhook status: %w", err)
 	}
 	outboundWebhook.Status = *status
 
-	return outboundWebhook, nil
+	return nil
 }
 
 func (r *OutboundWebhookReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {

@@ -48,13 +48,13 @@ func (r *ConnectorReconciler) FinalizerName() string {
 	return "connector.coralogix.com/finalizer"
 }
 
-func (r *ConnectorReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) (client.Object, error) {
+func (r *ConnectorReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	connector := obj.(*coralogixv1alpha1.Connector)
 	createRequest := connector.Spec.ExtractCreateConnectorRequest()
 	log.V(1).Info("Creating remote connector", "connector", protojson.Format(createRequest))
 	createResponse, err := r.NotificationsClient.CreateConnector(ctx, createRequest)
 	if err != nil {
-		return nil, fmt.Errorf("error on creating remote connector: %w", err)
+		return fmt.Errorf("error on creating remote connector: %w", err)
 	}
 	log.V(1).Info("Remote connector created", "response", protojson.Format(createResponse))
 
@@ -62,7 +62,7 @@ func (r *ConnectorReconciler) HandleCreation(ctx context.Context, log logr.Logge
 		Id: createResponse.Connector.Id,
 	}
 
-	return connector, nil
+	return nil
 }
 
 func (r *ConnectorReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {

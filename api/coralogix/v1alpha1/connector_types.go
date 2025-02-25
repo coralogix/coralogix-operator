@@ -101,7 +101,18 @@ type ConnectorSlackConfigOverride struct {
 
 // ConnectorStatus defines the observed state of Connector.
 type ConnectorStatus struct {
-	Id *string `json:"id"`
+	// +optional
+	Id *string `json:"id,omitempty"`
+	// +optional
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+}
+
+func (c *Connector) GetConditions() []metav1.Condition {
+	return c.Status.Conditions
+}
+
+func (c *Connector) SetConditions(conditions []metav1.Condition) {
+	c.Status.Conditions = conditions
 }
 
 // +kubebuilder:object:root=true

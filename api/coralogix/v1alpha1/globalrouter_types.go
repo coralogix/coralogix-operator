@@ -65,8 +65,8 @@ type NCRef struct {
 	ResourceRef *ResourceRef `json:"resourceRef,omitempty"`
 }
 
-func (g *GlobalRouter) ExtractCreateGlobalRouterRequest(refProperties *ResourceRefProperties) (*cxsdk.CreateGlobalRouterRequest, error) {
-	router, err := g.ExtractGlobalRouter(refProperties)
+func (g *GlobalRouter) ExtractCreateGlobalRouterRequest(namespace *string) (*cxsdk.CreateGlobalRouterRequest, error) {
+	router, err := g.ExtractGlobalRouter(namespace)
 	if err != nil {
 		return nil, fmt.Errorf("failed to extract global-router: %w", err)
 	}
@@ -74,8 +74,8 @@ func (g *GlobalRouter) ExtractCreateGlobalRouterRequest(refProperties *ResourceR
 	return &cxsdk.CreateGlobalRouterRequest{Router: router}, nil
 }
 
-func (g *GlobalRouter) ExtractUpdateGlobalRouterRequest(refProperties *ResourceRefProperties) (*cxsdk.ReplaceGlobalRouterRequest, error) {
-	router, err := g.ExtractGlobalRouter(refProperties)
+func (g *GlobalRouter) ExtractUpdateGlobalRouterRequest(namespace *string) (*cxsdk.ReplaceGlobalRouterRequest, error) {
+	router, err := g.ExtractGlobalRouter(namespace)
 	if err != nil {
 		return nil, fmt.Errorf("failed to extract global-router: %w", err)
 	}
@@ -84,13 +84,13 @@ func (g *GlobalRouter) ExtractUpdateGlobalRouterRequest(refProperties *ResourceR
 	return &cxsdk.ReplaceGlobalRouterRequest{Router: router}, nil
 }
 
-func (g *GlobalRouter) ExtractGlobalRouter(refProperties *ResourceRefProperties) (*cxsdk.GlobalRouter, error) {
-	fallback, err := extractRoutingTargets(refProperties, g.Spec.Fallback)
+func (g *GlobalRouter) ExtractGlobalRouter(namespace *string) (*cxsdk.GlobalRouter, error) {
+	fallback, err := extractRoutingTargets(namespace, g.Spec.Fallback)
 	if err != nil {
 		return nil, err
 	}
 
-	rules, err := extractRoutingRules(refProperties, g.Spec.Rules)
+	rules, err := extractRoutingRules(namespace, g.Spec.Rules)
 	if err != nil {
 		return nil, err
 	}
@@ -104,11 +104,11 @@ func (g *GlobalRouter) ExtractGlobalRouter(refProperties *ResourceRefProperties)
 	}, nil
 }
 
-func extractRoutingRules(refProperties *ResourceRefProperties, rules []RoutingRule) ([]*cxsdk.RoutingRule, error) {
+func extractRoutingRules(namespace *string, rules []RoutingRule) ([]*cxsdk.RoutingRule, error) {
 	var result []*cxsdk.RoutingRule
 	var errs error
 	for _, rule := range rules {
-		routingRule, err := extractRoutingRule(refProperties, rule)
+		routingRule, err := extractRoutingRule(namespace, rule)
 		if err != nil {
 			errs = errors.Join(errs, err)
 			continue
@@ -123,8 +123,8 @@ func extractRoutingRules(refProperties *ResourceRefProperties, rules []RoutingRu
 	return result, nil
 }
 
-func extractRoutingRule(refProperties *ResourceRefProperties, rule RoutingRule) (*cxsdk.RoutingRule, error) {
-	targets, err := extractRoutingTargets(refProperties, rule.Targets)
+func extractRoutingRule(namespace *string, rule RoutingRule) (*cxsdk.RoutingRule, error) {
+	targets, err := extractRoutingTargets(namespace, rule.Targets)
 	if err != nil {
 		return nil, err
 	}
@@ -136,11 +136,11 @@ func extractRoutingRule(refProperties *ResourceRefProperties, rule RoutingRule) 
 	}, nil
 }
 
-func extractRoutingTargets(refProperties *ResourceRefProperties, targets []RoutingTarget) ([]*cxsdk.RoutingTarget, error) {
+func extractRoutingTargets(namespace *string, targets []RoutingTarget) ([]*cxsdk.RoutingTarget, error) {
 	var result []*cxsdk.RoutingTarget
 	var errs error
 	for _, target := range targets {
-		routingTarget, err := extractRoutingTarget(refProperties, target)
+		routingTarget, err := extractRoutingTarget(namespace, target)
 		if err != nil {
 			errs = errors.Join(errs, err)
 			continue
@@ -155,13 +155,13 @@ func extractRoutingTargets(refProperties *ResourceRefProperties, targets []Routi
 	return result, nil
 }
 
-func extractRoutingTarget(refProperties *ResourceRefProperties, target RoutingTarget) (*cxsdk.RoutingTarget, error) {
-	connectorID, err := extractConnectorID(refProperties, target.Connector)
+func extractRoutingTarget(namespace *string, target RoutingTarget) (*cxsdk.RoutingTarget, error) {
+	connectorID, err := extractConnectorID(namespace, target.Connector)
 	if err != nil {
 		return nil, err
 	}
 
-	presetID, err := extractPresetID(refProperties, target.Preset)
+	presetID, err := extractPresetID(namespace, target.Preset)
 	if err != nil {
 		return nil, err
 	}
@@ -172,20 +172,17 @@ func extractRoutingTarget(refProperties *ResourceRefProperties, target RoutingTa
 	}, nil
 }
 
-func extractConnectorID(refProperties *ResourceRefProperties, connector *NCRef) (string, error) {
+func extractConnectorID(namespace *string, connector *NCRef) (string, error) {
 	if connector.BackendRef != nil {
 		return connector.BackendRef.ID, nil
 	}
 
-	var namespace string
 	if connector.ResourceRef != nil && connector.ResourceRef.Namespace != nil {
-		namespace = *connector.ResourceRef.Namespace
-	} else {
-		namespace = refProperties.Namespace
+		namespace = connector.ResourceRef.Namespace
 	}
 
 	c := &Connector{}
-	err := coralogixreconciler.GetClient().Get(context.Background(), client.ObjectKey{Name: connector.ResourceRef.Name, Namespace: namespace}, c)
+	err := coralogixreconciler.GetClient().Get(context.Background(), client.ObjectKey{Name: connector.ResourceRef.Name, Namespace: *namespace}, c)
 	if err != nil {
 		return "", err
 	}
@@ -201,20 +198,17 @@ func extractConnectorID(refProperties *ResourceRefProperties, connector *NCRef) 
 	return *c.Status.Id, nil
 }
 
-func extractPresetID(refProperties *ResourceRefProperties, preset *NCRef) (*string, error) {
+func extractPresetID(namespace *string, preset *NCRef) (*string, error) {
 	if preset.BackendRef != nil {
 		return ptr.To(preset.BackendRef.ID), nil
 	}
 
-	var namespace string
 	if preset.ResourceRef != nil && preset.ResourceRef.Namespace != nil {
-		namespace = *preset.ResourceRef.Namespace
-	} else {
-		namespace = refProperties.Namespace
+		namespace = preset.ResourceRef.Namespace
 	}
 
 	p := &Preset{}
-	err := coralogixreconciler.GetClient().Get(context.Background(), client.ObjectKey{Name: preset.ResourceRef.Name, Namespace: namespace}, p)
+	err := coralogixreconciler.GetClient().Get(context.Background(), client.ObjectKey{Name: preset.ResourceRef.Name, Namespace: *namespace}, p)
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +230,18 @@ type NCBackendRef struct {
 
 // GlobalRouterStatus defines the observed state of GlobalRouter.
 type GlobalRouterStatus struct {
-	ID *string `json:"id"`
+	// +optional
+	ID *string `json:"id,omitempty"`
+	// +optional
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+}
+
+func (g *GlobalRouter) GetConditions() []metav1.Condition {
+	return g.Status.Conditions
+}
+
+func (g *GlobalRouter) SetConditions(conditions []metav1.Condition) {
+	g.Status.Conditions = conditions
 }
 
 // +kubebuilder:object:root=true
@@ -263,9 +268,4 @@ type GlobalRouterList struct {
 
 func init() {
 	SchemeBuilder.Register(&GlobalRouter{}, &GlobalRouterList{})
-}
-
-// +k8s:deepcopy-gen=false
-type ResourceRefProperties struct {
-	Namespace string
 }

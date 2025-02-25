@@ -58,7 +58,18 @@ func (s *CustomRoleSpec) ExtractUpdateCustomRoleRequest(id string) (*cxsdk.Updat
 
 // CustomRoleStatus defines the observed state of CustomRole.
 type CustomRoleStatus struct {
-	ID *string `json:"id"`
+	// +optional
+	ID *string `json:"id,omitempty"`
+	// +optional
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+}
+
+func (c *CustomRole) GetConditions() []metav1.Condition {
+	return c.Status.Conditions
+}
+
+func (c *CustomRole) SetConditions(conditions []metav1.Condition) {
+	c.Status.Conditions = conditions
 }
 
 // +kubebuilder:object:root=true

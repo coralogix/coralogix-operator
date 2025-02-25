@@ -50,13 +50,13 @@ func (r *GroupReconciler) FinalizerName() string {
 	return "group.coralogix.com/finalizer"
 }
 
-func (r *GroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) (client.Object, error) {
+func (r *GroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	group := obj.(*coralogixv1alpha1.Group)
 	createRequest, err := group.ExtractCreateGroupRequest(ctx, r.CXClientSet)
 	log.V(1).Info("Creating remote group", "group", protojson.Format(createRequest))
 	createResponse, err := r.CXClientSet.Groups().Create(ctx, createRequest)
 	if err != nil {
-		return nil, fmt.Errorf("error on creating remote group: %w", err)
+		return fmt.Errorf("error on creating remote group: %w", err)
 	}
 	log.V(1).Info("Remote group created", "group", protojson.Format(createResponse))
 
@@ -64,7 +64,7 @@ func (r *GroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 		ID: pointer.String(strconv.Itoa(int(createResponse.GroupId.Id))),
 	}
 
-	return group, nil
+	return nil
 }
 
 func (r *GroupReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
