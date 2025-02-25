@@ -62,15 +62,15 @@ func (r *TCOTracesPoliciesReconciler) FinalizerName() string {
 	return "tco-traces-policies.coralogix.com/finalizer"
 }
 
-func (r *TCOTracesPoliciesReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) (client.Object, error) {
+func (r *TCOTracesPoliciesReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	tcoTracesPolicies := obj.(*coralogixv1alpha1.TCOTracesPolicies)
 	if err := r.overwrite(ctx, log, tcoTracesPolicies); err != nil {
-		return nil, err
+		return err
 	}
 	if err := coralogixreconciler.AddFinalizer(ctx, log, tcoTracesPolicies, r); err != nil {
-		return nil, err
+		return err
 	}
-	return tcoTracesPolicies, nil
+	return nil
 }
 
 func (r *TCOTracesPoliciesReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {

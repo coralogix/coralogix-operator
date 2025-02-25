@@ -278,6 +278,16 @@ type AlertSpec struct {
 type AlertStatus struct {
 	// +optional
 	ID *string `json:"id,omitempty"`
+	// +optional
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+}
+
+func (a *Alert) GetConditions() []metav1.Condition {
+	return a.Status.Conditions
+}
+
+func (a *Alert) SetConditions(conditions []metav1.Condition) {
+	a.Status.Conditions = conditions
 }
 
 // +kubebuilder:validation:Pattern=`^UTC[+-]\d{2}$`
@@ -2330,14 +2340,6 @@ func expandLogsTimeWindow(timeWindow LogsTimeWindow) *cxsdk.LogsTimeWindow {
 	return &cxsdk.LogsTimeWindow{
 		Type: &cxsdk.LogsTimeWindowSpecificValue{
 			LogsTimeWindowSpecificValue: LogsTimeWindowToProto[timeWindow.SpecificValue],
-		},
-	}
-}
-
-func NewAlert() *Alert {
-	return &Alert{
-		Spec: AlertSpec{
-			EntityLabels: make(map[string]string),
 		},
 	}
 }

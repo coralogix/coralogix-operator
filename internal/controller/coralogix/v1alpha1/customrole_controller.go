@@ -50,13 +50,13 @@ func (r *CustomRoleReconciler) FinalizerName() string {
 	return "custom-role.coralogix.com/finalizer"
 }
 
-func (r *CustomRoleReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) (client.Object, error) {
+func (r *CustomRoleReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	customRole := obj.(*coralogixv1alpha1.CustomRole)
 	createRequest := customRole.Spec.ExtractCreateCustomRoleRequest()
 	log.V(1).Info("Creating remote customRole", "customRole", protojson.Format(createRequest))
 	createResponse, err := r.CustomRolesClient.Create(ctx, createRequest)
 	if err != nil {
-		return nil, fmt.Errorf("error on creating remote customRole: %w", err)
+		return fmt.Errorf("error on creating remote customRole: %w", err)
 	}
 	log.V(1).Info("Remote customRole created", "response", protojson.Format(createResponse))
 
@@ -64,7 +64,7 @@ func (r *CustomRoleReconciler) HandleCreation(ctx context.Context, log logr.Logg
 		ID: pointer.String(strconv.Itoa(int(createResponse.Id))),
 	}
 
-	return customRole, nil
+	return nil
 }
 
 func (r *CustomRoleReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {

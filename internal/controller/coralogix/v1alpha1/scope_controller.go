@@ -49,16 +49,16 @@ func (r *ScopeReconciler) FinalizerName() string {
 	return "scope.coralogix.com/finalizer"
 }
 
-func (r *ScopeReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) (client.Object, error) {
+func (r *ScopeReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	scope := obj.(*coralogixv1alpha1.Scope)
 	createRequest, err := scope.Spec.ExtractCreateScopeRequest()
 	if err != nil {
-		return nil, fmt.Errorf("error on extracting create request: %w", err)
+		return fmt.Errorf("error on extracting create request: %w", err)
 	}
 	log.V(1).Info("Creating remote scope", "scope", protojson.Format(createRequest))
 	createResponse, err := r.ScopesClient.Create(ctx, createRequest)
 	if err != nil {
-		return nil, fmt.Errorf("error on creating remote scope: %w", err)
+		return fmt.Errorf("error on creating remote scope: %w", err)
 	}
 	log.V(1).Info("Remote scope created", "response", protojson.Format(createResponse))
 
@@ -66,7 +66,7 @@ func (r *ScopeReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 		ID: &createResponse.Scope.Id,
 	}
 
-	return scope, nil
+	return nil
 }
 
 func (r *ScopeReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {

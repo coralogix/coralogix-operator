@@ -48,20 +48,20 @@ func (r *RuleGroupReconciler) FinalizerName() string {
 	return "rulegroup.coralogix.com/finalizer"
 }
 
-func (r *RuleGroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) (client.Object, error) {
+func (r *RuleGroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	ruleGroup := obj.(*coralogixv1alpha1.RuleGroup)
 	createRequest := ruleGroup.Spec.ExtractCreateRuleGroupRequest()
 	log.V(1).Info("Creating remote ruleGroup", "ruleGroup", protojson.Format(createRequest))
 	createResponse, err := r.RuleGroupClient.Create(ctx, createRequest)
 	if err != nil {
-		return nil, fmt.Errorf("error on creating remote ruleGroup: %w", err)
+		return fmt.Errorf("error on creating remote ruleGroup: %w", err)
 	}
 	log.V(1).Info("Remote ruleGroup created", "response", protojson.Format(createResponse))
 	ruleGroup.Status = coralogixv1alpha1.RuleGroupStatus{
 		ID: &createResponse.RuleGroup.Id.Value,
 	}
 
-	return ruleGroup, nil
+	return nil
 }
 
 func (r *RuleGroupReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {

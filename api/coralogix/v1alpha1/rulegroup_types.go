@@ -42,8 +42,7 @@ var (
 		DestinationFieldThreadID:     cxsdk.JSONExtractParametersDestinationFieldThreadID,
 		DestinationFieldRuleSeverity: cxsdk.JSONExtractParametersDestinationFieldSeverity,
 	}
-	RulesProtoSeverityDestinationFieldToSchemaDestinationField = utils.ReverseMap(RulesSchemaDestinationFieldToProtoSeverityDestinationField)
-	RulesSchemaFormatStandardToProtoFormatStandard             = map[FieldFormatStandard]cxsdk.ExtractTimestampParametersFormatStandard{
+	RulesSchemaFormatStandardToProtoFormatStandard = map[FieldFormatStandard]cxsdk.ExtractTimestampParametersFormatStandard{
 		FieldFormatStandardStrftime: cxsdk.ExtractTimestampParametersFormatStandardStrftimeOrUnspecified,
 		FieldFormatStandardJavaSDF:  cxsdk.ExtractTimestampParametersFormatStandardJavasdf,
 		FieldFormatStandardGolang:   cxsdk.ExtractTimestampParametersFormatStandardGolang,
@@ -52,11 +51,7 @@ var (
 		FieldFormatStandardMicroTS:  cxsdk.ExtractTimestampParametersFormatStandardMicroTS,
 		FieldFormatStandardNanoTS:   cxsdk.ExtractTimestampParametersFormatStandardNanoTS,
 	}
-	RulesProtoFormatStandardToSchemaFormatStandard = utils.ReverseMap(RulesSchemaFormatStandardToProtoFormatStandard)
 )
-
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 type Rule struct {
 	//+kubebuilder:validation:MinLength=0
@@ -499,9 +494,18 @@ func flattenRuleMatchers(matchers []*cxsdk.RuleMatcher) (applications []string, 
 
 // RuleGroupStatus defines the observed state of RuleGroup
 type RuleGroupStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-	ID *string `json:"id"`
+	// +optional
+	ID *string `json:"id,omitempty"`
+	// +optional
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+}
+
+func (r *RuleGroup) GetConditions() []metav1.Condition {
+	return r.Status.Conditions
+}
+
+func (r *RuleGroup) SetConditions(conditions []metav1.Condition) {
+	r.Status.Conditions = conditions
 }
 
 //+kubebuilder:object:root=true

@@ -53,16 +53,16 @@ func (r *IntegrationReconciler) FinalizerName() string {
 	return "integration.coralogix.com/finalizer"
 }
 
-func (r *IntegrationReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) (client.Object, error) {
+func (r *IntegrationReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	integration := obj.(*coralogixv1alpha1.Integration)
 	createRequest, err := integration.Spec.ExtractCreateIntegrationRequest()
 	if err != nil {
-		return nil, fmt.Errorf("error on extracting create integration request: %w", err)
+		return fmt.Errorf("error on extracting create integration request: %w", err)
 	}
 	log.V(1).Info("Creating remote integration", "integration", protojson.Format(createRequest))
 	createResponse, err := r.IntegrationsClient.Create(ctx, createRequest)
 	if err != nil {
-		return nil, fmt.Errorf("error on creating remote integration: %w", err)
+		return fmt.Errorf("error on creating remote integration: %w", err)
 	}
 	log.V(1).Info("Remote integration created", "response", protojson.Format(createResponse))
 
@@ -70,7 +70,7 @@ func (r *IntegrationReconciler) HandleCreation(ctx context.Context, log logr.Log
 		Id: &createResponse.IntegrationId.Value,
 	}
 
-	return integration, nil
+	return nil
 }
 
 func (r *IntegrationReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
