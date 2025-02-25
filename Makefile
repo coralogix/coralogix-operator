@@ -121,6 +121,7 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 .PHONY: install-prometheus-crds
 install-prometheus-crds:
 	kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/master/example/prometheus-operator-crd-full/monitoring.coreos.com_prometheusrules.yaml
+	kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/master/example/prometheus-operator-crd-full/monitoring.coreos.com_servicemonitors.yaml
 
 .PHONY: install-cert-manager
 install-cert-manager:

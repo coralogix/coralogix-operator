@@ -100,22 +100,21 @@ func (r *PrometheusRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 }
 
 func (r *PrometheusRuleReconciler) convertPrometheusRuleRecordingRuleToCxRecordingRule(ctx context.Context, log logr.Logger, prometheusRule *prometheus.PrometheusRule, req reconcile.Request) error {
-	recordingRuleGroupSetSpec := prometheusRuleToRecordingRuleToRuleGroupSet(log, prometheusRule)
-	if len(recordingRuleGroupSetSpec.Groups) == 0 {
+	desiredRecordingRuleGroupSetSpec := prometheusRuleToRecordingRuleToRuleGroupSet(log, prometheusRule)
+	if len(desiredRecordingRuleGroupSetSpec.Groups) == 0 {
 		return nil
 	}
 
-	recordingRuleGroupSet := &coralogixv1alpha1.RecordingRuleGroupSet{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace:       prometheusRule.Namespace,
-			Name:            prometheusRule.Name,
-			OwnerReferences: []metav1.OwnerReference{getOwnerReference(prometheusRule)},
-		},
-		Spec: recordingRuleGroupSetSpec,
-	}
+	recordingRuleGroupSet := &coralogixv1alpha1.RecordingRuleGroupSet{}
 
 	if err := coralogixreconcile.GetClient().Get(ctx, req.NamespacedName, recordingRuleGroupSet); err != nil {
 		if k8serrors.IsNotFound(err) {
+			recordingRuleGroupSet.Name = prometheusRule.Name
+			recordingRuleGroupSet.Namespace = prometheusRule.Namespace
+			recordingRuleGroupSet.Labels = prometheusRule.Labels
+			recordingRuleGroupSet.Labels["app.kubernetes.io/managed-by"] = prometheusRule.Name
+			recordingRuleGroupSet.OwnerReferences = []metav1.OwnerReference{getOwnerReference(prometheusRule)}
+			recordingRuleGroupSet.Spec = desiredRecordingRuleGroupSetSpec
 			if err = coralogixreconcile.GetClient().Create(ctx, recordingRuleGroupSet); err != nil {
 				return fmt.Errorf("received an error while trying to create RecordingRuleGroupSet CRD: %w", err)
 			}
@@ -125,9 +124,29 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleRecordingRuleToCxRecordi
 		return fmt.Errorf("received an error while trying to get RecordingRuleGroupSet CRD: %w", err)
 	}
 
-	recordingRuleGroupSet.Spec = recordingRuleGroupSetSpec
-	if err := coralogixreconcile.GetClient().Update(ctx, recordingRuleGroupSet); err != nil {
-		return fmt.Errorf("received an error while trying to update RecordingRuleGroupSet CRD: %w", err)
+	updated := false
+	desiredLabels := prometheusRule.Labels
+	desiredLabels["app.kubernetes.io/managed-by"] = prometheusRule.Name
+	if !reflect.DeepEqual(recordingRuleGroupSet.Labels, desiredLabels) {
+		recordingRuleGroupSet.Labels = desiredLabels
+		updated = true
+	}
+
+	desiredOwnerReferences := []metav1.OwnerReference{getOwnerReference(prometheusRule)}
+	if !reflect.DeepEqual(recordingRuleGroupSet.OwnerReferences, desiredOwnerReferences) {
+		recordingRuleGroupSet.OwnerReferences = desiredOwnerReferences
+		updated = true
+	}
+
+	if !reflect.DeepEqual(recordingRuleGroupSet.Spec, desiredRecordingRuleGroupSetSpec) {
+		recordingRuleGroupSet.Spec = desiredRecordingRuleGroupSetSpec
+		updated = true
+	}
+
+	if updated {
+		if err := coralogixreconcile.GetClient().Update(ctx, recordingRuleGroupSet); err != nil {
+			return fmt.Errorf("received an error while trying to update RecordingRuleGroupSet CRD: %w", err)
+		}
 	}
 
 	return nil
@@ -185,15 +204,10 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 				if k8serrors.IsNotFound(err) {
 					alert.Name = alertName
 					alert.Namespace = prometheusRule.Namespace
-					alert.Labels = map[string]string{"app.kubernetes.io/managed-by": prometheusRule.Name}
+					alert.Labels = prometheusRule.Labels
+					alert.Labels["app.kubernetes.io/managed-by"] = prometheusRule.Name
 					alert.OwnerReferences = []metav1.OwnerReference{getOwnerReference(prometheusRule)}
-					alert.Spec.Name = rule.Alert
-					alert.Spec.Description = rule.Annotations["description"]
-					alert.Spec.EntityLabels = rule.Labels
-					alert.Spec.Priority = getPriority(rule)
-					alert.Spec.TypeDefinition = coralogixv1beta1.AlertTypeDefinition{
-						MetricThreshold: prometheusAlertToMetricThreshold(rule),
-					}
+					alert.Spec = prometheusAlertingRuleToAlertSpec(&rule)
 					if err = coralogixreconcile.GetClient().Create(ctx, alert); err != nil {
 						errorsEncountered = append(errorsEncountered, fmt.Errorf("error creating Alert CRD %s: %w", alertName, err))
 					}
@@ -205,36 +219,22 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 			}
 
 			updated := false
-			desiredDescription := rule.Annotations["description"]
-			if alert.Spec.Description != desiredDescription {
-				alert.Spec.Description = desiredDescription
-				updated = true
-			}
-
-			desiredLabels := rule.Labels
-			if !reflect.DeepEqual(alert.Spec.EntityLabels, desiredLabels) {
-				alert.Spec.EntityLabels = desiredLabels
-				updated = true
-			}
-
-			desiredPriority := getPriority(rule)
-			if alert.Spec.Priority != desiredPriority {
-				alert.Spec.Priority = desiredPriority
-				updated = true
-			}
-
-			desiredTypeDefinition := coralogixv1beta1.AlertTypeDefinition{
-				MetricThreshold: prometheusAlertToMetricThreshold(rule),
-			}
-			desiredTypeDefinition.MetricThreshold.MissingValues.MinNonNullValuesPct = alert.Spec.TypeDefinition.MetricThreshold.MissingValues.MinNonNullValuesPct
-			if !reflect.DeepEqual(alert.Spec.TypeDefinition, desiredTypeDefinition) {
-				alert.Spec.TypeDefinition = desiredTypeDefinition
+			desiredLabels := prometheusRule.Labels
+			desiredLabels["app.kubernetes.io/managed-by"] = prometheusRule.Name
+			if !reflect.DeepEqual(alert.Labels, desiredLabels) {
+				alert.Labels = desiredLabels
 				updated = true
 			}
 
 			desiredOwnerReferences := []metav1.OwnerReference{getOwnerReference(prometheusRule)}
 			if !reflect.DeepEqual(alert.OwnerReferences, desiredOwnerReferences) {
 				alert.OwnerReferences = desiredOwnerReferences
+				updated = true
+			}
+
+			desiredSpec := prometheusAlertingRuleToAlertSpec(&rule)
+			if !reflect.DeepEqual(alert.Spec, desiredSpec) {
+				alert.Spec = desiredSpec
 				updated = true
 			}
 
@@ -277,6 +277,18 @@ func shouldTrackAlerts(prometheusRule *prometheus.PrometheusRule) bool {
 		return true
 	}
 	return false
+}
+
+func prometheusAlertingRuleToAlertSpec(rule *prometheus.Rule) coralogixv1beta1.AlertSpec {
+	return coralogixv1beta1.AlertSpec{
+		Name:         rule.Alert,
+		Description:  rule.Annotations["description"],
+		EntityLabels: rule.Labels,
+		Priority:     getPriority(*rule),
+		TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
+			MetricThreshold: prometheusAlertToMetricThreshold(*rule),
+		},
+	}
 }
 
 func prometheusRuleToRecordingRuleToRuleGroupSet(log logr.Logger, prometheusRule *prometheus.PrometheusRule) coralogixv1alpha1.RecordingRuleGroupSetSpec {
@@ -407,17 +419,23 @@ func (r *PrometheusRuleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		return false
 	}
 
+	selector := utils.GetSelector()
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&prometheus.PrometheusRule{}).
 		WithEventFilter(predicate.Funcs{
 			CreateFunc: func(e event.CreateEvent) bool {
-				return shouldTrackPrometheusRules(e.Object.GetLabels())
+				return shouldTrackPrometheusRules(e.Object.GetLabels()) &&
+					selector.Matches(e.Object.GetLabels(), e.Object.GetNamespace())
 			},
 			UpdateFunc: func(e event.UpdateEvent) bool {
-				return shouldTrackPrometheusRules(e.ObjectNew.GetLabels()) || shouldTrackPrometheusRules(e.ObjectOld.GetLabels())
+				return (shouldTrackPrometheusRules(e.ObjectNew.GetLabels()) ||
+					shouldTrackPrometheusRules(e.ObjectOld.GetLabels())) &&
+					(selector.Matches(e.ObjectNew.GetLabels(), e.ObjectNew.GetNamespace()) ||
+						selector.Matches(e.ObjectOld.GetLabels(), e.ObjectOld.GetNamespace()))
 			},
 			DeleteFunc: func(e event.DeleteEvent) bool {
-				return shouldTrackPrometheusRules(e.Object.GetLabels())
+				return shouldTrackPrometheusRules(e.Object.GetLabels()) &&
+					selector.Matches(e.Object.GetLabels(), e.Object.GetNamespace())
 			},
 		}).
 		Complete(r)

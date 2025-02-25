@@ -220,6 +220,7 @@ func (dst *Alert) ConvertFrom(srcRaw conversion.Hub) error {
 
 	dst.Spec.NotificationGroups = convertingNotificationGroupsV1beta1ToV1alpha1(src.Spec.NotificationGroup, src.Spec.NotificationGroupExcess)
 	dst.Status.ID = src.Status.ID
+	dst.Status.Conditions = src.Status.Conditions
 
 	return nil
 }
@@ -246,6 +247,7 @@ func (src *Alert) ConvertTo(dstRaw conversion.Hub) error {
 
 	dst.Spec = dstSpec
 	dst.Status.ID = src.Status.ID
+	dst.Status.Conditions = src.Status.Conditions
 
 	return nil
 }
