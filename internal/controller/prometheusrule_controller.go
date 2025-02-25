@@ -72,7 +72,7 @@ func (r *PrometheusRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 			return ctrl.Result{}, nil
 		}
 		// Error reading the object - requeue the request
-		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
+		return ctrl.Result{}, err
 	}
 
 	var errs error
@@ -93,7 +93,7 @@ func (r *PrometheusRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	}
 
 	if errs != nil {
-		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, errs
+		return ctrl.Result{}, errs
 	}
 
 	return reconcile.Result{}, nil

@@ -67,14 +67,14 @@ func (r *ApiKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			// Return and don't requeue
 			return ctrl.Result{}, nil
 		}
-		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
+		return ctrl.Result{}, err
 	}
 
 	if ptr.Deref(apiKey.Status.Id, "") == "" {
 		err := r.create(ctx, log, apiKey)
 		if err != nil {
 			log.Error(err, "Error on creating ApiKey")
-			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
+			return ctrl.Result{}, err
 		}
 		return ctrl.Result{}, nil
 	}
@@ -83,7 +83,7 @@ func (r *ApiKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		err := r.delete(ctx, log, apiKey)
 		if err != nil {
 			log.Error(err, "Error on deleting ApiKey")
-			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
+			return ctrl.Result{}, err
 		}
 		return ctrl.Result{}, nil
 	}
@@ -92,7 +92,7 @@ func (r *ApiKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		err := r.deleteRemoteApiKey(ctx, log, apiKey.Status.Id)
 		if err != nil {
 			log.Error(err, "Error on deleting ApiKey")
-			return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
+			return ctrl.Result{}, err
 		}
 		return ctrl.Result{}, nil
 	}
@@ -100,7 +100,7 @@ func (r *ApiKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	err := r.update(ctx, log, apiKey)
 	if err != nil {
 		log.Error(err, "Error on updating ApiKey")
-		return ctrl.Result{RequeueAfter: utils.DefaultErrRequeuePeriod}, err
+		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil
