@@ -7756,15 +7756,15 @@ ScopeStatus defines the observed state of Scope.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>id</b></td>
-        <td>string</td>
+        <td><b><a href="#scopestatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
         <td>
           <br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr><tr>
-        <td><b><a href="#scopestatusconditionsindex">conditions</a></b></td>
-        <td>[]object</td>
+        <td><b>id</b></td>
+        <td>string</td>
         <td>
           <br/>
         </td>

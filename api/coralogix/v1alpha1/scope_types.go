@@ -91,6 +91,7 @@ func (s *ScopeSpec) ExtractScopeFilters() ([]*cxsdk.ScopeFilter, error) {
 
 // ScopeStatus defines the observed state of Scope.
 type ScopeStatus struct {
+	// +optional
 	ID *string `json:"id"`
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
