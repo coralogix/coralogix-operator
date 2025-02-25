@@ -16,7 +16,6 @@ package e2e
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/coralogix/coralogix-operator/internal/utils"
@@ -150,20 +149,16 @@ var _ = Describe("Alert", Ordered, func() {
 		}
 		Expect(crClient.Create(ctx, alert)).To(Succeed())
 
-		By("Fetching the Alert ID")
+		By("Fetching the Alert ID and Conditions")
 		fetchedAlert := &coralogixv1beta1.Alert{}
-		Eventually(func(g Gomega) error {
+		Eventually(func(g Gomega) {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, fetchedAlert)).To(Succeed())
-			if !meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced) {
-				return fmt.Errorf("RemoteSynced condition is not true")
-			}
 
-			if fetchedAlert.Status.ID == nil {
-				return fmt.Errorf("Alert ID is not set")
-			}
+			g.Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced))
+
+			g.Expect(fetchedAlert.Status.ID).ToNot(BeNil())
 
 			alertID = *fetchedAlert.Status.ID
-			return nil
 
 		}, time.Minute, time.Second).Should(Succeed())
 
@@ -266,16 +261,13 @@ var _ = Describe("Alert", Ordered, func() {
 		err := crClient.Create(ctx, newAlert)
 		Expect(err).ToNot(HaveOccurred())
 
-		By("Fetching the Alert")
+		By("Fetching the Alert and verifying the RemoteSynced condition is false")
 		fetchedAlert := &coralogixv1beta1.Alert{}
-		Eventually(func(g Gomega) error {
+		Eventually(func(g Gomega) {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: newAlert.Name, Namespace: newAlert.Namespace}, fetchedAlert)).To(Succeed())
 
-			if meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced) {
-				return fmt.Errorf("RemoteSynced condition is true")
-			}
+			g.Expect(meta.IsStatusConditionFalse(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced))
 
-			return nil
 		}, time.Minute, time.Second).Should(Succeed())
 
 		webhook := &coralogixv1alpha1.OutboundWebhook{
@@ -305,17 +297,12 @@ var _ = Describe("Alert", Ordered, func() {
 		}
 		Expect(crClient.Patch(ctx, updateAlert, client.MergeFrom(newAlert))).To(Succeed())
 
-		By("Fetching the Alert again")
+		By("Fetching the Alert again and verifying the RemoteSynced condition is true")
 		fetchedAlert = &coralogixv1beta1.Alert{}
-		Eventually(func(g Gomega) error {
+		Eventually(func(g Gomega) {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: newAlert.Name, Namespace: newAlert.Namespace}, fetchedAlert)).To(Succeed())
 
-			if !meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced) {
-				return fmt.Errorf("RemoteSynced condition is not true")
-			}
-
-			return nil
-
+			g.Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced))
 		}, time.Minute, time.Second).Should(Succeed())
 	})
 
