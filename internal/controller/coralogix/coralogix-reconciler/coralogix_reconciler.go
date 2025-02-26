@@ -210,7 +210,7 @@ func ManageSuccessWithRequeue(ctx context.Context, log logr.Logger, obj client.O
 		}
 	}
 
-	reconsileSecondsValue, found := os.LookupEnv("RECONCILE_SECOND")
+	reconsileSecondsValue, found := os.LookupEnv("RECONCILE_INTERVAL_SECONDS")
 	reconsileSeconds, err := strconv.Atoi(reconsileSecondsValue)
 
 	if !found || err != nil {
