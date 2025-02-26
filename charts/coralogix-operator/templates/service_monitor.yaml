@@ -12,5 +12,5 @@ spec:
       scheme: http
   selector:
     matchLabels:
-    {{- include "coralogixOperator.selectorLabels" . | nindent 6 }}
+      {{- include "coralogixOperator.selectorLabels" . | nindent 6 }}
 {{- end }}
