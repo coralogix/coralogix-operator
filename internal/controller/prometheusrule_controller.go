@@ -82,12 +82,24 @@ func (r *PrometheusRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 			log.Error(err, "Received an error while trying to convert PrometheusRule to RecordingRule CRD")
 			errs = errors.Join(errs, err)
 		}
+	} else {
+		err := r.deleteCxRecordingRule(ctx, req)
+		if err != nil {
+			log.Error(err, "Received an error while trying to delete RecordingRule CRD")
+			errs = errors.Join(errs, err)
+		}
 	}
 
 	if shouldTrackAlerts(prometheusRule) {
 		err := r.convertPrometheusRuleAlertToCxAlert(ctx, prometheusRule)
 		if err != nil {
 			log.Error(err, "Received an error while trying to convert PrometheusRule to Alert CRD")
+			errs = errors.Join(errs, err)
+		}
+	} else {
+		err := r.deleteCxAlerts(ctx, prometheusRule)
+		if err != nil {
+			log.Error(err, "Received an error while trying to delete Alert CRDs")
 			errs = errors.Join(errs, err)
 		}
 	}
@@ -106,7 +118,6 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleRecordingRuleToCxRecordi
 	}
 
 	recordingRuleGroupSet := &coralogixv1alpha1.RecordingRuleGroupSet{}
-
 	if err := coralogixreconcile.GetClient().Get(ctx, req.NamespacedName, recordingRuleGroupSet); err != nil {
 		if k8serrors.IsNotFound(err) {
 			recordingRuleGroupSet.Name = prometheusRule.Name
@@ -147,6 +158,24 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleRecordingRuleToCxRecordi
 		if err := coralogixreconcile.GetClient().Update(ctx, recordingRuleGroupSet); err != nil {
 			return fmt.Errorf("received an error while trying to update RecordingRuleGroupSet CRD: %w", err)
 		}
+	}
+
+	return nil
+}
+
+func (r *PrometheusRuleReconciler) deleteCxRecordingRule(ctx context.Context, req reconcile.Request) error {
+	recordingRuleGroupSet := &coralogixv1alpha1.RecordingRuleGroupSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      req.Name,
+			Namespace: req.Namespace,
+		},
+	}
+
+	if err := coralogixreconcile.GetClient().Delete(ctx, recordingRuleGroupSet); err != nil {
+		if k8serrors.IsNotFound(err) {
+			return nil
+		}
+		return fmt.Errorf("received an error while trying to delete RecordingRuleGroupSet CRD: %w", err)
 	}
 
 	return nil
@@ -262,6 +291,30 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 	if len(errorsEncountered) > 0 {
 		return errors.Join(errorsEncountered...)
 	}
+	return nil
+}
+
+func (r *PrometheusRuleReconciler) deleteCxAlerts(ctx context.Context, prometheusRule *prometheus.PrometheusRule) error {
+	var childAlerts coralogixv1beta1.AlertList
+	err := coralogixreconcile.GetClient().List(ctx, &childAlerts, client.InNamespace(prometheusRule.Namespace), client.MatchingLabels{"app.kubernetes.io/managed-by": prometheusRule.Name})
+	if err != nil {
+		return fmt.Errorf("received an error while trying to list Alerts: %w", err)
+	}
+
+	var errs error
+	for _, alert := range childAlerts.Items {
+		if err := coralogixreconcile.GetClient().Delete(ctx, &alert); err != nil {
+			if k8serrors.IsNotFound(err) {
+				return nil
+			}
+			errs = errors.Join(errs, fmt.Errorf("received an error while trying to delete Alert CRD %s: %w", alert.Name, err))
+		}
+	}
+
+	if errs != nil {
+		return errs
+	}
+
 	return nil
 }
 
