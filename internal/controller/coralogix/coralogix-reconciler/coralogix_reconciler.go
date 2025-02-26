@@ -17,6 +17,9 @@ package coralogixreconciler
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
+	"time"
 
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
@@ -194,6 +197,8 @@ func ManageErrorWithRequeue(ctx context.Context, log logr.Logger, obj client.Obj
 }
 
 func ManageSuccessWithRequeue(ctx context.Context, log logr.Logger, obj client.Object, reason string) (reconcile.Result, error) {
+	var reconsileSeconds int
+
 	if conditionsObj, ok := (obj).(utils.ConditionsObj); ok {
 		conditions := conditionsObj.GetConditions()
 		if utils.SetSyncedConditionTrue(&conditions, obj.GetGeneration(), reason) {
@@ -205,7 +210,13 @@ func ManageSuccessWithRequeue(ctx context.Context, log logr.Logger, obj client.O
 		}
 	}
 
-	return reconcile.Result{}, nil
+	reconsileSecondsValue, found := os.LookupEnv("RECONCILE_SECOND")
+	reconsileSeconds, err := strconv.Atoi(reconsileSecondsValue)
+
+	if !found || err != nil {
+		reconsileSeconds = 2 * 60
+	}
+	return reconcile.Result{RequeueAfter: time.Duration(reconsileSeconds)}, nil
 }
 
 func objToGVK(obj client.Object) string {
