@@ -50,6 +50,7 @@ var (
 		Friday:    v1beta1.DayOfWeekFriday,
 		Saturday:  v1beta1.DayOfWeekSaturday,
 	}
+	dayOfWeekV1beta1ToV1alpha1        = coralogix.ReverseMap(dayOfWeekV1alpha1ToV1beta1)
 	severitiesFilterV1alpha1ToV1beta1 = map[FiltersLogSeverity]v1beta1.LogSeverity{
 		FiltersLogSeverityCritical: v1beta1.LogSeverityCritical,
 		FiltersLogSeverityError:    v1beta1.LogSeverityError,
@@ -647,12 +648,29 @@ func convertWebhooksV1beta1ToV1alpha1(webhooks []v1beta1.WebhookSettings) []Noti
 }
 
 func convertWebhookV1beta1ToV1alpha1(webhook v1beta1.WebhookSettings) Notification {
-	return Notification{
+	notification := Notification{
 		RetriggeringPeriodMinutes: int32(*webhook.RetriggeringPeriod.Minutes),
 		NotifyOn:                  notifyOnV1beta1ToV1alpha1[webhook.NotifyOn],
-		//TODO: migrate IntegrationName
-		EmailRecipients: webhook.Integration.Recipients,
 	}
+	notification = convertToIntegrationTypeV1beta1ToV1alpha1(webhook.Integration, &notification)
+	return notification
+}
+
+func convertToIntegrationTypeV1beta1ToV1alpha1(integration v1beta1.IntegrationType, notification *Notification) Notification {
+	if integration.IntegrationRef != nil {
+		notification.IntegrationName = convertIntegrationRefV1beta1ToV1alpha1IntegrationName(*integration.IntegrationRef)
+	} else if integration.Recipients != nil {
+		notification.EmailRecipients = integration.Recipients
+	}
+
+	return *notification
+}
+
+func convertIntegrationRefV1beta1ToV1alpha1IntegrationName(integrationRef v1beta1.IntegrationRef) *string {
+	if integrationRef.BackendRef != nil {
+		return integrationRef.BackendRef.Name
+	}
+	return nil
 }
 
 func convertSchedulingV1beta1ToV1alpha1(schedule *v1beta1.AlertSchedule) *Scheduling {
@@ -680,7 +698,7 @@ func convertTimeV1beta1ToV1alpha1(time *v1beta1.TimeOfDay) *Time {
 func convertDaysOfWeekV1beta1ToV1alpha1(week []v1beta1.DayOfWeek) []Day {
 	result := make([]Day, len(week))
 	for i, day := range week {
-		result[i] = Day(day)
+		result[i] = dayOfWeekV1beta1ToV1alpha1[day]
 	}
 
 	return result
