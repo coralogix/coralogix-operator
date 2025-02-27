@@ -19,9 +19,11 @@ import (
 	"strings"
 	"time"
 
+	"go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/conversion"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/coralogix/coralogix-operator/api/coralogix"
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
@@ -202,6 +204,7 @@ var (
 // ConvertFrom converts from the Hub version (v1beta1) to this version (v1alpha1)
 func (dst *Alert) ConvertFrom(srcRaw conversion.Hub) error {
 	src := srcRaw.(*v1beta1.Alert)
+	logf.Log.V(int(zapcore.DebugLevel)).Info("Converting from v1beta1 to v1alpha1, Alert", "Name", src.Name)
 	dst.ObjectMeta = src.ObjectMeta
 	dst.Spec = AlertSpec{
 		Name:        src.Spec.Name,
@@ -223,12 +226,15 @@ func (dst *Alert) ConvertFrom(srcRaw conversion.Hub) error {
 	dst.Status.ID = src.Status.ID
 	dst.Status.Conditions = src.Status.Conditions
 
+	logf.Log.V(int(zapcore.DebugLevel)).Info("Converted Alert", "Name", src.Name)
+
 	return nil
 }
 
 // ConvertTo converts this Alert (v1alpha1) to the Hub version (v1beta1)
 func (src *Alert) ConvertTo(dstRaw conversion.Hub) error {
 	dst := dstRaw.(*v1beta1.Alert)
+	logf.Log.V(int(zapcore.DebugLevel)).Info("Converting from v1alpha1 to v1beta1, Alert", "Name", src.Name)
 	dst.ObjectMeta = src.ObjectMeta
 	dstSpec := v1beta1.AlertSpec{
 		Name:         src.Spec.Name,
@@ -249,6 +255,8 @@ func (src *Alert) ConvertTo(dstRaw conversion.Hub) error {
 	dst.Spec = dstSpec
 	dst.Status.ID = src.Status.ID
 	dst.Status.Conditions = src.Status.Conditions
+
+	logf.Log.V(int(zapcore.DebugLevel)).Info("Converted Alert", "Name", src.Name)
 
 	return nil
 }

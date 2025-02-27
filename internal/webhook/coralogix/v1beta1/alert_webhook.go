@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 
+	"go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -62,7 +63,11 @@ func (v *AlertCustomValidator) ValidateCreate(ctx context.Context, obj runtime.O
 	}
 	alertlog.Info("Validation for Alert upon creation", "name", alert.GetName())
 
-	return validateAlert(alert)
+	warning, errors := validateAlert(alert)
+
+	alertlog.V(int(zapcore.DebugLevel)).Info("Finishing validation for Alert", "name", alert.GetName(), "warnings", warning, "errors", errors)
+
+	return warning, errors
 
 }
 
@@ -89,8 +94,12 @@ func validateAlert(alert *coralogixv1beta1.Alert) (admission.Warnings, error) {
 	}
 
 	if errs != nil {
+		alertlog.Error(errs, "Validation failed for Alert", "name", alert.GetName())
 		monitoring.IncResourceRejectionsTotalMetric(alert.Kind, alert.Name, alert.Namespace)
 	}
+
+	alertlog.V(int(zapcore.DebugLevel)).Info("Validation for Alert", "name", alert.GetName(), "warnings", warnings, "errors", errs)
+
 	return warns, errs
 }
 
