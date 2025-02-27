@@ -400,7 +400,7 @@ func convertFlowV1beta1ToV1alpha1(flow *v1beta1.Flow) *Flow {
 
 func convertMetricThresholdV1beta1ToMetricV1alpha1(metricThreshold *v1beta1.MetricThreshold) *Metric {
 	condition := metricThreshold.Rules[0].Condition
-	var minNonValuePct *int
+	var minNonValuePct *int = nil
 	if metricThreshold.MissingValues.MinNonNullValuesPct != nil {
 		minNonValuePct = pointer.Int(int(*metricThreshold.MissingValues.MinNonNullValuesPct))
 	}
@@ -410,7 +410,7 @@ func convertMetricThresholdV1beta1ToMetricV1alpha1(metricThreshold *v1beta1.Metr
 			SearchQuery: metricThreshold.MetricFilter.Promql,
 			Conditions: PromqlConditions{
 				AlertWhen:                  metricConditionTypeV1beta1ToV1alpha1[condition.ConditionType],
-				Threshold:                  condition.Threshold.DeepCopy(),
+				Threshold:                  *resource.NewQuantity(int64(condition.Threshold.Value()), resource.DecimalSI),
 				SampleThresholdPercentage:  int(condition.ForOverPct),
 				TimeWindow:                 metricTimeWindowV1beta1ToV1alpha1[condition.OfTheLast.SpecificValue],
 				MinNonNullValuesPercentage: minNonValuePct,
