@@ -1,6 +1,6 @@
 
 # Image URL to use all building/pushing image targets
-IMG ?= ntakashi/coralogix-operator:v0.0.2
+IMG ?= ntakashi/coralogix-operator:v0.0.3
 # Enable Webhooks for the operator
 ENABLE_WEBHOOKS ?= false
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
