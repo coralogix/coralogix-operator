@@ -401,12 +401,13 @@ func convertMetricThresholdV1beta1ToMetricV1alpha1(metricThreshold *v1beta1.Metr
 		Promql: &Promql{
 			SearchQuery: metricThreshold.MetricFilter.Promql,
 			Conditions: PromqlConditions{
-				AlertWhen:                  metricConditionTypeV1beta1ToV1alpha1[condition.ConditionType],
-				Threshold:                  condition.Threshold.DeepCopy(),
-				SampleThresholdPercentage:  int(condition.ForOverPct),
-				TimeWindow:                 metricTimeWindowV1beta1ToV1alpha1[condition.OfTheLast.SpecificValue],
-				MinNonNullValuesPercentage: minNonValuePct,
-				ManageUndetectedValues:     convertUndetectedValuesManagementV1beta1ToV1alpha1(metricThreshold.UndetectedValuesManagement),
+				AlertWhen:                   metricConditionTypeV1beta1ToV1alpha1[condition.ConditionType],
+				Threshold:                   condition.Threshold.DeepCopy(),
+				SampleThresholdPercentage:   int(condition.ForOverPct),
+				TimeWindow:                  metricTimeWindowV1beta1ToV1alpha1[condition.OfTheLast.SpecificValue],
+				MinNonNullValuesPercentage:  minNonValuePct,
+				ManageUndetectedValues:      convertUndetectedValuesManagementV1beta1ToV1alpha1(metricThreshold.UndetectedValuesManagement),
+				ReplaceMissingValueWithZero: metricThreshold.MissingValues.ReplaceWithZero,
 			},
 		},
 	}
@@ -466,7 +467,7 @@ func convertLogsThresholdV1beta1ToStandardV1alpha1(logsThreshold *v1beta1.LogsTh
 		Filters: convertLogsFilterV1beta1ToV1alpha1(logsThreshold.LogsFilter),
 		Conditions: StandardConditions{
 			AlertWhen:              logsConditionTypeV1beta1ToV1alpha[conditions.Condition.LogsThresholdConditionType],
-			Threshold:              pointer.Int(conditions.Condition.Threshold.Sign()),
+			Threshold:              pointer.Int(int(conditions.Condition.Threshold.Value())),
 			TimeWindow:             &timeWindow,
 			GroupBy:                groupBy,
 			ManageUndetectedValues: convertUndetectedValuesManagementV1beta1ToV1alpha1(logsThreshold.UndetectedValuesManagement),
