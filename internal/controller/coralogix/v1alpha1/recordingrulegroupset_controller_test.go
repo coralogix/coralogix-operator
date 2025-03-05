@@ -34,7 +34,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
-	"github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
+	"github.com/coralogix/coralogix-operator/internal/config"
 	"github.com/coralogix/coralogix-operator/internal/controller/mock_clientset"
 )
 
@@ -55,9 +55,11 @@ func setupRecordingRuleReconciler(t *testing.T, ctx context.Context, recordingRu
 	withWatch, err := client.NewWithWatch(mgr.GetConfig(), client.Options{
 		Scheme: mgr.GetScheme(),
 	})
-	coralogixreconciler.InitClient(withWatch)
-	coralogixreconciler.InitScheme(mgr.GetScheme())
 	assert.NoError(t, err)
+
+	err = config.InitConfig(withWatch, mgr.GetScheme(), "", "", "")
+	assert.NoError(t, err)
+
 	r := RecordingRuleGroupSetReconciler{
 		RecordingRuleGroupSetClient: recordingRuleGroupSetClient,
 	}
@@ -129,7 +131,7 @@ func TestRecordingRuleCreation(t *testing.T) {
 
 			reconciler, watcher := setupRecordingRuleReconciler(t, ctx, recordingRuleClient)
 
-			err := coralogixreconciler.GetClient().Create(ctx, &tt.recordingRule)
+			err := config.GetConfig().Client.Create(ctx, &tt.recordingRule)
 
 			assert.NoError(t, err)
 
@@ -209,7 +211,7 @@ func TestRecordingRuleUpdate(t *testing.T) {
 
 			reconciler, watcher := setupRecordingRuleReconciler(t, ctx, recordingRuleClient)
 
-			err := coralogixreconciler.GetClient().Create(ctx, &tt.recordingRule)
+			err := config.GetConfig().Client.Create(ctx, &tt.recordingRule)
 
 			assert.NoError(t, err)
 
@@ -226,14 +228,14 @@ func TestRecordingRuleUpdate(t *testing.T) {
 
 			recordingRuleGroupSet := &coralogixv1alpha1.RecordingRuleGroupSet{}
 
-			err = coralogixreconciler.GetClient().Get(ctx, types.NamespacedName{
+			err = config.GetConfig().Client.Get(ctx, types.NamespacedName{
 				Namespace: tt.recordingRule.Namespace,
 				Name:      tt.recordingRule.Name,
 			}, recordingRuleGroupSet)
 
 			assert.NoError(t, err)
 
-			err = coralogixreconciler.GetClient().Update(ctx, recordingRuleGroupSet)
+			err = config.GetConfig().Client.Update(ctx, recordingRuleGroupSet)
 			assert.NoError(t, err)
 
 			_, err = reconciler.Reconcile(ctx, ctrl.Request{

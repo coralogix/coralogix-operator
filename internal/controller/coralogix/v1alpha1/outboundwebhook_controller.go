@@ -19,8 +19,6 @@ import (
 	"fmt"
 	"strconv"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-	coralogixreconcile "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -29,9 +27,12 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/config"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
-	util "github.com/coralogix/coralogix-operator/internal/utils"
+	coralogixreconcile "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 )
 
 // OutboundWebhookReconciler reconciles a OutboundWebhook object
@@ -177,6 +178,6 @@ func getWebhookType(webhook *v1alpha1.OutboundWebhook) string {
 func (r *OutboundWebhookReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.OutboundWebhook{}).
-		WithEventFilter(util.GetSelector().Predicate()).
+		WithEventFilter(config.GetConfig().Selector.Predicate()).
 		Complete(r)
 }

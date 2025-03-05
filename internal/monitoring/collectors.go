@@ -26,7 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 
-	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
+	"github.com/coralogix/coralogix-operator/internal/config"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
@@ -112,7 +112,7 @@ func getGVKsInVersion(version string) []schema.GroupVersionKind {
 	var result []schema.GroupVersionKind
 
 	groupVersion := schema.GroupVersion{Group: utils.CoralogixAPIGroup, Version: version}
-	knownTypes := coralogixreconciler.GetScheme().KnownTypes(groupVersion)
+	knownTypes := config.GetConfig().Scheme.KnownTypes(groupVersion)
 	for kind := range knownTypes {
 		// Skip v1alpha Alert since we pick it up from v1beta1
 		if kind == "Alert" && version == utils.V1alpha1APIVersion {
@@ -133,7 +133,7 @@ func getGVKsInVersion(version string) []schema.GroupVersionKind {
 func listResourcesInGVK(gvk schema.GroupVersionKind) ([]unstructured.Unstructured, error) {
 	var result []unstructured.Unstructured
 
-	labelSelector := utils.GetSelector().LabelSelector
+	labelSelector := config.GetConfig().Selector.LabelSelector
 	if gvk.Kind == utils.PrometheusRuleKind {
 		req, err := labels.NewRequirement(utils.TrackPrometheusRuleAlertsLabelKey, selection.Equals, []string{"true"})
 		if err != nil {
@@ -142,7 +142,7 @@ func listResourcesInGVK(gvk schema.GroupVersionKind) ([]unstructured.Unstructure
 		labelSelector = labelSelector.Add(*req)
 	}
 
-	namespaces := utils.GetSelector().NamespaceSelector
+	namespaces := config.GetConfig().Selector.NamespaceSelector
 	if len(namespaces) == 0 {
 		namespaces = []string{""} // Empty string means "all namespaces" in client.List
 	}
@@ -150,7 +150,7 @@ func listResourcesInGVK(gvk schema.GroupVersionKind) ([]unstructured.Unstructure
 	for _, ns := range namespaces {
 		resources := &unstructured.UnstructuredList{}
 		resources.SetGroupVersionKind(gvk)
-		if err := coralogixreconciler.GetClient().List(context.Background(), resources,
+		if err := config.GetConfig().Client.List(context.Background(), resources,
 			&client.ListOptions{LabelSelector: labelSelector, Namespace: ns}); err != nil {
 			return nil, err
 		}

@@ -33,7 +33,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	"github.com/coralogix/coralogix-operator/api/coralogix"
-	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
+	"github.com/coralogix/coralogix-operator/internal/config"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
@@ -1922,7 +1922,7 @@ func expandAlertRef(listingAlertsProperties *GetResourceRefProperties, ref Alert
 func convertAlertCrNameToID(listingAlertsProperties *GetResourceRefProperties, alertCrName string) (*wrapperspb.StringValue, error) {
 	ctx, namespace := listingAlertsProperties.Ctx, listingAlertsProperties.Namespace
 	alertCR := &Alert{}
-	err := coralogixreconciler.GetClient().Get(ctx, client.ObjectKey{Name: alertCrName, Namespace: namespace}, alertCR)
+	err := config.GetConfig().Client.Get(ctx, client.ObjectKey{Name: alertCrName, Namespace: namespace}, alertCR)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get alert %w", err)
 	}
@@ -2364,11 +2364,11 @@ func convertCRNameToIntegrationID(name string, properties *GetResourceRefPropert
 		Version: utils.V1alpha1APIVersion,
 	})
 
-	if err := coralogixreconciler.GetClient().Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
+	if err := config.GetConfig().Client.Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
 		return nil, fmt.Errorf("failed to get webhook, name: %s, namespace: %s, error: %w", name, namespace, err)
 	}
 
-	if !utils.GetSelector().Matches(u.GetLabels(), u.GetNamespace()) {
+	if !config.GetConfig().Selector.Matches(u.GetLabels(), u.GetNamespace()) {
 		return nil, fmt.Errorf("outbound webhook %s does not match selector", u.GetName())
 	}
 
@@ -2398,11 +2398,11 @@ func convertCRNameToConnectorID(name string, properties *GetResourceRefPropertie
 		Version: utils.V1alpha1APIVersion,
 	})
 
-	if err := coralogixreconciler.GetClient().Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
+	if err := config.GetConfig().Client.Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
 		return "", fmt.Errorf("failed to get connector: %w", err)
 	}
 
-	if !utils.GetSelector().Matches(u.GetLabels(), u.GetNamespace()) {
+	if !config.GetConfig().Selector.Matches(u.GetLabels(), u.GetNamespace()) {
 		return "", fmt.Errorf("outbound webhook %s does not match selector", u.GetName())
 	}
 
@@ -2427,11 +2427,11 @@ func convertCRNameToPresetID(name string, properties *GetResourceRefProperties) 
 		Version: utils.V1alpha1APIVersion,
 	})
 
-	if err := coralogixreconciler.GetClient().Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
+	if err := config.GetConfig().Client.Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
 		return "", fmt.Errorf("failed to get preset: %w", err)
 	}
 
-	if !utils.GetSelector().Matches(u.GetLabels(), u.GetNamespace()) {
+	if !config.GetConfig().Selector.Matches(u.GetLabels(), u.GetNamespace()) {
 		return "", fmt.Errorf("preset %s does not match selector", u.GetName())
 	}
 

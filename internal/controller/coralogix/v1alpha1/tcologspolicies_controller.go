@@ -26,8 +26,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/config"
 	"github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // TCOLogsPoliciesReconciler reconciles a TCOLogsPolicies object
@@ -100,6 +100,6 @@ func (r *TCOLogsPoliciesReconciler) CheckIDInStatus(_ client.Object) bool {
 func (r *TCOLogsPoliciesReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.TCOLogsPolicies{}).
-		WithEventFilter(utils.GetSelector().Predicate()).
+		WithEventFilter(config.GetConfig().Selector.Predicate()).
 		Complete(r)
 }

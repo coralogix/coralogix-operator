@@ -27,8 +27,8 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/config"
 	"github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // ConnectorReconciler reconciles a Connector object
@@ -99,6 +99,6 @@ func (r *ConnectorReconciler) CheckIDInStatus(obj client.Object) bool {
 func (r *ConnectorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.Connector{}).
-		WithEventFilter(utils.GetSelector().Predicate()).
+		WithEventFilter(config.GetConfig().Selector.Predicate()).
 		Complete(r)
 }

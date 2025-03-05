@@ -44,12 +44,11 @@ import (
 	"github.com/coralogix/coralogix-operator/api/coralogix"
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
+	"github.com/coralogix/coralogix-operator/internal/config"
 	controllers "github.com/coralogix/coralogix-operator/internal/controller"
-	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	v1alpha1controllers "github.com/coralogix/coralogix-operator/internal/controller/coralogix/v1alpha1"
 	v1beta1controllers "github.com/coralogix/coralogix-operator/internal/controller/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
-	"github.com/coralogix/coralogix-operator/internal/utils"
 	webhookcoralogixv1alpha1 "github.com/coralogix/coralogix-operator/internal/webhook/coralogix/v1alpha1"
 	webhookcoralogixv1beta1 "github.com/coralogix/coralogix-operator/internal/webhook/coralogix/v1beta1"
 	//+kubebuilder:scaffold:imports
@@ -124,6 +123,9 @@ func main() {
 	namespaceSelector := os.Getenv("NAMESPACE_SELECTOR")
 	flag.StringVar(&namespaceSelector, "namespace-selector", namespaceSelector, "A list of namespaces to filter custom resources.")
 
+	reconcileInterval := os.Getenv("RECONCILE_INTERVAL_SECONDS")
+	flag.StringVar(&reconcileInterval, "reconcile-interval-seconds", reconcileInterval, "The interval in seconds between reconciliations.")
+
 	enableWebhooks := os.Getenv("ENABLE_WEBHOOKS")
 	flag.StringVar(&enableWebhooks, "enable-webhooks", enableWebhooks, "Enable webhooks for the operator. Default is true.")
 	enableWebhooks = strings.ToLower(enableWebhooks)
@@ -167,11 +169,6 @@ func main() {
 	if apiKey == "" {
 		err := fmt.Errorf("api-key can not be empty")
 		setupLog.Error(err, "invalid arguments for running operator")
-		os.Exit(1)
-	}
-
-	if err := utils.InitSelector(labelSelector, namespaceSelector); err != nil {
-		setupLog.Error(err, "unable to initialize selector")
 		os.Exit(1)
 	}
 
@@ -230,8 +227,12 @@ func main() {
 		strings.ToLower(targetUrl),
 		cxsdk.NewAuthContext(apiKey, apiKey),
 		OperatorVersion))
-	coralogixreconciler.InitClient(mgr.GetClient())
-	coralogixreconciler.InitScheme(mgr.GetScheme())
+
+	err = config.InitConfig(mgr.GetClient(), mgr.GetScheme(), labelSelector, namespaceSelector, reconcileInterval)
+	if err != nil {
+		setupLog.Error(err, "unable to initialize config")
+		os.Exit(1)
+	}
 
 	if err = (&v1alpha1controllers.RuleGroupReconciler{
 		RuleGroupClient: clientSet.RuleGroups(),

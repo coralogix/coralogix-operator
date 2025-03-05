@@ -27,9 +27,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/config"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // RecordingRuleGroupSetReconciler reconciles a RecordingRuleGroupSet object
@@ -104,6 +104,6 @@ func (r *RecordingRuleGroupSetReconciler) CheckIDInStatus(obj client.Object) boo
 func (r *RecordingRuleGroupSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.RecordingRuleGroupSet{}).
-		WithEventFilter(utils.GetSelector().Predicate()).
+		WithEventFilter(config.GetConfig().Selector.Predicate()).
 		Complete(r)
 }

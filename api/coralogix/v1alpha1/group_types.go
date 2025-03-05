@@ -25,9 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-
-	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/internal/utils"
+	"github.com/coralogix/coralogix-operator/internal/config"
 )
 
 // GroupSpec defines the desired state of Group.
@@ -185,11 +183,11 @@ func (g *Group) getRoleIDFromCustomRole(customRole GroupCustomRole) (*cxsdk.Role
 	}
 
 	cr := &CustomRole{}
-	if err := coralogixreconciler.GetClient().Get(context.Background(), client.ObjectKey{Name: customRole.ResourceRef.Name, Namespace: namespace}, cr); err != nil {
+	if err := config.GetConfig().Client.Get(context.Background(), client.ObjectKey{Name: customRole.ResourceRef.Name, Namespace: namespace}, cr); err != nil {
 		return nil, err
 	}
 
-	if !utils.GetSelector().Matches(cr.Labels, cr.Namespace) {
+	if !config.GetConfig().Selector.Matches(cr.Labels, cr.Namespace) {
 		return nil, fmt.Errorf("custom role %s does not match selector", cr.Name)
 	}
 
@@ -218,11 +216,11 @@ func (g *Group) ExtractScopeId() (*string, error) {
 	}
 
 	sc := &Scope{}
-	if err := coralogixreconciler.GetClient().Get(context.Background(), client.ObjectKey{Name: g.Spec.Scope.ResourceRef.Name, Namespace: namespace}, sc); err != nil {
+	if err := config.GetConfig().Client.Get(context.Background(), client.ObjectKey{Name: g.Spec.Scope.ResourceRef.Name, Namespace: namespace}, sc); err != nil {
 		return nil, err
 	}
 
-	if !utils.GetSelector().Matches(sc.Labels, sc.Namespace) {
+	if !config.GetConfig().Selector.Matches(sc.Labels, sc.Namespace) {
 		return nil, fmt.Errorf("scope %s does not match selector", sc.Name)
 	}
 
