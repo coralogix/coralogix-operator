@@ -18,17 +18,18 @@ import (
 	"context"
 	"fmt"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/config"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // RuleGroupReconciler reconciles a RuleGroup object
@@ -98,6 +99,6 @@ func (r *RuleGroupReconciler) CheckIDInStatus(obj client.Object) bool {
 func (r *RuleGroupReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.RuleGroup{}).
-		WithEventFilter(utils.GetSelector().Predicate()).
+		WithEventFilter(config.GetConfig().Selector.Predicate()).
 		Complete(r)
 }

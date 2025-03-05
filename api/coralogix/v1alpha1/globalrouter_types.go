@@ -25,8 +25,7 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
-	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/internal/utils"
+	"github.com/coralogix/coralogix-operator/internal/config"
 )
 
 // GlobalRouterSpec defines the desired state of GlobalRouter.
@@ -182,12 +181,12 @@ func extractConnectorID(namespace *string, connector *NCRef) (string, error) {
 	}
 
 	c := &Connector{}
-	err := coralogixreconciler.GetClient().Get(context.Background(), client.ObjectKey{Name: connector.ResourceRef.Name, Namespace: *namespace}, c)
+	err := config.GetConfig().Client.Get(context.Background(), client.ObjectKey{Name: connector.ResourceRef.Name, Namespace: *namespace}, c)
 	if err != nil {
 		return "", err
 	}
 
-	if !utils.GetSelector().Matches(c.Labels, c.Namespace) {
+	if !config.GetConfig().Selector.Matches(c.Labels, c.Namespace) {
 		return "", fmt.Errorf("connector %s does not match selector", c.Name)
 	}
 
@@ -208,12 +207,12 @@ func extractPresetID(namespace *string, preset *NCRef) (*string, error) {
 	}
 
 	p := &Preset{}
-	err := coralogixreconciler.GetClient().Get(context.Background(), client.ObjectKey{Name: preset.ResourceRef.Name, Namespace: *namespace}, p)
+	err := config.GetConfig().Client.Get(context.Background(), client.ObjectKey{Name: preset.ResourceRef.Name, Namespace: *namespace}, p)
 	if err != nil {
 		return nil, err
 	}
 
-	if !utils.GetSelector().Matches(p.Labels, p.Namespace) {
+	if !config.GetConfig().Selector.Matches(p.Labels, p.Namespace) {
 		return nil, fmt.Errorf("Preset %s does not match selector", p.Name)
 	}
 

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package utils
+package config
 
 import (
 	"fmt"
@@ -22,8 +22,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
-
-var selector *Selector
 
 type Selector struct {
 	LabelSelector     labels.Selector
@@ -64,17 +62,16 @@ func (s *Selector) MatchesNamespace(namespace string) bool {
 	return false
 }
 
-func InitSelector(labelSelector, namespaceSelector string) error {
+func parseSelector(labelSelector, namespaceSelector string) (*Selector, error) {
 	parsedLabelSelector, err := labels.Parse(labelSelector)
 	if err != nil {
-		return fmt.Errorf("failed to parse label selector: %w", err)
+		return nil, fmt.Errorf("failed to parse label selector: %w", err)
 	}
 
-	selector = &Selector{
+	return &Selector{
 		LabelSelector:     parsedLabelSelector,
 		NamespaceSelector: parseNamespaceSelector(namespaceSelector),
-	}
-	return nil
+	}, nil
 }
 
 func parseNamespaceSelector(namespaceSelector string) []string {
@@ -88,13 +85,4 @@ func parseNamespaceSelector(namespaceSelector string) []string {
 	}
 
 	return namespaceList
-}
-
-func GetSelector() *Selector {
-	if selector == nil {
-		selector = &Selector{
-			LabelSelector: labels.Everything(),
-		}
-	}
-	return selector
 }

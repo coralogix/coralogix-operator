@@ -38,8 +38,8 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/config"
 	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
-	"github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	"github.com/coralogix/coralogix-operator/internal/controller/mock_clientset"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
@@ -178,8 +178,9 @@ func TestRuleGroupReconciler_Reconcile(t *testing.T) {
 	}
 	r.SetupWithManager(mgr)
 
-	coralogixreconciler.InitClient(withWatch)
-	coralogixreconciler.InitScheme(mgr.GetScheme())
+	err = config.InitConfig(withWatch, mgr.GetScheme(), "", "", "")
+	assert.NoError(t, err)
+
 	watcher, _ := withWatch.Watch(ctx, &coralogixv1alpha1.RuleGroupList{})
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
@@ -238,8 +239,10 @@ func TestRuleGroupReconciler_Reconcile_5XX_StatusError(t *testing.T) {
 		RuleGroupClient: ruleGroupClient,
 	}
 	r.SetupWithManager(mgr)
-	coralogixreconciler.InitClient(withWatch)
-	coralogixreconciler.InitScheme(mgr.GetScheme())
+
+	err = config.InitConfig(withWatch, mgr.GetScheme(), "", "", "")
+	assert.NoError(t, err)
+
 	watcher, _ := withWatch.Watch(ctx, &coralogixv1alpha1.RuleGroupList{})
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 

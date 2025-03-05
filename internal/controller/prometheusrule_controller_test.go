@@ -33,7 +33,7 @@ import (
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
-	coralogixreconcile "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
+	"github.com/coralogix/coralogix-operator/internal/config"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
@@ -59,7 +59,8 @@ func setupReconciler(t *testing.T, ctx context.Context) (PrometheusRuleReconcile
 		Mapper:     mgr.GetRESTMapper(),
 		Cache:      &client.CacheOptions{Reader: mgr.GetCache()},
 	})
-	coralogixreconcile.InitClient(withWatch)
+	err = config.InitConfig(mgr.GetClient(), mgr.GetScheme(), "", "", "")
+	assert.NoError(t, err)
 
 	assert.NoError(t, err)
 	r := PrometheusRuleReconciler{}
@@ -166,7 +167,7 @@ func TestPrometheusRulesConversionToCxParsingRules(t *testing.T) {
 
 			var err error
 			if tt.shouldCreate {
-				err = coralogixreconcile.GetClient().Create(ctx, tt.prometheusRule)
+				err = config.GetConfig().Client.Create(ctx, tt.prometheusRule)
 				assert.NoError(t, err)
 			}
 
@@ -284,7 +285,7 @@ func TestPrometheusRulesConvertionToCxAlert(t *testing.T) {
 			reconciler, watcher := setupReconciler(t, ctx)
 			var err error
 			if tt.shouldCreate {
-				err = coralogixreconcile.GetClient().Create(ctx, tt.prometheusRule)
+				err = config.GetConfig().Client.Create(ctx, tt.prometheusRule)
 				assert.NoError(t, err)
 			}
 
