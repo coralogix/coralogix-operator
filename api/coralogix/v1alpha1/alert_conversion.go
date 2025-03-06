@@ -722,21 +722,21 @@ func convertSchedulingV1alpha1ToV1beta1(scheduling *Scheduling) *v1beta1.AlertSc
 
 func convertAlertTypeV1alpha1ToV1beta1(srcSpec AlertSpec) (v1beta1.AlertTypeDefinition, []string) {
 	if standard := srcSpec.AlertType.Standard; standard != nil {
-		return convertStandardV1alpha1ToV1beta1(standard, srcSpec.PayloadFilters)
+		return convertStandardV1alpha1ToV1beta1(standard, srcSpec.PayloadFilters, srcSpec.Severity)
 	} else if flow := srcSpec.AlertType.Flow; flow != nil {
 		return convertFlowV1alpha1ToV1beta1(flow), nil
 	} else if metric := srcSpec.AlertType.Metric; metric != nil {
 		if promql := metric.Promql; promql != nil {
-			return convertPromqlV1alpha1ToV1beta1(promql), nil
+			return convertPromqlV1alpha1ToV1beta1(promql, srcSpec.Severity), nil
 		}
 	} else if newValue := srcSpec.AlertType.NewValue; newValue != nil {
 		return convertNewValueV1alpha1ToV1beta1(newValue, srcSpec.PayloadFilters), nil
 	} else if tracing := srcSpec.AlertType.Tracing; tracing != nil {
 		return convertTracingV1alpha1ToV1beta1(tracing, srcSpec.PayloadFilters)
 	} else if ratio := srcSpec.AlertType.Ratio; ratio != nil {
-		return convertRatioV1alpha1ToV1beta1(ratio)
+		return convertRatioV1alpha1ToV1beta1(ratio, srcSpec.Severity)
 	} else if timeRelative := srcSpec.AlertType.TimeRelative; timeRelative != nil {
-		return convertTimeRelativeV1alpha1ToV1beta1(timeRelative, srcSpec.PayloadFilters)
+		return convertTimeRelativeV1alpha1ToV1beta1(timeRelative, srcSpec.PayloadFilters, srcSpec.Severity)
 	} else if uniqueCount := srcSpec.AlertType.UniqueCount; uniqueCount != nil {
 		return convertUniqueCountV1alpha1ToV1beta1(uniqueCount, srcSpec.PayloadFilters)
 	}
@@ -765,7 +765,7 @@ func convertUniqueCountV1alpha1ToV1beta1(uniqueCount *UniqueCount, payloadFilter
 	}, groupBy
 }
 
-func convertTimeRelativeV1alpha1ToV1beta1(timeRelative *TimeRelative, payloadFilters []string) (v1beta1.AlertTypeDefinition, []string) {
+func convertTimeRelativeV1alpha1ToV1beta1(timeRelative *TimeRelative, payloadFilters []string, severity AlertSeverity) (v1beta1.AlertTypeDefinition, []string) {
 	return v1beta1.AlertTypeDefinition{
 		LogsTimeRelativeThreshold: &v1beta1.LogsTimeRelativeThreshold{
 			LogsFilter:                 *convertLogsFilterV1alpha1ToV1beta1(timeRelative.Filters),
@@ -773,13 +773,13 @@ func convertTimeRelativeV1alpha1ToV1beta1(timeRelative *TimeRelative, payloadFil
 			NotificationPayloadFilter:  payloadFilters,
 			UndetectedValuesManagement: convertUndetectedValuesManagementV1alpha1ToV1beta1(timeRelative.Conditions.ManageUndetectedValues),
 			Rules: []v1beta1.LogsTimeRelativeRule{
-				convertTimeRelativeConditionsV1alpha1ToV1beta1(timeRelative.Conditions),
+				convertTimeRelativeConditionsV1alpha1ToV1beta1(timeRelative.Conditions, severity),
 			},
 		},
 	}, timeRelative.Conditions.GroupBy
 }
 
-func convertRatioV1alpha1ToV1beta1(ratio *Ratio) (v1beta1.AlertTypeDefinition, []string) {
+func convertRatioV1alpha1ToV1beta1(ratio *Ratio, severity AlertSeverity) (v1beta1.AlertTypeDefinition, []string) {
 	return v1beta1.AlertTypeDefinition{
 		LogsRatioThreshold: &v1beta1.LogsRatioThreshold{
 			Numerator:        *convertLogsFilterV1alpha1ToV1beta1(&ratio.Query1Filters),
@@ -787,7 +787,7 @@ func convertRatioV1alpha1ToV1beta1(ratio *Ratio) (v1beta1.AlertTypeDefinition, [
 			Denominator:      *convertDenominatorV1alpha1ToV1beta1(&ratio.Query2Filters),
 			DenominatorAlias: *ratio.Query2Filters.Alias,
 			Rules: []v1beta1.LogsRatioThresholdRule{
-				covertRatioConditionsV1alpha1ToV1beta1(ratio.Conditions),
+				covertRatioConditionsV1alpha1ToV1beta1(ratio.Conditions, severity),
 			},
 		},
 	}, ratio.Conditions.GroupBy
@@ -834,25 +834,25 @@ func convertFlowV1alpha1ToV1beta1(flow *Flow) v1beta1.AlertTypeDefinition {
 	}
 }
 
-func convertStandardV1alpha1ToV1beta1(standard *Standard, payloadFilters []string) (v1beta1.AlertTypeDefinition, []string) {
+func convertStandardV1alpha1ToV1beta1(standard *Standard, payloadFilters []string, severity AlertSeverity) (v1beta1.AlertTypeDefinition, []string) {
 	switch standard.Conditions.AlertWhen {
 	case StandardAlertWhenImmediately:
 		return convertStandardImmediateV1alpha1toV1beta1(standard, payloadFilters), nil
 	case StandardAlertWhenMoreThanUsual:
 		return convertStandardAnomalyV1alpha1ToV1beta1(standard, payloadFilters), standard.Conditions.GroupBy
 	default:
-		return convertStandardThresholdV1alpha1ToV1beta1(standard, payloadFilters), standard.Conditions.GroupBy
+		return convertStandardThresholdV1alpha1ToV1beta1(standard, payloadFilters, severity), standard.Conditions.GroupBy
 	}
 }
 
-func convertStandardThresholdV1alpha1ToV1beta1(standard *Standard, payloadFilters []string) v1beta1.AlertTypeDefinition {
+func convertStandardThresholdV1alpha1ToV1beta1(standard *Standard, payloadFilters []string, severity AlertSeverity) v1beta1.AlertTypeDefinition {
 	return v1beta1.AlertTypeDefinition{
 		LogsThreshold: &v1beta1.LogsThreshold{
 			NotificationPayloadFilter:  payloadFilters,
 			LogsFilter:                 convertLogsFilterV1alpha1ToV1beta1(standard.Filters),
 			UndetectedValuesManagement: convertUndetectedValuesManagementV1alpha1ToV1beta1(standard.Conditions.ManageUndetectedValues),
 			Rules: []v1beta1.LogsThresholdRule{
-				convertStandardConditionsV1alpha1ToLogsThresholdRuleV1beta1(standard.Conditions),
+				convertStandardConditionsV1alpha1ToLogsThresholdRuleV1beta1(standard.Conditions, severity),
 			},
 		},
 	}
@@ -894,23 +894,23 @@ func convertStandardConditionsV1alpha1ToLogsAnomalyRuleV1beta1(conditions Standa
 	}
 }
 
-func convertPromqlV1alpha1ToV1beta1(promql *Promql) v1beta1.AlertTypeDefinition {
+func convertPromqlV1alpha1ToV1beta1(promql *Promql, severity AlertSeverity) v1beta1.AlertTypeDefinition {
 	switch promql.Conditions.AlertWhen {
 	case PromqlAlertWhenMoreThanUsual, PromqlAlertWhenLessThanUsual:
 		return convertPromqlMoreThanUsualV1alpha1ToV1beta1(promql)
 	default:
-		return convertPromqlThresholdV1alpha1ToV1beta1(promql)
+		return convertPromqlThresholdV1alpha1ToV1beta1(promql, severity)
 	}
 }
 
-func convertPromqlThresholdV1alpha1ToV1beta1(promql *Promql) v1beta1.AlertTypeDefinition {
+func convertPromqlThresholdV1alpha1ToV1beta1(promql *Promql, severity AlertSeverity) v1beta1.AlertTypeDefinition {
 	return v1beta1.AlertTypeDefinition{
 		MetricThreshold: &v1beta1.MetricThreshold{
 			MetricFilter: v1beta1.MetricFilter{
 				Promql: promql.SearchQuery,
 			},
 			Rules: []v1beta1.MetricThresholdRule{
-				convertPromqlConditionsV1alpha1ToMetricThresholdRuleV1beta1(promql.Conditions),
+				convertPromqlConditionsV1alpha1ToMetricThresholdRuleV1beta1(promql.Conditions, severity),
 			},
 			MissingValues:              convertMissingValuesV1alpha1ToV1beta1(promql.Conditions),
 			UndetectedValuesManagement: convertUndetectedValuesManagementV1alpha1ToV1beta1(promql.Conditions.ManageUndetectedValues),
@@ -952,17 +952,20 @@ func convertUniqueCountConditionsV1alpha1ToV1beta1(conditions UniqueCountConditi
 	}
 }
 
-func convertTimeRelativeConditionsV1alpha1ToV1beta1(conditions TimeRelativeConditions) v1beta1.LogsTimeRelativeRule {
+func convertTimeRelativeConditionsV1alpha1ToV1beta1(conditions TimeRelativeConditions, severity AlertSeverity) v1beta1.LogsTimeRelativeRule {
 	return v1beta1.LogsTimeRelativeRule{
 		Condition: v1beta1.LogsTimeRelativeCondition{
 			Threshold:     conditions.Threshold.DeepCopy(),
 			ComparedTo:    timeRelativeTimeWindowV1alpha1ToV1beta1[conditions.TimeWindow],
 			ConditionType: timeRelativeConditionTypeV1alpha1ToV1beta1[conditions.AlertWhen],
 		},
+		Override: &v1beta1.AlertOverride{
+			Priority: SeveritiesV1alpha1ToV1beta1[severity],
+		},
 	}
 }
 
-func covertRatioConditionsV1alpha1ToV1beta1(conditions RatioConditions) v1beta1.LogsRatioThresholdRule {
+func covertRatioConditionsV1alpha1ToV1beta1(conditions RatioConditions, severity AlertSeverity) v1beta1.LogsRatioThresholdRule {
 	return v1beta1.LogsRatioThresholdRule{
 		Condition: v1beta1.LogsRatioCondition{
 			Threshold: conditions.Ratio.DeepCopy(),
@@ -970,6 +973,9 @@ func covertRatioConditionsV1alpha1ToV1beta1(conditions RatioConditions) v1beta1.
 				SpecificValue: logsRatioTimeWindowV1alpha1ToV1beta1[conditions.TimeWindow],
 			},
 			ConditionType: ratioConditionTypeV1alpha1ToV1beta1[conditions.AlertWhen],
+		},
+		Override: &v1beta1.AlertOverride{
+			Priority: SeveritiesV1alpha1ToV1beta1[severity],
 		},
 	}
 }
@@ -1058,7 +1064,7 @@ func convertNewValueConditionsV1alpha1ToV1beta1(conditions NewValueConditions) v
 	}
 }
 
-func convertPromqlConditionsV1alpha1ToMetricThresholdRuleV1beta1(conditions PromqlConditions) v1beta1.MetricThresholdRule {
+func convertPromqlConditionsV1alpha1ToMetricThresholdRuleV1beta1(conditions PromqlConditions, severity AlertSeverity) v1beta1.MetricThresholdRule {
 	return v1beta1.MetricThresholdRule{
 		Condition: v1beta1.MetricThresholdRuleCondition{
 			Threshold:  conditions.Threshold.DeepCopy(),
@@ -1067,6 +1073,9 @@ func convertPromqlConditionsV1alpha1ToMetricThresholdRuleV1beta1(conditions Prom
 				SpecificValue: metricTimeWindowV1alpha1ToV1beta1[conditions.TimeWindow],
 			},
 			ConditionType: metricConditionTypeV1alpha1ToV1beta1[conditions.AlertWhen],
+		},
+		Override: &v1beta1.AlertOverride{
+			Priority: SeveritiesV1alpha1ToV1beta1[severity],
 		},
 	}
 }
@@ -1129,7 +1138,7 @@ func convertFlowAlertDefsV1alpha1ToV1beta1(alerts []InnerFlowAlert) []v1beta1.Fl
 	return result
 }
 
-func convertStandardConditionsV1alpha1ToLogsThresholdRuleV1beta1(conditions StandardConditions) v1beta1.LogsThresholdRule {
+func convertStandardConditionsV1alpha1ToLogsThresholdRuleV1beta1(conditions StandardConditions, severity AlertSeverity) v1beta1.LogsThresholdRule {
 	return v1beta1.LogsThresholdRule{
 		Condition: v1beta1.LogsThresholdRuleCondition{
 			TimeWindow: v1beta1.LogsTimeWindow{
@@ -1137,6 +1146,9 @@ func convertStandardConditionsV1alpha1ToLogsThresholdRuleV1beta1(conditions Stan
 			},
 			Threshold:                  *resource.NewQuantity(int64(*conditions.Threshold), resource.DecimalSI),
 			LogsThresholdConditionType: logsConditionTypeV1alpha1ToV1beta1[conditions.AlertWhen],
+		},
+		Override: &v1beta1.AlertOverride{
+			Priority: SeveritiesV1alpha1ToV1beta1[severity],
 		},
 	}
 }
