@@ -31,6 +31,7 @@ type CustomRoleSpec struct {
 
 	ParentRoleName string `json:"parentRoleName"`
 
+	// +kubebuilder:validation:MinItems=1
 	Permissions []string `json:"permissions"`
 }
 

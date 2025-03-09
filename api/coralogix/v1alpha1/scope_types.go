@@ -30,6 +30,7 @@ type ScopeSpec struct {
 	// +optional
 	Description *string `json:"description,omitempty"`
 
+	// +kubebuilder:validation:MinItems=1
 	Filters []ScopeFilter `json:"filters"`
 
 	// +kubebuilder:validation:Enum=<v1>true;<v1>false

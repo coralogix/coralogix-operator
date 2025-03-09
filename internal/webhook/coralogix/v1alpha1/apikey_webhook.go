@@ -129,7 +129,7 @@ func validateOwner(owner coralogixv1alpha1.ApiKeyOwner) error {
 }
 
 func validatePresetsAndPermissions(presets, permissions []string) error {
-	if presets == nil && permissions == nil {
+	if (presets == nil && permissions == nil) || (len(presets) == 0 && len(permissions) == 0) {
 		return fmt.Errorf("at least one of the presets or permissions fields must be set")
 	}
 	return nil
