@@ -131,7 +131,7 @@ func getSampleSlackPreset(name, namespace string) *coralogixv1alpha1.Preset {
 			Namespace: namespace,
 		},
 		Spec: coralogixv1alpha1.PresetSpec{
-			Name:        "Slack Alert Preset",
+			Name:        name,
 			Description: "A preset for Slack integration",
 			EntityType:  "alerts",
 			ParentId:    "preset_system_slack_alerts_basic",

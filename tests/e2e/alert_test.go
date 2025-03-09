@@ -16,6 +16,7 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/coralogix/coralogix-operator/internal/utils"
@@ -52,12 +53,12 @@ var _ = Describe("Alert", Ordered, func() {
 
 	It("Should be created successfully", func(ctx context.Context) {
 		By("Creating Slack Connector")
-		connectorName := "slack-connector-for-alert"
+		connectorName := fmt.Sprintf("slack-connector-for-alert-%d", time.Now().Unix())
 		connector := getSampleSlackConnector(connectorName, testNamespace)
 		Expect(crClient.Create(ctx, connector)).To(Succeed())
 
 		By("Creating Slack Preset")
-		presetName := "slack-preset-for-alert"
+		presetName := fmt.Sprintf("slack-preset-for-alert-%d", time.Now().Unix())
 		preset := getSampleSlackPreset(presetName, testNamespace)
 		Expect(crClient.Create(ctx, preset)).To(Succeed())
 

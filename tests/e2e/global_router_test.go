@@ -32,12 +32,12 @@ var _ = PDescribe("GlobalRouter", Ordered, func() {
 
 	It("Should be created successfully", func(ctx context.Context) {
 		By("Creating Slack Connector")
-		connectorName := "slack-connector-for-global-router"
+		connectorName := fmt.Sprintf("slack-connector-for-global-router-%d", time.Now().Unix())
 		connector := getSampleSlackConnector(connectorName, testNamespace)
 		Expect(crClient.Create(ctx, connector)).To(Succeed())
 
 		By("Creating Slack Preset")
-		presetName := "slack-preset-for-global-router"
+		presetName := fmt.Sprintf("slack-preset-for-global-router-%d", time.Now().Unix())
 		preset := getSampleSlackPreset(presetName, testNamespace)
 		Expect(crClient.Create(ctx, preset)).To(Succeed())
 
