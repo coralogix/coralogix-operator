@@ -221,6 +221,13 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Integration")
 		os.Exit(1)
 	}
+	if err = (&v1alpha1controllers.AlertSchedulerReconciler{
+		AlertSchedulerClient: clientSet.AlertSchedulers(),
+		Interval:             cfg.ReconcileIntervals[utils.AlertSchedulerKind],
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AlertScheduler")
+		os.Exit(1)
+	}
 
 	if cfg.EnableNotificationCenter {
 		if err = (&v1alpha1controllers.ConnectorReconciler{
@@ -264,6 +271,11 @@ func main() {
 
 		if err = webhookcoralogixv1beta1.SetupAlertWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "Alert")
+			os.Exit(1)
+		}
+
+		if err = webhookcoralogixv1alpha1.SetupAlertSchedulerWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "AlertScheduler")
 			os.Exit(1)
 		}
 
