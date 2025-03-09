@@ -327,6 +327,12 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "GlobalRouter")
 		os.Exit(1)
 	}
+	if err = (&v1alpha1controllers.AlertSchedulerReconciler{
+		AlertSchedulerClient: clientSet.AlertSchedulers(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AlertScheduler")
+		os.Exit(1)
+	}
 
 	if enableWebhooks != "false" {
 		if err = webhookcoralogixv1alpha1.SetupOutboundWebhookWebhookWithManager(mgr); err != nil {
