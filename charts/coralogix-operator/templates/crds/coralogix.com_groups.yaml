@@ -54,6 +54,7 @@ spec:
                   required:
                   - resourceRef
                   type: object
+                minItems: 1
                 type: array
               description:
                 type: string

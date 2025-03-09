@@ -37,6 +37,7 @@ type GroupSpec struct {
 	// +optional
 	Members []Member `json:"members,omitempty"`
 
+	// +kubebuilder:validation:MinItems=1
 	CustomRoles []GroupCustomRole `json:"customRoles"`
 
 	// +optional

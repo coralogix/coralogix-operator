@@ -62,6 +62,7 @@ spec:
                   - entityType
                   - expression
                   type: object
+                minItems: 1
                 type: array
               name:
                 type: string
