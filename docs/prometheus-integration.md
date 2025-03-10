@@ -21,12 +21,18 @@ The operator will create a Coralogix Alert in the PrometheusRule namespace, for 
 The following Coralogix Alert properties are derived from the PrometheusRule alerting rule:
 - `Alert.Spec.Name`: Set to `rule.Alert` value.
 - `Alert.Spec.Description`: Set to `rule.Annotations["description"]` value.
-- `Alert.Spec.Labels`: Set to `rule.Labels` property.
-- `Alert.Spec.Severity`: Set to `rule.Labels["severity"]` value.
-- `Alert.Spec.AlertType.Metric.Promql.Conditions.TimeWindow`: Set to `rule.For` value.
-- `Alert.Spec.AlertType.Metric.Promql.Conditions.AlertWhen`: Set to `More`.
-- `Alert.Spec.AlertType.Metric.Promql.Conditions.Threshold`: Set to `0`.
-- `Alert.Spec.AlertType.Metric.Promql.Conditions.sampleThresholdPercentage`: Set to `100`.
+- `Alert.Spec.EntityLabels`: Set to `rule.Labels` property.
+- `Alert.Spec.Priority`: Set to `rule.Labels["severity"]` value, with the next priority mapping:
+  - `critical` -> `p1`
+  - `error`    -> `p2`
+  - `warning`  -> `p3`
+  - `info`     -> `p4`
+  - `low`      -> `p5`
+  
+- `Alert.Spec.AlertType.MetricThreshold.OfTheLast.SpecificValue`: Set to `rule.For` value.
+- `Alert.Spec.AlertType.MetricThreshold.Rules[0].Condition.ConditionType`: Set to `moreThan`.
+- `Alert.Spec.AlertType.MetricThreshold.Rules[0].Condition.Threshold`: Set to `0`.
+- `Alert.Spec.AlertType.MetricThreshold.Rules[0].Condition.ForOverPct`: Set to `100`.
 
 Other properties will not be overridden by the operator and can be modified directly in the Coralogix Alert resource.
 
