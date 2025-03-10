@@ -285,6 +285,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 			desiredTypeDefinition.MetricThreshold.MissingValues.MinNonNullValuesPct = alert.Spec.TypeDefinition.MetricThreshold.MissingValues.MinNonNullValuesPct
 			if !reflect.DeepEqual(alert.Spec.TypeDefinition, desiredTypeDefinition) {
 				alert.Spec.TypeDefinition = desiredTypeDefinition
+				updated = true
 			}
 
 			if updated {
