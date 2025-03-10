@@ -261,10 +261,30 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 				updated = true
 			}
 
-			desiredSpec := prometheusAlertingRuleToAlertSpec(&rule)
-			if !reflect.DeepEqual(alert.Spec, desiredSpec) {
-				alert.Spec = desiredSpec
+			desiredDescription := rule.Annotations["description"]
+			if alert.Spec.Description != desiredDescription {
+				alert.Spec.Description = desiredDescription
 				updated = true
+			}
+
+			desiredEntityLabels := rule.Labels
+			if !reflect.DeepEqual(alert.Spec.EntityLabels, desiredEntityLabels) {
+				alert.Spec.EntityLabels = desiredEntityLabels
+				updated = true
+			}
+
+			desiredPriority := getPriority(rule)
+			if alert.Spec.Priority != desiredPriority {
+				alert.Spec.Priority = desiredPriority
+				updated = true
+			}
+
+			desiredTypeDefinition := coralogixv1beta1.AlertTypeDefinition{
+				MetricThreshold: prometheusAlertToMetricThreshold(rule),
+			}
+			desiredTypeDefinition.MetricThreshold.MissingValues.MinNonNullValuesPct = alert.Spec.TypeDefinition.MetricThreshold.MissingValues.MinNonNullValuesPct
+			if !reflect.DeepEqual(alert.Spec.TypeDefinition, desiredTypeDefinition) {
+				alert.Spec.TypeDefinition = desiredTypeDefinition
 			}
 
 			if updated {

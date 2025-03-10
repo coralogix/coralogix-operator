@@ -16,15 +16,15 @@ package e2e
 
 import (
 	"context"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
@@ -34,6 +34,8 @@ var _ = Describe("PrometheusRule", Ordered, func() {
 	var (
 		crClient             client.Client
 		promRule             *prometheus.PrometheusRule
+		modifiedPromRule     *prometheus.PrometheusRule
+		fetchedAlert         *coralogixv1alpha1.Alert
 		promRuleName         = "prometheus-rules"
 		alertName            = "test-alert"
 		alertResourceName    = promRuleName + "-" + alertName + "-0"
@@ -86,7 +88,7 @@ var _ = Describe("PrometheusRule", Ordered, func() {
 		Expect(crClient.Create(ctx, promRule)).To(Succeed())
 
 		By("Verifying underlying Alert and RecordingRuleGroupSet were created")
-		fetchedAlert := &coralogixv1alpha1.Alert{}
+		fetchedAlert = &coralogixv1alpha1.Alert{}
 		Eventually(func() error {
 			return crClient.Get(ctx, types.NamespacedName{Name: alertResourceName, Namespace: testNamespace}, fetchedAlert)
 		}, time.Minute, time.Second).Should(Succeed())
@@ -99,15 +101,43 @@ var _ = Describe("PrometheusRule", Ordered, func() {
 
 	It("Should be updated successfully", func(ctx context.Context) {
 		By("Patching the PrometheusRule")
-		modifiedPromRule := promRule.DeepCopy()
+		modifiedPromRule = promRule.DeepCopy()
 		modifiedPromRule.Spec.Groups[0].Rules[0].Alert = newAlertName
 		Expect(crClient.Patch(ctx, modifiedPromRule, client.MergeFrom(promRule))).To(Succeed())
 
 		By("Verifying underlying Alert was updated")
 		Eventually(func() error {
-			fetchedAlert := &coralogixv1alpha1.Alert{}
+			fetchedAlert = &coralogixv1alpha1.Alert{}
 			return crClient.Get(ctx, types.NamespacedName{Name: newAlertResourceName, Namespace: testNamespace}, fetchedAlert)
 		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should not overwrite advanced Alert fields when updating PrometheusRule", func(ctx context.Context) {
+		By("Using an advanced Alert field - NotificationGroups")
+		modifiedAlert := fetchedAlert.DeepCopy()
+		modifiedAlert.Spec.NotificationGroups = []coralogixv1alpha1.NotificationGroup{
+			{
+				GroupByFields: []string{"coralogix.metadata.sdkId"},
+			},
+		}
+		Expect(crClient.Patch(ctx, modifiedAlert, client.MergeFrom(fetchedAlert))).To(Succeed())
+
+		By("Patching the PrometheusRule to trigger reconciliation")
+		modifiedPromRule := modifiedPromRule.DeepCopy()
+		modifiedPromRule.Spec.Groups[0].Rules[0].Annotations["description"] = "updated"
+		Expect(crClient.Patch(ctx, modifiedPromRule, client.MergeFrom(promRule))).To(Succeed())
+
+		By("Verifying underlying Alert time was updated")
+		Eventually(func() string {
+			fetchedAlert = &coralogixv1alpha1.Alert{}
+			Expect(crClient.Get(ctx,
+				types.NamespacedName{Name: newAlertResourceName, Namespace: testNamespace},
+				fetchedAlert)).To(Succeed())
+			return fetchedAlert.Spec.Description
+		}, time.Minute, time.Second).Should(Equal("updated"))
+
+		By("Verifying underlying Alert NotificationGroups were not overwritten")
+		Expect(fetchedAlert.Spec.NotificationGroups).To(Equal(modifiedAlert.Spec.NotificationGroups))
 	})
 
 	It("Should be deleted successfully", func(ctx context.Context) {
