@@ -55,31 +55,38 @@ spec:
 ```
 The following Coralogix Alert will be created:
 ```yaml
-apiVersion: coralogix.com/v1alpha1
+apiVersion: coralogix.com/v1beta1
 kind: Alert
 metadata:
   labels:
+    app.coralogix.com/track-alerting-rules: "true"
     app.kubernetes.io/managed-by: prometheus-example-rules
   name: prometheus-example-rules-example-alert-0
   namespace: default
 spec:
-  active: true
   alertType:
-    metric:
-      promql:
-        conditions:
-          alertWhen: More
-          minNonNullValuesPercentage: 0
-          sampleThresholdPercentage: 100
-          threshold: "0"
-          timeWindow: FiveMinutes
-        searchQuery: vector(1) > 0
+    metricThreshold:
+      metricFilter:
+        promql: vector(1) > 0
+      missingValues:
+        minNonNullValuesPct: 0
+        replaceWithZero: false
+      rules:
+        - condition:
+            conditionType: moreThan
+            forOverPct: 100
+            ofTheLast:
+              specificValue: 5m
+            threshold: "0"
   description: app latency alert
-  labels:
+  enabled: true
+  entityLabels:
     severity: critical
     slack_channel: '#observability'
   name: example-alert
-  severity: Critical
+  phantomMode: false
+  priority: p1
+
 ```
 
 ### Recording Rules:
