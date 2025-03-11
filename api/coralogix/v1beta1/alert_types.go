@@ -336,11 +336,11 @@ type RetriggeringPeriod struct {
 
 type NotificationGroup struct {
 	// +optional
-	GroupByKeys []string `json:"groupByKeys,omitempty"`
+	GroupByKeys []string `json:"groupByKeys"`
 	// +optional
-	Webhooks []WebhookSettings `json:"webhooks,omitempty"`
+	Webhooks []WebhookSettings `json:"webhooks"`
 	// +optional
-	Destinations []Destination `json:"destinations,omitempty"`
+	Destinations []Destination `json:"destinations"`
 }
 
 type WebhookSettings struct {
@@ -354,7 +354,7 @@ type IntegrationType struct {
 	// +optional
 	IntegrationRef *IntegrationRef `json:"integrationRef,omitempty"`
 	// +optional
-	Recipients []string `json:"recipients,omitempty"`
+	Recipients []string `json:"recipients"`
 }
 
 type IntegrationRef struct {
@@ -476,7 +476,7 @@ type ResourceRef struct {
 }
 
 type ActiveOn struct {
-	DayOfWeek []DayOfWeek `json:"dayOfWeek,omitempty"`
+	DayOfWeek []DayOfWeek `json:"dayOfWeek"`
 	// +kubebuilder:default="00:00"
 	StartTime *TimeOfDay `json:"startTime,omitempty"`
 	// +kubebuilder:default="23:59"
@@ -530,7 +530,7 @@ type LogsImmediate struct {
 	// +optional
 	LogsFilter *LogsFilter `json:"logsFilter,omitempty"`
 	// +optional
-	NotificationPayloadFilter []string `json:"notificationPayloadFilter,omitempty"`
+	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 }
 
 type LogsThreshold struct {
@@ -538,9 +538,10 @@ type LogsThreshold struct {
 	LogsFilter *LogsFilter `json:"logsFilter,omitempty"`
 	// +optional
 	UndetectedValuesManagement *UndetectedValuesManagement `json:"undetectedValuesManagement,omitempty"`
-	Rules                      []LogsThresholdRule         `json:"rules,omitempty"`
+	// +kubebuilder:validation:MinItems=1
+	Rules []LogsThresholdRule `json:"rules"`
 	// +optional
-	NotificationPayloadFilter []string `json:"notificationPayloadFilter,omitempty"`
+	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 }
 
 type LogsThresholdRule struct {
@@ -588,11 +589,12 @@ type AlertOverride struct {
 }
 
 type LogsRatioThreshold struct {
-	Numerator        LogsFilter               `json:"numerator"`
-	NumeratorAlias   string                   `json:"numeratorAlias"`
-	Denominator      LogsFilter               `json:"denominator"`
-	DenominatorAlias string                   `json:"denominatorAlias"`
-	Rules            []LogsRatioThresholdRule `json:"rules"`
+	Numerator        LogsFilter `json:"numerator"`
+	NumeratorAlias   string     `json:"numeratorAlias"`
+	Denominator      LogsFilter `json:"denominator"`
+	DenominatorAlias string     `json:"denominatorAlias"`
+	// +kubebuilder:validation:MinItems=1
+	Rules []LogsRatioThresholdRule `json:"rules"`
 }
 
 type LogsRatioThresholdRule struct {
@@ -669,8 +671,9 @@ const (
 )
 
 type LogsTimeRelativeThreshold struct {
-	LogsFilter LogsFilter             `json:"logsFilter"`
-	Rules      []LogsTimeRelativeRule `json:"rules"`
+	LogsFilter LogsFilter `json:"logsFilter"`
+	// +kubebuilder:validation:MinItems=1
+	Rules []LogsTimeRelativeRule `json:"rules"`
 	//+kubebuilder:default=false
 	IgnoreInfinity bool `json:"ignoreInfinity"`
 	// +optional
@@ -680,7 +683,8 @@ type LogsTimeRelativeThreshold struct {
 }
 
 type MetricThreshold struct {
-	MetricFilter  MetricFilter          `json:"metricFilter"`
+	MetricFilter MetricFilter `json:"metricFilter"`
+	// +kubebuilder:validation:MinItems=1
 	Rules         []MetricThresholdRule `json:"rules"`
 	MissingValues MetricMissingValues   `json:"missingValues"`
 	// +optional
@@ -748,17 +752,18 @@ type MetricMissingValues struct {
 
 type TracingThreshold struct {
 	// +optional
-	TracingFilter *TracingFilter         `json:"tracingFilter,omitempty"`
-	Rules         []TracingThresholdRule `json:"rules,omitempty"`
+	TracingFilter *TracingFilter `json:"tracingFilter,omitempty"`
+	// +kubebuilder:validation:MinItems=1
+	Rules []TracingThresholdRule `json:"rules"`
 	// +optional
-	NotificationPayloadFilter []string `json:"notificationPayloadFilter,omitempty"`
+	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 }
 
 type TracingImmediate struct {
 	// +optional
 	TracingFilter *TracingFilter `json:"tracingFilter,omitempty"`
 	// +optional
-	NotificationPayloadFilter []string `json:"notificationPayloadFilter,omitempty"`
+	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 }
 
 type TracingFilter struct {
@@ -788,15 +793,15 @@ type TracingSimpleFilter struct {
 
 type TracingLabelFilters struct {
 	// +optional
-	ApplicationName []TracingFilterType `json:"applicationName,omitempty"`
+	ApplicationName []TracingFilterType `json:"applicationName"`
 	// +optional
-	SubsystemName []TracingFilterType `json:"subsystemName,omitempty"`
+	SubsystemName []TracingFilterType `json:"subsystemName"`
 	// +optional
-	ServiceName []TracingFilterType `json:"serviceName,omitempty"`
+	ServiceName []TracingFilterType `json:"serviceName"`
 	// +optional
-	OperationName []TracingFilterType `json:"operationName,omitempty"`
+	OperationName []TracingFilterType `json:"operationName"`
 	// +optional
-	SpanFields []TracingSpanFieldsFilterType `json:"spanFields,omitempty"`
+	SpanFields []TracingSpanFieldsFilterType `json:"spanFields"`
 }
 
 type TracingSpanFieldsFilterType struct {
@@ -888,10 +893,11 @@ const (
 
 type LogsAnomaly struct {
 	// +optional
-	LogsFilter *LogsFilter       `json:"logsFilter,omitempty"`
-	Rules      []LogsAnomalyRule `json:"rules,omitempty"`
+	LogsFilter *LogsFilter `json:"logsFilter,omitempty"`
+	// +kubebuilder:validation:MinItems=1
+	Rules []LogsAnomalyRule `json:"rules"`
 	// +optional
-	NotificationPayloadFilter []string `json:"notificationPayloadFilter,omitempty"`
+	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 }
 
 type LogsAnomalyRule struct {
@@ -905,8 +911,9 @@ type LogsAnomalyCondition struct {
 }
 
 type MetricAnomaly struct {
-	MetricFilter MetricFilter        `json:"metricFilter"`
-	Rules        []MetricAnomalyRule `json:"rules"`
+	MetricFilter MetricFilter `json:"metricFilter"`
+	// +kubebuilder:validation:MinItems=1
+	Rules []MetricAnomalyRule `json:"rules"`
 }
 
 type MetricAnomalyCondition struct {
@@ -932,8 +939,9 @@ type MetricAnomalyRule struct {
 }
 
 type LogsNewValue struct {
-	LogsFilter *LogsFilter        `json:"logsFilter"`
-	Rules      []LogsNewValueRule `json:"rules"`
+	LogsFilter *LogsFilter `json:"logsFilter"`
+	// +kubebuilder:validation:MinItems=1
+	Rules []LogsNewValueRule `json:"rules"`
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 }
@@ -966,8 +974,9 @@ const (
 )
 
 type LogsUniqueCount struct {
-	LogsFilter *LogsFilter           `json:"logsFilter"`
-	Rules      []LogsUniqueCountRule `json:"rules"`
+	LogsFilter *LogsFilter `json:"logsFilter"`
+	// +kubebuilder:validation:MinItems=1
+	Rules []LogsUniqueCountRule `json:"rules"`
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 	// +optional
@@ -1020,11 +1029,11 @@ type LogsSimpleFilter struct {
 
 type LabelFilters struct {
 	// +optional
-	ApplicationName []LabelFilterType `json:"applicationName,omitempty"`
+	ApplicationName []LabelFilterType `json:"applicationName"`
 	// +optional
-	SubsystemName []LabelFilterType `json:"subsystemName,omitempty"`
+	SubsystemName []LabelFilterType `json:"subsystemName"`
 	// +optional
-	Severity []LogSeverity `json:"severity,omitempty"`
+	Severity []LogSeverity `json:"severity"`
 }
 
 type LabelFilterType struct {
