@@ -201,13 +201,13 @@ type RatioQ2Filters struct {
 	SearchQuery *string `json:"searchQuery,omitempty"`
 
 	// +optional
-	Severities []FiltersLogSeverity `json:"severities,omitempty"`
+	Severities []FiltersLogSeverity `json:"severities"`
 
 	// +optional
-	Applications []string `json:"applications,omitempty"`
+	Applications []string `json:"applications"`
 
 	// +optional
-	Subsystems []string `json:"subsystems,omitempty"`
+	Subsystems []string `json:"subsystems"`
 }
 
 type NewValue struct {
@@ -272,7 +272,7 @@ type StandardConditions struct {
 	TimeWindow *TimeWindow `json:"timeWindow,omitempty"`
 
 	// +optional
-	GroupBy []string `json:"groupBy,omitempty"`
+	GroupBy []string `json:"groupBy"`
 
 	// +optional
 	ManageUndetectedValues *ManageUndetectedValues `json:"manageUndetectedValues,omitempty"`
@@ -289,7 +289,7 @@ type RatioConditions struct {
 	TimeWindow TimeWindow `json:"timeWindow"`
 
 	// +optional
-	GroupBy []string `json:"groupBy,omitempty"`
+	GroupBy []string `json:"groupBy"`
 
 	// +optional
 	GroupByFor *GroupByFor `json:"groupByFor,omitempty"`
@@ -329,7 +329,7 @@ type TimeRelativeConditions struct {
 	TimeWindow RelativeTimeWindow `json:"timeWindow"`
 
 	// +optional
-	GroupBy []string `json:"groupBy,omitempty"`
+	GroupBy []string `json:"groupBy"`
 
 	// +optional
 	ManageUndetectedValues *ManageUndetectedValues `json:"manageUndetectedValues,omitempty"`
@@ -366,7 +366,7 @@ type LuceneConditions struct {
 	TimeWindow MetricTimeWindow `json:"timeWindow"`
 
 	// +optional
-	GroupBy []string `json:"groupBy,omitempty"`
+	GroupBy []string `json:"groupBy"`
 
 	//+kubebuilder:default=false
 	ReplaceMissingValueWithZero bool `json:"replaceMissingValueWithZero,omitempty"`
@@ -411,7 +411,7 @@ type TracingCondition struct {
 	TimeWindow *TimeWindow `json:"timeWindow,omitempty"`
 
 	// +optional
-	GroupBy []string `json:"groupBy,omitempty"`
+	GroupBy []string `json:"groupBy"`
 }
 
 // +kubebuilder:validation:Enum=Never;FiveMinutes;TenMinutes;Hour;TwoHours;SixHours;TwelveHours;TwentyFourHours
@@ -563,31 +563,31 @@ type Filters struct {
 	SearchQuery *string `json:"searchQuery,omitempty"`
 
 	// +optional
-	Severities []FiltersLogSeverity `json:"severities,omitempty"`
+	Severities []FiltersLogSeverity `json:"severities"`
 
 	// +optional
-	Applications []string `json:"applications,omitempty"`
+	Applications []string `json:"applications"`
 
 	// +optional
-	Subsystems []string `json:"subsystems,omitempty"`
+	Subsystems []string `json:"subsystems"`
 
 	// +optional
-	Categories []string `json:"categories,omitempty"`
+	Categories []string `json:"categories"`
 
 	// +optional
-	Computers []string `json:"computers,omitempty"`
+	Computers []string `json:"computers"`
 
 	// +optional
-	Classes []string `json:"classes,omitempty"`
+	Classes []string `json:"classes"`
 
 	// +optional
-	Methods []string `json:"methods,omitempty"`
+	Methods []string `json:"methods"`
 
 	// +optional
-	IPs []string `json:"ips,omitempty"`
+	IPs []string `json:"ips"`
 
 	// +optional
-	Alias *string `json:"alias,omitempty"`
+	Alias *string `json:"alias"`
 }
 
 // +kubebuilder:validation:Enum=Debug;Verbose;Info;Warning;Critical;Error;
@@ -606,21 +606,21 @@ type TracingFilters struct {
 	LatencyThresholdMilliseconds resource.Quantity `json:"latencyThresholdMilliseconds,omitempty"`
 
 	// +optional
-	TagFilters []TagFilter `json:"tagFilters,omitempty"`
+	TagFilters []TagFilter `json:"tagFilters"`
 
 	// +optional
-	Applications []string `json:"applications,omitempty"`
+	Applications []string `json:"applications"`
 
 	// +optional
-	Subsystems []string `json:"subsystems,omitempty"`
+	Subsystems []string `json:"subsystems"`
 
 	// +optional
-	Services []string `json:"services,omitempty"`
+	Services []string `json:"services"`
 }
 
 type TagFilter struct {
 	Field  string   `json:"field,omitempty"`
-	Values []string `json:"values,omitempty"`
+	Values []string `json:"values"`
 }
 
 // +kubebuilder:validation:Enum=Equals;Contains;StartWith;EndWith;

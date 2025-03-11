@@ -1930,15 +1930,15 @@ AlertSpec defines the desired state of Alert.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>field</b></td>
-        <td>string</td>
+        <td><b>values</b></td>
+        <td>[]string</td>
         <td>
           <br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr><tr>
-        <td><b>values</b></td>
-        <td>[]string</td>
+        <td><b>field</b></td>
+        <td>string</td>
         <td>
           <br/>
         </td>
@@ -9393,6 +9393,13 @@ AlertSpec defines the desired state of Alert
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#alertspecalerttypelogsanomalyrulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
         <td><b><a href="#alertspecalerttypelogsanomalylogsfilter">logsFilter</a></b></td>
         <td>object</td>
         <td>
@@ -9406,11 +9413,96 @@ AlertSpec defines the desired state of Alert
           <br/>
         </td>
         <td>false</td>
-      </tr><tr>
-        <td><b><a href="#alertspecalerttypelogsanomalyrulesindex">rules</a></b></td>
-        <td>[]object</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.logsAnomaly.rules[index]
+<sup><sup>[↩ Parent](#alertspecalerttypelogsanomaly)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecalerttypelogsanomalyrulesindexcondition">condition</a></b></td>
+        <td>object</td>
         <td>
           <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.logsAnomaly.rules[index].condition
+<sup><sup>[↩ Parent](#alertspecalerttypelogsanomalyrulesindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>minimumThreshold</b></td>
+        <td>int or string</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: 0<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypelogsanomalyrulesindexconditiontimewindow">timeWindow</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.logsAnomaly.rules[index].condition.timeWindow
+<sup><sup>[↩ Parent](#alertspecalerttypelogsanomalyrulesindexcondition)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>specificValue</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: 5m, 10m, 15m, 30m, 1h, 2h, 6h, 12h, 24h, 36h<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -9591,98 +9683,6 @@ AlertSpec defines the desired state of Alert
           <br/>
         </td>
         <td>true</td>
-      </tr></tbody>
-</table>
-
-
-### Alert.spec.alertType.logsAnomaly.rules[index]
-<sup><sup>[↩ Parent](#alertspecalerttypelogsanomaly)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b><a href="#alertspecalerttypelogsanomalyrulesindexcondition">condition</a></b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr></tbody>
-</table>
-
-
-### Alert.spec.alertType.logsAnomaly.rules[index].condition
-<sup><sup>[↩ Parent](#alertspecalerttypelogsanomalyrulesindex)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>minimumThreshold</b></td>
-        <td>int or string</td>
-        <td>
-          <br/>
-          <br/>
-            <i>Default</i>: 0<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b><a href="#alertspecalerttypelogsanomalyrulesindexconditiontimewindow">timeWindow</a></b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr></tbody>
-</table>
-
-
-### Alert.spec.alertType.logsAnomaly.rules[index].condition.timeWindow
-<sup><sup>[↩ Parent](#alertspecalerttypelogsanomalyrulesindexcondition)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>specificValue</b></td>
-        <td>enum</td>
-        <td>
-          <br/>
-          <br/>
-            <i>Enum</i>: 5m, 10m, 15m, 30m, 1h, 2h, 6h, 12h, 24h, 36h<br/>
-        </td>
-        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -10771,6 +10771,13 @@ AlertSpec defines the desired state of Alert
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#alertspecalerttypelogsthresholdrulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
         <td><b><a href="#alertspecalerttypelogsthresholdlogsfilter">logsFilter</a></b></td>
         <td>object</td>
         <td>
@@ -10785,19 +10792,147 @@ AlertSpec defines the desired state of Alert
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#alertspecalerttypelogsthresholdrulesindex">rules</a></b></td>
-        <td>[]object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b><a href="#alertspecalerttypelogsthresholdundetectedvaluesmanagement">undetectedValuesManagement</a></b></td>
         <td>object</td>
         <td>
           <br/>
         </td>
         <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.logsThreshold.rules[index]
+<sup><sup>[↩ Parent](#alertspecalerttypelogsthreshold)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecalerttypelogsthresholdrulesindexcondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypelogsthresholdrulesindexoverride">override</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.logsThreshold.rules[index].condition
+<sup><sup>[↩ Parent](#alertspecalerttypelogsthresholdrulesindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>logsThresholdConditionType</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: moreThan, lessThan<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>threshold</b></td>
+        <td>int or string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypelogsthresholdrulesindexconditiontimewindow">timeWindow</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.logsThreshold.rules[index].condition.timeWindow
+<sup><sup>[↩ Parent](#alertspecalerttypelogsthresholdrulesindexcondition)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>specificValue</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: 5m, 10m, 15m, 30m, 1h, 2h, 6h, 12h, 24h, 36h<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.logsThreshold.rules[index].override
+<sup><sup>[↩ Parent](#alertspecalerttypelogsthresholdrulesindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
@@ -10974,141 +11109,6 @@ AlertSpec defines the desired state of Alert
         <td>string</td>
         <td>
           <br/>
-        </td>
-        <td>true</td>
-      </tr></tbody>
-</table>
-
-
-### Alert.spec.alertType.logsThreshold.rules[index]
-<sup><sup>[↩ Parent](#alertspecalerttypelogsthreshold)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b><a href="#alertspecalerttypelogsthresholdrulesindexcondition">condition</a></b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b><a href="#alertspecalerttypelogsthresholdrulesindexoverride">override</a></b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### Alert.spec.alertType.logsThreshold.rules[index].condition
-<sup><sup>[↩ Parent](#alertspecalerttypelogsthresholdrulesindex)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>logsThresholdConditionType</b></td>
-        <td>enum</td>
-        <td>
-          <br/>
-          <br/>
-            <i>Enum</i>: moreThan, lessThan<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>threshold</b></td>
-        <td>int or string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b><a href="#alertspecalerttypelogsthresholdrulesindexconditiontimewindow">timeWindow</a></b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr></tbody>
-</table>
-
-
-### Alert.spec.alertType.logsThreshold.rules[index].condition.timeWindow
-<sup><sup>[↩ Parent](#alertspecalerttypelogsthresholdrulesindexcondition)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>specificValue</b></td>
-        <td>enum</td>
-        <td>
-          <br/>
-          <br/>
-            <i>Enum</i>: 5m, 10m, 15m, 30m, 1h, 2h, 6h, 12h, 24h, 36h<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### Alert.spec.alertType.logsThreshold.rules[index].override
-<sup><sup>[↩ Parent](#alertspecalerttypelogsthresholdrulesindex)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>priority</b></td>
-        <td>enum</td>
-        <td>
-          <br/>
-          <br/>
-            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -12724,15 +12724,15 @@ AlertSpec defines the desired state of Alert
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>notificationPayloadFilter</b></td>
-        <td>[]string</td>
+        <td><b><a href="#alertspecalerttypetracingthresholdrulesindex">rules</a></b></td>
+        <td>[]object</td>
         <td>
           <br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr><tr>
-        <td><b><a href="#alertspecalerttypetracingthresholdrulesindex">rules</a></b></td>
-        <td>[]object</td>
+        <td><b>notificationPayloadFilter</b></td>
+        <td>[]string</td>
         <td>
           <br/>
         </td>
@@ -15790,7 +15790,7 @@ AlertSpec defines the desired state of Alert
           <br/>
             <i>Enum</i>: sunday, monday, tuesday, wednesday, thursday, friday, saturday<br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr><tr>
         <td><b>endTime</b></td>
         <td>string</td>

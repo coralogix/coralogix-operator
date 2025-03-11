@@ -743,6 +743,8 @@ spec:
                                   items:
                                     type: string
                                   type: array
+                              required:
+                              - values
                               type: object
                             type: array
                         type: object
@@ -1232,7 +1234,10 @@ spec:
                           required:
                           - condition
                           type: object
+                        minItems: 1
                         type: array
+                    required:
+                    - rules
                     type: object
                   logsImmediate:
                     properties:
@@ -1395,6 +1400,7 @@ spec:
                           required:
                           - condition
                           type: object
+                        minItems: 1
                         type: array
                     required:
                     - logsFilter
@@ -1580,6 +1586,7 @@ spec:
                           required:
                           - condition
                           type: object
+                        minItems: 1
                         type: array
                     required:
                     - denominator
@@ -1707,6 +1714,7 @@ spec:
                           required:
                           - condition
                           type: object
+                        minItems: 1
                         type: array
                       undetectedValuesManagement:
                         properties:
@@ -1729,6 +1737,8 @@ spec:
                         - autoRetireTimeframe
                         - triggerUndetectedValues
                         type: object
+                    required:
+                    - rules
                     type: object
                   logsTimeRelativeThreshold:
                     properties:
@@ -1845,6 +1855,7 @@ spec:
                           required:
                           - condition
                           type: object
+                        minItems: 1
                         type: array
                       undetectedValuesManagement:
                         properties:
@@ -1977,6 +1988,7 @@ spec:
                           required:
                           - condition
                           type: object
+                        minItems: 1
                         type: array
                       uniqueCountKeypath:
                         type: string
@@ -2045,6 +2057,7 @@ spec:
                           required:
                           - condition
                           type: object
+                        minItems: 1
                         type: array
                     required:
                     - metricFilter
@@ -2128,6 +2141,7 @@ spec:
                           required:
                           - condition
                           type: object
+                        minItems: 1
                         type: array
                       undetectedValuesManagement:
                         properties:
@@ -2324,6 +2338,7 @@ spec:
                           required:
                           - condition
                           type: object
+                        minItems: 1
                         type: array
                       tracingFilter:
                         properties:
@@ -2445,6 +2460,8 @@ spec:
                                 type: object
                             type: object
                         type: object
+                    required:
+                    - rules
                     type: object
                 type: object
               description:
@@ -2995,6 +3012,8 @@ spec:
                         default: "00:00"
                         pattern: ^(0\d|1\d|2[0-3]):[0-5]\d$
                         type: string
+                    required:
+                    - dayOfWeek
                     type: object
                   timeZone:
                     default: UTC+00
