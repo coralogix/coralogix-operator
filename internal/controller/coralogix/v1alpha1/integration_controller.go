@@ -17,6 +17,7 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
@@ -35,6 +36,7 @@ import (
 // IntegrationReconciler reconciles a Integration object
 type IntegrationReconciler struct {
 	IntegrationsClient *cxsdk.IntegrationsClient
+	Interval           time.Duration
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=integrations,verbs=get;list;watch;create;update;patch;delete
@@ -51,6 +53,10 @@ func (r *IntegrationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 func (r *IntegrationReconciler) FinalizerName() string {
 	return "integration.coralogix.com/finalizer"
+}
+
+func (r *IntegrationReconciler) RequeueInterval() time.Duration {
+	return r.Interval
 }
 
 func (r *IntegrationReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {

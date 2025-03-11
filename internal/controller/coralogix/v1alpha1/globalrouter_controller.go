@@ -17,6 +17,7 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
@@ -34,6 +35,7 @@ import (
 // GlobalRouterReconciler reconciles a GlobalRouter object
 type GlobalRouterReconciler struct {
 	NotificationsClient *cxsdk.NotificationsClient
+	Interval            time.Duration
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=globalrouters,verbs=get;list;watch;create;update;patch;delete
@@ -46,6 +48,10 @@ func (r *GlobalRouterReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 func (r *GlobalRouterReconciler) FinalizerName() string {
 	return "global-router.coralogix.com/finalizer"
+}
+
+func (r *GlobalRouterReconciler) RequeueInterval() time.Duration {
+	return r.Interval
 }
 
 func (r *GlobalRouterReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {

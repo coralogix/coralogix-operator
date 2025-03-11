@@ -44,6 +44,9 @@ spec:
         - -enable-webhooks={{.Values.coralogixOperator.webhooks.enabled }}
         - -label-selector={{ .Values.coralogixOperator.labelSelector }}
         - -namespace-selector={{ .Values.coralogixOperator.namespaceSelector }}
+{{- range $key, $value := .Values.coralogixOperator.reconcileIntervalSeconds }}
+        - -{{ lower $key }}-reconcile-interval-seconds={{ $value }}
+{{- end }}
         env:
           - name: CORALOGIX_REGION
             value: {{ .Values.coralogixOperator.region | quote }}

@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
@@ -36,6 +37,7 @@ import (
 // CustomRoleReconciler reconciles a CustomRole object
 type CustomRoleReconciler struct {
 	CustomRolesClient *cxsdk.RolesClient
+	Interval          time.Duration
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=customroles,verbs=get;list;watch;create;update;patch;delete
@@ -48,6 +50,10 @@ func (r *CustomRoleReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 func (r *CustomRoleReconciler) FinalizerName() string {
 	return "custom-role.coralogix.com/finalizer"
+}
+
+func (r *CustomRoleReconciler) RequeueInterval() time.Duration {
+	return r.Interval
 }
 
 func (r *CustomRoleReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
