@@ -73,7 +73,8 @@ type Config struct {
 	CoralogixUrl                string
 	Selector                    *Selector
 	ReconcileIntervals          map[string]time.Duration
-	EnableWebhooks              string
+	EnableWebhooks              bool
+	EnableNotificationCenter    bool
 	PrometheusRuleController    bool
 	RecordingRuleGroupSetSuffix string
 	MetricsAddr                 string
@@ -115,8 +116,11 @@ func InitConfig(setupLog logr.Logger) *Config {
 		flag.StringVar(&namespaceSelector, "namespace-selector", namespaceSelector, "A list of namespaces to filter custom resources.")
 
 		enableWebhooks := os.Getenv("ENABLE_WEBHOOKS")
-		flag.StringVar(&cfg.EnableWebhooks, "enable-webhooks", enableWebhooks, "Enable webhooks for the operator. Default is true.")
-		enableWebhooks = strings.ToLower(enableWebhooks)
+		flag.StringVar(&enableWebhooks, "enable-webhooks", enableWebhooks, "Enable webhooks for the operator. Default is true.")
+
+		enableNotificationCenter := os.Getenv("ENABLE_NOTIFICATION_CENTER")
+		flag.StringVar(&enableNotificationCenter, "enable-notification-center", enableNotificationCenter,
+			"Enable notification center CRDs and controllers. Default is false.")
 
 		reconcileIntervals := getReconcileIntervals()
 
@@ -144,6 +148,9 @@ func InitConfig(setupLog logr.Logger) *Config {
 			setupLog.Error(err, "invalid arguments for running operator")
 			os.Exit(1)
 		}
+
+		cfg.EnableWebhooks = strings.ToLower(enableWebhooks) != "false"
+		cfg.EnableNotificationCenter = strings.ToLower(enableNotificationCenter) == "true"
 
 		cfg.ReconcileIntervals, err = parseReconcileIntervals(setupLog, reconcileIntervals)
 		if err != nil {

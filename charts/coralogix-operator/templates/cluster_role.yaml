@@ -76,32 +76,6 @@ rules:
 - apiGroups:
   - coralogix.com
   resources:
-  - presets
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - coralogix.com
-  resources:
-  - presets/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - coralogix.com
-  resources:
-  - presets/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - coralogix.com
-  resources:
   - recordingrulegroupsets
   verbs:
   - create
@@ -151,6 +125,7 @@ rules:
   - get
   - patch
   - update
+{{- if .Values.coralogixOperator.notificationCenter.enabled }}
 - apiGroups:
   - coralogix.com
   resources:
@@ -180,7 +155,7 @@ rules:
 - apiGroups:
   - coralogix.com
   resources:
-  - customroles
+  - presets
   verbs:
   - create
   - delete
@@ -192,16 +167,8 @@ rules:
 - apiGroups:
   - coralogix.com
   resources:
-  - customroles/finalizers
+  - presets/finalizers
   verbs:
-  - update
-- apiGroups:
-  - coralogix.com
-  resources:
-  - customroles/status
-  verbs:
-  - get
-  - patch
   - update
 - apiGroups:
   - coralogix.com
@@ -225,6 +192,41 @@ rules:
   - coralogix.com
   resources:
   - globalrouters/status
+  verbs:
+  - get
+  - patch
+  - update
+{{- end }}
+- apiGroups:
+  - coralogix.com
+  resources:
+  - presets/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - customroles
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - customroles/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - customroles/status
   verbs:
   - get
   - patch

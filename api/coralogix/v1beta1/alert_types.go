@@ -1164,9 +1164,16 @@ func expandNotificationGroup(notificationGroup *NotificationGroup, listingAlerts
 		return nil, fmt.Errorf("failed to expand webhooks settings: %w", err)
 	}
 
-	destinations, err := expandDestinations(notificationGroup.Destinations, listingAlertsAndWebhooksProperties)
-	if err != nil {
-		return nil, fmt.Errorf("failed to expand destinations: %w", err)
+	var destinations []*cxsdk.NotificationDestination
+	if notificationGroup.Destinations != nil {
+		if config.GetConfig().EnableNotificationCenter {
+			destinations, err = expandDestinations(notificationGroup.Destinations, listingAlertsAndWebhooksProperties)
+			if err != nil {
+				return nil, fmt.Errorf("failed to expand destinations: %w", err)
+			}
+		} else {
+			return nil, fmt.Errorf("destinations cannot be set when notification center is disabled")
+		}
 	}
 
 	return &cxsdk.AlertDefNotificationGroup{
