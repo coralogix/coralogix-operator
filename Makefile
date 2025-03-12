@@ -186,7 +186,7 @@ e2e-tests:
 
 .PHONY: helm-sync-check
 helm-sync-check:
-	sh scripts/helm-sync-check.sh
+	bash scripts/helm-sync-check.sh
 
 .PHONY: helm-update-crds
 helm-update-crds:

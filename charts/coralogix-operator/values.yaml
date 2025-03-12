@@ -88,10 +88,16 @@ coralogixOperator:
   # Set this to false if PrometheusRule CRD is not available in the cluster.
   prometheusRules:
     enabled: true
-  # Set this is to true if you want to enable validation webhooks.
-  # It assumes you have cert-manager installed in your cluster.
+
+  # Set this to false if you want to disable validation and conversion webhooks.
+  # Leaving true assumes you have cert-manager installed in your cluster.
   webhooks:
     enabled: true
+
+  # Set this to true if you want to enable the notification center CRDs and controllers.
+  notificationCenter:
+    enabled: false
+
   # --  Coralogix operator Image
   image:
     repository: coralogixrepo/coralogix-operator
