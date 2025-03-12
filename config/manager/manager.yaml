@@ -79,6 +79,7 @@ spec:
         - --label-selector=${LABEL_SELECTOR}
         - --namespace-selector=${NAMESPACE_SELECTOR}
         - --enable-webhooks=${ENABLE_WEBHOOKS}
+        - --scope-reconcile-interval-seconds=${SCOPE_RECONCILE_INTERVAL_SECONDS}
         name: manager
         image: controller
         imagePullPolicy: IfNotPresent

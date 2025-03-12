@@ -59,8 +59,8 @@ func setupReconciler(t *testing.T, ctx context.Context) (PrometheusRuleReconcile
 		Mapper:     mgr.GetRESTMapper(),
 		Cache:      &client.CacheOptions{Reader: mgr.GetCache()},
 	})
-	err = config.InitConfig(mgr.GetClient(), mgr.GetScheme(), "", "", "")
-	assert.NoError(t, err)
+	config.InitClient(mgr.GetClient())
+	config.InitScheme(mgr.GetScheme())
 
 	assert.NoError(t, err)
 	r := PrometheusRuleReconciler{}
@@ -167,7 +167,7 @@ func TestPrometheusRulesConversionToCxParsingRules(t *testing.T) {
 
 			var err error
 			if tt.shouldCreate {
-				err = config.GetConfig().Client.Create(ctx, tt.prometheusRule)
+				err = config.GetClient().Create(ctx, tt.prometheusRule)
 				assert.NoError(t, err)
 			}
 
@@ -285,7 +285,7 @@ func TestPrometheusRulesConvertionToCxAlert(t *testing.T) {
 			reconciler, watcher := setupReconciler(t, ctx)
 			var err error
 			if tt.shouldCreate {
-				err = config.GetConfig().Client.Create(ctx, tt.prometheusRule)
+				err = config.GetClient().Create(ctx, tt.prometheusRule)
 				assert.NoError(t, err)
 			}
 

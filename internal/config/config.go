@@ -15,47 +15,227 @@
 package config
 
 import (
+	"flag"
+	"fmt"
+	"os"
 	"strconv"
+	"strings"
+	"sync"
 	"time"
 
+	"github.com/go-logr/logr"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/utils/strings/slices"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
-var cfg *Config
+var (
+	cfg = &Config{
+		Selector: &Selector{
+			LabelSelector: labels.Everything(),
+		},
+	}
+	CrClient                  client.Client
+	scheme                    *runtime.Scheme
+	once                      sync.Once
+	operatorRegionToSdkRegion = map[string]string{
+		"APAC1":   "AP1",
+		"AP1":     "AP1",
+		"APAC2":   "AP2",
+		"AP2":     "AP2",
+		"APAC3":   "AP3",
+		"AP3":     "AP3",
+		"EUROPE1": "EU1",
+		"EU1":     "EU1",
+		"EUROPE2": "EU2",
+		"EU2":     "EU2",
+		"USA1":    "US1",
+		"US1":     "US1",
+		"USA2":    "US2",
+		"US2":     "US2",
+	}
+	validRegions = getKeys(operatorRegionToSdkRegion)
+	crds         = []string{
+		utils.RuleGroupKind, utils.AlertKind, utils.RecordingRuleGroupSetKind, utils.OutboundWebhookKind,
+		utils.ApiKeyKind, utils.CustomRoleKind, utils.ScopeKind, utils.GroupKind, utils.TCOLogsPoliciesKind,
+		utils.TCOTracesPoliciesKind, utils.IntegrationKind, utils.ConnectorKind, utils.PresetKind,
+		utils.GlobalRouterKind, utils.PrometheusRuleKind,
+	}
+)
 
 type Config struct {
-	Client            client.Client
-	Scheme            *runtime.Scheme
-	ReconcileInterval time.Duration
-	Selector          *Selector
+	CoralogixApiKey             string
+	CoralogixUrl                string
+	Selector                    *Selector
+	ReconcileIntervals          map[string]time.Duration
+	EnableWebhooks              string
+	PrometheusRuleController    bool
+	RecordingRuleGroupSetSuffix string
+	MetricsAddr                 string
+	ProbeAddr                   string
+	EnableLeaderElection        bool
+	SecureMetrics               bool
+	EnableHTTP2                 bool
 }
 
-func InitConfig(client client.Client, scheme *runtime.Scheme, labelSelector, namespaceSelector, interval string) error {
-	selector, err := parseSelector(labelSelector, namespaceSelector)
-	if err != nil {
-		return err
-	}
+func InitConfig(setupLog logr.Logger) *Config {
+	once.Do(func() {
+		flag.StringVar(&cfg.MetricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
+		flag.StringVar(&cfg.ProbeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
+		flag.BoolVar(&cfg.EnableLeaderElection, "leader-elect", false,
+			"Enable leader election for controller manager. "+
+				"Enabling this will ensure there is only one active controller manager.")
+		flag.BoolVar(&cfg.SecureMetrics, "metrics-secure", false,
+			"If set, the metrics endpoint is served securely via HTTPS. Use --metrics-secure=false to use HTTP instead.")
+		flag.BoolVar(&cfg.EnableHTTP2, "enable-http2", false,
+			"If set, HTTP/2 will be enabled for the metrics and webhook servers")
+		flag.BoolVar(&cfg.PrometheusRuleController, "prometheus-rule-controller", true,
+			"Determine if the prometheus rule controller should be started. Default is true.")
+		flag.StringVar(&cfg.RecordingRuleGroupSetSuffix, "recording-rule-group-set-suffix", "",
+			"Suffix to be added to the RecordingRuleGroupSet")
 
-	if interval == "" {
-		interval = "0"
-	}
+		region := os.Getenv("CORALOGIX_REGION")
+		flag.StringVar(&region, "region", region, fmt.Sprintf("The region of your Coralogix cluster. Can be one of %q. Conflicts with 'domain'.", validRegions))
 
-	reconcileInterval, err := strconv.Atoi(interval)
-	if err != nil {
-		return err
-	}
+		domain := os.Getenv("CORALOGIX_DOMAIN")
+		flag.StringVar(&domain, "domain", domain, "The domain of your Coralogix cluster. Conflicts with 'region'.")
 
-	cfg = &Config{
-		Client:            client,
-		Scheme:            scheme,
-		Selector:          selector,
-		ReconcileInterval: time.Second * time.Duration(reconcileInterval),
-	}
+		apiKey := os.Getenv("CORALOGIX_API_KEY")
+		flag.StringVar(&cfg.CoralogixApiKey, "api-key", apiKey, "The proper api-key based on your Coralogix cluster's region.")
 
-	return nil
+		labelSelector := os.Getenv("LABEL_SELECTOR")
+		flag.StringVar(&labelSelector, "label-selector", labelSelector, "A comma-separated list of key=value labels to filter custom resources.")
+
+		namespaceSelector := os.Getenv("NAMESPACE_SELECTOR")
+		flag.StringVar(&namespaceSelector, "namespace-selector", namespaceSelector, "A list of namespaces to filter custom resources.")
+
+		enableWebhooks := os.Getenv("ENABLE_WEBHOOKS")
+		flag.StringVar(&cfg.EnableWebhooks, "enable-webhooks", enableWebhooks, "Enable webhooks for the operator. Default is true.")
+		enableWebhooks = strings.ToLower(enableWebhooks)
+
+		reconcileIntervals := getReconcileIntervals()
+
+		opts := zap.Options{}
+		opts.BindFlags(flag.CommandLine)
+		flag.Parse()
+
+		ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+
+		var err error
+		cfg.CoralogixUrl, err = getCoralogixUrl(region, domain)
+		if err != nil {
+			setupLog.Error(err, "invalid arguments for running operator")
+			os.Exit(1)
+		}
+
+		if cfg.CoralogixApiKey == "" {
+			setupLog.Error(fmt.Errorf("api-key can not be empty"),
+				"invalid arguments for running operator")
+			os.Exit(1)
+		}
+
+		cfg.Selector, err = parseSelector(labelSelector, namespaceSelector)
+		if err != nil {
+			setupLog.Error(err, "invalid arguments for running operator")
+			os.Exit(1)
+		}
+
+		cfg.ReconcileIntervals, err = parseReconcileIntervals(setupLog, reconcileIntervals)
+		if err != nil {
+			setupLog.Error(err, "invalid arguments for running operator")
+			os.Exit(1)
+		}
+	})
+
+	return cfg
 }
 
 func GetConfig() *Config {
 	return cfg
+}
+
+func getReconcileIntervals() map[string]*string {
+	result := make(map[string]*string)
+	for _, crd := range crds {
+		interval := os.Getenv(fmt.Sprintf("%s_RECONCILE_INTERVAL_SECONDS", strings.ToUpper(crd)))
+		flag.StringVar(
+			&interval,
+			fmt.Sprintf("%s-reconcile-interval-seconds", strings.ToLower(crd)),
+			interval,
+			fmt.Sprintf("The interval in seconds between succeding reconciliations for %s", crd),
+		)
+		result[crd] = &interval
+	}
+
+	return result
+}
+
+func parseReconcileIntervals(setupLog logr.Logger, intervals map[string]*string) (map[string]time.Duration, error) {
+	result := make(map[string]time.Duration)
+	for crd, interval := range intervals {
+		// Default to 0 if not set, which means no custom interval for the CRD.
+		// Leaving the operator to reconcile every 10 hours, according to the default manager settings.
+		// More info: https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.20.3/pkg/cache#Options
+		if *interval == "" {
+			*interval = "0"
+		}
+
+		setupLog.Info(fmt.Sprintf("Reconcile interval for CRD %s is %s seconds", crd, *interval))
+
+		numericInterval, err := strconv.Atoi(*interval)
+		if err != nil {
+			return nil, fmt.Errorf("invalid interval value for %s: %w", crd, err)
+		}
+
+		result[crd] = time.Second * time.Duration(numericInterval)
+	}
+	return result, nil
+}
+
+func getCoralogixUrl(region, domain string) (string, error) {
+	if region != "" && domain != "" {
+		return "", fmt.Errorf("region and domain flags are mutually exclusive")
+	}
+
+	if region == "" && domain == "" {
+		return "", fmt.Errorf("region or domain must be set")
+	}
+
+	if region != "" {
+		if !slices.Contains(validRegions, region) {
+			return "", fmt.Errorf("region value is '%s', but can be one of %q", region, validRegions)
+		}
+		return operatorRegionToSdkRegion[region], nil
+	}
+
+	return domain, nil
+}
+
+func InitClient(c client.Client) {
+	CrClient = c
+}
+
+func InitScheme(s *runtime.Scheme) {
+	scheme = s
+}
+
+func GetClient() client.Client {
+	return CrClient
+}
+
+func GetScheme() *runtime.Scheme {
+	return scheme
+}
+
+func getKeys[K, V comparable](m map[K]V) []K {
+	result := make([]K, 0)
+	for k := range m {
+		result = append(result, k)
+	}
+	return result
 }

@@ -17,6 +17,7 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"time"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	"github.com/go-logr/logr"
@@ -33,6 +34,7 @@ import (
 // TCOLogsPoliciesReconciler reconciles a TCOLogsPolicies object
 type TCOLogsPoliciesReconciler struct {
 	CoralogixClientSet *cxsdk.ClientSet
+	Interval           time.Duration
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=tcologspolicies,verbs=get;list;watch;create;update;patch;delete
@@ -41,6 +43,10 @@ type TCOLogsPoliciesReconciler struct {
 
 func (r *TCOLogsPoliciesReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	return coralogixreconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.TCOLogsPolicies{}, r)
+}
+
+func (r *TCOLogsPoliciesReconciler) RequeueInterval() time.Duration {
+	return r.Interval
 }
 
 func (r *TCOLogsPoliciesReconciler) overwrite(ctx context.Context, log logr.Logger, tcoLogsPolicies *coralogixv1alpha1.TCOLogsPolicies) error {

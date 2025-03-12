@@ -17,6 +17,7 @@ package v1beta1
 import (
 	"context"
 	"fmt"
+	"time"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	"github.com/go-logr/logr"
@@ -34,6 +35,7 @@ import (
 // AlertReconciler reconciles a Alert object
 type AlertReconciler struct {
 	CoralogixClientSet *cxsdk.ClientSet
+	Interval           time.Duration
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=alerts,verbs=get;list;watch;create;update;patch;delete
@@ -42,6 +44,10 @@ type AlertReconciler struct {
 
 func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	return coralogixreconciler.ReconcileResource(ctx, req, &coralogixv1beta1.Alert{}, r)
+}
+
+func (r *AlertReconciler) RequeueInterval() time.Duration {
+	return r.Interval
 }
 
 func (r *AlertReconciler) FinalizerName() string {

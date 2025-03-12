@@ -17,6 +17,7 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"time"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	"github.com/go-logr/logr"
@@ -35,6 +36,7 @@ import (
 // RecordingRuleGroupSetReconciler reconciles a RecordingRuleGroupSet object
 type RecordingRuleGroupSetReconciler struct {
 	RecordingRuleGroupSetClient clientset.RecordingRulesGroupsClientInterface
+	Interval                    time.Duration
 	RecordingRuleGroupSetSuffix string
 }
 
@@ -48,6 +50,10 @@ func (r *RecordingRuleGroupSetReconciler) Reconcile(ctx context.Context, req ctr
 
 func (r *RecordingRuleGroupSetReconciler) FinalizerName() string {
 	return "recordingrulegroupset.coralogix.com/finalizer"
+}
+
+func (r *RecordingRuleGroupSetReconciler) RequeueInterval() time.Duration {
+	return r.Interval
 }
 
 func (r *RecordingRuleGroupSetReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {

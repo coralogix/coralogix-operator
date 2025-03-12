@@ -17,6 +17,7 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
@@ -34,6 +35,7 @@ import (
 // PresetReconciler reconciles a Preset object
 type PresetReconciler struct {
 	NotificationsClient *cxsdk.NotificationsClient
+	Interval            time.Duration
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=presets,verbs=get;list;watch;create;update;patch;delete
@@ -50,6 +52,10 @@ func (r *PresetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 
 func (r *PresetReconciler) FinalizerName() string {
 	return "preset.coralogix.com/finalizer"
+}
+
+func (r *PresetReconciler) RequeueInterval() time.Duration {
+	return r.Interval
 }
 
 func (r *PresetReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {

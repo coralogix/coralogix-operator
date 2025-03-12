@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
@@ -38,6 +39,7 @@ import (
 // OutboundWebhookReconciler reconciles a OutboundWebhook object
 type OutboundWebhookReconciler struct {
 	OutboundWebhooksClient clientset.OutboundWebhooksClientInterface
+	Interval               time.Duration
 }
 
 //+kubebuilder:rbac:groups=coralogix.com,resources=outboundwebhooks,verbs=get;list;watch;create;update;patch;delete
@@ -50,6 +52,10 @@ func (r *OutboundWebhookReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 
 func (r *OutboundWebhookReconciler) FinalizerName() string {
 	return "outbound-webhook.coralogix.com/finalizer"
+}
+
+func (r *OutboundWebhookReconciler) RequeueInterval() time.Duration {
+	return r.Interval
 }
 
 func (r *OutboundWebhookReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {

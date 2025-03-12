@@ -17,6 +17,7 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"time"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	"github.com/go-logr/logr"
@@ -33,6 +34,7 @@ import (
 // ScopeReconciler reconciles a Scope object
 type ScopeReconciler struct {
 	ScopesClient *cxsdk.ScopesClient
+	Interval     time.Duration
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=scopes,verbs=get;list;watch;create;update;patch;delete
@@ -47,6 +49,10 @@ func (r *ScopeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 func (r *ScopeReconciler) FinalizerName() string {
 	return "scope.coralogix.com/finalizer"
+}
+
+func (r *ScopeReconciler) RequeueInterval() time.Duration {
+	return r.Interval
 }
 
 func (r *ScopeReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {

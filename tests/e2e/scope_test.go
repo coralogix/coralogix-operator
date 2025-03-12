@@ -88,6 +88,31 @@ var _ = Describe("Scope", Ordered, func() {
 		}, time.Minute, time.Second).Should(Equal(newScopeName))
 	})
 
+	It("After deleted from Coralogix backend directly, it should be recreated based on configured interval",
+		func(ctx context.Context) {
+			By("Deleting the Scope from Coralogix backend")
+			_, err := scopesClient.Delete(ctx, &cxsdk.DeleteScopeRequest{Id: scopeID})
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Verifying Scope is populated with a new ID after configured interval")
+			var newScopeID string
+			Eventually(func() string {
+				fetchedScope := &coralogixv1alpha1.Scope{}
+				Expect(crClient.Get(ctx, types.NamespacedName{Name: scopeName, Namespace: testNamespace}, fetchedScope)).To(Succeed())
+				newScopeID = *fetchedScope.Status.ID
+				return newScopeID
+			}, time.Minute, time.Second).Should(Not(Equal(scopeID)))
+
+			By("Verifying Scope with new the ID exists in Coralogix backend")
+			Eventually(func() error {
+				_, err := scopesClient.Get(ctx, &cxsdk.GetTeamScopesByIDsRequest{
+					Ids: []string{newScopeID},
+				})
+				return err
+			}, time.Minute, time.Second).Should(Succeed())
+
+		})
+
 	It("Should be deleted successfully", func(ctx context.Context) {
 		By("Deleting the Scope")
 		Expect(crClient.Delete(ctx, scope)).To(Succeed())
