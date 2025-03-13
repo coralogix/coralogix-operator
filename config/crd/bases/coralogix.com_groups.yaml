@@ -37,14 +37,18 @@ spec:
           metadata:
             type: object
           spec:
-            description: GroupSpec defines the desired state of Group.
+            description: GroupSpec defines the desired state of Coralogix Group.
             properties:
               customRoles:
+                description: Custom roles applied to the group.
                 items:
+                  description: Custom role reference.
                   properties:
                     resourceRef:
+                      description: Reference to the custom role.
                       properties:
                         name:
+                          description: Name of the resource (not id).
                           type: string
                         namespace:
                           type: string
@@ -57,23 +61,31 @@ spec:
                 minItems: 1
                 type: array
               description:
+                description: Description of the group.
                 type: string
               members:
+                description: Members of the group.
                 items:
+                  description: User on Coralogix.
                   properties:
                     userName:
+                      description: User's name.
                       type: string
                   required:
                   - userName
                   type: object
                 type: array
               name:
+                description: Name of the group.
                 type: string
               scope:
+                description: Scope attached to the group.
                 properties:
                   resourceRef:
+                    description: Scope reference
                     properties:
                       name:
+                        description: Name of the resource (not id).
                         type: string
                       namespace:
                         type: string
