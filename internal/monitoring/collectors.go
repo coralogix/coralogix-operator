@@ -114,9 +114,15 @@ func getGVKsInVersion(version string) []schema.GroupVersionKind {
 	groupVersion := schema.GroupVersion{Group: utils.CoralogixAPIGroup, Version: version}
 	knownTypes := config.GetScheme().KnownTypes(groupVersion)
 	for kind := range knownTypes {
-		// Skip v1alpha Alert since we pick it up from v1beta1
-		if kind == "Alert" && version == utils.V1alpha1APIVersion {
+		// Skip v1alpha1 Alert since we pick it up from v1beta1
+		if kind == utils.AlertKind && version == utils.V1alpha1APIVersion {
 			continue
+		}
+		// Skip NotificationCenter CRDs if the feature is disabled
+		if kind == utils.ConnectorKind || kind == utils.PresetKind || kind == utils.GlobalRouterKind {
+			if !config.GetConfig().EnableNotificationCenter {
+				continue
+			}
 		}
 		// skip List, Options and Event types. e.g. AlertList, ListOptions, WatchEvent
 		if strings.HasSuffix(kind, "List") ||
