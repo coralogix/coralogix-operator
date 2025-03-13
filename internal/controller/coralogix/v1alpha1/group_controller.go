@@ -59,6 +59,9 @@ func (r *GroupReconciler) RequeueInterval() time.Duration {
 func (r *GroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	group := obj.(*coralogixv1alpha1.Group)
 	createRequest, err := group.ExtractCreateGroupRequest(ctx, r.CXClientSet)
+	if err != nil {
+		return fmt.Errorf("error on extracting create request: %w", err)
+	}
 	log.V(1).Info("Creating remote group", "group", protojson.Format(createRequest))
 	createResponse, err := r.CXClientSet.Groups().Create(ctx, createRequest)
 	if err != nil {
