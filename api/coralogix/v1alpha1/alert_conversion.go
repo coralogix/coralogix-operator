@@ -780,12 +780,19 @@ func convertTimeRelativeV1alpha1ToV1beta1(timeRelative *TimeRelative, payloadFil
 }
 
 func convertRatioV1alpha1ToV1beta1(ratio *Ratio, severity AlertSeverity) (v1beta1.AlertTypeDefinition, []string) {
+	var query1filterAlias, query2filterAlias string
+	if ratio.Query1Filters.Alias != nil {
+		query1filterAlias = *ratio.Query1Filters.Alias
+	}
+	if ratio.Query2Filters.Alias != nil {
+		query2filterAlias = *ratio.Query2Filters.Alias
+	}
 	return v1beta1.AlertTypeDefinition{
 		LogsRatioThreshold: &v1beta1.LogsRatioThreshold{
 			Numerator:        *convertLogsFilterV1alpha1ToV1beta1(&ratio.Query1Filters),
-			NumeratorAlias:   *ratio.Query1Filters.Alias,
+			NumeratorAlias:   query1filterAlias,
 			Denominator:      *convertDenominatorV1alpha1ToV1beta1(&ratio.Query2Filters),
-			DenominatorAlias: *ratio.Query2Filters.Alias,
+			DenominatorAlias: query2filterAlias,
 			Rules: []v1beta1.LogsRatioThresholdRule{
 				covertRatioConditionsV1alpha1ToV1beta1(ratio.Conditions, severity),
 			},
