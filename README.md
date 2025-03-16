@@ -1,100 +1,74 @@
 # Coralogix Operator
-[![license](https://img.shields.io/github/license/coralogix/coralogix-operator.svg)](https://raw.githubusercontent.com/coralogix/coralogix-operator/master/LICENSE)
+[![license](https://img.shields.io/github/license/coralogix/coralogix-operator.svg)](https://raw.githubusercontent.com/coralogix/coralogix-operator/main/LICENSE)
 ![GitHub tag (latest SemVer pre-release)](https://img.shields.io/github/v/tag/coralogix/coralogix-operator.svg?include_prereleases&style=plastic)
 ![Go Report Card](https://goreportcard.com/badge/github.com/coralogix/coralogix-operator)
 ![e2e-tests](https://github.com/coralogix/coralogix-operator/actions/workflows/e2e-tests.yaml/badge.svg?style=plastic)
 
 ## Overview
 The Coralogix Operator provides Kubernetes-native deployment and management for Coralogix, 
-designed to simplify and automate the configuration of Coralogix APIs through Kubernetes [custom resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/).
+designed to simplify and automate the configuration of Coralogix APIs through Kubernetes [custom resources definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) and controllers.
 
-Please refer to the next note if you're using the latest version of the operator - [A note regarding webhooks and cert-manager](README.md#a-note-regarding-webhooks-and-cert-manager).
+The operator provides the following capabilities:
+- **CRDs and controllers:** Easily deploy and manage various Coralogix features using custom resources, which are automatically reconciled by the operator.
+  For a complete list of available CRDs and their details, refer to the [API documentation](https://github.com/coralogix/coralogix-operator/tree/main/docs/api.md).
+  For examples of custom resources, refer to the [samples directory](https://github.com/coralogix/coralogix-operator/tree/main/config/samples).
+- **[Prometheus Operator](https://prometheus-operator.dev/) integration:** The Operator leverages PrometheusRule CRD,
+  to simplify the transition to Coralogix Alerts by utilizing existing monitoring configurations.
+  For more details on this integration, refer to the [Prometheus Integration documentation](https://github.com/coralogix/coralogix-operator/tree/main/docs/prometheus-integration.md).
+- **Running multiple instances:** The operator supports running multiple instances within a single cluster by using namespace and label selectors.
+  For more details, refer to the [Running Multiple Instances documentation](https://github.com/coralogix/coralogix-operator/tree/main/docs/multi-instance-operator.md).
+- **Dynamic admission control:** To prevent invalid resources from causing failures in Coralogix, the operator uses admission webhooks 
+  to validate custom resources before they are applied to the cluster.
+  For more Information, refer to - [A note regarding webhooks and cert-manager](README.md#a-note-regarding-webhooks-and-cert-manager).
+- **Metrics collection:** The operator provides metrics for monitoring custom resources and the operator itself.
+  For more details, refer to the [Metrics documentation](https://github.com/coralogix/coralogix-operator/tree/main/docs/metrics.md).
 
-The operator integrates with Kubernetes by supporting a variety of custom resources and controllers to simplify Coralogix management, including:
-- **Custom Resources for Coralogix:** Easily deploy and manage Coralogix features, using custom resources like
-[Alerts](https://github.com/coralogix/coralogix-operator/tree/master/config/samples/alerts), 
-[RecordingRuleGroupSets](https://github.com/coralogix/coralogix-operator/tree/master/config/samples/recordingrulegroupset),
-[RuleGroups](https://github.com/coralogix/coralogix-operator/tree/master/config/samples/rulegroups), [OutboundWebhooks](https://github.com/coralogix/coralogix-operator/tree/master/config/samples/outboundwebhooks) and others.
-For a complete list of available APIs and their details, refer to the [API documentation](https://github.com/coralogix/coralogix-operator/tree/master/docs/api.md).
-For examples of custom resources, see the [samples directory](https://github.com/coralogix/coralogix-operator/tree/main/config/samples).
-- **Prometheus Operator Integration:** The Operator leverages [Prometheus Operator](https://prometheus-operator.dev/)'s PrometheusRule CRD,
-to simplify the transition to Coralogix by utilizing existing monitoring configurations.
-For more details on this integration, see the [Prometheus Integration documentation](https://github.com/coralogix/coralogix-operator/tree/master/docs/prometheus-integration.md).
-- **Running Multiple Instances:** The operator supports running multiple instances within a single cluster by using label selectors.
-For more details, see the [Running Multiple Instances documentation](https://github.com/coralogix/coralogix-operator/tree/master/docs/multi-instance-operator.md).
+### Prerequisites
+- Kubernetes cluster (v1.16+).
+- [cert-manager](https://cert-manager.io/) installed - The operator uses cert-manager for validation and conversion webhooks.
+- [Prometheus Operator](https://prometheus-operator.dev/) installed - By default, the PrometheusRule Integration is enabled,  
+  and a ServiceMonitor is created for the operator. These CRDs are part of the Prometheus Operator.
+  If you are not using Prometheus Operator, you can disable it by setting the 
+  `coralogixOperator.prometheusRules.enabled=false` and `serviceMonitor.create=false` flags during installation.
 
-
-## Getting Started
-You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
-
-### Helm Installation
-1. For using the official helm chart, add the Coralogix repository and update it:
+### Installation
+1. Add the Coralogix Helm repository and update it:
 ```sh
 helm repo add coralogix https://cgx.jfrog.io/artifactory/coralogix-charts-virtual
 helm repo update
 ```
 
-2. Install the operator with Helm:
+2. Install the operator:
 ```sh
 helm install <my-release> coralogix/coralogix-operator \
   --set secret.data.apiKey="<api-key>" \
   --set coralogixOperator.region="<region>"
 ```
+For a complete list of configuration options, refer to the [Helm Chart Docs](./charts/coralogix-operator/README.md).
 
- - The Prometheus-Operator integration assumes PrometheusRule CRD is installed. If you wish to disable this integration, add the `--set prometheusOperator.prometheusRules.enabled=false` flag.
+3. Upgrade the operator:
+```sh  
+helm upgrade <my-release> coralogix/coralogix-operator \
+  --set secret.data.api
+  -- set coralogixOperator.region="<region>"
+```
 
-## **A note regarding webhooks and cert-manager**
-Webhooks are used to validate the custom resources before they are created in the cluster. They are also used to convert the old schema to the new schema.
-For the webhook to work, cert-manager should be installed in the cluster.
-Webhooks will be enabled by default in the operator installation, so make sure cert-manager is installed in the cluster.
-A [certificate](./charts/coralogix-operator/templates/certificate.yaml) and an [issuer](./charts/coralogix-operator/templates/issuer.yaml) will be installed on the cluster as part of the cert-manager installation.
-
-### consequences of disabling webhooks
-If you disable the webhooks, the operator will not be able to validate the custom resources before they are created in the cluster.
-If you are using an old schema of the custom resources, the operator will not be able to convert them to the new schema.
-That means you will have to manually update the custom resources to the new schema.
-v1alpha1/Alerts won't be supported if webhooks are disabled, as the storage version is v1beta1.
-The PrometheusRule controller won't be able to track alerts that were created in a v1alpha1 schema.
-
-3. To uninstall the operator, run:
+4. To uninstall the operator, run:
 ```sh
 helm delete <my-release>
 ```
- 
-### Local Installation with Kustomize
-1. Clone the operator repository and navigate to the project directory:
-```
-git clone https://github.com/coralogix/coralogix-operator.git 
-cd coralogix-operator
-```
 
-2. Set the Coralogix API key and region as environment variables:
-```sh
-export CORALOGIX_API_KEY="<api-key>"
-export CORALOGIX_REGION="<region>"
-```
-For private domain set the `CORALOGIX_DOMAIN` environment variable.
+## **A note regarding webhooks and cert-manager**
+By default, the operator installs admission webhooks that are used to validate the custom resources before they are applied to the cluster.
+The operator uses [cert-manager](https://cert-manager.io/) for managing certificates, so make sure it is installed before deploying the operator.
+A [certificate](./charts/coralogix-operator/templates/certificate.yaml) and an [issuer](./charts/coralogix-operator/templates/issuer.yaml) will be installed on the cluster as part of the operator installation.
 
-3. For a custom operator image, build and push your image:
-```sh
-make docker-build docker-push IMG=<some-registry>/coralogix-operator:<tag> 
-```
-
-4. Deploy the operator to the cluster with the image specified by `IMG`:
-```sh
-make deploy IMG=<some-registry>/coralogix-operator:<tag> 
-```
-Note: This will install cert-manager and PrometheusRule CRD on the cluster if not already installed.
-
-5. To uninstall the operator, run:
-```sh
-make undeploy
-```
+In case you are not interested in using webhooks, you can disable them by setting the `coralogixOperator.webhooks.enabled=false` flag during installation.
+Keep in mind that the operator will not be able to validate the custom resources before applied to the cluster.
 
 ## Contributing
 Please refer to [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### How it works
 This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/).
-It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/) 
-which provides a reconcile function responsible for synchronizing resources until the Desired state is reached on the cluster.
+It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/) which provides a reconcile function responsible for synchronizing resources until the Desired state is reached on the cluster.
