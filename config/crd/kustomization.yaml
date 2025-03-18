@@ -16,6 +16,8 @@ resources:
   - bases/coralogix.com_connectors.yaml
   - bases/coralogix.com_presets.yaml
   - bases/coralogix.com_globalrouters.yaml
+  - bases/coralogix.com_dashboards.yaml
+  - bases/coralogix.com_dashboardsfolders.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:

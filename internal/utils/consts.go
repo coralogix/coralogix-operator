@@ -33,6 +33,8 @@ const (
 	TCOLogsPoliciesKind       = "TCOLogsPolicies"
 	TCOTracesPoliciesKind     = "TCOTracesPolicies"
 	IntegrationKind           = "Integration"
+	DashboardKind             = "Dashboard"
+	DashboardsFolderKind      = "DashboardsFolder"
 	ConnectorKind             = "Connector"
 	PresetKind                = "Preset"
 	GlobalRouterKind          = "GlobalRouter"
