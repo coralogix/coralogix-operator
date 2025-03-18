@@ -27,6 +27,18 @@ serviceMonitor:
   # -- Specifies whether a service monitor should be created.
   create: true
 
+validatingWebhookConfiguration:
+  # -- Specifies whether a ValidatingWebhookConfiguration should be created.
+  create: true
+
+certificate:
+  # -- Specifies whether a Certificate should be created.
+  create: true
+
+issuer:
+  # -- Specifies whether an Issuer should be created.
+  create: true
+
 # -- SecurityContext holds pod-level security attributes and common container settings.
 # -- This defaults to non root user with uid 2000 and gid 2000. *v1.PodSecurityContext  false
 # -- ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/

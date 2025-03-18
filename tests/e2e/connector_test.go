@@ -122,7 +122,7 @@ func getSampleSlackConnector(name, namespace string) *coralogixv1alpha1.Connecto
 			Namespace: namespace,
 		},
 		Spec: coralogixv1alpha1.ConnectorSpec{
-			Name:        "Slack Connector",
+			Name:        name,
 			Description: "A connector for Slack integration",
 			ConnectorType: &coralogixv1alpha1.ConnectorType{
 				Slack: &coralogixv1alpha1.ConnectorSlack{
