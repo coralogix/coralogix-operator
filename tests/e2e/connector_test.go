@@ -46,7 +46,7 @@ var _ = Describe("Connector", Ordered, func() {
 
 	It("Should be created successfully", func(ctx context.Context) {
 		By("Creating Connector")
-		connectorName := "slack-connector"
+		connectorName := fmt.Sprintf("slack-connector-%d", time.Now().Unix())
 		connector = getSampleSlackConnector(connectorName, testNamespace)
 		Expect(crClient.Create(ctx, connector)).To(Succeed())
 
