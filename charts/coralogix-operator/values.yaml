@@ -1,4 +1,4 @@
-# -- Provide a name in place of kube-prometheus-stack for `app:` labels
+# -- Provide a name in place of coralogix-operator for `app:` labels
 nameOverride: ""
 
 # -- Provide a name to substitute for the full names of resources
@@ -71,17 +71,6 @@ secret:
   # -- Coralogix operator secret data
   data:
     apiKey: ""
-
-  # -- Security context for kube-rbac-proxy container
-  securityContext:
-    allowPrivilegeEscalation: false
-    readOnlyRootFilesystem: true
-    capabilities:
-      drop:
-        - ALL
-
-  # -- resource config for kube-rbac-proxy
-  resources: {}
 
 # -- Coralogix operator container config
 coralogixOperator:

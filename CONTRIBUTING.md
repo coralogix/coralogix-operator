@@ -4,90 +4,62 @@ Thank you for your interest in contributing to the Coralogix Operator. We welcom
 
 You are contributing under the terms and conditions of the [Contributor License Agreement](LICENSE). [For signing](https://cla-assistant.io/coralogix/coralogix-operator).
 
-Building the Operator
+### Building the Operator
 ---------------------
-
-### Requirements
-
-- You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind)
-- [Go](https://golang.org/doc/install) 1.20.x (for building the operator locally)
-- [kuttl](https://kuttl.dev/) (for running e2e tests).
-- [kubebuilder](https://book-v1.book.kubebuilder.io/getting_started/installation_and_setup.html) for developing the operator.
-
-### Steps
-
-Clone the repository locally.
-
-```sh
-$ git clone git@github.com:coralogix/coralogix-operator
+1. Clone the operator repository and navigate to the project directory:
+```
+git clone https://github.com/coralogix/coralogix-operator.git 
+cd coralogix-operator
 ```
 
-Navigate to the operator directory and install it.
-This command will build the operator and install the CRDs located at [crd directory](./config/crd) into the K8s cluster
-specified in ~/.kube/config.
+2. Set the Coralogix API key and region as environment variables:
+```sh
+export CORALOGIX_API_KEY="<api-key>"
+export CORALOGIX_REGION="<region>"
+```
+For private domain set the `CORALOGIX_DOMAIN` environment variable.
 
+3. For a custom operator image, build and push your image to a registry:
 ```sh
-$ make install
-```
-
-Add the region and api-key as environment variables (or later as flags).
-
-```sh
-$ export CORALOGIX_API_KEY="xxx-xxx-xxx"
-$ export CORALOGIX_REGION = "EU2"
-```
-For private domain the `domain` field or the environment variable `CORALOGIX_DOMAIN` have to be defined.
-
-Run the operator locally
-```sh
-$ go run cmd/main.go
-```
-Or with `regin` and `api-key` flags
-```sh
-$ go run cmd/main.go -region EU2 -api-key xxx-xxx-xxx
-```
-For not running the prometheusRule controller set the `prometheus-rule-controller` flag to `false`
-```sh
-$ go run cmd/main.go -prometheus-rule-controller=false
-```
-Or build and push your image to a registry
-```sh
-make docker-build docker-push IMG=<some-registry>/coralogix-operator:tag
-```
-Then deploy it to the cluster
-```sh
-make deploy IMG=<some-registry>/coralogix-operator:tag
+make docker-build docker-push IMG=<some-registry>/coralogix-operator:<tag> 
 ```
 
-Running examples
+4. Deploy the operator to the cluster with the image specified by `IMG`:
 ```sh
+make deploy IMG=<some-registry>/coralogix-operator:<tag> 
+```
+Note: This will install cert-manager and Prometheus Operator CRDs on the cluster if not already installed.
 
+5. To uninstall the operator, run:
+```sh
+make undeploy
+```
+
+### Running examples
 ---------------------
-It's possible to use one of the samples in the [sample directory](./config/samples) or creating your own sample file.
-Then apply it -
+The project provides a [sample directory](./config/samples) for examples of custom resources.
 
+To use an example, apply the resource to the cluster:
 ```sh
-$ kubectl apply -f config/samples/alerts/standard_alert.yaml
+$ kubectl apply -f config/samples/v1beta1/alerts/metric_threshold.yaml
 ```
 
-Getting the resource status
-
+Getting the resource:
 ```sh
-$ kubectl get alerts.coralogix.com standard-alert-example -oyaml
+$ kubectl get alert metric-threshold -o yaml
 ```
 
-Destroying the resource.
-
+Deleting the resource.
 ```sh
-$ kubectl delete alerts.coralogix.com standard-alert-example
+$ kubectl delete alert metric-threshold
 ```
 
 Developing
 ---------------------
 We use [kubebuilder](https://book.kubebuilder.io/) for developing the operator.
-When creating or updating CRDs remember to run 
+When creating or updating CRDs remember to run:
 ```sh
-make manifests
+make manifests generate
 ````
 
 Running E2E Tests
