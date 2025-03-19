@@ -60,17 +60,6 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 		return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, err)
 	}
 
-	if ConditionsObj, ok := (obj).(utils.ConditionsObj); ok {
-		conditions := ConditionsObj.GetConditions()
-		if len(conditions) == 0 {
-			utils.SetSyncedConditionFalse(&conditions, obj.GetGeneration(), utils.ReasonRemoteSyncPending, "Syncing remote resource")
-			ConditionsObj.SetConditions(conditions)
-			if err = config.GetClient().Status().Update(ctx, obj); err != nil {
-				return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, err)
-			}
-		}
-	}
-
 	if !r.CheckIDInStatus(obj) {
 		log.V(1).Info("Resource ID is missing; handling creation for resource")
 		if err = r.HandleCreation(ctx, log, obj); err != nil {
@@ -82,7 +71,6 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 			return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, err)
 		}
 
-		log.V(1).Info("Adding finalizer")
 		if err = AddFinalizer(ctx, log, obj, r); err != nil {
 			log.Error(err, "Error adding finalizer")
 			return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, err)
@@ -98,7 +86,6 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 			return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonRemoteDeletionFailed, err)
 		}
 
-		log.V(1).Info("Removing finalizer")
 		if err = RemoveFinalizer(ctx, log, obj, r); err != nil {
 			log.Error(err, "Error removing finalizer")
 			return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, err)
@@ -118,6 +105,7 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 
 	log.V(1).Info("Handling update")
 	if err = r.HandleUpdate(ctx, log, obj); err != nil {
+		log.Error(err, "Error handling update")
 		if cxsdk.Code(err) == codes.NotFound {
 			log.V(1).Info("resource not found on remote")
 			uObj := &unstructured.Unstructured{}
@@ -144,7 +132,7 @@ func AddFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r Cor
 		log.V(1).Info("Adding finalizer")
 		controllerutil.AddFinalizer(obj, r.FinalizerName())
 		if err := config.GetClient().Update(ctx, obj); err != nil {
-			return fmt.Errorf("error updating k8s object: %w", err)
+			return err
 		}
 	}
 	return nil
@@ -154,19 +142,26 @@ func RemoveFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r 
 	log.V(1).Info("Removing finalizer")
 	controllerutil.RemoveFinalizer(obj, r.FinalizerName())
 	if err := config.GetClient().Update(ctx, obj); err != nil {
-		return fmt.Errorf("error updating k8s object: %w", err)
+		return err
 	}
 	return nil
 }
 
 func ManageErrorWithRequeue(ctx context.Context, log logr.Logger, obj client.Object, reason string, err error) (reconcile.Result, error) {
+	// in case of update conflict, don't try to update conditions, as it will fail with the same error.
+	// instead, requeue the request and without flooding with error logs.
+	if errors.IsConflict(err) {
+		return reconcile.Result{Requeue: true}, nil
+	}
+
 	if conditionsObj, ok := (obj).(utils.ConditionsObj); ok {
 		conditions := conditionsObj.GetConditions()
 		if utils.SetSyncedConditionFalse(&conditions, obj.GetGeneration(), reason, err.Error()) {
 			conditionsObj.SetConditions(conditions)
 			if err2 := config.GetClient().Status().Update(ctx, obj); err2 != nil {
-				log.Error(err2, "unable to update status")
-				return reconcile.Result{}, err2
+				if errors.IsConflict(err) {
+					return reconcile.Result{Requeue: true}, nil
+				}
 			}
 		}
 	}
@@ -181,8 +176,7 @@ func ManageSuccessWithRequeue(ctx context.Context, log logr.Logger, obj client.O
 		if utils.SetSyncedConditionTrue(&conditions, obj.GetGeneration(), reason) {
 			conditionsObj.SetConditions(conditions)
 			if err := config.GetClient().Status().Update(ctx, obj); err != nil {
-				log.Error(err, "unable to update status")
-				return reconcile.Result{}, err
+				return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, err)
 			}
 		}
 	}
