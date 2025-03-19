@@ -68,6 +68,11 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 		}
 
 		if err = config.GetClient().Status().Update(ctx, obj); err != nil {
+			log.Error(err, "Error updating status after creation; handling deletion")
+			if err2 := r.HandleDeletion(ctx, log, obj); err2 != nil {
+				log.Error(err2, "Error deleting from remote after status update failure")
+				return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonRemoteDeletionFailed, err2)
+			}
 			return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, err)
 		}
 
