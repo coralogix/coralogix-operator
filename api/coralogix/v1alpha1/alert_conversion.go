@@ -201,7 +201,10 @@ var (
 
 // ConvertFrom converts from the Hub version (v1beta1) to this version (v1alpha1)
 func (dst *Alert) ConvertFrom(srcRaw conversion.Hub) error {
-	src := srcRaw.(*v1beta1.Alert)
+	src, ok := srcRaw.(*v1beta1.Alert)
+	if !ok {
+		return fmt.Errorf("cannot convert from %T to %T", srcRaw, dst)
+	}
 	dst.ObjectMeta = src.ObjectMeta
 	dst.Spec = AlertSpec{
 		Name:        src.Spec.Name,
@@ -228,7 +231,10 @@ func (dst *Alert) ConvertFrom(srcRaw conversion.Hub) error {
 
 // ConvertTo converts this Alert (v1alpha1) to the Hub version (v1beta1)
 func (src *Alert) ConvertTo(dstRaw conversion.Hub) error {
-	dst := dstRaw.(*v1beta1.Alert)
+	dst, ok := dstRaw.(*v1beta1.Alert)
+	if !ok {
+		return fmt.Errorf("cannot convert from %T to %T", src, dstRaw)
+	}
 	dst.ObjectMeta = src.ObjectMeta
 	dstSpec := v1beta1.AlertSpec{
 		Name:         src.Spec.Name,
@@ -256,58 +262,61 @@ func (src *Alert) ConvertTo(dstRaw conversion.Hub) error {
 func convertAlertTypeV1beta1ToV1alpha1(definition v1beta1.AlertTypeDefinition, groupBy []string) (*AlertType, []string) {
 	if logsImmediate := definition.LogsImmediate; logsImmediate != nil {
 		return &AlertType{
-			Standard: convertLogImmediateV1beta1ToStandardV1alpha1(logsImmediate),
+			Standard: convertLogImmediateV1beta1ToStandardV1alpha1(*logsImmediate),
 		}, logsImmediate.NotificationPayloadFilter
 	} else if logsThreshold := definition.LogsThreshold; logsThreshold != nil {
 		return &AlertType{
-			Standard: convertLogsThresholdV1beta1ToStandardV1alpha1(logsThreshold, groupBy),
+			Standard: convertLogsThresholdV1beta1ToStandardV1alpha1(*logsThreshold, groupBy),
 		}, logsThreshold.NotificationPayloadFilter
 	} else if logsRatioThreshold := definition.LogsRatioThreshold; logsRatioThreshold != nil {
 		return &AlertType{
-			Ratio: convertRatioV1beta1ToV1alpha1(logsRatioThreshold, groupBy),
+			Ratio: convertRatioV1beta1ToV1alpha1(*logsRatioThreshold, groupBy),
 		}, nil
 	} else if logsNewValue := definition.LogsNewValue; logsNewValue != nil {
 		return &AlertType{
-			NewValue: convertLogsNewValueV1beta1ToV1alpha1(logsNewValue),
+			NewValue: convertLogsNewValueV1beta1ToV1alpha1(*logsNewValue),
 		}, logsNewValue.NotificationPayloadFilter
 	} else if metricAnomaly := definition.MetricAnomaly; metricAnomaly != nil {
 		return &AlertType{
-			Metric: convertMetricAnomalyV1beta1ToMetricV1alpha1(metricAnomaly),
+			Metric: convertMetricAnomalyV1beta1ToMetricV1alpha1(*metricAnomaly),
 		}, nil
 	} else if metricThreshold := definition.MetricThreshold; metricThreshold != nil {
 		return &AlertType{
-			Metric: convertMetricThresholdV1beta1ToMetricV1alpha1(metricThreshold),
+			Metric: convertMetricThresholdV1beta1ToMetricV1alpha1(*metricThreshold),
 		}, nil
 	} else if flow := definition.Flow; flow != nil {
 		return &AlertType{
-			Flow: convertFlowV1beta1ToV1alpha1(flow),
+			Flow: convertFlowV1beta1ToV1alpha1(*flow),
 		}, nil
 	} else if tracingThreshold := definition.TracingThreshold; tracingThreshold != nil {
 		return &AlertType{
-			Tracing: convertTracingThresholdV1beta1ToV1alpha1(tracingThreshold, groupBy),
+			Tracing: convertTracingThresholdV1beta1ToV1alpha1(*tracingThreshold, groupBy),
 		}, tracingThreshold.NotificationPayloadFilter
 	} else if tracingImmediate := definition.TracingImmediate; tracingImmediate != nil {
 		return &AlertType{
-			Tracing: convertTracingImmediateV1beta1ToV1alpha1(tracingImmediate, groupBy),
+			Tracing: convertTracingImmediateV1beta1ToV1alpha1(*tracingImmediate, groupBy),
 		}, tracingImmediate.NotificationPayloadFilter
 	} else if logsUniqueCount := definition.LogsUniqueCount; logsUniqueCount != nil {
 		return &AlertType{
-			UniqueCount: convertLogsUniqueCountV1beta1ToV1alpha1(logsUniqueCount, groupBy),
+			UniqueCount: convertLogsUniqueCountV1beta1ToV1alpha1(*logsUniqueCount, groupBy),
 		}, logsUniqueCount.NotificationPayloadFilter
 	} else if timeRelative := definition.LogsTimeRelativeThreshold; timeRelative != nil {
 		return &AlertType{
-			TimeRelative: convertTimeRelativeV1beta1ToV1alpha1(timeRelative, groupBy),
+			TimeRelative: convertTimeRelativeV1beta1ToV1alpha1(*timeRelative, groupBy),
 		}, timeRelative.NotificationPayloadFilter
 	} else if logsAnomaly := definition.LogsAnomaly; logsAnomaly != nil {
 		return &AlertType{
-			Standard: convertLogsAnomalyV1beta1ToStandardV1alpha1(logsAnomaly, groupBy),
+			Standard: convertLogsAnomalyV1beta1ToStandardV1alpha1(*logsAnomaly, groupBy),
 		}, logsAnomaly.NotificationPayloadFilter
 	}
 
 	return nil, nil
 }
 
-func convertLogsAnomalyV1beta1ToStandardV1alpha1(anomaly *v1beta1.LogsAnomaly, groupBy []string) *Standard {
+func convertLogsAnomalyV1beta1ToStandardV1alpha1(anomaly v1beta1.LogsAnomaly, groupBy []string) *Standard {
+	if len(anomaly.Rules) == 0 {
+		return nil
+	}
 	condition := anomaly.Rules[0].Condition
 	timeWindow := logsTimeWindowV1beta1ToV1alpha[condition.TimeWindow.SpecificValue]
 	return &Standard{
@@ -321,14 +330,17 @@ func convertLogsAnomalyV1beta1ToStandardV1alpha1(anomaly *v1beta1.LogsAnomaly, g
 	}
 }
 
-func convertTimeRelativeV1beta1ToV1alpha1(timeRelative *v1beta1.LogsTimeRelativeThreshold, groupBy []string) *TimeRelative {
+func convertTimeRelativeV1beta1ToV1alpha1(timeRelative v1beta1.LogsTimeRelativeThreshold, groupBy []string) *TimeRelative {
 	return &TimeRelative{
 		Filters:    convertLogsFilterV1beta1ToV1alpha1(&timeRelative.LogsFilter),
 		Conditions: convertTimeRelativeConditionV1beta1ToV1alpha1(timeRelative, groupBy),
 	}
 }
 
-func convertTimeRelativeConditionV1beta1ToV1alpha1(timeRelative *v1beta1.LogsTimeRelativeThreshold, groupBy []string) TimeRelativeConditions {
+func convertTimeRelativeConditionV1beta1ToV1alpha1(timeRelative v1beta1.LogsTimeRelativeThreshold, groupBy []string) TimeRelativeConditions {
+	if len(timeRelative.Rules) == 0 {
+		return TimeRelativeConditions{}
+	}
 	condition := timeRelative.Rules[0].Condition
 	return TimeRelativeConditions{
 		AlertWhen:              timeRelativeConditionTypeV1beta1ToV1alpha1[condition.ConditionType],
@@ -339,14 +351,17 @@ func convertTimeRelativeConditionV1beta1ToV1alpha1(timeRelative *v1beta1.LogsTim
 	}
 }
 
-func convertLogsUniqueCountV1beta1ToV1alpha1(uniqueCount *v1beta1.LogsUniqueCount, groupBy []string) *UniqueCount {
+func convertLogsUniqueCountV1beta1ToV1alpha1(uniqueCount v1beta1.LogsUniqueCount, groupBy []string) *UniqueCount {
 	return &UniqueCount{
 		Filters:    convertLogsFilterV1beta1ToV1alpha1(uniqueCount.LogsFilter),
 		Conditions: convertLogsUniqueCountConditionV1beta1ToV1alpha1(uniqueCount, groupBy),
 	}
 }
 
-func convertLogsUniqueCountConditionV1beta1ToV1alpha1(uniqueCount *v1beta1.LogsUniqueCount, groupBy []string) UniqueCountConditions {
+func convertLogsUniqueCountConditionV1beta1ToV1alpha1(uniqueCount v1beta1.LogsUniqueCount, groupBy []string) UniqueCountConditions {
+	if len(uniqueCount.Rules) == 0 {
+		return UniqueCountConditions{}
+	}
 	condition := uniqueCount.Rules[0].Condition
 	parsedUniqueCount := UniqueCountConditions{
 		Key:             uniqueCount.UniqueCountKeypath,
@@ -360,11 +375,18 @@ func convertLogsUniqueCountConditionV1beta1ToV1alpha1(uniqueCount *v1beta1.LogsU
 	return parsedUniqueCount
 }
 
-func convertTracingThresholdV1beta1ToV1alpha1(tracingThreshold *v1beta1.TracingThreshold, groupBy []string) *Tracing {
+func convertTracingThresholdV1beta1ToV1alpha1(tracingThreshold v1beta1.TracingThreshold, groupBy []string) *Tracing {
+	if len(tracingThreshold.Rules) == 0 {
+		return nil
+	}
 	condition := tracingThreshold.Rules[0].Condition
 	timeWindow := tracingTimeWindowV1beta1ToV1alpha1[condition.TimeWindow.SpecificValue]
+	var filters TracingFilters
+	if tracingThreshold.TracingFilter != nil {
+		filters = convertTracingFilterV1beta1ToV1alpha1(*tracingThreshold.TracingFilter)
+	}
 	return &Tracing{
-		Filters: convertTracingFilterV1beta1ToV1alpha1(tracingThreshold.TracingFilter),
+		Filters: filters,
 		Conditions: TracingCondition{
 			AlertWhen:  TracingAlertWhenMore,
 			Threshold:  pointer.Int(int(condition.SpanAmount.Value())),
@@ -374,9 +396,13 @@ func convertTracingThresholdV1beta1ToV1alpha1(tracingThreshold *v1beta1.TracingT
 	}
 }
 
-func convertTracingImmediateV1beta1ToV1alpha1(tracingImmediate *v1beta1.TracingImmediate, groupBy []string) *Tracing {
+func convertTracingImmediateV1beta1ToV1alpha1(tracingImmediate v1beta1.TracingImmediate, groupBy []string) *Tracing {
+	var filters TracingFilters
+	if tracingImmediate.TracingFilter != nil {
+		filters = convertTracingFilterV1beta1ToV1alpha1(*tracingImmediate.TracingFilter)
+	}
 	return &Tracing{
-		Filters: convertTracingFilterV1beta1ToV1alpha1(tracingImmediate.TracingFilter),
+		Filters: filters,
 		Conditions: TracingCondition{
 			AlertWhen: TracingAlertWhenImmediately,
 			GroupBy:   groupBy,
@@ -384,13 +410,16 @@ func convertTracingImmediateV1beta1ToV1alpha1(tracingImmediate *v1beta1.TracingI
 	}
 }
 
-func convertFlowV1beta1ToV1alpha1(flow *v1beta1.Flow) *Flow {
+func convertFlowV1beta1ToV1alpha1(flow v1beta1.Flow) *Flow {
 	return &Flow{
 		Stages: convertFlowStagesV1beta1ToV1alpha1(flow.Stages),
 	}
 }
 
-func convertMetricThresholdV1beta1ToMetricV1alpha1(metricThreshold *v1beta1.MetricThreshold) *Metric {
+func convertMetricThresholdV1beta1ToMetricV1alpha1(metricThreshold v1beta1.MetricThreshold) *Metric {
+	if len(metricThreshold.Rules) == 0 {
+		return nil
+	}
 	condition := metricThreshold.Rules[0].Condition
 	var minNonValuePct *int
 	if metricThreshold.MissingValues.MinNonNullValuesPct != nil {
@@ -413,9 +442,11 @@ func convertMetricThresholdV1beta1ToMetricV1alpha1(metricThreshold *v1beta1.Metr
 	}
 }
 
-func convertMetricAnomalyV1beta1ToMetricV1alpha1(metricAnomaly *v1beta1.MetricAnomaly) *Metric {
+func convertMetricAnomalyV1beta1ToMetricV1alpha1(metricAnomaly v1beta1.MetricAnomaly) *Metric {
+	if len(metricAnomaly.Rules) == 0 {
+		return nil
+	}
 	condition := metricAnomaly.Rules[0].Condition
-
 	return &Metric{
 		Promql: &Promql{
 			SearchQuery: metricAnomaly.MetricFilter.Promql,
@@ -428,7 +459,10 @@ func convertMetricAnomalyV1beta1ToMetricV1alpha1(metricAnomaly *v1beta1.MetricAn
 	}
 }
 
-func convertLogsNewValueV1beta1ToV1alpha1(logsNewValue *v1beta1.LogsNewValue) *NewValue {
+func convertLogsNewValueV1beta1ToV1alpha1(logsNewValue v1beta1.LogsNewValue) *NewValue {
+	if len(logsNewValue.Rules) == 0 {
+		return nil
+	}
 	condition := logsNewValue.Rules[0].Condition
 	return &NewValue{
 		Filters: convertLogsFilterV1beta1ToV1alpha1(logsNewValue.LogsFilter),
@@ -439,7 +473,10 @@ func convertLogsNewValueV1beta1ToV1alpha1(logsNewValue *v1beta1.LogsNewValue) *N
 	}
 }
 
-func convertRatioV1beta1ToV1alpha1(logsRatioThreshold *v1beta1.LogsRatioThreshold, groupBy []string) *Ratio {
+func convertRatioV1beta1ToV1alpha1(logsRatioThreshold v1beta1.LogsRatioThreshold, groupBy []string) *Ratio {
+	if len(logsRatioThreshold.Rules) == 0 {
+		return nil
+	}
 	condition := logsRatioThreshold.Rules[0].Condition
 
 	query1Filters := *convertLogsFilterV1beta1ToV1alpha1(&logsRatioThreshold.Numerator)
@@ -460,7 +497,10 @@ func convertRatioV1beta1ToV1alpha1(logsRatioThreshold *v1beta1.LogsRatioThreshol
 	}
 }
 
-func convertLogsThresholdV1beta1ToStandardV1alpha1(logsThreshold *v1beta1.LogsThreshold, groupBy []string) *Standard {
+func convertLogsThresholdV1beta1ToStandardV1alpha1(logsThreshold v1beta1.LogsThreshold, groupBy []string) *Standard {
+	if len(logsThreshold.Rules) == 0 {
+		return nil
+	}
 	conditions := logsThreshold.Rules[0]
 	timeWindow := logsTimeWindowV1beta1ToV1alpha[conditions.Condition.TimeWindow.SpecificValue]
 	return &Standard{
@@ -475,16 +515,27 @@ func convertLogsThresholdV1beta1ToStandardV1alpha1(logsThreshold *v1beta1.LogsTh
 	}
 }
 
-func convertLogImmediateV1beta1ToStandardV1alpha1(logsImmediate *v1beta1.LogsImmediate) *Standard {
+func convertLogImmediateV1beta1ToStandardV1alpha1(logsImmediate v1beta1.LogsImmediate) *Standard {
 	return &Standard{
 		Filters: convertLogsFilterV1beta1ToV1alpha1(logsImmediate.LogsFilter),
 	}
 }
 
-func convertTracingFilterV1beta1ToV1alpha1(filter *v1beta1.TracingFilter) TracingFilters {
+func convertTracingFilterV1beta1ToV1alpha1(filter v1beta1.TracingFilter) TracingFilters {
+	var latencyThresholdMilliseconds resource.Quantity
+	var applications []string
+	if simple := filter.Simple; simple != nil {
+		if simple.LatencyThresholdMs != nil {
+			latencyThresholdMilliseconds = *resource.NewQuantity(int64(*simple.LatencyThresholdMs), resource.DecimalSI)
+		}
+		if simple.TracingLabelFilters != nil {
+			applications = convertTracingLabelFilterV1beta1ToV1alpha1(simple.TracingLabelFilters.ApplicationName)
+		}
+	}
+
 	return TracingFilters{
-		LatencyThresholdMilliseconds: *resource.NewQuantity(int64(*filter.Simple.LatencyThresholdMs), resource.DecimalSI),
-		Applications:                 convertTracingLabelFilterV1beta1ToV1alpha1(filter.Simple.TracingLabelFilters.ApplicationName),
+		LatencyThresholdMilliseconds: latencyThresholdMilliseconds,
+		Applications:                 applications,
 	}
 }
 
@@ -580,14 +631,14 @@ func convertLogsFilterV1beta1ToV1alpha1(filter *v1beta1.LogsFilter) *Filters {
 	}
 
 	filters := &Filters{}
-	if filter.SimpleFilter.LuceneQuery != nil {
-		filters.SearchQuery = filter.SimpleFilter.LuceneQuery
+	if luceneQuery := filter.SimpleFilter.LuceneQuery; luceneQuery != nil {
+		filters.SearchQuery = luceneQuery
 	}
 
-	if filter.SimpleFilter.LabelFilters != nil {
-		filters.Applications = convertLabelFilterV1beta1ToV1alpha1(filter.SimpleFilter.LabelFilters.ApplicationName)
-		filters.Subsystems = convertLabelFilterV1beta1ToV1alpha1(filter.SimpleFilter.LabelFilters.SubsystemName)
-		filters.Severities = convertSeveritiesFilterV1beta1ToV1alpha1(filter.SimpleFilter.LabelFilters.Severity)
+	if labelFilters := filter.SimpleFilter.LabelFilters; labelFilters != nil {
+		filters.Applications = convertLabelFilterV1beta1ToV1alpha1(labelFilters.ApplicationName)
+		filters.Subsystems = convertLabelFilterV1beta1ToV1alpha1(labelFilters.SubsystemName)
+		filters.Severities = convertSeveritiesFilterV1beta1ToV1alpha1(labelFilters.Severity)
 	}
 
 	return filters
@@ -649,8 +700,12 @@ func convertWebhooksV1beta1ToV1alpha1(webhooks []v1beta1.WebhookSettings) []Noti
 }
 
 func convertWebhookV1beta1ToV1alpha1(webhook v1beta1.WebhookSettings) Notification {
+	var retriggeringPeriodMinutes int32
+	if webhook.RetriggeringPeriod.Minutes != nil {
+		retriggeringPeriodMinutes = int32(*webhook.RetriggeringPeriod.Minutes)
+	}
 	notification := Notification{
-		RetriggeringPeriodMinutes: int32(*webhook.RetriggeringPeriod.Minutes),
+		RetriggeringPeriodMinutes: retriggeringPeriodMinutes,
 		NotifyOn:                  notifyOnV1beta1ToV1alpha1[webhook.NotifyOn],
 	}
 	notification = convertToIntegrationTypeV1beta1ToV1alpha1(webhook.Integration, &notification)
@@ -722,29 +777,29 @@ func convertSchedulingV1alpha1ToV1beta1(scheduling *Scheduling) *v1beta1.AlertSc
 
 func convertAlertTypeV1alpha1ToV1beta1(srcSpec AlertSpec) (v1beta1.AlertTypeDefinition, []string) {
 	if standard := srcSpec.AlertType.Standard; standard != nil {
-		return convertStandardV1alpha1ToV1beta1(standard, srcSpec.PayloadFilters, srcSpec.Severity)
+		return convertStandardV1alpha1ToV1beta1(*standard, srcSpec.PayloadFilters, srcSpec.Severity)
 	} else if flow := srcSpec.AlertType.Flow; flow != nil {
-		return convertFlowV1alpha1ToV1beta1(flow), nil
+		return convertFlowV1alpha1ToV1beta1(*flow), nil
 	} else if metric := srcSpec.AlertType.Metric; metric != nil {
 		if promql := metric.Promql; promql != nil {
-			return convertPromqlV1alpha1ToV1beta1(promql, srcSpec.Severity), nil
+			return convertPromqlV1alpha1ToV1beta1(*promql, srcSpec.Severity), nil
 		}
 	} else if newValue := srcSpec.AlertType.NewValue; newValue != nil {
-		return convertNewValueV1alpha1ToV1beta1(newValue, srcSpec.PayloadFilters), nil
+		return convertNewValueV1alpha1ToV1beta1(*newValue, srcSpec.PayloadFilters), nil
 	} else if tracing := srcSpec.AlertType.Tracing; tracing != nil {
-		return convertTracingV1alpha1ToV1beta1(tracing, srcSpec.PayloadFilters)
+		return convertTracingV1alpha1ToV1beta1(*tracing, srcSpec.PayloadFilters)
 	} else if ratio := srcSpec.AlertType.Ratio; ratio != nil {
-		return convertRatioV1alpha1ToV1beta1(ratio, srcSpec.Severity)
+		return convertRatioV1alpha1ToV1beta1(*ratio, srcSpec.Severity)
 	} else if timeRelative := srcSpec.AlertType.TimeRelative; timeRelative != nil {
-		return convertTimeRelativeV1alpha1ToV1beta1(timeRelative, srcSpec.PayloadFilters, srcSpec.Severity)
+		return convertTimeRelativeV1alpha1ToV1beta1(*timeRelative, srcSpec.PayloadFilters, srcSpec.Severity)
 	} else if uniqueCount := srcSpec.AlertType.UniqueCount; uniqueCount != nil {
-		return convertUniqueCountV1alpha1ToV1beta1(uniqueCount, srcSpec.PayloadFilters)
+		return convertUniqueCountV1alpha1ToV1beta1(*uniqueCount, srcSpec.PayloadFilters)
 	}
 
 	return v1beta1.AlertTypeDefinition{}, nil
 }
 
-func convertUniqueCountV1alpha1ToV1beta1(uniqueCount *UniqueCount, payloadFilters []string) (v1beta1.AlertTypeDefinition, []string) {
+func convertUniqueCountV1alpha1ToV1beta1(uniqueCount UniqueCount, payloadFilters []string) (v1beta1.AlertTypeDefinition, []string) {
 	condition := uniqueCount.Conditions
 
 	var groupBy []string
@@ -765,7 +820,7 @@ func convertUniqueCountV1alpha1ToV1beta1(uniqueCount *UniqueCount, payloadFilter
 	}, groupBy
 }
 
-func convertTimeRelativeV1alpha1ToV1beta1(timeRelative *TimeRelative, payloadFilters []string, severity AlertSeverity) (v1beta1.AlertTypeDefinition, []string) {
+func convertTimeRelativeV1alpha1ToV1beta1(timeRelative TimeRelative, payloadFilters []string, severity AlertSeverity) (v1beta1.AlertTypeDefinition, []string) {
 	return v1beta1.AlertTypeDefinition{
 		LogsTimeRelativeThreshold: &v1beta1.LogsTimeRelativeThreshold{
 			LogsFilter:                 *convertLogsFilterV1alpha1ToV1beta1(timeRelative.Filters),
@@ -779,7 +834,7 @@ func convertTimeRelativeV1alpha1ToV1beta1(timeRelative *TimeRelative, payloadFil
 	}, timeRelative.Conditions.GroupBy
 }
 
-func convertRatioV1alpha1ToV1beta1(ratio *Ratio, severity AlertSeverity) (v1beta1.AlertTypeDefinition, []string) {
+func convertRatioV1alpha1ToV1beta1(ratio Ratio, severity AlertSeverity) (v1beta1.AlertTypeDefinition, []string) {
 	var query1filterAlias, query2filterAlias string
 	if ratio.Query1Filters.Alias != nil {
 		query1filterAlias = *ratio.Query1Filters.Alias
@@ -800,7 +855,7 @@ func convertRatioV1alpha1ToV1beta1(ratio *Ratio, severity AlertSeverity) (v1beta
 	}, ratio.Conditions.GroupBy
 }
 
-func convertTracingV1alpha1ToV1beta1(tracing *Tracing, payloadFilters []string) (v1beta1.AlertTypeDefinition, []string) {
+func convertTracingV1alpha1ToV1beta1(tracing Tracing, payloadFilters []string) (v1beta1.AlertTypeDefinition, []string) {
 	if tracing.Conditions.AlertWhen == TracingAlertWhenImmediately {
 		return v1beta1.AlertTypeDefinition{
 			TracingImmediate: &v1beta1.TracingImmediate{
@@ -821,7 +876,7 @@ func convertTracingV1alpha1ToV1beta1(tracing *Tracing, payloadFilters []string) 
 	}
 }
 
-func convertNewValueV1alpha1ToV1beta1(newValue *NewValue, payloadFilters []string) v1beta1.AlertTypeDefinition {
+func convertNewValueV1alpha1ToV1beta1(newValue NewValue, payloadFilters []string) v1beta1.AlertTypeDefinition {
 	return v1beta1.AlertTypeDefinition{
 		LogsNewValue: &v1beta1.LogsNewValue{
 			LogsFilter: convertLogsFilterV1alpha1ToV1beta1(newValue.Filters),
@@ -833,7 +888,7 @@ func convertNewValueV1alpha1ToV1beta1(newValue *NewValue, payloadFilters []strin
 	}
 }
 
-func convertFlowV1alpha1ToV1beta1(flow *Flow) v1beta1.AlertTypeDefinition {
+func convertFlowV1alpha1ToV1beta1(flow Flow) v1beta1.AlertTypeDefinition {
 	return v1beta1.AlertTypeDefinition{
 		Flow: &v1beta1.Flow{
 			Stages: convertFlowStagesV1alpha1ToV1beta1(flow.Stages),
@@ -841,7 +896,7 @@ func convertFlowV1alpha1ToV1beta1(flow *Flow) v1beta1.AlertTypeDefinition {
 	}
 }
 
-func convertStandardV1alpha1ToV1beta1(standard *Standard, payloadFilters []string, severity AlertSeverity) (v1beta1.AlertTypeDefinition, []string) {
+func convertStandardV1alpha1ToV1beta1(standard Standard, payloadFilters []string, severity AlertSeverity) (v1beta1.AlertTypeDefinition, []string) {
 	switch standard.Conditions.AlertWhen {
 	case StandardAlertWhenImmediately:
 		return convertStandardImmediateV1alpha1toV1beta1(standard, payloadFilters), nil
@@ -852,7 +907,7 @@ func convertStandardV1alpha1ToV1beta1(standard *Standard, payloadFilters []strin
 	}
 }
 
-func convertStandardThresholdV1alpha1ToV1beta1(standard *Standard, payloadFilters []string, severity AlertSeverity) v1beta1.AlertTypeDefinition {
+func convertStandardThresholdV1alpha1ToV1beta1(standard Standard, payloadFilters []string, severity AlertSeverity) v1beta1.AlertTypeDefinition {
 	return v1beta1.AlertTypeDefinition{
 		LogsThreshold: &v1beta1.LogsThreshold{
 			NotificationPayloadFilter:  payloadFilters,
@@ -865,7 +920,7 @@ func convertStandardThresholdV1alpha1ToV1beta1(standard *Standard, payloadFilter
 	}
 }
 
-func convertStandardImmediateV1alpha1toV1beta1(standard *Standard, payloadFilters []string) v1beta1.AlertTypeDefinition {
+func convertStandardImmediateV1alpha1toV1beta1(standard Standard, payloadFilters []string) v1beta1.AlertTypeDefinition {
 	return v1beta1.AlertTypeDefinition{
 		LogsImmediate: &v1beta1.LogsImmediate{
 			NotificationPayloadFilter: payloadFilters,
@@ -874,7 +929,7 @@ func convertStandardImmediateV1alpha1toV1beta1(standard *Standard, payloadFilter
 	}
 }
 
-func convertStandardAnomalyV1alpha1ToV1beta1(standard *Standard, payloadFilters []string) v1beta1.AlertTypeDefinition {
+func convertStandardAnomalyV1alpha1ToV1beta1(standard Standard, payloadFilters []string) v1beta1.AlertTypeDefinition {
 	return v1beta1.AlertTypeDefinition{
 		LogsAnomaly: &v1beta1.LogsAnomaly{
 			LogsFilter: convertLogsFilterV1alpha1ToV1beta1(standard.Filters),
@@ -901,7 +956,7 @@ func convertStandardConditionsV1alpha1ToLogsAnomalyRuleV1beta1(conditions Standa
 	}
 }
 
-func convertPromqlV1alpha1ToV1beta1(promql *Promql, severity AlertSeverity) v1beta1.AlertTypeDefinition {
+func convertPromqlV1alpha1ToV1beta1(promql Promql, severity AlertSeverity) v1beta1.AlertTypeDefinition {
 	switch promql.Conditions.AlertWhen {
 	case PromqlAlertWhenMoreThanUsual, PromqlAlertWhenLessThanUsual:
 		return convertPromqlMoreThanUsualV1alpha1ToV1beta1(promql)
@@ -910,7 +965,7 @@ func convertPromqlV1alpha1ToV1beta1(promql *Promql, severity AlertSeverity) v1be
 	}
 }
 
-func convertPromqlThresholdV1alpha1ToV1beta1(promql *Promql, severity AlertSeverity) v1beta1.AlertTypeDefinition {
+func convertPromqlThresholdV1alpha1ToV1beta1(promql Promql, severity AlertSeverity) v1beta1.AlertTypeDefinition {
 	return v1beta1.AlertTypeDefinition{
 		MetricThreshold: &v1beta1.MetricThreshold{
 			MetricFilter: v1beta1.MetricFilter{
@@ -935,7 +990,7 @@ func convertMissingValuesV1alpha1ToV1beta1(conditions PromqlConditions) v1beta1.
 	return metricMissingValues
 }
 
-func convertPromqlMoreThanUsualV1alpha1ToV1beta1(promql *Promql) v1beta1.AlertTypeDefinition {
+func convertPromqlMoreThanUsualV1alpha1ToV1beta1(promql Promql) v1beta1.AlertTypeDefinition {
 	return v1beta1.AlertTypeDefinition{
 		MetricAnomaly: &v1beta1.MetricAnomaly{
 			MetricFilter: v1beta1.MetricFilter{
@@ -1146,12 +1201,17 @@ func convertFlowAlertDefsV1alpha1ToV1beta1(alerts []InnerFlowAlert) []v1beta1.Fl
 }
 
 func convertStandardConditionsV1alpha1ToLogsThresholdRuleV1beta1(conditions StandardConditions, severity AlertSeverity) v1beta1.LogsThresholdRule {
+	var threshold resource.Quantity
+	if conditions.Threshold != nil {
+		threshold = *resource.NewQuantity(int64(*conditions.Threshold), resource.DecimalSI)
+	}
+
 	return v1beta1.LogsThresholdRule{
 		Condition: v1beta1.LogsThresholdRuleCondition{
 			TimeWindow: v1beta1.LogsTimeWindow{
 				SpecificValue: logsTimeWindowV1alpha1ToV1beta1[*conditions.TimeWindow],
 			},
-			Threshold:                  *resource.NewQuantity(int64(*conditions.Threshold), resource.DecimalSI),
+			Threshold:                  threshold,
 			LogsThresholdConditionType: logsConditionTypeV1alpha1ToV1beta1[conditions.AlertWhen],
 		},
 		Override: &v1beta1.AlertOverride{
