@@ -1930,15 +1930,15 @@ AlertSpec defines the desired state of Alert.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>values</b></td>
-        <td>[]string</td>
+        <td><b>field</b></td>
+        <td>string</td>
         <td>
           <br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr><tr>
-        <td><b>field</b></td>
-        <td>string</td>
+        <td><b>values</b></td>
+        <td>[]string</td>
         <td>
           <br/>
         </td>

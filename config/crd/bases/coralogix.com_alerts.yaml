@@ -743,8 +743,6 @@ spec:
                                   items:
                                     type: string
                                   type: array
-                              required:
-                              - values
                               type: object
                             type: array
                         type: object

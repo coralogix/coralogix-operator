@@ -619,7 +619,8 @@ type TracingFilters struct {
 }
 
 type TagFilter struct {
-	Field  string   `json:"field,omitempty"`
+	Field string `json:"field,omitempty"`
+	// +optional
 	Values []string `json:"values"`
 }
 
