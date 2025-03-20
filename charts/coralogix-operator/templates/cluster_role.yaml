@@ -50,6 +50,32 @@ rules:
 - apiGroups:
   - coralogix.com
   resources:
+  - alertschedulers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - alertschedulers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - alertschedulers/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
   - apikeys
   verbs:
   - create

@@ -133,6 +133,7 @@ coralogixOperator:
     connector: ""
     preset: ""
     globalRouter: ""
+    alertScheduler: ""
     prometheusRule: ""
 
   # -- resource config for Coralogix operator
