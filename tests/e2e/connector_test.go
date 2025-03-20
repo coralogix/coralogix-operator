@@ -46,7 +46,7 @@ var _ = Describe("Connector", Ordered, func() {
 
 	It("Should be created successfully", func(ctx context.Context) {
 		By("Creating Connector")
-		connectorName := "slack-connector"
+		connectorName := fmt.Sprintf("slack-connector-%d", time.Now().Unix())
 		connector = getSampleSlackConnector(connectorName, testNamespace)
 		Expect(crClient.Create(ctx, connector)).To(Succeed())
 
@@ -122,7 +122,7 @@ func getSampleSlackConnector(name, namespace string) *coralogixv1alpha1.Connecto
 			Namespace: namespace,
 		},
 		Spec: coralogixv1alpha1.ConnectorSpec{
-			Name:        "Slack Connector",
+			Name:        name,
 			Description: "A connector for Slack integration",
 			ConnectorType: &coralogixv1alpha1.ConnectorType{
 				Slack: &coralogixv1alpha1.ConnectorSlack{

@@ -1,4 +1,4 @@
-{{- if .Values.coralogixOperator.webhooks.enabled }}
+{{- if and .Values.coralogixOperator.webhooks.enabled .Values.validatingWebhookConfiguration.create }}
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
