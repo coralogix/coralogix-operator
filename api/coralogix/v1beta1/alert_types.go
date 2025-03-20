@@ -637,34 +637,57 @@ type AlertTypeDefinition struct {
 	// Alerts for when traces crosses a threshold.
 	// +optional
 	TracingThreshold *TracingThreshold `json:"tracingThreshold,omitempty"`
+
+	// Immediate alerts for traces.
 	// +optional
 	TracingImmediate *TracingImmediate `json:"tracingImmediate,omitempty"`
+
+	// Flow alerts chaining multiple alerts together.
 	// +optional
 	Flow *Flow `json:"flow,omitempty"`
+
+	// Anomaly alerts for logs.
 	// +optional
 	LogsAnomaly *LogsAnomaly `json:"logsAnomaly,omitempty"`
+
+	// Anomaly alerts for metrics.
 	// +optional
 	MetricAnomaly *MetricAnomaly `json:"metricAnomaly,omitempty"`
+
+	// Alerts when a new log value appears.
 	// +optional
 	LogsNewValue *LogsNewValue `json:"logsNewValue,omitempty"`
+
+	// Alerts for unique count changes.
 	// +optional
 	LogsUniqueCount *LogsUniqueCount `json:"logsUniqueCount,omitempty"`
 }
 
+// Immediate alerts for logs.
 type LogsImmediate struct {
+	// Filter to filter the logs with.
 	// +optional
 	LogsFilter *LogsFilter `json:"logsFilter,omitempty"`
+
+	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 }
 
+// Alerts for when a log crosses a threshold.
 type LogsThreshold struct {
+	// Filter to filter the logs with.
 	// +optional
 	LogsFilter *LogsFilter `json:"logsFilter,omitempty"`
+
+	// How to work with undetected values.
 	// +optional
 	UndetectedValuesManagement *UndetectedValuesManagement `json:"undetectedValuesManagement,omitempty"`
+
 	// +kubebuilder:validation:MinItems=1
 	Rules []LogsThresholdRule `json:"rules"`
+
+	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 }
@@ -801,8 +824,11 @@ type LogsTimeRelativeThreshold struct {
 	Rules []LogsTimeRelativeRule `json:"rules"`
 	//+kubebuilder:default=false
 	IgnoreInfinity bool `json:"ignoreInfinity"`
+	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
+
+	// How to work with undetected values.
 	// +optional
 	UndetectedValuesManagement *UndetectedValuesManagement `json:"undetectedValuesManagement"`
 }
@@ -812,6 +838,8 @@ type MetricThreshold struct {
 	// +kubebuilder:validation:MinItems=1
 	Rules         []MetricThresholdRule `json:"rules"`
 	MissingValues MetricMissingValues   `json:"missingValues"`
+
+	// How to work with undetected values.
 	// +optional
 	UndetectedValuesManagement *UndetectedValuesManagement `json:"undetectedValuesManagement"`
 }
@@ -880,6 +908,8 @@ type TracingThreshold struct {
 	TracingFilter *TracingFilter `json:"tracingFilter,omitempty"`
 	// +kubebuilder:validation:MinItems=1
 	Rules []TracingThresholdRule `json:"rules"`
+
+	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 }
@@ -887,6 +917,8 @@ type TracingThreshold struct {
 type TracingImmediate struct {
 	// +optional
 	TracingFilter *TracingFilter `json:"tracingFilter,omitempty"`
+
+	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 }
@@ -1017,10 +1049,13 @@ const (
 )
 
 type LogsAnomaly struct {
+	// Filter to filter the logs with.
 	// +optional
 	LogsFilter *LogsFilter `json:"logsFilter,omitempty"`
 	// +kubebuilder:validation:MinItems=1
 	Rules []LogsAnomalyRule `json:"rules"`
+
+	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 }
@@ -1064,9 +1099,12 @@ type MetricAnomalyRule struct {
 }
 
 type LogsNewValue struct {
+	// Filter to filter the logs with.
 	LogsFilter *LogsFilter `json:"logsFilter"`
 	// +kubebuilder:validation:MinItems=1
 	Rules []LogsNewValueRule `json:"rules"`
+
+	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 }
@@ -1099,9 +1137,12 @@ const (
 )
 
 type LogsUniqueCount struct {
+	// Filter to filter the logs with.
 	LogsFilter *LogsFilter `json:"logsFilter"`
 	// +kubebuilder:validation:MinItems=1
 	Rules []LogsUniqueCountRule `json:"rules"`
+
+	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 	// +optional
@@ -1152,32 +1193,48 @@ type LogsSimpleFilter struct {
 	LabelFilters *LabelFilters `json:"labelFilters,omitempty"`
 }
 
+// Filters for labels.
 type LabelFilters struct {
+	// Application name to filter for.
 	// +optional
 	ApplicationName []LabelFilterType `json:"applicationName"`
+	// Subsystem name to filter for.
 	// +optional
 	SubsystemName []LabelFilterType `json:"subsystemName"`
+	// Severity to filter for.
 	// +optional
 	Severity []LogSeverity `json:"severity"`
 }
 
+// Label filter specifications
 type LabelFilterType struct {
+	// The value
 	//+kubebuilder:validation:MinLength=0
 	Value string `json:"value"`
+
 	//+kubebuilder:default=or
+	// Operation to apply.
 	Operation LogFilterOperationType `json:"operation"`
 }
 
+// How to work with undetected values.
+// Read more here: https://coralogix.com/docs/user-guides/alerting/create-an-alert/metrics/threshold-alerts/#manage-undetected-values
 type UndetectedValuesManagement struct {
+
 	//+kubebuilder:default=false
+	// Deactivate triggering the alert on undetected values.
 	TriggerUndetectedValues bool `json:"triggerUndetectedValues"`
+
 	//+kubebuilder:default=never
+	// Automatically retire the alerts after this time.
 	AutoRetireTimeframe AutoRetireTimeframe `json:"autoRetireTimeframe"`
 }
 
 // +kubebuilder:validation:Enum=or;includes;endsWith;startsWith
+// Operation type for log filters.
 type LogFilterOperationType string
 
+// Operation type for log filter values.
 const (
 	LogFilterOperationTypeOr         LogFilterOperationType = "or"
 	LogFilterOperationTypeIncludes   LogFilterOperationType = "includes"
@@ -1186,8 +1243,10 @@ const (
 )
 
 // +kubebuilder:validation:Enum=debug;info;warning;error;critical;verbose
+// How severe a log is.
 type LogSeverity string
 
+// Severity values.
 const (
 	LogSeverityDebug    LogSeverity = "debug"
 	LogSeverityInfo     LogSeverity = "info"
@@ -1198,8 +1257,10 @@ const (
 )
 
 // +kubebuilder:validation:Enum=p1;p2;p3;p4;p5
+// Alert priorities.
 type AlertPriority string
 
+// Priority values.
 const (
 	AlertPriorityP1 AlertPriority = "p1"
 	AlertPriorityP2 AlertPriority = "p2"

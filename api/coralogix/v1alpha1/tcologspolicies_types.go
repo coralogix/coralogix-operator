@@ -245,7 +245,6 @@ type TCOLogsPolicies struct {
 }
 
 // +kubebuilder:object:root=true
-
 // TCOLogsPoliciesList contains a list of TCOLogsPolicies.
 type TCOLogsPoliciesList struct {
 	metav1.TypeMeta `json:",inline"`
