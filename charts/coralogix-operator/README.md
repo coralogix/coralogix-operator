@@ -1,6 +1,6 @@
 # coralogix-operator
 
-![Version: 0.1.5](https://img.shields.io/badge/Version-0.1.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.18](https://img.shields.io/badge/AppVersion-0.1.18-informational?style=flat-square)
+![Version: 0.3.5](https://img.shields.io/badge/Version-0.3.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.3.5](https://img.shields.io/badge/AppVersion-0.3.5-informational?style=flat-square)
 
 Coralogix Operator Helm Chart
 
@@ -25,18 +25,20 @@ Kubernetes: `>=1.16.0-0`
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` | ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/ |
-| coralogixOperator | object | `{"image":{"pullPolicy":"IfNotPresent","repository":"coralogixrepo/coralogix-operator","tag":""},"prometheusRules":{"enabled":true},"region":"","resources":{},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}}` | Coralogix operator container config |
+| certificate.create | bool | `true` | Specifies whether a Certificate should be created. |
+| coralogixOperator | object | `{"domain":"","image":{"pullPolicy":"IfNotPresent","repository":"coralogixrepo/coralogix-operator","tag":""},"labelSelector":"","namespaceSelector":"","notificationCenter":{"enabled":false},"prometheusRules":{"enabled":true},"reconcileIntervalSeconds":{"alert":"","apiKey":"","connector":"","customRole":"","globalRouter":"","group":"","integration":"","outboundWebhook":"","preset":"","prometheusRule":"","recordingRuleGroupSet":"","ruleGroup":"","scope":"","tcoLogsPolicies":"","tcoTracesPolicies":""},"region":"","resources":{},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true},"webhooks":{"enabled":true}}` | Coralogix operator container config |
+| coralogixOperator.domain | string | `""` | Coralogix Account Domain |
 | coralogixOperator.image | object | `{"pullPolicy":"IfNotPresent","repository":"coralogixrepo/coralogix-operator","tag":""}` | Coralogix operator Image |
+| coralogixOperator.labelSelector | string | `""` | A comma-separated list of key=value labels to filter custom resources |
+| coralogixOperator.namespaceSelector | string | `""` | A list of namespaces to filter custom resources |
+| coralogixOperator.reconcileIntervalSeconds | object | `{"alert":"","apiKey":"","connector":"","customRole":"","globalRouter":"","group":"","integration":"","outboundWebhook":"","preset":"","prometheusRule":"","recordingRuleGroupSet":"","ruleGroup":"","scope":"","tcoLogsPolicies":"","tcoTracesPolicies":""}` | The interval in seconds to reconcile each custom resource |
 | coralogixOperator.region | string | `""` | Coralogix Account Region |
 | coralogixOperator.resources | object | `{}` | resource config for Coralogix operator |
 | coralogixOperator.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}` | Security context for Coralogix operator container |
 | fullnameOverride | string | `""` | Provide a name to substitute for the full names of resources |
 | imagePullSecrets | list | `[]` |  |
-| kubeRbacProxy | object | `{"image":"gcr.io/kubebuilder/kube-rbac-proxy:v0.13.0","resources":{},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}}` | kube-rbac-proxy container config |
-| kubeRbacProxy.image | string | `"gcr.io/kubebuilder/kube-rbac-proxy:v0.13.0"` | kube-rbac-proxy Image |
-| kubeRbacProxy.resources | object | `{}` | resource config for kube-rbac-proxy |
-| kubeRbacProxy.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}` | Security context for kube-rbac-proxy container |
-| nameOverride | string | `""` | Provide a name in place of kube-prometheus-stack for `app:` labels |
+| issuer.create | bool | `true` | Specifies whether an Issuer should be created. |
+| nameOverride | string | `""` | Provide a name in place of coralogix-operator for `app:` labels |
 | nodeSelector | object | `{}` | ref: https://kubernetes.io/docs/user-guide/node-selection/ |
 | podAnnotations | object | `{}` | Annotations to add to the operator pod |
 | secret | object | `{"annotations":{},"create":true,"data":{"apiKey":""},"labels":{},"secretKeyReference":{}}` | Configuration for Coralogix operator secret |
@@ -50,27 +52,8 @@ Kubernetes: `>=1.16.0-0`
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | If not set and create is true, a name is generated using the fullname template |
+| serviceMonitor | object | `{"create":true}` | Service monitor for Prometheus to use. |
+| serviceMonitor.create | bool | `true` | Specifies whether a service monitor should be created. |
 | tolerations | list | `[]` | ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/ |
------------------------------------------------
-Autogenerated from chart metadata using [helm-docs v1.11.0](https://github.com/norwoodj/helm-docs/releases/v1.11.0)
+| validatingWebhookConfiguration.create | bool | `true` | Specifies whether a ValidatingWebhookConfiguration should be created. |
 
-## Installation
-
-Our Helm charts repository can be added to the local repos list with the following command. It will create a repository named `coralogix`. If you wish to change it to anything else, be sure to adapt your commands in the other segments referring to this repository.
-
-```bash
-helm repo add coralogix https://cgx.jfrog.io/artifactory/coralogix-charts-virtual
-helm repo update
-```
-
-Now you can run the following command to install the helm chart on your cluster.
-
-```bash
-helm install <my-release> coralogix/coralogix-operator
-```
-
-To uninstall the helm chart you can run:
-
-```bash
-helm delete <my-release>
-```

@@ -58,13 +58,14 @@ const (
 
 // PrometheusRuleReconciler reconciles a PrometheusRule object
 type PrometheusRuleReconciler struct {
+	Interval time.Duration
 }
 
 func (r *PrometheusRuleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 
 	prometheusRule := &prometheus.PrometheusRule{}
-	if err := config.GetConfig().Client.Get(ctx, req.NamespacedName, prometheusRule); err != nil {
+	if err := config.GetClient().Get(ctx, req.NamespacedName, prometheusRule); err != nil {
 		if k8serrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
@@ -108,7 +109,7 @@ func (r *PrometheusRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, errs
 	}
 
-	return reconcile.Result{}, nil
+	return reconcile.Result{RequeueAfter: r.Interval}, nil
 }
 
 func (r *PrometheusRuleReconciler) convertPrometheusRuleRecordingRuleToCxRecordingRule(ctx context.Context, log logr.Logger, prometheusRule *prometheus.PrometheusRule, req reconcile.Request) error {
@@ -118,7 +119,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleRecordingRuleToCxRecordi
 	}
 
 	recordingRuleGroupSet := &coralogixv1alpha1.RecordingRuleGroupSet{}
-	if err := config.GetConfig().Client.Get(ctx, req.NamespacedName, recordingRuleGroupSet); err != nil {
+	if err := config.GetClient().Get(ctx, req.NamespacedName, recordingRuleGroupSet); err != nil {
 		if k8serrors.IsNotFound(err) {
 			recordingRuleGroupSet.Name = prometheusRule.Name
 			recordingRuleGroupSet.Namespace = prometheusRule.Namespace
@@ -126,7 +127,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleRecordingRuleToCxRecordi
 			recordingRuleGroupSet.Labels["app.kubernetes.io/managed-by"] = prometheusRule.Name
 			recordingRuleGroupSet.OwnerReferences = []metav1.OwnerReference{getOwnerReference(prometheusRule)}
 			recordingRuleGroupSet.Spec = desiredRecordingRuleGroupSetSpec
-			if err = config.GetConfig().Client.Create(ctx, recordingRuleGroupSet); err != nil {
+			if err = config.GetClient().Create(ctx, recordingRuleGroupSet); err != nil {
 				return fmt.Errorf("received an error while trying to create RecordingRuleGroupSet CRD: %w", err)
 			}
 			return nil
@@ -155,7 +156,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleRecordingRuleToCxRecordi
 	}
 
 	if updated {
-		if err := config.GetConfig().Client.Update(ctx, recordingRuleGroupSet); err != nil {
+		if err := config.GetClient().Update(ctx, recordingRuleGroupSet); err != nil {
 			return fmt.Errorf("received an error while trying to update RecordingRuleGroupSet CRD: %w", err)
 		}
 	}
@@ -171,7 +172,7 @@ func (r *PrometheusRuleReconciler) deleteCxRecordingRule(ctx context.Context, re
 		},
 	}
 
-	if err := config.GetConfig().Client.Delete(ctx, recordingRuleGroupSet); err != nil {
+	if err := config.GetClient().Delete(ctx, recordingRuleGroupSet); err != nil {
 		if k8serrors.IsNotFound(err) {
 			return nil
 		}
@@ -229,7 +230,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 			alert := &coralogixv1beta1.Alert{}
 			alertName := fmt.Sprintf("%s-%s-%d", prometheusRule.Name, alertName, i)
 			alertsToKeep[alertName] = true
-			if err := config.GetConfig().Client.Get(ctx, client.ObjectKey{Namespace: prometheusRule.Namespace, Name: alertName}, alert); err != nil {
+			if err := config.GetClient().Get(ctx, client.ObjectKey{Namespace: prometheusRule.Namespace, Name: alertName}, alert); err != nil {
 				if k8serrors.IsNotFound(err) {
 					alert.Name = alertName
 					alert.Namespace = prometheusRule.Namespace
@@ -237,7 +238,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 					alert.Labels["app.kubernetes.io/managed-by"] = prometheusRule.Name
 					alert.OwnerReferences = []metav1.OwnerReference{getOwnerReference(prometheusRule)}
 					alert.Spec = prometheusAlertingRuleToAlertSpec(&rule)
-					if err = config.GetConfig().Client.Create(ctx, alert); err != nil {
+					if err = config.GetClient().Create(ctx, alert); err != nil {
 						errorsEncountered = append(errorsEncountered, fmt.Errorf("error creating Alert CRD %s: %w", alertName, err))
 					}
 					continue
@@ -289,7 +290,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 			}
 
 			if updated {
-				if err := config.GetConfig().Client.Update(ctx, alert); err != nil {
+				if err := config.GetClient().Update(ctx, alert); err != nil {
 					errorsEncountered = append(errorsEncountered, fmt.Errorf("error updating Alert CRD %s: %w", alertName, err))
 				}
 			}
@@ -297,13 +298,13 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 	}
 
 	var childAlerts coralogixv1beta1.AlertList
-	if err := config.GetConfig().Client.List(ctx, &childAlerts, client.InNamespace(prometheusRule.Namespace), client.MatchingLabels{"app.kubernetes.io/managed-by": prometheusRule.Name}); err != nil {
+	if err := config.GetClient().List(ctx, &childAlerts, client.InNamespace(prometheusRule.Namespace), client.MatchingLabels{"app.kubernetes.io/managed-by": prometheusRule.Name}); err != nil {
 		return fmt.Errorf("received an error while trying to list Alerts: %w", err)
 	}
 
 	for _, alert := range childAlerts.Items {
 		if !alertsToKeep[alert.Name] {
-			if err := config.GetConfig().Client.Delete(ctx, &alert); err != nil {
+			if err := config.GetClient().Delete(ctx, &alert); err != nil {
 				errorsEncountered = append(errorsEncountered, fmt.Errorf("error deleting Alert CRD %s: %w", alert.Name, err))
 			}
 		}
@@ -317,14 +318,14 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 
 func (r *PrometheusRuleReconciler) deleteCxAlerts(ctx context.Context, prometheusRule *prometheus.PrometheusRule) error {
 	var childAlerts coralogixv1beta1.AlertList
-	err := config.GetConfig().Client.List(ctx, &childAlerts, client.InNamespace(prometheusRule.Namespace), client.MatchingLabels{"app.kubernetes.io/managed-by": prometheusRule.Name})
+	err := config.GetClient().List(ctx, &childAlerts, client.InNamespace(prometheusRule.Namespace), client.MatchingLabels{"app.kubernetes.io/managed-by": prometheusRule.Name})
 	if err != nil {
 		return fmt.Errorf("received an error while trying to list Alerts: %w", err)
 	}
 
 	var errs error
 	for _, alert := range childAlerts.Items {
-		if err := config.GetConfig().Client.Delete(ctx, &alert); err != nil {
+		if err := config.GetClient().Delete(ctx, &alert); err != nil {
 			if k8serrors.IsNotFound(err) {
 				return nil
 			}

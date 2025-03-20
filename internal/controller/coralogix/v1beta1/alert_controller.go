@@ -17,6 +17,7 @@ package v1beta1
 import (
 	"context"
 	"fmt"
+	"time"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	"github.com/go-logr/logr"
@@ -34,6 +35,7 @@ import (
 // AlertReconciler reconciles a Alert object
 type AlertReconciler struct {
 	CoralogixClientSet *cxsdk.ClientSet
+	Interval           time.Duration
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=alerts,verbs=get;list;watch;create;update;patch;delete
@@ -42,6 +44,10 @@ type AlertReconciler struct {
 
 func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	return coralogixreconciler.ReconcileResource(ctx, req, &coralogixv1beta1.Alert{}, r)
+}
+
+func (r *AlertReconciler) RequeueInterval() time.Duration {
+	return r.Interval
 }
 
 func (r *AlertReconciler) FinalizerName() string {
@@ -87,6 +93,9 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 		return fmt.Errorf("error on extracting alert properties: %w", err)
 	}
 
+	if alert.Status.ID == nil {
+		return fmt.Errorf("alert ID is missing")
+	}
 	updateRequest := &cxsdk.ReplaceAlertDefRequest{
 		Id:                 wrapperspb.String(*alert.Status.ID),
 		AlertDefProperties: alertDefProperties,
@@ -105,6 +114,9 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 
 func (r *AlertReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
 	alert := obj.(*coralogixv1beta1.Alert)
+	if alert.Status.ID == nil {
+		return fmt.Errorf("alert ID is missing")
+	}
 	log.V(1).Info("Deleting alert from remote system", "id", *alert.Status.ID)
 	_, err := r.CoralogixClientSet.Alerts().Delete(ctx, &cxsdk.DeleteAlertDefRequest{Id: wrapperspb.String(*alert.Status.ID)})
 	if err != nil && cxsdk.Code(err) != codes.NotFound {
@@ -118,33 +130,6 @@ func (r *AlertReconciler) HandleDeletion(ctx context.Context, log logr.Logger, o
 func (r *AlertReconciler) CheckIDInStatus(obj client.Object) bool {
 	alert := obj.(*coralogixv1beta1.Alert)
 	return alert.Status.ID != nil && *alert.Status.ID != ""
-}
-
-func getAlertType(alert *coralogixv1beta1.Alert) string {
-	if alert.Spec.TypeDefinition.Flow != nil {
-		return "flow"
-	} else if alert.Spec.TypeDefinition.MetricAnomaly != nil {
-		return "metric-anomaly"
-	} else if alert.Spec.TypeDefinition.LogsAnomaly != nil {
-		return "logs-anomaly"
-	} else if alert.Spec.TypeDefinition.LogsImmediate != nil {
-		return "logs-immediate"
-	} else if alert.Spec.TypeDefinition.LogsNewValue != nil {
-		return "logs-new-value"
-	} else if alert.Spec.TypeDefinition.LogsRatioThreshold != nil {
-		return "logs-ratio-threshold"
-	} else if alert.Spec.TypeDefinition.LogsUniqueCount != nil {
-		return "logs-unique-count"
-	} else if alert.Spec.TypeDefinition.MetricThreshold != nil {
-		return "metric-threshold"
-	} else if alert.Spec.TypeDefinition.TracingThreshold != nil {
-		return "tracing-threshold"
-	} else if alert.Spec.TypeDefinition.LogsThreshold != nil {
-		return "logs-threshold"
-	} else if alert.Spec.TypeDefinition.LogsTimeRelativeThreshold != nil {
-		return "logs-time-relative-threshold"
-	}
-	return "unknown"
 }
 
 // SetupWithManager sets up the controller with the Manager.

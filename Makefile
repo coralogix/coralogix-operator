@@ -149,11 +149,13 @@ KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 CRDOC ?= $(LOCALBIN)/crdoc
+HELM_DOCS ?= $(LOCALBIN)/helm-docs
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.3.0
 CONTROLLER_TOOLS_VERSION ?= v0.15.0
 CERT_MANAGER_VERSION ?= v1.16.1
+HELM_DOCS_VERSION ?= v1.14.2
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize
@@ -176,6 +178,11 @@ crdoc: $(CRDOC) ## Download crdoc locally if necessary.
 $(CRDOC): $(LOCALBIN)
 	test -s $(LOCALBIN)/crdoc || GOBIN=$(LOCALBIN) go install fybrik.io/crdoc@latest
 
+.PHONY: helm-docs
+helm-docs: $(HELM_DOCS) ## Download helm-docs locally if necessary.
+$(HELM_DOCS): $(LOCALBIN)
+	test -s $(LOCALBIN)/helm-docs || GOBIN=$(LOCALBIN) go install github.com/norwoodj/helm-docs/cmd/helm-docs@$(HELM_DOCS_VERSION)
+
 .PHONY: integration-tests
 integration-tests:
 	kubectl kuttl test
@@ -186,8 +193,12 @@ e2e-tests:
 
 .PHONY: helm-sync-check
 helm-sync-check:
-	sh scripts/helm-sync-check.sh
+	bash scripts/helm-sync-check.sh
 
 .PHONY: helm-update-crds
 helm-update-crds:
 	sh scripts/helm-update-crds.sh
+
+.PHONY: helm-sync-docs
+helm-sync-docs: helm-docs
+	$(HELM_DOCS)

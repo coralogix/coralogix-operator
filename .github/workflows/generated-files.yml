@@ -28,6 +28,7 @@ jobs:
           make generate
           make manifests
           make generate-api-docs
+          make helm-sync-docs
       - name: Check for changes
         run: |
           if ! git diff --exit-code; then
@@ -36,5 +37,6 @@ jobs:
             echo "    make generate-api-docs"
             echo "    make generate"
             echo "    make manifests"
+            echo "    make helm-sync-docs"
             exit 1
           fi

@@ -47,7 +47,7 @@ var _ = Describe("Preset", Ordered, func() {
 
 	It("Should be created successfully", func(ctx context.Context) {
 		By("Creating Preset")
-		presetName := "slack-preset"
+		presetName := fmt.Sprintf("slack-preset-%d", time.Now().Unix())
 		preset = getSampleSlackPreset(presetName, testNamespace)
 		Expect(crClient.Create(ctx, preset)).To(Succeed())
 
@@ -131,7 +131,7 @@ func getSampleSlackPreset(name, namespace string) *coralogixv1alpha1.Preset {
 			Namespace: namespace,
 		},
 		Spec: coralogixv1alpha1.PresetSpec{
-			Name:        "Slack Alert Preset",
+			Name:        name,
 			Description: "A preset for Slack integration",
 			EntityType:  "alerts",
 			ParentId:    "preset_system_slack_alerts_basic",

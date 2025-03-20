@@ -20,7 +20,6 @@ import (
 )
 
 const (
-	ReasonRemoteSyncPending         = "RemoteSyncPending"
 	ReasonRemoteCreatedSuccessfully = "RemoteCreatedSuccessfully"
 	ReasonRemoteCreationFailed      = "RemoteCreationFailed"
 	ReasonRemoteUpdatedSuccessfully = "RemoteUpdatedSuccessfully"

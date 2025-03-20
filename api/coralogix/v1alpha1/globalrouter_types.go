@@ -181,7 +181,7 @@ func extractConnectorID(namespace *string, connector *NCRef) (string, error) {
 	}
 
 	c := &Connector{}
-	err := config.GetConfig().Client.Get(context.Background(), client.ObjectKey{Name: connector.ResourceRef.Name, Namespace: *namespace}, c)
+	err := config.GetClient().Get(context.Background(), client.ObjectKey{Name: connector.ResourceRef.Name, Namespace: *namespace}, c)
 	if err != nil {
 		return "", err
 	}
@@ -207,7 +207,7 @@ func extractPresetID(namespace *string, preset *NCRef) (*string, error) {
 	}
 
 	p := &Preset{}
-	err := config.GetConfig().Client.Get(context.Background(), client.ObjectKey{Name: preset.ResourceRef.Name, Namespace: *namespace}, p)
+	err := config.GetClient().Get(context.Background(), client.ObjectKey{Name: preset.ResourceRef.Name, Namespace: *namespace}, p)
 	if err != nil {
 		return nil, err
 	}

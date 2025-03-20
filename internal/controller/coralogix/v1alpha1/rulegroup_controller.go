@@ -17,6 +17,7 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
@@ -35,6 +36,7 @@ import (
 // RuleGroupReconciler reconciles a RuleGroup object
 type RuleGroupReconciler struct {
 	RuleGroupClient clientset.RuleGroupsClientInterface
+	Interval        time.Duration
 }
 
 //+kubebuilder:rbac:groups=coralogix.com,resources=rulegroups,verbs=get;list;watch;create;update;patch;delete
@@ -47,6 +49,10 @@ func (r *RuleGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 func (r *RuleGroupReconciler) FinalizerName() string {
 	return "rulegroup.coralogix.com/finalizer"
+}
+
+func (r *RuleGroupReconciler) RequeueInterval() time.Duration {
+	return r.Interval
 }
 
 func (r *RuleGroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {

@@ -112,11 +112,17 @@ func getGVKsInVersion(version string) []schema.GroupVersionKind {
 	var result []schema.GroupVersionKind
 
 	groupVersion := schema.GroupVersion{Group: utils.CoralogixAPIGroup, Version: version}
-	knownTypes := config.GetConfig().Scheme.KnownTypes(groupVersion)
+	knownTypes := config.GetScheme().KnownTypes(groupVersion)
 	for kind := range knownTypes {
-		// Skip v1alpha Alert since we pick it up from v1beta1
-		if kind == "Alert" && version == utils.V1alpha1APIVersion {
+		// Skip v1alpha1 Alert since we pick it up from v1beta1
+		if kind == utils.AlertKind && version == utils.V1alpha1APIVersion {
 			continue
+		}
+		// Skip NotificationCenter CRDs if the feature is disabled
+		if kind == utils.ConnectorKind || kind == utils.PresetKind || kind == utils.GlobalRouterKind {
+			if !config.GetConfig().EnableNotificationCenter {
+				continue
+			}
 		}
 		// skip List, Options and Event types. e.g. AlertList, ListOptions, WatchEvent
 		if strings.HasSuffix(kind, "List") ||
@@ -150,7 +156,7 @@ func listResourcesInGVK(gvk schema.GroupVersionKind) ([]unstructured.Unstructure
 	for _, ns := range namespaces {
 		resources := &unstructured.UnstructuredList{}
 		resources.SetGroupVersionKind(gvk)
-		if err := config.GetConfig().Client.List(context.Background(), resources,
+		if err := config.GetClient().List(context.Background(), resources,
 			&client.ListOptions{LabelSelector: labelSelector, Namespace: ns}); err != nil {
 			return nil, err
 		}

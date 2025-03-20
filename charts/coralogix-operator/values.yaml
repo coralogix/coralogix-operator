@@ -1,4 +1,4 @@
-# -- Provide a name in place of kube-prometheus-stack for `app:` labels
+# -- Provide a name in place of coralogix-operator for `app:` labels
 nameOverride: ""
 
 # -- Provide a name to substitute for the full names of resources
@@ -25,6 +25,18 @@ podAnnotations: {}
 # -- Service monitor for Prometheus to use.
 serviceMonitor:
   # -- Specifies whether a service monitor should be created.
+  create: true
+
+validatingWebhookConfiguration:
+  # -- Specifies whether a ValidatingWebhookConfiguration should be created.
+  create: true
+
+certificate:
+  # -- Specifies whether a Certificate should be created.
+  create: true
+
+issuer:
+  # -- Specifies whether an Issuer should be created.
   create: true
 
 # -- SecurityContext holds pod-level security attributes and common container settings.
@@ -72,26 +84,21 @@ secret:
   data:
     apiKey: ""
 
-  # -- Security context for kube-rbac-proxy container
-  securityContext:
-    allowPrivilegeEscalation: false
-    readOnlyRootFilesystem: true
-    capabilities:
-      drop:
-        - ALL
-
-  # -- resource config for kube-rbac-proxy
-  resources: {}
-
 # -- Coralogix operator container config
 coralogixOperator:
   # Set this to false if PrometheusRule CRD is not available in the cluster.
   prometheusRules:
     enabled: true
-  # Set this is to true if you want to enable validation webhooks.
-  # It assumes you have cert-manager installed in your cluster.
+
+  # Set this to false if you want to disable validation and conversion webhooks.
+  # Leaving true assumes you have cert-manager installed in your cluster.
   webhooks:
     enabled: true
+
+  # Set this to true if you want to enable the notification center CRDs and controllers.
+  notificationCenter:
+    enabled: false
+
   # --  Coralogix operator Image
   image:
     repository: coralogixrepo/coralogix-operator
@@ -111,7 +118,22 @@ coralogixOperator:
   namespaceSelector: ""
 
   # -- The interval in seconds to reconcile each custom resource
-  reconcileIntervalSeconds: ""
+  reconcileIntervalSeconds:
+    ruleGroup: ""
+    alert: ""
+    recordingRuleGroupSet: ""
+    outboundWebhook: ""
+    apiKey: ""
+    customRole: ""
+    scope: ""
+    group: ""
+    tcoLogsPolicies: ""
+    tcoTracesPolicies: ""
+    integration: ""
+    connector: ""
+    preset: ""
+    globalRouter: ""
+    prometheusRule: ""
 
   # -- resource config for Coralogix operator
   resources: {}

@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
@@ -36,6 +37,7 @@ import (
 // GroupReconciler reconciles a Group object
 type GroupReconciler struct {
 	CXClientSet *cxsdk.ClientSet
+	Interval    time.Duration
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=groups,verbs=get;list;watch;create;update;patch;delete
@@ -48,6 +50,10 @@ func (r *GroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 func (r *GroupReconciler) FinalizerName() string {
 	return "group.coralogix.com/finalizer"
+}
+
+func (r *GroupReconciler) RequeueInterval() time.Duration {
+	return r.Interval
 }
 
 func (r *GroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {

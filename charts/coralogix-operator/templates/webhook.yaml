@@ -1,4 +1,4 @@
-{{- if .Values.coralogixOperator.webhooks.enabled }}
+{{- if and .Values.coralogixOperator.webhooks.enabled .Values.validatingWebhookConfiguration.create }}
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
@@ -28,6 +28,7 @@ webhooks:
         resources:
           - apikeys
     sideEffects: None
+  {{- if .Values.coralogixOperator.notificationCenter.enabled }}
   - admissionReviewVersions:
       - v1
     clientConfig:
@@ -68,6 +69,7 @@ webhooks:
         resources:
           - presets
     sideEffects: None
+  {{- end }}
   - admissionReviewVersions:
       - v1
     clientConfig:

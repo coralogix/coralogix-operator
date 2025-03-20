@@ -59,8 +59,8 @@ func setupOutboundWebhooksReconciler(t *testing.T, ctx context.Context, outbound
 	})
 	assert.NoError(t, err)
 
-	err = config.InitConfig(withWatch, mgr.GetScheme(), "", "", "")
-	assert.NoError(t, err)
+	config.InitClient(withWatch)
+	config.InitScheme(mgr.GetScheme())
 
 	r := OutboundWebhookReconciler{
 		OutboundWebhooksClient: outboundWebhooksClient,
@@ -144,7 +144,7 @@ func TestOutboundWebhooksCreation(t *testing.T) {
 
 			reconciler, watcher := setupOutboundWebhooksReconciler(t, ctx, outboundWebhooksClient)
 
-			err := config.GetConfig().Client.Create(ctx, &tt.outboundWebhook)
+			err := config.GetClient().Create(ctx, &tt.outboundWebhook)
 
 			assert.NoError(t, err)
 
@@ -253,7 +253,7 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 
 			reconciler, watcher := setupOutboundWebhooksReconciler(t, ctx, outboundWebhookClient)
 
-			err := config.GetConfig().Client.Create(ctx, &tt.outboundWebhook)
+			err := config.GetClient().Create(ctx, &tt.outboundWebhook)
 
 			assert.NoError(t, err)
 
@@ -270,7 +270,7 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 
 			outboundWebhook := &v1alpha1.OutboundWebhook{}
 
-			err = config.GetConfig().Client.Get(ctx, types.NamespacedName{
+			err = config.GetClient().Get(ctx, types.NamespacedName{
 				Namespace: tt.outboundWebhook.Namespace,
 				Name:      tt.outboundWebhook.Name,
 			}, outboundWebhook)
@@ -278,7 +278,7 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 			assert.NoError(t, err)
 
 			tt.updatedWebhook.ObjectMeta.ResourceVersion = outboundWebhook.ObjectMeta.ResourceVersion
-			err = config.GetConfig().Client.Update(ctx, &tt.updatedWebhook)
+			err = config.GetClient().Update(ctx, &tt.updatedWebhook)
 			assert.NoError(t, err)
 
 			<-watcher.ResultChan()
@@ -291,7 +291,7 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 			})
 
 			outboundWebhook = &v1alpha1.OutboundWebhook{}
-			err = config.GetConfig().Client.Get(ctx, types.NamespacedName{
+			err = config.GetClient().Get(ctx, types.NamespacedName{
 				Namespace: tt.updatedWebhook.Namespace,
 				Name:      tt.updatedWebhook.Name,
 			}, outboundWebhook)
@@ -374,7 +374,7 @@ func TestOutboundWebhookDeletion(t *testing.T) {
 
 			reconciler, watcher := setupOutboundWebhooksReconciler(t, ctx, outboundWebhooksClient)
 
-			err := config.GetConfig().Client.Create(ctx, &tt.outboundWebhook)
+			err := config.GetClient().Create(ctx, &tt.outboundWebhook)
 
 			assert.NoError(t, err)
 
@@ -387,7 +387,7 @@ func TestOutboundWebhookDeletion(t *testing.T) {
 				},
 			})
 
-			err = config.GetConfig().Client.Delete(ctx, &tt.outboundWebhook)
+			err = config.GetClient().Delete(ctx, &tt.outboundWebhook)
 
 			assert.NoError(t, err)
 

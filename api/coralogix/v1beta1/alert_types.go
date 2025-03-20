@@ -1173,9 +1173,16 @@ func expandNotificationGroup(notificationGroup *NotificationGroup, listingAlerts
 		return nil, fmt.Errorf("failed to expand webhooks settings: %w", err)
 	}
 
-	destinations, err := expandDestinations(notificationGroup.Destinations, listingAlertsAndWebhooksProperties)
-	if err != nil {
-		return nil, fmt.Errorf("failed to expand destinations: %w", err)
+	var destinations []*cxsdk.NotificationDestination
+	if notificationGroup.Destinations != nil {
+		if config.GetConfig().EnableNotificationCenter {
+			destinations, err = expandDestinations(notificationGroup.Destinations, listingAlertsAndWebhooksProperties)
+			if err != nil {
+				return nil, fmt.Errorf("failed to expand destinations: %w", err)
+			}
+		} else {
+			return nil, fmt.Errorf("destinations cannot be set when notification center is disabled")
+		}
 	}
 
 	return &cxsdk.AlertDefNotificationGroup{
@@ -1931,7 +1938,7 @@ func expandAlertRef(listingAlertsProperties *GetResourceRefProperties, ref Alert
 func convertAlertCrNameToID(listingAlertsProperties *GetResourceRefProperties, alertCrName string) (*wrapperspb.StringValue, error) {
 	ctx, namespace := listingAlertsProperties.Ctx, listingAlertsProperties.Namespace
 	alertCR := &Alert{}
-	err := config.GetConfig().Client.Get(ctx, client.ObjectKey{Name: alertCrName, Namespace: namespace}, alertCR)
+	err := config.GetClient().Get(ctx, client.ObjectKey{Name: alertCrName, Namespace: namespace}, alertCR)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get alert %w", err)
 	}
@@ -2373,7 +2380,7 @@ func convertCRNameToIntegrationID(name string, properties *GetResourceRefPropert
 		Version: utils.V1alpha1APIVersion,
 	})
 
-	if err := config.GetConfig().Client.Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
+	if err := config.GetClient().Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
 		return nil, fmt.Errorf("failed to get webhook, name: %s, namespace: %s, error: %w", name, namespace, err)
 	}
 
@@ -2407,7 +2414,7 @@ func convertCRNameToConnectorID(name string, properties *GetResourceRefPropertie
 		Version: utils.V1alpha1APIVersion,
 	})
 
-	if err := config.GetConfig().Client.Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
+	if err := config.GetClient().Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
 		return "", fmt.Errorf("failed to get connector: %w", err)
 	}
 
@@ -2436,7 +2443,7 @@ func convertCRNameToPresetID(name string, properties *GetResourceRefProperties) 
 		Version: utils.V1alpha1APIVersion,
 	})
 
-	if err := config.GetConfig().Client.Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
+	if err := config.GetClient().Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, u); err != nil {
 		return "", fmt.Errorf("failed to get preset: %w", err)
 	}
 
