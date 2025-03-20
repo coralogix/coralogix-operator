@@ -248,29 +248,51 @@ var (
 	fieldNameChannel         = "channel"
 )
 
-// AlertSpec defines the desired state of Alert
+// AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
 type AlertSpec struct {
+	// Name of the alert
 	//+kubebuilder:validation:MinLength=0
 	Name string `json:"name"`
+
+	// Description of the alert
 	// +optional
-	Description string        `json:"description,omitempty"`
-	Priority    AlertPriority `json:"priority"`
+	Description string `json:"description,omitempty"`
+
+	// Priority of the alert.
+	Priority AlertPriority `json:"priority"`
+
+	// Enable/disable the alert.
 	//+kubebuilder:default=true
 	Enabled bool `json:"enabled,omitempty"`
+
+	// Grouping fields for multiple alerts.
 	// +optional
 	GroupByKeys []string `json:"groupByKeys,omitempty"`
+
+	// Settings for the attached incidents.
 	// +optional
 	IncidentsSettings *IncidentsSettings `json:"incidentsSettings,omitempty"`
+
+	// Where notifications should be sent to.
 	// +optional
 	NotificationGroup *NotificationGroup `json:"notificationGroup,omitempty"`
+
+	// Do not use.
+	// Deprecated: Legacy field for when multiple notification groups were attached.
 	// +optional
 	NotificationGroupExcess []NotificationGroup `json:"notificationGroupExcess,omitempty"`
+
+	// Labels attached to the alert.
 	// +optional
 	EntityLabels map[string]string `json:"entityLabels,omitempty"`
 	//+kubebuilder:default=false
 	PhantomMode bool `json:"phantomMode,omitempty"`
+
+	// Alert activity schedule. Will be activated all the time if not specified.
 	// +optional
-	Schedule       *AlertSchedule      `json:"schedule,omitempty"`
+	Schedule *AlertSchedule `json:"schedule,omitempty"`
+
+	// Type of alert.
 	TypeDefinition AlertTypeDefinition `json:"alertType"`
 }
 
@@ -292,22 +314,33 @@ func (a *Alert) SetConditions(conditions []metav1.Condition) {
 
 // +kubebuilder:validation:Pattern=`^UTC[+-]\d{2}$`
 // +kubebuilder:default=UTC+00
+// A time zone expressed in UTC offsets.
 type TimeZone string
 
+// The schedule for when the alert is active.
 type AlertSchedule struct {
 	//+kubebuilder:default=UTC+00
+	// Time zone.
 	TimeZone TimeZone `json:"timeZone"`
+
+	// Schedule to have the alert active.
 	// +optional
 	ActiveOn *ActiveOn `json:"activeOn,omitempty"`
 }
 
+// Settings for attached incidents.
 type IncidentsSettings struct {
+
+	// When to notify.
 	//+kubebuilder:default=triggeredOnly
-	NotifyOn           NotifyOn           `json:"notifyOn,omitempty"`
+	NotifyOn NotifyOn `json:"notifyOn,omitempty"`
+
+	// When to re-notify.
 	RetriggeringPeriod RetriggeringPeriod `json:"retriggeringPeriod,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=triggeredOnly;triggeredAndResolved
+// When to notify.
 type NotifyOn string
 
 const (
@@ -316,6 +349,7 @@ const (
 )
 
 // +kubebuilder:validation:Enum={"never","5m","10m","1h","2h","6h","12h","24h"}
+// Automatically retire the alert after...
 type AutoRetireTimeframe string
 
 const (
@@ -329,78 +363,132 @@ const (
 	AutoRetireTimeframe24H                AutoRetireTimeframe = "24h"
 )
 
+// When to re-trigger the alert.
 type RetriggeringPeriod struct {
+	// Delay between re-triggered alerts.
 	// +optional
 	Minutes *uint32 `json:"minutes,omitempty"`
 }
 
+// Notification group to use for alert notifications.
 type NotificationGroup struct {
+
+	// Group notification by these keys.
 	// +optional
 	GroupByKeys []string `json:"groupByKeys"`
+
+	// Webhooks to trigger for notifications.
 	// +optional
 	Webhooks []WebhookSettings `json:"webhooks"`
+
+	// Other destinations using the notification center.
 	// +optional
 	Destinations []Destination `json:"destinations"`
 }
 
+// Settings for a notification webhook.
 type WebhookSettings struct {
+
+	// When to re-trigger.
 	RetriggeringPeriod RetriggeringPeriod `json:"retriggeringPeriod"`
+
 	// +kubebuilder:default=triggeredOnly
-	NotifyOn    NotifyOn        `json:"notifyOn"`
+	// When to notify.
+	NotifyOn NotifyOn `json:"notifyOn"`
+
+	// Type and spec of webhook.
 	Integration IntegrationType `json:"integration"`
 }
 
+// Type and spec of the webhook.
 type IntegrationType struct {
+
+	// Reference to the webhook.
 	// +optional
 	IntegrationRef *IntegrationRef `json:"integrationRef,omitempty"`
+
+	// Recipients for the notification.
 	// +optional
 	Recipients []string `json:"recipients"`
 }
 
+// Reference to the integration.
 type IntegrationRef struct {
+
+	// Backend reference for the outbound webhook.
 	// +optional
 	BackendRef *OutboundWebhookBackendRef `json:"backendRef,omitempty"`
+
+	// Resource reference for use with the alert notification.
 	// +optional
 	ResourceRef *ResourceRef `json:"resourceRef"`
 }
 
+// Outbound webhook reference.
 type OutboundWebhookBackendRef struct {
+	// Webhook Id.
 	// +optional
 	ID *uint32 `json:"id,omitempty"`
+
+	// Name of the webhook.
 	// +optional
 	Name *string `json:"name,omitempty"`
 }
 
+// Notification center destination for a notification.
 type Destination struct {
+
 	// +kubebuilder:default=triggeredOnly
+	// When to notify.
 	NotifyOn NotifyOn `json:"notifyOn"`
 
+	// Type of notification to send.
 	DestinationType DestinationType `json:"destinationType"`
 }
 
+// Type of notification to send.
 type DestinationType struct {
+	// Slack app.
 	// +optional
 	Slack *SlackDestination `json:"slack,omitempty"`
+
+	// HTTPS webhook.
 	// +optional
 	GenericHttps *GenericHttpsDestination `json:"genericHttps,omitempty"`
 }
 
+// Slack notification configuration.
 type SlackDestination struct {
+	// Connector
 	ConnectorRef *NCRef `json:"connectorRef"`
+
+	// Preset for the notification.
 	// +optional
 	PresetRef *NCRef `json:"presetRef,omitempty"`
+
+	// Routing override for when the notification is triggered.
 	// +optional
 	TriggeredRoutingOverride *SlackRoutingOverride `json:"triggeredRoutingOverride,omitempty"`
+
+	// Routing override for when the notification is resolved.
 	// +optional
 	ResolvedRoutingOverride *SlackRoutingOverride `json:"resolvedRoutingOverride,omitempty"`
 }
 
+// Generic HTTPS notification configuration.
 type GenericHttpsDestination struct {
+	// Connector
 	ConnectorRef *NCRef `json:"connectorRef"`
+
+	// Preset for the notification.
 	// +optional
 	PresetRef *NCRef `json:"presetRef,omitempty"`
+
+	// Routing override for when the notification is triggered.
 	// +optional
 	TriggeredRoutingOverride *GenericHttpsRoutingOverride `json:"triggeredRoutingOverride,omitempty"`
+
+	// Routing override for when the notification is resolved.
 	// +optional
 	ResolvedRoutingOverride *GenericHttpsRoutingOverride `json:"resolvedRoutingOverride,omitempty"`
 }
@@ -412,40 +500,57 @@ type NCRef struct {
 	ResourceRef *ResourceRef `json:"resourceRef,omitempty"`
 }
 
+// Notification center reference on Coralogix
 type NCBackendRef struct {
+	// ID
 	ID string `json:"id"`
 }
 
+// Slack routing override for the notification center
 type SlackRoutingOverride struct {
+	// Override for the connector
 	// +optional
 	ConnectorOverride *SlackConnectorOverride `json:"connectorOverride,omitempty"`
+
+	// Override for the present
 	// +optional
 	PresetOverride *SlackPresetOverride `json:"presetOverride,omitempty"`
 }
 
+// Connector override for Slack
 type SlackConnectorOverride struct {
+	// (New) Channel for Slack
 	Channel string `json:"channel"`
 }
 
+// Preset override for Slack
 type SlackPresetOverride struct {
+	// New content for the Slack notification.
 	// +optional
 	RawFields *PresetSlackRawFields `json:"rawFields,omitempty"`
 
+	// New content for the Slack notification in structured fields.
 	// +optional
 	StructuredFields *PresetSlackStructuredFields `json:"structuredFields,omitempty"`
 }
 
+// Raw Slack notification payload
 type PresetSlackRawFields struct {
+	// Notification content.
 	Payload string `json:"payload"`
 }
 
+// Structured notification  payload.
 type PresetSlackStructuredFields struct {
+	// The title of the notification message.
 	// +optional
 	Title *string `json:"title,omitempty"`
 
+	// The body of the notification message.
 	// +optional
 	Description *string `json:"description,omitempty"`
 
+	// The footer of the notification message.
 	// +optional
 	Footer *string `json:"footer,omitempty"`
 }
@@ -462,15 +567,24 @@ type GenericHttpsPresetOverride struct {
 	Body *string `json:"body,omitempty"`
 }
 
+// Reference to the alert on Coralogix.
 type AlertBackendRef struct {
+
+	// Alert ID.
 	// +optional
 	ID *string `json:"id,omitempty"`
+
+	// Name of the alert.
 	// +optional
 	Name *string `json:"name,omitempty"`
 }
 
+// Reference to a resource within the cluster.
 type ResourceRef struct {
+	// Name of the resource.
 	Name string `json:"name"`
+
+	// Kubernetes namespace.
 	// +optional
 	Namespace *string `json:"namespace,omitempty"`
 }
@@ -484,11 +598,14 @@ type ActiveOn struct {
 }
 
 // +kubebuilder:validation:Pattern=`^(0\d|1\d|2[0-3]):[0-5]\d$`
+// Time of day.
 type TimeOfDay string
 
 // +kubebuilder:validation:Enum=sunday;monday;tuesday;wednesday;thursday;friday;saturday
+// Day of the week.
 type DayOfWeek string
 
+// Day of the week values.
 const (
 	DayOfWeekSunday    DayOfWeek = "sunday"
 	DayOfWeekMonday    DayOfWeek = "monday"
@@ -499,47 +616,78 @@ const (
 	DayOfWeekSaturday  DayOfWeek = "saturday"
 )
 
+// Alert type definitions.
 type AlertTypeDefinition struct {
+	// Immediate alerts for logs.
 	// +optional
 	LogsImmediate *LogsImmediate `json:"logsImmediate,omitempty"`
+	// Alerts for when a log crosses a threshold.
 	// +optional
 	LogsThreshold *LogsThreshold `json:"logsThreshold,omitempty"`
+	// Alerts for when a log exceeds a defined ratio.
 	// +optional
 	LogsRatioThreshold *LogsRatioThreshold `json:"logsRatioThreshold,omitempty"`
+	// Alerts are sent when the number of logs matching a filter is more than or less than a threshold over a specific time window.
 	// +optional
 	LogsTimeRelativeThreshold *LogsTimeRelativeThreshold `json:"logsTimeRelativeThreshold,omitempty"`
+	// Alerts for when a metric crosses a threshold.
 	// +optional
 	MetricThreshold *MetricThreshold `json:"metricThreshold,omitempty"`
+
+	// Alerts for when traces crosses a threshold.
 	// +optional
 	TracingThreshold *TracingThreshold `json:"tracingThreshold,omitempty"`
+
+	// Immediate alerts for traces.
 	// +optional
 	TracingImmediate *TracingImmediate `json:"tracingImmediate,omitempty"`
+
+	// Flow alerts chaining multiple alerts together.
 	// +optional
 	Flow *Flow `json:"flow,omitempty"`
+
+	// Anomaly alerts for logs.
 	// +optional
 	LogsAnomaly *LogsAnomaly `json:"logsAnomaly,omitempty"`
+
+	// Anomaly alerts for metrics.
 	// +optional
 	MetricAnomaly *MetricAnomaly `json:"metricAnomaly,omitempty"`
+
+	// Alerts when a new log value appears.
 	// +optional
 	LogsNewValue *LogsNewValue `json:"logsNewValue,omitempty"`
+
+	// Alerts for unique count changes.
 	// +optional
 	LogsUniqueCount *LogsUniqueCount `json:"logsUniqueCount,omitempty"`
 }
 
+// Immediate alerts for logs.
 type LogsImmediate struct {
+	// Filter to filter the logs with.
 	// +optional
 	LogsFilter *LogsFilter `json:"logsFilter,omitempty"`
+
+	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 }
 
+// Alerts for when a log crosses a threshold.
 type LogsThreshold struct {
+	// Filter to filter the logs with.
 	// +optional
 	LogsFilter *LogsFilter `json:"logsFilter,omitempty"`
+
+	// How to work with undetected values.
 	// +optional
 	UndetectedValuesManagement *UndetectedValuesManagement `json:"undetectedValuesManagement,omitempty"`
+
 	// +kubebuilder:validation:MinItems=1
 	Rules []LogsThresholdRule `json:"rules"`
+
+	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 }
@@ -676,8 +824,11 @@ type LogsTimeRelativeThreshold struct {
 	Rules []LogsTimeRelativeRule `json:"rules"`
 	//+kubebuilder:default=false
 	IgnoreInfinity bool `json:"ignoreInfinity"`
+	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
+
+	// How to work with undetected values.
 	// +optional
 	UndetectedValuesManagement *UndetectedValuesManagement `json:"undetectedValuesManagement"`
 }
@@ -687,6 +838,8 @@ type MetricThreshold struct {
 	// +kubebuilder:validation:MinItems=1
 	Rules         []MetricThresholdRule `json:"rules"`
 	MissingValues MetricMissingValues   `json:"missingValues"`
+
+	// How to work with undetected values.
 	// +optional
 	UndetectedValuesManagement *UndetectedValuesManagement `json:"undetectedValuesManagement"`
 }
@@ -755,6 +908,8 @@ type TracingThreshold struct {
 	TracingFilter *TracingFilter `json:"tracingFilter,omitempty"`
 	// +kubebuilder:validation:MinItems=1
 	Rules []TracingThresholdRule `json:"rules"`
+
+	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 }
@@ -762,6 +917,8 @@ type TracingThreshold struct {
 type TracingImmediate struct {
 	// +optional
 	TracingFilter *TracingFilter `json:"tracingFilter,omitempty"`
+
+	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 }
@@ -892,10 +1049,13 @@ const (
 )
 
 type LogsAnomaly struct {
+	// Filter to filter the logs with.
 	// +optional
 	LogsFilter *LogsFilter `json:"logsFilter,omitempty"`
 	// +kubebuilder:validation:MinItems=1
 	Rules []LogsAnomalyRule `json:"rules"`
+
+	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 }
@@ -939,9 +1099,12 @@ type MetricAnomalyRule struct {
 }
 
 type LogsNewValue struct {
+	// Filter to filter the logs with.
 	LogsFilter *LogsFilter `json:"logsFilter"`
 	// +kubebuilder:validation:MinItems=1
 	Rules []LogsNewValueRule `json:"rules"`
+
+	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 }
@@ -974,9 +1137,12 @@ const (
 )
 
 type LogsUniqueCount struct {
+	// Filter to filter the logs with.
 	LogsFilter *LogsFilter `json:"logsFilter"`
 	// +kubebuilder:validation:MinItems=1
 	Rules []LogsUniqueCountRule `json:"rules"`
+
+	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 	// +optional
@@ -1027,32 +1193,48 @@ type LogsSimpleFilter struct {
 	LabelFilters *LabelFilters `json:"labelFilters,omitempty"`
 }
 
+// Filters for labels.
 type LabelFilters struct {
+	// Application name to filter for.
 	// +optional
 	ApplicationName []LabelFilterType `json:"applicationName"`
+	// Subsystem name to filter for.
 	// +optional
 	SubsystemName []LabelFilterType `json:"subsystemName"`
+	// Severity to filter for.
 	// +optional
 	Severity []LogSeverity `json:"severity"`
 }
 
+// Label filter specifications
 type LabelFilterType struct {
+	// The value
 	//+kubebuilder:validation:MinLength=0
 	Value string `json:"value"`
+
 	//+kubebuilder:default=or
+	// Operation to apply.
 	Operation LogFilterOperationType `json:"operation"`
 }
 
+// How to work with undetected values.
+// Read more here: https://coralogix.com/docs/user-guides/alerting/create-an-alert/metrics/threshold-alerts/#manage-undetected-values
 type UndetectedValuesManagement struct {
+
 	//+kubebuilder:default=false
+	// Deactivate triggering the alert on undetected values.
 	TriggerUndetectedValues bool `json:"triggerUndetectedValues"`
+
 	//+kubebuilder:default=never
+	// Automatically retire the alerts after this time.
 	AutoRetireTimeframe AutoRetireTimeframe `json:"autoRetireTimeframe"`
 }
 
 // +kubebuilder:validation:Enum=or;includes;endsWith;startsWith
+// Operation type for log filters.
 type LogFilterOperationType string
 
+// Operation type for log filter values.
 const (
 	LogFilterOperationTypeOr         LogFilterOperationType = "or"
 	LogFilterOperationTypeIncludes   LogFilterOperationType = "includes"
@@ -1061,8 +1243,10 @@ const (
 )
 
 // +kubebuilder:validation:Enum=debug;info;warning;error;critical;verbose
+// How severe a log is.
 type LogSeverity string
 
+// Severity values.
 const (
 	LogSeverityDebug    LogSeverity = "debug"
 	LogSeverityInfo     LogSeverity = "info"
@@ -1073,8 +1257,10 @@ const (
 )
 
 // +kubebuilder:validation:Enum=p1;p2;p3;p4;p5
+// Alert priorities.
 type AlertPriority string
 
+// Priority values.
 const (
 	AlertPriorityP1 AlertPriority = "p1"
 	AlertPriorityP2 AlertPriority = "p2"
