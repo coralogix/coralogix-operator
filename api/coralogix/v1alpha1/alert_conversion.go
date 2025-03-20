@@ -567,6 +567,9 @@ func convertTracingLabelFilterV1beta1ToV1alpha1(filters []v1beta1.TracingFilterT
 }
 
 func convertFlowStagesV1beta1ToV1alpha1(stages []v1beta1.FlowStage) []FlowStage {
+	if stages == nil {
+		return nil
+	}
 	result := make([]FlowStage, len(stages))
 	for i, stage := range stages {
 		result[i] = FlowStage{
@@ -577,6 +580,9 @@ func convertFlowStagesV1beta1ToV1alpha1(stages []v1beta1.FlowStage) []FlowStage 
 }
 
 func convertFlowGroupsV1beta1ToV1alpha1(groups []v1beta1.FlowStageGroup) []FlowStageGroup {
+	if groups == nil {
+		return nil
+	}
 	result := make([]FlowStageGroup, len(groups))
 	for i, group := range groups {
 		result[i] = FlowStageGroup{
@@ -645,6 +651,9 @@ func convertLogsFilterV1beta1ToV1alpha1(filter *v1beta1.LogsFilter) *Filters {
 }
 
 func convertSeveritiesFilterV1beta1ToV1alpha1(severity []v1beta1.LogSeverity) []FiltersLogSeverity {
+	if severity == nil {
+		return nil
+	}
 	result := make([]FiltersLogSeverity, len(severity))
 	for i, s := range severity {
 		result[i] = severitiesFilterV1beta1ToV1alpha1[s]
@@ -653,6 +662,9 @@ func convertSeveritiesFilterV1beta1ToV1alpha1(severity []v1beta1.LogSeverity) []
 }
 
 func convertLabelFilterV1beta1ToV1alpha1(labelFilters []v1beta1.LabelFilterType) []string {
+	if labelFilters == nil {
+		return nil
+	}
 	result := make([]string, len(labelFilters))
 	for i, labelFilter := range labelFilters {
 		switch labelFilter.Operation {
@@ -691,6 +703,9 @@ func convertNotificationGroupV1beta1ToV1alpha1(group v1beta1.NotificationGroup) 
 }
 
 func convertWebhooksV1beta1ToV1alpha1(webhooks []v1beta1.WebhookSettings) []Notification {
+	if webhooks == nil {
+		return nil
+	}
 	notifications := make([]Notification, len(webhooks))
 	for i, webhook := range webhooks {
 		notifications[i] = convertWebhookV1beta1ToV1alpha1(webhook)
@@ -752,6 +767,9 @@ func convertTimeV1beta1ToV1alpha1(time *v1beta1.TimeOfDay) *Time {
 }
 
 func convertDaysOfWeekV1beta1ToV1alpha1(week []v1beta1.DayOfWeek) []Day {
+	if week == nil {
+		return nil
+	}
 	result := make([]Day, len(week))
 	for i, day := range week {
 		result[i] = dayOfWeekV1beta1ToV1alpha1[day]
@@ -1082,6 +1100,10 @@ func convertTracingFilterV1alpha1ToV1beta1(filters TracingFilters) *v1beta1.Trac
 }
 
 func convertTracingFilterTypeV1alpha1ToV1beta1(labels []string) []v1beta1.TracingFilterType {
+	if labels == nil {
+		return nil
+	}
+
 	filterTypeOperationToValues := map[v1beta1.TracingFilterOperationType][]string{
 		v1beta1.TracingFilterOperationTypeOr:         {},
 		v1beta1.TracingFilterOperationTypeIncludes:   {},
@@ -1156,6 +1178,9 @@ func convertPromqlConditionsV1alpha1ToMetricAnomalyRuleV1beta1(conditions Promql
 }
 
 func convertFlowStagesV1alpha1ToV1beta1(stages []FlowStage) []v1beta1.FlowStage {
+	if stages == nil {
+		return nil
+	}
 	result := make([]v1beta1.FlowStage, len(stages))
 	for i, stage := range stages {
 		result[i] = v1beta1.FlowStage{
@@ -1178,6 +1203,9 @@ func convertFlowStateTimeWindowV1alpha1ToV1beta1(timeWindow *FlowStageTimeFrame)
 }
 
 func convertFlowStageGroupsV1alpha1ToV1beta1(groups []FlowStageGroup) []v1beta1.FlowStageGroup {
+	if groups == nil {
+		return nil
+	}
 	result := make([]v1beta1.FlowStageGroup, len(groups))
 	for i, group := range groups {
 		result[i] = v1beta1.FlowStageGroup{
@@ -1190,6 +1218,9 @@ func convertFlowStageGroupsV1alpha1ToV1beta1(groups []FlowStageGroup) []v1beta1.
 }
 
 func convertFlowAlertDefsV1alpha1ToV1beta1(alerts []InnerFlowAlert) []v1beta1.FlowStagesGroupsAlertDefs {
+	if alerts == nil {
+		return nil
+	}
 	result := make([]v1beta1.FlowStagesGroupsAlertDefs, len(alerts))
 	for i, alert := range alerts {
 		result[i] = v1beta1.FlowStagesGroupsAlertDefs{
@@ -1249,6 +1280,9 @@ func convertLogsFilterV1alpha1ToV1beta1(filters *Filters) *v1beta1.LogsFilter {
 }
 
 func convertSeveritiesFilterV1alpha1ToV1beta1(severities []FiltersLogSeverity) []v1beta1.LogSeverity {
+	if severities == nil {
+		return nil
+	}
 	result := make([]v1beta1.LogSeverity, len(severities))
 	for i, severity := range severities {
 		result[i] = severitiesFilterV1alpha1ToV1beta1[severity]
@@ -1257,8 +1291,10 @@ func convertSeveritiesFilterV1alpha1ToV1beta1(severities []FiltersLogSeverity) [
 }
 
 func convertLabelFilterV1alpha1ToV1beta1(labels []string) []v1beta1.LabelFilterType {
+	if labels == nil {
+		return nil
+	}
 	result := make([]v1beta1.LabelFilterType, len(labels))
-
 	for i, label := range labels {
 		if value, prefixExist := strings.CutPrefix(label, "filter:contains:"); prefixExist {
 			result[i] = v1beta1.LabelFilterType{
@@ -1295,6 +1331,9 @@ func convertTimeV1alpha1ToV1beta1(time *Time) *v1beta1.TimeOfDay {
 }
 
 func convertDaysOfWeekV1alpha1ToV1beta1(enabled []Day) []v1beta1.DayOfWeek {
+	if enabled == nil {
+		return nil
+	}
 	rslt := make([]v1beta1.DayOfWeek, len(enabled))
 	for i, day := range enabled {
 		rslt[i] = dayOfWeekV1alpha1ToV1beta1[day]
@@ -1303,6 +1342,9 @@ func convertDaysOfWeekV1alpha1ToV1beta1(enabled []Day) []v1beta1.DayOfWeek {
 }
 
 func convertNotificationGroupExcessV1alpha1ToV1beta1(groups []NotificationGroup) []v1beta1.NotificationGroup {
+	if groups == nil {
+		return nil
+	}
 	rslt := make([]v1beta1.NotificationGroup, len(groups))
 	for i, group := range groups {
 		rslt[i] = *convertNotificationGroupsV1alpha1ToV1beta1(group)
@@ -1318,6 +1360,9 @@ func convertNotificationGroupsV1alpha1ToV1beta1(group NotificationGroup) *v1beta
 }
 
 func convertWebhooksV1alpha1ToV1beta1(notifications []Notification) []v1beta1.WebhookSettings {
+	if notifications == nil {
+		return nil
+	}
 	rslt := make([]v1beta1.WebhookSettings, len(notifications))
 	for i, notification := range notifications {
 		rslt[i] = convertWebhookV1alpha1ToV1beta1(notification)
