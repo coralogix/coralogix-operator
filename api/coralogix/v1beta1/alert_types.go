@@ -375,7 +375,7 @@ type Destination struct {
 	// +kubebuilder:default=triggeredOnly
 	NotifyOn NotifyOn `json:"notifyOn"`
 
-	DestinationType DestinationType `json:"destinationType"`
+	DestinationType *DestinationType `json:"destinationType"`
 }
 
 type DestinationType struct {

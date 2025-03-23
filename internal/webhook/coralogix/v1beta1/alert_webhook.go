@@ -181,6 +181,11 @@ func validateDestinations(destinations []coralogixv1beta1.Destination) (admissio
 func validateDestination(destination coralogixv1beta1.Destination) (admission.Warnings, error) {
 	var warnings admission.Warnings
 	var errs error
+	if destination.DestinationType == nil {
+		warnings = append(warnings, "destination type must be set")
+		errs = errors.Join(errs, fmt.Errorf("destination type must be set"))
+	}
+
 	if destination.DestinationType.Slack == nil && destination.DestinationType.GenericHttps == nil {
 		warnings = append(warnings, "destination type must be set")
 		errs = errors.Join(errs, fmt.Errorf("destination type must be set"))
@@ -192,23 +197,33 @@ func validateDestination(destination coralogixv1beta1.Destination) (admission.Wa
 	}
 
 	if slack := destination.DestinationType.Slack; slack != nil {
-		if slack.ConnectorRef.ResourceRef != nil && slack.ConnectorRef.BackendRef != nil {
-			warnings = append(warnings, "only one of resource reference or backend reference should be set")
-			errs = errors.Join(errs, fmt.Errorf("only one of resource reference or backend reference should be set"))
+		if slack.ConnectorRef != nil {
+			if slack.ConnectorRef.ResourceRef != nil && slack.ConnectorRef.BackendRef != nil {
+				warnings = append(warnings, "only one of resource reference or backend reference should be set")
+				errs = errors.Join(errs, fmt.Errorf("only one of resource reference or backend reference should be set"))
+			}
 		}
-		if slack.PresetRef.ResourceRef != nil && slack.PresetRef.BackendRef != nil {
-			warnings = append(warnings, "only one of resource reference or backend reference should be set")
-			errs = errors.Join(errs, fmt.Errorf("only one of resource reference or backend reference should be set"))
+
+		if slack.PresetRef != nil {
+			if slack.PresetRef.ResourceRef != nil && slack.PresetRef.BackendRef != nil {
+				warnings = append(warnings, "only one of resource reference or backend reference should be set")
+				errs = errors.Join(errs, fmt.Errorf("only one of resource reference or backend reference should be set"))
+			}
 		}
 	}
 	if genericHttps := destination.DestinationType.GenericHttps; genericHttps != nil {
-		if genericHttps.ConnectorRef.ResourceRef != nil && genericHttps.ConnectorRef.BackendRef != nil {
-			warnings = append(warnings, "only one of resource reference or backend reference should be set")
-			errs = errors.Join(errs, fmt.Errorf("only one of resource reference or backend reference should be set"))
+		if genericHttps.ConnectorRef != nil {
+			if genericHttps.ConnectorRef.ResourceRef != nil && genericHttps.ConnectorRef.BackendRef != nil {
+				warnings = append(warnings, "only one of resource reference or backend reference should be set")
+				errs = errors.Join(errs, fmt.Errorf("only one of resource reference or backend reference should be set"))
+			}
 		}
-		if genericHttps.PresetRef.ResourceRef != nil && genericHttps.PresetRef.BackendRef != nil {
-			warnings = append(warnings, "only one of resource reference or backend reference should be set")
-			errs = errors.Join(errs, fmt.Errorf("only one of resource reference or backend reference should be set"))
+
+		if genericHttps.PresetRef != nil {
+			if genericHttps.PresetRef.ResourceRef != nil && genericHttps.PresetRef.BackendRef != nil {
+				warnings = append(warnings, "only one of resource reference or backend reference should be set")
+				errs = errors.Join(errs, fmt.Errorf("only one of resource reference or backend reference should be set"))
+			}
 		}
 	}
 
