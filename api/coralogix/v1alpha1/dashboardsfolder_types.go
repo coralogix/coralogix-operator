@@ -17,9 +17,14 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
+	"fmt"
+
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	"github.com/coralogix/coralogix-operator/internal/config"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -28,32 +33,53 @@ import (
 // DashboardsFolderSpec defines the desired state of DashboardsFolder.
 type DashboardsFolderSpec struct {
 	Name string `json:"name"`
-	// +kubebuilder:validation:Pattern=`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$`
-	CustomID string `json:"customId,omitempty"`
+	// A custom ID for the folder. If not provided, a random UUID will be generated. The custom ID is immutable.
 	// +optional
-	ParentFolderBackendID *string `json:"parentFolderBackendId,omitempty"`
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="spec.customId is immutable"
+	// +kubebuilder:validation:Pattern=`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$`
+	CustomID *string `json:"customId,omitempty"`
+	// A reference to an existing folder by its backend's ID.
+	// +optional
+	ParentFolderID *string `json:"parentFolderId,omitempty"`
+	// A reference to an existing DashboardsFolder CR.
+	// +optional
+	ParentFolderRef *ResourceRef `json:"parentFolderRef,omitempty"`
 }
 
-func (in *DashboardsFolderSpec) ExtractDashboardsFolderFromSpec() *cxsdk.DashboardFolder {
+func (in *DashboardsFolderSpec) ExtractDashboardsFolderFromSpec(ctx context.Context, namespace string) (*cxsdk.DashboardFolder, error) {
 	dashboardFolder := new(cxsdk.DashboardFolder)
 	dashboardFolder.Name = wrapperspb.String(in.Name)
-	dashboardFolder.Id = wrapperspb.String(in.CustomID)
-	if parentID := in.ParentFolderBackendID; parentID != nil {
+
+	if parentID := in.ParentFolderID; parentID != nil {
 		dashboardFolder.ParentId = wrapperspb.String(*parentID)
+	} else if parentRef := in.ParentFolderRef; parentRef != nil {
+		df := &DashboardsFolder{}
+		if parentRef.Namespace != nil {
+			namespace = *parentRef.Namespace
+		}
+		if err := config.GetClient().Get(ctx, client.ObjectKey{Name: parentRef.Name, Namespace: namespace}, df); err != nil {
+			return nil, fmt.Errorf("failed to get DashboardsFolder: %w", err)
+		}
+		if df.Status.ID == nil {
+			return nil, fmt.Errorf("failed to get DashboardsFolder ID")
+		}
+		dashboardFolder.ParentId = wrapperspb.String(*df.Status.ID)
 	}
-	return dashboardFolder
+	return dashboardFolder, nil
 }
 
 type DashboardFolderRef struct {
 	// +optional
-	BackendRef *DashboardFolderRefBackendRef `json:"backendRef"`
+	BackendRef *DashboardFolderRefBackendRef `json:"backendRef,omitempty"`
 	// +optional
-	ResourceRef *ResourceRef `json:"resourceRef"`
+	ResourceRef *ResourceRef `json:"resourceRef,omitempty"`
 }
 
 type DashboardFolderRefBackendRef struct {
+	// Reference to a folder by its backend's ID.
 	// +optional
 	ID *string `json:"id,omitempty"`
+	// Reference to a folder by its path (<parent-folder-name-1>/<parent-folder-name-2>/<folder-name>).
 	// +optional
 	Path *string `json:"path,omitempty"`
 }

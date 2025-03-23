@@ -64,7 +64,7 @@ var (
 		utils.RuleGroupKind, utils.AlertKind, utils.RecordingRuleGroupSetKind, utils.OutboundWebhookKind,
 		utils.ApiKeyKind, utils.CustomRoleKind, utils.ScopeKind, utils.GroupKind, utils.TCOLogsPoliciesKind,
 		utils.TCOTracesPoliciesKind, utils.IntegrationKind, utils.ConnectorKind, utils.PresetKind,
-		utils.GlobalRouterKind, utils.PrometheusRuleKind,
+		utils.GlobalRouterKind, utils.PrometheusRuleKind, utils.DashboardKind, utils.DashboardsFolderKind,
 	}
 )
 

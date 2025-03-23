@@ -25,9 +25,11 @@ import (
 	"github.com/coralogix/coralogix-operator/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	"github.com/go-logr/logr"
+	gouuid "github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/wrapperspb"
+	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -57,8 +59,20 @@ func (r *DashboardsFolderReconciler) RequeueInterval() time.Duration {
 }
 
 func (r *DashboardsFolderReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
-	folder := obj.(*coralogixv1alpha1.DashboardsFolder)
-	folderToCreate := folder.Spec.ExtractDashboardsFolderFromSpec()
+	folder, ok := obj.(*coralogixv1alpha1.DashboardsFolder)
+	if !ok {
+		return fmt.Errorf("object is not a DashboardsFolder, but %T", obj)
+	}
+	folderToCreate, err := folder.Spec.ExtractDashboardsFolderFromSpec(ctx, folder.Namespace)
+	if err != nil {
+		return fmt.Errorf("error on extracting dashboards-folder from spec: %w", err)
+	}
+
+	if customID := folder.Spec.CustomID; customID != nil {
+		folderToCreate.Id = wrapperspb.String(*customID)
+	} else {
+		folderToCreate.Id = wrapperspb.String(gouuid.NewString())
+	}
 
 	createRequest := &cxsdk.CreateDashboardFolderRequest{
 		Folder: folderToCreate,
@@ -66,16 +80,24 @@ func (r *DashboardsFolderReconciler) HandleCreation(ctx context.Context, log log
 	log.V(1).Info("Creating remote dashboards-folder", "folder", protojson.Format(createRequest))
 	createResponse, err := r.DashboardsFoldersClient.Create(ctx, createRequest)
 	if err != nil {
-		return fmt.Errorf("error on creating remote dashboard: %w", err)
+		return fmt.Errorf("error on creating remote dashboard-folder: %w", err)
 	}
 	log.V(1).Info("Remote dashboard dashboards-folder", "folder", protojson.Format(createResponse))
 
+	folder.Status = coralogixv1alpha1.DashboardsFolderStatus{ID: pointer.String(folderToCreate.Id.GetValue())}
 	return nil
 }
 
 func (r *DashboardsFolderReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	folder := obj.(*coralogixv1alpha1.DashboardsFolder)
-	folderToUpdate := folder.Spec.ExtractDashboardsFolderFromSpec()
+	folderToUpdate, err := folder.Spec.ExtractDashboardsFolderFromSpec(ctx, folder.Namespace)
+	if err != nil {
+		return fmt.Errorf("error on extracting dashboards-folder from spec: %w", err)
+	}
+	if folder.Status.ID == nil {
+		return fmt.Errorf("no ID in status, cannot update remote dashboards-folder")
+	}
+	folderToUpdate.Id = wrapperspb.String(*folder.Status.ID)
 	updateRequest := &cxsdk.ReplaceDashboardFolderRequest{
 		Folder: folderToUpdate,
 	}
@@ -91,9 +113,13 @@ func (r *DashboardsFolderReconciler) HandleUpdate(ctx context.Context, log logr.
 
 func (r *DashboardsFolderReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
 	folder := obj.(*coralogixv1alpha1.DashboardsFolder)
-	id := folder.Spec.CustomID
+	id := folder.Status.ID
+	if id == nil {
+		log.V(1).Info("No ID in status, nothing to delete", "folder", folder)
+		return nil
+	}
 	log.V(1).Info("Deleting dashboards-folder from remote system", "id", id)
-	_, err := r.DashboardsFoldersClient.Delete(ctx, &cxsdk.DeleteDashboardFolderRequest{FolderId: wrapperspb.String(id)})
+	_, err := r.DashboardsFoldersClient.Delete(ctx, &cxsdk.DeleteDashboardFolderRequest{FolderId: wrapperspb.String(*id)})
 	if err != nil && cxsdk.Code(err) != codes.NotFound {
 		log.V(1).Error(err, "Error deleting remote dashboards-folder", "id", id)
 		return fmt.Errorf("error deleting remote dashboards-folder %s: %w", id, err)

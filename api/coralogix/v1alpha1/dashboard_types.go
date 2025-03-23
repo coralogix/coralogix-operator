@@ -27,6 +27,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	"github.com/coralogix/coralogix-operator/internal/config"
 	"google.golang.org/protobuf/encoding/protojson"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -40,6 +41,9 @@ type DashboardSpec struct {
 	GzipContentJson []byte `json:"gzipJson,omitempty"`
 	// +optional
 	URL *string `json:"url,omitempty"`
+	// model from configmap
+	// +optional
+	ConfigMap *v1.ConfigMapKeySelector `json:"configMap,omitempty"`
 	// +optional
 	FolderRef *DashboardFolderRef `json:"folderRef,omitempty"`
 }
@@ -57,6 +61,17 @@ func (in *DashboardSpec) ExtractDashboardFromSpec(ctx context.Context, namespace
 		contentJson = string(content)
 	} else if url := in.URL; url != nil {
 		//dashboard = *url
+	} else if configMap := in.ConfigMap; configMap != nil {
+		dashboardConfigMap := &v1.ConfigMap{}
+		if err := config.GetClient().Get(ctx, client.ObjectKey{Namespace: namespace, Name: configMap.Name}, dashboardConfigMap); err != nil {
+			return nil, err
+		}
+
+		if content, ok := dashboardConfigMap.Data[configMap.Key]; ok {
+			contentJson = content
+		}
+
+		return nil, fmt.Errorf("cannot find key '%v' in config map '%v'", configMap.Key, configMap.Name)
 	}
 
 	if err := protojson.Unmarshal([]byte(contentJson), dashboard); err != nil {
@@ -78,15 +93,24 @@ func (in *DashboardSpec) ExtractDashboardFromSpec(ctx context.Context, namespace
 						Segments: segments,
 					},
 				}
-			} else if resourceRef := folderRef.ResourceRef; resourceRef != nil {
-				if resourceRef.Namespace == nil {
-					resourceRef.Namespace = &namespace
+			}
+		} else if resourceRef := folderRef.ResourceRef; resourceRef != nil {
+			if resourceRef.Namespace == nil {
+				resourceRef.Namespace = &namespace
+			}
+			df := &DashboardsFolder{}
+			if err := config.GetClient().Get(ctx, client.ObjectKey{Name: resourceRef.Name, Namespace: *resourceRef.Namespace}, df); err != nil {
+				return nil, fmt.Errorf("failed to get DashboardsFolder: %w", err)
+			}
+
+			if df.Status.ID != nil && *df.Status.ID != "" {
+				dashboard.Folder = &cxsdk.DashboardFolderID{
+					FolderId: &cxsdk.UUID{
+						Value: *df.Status.ID,
+					},
 				}
-				df := &DashboardsFolder{}
-				err := config.GetClient().Get(ctx, client.ObjectKey{Name: resourceRef.Name, Namespace: *resourceRef.Namespace}, df)
-				if err != nil {
-					return nil, fmt.Errorf("failed to get DashboardsFolder: %w", err)
-				}
+			} else {
+				return nil, fmt.Errorf("failed to get DashboardsFolder ID")
 			}
 		}
 	}

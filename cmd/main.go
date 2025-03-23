@@ -230,6 +230,13 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Dashboard")
 		os.Exit(1)
 	}
+	if err = (&v1alpha1controllers.DashboardsFolderReconciler{
+		DashboardsFoldersClient: clientSet.DashboardsFolders(),
+		Interval:                cfg.ReconcileIntervals[utils.DashboardsFolderKind],
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "DashboardsFolder")
+		os.Exit(1)
+	}
 
 	if cfg.EnableNotificationCenter {
 		if err = (&v1alpha1controllers.ConnectorReconciler{
@@ -251,13 +258,6 @@ func main() {
 			Interval:            cfg.ReconcileIntervals[utils.GlobalRouterKind],
 		}).SetupWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "GlobalRouter")
-			os.Exit(1)
-		}
-		if err = (&v1alpha1controllers.DashboardsFolderReconciler{
-			DashboardsFoldersClient: nil,
-			Interval:                cfg.ReconcileIntervals[utils.DashboardsFolderKind],
-		}).SetupWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create controller", "controller", "DashboardsFolder")
 			os.Exit(1)
 		}
 	}
