@@ -10,6 +10,26 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /validate-coralogix-com-v1alpha1-alertscheduler
+  failurePolicy: Fail
+  name: valertscheduler-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - coralogix.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - alertschedulers
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /validate-coralogix-com-v1alpha1-apikey
   failurePolicy: Fail
   name: vapikey-v1alpha1.kb.io

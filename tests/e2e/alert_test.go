@@ -88,7 +88,7 @@ var _ = Describe("Alert", Ordered, func() {
 					Destinations: []coralogixv1beta1.Destination{
 						{
 							NotifyOn: coralogixv1beta1.NotifyOnTriggeredOnly,
-							DestinationType: coralogixv1beta1.DestinationType{
+							DestinationType: &coralogixv1beta1.DestinationType{
 								Slack: &coralogixv1beta1.SlackDestination{
 									ConnectorRef: &coralogixv1beta1.NCRef{
 										ResourceRef: &coralogixv1beta1.ResourceRef{

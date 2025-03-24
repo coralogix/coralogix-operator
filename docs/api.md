@@ -11,6 +11,8 @@ Resource Types:
 
 - [Alert](#alert)
 
+- [AlertScheduler](#alertscheduler)
+
 - [ApiKey](#apikey)
 
 - [Connector](#connector)
@@ -2405,6 +2407,832 @@ AlertStatus defines the observed state of Alert
 
 ### Alert.status.conditions[index]
 <sup><sup>[↩ Parent](#alertstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## AlertScheduler
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+AlertScheduler is the Schema for the alertschedulers API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>AlertScheduler</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertschedulerspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          AlertSchedulerSpec defines the desired state Coralogix AlertScheduler.
+It is used to suppress or activate alerts based on a schedule.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertschedulerstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          AlertSchedulerStatus defines the observed state of AlertScheduler.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertScheduler.spec
+<sup><sup>[↩ Parent](#alertscheduler)</sup></sup>
+
+
+
+AlertSchedulerSpec defines the desired state Coralogix AlertScheduler.
+It is used to suppress or activate alerts based on a schedule.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Alert Scheduler name.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          Alert Scheduler description.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Alert Scheduler enabled. If set to `false`, the alert scheduler will be disabled. True by default.<br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertschedulerspecfilter">filter</a></b></td>
+        <td>object</td>
+        <td>
+          Alert Scheduler filter. Exactly one of `metaLabels` or `alerts` can be set.
+If none of them set, all alerts will be affected.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertschedulerspecmetalabelsindex">metaLabels</a></b></td>
+        <td>[]object</td>
+        <td>
+          Alert Scheduler meta labels.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertschedulerspecschedule">schedule</a></b></td>
+        <td>object</td>
+        <td>
+          Alert Scheduler schedule. Exactly one of `oneTime` or `recurring` must be set.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertScheduler.spec.filter
+<sup><sup>[↩ Parent](#alertschedulerspec)</sup></sup>
+
+
+
+Alert Scheduler filter. Exactly one of `metaLabels` or `alerts` can be set.
+If none of them set, all alerts will be affected.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>whatExpression</b></td>
+        <td>string</td>
+        <td>
+          DataPrime query expression - https://coralogix.com/docs/dataprime-query-language.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertschedulerspecfilteralertsindex">alerts</a></b></td>
+        <td>[]object</td>
+        <td>
+          Alert references. Conflicts with `metaLabels`.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertschedulerspecfiltermetalabelsindex">metaLabels</a></b></td>
+        <td>[]object</td>
+        <td>
+          Alert Scheduler meta labels. Conflicts with `alerts`.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertScheduler.spec.filter.alerts[index]
+<sup><sup>[↩ Parent](#alertschedulerspecfilter)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertschedulerspecfilteralertsindexresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          Alert custom resource name and namespace. If namespace is not set, the AlertScheduler namespace will be used.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertScheduler.spec.filter.alerts[index].resourceRef
+<sup><sup>[↩ Parent](#alertschedulerspecfilteralertsindex)</sup></sup>
+
+
+
+Alert custom resource name and namespace. If namespace is not set, the AlertScheduler namespace will be used.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertScheduler.spec.filter.metaLabels[index]
+<sup><sup>[↩ Parent](#alertschedulerspecfilter)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertScheduler.spec.metaLabels[index]
+<sup><sup>[↩ Parent](#alertschedulerspec)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertScheduler.spec.schedule
+<sup><sup>[↩ Parent](#alertschedulerspec)</sup></sup>
+
+
+
+Alert Scheduler schedule. Exactly one of `oneTime` or `recurring` must be set.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          The operation to perform. Can be `mute` or `activate`.<br/>
+          <br/>
+            <i>Enum</i>: mute, activate<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertschedulerspecscheduleonetime">oneTime</a></b></td>
+        <td>object</td>
+        <td>
+          One-time schedule. Conflicts with `recurring`.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertschedulerspecschedulerecurring">recurring</a></b></td>
+        <td>object</td>
+        <td>
+          Recurring schedule. Conflicts with `oneTime`.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertScheduler.spec.schedule.oneTime
+<sup><sup>[↩ Parent](#alertschedulerspecschedule)</sup></sup>
+
+
+
+One-time schedule. Conflicts with `recurring`.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>startTime</b></td>
+        <td>string</td>
+        <td>
+          The start time of the time frame. In isodate format. For example, `2021-01-01T00:00:00.000`.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>timezone</b></td>
+        <td>string</td>
+        <td>
+          The timezone of the time frame. For example, `UTC-4` or `UTC+10`.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertschedulerspecscheduleonetimeduration">duration</a></b></td>
+        <td>object</td>
+        <td>
+          The duration from the start time to wait before the operation is performed.
+Conflicts with `endTime`.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>endTime</b></td>
+        <td>string</td>
+        <td>
+          The end time of the time frame. In isodate format. For example, `2021-01-01T00:00:00.000`.
+Conflicts with `duration`.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertScheduler.spec.schedule.oneTime.duration
+<sup><sup>[↩ Parent](#alertschedulerspecscheduleonetime)</sup></sup>
+
+
+
+The duration from the start time to wait before the operation is performed.
+Conflicts with `endTime`.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>forOver</b></td>
+        <td>integer</td>
+        <td>
+          The number of time units to wait before the alert is triggered. For example,
+if the frequency is set to `hours` and the value is set to `2`, the alert will be triggered after 2 hours.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>frequency</b></td>
+        <td>enum</td>
+        <td>
+          The time unit to wait before the alert is triggered. Can be `minutes`, `hours` or `days`.<br/>
+          <br/>
+            <i>Enum</i>: minutes, hours, days<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertScheduler.spec.schedule.recurring
+<sup><sup>[↩ Parent](#alertschedulerspecschedule)</sup></sup>
+
+
+
+Recurring schedule. Conflicts with `oneTime`.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>always</b></td>
+        <td>object</td>
+        <td>
+          Recurring always.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertschedulerspecschedulerecurringdynamic">dynamic</a></b></td>
+        <td>object</td>
+        <td>
+          Dynamic schedule.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertScheduler.spec.schedule.recurring.dynamic
+<sup><sup>[↩ Parent](#alertschedulerspecschedulerecurring)</sup></sup>
+
+
+
+Dynamic schedule.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertschedulerspecschedulerecurringdynamicfrequency">frequency</a></b></td>
+        <td>object</td>
+        <td>
+          The rule will be activated in a recurring mode (daily, weekly or monthly).<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>repeatEvery</b></td>
+        <td>integer</td>
+        <td>
+          The rule will be activated in a recurring mode according to the interval.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertschedulerspecschedulerecurringdynamictimeframe">timeFrame</a></b></td>
+        <td>object</td>
+        <td>
+          The time frame of the rule.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>terminationDate</b></td>
+        <td>string</td>
+        <td>
+          The termination date of the rule.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertScheduler.spec.schedule.recurring.dynamic.frequency
+<sup><sup>[↩ Parent](#alertschedulerspecschedulerecurringdynamic)</sup></sup>
+
+
+
+The rule will be activated in a recurring mode (daily, weekly or monthly).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>daily</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertschedulerspecschedulerecurringdynamicfrequencymonthly">monthly</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertschedulerspecschedulerecurringdynamicfrequencyweekly">weekly</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertScheduler.spec.schedule.recurring.dynamic.frequency.monthly
+<sup><sup>[↩ Parent](#alertschedulerspecschedulerecurringdynamicfrequency)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>days</b></td>
+        <td>[]integer</td>
+        <td>
+          The days of the month to activate the rule.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertScheduler.spec.schedule.recurring.dynamic.frequency.weekly
+<sup><sup>[↩ Parent](#alertschedulerspecschedulerecurringdynamicfrequency)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>days</b></td>
+        <td>[]enum</td>
+        <td>
+          The days of the week to activate the rule.<br/>
+          <br/>
+            <i>Enum</i>: Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertScheduler.spec.schedule.recurring.dynamic.timeFrame
+<sup><sup>[↩ Parent](#alertschedulerspecschedulerecurringdynamic)</sup></sup>
+
+
+
+The time frame of the rule.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>startTime</b></td>
+        <td>string</td>
+        <td>
+          The start time of the time frame. In isodate format. For example, `2021-01-01T00:00:00.000`.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>timezone</b></td>
+        <td>string</td>
+        <td>
+          The timezone of the time frame. For example, `UTC-4` or `UTC+10`.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertschedulerspecschedulerecurringdynamictimeframeduration">duration</a></b></td>
+        <td>object</td>
+        <td>
+          The duration from the start time to wait before the operation is performed.
+Conflicts with `endTime`.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>endTime</b></td>
+        <td>string</td>
+        <td>
+          The end time of the time frame. In isodate format. For example, `2021-01-01T00:00:00.000`.
+Conflicts with `duration`.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertScheduler.spec.schedule.recurring.dynamic.timeFrame.duration
+<sup><sup>[↩ Parent](#alertschedulerspecschedulerecurringdynamictimeframe)</sup></sup>
+
+
+
+The duration from the start time to wait before the operation is performed.
+Conflicts with `endTime`.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>forOver</b></td>
+        <td>integer</td>
+        <td>
+          The number of time units to wait before the alert is triggered. For example,
+if the frequency is set to `hours` and the value is set to `2`, the alert will be triggered after 2 hours.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>frequency</b></td>
+        <td>enum</td>
+        <td>
+          The time unit to wait before the alert is triggered. Can be `minutes`, `hours` or `days`.<br/>
+          <br/>
+            <i>Enum</i>: minutes, hours, days<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertScheduler.status
+<sup><sup>[↩ Parent](#alertscheduler)</sup></sup>
+
+
+
+AlertSchedulerStatus defines the observed state of AlertScheduler.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertschedulerstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertScheduler.status.conditions[index]
+<sup><sup>[↩ Parent](#alertschedulerstatus)</sup></sup>
 
 
 
