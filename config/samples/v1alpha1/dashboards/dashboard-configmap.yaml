@@ -1,12 +1,9 @@
-apiVersion: coralogix.com/v1alpha1
-kind: Dashboard
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  labels:
-    app.kubernetes.io/name: coralogix-operator
-    app.kubernetes.io/managed-by: kustomize
-  name: dashboard-sample
-spec:
-  contentJson: >
+  name: dashboard-definition
+data:
+  json: >
     {
       "name": "OpenTelemetry Collector Dashboard",
       "description": "Gives insights into your Collector stats.",
@@ -1282,30 +1279,15 @@ spec:
     }
 
 
-  folderRef:
-    backendRef:
-      path: parent-folder/folder
 ---
 apiVersion: coralogix.com/v1alpha1
-kind: DashboardsFolder
+kind: Dashboard
 metadata:
   labels:
     app.kubernetes.io/name: coralogix-operator
     app.kubernetes.io/managed-by: kustomize
-  name: folder
+  name: dashboard-from-configmap
 spec:
-  name: folder
-  customId: "efa8b720-c5d9-4c08-bb27-e3de0837a8d2"
-  parentFolderRef:
-    name: parent-folder
----
-apiVersion: coralogix.com/v1alpha1
-kind: DashboardsFolder
-metadata:
-  labels:
-    app.kubernetes.io/name: coralogix-operator
-    app.kubernetes.io/managed-by: kustomize
-  name: parent-folder
-spec:
-  name: parent-folder
-  customId: "ffa8b720-c5d9-4c08-bb27-e3de0837a8d2"
+  configMap:
+    name: dashboard-definition
+    key: json

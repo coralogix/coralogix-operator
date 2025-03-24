@@ -39,6 +39,9 @@ spec:
           spec:
             description: DashboardSpec defines the desired state of Dashboard.
             properties:
+              configMap:
+                description: model from configmap
+                x-kubernetes-preserve-unknown-fields: true
               contentJson:
                 type: string
               folderRef:
@@ -66,8 +69,6 @@ spec:
                 description: GzipJson the model's JSON compressed with Gzip. Base64-encoded
                   when in YAML.
                 format: byte
-                type: string
-              url:
                 type: string
             type: object
           status:

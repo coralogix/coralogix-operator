@@ -44,6 +44,7 @@ type DashboardReconciler struct {
 // +kubebuilder:rbac:groups=coralogix.com,resources=dashboards,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=coralogix.com,resources=dashboards/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=coralogix.com,resources=dashboards/finalizers,verbs=update
+// +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch
 
 func (r *DashboardReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	return coralogixreconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.Dashboard{}, r)

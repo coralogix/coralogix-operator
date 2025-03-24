@@ -21,6 +21,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -944,10 +945,10 @@ func (in *DashboardSpec) DeepCopyInto(out *DashboardSpec) {
 		*out = make([]byte, len(*in))
 		copy(*out, *in)
 	}
-	if in.URL != nil {
-		in, out := &in.URL, &out.URL
-		*out = new(string)
-		**out = **in
+	if in.ConfigMap != nil {
+		in, out := &in.ConfigMap, &out.ConfigMap
+		*out = new(corev1.ConfigMapKeySelector)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.FolderRef != nil {
 		in, out := &in.FolderRef, &out.FolderRef

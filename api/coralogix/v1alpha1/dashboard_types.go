@@ -39,10 +39,10 @@ type DashboardSpec struct {
 	// GzipJson the model's JSON compressed with Gzip. Base64-encoded when in YAML.
 	// +optional
 	GzipContentJson []byte `json:"gzipJson,omitempty"`
-	// +optional
-	URL *string `json:"url,omitempty"`
 	// model from configmap
-	// +optional
+	//+optional
+	// +kubebuilder:validation:Schemaless
+	// +kubebuilder:pruning:PreserveUnknownFields
 	ConfigMap *v1.ConfigMapKeySelector `json:"configMap,omitempty"`
 	// +optional
 	FolderRef *DashboardFolderRef `json:"folderRef,omitempty"`
@@ -59,19 +59,16 @@ func (in *DashboardSpec) ExtractDashboardFromSpec(ctx context.Context, namespace
 			return nil, fmt.Errorf("failed to gunzip contentJson: %w", err)
 		}
 		contentJson = string(content)
-	} else if url := in.URL; url != nil {
-		//dashboard = *url
 	} else if configMap := in.ConfigMap; configMap != nil {
 		dashboardConfigMap := &v1.ConfigMap{}
 		if err := config.GetClient().Get(ctx, client.ObjectKey{Namespace: namespace, Name: configMap.Name}, dashboardConfigMap); err != nil {
 			return nil, err
 		}
-
 		if content, ok := dashboardConfigMap.Data[configMap.Key]; ok {
 			contentJson = content
+		} else {
+			return nil, fmt.Errorf("cannot find key '%v' in config map '%v', dashboardConfigMap - %v", configMap.Key, configMap.Name, dashboardConfigMap)
 		}
-
-		return nil, fmt.Errorf("cannot find key '%v' in config map '%v'", configMap.Key, configMap.Name)
 	}
 
 	if err := protojson.Unmarshal([]byte(contentJson), dashboard); err != nil {

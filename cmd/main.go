@@ -38,7 +38,6 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/internal/config"
 	controllers "github.com/coralogix/coralogix-operator/internal/controller"
@@ -68,7 +67,6 @@ func init() {
 	utilruntime.Must(v1beta1.AddToScheme(scheme))
 
 	utilruntime.Must(prometheusv1alpha.AddToScheme(scheme))
-	utilruntime.Must(coralogixv1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 

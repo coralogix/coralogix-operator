@@ -3769,6 +3769,13 @@ DashboardSpec defines the desired state of Dashboard.
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>configMap</b></td>
+        <td></td>
+        <td>
+          model from configmap<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>contentJson</b></td>
         <td>string</td>
         <td>

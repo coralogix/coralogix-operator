@@ -4,7 +4,7 @@ metadata:
   labels:
     app.kubernetes.io/name: coralogix-operator
     app.kubernetes.io/managed-by: kustomize
-  name: dashboard-sample
+  name: dashboard-gzip
 spec:
   folderRef:
     resourceRef:
