@@ -16,7 +16,6 @@ package monitoring
 
 import (
 	"context"
-	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -53,7 +52,7 @@ func NewResourceInfoCollector() *ResourceInfoCollector {
 			[]string{"kind", "name", "namespace", "status"},
 			nil,
 		),
-		gvks: getGVKsToMonitor(),
+		gvks: utils.GetGVKs(config.GetScheme(), config.GetConfig().EnableNotificationCenter),
 	}
 }
 
@@ -96,44 +95,6 @@ func (c *ResourceInfoCollector) Collect(ch chan<- prometheus.Metric) {
 			ch <- metric
 		}
 	}
-}
-
-func getGVKsToMonitor() []schema.GroupVersionKind {
-	result := []schema.GroupVersionKind{
-		{Group: utils.MonitoringAPIGroup, Version: utils.V1APIVersion, Kind: utils.PrometheusRuleKind},
-	}
-
-	result = append(result, getGVKsInVersion(utils.V1alpha1APIVersion)...)
-	result = append(result, getGVKsInVersion(utils.V1beta1APIVersion)...)
-	return result
-}
-
-func getGVKsInVersion(version string) []schema.GroupVersionKind {
-	var result []schema.GroupVersionKind
-
-	groupVersion := schema.GroupVersion{Group: utils.CoralogixAPIGroup, Version: version}
-	knownTypes := config.GetScheme().KnownTypes(groupVersion)
-	for kind := range knownTypes {
-		// Skip v1alpha1 Alert since we pick it up from v1beta1
-		if kind == utils.AlertKind && version == utils.V1alpha1APIVersion {
-			continue
-		}
-		// Skip NotificationCenter CRDs if the feature is disabled
-		if kind == utils.ConnectorKind || kind == utils.PresetKind || kind == utils.GlobalRouterKind {
-			if !config.GetConfig().EnableNotificationCenter {
-				continue
-			}
-		}
-		// skip List, Options and Event types. e.g. AlertList, ListOptions, WatchEvent
-		if strings.HasSuffix(kind, "List") ||
-			strings.HasSuffix(kind, "Options") ||
-			strings.HasSuffix(kind, "Event") {
-			continue
-		}
-		result = append(result, groupVersion.WithKind(kind))
-	}
-
-	return result
 }
 
 func listResourcesInGVK(gvk schema.GroupVersionKind) ([]unstructured.Unstructured, error) {
