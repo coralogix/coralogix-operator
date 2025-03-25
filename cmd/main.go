@@ -71,6 +71,7 @@ func init() {
 }
 
 func main() {
+	config.InitScheme(scheme)
 	cfg := config.InitConfig(setupLog)
 
 	// if the enable-http2 flag is false (the default), http/2 should be disabled
@@ -131,7 +132,6 @@ func main() {
 		OperatorVersion))
 
 	config.InitClient(mgr.GetClient())
-	config.InitScheme(scheme)
 
 	if err = (&v1alpha1controllers.RuleGroupReconciler{
 		RuleGroupClient: clientSet.RuleGroups(),

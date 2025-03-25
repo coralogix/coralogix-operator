@@ -33,17 +33,19 @@ import (
 )
 
 // DashboardSpec defines the desired state of Dashboard.
+// +kubebuilder:validation:XValidation:rule="!(has(self.json) && has(self.gzipJson))", message="Only one of json or gzipJson can be declared at the same time"
+// +kubebuilder:validation:XValidation:rule="!(has(self.json) && has(self.configMapRef))", message="Only one of json or configMapRef can be declared at the same time"
+// +kubebuilder:validation:XValidation:rule="!(has(self.gzipJson) && has(self.configMapRef))", message="Only one of gzipJson or configMapRef can be declared at the same time"
+// +kubebuilder:validation:XValidation:rule="!(has(self.configMapRef) || has(self.json) || has(self.gzipJson))", message="One of json, gzipJson or configMapRef is required"
 type DashboardSpec struct {
 	// +optional
-	ContentJson *string `json:"contentJson,omitempty"`
+	Json *string `json:"json,omitempty"`
 	// GzipJson the model's JSON compressed with Gzip. Base64-encoded when in YAML.
 	// +optional
-	GzipContentJson []byte `json:"gzipJson,omitempty"`
+	GzipJson []byte `json:"gzipJson,omitempty"`
 	// model from configmap
 	//+optional
-	// +kubebuilder:validation:Schemaless
-	// +kubebuilder:pruning:PreserveUnknownFields
-	ConfigMap *v1.ConfigMapKeySelector `json:"configMap,omitempty"`
+	ConfigMapRef *v1.ConfigMapKeySelector `json:"configMapRef,omitempty"`
 	// +optional
 	FolderRef *DashboardFolderRef `json:"folderRef,omitempty"`
 }
@@ -51,25 +53,27 @@ type DashboardSpec struct {
 func (in *DashboardSpec) ExtractDashboardFromSpec(ctx context.Context, namespace string) (*cxsdk.Dashboard, error) {
 	dashboard := new(cxsdk.Dashboard)
 	var contentJson string
-	if in.ContentJson != nil {
-		contentJson = *in.ContentJson
-	} else if in.GzipContentJson != nil {
-		content, err := Gunzip(in.GzipContentJson)
+	if in.Json != nil {
+		contentJson = *in.Json
+	} else if in.GzipJson != nil {
+		content, err := Gunzip(in.GzipJson)
 		if err != nil {
 			return nil, fmt.Errorf("failed to gunzip contentJson: %w", err)
 		}
 		contentJson = string(content)
-	} else if configMap := in.ConfigMap; configMap != nil {
-		dashboardConfigMap := &v1.ConfigMap{}
-		if err := config.GetClient().Get(ctx, client.ObjectKey{Namespace: namespace, Name: configMap.Name}, dashboardConfigMap); err != nil {
-			return nil, err
-		}
-		if content, ok := dashboardConfigMap.Data[configMap.Key]; ok {
-			contentJson = content
-		} else {
-			return nil, fmt.Errorf("cannot find key '%v' in config map '%v', dashboardConfigMap - %v", configMap.Key, configMap.Name, dashboardConfigMap)
-		}
+	} else {
+		return nil, fmt.Errorf("contentJson, GzipContentJson or ConfigMap is required")
 	}
+	//} else if configMap := in.ConfigMapRef; configMap != nil {
+	//	dashboardConfigMap := &v1.ConfigMap{}
+	//	if err := config.GetClient().Get(ctx, client.ObjectKey{Namespace: namespace, Name: configMap.Name}, dashboardConfigMap); err != nil {
+	//		return nil, err
+	//	}
+	//	if content, ok := dashboardConfigMap.Data[configMap.Key]; ok {
+	//		contentJson = content
+	//	} else {
+	//		return nil, fmt.Errorf("cannot find key '%v' in config map '%v', dashboardConfigMap - %v", configMap.Key, configMap.Name, dashboardConfigMap)
+	//	}
 
 	if err := protojson.Unmarshal([]byte(contentJson), dashboard); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal contentJson: %w", err)
@@ -109,6 +113,8 @@ func (in *DashboardSpec) ExtractDashboardFromSpec(ctx context.Context, namespace
 			} else {
 				return nil, fmt.Errorf("failed to get DashboardsFolder ID")
 			}
+		} else {
+			return nil, fmt.Errorf("folderRef.BackendRef or folderRef.ResourceRef is required")
 		}
 	}
 
@@ -141,6 +147,8 @@ func (d *Dashboard) SetConditions(conditions []metav1.Condition) {
 }
 
 // +kubebuilder:object:root=true
+// +kubebuilder:storageversion
+// +kubebuilder:conversion:hub
 // +kubebuilder:subresource:status
 
 // Dashboard is the Schema for the dashboards API.
