@@ -36,17 +36,19 @@ import (
 // +kubebuilder:validation:XValidation:rule="!(has(self.json) && has(self.gzipJson))", message="Only one of json or gzipJson can be declared at the same time"
 // +kubebuilder:validation:XValidation:rule="!(has(self.json) && has(self.configMapRef))", message="Only one of json or configMapRef can be declared at the same time"
 // +kubebuilder:validation:XValidation:rule="!(has(self.gzipJson) && has(self.configMapRef))", message="Only one of gzipJson or configMapRef can be declared at the same time"
-// +kubebuilder:validation:XValidation:rule="!(has(self.configMapRef) || has(self.json) || has(self.gzipJson))", message="One of json, gzipJson or configMapRef is required"
+// +kubebuilder:validation:XValidation:rule="has(self.configMapRef) || has(self.json) || has(self.gzipJson)", message="One of json, gzipJson or configMapRef is required"
 type DashboardSpec struct {
 	// +optional
 	Json *string `json:"json,omitempty"`
 	// GzipJson the model's JSON compressed with Gzip. Base64-encoded when in YAML.
 	// +optional
-	GzipJson []byte `json:"gzipJson,omitempty"`
+	GzipJson *[]byte `json:"gzipJson,omitempty"`
 	// model from configmap
 	//+optional
 	ConfigMapRef *v1.ConfigMapKeySelector `json:"configMapRef,omitempty"`
 	// +optional
+	// +kubebuilder:validation:XValidation:rule="has(self.backendRef) || has(self.resourceRef)", message="One of backendRef or resourceRef is required"
+	// +kubebuilder:validation:XValidation:rule="!(has(self.backendRef) && has(self.resourceRef))", message="Only one of backendRef or resourceRef can be declared at the same time"
 	FolderRef *DashboardFolderRef `json:"folderRef,omitempty"`
 }
 
@@ -56,24 +58,24 @@ func (in *DashboardSpec) ExtractDashboardFromSpec(ctx context.Context, namespace
 	if in.Json != nil {
 		contentJson = *in.Json
 	} else if in.GzipJson != nil {
-		content, err := Gunzip(in.GzipJson)
+		content, err := Gunzip(*in.GzipJson)
 		if err != nil {
 			return nil, fmt.Errorf("failed to gunzip contentJson: %w", err)
 		}
 		contentJson = string(content)
+	} else if configMapRef := in.ConfigMapRef; configMapRef != nil {
+		dashboardConfigMap := &v1.ConfigMap{}
+		if err := config.GetClient().Get(ctx, client.ObjectKey{Namespace: namespace, Name: configMapRef.Name}, dashboardConfigMap); err != nil {
+			return nil, err
+		}
+		if content, ok := dashboardConfigMap.Data[configMapRef.Key]; ok {
+			contentJson = content
+		} else {
+			return nil, fmt.Errorf("cannot find key '%v' in config map '%v'", configMapRef.Key, configMapRef.Name)
+		}
 	} else {
-		return nil, fmt.Errorf("contentJson, GzipContentJson or ConfigMap is required")
+		return nil, fmt.Errorf("json, gzipContentJson or configMapRef is required")
 	}
-	//} else if configMap := in.ConfigMapRef; configMap != nil {
-	//	dashboardConfigMap := &v1.ConfigMap{}
-	//	if err := config.GetClient().Get(ctx, client.ObjectKey{Namespace: namespace, Name: configMap.Name}, dashboardConfigMap); err != nil {
-	//		return nil, err
-	//	}
-	//	if content, ok := dashboardConfigMap.Data[configMap.Key]; ok {
-	//		contentJson = content
-	//	} else {
-	//		return nil, fmt.Errorf("cannot find key '%v' in config map '%v', dashboardConfigMap - %v", configMap.Key, configMap.Name, dashboardConfigMap)
-	//	}
 
 	if err := protojson.Unmarshal([]byte(contentJson), dashboard); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal contentJson: %w", err)

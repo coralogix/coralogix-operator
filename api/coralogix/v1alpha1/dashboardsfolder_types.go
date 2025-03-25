@@ -70,6 +70,8 @@ func (in *DashboardsFolderSpec) ExtractDashboardsFolderFromSpec(ctx context.Cont
 
 type DashboardFolderRef struct {
 	// +optional
+	// +kubebuilder:validation:XValidation:rule="has(self.id) || has(self.path)",message="One of id or path is required"
+	// +kubebuilder:validation:XValidation:rule="!(has(self.id) && has(self.path))",message="Only one of id or path can be declared at the same time"
 	BackendRef *DashboardFolderRefBackendRef `json:"backendRef,omitempty"`
 	// +optional
 	ResourceRef *ResourceRef `json:"resourceRef,omitempty"`
