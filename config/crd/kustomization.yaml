@@ -13,9 +13,6 @@ resources:
   - bases/coralogix.com_tcologspolicies.yaml
   - bases/coralogix.com_tcotracespolicies.yaml
   - bases/coralogix.com_integrations.yaml
-  - bases/coralogix.com_connectors.yaml
-  - bases/coralogix.com_presets.yaml
-  - bases/coralogix.com_globalrouters.yaml
   - bases/coralogix.com_alertschedulers.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
@@ -26,8 +23,6 @@ patchesStrategicMerge:
 - patches/webhook_in_coralogix_alerts.yaml
 #- patches/webhook_in_recordingrulegroupsets.yaml
 #- patches/webhook_in_outboundwebhooks.yaml
-#- patches/webhook_in_coralogix_connectors.yaml
-#- patches/webhook_in_coralogix_presets.yaml
 #+kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # [CERTMANAGER] To enable cert-manager, uncomment all the sections with [CERTMANAGER] prefix.
@@ -43,9 +38,6 @@ patchesStrategicMerge:
 #- patches/cainjection_in_coralogix_tcologspolicies.yaml
 #- patches/cainjection_in_coralogix_tcotracespolicies.yaml
 #- patches/cainjection_in_coralogix_integrations.yaml
-#- patches/cainjection_in_coralogix_connectors.yaml
-#- patches/cainjection_in_coralogix_presets.yaml
-#- patches/cainjection_in_coralogix_globalrouters.yaml
 #- patches/cainjection_in_coralogix_alertschedulers.yaml
 #+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
