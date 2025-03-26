@@ -15,7 +15,7 @@ resources:
   - bases/coralogix.com_integrations.yaml
   - bases/coralogix.com_alertschedulers.yaml
   - bases/coralogix.com_dashboards.yaml
-#  - bases/coralogix.com_dashboardsfolders.yaml
+  - bases/coralogix.com_dashboardsfolders.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
