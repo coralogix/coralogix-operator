@@ -1291,4 +1291,3 @@ spec:
   configMapRef:
     name: dashboard-definition
     key: json
-  json:

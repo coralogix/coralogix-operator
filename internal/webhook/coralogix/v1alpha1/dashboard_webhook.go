@@ -94,17 +94,20 @@ func validateDashboardSpec(ctx context.Context, spec coralogixv1alpha1.Dashboard
 		if contentJson, ok := dashboardConfigMap.Data[configMapRef.Key]; ok {
 			dashboardBackendSchema := new(cxsdk.Dashboard)
 			if err := protojson.Unmarshal([]byte(contentJson), dashboardBackendSchema); err != nil {
-				return admission.Warnings{fmt.Sprintf("failed to unmarshal contentJson: %s", err.Error())}, nil
+				return admission.Warnings{fmt.Sprintf("failed to unmarshal contentJson from config map: %s", err.Error())}, nil
 			}
+			return nil, nil
 		} else {
 			return admission.Warnings{fmt.Sprintf("cannot find key '%v' in config map '%v'", configMapRef.Key, configMapRef.Name)}, nil
 		}
 	}
 
-	var contentJson string
+	var contentJson, source string
 	if json := spec.Json; json != nil {
+		source = "json"
 		contentJson = *json
 	} else if gzipJson := spec.GzipJson; gzipJson != nil {
+		source = "gzipJson"
 		content, err := coralogixv1alpha1.Gunzip(gzipJson)
 		if err != nil {
 			return nil, fmt.Errorf("failed to gunzip contentJson: %w", err)
@@ -114,7 +117,7 @@ func validateDashboardSpec(ctx context.Context, spec coralogixv1alpha1.Dashboard
 
 	dashboardBackendSchema := new(cxsdk.Dashboard)
 	if err := protojson.Unmarshal([]byte(contentJson), dashboardBackendSchema); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal contentJson: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal contentJson from %s: %w", source, err)
 	}
 
 	return nil, nil
