@@ -58,9 +58,9 @@ var _ = Describe("DashboardsFolder", Ordered, func() {
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: dashboardFolderName, Namespace: testNamespace}, fetchedDashboardsFolder)).To(Succeed())
 			if fetchedDashboardsFolder.Status.ID != nil {
+				dashboardFolderID = *fetchedDashboardsFolder.Status.ID
 				return nil
 			}
-			dashboardFolderID = *fetchedDashboardsFolder.Status.ID
 			return fmt.Errorf("DashboardsFolder ID is not set")
 		}, time.Minute, time.Second).Should(Succeed())
 

@@ -56,9 +56,9 @@ var _ = Describe("Dashboard", Ordered, func() {
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: dashboardName, Namespace: testNamespace}, fetchedDashboard)).To(Succeed())
 			if fetchedDashboard.Status.ID != nil {
+				dashboardID = *fetchedDashboard.Status.ID
 				return nil
 			}
-			dashboardID = *fetchedDashboard.Status.ID
 			return fmt.Errorf("Dashboard ID is not set")
 		}, time.Minute, time.Second).Should(Succeed())
 
