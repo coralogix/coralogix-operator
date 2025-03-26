@@ -50,7 +50,7 @@ import (
 	//+kubebuilder:scaffold:imports
 )
 
-const OperatorVersion = "0.3.6"
+const OperatorVersion = "0.3.7"
 
 var (
 	scheme   = k8sruntime.NewScheme()
@@ -307,6 +307,13 @@ func main() {
 		setupLog.Info("Webhooks are disabled")
 	}
 
+	// nolint:goconst
+	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
+		if err = webhookcoralogixv1alpha1.SetupDashboardWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Dashboard")
+			os.Exit(1)
+		}
+	}
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {

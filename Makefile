@@ -5,7 +5,6 @@ IMG ?= coralogixrepo/coralogix-operator:latest
 ENABLE_WEBHOOKS ?= false
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.25.0
-LDFLAGS ?= "-X google.golang.org/protobuf/reflect/protoregistry.conflictPolicy=warn"
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -59,7 +58,7 @@ vet: ## Run go vet against code.
 
 .PHONY: unit-tests
 unit-tests: manifests generate fmt vet envtest ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./internal/controller/... -ldflags $(LDFLAGS) -coverprofile cover.out
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./internal/controller/... -coverprofile cover.out
 
 ##@ Documentation
 .PHONY: generate-api-docs
@@ -70,18 +69,18 @@ generate-api-docs: crdoc ## Generate API documentation.
 
 .PHONY: build
 build: generate fmt vet ## Build manager binary.
-	go build -ldflags=$(LDFLAGS) -o bin/manager cmd/main.go
+	go build -o bin/manager cmd/main.go
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
-	go run -ldflags=$(LDFLAGS) cmd/main.go
+	go run cmd/main.go
 
 # If you wish built the manager image targeting other platforms you can use the --platform flag.
 # (i.e. docker build --platform linux/arm64 ). However, you must enable docker buildKit for it.
 # More info: https://docs.docker.com/develop/develop-images/build_enhancements/
 .PHONY: docker-build
 docker-build:  ## Build docker image with the manager.
-	docker build --build-arg LDFLAGS=${LDFLAGS} -t ${IMG} .
+	docker build -t ${IMG} .
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
@@ -189,7 +188,7 @@ integration-tests:
 
 .PHONY: e2e-tests
 e2e-tests:
-	go test ./tests/e2e/ -ldflags $(LDFLAGS) -ginkgo.v -v
+	go test ./tests/e2e/ -ginkgo.v -v
 
 .PHONY: helm-sync-check
 helm-sync-check:

@@ -60,13 +60,6 @@ var (
 		"US2":     "US2",
 	}
 	validRegions = getKeys(operatorRegionToSdkRegion)
-	crds         = []string{
-		utils.RuleGroupKind, utils.AlertKind, utils.RecordingRuleGroupSetKind, utils.OutboundWebhookKind,
-		utils.ApiKeyKind, utils.CustomRoleKind, utils.ScopeKind, utils.GroupKind, utils.TCOLogsPoliciesKind,
-		utils.TCOTracesPoliciesKind, utils.IntegrationKind, utils.ConnectorKind, utils.PresetKind,
-		utils.GlobalRouterKind, utils.PrometheusRuleKind, utils.DashboardKind, utils.DashboardsFolderKind,
-		utils.GlobalRouterKind, utils.AlertSchedulerKind, utils.PrometheusRuleKind,
-	}
 )
 
 type Config struct {
@@ -169,15 +162,16 @@ func GetConfig() *Config {
 
 func getReconcileIntervals() map[string]*string {
 	result := make(map[string]*string)
-	for _, crd := range crds {
-		interval := os.Getenv(fmt.Sprintf("%s_RECONCILE_INTERVAL_SECONDS", strings.ToUpper(crd)))
+	gvks := utils.GetGVKs(GetScheme(), cfg.EnableNotificationCenter)
+	for _, gvk := range gvks {
+		interval := os.Getenv(fmt.Sprintf("%s_RECONCILE_INTERVAL_SECONDS", strings.ToUpper(gvk.Kind)))
 		flag.StringVar(
 			&interval,
-			fmt.Sprintf("%s-reconcile-interval-seconds", strings.ToLower(crd)),
+			fmt.Sprintf("%s-reconcile-interval-seconds", strings.ToLower(gvk.Kind)),
 			interval,
-			fmt.Sprintf("The interval in seconds between succeding reconciliations for %s", crd),
+			fmt.Sprintf("The interval in seconds between succeding reconciliations for %s", gvk.Kind),
 		)
-		result[crd] = &interval
+		result[gvk.Kind] = &interval
 	}
 
 	return result

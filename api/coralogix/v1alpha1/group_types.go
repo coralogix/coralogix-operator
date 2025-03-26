@@ -56,6 +56,13 @@ type GroupScope struct {
 	ResourceRef *ResourceRef `json:"resourceRef"`
 }
 
+type ResourceRef struct {
+	Name string `json:"name"`
+
+	// +optional
+	Namespace *string `json:"namespace,omitempty"`
+}
+
 func (g *Group) ExtractCreateGroupRequest(
 	ctx context.Context,
 	cxClient *cxsdk.ClientSet) (*cxsdk.CreateTeamGroupRequest, error) {

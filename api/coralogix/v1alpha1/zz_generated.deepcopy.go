@@ -1110,12 +1110,8 @@ func (in *DashboardSpec) DeepCopyInto(out *DashboardSpec) {
 	}
 	if in.GzipJson != nil {
 		in, out := &in.GzipJson, &out.GzipJson
-		*out = new([]byte)
-		if **in != nil {
-			in, out := *in, *out
-			*out = make([]byte, len(*in))
-			copy(*out, *in)
-		}
+		*out = make([]byte, len(*in))
+		copy(*out, *in)
 	}
 	if in.ConfigMapRef != nil {
 		in, out := &in.ConfigMapRef, &out.ConfigMapRef

@@ -33,16 +33,13 @@ import (
 )
 
 // DashboardSpec defines the desired state of Dashboard.
-// +kubebuilder:validation:XValidation:rule="!(has(self.json) && has(self.gzipJson))", message="Only one of json or gzipJson can be declared at the same time"
 // +kubebuilder:validation:XValidation:rule="!(has(self.json) && has(self.configMapRef))", message="Only one of json or configMapRef can be declared at the same time"
-// +kubebuilder:validation:XValidation:rule="!(has(self.gzipJson) && has(self.configMapRef))", message="Only one of gzipJson or configMapRef can be declared at the same time"
-// +kubebuilder:validation:XValidation:rule="has(self.configMapRef) || has(self.json) || has(self.gzipJson)", message="One of json, gzipJson or configMapRef is required"
 type DashboardSpec struct {
 	// +optional
 	Json *string `json:"json,omitempty"`
 	// GzipJson the model's JSON compressed with Gzip. Base64-encoded when in YAML.
 	// +optional
-	GzipJson *[]byte `json:"gzipJson,omitempty"`
+	GzipJson []byte `json:"gzipJson,omitempty"`
 	// model from configmap
 	//+optional
 	ConfigMapRef *v1.ConfigMapKeySelector `json:"configMapRef,omitempty"`
@@ -58,7 +55,7 @@ func (in *DashboardSpec) ExtractDashboardFromSpec(ctx context.Context, namespace
 	if in.Json != nil {
 		contentJson = *in.Json
 	} else if in.GzipJson != nil {
-		content, err := Gunzip(*in.GzipJson)
+		content, err := Gunzip(in.GzipJson)
 		if err != nil {
 			return nil, fmt.Errorf("failed to gunzip contentJson: %w", err)
 		}

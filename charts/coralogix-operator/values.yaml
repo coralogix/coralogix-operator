@@ -130,9 +130,6 @@ coralogixOperator:
     tcoLogsPolicies: ""
     tcoTracesPolicies: ""
     integration: ""
-    connector: ""
-    preset: ""
-    globalRouter: ""
     alertScheduler: ""
     prometheusRule: ""
 

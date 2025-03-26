@@ -266,25 +266,10 @@ func validateAlertType(alertType coralogixv1beta1.AlertTypeDefinition, groupBy [
 		if len(groupBy) > 0 {
 			return admission.Warnings{"group by is not supported for TracingImmediate alert type"}, fmt.Errorf("group by is not supported for TracingImmediate alert type")
 		}
-	case alertType.MetricThreshold != nil:
-		return validateMetricThreshold(alertType.MetricThreshold)
 	case alertType.Flow != nil:
 		return validateFlow(alertType.Flow)
 	}
 
-	return nil, nil
-}
-
-func validateMetricThreshold(metricThreshold *coralogixv1beta1.MetricThreshold) (admission.Warnings, error) {
-	return validateMissingValues(metricThreshold.MissingValues)
-}
-
-func validateMissingValues(missingValues coralogixv1beta1.MetricMissingValues) (admission.Warnings, error) {
-	if !missingValues.ReplaceWithZero && missingValues.MinNonNullValuesPct == nil {
-		return admission.Warnings{"missingValues.minNonNullValuesPct is required when missingValues.replaceWithZero is false"}, fmt.Errorf("missingValues.minNonNullValuesPct is required when missingValues.replaceWithZero is false")
-	} else if missingValues.ReplaceWithZero && missingValues.MinNonNullValuesPct != nil {
-		return admission.Warnings{"missingValues.minNonNullValuesPct should not be set when missingValues.replaceWithZero is true"}, fmt.Errorf("missingValues.minNonNullValuesPct should not be set when missingValues.replaceWithZero is true")
-	}
 	return nil, nil
 }
 

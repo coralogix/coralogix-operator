@@ -65,6 +65,10 @@ spec:
             required:
             - name
             type: object
+            x-kubernetes-validations:
+            - message: Only one of parentFolderID or parentFolderRef can be declared
+                at the same time
+              rule: '!(has(self.parentFolderId) && has(self.parentFolderRef))'
           status:
             description: DashboardsFolderStatus defines the observed state of DashboardsFolder.
             properties:

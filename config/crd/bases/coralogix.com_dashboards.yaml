@@ -104,16 +104,9 @@ spec:
                 type: string
             type: object
             x-kubernetes-validations:
-            - message: Only one of json or gzipJson can be declared at the same time
-              rule: '!(has(self.json) && has(self.gzipJson))'
             - message: Only one of json or configMapRef can be declared at the same
                 time
               rule: '!(has(self.json) && has(self.configMapRef))'
-            - message: Only one of gzipJson or configMapRef can be declared at the
-                same time
-              rule: '!(has(self.gzipJson) && has(self.configMapRef))'
-            - message: One of json, gzipJson or configMapRef is required
-              rule: has(self.configMapRef) || has(self.json) || has(self.gzipJson)
           status:
             description: DashboardStatus defines the observed state of Dashboard.
             properties:

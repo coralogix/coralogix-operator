@@ -31,6 +31,7 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // DashboardsFolderSpec defines the desired state of DashboardsFolder.
+// +kubebuilder:validation:XValidation:rule="!(has(self.parentFolderId) && has(self.parentFolderRef))",message="Only one of parentFolderID or parentFolderRef can be declared at the same time"
 type DashboardsFolderSpec struct {
 	Name string `json:"name"`
 	// A custom ID for the folder. If not provided, a random UUID will be generated. The custom ID is immutable.

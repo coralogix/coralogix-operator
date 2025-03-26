@@ -122,7 +122,7 @@ func (r *DashboardsFolderReconciler) HandleDeletion(ctx context.Context, log log
 	_, err := r.DashboardsFoldersClient.Delete(ctx, &cxsdk.DeleteDashboardFolderRequest{FolderId: wrapperspb.String(*id)})
 	if err != nil && cxsdk.Code(err) != codes.NotFound {
 		log.V(1).Error(err, "Error deleting remote dashboards-folder", "id", id)
-		return fmt.Errorf("error deleting remote dashboards-folder %s: %w", id, err)
+		return fmt.Errorf("error deleting remote dashboards-folder %s: %w", *id, err)
 	}
 	log.V(1).Info("Dashboards-folder deleted from remote", "id", id)
 	return nil
