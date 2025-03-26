@@ -50,7 +50,7 @@ import (
 	//+kubebuilder:scaffold:imports
 )
 
-const OperatorVersion = "0.3.7"
+const OperatorVersion = "0.4.0"
 
 var (
 	scheme   = k8sruntime.NewScheme()
@@ -283,7 +283,6 @@ func main() {
 		setupLog.Error(err, "unable to set up health check")
 		os.Exit(1)
 	}
-
 	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up ready check")
 		os.Exit(1)

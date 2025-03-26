@@ -276,7 +276,9 @@ spec:
                 - operation
                 type: object
             required:
+            - filter
             - name
+            - schedule
             type: object
           status:
             description: AlertSchedulerStatus defines the observed state of AlertScheduler.

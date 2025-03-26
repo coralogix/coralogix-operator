@@ -2570,10 +2570,25 @@ It is used to suppress or activate alerts based on a schedule.
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#alertschedulerspecfilter">filter</a></b></td>
+        <td>object</td>
+        <td>
+          Alert Scheduler filter. Exactly one of `metaLabels` or `alerts` can be set.
+If none of them set, all alerts will be affected.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
           Alert Scheduler name.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertschedulerspecschedule">schedule</a></b></td>
+        <td>object</td>
+        <td>
+          Alert Scheduler schedule. Exactly one of `oneTime` or `recurring` must be set.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -2593,25 +2608,10 @@ It is used to suppress or activate alerts based on a schedule.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#alertschedulerspecfilter">filter</a></b></td>
-        <td>object</td>
-        <td>
-          Alert Scheduler filter. Exactly one of `metaLabels` or `alerts` can be set.
-If none of them set, all alerts will be affected.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b><a href="#alertschedulerspecmetalabelsindex">metaLabels</a></b></td>
         <td>[]object</td>
         <td>
           Alert Scheduler meta labels.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#alertschedulerspecschedule">schedule</a></b></td>
-        <td>object</td>
-        <td>
-          Alert Scheduler schedule. Exactly one of `oneTime` or `recurring` must be set.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -2723,40 +2723,6 @@ Alert custom resource name and namespace. If namespace is not set, the AlertSche
 
 ### AlertScheduler.spec.filter.metaLabels[index]
 <sup><sup>[↩ Parent](#alertschedulerspecfilter)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>key</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>value</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### AlertScheduler.spec.metaLabels[index]
-<sup><sup>[↩ Parent](#alertschedulerspec)</sup></sup>
 
 
 
@@ -3189,6 +3155,40 @@ if the frequency is set to `hours` and the value is set to `2`, the alert will b
             <i>Enum</i>: minutes, hours, days<br/>
         </td>
         <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertScheduler.spec.metaLabels[index]
+<sup><sup>[↩ Parent](#alertschedulerspec)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
