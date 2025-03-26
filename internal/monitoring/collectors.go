@@ -52,7 +52,7 @@ func NewResourceInfoCollector() *ResourceInfoCollector {
 			[]string{"kind", "name", "namespace", "status"},
 			nil,
 		),
-		gvks: utils.GetGVKs(config.GetScheme(), config.GetConfig().EnableNotificationCenter),
+		gvks: utils.GetGVKs(config.GetScheme()),
 	}
 }
 

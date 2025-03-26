@@ -50,9 +50,9 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-coralogix-com-v1alpha1-connector
+      path: /validate-coralogix-com-v1alpha1-dashboard
   failurePolicy: Fail
-  name: vconnector-v1alpha1.kb.io
+  name: vdashboard-v1alpha1.kb.io
   rules:
   - apiGroups:
     - coralogix.com
@@ -62,7 +62,7 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-    - connectors
+    - dashboards
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -83,26 +83,6 @@ webhooks:
     - UPDATE
     resources:
     - outboundwebhooks
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
-      path: /validate-coralogix-com-v1alpha1-preset
-  failurePolicy: Fail
-  name: vpreset-v1alpha1.kb.io
-  rules:
-  - apiGroups:
-    - coralogix.com
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - presets
   sideEffects: None
 - admissionReviewVersions:
   - v1

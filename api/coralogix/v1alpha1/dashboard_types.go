@@ -33,7 +33,6 @@ import (
 )
 
 // DashboardSpec defines the desired state of Dashboard.
-// +kubebuilder:validation:XValidation:rule="!(has(self.json) && has(self.configMapRef))", message="Only one of json or configMapRef can be declared at the same time"
 type DashboardSpec struct {
 	// +optional
 	Json *string `json:"json,omitempty"`

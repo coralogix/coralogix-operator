@@ -45,7 +45,7 @@ func SetupDashboardWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-// +kubebuilder:webhook:path=/validate-coralogix-coralogix-com-v1alpha1-dashboard,mutating=false,failurePolicy=fail,sideEffects=None,groups=coralogix.coralogix.com,resources=dashboards,verbs=create;update,versions=v1alpha1,name=vdashboard-v1alpha1.kb.io,admissionReviewVersions=v1
+// +kubebuilder:webhook:path=/validate-coralogix-com-v1alpha1-dashboard,mutating=false,failurePolicy=fail,sideEffects=None,groups=coralogix.com,resources=dashboards,verbs=create;update,versions=v1alpha1,name=vdashboard-v1alpha1.kb.io,admissionReviewVersions=v1
 
 // DashboardCustomValidator struct is responsible for validating the Dashboard resource
 // when it is created, updated, or deleted.

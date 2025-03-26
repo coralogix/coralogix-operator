@@ -107,10 +107,10 @@ func (r *DashboardReconciler) HandleDeletion(ctx context.Context, log logr.Logge
 	log.V(1).Info("Deleting dashboard from remote system", "id", id)
 	_, err := r.DashboardsClient.Delete(ctx, &cxsdk.DeleteDashboardRequest{DashboardId: wrapperspb.String(id)})
 	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.V(1).Error(err, "Error deleting remote group", "id", id)
-		return fmt.Errorf("error deleting remote group %s: %w", id, err)
+		log.V(1).Error(err, "Error deleting remote dashboard", "id", id)
+		return fmt.Errorf("error deleting remote dashboard %s: %w", id, err)
 	}
-	log.V(1).Info("Group deleted from remote system", "id", id)
+	log.V(1).Info("Dashboard deleted from remote system", "id", id)
 	return nil
 }
 

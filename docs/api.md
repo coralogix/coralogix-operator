@@ -15,8 +15,6 @@ Resource Types:
 
 - [ApiKey](#apikey)
 
-- [Connector](#connector)
-
 - [CustomRole](#customrole)
 
 - [Dashboard](#dashboard)
@@ -30,8 +28,6 @@ Resource Types:
 - [Integration](#integration)
 
 - [OutboundWebhook](#outboundwebhook)
-
-- [Preset](#preset)
 
 - [RecordingRuleGroupSet](#recordingrulegroupset)
 
