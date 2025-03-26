@@ -80,7 +80,7 @@ var _ = Describe("DashboardsFolder", Ordered, func() {
 
 		By("Verifying DashboardsFolder is updated in Coralogix backend")
 		Eventually(func() string {
-			getDashboardRes, err := dashboardsFoldersClient.Get(ctx, &cxsdk.GetDashboardFolderRequest{RequestId: wrapperspb.String(dashboardFolderID)})
+			getDashboardRes, err := dashboardsFoldersClient.Get(ctx, &cxsdk.GetDashboardFolderRequest{FolderId: wrapperspb.String(dashboardFolderID)})
 			Expect(err).ToNot(HaveOccurred())
 			return getDashboardRes.GetFolder().GetName().GetValue()
 		}, time.Minute, time.Second).Should(Equal(newName))
