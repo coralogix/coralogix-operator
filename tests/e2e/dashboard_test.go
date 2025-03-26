@@ -37,7 +37,7 @@ var _ = Describe("Dashboard", Ordered, func() {
 		crClient         client.Client
 		dashboardsClient *cxsdk.DashboardsClient
 		dashboard        *coralogixv1alpha1.Dashboard
-		dashboardName    = fmt.Sprintf("dashboard-sample-%d", time.Now().Unix())
+		dashboardName    = "dashboard-sample"
 		dashboardID      string
 	)
 
