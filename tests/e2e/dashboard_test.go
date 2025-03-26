@@ -25,6 +25,7 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
@@ -71,7 +72,8 @@ var _ = Describe("Dashboard", Ordered, func() {
 
 	It("Should be updated successfully", func(ctx context.Context) {
 		By("Patching the Dashboard")
-		modifiedDashboard := getSampleDashboard(testUpdatedDashboardJson)
+		modifiedDashboard := dashboard.DeepCopy()
+		modifiedDashboard.Spec.Json = pointer.String(testUpdatedDashboardJson)
 		Expect(crClient.Patch(ctx, modifiedDashboard, client.MergeFrom(dashboard))).To(Succeed())
 
 		By("Verifying Dashboard is updated in Coralogix backend")

@@ -74,7 +74,8 @@ var _ = Describe("DashboardsFolder", Ordered, func() {
 	It("Should be updated successfully", func(ctx context.Context) {
 		By("Patching the DashboardsFolder")
 		newName := "Test Updated Dashboard"
-		modifiedDashboardsFolder := getSampleDashboardsFolder(newName)
+		modifiedDashboardsFolder := dashboardsFolder.DeepCopy()
+		modifiedDashboardsFolder.Spec.Name = newName
 		Expect(crClient.Patch(ctx, modifiedDashboardsFolder, client.MergeFrom(dashboardsFolder))).To(Succeed())
 
 		By("Verifying DashboardsFolder is updated in Coralogix backend")
