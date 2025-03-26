@@ -92,7 +92,7 @@ var _ = Describe("DashboardsFolder", Ordered, func() {
 
 		By("Verifying DashboardsFolder is deleted from Coralogix backend")
 		Eventually(func() codes.Code {
-			_, err := dashboardsFoldersClient.Get(ctx, &cxsdk.GetDashboardFolderRequest{RequestId: wrapperspb.String(dashboardFolderID)})
+			_, err := dashboardsFoldersClient.Get(ctx, &cxsdk.GetDashboardFolderRequest{FolderId: wrapperspb.String(dashboardFolderID)})
 			return cxsdk.Code(err)
 		}).Should(Equal(codes.NotFound))
 	})
