@@ -4,20 +4,20 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.3
-  name: integrations.coralogix.com
+  name: dashboardsfolders.coralogix.com
 spec:
   group: coralogix.com
   names:
-    kind: Integration
-    listKind: IntegrationList
-    plural: integrations
-    singular: integration
+    kind: DashboardsFolder
+    listKind: DashboardsFolderList
+    plural: dashboardsfolders
+    singular: dashboardsfolder
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Integration is the Schema for the integrations API.
+        description: DashboardsFolder is the Schema for the dashboardsfolders API.
         properties:
           apiVersion:
             description: |-
@@ -37,22 +37,40 @@ spec:
           metadata:
             type: object
           spec:
-            description: IntegrationSpec defines the desired state of Integration.
+            description: DashboardsFolderSpec defines the desired state of DashboardsFolder.
             properties:
-              integrationKey:
+              customId:
+                description: A custom ID for the folder. If not provided, a random
+                  UUID will be generated. The custom ID is immutable.
+                pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
                 type: string
-              parameters:
+                x-kubernetes-validations:
+                - message: spec.customId is immutable
+                  rule: self == oldSelf
+              name:
+                type: string
+              parentFolderId:
+                description: A reference to an existing folder by its backend's ID.
+                type: string
+              parentFolderRef:
+                description: A reference to an existing DashboardsFolder CR.
+                properties:
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                required:
+                - name
                 type: object
-                x-kubernetes-preserve-unknown-fields: true
-              version:
-                type: string
             required:
-            - integrationKey
-            - parameters
-            - version
+            - name
             type: object
+            x-kubernetes-validations:
+            - message: Only one of parentFolderID or parentFolderRef can be declared
+                at the same time
+              rule: '!(has(self.parentFolderId) && has(self.parentFolderRef))'
           status:
-            description: IntegrationStatus defines the observed state of Integration.
+            description: DashboardsFolderStatus defines the observed state of DashboardsFolder.
             properties:
               conditions:
                 items:
