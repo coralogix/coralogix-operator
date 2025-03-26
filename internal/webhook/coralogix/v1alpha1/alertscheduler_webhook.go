@@ -160,6 +160,10 @@ func validateRecurring(recurring *coralogixv1alpha1.Recurring) error {
 }
 
 func validateTimeFrame(timeFrame *coralogixv1alpha1.TimeFrame) error {
+	if timeFrame == nil {
+		return nil
+	}
+
 	if timeFrame.EndTime == nil && timeFrame.Duration == nil {
 		return fmt.Errorf("timeFrame must contain only one of the fields: endTime or duration")
 	}
