@@ -228,6 +228,20 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "AlertScheduler")
 		os.Exit(1)
 	}
+	if err = (&v1alpha1controllers.DashboardReconciler{
+		DashboardsClient: clientSet.Dashboards(),
+		Interval:         cfg.ReconcileIntervals[utils.DashboardKind],
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Dashboard")
+		os.Exit(1)
+	}
+	if err = (&v1alpha1controllers.DashboardsFolderReconciler{
+		DashboardsFoldersClient: clientSet.DashboardsFolders(),
+		Interval:                cfg.ReconcileIntervals[utils.DashboardsFolderKind],
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "DashboardsFolder")
+		os.Exit(1)
+	}
 
 	if cfg.EnableWebhooks {
 		if err = webhookcoralogixv1alpha1.SetupOutboundWebhookWebhookWithManager(mgr); err != nil {
@@ -252,6 +266,11 @@ func main() {
 
 		if err = webhookcoralogixv1alpha1.SetupAlertSchedulerWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "AlertScheduler")
+			os.Exit(1)
+		}
+
+		if err = webhookcoralogixv1alpha1.SetupDashboardWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Dashboard")
 			os.Exit(1)
 		}
 	} else {
