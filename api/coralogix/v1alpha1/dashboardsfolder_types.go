@@ -27,9 +27,6 @@ import (
 	"github.com/coralogix/coralogix-operator/internal/config"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // DashboardsFolderSpec defines the desired state of DashboardsFolder.
 // +kubebuilder:validation:XValidation:rule="!(has(self.parentFolderId) && has(self.parentFolderRef))",message="Only one of parentFolderID or parentFolderRef can be declared at the same time"
 type DashboardsFolderSpec struct {
@@ -54,19 +51,28 @@ func (in *DashboardsFolderSpec) ExtractDashboardsFolderFromSpec(ctx context.Cont
 	if parentID := in.ParentFolderID; parentID != nil {
 		dashboardFolder.ParentId = wrapperspb.String(*parentID)
 	} else if parentRef := in.ParentFolderRef; parentRef != nil {
-		df := &DashboardsFolder{}
-		if parentRef.Namespace != nil {
-			namespace = *parentRef.Namespace
+		var err error
+		parentId, err := GetFolderIdFromFolderCR(ctx, namespace, *parentRef)
+		if err != nil {
+			return nil, err
 		}
-		if err := config.GetClient().Get(ctx, client.ObjectKey{Name: parentRef.Name, Namespace: namespace}, df); err != nil {
-			return nil, fmt.Errorf("failed to get DashboardsFolder: %w", err)
-		}
-		if df.Status.ID == nil {
-			return nil, fmt.Errorf("failed to get DashboardsFolder ID")
-		}
-		dashboardFolder.ParentId = wrapperspb.String(*df.Status.ID)
+		dashboardFolder.ParentId = wrapperspb.String(parentId)
 	}
 	return dashboardFolder, nil
+}
+
+func GetFolderIdFromFolderCR(ctx context.Context, namespace string, parentRef ResourceRef) (string, error) {
+	df := &DashboardsFolder{}
+	if parentRef.Namespace != nil {
+		namespace = *parentRef.Namespace
+	}
+	if err := config.GetClient().Get(ctx, client.ObjectKey{Name: parentRef.Name, Namespace: namespace}, df); err != nil {
+		return "", fmt.Errorf("failed to get DashboardsFolder: %w", err)
+	}
+	if df.Status.ID == nil || *df.Status.ID == "" {
+		return "", fmt.Errorf("failed to get DashboardsFolder ID")
+	}
+	return *df.Status.ID, nil
 }
 
 type DashboardFolderRef struct {

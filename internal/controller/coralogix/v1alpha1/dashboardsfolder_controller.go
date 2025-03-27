@@ -103,11 +103,11 @@ func (r *DashboardsFolderReconciler) HandleUpdate(ctx context.Context, log logr.
 		Folder: folderToUpdate,
 	}
 	log.V(1).Info("Updating remote dashboards-folder", "folder", protojson.Format(updateRequest))
-	createResponse, err := r.DashboardsFoldersClient.Replace(ctx, updateRequest)
+	updateResponse, err := r.DashboardsFoldersClient.Replace(ctx, updateRequest)
 	if err != nil {
 		return fmt.Errorf("error on updating remote dashboard: %w", err)
 	}
-	log.V(1).Info("Remote dashboards-folder updated", "folder", protojson.Format(createResponse))
+	log.V(1).Info("Remote dashboards-folder updated", "folder", protojson.Format(updateResponse))
 
 	return nil
 }

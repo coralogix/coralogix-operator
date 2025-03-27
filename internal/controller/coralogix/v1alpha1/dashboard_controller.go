@@ -94,11 +94,11 @@ func (r *DashboardReconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 		Dashboard: dashboardToUpdate,
 	}
 	log.V(1).Info("Updating remote dashboard", "dashboard", protojson.Format(updateRequest))
-	createResponse, err := r.DashboardsClient.Replace(ctx, updateRequest)
+	updateResponse, err := r.DashboardsClient.Replace(ctx, updateRequest)
 	if err != nil {
 		return fmt.Errorf("error on updating remote dashboard: %w", err)
 	}
-	log.V(1).Info("Remote dashboard updated", "dashboard", protojson.Format(createResponse))
+	log.V(1).Info("Remote dashboard updated", "dashboard", protojson.Format(updateResponse))
 
 	return nil
 }

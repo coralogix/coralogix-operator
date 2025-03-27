@@ -48,34 +48,25 @@ type DashboardSpec struct {
 }
 
 func (in *DashboardSpec) ExtractDashboardFromSpec(ctx context.Context, namespace string) (*cxsdk.Dashboard, error) {
-	dashboard := new(cxsdk.Dashboard)
-	var contentJson string
-	if in.Json != nil {
-		contentJson = *in.Json
-	} else if in.GzipJson != nil {
-		content, err := Gunzip(in.GzipJson)
-		if err != nil {
-			return nil, fmt.Errorf("failed to gunzip contentJson: %w", err)
-		}
-		contentJson = string(content)
-	} else if configMapRef := in.ConfigMapRef; configMapRef != nil {
-		dashboardConfigMap := &v1.ConfigMap{}
-		if err := config.GetClient().Get(ctx, client.ObjectKey{Namespace: namespace, Name: configMapRef.Name}, dashboardConfigMap); err != nil {
-			return nil, err
-		}
-		if content, ok := dashboardConfigMap.Data[configMapRef.Key]; ok {
-			contentJson = content
-		} else {
-			return nil, fmt.Errorf("cannot find key '%v' in config map '%v'", configMapRef.Key, configMapRef.Name)
-		}
-	} else {
-		return nil, fmt.Errorf("json, gzipContentJson or configMapRef is required")
+	contentJson, err := extractJsonContentFromSpec(ctx, namespace, in)
+	if err != nil {
+		return nil, err
 	}
 
-	if err := protojson.Unmarshal([]byte(contentJson), dashboard); err != nil {
+	dashboard := new(cxsdk.Dashboard)
+	if err = protojson.Unmarshal([]byte(contentJson), dashboard); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal contentJson: %w", err)
 	}
 
+	dashboard, err = expandDashboardFolder(ctx, namespace, in, dashboard)
+	if err != nil {
+		return nil, err
+	}
+
+	return dashboard, nil
+}
+
+func expandDashboardFolder(ctx context.Context, namespace string, in *DashboardSpec, dashboard *cxsdk.Dashboard) (*cxsdk.Dashboard, error) {
 	if folderRef := in.FolderRef; folderRef != nil {
 		if backendRef := folderRef.BackendRef; backendRef != nil {
 			if id := backendRef.ID; id != nil {
@@ -93,22 +84,14 @@ func (in *DashboardSpec) ExtractDashboardFromSpec(ctx context.Context, namespace
 				}
 			}
 		} else if resourceRef := folderRef.ResourceRef; resourceRef != nil {
-			if resourceRef.Namespace == nil {
-				resourceRef.Namespace = &namespace
+			folderId, err := GetFolderIdFromFolderCR(ctx, namespace, *resourceRef)
+			if err != nil {
+				return nil, err
 			}
-			df := &DashboardsFolder{}
-			if err := config.GetClient().Get(ctx, client.ObjectKey{Name: resourceRef.Name, Namespace: *resourceRef.Namespace}, df); err != nil {
-				return nil, fmt.Errorf("failed to get DashboardsFolder: %w", err)
-			}
-
-			if df.Status.ID != nil && *df.Status.ID != "" {
-				dashboard.Folder = &cxsdk.DashboardFolderID{
-					FolderId: &cxsdk.UUID{
-						Value: *df.Status.ID,
-					},
-				}
-			} else {
-				return nil, fmt.Errorf("failed to get DashboardsFolder ID")
+			dashboard.Folder = &cxsdk.DashboardFolderID{
+				FolderId: &cxsdk.UUID{
+					Value: folderId,
+				},
 			}
 		} else {
 			return nil, fmt.Errorf("folderRef.BackendRef or folderRef.ResourceRef is required")
@@ -118,7 +101,33 @@ func (in *DashboardSpec) ExtractDashboardFromSpec(ctx context.Context, namespace
 	return dashboard, nil
 }
 
-func Gunzip(compressed []byte) ([]byte, error) {
+func extractJsonContentFromSpec(ctx context.Context, namespace string, in *DashboardSpec) (string, error) {
+	var contentJson string
+	if in.Json != nil {
+		contentJson = *in.Json
+	} else if in.GzipJson != nil {
+		content, err := Unzip(in.GzipJson)
+		if err != nil {
+			return "", fmt.Errorf("failed to gunzip contentJson: %w", err)
+		}
+		contentJson = string(content)
+	} else if configMapRef := in.ConfigMapRef; configMapRef != nil {
+		dashboardConfigMap := &v1.ConfigMap{}
+		if err := config.GetClient().Get(ctx, client.ObjectKey{Namespace: namespace, Name: configMapRef.Name}, dashboardConfigMap); err != nil {
+			return "", err
+		}
+		if content, ok := dashboardConfigMap.Data[configMapRef.Key]; ok {
+			contentJson = content
+		} else {
+			return "", fmt.Errorf("cannot find key '%v' in config map '%v'", configMapRef.Key, configMapRef.Name)
+		}
+	} else {
+		return "", fmt.Errorf("json, gzipContentJson or configMapRef is required")
+	}
+	return contentJson, nil
+}
+
+func Unzip(compressed []byte) ([]byte, error) {
 	gz, err := gzip.NewReader(bytes.NewReader(compressed))
 	if err != nil {
 		return nil, err

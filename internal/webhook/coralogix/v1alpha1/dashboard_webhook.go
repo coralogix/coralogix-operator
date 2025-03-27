@@ -108,7 +108,7 @@ func validateDashboardSpec(ctx context.Context, spec coralogixv1alpha1.Dashboard
 		contentJson = *json
 	} else if gzipJson := spec.GzipJson; gzipJson != nil {
 		source = "gzipJson"
-		content, err := coralogixv1alpha1.Gunzip(gzipJson)
+		content, err := coralogixv1alpha1.Unzip(gzipJson)
 		if err != nil {
 			return nil, fmt.Errorf("failed to gunzip contentJson: %w", err)
 		}
@@ -139,13 +139,5 @@ func getContentJsonOptions(spec coralogixv1alpha1.DashboardSpec) []string {
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type Dashboard.
 func (v *DashboardCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	dashboard, ok := obj.(*coralogixv1alpha1.Dashboard)
-	if !ok {
-		return nil, fmt.Errorf("expected a Dashboard object but got %T", obj)
-	}
-	dashboardlog.Info("Validation for Dashboard upon deletion", "name", dashboard.GetName())
-
-	// TODO(user): fill in your validation logic upon object deletion.
-
 	return nil, nil
 }
