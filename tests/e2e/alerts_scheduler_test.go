@@ -78,6 +78,9 @@ var _ = Describe("AlertScheduler", Ordered, func() {
 		Eventually(func() string {
 			getSchedulerRes, err := alertSchedulerClient.Get(ctx, &cxsdk.GetAlertSchedulerRuleRequest{AlertSchedulerRuleId: alertSchedulerID})
 			Expect(err).ToNot(HaveOccurred())
+			if getSchedulerRes.AlertSchedulerRule == nil {
+				return ""
+			}
 			return getSchedulerRes.AlertSchedulerRule.Name
 		}, time.Minute, time.Second).Should(Equal(newSchedulerName))
 	})
