@@ -33,9 +33,7 @@ const (
 	TCOLogsPoliciesKind       = "TCOLogsPolicies"
 	TCOTracesPoliciesKind     = "TCOTracesPolicies"
 	IntegrationKind           = "Integration"
-	ConnectorKind             = "Connector"
-	PresetKind                = "Preset"
-	GlobalRouterKind          = "GlobalRouter"
+	AlertSchedulerKind        = "AlertScheduler"
 	PrometheusRuleKind        = "PrometheusRule"
 
 	TrackPrometheusRuleAlertsLabelKey         = "app.coralogix.com/track-alerting-rules"

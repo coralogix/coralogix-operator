@@ -12,12 +12,6 @@ chart_webhook_file="charts/coralogix-operator/templates/webhook.yaml"
 
 errors_found=0
 
-nc_crds=(
-    "coralogix.com_connectors.yaml"
-    "coralogix.com_presets.yaml"
-    "coralogix.com_globalrouters.yaml"
-)
-
 echo "Validating CRDs..."
 
 # Validate CRDs
@@ -34,19 +28,9 @@ for crd_file in $crds_files; do
     chart_crd_file="$chart_crds_path/$crd_filename"
 
     if [ -f "$chart_crd_file" ]; then
-        if [[ " ${nc_crds[*]} " =~ " $crd_filename " ]]; then
-            # Ignore first and last lines for NC CRDs in the Helm chart
-            original_content=$(sed '1d;$d' "$chart_crd_file")
-            if ! diff <(echo "$original_content") "$crd_file" >/dev/null; then
-                echo "CRD file $chart_crd_file is outdated, please run make helm-update-crds"
-                errors_found=$((errors_found + 1))
-            fi
-        else
-            # Regular comparison for all other CRDs
-            if ! cmp -s "$crd_file" "$chart_crd_file"; then
-                echo "CRD file $chart_crd_file is outdated, please run make helm-update-crds"
-                errors_found=$((errors_found + 1))
-            fi
+        if ! cmp -s "$crd_file" "$chart_crd_file"; then
+            echo "CRD file $chart_crd_file is outdated, please run make helm-update-crds"
+            errors_found=$((errors_found + 1))
         fi
     else
         echo "CRD file $chart_crd_file is missing in the Helm chart. Please run make helm-update-crds"

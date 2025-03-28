@@ -60,12 +60,6 @@ var (
 		"US2":     "US2",
 	}
 	validRegions = getKeys(operatorRegionToSdkRegion)
-	crds         = []string{
-		utils.RuleGroupKind, utils.AlertKind, utils.RecordingRuleGroupSetKind, utils.OutboundWebhookKind,
-		utils.ApiKeyKind, utils.CustomRoleKind, utils.ScopeKind, utils.GroupKind, utils.TCOLogsPoliciesKind,
-		utils.TCOTracesPoliciesKind, utils.IntegrationKind, utils.ConnectorKind, utils.PresetKind,
-		utils.GlobalRouterKind, utils.PrometheusRuleKind,
-	}
 )
 
 type Config struct {
@@ -74,7 +68,6 @@ type Config struct {
 	Selector                    *Selector
 	ReconcileIntervals          map[string]time.Duration
 	EnableWebhooks              bool
-	EnableNotificationCenter    bool
 	PrometheusRuleController    bool
 	RecordingRuleGroupSetSuffix string
 	MetricsAddr                 string
@@ -118,10 +111,6 @@ func InitConfig(setupLog logr.Logger) *Config {
 		enableWebhooks := os.Getenv("ENABLE_WEBHOOKS")
 		flag.StringVar(&enableWebhooks, "enable-webhooks", enableWebhooks, "Enable webhooks for the operator. Default is true.")
 
-		enableNotificationCenter := os.Getenv("ENABLE_NOTIFICATION_CENTER")
-		flag.StringVar(&enableNotificationCenter, "enable-notification-center", enableNotificationCenter,
-			"Enable notification center CRDs and controllers. Default is false.")
-
 		reconcileIntervals := getReconcileIntervals()
 
 		opts := zap.Options{}
@@ -150,7 +139,6 @@ func InitConfig(setupLog logr.Logger) *Config {
 		}
 
 		cfg.EnableWebhooks = strings.ToLower(enableWebhooks) != "false"
-		cfg.EnableNotificationCenter = strings.ToLower(enableNotificationCenter) == "true"
 
 		cfg.ReconcileIntervals, err = parseReconcileIntervals(setupLog, reconcileIntervals)
 		if err != nil {
@@ -168,15 +156,16 @@ func GetConfig() *Config {
 
 func getReconcileIntervals() map[string]*string {
 	result := make(map[string]*string)
-	for _, crd := range crds {
-		interval := os.Getenv(fmt.Sprintf("%s_RECONCILE_INTERVAL_SECONDS", strings.ToUpper(crd)))
+	gvks := utils.GetGVKs(GetScheme())
+	for _, gvk := range gvks {
+		interval := os.Getenv(fmt.Sprintf("%s_RECONCILE_INTERVAL_SECONDS", strings.ToUpper(gvk.Kind)))
 		flag.StringVar(
 			&interval,
-			fmt.Sprintf("%s-reconcile-interval-seconds", strings.ToLower(crd)),
+			fmt.Sprintf("%s-reconcile-interval-seconds", strings.ToLower(gvk.Kind)),
 			interval,
-			fmt.Sprintf("The interval in seconds between succeding reconciliations for %s", crd),
+			fmt.Sprintf("The interval in seconds between succeding reconciliations for %s", gvk.Kind),
 		)
-		result[crd] = &interval
+		result[gvk.Kind] = &interval
 	}
 
 	return result
