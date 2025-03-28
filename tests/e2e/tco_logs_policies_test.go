@@ -61,7 +61,7 @@ var _ = Describe("TCOLogsPolicies", func() {
 							RuleType: "is",
 						},
 						ArchiveRetention: &coralogixv1alpha1.ArchiveRetention{
-							BackendRef: &coralogixv1alpha1.ArchiveRetentionBackendRef{
+							BackendRef: coralogixv1alpha1.ArchiveRetentionBackendRef{
 								Name: "Default",
 							},
 						},

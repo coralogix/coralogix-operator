@@ -50,10 +50,10 @@ type AlertSchedulerSpec struct {
 
 	// Alert Scheduler filter. Exactly one of `metaLabels` or `alerts` can be set.
 	// If none of them set, all alerts will be affected.
-	Filter *Filter `json:"filter"`
+	Filter Filter `json:"filter"`
 
 	// Alert Scheduler schedule. Exactly one of `oneTime` or `recurring` must be set.
-	Schedule *Schedule `json:"schedule"`
+	Schedule Schedule `json:"schedule"`
 }
 
 type Filter struct {
