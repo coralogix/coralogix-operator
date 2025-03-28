@@ -1237,16 +1237,11 @@ func convertStandardConditionsV1alpha1ToLogsThresholdRuleV1beta1(conditions Stan
 		threshold = *resource.NewQuantity(int64(*conditions.Threshold), resource.DecimalSI)
 	}
 
-	var timeWindow v1beta1.LogsTimeWindow
-	if conditions.TimeWindow != nil {
-		timeWindow = v1beta1.LogsTimeWindow{
-			SpecificValue: logsTimeWindowV1alpha1ToV1beta1[*conditions.TimeWindow],
-		}
-	}
-
 	return v1beta1.LogsThresholdRule{
 		Condition: v1beta1.LogsThresholdRuleCondition{
-			TimeWindow:                 timeWindow,
+			TimeWindow: v1beta1.LogsTimeWindow{
+				SpecificValue: logsTimeWindowV1alpha1ToV1beta1[*conditions.TimeWindow],
+			},
 			Threshold:                  threshold,
 			LogsThresholdConditionType: logsConditionTypeV1alpha1ToV1beta1[conditions.AlertWhen],
 		},

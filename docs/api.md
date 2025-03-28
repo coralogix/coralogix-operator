@@ -11,17 +11,21 @@ Resource Types:
 
 - [Alert](#alert)
 
-- [AlertScheduler](#alertscheduler)
-
 - [ApiKey](#apikey)
 
+- [Connector](#connector)
+
 - [CustomRole](#customrole)
+
+- [GlobalRouter](#globalrouter)
 
 - [Group](#group)
 
 - [Integration](#integration)
 
 - [OutboundWebhook](#outboundwebhook)
+
+- [Preset](#preset)
 
 - [RecordingRuleGroupSet](#recordingrulegroupset)
 
@@ -76,7 +80,8 @@ Alert is the v1alpha1 version Schema for the alerts API. v1alpha1 Alert is going
         <td><b><a href="#alertspec">spec</a></b></td>
         <td>object</td>
         <td>
-          AlertSpec defines the desired state of Alert.<br/>
+          AlertSpec defines the desired state of a Coralogix Alert.
+Deprecated: Upgrade to v1beta1.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -95,7 +100,8 @@ Alert is the v1alpha1 version Schema for the alerts API. v1alpha1 Alert is going
 
 
 
-AlertSpec defines the desired state of Alert.
+AlertSpec defines the desired state of a Coralogix Alert.
+Deprecated: Upgrade to v1beta1.
 
 <table>
     <thead>
@@ -117,7 +123,7 @@ AlertSpec defines the desired state of Alert.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Alert name.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -142,7 +148,7 @@ AlertSpec defines the desired state of Alert.
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Alert description.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2401,6 +2407,22 @@ AlertStatus defines the observed state of Alert
 
 
 Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
 
 <table>
     <thead>
@@ -2453,813 +2475,11 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>observedGeneration</b></td>
-        <td>integer</td>
-        <td>
-          observedGeneration represents the .metadata.generation that the condition was set based upon.
-For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
-with respect to the current state of the instance.<br/>
-          <br/>
-            <i>Format</i>: int64<br/>
-            <i>Minimum</i>: 0<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-## AlertScheduler
-<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
-
-
-
-
-
-
-AlertScheduler is the Schema for the alertschedulers API.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-      <td><b>apiVersion</b></td>
-      <td>string</td>
-      <td>coralogix.com/v1alpha1</td>
-      <td>true</td>
-      </tr>
-      <tr>
-      <td><b>kind</b></td>
-      <td>string</td>
-      <td>AlertScheduler</td>
-      <td>true</td>
-      </tr>
-      <tr>
-      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
-      <td>object</td>
-      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
-      <td>true</td>
-      </tr><tr>
-        <td><b><a href="#alertschedulerspec">spec</a></b></td>
-        <td>object</td>
-        <td>
-          AlertSchedulerSpec defines the desired state Coralogix AlertScheduler.
-It is used to suppress or activate alerts based on a schedule.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#alertschedulerstatus">status</a></b></td>
-        <td>object</td>
-        <td>
-          AlertSchedulerStatus defines the observed state of AlertScheduler.<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### AlertScheduler.spec
-<sup><sup>[↩ Parent](#alertscheduler)</sup></sup>
-
-
-
-AlertSchedulerSpec defines the desired state Coralogix AlertScheduler.
-It is used to suppress or activate alerts based on a schedule.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b><a href="#alertschedulerspecfilter">filter</a></b></td>
-        <td>object</td>
-        <td>
-          Alert Scheduler filter. Exactly one of `metaLabels` or `alerts` can be set.
-If none of them set, all alerts will be affected.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          Alert Scheduler name.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b><a href="#alertschedulerspecschedule">schedule</a></b></td>
-        <td>object</td>
-        <td>
-          Alert Scheduler schedule. Exactly one of `oneTime` or `recurring` must be set.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>description</b></td>
-        <td>string</td>
-        <td>
-          Alert Scheduler description.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
-        <td>
-          Alert Scheduler enabled. If set to `false`, the alert scheduler will be disabled. True by default.<br/>
-          <br/>
-            <i>Default</i>: true<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#alertschedulerspecmetalabelsindex">metaLabels</a></b></td>
-        <td>[]object</td>
-        <td>
-          Alert Scheduler meta labels.<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### AlertScheduler.spec.filter
-<sup><sup>[↩ Parent](#alertschedulerspec)</sup></sup>
-
-
-
-Alert Scheduler filter. Exactly one of `metaLabels` or `alerts` can be set.
-If none of them set, all alerts will be affected.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>whatExpression</b></td>
-        <td>string</td>
-        <td>
-          DataPrime query expression - https://coralogix.com/docs/dataprime-query-language.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b><a href="#alertschedulerspecfilteralertsindex">alerts</a></b></td>
-        <td>[]object</td>
-        <td>
-          Alert references. Conflicts with `metaLabels`.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#alertschedulerspecfiltermetalabelsindex">metaLabels</a></b></td>
-        <td>[]object</td>
-        <td>
-          Alert Scheduler meta labels. Conflicts with `alerts`.<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### AlertScheduler.spec.filter.alerts[index]
-<sup><sup>[↩ Parent](#alertschedulerspecfilter)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b><a href="#alertschedulerspecfilteralertsindexresourceref">resourceRef</a></b></td>
-        <td>object</td>
-        <td>
-          Alert custom resource name and namespace. If namespace is not set, the AlertScheduler namespace will be used.<br/>
-        </td>
-        <td>true</td>
-      </tr></tbody>
-</table>
-
-
-### AlertScheduler.spec.filter.alerts[index].resourceRef
-<sup><sup>[↩ Parent](#alertschedulerspecfilteralertsindex)</sup></sup>
-
-
-
-Alert custom resource name and namespace. If namespace is not set, the AlertScheduler namespace will be used.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>namespace</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### AlertScheduler.spec.filter.metaLabels[index]
-<sup><sup>[↩ Parent](#alertschedulerspecfilter)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>key</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>value</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### AlertScheduler.spec.schedule
-<sup><sup>[↩ Parent](#alertschedulerspec)</sup></sup>
-
-
-
-Alert Scheduler schedule. Exactly one of `oneTime` or `recurring` must be set.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>operation</b></td>
-        <td>enum</td>
-        <td>
-          The operation to perform. Can be `mute` or `activate`.<br/>
-          <br/>
-            <i>Enum</i>: mute, activate<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b><a href="#alertschedulerspecscheduleonetime">oneTime</a></b></td>
-        <td>object</td>
-        <td>
-          One-time schedule. Conflicts with `recurring`.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#alertschedulerspecschedulerecurring">recurring</a></b></td>
-        <td>object</td>
-        <td>
-          Recurring schedule. Conflicts with `oneTime`.<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### AlertScheduler.spec.schedule.oneTime
-<sup><sup>[↩ Parent](#alertschedulerspecschedule)</sup></sup>
-
-
-
-One-time schedule. Conflicts with `recurring`.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>startTime</b></td>
-        <td>string</td>
-        <td>
-          The start time of the time frame. In isodate format. For example, `2021-01-01T00:00:00.000`.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>timezone</b></td>
-        <td>string</td>
-        <td>
-          The timezone of the time frame. For example, `UTC-4` or `UTC+10`.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b><a href="#alertschedulerspecscheduleonetimeduration">duration</a></b></td>
-        <td>object</td>
-        <td>
-          The duration from the start time to wait before the operation is performed.
-Conflicts with `endTime`.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>endTime</b></td>
-        <td>string</td>
-        <td>
-          The end time of the time frame. In isodate format. For example, `2021-01-01T00:00:00.000`.
-Conflicts with `duration`.<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### AlertScheduler.spec.schedule.oneTime.duration
-<sup><sup>[↩ Parent](#alertschedulerspecscheduleonetime)</sup></sup>
-
-
-
-The duration from the start time to wait before the operation is performed.
-Conflicts with `endTime`.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>forOver</b></td>
-        <td>integer</td>
-        <td>
-          The number of time units to wait before the alert is triggered. For example,
-if the frequency is set to `hours` and the value is set to `2`, the alert will be triggered after 2 hours.<br/>
-          <br/>
-            <i>Format</i>: int32<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>frequency</b></td>
-        <td>enum</td>
-        <td>
-          The time unit to wait before the alert is triggered. Can be `minutes`, `hours` or `days`.<br/>
-          <br/>
-            <i>Enum</i>: minutes, hours, days<br/>
-        </td>
-        <td>true</td>
-      </tr></tbody>
-</table>
-
-
-### AlertScheduler.spec.schedule.recurring
-<sup><sup>[↩ Parent](#alertschedulerspecschedule)</sup></sup>
-
-
-
-Recurring schedule. Conflicts with `oneTime`.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>always</b></td>
-        <td>object</td>
-        <td>
-          Recurring always.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#alertschedulerspecschedulerecurringdynamic">dynamic</a></b></td>
-        <td>object</td>
-        <td>
-          Dynamic schedule.<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### AlertScheduler.spec.schedule.recurring.dynamic
-<sup><sup>[↩ Parent](#alertschedulerspecschedulerecurring)</sup></sup>
-
-
-
-Dynamic schedule.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b><a href="#alertschedulerspecschedulerecurringdynamicfrequency">frequency</a></b></td>
-        <td>object</td>
-        <td>
-          The rule will be activated in a recurring mode (daily, weekly or monthly).<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>repeatEvery</b></td>
-        <td>integer</td>
-        <td>
-          The rule will be activated in a recurring mode according to the interval.<br/>
-          <br/>
-            <i>Format</i>: int32<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b><a href="#alertschedulerspecschedulerecurringdynamictimeframe">timeFrame</a></b></td>
-        <td>object</td>
-        <td>
-          The time frame of the rule.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>terminationDate</b></td>
-        <td>string</td>
-        <td>
-          The termination date of the rule.<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### AlertScheduler.spec.schedule.recurring.dynamic.frequency
-<sup><sup>[↩ Parent](#alertschedulerspecschedulerecurringdynamic)</sup></sup>
-
-
-
-The rule will be activated in a recurring mode (daily, weekly or monthly).
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>daily</b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#alertschedulerspecschedulerecurringdynamicfrequencymonthly">monthly</a></b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#alertschedulerspecschedulerecurringdynamicfrequencyweekly">weekly</a></b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### AlertScheduler.spec.schedule.recurring.dynamic.frequency.monthly
-<sup><sup>[↩ Parent](#alertschedulerspecschedulerecurringdynamicfrequency)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>days</b></td>
-        <td>[]integer</td>
-        <td>
-          The days of the month to activate the rule.<br/>
-        </td>
-        <td>true</td>
-      </tr></tbody>
-</table>
-
-
-### AlertScheduler.spec.schedule.recurring.dynamic.frequency.weekly
-<sup><sup>[↩ Parent](#alertschedulerspecschedulerecurringdynamicfrequency)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>days</b></td>
-        <td>[]enum</td>
-        <td>
-          The days of the week to activate the rule.<br/>
-          <br/>
-            <i>Enum</i>: Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday<br/>
-        </td>
-        <td>true</td>
-      </tr></tbody>
-</table>
-
-
-### AlertScheduler.spec.schedule.recurring.dynamic.timeFrame
-<sup><sup>[↩ Parent](#alertschedulerspecschedulerecurringdynamic)</sup></sup>
-
-
-
-The time frame of the rule.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>startTime</b></td>
-        <td>string</td>
-        <td>
-          The start time of the time frame. In isodate format. For example, `2021-01-01T00:00:00.000`.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>timezone</b></td>
-        <td>string</td>
-        <td>
-          The timezone of the time frame. For example, `UTC-4` or `UTC+10`.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b><a href="#alertschedulerspecschedulerecurringdynamictimeframeduration">duration</a></b></td>
-        <td>object</td>
-        <td>
-          The duration from the start time to wait before the operation is performed.
-Conflicts with `endTime`.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>endTime</b></td>
-        <td>string</td>
-        <td>
-          The end time of the time frame. In isodate format. For example, `2021-01-01T00:00:00.000`.
-Conflicts with `duration`.<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### AlertScheduler.spec.schedule.recurring.dynamic.timeFrame.duration
-<sup><sup>[↩ Parent](#alertschedulerspecschedulerecurringdynamictimeframe)</sup></sup>
-
-
-
-The duration from the start time to wait before the operation is performed.
-Conflicts with `endTime`.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>forOver</b></td>
-        <td>integer</td>
-        <td>
-          The number of time units to wait before the alert is triggered. For example,
-if the frequency is set to `hours` and the value is set to `2`, the alert will be triggered after 2 hours.<br/>
-          <br/>
-            <i>Format</i>: int32<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>frequency</b></td>
-        <td>enum</td>
-        <td>
-          The time unit to wait before the alert is triggered. Can be `minutes`, `hours` or `days`.<br/>
-          <br/>
-            <i>Enum</i>: minutes, hours, days<br/>
-        </td>
-        <td>true</td>
-      </tr></tbody>
-</table>
-
-
-### AlertScheduler.spec.metaLabels[index]
-<sup><sup>[↩ Parent](#alertschedulerspec)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>key</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>value</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### AlertScheduler.status
-<sup><sup>[↩ Parent](#alertscheduler)</sup></sup>
-
-
-
-AlertSchedulerStatus defines the observed state of AlertScheduler.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b><a href="#alertschedulerstatusconditionsindex">conditions</a></b></td>
-        <td>[]object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>id</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### AlertScheduler.status.conditions[index]
-<sup><sup>[↩ Parent](#alertschedulerstatus)</sup></sup>
-
-
-
-Condition contains details for one aspect of the current state of this API Resource.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>lastTransitionTime</b></td>
-        <td>string</td>
-        <td>
-          lastTransitionTime is the last time the condition transitioned from one status to another.
-This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
-          <br/>
-            <i>Format</i>: date-time<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>message</b></td>
-        <td>string</td>
-        <td>
-          message is a human readable message indicating details about the transition.
-This may be an empty string.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>reason</b></td>
-        <td>string</td>
-        <td>
-          reason contains a programmatic identifier indicating the reason for the condition's last transition.
-Producers of specific condition types may define expected values and meanings for this field,
-and whether the values are considered a guaranteed API.
-The value should be a CamelCase string.
-This field may not be empty.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>status</b></td>
-        <td>enum</td>
-        <td>
-          status of the condition, one of True, False, Unknown.<br/>
-          <br/>
-            <i>Enum</i>: True, False, Unknown<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>type</b></td>
-        <td>string</td>
-        <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -3317,7 +2537,7 @@ ApiKey is the Schema for the apikeys API.
         <td><b><a href="#apikeyspec">spec</a></b></td>
         <td>object</td>
         <td>
-          ApiKeySpec defines the desired state of ApiKey.<br/>
+          ApiKeySpec defines the desired state of a Coralogix ApiKey.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -3336,7 +2556,7 @@ ApiKey is the Schema for the apikeys API.
 
 
 
-ApiKeySpec defines the desired state of ApiKey.
+ApiKeySpec defines the desired state of a Coralogix ApiKey.
 
 <table>
     <thead>
@@ -3351,21 +2571,21 @@ ApiKeySpec defines the desired state of ApiKey.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the ApiKey<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#apikeyspecowner">owner</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Owner of the ApiKey.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>active</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Whether the ApiKey Is active.<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -3374,14 +2594,14 @@ ApiKeySpec defines the desired state of ApiKey.
         <td><b>permissions</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Permissions of the ApiKey<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>presets</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Permission Presets that the ApiKey uses.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -3393,7 +2613,7 @@ ApiKeySpec defines the desired state of ApiKey.
 
 
 
-
+Owner of the ApiKey.
 
 <table>
     <thead>
@@ -3408,7 +2628,7 @@ ApiKeySpec defines the desired state of ApiKey.
         <td><b>teamId</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Team that owns the key.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -3417,7 +2637,7 @@ ApiKeySpec defines the desired state of ApiKey.
         <td><b>userId</b></td>
         <td>string</td>
         <td>
-          <br/>
+          User that owns the key.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -3464,6 +2684,22 @@ ApiKeyStatus defines the observed state of ApiKey.
 
 
 Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
 
 <table>
     <thead>
@@ -3516,7 +2752,701 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## Connector
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+Connector is the Schema for the connectors API.
+NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>Connector</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#connectorspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          ConnectorSpec defines the desired state of Connector.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#connectorstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          ConnectorStatus defines the observed state of Connector.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.spec
+<sup><sup>[↩ Parent](#connector)</sup></sup>
+
+
+
+ConnectorSpec defines the desired state of Connector.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#connectorspecconnectortype">connectorType</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.spec.connectorType
+<sup><sup>[↩ Parent](#connectorspec)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#connectorspecconnectortypegenerichttps">genericHttps</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#connectorspecconnectortypeslack">slack</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.spec.connectorType.genericHttps
+<sup><sup>[↩ Parent](#connectorspecconnectortype)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#connectorspecconnectortypegenerichttpsconfig">config</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.spec.connectorType.genericHttps.config
+<sup><sup>[↩ Parent](#connectorspecconnectortypegenerichttps)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>url</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>additionalBodyFields</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>additionalHeaders</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>method</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: get, post, put<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.spec.connectorType.slack
+<sup><sup>[↩ Parent](#connectorspecconnectortype)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#connectorspecconnectortypeslackcommonfields">commonFields</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#connectorspecconnectortypeslackoverridesindex">overrides</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.spec.connectorType.slack.commonFields
+<sup><sup>[↩ Parent](#connectorspecconnectortypeslack)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#connectorspecconnectortypeslackcommonfieldsrawconfig">rawConfig</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#connectorspecconnectortypeslackcommonfieldsstructuredconfig">structuredConfig</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.spec.connectorType.slack.commonFields.rawConfig
+<sup><sup>[↩ Parent](#connectorspecconnectortypeslackcommonfields)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fallbackChannel</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#connectorspecconnectortypeslackcommonfieldsrawconfigintegration">integration</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>channel</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.spec.connectorType.slack.commonFields.rawConfig.integration
+<sup><sup>[↩ Parent](#connectorspecconnectortypeslackcommonfieldsrawconfig)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#connectorspecconnectortypeslackcommonfieldsrawconfigintegrationbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.spec.connectorType.slack.commonFields.rawConfig.integration.backendRef
+<sup><sup>[↩ Parent](#connectorspecconnectortypeslackcommonfieldsrawconfigintegration)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.spec.connectorType.slack.commonFields.structuredConfig
+<sup><sup>[↩ Parent](#connectorspecconnectortypeslackcommonfields)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fallbackChannel</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#connectorspecconnectortypeslackcommonfieldsstructuredconfigintegration">integration</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>channel</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.spec.connectorType.slack.commonFields.structuredConfig.integration
+<sup><sup>[↩ Parent](#connectorspecconnectortypeslackcommonfieldsstructuredconfig)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#connectorspecconnectortypeslackcommonfieldsstructuredconfigintegrationbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.spec.connectorType.slack.commonFields.structuredConfig.integration.backendRef
+<sup><sup>[↩ Parent](#connectorspecconnectortypeslackcommonfieldsstructuredconfigintegration)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.spec.connectorType.slack.overrides[index]
+<sup><sup>[↩ Parent](#connectorspecconnectortypeslack)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>entityType</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#connectorspecconnectortypeslackoverridesindexrawconfig">rawConfig</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#connectorspecconnectortypeslackoverridesindexstructuredconfig">structuredConfig</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.spec.connectorType.slack.overrides[index].rawConfig
+<sup><sup>[↩ Parent](#connectorspecconnectortypeslackoverridesindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>channel</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.spec.connectorType.slack.overrides[index].structuredConfig
+<sup><sup>[↩ Parent](#connectorspecconnectortypeslackoverridesindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>channel</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.status
+<sup><sup>[↩ Parent](#connector)</sup></sup>
+
+
+
+ConnectorStatus defines the observed state of Connector.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#connectorstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.status.conditions[index]
+<sup><sup>[↩ Parent](#connectorstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -3574,7 +3504,7 @@ CustomRole is the Schema for the customroles API.
         <td><b><a href="#customrolespec">spec</a></b></td>
         <td>object</td>
         <td>
-          CustomRoleSpec defines the desired state of CustomRole.<br/>
+          CustomRoleSpec defines the desired state of a Coralogix Custom Role.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -3593,7 +3523,7 @@ CustomRole is the Schema for the customroles API.
 
 
 
-CustomRoleSpec defines the desired state of CustomRole.
+CustomRoleSpec defines the desired state of a Coralogix Custom Role.
 
 <table>
     <thead>
@@ -3608,28 +3538,28 @@ CustomRoleSpec defines the desired state of CustomRole.
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Description of the custom role.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the custom role.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>parentRoleName</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Parent role name.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>permissions</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Custom role permissions.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -3676,6 +3606,22 @@ CustomRoleStatus defines the observed state of CustomRole.
 
 
 Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
 
 <table>
     <thead>
@@ -3728,7 +3674,740 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## GlobalRouter
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+GlobalRouter is the Schema for the globalrouters API.
+NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>GlobalRouter</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          GlobalRouterSpec defines the desired state of GlobalRouter.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          GlobalRouterStatus defines the observed state of GlobalRouter.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec
+<sup><sup>[↩ Parent](#globalrouter)</sup></sup>
+
+
+
+GlobalRouterSpec defines the desired state of GlobalRouter.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>entityType</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspecfallbackindex">fallback</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspecrulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.fallback[index]
+<sup><sup>[↩ Parent](#globalrouterspec)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#globalrouterspecfallbackindexconnector">connector</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspecfallbackindexpreset">preset</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.fallback[index].connector
+<sup><sup>[↩ Parent](#globalrouterspecfallbackindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#globalrouterspecfallbackindexconnectorbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspecfallbackindexconnectorresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          Reference to a Coralogix resource.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.fallback[index].connector.backendRef
+<sup><sup>[↩ Parent](#globalrouterspecfallbackindexconnector)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.fallback[index].connector.resourceRef
+<sup><sup>[↩ Parent](#globalrouterspecfallbackindexconnector)</sup></sup>
+
+
+
+Reference to a Coralogix resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource (not id).<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.fallback[index].preset
+<sup><sup>[↩ Parent](#globalrouterspecfallbackindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#globalrouterspecfallbackindexpresetbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspecfallbackindexpresetresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          Reference to a Coralogix resource.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.fallback[index].preset.backendRef
+<sup><sup>[↩ Parent](#globalrouterspecfallbackindexpreset)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.fallback[index].preset.resourceRef
+<sup><sup>[↩ Parent](#globalrouterspecfallbackindexpreset)</sup></sup>
+
+
+
+Reference to a Coralogix resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource (not id).<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.rules[index]
+<sup><sup>[↩ Parent](#globalrouterspec)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspecrulesindextargetsindex">targets</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.rules[index].targets[index]
+<sup><sup>[↩ Parent](#globalrouterspecrulesindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#globalrouterspecrulesindextargetsindexconnector">connector</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspecrulesindextargetsindexpreset">preset</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.rules[index].targets[index].connector
+<sup><sup>[↩ Parent](#globalrouterspecrulesindextargetsindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#globalrouterspecrulesindextargetsindexconnectorbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspecrulesindextargetsindexconnectorresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          Reference to a Coralogix resource.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.rules[index].targets[index].connector.backendRef
+<sup><sup>[↩ Parent](#globalrouterspecrulesindextargetsindexconnector)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.rules[index].targets[index].connector.resourceRef
+<sup><sup>[↩ Parent](#globalrouterspecrulesindextargetsindexconnector)</sup></sup>
+
+
+
+Reference to a Coralogix resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource (not id).<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.rules[index].targets[index].preset
+<sup><sup>[↩ Parent](#globalrouterspecrulesindextargetsindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#globalrouterspecrulesindextargetsindexpresetbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspecrulesindextargetsindexpresetresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          Reference to a Coralogix resource.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.rules[index].targets[index].preset.backendRef
+<sup><sup>[↩ Parent](#globalrouterspecrulesindextargetsindexpreset)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.rules[index].targets[index].preset.resourceRef
+<sup><sup>[↩ Parent](#globalrouterspecrulesindextargetsindexpreset)</sup></sup>
+
+
+
+Reference to a Coralogix resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource (not id).<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.status
+<sup><sup>[↩ Parent](#globalrouter)</sup></sup>
+
+
+
+GlobalRouterStatus defines the observed state of GlobalRouter.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#globalrouterstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.status.conditions[index]
+<sup><sup>[↩ Parent](#globalrouterstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -3786,7 +4465,7 @@ Group is the Schema for the groups API.
         <td><b><a href="#groupspec">spec</a></b></td>
         <td>object</td>
         <td>
-          GroupSpec defines the desired state of Group.<br/>
+          GroupSpec defines the desired state of Coralogix Group.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -3805,7 +4484,7 @@ Group is the Schema for the groups API.
 
 
 
-GroupSpec defines the desired state of Group.
+GroupSpec defines the desired state of Coralogix Group.
 
 <table>
     <thead>
@@ -3820,35 +4499,35 @@ GroupSpec defines the desired state of Group.
         <td><b><a href="#groupspeccustomrolesindex">customRoles</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Custom roles applied to the group.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the group.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Description of the group.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#groupspecmembersindex">members</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Members of the group.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#groupspecscope">scope</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Scope attached to the group.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -3860,7 +4539,7 @@ GroupSpec defines the desired state of Group.
 
 
 
-
+Custom role reference.
 
 <table>
     <thead>
@@ -3875,7 +4554,7 @@ GroupSpec defines the desired state of Group.
         <td><b><a href="#groupspeccustomrolesindexresourceref">resourceRef</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Reference to the custom role.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -3887,7 +4566,7 @@ GroupSpec defines the desired state of Group.
 
 
 
-
+Reference to the custom role.
 
 <table>
     <thead>
@@ -3902,7 +4581,7 @@ GroupSpec defines the desired state of Group.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the resource (not id).<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -3921,7 +4600,7 @@ GroupSpec defines the desired state of Group.
 
 
 
-
+User on Coralogix.
 
 <table>
     <thead>
@@ -3936,7 +4615,7 @@ GroupSpec defines the desired state of Group.
         <td><b>userName</b></td>
         <td>string</td>
         <td>
-          <br/>
+          User's name.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -3948,7 +4627,7 @@ GroupSpec defines the desired state of Group.
 
 
 
-
+Scope attached to the group.
 
 <table>
     <thead>
@@ -3963,7 +4642,7 @@ GroupSpec defines the desired state of Group.
         <td><b><a href="#groupspecscoperesourceref">resourceRef</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Scope reference<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -3975,7 +4654,7 @@ GroupSpec defines the desired state of Group.
 
 
 
-
+Scope reference
 
 <table>
     <thead>
@@ -3990,7 +4669,7 @@ GroupSpec defines the desired state of Group.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the resource (not id).<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -4044,6 +4723,22 @@ GroupStatus defines the observed state of Group.
 
 
 Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
 
 <table>
     <thead>
@@ -4096,7 +4791,11 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -4154,7 +4853,7 @@ Integration is the Schema for the integrations API.
         <td><b><a href="#integrationspec">spec</a></b></td>
         <td>object</td>
         <td>
-          IntegrationSpec defines the desired state of Integration.<br/>
+          IntegrationSpec defines the desired state of a Coralogix (managed) integration.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4173,7 +4872,7 @@ Integration is the Schema for the integrations API.
 
 
 
-IntegrationSpec defines the desired state of Integration.
+IntegrationSpec defines the desired state of a Coralogix (managed) integration.
 
 <table>
     <thead>
@@ -4188,21 +4887,21 @@ IntegrationSpec defines the desired state of Integration.
         <td><b>integrationKey</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Unique name of the integration.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>parameters</b></td>
         <td>object</td>
         <td>
-          <br/>
+          Parameters required by the integration.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>version</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Desired version of the integration<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -4249,6 +4948,22 @@ IntegrationStatus defines the observed state of Integration.
 
 
 Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
 
 <table>
     <thead>
@@ -4301,7 +5016,11 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -4327,7 +5046,7 @@ with respect to the current state of the instance.<br/>
 
 
 
-OutboundWebhook is the Schema for the outboundwebhooks API
+OutboundWebhook is the Schema for the API
 
 <table>
     <thead>
@@ -4393,14 +5112,14 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the webhook.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktype">outboundWebhookType</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Type of webhook.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -4412,7 +5131,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+Type of webhook.
 
 <table>
     <thead>
@@ -4427,70 +5146,70 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypeawseventbridge">awsEventBridge</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          AWS eventbridge message.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypedemisto">demisto</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Demisto notification.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypeemailgroup">emailGroup</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Email notification.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypegenericwebhook">genericWebhook</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Generic HTTP(s) webhook.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypejira">jira</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Jira issue.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypemicrosoftteams">microsoftTeams</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Teams message.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypeopsgenie">opsgenie</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Opsgenie notification.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypepagerduty">pagerDuty</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          PagerDuty notification.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypesendlog">sendLog</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          SendLog notification.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypeslack">slack</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Slack message.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -4502,7 +5221,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+AWS eventbridge message.
 
 <table>
     <thead>
@@ -4557,7 +5276,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+Demisto notification.
 
 <table>
     <thead>
@@ -4598,7 +5317,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+Email notification.
 
 <table>
     <thead>
@@ -4613,7 +5332,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
         <td><b>emailAddresses</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Recipients<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -4625,7 +5344,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+Generic HTTP(s) webhook.
 
 <table>
     <thead>
@@ -4640,7 +5359,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
         <td><b>method</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          HTTP Method to use.<br/>
           <br/>
             <i>Enum</i>: Unkown, Get, Post, Put<br/>
         </td>
@@ -4649,21 +5368,21 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
         <td><b>url</b></td>
         <td>string</td>
         <td>
-          <br/>
+          URL to call<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>headers</b></td>
         <td>map[string]string</td>
         <td>
-          <br/>
+          Attached HTTP headers.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>payload</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Payload of the webhook call.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -4675,7 +5394,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+Jira issue.
 
 <table>
     <thead>
@@ -4690,28 +5409,28 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
         <td><b>apiToken</b></td>
         <td>string</td>
         <td>
-          <br/>
+          API token<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>email</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Email address associated with the token<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>projectKey</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Project to add it to.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>url</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Jira URL<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -4723,7 +5442,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+Teams message.
 
 <table>
     <thead>
@@ -4738,7 +5457,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
         <td><b>url</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Teams URL<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -4750,7 +5469,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+Opsgenie notification.
 
 <table>
     <thead>
@@ -4777,7 +5496,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+PagerDuty notification.
 
 <table>
     <thead>
@@ -4792,7 +5511,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
         <td><b>serviceKey</b></td>
         <td>string</td>
         <td>
-          <br/>
+          PagerDuty service key.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -4804,7 +5523,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+SendLog notification.
 
 <table>
     <thead>
@@ -4819,14 +5538,14 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
         <td><b>payload</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Payload of the notification<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>url</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Sendlog URL.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -4838,7 +5557,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+Slack message.
 
 <table>
     <thead>
@@ -4860,14 +5579,14 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypeslackattachmentsindex">attachments</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Attachments of the message.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypeslackdigestsindex">digests</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Digest configuration.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -4879,7 +5598,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+Slack attachment
 
 <table>
     <thead>
@@ -4894,14 +5613,14 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
         <td><b>isActive</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Active status.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Attachment to the message.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -4913,7 +5632,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+Digest config.
 
 <table>
     <thead>
@@ -4928,14 +5647,14 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
         <td><b>isActive</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Active status.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Type of digest to send<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -4989,6 +5708,22 @@ OutboundWebhookStatus defines the observed state of OutboundWebhook
 
 
 Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
 
 <table>
     <thead>
@@ -5041,7 +5776,695 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## Preset
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+Preset is the Schema for the presets API.
+NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>Preset</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#presetspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          PresetSpec defines the desired state of Preset.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#presetstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          PresetStatus defines the observed state of Preset.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Preset.spec
+<sup><sup>[↩ Parent](#preset)</sup></sup>
+
+
+
+PresetSpec defines the desired state of Preset.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#presetspecconnectortype">connectorType</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>entityType</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: alerts<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>parentId</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Preset.spec.connectorType
+<sup><sup>[↩ Parent](#presetspec)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#presetspecconnectortypegenerichttps">genericHttps</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#presetspecconnectortypeslack">slack</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Preset.spec.connectorType.genericHttps
+<sup><sup>[↩ Parent](#presetspecconnectortype)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#presetspecconnectortypegenerichttpsgeneral">general</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#presetspecconnectortypegenerichttpsoverridesindex">overrides</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Preset.spec.connectorType.genericHttps.general
+<sup><sup>[↩ Parent](#presetspecconnectortypegenerichttps)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#presetspecconnectortypegenerichttpsgeneralfields">fields</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Preset.spec.connectorType.genericHttps.general.fields
+<sup><sup>[↩ Parent](#presetspecconnectortypegenerichttpsgeneral)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>body</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>headers</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Preset.spec.connectorType.genericHttps.overrides[index]
+<sup><sup>[↩ Parent](#presetspecconnectortypegenerichttps)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>entitySubType</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#presetspecconnectortypegenerichttpsoverridesindexfields">fields</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Preset.spec.connectorType.genericHttps.overrides[index].fields
+<sup><sup>[↩ Parent](#presetspecconnectortypegenerichttpsoverridesindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>body</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>headers</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Preset.spec.connectorType.slack
+<sup><sup>[↩ Parent](#presetspecconnectortype)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#presetspecconnectortypeslackgeneral">general</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#presetspecconnectortypeslackoverridesindex">overrides</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Preset.spec.connectorType.slack.general
+<sup><sup>[↩ Parent](#presetspecconnectortypeslack)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#presetspecconnectortypeslackgeneralrawfields">rawFields</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#presetspecconnectortypeslackgeneralstructuredfields">structuredFields</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Preset.spec.connectorType.slack.general.rawFields
+<sup><sup>[↩ Parent](#presetspecconnectortypeslackgeneral)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>payload</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Preset.spec.connectorType.slack.general.structuredFields
+<sup><sup>[↩ Parent](#presetspecconnectortypeslackgeneral)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>footer</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>title</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Preset.spec.connectorType.slack.overrides[index]
+<sup><sup>[↩ Parent](#presetspecconnectortypeslack)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>entitySubType</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#presetspecconnectortypeslackoverridesindexrawfields">rawFields</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#presetspecconnectortypeslackoverridesindexstructuredfields">structuredFields</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Preset.spec.connectorType.slack.overrides[index].rawFields
+<sup><sup>[↩ Parent](#presetspecconnectortypeslackoverridesindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>payload</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Preset.spec.connectorType.slack.overrides[index].structuredFields
+<sup><sup>[↩ Parent](#presetspecconnectortypeslackoverridesindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>footer</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>title</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Preset.status
+<sup><sup>[↩ Parent](#preset)</sup></sup>
+
+
+
+PresetStatus defines the observed state of Preset.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#presetstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Preset.status.conditions[index]
+<sup><sup>[↩ Parent](#presetstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -5099,7 +6522,7 @@ RecordingRuleGroupSet is the Schema for the recordingrulegroupsets API
         <td><b><a href="#recordingrulegroupsetspec">spec</a></b></td>
         <td>object</td>
         <td>
-          RecordingRuleGroupSetSpec defines the desired state of RecordingRuleGroupSet<br/>
+          RecordingRuleGroupSetSpec defines the desired state of a set of Coralogix recording rule groups.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5118,7 +6541,7 @@ RecordingRuleGroupSet is the Schema for the recordingrulegroupsets API
 
 
 
-RecordingRuleGroupSetSpec defines the desired state of RecordingRuleGroupSet
+RecordingRuleGroupSetSpec defines the desired state of a set of Coralogix recording rule groups.
 
 <table>
     <thead>
@@ -5133,7 +6556,7 @@ RecordingRuleGroupSetSpec defines the desired state of RecordingRuleGroupSet
         <td><b><a href="#recordingrulegroupsetspecgroupsindex">groups</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Recording rule groups.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -5145,7 +6568,7 @@ RecordingRuleGroupSetSpec defines the desired state of RecordingRuleGroupSet
 
 
 
-
+A Coralogix recording rule group.
 
 <table>
     <thead>
@@ -5160,7 +6583,7 @@ RecordingRuleGroupSetSpec defines the desired state of RecordingRuleGroupSet
         <td><b>intervalSeconds</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          How often rules in the group are evaluated (in seconds).<br/>
           <br/>
             <i>Format</i>: int32<br/>
             <i>Default</i>: 60<br/>
@@ -5170,7 +6593,7 @@ RecordingRuleGroupSetSpec defines the desired state of RecordingRuleGroupSet
         <td><b>limit</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Limits the number of alerts an alerting rule and series a recording-rule can produce. 0 is no limit.<br/>
           <br/>
             <i>Format</i>: int64<br/>
         </td>
@@ -5179,15 +6602,14 @@ RecordingRuleGroupSetSpec defines the desired state of RecordingRuleGroupSet
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-Important: Run "make" to regenerate code after modifying this file<br/>
+          The (unique) rule group name.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#recordingrulegroupsetspecgroupsindexrulesindex">rules</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Rules of this group.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -5199,7 +6621,7 @@ Important: Run "make" to regenerate code after modifying this file<br/>
 
 
 
-
+A recording rule.
 
 <table>
     <thead>
@@ -5214,21 +6636,22 @@ Important: Run "make" to regenerate code after modifying this file<br/>
         <td><b>expr</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The PromQL expression to evaluate.
+Every evaluation cycle this is evaluated at the current time, and the result recorded as a new set of time series with the metric name as given by 'record'.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>labels</b></td>
         <td>map[string]string</td>
         <td>
-          <br/>
+          Labels to add or overwrite before storing the result.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>record</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The name of the time series to output to. Must be a valid metric name.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -5275,6 +6698,22 @@ RecordingRuleGroupSetStatus defines the observed state of RecordingRuleGroupSet
 
 
 Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
 
 <table>
     <thead>
@@ -5327,7 +6766,11 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -5419,14 +6862,14 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the rule-group.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>active</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Whether the rule-group is active.<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -5435,28 +6878,28 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>applications</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Rules will execute on logs that match the these applications.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>creator</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Rule-group creator<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Description of the rule-group.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>hidden</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Hides the rule-group.<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -5465,7 +6908,7 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>order</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          The index of the rule-group between the other rule-groups.<br/>
           <br/>
             <i>Format</i>: int32<br/>
             <i>Minimum</i>: 1<br/>
@@ -5475,7 +6918,7 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>severities</b></td>
         <td>[]enum</td>
         <td>
-          <br/>
+          Rules will execute on logs that match the these severities.<br/>
           <br/>
             <i>Enum</i>: Debug, Verbose, Info, Warning, Error, Critical<br/>
         </td>
@@ -5484,14 +6927,14 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b><a href="#rulegroupspecsubgroupsindex">subgroups</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          List of rule-subgroups. Every rule-subgroup is a list of rules linked with a logical 'OR' (||) operation.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>subsystems</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Rules will execute on logs that match the these subsystems.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -5503,7 +6946,7 @@ RuleGroupSpec defines the Desired state of RuleGroup
 
 
 
-
+Sub group of rules.
 
 <table>
     <thead>
@@ -5518,7 +6961,7 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>active</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Determines whether to rule will be active or not.<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -5527,14 +6970,14 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>id</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The rule id.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>order</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Determines the index of the rule inside the rule-subgroup.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -5543,7 +6986,7 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b><a href="#rulegroupspecsubgroupsindexrulesindex">rules</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          List of rules associated with the sub group.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -5555,7 +6998,7 @@ RuleGroupSpec defines the Desired state of RuleGroup
 
 
 
-
+A rule to change data extraction.
 
 <table>
     <thead>
@@ -5570,14 +7013,14 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the rule.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>active</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Whether the rule will be activated.<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -5586,70 +7029,70 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b><a href="#rulegroupspecsubgroupsindexrulesindexblock">block</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Block rules allow for refined filtering of incoming logs with a Regular Expression.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Description of the rule.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#rulegroupspecsubgroupsindexrulesindexextract">extract</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Use a named Regular Expression group to extract specific values you need as JSON getKeysStrings without having to parse the entire log.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#rulegroupspecsubgroupsindexrulesindexextracttimestamp">extractTimestamp</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Replace rules are used to replace logs timestamp with JSON field.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#rulegroupspecsubgroupsindexrulesindexjsonextract">jsonExtract</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Name a JSON field to extract its value directly into a Coralogix metadata field<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#rulegroupspecsubgroupsindexrulesindexjsonstringify">jsonStringify</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Convert JSON object to JSON string.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#rulegroupspecsubgroupsindexrulesindexparse">parse</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Parse unstructured logs into JSON format using named Regular Expression groups.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#rulegroupspecsubgroupsindexrulesindexparsejsonfield">parseJsonField</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Convert JSON string to JSON object.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#rulegroupspecsubgroupsindexrulesindexremovefields">removeFields</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Remove Fields allows to select fields that will not be indexed.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#rulegroupspecsubgroupsindexrulesindexreplace">replace</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Replace rules are used to strings in order to fix log structure, change log severity, or obscure information.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -5661,7 +7104,7 @@ RuleGroupSpec defines the Desired state of RuleGroup
 
 
 
-
+Block rules allow for refined filtering of incoming logs with a Regular Expression.
 
 <table>
     <thead>
@@ -5676,21 +7119,21 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>regex</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Regular Expression. More info: https://coralogix.com/blog/regex-101/<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>sourceField</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The field on which the Regular Expression will operate on.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>blockingAllMatchingBlocks</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Block Logic. If true or nor set - blocking all matching blocks, if false - blocking all non-matching blocks.<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -5699,7 +7142,7 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>keepBlockedLogs</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Determines if to view blocked logs in LiveTail and archive to S3.<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -5713,7 +7156,7 @@ RuleGroupSpec defines the Desired state of RuleGroup
 
 
 
-
+Use a named Regular Expression group to extract specific values you need as JSON getKeysStrings without having to parse the entire log.
 
 <table>
     <thead>
@@ -5728,14 +7171,14 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>regex</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Regular Expression. More info: https://coralogix.com/blog/regex-101/<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>sourceField</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The field on which the Regular Expression will operate on.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -5747,7 +7190,7 @@ RuleGroupSpec defines the Desired state of RuleGroup
 
 
 
-
+Replace rules are used to replace logs timestamp with JSON field.
 
 <table>
     <thead>
@@ -5762,7 +7205,7 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>fieldFormatStandard</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          The format standard to parse the timestamp.<br/>
           <br/>
             <i>Enum</i>: Strftime, JavaSDF, Golang, SecondTS, MilliTS, MicroTS, NanoTS<br/>
         </td>
@@ -5771,14 +7214,14 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>sourceField</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The field on which the Regular Expression will operate on.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>timeFormat</b></td>
         <td>string</td>
         <td>
-          <br/>
+          A time formatting string that matches the field format standard.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -5790,7 +7233,7 @@ RuleGroupSpec defines the Desired state of RuleGroup
 
 
 
-
+Name a JSON field to extract its value directly into a Coralogix metadata field
 
 <table>
     <thead>
@@ -5805,7 +7248,7 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>destinationField</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          The field that will be populated by the results of the Regular Expression operation.<br/>
           <br/>
             <i>Enum</i>: Category, CLASSNAME, METHODNAME, THREADID, SEVERITY<br/>
         </td>
@@ -5814,7 +7257,7 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>jsonKey</b></td>
         <td>string</td>
         <td>
-          <br/>
+          JSON key to extract its value directly into a Coralogix metadata field.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -5826,7 +7269,7 @@ RuleGroupSpec defines the Desired state of RuleGroup
 
 
 
-
+Convert JSON object to JSON string.
 
 <table>
     <thead>
@@ -5841,14 +7284,14 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>destinationField</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The field that will be populated by the results of the Regular Expression<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>sourceField</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The field on which the Regular Expression will operate on.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -5869,7 +7312,7 @@ RuleGroupSpec defines the Desired state of RuleGroup
 
 
 
-
+Parse unstructured logs into JSON format using named Regular Expression groups.
 
 <table>
     <thead>
@@ -5884,21 +7327,21 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>destinationField</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The field that will be populated by the results of the Regular Expression operation.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>regex</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Regular Expression. More info: https://coralogix.com/blog/regex-101/<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>sourceField</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The field on which the Regular Expression will operate on.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -5910,7 +7353,7 @@ RuleGroupSpec defines the Desired state of RuleGroup
 
 
 
-
+Convert JSON string to JSON object.
 
 <table>
     <thead>
@@ -5925,28 +7368,28 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>destinationField</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The field that will be populated by the results of the Regular Expression<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>keepDestinationField</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Determines whether to keep or to delete the destination field.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>keepSourceField</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Determines whether to keep or to delete the source field.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>sourceField</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The field on which the Regular Expression will operate on.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -5958,7 +7401,7 @@ RuleGroupSpec defines the Desired state of RuleGroup
 
 
 
-
+Remove Fields allows to select fields that will not be indexed.
 
 <table>
     <thead>
@@ -5973,7 +7416,7 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>excludedFields</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Excluded fields won't be indexed.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -5985,7 +7428,7 @@ RuleGroupSpec defines the Desired state of RuleGroup
 
 
 
-
+Replace rules are used to strings in order to fix log structure, change log severity, or obscure information.
 
 <table>
     <thead>
@@ -6000,28 +7443,28 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>destinationField</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The field that will be populated by the results of the Regular Expression operation.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>regex</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Regular Expression. More info: https://coralogix.com/blog/regex-101/<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>replacementString</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The string that will replace the matched Regular Expression<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>sourceField</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The field on which the Regular Expression will operate on.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -6068,6 +7511,22 @@ RuleGroupStatus defines the observed state of RuleGroup
 
 
 Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
 
 <table>
     <thead>
@@ -6120,7 +7579,11 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -6178,14 +7641,14 @@ Scope is the Schema for the scopes API.
         <td><b><a href="#scopespec">spec</a></b></td>
         <td>object</td>
         <td>
-          ScopeSpec defines the desired state of Scope.<br/>
+          ScopeSpec defines the desired state of a Coralogix Scope.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#scopestatus">status</a></b></td>
         <td>object</td>
         <td>
-          ScopeStatus defines the observed state of Scope.<br/>
+          ScopeStatus defines the observed state of Coralogix Scope.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -6197,7 +7660,7 @@ Scope is the Schema for the scopes API.
 
 
 
-ScopeSpec defines the desired state of Scope.
+ScopeSpec defines the desired state of a Coralogix Scope.
 
 <table>
     <thead>
@@ -6212,7 +7675,7 @@ ScopeSpec defines the desired state of Scope.
         <td><b>defaultExpression</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Default expression to use when no filter matches the query. Until further notice, this is limited to `true` (everything is included) or `false` (nothing is included). Use a version tag (e.g `<v1>true` or `<v1>false`)<br/>
           <br/>
             <i>Enum</i>: <v1>true, <v1>false<br/>
         </td>
@@ -6221,21 +7684,21 @@ ScopeSpec defines the desired state of Scope.
         <td><b><a href="#scopespecfiltersindex">filters</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Filters applied to include data in the scope.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Scope display name.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Description of the scope. Optional.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -6247,7 +7710,7 @@ ScopeSpec defines the desired state of Scope.
 
 
 
-ScopeFilter defines a filter for a scope
+ScopeFilter defines a filter to include data in a scope.
 
 <table>
     <thead>
@@ -6262,7 +7725,7 @@ ScopeFilter defines a filter for a scope
         <td><b>entityType</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Entity type to apply the expression on.<br/>
           <br/>
             <i>Enum</i>: logs, spans, unspecified<br/>
         </td>
@@ -6271,7 +7734,7 @@ ScopeFilter defines a filter for a scope
         <td><b>expression</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Expression to run.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -6283,7 +7746,7 @@ ScopeFilter defines a filter for a scope
 
 
 
-ScopeStatus defines the observed state of Scope.
+ScopeStatus defines the observed state of Coralogix Scope.
 
 <table>
     <thead>
@@ -6318,6 +7781,22 @@ ScopeStatus defines the observed state of Scope.
 
 
 Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
 
 <table>
     <thead>
@@ -6370,7 +7849,11 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -6431,7 +7914,7 @@ removed. Use with caution as this operation is destructive.
         <td><b><a href="#tcologspoliciesspec">spec</a></b></td>
         <td>object</td>
         <td>
-          TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.<br/>
+          TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6450,7 +7933,7 @@ removed. Use with caution as this operation is destructive.
 
 
 
-TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
+TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.
 
 <table>
     <thead>
@@ -6465,7 +7948,7 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
         <td><b><a href="#tcologspoliciesspecpoliciesindex">policies</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Coralogix TCO-Policies-List. For more information - https://coralogix.com/docs/tco-optimizer-api<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -6477,7 +7960,7 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
 
 
 
-
+A TCO policy for logs.
 
 <table>
     <thead>
@@ -6492,14 +7975,14 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the policy.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>priority</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          The policy priority.<br/>
           <br/>
             <i>Enum</i>: block, high, medium, low<br/>
         </td>
@@ -6508,7 +7991,7 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
         <td><b>severities</b></td>
         <td>[]enum</td>
         <td>
-          <br/>
+          The severities to apply the policy on.<br/>
           <br/>
             <i>Enum</i>: info, warning, critical, error, debug, verbose<br/>
         </td>
@@ -6517,28 +8000,28 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
         <td><b><a href="#tcologspoliciesspecpoliciesindexapplications">applications</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          The applications to apply the policy on. Applies the policy on all the applications by default.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcologspoliciesspecpoliciesindexarchiveretention">archiveRetention</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Matches the specified retention.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Description of the policy.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcologspoliciesspecpoliciesindexsubsystems">subsystems</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          The subsystems to apply the policy on. Applies the policy on all the subsystems by default.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -6550,7 +8033,7 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
 
 
 
-
+The applications to apply the policy on. Applies the policy on all the applications by default.
 
 <table>
     <thead>
@@ -6565,14 +8048,14 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Names to match.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>ruleType</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Type of matching for the name.<br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
         </td>
@@ -6586,7 +8069,7 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
 
 
 
-
+Matches the specified retention.
 
 <table>
     <thead>
@@ -6601,7 +8084,7 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
         <td><b><a href="#tcologspoliciesspecpoliciesindexarchiveretentionbackendref">backendRef</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Reference to the retention policy<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -6613,7 +8096,7 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
 
 
 
-
+Reference to the retention policy
 
 <table>
     <thead>
@@ -6628,7 +8111,7 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the policy.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -6640,7 +8123,7 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
 
 
 
-
+The subsystems to apply the policy on. Applies the policy on all the subsystems by default.
 
 <table>
     <thead>
@@ -6655,14 +8138,14 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Names to match.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>ruleType</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Type of matching for the name.<br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
         </td>
@@ -6704,6 +8187,22 @@ TCOLogsPoliciesStatus defines the observed state of TCOLogsPolicies.
 
 
 Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
 
 <table>
     <thead>
@@ -6756,7 +8255,11 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -6817,7 +8320,7 @@ removed. Use with caution as this operation is destructive.
         <td><b><a href="#tcotracespoliciesspec">spec</a></b></td>
         <td>object</td>
         <td>
-          TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.<br/>
+          TCOTracesPoliciesSpec defines the desired state of Coralogix TCO policies for traces.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6836,7 +8339,7 @@ removed. Use with caution as this operation is destructive.
 
 
 
-TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
+TCOTracesPoliciesSpec defines the desired state of Coralogix TCO policies for traces.
 
 <table>
     <thead>
@@ -6851,7 +8354,7 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
         <td><b><a href="#tcotracespoliciesspecpoliciesindex">policies</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Coralogix TCO-Policies-List. For more information - https://coralogix.com/docs/tco-optimizer-api.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -6863,7 +8366,7 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
 
 
 
-
+Coralogix TCO policy for traces.
 
 <table>
     <thead>
@@ -6878,14 +8381,14 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the policy.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>priority</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          The policy priority.<br/>
           <br/>
             <i>Enum</i>: block, high, medium, low<br/>
         </td>
@@ -6894,49 +8397,49 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
         <td><b><a href="#tcotracespoliciesspecpoliciesindexactions">actions</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          The actions to apply the policy on. Applies the policy on all the actions by default.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcotracespoliciesspecpoliciesindexapplications">applications</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          The applications to apply the policy on. Applies the policy on all the applications by default.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcotracespoliciesspecpoliciesindexarchiveretention">archiveRetention</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Matches the specified retention.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Description of the policy.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcotracespoliciesspecpoliciesindexservices">services</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          The services to apply the policy on. Applies the policy on all the services by default.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcotracespoliciesspecpoliciesindexsubsystems">subsystems</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          The subsystems to apply the policy on. Applies the policy on all the subsystems by default.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcotracespoliciesspecpoliciesindextagsindex">tags</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          The tags to apply the policy on. Applies the policy on all the tags by default.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -6948,7 +8451,7 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
 
 
 
-
+The actions to apply the policy on. Applies the policy on all the actions by default.
 
 <table>
     <thead>
@@ -6963,14 +8466,14 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Names to match.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>ruleType</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Type of matching for the name.<br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
         </td>
@@ -6984,7 +8487,7 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
 
 
 
-
+The applications to apply the policy on. Applies the policy on all the applications by default.
 
 <table>
     <thead>
@@ -6999,14 +8502,14 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Names to match.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>ruleType</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Type of matching for the name.<br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
         </td>
@@ -7020,7 +8523,7 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
 
 
 
-
+Matches the specified retention.
 
 <table>
     <thead>
@@ -7035,7 +8538,7 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
         <td><b><a href="#tcotracespoliciesspecpoliciesindexarchiveretentionbackendref">backendRef</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Reference to the retention policy<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -7047,7 +8550,7 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
 
 
 
-
+Reference to the retention policy
 
 <table>
     <thead>
@@ -7062,7 +8565,7 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the policy.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -7074,7 +8577,7 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
 
 
 
-
+The services to apply the policy on. Applies the policy on all the services by default.
 
 <table>
     <thead>
@@ -7089,14 +8592,14 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Names to match.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>ruleType</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Type of matching for the name.<br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
         </td>
@@ -7110,7 +8613,7 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
 
 
 
-
+The subsystems to apply the policy on. Applies the policy on all the subsystems by default.
 
 <table>
     <thead>
@@ -7125,14 +8628,14 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Names to match.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>ruleType</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Type of matching for the name.<br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
         </td>
@@ -7146,7 +8649,7 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
 
 
 
-
+TCO Policy tag matching rule.
 
 <table>
     <thead>
@@ -7161,14 +8664,14 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Tag names to match.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>ruleType</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Operator to match with.<br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
         </td>
@@ -7177,7 +8680,7 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
         <td><b>values</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Values to match for<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -7217,6 +8720,22 @@ TCOTracesPoliciesStatus defines the observed state of TCOTracesPolicies.
 
 
 Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
 
 <table>
     <thead>
@@ -7269,7 +8788,11 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -7336,7 +8859,7 @@ Alert is the Schema for the alerts API.
         <td><b><a href="#alertspec-1">spec</a></b></td>
         <td>object</td>
         <td>
-          AlertSpec defines the desired state of Alert<br/>
+          AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -7355,7 +8878,7 @@ Alert is the Schema for the alerts API.
 
 
 
-AlertSpec defines the desired state of Alert
+AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
 
 <table>
     <thead>
@@ -7370,21 +8893,21 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttype-1">alertType</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Type of alert.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the alert<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>priority</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Priority of the alert.<br/>
           <br/>
             <i>Enum</i>: p1, p2, p3, p4, p5<br/>
         </td>
@@ -7393,14 +8916,14 @@ AlertSpec defines the desired state of Alert
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Description of the alert<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Enable/disable the alert.<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -7409,35 +8932,36 @@ AlertSpec defines the desired state of Alert
         <td><b>entityLabels</b></td>
         <td>map[string]string</td>
         <td>
-          <br/>
+          Labels attached to the alert.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>groupByKeys</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Grouping fields for multiple alerts.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecincidentssettings">incidentsSettings</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Settings for the attached incidents.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecnotificationgroup">notificationGroup</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Where notifications should be sent to.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecnotificationgroupexcessindex">notificationGroupExcess</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Do not use.
+Deprecated: Legacy field for when multiple notification groups were attached.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -7453,7 +8977,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecschedule">schedule</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Alert activity schedule. Will be activated all the time if not specified.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -7465,7 +8989,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Type of alert.
 
 <table>
     <thead>
@@ -9614,7 +11138,7 @@ AlertSpec defines the desired state of Alert
         <td><b>autoRetireTimeframe</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Automatically retire the alert after...<br/>
           <br/>
             <i>Enum</i>: never, 5m, 10m, 1h, 2h, 6h, 12h, 24h<br/>
             <i>Default</i>: never<br/>
@@ -9996,7 +11520,7 @@ AlertSpec defines the desired state of Alert
         <td><b>autoRetireTimeframe</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Automatically retire the alert after...<br/>
           <br/>
             <i>Enum</i>: never, 5m, 10m, 1h, 2h, 6h, 12h, 24h<br/>
             <i>Default</i>: never<br/>
@@ -10801,7 +12325,7 @@ AlertSpec defines the desired state of Alert
         <td><b>autoRetireTimeframe</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Automatically retire the alert after...<br/>
           <br/>
             <i>Enum</i>: never, 5m, 10m, 1h, 2h, 6h, 12h, 24h<br/>
             <i>Default</i>: never<br/>
@@ -11654,7 +13178,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Settings for the attached incidents.
 
 <table>
     <thead>
@@ -11669,7 +13193,7 @@ AlertSpec defines the desired state of Alert
         <td><b>notifyOn</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          When to notify.<br/>
           <br/>
             <i>Enum</i>: triggeredOnly, triggeredAndResolved<br/>
             <i>Default</i>: triggeredOnly<br/>
@@ -11679,7 +13203,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecincidentssettingsretriggeringperiod">retriggeringPeriod</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          When to re-notify.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11691,7 +13215,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+When to re-notify.
 
 <table>
     <thead>
@@ -11706,7 +13230,7 @@ AlertSpec defines the desired state of Alert
         <td><b>minutes</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Delay between re-triggered alerts.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -11720,7 +13244,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Where notifications should be sent to.
 
 <table>
     <thead>
@@ -11732,29 +13256,36 @@ AlertSpec defines the desired state of Alert
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindex">destinations</a></b></td>
+        <td>[]object</td>
+        <td>
+          Other destinations using the notification center.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>groupByKeys</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Group notification by these keys.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecnotificationgroupwebhooksindex">webhooks</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Webhooks to trigger for notifications.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
 </table>
 
 
-### Alert.spec.notificationGroup.webhooks[index]
+### Alert.spec.notificationGroup.destinations[index]
 <sup><sup>[↩ Parent](#alertspecnotificationgroup)</sup></sup>
 
 
 
-
+Notification center destination for a notification.
 
 <table>
     <thead>
@@ -11766,39 +13297,114 @@ AlertSpec defines the desired state of Alert
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#alertspecnotificationgroupwebhooksindexintegration">integration</a></b></td>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtype">destinationType</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Type of notification to send.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>notifyOn</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          When to notify.<br/>
           <br/>
             <i>Enum</i>: triggeredOnly, triggeredAndResolved<br/>
             <i>Default</i>: triggeredOnly<br/>
         </td>
         <td>true</td>
-      </tr><tr>
-        <td><b><a href="#alertspecnotificationgroupwebhooksindexretriggeringperiod">retriggeringPeriod</a></b></td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindex)</sup></sup>
+
+
+
+Type of notification to send.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttps">genericHttps</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          HTTPS webhook.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslack">slack</a></b></td>
+        <td>object</td>
+        <td>
+          Slack app.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.genericHttps
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtype)</sup></sup>
+
+
+
+HTTPS webhook.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpsconnectorref">connectorRef</a></b></td>
+        <td>object</td>
+        <td>
+          Connector<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpspresetref">presetRef</a></b></td>
+        <td>object</td>
+        <td>
+          Preset for the notification.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpsresolvedroutingoverride">resolvedRoutingOverride</a></b></td>
+        <td>object</td>
+        <td>
+          Routing override for when the notification is resolved.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpstriggeredroutingoverride">triggeredRoutingOverride</a></b></td>
+        <td>object</td>
+        <td>
+          Routing override for when the notification is triggered.<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
 
-### Alert.spec.notificationGroup.webhooks[index].integration
-<sup><sup>[↩ Parent](#alertspecnotificationgroupwebhooksindex)</sup></sup>
+### Alert.spec.notificationGroup.destinations[index].destinationType.genericHttps.connectorRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttps)</sup></sup>
 
 
 
-
+Connector
 
 <table>
     <thead>
@@ -11810,48 +13416,14 @@ AlertSpec defines the desired state of Alert
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#alertspecnotificationgroupwebhooksindexintegrationintegrationref">integrationRef</a></b></td>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpsconnectorrefbackendref">backendRef</a></b></td>
         <td>object</td>
         <td>
           <br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>recipients</b></td>
-        <td>[]string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### Alert.spec.notificationGroup.webhooks[index].integration.integrationRef
-<sup><sup>[↩ Parent](#alertspecnotificationgroupwebhooksindexintegration)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b><a href="#alertspecnotificationgroupwebhooksindexintegrationintegrationrefbackendref">backendRef</a></b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#alertspecnotificationgroupwebhooksindexintegrationintegrationrefresourceref">resourceRef</a></b></td>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpsconnectorrefresourceref">resourceRef</a></b></td>
         <td>object</td>
         <td>
           <br/>
@@ -11861,8 +13433,8 @@ AlertSpec defines the desired state of Alert
 </table>
 
 
-### Alert.spec.notificationGroup.webhooks[index].integration.integrationRef.backendRef
-<sup><sup>[↩ Parent](#alertspecnotificationgroupwebhooksindexintegrationintegrationref)</sup></sup>
+### Alert.spec.notificationGroup.destinations[index].destinationType.genericHttps.connectorRef.backendRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpsconnectorref)</sup></sup>
 
 
 
@@ -11879,9 +13451,963 @@ AlertSpec defines the desired state of Alert
     </thead>
     <tbody><tr>
         <td><b>id</b></td>
-        <td>integer</td>
+        <td>string</td>
         <td>
           <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.genericHttps.connectorRef.resourceRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpsconnectorref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.genericHttps.presetRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttps)</sup></sup>
+
+
+
+Preset for the notification.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpspresetrefbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpspresetrefresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.genericHttps.presetRef.backendRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpspresetref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.genericHttps.presetRef.resourceRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpspresetref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.genericHttps.resolvedRoutingOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttps)</sup></sup>
+
+
+
+Routing override for when the notification is resolved.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpsresolvedroutingoverridepresetoverride">presetOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.genericHttps.resolvedRoutingOverride.presetOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpsresolvedroutingoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>body</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>headers</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.genericHttps.triggeredRoutingOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttps)</sup></sup>
+
+
+
+Routing override for when the notification is triggered.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpstriggeredroutingoverridepresetoverride">presetOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.genericHttps.triggeredRoutingOverride.presetOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypegenerichttpstriggeredroutingoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>body</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>headers</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtype)</sup></sup>
+
+
+
+Slack app.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslackconnectorref">connectorRef</a></b></td>
+        <td>object</td>
+        <td>
+          Connector<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslackpresetref">presetRef</a></b></td>
+        <td>object</td>
+        <td>
+          Preset for the notification.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslackresolvedroutingoverride">resolvedRoutingOverride</a></b></td>
+        <td>object</td>
+        <td>
+          Routing override for when the notification is resolved.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslacktriggeredroutingoverride">triggeredRoutingOverride</a></b></td>
+        <td>object</td>
+        <td>
+          Routing override for when the notification is triggered.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.connectorRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslack)</sup></sup>
+
+
+
+Connector
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslackconnectorrefbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslackconnectorrefresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.connectorRef.backendRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslackconnectorref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.connectorRef.resourceRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslackconnectorref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.presetRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslack)</sup></sup>
+
+
+
+Preset for the notification.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslackpresetrefbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslackpresetrefresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.presetRef.backendRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslackpresetref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.presetRef.resourceRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslackpresetref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.resolvedRoutingOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslack)</sup></sup>
+
+
+
+Routing override for when the notification is resolved.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslackresolvedroutingoverrideconnectoroverride">connectorOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslackresolvedroutingoverridepresetoverride">presetOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.resolvedRoutingOverride.connectorOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslackresolvedroutingoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>channel</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.resolvedRoutingOverride.presetOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslackresolvedroutingoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslackresolvedroutingoverridepresetoverriderawfields">rawFields</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslackresolvedroutingoverridepresetoverridestructuredfields">structuredFields</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.resolvedRoutingOverride.presetOverride.rawFields
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslackresolvedroutingoverridepresetoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>payload</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.resolvedRoutingOverride.presetOverride.structuredFields
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslackresolvedroutingoverridepresetoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>footer</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>title</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.triggeredRoutingOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslack)</sup></sup>
+
+
+
+Routing override for when the notification is triggered.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslacktriggeredroutingoverrideconnectoroverride">connectorOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslacktriggeredroutingoverridepresetoverride">presetOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.triggeredRoutingOverride.connectorOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslacktriggeredroutingoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>channel</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.triggeredRoutingOverride.presetOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslacktriggeredroutingoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslacktriggeredroutingoverridepresetoverriderawfields">rawFields</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexdestinationtypeslacktriggeredroutingoverridepresetoverridestructuredfields">structuredFields</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.triggeredRoutingOverride.presetOverride.rawFields
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslacktriggeredroutingoverridepresetoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>payload</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].destinationType.slack.triggeredRoutingOverride.presetOverride.structuredFields
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexdestinationtypeslacktriggeredroutingoverridepresetoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>footer</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>title</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.webhooks[index]
+<sup><sup>[↩ Parent](#alertspecnotificationgroup)</sup></sup>
+
+
+
+Settings for a notification webhook.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupwebhooksindexintegration">integration</a></b></td>
+        <td>object</td>
+        <td>
+          Type and spec of webhook.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>notifyOn</b></td>
+        <td>enum</td>
+        <td>
+          When to notify.<br/>
+          <br/>
+            <i>Enum</i>: triggeredOnly, triggeredAndResolved<br/>
+            <i>Default</i>: triggeredOnly<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupwebhooksindexretriggeringperiod">retriggeringPeriod</a></b></td>
+        <td>object</td>
+        <td>
+          When to re-trigger.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.webhooks[index].integration
+<sup><sup>[↩ Parent](#alertspecnotificationgroupwebhooksindex)</sup></sup>
+
+
+
+Type and spec of webhook.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupwebhooksindexintegrationintegrationref">integrationRef</a></b></td>
+        <td>object</td>
+        <td>
+          Reference to the webhook.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>recipients</b></td>
+        <td>[]string</td>
+        <td>
+          Recipients for the notification.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.webhooks[index].integration.integrationRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupwebhooksindexintegration)</sup></sup>
+
+
+
+Reference to the webhook.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupwebhooksindexintegrationintegrationrefbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          Backend reference for the outbound webhook.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupwebhooksindexintegrationintegrationrefresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          Resource reference for use with the alert notification.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.webhooks[index].integration.integrationRef.backendRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupwebhooksindexintegrationintegrationref)</sup></sup>
+
+
+
+Backend reference for the outbound webhook.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>integer</td>
+        <td>
+          Webhook Id.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -11890,7 +14416,7 @@ AlertSpec defines the desired state of Alert
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the webhook.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11902,7 +14428,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Resource reference for use with the alert notification.
 
 <table>
     <thead>
@@ -11936,7 +14462,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+When to re-trigger.
 
 <table>
     <thead>
@@ -11951,7 +14477,7 @@ AlertSpec defines the desired state of Alert
         <td><b>minutes</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Delay between re-triggered alerts.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -11965,7 +14491,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Notification group to use for alert notifications.
 
 <table>
     <thead>
@@ -11977,29 +14503,36 @@ AlertSpec defines the desired state of Alert
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindex">destinations</a></b></td>
+        <td>[]object</td>
+        <td>
+          Other destinations using the notification center.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>groupByKeys</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Group notification by these keys.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecnotificationgroupexcessindexwebhooksindex">webhooks</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Webhooks to trigger for notifications.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
 </table>
 
 
-### Alert.spec.notificationGroupExcess[index].webhooks[index]
+### Alert.spec.notificationGroupExcess[index].destinations[index]
 <sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindex)</sup></sup>
 
 
 
-
+Notification center destination for a notification.
 
 <table>
     <thead>
@@ -12011,39 +14544,114 @@ AlertSpec defines the desired state of Alert
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#alertspecnotificationgroupexcessindexwebhooksindexintegration">integration</a></b></td>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtype">destinationType</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Type of notification to send.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>notifyOn</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          When to notify.<br/>
           <br/>
             <i>Enum</i>: triggeredOnly, triggeredAndResolved<br/>
             <i>Default</i>: triggeredOnly<br/>
         </td>
         <td>true</td>
-      </tr><tr>
-        <td><b><a href="#alertspecnotificationgroupexcessindexwebhooksindexretriggeringperiod">retriggeringPeriod</a></b></td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindex)</sup></sup>
+
+
+
+Type of notification to send.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttps">genericHttps</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          HTTPS webhook.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslack">slack</a></b></td>
+        <td>object</td>
+        <td>
+          Slack app.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.genericHttps
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtype)</sup></sup>
+
+
+
+HTTPS webhook.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpsconnectorref">connectorRef</a></b></td>
+        <td>object</td>
+        <td>
+          Connector<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpspresetref">presetRef</a></b></td>
+        <td>object</td>
+        <td>
+          Preset for the notification.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpsresolvedroutingoverride">resolvedRoutingOverride</a></b></td>
+        <td>object</td>
+        <td>
+          Routing override for when the notification is resolved.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpstriggeredroutingoverride">triggeredRoutingOverride</a></b></td>
+        <td>object</td>
+        <td>
+          Routing override for when the notification is triggered.<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
 
-### Alert.spec.notificationGroupExcess[index].webhooks[index].integration
-<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexwebhooksindex)</sup></sup>
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.genericHttps.connectorRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttps)</sup></sup>
 
 
 
-
+Connector
 
 <table>
     <thead>
@@ -12055,48 +14663,14 @@ AlertSpec defines the desired state of Alert
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#alertspecnotificationgroupexcessindexwebhooksindexintegrationintegrationref">integrationRef</a></b></td>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpsconnectorrefbackendref">backendRef</a></b></td>
         <td>object</td>
         <td>
           <br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>recipients</b></td>
-        <td>[]string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### Alert.spec.notificationGroupExcess[index].webhooks[index].integration.integrationRef
-<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexwebhooksindexintegration)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b><a href="#alertspecnotificationgroupexcessindexwebhooksindexintegrationintegrationrefbackendref">backendRef</a></b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#alertspecnotificationgroupexcessindexwebhooksindexintegrationintegrationrefresourceref">resourceRef</a></b></td>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpsconnectorrefresourceref">resourceRef</a></b></td>
         <td>object</td>
         <td>
           <br/>
@@ -12106,8 +14680,8 @@ AlertSpec defines the desired state of Alert
 </table>
 
 
-### Alert.spec.notificationGroupExcess[index].webhooks[index].integration.integrationRef.backendRef
-<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexwebhooksindexintegrationintegrationref)</sup></sup>
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.genericHttps.connectorRef.backendRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpsconnectorref)</sup></sup>
 
 
 
@@ -12124,9 +14698,963 @@ AlertSpec defines the desired state of Alert
     </thead>
     <tbody><tr>
         <td><b>id</b></td>
-        <td>integer</td>
+        <td>string</td>
         <td>
           <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.genericHttps.connectorRef.resourceRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpsconnectorref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.genericHttps.presetRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttps)</sup></sup>
+
+
+
+Preset for the notification.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpspresetrefbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpspresetrefresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.genericHttps.presetRef.backendRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpspresetref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.genericHttps.presetRef.resourceRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpspresetref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.genericHttps.resolvedRoutingOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttps)</sup></sup>
+
+
+
+Routing override for when the notification is resolved.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpsresolvedroutingoverridepresetoverride">presetOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.genericHttps.resolvedRoutingOverride.presetOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpsresolvedroutingoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>body</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>headers</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.genericHttps.triggeredRoutingOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttps)</sup></sup>
+
+
+
+Routing override for when the notification is triggered.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpstriggeredroutingoverridepresetoverride">presetOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.genericHttps.triggeredRoutingOverride.presetOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypegenerichttpstriggeredroutingoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>body</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>headers</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtype)</sup></sup>
+
+
+
+Slack app.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackconnectorref">connectorRef</a></b></td>
+        <td>object</td>
+        <td>
+          Connector<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackpresetref">presetRef</a></b></td>
+        <td>object</td>
+        <td>
+          Preset for the notification.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackresolvedroutingoverride">resolvedRoutingOverride</a></b></td>
+        <td>object</td>
+        <td>
+          Routing override for when the notification is resolved.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslacktriggeredroutingoverride">triggeredRoutingOverride</a></b></td>
+        <td>object</td>
+        <td>
+          Routing override for when the notification is triggered.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.connectorRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslack)</sup></sup>
+
+
+
+Connector
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackconnectorrefbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackconnectorrefresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.connectorRef.backendRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackconnectorref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.connectorRef.resourceRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackconnectorref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.presetRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslack)</sup></sup>
+
+
+
+Preset for the notification.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackpresetrefbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackpresetrefresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.presetRef.backendRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackpresetref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.presetRef.resourceRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackpresetref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.resolvedRoutingOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslack)</sup></sup>
+
+
+
+Routing override for when the notification is resolved.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackresolvedroutingoverrideconnectoroverride">connectorOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackresolvedroutingoverridepresetoverride">presetOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.resolvedRoutingOverride.connectorOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackresolvedroutingoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>channel</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.resolvedRoutingOverride.presetOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackresolvedroutingoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackresolvedroutingoverridepresetoverriderawfields">rawFields</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackresolvedroutingoverridepresetoverridestructuredfields">structuredFields</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.resolvedRoutingOverride.presetOverride.rawFields
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackresolvedroutingoverridepresetoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>payload</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.resolvedRoutingOverride.presetOverride.structuredFields
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslackresolvedroutingoverridepresetoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>footer</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>title</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.triggeredRoutingOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslack)</sup></sup>
+
+
+
+Routing override for when the notification is triggered.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslacktriggeredroutingoverrideconnectoroverride">connectorOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslacktriggeredroutingoverridepresetoverride">presetOverride</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.triggeredRoutingOverride.connectorOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslacktriggeredroutingoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>channel</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.triggeredRoutingOverride.presetOverride
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslacktriggeredroutingoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslacktriggeredroutingoverridepresetoverriderawfields">rawFields</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslacktriggeredroutingoverridepresetoverridestructuredfields">structuredFields</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.triggeredRoutingOverride.presetOverride.rawFields
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslacktriggeredroutingoverridepresetoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>payload</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].destinationType.slack.triggeredRoutingOverride.presetOverride.structuredFields
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexdestinationtypeslacktriggeredroutingoverridepresetoverride)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>footer</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>title</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].webhooks[index]
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindex)</sup></sup>
+
+
+
+Settings for a notification webhook.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexwebhooksindexintegration">integration</a></b></td>
+        <td>object</td>
+        <td>
+          Type and spec of webhook.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>notifyOn</b></td>
+        <td>enum</td>
+        <td>
+          When to notify.<br/>
+          <br/>
+            <i>Enum</i>: triggeredOnly, triggeredAndResolved<br/>
+            <i>Default</i>: triggeredOnly<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexwebhooksindexretriggeringperiod">retriggeringPeriod</a></b></td>
+        <td>object</td>
+        <td>
+          When to re-trigger.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].webhooks[index].integration
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexwebhooksindex)</sup></sup>
+
+
+
+Type and spec of webhook.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexwebhooksindexintegrationintegrationref">integrationRef</a></b></td>
+        <td>object</td>
+        <td>
+          Reference to the webhook.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>recipients</b></td>
+        <td>[]string</td>
+        <td>
+          Recipients for the notification.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].webhooks[index].integration.integrationRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexwebhooksindexintegration)</sup></sup>
+
+
+
+Reference to the webhook.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexwebhooksindexintegrationintegrationrefbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          Backend reference for the outbound webhook.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexwebhooksindexintegrationintegrationrefresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          Resource reference for use with the alert notification.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].webhooks[index].integration.integrationRef.backendRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexwebhooksindexintegrationintegrationref)</sup></sup>
+
+
+
+Backend reference for the outbound webhook.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>integer</td>
+        <td>
+          Webhook Id.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -12135,7 +15663,7 @@ AlertSpec defines the desired state of Alert
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the webhook.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -12147,7 +15675,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Resource reference for use with the alert notification.
 
 <table>
     <thead>
@@ -12181,7 +15709,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+When to re-trigger.
 
 <table>
     <thead>
@@ -12196,7 +15724,7 @@ AlertSpec defines the desired state of Alert
         <td><b>minutes</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Delay between re-triggered alerts.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -12210,7 +15738,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Alert activity schedule. Will be activated all the time if not specified.
 
 <table>
     <thead>
@@ -12225,7 +15753,7 @@ AlertSpec defines the desired state of Alert
         <td><b>timeZone</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Time zone.<br/>
           <br/>
             <i>Default</i>: UTC+00<br/>
         </td>
@@ -12234,7 +15762,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecscheduleactiveon">activeOn</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Schedule to have the alert active.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -12246,7 +15774,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Schedule to have the alert active.
 
 <table>
     <thead>
@@ -12328,6 +15856,22 @@ AlertStatus defines the observed state of Alert
 
 
 Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
 
 <table>
     <thead>
@@ -12380,7 +15924,11 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
         </td>
         <td>true</td>
       </tr><tr>

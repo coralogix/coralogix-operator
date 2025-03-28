@@ -49,6 +49,7 @@ jobs:
             --set coralogixOperator.image.tag="${{ env.IMG_TAG }}" \
             --set coralogixOperator.region="${{ secrets.CORALOGIX_REGION }}" \
             --set coralogixOperator.webhooks.enabled=true \
+            --set coralogixOperator.notificationCenter.enabled=true \
             --set coralogixOperator.reconcileIntervalSeconds.scope=30
       - name: Run e2e Tests
         run: |

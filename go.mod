@@ -3,7 +3,7 @@ module github.com/coralogix/coralogix-operator
 go 1.23.0
 
 require (
-	github.com/coralogix/coralogix-management-sdk v1.3.1
+	github.com/coralogix/coralogix-management-sdk v1.2.2-0.20250209152200-0c9734066a94
 	github.com/go-logr/logr v1.4.2
 	github.com/google/uuid v1.6.0
 	github.com/onsi/ginkgo/v2 v2.21.0
@@ -20,7 +20,6 @@ require (
 	k8s.io/client-go v0.32.2
 	k8s.io/utils v0.0.0-20241104100929-3ea5e8cea738
 	sigs.k8s.io/controller-runtime v0.19.0
-	sigs.k8s.io/yaml v1.4.0
 )
 
 require (
@@ -78,12 +77,12 @@ require (
 	go.opentelemetry.io/proto/otlp v1.3.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
-	golang.org/x/net v0.36.0 // indirect
+	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/oauth2 v0.24.0 // indirect
-	golang.org/x/sync v0.11.0 // indirect
-	golang.org/x/sys v0.30.0 // indirect
-	golang.org/x/term v0.29.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/sync v0.10.0 // indirect
+	golang.org/x/sys v0.29.0 // indirect
+	golang.org/x/term v0.28.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/time v0.7.0 // indirect
 	golang.org/x/tools v0.26.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
@@ -100,4 +99,5 @@ require (
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.31.0 // indirect
 	sigs.k8s.io/json v0.0.0-20241014173422-cfa47c3a1cc8 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.5.0 // indirect
+	sigs.k8s.io/yaml v1.4.0 // indirect
 )

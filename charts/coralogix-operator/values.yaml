@@ -95,6 +95,10 @@ coralogixOperator:
   webhooks:
     enabled: true
 
+  # Set this to true if you want to enable the notification center CRDs and controllers.
+  notificationCenter:
+    enabled: false
+
   # --  Coralogix operator Image
   image:
     repository: coralogixrepo/coralogix-operator
@@ -126,7 +130,9 @@ coralogixOperator:
     tcoLogsPolicies: ""
     tcoTracesPolicies: ""
     integration: ""
-    alertScheduler: ""
+    connector: ""
+    preset: ""
+    globalRouter: ""
     prometheusRule: ""
 
   # -- resource config for Coralogix operator
