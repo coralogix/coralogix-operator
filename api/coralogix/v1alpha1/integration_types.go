@@ -25,13 +25,20 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 )
 
-// IntegrationSpec defines the desired state of Integration.
+// IntegrationSpec defines the desired state of a Coralogix (managed) integration.
+// See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/
+//
+// For available integrations see https://coralogix.com/docs/developer-portal/infrastructure-as-code/terraform-provider/integrations/aws-metrics-collector/ or at https://github.com/coralogix/coralogix-operator/tree/main/config/samples/v1alpha1/integrations.
 type IntegrationSpec struct {
+
+	// Unique name of the integration.
 	IntegrationKey string `json:"integrationKey"`
 
+	// Desired version of the integration
 	Version string `json:"version"`
 
 	// +kubebuilder:pruning:PreserveUnknownFields
+	// Parameters required by the integration.
 	Parameters runtime.RawExtension `json:"parameters"`
 }
 
@@ -148,7 +155,7 @@ type Integration struct {
 
 // +kubebuilder:object:root=true
 
-// IntegrationList contains a list of Integration.
+// IntegrationList contains a list of Integrations.
 type IntegrationList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

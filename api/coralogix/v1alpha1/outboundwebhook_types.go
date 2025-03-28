@@ -27,41 +27,55 @@ import (
 )
 
 // OutboundWebhookSpec defines the desired state of OutboundWebhook
+// See also https://coralogix.com/docs/user-guides/alerting/outbound-webhooks/aws-eventbridge-outbound-webhook/
 type OutboundWebhookSpec struct {
 	//+kubebuilder:validation:MinLength=0
+	// Name of the webhook.
 	Name string `json:"name"`
 
+	// Type of webhook.
 	OutboundWebhookType OutboundWebhookType `json:"outboundWebhookType"`
 }
 
+// Webhook type
 type OutboundWebhookType struct {
+	// Generic HTTP(s) webhook.
 	// +optional
 	GenericWebhook *GenericWebhook `json:"genericWebhook,omitempty"`
 
+	// Slack message.
 	// +optional
 	Slack *Slack `json:"slack,omitempty"`
 
+	// PagerDuty notification.
 	// +optional
 	PagerDuty *PagerDuty `json:"pagerDuty,omitempty"`
 
+	// SendLog notification.
 	// +optional
 	SendLog *SendLog `json:"sendLog,omitempty"`
 
+	// Email notification.
 	// +optional
 	EmailGroup *EmailGroup `json:"emailGroup,omitempty"`
 
+	// Teams message.
 	// +optional
 	MicrosoftTeams *MicrosoftTeams `json:"microsoftTeams,omitempty"`
 
+	// Jira issue.
 	// +optional
 	Jira *Jira `json:"jira,omitempty"`
 
+	// Opsgenie notification.
 	// +optional
 	Opsgenie *Opsgenie `json:"opsgenie,omitempty"`
 
+	// Demisto notification.
 	// +optional
 	Demisto *Demisto `json:"demisto,omitempty"`
 
+	// AWS eventbridge message.
 	// +optional
 	AwsEventBridge *AwsEventBridge `json:"awsEventBridge,omitempty"`
 }
@@ -111,28 +125,40 @@ func (in *OutboundWebhookType) appendOutgoingWebhookConfig(data *cxsdk.OutgoingW
 	return data, nil
 }
 
+// Generic HTTP(s) webhook.
 type GenericWebhook struct {
+
+	// URL to call
 	Url string `json:"url"`
 
+	// HTTP Method to use.
 	Method GenericWebhookMethodType `json:"method"`
 
+	// Attached HTTP headers.
 	// +optional
 	Headers map[string]string `json:"headers"`
 
+	// Payload of the webhook call.
 	// +optional
 	Payload *string `json:"payload"`
 }
 
+// Status of the webhook call.
 type GenericWebhookStatus struct {
+	// ID
 	Uuid string `json:"uuid"`
 
+	// Called URL
 	Url string `json:"url"`
 
+	// HTTP method.
 	Method GenericWebhookMethodType `json:"method"`
 
+	// Headers of the call.
 	// +optional
 	Headers map[string]string `json:"headers"`
 
+	// Payland of the call.
 	// +optional
 	Payload *string `json:"payload"`
 }
@@ -169,8 +195,12 @@ var (
 )
 
 type Slack struct {
+
+	// Digest configuration.
 	// +optional
 	Digests []SlackConfigDigest `json:"digests"`
+
+	// Attachments of the message.
 	// +optional
 	Attachments []SlackConfigAttachment `json:"attachments"`
 	Url         string                  `json:"url"`
@@ -201,8 +231,10 @@ func (in *Slack) extractSlackConfig() *cxsdk.SlackWebhookInputData {
 	}
 }
 
+// Slack config digest type.
 type SlackConfigDigestType string
 
+// Slack config digest values.
 const (
 	SlackConfigDigestTypeUnknown              SlackConfigDigestType = "Unknown"
 	SlackConfigDigestTypeErrorAndCriticalLogs SlackConfigDigestType = "ErrorAndCriticalLogs"
@@ -222,18 +254,28 @@ var (
 	SlackConfigDigestTypeFromProto = utils.ReverseMap(SlackConfigDigestTypeToProto)
 )
 
+// Digest config.
 type SlackConfigDigest struct {
-	Type     SlackConfigDigestType `json:"type"`
-	IsActive bool                  `json:"isActive"`
+	// Type of digest to send
+	Type SlackConfigDigestType `json:"type"`
+
+	// Active status.
+	IsActive bool `json:"isActive"`
 }
 
+// Slack attachment
 type SlackConfigAttachment struct {
-	Type     SlackConfigAttachmentType `json:"type"`
-	IsActive bool                      `json:"isActive"`
+	// Attachment to the message.
+	Type SlackConfigAttachmentType `json:"type"`
+
+	// Active status.
+	IsActive bool `json:"isActive"`
 }
 
+// Attachment type.
 type SlackConfigAttachmentType string
 
+// Attachment type values.
 const (
 	SlackConfigAttachmentTypeEmpty          SlackConfigAttachmentType = "Empty"
 	SlackConfigAttachmentTypeMetricSnapshot SlackConfigAttachmentType = "MetricSnapshot"
@@ -249,7 +291,9 @@ var (
 	SlackConfigAttachmentTypeFromProto = utils.ReverseMap(SlackConfigAttachmentTypeToProto)
 )
 
+// PagerDuty configuration.
 type PagerDuty struct {
+	// PagerDuty service key.
 	ServiceKey string `json:"serviceKey"`
 }
 
@@ -261,15 +305,23 @@ func (in *PagerDuty) extractPagerDutyConfig() *cxsdk.PagerDutyWebhookInputData {
 	}
 }
 
+// SendLog configuration.
 type SendLog struct {
+	// Payload of the notification
 	Payload string `json:"payload"`
-	Url     string `json:"url"`
+
+	// Sendlog URL.
+	Url string `json:"url"`
 }
 
+// SendLog status.
 type SendLogStatus struct {
+	// Payload of the SendLog notification
 	Payload string `json:"payload"`
-	Url     string `json:"url"`
-	Uuid    string `json:"uuid"`
+	// SendLog URL
+	Url string `json:"url"`
+	// ID
+	Uuid string `json:"uuid"`
 }
 
 func (in *SendLog) extractSendLogConfig() *cxsdk.SendLogWebhookInputData {
@@ -281,7 +333,9 @@ func (in *SendLog) extractSendLogConfig() *cxsdk.SendLogWebhookInputData {
 	}
 }
 
+// EMail notification configuration
 type EmailGroup struct {
+	// Recipients
 	EmailAddresses []string `json:"emailAddresses"`
 }
 
@@ -293,7 +347,9 @@ func (in *EmailGroup) extractEmailGroupConfig() *cxsdk.EmailGroupWebhookInputDat
 	}
 }
 
+// Microsoft Teams configuration.
 type MicrosoftTeams struct {
+	// Teams URL
 	Url string `json:"url"`
 }
 
@@ -303,11 +359,19 @@ func (in *MicrosoftTeams) extractMicrosoftTeamsConfig() *cxsdk.MicrosoftTeamsWeb
 	}
 }
 
+// Jira configuration
 type Jira struct {
-	ApiToken   string `json:"apiToken"`
-	Email      string `json:"email"`
+	// API token
+	ApiToken string `json:"apiToken"`
+
+	// Email address associated with the token
+	Email string `json:"email"`
+
+	// Project to add it to.
 	ProjectKey string `json:"projectKey"`
-	Url        string `json:"url"`
+
+	// Jira URL
+	Url string `json:"url"`
 }
 
 func (in *Jira) extractJiraConfig() *cxsdk.JiraWebhookInputData {
@@ -386,7 +450,7 @@ func (in *OutboundWebhook) SetConditions(conditions []metav1.Condition) {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// OutboundWebhook is the Schema for the outboundwebhooks API
+// OutboundWebhook is the Schema for the API
 type OutboundWebhook struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
