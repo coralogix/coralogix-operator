@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.15.0
+    controller-gen.kubebuilder.io/version: v0.17.2
   name: tcotracespolicies.coralogix.com
 spec:
   group: coralogix.com
@@ -41,25 +41,18 @@ spec:
           metadata:
             type: object
           spec:
-            description: TCOTracesPoliciesSpec defines the desired state of Coralogix
-              TCO policies for traces.
+            description: TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
             properties:
               policies:
-                description: Coralogix TCO-Policies-List. For more information - https://coralogix.com/docs/tco-optimizer-api.
                 items:
-                  description: Coralogix TCO policy for traces.
                   properties:
                     actions:
-                      description: The actions to apply the policy on. Applies the
-                        policy on all the actions by default.
                       properties:
                         names:
-                          description: Names to match.
                           items:
                             type: string
                           type: array
                         ruleType:
-                          description: Type of matching for the name.
                           enum:
                           - is
                           - is_not
@@ -71,16 +64,12 @@ spec:
                       - ruleType
                       type: object
                     applications:
-                      description: The applications to apply the policy on. Applies
-                        the policy on all the applications by default.
                       properties:
                         names:
-                          description: Names to match.
                           items:
                             type: string
                           type: array
                         ruleType:
-                          description: Type of matching for the name.
                           enum:
                           - is
                           - is_not
@@ -92,13 +81,10 @@ spec:
                       - ruleType
                       type: object
                     archiveRetention:
-                      description: Matches the specified retention.
                       properties:
                         backendRef:
-                          description: Reference to the retention policy
                           properties:
                             name:
-                              description: Name of the policy.
                               type: string
                           required:
                           - name
@@ -107,13 +93,10 @@ spec:
                       - backendRef
                       type: object
                     description:
-                      description: Description of the policy.
                       type: string
                     name:
-                      description: Name of the policy.
                       type: string
                     priority:
-                      description: The policy priority.
                       enum:
                       - block
                       - high
@@ -121,16 +104,12 @@ spec:
                       - low
                       type: string
                     services:
-                      description: The services to apply the policy on. Applies the
-                        policy on all the services by default.
                       properties:
                         names:
-                          description: Names to match.
                           items:
                             type: string
                           type: array
                         ruleType:
-                          description: Type of matching for the name.
                           enum:
                           - is
                           - is_not
@@ -142,16 +121,12 @@ spec:
                       - ruleType
                       type: object
                     subsystems:
-                      description: The subsystems to apply the policy on. Applies
-                        the policy on all the subsystems by default.
                       properties:
                         names:
-                          description: Names to match.
                           items:
                             type: string
                           type: array
                         ruleType:
-                          description: Type of matching for the name.
                           enum:
                           - is
                           - is_not
@@ -163,17 +138,12 @@ spec:
                       - ruleType
                       type: object
                     tags:
-                      description: The tags to apply the policy on. Applies the policy
-                        on all the tags by default.
                       items:
-                        description: TCO Policy tag matching rule.
                         properties:
                           name:
-                            description: Tag names to match.
                             pattern: ^tags\..*
                             type: string
                           ruleType:
-                            description: Operator to match with.
                             enum:
                             - is
                             - is_not
@@ -181,7 +151,6 @@ spec:
                             - includes
                             type: string
                           values:
-                            description: Values to match for
                             items:
                               type: string
                             type: array
@@ -204,16 +173,8 @@ spec:
             properties:
               conditions:
                 items:
-                  description: "Condition contains details for one aspect of the current
-                    state of this API Resource.\n---\nThis struct is intended for
-                    direct use as an array at the field path .status.conditions.  For
-                    example,\n\n\n\ttype FooStatus struct{\n\t    // Represents the
-                    observations of a foo's current state.\n\t    // Known .status.conditions.type
-                    are: \"Available\", \"Progressing\", and \"Degraded\"\n\t    //
-                    +patchMergeKey=type\n\t    // +patchStrategy=merge\n\t    // +listType=map\n\t
-                    \   // +listMapKey=type\n\t    Conditions []metav1.Condition `json:\"conditions,omitempty\"
-                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`\n\n\n\t
-                    \   // other fields\n\t}"
+                  description: Condition contains details for one aspect of the current
+                    state of this API Resource.
                   properties:
                     lastTransitionTime:
                       description: |-
@@ -254,12 +215,7 @@ spec:
                       - Unknown
                       type: string
                     type:
-                      description: |-
-                        type of condition in CamelCase or in foo.example.com/CamelCase.
-                        ---
-                        Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
-                        useful (see .node.status.conditions), the ability to deconflict is important.
-                        The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
                       maxLength: 316
                       pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
                       type: string
