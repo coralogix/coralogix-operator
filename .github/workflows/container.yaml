@@ -61,5 +61,3 @@ jobs:
             ${{ steps.meta.outputs.tags }}
             coralogixrepo/coralogix-operator:${{ steps.fetch-latest-release.outputs.latest-release }}
             coralogixrepo/coralogix-operator:latest
-          build-args: |
-            LDFLAGS=-X google.golang.org/protobuf/reflect/protoregistry.conflictPolicy=warn
