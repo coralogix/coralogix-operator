@@ -50,7 +50,7 @@ import (
 	//+kubebuilder:scaffold:imports
 )
 
-const OperatorVersion = "0.3.6"
+const OperatorVersion = "0.4.0"
 
 var (
 	scheme   = k8sruntime.NewScheme()
@@ -71,6 +71,7 @@ func init() {
 }
 
 func main() {
+	config.InitScheme(scheme)
 	cfg := config.InitConfig(setupLog)
 
 	// if the enable-http2 flag is false (the default), http/2 should be disabled
@@ -131,7 +132,6 @@ func main() {
 		OperatorVersion))
 
 	config.InitClient(mgr.GetClient())
-	config.InitScheme(scheme)
 
 	if err = (&v1alpha1controllers.RuleGroupReconciler{
 		RuleGroupClient: clientSet.RuleGroups(),
@@ -221,29 +221,12 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Integration")
 		os.Exit(1)
 	}
-
-	if cfg.EnableNotificationCenter {
-		if err = (&v1alpha1controllers.ConnectorReconciler{
-			NotificationsClient: clientSet.Notifications(),
-			Interval:            cfg.ReconcileIntervals[utils.ConnectorKind],
-		}).SetupWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create controller", "controller", "Connector")
-			os.Exit(1)
-		}
-		if err = (&v1alpha1controllers.PresetReconciler{
-			NotificationsClient: clientSet.Notifications(),
-			Interval:            cfg.ReconcileIntervals[utils.PresetKind],
-		}).SetupWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create controller", "controller", "Preset")
-			os.Exit(1)
-		}
-		if err = (&v1alpha1controllers.GlobalRouterReconciler{
-			NotificationsClient: clientSet.Notifications(),
-			Interval:            cfg.ReconcileIntervals[utils.GlobalRouterKind],
-		}).SetupWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create controller", "controller", "GlobalRouter")
-			os.Exit(1)
-		}
+	if err = (&v1alpha1controllers.AlertSchedulerReconciler{
+		AlertSchedulerClient: clientSet.AlertSchedulers(),
+		Interval:             cfg.ReconcileIntervals[utils.AlertSchedulerKind],
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AlertScheduler")
+		os.Exit(1)
 	}
 
 	if cfg.EnableWebhooks {
@@ -267,15 +250,9 @@ func main() {
 			os.Exit(1)
 		}
 
-		if cfg.EnableNotificationCenter {
-			if err = webhookcoralogixv1alpha1.SetupConnectorWebhookWithManager(mgr); err != nil {
-				setupLog.Error(err, "unable to create webhook", "webhook", "Connector")
-				os.Exit(1)
-			}
-			if err = webhookcoralogixv1alpha1.SetupPresetWebhookWithManager(mgr); err != nil {
-				setupLog.Error(err, "unable to create webhook", "webhook", "Preset")
-				os.Exit(1)
-			}
+		if err = webhookcoralogixv1alpha1.SetupAlertSchedulerWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "AlertScheduler")
+			os.Exit(1)
 		}
 	} else {
 		setupLog.Info("Webhooks are disabled")

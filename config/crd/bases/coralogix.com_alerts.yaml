@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.15.0
+    controller-gen.kubebuilder.io/version: v0.17.2
   name: alerts.coralogix.com
 spec:
   group: coralogix.com
@@ -38,9 +38,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: |-
-              AlertSpec defines the desired state of a Coralogix Alert.
-              Deprecated: Upgrade to v1beta1.
+            description: AlertSpec defines the desired state of Alert.
             properties:
               active:
                 default: true
@@ -837,7 +835,6 @@ spec:
                     type: object
                 type: object
               description:
-                description: Alert description.
                 type: string
               expirationDate:
                 properties:
@@ -862,7 +859,6 @@ spec:
                   type: string
                 type: object
               name:
-                description: Alert name.
                 minLength: 0
                 type: string
               notificationGroups:
@@ -953,16 +949,8 @@ spec:
             properties:
               conditions:
                 items:
-                  description: "Condition contains details for one aspect of the current
-                    state of this API Resource.\n---\nThis struct is intended for
-                    direct use as an array at the field path .status.conditions.  For
-                    example,\n\n\n\ttype FooStatus struct{\n\t    // Represents the
-                    observations of a foo's current state.\n\t    // Known .status.conditions.type
-                    are: \"Available\", \"Progressing\", and \"Degraded\"\n\t    //
-                    +patchMergeKey=type\n\t    // +patchStrategy=merge\n\t    // +listType=map\n\t
-                    \   // +listMapKey=type\n\t    Conditions []metav1.Condition `json:\"conditions,omitempty\"
-                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`\n\n\n\t
-                    \   // other fields\n\t}"
+                  description: Condition contains details for one aspect of the current
+                    state of this API Resource.
                   properties:
                     lastTransitionTime:
                       description: |-
@@ -1003,12 +991,7 @@ spec:
                       - Unknown
                       type: string
                     type:
-                      description: |-
-                        type of condition in CamelCase or in foo.example.com/CamelCase.
-                        ---
-                        Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
-                        useful (see .node.status.conditions), the ability to deconflict is important.
-                        The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
                       maxLength: 316
                       pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
                       type: string
@@ -1051,11 +1034,9 @@ spec:
           metadata:
             type: object
           spec:
-            description: AlertSpec defines the desired state of a Coralogix Alert.
-              For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
+            description: AlertSpec defines the desired state of Alert
             properties:
               alertType:
-                description: Type of alert.
                 properties:
                   flow:
                     properties:
@@ -1724,7 +1705,6 @@ spec:
                         properties:
                           autoRetireTimeframe:
                             default: never
-                            description: Automatically retire the alert after...
                             enum:
                             - never
                             - 5m
@@ -1866,7 +1846,6 @@ spec:
                         properties:
                           autoRetireTimeframe:
                             default: never
-                            description: Automatically retire the alert after...
                             enum:
                             - never
                             - 5m
@@ -2153,7 +2132,6 @@ spec:
                         properties:
                           autoRetireTimeframe:
                             default: never
-                            description: Automatically retire the alert after...
                             enum:
                             - never
                             - 5m
@@ -2472,282 +2450,58 @@ spec:
                     type: object
                 type: object
               description:
-                description: Description of the alert
                 type: string
               enabled:
                 default: true
-                description: Enable/disable the alert.
                 type: boolean
               entityLabels:
                 additionalProperties:
                   type: string
-                description: Labels attached to the alert.
                 type: object
               groupByKeys:
-                description: Grouping fields for multiple alerts.
                 items:
                   type: string
                 type: array
               incidentsSettings:
-                description: Settings for the attached incidents.
                 properties:
                   notifyOn:
                     default: triggeredOnly
-                    description: When to notify.
                     enum:
                     - triggeredOnly
                     - triggeredAndResolved
                     type: string
                   retriggeringPeriod:
-                    description: When to re-notify.
                     properties:
                       minutes:
-                        description: Delay between re-triggered alerts.
                         format: int32
                         type: integer
                     type: object
                 type: object
               name:
-                description: Name of the alert
                 minLength: 0
                 type: string
               notificationGroup:
-                description: Where notifications should be sent to.
                 properties:
-                  destinations:
-                    description: Other destinations using the notification center.
-                    items:
-                      description: Notification center destination for a notification.
-                      properties:
-                        destinationType:
-                          description: Type of notification to send.
-                          properties:
-                            genericHttps:
-                              description: HTTPS webhook.
-                              properties:
-                                connectorRef:
-                                  description: Connector
-                                  properties:
-                                    backendRef:
-                                      properties:
-                                        id:
-                                          type: string
-                                      required:
-                                      - id
-                                      type: object
-                                    resourceRef:
-                                      properties:
-                                        name:
-                                          type: string
-                                        namespace:
-                                          type: string
-                                      required:
-                                      - name
-                                      type: object
-                                  type: object
-                                presetRef:
-                                  description: Preset for the notification.
-                                  properties:
-                                    backendRef:
-                                      properties:
-                                        id:
-                                          type: string
-                                      required:
-                                      - id
-                                      type: object
-                                    resourceRef:
-                                      properties:
-                                        name:
-                                          type: string
-                                        namespace:
-                                          type: string
-                                      required:
-                                      - name
-                                      type: object
-                                  type: object
-                                resolvedRoutingOverride:
-                                  description: Routing override for when the notification
-                                    is resolved.
-                                  properties:
-                                    presetOverride:
-                                      properties:
-                                        body:
-                                          type: string
-                                        headers:
-                                          type: string
-                                      type: object
-                                  required:
-                                  - presetOverride
-                                  type: object
-                                triggeredRoutingOverride:
-                                  description: Routing override for when the notification
-                                    is triggered.
-                                  properties:
-                                    presetOverride:
-                                      properties:
-                                        body:
-                                          type: string
-                                        headers:
-                                          type: string
-                                      type: object
-                                  required:
-                                  - presetOverride
-                                  type: object
-                              required:
-                              - connectorRef
-                              type: object
-                            slack:
-                              description: Slack app.
-                              properties:
-                                connectorRef:
-                                  description: Connector
-                                  properties:
-                                    backendRef:
-                                      properties:
-                                        id:
-                                          type: string
-                                      required:
-                                      - id
-                                      type: object
-                                    resourceRef:
-                                      properties:
-                                        name:
-                                          type: string
-                                        namespace:
-                                          type: string
-                                      required:
-                                      - name
-                                      type: object
-                                  type: object
-                                presetRef:
-                                  description: Preset for the notification.
-                                  properties:
-                                    backendRef:
-                                      properties:
-                                        id:
-                                          type: string
-                                      required:
-                                      - id
-                                      type: object
-                                    resourceRef:
-                                      properties:
-                                        name:
-                                          type: string
-                                        namespace:
-                                          type: string
-                                      required:
-                                      - name
-                                      type: object
-                                  type: object
-                                resolvedRoutingOverride:
-                                  description: Routing override for when the notification
-                                    is resolved.
-                                  properties:
-                                    connectorOverride:
-                                      properties:
-                                        channel:
-                                          type: string
-                                      required:
-                                      - channel
-                                      type: object
-                                    presetOverride:
-                                      properties:
-                                        rawFields:
-                                          properties:
-                                            payload:
-                                              type: string
-                                          required:
-                                          - payload
-                                          type: object
-                                        structuredFields:
-                                          properties:
-                                            description:
-                                              type: string
-                                            footer:
-                                              type: string
-                                            title:
-                                              type: string
-                                          type: object
-                                      type: object
-                                  type: object
-                                triggeredRoutingOverride:
-                                  description: Routing override for when the notification
-                                    is triggered.
-                                  properties:
-                                    connectorOverride:
-                                      properties:
-                                        channel:
-                                          type: string
-                                      required:
-                                      - channel
-                                      type: object
-                                    presetOverride:
-                                      properties:
-                                        rawFields:
-                                          properties:
-                                            payload:
-                                              type: string
-                                          required:
-                                          - payload
-                                          type: object
-                                        structuredFields:
-                                          properties:
-                                            description:
-                                              type: string
-                                            footer:
-                                              type: string
-                                            title:
-                                              type: string
-                                          type: object
-                                      type: object
-                                  type: object
-                              required:
-                              - connectorRef
-                              type: object
-                          type: object
-                        notifyOn:
-                          default: triggeredOnly
-                          description: When to notify.
-                          enum:
-                          - triggeredOnly
-                          - triggeredAndResolved
-                          type: string
-                      required:
-                      - destinationType
-                      - notifyOn
-                      type: object
-                    type: array
                   groupByKeys:
-                    description: Group notification by these keys.
                     items:
                       type: string
                     type: array
                   webhooks:
-                    description: Webhooks to trigger for notifications.
                     items:
-                      description: Settings for a notification webhook.
                       properties:
                         integration:
-                          description: Type and spec of webhook.
                           properties:
                             integrationRef:
-                              description: Reference to the webhook.
                               properties:
                                 backendRef:
-                                  description: Backend reference for the outbound
-                                    webhook.
                                   properties:
                                     id:
-                                      description: Webhook Id.
                                       format: int32
                                       type: integer
                                     name:
-                                      description: Name of the webhook.
                                       type: string
                                   type: object
                                 resourceRef:
-                                  description: Resource reference for use with the
-                                    alert notification.
                                   properties:
                                     name:
                                       type: string
@@ -2758,23 +2512,19 @@ spec:
                                   type: object
                               type: object
                             recipients:
-                              description: Recipients for the notification.
                               items:
                                 type: string
                               type: array
                           type: object
                         notifyOn:
                           default: triggeredOnly
-                          description: When to notify.
                           enum:
                           - triggeredOnly
                           - triggeredAndResolved
                           type: string
                         retriggeringPeriod:
-                          description: When to re-trigger.
                           properties:
                             minutes:
-                              description: Delay between re-triggered alerts.
                               format: int32
                               type: integer
                           type: object
@@ -2786,246 +2536,28 @@ spec:
                     type: array
                 type: object
               notificationGroupExcess:
-                description: |-
-                  Do not use.
-                  Deprecated: Legacy field for when multiple notification groups were attached.
                 items:
-                  description: Notification group to use for alert notifications.
                   properties:
-                    destinations:
-                      description: Other destinations using the notification center.
-                      items:
-                        description: Notification center destination for a notification.
-                        properties:
-                          destinationType:
-                            description: Type of notification to send.
-                            properties:
-                              genericHttps:
-                                description: HTTPS webhook.
-                                properties:
-                                  connectorRef:
-                                    description: Connector
-                                    properties:
-                                      backendRef:
-                                        properties:
-                                          id:
-                                            type: string
-                                        required:
-                                        - id
-                                        type: object
-                                      resourceRef:
-                                        properties:
-                                          name:
-                                            type: string
-                                          namespace:
-                                            type: string
-                                        required:
-                                        - name
-                                        type: object
-                                    type: object
-                                  presetRef:
-                                    description: Preset for the notification.
-                                    properties:
-                                      backendRef:
-                                        properties:
-                                          id:
-                                            type: string
-                                        required:
-                                        - id
-                                        type: object
-                                      resourceRef:
-                                        properties:
-                                          name:
-                                            type: string
-                                          namespace:
-                                            type: string
-                                        required:
-                                        - name
-                                        type: object
-                                    type: object
-                                  resolvedRoutingOverride:
-                                    description: Routing override for when the notification
-                                      is resolved.
-                                    properties:
-                                      presetOverride:
-                                        properties:
-                                          body:
-                                            type: string
-                                          headers:
-                                            type: string
-                                        type: object
-                                    required:
-                                    - presetOverride
-                                    type: object
-                                  triggeredRoutingOverride:
-                                    description: Routing override for when the notification
-                                      is triggered.
-                                    properties:
-                                      presetOverride:
-                                        properties:
-                                          body:
-                                            type: string
-                                          headers:
-                                            type: string
-                                        type: object
-                                    required:
-                                    - presetOverride
-                                    type: object
-                                required:
-                                - connectorRef
-                                type: object
-                              slack:
-                                description: Slack app.
-                                properties:
-                                  connectorRef:
-                                    description: Connector
-                                    properties:
-                                      backendRef:
-                                        properties:
-                                          id:
-                                            type: string
-                                        required:
-                                        - id
-                                        type: object
-                                      resourceRef:
-                                        properties:
-                                          name:
-                                            type: string
-                                          namespace:
-                                            type: string
-                                        required:
-                                        - name
-                                        type: object
-                                    type: object
-                                  presetRef:
-                                    description: Preset for the notification.
-                                    properties:
-                                      backendRef:
-                                        properties:
-                                          id:
-                                            type: string
-                                        required:
-                                        - id
-                                        type: object
-                                      resourceRef:
-                                        properties:
-                                          name:
-                                            type: string
-                                          namespace:
-                                            type: string
-                                        required:
-                                        - name
-                                        type: object
-                                    type: object
-                                  resolvedRoutingOverride:
-                                    description: Routing override for when the notification
-                                      is resolved.
-                                    properties:
-                                      connectorOverride:
-                                        properties:
-                                          channel:
-                                            type: string
-                                        required:
-                                        - channel
-                                        type: object
-                                      presetOverride:
-                                        properties:
-                                          rawFields:
-                                            properties:
-                                              payload:
-                                                type: string
-                                            required:
-                                            - payload
-                                            type: object
-                                          structuredFields:
-                                            properties:
-                                              description:
-                                                type: string
-                                              footer:
-                                                type: string
-                                              title:
-                                                type: string
-                                            type: object
-                                        type: object
-                                    type: object
-                                  triggeredRoutingOverride:
-                                    description: Routing override for when the notification
-                                      is triggered.
-                                    properties:
-                                      connectorOverride:
-                                        properties:
-                                          channel:
-                                            type: string
-                                        required:
-                                        - channel
-                                        type: object
-                                      presetOverride:
-                                        properties:
-                                          rawFields:
-                                            properties:
-                                              payload:
-                                                type: string
-                                            required:
-                                            - payload
-                                            type: object
-                                          structuredFields:
-                                            properties:
-                                              description:
-                                                type: string
-                                              footer:
-                                                type: string
-                                              title:
-                                                type: string
-                                            type: object
-                                        type: object
-                                    type: object
-                                required:
-                                - connectorRef
-                                type: object
-                            type: object
-                          notifyOn:
-                            default: triggeredOnly
-                            description: When to notify.
-                            enum:
-                            - triggeredOnly
-                            - triggeredAndResolved
-                            type: string
-                        required:
-                        - destinationType
-                        - notifyOn
-                        type: object
-                      type: array
                     groupByKeys:
-                      description: Group notification by these keys.
                       items:
                         type: string
                       type: array
                     webhooks:
-                      description: Webhooks to trigger for notifications.
                       items:
-                        description: Settings for a notification webhook.
                         properties:
                           integration:
-                            description: Type and spec of webhook.
                             properties:
                               integrationRef:
-                                description: Reference to the webhook.
                                 properties:
                                   backendRef:
-                                    description: Backend reference for the outbound
-                                      webhook.
                                     properties:
                                       id:
-                                        description: Webhook Id.
                                         format: int32
                                         type: integer
                                       name:
-                                        description: Name of the webhook.
                                         type: string
                                     type: object
                                   resourceRef:
-                                    description: Resource reference for use with the
-                                      alert notification.
                                     properties:
                                       name:
                                         type: string
@@ -3036,23 +2568,19 @@ spec:
                                     type: object
                                 type: object
                               recipients:
-                                description: Recipients for the notification.
                                 items:
                                   type: string
                                 type: array
                             type: object
                           notifyOn:
                             default: triggeredOnly
-                            description: When to notify.
                             enum:
                             - triggeredOnly
                             - triggeredAndResolved
                             type: string
                           retriggeringPeriod:
-                            description: When to re-trigger.
                             properties:
                               minutes:
-                                description: Delay between re-triggered alerts.
                                 format: int32
                                 type: integer
                             type: object
@@ -3068,7 +2596,6 @@ spec:
                 default: false
                 type: boolean
               priority:
-                description: Priority of the alert.
                 enum:
                 - p1
                 - p2
@@ -3077,11 +2604,8 @@ spec:
                 - p5
                 type: string
               schedule:
-                description: Alert activity schedule. Will be activated all the time
-                  if not specified.
                 properties:
                   activeOn:
-                    description: Schedule to have the alert active.
                     properties:
                       dayOfWeek:
                         items:
@@ -3108,7 +2632,6 @@ spec:
                     type: object
                   timeZone:
                     default: UTC+00
-                    description: Time zone.
                     pattern: ^UTC[+-]\d{2}$
                     type: string
                 required:
@@ -3124,16 +2647,8 @@ spec:
             properties:
               conditions:
                 items:
-                  description: "Condition contains details for one aspect of the current
-                    state of this API Resource.\n---\nThis struct is intended for
-                    direct use as an array at the field path .status.conditions.  For
-                    example,\n\n\n\ttype FooStatus struct{\n\t    // Represents the
-                    observations of a foo's current state.\n\t    // Known .status.conditions.type
-                    are: \"Available\", \"Progressing\", and \"Degraded\"\n\t    //
-                    +patchMergeKey=type\n\t    // +patchStrategy=merge\n\t    // +listType=map\n\t
-                    \   // +listMapKey=type\n\t    Conditions []metav1.Condition `json:\"conditions,omitempty\"
-                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`\n\n\n\t
-                    \   // other fields\n\t}"
+                  description: Condition contains details for one aspect of the current
+                    state of this API Resource.
                   properties:
                     lastTransitionTime:
                       description: |-
@@ -3174,12 +2689,7 @@ spec:
                       - Unknown
                       type: string
                     type:
-                      description: |-
-                        type of condition in CamelCase or in foo.example.com/CamelCase.
-                        ---
-                        Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
-                        useful (see .node.status.conditions), the ability to deconflict is important.
-                        The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
                       maxLength: 316
                       pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
                       type: string

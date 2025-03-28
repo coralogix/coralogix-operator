@@ -44,7 +44,6 @@ spec:
         - -enable-webhooks={{.Values.coralogixOperator.webhooks.enabled }}
         - -label-selector={{ .Values.coralogixOperator.labelSelector }}
         - -namespace-selector={{ .Values.coralogixOperator.namespaceSelector }}
-        - -enable-notification-center={{ .Values.coralogixOperator.notificationCenter.enabled }}
 {{- range $key, $value := .Values.coralogixOperator.reconcileIntervalSeconds }}
         - -{{ lower $key }}-reconcile-interval-seconds={{ $value }}
 {{- end }}
