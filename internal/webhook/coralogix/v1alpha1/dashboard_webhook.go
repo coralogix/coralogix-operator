@@ -21,12 +21,9 @@ import (
 	"fmt"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-	"github.com/coralogix/coralogix-operator/internal/config"
 	"google.golang.org/protobuf/encoding/protojson"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
@@ -84,39 +81,15 @@ func validateDashboardSpec(ctx context.Context, spec coralogixv1alpha1.Dashboard
 		return nil, fmt.Errorf("at least one of the following fields must be set: %s", "json, gzipJson, configMapRef")
 	}
 
-	// in case of invalid request with configMapRef, returning a warning instead of an error
-	if configMapRef := spec.ConfigMapRef; configMapRef != nil {
-		dashboardConfigMap := &v1.ConfigMap{}
-		if err := config.GetClient().Get(ctx, client.ObjectKey{Namespace: namespace, Name: configMapRef.Name}, dashboardConfigMap); err != nil {
-			return admission.Warnings{"failed to get ConfigMap: " + err.Error()}, nil
-		}
-		if contentJson, ok := dashboardConfigMap.Data[configMapRef.Key]; ok {
-			dashboardBackendSchema := new(cxsdk.Dashboard)
-			if err := protojson.Unmarshal([]byte(contentJson), dashboardBackendSchema); err != nil {
-				return admission.Warnings{fmt.Sprintf("failed to unmarshal contentJson from config map: %s", err.Error())}, nil
-			}
-			return nil, nil
-		} else {
-			return admission.Warnings{fmt.Sprintf("cannot find key '%v' in config map '%v'", configMapRef.Key, configMapRef.Name)}, nil
-		}
-	}
-
-	var contentJson, source string
-	if json := spec.Json; json != nil {
-		source = "json"
-		contentJson = *json
-	} else if gzipJson := spec.GzipJson; gzipJson != nil {
-		source = "gzipJson"
-		content, err := coralogixv1alpha1.Unzip(gzipJson)
-		if err != nil {
-			return nil, fmt.Errorf("failed to gunzip contentJson: %w", err)
-		}
-		contentJson = string(content)
+	//in a case of a failure to extract contentJson from or unmarshal it to a Dashboard, only a warning is returned
+	contentJson, err := coralogixv1alpha1.ExtractJsonContentFromSpec(ctx, namespace, &spec)
+	if err != nil {
+		return admission.Warnings{"failed to extract contentJson from spec: " + err.Error()}, nil
 	}
 
 	dashboardBackendSchema := new(cxsdk.Dashboard)
-	if err := protojson.Unmarshal([]byte(contentJson), dashboardBackendSchema); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal contentJson from %s: %w", source, err)
+	if err = protojson.Unmarshal([]byte(contentJson), dashboardBackendSchema); err != nil {
+		return admission.Warnings{"failed to extract contentJson from spec: " + err.Error()}, nil
 	}
 
 	return nil, nil

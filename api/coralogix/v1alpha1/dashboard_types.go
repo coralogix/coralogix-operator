@@ -46,7 +46,7 @@ type DashboardSpec struct {
 }
 
 func (in *DashboardSpec) ExtractDashboardFromSpec(ctx context.Context, namespace string) (*cxsdk.Dashboard, error) {
-	contentJson, err := extractJsonContentFromSpec(ctx, namespace, in)
+	contentJson, err := ExtractJsonContentFromSpec(ctx, namespace, in)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func expandDashboardFolder(ctx context.Context, namespace string, in *DashboardS
 	return dashboard, nil
 }
 
-func extractJsonContentFromSpec(ctx context.Context, namespace string, in *DashboardSpec) (string, error) {
+func ExtractJsonContentFromSpec(ctx context.Context, namespace string, in *DashboardSpec) (string, error) {
 	if json := in.Json; json != nil {
 		return *json, nil
 	} else if gzipJson := in.GzipJson; gzipJson != nil {
