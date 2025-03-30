@@ -1,3 +1,15 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Dashboard
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: dashboard-from-configmap
+spec:
+  configMapRef:
+    name: dashboard-definition
+    key: json
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -1279,15 +1291,4 @@ data:
     }
 
 
----
-apiVersion: coralogix.com/v1alpha1
-kind: Dashboard
-metadata:
-  labels:
-    app.kubernetes.io/name: coralogix-operator
-    app.kubernetes.io/managed-by: kustomize
-  name: dashboard-from-configmap
-spec:
-  configMapRef:
-    name: dashboard-definition
-    key: json
+

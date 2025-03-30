@@ -42,8 +42,6 @@ type DashboardSpec struct {
 	//+optional
 	ConfigMapRef *v1.ConfigMapKeySelector `json:"configMapRef,omitempty"`
 	// +optional
-	// +kubebuilder:validation:XValidation:rule="has(self.backendRef) || has(self.resourceRef)", message="One of backendRef or resourceRef is required"
-	// +kubebuilder:validation:XValidation:rule="!(has(self.backendRef) && has(self.resourceRef))", message="Only one of backendRef or resourceRef can be declared at the same time"
 	FolderRef *DashboardFolderRef `json:"folderRef,omitempty"`
 }
 
@@ -102,29 +100,27 @@ func expandDashboardFolder(ctx context.Context, namespace string, in *DashboardS
 }
 
 func extractJsonContentFromSpec(ctx context.Context, namespace string, in *DashboardSpec) (string, error) {
-	var contentJson string
-	if in.Json != nil {
-		contentJson = *in.Json
-	} else if in.GzipJson != nil {
-		content, err := Unzip(in.GzipJson)
+	if json := in.Json; json != nil {
+		return *json, nil
+	} else if gzipJson := in.GzipJson; gzipJson != nil {
+		content, err := Unzip(gzipJson)
 		if err != nil {
 			return "", fmt.Errorf("failed to gunzip contentJson: %w", err)
 		}
-		contentJson = string(content)
+		return string(content), nil
 	} else if configMapRef := in.ConfigMapRef; configMapRef != nil {
 		dashboardConfigMap := &v1.ConfigMap{}
 		if err := config.GetClient().Get(ctx, client.ObjectKey{Namespace: namespace, Name: configMapRef.Name}, dashboardConfigMap); err != nil {
 			return "", err
 		}
 		if content, ok := dashboardConfigMap.Data[configMapRef.Key]; ok {
-			contentJson = content
+			return content, nil
 		} else {
 			return "", fmt.Errorf("cannot find key '%v' in config map '%v'", configMapRef.Key, configMapRef.Name)
 		}
-	} else {
-		return "", fmt.Errorf("json, gzipContentJson or configMapRef is required")
 	}
-	return contentJson, nil
+
+	return "", fmt.Errorf("json, gzipContentJson or configMapRef is required")
 }
 
 func Unzip(compressed []byte) ([]byte, error) {

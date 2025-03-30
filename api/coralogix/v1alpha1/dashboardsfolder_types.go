@@ -75,6 +75,8 @@ func GetFolderIdFromFolderCR(ctx context.Context, namespace string, parentRef Re
 	return *df.Status.ID, nil
 }
 
+// +kubebuilder:validation:XValidation:rule="has(self.backendRef) || has(self.resourceRef)", message="One of backendRef or resourceRef is required"
+// +kubebuilder:validation:XValidation:rule="!(has(self.backendRef) && has(self.resourceRef))", message="Only one of backendRef or resourceRef can be declared at the same time"
 type DashboardFolderRef struct {
 	// +optional
 	// +kubebuilder:validation:XValidation:rule="has(self.id) || has(self.path)",message="One of id or path is required"
