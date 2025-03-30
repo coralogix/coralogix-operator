@@ -45,6 +45,17 @@ type DashboardSpec struct {
 	FolderRef *DashboardFolderRef `json:"folderRef,omitempty"`
 }
 
+// +kubebuilder:validation:XValidation:rule="has(self.backendRef) || has(self.resourceRef)", message="One of backendRef or resourceRef is required"
+// +kubebuilder:validation:XValidation:rule="!(has(self.backendRef) && has(self.resourceRef))", message="Only one of backendRef or resourceRef can be declared at the same time"
+type DashboardFolderRef struct {
+	// +optional
+	// +kubebuilder:validation:XValidation:rule="has(self.id) || has(self.path)",message="One of id or path is required"
+	// +kubebuilder:validation:XValidation:rule="!(has(self.id) && has(self.path))",message="Only one of id or path can be declared at the same time"
+	BackendRef *DashboardFolderRefBackendRef `json:"backendRef,omitempty"`
+	// +optional
+	ResourceRef *ResourceRef `json:"resourceRef,omitempty"`
+}
+
 func (in *DashboardSpec) ExtractDashboardFromSpec(ctx context.Context, namespace string) (*cxsdk.Dashboard, error) {
 	contentJson, err := ExtractJsonContentFromSpec(ctx, namespace, in)
 	if err != nil {
