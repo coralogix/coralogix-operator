@@ -64,13 +64,13 @@ var _ = Describe("Group", Ordered, func() {
 					{UserName: "example2@coralogix.com"},
 				},
 				Scope: &coralogixv1alpha1.GroupScope{
-					ResourceRef: &coralogixv1alpha1.ResourceRef{
+					ResourceRef: coralogixv1alpha1.ResourceRef{
 						Name: scopeName,
 					},
 				},
 				CustomRoles: []coralogixv1alpha1.GroupCustomRole{
 					{
-						ResourceRef: &coralogixv1alpha1.ResourceRef{
+						ResourceRef: coralogixv1alpha1.ResourceRef{
 							Name: customRoleName,
 						},
 					},

@@ -55,7 +55,7 @@ type TCOLogsPolicy struct {
 }
 
 type ArchiveRetention struct {
-	BackendRef *ArchiveRetentionBackendRef `json:"backendRef"`
+	BackendRef ArchiveRetentionBackendRef `json:"backendRef"`
 }
 
 type ArchiveRetentionBackendRef struct {

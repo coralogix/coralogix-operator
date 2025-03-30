@@ -104,7 +104,7 @@ func (v *AlertSchedulerCustomValidator) ValidateDelete(ctx context.Context, obj 
 	return nil, nil
 }
 
-func validateFilter(filter *coralogixv1alpha1.Filter) error {
+func validateFilter(filter coralogixv1alpha1.Filter) error {
 	if (filter.MetaLabels == nil || len(filter.MetaLabels) == 0) &&
 		(filter.Alerts == nil || len(filter.Alerts) == 0) {
 		return fmt.Errorf("filter must contain at least one of the fields: metaLabels or alerts")
@@ -117,7 +117,7 @@ func validateFilter(filter *coralogixv1alpha1.Filter) error {
 	return nil
 }
 
-func validateSchedule(schedule *coralogixv1alpha1.Schedule) error {
+func validateSchedule(schedule coralogixv1alpha1.Schedule) error {
 	if schedule.OneTime == nil && schedule.Recurring == nil {
 		return fmt.Errorf("schedule must contain only one of the fields: oneTime or recurring")
 	}

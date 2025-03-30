@@ -80,7 +80,7 @@ var _ = Describe("TCOTracesPolicies", func() {
 							},
 						},
 						ArchiveRetention: &coralogixv1alpha1.ArchiveRetention{
-							BackendRef: &coralogixv1alpha1.ArchiveRetentionBackendRef{
+							BackendRef: coralogixv1alpha1.ArchiveRetentionBackendRef{
 								Name: "Default",
 							},
 						},

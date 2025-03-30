@@ -49,11 +49,11 @@ type Member struct {
 }
 
 type GroupCustomRole struct {
-	ResourceRef *ResourceRef `json:"resourceRef"`
+	ResourceRef ResourceRef `json:"resourceRef"`
 }
 
 type GroupScope struct {
-	ResourceRef *ResourceRef `json:"resourceRef"`
+	ResourceRef ResourceRef `json:"resourceRef"`
 }
 
 type ResourceRef struct {
