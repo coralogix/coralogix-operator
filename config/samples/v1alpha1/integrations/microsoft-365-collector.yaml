@@ -1,0 +1,19 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Integration
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: integration-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: microsoft-365-collector
+spec:
+  integrationKey: microsoft-365-collector
+  version: 0.0.1
+  parameters:
+    IntegrationName: Microsoft 365
+    ApplicationName: <ApplicationName>
+    TenantId: <TenantId>
+    ClientId: <ClientId>
+    ClientSecret: <ClientSecret>

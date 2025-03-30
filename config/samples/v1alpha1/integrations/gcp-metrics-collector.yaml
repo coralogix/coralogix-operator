@@ -7,7 +7,7 @@ metadata:
     app.kubernetes.io/part-of: coralogix-operator
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/created-by: coralogix-operator
-  name: gcp-metrics-collector-integration
+  name: gcp-metrics-collector
 spec:
   integrationKey: gcp-metrics-collector
   version: 1.0.0
