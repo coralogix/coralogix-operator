@@ -108,4 +108,24 @@ webhooks:
         resources:
           - alerts
     sideEffects: None
+  - admissionReviewVersions:
+      - v1
+    clientConfig:
+      service:
+        name: {{ include "coralogixOperator.fullname" . }}-webhook-service
+        namespace: {{ .Release.Namespace }}
+        path: /validate-coralogix-com-v1alpha1-dashboard
+    failurePolicy: Fail
+    name: vdashboard-v1alpha1.kb.io
+    rules:
+      - apiGroups:
+          - coralogix.com
+        apiVersions:
+          - v1alpha1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - dashboards
+    sideEffects: None
 {{- end }}

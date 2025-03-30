@@ -7,6 +7,14 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
   - secrets
   verbs:
   - create
@@ -23,6 +31,8 @@ rules:
   - alertschedulers
   - apikeys
   - customroles
+  - dashboards
+  - dashboardsfolders
   - groups
   - integrations
   - outboundwebhooks
@@ -46,6 +56,8 @@ rules:
   - alertschedulers/finalizers
   - apikeys/finalizers
   - customroles/finalizers
+  - dashboards/finalizers
+  - dashboardsfolders/finalizers
   - groups/finalizers
   - integrations/finalizers
   - outboundwebhooks/finalizers
@@ -63,6 +75,8 @@ rules:
   - alertschedulers/status
   - apikeys/status
   - customroles/status
+  - dashboards/status
+  - dashboardsfolders/status
   - groups/status
   - integrations/status
   - outboundwebhooks/status
