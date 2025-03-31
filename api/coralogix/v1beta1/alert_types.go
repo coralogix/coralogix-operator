@@ -235,17 +235,6 @@ var (
 		LogsUniqueCountTimeWindowValue24Hours:   cxsdk.LogsUniqueValueTimeWindowValue24Hours,
 		LogsUniqueCountTimeWindowValue36Hours:   cxsdk.LogsUniqueValueTimeWindowValue36Hours,
 	}
-
-	defaultOutputSchemaId    = "default"
-	rawOutputSchemaId        = "raw"
-	structuredOutputSchemaId = "structured"
-	fieldNameHeaders         = "headers"
-	fieldNameBody            = "body"
-	fieldNamePayload         = "payload"
-	fieldNameTitle           = "title"
-	fieldNameDescription     = "description"
-	fieldNameFooter          = "footer"
-	fieldNameChannel         = "channel"
 )
 
 // AlertSpec defines the desired state of Alert
@@ -258,7 +247,7 @@ type AlertSpec struct {
 	//+kubebuilder:default=true
 	Enabled bool `json:"enabled,omitempty"`
 	// +optional
-	GroupByKeys []string `json:"groupByKeys,omitempty"`
+	GroupByKeys []string `json:"groupByKeys"`
 	// +optional
 	IncidentsSettings *IncidentsSettings `json:"incidentsSettings,omitempty"`
 	// +optional
