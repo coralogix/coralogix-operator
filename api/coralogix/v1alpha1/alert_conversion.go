@@ -262,7 +262,7 @@ func (src *Alert) ConvertTo(dstRaw conversion.Hub) error {
 func convertAlertTypeV1beta1ToV1alpha1(definition v1beta1.AlertTypeDefinition, groupBy []string) (*AlertType, []string) {
 	if logsImmediate := definition.LogsImmediate; logsImmediate != nil {
 		return &AlertType{
-			Standard: convertLogImmediateV1beta1ToStandardV1alpha1(*logsImmediate),
+			Standard: convertLogImmediateV1beta1ToStandardV1alpha1(*logsImmediate, groupBy),
 		}, logsImmediate.NotificationPayloadFilter
 	} else if logsThreshold := definition.LogsThreshold; logsThreshold != nil {
 		return &AlertType{
@@ -515,9 +515,13 @@ func convertLogsThresholdV1beta1ToStandardV1alpha1(logsThreshold v1beta1.LogsThr
 	}
 }
 
-func convertLogImmediateV1beta1ToStandardV1alpha1(logsImmediate v1beta1.LogsImmediate) *Standard {
+func convertLogImmediateV1beta1ToStandardV1alpha1(logsImmediate v1beta1.LogsImmediate, groupBy []string) *Standard {
 	return &Standard{
 		Filters: convertLogsFilterV1beta1ToV1alpha1(logsImmediate.LogsFilter),
+		Conditions: StandardConditions{
+			AlertWhen: StandardAlertWhenImmediately,
+			GroupBy:   groupBy,
+		},
 	}
 }
 
@@ -917,7 +921,7 @@ func convertFlowV1alpha1ToV1beta1(flow Flow) v1beta1.AlertTypeDefinition {
 func convertStandardV1alpha1ToV1beta1(standard Standard, payloadFilters []string, severity AlertSeverity) (v1beta1.AlertTypeDefinition, []string) {
 	switch standard.Conditions.AlertWhen {
 	case StandardAlertWhenImmediately:
-		return convertStandardImmediateV1alpha1toV1beta1(standard, payloadFilters), nil
+		return convertStandardImmediateV1alpha1toV1beta1(standard, payloadFilters), standard.Conditions.GroupBy
 	case StandardAlertWhenMoreThanUsual:
 		return convertStandardAnomalyV1alpha1ToV1beta1(standard, payloadFilters), standard.Conditions.GroupBy
 	default:
