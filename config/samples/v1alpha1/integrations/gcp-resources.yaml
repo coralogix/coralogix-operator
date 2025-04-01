@@ -1,0 +1,18 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Integration
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: integration-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: gcp-resources
+spec:
+  integrationKey: gcp-resources
+  version: 0.0.1
+  parameters:
+    IntegrationName: GcpResources
+    ServiceAccountKey: <ServiceAccountKey>
+    OrganizationName: <OrganizationName>
+    OrganizationId: 0

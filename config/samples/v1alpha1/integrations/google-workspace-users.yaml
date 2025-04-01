@@ -1,0 +1,19 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Integration
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: integration-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: google-workspace-users
+spec:
+  integrationKey: google-workspace-users
+  version: 0.0.1
+  parameters:
+    IntegrationName: GoogleWorkspace
+    ServiceAccountKey: <ServiceAccountKey>
+    OrganizationName: <OrganizationName>
+    OrganizationId: <OrganizationId>
+    ImpersonatedEmail: <ImpersonatedEmail>

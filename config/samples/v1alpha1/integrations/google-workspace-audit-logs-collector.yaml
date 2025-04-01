@@ -1,0 +1,19 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Integration
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: integration-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: google-workspace-audit-logs-collector
+spec:
+  integrationKey: google-workspace-audit-logs-collector
+  version: 0.1.0
+  parameters:
+    IntegrationName: GoogleWorkspaceAuditLogs
+    ServiceAccountKey: <ServiceAccountKey>
+    ImpersonatedEmail: <ImpersonatedEmail>
+    GoogleWorkspaceApplicationNames: false
+    ApplicationName: <ApplicationName>
