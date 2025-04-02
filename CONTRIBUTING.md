@@ -17,7 +17,6 @@ cd coralogix-operator
 export CORALOGIX_API_KEY="<api-key>"
 export CORALOGIX_REGION="<region>"
 ```
-For private domain set the `CORALOGIX_DOMAIN` environment variable.
 
 3. For a custom operator image, build and push your image to a registry:
 ```sh
