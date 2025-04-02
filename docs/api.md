@@ -6105,7 +6105,10 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b><a href="#rulegroupspecsubgroupsindex">subgroups</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Rules within the same subgroup have an OR relationship,
+while rules in different subgroups have an AND relationship.
+Refer to https://github.com/coralogix/coralogix-operator/blob/main/config/samples/v1alpha1/rulegroups/mixed_rulegroup.yaml
+for an example.<br/>
         </td>
         <td>false</td>
       </tr><tr>
