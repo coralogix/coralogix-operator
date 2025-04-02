@@ -15,21 +15,32 @@ spec:
   subsystems: ["subsystems-name"]
   severities: ["Warning", "Info"]
   subgroups:
+    # rules within the same subgroup have an OR relationship
+    # rules between subgroups have an AND relationship
     - rules:
         - name: parsing-rule
           parse:
             sourceField: text
             destinationField: text
             regex: message\\s*:s*(?P<bytes>\\d+)\\s*.*?status\\sis\\s(?P<status>\\[^\"]+)
+        # OR
         - name: blocking-rule
           block:
             sourceField: text
             regex: sql_error_code\\s*=\\s*28000
+        # OR
+        - name: Json stringify
+          jsonStringify:
+            sourceField: text
+            destinationField: text
+            keepSourceField: false
+    # AND
     - rules:
         - name: json-extract-rule
           jsonExtract:
             jsonKey: worker
             destinationField: Category
+        # OR
         - name: replacing-rule
           replace:
             sourceField: text
