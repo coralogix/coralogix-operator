@@ -14,7 +14,7 @@ This allows for multiple independent deployments of the operator, each managing 
 ```sh
 helm install coralogix-operator-staging coralogix/coralogix-operator \
   --set secret.data.apiKey="stg-api-key" \
-  --set coralogixOperator.domain="app.stg.domain" \
+  --set coralogixOperator.region="eu2" \
   --set coralogixOperator.labelSelector="env=stg,team=a"
 ```
 This operator installation will **only reconcile custom resources** labeled:
@@ -31,7 +31,7 @@ metadata:
 ```sh
 helm install coralogix-operator-staging coralogix/coralogix-operator \
   --set secret.data.apiKey="stg-api-key" \
-  --set coralogixOperator.domain="app.stg.domain" \
+  --set coralogixOperator.region="eu2" \
   --set coralogixOperator.namespaceSelector="staging,production"
 ```
 This operator installation will **only reconcile custom resources** deployed in either the `staging` or `production` namespaces.
