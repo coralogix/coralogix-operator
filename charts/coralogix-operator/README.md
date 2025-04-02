@@ -1,6 +1,6 @@
 # coralogix-operator
 
-![Version: 0.4.0](https://img.shields.io/badge/Version-0.4.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.4.0](https://img.shields.io/badge/AppVersion-0.4.0-informational?style=flat-square)
+![Version: 0.4.1](https://img.shields.io/badge/Version-0.4.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.4.1](https://img.shields.io/badge/AppVersion-0.4.1-informational?style=flat-square)
 
 Coralogix Operator Helm Chart
 
@@ -26,15 +26,17 @@ Kubernetes: `>=1.16.0-0`
 |-----|------|---------|-------------|
 | affinity | object | `{}` | ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/ |
 | certificate.create | bool | `true` | Specifies whether a Certificate should be created. |
-| coralogixOperator | object | `{"domain":"","image":{"pullPolicy":"IfNotPresent","repository":"coralogixrepo/coralogix-operator","tag":""},"labelSelector":"","namespaceSelector":"","prometheusRules":{"enabled":true},"reconcileIntervalSeconds":{"alert":"","alertScheduler":"","apiKey":"","customRole":"","group":"","integration":"","outboundWebhook":"","prometheusRule":"","recordingRuleGroupSet":"","ruleGroup":"","scope":"","tcoLogsPolicies":"","tcoTracesPolicies":""},"region":"","resources":{},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true},"webhooks":{"enabled":true}}` | Coralogix operator container config |
+| coralogixOperator | object | `{"domain":"","image":{"pullPolicy":"IfNotPresent","repository":"coralogixrepo/coralogix-operator","tag":""},"labelSelector":"","leaderElection":{"enabled":true},"namespaceSelector":"","prometheusRules":{"enabled":true},"reconcileIntervalSeconds":{"alert":"","alertScheduler":"","apiKey":"","customRole":"","group":"","integration":"","outboundWebhook":"","prometheusRule":"","recordingRuleGroupSet":"","ruleGroup":"","scope":"","tcoLogsPolicies":"","tcoTracesPolicies":""},"region":"","resources":{},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true},"webhooks":{"enabled":true}}` | Coralogix operator container config |
 | coralogixOperator.domain | string | `""` | Coralogix Account Domain |
 | coralogixOperator.image | object | `{"pullPolicy":"IfNotPresent","repository":"coralogixrepo/coralogix-operator","tag":""}` | Coralogix operator Image |
 | coralogixOperator.labelSelector | string | `""` | A comma-separated list of key=value labels to filter custom resources |
+| coralogixOperator.leaderElection | object | `{"enabled":true}` | Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager. |
 | coralogixOperator.namespaceSelector | string | `""` | A list of namespaces to filter custom resources |
 | coralogixOperator.reconcileIntervalSeconds | object | `{"alert":"","alertScheduler":"","apiKey":"","customRole":"","group":"","integration":"","outboundWebhook":"","prometheusRule":"","recordingRuleGroupSet":"","ruleGroup":"","scope":"","tcoLogsPolicies":"","tcoTracesPolicies":""}` | The interval in seconds to reconcile each custom resource |
 | coralogixOperator.region | string | `""` | Coralogix Account Region |
 | coralogixOperator.resources | object | `{}` | resource config for Coralogix operator |
 | coralogixOperator.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}` | Security context for Coralogix operator container |
+| deployment.replicas | int | `1` | How many coralogix-operator pods to run |
 | fullnameOverride | string | `""` | Provide a name to substitute for the full names of resources |
 | imagePullSecrets | list | `[]` |  |
 | issuer.create | bool | `true` | Specifies whether an Issuer should be created. |

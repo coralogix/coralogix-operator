@@ -50,7 +50,7 @@ import (
 	//+kubebuilder:scaffold:imports
 )
 
-const OperatorVersion = "0.4.0"
+const OperatorVersion = "0.4.2"
 
 var (
 	scheme   = k8sruntime.NewScheme()
@@ -109,7 +109,7 @@ func main() {
 		Metrics:                metricsServerOptions,
 		HealthProbeBindAddress: cfg.ProbeAddr,
 		LeaderElection:         cfg.EnableLeaderElection,
-		LeaderElectionID:       "9e1892e3.coralogix",
+		LeaderElectionID:       cfg.LeaderElectionID,
 		PprofBindAddress:       "0.0.0.0:8888",
 	}
 

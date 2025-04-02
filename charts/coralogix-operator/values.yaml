@@ -6,6 +6,10 @@ fullnameOverride: ""
 
 imagePullSecrets: []
 
+deployment:
+  # -- How many coralogix-operator pods to run
+  replicas: 1
+
 # -- Service account for Coralogix operator to use.
 # -- ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
 serviceAccount:
@@ -86,6 +90,10 @@ secret:
 
 # -- Coralogix operator container config
 coralogixOperator:
+  # -- Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.
+  leaderElection:
+    enabled: true
+
   # Set this to false if PrometheusRule CRD is not available in the cluster.
   prometheusRules:
     enabled: true

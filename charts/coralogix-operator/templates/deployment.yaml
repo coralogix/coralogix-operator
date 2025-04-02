@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "coralogixOperator.labels" . | nindent 4 }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.deployment.replicas }}
   selector:
     matchLabels:
       {{- include "coralogixOperator.selectorLabels" . | nindent 6 }}
@@ -39,7 +39,8 @@ spec:
         args:
         - -health-probe-bind-address=:8081
         - -metrics-bind-address=:8080
-        - -leader-elect
+        - -leader-elect={{.Values.coralogixOperator.leaderElection.enabled}}
+        - -leader-election-id={{ include "coralogixOperator.fullname" . }}
         - -prometheus-rule-controller={{.Values.coralogixOperator.prometheusRules.enabled}}
         - -enable-webhooks={{.Values.coralogixOperator.webhooks.enabled }}
         - -label-selector={{ .Values.coralogixOperator.labelSelector }}

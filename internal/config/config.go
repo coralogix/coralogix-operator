@@ -73,6 +73,7 @@ type Config struct {
 	MetricsAddr                 string
 	ProbeAddr                   string
 	EnableLeaderElection        bool
+	LeaderElectionID            string
 	SecureMetrics               bool
 	EnableHTTP2                 bool
 }
@@ -81,9 +82,11 @@ func InitConfig(setupLog logr.Logger) *Config {
 	once.Do(func() {
 		flag.StringVar(&cfg.MetricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 		flag.StringVar(&cfg.ProbeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
-		flag.BoolVar(&cfg.EnableLeaderElection, "leader-elect", false,
+		flag.BoolVar(&cfg.EnableLeaderElection, "leader-elect", true,
 			"Enable leader election for controller manager. "+
 				"Enabling this will ensure there is only one active controller manager.")
+		flag.StringVar(&cfg.LeaderElectionID, "leader-election-id", "coralogix-operator",
+			"Name of the leader election lease. Used to manage the leader election process.")
 		flag.BoolVar(&cfg.SecureMetrics, "metrics-secure", false,
 			"If set, the metrics endpoint is served securely via HTTPS. Use --metrics-secure=false to use HTTP instead.")
 		flag.BoolVar(&cfg.EnableHTTP2, "enable-http2", false,
@@ -180,8 +183,6 @@ func parseReconcileIntervals(setupLog logr.Logger, intervals map[string]*string)
 		if *interval == "" {
 			*interval = "0"
 		}
-
-		setupLog.Info(fmt.Sprintf("Reconcile interval for CRD %s is %s seconds", crd, *interval))
 
 		numericInterval, err := strconv.Atoi(*interval)
 		if err != nil {
