@@ -58,12 +58,12 @@ func (r *RuleGroupReconciler) RequeueInterval() time.Duration {
 func (r *RuleGroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	ruleGroup := obj.(*coralogixv1alpha1.RuleGroup)
 	createRequest := ruleGroup.Spec.ExtractCreateRuleGroupRequest()
-	log.V(1).Info("Creating remote ruleGroup", "ruleGroup", protojson.Format(createRequest))
+	log.Info("Creating remote ruleGroup", "ruleGroup", protojson.Format(createRequest))
 	createResponse, err := r.RuleGroupClient.Create(ctx, createRequest)
 	if err != nil {
 		return fmt.Errorf("error on creating remote ruleGroup: %w", err)
 	}
-	log.V(1).Info("Remote ruleGroup created", "response", protojson.Format(createResponse))
+	log.Info("Remote ruleGroup created", "response", protojson.Format(createResponse))
 	ruleGroup.Status = coralogixv1alpha1.RuleGroupStatus{
 		ID: &createResponse.RuleGroup.Id.Value,
 	}
@@ -74,25 +74,25 @@ func (r *RuleGroupReconciler) HandleCreation(ctx context.Context, log logr.Logge
 func (r *RuleGroupReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	ruleGroup := obj.(*coralogixv1alpha1.RuleGroup)
 	updateRequest := ruleGroup.Spec.ExtractUpdateRuleGroupRequest(*ruleGroup.Status.ID)
-	log.V(1).Info("Updating remote ruleGroup", "ruleGroup", protojson.Format(updateRequest))
+	log.Info("Updating remote ruleGroup", "ruleGroup", protojson.Format(updateRequest))
 	updateResponse, err := r.RuleGroupClient.Update(ctx, updateRequest)
 	if err != nil {
 		return err
 	}
-	log.V(1).Info("Remote ruleGroup updated", "ruleGroup", protojson.Format(updateResponse))
+	log.Info("Remote ruleGroup updated", "ruleGroup", protojson.Format(updateResponse))
 	return nil
 }
 
 func (r *RuleGroupReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
 	ruleGroup := obj.(*coralogixv1alpha1.RuleGroup)
 	id := *ruleGroup.Status.ID
-	log.V(1).Info("Deleting ruleGroup from remote system", "id", id)
+	log.Info("Deleting ruleGroup from remote system", "id", id)
 	_, err := r.RuleGroupClient.Delete(ctx, &cxsdk.DeleteRuleGroupRequest{GroupId: id})
 	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.V(1).Error(err, "Error deleting remote ruleGroup", "id", id)
+		log.Error(err, "Error deleting remote ruleGroup", "id", id)
 		return fmt.Errorf("error deleting remote ruleGroup %s: %w", id, err)
 	}
-	log.V(1).Info("RuleGroup deleted from remote system", "id", id)
+	log.Info("RuleGroup deleted from remote system", "id", id)
 	return nil
 }
 

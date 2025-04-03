@@ -65,12 +65,12 @@ func (r *IntegrationReconciler) HandleCreation(ctx context.Context, log logr.Log
 	if err != nil {
 		return fmt.Errorf("error on extracting create integration request: %w", err)
 	}
-	log.V(1).Info("Creating remote integration", "integration", protojson.Format(createRequest))
+	log.Info("Creating remote integration", "integration", protojson.Format(createRequest))
 	createResponse, err := r.IntegrationsClient.Create(ctx, createRequest)
 	if err != nil {
 		return fmt.Errorf("error on creating remote integration: %w", err)
 	}
-	log.V(1).Info("Remote integration created", "response", protojson.Format(createResponse))
+	log.Info("Remote integration created", "response", protojson.Format(createResponse))
 
 	integration.Status = coralogixv1alpha1.IntegrationStatus{
 		Id: &createResponse.IntegrationId.Value,
@@ -85,25 +85,25 @@ func (r *IntegrationReconciler) HandleUpdate(ctx context.Context, log logr.Logge
 	if err != nil {
 		return fmt.Errorf("error on extracting update integration request: %w", err)
 	}
-	log.V(1).Info("Updating remote integration", "integration", protojson.Format(updateRequest))
+	log.Info("Updating remote integration", "integration", protojson.Format(updateRequest))
 	updateResponse, err := r.IntegrationsClient.Update(ctx, updateRequest)
 	if err != nil {
 		return err
 	}
-	log.V(1).Info("Remote integration updated", "integration", protojson.Format(updateResponse))
+	log.Info("Remote integration updated", "integration", protojson.Format(updateResponse))
 
 	return nil
 }
 
 func (r *IntegrationReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
 	integration := obj.(*coralogixv1alpha1.Integration)
-	log.V(1).Info("Deleting integration from remote system", "id", *integration.Status.Id)
+	log.Info("Deleting integration from remote system", "id", *integration.Status.Id)
 	_, err := r.IntegrationsClient.Delete(ctx, &cxsdk.DeleteIntegrationRequest{IntegrationId: wrapperspb.String(*integration.Status.Id)})
 	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.V(1).Error(err, "Error deleting remote integration", "id", *integration.Status.Id)
+		log.Error(err, "Error deleting remote integration", "id", *integration.Status.Id)
 		return fmt.Errorf("error deleting remote integration %s: %w", *integration.Status.Id, err)
 	}
-	log.V(1).Info("integration deleted from remote system", "id", *integration.Status.Id)
+	log.Info("integration deleted from remote system", "id", *integration.Status.Id)
 	return nil
 }
 

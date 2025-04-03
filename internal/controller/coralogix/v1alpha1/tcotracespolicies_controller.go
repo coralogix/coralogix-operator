@@ -54,12 +54,12 @@ func (r *TCOTracesPoliciesReconciler) overwrite(ctx context.Context, log logr.Lo
 	if err != nil {
 		return fmt.Errorf("error on extracting overwrite log policies request: %w", err)
 	}
-	log.V(1).Info("Overwriting remote tco-Traces-policies", "tco-Traces-policies", protojson.Format(overwriteRequest))
+	log.Info("Overwriting remote tco-Traces-policies", "tco-Traces-policies", protojson.Format(overwriteRequest))
 	overwriteResponse, err := r.CoralogixClientSet.TCOPolicies().OverwriteTCOTracesPolicies(ctx, overwriteRequest)
 	if err != nil {
 		return fmt.Errorf("error on overwriting remote tco-Traces-policies: %w", err)
 	}
-	log.V(1).Info("Remote tco-Traces-policies overwritten", "response", protojson.Format(overwriteResponse))
+	log.Info("Remote tco-Traces-policies overwritten", "response", protojson.Format(overwriteResponse))
 
 	return nil
 }
@@ -89,13 +89,13 @@ func (r *TCOTracesPoliciesReconciler) HandleUpdate(ctx context.Context, log logr
 
 func (r *TCOTracesPoliciesReconciler) HandleDeletion(ctx context.Context, log logr.Logger, _ client.Object) error {
 	deleteTCOTracesPoliciesRequest := &cxsdk.AtomicOverwriteSpanPoliciesRequest{}
-	log.V(1).Info("Deleting TCOTracesPolicies")
+	log.Info("Deleting TCOTracesPolicies")
 	if _, err := r.CoralogixClientSet.TCOPolicies().OverwriteTCOTracesPolicies(ctx, deleteTCOTracesPoliciesRequest); err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.V(1).Error(err, "Received an error while Deleting a TCOTracesPolicies")
+		log.Error(err, "Received an error while Deleting a TCOTracesPolicies")
 		return err
 	}
 
-	log.V(1).Info("tco-traces-policies was deleted from remote")
+	log.Info("tco-traces-policies was deleted from remote")
 	return nil
 }
 

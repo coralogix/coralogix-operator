@@ -18,10 +18,12 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
 	"github.com/go-logr/logr"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -50,6 +52,47 @@ func collectOperatorResource(ctx context.Context, log logr.Logger, gvk schema.Gr
 
 	if err := dumpResource(resource, dir, fileName); err != nil {
 		return fmt.Errorf("failed to dump resource: %w", err)
+	}
+
+	return nil
+}
+
+func collectLogs(ctx context.Context, log logr.Logger) error {
+	log.V(1).Info("Collecting logs")
+
+	labelSelector := labels.SelectorFromSet(map[string]string{
+		"app.kubernetes.io/instance": cfg.ChartName,
+	})
+
+	podList := &corev1.PodList{}
+	err := cfg.Client.List(ctx, podList, &client.ListOptions{
+		Namespace:     cfg.ChartNamespace,
+		LabelSelector: labelSelector,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to list operator pods: %w", err)
+	}
+
+	for _, pod := range podList.Items {
+		log.V(1).Info("Collecting logs from pod", "pod", pod.Name, "namespace", pod.Namespace)
+
+		cmd := exec.CommandContext(ctx,
+			"kubectl", "logs",
+			"-n", pod.Namespace,
+			pod.Name,
+		)
+
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			log.Error(err, "Failed to collect logs", "pod", pod.Name, "namespace", pod.Namespace)
+			continue
+		}
+
+		logsDir := filepath.Join("temp", "cxo-observer", "logs")
+		if err := dumpLogFile(output, logsDir, pod.Name); err != nil {
+			log.Error(err, "Failed to dump logs", "pod", pod.Name)
+			continue
+		}
 	}
 
 	return nil
@@ -124,4 +167,18 @@ func dumpResource(resource *unstructured.Unstructured, dir, fileName string) err
 	}
 
 	return nil
+}
+
+func dumpLogFile(logs []byte, dir, fileName string) error {
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("failed to create directory %s: %w", dir, err)
+	}
+
+	filePath := filepath.Join(dir, fileName+".log")
+	if err := os.WriteFile(filePath, logs, 0644); err != nil {
+		return fmt.Errorf("failed to write file %s: %w", filePath, err)
+	}
+
+	return nil
+
 }
