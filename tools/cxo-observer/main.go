@@ -147,6 +147,11 @@ func main() {
 		}
 	}
 
+	log.Info("Collecting logs")
+	if err := collectLogs(ctx, log); err != nil {
+		log.Error(err, "Failed to collect logs")
+	}
+
 	log.Info("Collecting custom resources")
 	for _, ns := range cfg.Selector.NamespaceSelector {
 		if err := collectCRsInNamespace(ctx, log, ns); err != nil {
