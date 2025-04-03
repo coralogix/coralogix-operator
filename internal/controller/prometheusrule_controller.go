@@ -442,12 +442,20 @@ func prometheusAlertToMetricThreshold(rule prometheus.Rule) *coralogixv1beta1.Me
 }
 
 func getPriority(rule prometheus.Rule) coralogixv1beta1.AlertPriority {
-	severity := coralogixv1alpha1.AlertSeverityInfo
 	if severityStr, ok := rule.Labels["severity"]; ok && severityStr != "" {
-		severityStr = strings.ToUpper(severityStr[:1]) + strings.ToLower(severityStr[1:])
-		severity = coralogixv1alpha1.AlertSeverity(severityStr)
+		if priority, ok := prometheusSeverityToCXPriority[strings.ToLower(severityStr)]; ok {
+			return priority
+		}
 	}
-	return coralogixv1alpha1.SeveritiesV1alpha1ToV1beta1[severity]
+	return coralogixv1beta1.AlertPriorityP4
+}
+
+var prometheusSeverityToCXPriority = map[string]coralogixv1beta1.AlertPriority{
+	"critical": coralogixv1beta1.AlertPriorityP1,
+	"error":    coralogixv1beta1.AlertPriorityP2,
+	"warning":  coralogixv1beta1.AlertPriorityP3,
+	"info":     coralogixv1beta1.AlertPriorityP4,
+	"low":      coralogixv1beta1.AlertPriorityP5,
 }
 
 func getTimeWindow(rule prometheus.Rule) coralogixv1beta1.MetricTimeWindowSpecificValue {
