@@ -20,11 +20,6 @@ for crd_file in $crds_files; do
     # Extract filename without the path
     crd_filename=$(basename "$crd_file")
 
-    # Skip coralogix.com_alerts.yaml regardless of its location
-    if [ "$crd_filename" = "coralogix.com_alerts.yaml" ]; then
-        continue
-    fi
-
     chart_crd_file="$chart_crds_path/$crd_filename"
 
     if [ -f "$chart_crd_file" ]; then
