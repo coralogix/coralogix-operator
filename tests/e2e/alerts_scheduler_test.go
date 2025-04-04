@@ -145,21 +145,13 @@ func getSampleAlertScheduler(name, namespace string) *coralogixv1alpha1.AlertSch
 			Name:        name,
 			Description: "This is a sample alert scheduler",
 			Enabled:     true,
-<<<<<<< HEAD
 			Filter: coralogixv1alpha1.Filter{
-=======
-			Filter: &coralogixv1alpha1.Filter{
->>>>>>> 01ad465 (chore: fixing invalid rebase)
 				WhatExpression: "source logs | filter $d.cpodId:string == '122'",
 				MetaLabels: []coralogixv1alpha1.MetaLabel{
 					{Key: "environment", Value: ptr.To("production")},
 				},
 			},
-<<<<<<< HEAD
 			Schedule: coralogixv1alpha1.Schedule{
-=======
-			Schedule: &coralogixv1alpha1.Schedule{
->>>>>>> 01ad465 (chore: fixing invalid rebase)
 				Operation: "mute",
 				Recurring: &coralogixv1alpha1.Recurring{
 					Dynamic: &coralogixv1alpha1.Dynamic{
