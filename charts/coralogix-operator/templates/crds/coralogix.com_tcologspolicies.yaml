@@ -41,18 +41,26 @@ spec:
           metadata:
             type: object
           spec:
-            description: TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
+            description: |-
+              TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.
+              See also https://coralogix.com/docs/tco-optimizer-api
             properties:
               policies:
+                description: Coralogix TCO-Policies-List.
                 items:
+                  description: A TCO policy for logs.
                   properties:
                     applications:
+                      description: The applications to apply the policy on. Applies
+                        the policy on all the applications by default.
                       properties:
                         names:
+                          description: Names to match.
                           items:
                             type: string
                           type: array
                         ruleType:
+                          description: Type of matching for the name.
                           enum:
                           - is
                           - is_not
@@ -64,10 +72,13 @@ spec:
                       - ruleType
                       type: object
                     archiveRetention:
+                      description: Matches the specified retention.
                       properties:
                         backendRef:
+                          description: Reference to the retention policy
                           properties:
                             name:
+                              description: Name of the policy.
                               type: string
                           required:
                           - name
@@ -76,10 +87,13 @@ spec:
                       - backendRef
                       type: object
                     description:
+                      description: Description of the policy.
                       type: string
                     name:
+                      description: Name of the policy.
                       type: string
                     priority:
+                      description: The policy priority.
                       enum:
                       - block
                       - high
@@ -87,7 +101,9 @@ spec:
                       - low
                       type: string
                     severities:
+                      description: The severities to apply the policy on.
                       items:
+                        description: The severities to apply the policy on.
                         enum:
                         - info
                         - warning
@@ -98,12 +114,16 @@ spec:
                         type: string
                       type: array
                     subsystems:
+                      description: The subsystems to apply the policy on. Applies
+                        the policy on all the subsystems by default.
                       properties:
                         names:
+                          description: Names to match.
                           items:
                             type: string
                           type: array
                         ruleType:
+                          description: Type of matching for the name.
                           enum:
                           - is
                           - is_not
