@@ -2407,22 +2407,6 @@ AlertStatus defines the observed state of Alert
 
 
 Condition contains details for one aspect of the current state of this API Resource.
----
-This struct is intended for direct use as an array at the field path .status.conditions.  For example,
-
-
-	type FooStatus struct{
-	    // Represents the observations of a foo's current state.
-	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
-	    // +patchMergeKey=type
-	    // +patchStrategy=merge
-	    // +listType=map
-	    // +listMapKey=type
-	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
-
-
-	    // other fields
-	}
 
 <table>
     <thead>
@@ -2475,11 +2459,7 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.
----
-Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
-useful (see .node.status.conditions), the ability to deconflict is important.
-The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -3235,22 +3215,6 @@ AlertSchedulerStatus defines the observed state of AlertScheduler.
 
 
 Condition contains details for one aspect of the current state of this API Resource.
----
-This struct is intended for direct use as an array at the field path .status.conditions.  For example,
-
-
-	type FooStatus struct{
-	    // Represents the observations of a foo's current state.
-	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
-	    // +patchMergeKey=type
-	    // +patchStrategy=merge
-	    // +listType=map
-	    // +listMapKey=type
-	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
-
-
-	    // other fields
-	}
 
 <table>
     <thead>
@@ -3303,11 +3267,7 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.
----
-Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
-useful (see .node.status.conditions), the ability to deconflict is important.
-The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -3514,22 +3474,6 @@ ApiKeyStatus defines the observed state of ApiKey.
 
 
 Condition contains details for one aspect of the current state of this API Resource.
----
-This struct is intended for direct use as an array at the field path .status.conditions.  For example,
-
-
-	type FooStatus struct{
-	    // Represents the observations of a foo's current state.
-	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
-	    // +patchMergeKey=type
-	    // +patchStrategy=merge
-	    // +listType=map
-	    // +listMapKey=type
-	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
-
-
-	    // other fields
-	}
 
 <table>
     <thead>
@@ -3582,11 +3526,7 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.
----
-Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
-useful (see .node.status.conditions), the ability to deconflict is important.
-The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -3748,22 +3688,6 @@ CustomRoleStatus defines the observed state of CustomRole.
 
 
 Condition contains details for one aspect of the current state of this API Resource.
----
-This struct is intended for direct use as an array at the field path .status.conditions.  For example,
-
-
-	type FooStatus struct{
-	    // Represents the observations of a foo's current state.
-	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
-	    // +patchMergeKey=type
-	    // +patchStrategy=merge
-	    // +listType=map
-	    // +listMapKey=type
-	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
-
-
-	    // other fields
-	}
 
 <table>
     <thead>
@@ -3816,11 +3740,7 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.
----
-Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
-useful (see .node.status.conditions), the ability to deconflict is important.
-The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -3909,8 +3829,8 @@ DashboardSpec defines the desired state of Dashboard.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>configMapRef</b></td>
-        <td></td>
+        <td><b><a href="#dashboardspecconfigmapref">configMapRef</a></b></td>
+        <td>object</td>
         <td>
           model from configmap<br/>
         </td>
@@ -3938,6 +3858,53 @@ DashboardSpec defines the desired state of Dashboard.
         <td>string</td>
         <td>
           <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Dashboard.spec.configMapRef
+<sup><sup>[↩ Parent](#dashboardspec)</sup></sup>
+
+
+
+model from configmap
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key to select.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the ConfigMap or its key must be defined<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -4088,22 +4055,6 @@ DashboardStatus defines the observed state of Dashboard.
 
 
 Condition contains details for one aspect of the current state of this API Resource.
----
-This struct is intended for direct use as an array at the field path .status.conditions.  For example,
-
-
-	type FooStatus struct{
-	    // Represents the observations of a foo's current state.
-	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
-	    // +patchMergeKey=type
-	    // +patchStrategy=merge
-	    // +listType=map
-	    // +listMapKey=type
-	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
-
-
-	    // other fields
-	}
 
 <table>
     <thead>
@@ -4156,11 +4107,7 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.
----
-Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
-useful (see .node.status.conditions), the ability to deconflict is important.
-The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -4358,22 +4305,6 @@ DashboardsFolderStatus defines the observed state of DashboardsFolder.
 
 
 Condition contains details for one aspect of the current state of this API Resource.
----
-This struct is intended for direct use as an array at the field path .status.conditions.  For example,
-
-
-	type FooStatus struct{
-	    // Represents the observations of a foo's current state.
-	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
-	    // +patchMergeKey=type
-	    // +patchStrategy=merge
-	    // +listType=map
-	    // +listMapKey=type
-	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
-
-
-	    // other fields
-	}
 
 <table>
     <thead>
@@ -4426,11 +4357,7 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.
----
-Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
-useful (see .node.status.conditions), the ability to deconflict is important.
-The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -4748,22 +4675,6 @@ GroupStatus defines the observed state of Group.
 
 
 Condition contains details for one aspect of the current state of this API Resource.
----
-This struct is intended for direct use as an array at the field path .status.conditions.  For example,
-
-
-	type FooStatus struct{
-	    // Represents the observations of a foo's current state.
-	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
-	    // +patchMergeKey=type
-	    // +patchStrategy=merge
-	    // +listType=map
-	    // +listMapKey=type
-	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
-
-
-	    // other fields
-	}
 
 <table>
     <thead>
@@ -4816,11 +4727,7 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.
----
-Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
-useful (see .node.status.conditions), the ability to deconflict is important.
-The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -4881,7 +4788,6 @@ Integration is the Schema for the integrations API.
           IntegrationSpec defines the desired state of a Coralogix (managed) integration.
 See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/
 
-
 For available integrations see https://coralogix.com/docs/developer-portal/infrastructure-as-code/terraform-provider/integrations/aws-metrics-collector/ or at https://github.com/coralogix/coralogix-operator/tree/main/config/samples/v1alpha1/integrations.<br/>
         </td>
         <td>false</td>
@@ -4903,7 +4809,6 @@ For available integrations see https://coralogix.com/docs/developer-portal/infra
 
 IntegrationSpec defines the desired state of a Coralogix (managed) integration.
 See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/
-
 
 For available integrations see https://coralogix.com/docs/developer-portal/infrastructure-as-code/terraform-provider/integrations/aws-metrics-collector/ or at https://github.com/coralogix/coralogix-operator/tree/main/config/samples/v1alpha1/integrations.
 
@@ -4981,22 +4886,6 @@ IntegrationStatus defines the observed state of Integration.
 
 
 Condition contains details for one aspect of the current state of this API Resource.
----
-This struct is intended for direct use as an array at the field path .status.conditions.  For example,
-
-
-	type FooStatus struct{
-	    // Represents the observations of a foo's current state.
-	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
-	    // +patchMergeKey=type
-	    // +patchStrategy=merge
-	    // +listType=map
-	    // +listMapKey=type
-	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
-
-
-	    // other fields
-	}
 
 <table>
     <thead>
@@ -5049,11 +4938,7 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.
----
-Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
-useful (see .node.status.conditions), the ability to deconflict is important.
-The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -5743,22 +5628,6 @@ OutboundWebhookStatus defines the observed state of OutboundWebhook
 
 
 Condition contains details for one aspect of the current state of this API Resource.
----
-This struct is intended for direct use as an array at the field path .status.conditions.  For example,
-
-
-	type FooStatus struct{
-	    // Represents the observations of a foo's current state.
-	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
-	    // +patchMergeKey=type
-	    // +patchStrategy=merge
-	    // +listType=map
-	    // +listMapKey=type
-	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
-
-
-	    // other fields
-	}
 
 <table>
     <thead>
@@ -5811,11 +5680,7 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.
----
-Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
-useful (see .node.status.conditions), the ability to deconflict is important.
-The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -6051,22 +5916,6 @@ RecordingRuleGroupSetStatus defines the observed state of RecordingRuleGroupSet
 
 
 Condition contains details for one aspect of the current state of this API Resource.
----
-This struct is intended for direct use as an array at the field path .status.conditions.  For example,
-
-
-	type FooStatus struct{
-	    // Represents the observations of a foo's current state.
-	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
-	    // +patchMergeKey=type
-	    // +patchStrategy=merge
-	    // +listType=map
-	    // +listMapKey=type
-	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
-
-
-	    // other fields
-	}
 
 <table>
     <thead>
@@ -6119,11 +5968,7 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.
----
-Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
-useful (see .node.status.conditions), the ability to deconflict is important.
-The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -6868,22 +6713,6 @@ RuleGroupStatus defines the observed state of RuleGroup
 
 
 Condition contains details for one aspect of the current state of this API Resource.
----
-This struct is intended for direct use as an array at the field path .status.conditions.  For example,
-
-
-	type FooStatus struct{
-	    // Represents the observations of a foo's current state.
-	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
-	    // +patchMergeKey=type
-	    // +patchStrategy=merge
-	    // +listType=map
-	    // +listMapKey=type
-	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
-
-
-	    // other fields
-	}
 
 <table>
     <thead>
@@ -6936,11 +6765,7 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.
----
-Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
-useful (see .node.status.conditions), the ability to deconflict is important.
-The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -7140,22 +6965,6 @@ ScopeStatus defines the observed state of Coralogix Scope.
 
 
 Condition contains details for one aspect of the current state of this API Resource.
----
-This struct is intended for direct use as an array at the field path .status.conditions.  For example,
-
-
-	type FooStatus struct{
-	    // Represents the observations of a foo's current state.
-	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
-	    // +patchMergeKey=type
-	    // +patchStrategy=merge
-	    // +listType=map
-	    // +listMapKey=type
-	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
-
-
-	    // other fields
-	}
 
 <table>
     <thead>
@@ -7208,11 +7017,7 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.
----
-Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
-useful (see .node.status.conditions), the ability to deconflict is important.
-The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -7548,22 +7353,6 @@ TCOLogsPoliciesStatus defines the observed state of TCOLogsPolicies.
 
 
 Condition contains details for one aspect of the current state of this API Resource.
----
-This struct is intended for direct use as an array at the field path .status.conditions.  For example,
-
-
-	type FooStatus struct{
-	    // Represents the observations of a foo's current state.
-	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
-	    // +patchMergeKey=type
-	    // +patchStrategy=merge
-	    // +listType=map
-	    // +listMapKey=type
-	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
-
-
-	    // other fields
-	}
 
 <table>
     <thead>
@@ -7616,11 +7405,7 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.
----
-Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
-useful (see .node.status.conditions), the ability to deconflict is important.
-The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -8083,22 +7868,6 @@ TCOTracesPoliciesStatus defines the observed state of TCOTracesPolicies.
 
 
 Condition contains details for one aspect of the current state of this API Resource.
----
-This struct is intended for direct use as an array at the field path .status.conditions.  For example,
-
-
-	type FooStatus struct{
-	    // Represents the observations of a foo's current state.
-	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
-	    // +patchMergeKey=type
-	    // +patchStrategy=merge
-	    // +listType=map
-	    // +listMapKey=type
-	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
-
-
-	    // other fields
-	}
 
 <table>
     <thead>
@@ -8151,11 +7920,7 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.
----
-Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
-useful (see .node.status.conditions), the ability to deconflict is important.
-The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -8224,7 +7989,6 @@ Alert is the Schema for the alerts API.
         <td>
           AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
 
-
 Note that this is only for the latest version of the alerts API. If your account has been created before March 2025, make sure that your account has been migrated before using advanced features of alerts.<br/>
         </td>
         <td>false</td>
@@ -8245,7 +8009,6 @@ Note that this is only for the latest version of the alerts API. If your account
 
 
 AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
-
 
 Note that this is only for the latest version of the alerts API. If your account has been created before March 2025, make sure that your account has been migrated before using advanced features of alerts.
 
@@ -13221,22 +12984,6 @@ AlertStatus defines the observed state of Alert
 
 
 Condition contains details for one aspect of the current state of this API Resource.
----
-This struct is intended for direct use as an array at the field path .status.conditions.  For example,
-
-
-	type FooStatus struct{
-	    // Represents the observations of a foo's current state.
-	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
-	    // +patchMergeKey=type
-	    // +patchStrategy=merge
-	    // +listType=map
-	    // +listMapKey=type
-	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
-
-
-	    // other fields
-	}
 
 <table>
     <thead>
@@ -13289,11 +13036,7 @@ This field may not be empty.<br/>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          type of condition in CamelCase or in foo.example.com/CamelCase.
----
-Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
-useful (see .node.status.conditions), the ability to deconflict is important.
-The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
         </td>
         <td>true</td>
       </tr><tr>
