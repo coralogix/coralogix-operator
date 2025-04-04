@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.17.2
+    controller-gen.kubebuilder.io/version: v0.15.0
   name: outboundwebhooks.coralogix.com
 spec:
   group: coralogix.com
@@ -17,7 +17,7 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: OutboundWebhook is the Schema for the outboundwebhooks API
+        description: OutboundWebhook is the Schema for the API
         properties:
           apiVersion:
             description: |-
@@ -37,14 +37,19 @@ spec:
           metadata:
             type: object
           spec:
-            description: OutboundWebhookSpec defines the desired state of OutboundWebhook
+            description: |-
+              OutboundWebhookSpec defines the desired state of OutboundWebhook
+              See also https://coralogix.com/docs/user-guides/alerting/outbound-webhooks/aws-eventbridge-outbound-webhook/
             properties:
               name:
+                description: Name of the webhook.
                 minLength: 0
                 type: string
               outboundWebhookType:
+                description: Type of webhook.
                 properties:
                   awsEventBridge:
+                    description: AWS eventbridge message.
                     properties:
                       detail:
                         type: string
@@ -64,6 +69,7 @@ spec:
                     - source
                     type: object
                   demisto:
+                    description: Demisto notification.
                     properties:
                       payload:
                         type: string
@@ -77,8 +83,10 @@ spec:
                     - uuid
                     type: object
                   emailGroup:
+                    description: Email notification.
                     properties:
                       emailAddresses:
+                        description: Recipients
                         items:
                           type: string
                         type: array
@@ -86,12 +94,15 @@ spec:
                     - emailAddresses
                     type: object
                   genericWebhook:
+                    description: Generic HTTP(s) webhook.
                     properties:
                       headers:
                         additionalProperties:
                           type: string
+                        description: Attached HTTP headers.
                         type: object
                       method:
+                        description: HTTP Method to use.
                         enum:
                         - Unkown
                         - Get
@@ -99,22 +110,29 @@ spec:
                         - Put
                         type: string
                       payload:
+                        description: Payload of the webhook call.
                         type: string
                       url:
+                        description: URL to call
                         type: string
                     required:
                     - method
                     - url
                     type: object
                   jira:
+                    description: Jira issue.
                     properties:
                       apiToken:
+                        description: API token
                         type: string
                       email:
+                        description: Email address associated with the token
                         type: string
                       projectKey:
+                        description: Project to add it to.
                         type: string
                       url:
+                        description: Jira URL
                         type: string
                     required:
                     - apiToken
@@ -123,13 +141,16 @@ spec:
                     - url
                     type: object
                   microsoftTeams:
+                    description: Teams message.
                     properties:
                       url:
+                        description: Teams URL
                         type: string
                     required:
                     - url
                     type: object
                   opsgenie:
+                    description: Opsgenie notification.
                     properties:
                       url:
                         type: string
@@ -137,30 +158,40 @@ spec:
                     - url
                     type: object
                   pagerDuty:
+                    description: PagerDuty notification.
                     properties:
                       serviceKey:
+                        description: PagerDuty service key.
                         type: string
                     required:
                     - serviceKey
                     type: object
                   sendLog:
+                    description: SendLog notification.
                     properties:
                       payload:
+                        description: Payload of the notification
                         type: string
                       url:
+                        description: Sendlog URL.
                         type: string
                     required:
                     - payload
                     - url
                     type: object
                   slack:
+                    description: Slack message.
                     properties:
                       attachments:
+                        description: Attachments of the message.
                         items:
+                          description: Slack attachment
                           properties:
                             isActive:
+                              description: Active status.
                               type: boolean
                             type:
+                              description: Attachment to the message.
                               type: string
                           required:
                           - isActive
@@ -168,11 +199,15 @@ spec:
                           type: object
                         type: array
                       digests:
+                        description: Digest configuration.
                         items:
+                          description: Digest config.
                           properties:
                             isActive:
+                              description: Active status.
                               type: boolean
                             type:
+                              description: Type of digest to send
                               type: string
                           required:
                           - isActive
@@ -194,8 +229,16 @@ spec:
             properties:
               conditions:
                 items:
-                  description: Condition contains details for one aspect of the current
-                    state of this API Resource.
+                  description: "Condition contains details for one aspect of the current
+                    state of this API Resource.\n---\nThis struct is intended for
+                    direct use as an array at the field path .status.conditions.  For
+                    example,\n\n\n\ttype FooStatus struct{\n\t    // Represents the
+                    observations of a foo's current state.\n\t    // Known .status.conditions.type
+                    are: \"Available\", \"Progressing\", and \"Degraded\"\n\t    //
+                    +patchMergeKey=type\n\t    // +patchStrategy=merge\n\t    // +listType=map\n\t
+                    \   // +listMapKey=type\n\t    Conditions []metav1.Condition `json:\"conditions,omitempty\"
+                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`\n\n\n\t
+                    \   // other fields\n\t}"
                   properties:
                     lastTransitionTime:
                       description: |-
@@ -236,7 +279,12 @@ spec:
                       - Unknown
                       type: string
                     type:
-                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                      description: |-
+                        type of condition in CamelCase or in foo.example.com/CamelCase.
+                        ---
+                        Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+                        useful (see .node.status.conditions), the ability to deconflict is important.
+                        The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
                       maxLength: 316
                       pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
                       type: string

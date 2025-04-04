@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.17.2
+    controller-gen.kubebuilder.io/version: v0.15.0
   name: scopes.coralogix.com
 spec:
   group: coralogix.com
@@ -37,26 +37,36 @@ spec:
           metadata:
             type: object
           spec:
-            description: ScopeSpec defines the desired state of Scope.
+            description: |-
+              ScopeSpec defines the desired state of a Coralogix Scope.
+              See also https://coralogix.com/docs/user-guides/account-management/user-management/scopes/
             properties:
               defaultExpression:
+                description: Default expression to use when no filter matches the
+                  query. Until further notice, this is limited to `true` (everything
+                  is included) or `false` (nothing is included). Use a version tag
+                  (e.g `<v1>true` or `<v1>false`)
                 enum:
                 - <v1>true
                 - <v1>false
                 type: string
               description:
+                description: Description of the scope. Optional.
                 type: string
               filters:
+                description: Filters applied to include data in the scope.
                 items:
-                  description: ScopeFilter defines a filter for a scope
+                  description: ScopeFilter defines a filter to include data in a scope.
                   properties:
                     entityType:
+                      description: Entity type to apply the expression on.
                       enum:
                       - logs
                       - spans
                       - unspecified
                       type: string
                     expression:
+                      description: Expression to run.
                       type: string
                   required:
                   - entityType
@@ -65,6 +75,7 @@ spec:
                 minItems: 1
                 type: array
               name:
+                description: Scope display name.
                 type: string
             required:
             - defaultExpression
@@ -72,12 +83,20 @@ spec:
             - name
             type: object
           status:
-            description: ScopeStatus defines the observed state of Scope.
+            description: ScopeStatus defines the observed state of Coralogix Scope.
             properties:
               conditions:
                 items:
-                  description: Condition contains details for one aspect of the current
-                    state of this API Resource.
+                  description: "Condition contains details for one aspect of the current
+                    state of this API Resource.\n---\nThis struct is intended for
+                    direct use as an array at the field path .status.conditions.  For
+                    example,\n\n\n\ttype FooStatus struct{\n\t    // Represents the
+                    observations of a foo's current state.\n\t    // Known .status.conditions.type
+                    are: \"Available\", \"Progressing\", and \"Degraded\"\n\t    //
+                    +patchMergeKey=type\n\t    // +patchStrategy=merge\n\t    // +listType=map\n\t
+                    \   // +listMapKey=type\n\t    Conditions []metav1.Condition `json:\"conditions,omitempty\"
+                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`\n\n\n\t
+                    \   // other fields\n\t}"
                   properties:
                     lastTransitionTime:
                       description: |-
@@ -118,7 +137,12 @@ spec:
                       - Unknown
                       type: string
                     type:
-                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                      description: |-
+                        type of condition in CamelCase or in foo.example.com/CamelCase.
+                        ---
+                        Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+                        useful (see .node.status.conditions), the ability to deconflict is important.
+                        The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
                       maxLength: 316
                       pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
                       type: string

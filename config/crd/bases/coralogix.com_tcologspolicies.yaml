@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.17.2
+    controller-gen.kubebuilder.io/version: v0.15.0
   name: tcologspolicies.coralogix.com
 spec:
   group: coralogix.com
@@ -41,18 +41,26 @@ spec:
           metadata:
             type: object
           spec:
-            description: TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
+            description: |-
+              TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.
+              See also https://coralogix.com/docs/tco-optimizer-api
             properties:
               policies:
+                description: Coralogix TCO-Policies-List.
                 items:
+                  description: A TCO policy for logs.
                   properties:
                     applications:
+                      description: The applications to apply the policy on. Applies
+                        the policy on all the applications by default.
                       properties:
                         names:
+                          description: Names to match.
                           items:
                             type: string
                           type: array
                         ruleType:
+                          description: Type of matching for the name.
                           enum:
                           - is
                           - is_not
@@ -64,10 +72,13 @@ spec:
                       - ruleType
                       type: object
                     archiveRetention:
+                      description: Matches the specified retention.
                       properties:
                         backendRef:
+                          description: Reference to the retention policy
                           properties:
                             name:
+                              description: Name of the policy.
                               type: string
                           required:
                           - name
@@ -76,10 +87,13 @@ spec:
                       - backendRef
                       type: object
                     description:
+                      description: Description of the policy.
                       type: string
                     name:
+                      description: Name of the policy.
                       type: string
                     priority:
+                      description: The policy priority.
                       enum:
                       - block
                       - high
@@ -87,7 +101,9 @@ spec:
                       - low
                       type: string
                     severities:
+                      description: The severities to apply the policy on.
                       items:
+                        description: The severities to apply the policy on.
                         enum:
                         - info
                         - warning
@@ -98,12 +114,16 @@ spec:
                         type: string
                       type: array
                     subsystems:
+                      description: The subsystems to apply the policy on. Applies
+                        the policy on all the subsystems by default.
                       properties:
                         names:
+                          description: Names to match.
                           items:
                             type: string
                           type: array
                         ruleType:
+                          description: Type of matching for the name.
                           enum:
                           - is
                           - is_not
@@ -128,8 +148,16 @@ spec:
             properties:
               conditions:
                 items:
-                  description: Condition contains details for one aspect of the current
-                    state of this API Resource.
+                  description: "Condition contains details for one aspect of the current
+                    state of this API Resource.\n---\nThis struct is intended for
+                    direct use as an array at the field path .status.conditions.  For
+                    example,\n\n\n\ttype FooStatus struct{\n\t    // Represents the
+                    observations of a foo's current state.\n\t    // Known .status.conditions.type
+                    are: \"Available\", \"Progressing\", and \"Degraded\"\n\t    //
+                    +patchMergeKey=type\n\t    // +patchStrategy=merge\n\t    // +listType=map\n\t
+                    \   // +listMapKey=type\n\t    Conditions []metav1.Condition `json:\"conditions,omitempty\"
+                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`\n\n\n\t
+                    \   // other fields\n\t}"
                   properties:
                     lastTransitionTime:
                       description: |-
@@ -170,7 +198,12 @@ spec:
                       - Unknown
                       type: string
                     type:
-                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                      description: |-
+                        type of condition in CamelCase or in foo.example.com/CamelCase.
+                        ---
+                        Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+                        useful (see .node.status.conditions), the ability to deconflict is important.
+                        The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
                       maxLength: 316
                       pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
                       type: string

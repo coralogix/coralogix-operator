@@ -28,19 +28,6 @@ rules:
   - coralogix.com
   resources:
   - alerts
-  - alertschedulers
-  - apikeys
-  - customroles
-  - dashboards
-  - dashboardsfolders
-  - groups
-  - integrations
-  - outboundwebhooks
-  - recordingrulegroupsets
-  - rulegroups
-  - scopes
-  - tcologspolicies
-  - tcotracespolicies
   verbs:
   - create
   - delete
@@ -53,37 +40,349 @@ rules:
   - coralogix.com
   resources:
   - alerts/finalizers
-  - alertschedulers/finalizers
-  - apikeys/finalizers
-  - customroles/finalizers
-  - dashboards/finalizers
-  - dashboardsfolders/finalizers
-  - groups/finalizers
-  - integrations/finalizers
-  - outboundwebhooks/finalizers
-  - recordingrulegroupsets/finalizers
-  - rulegroups/finalizers
-  - scopes/finalizers
-  - tcologspolicies/finalizers
-  - tcotracespolicies/finalizers
   verbs:
   - update
 - apiGroups:
   - coralogix.com
   resources:
   - alerts/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - alertschedulers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - alertschedulers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
   - alertschedulers/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - apikeys
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - apikeys/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
   - apikeys/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - customroles
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - customroles/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
   - customroles/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - dashboards
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - dashboards/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
   - dashboards/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - dashboardsfolders
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - dashboardsfolders/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
   - dashboardsfolders/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - groups
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - groups/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
   - groups/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - integrations
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - integrations/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
   - integrations/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - outboundwebhooks
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - outboundwebhooks/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
   - outboundwebhooks/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - recordingrulegroupsets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - recordingrulegroupsets/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
   - recordingrulegroupsets/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - rulegroups
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - rulegroups/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
   - rulegroups/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - scopes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - scopes/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
   - scopes/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - tcologspolicies
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - tcologspolicies/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
   - tcologspolicies/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
+  - tcotracespolicies
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coralogix.com
+  resources:
+  - tcotracespolicies/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - coralogix.com
+  resources:
   - tcotracespolicies/status
   verbs:
   - get

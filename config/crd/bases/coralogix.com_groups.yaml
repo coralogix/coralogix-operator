@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.17.2
+    controller-gen.kubebuilder.io/version: v0.15.0
   name: groups.coralogix.com
 spec:
   group: coralogix.com
@@ -37,16 +37,23 @@ spec:
           metadata:
             type: object
           spec:
-            description: GroupSpec defines the desired state of Group.
+            description: |-
+              GroupSpec defines the desired state of Coralogix Group.
+              See also https://coralogix.com/docs/user-guides/account-management/user-management/assign-user-roles-and-scopes-via-groups/
             properties:
               customRoles:
+                description: Custom roles applied to the group.
                 items:
+                  description: Custom role reference.
                   properties:
                     resourceRef:
+                      description: Reference to the custom role within the cluster.
                       properties:
                         name:
+                          description: Name of the resource (not id).
                           type: string
                         namespace:
+                          description: Kubernetes namespace.
                           type: string
                       required:
                       - name
@@ -57,25 +64,34 @@ spec:
                 minItems: 1
                 type: array
               description:
+                description: Description of the group.
                 type: string
               members:
+                description: Members of the group.
                 items:
+                  description: User on Coralogix.
                   properties:
                     userName:
+                      description: User's name.
                       type: string
                   required:
                   - userName
                   type: object
                 type: array
               name:
+                description: Name of the group.
                 type: string
               scope:
+                description: Scope attached to the group.
                 properties:
                   resourceRef:
+                    description: Scope reference.
                     properties:
                       name:
+                        description: Name of the resource (not id).
                         type: string
                       namespace:
+                        description: Kubernetes namespace.
                         type: string
                     required:
                     - name
@@ -92,8 +108,16 @@ spec:
             properties:
               conditions:
                 items:
-                  description: Condition contains details for one aspect of the current
-                    state of this API Resource.
+                  description: "Condition contains details for one aspect of the current
+                    state of this API Resource.\n---\nThis struct is intended for
+                    direct use as an array at the field path .status.conditions.  For
+                    example,\n\n\n\ttype FooStatus struct{\n\t    // Represents the
+                    observations of a foo's current state.\n\t    // Known .status.conditions.type
+                    are: \"Available\", \"Progressing\", and \"Degraded\"\n\t    //
+                    +patchMergeKey=type\n\t    // +patchStrategy=merge\n\t    // +listType=map\n\t
+                    \   // +listMapKey=type\n\t    Conditions []metav1.Condition `json:\"conditions,omitempty\"
+                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`\n\n\n\t
+                    \   // other fields\n\t}"
                   properties:
                     lastTransitionTime:
                       description: |-
@@ -134,7 +158,12 @@ spec:
                       - Unknown
                       type: string
                     type:
-                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                      description: |-
+                        type of condition in CamelCase or in foo.example.com/CamelCase.
+                        ---
+                        Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+                        useful (see .node.status.conditions), the ability to deconflict is important.
+                        The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
                       maxLength: 316
                       pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
                       type: string

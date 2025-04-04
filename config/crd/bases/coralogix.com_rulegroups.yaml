@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.17.2
+    controller-gen.kubebuilder.io/version: v0.15.0
   name: rulegroups.coralogix.com
 spec:
   group: coralogix.com
@@ -41,27 +41,36 @@ spec:
             properties:
               active:
                 default: true
+                description: Whether the rule-group is active.
                 type: boolean
               applications:
+                description: Rules will execute on logs that match the these applications.
                 items:
                   type: string
                 type: array
               creator:
+                description: Rule-group creator
                 type: string
               description:
+                description: Description of the rule-group.
                 type: string
               hidden:
                 default: false
+                description: Hides the rule-group.
                 type: boolean
               name:
+                description: Name of the rule-group.
                 minLength: 0
                 type: string
               order:
+                description: The index of the rule-group between the other rule-groups.
                 format: int32
                 minimum: 1
                 type: integer
               severities:
+                description: Rules will execute on logs that match the these severities.
                 items:
+                  description: Severity to match to.
                   enum:
                   - Debug
                   - Verbose
@@ -78,52 +87,81 @@ spec:
                   Refer to https://github.com/coralogix/coralogix-operator/blob/main/config/samples/v1alpha1/rulegroups/mixed_rulegroup.yaml
                   for an example.
                 items:
+                  description: Sub group of rules.
                   properties:
                     active:
                       default: true
+                      description: Determines whether to rule will be active or not.
                       type: boolean
                     id:
+                      description: The rule id.
                       type: string
                     order:
+                      description: Determines the index of the rule inside the rule-subgroup.
                       format: int32
                       type: integer
                     rules:
+                      description: List of rules associated with the sub group.
                       items:
+                        description: |-
+                          A rule to change data extraction.
+                          See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
                         properties:
                           active:
                             default: true
+                            description: Whether the rule will be activated.
                             type: boolean
                           block:
+                            description: Block rules allow for refined filtering of
+                              incoming logs with a Regular Expression.
                             properties:
                               blockingAllMatchingBlocks:
                                 default: true
+                                description: Block Logic. If true or nor set - blocking
+                                  all matching blocks, if false - blocking all non-matching
+                                  blocks.
                                 type: boolean
                               keepBlockedLogs:
                                 default: false
+                                description: Determines if to view blocked logs in
+                                  LiveTail and archive to S3.
                                 type: boolean
                               regex:
+                                description: 'Regular Expression. More info: https://coralogix.com/blog/regex-101/'
                                 type: string
                               sourceField:
+                                description: The field on which the Regular Expression
+                                  will operate on.
                                 type: string
                             required:
                             - regex
                             - sourceField
                             type: object
                           description:
+                            description: Description of the rule.
                             type: string
                           extract:
+                            description: Use a named Regular Expression group to extract
+                              specific values you need as JSON getKeysStrings without
+                              having to parse the entire log.
                             properties:
                               regex:
+                                description: 'Regular Expression. More info: https://coralogix.com/blog/regex-101/'
                                 type: string
                               sourceField:
+                                description: The field on which the Regular Expression
+                                  will operate on.
                                 type: string
                             required:
                             - regex
                             - sourceField
                             type: object
                           extractTimestamp:
+                            description: Replace rules are used to replace logs timestamp
+                              with JSON field.
                             properties:
                               fieldFormatStandard:
+                                description: The format standard to parse the timestamp.
                                 enum:
                                 - Strftime
                                 - JavaSDF
@@ -134,8 +172,12 @@ spec:
                                 - NanoTS
                                 type: string
                               sourceField:
+                                description: The field on which the Regular Expression
+                                  will operate on.
                                 type: string
                               timeFormat:
+                                description: A time formatting string that matches
+                                  the field format standard.
                                 type: string
                             required:
                             - fieldFormatStandard
@@ -143,8 +185,12 @@ spec:
                             - timeFormat
                             type: object
                           jsonExtract:
+                            description: Name a JSON field to extract its value directly
+                              into a Coralogix metadata field
                             properties:
                               destinationField:
+                                description: The field that will be populated by the
+                                  results of the Regular Expression operation.
                                 enum:
                                 - Category
                                 - CLASSNAME
@@ -153,34 +199,49 @@ spec:
                                 - SEVERITY
                                 type: string
                               jsonKey:
+                                description: JSON key to extract its value directly
+                                  into a Coralogix metadata field.
                                 type: string
                             required:
                             - destinationField
                             - jsonKey
                             type: object
                           jsonStringify:
+                            description: Convert JSON object to JSON string.
                             properties:
                               destinationField:
+                                description: The field that will be populated by the
+                                  results of the Regular Expression
                                 type: string
                               keepSourceField:
                                 default: false
                                 type: boolean
                               sourceField:
+                                description: The field on which the Regular Expression
+                                  will operate on.
                                 type: string
                             required:
                             - destinationField
                             - sourceField
                             type: object
                           name:
+                            description: Name of the rule.
                             minLength: 0
                             type: string
                           parse:
+                            description: Parse unstructured logs into JSON format
+                              using named Regular Expression groups.
                             properties:
                               destinationField:
+                                description: The field that will be populated by the
+                                  results of the Regular Expression operation.
                                 type: string
                               regex:
+                                description: 'Regular Expression. More info: https://coralogix.com/blog/regex-101/'
                                 type: string
                               sourceField:
+                                description: The field on which the Regular Expression
+                                  will operate on.
                                 type: string
                             required:
                             - destinationField
@@ -188,14 +249,23 @@ spec:
                             - sourceField
                             type: object
                           parseJsonField:
+                            description: Convert JSON string to JSON object.
                             properties:
                               destinationField:
+                                description: The field that will be populated by the
+                                  results of the Regular Expression
                                 type: string
                               keepDestinationField:
+                                description: Determines whether to keep or to delete
+                                  the destination field.
                                 type: boolean
                               keepSourceField:
+                                description: Determines whether to keep or to delete
+                                  the source field.
                                 type: boolean
                               sourceField:
+                                description: The field on which the Regular Expression
+                                  will operate on.
                                 type: string
                             required:
                             - destinationField
@@ -204,8 +274,11 @@ spec:
                             - sourceField
                             type: object
                           removeFields:
+                            description: Remove Fields allows to select fields that
+                              will not be indexed.
                             properties:
                               excludedFields:
+                                description: Excluded fields won't be indexed.
                                 items:
                                   type: string
                                 type: array
@@ -213,14 +286,24 @@ spec:
                             - excludedFields
                             type: object
                           replace:
+                            description: Replace rules are used to strings in order
+                              to fix log structure, change log severity, or obscure
+                              information.
                             properties:
                               destinationField:
+                                description: The field that will be populated by the
+                                  results of the Regular Expression operation.
                                 type: string
                               regex:
+                                description: 'Regular Expression. More info: https://coralogix.com/blog/regex-101/'
                                 type: string
                               replacementString:
+                                description: The string that will replace the matched
+                                  Regular Expression
                                 type: string
                               sourceField:
+                                description: The field on which the Regular Expression
+                                  will operate on.
                                 type: string
                             required:
                             - destinationField
@@ -235,6 +318,7 @@ spec:
                   type: object
                 type: array
               subsystems:
+                description: Rules will execute on logs that match the these subsystems.
                 items:
                   type: string
                 type: array
@@ -246,8 +330,16 @@ spec:
             properties:
               conditions:
                 items:
-                  description: Condition contains details for one aspect of the current
-                    state of this API Resource.
+                  description: "Condition contains details for one aspect of the current
+                    state of this API Resource.\n---\nThis struct is intended for
+                    direct use as an array at the field path .status.conditions.  For
+                    example,\n\n\n\ttype FooStatus struct{\n\t    // Represents the
+                    observations of a foo's current state.\n\t    // Known .status.conditions.type
+                    are: \"Available\", \"Progressing\", and \"Degraded\"\n\t    //
+                    +patchMergeKey=type\n\t    // +patchStrategy=merge\n\t    // +listType=map\n\t
+                    \   // +listMapKey=type\n\t    Conditions []metav1.Condition `json:\"conditions,omitempty\"
+                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`\n\n\n\t
+                    \   // other fields\n\t}"
                   properties:
                     lastTransitionTime:
                       description: |-
@@ -288,7 +380,12 @@ spec:
                       - Unknown
                       type: string
                     type:
-                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                      description: |-
+                        type of condition in CamelCase or in foo.example.com/CamelCase.
+                        ---
+                        Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+                        useful (see .node.status.conditions), the ability to deconflict is important.
+                        The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
                       maxLength: 316
                       pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
                       type: string
