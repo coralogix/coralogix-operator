@@ -37,26 +37,36 @@ spec:
           metadata:
             type: object
           spec:
-            description: ScopeSpec defines the desired state of Scope.
+            description: |-
+              ScopeSpec defines the desired state of a Coralogix Scope.
+              See also https://coralogix.com/docs/user-guides/account-management/user-management/scopes/
             properties:
               defaultExpression:
+                description: Default expression to use when no filter matches the
+                  query. Until further notice, this is limited to `true` (everything
+                  is included) or `false` (nothing is included). Use a version tag
+                  (e.g `<v1>true` or `<v1>false`)
                 enum:
                 - <v1>true
                 - <v1>false
                 type: string
               description:
+                description: Description of the scope. Optional.
                 type: string
               filters:
+                description: Filters applied to include data in the scope.
                 items:
-                  description: ScopeFilter defines a filter for a scope
+                  description: ScopeFilter defines a filter to include data in a scope.
                   properties:
                     entityType:
+                      description: Entity type to apply the expression on.
                       enum:
                       - logs
                       - spans
                       - unspecified
                       type: string
                     expression:
+                      description: Expression to run.
                       type: string
                   required:
                   - entityType
@@ -65,6 +75,7 @@ spec:
                 minItems: 1
                 type: array
               name:
+                description: Scope display name.
                 type: string
             required:
             - defaultExpression
@@ -72,7 +83,7 @@ spec:
             - name
             type: object
           status:
-            description: ScopeStatus defines the observed state of Scope.
+            description: ScopeStatus defines the observed state of Coralogix Scope.
             properties:
               conditions:
                 items:

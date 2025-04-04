@@ -37,16 +37,23 @@ spec:
           metadata:
             type: object
           spec:
-            description: GroupSpec defines the desired state of Group.
+            description: |-
+              GroupSpec defines the desired state of Coralogix Group.
+              See also https://coralogix.com/docs/user-guides/account-management/user-management/assign-user-roles-and-scopes-via-groups/
             properties:
               customRoles:
+                description: Custom roles applied to the group.
                 items:
+                  description: Custom role reference.
                   properties:
                     resourceRef:
+                      description: Reference to the custom role within the cluster.
                       properties:
                         name:
+                          description: Name of the resource (not id).
                           type: string
                         namespace:
+                          description: Kubernetes namespace.
                           type: string
                       required:
                       - name
@@ -57,25 +64,34 @@ spec:
                 minItems: 1
                 type: array
               description:
+                description: Description of the group.
                 type: string
               members:
+                description: Members of the group.
                 items:
+                  description: User on Coralogix.
                   properties:
                     userName:
+                      description: User's name.
                       type: string
                   required:
                   - userName
                   type: object
                 type: array
               name:
+                description: Name of the group.
                 type: string
               scope:
+                description: Scope attached to the group.
                 properties:
                   resourceRef:
+                    description: Scope reference.
                     properties:
                       name:
+                        description: Name of the resource (not id).
                         type: string
                       namespace:
+                        description: Kubernetes namespace.
                         type: string
                     required:
                     - name

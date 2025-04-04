@@ -50,7 +50,6 @@ type Alert struct {
 }
 
 // +kubebuilder:object:root=true
-
 // AlertList contains a list of Alert.
 type AlertList struct {
 	metav1.TypeMeta `json:",inline"`
@@ -237,29 +236,53 @@ var (
 	}
 )
 
-// AlertSpec defines the desired state of Alert
+// AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
+//
+// Note that this is only for the latest version of the alerts API. If your account has been created before March 2025, make sure that your account has been migrated before using advanced features of alerts.
 type AlertSpec struct {
+	// Name of the alert
 	//+kubebuilder:validation:MinLength=0
 	Name string `json:"name"`
+
+	// Description of the alert
 	// +optional
-	Description string        `json:"description,omitempty"`
-	Priority    AlertPriority `json:"priority"`
+	Description string `json:"description,omitempty"`
+
+	// Priority of the alert.
+	Priority AlertPriority `json:"priority"`
+
+	// Enable/disable the alert.
 	//+kubebuilder:default=true
 	Enabled bool `json:"enabled,omitempty"`
+
+	// Grouping fields for multiple alerts.
 	// +optional
 	GroupByKeys []string `json:"groupByKeys"`
+
+	// Settings for the attached incidents.
 	// +optional
 	IncidentsSettings *IncidentsSettings `json:"incidentsSettings,omitempty"`
+
+	// Where notifications should be sent to.
 	// +optional
 	NotificationGroup *NotificationGroup `json:"notificationGroup,omitempty"`
+
+	// Do not use.
+	// Deprecated: Legacy field for when multiple notification groups were attached.
 	// +optional
 	NotificationGroupExcess []NotificationGroup `json:"notificationGroupExcess,omitempty"`
+
+	// Labels attached to the alert.
 	// +optional
 	EntityLabels map[string]string `json:"entityLabels,omitempty"`
 	//+kubebuilder:default=false
 	PhantomMode bool `json:"phantomMode,omitempty"`
+
+	// Alert activity schedule. Will be activated all the time if not specified.
 	// +optional
-	Schedule       *AlertSchedule      `json:"schedule,omitempty"`
+	Schedule *AlertSchedule `json:"schedule,omitempty"`
+
+	// Type of alert.
 	TypeDefinition AlertTypeDefinition `json:"alertType"`
 }
 
@@ -267,6 +290,7 @@ type AlertSpec struct {
 type AlertStatus struct {
 	// +optional
 	ID *string `json:"id,omitempty"`
+
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
@@ -281,22 +305,33 @@ func (a *Alert) SetConditions(conditions []metav1.Condition) {
 
 // +kubebuilder:validation:Pattern=`^UTC[+-]\d{2}$`
 // +kubebuilder:default=UTC+00
+// A time zone expressed in UTC offsets.
 type TimeZone string
 
+// The schedule for when the alert is active.
 type AlertSchedule struct {
 	//+kubebuilder:default=UTC+00
+	// Time zone.
 	TimeZone TimeZone `json:"timeZone"`
+
+	// Schedule to have the alert active.
 	// +optional
 	ActiveOn *ActiveOn `json:"activeOn,omitempty"`
 }
 
+// Settings for attached incidents.
 type IncidentsSettings struct {
+
+	// When to notify.
 	//+kubebuilder:default=triggeredOnly
-	NotifyOn           NotifyOn           `json:"notifyOn,omitempty"`
+	NotifyOn NotifyOn `json:"notifyOn,omitempty"`
+
+	// When to re-notify.
 	RetriggeringPeriod RetriggeringPeriod `json:"retriggeringPeriod,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=triggeredOnly;triggeredAndResolved
+// When to notify.
 type NotifyOn string
 
 const (
@@ -305,6 +340,7 @@ const (
 )
 
 // +kubebuilder:validation:Enum={"never","5m","10m","1h","2h","6h","12h","24h"}
+// Automatically retire the alert after...
 type AutoRetireTimeframe string
 
 const (
@@ -318,55 +354,92 @@ const (
 	AutoRetireTimeframe24H                AutoRetireTimeframe = "24h"
 )
 
+// When to re-trigger the alert.
 type RetriggeringPeriod struct {
+	// Delay between re-triggered alerts.
 	// +optional
 	Minutes *uint32 `json:"minutes,omitempty"`
 }
 
+// Notification group to use for alert notifications.
 type NotificationGroup struct {
+
+	// Group notification by these keys.
 	// +optional
 	GroupByKeys []string `json:"groupByKeys"`
+
+	// Webhooks to trigger for notifications.
 	// +optional
 	Webhooks []WebhookSettings `json:"webhooks"`
 }
 
+// Settings for a notification webhook.
 type WebhookSettings struct {
+
+	// When to re-trigger.
 	RetriggeringPeriod RetriggeringPeriod `json:"retriggeringPeriod"`
+
 	// +kubebuilder:default=triggeredOnly
-	NotifyOn    NotifyOn        `json:"notifyOn"`
+	// When to notify.
+	NotifyOn NotifyOn `json:"notifyOn"`
+
+	// Type and spec of webhook.
 	Integration IntegrationType `json:"integration"`
 }
 
+// Type and spec of the webhook.
 type IntegrationType struct {
+
+	// Reference to the webhook.
 	// +optional
 	IntegrationRef *IntegrationRef `json:"integrationRef,omitempty"`
+
+	// Recipients for the notification.
 	// +optional
 	Recipients []string `json:"recipients"`
 }
 
+// Reference to the integration.
 type IntegrationRef struct {
+
+	// Backend reference for the outbound webhook.
 	// +optional
 	BackendRef *OutboundWebhookBackendRef `json:"backendRef,omitempty"`
+
+	// Resource reference for use with the alert notification.
 	// +optional
 	ResourceRef *ResourceRef `json:"resourceRef"`
 }
 
+// Outbound webhook reference.
 type OutboundWebhookBackendRef struct {
+	// Webhook Id.
 	// +optional
 	ID *uint32 `json:"id,omitempty"`
+
+	// Name of the webhook.
 	// +optional
 	Name *string `json:"name,omitempty"`
 }
 
+// Reference to the alert on Coralogix.
 type AlertBackendRef struct {
+
+	// Alert ID.
 	// +optional
 	ID *string `json:"id,omitempty"`
+
+	// Name of the alert.
 	// +optional
 	Name *string `json:"name,omitempty"`
 }
 
+// Reference to a resource within the cluster.
 type ResourceRef struct {
+	// Name of the resource.
 	Name string `json:"name"`
+
+	// Kubernetes namespace.
 	// +optional
 	Namespace *string `json:"namespace,omitempty"`
 }
@@ -380,11 +453,14 @@ type ActiveOn struct {
 }
 
 // +kubebuilder:validation:Pattern=`^(0\d|1\d|2[0-3]):[0-5]\d$`
+// Time of day.
 type TimeOfDay string
 
 // +kubebuilder:validation:Enum=sunday;monday;tuesday;wednesday;thursday;friday;saturday
+// Day of the week.
 type DayOfWeek string
 
+// Day of the week values.
 const (
 	DayOfWeekSunday    DayOfWeek = "sunday"
 	DayOfWeekMonday    DayOfWeek = "monday"
@@ -395,70 +471,120 @@ const (
 	DayOfWeekSaturday  DayOfWeek = "saturday"
 )
 
+// Alert type definitions.
 type AlertTypeDefinition struct {
+
+	// Immediate alerts for logs.
 	// +optional
 	LogsImmediate *LogsImmediate `json:"logsImmediate,omitempty"`
+
+	// Alerts for when a log crosses a threshold.
 	// +optional
 	LogsThreshold *LogsThreshold `json:"logsThreshold,omitempty"`
+
+	// Alerts for when a log exceeds a defined ratio.
 	// +optional
 	LogsRatioThreshold *LogsRatioThreshold `json:"logsRatioThreshold,omitempty"`
+
+	// Alerts are sent when the number of logs matching a filter is more than or less than a threshold over a specific time window.
 	// +optional
 	LogsTimeRelativeThreshold *LogsTimeRelativeThreshold `json:"logsTimeRelativeThreshold,omitempty"`
+
+	// Alerts for when a metric crosses a threshold.
 	// +optional
 	MetricThreshold *MetricThreshold `json:"metricThreshold,omitempty"`
+
+	// Alerts for when traces crosses a threshold.
 	// +optional
 	TracingThreshold *TracingThreshold `json:"tracingThreshold,omitempty"`
+
+	// Immediate alerts for traces.
 	// +optional
 	TracingImmediate *TracingImmediate `json:"tracingImmediate,omitempty"`
+
+	// Flow alerts chaining multiple alerts together.
 	// +optional
 	Flow *Flow `json:"flow,omitempty"`
+
+	// Anomaly alerts for logs.
 	// +optional
 	LogsAnomaly *LogsAnomaly `json:"logsAnomaly,omitempty"`
+
+	// Anomaly alerts for metrics.
 	// +optional
 	MetricAnomaly *MetricAnomaly `json:"metricAnomaly,omitempty"`
+
+	// Alerts when a new log value appears.
 	// +optional
 	LogsNewValue *LogsNewValue `json:"logsNewValue,omitempty"`
+
+	// Alerts for unique count changes.
 	// +optional
 	LogsUniqueCount *LogsUniqueCount `json:"logsUniqueCount,omitempty"`
 }
 
+// Immediate alerts for logs.
+// Read more at https://coralogix.com/docs/user-guides/alerting/create-an-alert/logs/immediate-notifications/
 type LogsImmediate struct {
+	// Filter to filter the logs with.
 	// +optional
 	LogsFilter *LogsFilter `json:"logsFilter,omitempty"`
+
+	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 }
 
+// Alerts for when a log crosses a threshold.
+// Read more at https://coralogix.com/docs/user-guides/alerting/create-an-alert/logs/threshold-alerts/
 type LogsThreshold struct {
+	// Filter to filter the logs with.
 	// +optional
 	LogsFilter *LogsFilter `json:"logsFilter,omitempty"`
+
+	// How to work with undetected values.
 	// +optional
 	UndetectedValuesManagement *UndetectedValuesManagement `json:"undetectedValuesManagement,omitempty"`
+
 	// +kubebuilder:validation:MinItems=1
+	// Rules that match the alert to the data.
 	Rules []LogsThresholdRule `json:"rules"`
+
+	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 }
 
+// The rule to match the alert's conditions.
 type LogsThresholdRule struct {
+	// Condition to match
 	Condition LogsThresholdRuleCondition `json:"condition"`
+
+	// Alert overrides.
 	// +optional
 	Override *AlertOverride `json:"override"`
 }
 
+// Threshold rules for logs.
 type LogsThresholdRuleCondition struct {
-	TimeWindow                 LogsTimeWindow             `json:"timeWindow"`
-	Threshold                  resource.Quantity          `json:"threshold"`
+	// Time window in which the condition is checked.
+	TimeWindow LogsTimeWindow `json:"timeWindow"`
+	// Threshold to match to.
+	Threshold resource.Quantity `json:"threshold"`
+	// Condition type.
 	LogsThresholdConditionType LogsThresholdConditionType `json:"logsThresholdConditionType"`
 }
 
+// Time window in which the condition is checked.
 type LogsTimeWindow struct {
 	SpecificValue LogsTimeWindowValue `json:"specificValue,omitempty"`
 }
 
 // +kubebuilder:validation:Enum={"5m","10m","15m","30m","1h","2h","6h","12h","24h","36h"}
+// Logs time window type
 type LogsTimeWindowValue string
 
+// Logs time window values
 const (
 	LogsTimeWindow5Minutes  LogsTimeWindowValue = "5m"
 	LogsTimeWindow10Minutes LogsTimeWindowValue = "10m"
@@ -473,35 +599,50 @@ const (
 )
 
 // +kubebuilder:validation:Enum=moreThan;lessThan
+// ConditionType type.
 type LogsThresholdConditionType string
 
+// Condition type values.
 const (
 	LogsThresholdConditionTypeMoreThan LogsThresholdConditionType = "moreThan"
 	LogsThresholdConditionTypeLessThan LogsThresholdConditionType = "lessThan"
 )
 
+// Override alert properties
 type AlertOverride struct {
+	// Priority to override it
 	Priority AlertPriority `json:"priority"`
 }
 
+// Logs ratio alerts.
+// Read more at https://coralogix.com/docs/user-guides/alerting/create-an-alert/logs/ratio-alerts/
 type LogsRatioThreshold struct {
 	Numerator        LogsFilter `json:"numerator"`
 	NumeratorAlias   string     `json:"numeratorAlias"`
 	Denominator      LogsFilter `json:"denominator"`
 	DenominatorAlias string     `json:"denominatorAlias"`
 	// +kubebuilder:validation:MinItems=1
+	// Rules that match the alert to the data.
 	Rules []LogsRatioThresholdRule `json:"rules"`
 }
 
+// The rule to match the alert's conditions.
 type LogsRatioThresholdRule struct {
+	// Condition to match
 	Condition LogsRatioCondition `json:"condition"`
 	// +optional
 	Override *AlertOverride `json:"override"`
 }
 
+// Logs ratio condition for matching alerts.
 type LogsRatioCondition struct {
-	Threshold     resource.Quantity      `json:"threshold"`
-	TimeWindow    LogsRatioTimeWindow    `json:"timeWindow"`
+	// Threshold to pass.
+	Threshold resource.Quantity `json:"threshold"`
+
+	// Time window to evaluate.
+	TimeWindow LogsRatioTimeWindow `json:"timeWindow"`
+
+	// Condition to evaluate with.
 	ConditionType LogsRatioConditionType `json:"conditionType"`
 }
 
@@ -510,8 +651,10 @@ type LogsRatioTimeWindow struct {
 }
 
 // +kubebuilder:validation:Enum={"5m","10m","15m","30m","1h","2h","4h","6h","12h","24h","36h"}
+// Time window type.
 type LogsRatioTimeWindowValue string
 
+// Time window values.
 const (
 	LogsRatioTimeWindowMinutes5  LogsRatioTimeWindowValue = "5m"
 	LogsRatioTimeWindowMinutes10 LogsRatioTimeWindowValue = "10m"
@@ -527,28 +670,40 @@ const (
 )
 
 // +kubebuilder:validation:Enum=moreThan;lessThan
+// ConditionType type.
 type LogsRatioConditionType string
 
+// Condition type values.
 const (
 	LogsRatioConditionTypeMoreThan LogsRatioConditionType = "moreThan"
 	LogsRatioConditionTypeLessThan LogsRatioConditionType = "lessThan"
 )
 
+// The rule to match the alert's conditions.
 type LogsTimeRelativeRule struct {
+	// The condition to match to.
 	Condition LogsTimeRelativeCondition `json:"condition"`
 	// +optional
 	Override *AlertOverride `json:"override"`
 }
 
+// Logs time relative condition to match.
 type LogsTimeRelativeCondition struct {
-	Threshold     resource.Quantity             `json:"threshold"`
-	ComparedTo    LogsTimeRelativeComparedTo    `json:"comparedTo"`
+	// Threshold to match.
+	Threshold resource.Quantity `json:"threshold"`
+
+	// Comparison window.
+	ComparedTo LogsTimeRelativeComparedTo `json:"comparedTo"`
+
+	// How to compare.
 	ConditionType LogsTimeRelativeConditionType `json:"conditionType"`
 }
 
 // +kubebuilder:validation:Enum=previousHour;sameHourYesterday;sameHourLastWeek;yesterday;sameDayLastWeek;sameDayLastMonth
+// Comparison window type.
 type LogsTimeRelativeComparedTo string
 
+// Comparison window values.
 const (
 	LogsTimeRelativeComparedToPreviousHour      LogsTimeRelativeComparedTo = "previousHour"
 	LogsTimeRelativeComparedToSameHourYesterday LogsTimeRelativeComparedTo = "sameHourYesterday"
@@ -559,44 +714,68 @@ const (
 )
 
 // +kubebuilder:validation:Enum=moreThan;lessThan
+// ConditionType type.
 type LogsTimeRelativeConditionType string
 
+// Condition type values.
 const (
 	LogsTimeRelativeConditionTypeMoreThan LogsTimeRelativeConditionType = "moreThan"
 	LogsTimeRelativeConditionTypeLessThan LogsTimeRelativeConditionType = "lessThan"
 )
 
+// Alerts are sent when the number of logs matching a filter is more than or less than a threshold over a specific time window.
+// Read more at https://coralogix.com/docs/user-guides/alerting/create-an-alert/logs/time-relative-alerts/
 type LogsTimeRelativeThreshold struct {
 	LogsFilter LogsFilter `json:"logsFilter"`
 	// +kubebuilder:validation:MinItems=1
+	// Rules that match the alert to the data.
 	Rules []LogsTimeRelativeRule `json:"rules"`
+
 	//+kubebuilder:default=false
+	// Ignore infinity on the threshold value.
 	IgnoreInfinity bool `json:"ignoreInfinity"`
+
+	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
+
+	// How to work with undetected values.
 	// +optional
 	UndetectedValuesManagement *UndetectedValuesManagement `json:"undetectedValuesManagement"`
 }
 
+// Alerts for when a metric crosses a threshold.
+// Read more at https://coralogix.com/docs/user-guides/alerting/create-an-alert/metrics/threshold-alerts/
 type MetricThreshold struct {
+	// Filter for metrics
 	MetricFilter MetricFilter `json:"metricFilter"`
 	// +kubebuilder:validation:MinItems=1
-	Rules         []MetricThresholdRule `json:"rules"`
-	MissingValues MetricMissingValues   `json:"missingValues"`
+	// Rules that match the alert to the data.
+	Rules []MetricThresholdRule `json:"rules"`
+
+	MissingValues MetricMissingValues `json:"missingValues"`
+
+	// How to work with undetected values.
 	// +optional
 	UndetectedValuesManagement *UndetectedValuesManagement `json:"undetectedValuesManagement"`
 }
 
+// Filter for metrics
 type MetricFilter struct {
+	// PromQL query: https://coralogix.com/academy/mastering-metrics-in-coralogix/promql-fundamentals/
 	Promql string `json:"promql,omitempty"`
 }
 
+// Rules that match the alert to the data.
 type MetricThresholdRule struct {
+	// Conditions to match for the rule.
 	Condition MetricThresholdRuleCondition `json:"condition"`
+	// Alert property overrides
 	// +optional
 	Override *AlertOverride `json:"override"`
 }
 
+// Conditions to match for the rule.
 type MetricThresholdRuleCondition struct {
 	Threshold resource.Quantity `json:"threshold"`
 	// +kubebuilder:validation:Maximum:=100
@@ -605,13 +784,16 @@ type MetricThresholdRuleCondition struct {
 	ConditionType MetricThresholdConditionType `json:"conditionType"`
 }
 
+// Time window type.
 type MetricTimeWindow struct {
 	SpecificValue MetricTimeWindowSpecificValue `json:"specificValue,omitempty"`
 }
 
 // +kubebuilder:validation:Enum={"1m","5m","10m","15m","20m","30m","1h","2h","4h","6h","12h","24h","36h"}
+// Time window type.
 type MetricTimeWindowSpecificValue string
 
+// Time window values.
 const (
 	MetricTimeWindowValue1Minute   MetricTimeWindowSpecificValue = "1m"
 	MetricTimeWindowValue5Minutes  MetricTimeWindowSpecificValue = "5m"
@@ -629,8 +811,10 @@ const (
 )
 
 // +kubebuilder:validation:Enum=moreThan;lessThan
+// ConditionType type.
 type MetricThresholdConditionType string
 
+// ConditionType type value.
 const (
 	MetricThresholdConditionTypeMoreThan         MetricThresholdConditionType = "moreThan"
 	MetricThresholdConditionTypeLessThan         MetricThresholdConditionType = "lessThan"
@@ -638,42 +822,60 @@ const (
 	MetricThresholdConditionTypeLessThanOrEquals MetricThresholdConditionType = "lessThanOrEquals"
 )
 
+// Missing values strategies.
 type MetricMissingValues struct {
 	// +kubebuilder:default=false
+	// Replace missing values with 0s
 	ReplaceWithZero bool `json:"replaceWithZero,omitempty"`
-	// +optional
 	// +kubebuilder:validation:Maximum:=100
+	// Replace with a number
+	// +optional
 	MinNonNullValuesPct *uint32 `json:"minNonNullValuesPct,omitempty"`
 }
 
+// Tracing threshold alert
+// Read more at https://coralogix.com/docs/user-guides/alerting/create-an-alert/traces/tracing-alerts/
 type TracingThreshold struct {
+	// Filter the base collection.
 	// +optional
 	TracingFilter *TracingFilter `json:"tracingFilter,omitempty"`
+
 	// +kubebuilder:validation:MinItems=1
+	// Rules that match the alert to the data.
 	Rules []TracingThresholdRule `json:"rules"`
+
+	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 }
 
+// Tracing immediate alert
+// Read more at https://coralogix.com/docs/user-guides/alerting/create-an-alert/traces/tracing-alerts/
 type TracingImmediate struct {
 	// +optional
 	TracingFilter *TracingFilter `json:"tracingFilter,omitempty"`
+
+	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 }
 
+// A simple tracing filter.
 type TracingFilter struct {
 	Simple *TracingSimpleFilter `json:"simple,omitempty"`
 }
 
+// Filter - values and operation.
 type TracingFilterType struct {
 	Values    []string                   `json:"values"`
 	Operation TracingFilterOperationType `json:"operation"`
 }
 
 // +kubebuilder:validation:Enum=or;includes;endsWith;startsWith;isNot
+// Tracing filter operations.
 type TracingFilterOperationType string
 
+// Tracing filter operation values.
 const (
 	TracingFilterOperationTypeOr         TracingFilterOperationType = "or"
 	TracingFilterOperationTypeIncludes   TracingFilterOperationType = "includes"
@@ -682,11 +884,13 @@ const (
 	TracingFilterOperationTypeIsNot      TracingFilterOperationType = "isNot"
 )
 
+// Simple tracing filter paired with a latency.
 type TracingSimpleFilter struct {
 	TracingLabelFilters *TracingLabelFilters `json:"tracingLabelFilters,omitempty"`
 	LatencyThresholdMs  *uint64              `json:"latencyThresholdMs,omitempty"`
 }
 
+// Filter for traces.
 type TracingLabelFilters struct {
 	// +optional
 	ApplicationName []TracingFilterType `json:"applicationName"`
@@ -700,27 +904,37 @@ type TracingLabelFilters struct {
 	SpanFields []TracingSpanFieldsFilterType `json:"spanFields"`
 }
 
+// Filter for spans
 type TracingSpanFieldsFilterType struct {
 	Key        string            `json:"key"`
 	FilterType TracingFilterType `json:"filterType"`
 }
 
+// The rule to match the alert's conditions.
 type TracingThresholdRule struct {
+	// The condition to match to.
 	Condition TracingThresholdRuleCondition `json:"condition"`
 }
 
+// Tracing Threshold condition.
 type TracingThresholdRuleCondition struct {
+	// Threshold amount.
 	SpanAmount resource.Quantity `json:"spanAmount"`
+
+	// Time window to evaluate.
 	TimeWindow TracingTimeWindow `json:"timeWindow"`
 }
 
+// Tracing time window.
 type TracingTimeWindow struct {
 	SpecificValue TracingTimeWindowSpecificValue `json:"specificValue,omitempty"`
 }
 
 // +kubebuilder:validation:Enum={"5m","10m","15m","20m","30m","1h","2h","4h","6h","12h","24h","36h"}
+// Time window type for tracing.
 type TracingTimeWindowSpecificValue string
 
+// Time window values.
 const (
 	TracingTimeWindowValue5Minutes  TracingTimeWindowSpecificValue = "5m"
 	TracingTimeWindowValue10Minutes TracingTimeWindowSpecificValue = "10m"
@@ -736,128 +950,195 @@ const (
 	TracingTimeWindowValue36Hours   TracingTimeWindowSpecificValue = "36h"
 )
 
+// Alert to chain multiple alerts together.
+// Read more at https://coralogix.com/docs/user-guides/alerting/create-an-alert/flow-alerts/
 type Flow struct {
 	Stages []FlowStage `json:"stages"`
 	// +kubebuilder:default=false
 	EnforceSuppression bool `json:"enforceSuppression"`
 }
 
+// Stages to go through.
 type FlowStage struct {
-	FlowStagesType FlowStagesType    `json:"flowStagesType"`
-	TimeframeMs    int64             `json:"timeframeMs"`
-	TimeframeType  FlowTimeframeType `json:"timeframeType"`
+	// Type of stage.
+	FlowStagesType FlowStagesType `json:"flowStagesType"`
+
+	TimeframeMs int64 `json:"timeframeMs"`
+	// Type of timeframe.
+	TimeframeType FlowTimeframeType `json:"timeframeType"`
 }
 
+// Flow stage for the flow alert.
 type FlowStagesType struct {
 	Groups []FlowStageGroup `json:"groups"`
 }
 
+// Flow stage grouping.
 type FlowStageGroup struct {
+	// Alerts to group.
 	AlertDefs []FlowStagesGroupsAlertDefs `json:"alertDefs"`
-	NextOp    FlowStageGroupAlertsOp      `json:"nextOp"`
-	AlertsOp  FlowStageGroupAlertsOp      `json:"alertsOp"`
+
+	// Link to the next alert.
+	NextOp FlowStageGroupAlertsOp `json:"nextOp"`
+
+	// Operation for the alert.
+	AlertsOp FlowStageGroupAlertsOp `json:"alertsOp"`
 }
 
+// Alert references.
 type FlowStagesGroupsAlertDefs struct {
 	AlertRef AlertRef `json:"alertRef"`
 	// +kubebuilder:default=false
+	// Inversion.
 	Not bool `json:"not"`
 }
 
+// Reference for an alert, backend or Kubernetes resource
 type AlertRef struct {
+	// Coralogix id reference.
 	// +optional
 	BackendRef *AlertBackendRef `json:"backendRef"`
+
+	// Kubernetes resource reference.
 	// +optional
 	ResourceRef *ResourceRef `json:"resourceRef"`
 }
 
 // +kubebuilder:validation:Enum=and;or
+// Flow stage operation type
 type FlowStageGroupAlertsOp string
 
+// Flow stage operation links.
 const (
 	FlowStageGroupAlertsOpAnd FlowStageGroupAlertsOp = "and"
 	FlowStageGroupAlertsOpOr  FlowStageGroupAlertsOp = "or"
 )
 
 // +kubebuilder:validation:Enum=unspecified;upTo
+// Type of timeframe
 type FlowTimeframeType string
 
+// Timeframe Type values.
 const (
 	TimeframeTypeUnspecified FlowTimeframeType = "unspecified"
 	TimeframeTypeUpTo        FlowTimeframeType = "upTo"
 )
 
+// Logs anomaly alert
+// Read more at https://coralogix.com/docs/user-guides/alerting/create-an-alert/logs/anomaly-detection-alerts/
 type LogsAnomaly struct {
+	// Filter to filter the logs with.
 	// +optional
 	LogsFilter *LogsFilter `json:"logsFilter,omitempty"`
+
 	// +kubebuilder:validation:MinItems=1
+	// Rules that match the alert to the data.
 	Rules []LogsAnomalyRule `json:"rules"`
+
+	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 }
 
+// The rule to match the alert's conditions.
 type LogsAnomalyRule struct {
+	// Condition to match to.
 	Condition LogsAnomalyCondition `json:"condition"`
 }
 
+// Condition for the logs anomaly alert.
 type LogsAnomalyCondition struct {
 	//+kubebuilder:default=0
+	// Minimum value
 	MinimumThreshold resource.Quantity `json:"minimumThreshold"`
-	TimeWindow       LogsTimeWindow    `json:"timeWindow"`
+	// Time window to evaluate.
+	TimeWindow LogsTimeWindow `json:"timeWindow"`
 }
 
+// Metric anomaly alert
+// Read more at https://coralogix.com/docs/user-guides/alerting/create-an-alert/metrics/anomaly-detection-alerts/
 type MetricAnomaly struct {
+	// PromQL filter for metrics
 	MetricFilter MetricFilter `json:"metricFilter"`
+
 	// +kubebuilder:validation:MinItems=1
+	// Rules that match the alert to the data.
 	Rules []MetricAnomalyRule `json:"rules"`
 }
 
+// Condition to match to.
 type MetricAnomalyCondition struct {
+	// Threshold to clear.
 	Threshold resource.Quantity `json:"threshold"`
+
 	// +kubebuilder:validation:Maximum:=100
-	ForOverPct uint32           `json:"forOverPct"`
-	OfTheLast  MetricTimeWindow `json:"ofTheLast"`
+	// Percentage for the threshold
+	ForOverPct uint32 `json:"forOverPct"`
+
+	// Time window to match within
+	OfTheLast MetricTimeWindow `json:"ofTheLast"`
 	// +kubebuilder:validation:Maximum:=100
-	MinNonNullValuesPct uint32                     `json:"minNonNullValuesPct"`
-	ConditionType       MetricAnomalyConditionType `json:"conditionType"`
+	// Replace with a number
+	MinNonNullValuesPct uint32 `json:"minNonNullValuesPct"`
+	// Condition type.
+	ConditionType MetricAnomalyConditionType `json:"conditionType"`
 }
 
 // +kubebuilder:validation:Enum=moreThanUsual;lessThanUsual
+// ConditionType type.
 type MetricAnomalyConditionType string
 
+// Condition type values.
 const (
 	MetricAnomalyConditionTypeMoreThanUsual MetricAnomalyConditionType = "moreThanUsual"
 	MetricAnomalyConditionTypeLessThanUsual MetricAnomalyConditionType = "lessThanUsual"
 )
 
+// The rule to match the alert's conditions.
 type MetricAnomalyRule struct {
+	// Condition to match to.
 	Condition MetricAnomalyCondition `json:"condition"`
 }
 
+// Alert for when a new value is logged
+// Read more at https://coralogix.com/docs/user-guides/alerting/create-an-alert/logs/new-value-alerts/
 type LogsNewValue struct {
+	// Filter to filter the logs with.
 	LogsFilter *LogsFilter `json:"logsFilter"`
+
 	// +kubebuilder:validation:MinItems=1
+	// Rules that match the alert to the data.
 	Rules []LogsNewValueRule `json:"rules"`
+
+	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 }
 
+// The rule to match the alert's conditions.
 type LogsNewValueRule struct {
+	// Condition to match to
 	Condition LogsNewValueRuleCondition `json:"condition"`
 }
 
+// Condition to match.
 type LogsNewValueRuleCondition struct {
-	KeypathToTrack string                 `json:"keypathToTrack"`
-	TimeWindow     LogsNewValueTimeWindow `json:"timeWindow"`
+	// Where to look
+	KeypathToTrack string `json:"keypathToTrack"`
+	// Which time window.
+	TimeWindow LogsNewValueTimeWindow `json:"timeWindow"`
 }
 
+// New values time window.
 type LogsNewValueTimeWindow struct {
 	SpecificValue LogsNewValueTimeWindowSpecificValue `json:"specificValue,omitempty"`
 }
 
 // +kubebuilder:validation:Enum={"12h","24h","48h","72h","1w","1mo","2mo","3mo"}
+// Time windows.
 type LogsNewValueTimeWindowSpecificValue string
 
+// Time windows values.
 const (
 	LogsNewValueTimeWindowValue12Hours LogsNewValueTimeWindowSpecificValue = "12h"
 	LogsNewValueTimeWindowValue24Hours LogsNewValueTimeWindowSpecificValue = "24h"
@@ -870,9 +1151,14 @@ const (
 )
 
 type LogsUniqueCount struct {
+	// Filter to filter the logs with.
 	LogsFilter *LogsFilter `json:"logsFilter"`
+
 	// +kubebuilder:validation:MinItems=1
+	// Rules that match the alert to the data.
 	Rules []LogsUniqueCountRule `json:"rules"`
+
+	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
 	// +optional
@@ -880,18 +1166,25 @@ type LogsUniqueCount struct {
 	UniqueCountKeypath          string  `json:"uniqueCountKeypath"`
 }
 
+// Condition for the logs unique count alerts.
 type LogsUniqueCountCondition struct {
-	Threshold  int64                     `json:"threshold"`
+	// Threshold to cross
+	Threshold int64 `json:"threshold"`
+
+	// Time window to evaluate.
 	TimeWindow LogsUniqueCountTimeWindow `json:"timeWindow"`
 }
 
+// Time window.
 type LogsUniqueCountTimeWindow struct {
 	SpecificValue LogsUniqueCountTimeWindowSpecificValue `json:"specificValue"`
 }
 
 // +kubebuilder:validation:Enum={"1m","5m","10m","15m","20m","30m","1h","2h","4h","6h","12h","24h","36h"}
+// Time windows for Logs Unique Count
 type LogsUniqueCountTimeWindowSpecificValue string
 
+// Time window values.
 const (
 	LogsUniqueCountTimeWindowValue1Minute   LogsUniqueCountTimeWindowSpecificValue = "1m"
 	LogsUniqueCountTimeWindowValue5Minutes  LogsUniqueCountTimeWindowSpecificValue = "5m"
@@ -908,47 +1201,71 @@ const (
 	LogsUniqueCountTimeWindowValue36Hours   LogsUniqueCountTimeWindowSpecificValue = "36h"
 )
 
+// The rule to match the alert's conditions.
 type LogsUniqueCountRule struct {
+	// Condition to match to.
 	Condition LogsUniqueCountCondition `json:"condition"`
 }
 
+// A filter for logs.
 type LogsFilter struct {
+	// Simple lucene filter.
 	SimpleFilter LogsSimpleFilter `json:"simpleFilter,omitempty"`
 }
 
+// Simple lucene filter.
 type LogsSimpleFilter struct {
+	// The query.
 	// +optional
 	LuceneQuery *string `json:"luceneQuery,omitempty"`
+
+	// Filter for labels.
 	// +optional
 	LabelFilters *LabelFilters `json:"labelFilters,omitempty"`
 }
 
+// Filters for labels.
 type LabelFilters struct {
+	// Application name to filter for.
 	// +optional
 	ApplicationName []LabelFilterType `json:"applicationName"`
+	// Subsystem name to filter for.
 	// +optional
 	SubsystemName []LabelFilterType `json:"subsystemName"`
+	// Severity to filter for.
 	// +optional
 	Severity []LogSeverity `json:"severity"`
 }
 
+// Label filter specifications
 type LabelFilterType struct {
+	// The value
 	//+kubebuilder:validation:MinLength=0
 	Value string `json:"value"`
+
 	//+kubebuilder:default=or
+	// Operation to apply.
 	Operation LogFilterOperationType `json:"operation"`
 }
 
+// How to work with undetected values.
+// Read more here: https://coralogix.com/docs/user-guides/alerting/create-an-alert/metrics/threshold-alerts/#manage-undetected-values
 type UndetectedValuesManagement struct {
+
 	//+kubebuilder:default=false
+	// Deactivate triggering the alert on undetected values.
 	TriggerUndetectedValues bool `json:"triggerUndetectedValues"`
+
 	//+kubebuilder:default=never
+	// Automatically retire the alerts after this time.
 	AutoRetireTimeframe AutoRetireTimeframe `json:"autoRetireTimeframe"`
 }
 
 // +kubebuilder:validation:Enum=or;includes;endsWith;startsWith
+// Operation type for log filters.
 type LogFilterOperationType string
 
+// Operation type for log filter values.
 const (
 	LogFilterOperationTypeOr         LogFilterOperationType = "or"
 	LogFilterOperationTypeIncludes   LogFilterOperationType = "includes"
@@ -957,8 +1274,10 @@ const (
 )
 
 // +kubebuilder:validation:Enum=debug;info;warning;error;critical;verbose
+// How severe a log is.
 type LogSeverity string
 
+// Severity values.
 const (
 	LogSeverityDebug    LogSeverity = "debug"
 	LogSeverityInfo     LogSeverity = "info"
@@ -969,8 +1288,10 @@ const (
 )
 
 // +kubebuilder:validation:Enum=p1;p2;p3;p4;p5
+// Alert priorities.
 type AlertPriority string
 
+// Priority values.
 const (
 	AlertPriorityP1 AlertPriority = "p1"
 	AlertPriorityP2 AlertPriority = "p2"

@@ -28,37 +28,52 @@ import (
 	"github.com/coralogix/coralogix-operator/internal/config"
 )
 
-// GroupSpec defines the desired state of Group.
+// GroupSpec defines the desired state of Coralogix Group.
+// See also https://coralogix.com/docs/user-guides/account-management/user-management/assign-user-roles-and-scopes-via-groups/
 type GroupSpec struct {
+	// Name of the group.
 	Name string `json:"name"`
 
+	// Description of the group.
 	Description *string `json:"description,omitempty"`
 
+	// Members of the group.
 	// +optional
 	Members []Member `json:"members,omitempty"`
 
 	// +kubebuilder:validation:MinItems=1
+	// Custom roles applied to the group.
 	CustomRoles []GroupCustomRole `json:"customRoles"`
 
+	// Scope attached to the group.
 	// +optional
 	Scope *GroupScope `json:"scope,omitempty"`
 }
 
+// User on Coralogix.
 type Member struct {
+	// User's name.
 	UserName string `json:"userName"`
 }
 
+// Custom role reference.
 type GroupCustomRole struct {
+	// Reference to the custom role within the cluster.
 	ResourceRef ResourceRef `json:"resourceRef"`
 }
 
+// Scope attached to the group.
 type GroupScope struct {
+	// Scope reference.
 	ResourceRef ResourceRef `json:"resourceRef"`
 }
 
+// Reference to a Coralogix resource within the cluster.
 type ResourceRef struct {
+	// Name of the resource (not id).
 	Name string `json:"name"`
 
+	// Kubernetes namespace.
 	// +optional
 	Namespace *string `json:"namespace,omitempty"`
 }
@@ -262,7 +277,7 @@ type Group struct {
 
 // +kubebuilder:object:root=true
 
-// GroupList contains a list of Group.
+// GroupList contains a list of Groups.
 type GroupList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

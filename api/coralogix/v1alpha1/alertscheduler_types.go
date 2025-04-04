@@ -31,6 +31,7 @@ import (
 
 // AlertSchedulerSpec defines the desired state Coralogix AlertScheduler.
 // It is used to suppress or activate alerts based on a schedule.
+// See also https://coralogix.com/docs/user-guides/alerting/alert-suppression-rules/
 type AlertSchedulerSpec struct {
 	// Alert Scheduler name.
 	Name string `json:"name"`
@@ -39,8 +40,8 @@ type AlertSchedulerSpec struct {
 	// +optional
 	Description string `json:"description,omitempty"`
 
-	// Alert Scheduler enabled. If set to `false`, the alert scheduler will be disabled. True by default.
 	//+kubebuilder:default=true
+	// Alert Scheduler enabled. If set to `false`, the alert scheduler will be disabled. True by default.
 	// +optional
 	Enabled bool `json:"enabled,omitempty"`
 

@@ -17,7 +17,7 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: RecordingRuleGroupSet is the Schema for the recordingrulegroupsets
+        description: RecordingRuleGroupSet is the Schema for the RecordingRuleGroupSets
           API
         properties:
           apiVersion:
@@ -38,33 +38,48 @@ spec:
           metadata:
             type: object
           spec:
-            description: RecordingRuleGroupSetSpec defines the desired state of RecordingRuleGroupSet
+            description: |-
+              RecordingRuleGroupSetSpec defines the desired state of a set of Coralogix recording rule groups.
+              See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
             properties:
               groups:
+                description: Recording rule groups.
                 items:
+                  description: A Coralogix recording rule group.
                   properties:
                     intervalSeconds:
                       default: 60
+                      description: How often rules in the group are evaluated (in
+                        seconds).
                       format: int32
                       type: integer
                     limit:
+                      description: Limits the number of alerts an alerting rule and
+                        series a recording-rule can produce. 0 is no limit.
                       format: int64
                       type: integer
                     name:
-                      description: |-
-                        INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-                        Important: Run "make" to regenerate code after modifying this file
+                      description: The (unique) rule group name.
                       type: string
                     rules:
+                      description: Rules of this group.
                       items:
+                        description: A recording rule.
                         properties:
                           expr:
+                            description: |-
+                              The PromQL expression to evaluate.
+                              Every evaluation cycle this is evaluated at the current time, and the result recorded as a new set of time series with the metric name as given by 'record'.
                             type: string
                           labels:
                             additionalProperties:
                               type: string
+                            description: Labels to add or overwrite before storing
+                              the result.
                             type: object
                           record:
+                            description: The name of the time series to output to.
+                              Must be a valid metric name.
                             type: string
                         type: object
                       type: array

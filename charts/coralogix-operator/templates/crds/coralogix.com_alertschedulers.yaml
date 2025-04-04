@@ -40,6 +40,7 @@ spec:
             description: |-
               AlertSchedulerSpec defines the desired state Coralogix AlertScheduler.
               It is used to suppress or activate alerts based on a schedule.
+              See also https://coralogix.com/docs/user-guides/alerting/alert-suppression-rules/
             properties:
               description:
                 description: Alert Scheduler description.
@@ -64,8 +65,10 @@ spec:
                             be used.
                           properties:
                             name:
+                              description: Name of the resource (not id).
                               type: string
                             namespace:
+                              description: Kubernetes namespace.
                               type: string
                           required:
                           - name

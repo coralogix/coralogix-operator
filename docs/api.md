@@ -80,7 +80,8 @@ Alert is the v1alpha1 version Schema for the alerts API. v1alpha1 Alert is going
         <td><b><a href="#alertspec">spec</a></b></td>
         <td>object</td>
         <td>
-          AlertSpec defines the desired state of Alert.<br/>
+          AlertSpec defines the desired state of a Coralogix Alert.
+Deprecated: Upgrade to v1beta1.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -99,7 +100,8 @@ Alert is the v1alpha1 version Schema for the alerts API. v1alpha1 Alert is going
 
 
 
-AlertSpec defines the desired state of Alert.
+AlertSpec defines the desired state of a Coralogix Alert.
+Deprecated: Upgrade to v1beta1.
 
 <table>
     <thead>
@@ -121,7 +123,7 @@ AlertSpec defines the desired state of Alert.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Alert name.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -146,7 +148,7 @@ AlertSpec defines the desired state of Alert.
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Alert description.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2516,7 +2518,8 @@ AlertScheduler is the Schema for the alertschedulers API.
         <td>object</td>
         <td>
           AlertSchedulerSpec defines the desired state Coralogix AlertScheduler.
-It is used to suppress or activate alerts based on a schedule.<br/>
+It is used to suppress or activate alerts based on a schedule.
+See also https://coralogix.com/docs/user-guides/alerting/alert-suppression-rules/<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2537,6 +2540,7 @@ It is used to suppress or activate alerts based on a schedule.<br/>
 
 AlertSchedulerSpec defines the desired state Coralogix AlertScheduler.
 It is used to suppress or activate alerts based on a schedule.
+See also https://coralogix.com/docs/user-guides/alerting/alert-suppression-rules/
 
 <table>
     <thead>
@@ -2685,14 +2689,14 @@ Alert custom resource name and namespace. If namespace is not set, the AlertSche
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the resource (not id).<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>namespace</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Kubernetes namespace.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -3321,7 +3325,8 @@ ApiKey is the Schema for the apikeys API.
         <td><b><a href="#apikeyspec">spec</a></b></td>
         <td>object</td>
         <td>
-          ApiKeySpec defines the desired state of ApiKey.<br/>
+          ApiKeySpec defines the desired state of a Coralogix ApiKey.
+See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-keys/<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -3340,7 +3345,8 @@ ApiKey is the Schema for the apikeys API.
 
 
 
-ApiKeySpec defines the desired state of ApiKey.
+ApiKeySpec defines the desired state of a Coralogix ApiKey.
+See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-keys/
 
 <table>
     <thead>
@@ -3355,21 +3361,21 @@ ApiKeySpec defines the desired state of ApiKey.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the ApiKey<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#apikeyspecowner">owner</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Owner of the ApiKey.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>active</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Whether the ApiKey Is active.<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -3378,14 +3384,14 @@ ApiKeySpec defines the desired state of ApiKey.
         <td><b>permissions</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Permissions of the ApiKey<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>presets</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Permission Presets that the ApiKey uses.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -3397,7 +3403,7 @@ ApiKeySpec defines the desired state of ApiKey.
 
 
 
-
+Owner of the ApiKey.
 
 <table>
     <thead>
@@ -3412,7 +3418,7 @@ ApiKeySpec defines the desired state of ApiKey.
         <td><b>teamId</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Team that owns the key.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -3421,7 +3427,7 @@ ApiKeySpec defines the desired state of ApiKey.
         <td><b>userId</b></td>
         <td>string</td>
         <td>
-          <br/>
+          User that owns the key.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -3578,7 +3584,8 @@ CustomRole is the Schema for the customroles API.
         <td><b><a href="#customrolespec">spec</a></b></td>
         <td>object</td>
         <td>
-          CustomRoleSpec defines the desired state of CustomRole.<br/>
+          CustomRoleSpec defines the desired state of a Coralogix Custom Role.
+See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -3597,7 +3604,8 @@ CustomRole is the Schema for the customroles API.
 
 
 
-CustomRoleSpec defines the desired state of CustomRole.
+CustomRoleSpec defines the desired state of a Coralogix Custom Role.
+See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
 
 <table>
     <thead>
@@ -3612,28 +3620,28 @@ CustomRoleSpec defines the desired state of CustomRole.
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Description of the custom role.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the custom role.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>parentRoleName</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Parent role name.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>permissions</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Custom role permissions.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -3932,7 +3940,7 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
         <td><b><a href="#dashboardspecfolderrefresourceref">resourceRef</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Reference to a Coralogix resource within the cluster.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -3978,7 +3986,7 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
 
 
 
-
+Reference to a Coralogix resource within the cluster.
 
 <table>
     <thead>
@@ -3993,14 +4001,14 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the resource (not id).<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>namespace</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Kubernetes namespace.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -4243,14 +4251,14 @@ A reference to an existing DashboardsFolder CR.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the resource (not id).<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>namespace</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Kubernetes namespace.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -4407,7 +4415,8 @@ Group is the Schema for the groups API.
         <td><b><a href="#groupspec">spec</a></b></td>
         <td>object</td>
         <td>
-          GroupSpec defines the desired state of Group.<br/>
+          GroupSpec defines the desired state of Coralogix Group.
+See also https://coralogix.com/docs/user-guides/account-management/user-management/assign-user-roles-and-scopes-via-groups/<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4426,7 +4435,8 @@ Group is the Schema for the groups API.
 
 
 
-GroupSpec defines the desired state of Group.
+GroupSpec defines the desired state of Coralogix Group.
+See also https://coralogix.com/docs/user-guides/account-management/user-management/assign-user-roles-and-scopes-via-groups/
 
 <table>
     <thead>
@@ -4441,35 +4451,35 @@ GroupSpec defines the desired state of Group.
         <td><b><a href="#groupspeccustomrolesindex">customRoles</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Custom roles applied to the group.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the group.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Description of the group.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#groupspecmembersindex">members</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Members of the group.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#groupspecscope">scope</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Scope attached to the group.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -4481,7 +4491,7 @@ GroupSpec defines the desired state of Group.
 
 
 
-
+Custom role reference.
 
 <table>
     <thead>
@@ -4496,7 +4506,7 @@ GroupSpec defines the desired state of Group.
         <td><b><a href="#groupspeccustomrolesindexresourceref">resourceRef</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Reference to the custom role within the cluster.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -4508,7 +4518,7 @@ GroupSpec defines the desired state of Group.
 
 
 
-
+Reference to the custom role within the cluster.
 
 <table>
     <thead>
@@ -4523,14 +4533,14 @@ GroupSpec defines the desired state of Group.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the resource (not id).<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>namespace</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Kubernetes namespace.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -4542,7 +4552,7 @@ GroupSpec defines the desired state of Group.
 
 
 
-
+User on Coralogix.
 
 <table>
     <thead>
@@ -4557,7 +4567,7 @@ GroupSpec defines the desired state of Group.
         <td><b>userName</b></td>
         <td>string</td>
         <td>
-          <br/>
+          User's name.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -4569,7 +4579,7 @@ GroupSpec defines the desired state of Group.
 
 
 
-
+Scope attached to the group.
 
 <table>
     <thead>
@@ -4584,7 +4594,7 @@ GroupSpec defines the desired state of Group.
         <td><b><a href="#groupspecscoperesourceref">resourceRef</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Scope reference.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -4596,7 +4606,7 @@ GroupSpec defines the desired state of Group.
 
 
 
-
+Scope reference.
 
 <table>
     <thead>
@@ -4611,14 +4621,14 @@ GroupSpec defines the desired state of Group.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the resource (not id).<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>namespace</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Kubernetes namespace.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -4775,7 +4785,10 @@ Integration is the Schema for the integrations API.
         <td><b><a href="#integrationspec">spec</a></b></td>
         <td>object</td>
         <td>
-          IntegrationSpec defines the desired state of Integration.<br/>
+          IntegrationSpec defines the desired state of a Coralogix (managed) integration.
+See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/
+
+For available integrations see https://coralogix.com/docs/developer-portal/infrastructure-as-code/terraform-provider/integrations/aws-metrics-collector/ or at https://github.com/coralogix/coralogix-operator/tree/main/config/samples/v1alpha1/integrations.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4794,7 +4807,10 @@ Integration is the Schema for the integrations API.
 
 
 
-IntegrationSpec defines the desired state of Integration.
+IntegrationSpec defines the desired state of a Coralogix (managed) integration.
+See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/
+
+For available integrations see https://coralogix.com/docs/developer-portal/infrastructure-as-code/terraform-provider/integrations/aws-metrics-collector/ or at https://github.com/coralogix/coralogix-operator/tree/main/config/samples/v1alpha1/integrations.
 
 <table>
     <thead>
@@ -4809,21 +4825,21 @@ IntegrationSpec defines the desired state of Integration.
         <td><b>integrationKey</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Unique name of the integration.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>parameters</b></td>
         <td>object</td>
         <td>
-          <br/>
+          Parameters required by the integration.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>version</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Desired version of the integration<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -4948,7 +4964,7 @@ with respect to the current state of the instance.<br/>
 
 
 
-OutboundWebhook is the Schema for the outboundwebhooks API
+OutboundWebhook is the Schema for the API
 
 <table>
     <thead>
@@ -4980,7 +4996,8 @@ OutboundWebhook is the Schema for the outboundwebhooks API
         <td><b><a href="#outboundwebhookspec">spec</a></b></td>
         <td>object</td>
         <td>
-          OutboundWebhookSpec defines the desired state of OutboundWebhook<br/>
+          OutboundWebhookSpec defines the desired state of OutboundWebhook
+See also https://coralogix.com/docs/user-guides/alerting/outbound-webhooks/aws-eventbridge-outbound-webhook/<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5000,6 +5017,7 @@ OutboundWebhook is the Schema for the outboundwebhooks API
 
 
 OutboundWebhookSpec defines the desired state of OutboundWebhook
+See also https://coralogix.com/docs/user-guides/alerting/outbound-webhooks/aws-eventbridge-outbound-webhook/
 
 <table>
     <thead>
@@ -5014,14 +5032,14 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the webhook.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktype">outboundWebhookType</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Type of webhook.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -5033,7 +5051,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+Type of webhook.
 
 <table>
     <thead>
@@ -5048,70 +5066,70 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypeawseventbridge">awsEventBridge</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          AWS eventbridge message.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypedemisto">demisto</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Demisto notification.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypeemailgroup">emailGroup</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Email notification.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypegenericwebhook">genericWebhook</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Generic HTTP(s) webhook.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypejira">jira</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Jira issue.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypemicrosoftteams">microsoftTeams</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Teams message.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypeopsgenie">opsgenie</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Opsgenie notification.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypepagerduty">pagerDuty</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          PagerDuty notification.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypesendlog">sendLog</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          SendLog notification.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypeslack">slack</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Slack message.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -5123,7 +5141,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+AWS eventbridge message.
 
 <table>
     <thead>
@@ -5178,7 +5196,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+Demisto notification.
 
 <table>
     <thead>
@@ -5219,7 +5237,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+Email notification.
 
 <table>
     <thead>
@@ -5234,7 +5252,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
         <td><b>emailAddresses</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Recipients<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -5246,7 +5264,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+Generic HTTP(s) webhook.
 
 <table>
     <thead>
@@ -5261,7 +5279,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
         <td><b>method</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          HTTP Method to use.<br/>
           <br/>
             <i>Enum</i>: Unkown, Get, Post, Put<br/>
         </td>
@@ -5270,21 +5288,21 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
         <td><b>url</b></td>
         <td>string</td>
         <td>
-          <br/>
+          URL to call<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>headers</b></td>
         <td>map[string]string</td>
         <td>
-          <br/>
+          Attached HTTP headers.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>payload</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Payload of the webhook call.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -5296,7 +5314,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+Jira issue.
 
 <table>
     <thead>
@@ -5311,28 +5329,28 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
         <td><b>apiToken</b></td>
         <td>string</td>
         <td>
-          <br/>
+          API token<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>email</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Email address associated with the token<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>projectKey</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Project to add it to.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>url</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Jira URL<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -5344,7 +5362,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+Teams message.
 
 <table>
     <thead>
@@ -5359,7 +5377,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
         <td><b>url</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Teams URL<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -5371,7 +5389,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+Opsgenie notification.
 
 <table>
     <thead>
@@ -5398,7 +5416,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+PagerDuty notification.
 
 <table>
     <thead>
@@ -5413,7 +5431,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
         <td><b>serviceKey</b></td>
         <td>string</td>
         <td>
-          <br/>
+          PagerDuty service key.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -5425,7 +5443,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+SendLog notification.
 
 <table>
     <thead>
@@ -5440,14 +5458,14 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
         <td><b>payload</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Payload of the notification<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>url</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Sendlog URL.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -5459,7 +5477,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+Slack message.
 
 <table>
     <thead>
@@ -5481,14 +5499,14 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypeslackattachmentsindex">attachments</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Attachments of the message.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypeslackdigestsindex">digests</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Digest configuration.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -5500,7 +5518,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+Slack attachment
 
 <table>
     <thead>
@@ -5515,14 +5533,14 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
         <td><b>isActive</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Active status.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Attachment to the message.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -5534,7 +5552,7 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
 
 
 
-
+Digest config.
 
 <table>
     <thead>
@@ -5549,14 +5567,14 @@ OutboundWebhookSpec defines the desired state of OutboundWebhook
         <td><b>isActive</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Active status.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Type of digest to send<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -5688,7 +5706,7 @@ with respect to the current state of the instance.<br/>
 
 
 
-RecordingRuleGroupSet is the Schema for the recordingrulegroupsets API
+RecordingRuleGroupSet is the Schema for the RecordingRuleGroupSets API
 
 <table>
     <thead>
@@ -5720,7 +5738,8 @@ RecordingRuleGroupSet is the Schema for the recordingrulegroupsets API
         <td><b><a href="#recordingrulegroupsetspec">spec</a></b></td>
         <td>object</td>
         <td>
-          RecordingRuleGroupSetSpec defines the desired state of RecordingRuleGroupSet<br/>
+          RecordingRuleGroupSetSpec defines the desired state of a set of Coralogix recording rule groups.
+See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5739,7 +5758,8 @@ RecordingRuleGroupSet is the Schema for the recordingrulegroupsets API
 
 
 
-RecordingRuleGroupSetSpec defines the desired state of RecordingRuleGroupSet
+RecordingRuleGroupSetSpec defines the desired state of a set of Coralogix recording rule groups.
+See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
 
 <table>
     <thead>
@@ -5754,7 +5774,7 @@ RecordingRuleGroupSetSpec defines the desired state of RecordingRuleGroupSet
         <td><b><a href="#recordingrulegroupsetspecgroupsindex">groups</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Recording rule groups.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -5766,7 +5786,7 @@ RecordingRuleGroupSetSpec defines the desired state of RecordingRuleGroupSet
 
 
 
-
+A Coralogix recording rule group.
 
 <table>
     <thead>
@@ -5781,7 +5801,7 @@ RecordingRuleGroupSetSpec defines the desired state of RecordingRuleGroupSet
         <td><b>intervalSeconds</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          How often rules in the group are evaluated (in seconds).<br/>
           <br/>
             <i>Format</i>: int32<br/>
             <i>Default</i>: 60<br/>
@@ -5791,7 +5811,7 @@ RecordingRuleGroupSetSpec defines the desired state of RecordingRuleGroupSet
         <td><b>limit</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Limits the number of alerts an alerting rule and series a recording-rule can produce. 0 is no limit.<br/>
           <br/>
             <i>Format</i>: int64<br/>
         </td>
@@ -5800,15 +5820,14 @@ RecordingRuleGroupSetSpec defines the desired state of RecordingRuleGroupSet
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-Important: Run "make" to regenerate code after modifying this file<br/>
+          The (unique) rule group name.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#recordingrulegroupsetspecgroupsindexrulesindex">rules</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Rules of this group.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -5820,7 +5839,7 @@ Important: Run "make" to regenerate code after modifying this file<br/>
 
 
 
-
+A recording rule.
 
 <table>
     <thead>
@@ -5835,21 +5854,22 @@ Important: Run "make" to regenerate code after modifying this file<br/>
         <td><b>expr</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The PromQL expression to evaluate.
+Every evaluation cycle this is evaluated at the current time, and the result recorded as a new set of time series with the metric name as given by 'record'.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>labels</b></td>
         <td>map[string]string</td>
         <td>
-          <br/>
+          Labels to add or overwrite before storing the result.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>record</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The name of the time series to output to. Must be a valid metric name.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -6040,14 +6060,14 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the rule-group.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>active</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Whether the rule-group is active.<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -6056,28 +6076,28 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>applications</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Rules will execute on logs that match the these applications.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>creator</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Rule-group creator<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Description of the rule-group.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>hidden</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Hides the rule-group.<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -6086,7 +6106,7 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>order</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          The index of the rule-group between the other rule-groups.<br/>
           <br/>
             <i>Format</i>: int32<br/>
             <i>Minimum</i>: 1<br/>
@@ -6096,7 +6116,7 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>severities</b></td>
         <td>[]enum</td>
         <td>
-          <br/>
+          Rules will execute on logs that match the these severities.<br/>
           <br/>
             <i>Enum</i>: Debug, Verbose, Info, Warning, Error, Critical<br/>
         </td>
@@ -6115,7 +6135,7 @@ for an example.<br/>
         <td><b>subsystems</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Rules will execute on logs that match the these subsystems.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -6127,7 +6147,7 @@ for an example.<br/>
 
 
 
-
+Sub group of rules.
 
 <table>
     <thead>
@@ -6142,7 +6162,7 @@ for an example.<br/>
         <td><b>active</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Determines whether to rule will be active or not.<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -6151,14 +6171,14 @@ for an example.<br/>
         <td><b>id</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The rule id.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>order</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Determines the index of the rule inside the rule-subgroup.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -6167,7 +6187,7 @@ for an example.<br/>
         <td><b><a href="#rulegroupspecsubgroupsindexrulesindex">rules</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          List of rules associated with the sub group.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -6179,7 +6199,8 @@ for an example.<br/>
 
 
 
-
+A rule to change data extraction.
+See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
 
 <table>
     <thead>
@@ -6194,14 +6215,14 @@ for an example.<br/>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the rule.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>active</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Whether the rule will be activated.<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -6210,70 +6231,70 @@ for an example.<br/>
         <td><b><a href="#rulegroupspecsubgroupsindexrulesindexblock">block</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Block rules allow for refined filtering of incoming logs with a Regular Expression.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Description of the rule.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#rulegroupspecsubgroupsindexrulesindexextract">extract</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Use a named Regular Expression group to extract specific values you need as JSON getKeysStrings without having to parse the entire log.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#rulegroupspecsubgroupsindexrulesindexextracttimestamp">extractTimestamp</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Replace rules are used to replace logs timestamp with JSON field.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#rulegroupspecsubgroupsindexrulesindexjsonextract">jsonExtract</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Name a JSON field to extract its value directly into a Coralogix metadata field<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#rulegroupspecsubgroupsindexrulesindexjsonstringify">jsonStringify</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Convert JSON object to JSON string.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#rulegroupspecsubgroupsindexrulesindexparse">parse</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Parse unstructured logs into JSON format using named Regular Expression groups.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#rulegroupspecsubgroupsindexrulesindexparsejsonfield">parseJsonField</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Convert JSON string to JSON object.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#rulegroupspecsubgroupsindexrulesindexremovefields">removeFields</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Remove Fields allows to select fields that will not be indexed.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#rulegroupspecsubgroupsindexrulesindexreplace">replace</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Replace rules are used to strings in order to fix log structure, change log severity, or obscure information.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -6285,7 +6306,7 @@ for an example.<br/>
 
 
 
-
+Block rules allow for refined filtering of incoming logs with a Regular Expression.
 
 <table>
     <thead>
@@ -6300,21 +6321,21 @@ for an example.<br/>
         <td><b>regex</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Regular Expression. More info: https://coralogix.com/blog/regex-101/<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>sourceField</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The field on which the Regular Expression will operate on.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>blockingAllMatchingBlocks</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Block Logic. If true or nor set - blocking all matching blocks, if false - blocking all non-matching blocks.<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -6323,7 +6344,7 @@ for an example.<br/>
         <td><b>keepBlockedLogs</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Determines if to view blocked logs in LiveTail and archive to S3.<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -6337,7 +6358,7 @@ for an example.<br/>
 
 
 
-
+Use a named Regular Expression group to extract specific values you need as JSON getKeysStrings without having to parse the entire log.
 
 <table>
     <thead>
@@ -6352,14 +6373,14 @@ for an example.<br/>
         <td><b>regex</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Regular Expression. More info: https://coralogix.com/blog/regex-101/<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>sourceField</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The field on which the Regular Expression will operate on.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -6371,7 +6392,7 @@ for an example.<br/>
 
 
 
-
+Replace rules are used to replace logs timestamp with JSON field.
 
 <table>
     <thead>
@@ -6386,7 +6407,7 @@ for an example.<br/>
         <td><b>fieldFormatStandard</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          The format standard to parse the timestamp.<br/>
           <br/>
             <i>Enum</i>: Strftime, JavaSDF, Golang, SecondTS, MilliTS, MicroTS, NanoTS<br/>
         </td>
@@ -6395,14 +6416,14 @@ for an example.<br/>
         <td><b>sourceField</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The field on which the Regular Expression will operate on.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>timeFormat</b></td>
         <td>string</td>
         <td>
-          <br/>
+          A time formatting string that matches the field format standard.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -6414,7 +6435,7 @@ for an example.<br/>
 
 
 
-
+Name a JSON field to extract its value directly into a Coralogix metadata field
 
 <table>
     <thead>
@@ -6429,7 +6450,7 @@ for an example.<br/>
         <td><b>destinationField</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          The field that will be populated by the results of the Regular Expression operation.<br/>
           <br/>
             <i>Enum</i>: Category, CLASSNAME, METHODNAME, THREADID, SEVERITY<br/>
         </td>
@@ -6438,7 +6459,7 @@ for an example.<br/>
         <td><b>jsonKey</b></td>
         <td>string</td>
         <td>
-          <br/>
+          JSON key to extract its value directly into a Coralogix metadata field.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -6450,7 +6471,7 @@ for an example.<br/>
 
 
 
-
+Convert JSON object to JSON string.
 
 <table>
     <thead>
@@ -6465,14 +6486,14 @@ for an example.<br/>
         <td><b>destinationField</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The field that will be populated by the results of the Regular Expression<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>sourceField</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The field on which the Regular Expression will operate on.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -6493,7 +6514,7 @@ for an example.<br/>
 
 
 
-
+Parse unstructured logs into JSON format using named Regular Expression groups.
 
 <table>
     <thead>
@@ -6508,21 +6529,21 @@ for an example.<br/>
         <td><b>destinationField</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The field that will be populated by the results of the Regular Expression operation.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>regex</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Regular Expression. More info: https://coralogix.com/blog/regex-101/<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>sourceField</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The field on which the Regular Expression will operate on.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -6534,7 +6555,7 @@ for an example.<br/>
 
 
 
-
+Convert JSON string to JSON object.
 
 <table>
     <thead>
@@ -6549,28 +6570,28 @@ for an example.<br/>
         <td><b>destinationField</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The field that will be populated by the results of the Regular Expression<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>keepDestinationField</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Determines whether to keep or to delete the destination field.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>keepSourceField</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Determines whether to keep or to delete the source field.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>sourceField</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The field on which the Regular Expression will operate on.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -6582,7 +6603,7 @@ for an example.<br/>
 
 
 
-
+Remove Fields allows to select fields that will not be indexed.
 
 <table>
     <thead>
@@ -6597,7 +6618,7 @@ for an example.<br/>
         <td><b>excludedFields</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Excluded fields won't be indexed.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -6609,7 +6630,7 @@ for an example.<br/>
 
 
 
-
+Replace rules are used to strings in order to fix log structure, change log severity, or obscure information.
 
 <table>
     <thead>
@@ -6624,28 +6645,28 @@ for an example.<br/>
         <td><b>destinationField</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The field that will be populated by the results of the Regular Expression operation.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>regex</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Regular Expression. More info: https://coralogix.com/blog/regex-101/<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>replacementString</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The string that will replace the matched Regular Expression<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>sourceField</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The field on which the Regular Expression will operate on.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -6802,14 +6823,15 @@ Scope is the Schema for the scopes API.
         <td><b><a href="#scopespec">spec</a></b></td>
         <td>object</td>
         <td>
-          ScopeSpec defines the desired state of Scope.<br/>
+          ScopeSpec defines the desired state of a Coralogix Scope.
+See also https://coralogix.com/docs/user-guides/account-management/user-management/scopes/<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#scopestatus">status</a></b></td>
         <td>object</td>
         <td>
-          ScopeStatus defines the observed state of Scope.<br/>
+          ScopeStatus defines the observed state of Coralogix Scope.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -6821,7 +6843,8 @@ Scope is the Schema for the scopes API.
 
 
 
-ScopeSpec defines the desired state of Scope.
+ScopeSpec defines the desired state of a Coralogix Scope.
+See also https://coralogix.com/docs/user-guides/account-management/user-management/scopes/
 
 <table>
     <thead>
@@ -6836,7 +6859,7 @@ ScopeSpec defines the desired state of Scope.
         <td><b>defaultExpression</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Default expression to use when no filter matches the query. Until further notice, this is limited to `true` (everything is included) or `false` (nothing is included). Use a version tag (e.g `<v1>true` or `<v1>false`)<br/>
           <br/>
             <i>Enum</i>: <v1>true, <v1>false<br/>
         </td>
@@ -6845,21 +6868,21 @@ ScopeSpec defines the desired state of Scope.
         <td><b><a href="#scopespecfiltersindex">filters</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Filters applied to include data in the scope.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Scope display name.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Description of the scope. Optional.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -6871,7 +6894,7 @@ ScopeSpec defines the desired state of Scope.
 
 
 
-ScopeFilter defines a filter for a scope
+ScopeFilter defines a filter to include data in a scope.
 
 <table>
     <thead>
@@ -6886,7 +6909,7 @@ ScopeFilter defines a filter for a scope
         <td><b>entityType</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Entity type to apply the expression on.<br/>
           <br/>
             <i>Enum</i>: logs, spans, unspecified<br/>
         </td>
@@ -6895,7 +6918,7 @@ ScopeFilter defines a filter for a scope
         <td><b>expression</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Expression to run.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -6907,7 +6930,7 @@ ScopeFilter defines a filter for a scope
 
 
 
-ScopeStatus defines the observed state of Scope.
+ScopeStatus defines the observed state of Coralogix Scope.
 
 <table>
     <thead>
@@ -7055,7 +7078,8 @@ removed. Use with caution as this operation is destructive.
         <td><b><a href="#tcologspoliciesspec">spec</a></b></td>
         <td>object</td>
         <td>
-          TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.<br/>
+          TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.
+See also https://coralogix.com/docs/tco-optimizer-api<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -7074,7 +7098,8 @@ removed. Use with caution as this operation is destructive.
 
 
 
-TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
+TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.
+See also https://coralogix.com/docs/tco-optimizer-api
 
 <table>
     <thead>
@@ -7089,7 +7114,7 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
         <td><b><a href="#tcologspoliciesspecpoliciesindex">policies</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Coralogix TCO-Policies-List.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -7101,7 +7126,7 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
 
 
 
-
+A TCO policy for logs.
 
 <table>
     <thead>
@@ -7116,14 +7141,14 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the policy.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>priority</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          The policy priority.<br/>
           <br/>
             <i>Enum</i>: block, high, medium, low<br/>
         </td>
@@ -7132,7 +7157,7 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
         <td><b>severities</b></td>
         <td>[]enum</td>
         <td>
-          <br/>
+          The severities to apply the policy on.<br/>
           <br/>
             <i>Enum</i>: info, warning, critical, error, debug, verbose<br/>
         </td>
@@ -7141,28 +7166,28 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
         <td><b><a href="#tcologspoliciesspecpoliciesindexapplications">applications</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          The applications to apply the policy on. Applies the policy on all the applications by default.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcologspoliciesspecpoliciesindexarchiveretention">archiveRetention</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Matches the specified retention.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Description of the policy.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcologspoliciesspecpoliciesindexsubsystems">subsystems</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          The subsystems to apply the policy on. Applies the policy on all the subsystems by default.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -7174,7 +7199,7 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
 
 
 
-
+The applications to apply the policy on. Applies the policy on all the applications by default.
 
 <table>
     <thead>
@@ -7189,14 +7214,14 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Names to match.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>ruleType</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Type of matching for the name.<br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
         </td>
@@ -7210,7 +7235,7 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
 
 
 
-
+Matches the specified retention.
 
 <table>
     <thead>
@@ -7225,7 +7250,7 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
         <td><b><a href="#tcologspoliciesspecpoliciesindexarchiveretentionbackendref">backendRef</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Reference to the retention policy<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -7237,7 +7262,7 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
 
 
 
-
+Reference to the retention policy
 
 <table>
     <thead>
@@ -7252,7 +7277,7 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the policy.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -7264,7 +7289,7 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
 
 
 
-
+The subsystems to apply the policy on. Applies the policy on all the subsystems by default.
 
 <table>
     <thead>
@@ -7279,14 +7304,14 @@ TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Names to match.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>ruleType</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Type of matching for the name.<br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
         </td>
@@ -7441,7 +7466,8 @@ removed. Use with caution as this operation is destructive.
         <td><b><a href="#tcotracespoliciesspec">spec</a></b></td>
         <td>object</td>
         <td>
-          TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.<br/>
+          TCOTracesPoliciesSpec defines the desired state of Coralogix TCO policies for traces.
+See also https://coralogix.com/docs/tco-optimizer-api<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -7460,7 +7486,8 @@ removed. Use with caution as this operation is destructive.
 
 
 
-TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
+TCOTracesPoliciesSpec defines the desired state of Coralogix TCO policies for traces.
+See also https://coralogix.com/docs/tco-optimizer-api
 
 <table>
     <thead>
@@ -7475,7 +7502,7 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
         <td><b><a href="#tcotracespoliciesspecpoliciesindex">policies</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Coralogix TCO-Policies-List.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -7487,7 +7514,7 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
 
 
 
-
+Coralogix TCO policy for traces.
 
 <table>
     <thead>
@@ -7502,14 +7529,14 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the policy.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>priority</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          The policy priority.<br/>
           <br/>
             <i>Enum</i>: block, high, medium, low<br/>
         </td>
@@ -7518,49 +7545,49 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
         <td><b><a href="#tcotracespoliciesspecpoliciesindexactions">actions</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          The actions to apply the policy on. Applies the policy on all the actions by default.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcotracespoliciesspecpoliciesindexapplications">applications</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          The applications to apply the policy on. Applies the policy on all the applications by default.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcotracespoliciesspecpoliciesindexarchiveretention">archiveRetention</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Matches the specified retention.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Description of the policy.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcotracespoliciesspecpoliciesindexservices">services</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          The services to apply the policy on. Applies the policy on all the services by default.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcotracespoliciesspecpoliciesindexsubsystems">subsystems</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          The subsystems to apply the policy on. Applies the policy on all the subsystems by default.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcotracespoliciesspecpoliciesindextagsindex">tags</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          The tags to apply the policy on. Applies the policy on all the tags by default.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -7572,7 +7599,7 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
 
 
 
-
+The actions to apply the policy on. Applies the policy on all the actions by default.
 
 <table>
     <thead>
@@ -7587,14 +7614,14 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Names to match.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>ruleType</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Type of matching for the name.<br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
         </td>
@@ -7608,7 +7635,7 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
 
 
 
-
+The applications to apply the policy on. Applies the policy on all the applications by default.
 
 <table>
     <thead>
@@ -7623,14 +7650,14 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Names to match.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>ruleType</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Type of matching for the name.<br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
         </td>
@@ -7644,7 +7671,7 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
 
 
 
-
+Matches the specified retention.
 
 <table>
     <thead>
@@ -7659,7 +7686,7 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
         <td><b><a href="#tcotracespoliciesspecpoliciesindexarchiveretentionbackendref">backendRef</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Reference to the retention policy<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -7671,7 +7698,7 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
 
 
 
-
+Reference to the retention policy
 
 <table>
     <thead>
@@ -7686,7 +7713,7 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the policy.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -7698,7 +7725,7 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
 
 
 
-
+The services to apply the policy on. Applies the policy on all the services by default.
 
 <table>
     <thead>
@@ -7713,14 +7740,14 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Names to match.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>ruleType</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Type of matching for the name.<br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
         </td>
@@ -7734,7 +7761,7 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
 
 
 
-
+The subsystems to apply the policy on. Applies the policy on all the subsystems by default.
 
 <table>
     <thead>
@@ -7749,14 +7776,14 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Names to match.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>ruleType</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Type of matching for the name.<br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
         </td>
@@ -7770,7 +7797,7 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
 
 
 
-
+TCO Policy tag matching rule.
 
 <table>
     <thead>
@@ -7785,14 +7812,14 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Tag names to match.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>ruleType</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Operator to match with.<br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
         </td>
@@ -7801,7 +7828,7 @@ TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
         <td><b>values</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Values to match for<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -7960,7 +7987,9 @@ Alert is the Schema for the alerts API.
         <td><b><a href="#alertspec-1">spec</a></b></td>
         <td>object</td>
         <td>
-          AlertSpec defines the desired state of Alert<br/>
+          AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
+
+Note that this is only for the latest version of the alerts API. If your account has been created before March 2025, make sure that your account has been migrated before using advanced features of alerts.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -7979,7 +8008,9 @@ Alert is the Schema for the alerts API.
 
 
 
-AlertSpec defines the desired state of Alert
+AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
+
+Note that this is only for the latest version of the alerts API. If your account has been created before March 2025, make sure that your account has been migrated before using advanced features of alerts.
 
 <table>
     <thead>
@@ -7994,21 +8025,21 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttype-1">alertType</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Type of alert.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the alert<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>priority</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Priority of the alert.<br/>
           <br/>
             <i>Enum</i>: p1, p2, p3, p4, p5<br/>
         </td>
@@ -8017,14 +8048,14 @@ AlertSpec defines the desired state of Alert
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Description of the alert<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Enable/disable the alert.<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -8033,35 +8064,36 @@ AlertSpec defines the desired state of Alert
         <td><b>entityLabels</b></td>
         <td>map[string]string</td>
         <td>
-          <br/>
+          Labels attached to the alert.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>groupByKeys</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Grouping fields for multiple alerts.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecincidentssettings">incidentsSettings</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Settings for the attached incidents.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecnotificationgroup">notificationGroup</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Where notifications should be sent to.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecnotificationgroupexcessindex">notificationGroupExcess</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Do not use.
+Deprecated: Legacy field for when multiple notification groups were attached.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -8077,7 +8109,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecschedule">schedule</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Alert activity schedule. Will be activated all the time if not specified.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -8089,7 +8121,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Type of alert.
 
 <table>
     <thead>
@@ -8104,84 +8136,84 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypeflow-1">flow</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Flow alerts chaining multiple alerts together.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypelogsanomaly">logsAnomaly</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Anomaly alerts for logs.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypelogsimmediate">logsImmediate</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Immediate alerts for logs.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypelogsnewvalue">logsNewValue</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Alerts when a new log value appears.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypelogsratiothreshold">logsRatioThreshold</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Alerts for when a log exceeds a defined ratio.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypelogsthreshold">logsThreshold</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Alerts for when a log crosses a threshold.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypelogstimerelativethreshold">logsTimeRelativeThreshold</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Alerts are sent when the number of logs matching a filter is more than or less than a threshold over a specific time window.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypelogsuniquecount">logsUniqueCount</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Alerts for unique count changes.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypemetricanomaly">metricAnomaly</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Anomaly alerts for metrics.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypemetricthreshold">metricThreshold</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Alerts for when a metric crosses a threshold.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypetracingimmediate">tracingImmediate</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Immediate alerts for traces.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypetracingthreshold">tracingThreshold</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Alerts for when traces crosses a threshold.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -8193,7 +8225,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Flow alerts chaining multiple alerts together.
 
 <table>
     <thead>
@@ -8229,7 +8261,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Stages to go through.
 
 <table>
     <thead>
@@ -8244,7 +8276,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypeflowstagesindexflowstagestype">flowStagesType</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Type of stage.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -8260,7 +8292,7 @@ AlertSpec defines the desired state of Alert
         <td><b>timeframeType</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Type of timeframe.<br/>
           <br/>
             <i>Enum</i>: unspecified, upTo<br/>
         </td>
@@ -8274,7 +8306,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Type of stage.
 
 <table>
     <thead>
@@ -8301,7 +8333,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Flow stage grouping.
 
 <table>
     <thead>
@@ -8316,14 +8348,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypeflowstagesindexflowstagestypegroupsindexalertdefsindex">alertDefs</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Alerts to group.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>alertsOp</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Operation for the alert.<br/>
           <br/>
             <i>Enum</i>: and, or<br/>
         </td>
@@ -8332,7 +8364,7 @@ AlertSpec defines the desired state of Alert
         <td><b>nextOp</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Link to the next alert.<br/>
           <br/>
             <i>Enum</i>: and, or<br/>
         </td>
@@ -8346,7 +8378,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Alert references.
 
 <table>
     <thead>
@@ -8361,14 +8393,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypeflowstagesindexflowstagestypegroupsindexalertdefsindexalertref">alertRef</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Reference for an alert, backend or Kubernetes resource<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>not</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Inversion.<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -8382,7 +8414,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Reference for an alert, backend or Kubernetes resource
 
 <table>
     <thead>
@@ -8397,14 +8429,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypeflowstagesindexflowstagestypegroupsindexalertdefsindexalertrefbackendref">backendRef</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Coralogix id reference.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypeflowstagesindexflowstagestypegroupsindexalertdefsindexalertrefresourceref">resourceRef</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Kubernetes resource reference.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -8416,7 +8448,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Coralogix id reference.
 
 <table>
     <thead>
@@ -8431,14 +8463,14 @@ AlertSpec defines the desired state of Alert
         <td><b>id</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Alert ID.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the alert.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -8450,7 +8482,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Kubernetes resource reference.
 
 <table>
     <thead>
@@ -8465,14 +8497,14 @@ AlertSpec defines the desired state of Alert
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the resource.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>namespace</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Kubernetes namespace.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -8484,7 +8516,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Anomaly alerts for logs.
 
 <table>
     <thead>
@@ -8499,21 +8531,21 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsanomalyrulesindex">rules</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Rules that match the alert to the data.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypelogsanomalylogsfilter">logsFilter</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Filter to filter the logs with.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>notificationPayloadFilter</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Filter for the notification payload.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -8525,7 +8557,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+The rule to match the alert's conditions.
 
 <table>
     <thead>
@@ -8540,7 +8572,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsanomalyrulesindexcondition">condition</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Condition to match to.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -8552,7 +8584,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Condition to match to.
 
 <table>
     <thead>
@@ -8567,7 +8599,7 @@ AlertSpec defines the desired state of Alert
         <td><b>minimumThreshold</b></td>
         <td>int or string</td>
         <td>
-          <br/>
+          Minimum value<br/>
           <br/>
             <i>Default</i>: 0<br/>
         </td>
@@ -8576,7 +8608,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsanomalyrulesindexconditiontimewindow">timeWindow</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Time window to evaluate.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -8588,7 +8620,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Time window to evaluate.
 
 <table>
     <thead>
@@ -8603,7 +8635,7 @@ AlertSpec defines the desired state of Alert
         <td><b>specificValue</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Logs time window type<br/>
           <br/>
             <i>Enum</i>: 5m, 10m, 15m, 30m, 1h, 2h, 6h, 12h, 24h, 36h<br/>
         </td>
@@ -8617,7 +8649,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter to filter the logs with.
 
 <table>
     <thead>
@@ -8632,7 +8664,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsanomalylogsfiltersimplefilter">simpleFilter</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Simple lucene filter.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -8644,7 +8676,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Simple lucene filter.
 
 <table>
     <thead>
@@ -8659,14 +8691,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsanomalylogsfiltersimplefilterlabelfilters">labelFilters</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Filter for labels.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>luceneQuery</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The query.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -8678,7 +8710,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter for labels.
 
 <table>
     <thead>
@@ -8693,14 +8725,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsanomalylogsfiltersimplefilterlabelfiltersapplicationnameindex">applicationName</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Application name to filter for.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>severity</b></td>
         <td>[]enum</td>
         <td>
-          <br/>
+          Severity to filter for.<br/>
           <br/>
             <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
@@ -8709,7 +8741,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsanomalylogsfiltersimplefilterlabelfilterssubsystemnameindex">subsystemName</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Subsystem name to filter for.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -8721,7 +8753,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Label filter specifications
 
 <table>
     <thead>
@@ -8736,7 +8768,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Operation to apply.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith<br/>
             <i>Default</i>: or<br/>
@@ -8746,7 +8778,7 @@ AlertSpec defines the desired state of Alert
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The value<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -8758,7 +8790,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Label filter specifications
 
 <table>
     <thead>
@@ -8773,7 +8805,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Operation to apply.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith<br/>
             <i>Default</i>: or<br/>
@@ -8783,7 +8815,7 @@ AlertSpec defines the desired state of Alert
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The value<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -8795,7 +8827,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Immediate alerts for logs.
 
 <table>
     <thead>
@@ -8810,14 +8842,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsimmediatelogsfilter">logsFilter</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Filter to filter the logs with.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>notificationPayloadFilter</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Filter for the notification payload.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -8829,7 +8861,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter to filter the logs with.
 
 <table>
     <thead>
@@ -8844,7 +8876,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsimmediatelogsfiltersimplefilter">simpleFilter</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Simple lucene filter.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -8856,7 +8888,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Simple lucene filter.
 
 <table>
     <thead>
@@ -8871,14 +8903,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsimmediatelogsfiltersimplefilterlabelfilters">labelFilters</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Filter for labels.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>luceneQuery</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The query.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -8890,7 +8922,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter for labels.
 
 <table>
     <thead>
@@ -8905,14 +8937,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsimmediatelogsfiltersimplefilterlabelfiltersapplicationnameindex">applicationName</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Application name to filter for.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>severity</b></td>
         <td>[]enum</td>
         <td>
-          <br/>
+          Severity to filter for.<br/>
           <br/>
             <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
@@ -8921,7 +8953,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsimmediatelogsfiltersimplefilterlabelfilterssubsystemnameindex">subsystemName</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Subsystem name to filter for.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -8933,7 +8965,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Label filter specifications
 
 <table>
     <thead>
@@ -8948,7 +8980,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Operation to apply.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith<br/>
             <i>Default</i>: or<br/>
@@ -8958,7 +8990,7 @@ AlertSpec defines the desired state of Alert
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The value<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -8970,7 +9002,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Label filter specifications
 
 <table>
     <thead>
@@ -8985,7 +9017,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Operation to apply.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith<br/>
             <i>Default</i>: or<br/>
@@ -8995,7 +9027,7 @@ AlertSpec defines the desired state of Alert
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The value<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -9007,7 +9039,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Alerts when a new log value appears.
 
 <table>
     <thead>
@@ -9022,21 +9054,21 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsnewvaluelogsfilter">logsFilter</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Filter to filter the logs with.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypelogsnewvaluerulesindex">rules</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Rules that match the alert to the data.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>notificationPayloadFilter</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Filter for the notification payload.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -9048,7 +9080,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter to filter the logs with.
 
 <table>
     <thead>
@@ -9063,7 +9095,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsnewvaluelogsfiltersimplefilter">simpleFilter</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Simple lucene filter.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -9075,7 +9107,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Simple lucene filter.
 
 <table>
     <thead>
@@ -9090,14 +9122,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsnewvaluelogsfiltersimplefilterlabelfilters">labelFilters</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Filter for labels.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>luceneQuery</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The query.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -9109,7 +9141,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter for labels.
 
 <table>
     <thead>
@@ -9124,14 +9156,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsnewvaluelogsfiltersimplefilterlabelfiltersapplicationnameindex">applicationName</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Application name to filter for.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>severity</b></td>
         <td>[]enum</td>
         <td>
-          <br/>
+          Severity to filter for.<br/>
           <br/>
             <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
@@ -9140,7 +9172,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsnewvaluelogsfiltersimplefilterlabelfilterssubsystemnameindex">subsystemName</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Subsystem name to filter for.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -9152,7 +9184,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Label filter specifications
 
 <table>
     <thead>
@@ -9167,7 +9199,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Operation to apply.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith<br/>
             <i>Default</i>: or<br/>
@@ -9177,7 +9209,7 @@ AlertSpec defines the desired state of Alert
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The value<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -9189,7 +9221,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Label filter specifications
 
 <table>
     <thead>
@@ -9204,7 +9236,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Operation to apply.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith<br/>
             <i>Default</i>: or<br/>
@@ -9214,7 +9246,7 @@ AlertSpec defines the desired state of Alert
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The value<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -9226,7 +9258,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+The rule to match the alert's conditions.
 
 <table>
     <thead>
@@ -9241,7 +9273,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsnewvaluerulesindexcondition">condition</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Condition to match to<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -9253,7 +9285,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Condition to match to
 
 <table>
     <thead>
@@ -9268,14 +9300,14 @@ AlertSpec defines the desired state of Alert
         <td><b>keypathToTrack</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Where to look<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypelogsnewvaluerulesindexconditiontimewindow">timeWindow</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Which time window.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -9287,7 +9319,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Which time window.
 
 <table>
     <thead>
@@ -9302,7 +9334,7 @@ AlertSpec defines the desired state of Alert
         <td><b>specificValue</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Time windows.<br/>
           <br/>
             <i>Enum</i>: 12h, 24h, 48h, 72h, 1w, 1mo, 2mo, 3mo<br/>
         </td>
@@ -9316,7 +9348,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Alerts for when a log exceeds a defined ratio.
 
 <table>
     <thead>
@@ -9331,7 +9363,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsratiothresholddenominator">denominator</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          A filter for logs.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -9345,7 +9377,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsratiothresholdnumerator">numerator</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          A filter for logs.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -9359,7 +9391,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsratiothresholdrulesindex">rules</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Rules that match the alert to the data.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -9371,7 +9403,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+A filter for logs.
 
 <table>
     <thead>
@@ -9386,7 +9418,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsratiothresholddenominatorsimplefilter">simpleFilter</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Simple lucene filter.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -9398,7 +9430,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Simple lucene filter.
 
 <table>
     <thead>
@@ -9413,14 +9445,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsratiothresholddenominatorsimplefilterlabelfilters">labelFilters</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Filter for labels.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>luceneQuery</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The query.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -9432,7 +9464,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter for labels.
 
 <table>
     <thead>
@@ -9447,14 +9479,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsratiothresholddenominatorsimplefilterlabelfiltersapplicationnameindex">applicationName</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Application name to filter for.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>severity</b></td>
         <td>[]enum</td>
         <td>
-          <br/>
+          Severity to filter for.<br/>
           <br/>
             <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
@@ -9463,7 +9495,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsratiothresholddenominatorsimplefilterlabelfilterssubsystemnameindex">subsystemName</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Subsystem name to filter for.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -9475,7 +9507,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Label filter specifications
 
 <table>
     <thead>
@@ -9490,7 +9522,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Operation to apply.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith<br/>
             <i>Default</i>: or<br/>
@@ -9500,7 +9532,7 @@ AlertSpec defines the desired state of Alert
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The value<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -9512,7 +9544,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Label filter specifications
 
 <table>
     <thead>
@@ -9527,7 +9559,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Operation to apply.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith<br/>
             <i>Default</i>: or<br/>
@@ -9537,7 +9569,7 @@ AlertSpec defines the desired state of Alert
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The value<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -9549,7 +9581,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+A filter for logs.
 
 <table>
     <thead>
@@ -9564,7 +9596,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsratiothresholdnumeratorsimplefilter">simpleFilter</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Simple lucene filter.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -9576,7 +9608,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Simple lucene filter.
 
 <table>
     <thead>
@@ -9591,14 +9623,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsratiothresholdnumeratorsimplefilterlabelfilters">labelFilters</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Filter for labels.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>luceneQuery</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The query.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -9610,7 +9642,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter for labels.
 
 <table>
     <thead>
@@ -9625,14 +9657,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsratiothresholdnumeratorsimplefilterlabelfiltersapplicationnameindex">applicationName</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Application name to filter for.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>severity</b></td>
         <td>[]enum</td>
         <td>
-          <br/>
+          Severity to filter for.<br/>
           <br/>
             <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
@@ -9641,7 +9673,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsratiothresholdnumeratorsimplefilterlabelfilterssubsystemnameindex">subsystemName</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Subsystem name to filter for.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -9653,7 +9685,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Label filter specifications
 
 <table>
     <thead>
@@ -9668,7 +9700,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Operation to apply.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith<br/>
             <i>Default</i>: or<br/>
@@ -9678,7 +9710,7 @@ AlertSpec defines the desired state of Alert
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The value<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -9690,7 +9722,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Label filter specifications
 
 <table>
     <thead>
@@ -9705,7 +9737,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Operation to apply.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith<br/>
             <i>Default</i>: or<br/>
@@ -9715,7 +9747,7 @@ AlertSpec defines the desired state of Alert
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The value<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -9727,7 +9759,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+The rule to match the alert's conditions.
 
 <table>
     <thead>
@@ -9742,14 +9774,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsratiothresholdrulesindexcondition">condition</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Condition to match<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypelogsratiothresholdrulesindexoverride">override</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Override alert properties<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -9761,7 +9793,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Condition to match
 
 <table>
     <thead>
@@ -9776,7 +9808,7 @@ AlertSpec defines the desired state of Alert
         <td><b>conditionType</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Condition to evaluate with.<br/>
           <br/>
             <i>Enum</i>: moreThan, lessThan<br/>
         </td>
@@ -9785,14 +9817,14 @@ AlertSpec defines the desired state of Alert
         <td><b>threshold</b></td>
         <td>int or string</td>
         <td>
-          <br/>
+          Threshold to pass.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypelogsratiothresholdrulesindexconditiontimewindow">timeWindow</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Time window to evaluate.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -9804,7 +9836,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Time window to evaluate.
 
 <table>
     <thead>
@@ -9819,7 +9851,7 @@ AlertSpec defines the desired state of Alert
         <td><b>specificValue</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Time window type.<br/>
           <br/>
             <i>Enum</i>: 5m, 10m, 15m, 30m, 1h, 2h, 4h, 6h, 12h, 24h, 36h<br/>
         </td>
@@ -9833,7 +9865,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Override alert properties
 
 <table>
     <thead>
@@ -9848,7 +9880,7 @@ AlertSpec defines the desired state of Alert
         <td><b>priority</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Priority to override it<br/>
           <br/>
             <i>Enum</i>: p1, p2, p3, p4, p5<br/>
         </td>
@@ -9862,7 +9894,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Alerts for when a log crosses a threshold.
 
 <table>
     <thead>
@@ -9877,28 +9909,28 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsthresholdrulesindex">rules</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Rules that match the alert to the data.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypelogsthresholdlogsfilter">logsFilter</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Filter to filter the logs with.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>notificationPayloadFilter</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Filter for the notification payload.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypelogsthresholdundetectedvaluesmanagement">undetectedValuesManagement</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          How to work with undetected values.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -9910,7 +9942,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+The rule to match the alert's conditions.
 
 <table>
     <thead>
@@ -9925,14 +9957,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsthresholdrulesindexcondition">condition</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Condition to match<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypelogsthresholdrulesindexoverride">override</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Alert overrides.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -9944,7 +9976,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Condition to match
 
 <table>
     <thead>
@@ -9959,7 +9991,7 @@ AlertSpec defines the desired state of Alert
         <td><b>logsThresholdConditionType</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Condition type.<br/>
           <br/>
             <i>Enum</i>: moreThan, lessThan<br/>
         </td>
@@ -9968,14 +10000,14 @@ AlertSpec defines the desired state of Alert
         <td><b>threshold</b></td>
         <td>int or string</td>
         <td>
-          <br/>
+          Threshold to match to.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypelogsthresholdrulesindexconditiontimewindow">timeWindow</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Time window in which the condition is checked.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -9987,7 +10019,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Time window in which the condition is checked.
 
 <table>
     <thead>
@@ -10002,7 +10034,7 @@ AlertSpec defines the desired state of Alert
         <td><b>specificValue</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Logs time window type<br/>
           <br/>
             <i>Enum</i>: 5m, 10m, 15m, 30m, 1h, 2h, 6h, 12h, 24h, 36h<br/>
         </td>
@@ -10016,7 +10048,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Alert overrides.
 
 <table>
     <thead>
@@ -10031,7 +10063,7 @@ AlertSpec defines the desired state of Alert
         <td><b>priority</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Priority to override it<br/>
           <br/>
             <i>Enum</i>: p1, p2, p3, p4, p5<br/>
         </td>
@@ -10045,7 +10077,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter to filter the logs with.
 
 <table>
     <thead>
@@ -10060,7 +10092,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsthresholdlogsfiltersimplefilter">simpleFilter</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Simple lucene filter.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10072,7 +10104,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Simple lucene filter.
 
 <table>
     <thead>
@@ -10087,14 +10119,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsthresholdlogsfiltersimplefilterlabelfilters">labelFilters</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Filter for labels.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>luceneQuery</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The query.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10106,7 +10138,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter for labels.
 
 <table>
     <thead>
@@ -10121,14 +10153,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsthresholdlogsfiltersimplefilterlabelfiltersapplicationnameindex">applicationName</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Application name to filter for.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>severity</b></td>
         <td>[]enum</td>
         <td>
-          <br/>
+          Severity to filter for.<br/>
           <br/>
             <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
@@ -10137,7 +10169,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsthresholdlogsfiltersimplefilterlabelfilterssubsystemnameindex">subsystemName</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Subsystem name to filter for.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10149,7 +10181,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Label filter specifications
 
 <table>
     <thead>
@@ -10164,7 +10196,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Operation to apply.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith<br/>
             <i>Default</i>: or<br/>
@@ -10174,7 +10206,7 @@ AlertSpec defines the desired state of Alert
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The value<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -10186,7 +10218,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Label filter specifications
 
 <table>
     <thead>
@@ -10201,7 +10233,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Operation to apply.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith<br/>
             <i>Default</i>: or<br/>
@@ -10211,7 +10243,7 @@ AlertSpec defines the desired state of Alert
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The value<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -10223,7 +10255,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+How to work with undetected values.
 
 <table>
     <thead>
@@ -10238,7 +10270,7 @@ AlertSpec defines the desired state of Alert
         <td><b>autoRetireTimeframe</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Automatically retire the alerts after this time.<br/>
           <br/>
             <i>Enum</i>: never, 5m, 10m, 1h, 2h, 6h, 12h, 24h<br/>
             <i>Default</i>: never<br/>
@@ -10248,7 +10280,7 @@ AlertSpec defines the desired state of Alert
         <td><b>triggerUndetectedValues</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Deactivate triggering the alert on undetected values.<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -10262,7 +10294,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Alerts are sent when the number of logs matching a filter is more than or less than a threshold over a specific time window.
 
 <table>
     <thead>
@@ -10277,7 +10309,7 @@ AlertSpec defines the desired state of Alert
         <td><b>ignoreInfinity</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Ignore infinity on the threshold value.<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -10286,28 +10318,28 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogstimerelativethresholdlogsfilter">logsFilter</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          A filter for logs.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypelogstimerelativethresholdrulesindex">rules</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Rules that match the alert to the data.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>notificationPayloadFilter</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Filter for the notification payload.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypelogstimerelativethresholdundetectedvaluesmanagement">undetectedValuesManagement</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          How to work with undetected values.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10319,7 +10351,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+A filter for logs.
 
 <table>
     <thead>
@@ -10334,7 +10366,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogstimerelativethresholdlogsfiltersimplefilter">simpleFilter</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Simple lucene filter.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10346,7 +10378,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Simple lucene filter.
 
 <table>
     <thead>
@@ -10361,14 +10393,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogstimerelativethresholdlogsfiltersimplefilterlabelfilters">labelFilters</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Filter for labels.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>luceneQuery</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The query.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10380,7 +10412,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter for labels.
 
 <table>
     <thead>
@@ -10395,14 +10427,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogstimerelativethresholdlogsfiltersimplefilterlabelfiltersapplicationnameindex">applicationName</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Application name to filter for.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>severity</b></td>
         <td>[]enum</td>
         <td>
-          <br/>
+          Severity to filter for.<br/>
           <br/>
             <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
@@ -10411,7 +10443,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogstimerelativethresholdlogsfiltersimplefilterlabelfilterssubsystemnameindex">subsystemName</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Subsystem name to filter for.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10423,7 +10455,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Label filter specifications
 
 <table>
     <thead>
@@ -10438,7 +10470,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Operation to apply.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith<br/>
             <i>Default</i>: or<br/>
@@ -10448,7 +10480,7 @@ AlertSpec defines the desired state of Alert
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The value<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -10460,7 +10492,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Label filter specifications
 
 <table>
     <thead>
@@ -10475,7 +10507,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Operation to apply.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith<br/>
             <i>Default</i>: or<br/>
@@ -10485,7 +10517,7 @@ AlertSpec defines the desired state of Alert
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The value<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -10497,7 +10529,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+The rule to match the alert's conditions.
 
 <table>
     <thead>
@@ -10512,14 +10544,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogstimerelativethresholdrulesindexcondition">condition</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          The condition to match to.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypelogstimerelativethresholdrulesindexoverride">override</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Override alert properties<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10531,7 +10563,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+The condition to match to.
 
 <table>
     <thead>
@@ -10546,7 +10578,7 @@ AlertSpec defines the desired state of Alert
         <td><b>comparedTo</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Comparison window.<br/>
           <br/>
             <i>Enum</i>: previousHour, sameHourYesterday, sameHourLastWeek, yesterday, sameDayLastWeek, sameDayLastMonth<br/>
         </td>
@@ -10555,7 +10587,7 @@ AlertSpec defines the desired state of Alert
         <td><b>conditionType</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          How to compare.<br/>
           <br/>
             <i>Enum</i>: moreThan, lessThan<br/>
         </td>
@@ -10564,7 +10596,7 @@ AlertSpec defines the desired state of Alert
         <td><b>threshold</b></td>
         <td>int or string</td>
         <td>
-          <br/>
+          Threshold to match.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -10576,7 +10608,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Override alert properties
 
 <table>
     <thead>
@@ -10591,7 +10623,7 @@ AlertSpec defines the desired state of Alert
         <td><b>priority</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Priority to override it<br/>
           <br/>
             <i>Enum</i>: p1, p2, p3, p4, p5<br/>
         </td>
@@ -10605,7 +10637,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+How to work with undetected values.
 
 <table>
     <thead>
@@ -10620,7 +10652,7 @@ AlertSpec defines the desired state of Alert
         <td><b>autoRetireTimeframe</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Automatically retire the alerts after this time.<br/>
           <br/>
             <i>Enum</i>: never, 5m, 10m, 1h, 2h, 6h, 12h, 24h<br/>
             <i>Default</i>: never<br/>
@@ -10630,7 +10662,7 @@ AlertSpec defines the desired state of Alert
         <td><b>triggerUndetectedValues</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Deactivate triggering the alert on undetected values.<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -10644,7 +10676,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Alerts for unique count changes.
 
 <table>
     <thead>
@@ -10659,14 +10691,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsuniquecountlogsfilter">logsFilter</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Filter to filter the logs with.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypelogsuniquecountrulesindex">rules</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Rules that match the alert to the data.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -10689,7 +10721,7 @@ AlertSpec defines the desired state of Alert
         <td><b>notificationPayloadFilter</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Filter for the notification payload.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10701,7 +10733,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter to filter the logs with.
 
 <table>
     <thead>
@@ -10716,7 +10748,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsuniquecountlogsfiltersimplefilter">simpleFilter</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Simple lucene filter.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10728,7 +10760,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Simple lucene filter.
 
 <table>
     <thead>
@@ -10743,14 +10775,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsuniquecountlogsfiltersimplefilterlabelfilters">labelFilters</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Filter for labels.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>luceneQuery</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The query.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10762,7 +10794,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter for labels.
 
 <table>
     <thead>
@@ -10777,14 +10809,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsuniquecountlogsfiltersimplefilterlabelfiltersapplicationnameindex">applicationName</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Application name to filter for.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>severity</b></td>
         <td>[]enum</td>
         <td>
-          <br/>
+          Severity to filter for.<br/>
           <br/>
             <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
@@ -10793,7 +10825,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsuniquecountlogsfiltersimplefilterlabelfilterssubsystemnameindex">subsystemName</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Subsystem name to filter for.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10805,7 +10837,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Label filter specifications
 
 <table>
     <thead>
@@ -10820,7 +10852,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Operation to apply.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith<br/>
             <i>Default</i>: or<br/>
@@ -10830,7 +10862,7 @@ AlertSpec defines the desired state of Alert
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The value<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -10842,7 +10874,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Label filter specifications
 
 <table>
     <thead>
@@ -10857,7 +10889,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Operation to apply.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith<br/>
             <i>Default</i>: or<br/>
@@ -10867,7 +10899,7 @@ AlertSpec defines the desired state of Alert
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The value<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -10879,7 +10911,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+The rule to match the alert's conditions.
 
 <table>
     <thead>
@@ -10894,7 +10926,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsuniquecountrulesindexcondition">condition</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Condition to match to.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -10906,7 +10938,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Condition to match to.
 
 <table>
     <thead>
@@ -10921,7 +10953,7 @@ AlertSpec defines the desired state of Alert
         <td><b>threshold</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Threshold to cross<br/>
           <br/>
             <i>Format</i>: int64<br/>
         </td>
@@ -10930,7 +10962,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypelogsuniquecountrulesindexconditiontimewindow">timeWindow</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Time window to evaluate.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -10942,7 +10974,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Time window to evaluate.
 
 <table>
     <thead>
@@ -10957,7 +10989,7 @@ AlertSpec defines the desired state of Alert
         <td><b>specificValue</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Time windows for Logs Unique Count<br/>
           <br/>
             <i>Enum</i>: 1m, 5m, 10m, 15m, 20m, 30m, 1h, 2h, 4h, 6h, 12h, 24h, 36h<br/>
         </td>
@@ -10971,7 +11003,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Anomaly alerts for metrics.
 
 <table>
     <thead>
@@ -10986,14 +11018,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypemetricanomalymetricfilter">metricFilter</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          PromQL filter for metrics<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypemetricanomalyrulesindex">rules</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Rules that match the alert to the data.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -11005,7 +11037,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+PromQL filter for metrics
 
 <table>
     <thead>
@@ -11020,7 +11052,7 @@ AlertSpec defines the desired state of Alert
         <td><b>promql</b></td>
         <td>string</td>
         <td>
-          <br/>
+          PromQL query: https://coralogix.com/academy/mastering-metrics-in-coralogix/promql-fundamentals/<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11032,7 +11064,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+The rule to match the alert's conditions.
 
 <table>
     <thead>
@@ -11047,7 +11079,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypemetricanomalyrulesindexcondition">condition</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Condition to match to.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -11059,7 +11091,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Condition to match to.
 
 <table>
     <thead>
@@ -11074,7 +11106,7 @@ AlertSpec defines the desired state of Alert
         <td><b>conditionType</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Condition type.<br/>
           <br/>
             <i>Enum</i>: moreThanUsual, lessThanUsual<br/>
         </td>
@@ -11083,7 +11115,7 @@ AlertSpec defines the desired state of Alert
         <td><b>forOverPct</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Percentage for the threshold<br/>
           <br/>
             <i>Format</i>: int32<br/>
             <i>Maximum</i>: 100<br/>
@@ -11093,7 +11125,7 @@ AlertSpec defines the desired state of Alert
         <td><b>minNonNullValuesPct</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Replace with a number<br/>
           <br/>
             <i>Format</i>: int32<br/>
             <i>Maximum</i>: 100<br/>
@@ -11103,14 +11135,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypemetricanomalyrulesindexconditionofthelast">ofTheLast</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Time window to match within<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>threshold</b></td>
         <td>int or string</td>
         <td>
-          <br/>
+          Threshold to clear.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -11122,7 +11154,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Time window to match within
 
 <table>
     <thead>
@@ -11137,7 +11169,7 @@ AlertSpec defines the desired state of Alert
         <td><b>specificValue</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Time window type.<br/>
           <br/>
             <i>Enum</i>: 1m, 5m, 10m, 15m, 20m, 30m, 1h, 2h, 4h, 6h, 12h, 24h, 36h<br/>
         </td>
@@ -11151,7 +11183,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Alerts for when a metric crosses a threshold.
 
 <table>
     <thead>
@@ -11166,28 +11198,28 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypemetricthresholdmetricfilter">metricFilter</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Filter for metrics<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypemetricthresholdmissingvalues">missingValues</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Missing values strategies.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypemetricthresholdrulesindex">rules</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Rules that match the alert to the data.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypemetricthresholdundetectedvaluesmanagement">undetectedValuesManagement</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          How to work with undetected values.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11199,7 +11231,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter for metrics
 
 <table>
     <thead>
@@ -11214,7 +11246,7 @@ AlertSpec defines the desired state of Alert
         <td><b>promql</b></td>
         <td>string</td>
         <td>
-          <br/>
+          PromQL query: https://coralogix.com/academy/mastering-metrics-in-coralogix/promql-fundamentals/<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11226,7 +11258,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Missing values strategies.
 
 <table>
     <thead>
@@ -11241,7 +11273,7 @@ AlertSpec defines the desired state of Alert
         <td><b>minNonNullValuesPct</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Replace with a number<br/>
           <br/>
             <i>Format</i>: int32<br/>
             <i>Maximum</i>: 100<br/>
@@ -11251,7 +11283,7 @@ AlertSpec defines the desired state of Alert
         <td><b>replaceWithZero</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Replace missing values with 0s<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -11265,7 +11297,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Rules that match the alert to the data.
 
 <table>
     <thead>
@@ -11280,14 +11312,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypemetricthresholdrulesindexcondition">condition</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Conditions to match for the rule.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypemetricthresholdrulesindexoverride">override</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Alert property overrides<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11299,7 +11331,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Conditions to match for the rule.
 
 <table>
     <thead>
@@ -11314,7 +11346,7 @@ AlertSpec defines the desired state of Alert
         <td><b>conditionType</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          ConditionType type.<br/>
           <br/>
             <i>Enum</i>: moreThan, lessThan<br/>
         </td>
@@ -11333,7 +11365,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypemetricthresholdrulesindexconditionofthelast">ofTheLast</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Time window type.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -11352,7 +11384,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Time window type.
 
 <table>
     <thead>
@@ -11367,7 +11399,7 @@ AlertSpec defines the desired state of Alert
         <td><b>specificValue</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Time window type.<br/>
           <br/>
             <i>Enum</i>: 1m, 5m, 10m, 15m, 20m, 30m, 1h, 2h, 4h, 6h, 12h, 24h, 36h<br/>
         </td>
@@ -11381,7 +11413,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Alert property overrides
 
 <table>
     <thead>
@@ -11396,7 +11428,7 @@ AlertSpec defines the desired state of Alert
         <td><b>priority</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Priority to override it<br/>
           <br/>
             <i>Enum</i>: p1, p2, p3, p4, p5<br/>
         </td>
@@ -11410,7 +11442,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+How to work with undetected values.
 
 <table>
     <thead>
@@ -11425,7 +11457,7 @@ AlertSpec defines the desired state of Alert
         <td><b>autoRetireTimeframe</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Automatically retire the alerts after this time.<br/>
           <br/>
             <i>Enum</i>: never, 5m, 10m, 1h, 2h, 6h, 12h, 24h<br/>
             <i>Default</i>: never<br/>
@@ -11435,7 +11467,7 @@ AlertSpec defines the desired state of Alert
         <td><b>triggerUndetectedValues</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Deactivate triggering the alert on undetected values.<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -11449,7 +11481,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Immediate alerts for traces.
 
 <table>
     <thead>
@@ -11464,14 +11496,14 @@ AlertSpec defines the desired state of Alert
         <td><b>notificationPayloadFilter</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Filter for the notification payload.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypetracingimmediatetracingfilter">tracingFilter</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          A simple tracing filter.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11483,7 +11515,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+A simple tracing filter.
 
 <table>
     <thead>
@@ -11498,7 +11530,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypetracingimmediatetracingfiltersimple">simple</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Simple tracing filter paired with a latency.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11510,7 +11542,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Simple tracing filter paired with a latency.
 
 <table>
     <thead>
@@ -11534,7 +11566,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypetracingimmediatetracingfiltersimpletracinglabelfilters">tracingLabelFilters</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Filter for traces.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11546,7 +11578,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter for traces.
 
 <table>
     <thead>
@@ -11601,7 +11633,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter - values and operation.
 
 <table>
     <thead>
@@ -11616,7 +11648,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Tracing filter operations.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith, isNot<br/>
         </td>
@@ -11637,7 +11669,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter - values and operation.
 
 <table>
     <thead>
@@ -11652,7 +11684,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Tracing filter operations.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith, isNot<br/>
         </td>
@@ -11673,7 +11705,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter - values and operation.
 
 <table>
     <thead>
@@ -11688,7 +11720,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Tracing filter operations.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith, isNot<br/>
         </td>
@@ -11709,7 +11741,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter for spans
 
 <table>
     <thead>
@@ -11724,7 +11756,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypetracingimmediatetracingfiltersimpletracinglabelfiltersspanfieldsindexfiltertype">filterType</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Filter - values and operation.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -11743,7 +11775,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter - values and operation.
 
 <table>
     <thead>
@@ -11758,7 +11790,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Tracing filter operations.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith, isNot<br/>
         </td>
@@ -11779,7 +11811,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter - values and operation.
 
 <table>
     <thead>
@@ -11794,7 +11826,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Tracing filter operations.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith, isNot<br/>
         </td>
@@ -11815,7 +11847,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Alerts for when traces crosses a threshold.
 
 <table>
     <thead>
@@ -11830,21 +11862,21 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypetracingthresholdrulesindex">rules</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Rules that match the alert to the data.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>notificationPayloadFilter</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Filter for the notification payload.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypetracingthresholdtracingfilter">tracingFilter</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Filter the base collection.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11856,7 +11888,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+The rule to match the alert's conditions.
 
 <table>
     <thead>
@@ -11871,7 +11903,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypetracingthresholdrulesindexcondition">condition</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          The condition to match to.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -11883,7 +11915,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+The condition to match to.
 
 <table>
     <thead>
@@ -11898,14 +11930,14 @@ AlertSpec defines the desired state of Alert
         <td><b>spanAmount</b></td>
         <td>int or string</td>
         <td>
-          <br/>
+          Threshold amount.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypetracingthresholdrulesindexconditiontimewindow">timeWindow</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Time window to evaluate.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -11917,7 +11949,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Time window to evaluate.
 
 <table>
     <thead>
@@ -11932,7 +11964,7 @@ AlertSpec defines the desired state of Alert
         <td><b>specificValue</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Time window type for tracing.<br/>
           <br/>
             <i>Enum</i>: 5m, 10m, 15m, 20m, 30m, 1h, 2h, 4h, 6h, 12h, 24h, 36h<br/>
         </td>
@@ -11946,7 +11978,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter the base collection.
 
 <table>
     <thead>
@@ -11961,7 +11993,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypetracingthresholdtracingfiltersimple">simple</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Simple tracing filter paired with a latency.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11973,7 +12005,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Simple tracing filter paired with a latency.
 
 <table>
     <thead>
@@ -11997,7 +12029,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypetracingthresholdtracingfiltersimpletracinglabelfilters">tracingLabelFilters</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Filter for traces.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -12009,7 +12041,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter for traces.
 
 <table>
     <thead>
@@ -12064,7 +12096,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter - values and operation.
 
 <table>
     <thead>
@@ -12079,7 +12111,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Tracing filter operations.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith, isNot<br/>
         </td>
@@ -12100,7 +12132,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter - values and operation.
 
 <table>
     <thead>
@@ -12115,7 +12147,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Tracing filter operations.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith, isNot<br/>
         </td>
@@ -12136,7 +12168,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter - values and operation.
 
 <table>
     <thead>
@@ -12151,7 +12183,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Tracing filter operations.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith, isNot<br/>
         </td>
@@ -12172,7 +12204,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter for spans
 
 <table>
     <thead>
@@ -12187,7 +12219,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecalerttypetracingthresholdtracingfiltersimpletracinglabelfiltersspanfieldsindexfiltertype">filterType</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Filter - values and operation.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -12206,7 +12238,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter - values and operation.
 
 <table>
     <thead>
@@ -12221,7 +12253,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Tracing filter operations.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith, isNot<br/>
         </td>
@@ -12242,7 +12274,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Filter - values and operation.
 
 <table>
     <thead>
@@ -12257,7 +12289,7 @@ AlertSpec defines the desired state of Alert
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Tracing filter operations.<br/>
           <br/>
             <i>Enum</i>: or, includes, endsWith, startsWith, isNot<br/>
         </td>
@@ -12278,7 +12310,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Settings for the attached incidents.
 
 <table>
     <thead>
@@ -12293,7 +12325,7 @@ AlertSpec defines the desired state of Alert
         <td><b>notifyOn</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          When to notify.<br/>
           <br/>
             <i>Enum</i>: triggeredOnly, triggeredAndResolved<br/>
             <i>Default</i>: triggeredOnly<br/>
@@ -12303,7 +12335,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecincidentssettingsretriggeringperiod">retriggeringPeriod</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          When to re-notify.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -12315,7 +12347,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+When to re-notify.
 
 <table>
     <thead>
@@ -12330,7 +12362,7 @@ AlertSpec defines the desired state of Alert
         <td><b>minutes</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Delay between re-triggered alerts.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -12344,7 +12376,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Where notifications should be sent to.
 
 <table>
     <thead>
@@ -12359,14 +12391,14 @@ AlertSpec defines the desired state of Alert
         <td><b>groupByKeys</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Group notification by these keys.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecnotificationgroupwebhooksindex">webhooks</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Webhooks to trigger for notifications.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -12378,7 +12410,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Settings for a notification webhook.
 
 <table>
     <thead>
@@ -12393,14 +12425,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecnotificationgroupwebhooksindexintegration">integration</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Type and spec of webhook.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>notifyOn</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          When to notify.<br/>
           <br/>
             <i>Enum</i>: triggeredOnly, triggeredAndResolved<br/>
             <i>Default</i>: triggeredOnly<br/>
@@ -12410,7 +12442,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecnotificationgroupwebhooksindexretriggeringperiod">retriggeringPeriod</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          When to re-trigger.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -12422,7 +12454,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Type and spec of webhook.
 
 <table>
     <thead>
@@ -12437,14 +12469,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecnotificationgroupwebhooksindexintegrationintegrationref">integrationRef</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Reference to the webhook.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>recipients</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Recipients for the notification.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -12456,7 +12488,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Reference to the webhook.
 
 <table>
     <thead>
@@ -12471,14 +12503,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecnotificationgroupwebhooksindexintegrationintegrationrefbackendref">backendRef</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Backend reference for the outbound webhook.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecnotificationgroupwebhooksindexintegrationintegrationrefresourceref">resourceRef</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Resource reference for use with the alert notification.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -12490,7 +12522,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Backend reference for the outbound webhook.
 
 <table>
     <thead>
@@ -12505,7 +12537,7 @@ AlertSpec defines the desired state of Alert
         <td><b>id</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Webhook Id.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -12514,7 +12546,7 @@ AlertSpec defines the desired state of Alert
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the webhook.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -12526,7 +12558,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Resource reference for use with the alert notification.
 
 <table>
     <thead>
@@ -12541,14 +12573,14 @@ AlertSpec defines the desired state of Alert
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the resource.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>namespace</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Kubernetes namespace.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -12560,7 +12592,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+When to re-trigger.
 
 <table>
     <thead>
@@ -12575,7 +12607,7 @@ AlertSpec defines the desired state of Alert
         <td><b>minutes</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Delay between re-triggered alerts.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -12589,7 +12621,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Notification group to use for alert notifications.
 
 <table>
     <thead>
@@ -12604,14 +12636,14 @@ AlertSpec defines the desired state of Alert
         <td><b>groupByKeys</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Group notification by these keys.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecnotificationgroupexcessindexwebhooksindex">webhooks</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Webhooks to trigger for notifications.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -12623,7 +12655,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Settings for a notification webhook.
 
 <table>
     <thead>
@@ -12638,14 +12670,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecnotificationgroupexcessindexwebhooksindexintegration">integration</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Type and spec of webhook.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>notifyOn</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          When to notify.<br/>
           <br/>
             <i>Enum</i>: triggeredOnly, triggeredAndResolved<br/>
             <i>Default</i>: triggeredOnly<br/>
@@ -12655,7 +12687,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecnotificationgroupexcessindexwebhooksindexretriggeringperiod">retriggeringPeriod</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          When to re-trigger.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -12667,7 +12699,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Type and spec of webhook.
 
 <table>
     <thead>
@@ -12682,14 +12714,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecnotificationgroupexcessindexwebhooksindexintegrationintegrationref">integrationRef</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Reference to the webhook.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>recipients</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Recipients for the notification.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -12701,7 +12733,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Reference to the webhook.
 
 <table>
     <thead>
@@ -12716,14 +12748,14 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecnotificationgroupexcessindexwebhooksindexintegrationintegrationrefbackendref">backendRef</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Backend reference for the outbound webhook.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecnotificationgroupexcessindexwebhooksindexintegrationintegrationrefresourceref">resourceRef</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Resource reference for use with the alert notification.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -12735,7 +12767,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Backend reference for the outbound webhook.
 
 <table>
     <thead>
@@ -12750,7 +12782,7 @@ AlertSpec defines the desired state of Alert
         <td><b>id</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Webhook Id.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -12759,7 +12791,7 @@ AlertSpec defines the desired state of Alert
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the webhook.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -12771,7 +12803,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Resource reference for use with the alert notification.
 
 <table>
     <thead>
@@ -12786,14 +12818,14 @@ AlertSpec defines the desired state of Alert
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the resource.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>namespace</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Kubernetes namespace.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -12805,7 +12837,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+When to re-trigger.
 
 <table>
     <thead>
@@ -12820,7 +12852,7 @@ AlertSpec defines the desired state of Alert
         <td><b>minutes</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Delay between re-triggered alerts.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -12834,7 +12866,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Alert activity schedule. Will be activated all the time if not specified.
 
 <table>
     <thead>
@@ -12849,7 +12881,7 @@ AlertSpec defines the desired state of Alert
         <td><b>timeZone</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Time zone.<br/>
           <br/>
             <i>Default</i>: UTC+00<br/>
         </td>
@@ -12858,7 +12890,7 @@ AlertSpec defines the desired state of Alert
         <td><b><a href="#alertspecscheduleactiveon">activeOn</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Schedule to have the alert active.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -12870,7 +12902,7 @@ AlertSpec defines the desired state of Alert
 
 
 
-
+Schedule to have the alert active.
 
 <table>
     <thead>
@@ -12894,7 +12926,7 @@ AlertSpec defines the desired state of Alert
         <td><b>endTime</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Time of day.<br/>
           <br/>
             <i>Default</i>: 23:59<br/>
         </td>
@@ -12903,7 +12935,7 @@ AlertSpec defines the desired state of Alert
         <td><b>startTime</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Time of day.<br/>
           <br/>
             <i>Default</i>: 00:00<br/>
         </td>

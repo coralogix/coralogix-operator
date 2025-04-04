@@ -37,15 +37,21 @@ spec:
           metadata:
             type: object
           spec:
-            description: CustomRoleSpec defines the desired state of CustomRole.
+            description: |-
+              CustomRoleSpec defines the desired state of a Coralogix Custom Role.
+              See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
             properties:
               description:
+                description: Description of the custom role.
                 type: string
               name:
+                description: Name of the custom role.
                 type: string
               parentRoleName:
+                description: Parent role name.
                 type: string
               permissions:
+                description: Custom role permissions.
                 items:
                   type: string
                 minItems: 1
