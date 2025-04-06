@@ -123,7 +123,7 @@ func InitConfig(setupLog logr.Logger) *Config {
 		ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 		var err error
-		cfg.CoralogixUrl, err = getCoralogixUrl(region, domain)
+		cfg.CoralogixUrl, err = getCoralogixUrl(strings.ToUpper(region), domain)
 		if err != nil {
 			setupLog.Error(err, "invalid arguments for running operator")
 			os.Exit(1)
