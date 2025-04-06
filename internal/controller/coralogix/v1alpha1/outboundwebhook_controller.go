@@ -64,14 +64,14 @@ func (r *OutboundWebhookReconciler) HandleCreation(ctx context.Context, log logr
 	if err != nil {
 		return fmt.Errorf("error on extracting create outbound-webhook request: %w", err)
 	}
-	log.V(1).Info("Creating remote outbound-webhook", "outbound-webhook", protojson.Format(createRequest))
+	log.Info("Creating remote outbound-webhook", "outbound-webhook", protojson.Format(createRequest))
 	createResponse, err := r.OutboundWebhooksClient.Create(ctx, createRequest)
 	if err != nil {
 		return fmt.Errorf("error on creating remote outbound-webhook: %w", err)
 	}
-	log.V(1).Info("Remote outbound-webhook created", "response", protojson.Format(createResponse))
+	log.Info("Remote outbound-webhook created", "response", protojson.Format(createResponse))
 
-	log.V(1).Info("Getting outbound-webhook from remote", "id", createResponse.Id.Value)
+	log.Info("Getting outbound-webhook from remote", "id", createResponse.Id.Value)
 	remoteOutboundWebhook, err := r.OutboundWebhooksClient.Get(ctx,
 		&cxsdk.GetOutgoingWebhookRequest{
 			Id: createResponse.Id,
@@ -80,7 +80,7 @@ func (r *OutboundWebhookReconciler) HandleCreation(ctx context.Context, log logr
 	if err != nil {
 		return fmt.Errorf("error to get outbound-webhook %w", err)
 	}
-	log.V(1).Info(fmt.Sprintf("outbound-webhook was read\n%s", protojson.Format(remoteOutboundWebhook)))
+	log.Info(fmt.Sprintf("outbound-webhook was read\n%s", protojson.Format(remoteOutboundWebhook)))
 
 	status, err := getOutboundWebhookStatus(remoteOutboundWebhook.Webhook)
 	if err != nil {
@@ -97,24 +97,24 @@ func (r *OutboundWebhookReconciler) HandleUpdate(ctx context.Context, log logr.L
 	if err != nil {
 		return fmt.Errorf("error on extracting update outbound-webhook request: %w", err)
 	}
-	log.V(1).Info("Updating remote outbound-webhook", "outbound-webhook", protojson.Format(updateRequest))
+	log.Info("Updating remote outbound-webhook", "outbound-webhook", protojson.Format(updateRequest))
 	updateResponse, err := r.OutboundWebhooksClient.Update(ctx, updateRequest)
 	if err != nil {
 		return err
 	}
-	log.V(1).Info("Remote outbound-webhook updated", "outbound-webhook", protojson.Format(updateResponse))
+	log.Info("Remote outbound-webhook updated", "outbound-webhook", protojson.Format(updateResponse))
 	return nil
 }
 
 func (r *OutboundWebhookReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
 	outboundWebhook := obj.(*v1alpha1.OutboundWebhook)
-	log.V(1).Info("Deleting outbound-webhook from remote system", "id", *outboundWebhook.Status.ID)
+	log.Info("Deleting outbound-webhook from remote system", "id", *outboundWebhook.Status.ID)
 	_, err := r.OutboundWebhooksClient.Delete(ctx, &cxsdk.DeleteOutgoingWebhookRequest{Id: wrapperspb.String(*outboundWebhook.Status.ID)})
 	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.V(1).Error(err, "Error deleting remote outbound-webhook", "id", *outboundWebhook.Status.ID)
+		log.Error(err, "Error deleting remote outbound-webhook", "id", *outboundWebhook.Status.ID)
 		return fmt.Errorf("error deleting remote outbound-webhook %s: %w", *outboundWebhook.Status.ID, err)
 	}
-	log.V(1).Info("outbound-webhook deleted from remote system", "id", *outboundWebhook.Status.ID)
+	log.Info("outbound-webhook deleted from remote system", "id", *outboundWebhook.Status.ID)
 	return nil
 }
 

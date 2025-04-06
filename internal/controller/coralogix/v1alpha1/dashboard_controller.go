@@ -69,12 +69,12 @@ func (r *DashboardReconciler) HandleCreation(ctx context.Context, log logr.Logge
 	createRequest := &cxsdk.CreateDashboardRequest{
 		Dashboard: dashboardToCreate,
 	}
-	log.V(1).Info("Creating remote dashboard", "dashboard", protojson.Format(createRequest))
+	log.Info("Creating remote dashboard", "dashboard", protojson.Format(createRequest))
 	createResponse, err := r.DashboardsClient.Create(ctx, createRequest)
 	if err != nil {
 		return fmt.Errorf("error on creating remote dashboard: %w", err)
 	}
-	log.V(1).Info("Remote dashboard created", "dashboard", protojson.Format(createResponse))
+	log.Info("Remote dashboard created", "dashboard", protojson.Format(createResponse))
 
 	dashboard.Status = coralogixv1alpha1.DashboardStatus{
 		ID: pointer.String(createResponse.DashboardId.Value),
@@ -93,12 +93,12 @@ func (r *DashboardReconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 	updateRequest := &cxsdk.ReplaceDashboardRequest{
 		Dashboard: dashboardToUpdate,
 	}
-	log.V(1).Info("Updating remote dashboard", "dashboard", protojson.Format(updateRequest))
+	log.Info("Updating remote dashboard", "dashboard", protojson.Format(updateRequest))
 	updateResponse, err := r.DashboardsClient.Replace(ctx, updateRequest)
 	if err != nil {
 		return fmt.Errorf("error on updating remote dashboard: %w", err)
 	}
-	log.V(1).Info("Remote dashboard updated", "dashboard", protojson.Format(updateResponse))
+	log.Info("Remote dashboard updated", "dashboard", protojson.Format(updateResponse))
 
 	return nil
 }
@@ -106,13 +106,13 @@ func (r *DashboardReconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 func (r *DashboardReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
 	dashboard := obj.(*coralogixv1alpha1.Dashboard)
 	id := *dashboard.Status.ID
-	log.V(1).Info("Deleting dashboard from remote system", "id", id)
+	log.Info("Deleting dashboard from remote system", "id", id)
 	_, err := r.DashboardsClient.Delete(ctx, &cxsdk.DeleteDashboardRequest{DashboardId: wrapperspb.String(id)})
 	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.V(1).Error(err, "Error deleting remote dashboard", "id", id)
+		log.Error(err, "Error deleting remote dashboard", "id", id)
 		return fmt.Errorf("error deleting remote dashboard %s: %w", id, err)
 	}
-	log.V(1).Info("Dashboard deleted from remote system", "id", id)
+	log.Info("Dashboard deleted from remote system", "id", id)
 	return nil
 }
 

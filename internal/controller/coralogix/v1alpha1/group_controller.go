@@ -62,12 +62,12 @@ func (r *GroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 	if err != nil {
 		return fmt.Errorf("error on extracting create request: %w", err)
 	}
-	log.V(1).Info("Creating remote group", "group", protojson.Format(createRequest))
+	log.Info("Creating remote group", "group", protojson.Format(createRequest))
 	createResponse, err := r.CXClientSet.Groups().Create(ctx, createRequest)
 	if err != nil {
 		return fmt.Errorf("error on creating remote group: %w", err)
 	}
-	log.V(1).Info("Remote group created", "group", protojson.Format(createResponse))
+	log.Info("Remote group created", "group", protojson.Format(createResponse))
 
 	group.Status = coralogixv1alpha1.GroupStatus{
 		ID: pointer.String(strconv.Itoa(int(createResponse.GroupId.Id))),
@@ -82,19 +82,19 @@ func (r *GroupReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
 	}
-	log.V(1).Info("Updating remote group", "group", protojson.Format(updateRequest))
+	log.Info("Updating remote group", "group", protojson.Format(updateRequest))
 	updateResponse, err := r.CXClientSet.Groups().Update(ctx, updateRequest)
 	if err != nil {
 		return err
 	}
-	log.V(1).Info("Remote group updated", "group", protojson.Format(updateResponse))
+	log.Info("Remote group updated", "group", protojson.Format(updateResponse))
 
 	return nil
 }
 
 func (r *GroupReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
 	group := obj.(*coralogixv1alpha1.Group)
-	log.V(1).Info("Deleting group from remote system", "id", *group.Status.ID)
+	log.Info("Deleting group from remote system", "id", *group.Status.ID)
 	id, err := strconv.Atoi(*group.Status.ID)
 	if err != nil {
 		return fmt.Errorf("error on converting custom-role id to int: %w", err)
@@ -102,10 +102,10 @@ func (r *GroupReconciler) HandleDeletion(ctx context.Context, log logr.Logger, o
 
 	_, err = r.CXClientSet.Groups().Delete(ctx, &cxsdk.DeleteTeamGroupRequest{GroupId: &cxsdk.TeamGroupID{Id: uint32(id)}})
 	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.V(1).Error(err, "Error deleting remote group", "id", *group.Status.ID)
+		log.Error(err, "Error deleting remote group", "id", *group.Status.ID)
 		return fmt.Errorf("error deleting remote group %s: %w", *group.Status.ID, err)
 	}
-	log.V(1).Info("Group deleted from remote system", "id", *group.Status.ID)
+	log.Info("Group deleted from remote system", "id", *group.Status.ID)
 	return nil
 }
 

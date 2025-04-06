@@ -69,12 +69,12 @@ func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 	}
 
 	createRequest := &cxsdk.CreateAlertDefRequest{AlertDefProperties: alertDefProperties}
-	log.V(1).Info("Creating remote alert", "alert", protojson.Format(createRequest))
+	log.Info("Creating remote alert", "alert", protojson.Format(createRequest))
 	createResponse, err := r.CoralogixClientSet.Alerts().Create(ctx, createRequest)
 	if err != nil {
 		return fmt.Errorf("error on creating remote alert: %w", err)
 	}
-	log.V(1).Info("Remote alert created", "response", protojson.Format(createResponse))
+	log.Info("Remote alert created", "response", protojson.Format(createResponse))
 	alert.Status = coralogixv1beta1.AlertStatus{ID: &createResponse.AlertDef.Id.Value}
 	return nil
 }
@@ -103,12 +103,12 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
 	}
-	log.V(1).Info("Updating remote alert", "alert", protojson.Format(updateRequest))
+	log.Info("Updating remote alert", "alert", protojson.Format(updateRequest))
 	updateResponse, err := r.CoralogixClientSet.Alerts().Replace(ctx, updateRequest)
 	if err != nil {
 		return err
 	}
-	log.V(1).Info("Remote alert updated", "alert", protojson.Format(updateResponse))
+	log.Info("Remote alert updated", "alert", protojson.Format(updateResponse))
 	return nil
 }
 
@@ -117,13 +117,13 @@ func (r *AlertReconciler) HandleDeletion(ctx context.Context, log logr.Logger, o
 	if alert.Status.ID == nil {
 		return fmt.Errorf("alert ID is missing")
 	}
-	log.V(1).Info("Deleting alert from remote system", "id", *alert.Status.ID)
+	log.Info("Deleting alert from remote system", "id", *alert.Status.ID)
 	_, err := r.CoralogixClientSet.Alerts().Delete(ctx, &cxsdk.DeleteAlertDefRequest{Id: wrapperspb.String(*alert.Status.ID)})
 	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.V(1).Error(err, "Error deleting remote alert", "id", *alert.Status.ID)
+		log.Error(err, "Error deleting remote alert", "id", *alert.Status.ID)
 		return fmt.Errorf("error deleting remote alert %s: %w", *alert.Status.ID, err)
 	}
-	log.V(1).Info("Alert deleted from remote system", "id", *alert.Status.ID)
+	log.Info("Alert deleted from remote system", "id", *alert.Status.ID)
 	return nil
 }
 

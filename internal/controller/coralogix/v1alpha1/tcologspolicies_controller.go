@@ -54,12 +54,12 @@ func (r *TCOLogsPoliciesReconciler) overwrite(ctx context.Context, log logr.Logg
 	if err != nil {
 		return fmt.Errorf("error on extracting overwrite log policies request: %w", err)
 	}
-	log.V(1).Info("Overwriting remote tco-logs-policies", "tco-logs-policies", protojson.Format(overwriteRequest))
+	log.Info("Overwriting remote tco-logs-policies", "tco-logs-policies", protojson.Format(overwriteRequest))
 	overwriteResponse, err := r.CoralogixClientSet.TCOPolicies().OverwriteTCOLogsPolicies(ctx, overwriteRequest)
 	if err != nil {
 		return fmt.Errorf("error on overwriting remote tco-logs-policies: %w", err)
 	}
-	log.V(1).Info("Remote tco-logs-policies overwritten", "response", protojson.Format(overwriteResponse))
+	log.Info("Remote tco-logs-policies overwritten", "response", protojson.Format(overwriteResponse))
 	return nil
 }
 
@@ -88,13 +88,13 @@ func (r *TCOLogsPoliciesReconciler) HandleUpdate(ctx context.Context, log logr.L
 
 func (r *TCOLogsPoliciesReconciler) HandleDeletion(ctx context.Context, log logr.Logger, _ client.Object) error {
 	deleteTCOLogsPoliciesRequest := &cxsdk.AtomicOverwriteLogPoliciesRequest{Policies: nil}
-	log.V(1).Info("Deleting TCOLogsPolicies")
+	log.Info("Deleting TCOLogsPolicies")
 	if _, err := r.CoralogixClientSet.TCOPolicies().OverwriteTCOLogsPolicies(ctx, deleteTCOLogsPoliciesRequest); err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.V(1).Error(err, "Received an error while Deleting a TCOLogsPolicies")
+		log.Error(err, "Received an error while Deleting a TCOLogsPolicies")
 		return err
 	}
 
-	log.V(1).Info("tco-logs-policies was deleted from remote")
+	log.Info("tco-logs-policies was deleted from remote")
 	return nil
 }
 
