@@ -37,14 +37,21 @@ spec:
           metadata:
             type: object
           spec:
-            description: IntegrationSpec defines the desired state of Integration.
+            description: |-
+              IntegrationSpec defines the desired state of a Coralogix (managed) integration.
+              See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/
+
+              For available integrations see https://coralogix.com/docs/developer-portal/infrastructure-as-code/terraform-provider/integrations/aws-metrics-collector/ or at https://github.com/coralogix/coralogix-operator/tree/main/config/samples/v1alpha1/integrations.
             properties:
               integrationKey:
+                description: Unique name of the integration.
                 type: string
               parameters:
+                description: Parameters required by the integration.
                 type: object
                 x-kubernetes-preserve-unknown-fields: true
               version:
+                description: Desired version of the integration
                 type: string
             required:
             - integrationKey

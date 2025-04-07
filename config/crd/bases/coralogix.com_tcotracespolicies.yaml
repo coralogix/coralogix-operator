@@ -41,18 +41,26 @@ spec:
           metadata:
             type: object
           spec:
-            description: TCOTracesPoliciesSpec defines the desired state of TCOTracesPolicies.
+            description: |-
+              TCOTracesPoliciesSpec defines the desired state of Coralogix TCO policies for traces.
+              See also https://coralogix.com/docs/tco-optimizer-api
             properties:
               policies:
+                description: Coralogix TCO-Policies-List.
                 items:
+                  description: Coralogix TCO policy for traces.
                   properties:
                     actions:
+                      description: The actions to apply the policy on. Applies the
+                        policy on all the actions by default.
                       properties:
                         names:
+                          description: Names to match.
                           items:
                             type: string
                           type: array
                         ruleType:
+                          description: Type of matching for the name.
                           enum:
                           - is
                           - is_not
@@ -64,12 +72,16 @@ spec:
                       - ruleType
                       type: object
                     applications:
+                      description: The applications to apply the policy on. Applies
+                        the policy on all the applications by default.
                       properties:
                         names:
+                          description: Names to match.
                           items:
                             type: string
                           type: array
                         ruleType:
+                          description: Type of matching for the name.
                           enum:
                           - is
                           - is_not
@@ -81,10 +93,13 @@ spec:
                       - ruleType
                       type: object
                     archiveRetention:
+                      description: Matches the specified retention.
                       properties:
                         backendRef:
+                          description: Reference to the retention policy
                           properties:
                             name:
+                              description: Name of the policy.
                               type: string
                           required:
                           - name
@@ -93,10 +108,13 @@ spec:
                       - backendRef
                       type: object
                     description:
+                      description: Description of the policy.
                       type: string
                     name:
+                      description: Name of the policy.
                       type: string
                     priority:
+                      description: The policy priority.
                       enum:
                       - block
                       - high
@@ -104,12 +122,16 @@ spec:
                       - low
                       type: string
                     services:
+                      description: The services to apply the policy on. Applies the
+                        policy on all the services by default.
                       properties:
                         names:
+                          description: Names to match.
                           items:
                             type: string
                           type: array
                         ruleType:
+                          description: Type of matching for the name.
                           enum:
                           - is
                           - is_not
@@ -121,12 +143,16 @@ spec:
                       - ruleType
                       type: object
                     subsystems:
+                      description: The subsystems to apply the policy on. Applies
+                        the policy on all the subsystems by default.
                       properties:
                         names:
+                          description: Names to match.
                           items:
                             type: string
                           type: array
                         ruleType:
+                          description: Type of matching for the name.
                           enum:
                           - is
                           - is_not
@@ -138,12 +164,17 @@ spec:
                       - ruleType
                       type: object
                     tags:
+                      description: The tags to apply the policy on. Applies the policy
+                        on all the tags by default.
                       items:
+                        description: TCO Policy tag matching rule.
                         properties:
                           name:
+                            description: Tag names to match.
                             pattern: ^tags\..*
                             type: string
                           ruleType:
+                            description: Operator to match with.
                             enum:
                             - is
                             - is_not
@@ -151,6 +182,7 @@ spec:
                             - includes
                             type: string
                           values:
+                            description: Values to match for
                             items:
                               type: string
                             type: array

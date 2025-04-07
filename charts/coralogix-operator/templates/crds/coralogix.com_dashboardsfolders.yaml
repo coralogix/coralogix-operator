@@ -56,8 +56,10 @@ spec:
                 description: A reference to an existing DashboardsFolder CR.
                 properties:
                   name:
+                    description: Name of the resource (not id).
                     type: string
                   namespace:
+                    description: Kubernetes namespace.
                     type: string
                 required:
                 - name
