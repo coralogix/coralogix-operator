@@ -4,8 +4,21 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "coralogixOperator.fullname" . }}-serving-cert
   name: alerts.coralogix.com
 spec:
+  conversion:
+      strategy: Webhook
+      webhook:
+        clientConfig:
+          service:
+            namespace: {{ .Release.Namespace }}
+            name: {{ include "coralogixOperator.fullname" . }}-webhook-service
+            path: /convert
+            port:  443
+        conversionReviewVersions:
+          - v1alpha1
+          - v1beta1
   group: coralogix.com
   names:
     kind: Alert
