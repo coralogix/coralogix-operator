@@ -7,15 +7,18 @@ resources:
   - bases/coralogix.com_recordingrulegroupsets.yaml
   - bases/coralogix.com_outboundwebhooks.yaml
   - bases/coralogix.com_apikeys.yaml
+  - bases/coralogix.com_connectors.yaml
   - bases/coralogix.com_customroles.yaml
   - bases/coralogix.com_scopes.yaml
   - bases/coralogix.com_groups.yaml
+  - bases/coralogix.com_globalrouters.yaml
   - bases/coralogix.com_tcologspolicies.yaml
   - bases/coralogix.com_tcotracespolicies.yaml
   - bases/coralogix.com_integrations.yaml
   - bases/coralogix.com_alertschedulers.yaml
   - bases/coralogix.com_dashboards.yaml
   - bases/coralogix.com_dashboardsfolders.yaml
+  - bases/coralogix.com_presets.yaml
   - bases/coralogix.com_viewfolders.yaml
   - bases/coralogix.com_views.yaml
 #+kubebuilder:scaffold:crdkustomizeresource

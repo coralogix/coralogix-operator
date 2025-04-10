@@ -362,8 +362,8 @@ type RetriggeringPeriod struct {
 }
 
 // Notification group to use for alert notifications.
+// +kubebuilder:validation:XValidation:rule="!(has(self.destinations) && has(self.router))", message="At most one of Destinations or Router can be set."
 type NotificationGroup struct {
-
 	// Group notification by these keys.
 	// +optional
 	GroupByKeys []string `json:"groupByKeys"`
@@ -371,6 +371,14 @@ type NotificationGroup struct {
 	// Webhooks to trigger for notifications.
 	// +optional
 	Webhooks []WebhookSettings `json:"webhooks"`
+
+	// The destinations for notifications (Notification Center feature).
+	// +optional
+	Destinations []NotificationDestination `json:"destinations,omitempty"`
+
+	// The router for notifications (Notification Center feature).
+	// +optional
+	Router *NotificationRouter `json:"router,omitempty"`
 }
 
 // Settings for a notification webhook.
@@ -442,6 +450,73 @@ type ResourceRef struct {
 	// Kubernetes namespace.
 	// +optional
 	Namespace *string `json:"namespace,omitempty"`
+}
+
+type NotificationDestination struct {
+	// Connector is the connector for the destination. Should be one of backendRef or resourceRef.
+	Connector NCRef `json:"connector"`
+
+	// Preset is the preset for the destination. Should be one of backendRef or resourceRef.
+	// +optional
+	Preset *NCRef `json:"preset,omitempty"`
+
+	// +kubebuilder:default=triggeredOnly
+	// When to notify.
+	NotifyOn NotifyOn `json:"notifyOn"`
+
+	// The routing configuration to override from the connector/preset for triggered notifications.
+	TriggeredRoutingOverrides NotificationRouting `json:"triggeredRoutingOverrides"`
+
+	// Optional routing configuration to override from the connector/preset for resolved notifications.
+	// +optional
+	ResolvedRoutingOverrides *NotificationRouting `json:"resolvedRoutingOverrides,omitempty"`
+}
+
+type NotificationRouter struct {
+	// +kubebuilder:default=triggeredOnly
+	// When to notify.
+	NotifyOn NotifyOn `json:"notifyOn"`
+}
+
+// +kubebuilder:validation:XValidation:rule="has(self.backendRef) != has(self.resourceRef)",message="Exactly one of backendRef or resourceRef must be set"
+type NCRef struct {
+	// BackendRef is a reference to a backend resource.
+	// +optional
+	BackendRef *NCBackendRef `json:"backendRef,omitempty"`
+
+	// ResourceRef is a reference to a Kubernetes resource.
+	// +optional
+	ResourceRef *ResourceRef `json:"resourceRef,omitempty"`
+}
+
+type NCBackendRef struct {
+	ID string `json:"id"`
+}
+
+type NotificationRouting struct {
+	// +optional
+	ConfigOverrides *SourceOverrides `json:"configOverrides,omitempty"`
+}
+
+type SourceOverrides struct {
+	// The ID of the output schema to use for routing notifications
+	OutputSchemaId string `json:"outputSchemaId"`
+
+	// Notification message configuration fields.
+	// +optional
+	MessageConfigFields []ConfigField `json:"messageConfigFields,omitempty"`
+
+	// Connector configuration fields.
+	// +optional
+	ConnectorConfigFields []ConfigField `json:"connectorConfigFields,omitempty"`
+}
+
+type ConfigField struct {
+	// The name of the configuration field.
+	FieldName string `json:"fieldName"`
+
+	// The template for the configuration field.
+	Template string `json:"template"`
 }
 
 type ActiveOn struct {
@@ -1390,9 +1465,26 @@ func expandNotificationGroup(notificationGroup *NotificationGroup, listingAlerts
 		return nil, fmt.Errorf("failed to expand webhooks settings: %w", err)
 	}
 
+	var destinations []*cxsdk.NotificationDestination
+	var router *cxsdk.NotificationRouter
+	if notificationGroup.Destinations != nil {
+		destinations, err = expandNotificationDestinations(notificationGroup.Destinations, listingAlertsAndWebhooksProperties)
+		if err != nil {
+			return nil, fmt.Errorf("failed to expand notification destinations: %w", err)
+		}
+	} else if notificationGroup.Router != nil {
+		notifyOn := NotifyOnToProtoNotifyOn[notificationGroup.Router.NotifyOn]
+		router = &cxsdk.NotificationRouter{
+			Id:       "router_default",
+			NotifyOn: &notifyOn,
+		}
+	}
+
 	return &cxsdk.AlertDefNotificationGroup{
-		GroupByKeys: coralogix.StringSliceToWrappedStringSlice(notificationGroup.GroupByKeys),
-		Webhooks:    webhooks,
+		GroupByKeys:  coralogix.StringSliceToWrappedStringSlice(notificationGroup.GroupByKeys),
+		Webhooks:     webhooks,
+		Destinations: destinations,
+		Router:       router,
 	}, nil
 }
 
@@ -1502,6 +1594,139 @@ func fillWebhookNameToId(properties *GetResourceRefProperties) error {
 	}
 
 	return nil
+}
+
+func expandNotificationDestinations(destinations []NotificationDestination, properties *GetResourceRefProperties) ([]*cxsdk.NotificationDestination, error) {
+	var result []*cxsdk.NotificationDestination
+	for _, destination := range destinations {
+		connectorId, err := getResourceID(destination.Connector, properties, utils.ConnectorKind)
+		if err != nil {
+			return nil, fmt.Errorf("failed to expand connector ID: %w", err)
+		}
+
+		var presetId *string
+		if destination.Preset != nil {
+			id, err := getResourceID(*destination.Preset, properties, utils.PresetKind)
+			if err != nil {
+				return nil, fmt.Errorf("failed to expand preset ID: %w", err)
+			}
+
+			presetId = &id
+		}
+
+		triggeredRoutingOverrides, err := expandRoutingOverrides(destination.TriggeredRoutingOverrides)
+		if err != nil {
+			return nil, fmt.Errorf("failed to expand triggered routing overrides: %w", err)
+		}
+
+		var resolvedRoutingOverrides *cxsdk.SourceOverrides
+		if destination.ResolvedRoutingOverrides != nil {
+			resolvedRoutingOverrides, err = expandRoutingOverrides(*destination.ResolvedRoutingOverrides)
+			if err != nil {
+				return nil, fmt.Errorf("failed to expand resolved routing overrides: %w", err)
+			}
+		}
+
+		notificationDestination := &cxsdk.NotificationDestination{
+			ConnectorId: connectorId,
+			PresetId:    presetId,
+			NotifyOn:    NotifyOnToProtoNotifyOn[destination.NotifyOn],
+			TriggeredRoutingOverrides: &cxsdk.NotificationRouting{
+				ConfigOverrides: triggeredRoutingOverrides,
+			},
+			ResolvedRouteOverrides: &cxsdk.NotificationRouting{
+				ConfigOverrides: resolvedRoutingOverrides,
+			},
+		}
+
+		result = append(result, notificationDestination)
+	}
+
+	return result, nil
+}
+
+func expandRoutingOverrides(overrides NotificationRouting) (*cxsdk.SourceOverrides, error) {
+	if overrides.ConfigOverrides == nil {
+		return nil, nil
+	}
+
+	connectorOverrides := extractConnectorOverrides(overrides.ConfigOverrides.ConnectorConfigFields)
+	presetOverrides := extractPresetOverrides(overrides.ConfigOverrides.MessageConfigFields)
+
+	sourceOverrides := &cxsdk.SourceOverrides{
+		ConnectorConfigFields: connectorOverrides,
+		MessageConfigFields:   presetOverrides,
+		OutputSchemaId:        overrides.ConfigOverrides.OutputSchemaId,
+	}
+
+	return sourceOverrides, nil
+}
+
+func extractConnectorOverrides(overrides []ConfigField) []*cxsdk.AlertsConnectorConfigField {
+	var result []*cxsdk.AlertsConnectorConfigField
+	for _, override := range overrides {
+		result = append(result, &cxsdk.AlertsConnectorConfigField{
+			FieldName: override.FieldName,
+			Template:  override.Template,
+		})
+	}
+
+	return result
+}
+
+func extractPresetOverrides(overrides []ConfigField) []*cxsdk.AlertsMessageConfigField {
+	var result []*cxsdk.AlertsMessageConfigField
+	for _, override := range overrides {
+		result = append(result, &cxsdk.AlertsMessageConfigField{
+			FieldName: override.FieldName,
+			Template:  override.Template,
+		})
+	}
+
+	return result
+}
+
+func getResourceID(ref NCRef, properties *GetResourceRefProperties, kind string) (string, error) {
+	if ref.BackendRef != nil {
+		return ref.BackendRef.ID, nil
+	}
+	if ref.ResourceRef != nil {
+		return extractIdFromResourceRef(ref.ResourceRef, properties, kind)
+	}
+
+	return "", fmt.Errorf("resource reference should have either backendRef or resourceRef")
+}
+
+func extractIdFromResourceRef(ref *ResourceRef, properties *GetResourceRefProperties, kind string) (string, error) {
+	ctx, namespace := properties.Ctx, properties.Namespace
+	if ref.Namespace != nil {
+		namespace = *ref.Namespace
+	}
+
+	u := &unstructured.Unstructured{}
+	u.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   utils.CoralogixAPIGroup,
+		Kind:    kind,
+		Version: utils.V1alpha1APIVersion,
+	})
+
+	if err := config.GetClient().Get(ctx, client.ObjectKey{Name: ref.Name, Namespace: namespace}, u); err != nil {
+		return "", fmt.Errorf("failed to get resource: %w", err)
+	}
+
+	if !config.GetConfig().Selector.Matches(u.GetLabels(), u.GetNamespace()) {
+		return "", fmt.Errorf("resource %s does not match selector", u.GetName())
+	}
+
+	id, found, err := unstructured.NestedString(u.Object, "status", "id")
+	if err != nil {
+		return "", err
+	}
+	if !found {
+		return "", fmt.Errorf("resource %s does not have an ID populated", u.GetName())
+	}
+
+	return id, nil
 }
 
 func expandAlertSchedule(alertSchedule *AlertSchedule) *cxsdk.AlertDefPropertiesActiveOn {

@@ -1,0 +1,35 @@
+apiVersion: coralogix.com/v1beta1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/name: alert
+    app.kubernetes.io/instance: alert-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: metric-threshold
+spec:
+  name: metric-threshold with routing
+  description: alert from k8s operator
+  priority: p4
+  entityLabels:
+    alert_type: security
+    security_severity: high
+  alertType:
+    metricThreshold:
+      metricFilter:
+        promql: |
+          sum(rate(http_requests_total{job="api-server"}[5m])) by (status)
+      missingValues:
+        minNonNullValuesPct: 60
+      rules:
+        - condition:
+            threshold: "100.4"
+            forOverPct: 20
+            ofTheLast:
+              specificValue: 15m
+            conditionType: moreThan
+  notificationGroup:
+    router:
+      notifyOn: triggeredOnly
+

@@ -256,6 +256,27 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "ViewFolder")
 		os.Exit(1)
 	}
+	if err = (&v1alpha1controllers.ConnectorReconciler{
+		NotificationsClient: clientSet.Notifications(),
+		Interval:            cfg.ReconcileIntervals[utils.ConnectorKind],
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Connector")
+		os.Exit(1)
+	}
+	if err = (&v1alpha1controllers.PresetReconciler{
+		NotificationsClient: clientSet.Notifications(),
+		Interval:            cfg.ReconcileIntervals[utils.PresetKind],
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Preset")
+		os.Exit(1)
+	}
+	if err = (&v1alpha1controllers.GlobalRouterReconciler{
+		NotificationsClient: clientSet.Notifications(),
+		Interval:            cfg.ReconcileIntervals[utils.GlobalRouterKind],
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GlobalRouter")
+		os.Exit(1)
+	}
 
 	if cfg.EnableWebhooks {
 		if err = webhookcoralogixv1alpha1.SetupOutboundWebhookWebhookWithManager(mgr); err != nil {

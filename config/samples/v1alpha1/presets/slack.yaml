@@ -1,0 +1,26 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Preset
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: preset-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: slack-sample
+spec:
+  name: slack-sample
+  description: This is a sample slack preset
+  connectorType: slack
+  entityType: alerts
+  parentId: preset_system_slack_alerts_basic
+  configOverrides:
+    - conditionType:
+        matchEntityTypeAndSubType:
+          entitySubType: logsImmediateTriggered
+      messageConfig:
+        fields:
+          - fieldName: title
+            template: "CUSTOM PRESET OVERRIDE: {{alert.status}} {{alertDef.priority}} - {{alertDef.name}}"
+          - fieldName: description
+            template: "{{alertDef.description}}"

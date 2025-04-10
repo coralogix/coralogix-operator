@@ -1,0 +1,48 @@
+apiVersion: coralogix.com/v1alpha1
+kind: GlobalRouter
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: router-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: router-sample
+spec:
+  name: router-sample
+  description: This is a sample global router
+  entityType: alerts
+  fallback:
+    - connector:
+        resourceRef:
+          name: slack-sample
+      preset:
+        backendRef:
+          id: preset_system_slack_alerts_basic
+  rules:
+    - name: first-rule
+      condition: "alertDef.priority == \"P1\""
+      targets:
+        - connector:
+            resourceRef:
+              name: slack-sample
+          preset:
+            backendRef:
+              id: preset_system_slack_alerts_detailed
+        - connector:
+            resourceRef:
+              name: generic-https-sample
+          preset:
+            backendRef:
+              id: preset_system_generic_https_alerts_empty
+    - name: second-rule
+      condition: "alertDef.priority == \"P2\""
+      targets:
+          - connector:
+              resourceRef:
+                name: slack-sample
+            preset:
+              backendRef:
+                id: preset_system_slack_alerts_basic
+
+
