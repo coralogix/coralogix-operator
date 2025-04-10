@@ -37,6 +37,9 @@ const (
 	PrometheusRuleKind        = "PrometheusRule"
 	DashboardKind             = "Dashboard"
 	DashboardsFolderKind      = "DashboardFolder"
+	ConnectorKind             = "Connector"
+	PresetKind                = "Preset"
+	GlobalRouterKind          = "GlobalRouter"
 
 	TrackPrometheusRuleAlertsLabelKey         = "app.coralogix.com/track-alerting-rules"
 	TrackPrometheusRuleRecordingRulesLabelKey = "app.coralogix.com/track-recording-rules"
