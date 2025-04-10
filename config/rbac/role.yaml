@@ -30,12 +30,15 @@ rules:
   - alerts
   - alertschedulers
   - apikeys
+  - connectors
   - customroles
   - dashboards
   - dashboardsfolders
+  - globalRouters
   - groups
   - integrations
   - outboundwebhooks
+  - presets
   - recordingrulegroupsets
   - rulegroups
   - scopes
@@ -55,12 +58,15 @@ rules:
   - alerts/finalizers
   - alertschedulers/finalizers
   - apikeys/finalizers
+  - connectors/finalizers
   - customroles/finalizers
   - dashboards/finalizers
   - dashboardsfolders/finalizers
+  - globalRouters/finalizers
   - groups/finalizers
   - integrations/finalizers
   - outboundwebhooks/finalizers
+  - presets/finalizers
   - recordingrulegroupsets/finalizers
   - rulegroups/finalizers
   - scopes/finalizers
@@ -74,12 +80,15 @@ rules:
   - alerts/status
   - alertschedulers/status
   - apikeys/status
+  - connectors/status
   - customroles/status
   - dashboards/status
   - dashboardsfolders/status
+  - globalRouters/status
   - groups/status
   - integrations/status
   - outboundwebhooks/status
+  - presets/status
   - recordingrulegroupsets/status
   - rulegroups/status
   - scopes/status
