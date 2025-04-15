@@ -21,7 +21,7 @@ jobs:
       CORALOGIX_REGION: ${{ secrets.CORALOGIX_REGION }}
       CORALOGIX_API_KEY: ${{ secrets.CORALOGIX_API_KEY }}
       ENABLE_WEBHOOKS: true
-      SCOPE_RECONCILE_INTERVAL_SECONDS: 30
+      SCOPE_RECONCILE_INTERVAL_SECONDS: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v2

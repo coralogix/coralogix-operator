@@ -36,7 +36,9 @@ const (
 	AlertSchedulerKind        = "AlertScheduler"
 	PrometheusRuleKind        = "PrometheusRule"
 	DashboardKind             = "Dashboard"
-	DashboardsFolderKind      = "DashboardFolder"
+	DashboardsFolderKind      = "DashboardsFolder"
+	ViewKind                  = "View"
+	ViewFolderKind            = "ViewFolder"
 
 	TrackPrometheusRuleAlertsLabelKey         = "app.coralogix.com/track-alerting-rules"
 	TrackPrometheusRuleRecordingRulesLabelKey = "app.coralogix.com/track-recording-rules"

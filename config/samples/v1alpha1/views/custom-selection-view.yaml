@@ -1,0 +1,27 @@
+apiVersion: coralogix.com/v1alpha1
+kind: View
+metadata:
+  name: custom-selection-sample
+spec:
+  name: custom-selection-sample
+  searchQuery:
+    query: "region:us-west-2"
+  timeSelection:
+    customSelection:
+      fromTime: "2026-01-01T00:00:00Z"
+      toTime: "2027-01-02T00:00:00Z"
+  filters:
+    filters:
+      - name: severity
+        selectedValues:
+          CRITICAL: true
+          ERROR: true
+      - name: applicationName
+        selectedValues:
+          sample-app: true
+      - name: subsystemName
+        selectedValues:
+          sample-subsystem: true
+  folder:
+    resourceRef:
+      name: sample-folder

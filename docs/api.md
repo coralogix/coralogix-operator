@@ -37,6 +37,10 @@ Resource Types:
 
 - [TCOTracesPolicies](#tcotracespolicies)
 
+- [ViewFolder](#viewfolder)
+
+- [View](#view)
+
 
 
 
@@ -7864,6 +7868,668 @@ TCOTracesPoliciesStatus defines the observed state of TCOTracesPolicies.
 
 ### TCOTracesPolicies.status.conditions[index]
 <sup><sup>[↩ Parent](#tcotracespoliciesstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## ViewFolder
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+ViewFolder is the Schema for the viewfolders API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>ViewFolder</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#viewfolderspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          ViewFolderSpec defines the desired state of ViewFolder.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#viewfolderstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          ViewFolderStatus defines the observed state of ViewFolder.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ViewFolder.spec
+<sup><sup>[↩ Parent](#viewfolder)</sup></sup>
+
+
+
+ViewFolderSpec defines the desired state of ViewFolder.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the view folder<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### ViewFolder.status
+<sup><sup>[↩ Parent](#viewfolder)</sup></sup>
+
+
+
+ViewFolderStatus defines the observed state of ViewFolder.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#viewfolderstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ViewFolder.status.conditions[index]
+<sup><sup>[↩ Parent](#viewfolderstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## View
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+View is the Schema for the views API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>View</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#viewspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          ViewSpec defines the desired state of View.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#viewstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          ViewStatus defines the observed state of View.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### View.spec
+<sup><sup>[↩ Parent](#view)</sup></sup>
+
+
+
+ViewSpec defines the desired state of View.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#viewspecfilters">filters</a></b></td>
+        <td>object</td>
+        <td>
+          Filters is the filters for the view.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the view.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#viewspectimeselection">timeSelection</a></b></td>
+        <td>object</td>
+        <td>
+          TimeSelection is the time selection for the view. Exactly one of quickSelection or customSelection must be set.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.quickSelection) != has(self.customSelection): Exactly one of quickSelection or customSelection must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#viewspecfolder">folder</a></b></td>
+        <td>object</td>
+        <td>
+          Folder is the folder to which the view belongs.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#viewspecsearchquery">searchQuery</a></b></td>
+        <td>object</td>
+        <td>
+          SearchQuery is the search query for the view.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### View.spec.filters
+<sup><sup>[↩ Parent](#viewspec)</sup></sup>
+
+
+
+Filters is the filters for the view.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#viewspecfiltersfiltersindex">filters</a></b></td>
+        <td>[]object</td>
+        <td>
+          Filters is the list of filters for the view.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### View.spec.filters.filters[index]
+<sup><sup>[↩ Parent](#viewspecfilters)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name is the name of the filter.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>selectedValues</b></td>
+        <td>map[string]boolean</td>
+        <td>
+          SelectedValues is the selected values for the filter.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### View.spec.timeSelection
+<sup><sup>[↩ Parent](#viewspec)</sup></sup>
+
+
+
+TimeSelection is the time selection for the view. Exactly one of quickSelection or customSelection must be set.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#viewspectimeselectioncustomselection">customSelection</a></b></td>
+        <td>object</td>
+        <td>
+          CustomSelection is the custom selection for the view.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#viewspectimeselectionquickselection">quickSelection</a></b></td>
+        <td>object</td>
+        <td>
+          QuickSelection is the quick selection for the view.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### View.spec.timeSelection.customSelection
+<sup><sup>[↩ Parent](#viewspectimeselection)</sup></sup>
+
+
+
+CustomSelection is the custom selection for the view.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fromTime</b></td>
+        <td>string</td>
+        <td>
+          FromTime is the start time for the custom selection.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>toTime</b></td>
+        <td>string</td>
+        <td>
+          ToTime is the end time for the custom selection.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### View.spec.timeSelection.quickSelection
+<sup><sup>[↩ Parent](#viewspectimeselection)</sup></sup>
+
+
+
+QuickSelection is the quick selection for the view.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>seconds</b></td>
+        <td>integer</td>
+        <td>
+          Seconds is the number of seconds for the quick selection.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### View.spec.folder
+<sup><sup>[↩ Parent](#viewspec)</sup></sup>
+
+
+
+Folder is the folder to which the view belongs.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#viewspecfolderresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          ViewFolder custom resource name and namespace. If namespace is not set, the View namespace will be used.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### View.spec.folder.resourceRef
+<sup><sup>[↩ Parent](#viewspecfolder)</sup></sup>
+
+
+
+ViewFolder custom resource name and namespace. If namespace is not set, the View namespace will be used.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource (not id).<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### View.spec.searchQuery
+<sup><sup>[↩ Parent](#viewspec)</sup></sup>
+
+
+
+SearchQuery is the search query for the view.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>query</b></td>
+        <td>string</td>
+        <td>
+          Query is the search query.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### View.status
+<sup><sup>[↩ Parent](#view)</sup></sup>
+
+
+
+ViewStatus defines the observed state of View.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#viewstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### View.status.conditions[index]
+<sup><sup>[↩ Parent](#viewstatus)</sup></sup>
 
 
 
