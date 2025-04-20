@@ -143,7 +143,7 @@ func InitConfig(setupLog logr.Logger) *Config {
 
 		cfg.EnableWebhooks = strings.ToLower(enableWebhooks) != "false"
 
-		cfg.ReconcileIntervals, err = parseReconcileIntervals(setupLog, reconcileIntervals)
+		cfg.ReconcileIntervals, err = parseReconcileIntervals(reconcileIntervals)
 		if err != nil {
 			setupLog.Error(err, "invalid arguments for running operator")
 			os.Exit(1)
@@ -174,7 +174,7 @@ func getReconcileIntervals() map[string]*string {
 	return result
 }
 
-func parseReconcileIntervals(setupLog logr.Logger, intervals map[string]*string) (map[string]time.Duration, error) {
+func parseReconcileIntervals(intervals map[string]*string) (map[string]time.Duration, error) {
 	result := make(map[string]time.Duration)
 	for crd, interval := range intervals {
 		// Default to 0 if not set, which means no custom interval for the CRD.

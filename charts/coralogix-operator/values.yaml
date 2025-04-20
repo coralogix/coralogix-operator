@@ -135,6 +135,10 @@ coralogixOperator:
     tcoTracesPolicies: ""
     integration: ""
     alertScheduler: ""
+    dashboard: ""
+    dashboardsFolder: ""
+    view: ""
+    viewFolder: ""
     prometheusRule: ""
 
   # -- resource config for Coralogix operator
