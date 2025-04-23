@@ -15,8 +15,6 @@
 package monitoring
 
 import (
-	"strings"
-
 	"github.com/prometheus/client_golang/prometheus"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
@@ -67,7 +65,7 @@ var operatorInfoMetric = prometheus.NewGaugeVec(
 
 func SetOperatorInfoMetric(goVersion, operatorVersion, url string) {
 	labelSelector := config.GetConfig().Selector.LabelSelector.String()
-	namespaceSelector := strings.Join(config.GetConfig().Selector.NamespaceSelector, ",")
+	namespaceSelector := config.GetConfig().Selector.NamespaceSelector.String()
 	metricsLog.V(1).Info("Setting operator info metric",
 		"go_version", goVersion,
 		"operator_version", operatorVersion,

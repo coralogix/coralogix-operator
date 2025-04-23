@@ -24,7 +24,6 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/strings/slices"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -35,11 +34,7 @@ import (
 )
 
 var (
-	cfg = &Config{
-		Selector: &Selector{
-			LabelSelector: labels.Everything(),
-		},
-	}
+	cfg                       = &Config{}
 	CrClient                  client.Client
 	scheme                    *runtime.Scheme
 	once                      sync.Once
@@ -65,7 +60,7 @@ var (
 type Config struct {
 	CoralogixApiKey             string
 	CoralogixUrl                string
-	Selector                    *Selector
+	Selector                    Selector
 	ReconcileIntervals          map[string]time.Duration
 	EnableWebhooks              bool
 	PrometheusRuleController    bool

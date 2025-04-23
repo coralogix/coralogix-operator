@@ -15,20 +15,23 @@
 package config
 
 import (
+	"context"
 	"fmt"
-	"strings"
+	"log"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
 type Selector struct {
 	LabelSelector     labels.Selector
-	NamespaceSelector []string
+	NamespaceSelector labels.Selector
 }
 
-func (s *Selector) Predicate() predicate.Funcs {
+func (s Selector) Predicate() predicate.Funcs {
 	return predicate.Funcs{
 		CreateFunc: func(e event.CreateEvent) bool {
 			return s.Matches(e.Object.GetLabels(), e.Object.GetNamespace())
@@ -46,43 +49,44 @@ func (s *Selector) Predicate() predicate.Funcs {
 	}
 }
 
-func (s *Selector) Matches(resourceLabels map[string]string, namespace string) bool {
-	return s.LabelSelector.Matches(labels.Set(resourceLabels)) && s.MatchesNamespace(namespace)
-}
-
-func (s *Selector) MatchesNamespace(namespace string) bool {
-	if len(s.NamespaceSelector) == 0 {
-		return true
-	}
-	for _, ns := range s.NamespaceSelector {
-		if ns == namespace {
-			return true
+func (s Selector) Matches(resourceLabels map[string]string, namespace string) bool {
+	if labelSelector := s.LabelSelector; labelSelector != nil {
+		if !labelSelector.Matches(labels.Set(resourceLabels)) {
+			return false
 		}
 	}
-	return false
-}
-
-func parseSelector(labelSelector, namespaceSelector string) (*Selector, error) {
-	parsedLabelSelector, err := labels.Parse(labelSelector)
+	match, err := isNamespaceExistAndMatch(s.NamespaceSelector, namespace)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse label selector: %w", err)
+		log.Printf("Error getting namespace: %v", err)
+		return false
 	}
 
-	return &Selector{
-		LabelSelector:     parsedLabelSelector,
-		NamespaceSelector: parseNamespaceSelector(namespaceSelector),
-	}, nil
+	return match
 }
 
-func parseNamespaceSelector(namespaceSelector string) []string {
-	if namespaceSelector == "" {
-		return nil
+func isNamespaceExistAndMatch(selector labels.Selector, namespace string) (bool, error) {
+	ns := &corev1.Namespace{}
+	if err := GetClient().Get(context.Background(), client.ObjectKey{Name: namespace}, ns); err != nil {
+		return false, fmt.Errorf("error getting namespace: %w", err)
+	}
+	var labels labels.Set
+	labels = ns.Labels
+	return selector.Matches(labels), nil
+}
+
+func parseSelector(labelSelectorStr, namespaceSelectorStr string) (Selector, error) {
+	labelSelector, err := labels.Parse(labelSelectorStr)
+	if err != nil {
+		return Selector{}, fmt.Errorf("error parsing label selector: %w", err)
 	}
 
-	namespaceList := strings.Split(namespaceSelector, ",")
-	for i, ns := range namespaceList {
-		namespaceList[i] = strings.TrimSpace(ns)
+	namespaceSelector, err := labels.Parse(namespaceSelectorStr)
+	if err != nil {
+		return Selector{}, fmt.Errorf("error parsing namespace selector: %w", err)
 	}
 
-	return namespaceList
+	return Selector{
+		LabelSelector:     labelSelector,
+		NamespaceSelector: namespaceSelector,
+	}, nil
 }
