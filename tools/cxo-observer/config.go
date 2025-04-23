@@ -22,7 +22,6 @@ import (
 	"sync"
 
 	"github.com/go-logr/logr"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -33,11 +32,7 @@ import (
 )
 
 var (
-	cfg = &Config{
-		Selector: &Selector{
-			LabelSelector: labels.Everything(),
-		},
-	}
+	cfg  = &Config{}
 	once sync.Once
 )
 
@@ -45,7 +40,7 @@ type Config struct {
 	ChartName      string
 	ChartNamespace string
 	GVKs           []schema.GroupVersionKind
-	Selector       *Selector
+	Selector       Selector
 	Client         client.Client
 }
 

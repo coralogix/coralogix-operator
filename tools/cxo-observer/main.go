@@ -22,10 +22,14 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/coralogix/coralogix-operator/internal/config"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
@@ -153,8 +157,12 @@ func main() {
 	}
 
 	log.Info("Collecting custom resources")
-	for _, ns := range cfg.Selector.NamespaceSelector {
-		if err := collectCRsInNamespace(ctx, log, ns); err != nil {
+	filteredNamespaces, err := filteredNamespaces(cfg.Selector.NamespaceSelector)
+	if err != nil {
+
+	}
+	for _, ns := range filteredNamespaces.Items {
+		if err := collectCRsInNamespace(ctx, log, ns.Name); err != nil {
 			log.Error(err, "Failed to collect custom resources in namespace", "namespace", ns)
 		}
 	}
@@ -162,6 +170,15 @@ func main() {
 	if err := compress(); err != nil {
 		log.Error(err, "Failed to compress output dir")
 	}
+}
+
+func filteredNamespaces(selector labels.Selector) (*corev1.NamespaceList, error) {
+	namespacesList := &corev1.NamespaceList{}
+	listOptions := &client.ListOptions{LabelSelector: selector}
+	if err := config.GetClient().List(context.Background(), namespacesList, listOptions); err != nil {
+		return nil, err
+	}
+	return namespacesList, nil
 }
 
 func compress() error {
