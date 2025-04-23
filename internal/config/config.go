@@ -104,7 +104,7 @@ func InitConfig(setupLog logr.Logger) *Config {
 		flag.StringVar(&labelSelector, "label-selector", labelSelector, "A comma-separated list of key=value labels to filter custom resources.")
 
 		namespaceSelector := os.Getenv("NAMESPACE_SELECTOR")
-		flag.StringVar(&namespaceSelector, "namespace-selector", namespaceSelector, "A list of namespaces to filter custom resources.")
+		flag.StringVar(&namespaceSelector, "namespace-selector", namespaceSelector, "A comma-separated list of key=value labels to filter namespaces for the operator to watch.")
 
 		enableWebhooks := os.Getenv("ENABLE_WEBHOOKS")
 		flag.StringVar(&enableWebhooks, "enable-webhooks", enableWebhooks, "Enable webhooks for the operator. Default is true.")

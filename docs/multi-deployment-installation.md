@@ -7,7 +7,7 @@ and **`namespace-selector`** flag, which filters custom resources based on the n
 ## How It Works
 
 - By setting the `--label-selector` flag, the operator will **only reconcile resources that match the specified label selector**. 
-- By setting the `--namespace-selector` flag, the operator will **only reconcile resources that are deployed in the specified namespaces**.
+- By setting the `--namespace-selector` flag, the operator will **only reconcile resources been created at namespaces that match the specified namespace selector**.
 This allows for multiple independent deployments of the operator, each managing a different subset of resources.
 
 #### Example: Deploying an Operator using the label-selector flag
@@ -32,7 +32,7 @@ metadata:
 helm install coralogix-operator-staging coralogix/coralogix-operator \
   --set secret.data.apiKey="stg-api-key" \
   --set coralogixOperator.region="EU2" \
-  --set coralogixOperator.namespaceSelector="staging,production"
+  --set coralogixOperator.namespaceSelector="kubernetes.io/metadata.name=!staging"
 ```
 This operator installation will **only reconcile custom resources** deployed in either the `staging` or `production` namespaces.
 
