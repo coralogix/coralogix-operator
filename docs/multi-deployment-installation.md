@@ -15,7 +15,7 @@ This allows for multiple independent deployments of the operator, each managing 
 helm install coralogix-operator-staging coralogix/coralogix-operator \
   --set secret.data.apiKey="stg-api-key" \
   --set coralogixOperator.region="EU2" \
-  --set coralogixOperator.labelSelector="env=stg,team=a"
+  --set coralogixOperator.labelSelector="{\"matchExpressions\":[{\"key\":\"app\",\"operator\":\"In\",\"values\":[\"nginx\"]}]}"
 ```
 This operator installation will **only reconcile custom resources** labeled:
 ```yaml
@@ -32,7 +32,7 @@ metadata:
 helm install coralogix-operator-staging coralogix/coralogix-operator \
   --set secret.data.apiKey="stg-api-key" \
   --set coralogixOperator.region="EU2" \
-  --set coralogixOperator.namespaceSelector="kubernetes.io/metadata.name=!staging"
+  --set coralogixOperator.namespaceSelector="{\"matchExpressions\":[{\"key\":\"kubernetes.io/metadata.name\",\"operator\":\"NotIn\",\"values\":[\"staging\",\"production\"]}]}"
 ```
 This operator installation will **only reconcile custom resources** deployed in either the `staging` or `production` namespaces.
 
