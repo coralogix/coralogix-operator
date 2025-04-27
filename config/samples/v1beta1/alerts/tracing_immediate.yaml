@@ -28,7 +28,7 @@ spec:
                 operation: startsWith
             subsystemName:
               - values: [warning]
-                operation: or
+                operation: is
               - values: [info]
                 operation: endsWith
       notificationPayloadFilter: [ "coralogix.metadata.sdkId" ]
