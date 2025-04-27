@@ -101,10 +101,10 @@ func InitConfig(setupLog logr.Logger) *Config {
 		flag.StringVar(&cfg.CoralogixApiKey, "api-key", apiKey, "The proper api-key based on your Coralogix cluster's region.")
 
 		labelSelector := os.Getenv("LABEL_SELECTOR")
-		flag.StringVar(&labelSelector, "label-selector", labelSelector, "A comma-separated list of key=value labels to filter custom resources.")
+		flag.StringVar(&labelSelector, "label-selector", labelSelector, "A labelsSelector structure to filter resources by their labels.")
 
 		namespaceSelector := os.Getenv("NAMESPACE_SELECTOR")
-		flag.StringVar(&namespaceSelector, "namespace-selector", namespaceSelector, "A comma-separated list of key=value labels to filter namespaces for the operator to watch.")
+		flag.StringVar(&namespaceSelector, "namespace-selector", namespaceSelector, "A labelsSelector structure to filter resources by their namespaces' labels.")
 
 		enableWebhooks := os.Getenv("ENABLE_WEBHOOKS")
 		flag.StringVar(&enableWebhooks, "enable-webhooks", enableWebhooks, "Enable webhooks for the operator. Default is true.")

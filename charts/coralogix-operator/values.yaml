@@ -115,7 +115,7 @@ coralogixOperator:
   # -- Coralogix Account Domain
   domain: ""
 
-  # -- A comma-separated list of key=value labels to filter custom resources
+  # -- A selector to filter custom resources (by the custom resources' labels). {} matches all custom resources.
   labelSelector: {}
   ## Example which selects all custom resources with the label app=coralogix-operator
   #  labelSelector:
@@ -125,8 +125,8 @@ coralogixOperator:
   #        values:
   #          - coralogix-operator
 
-  # -- A list of namespaces to filter custom resources (by the namespaces' labels).
-  namespaceSelector: {}
+  # -- A selector to filter namespaces (by the namespace's labels). {} matches all namespaces.
+  namespaceSelector: { }
   ## Example which selects all custom resources in the namespace coralogix-operator,
   #  namespaceSelector:
   #    matchNames:
