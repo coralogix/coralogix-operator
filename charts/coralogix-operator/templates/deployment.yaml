@@ -43,8 +43,18 @@ spec:
         - -leader-election-id={{ include "coralogixOperator.fullname" . }}
         - -prometheus-rule-controller={{.Values.coralogixOperator.prometheusRules.enabled}}
         - -enable-webhooks={{.Values.coralogixOperator.webhooks.enabled }}
-        - -label-selector={{ toJson .Values.coralogixOperator.labelSelector }}
-        - -namespace-selector={{ toJson .Values.coralogixOperator.namespaceSelector }}
+        {{- if .Values.coralogixOperator.labelSelector }}
+        - -label-selector={{- $out := "" -}}
+        {{- range $k, $v := .Values.coralogixOperator.labelSelector }}
+          {{- $out = printf "%s%s=%s," $out $k $v }}
+        {{- end }}
+        {{- trimSuffix "," $out }}
+        {{ end }}
+        - -namespace-selector={{- $out := "" -}}
+        {{- range $k, $v := .Values.coralogixOperator.namespaceSelector }}
+          {{- $out = printf "%s%s=%s," $out $k $v }}
+        {{- end }}
+        {{- trimSuffix "," $out }}
 {{- range $key, $value := .Values.coralogixOperator.reconcileIntervalSeconds }}
         - -{{ lower $key }}-reconcile-interval-seconds={{ $value }}
 {{- end }}

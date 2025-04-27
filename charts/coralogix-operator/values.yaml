@@ -119,7 +119,12 @@ coralogixOperator:
   labelSelector: {}
 
   # -- A list of namespaces to filter custom resources
-  namespaceSelector: {}
+  namespaceSelector:
+    matchExpressions:
+      - key: prometheus
+        operator: NotIn
+        values:
+          - default
 
   # -- The interval in seconds to reconcile each custom resource
   reconcileIntervalSeconds:
