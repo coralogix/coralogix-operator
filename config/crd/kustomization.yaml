@@ -21,30 +21,11 @@ resources:
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
-# [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix.
-# patches here are for enabling the conversion webhook for each CRD
-#- patches/webhook_in_rulegroups.yaml
 - patches/webhook_in_coralogix_alerts.yaml
-#- patches/webhook_in_recordingrulegroupsets.yaml
-#- patches/webhook_in_outboundwebhooks.yaml
 #+kubebuilder:scaffold:crdkustomizewebhookpatch
 
-# [CERTMANAGER] To enable cert-manager, uncomment all the sections with [CERTMANAGER] prefix.
 # patches here are for enabling the CA injection for each CRD
-#- patches/cainjection_in_rulegroups.yaml
 - patches/cainjection_in_coralogix_alerts.yaml
-#- patches/cainjection_in_recordingrulegroupsets.yaml
-#- patches/cainjection_in_outboundwebhooks.yaml
-#- patches/cainjection_in_coralogix_apikeys.yaml
-#- patches/cainjection_in_coralogix_customroles.yaml
-#- patches/cainjection_in_coralogix_scopes.yaml
-#- patches/cainjection_in_coralogix_groups.yaml
-#- patches/cainjection_in_coralogix_tcologspolicies.yaml
-#- patches/cainjection_in_coralogix_tcotracespolicies.yaml
-#- patches/cainjection_in_coralogix_integrations.yaml
-#- patches/cainjection_in_coralogix_alertschedulers.yaml
-#- patches/cainjection_in_coralogix_viewfolders.yaml
-#- patches/cainjection_in_coralogix_views.yaml
 #+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # the following config is for teaching kustomize how to do kustomization for CRDs.
