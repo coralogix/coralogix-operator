@@ -547,7 +547,7 @@ func convertTracingLabelFilterV1beta1ToV1alpha1(filters []v1beta1.TracingFilterT
 	var result []string
 	for _, filter := range filters {
 		switch filter.Operation {
-		case v1beta1.TracingFilterOperationTypeOr:
+		case v1beta1.TracingFilterOperationTypeIs:
 			result = append(result, filter.Values...)
 		case v1beta1.TracingFilterOperationTypeIncludes:
 			for _, value := range filter.Values {
@@ -672,7 +672,7 @@ func convertLabelFilterV1beta1ToV1alpha1(labelFilters []v1beta1.LabelFilterType)
 	result := make([]string, len(labelFilters))
 	for i, labelFilter := range labelFilters {
 		switch labelFilter.Operation {
-		case v1beta1.LogFilterOperationTypeOr:
+		case v1beta1.LogFilterOperationTypeIs:
 			result[i] = labelFilter.Value
 		case v1beta1.LogFilterOperationTypeIncludes:
 			result[i] = "filter:contains:" + labelFilter.Value
@@ -1109,7 +1109,7 @@ func convertTracingFilterTypeV1alpha1ToV1beta1(labels []string) []v1beta1.Tracin
 	}
 
 	filterTypeOperationToValues := map[v1beta1.TracingFilterOperationType][]string{
-		v1beta1.TracingFilterOperationTypeOr:         {},
+		v1beta1.TracingFilterOperationTypeIs:         {},
 		v1beta1.TracingFilterOperationTypeIncludes:   {},
 		v1beta1.TracingFilterOperationTypeEndsWith:   {},
 		v1beta1.TracingFilterOperationTypeStartsWith: {},
@@ -1124,7 +1124,7 @@ func convertTracingFilterTypeV1alpha1ToV1beta1(labels []string) []v1beta1.Tracin
 		} else if value, prefixExist = strings.CutPrefix(label, "filter:endsWith:"); prefixExist {
 			filterTypeOperationToValues[v1beta1.TracingFilterOperationTypeEndsWith] = append(filterTypeOperationToValues[v1beta1.TracingFilterOperationTypeEndsWith], value)
 		} else {
-			filterTypeOperationToValues[v1beta1.TracingFilterOperationTypeOr] = append(filterTypeOperationToValues[v1beta1.TracingFilterOperationTypeOr], label)
+			filterTypeOperationToValues[v1beta1.TracingFilterOperationTypeIs] = append(filterTypeOperationToValues[v1beta1.TracingFilterOperationTypeIs], label)
 		}
 	}
 
@@ -1323,7 +1323,7 @@ func convertLabelFilterV1alpha1ToV1beta1(labels []string) []v1beta1.LabelFilterT
 		} else {
 			result[i] = v1beta1.LabelFilterType{
 				Value:     label,
-				Operation: v1beta1.LogFilterOperationTypeOr,
+				Operation: v1beta1.LogFilterOperationTypeIs,
 			}
 		}
 	}

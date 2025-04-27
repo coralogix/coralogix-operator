@@ -78,7 +78,7 @@ var (
 		LogSeverityVerbose:  cxsdk.LogSeverityVerboseUnspecified,
 	}
 	LogsFiltersOperationToProtoOperation = map[LogFilterOperationType]cxsdk.LogFilterOperationType{
-		LogFilterOperationTypeOr:         cxsdk.LogFilterOperationIsOrUnspecified,
+		LogFilterOperationTypeIs:         cxsdk.LogFilterOperationIsOrUnspecified,
 		LogFilterOperationTypeIncludes:   cxsdk.LogFilterOperationIncludes,
 		LogFilterOperationTypeEndWith:    cxsdk.LogFilterOperationEndsWith,
 		LogFilterOperationTypeStartsWith: cxsdk.LogFilterOperationStartsWith,
@@ -187,7 +187,7 @@ var (
 		TracingTimeWindowValue36Hours:   cxsdk.TracingTimeWindowValue36Hours,
 	}
 	TracingFilterOperationTypeToProto = map[TracingFilterOperationType]cxsdk.TracingFilterOperationType{
-		TracingFilterOperationTypeOr:         cxsdk.TracingFilterOperationTypeIsOrUnspecified,
+		TracingFilterOperationTypeIs:         cxsdk.TracingFilterOperationTypeIsOrUnspecified,
 		TracingFilterOperationTypeIncludes:   cxsdk.TracingFilterOperationTypeIncludes,
 		TracingFilterOperationTypeEndsWith:   cxsdk.TracingFilterOperationTypeEndsWith,
 		TracingFilterOperationTypeStartsWith: cxsdk.TracingFilterOperationTypeStartsWith,
@@ -871,13 +871,13 @@ type TracingFilterType struct {
 	Operation TracingFilterOperationType `json:"operation"`
 }
 
-// +kubebuilder:validation:Enum=or;includes;endsWith;startsWith;isNot
+// +kubebuilder:validation:Enum=includes;endsWith;startsWith;isNot;is
 // Tracing filter operations.
 type TracingFilterOperationType string
 
 // Tracing filter operation values.
 const (
-	TracingFilterOperationTypeOr         TracingFilterOperationType = "or"
+	TracingFilterOperationTypeIs         TracingFilterOperationType = "is"
 	TracingFilterOperationTypeIncludes   TracingFilterOperationType = "includes"
 	TracingFilterOperationTypeEndsWith   TracingFilterOperationType = "endsWith"
 	TracingFilterOperationTypeStartsWith TracingFilterOperationType = "startsWith"
@@ -1243,7 +1243,7 @@ type LabelFilterType struct {
 	//+kubebuilder:validation:MinLength=0
 	Value string `json:"value"`
 
-	//+kubebuilder:default=or
+	//+kubebuilder:default=is
 	// Operation to apply.
 	Operation LogFilterOperationType `json:"operation"`
 }
@@ -1261,13 +1261,13 @@ type UndetectedValuesManagement struct {
 	AutoRetireTimeframe AutoRetireTimeframe `json:"autoRetireTimeframe"`
 }
 
-// +kubebuilder:validation:Enum=or;includes;endsWith;startsWith
+// +kubebuilder:validation:Enum=is;includes;endsWith;startsWith
 // Operation type for log filters.
 type LogFilterOperationType string
 
 // Operation type for log filter values.
 const (
-	LogFilterOperationTypeOr         LogFilterOperationType = "or"
+	LogFilterOperationTypeIs         LogFilterOperationType = "is"
 	LogFilterOperationTypeIncludes   LogFilterOperationType = "includes"
 	LogFilterOperationTypeEndWith    LogFilterOperationType = "endsWith"
 	LogFilterOperationTypeStartsWith LogFilterOperationType = "startsWith"

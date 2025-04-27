@@ -1163,10 +1163,10 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
@@ -1199,10 +1199,10 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
@@ -1291,10 +1291,10 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
@@ -1327,10 +1327,10 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
@@ -1374,10 +1374,10 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
@@ -1410,10 +1410,10 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
@@ -1496,10 +1496,10 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
@@ -1532,10 +1532,10 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
@@ -1572,10 +1572,10 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
@@ -1608,10 +1608,10 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
@@ -1723,10 +1723,10 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
@@ -1759,10 +1759,10 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
@@ -1905,10 +1905,10 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
@@ -1941,10 +1941,10 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
@@ -2074,10 +2074,10 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
@@ -2110,10 +2110,10 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
@@ -2422,11 +2422,11 @@ spec:
                                         operation:
                                           description: Tracing filter operations.
                                           enum:
-                                          - or
                                           - includes
                                           - endsWith
                                           - startsWith
                                           - isNot
+                                          - is
                                           type: string
                                         values:
                                           items:
@@ -2444,11 +2444,11 @@ spec:
                                         operation:
                                           description: Tracing filter operations.
                                           enum:
-                                          - or
                                           - includes
                                           - endsWith
                                           - startsWith
                                           - isNot
+                                          - is
                                           type: string
                                         values:
                                           items:
@@ -2466,11 +2466,11 @@ spec:
                                         operation:
                                           description: Tracing filter operations.
                                           enum:
-                                          - or
                                           - includes
                                           - endsWith
                                           - startsWith
                                           - isNot
+                                          - is
                                           type: string
                                         values:
                                           items:
@@ -2491,11 +2491,11 @@ spec:
                                             operation:
                                               description: Tracing filter operations.
                                               enum:
-                                              - or
                                               - includes
                                               - endsWith
                                               - startsWith
                                               - isNot
+                                              - is
                                               type: string
                                             values:
                                               items:
@@ -2519,11 +2519,11 @@ spec:
                                         operation:
                                           description: Tracing filter operations.
                                           enum:
-                                          - or
                                           - includes
                                           - endsWith
                                           - startsWith
                                           - isNot
+                                          - is
                                           type: string
                                         values:
                                           items:
@@ -2609,11 +2609,11 @@ spec:
                                         operation:
                                           description: Tracing filter operations.
                                           enum:
-                                          - or
                                           - includes
                                           - endsWith
                                           - startsWith
                                           - isNot
+                                          - is
                                           type: string
                                         values:
                                           items:
@@ -2631,11 +2631,11 @@ spec:
                                         operation:
                                           description: Tracing filter operations.
                                           enum:
-                                          - or
                                           - includes
                                           - endsWith
                                           - startsWith
                                           - isNot
+                                          - is
                                           type: string
                                         values:
                                           items:
@@ -2653,11 +2653,11 @@ spec:
                                         operation:
                                           description: Tracing filter operations.
                                           enum:
-                                          - or
                                           - includes
                                           - endsWith
                                           - startsWith
                                           - isNot
+                                          - is
                                           type: string
                                         values:
                                           items:
@@ -2678,11 +2678,11 @@ spec:
                                             operation:
                                               description: Tracing filter operations.
                                               enum:
-                                              - or
                                               - includes
                                               - endsWith
                                               - startsWith
                                               - isNot
+                                              - is
                                               type: string
                                             values:
                                               items:
@@ -2706,11 +2706,11 @@ spec:
                                         operation:
                                           description: Tracing filter operations.
                                           enum:
-                                          - or
                                           - includes
                                           - endsWith
                                           - startsWith
                                           - isNot
+                                          - is
                                           type: string
                                         values:
                                           items:
