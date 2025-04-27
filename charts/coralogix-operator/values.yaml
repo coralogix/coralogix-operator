@@ -4,7 +4,7 @@ nameOverride: ""
 # -- Provide a name to substitute for the full names of resources
 fullnameOverride: ""
 
-imagePullSecrets: []
+imagePullSecrets: [ ]
 
 deployment:
   # -- How many coralogix-operator pods to run
@@ -21,10 +21,10 @@ serviceAccount:
   name: ""
 
   # -- Annotations to add to the service account
-  annotations: {}
+  annotations: { }
 
 # -- Annotations to add to the operator pod
-podAnnotations: {}
+podAnnotations: { }
 
 # -- Service monitor for Prometheus to use.
 serviceMonitor:
@@ -56,15 +56,15 @@ securityContext:
 
 # -- Define which Nodes the Pods are scheduled on.
 # -- ref: https://kubernetes.io/docs/user-guide/node-selection/
-nodeSelector: {}
+nodeSelector: { }
 
 # -- If specified, the pod's tolerations.
 # -- ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-tolerations: []
+tolerations: [ ]
 
 # -- Assign custom affinity rules
 # -- ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
-affinity: {}
+affinity: { }
 
 # -- Configuration for Coralogix operator secret
 secret:
@@ -72,15 +72,15 @@ secret:
   create: true
 
   # -- Labels to add to the Coralogix operator secret
-  labels: {}
+  labels: { }
 
   # -- Annotations to add to the Coralogix operator secret
-  annotations: {}
+  annotations: { }
 
   # -- secretKeyReference is used to reference an existing Kubernetes secret
   # -- Use secretKeyReference if you're concerned with exposing sensitive data over you chart's values file.
   # -- secret.data and secret.secretKeyReference should be mutually exclusive.
-  secretKeyReference: {}
+  secretKeyReference: { }
   #   name: "coralogix-operator"
   #   key: "apiKey"
 
@@ -117,14 +117,27 @@ coralogixOperator:
 
   # -- A comma-separated list of key=value labels to filter custom resources
   labelSelector: {}
+  ## Example which selects all custom resources with the label app=coralogix-operator
+  #  labelSelector:
+  #    matchExpressions:
+  #      - key: app
+  #        operator: In
+  #        values:
+  #          - coralogix-operator
 
-  # -- A list of namespaces to filter custom resources
-  namespaceSelector:
-    matchExpressions:
-      - key: prometheus
-        operator: NotIn
-        values:
-          - default
+  # -- A list of namespaces to filter custom resources (by the namespaces' labels).
+  namespaceSelector: {}
+  ## Example which selects all custom resources in the namespace coralogix-operator,
+  #  namespaceSelector:
+  #    matchNames:
+  #      - coralogix-operator
+  ## Example which selects all custom resources which are not in the namespace staging
+  #  namespaceSelector:
+  #    matchExpressions:
+  #      - key: kubernetes.io/metadata.name
+  #        operator: NotIn
+  #        values:
+  #          - staging
 
   # -- The interval in seconds to reconcile each custom resource
   reconcileIntervalSeconds:
@@ -147,7 +160,7 @@ coralogixOperator:
     prometheusRule: ""
 
   # -- resource config for Coralogix operator
-  resources: {}
+  resources: { }
 
   # -- Security context for Coralogix operator container
   securityContext:

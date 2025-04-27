@@ -16,10 +16,13 @@ package config
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -77,14 +80,38 @@ func isNamespaceExistAndMatch(selector labels.Selector, namespace string) (bool,
 }
 
 func parseSelector(labelSelectorStr, namespaceSelectorStr string) (Selector, error) {
-	labelSelector, err := labels.Parse(labelSelectorStr)
+	var err error
+
+	// Unquote the flags to remove extra escaping
+	labelSelectorStr, err = strconv.Unquote(labelSelectorStr)
 	if err != nil {
-		return Selector{}, fmt.Errorf("error parsing label selector: %w", err)
+		// not fatal; maybe it wasn't quoted
+	}
+	namespaceSelectorStr, err = strconv.Unquote(namespaceSelectorStr)
+	if err != nil {
+		// not fatal; maybe it wasn't quoted
 	}
 
-	namespaceSelector, err := labels.Parse(namespaceSelectorStr)
+	var labelSel metav1.LabelSelector
+	if labelSelectorStr != "" {
+		if err := json.Unmarshal([]byte(labelSelectorStr), &labelSel); err != nil {
+			return Selector{}, fmt.Errorf("failed to parse labelSelector %s: %w", labelSelectorStr, err)
+		}
+	}
+	var namespaceSel metav1.LabelSelector
+	if namespaceSelectorStr != "" {
+		if err := json.Unmarshal([]byte(namespaceSelectorStr), &namespaceSel); err != nil {
+			return Selector{}, fmt.Errorf("failed to parse namespaceSelector %s: %w", namespaceSelectorStr, err)
+		}
+	}
+
+	labelSelector, err := metav1.LabelSelectorAsSelector(&labelSel)
 	if err != nil {
-		return Selector{}, fmt.Errorf("error parsing namespace selector: %w", err)
+		return Selector{}, fmt.Errorf("failed to convert labelSelector %s: %w", labelSelectorStr, err)
+	}
+	namespaceSelector, err := metav1.LabelSelectorAsSelector(&namespaceSel)
+	if err != nil {
+		return Selector{}, fmt.Errorf("failed to convert namespaceSelector %s: %w", namespaceSelectorStr, err)
 	}
 
 	return Selector{
