@@ -871,7 +871,7 @@ type TracingFilterType struct {
 	Operation TracingFilterOperationType `json:"operation"`
 }
 
-// +kubebuilder:validation:Enum=or;includes;endsWith;startsWith;isNot;is
+// +kubebuilder:validation:Enum=includes;endsWith;startsWith;isNot;is
 // Tracing filter operations.
 type TracingFilterOperationType string
 
@@ -1243,7 +1243,7 @@ type LabelFilterType struct {
 	//+kubebuilder:validation:MinLength=0
 	Value string `json:"value"`
 
-	//+kubebuilder:default=or
+	//+kubebuilder:default=is
 	// Operation to apply.
 	Operation LogFilterOperationType `json:"operation"`
 }

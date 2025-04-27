@@ -1163,7 +1163,7 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
                                           - is
@@ -1199,7 +1199,7 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
                                           - is
@@ -1291,7 +1291,7 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
                                           - is
@@ -1327,7 +1327,7 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
                                           - is
@@ -1374,7 +1374,7 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
                                           - is
@@ -1410,7 +1410,7 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
                                           - is
@@ -1496,7 +1496,7 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
                                           - is
@@ -1532,7 +1532,7 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
                                           - is
@@ -1572,7 +1572,7 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
                                           - is
@@ -1608,7 +1608,7 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
                                           - is
@@ -1723,7 +1723,7 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
                                           - is
@@ -1759,7 +1759,7 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
                                           - is
@@ -1905,7 +1905,7 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
                                           - is
@@ -1941,7 +1941,7 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
                                           - is
@@ -2074,7 +2074,7 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
                                           - is
@@ -2110,7 +2110,7 @@ spec:
                                       description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
                                           description: Operation to apply.
                                           enum:
                                           - is
@@ -2422,7 +2422,6 @@ spec:
                                         operation:
                                           description: Tracing filter operations.
                                           enum:
-                                          - or
                                           - includes
                                           - endsWith
                                           - startsWith
@@ -2445,7 +2444,6 @@ spec:
                                         operation:
                                           description: Tracing filter operations.
                                           enum:
-                                          - or
                                           - includes
                                           - endsWith
                                           - startsWith
@@ -2468,7 +2466,6 @@ spec:
                                         operation:
                                           description: Tracing filter operations.
                                           enum:
-                                          - or
                                           - includes
                                           - endsWith
                                           - startsWith
@@ -2494,7 +2491,6 @@ spec:
                                             operation:
                                               description: Tracing filter operations.
                                               enum:
-                                              - or
                                               - includes
                                               - endsWith
                                               - startsWith
@@ -2523,7 +2519,6 @@ spec:
                                         operation:
                                           description: Tracing filter operations.
                                           enum:
-                                          - or
                                           - includes
                                           - endsWith
                                           - startsWith
@@ -2614,7 +2609,6 @@ spec:
                                         operation:
                                           description: Tracing filter operations.
                                           enum:
-                                          - or
                                           - includes
                                           - endsWith
                                           - startsWith
@@ -2637,7 +2631,6 @@ spec:
                                         operation:
                                           description: Tracing filter operations.
                                           enum:
-                                          - or
                                           - includes
                                           - endsWith
                                           - startsWith
@@ -2660,7 +2653,6 @@ spec:
                                         operation:
                                           description: Tracing filter operations.
                                           enum:
-                                          - or
                                           - includes
                                           - endsWith
                                           - startsWith
@@ -2686,7 +2678,6 @@ spec:
                                             operation:
                                               description: Tracing filter operations.
                                               enum:
-                                              - or
                                               - includes
                                               - endsWith
                                               - startsWith
@@ -2715,7 +2706,6 @@ spec:
                                         operation:
                                           description: Tracing filter operations.
                                           enum:
-                                          - or
                                           - includes
                                           - endsWith
                                           - startsWith
