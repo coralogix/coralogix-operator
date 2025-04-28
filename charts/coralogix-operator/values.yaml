@@ -127,10 +127,13 @@ coralogixOperator:
 
   # -- A selector to filter namespaces (by the namespace's labels). {} matches all namespaces. Cannot be set to nil.
   namespaceSelector: { }
-  ## Example which selects all custom resources in the namespace coralogix-operator,
+  ## Example which selects all custom resources in the namespace coralogix-operator
   #  namespaceSelector:
-  #    matchNames:
-  #      - coralogix-operator
+  #    matchLabels:
+  #     - key: kubernetes.io/metadata.name
+  #       operator: In
+  #       values:
+  #         - coralogix-operator
   ## Example which selects all custom resources which are not in the namespace staging
   #  namespaceSelector:
   #    matchExpressions:

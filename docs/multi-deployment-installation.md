@@ -34,7 +34,7 @@ helm install coralogix-operator-staging coralogix/coralogix-operator \
   --set coralogixOperator.region="EU2" \
   --set coralogixOperator.namespaceSelector={"matchExpressions":[{"key":"kubernetes.io/metadata.name","operator":"NotIn","values":["staging","testing"]}]}
 ```
-This operator installation will **only reconcile custom resources** deployed in the `staging` or `testing` namespaces.
+This operator installation will reconcile custom resources **not** deployed in the `staging` or `testing` namespaces.
 
 ---
  
