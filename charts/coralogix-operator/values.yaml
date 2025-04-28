@@ -117,23 +117,35 @@ coralogixOperator:
 
   # -- A selector to filter custom resources (by the custom resources' labels). {} matches all custom resources. Cannot be set to nil.
   labelSelector: {}
-  ## Example which selects all custom resources with the label app=coralogix-operator
+  ## Example which selects all custom resources with the label app=coralogix-operator and env=production. **Labels are ANDed**.
+  #  labelSelector:
+  #    matchLabels: {
+  #      app: coralogix-operator
+  #      env: production
+  #    }
+
+  ## Example which selects all custom resources with the label app=coralogix-operator or env=production. **Labels are ORed**.
   #  labelSelector:
   #    matchExpressions:
   #      - key: app
   #        operator: In
   #        values:
   #          - coralogix-operator
+  #      - key: env
+  #        operator: In
+  #        values:
+  #          - production
+  #
+
 
   # -- A selector to filter namespaces (by the namespace's labels). {} matches all namespaces. Cannot be set to nil.
-  namespaceSelector: { }
+  namespaceSelector: {}
   ## Example which selects all custom resources in the namespace coralogix-operator
   #  namespaceSelector:
-  #    matchLabels:
-  #     - key: kubernetes.io/metadata.name
-  #       operator: In
-  #       values:
-  #         - coralogix-operator
+  #    matchLabels: {
+  #      kubernetes.io/metadata.name: default
+  #    }
+
   ## Example which selects all custom resources which are not in the namespace staging
   #  namespaceSelector:
   #    matchExpressions:
