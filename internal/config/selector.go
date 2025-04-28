@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -62,7 +61,6 @@ func (s Selector) Matches(resourceLabels map[string]string, namespace string) bo
 	if namespaceSelector := s.NamespaceSelector; namespaceSelector != nil {
 		match, err := isNamespaceMatch(s.NamespaceSelector, namespace)
 		if err != nil {
-			log.Printf("Error getting namespace: %v", err)
 			return false
 		}
 		return match
@@ -79,18 +77,18 @@ func isNamespaceMatch(selector labels.Selector, namespace string) (bool, error) 
 	return selector.Matches(labels.Set(ns.Labels)), nil
 }
 
-func parseSelector(labelSelectorStr, namespaceSelectorStr string) (Selector, error) {
+func parseSelector(labelSelectorStr, namespaceSelectorStr string) (*Selector, error) {
 	labelSelector, err := stringToLabelSelector(labelSelectorStr)
 	if err != nil {
-		return Selector{}, fmt.Errorf("failed to parse label selector: %w", err)
+		return nil, fmt.Errorf("failed to parse label selector: %w", err)
 	}
 
 	namespaceSelector, err := stringToLabelSelector(namespaceSelectorStr)
 	if err != nil {
-		return Selector{}, fmt.Errorf("failed to parse namespace selector: %w", err)
+		return nil, fmt.Errorf("failed to parse namespace selector: %w", err)
 	}
 
-	return Selector{
+	return &Selector{
 		LabelSelector:     labelSelector,
 		NamespaceSelector: namespaceSelector,
 	}, nil

@@ -110,7 +110,7 @@ func listResourcesInGVK(gvk schema.GroupVersionKind) ([]unstructured.Unstructure
 		labelSelector = labelSelector.Add(*req)
 	}
 
-	namespaces, err := filteredNamespaces(config.GetConfig().Selector.NamespaceSelector)
+	namespaces, err := filterNamespaces(config.GetConfig().Selector.NamespaceSelector)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func listResourcesInGVK(gvk schema.GroupVersionKind) ([]unstructured.Unstructure
 	return result, nil
 }
 
-func filteredNamespaces(selector labels.Selector) (*corev1.NamespaceList, error) {
+func filterNamespaces(selector labels.Selector) (*corev1.NamespaceList, error) {
 	namespacesList := &corev1.NamespaceList{}
 	listOptions := &client.ListOptions{LabelSelector: selector}
 	if err := config.GetClient().List(context.Background(), namespacesList, listOptions); err != nil {

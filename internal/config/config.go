@@ -130,11 +130,12 @@ func InitConfig(setupLog logr.Logger) *Config {
 			os.Exit(1)
 		}
 
-		cfg.Selector, err = parseSelector(labelSelector, namespaceSelector)
+		selector, err := parseSelector(labelSelector, namespaceSelector)
 		if err != nil {
 			setupLog.Error(err, "invalid arguments for running operator")
 			os.Exit(1)
 		}
+		cfg.Selector = *selector
 
 		cfg.EnableWebhooks = strings.ToLower(enableWebhooks) != "false"
 
