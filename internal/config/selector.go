@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -95,17 +94,9 @@ func parseSelector(labelSelectorStr, namespaceSelectorStr string) (*Selector, er
 }
 
 func stringToLabelSelector(selectorStr string) (labels.Selector, error) {
-	if strings.HasPrefix(selectorStr, "{") {
-		var labelSelector metav1.LabelSelector
-		if err := json.Unmarshal([]byte(selectorStr), &labelSelector); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal label selector JSON: %s, %w", selectorStr, err)
-		}
-		return metav1.LabelSelectorAsSelector(&labelSelector)
+	var labelSelector metav1.LabelSelector
+	if err := json.Unmarshal([]byte(selectorStr), &labelSelector); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal label selector JSON: %s, %w", selectorStr, err)
 	}
-
-	selector, err := labels.Parse(selectorStr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse selector string: %s, %w", selectorStr, err)
-	}
-	return selector, nil
+	return metav1.LabelSelectorAsSelector(&labelSelector)
 }
