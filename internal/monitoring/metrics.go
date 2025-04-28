@@ -58,7 +58,7 @@ var operatorInfoMetric = prometheus.NewGaugeVec(
 		Name: "cx_operator_info",
 		Help: "Coralogix Operator information.",
 	},
-	[]string{"go_version", "operator_version", "coralogix_url", "label_selector", "namespace_selector"},
+	[]string{"go_version", "operator_version", "coralogix_url"},
 )
 
 func SetOperatorInfoMetric(goVersion, operatorVersion, url string) {

@@ -94,6 +94,9 @@ func parseSelector(labelSelectorStr, namespaceSelectorStr string) (*Selector, er
 }
 
 func stringToLabelSelector(selectorStr string) (labels.Selector, error) {
+	if selectorStr == "" {
+		return nil, nil
+	}
 	var labelSelector metav1.LabelSelector
 	if err := json.Unmarshal([]byte(selectorStr), &labelSelector); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal label selector JSON: %s, %w", selectorStr, err)
