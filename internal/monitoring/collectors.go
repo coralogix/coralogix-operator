@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/prometheus/client_golang/prometheus"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -109,24 +110,31 @@ func listResourcesInGVK(gvk schema.GroupVersionKind) ([]unstructured.Unstructure
 		labelSelector = labelSelector.Add(*req)
 	}
 
-	namespaces := config.GetConfig().Selector.NamespaceSelector
-	if len(namespaces) == 0 {
-		namespaces = []string{""} // Empty string means "all namespaces" in client.List
+	namespaces, err := filterNamespaces(config.GetConfig().Selector.NamespaceSelector)
+	if err != nil {
+		return nil, err
 	}
 
-	for _, ns := range namespaces {
+	for _, ns := range namespaces.Items {
 		resources := &unstructured.UnstructuredList{}
 		resources.SetGroupVersionKind(gvk)
-		if err := config.GetClient().List(context.Background(), resources,
-			&client.ListOptions{LabelSelector: labelSelector, Namespace: ns}); err != nil {
+		if err = config.GetClient().List(context.Background(), resources,
+			&client.ListOptions{LabelSelector: labelSelector, Namespace: ns.Name}); err != nil {
 			return nil, err
 		}
-
 		result = append(result, resources.Items...)
-
 	}
 
 	return result, nil
+}
+
+func filterNamespaces(selector labels.Selector) (*corev1.NamespaceList, error) {
+	namespacesList := &corev1.NamespaceList{}
+	listOptions := &client.ListOptions{LabelSelector: selector}
+	if err := config.GetClient().List(context.Background(), namespacesList, listOptions); err != nil {
+		return nil, err
+	}
+	return namespacesList, nil
 }
 
 func getResourceStatus(resource unstructured.Unstructured) string {

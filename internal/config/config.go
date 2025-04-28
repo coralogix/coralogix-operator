@@ -24,7 +24,6 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/strings/slices"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -35,11 +34,7 @@ import (
 )
 
 var (
-	cfg = &Config{
-		Selector: &Selector{
-			LabelSelector: labels.Everything(),
-		},
-	}
+	cfg                       = &Config{}
 	CrClient                  client.Client
 	scheme                    *runtime.Scheme
 	once                      sync.Once
@@ -65,7 +60,7 @@ var (
 type Config struct {
 	CoralogixApiKey             string
 	CoralogixUrl                string
-	Selector                    *Selector
+	Selector                    Selector
 	ReconcileIntervals          map[string]time.Duration
 	EnableWebhooks              bool
 	PrometheusRuleController    bool
@@ -106,10 +101,10 @@ func InitConfig(setupLog logr.Logger) *Config {
 		flag.StringVar(&cfg.CoralogixApiKey, "api-key", apiKey, "The proper api-key based on your Coralogix cluster's region.")
 
 		labelSelector := os.Getenv("LABEL_SELECTOR")
-		flag.StringVar(&labelSelector, "label-selector", labelSelector, "A comma-separated list of key=value labels to filter custom resources.")
+		flag.StringVar(&labelSelector, "label-selector", labelSelector, "A labelsSelector structure to filter resources by their labels.")
 
 		namespaceSelector := os.Getenv("NAMESPACE_SELECTOR")
-		flag.StringVar(&namespaceSelector, "namespace-selector", namespaceSelector, "A list of namespaces to filter custom resources.")
+		flag.StringVar(&namespaceSelector, "namespace-selector", namespaceSelector, "A labelsSelector structure to filter resources by their namespaces' labels.")
 
 		enableWebhooks := os.Getenv("ENABLE_WEBHOOKS")
 		flag.StringVar(&enableWebhooks, "enable-webhooks", enableWebhooks, "Enable webhooks for the operator. Default is true.")
@@ -135,11 +130,12 @@ func InitConfig(setupLog logr.Logger) *Config {
 			os.Exit(1)
 		}
 
-		cfg.Selector, err = parseSelector(labelSelector, namespaceSelector)
+		selector, err := parseSelector(labelSelector, namespaceSelector)
 		if err != nil {
 			setupLog.Error(err, "invalid arguments for running operator")
 			os.Exit(1)
 		}
+		cfg.Selector = *selector
 
 		cfg.EnableWebhooks = strings.ToLower(enableWebhooks) != "false"
 

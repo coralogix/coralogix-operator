@@ -48,6 +48,8 @@ type CoralogixReconciler interface {
 	RequeueInterval() time.Duration
 }
 
+// +kubebuilder:rbac:groups="",resources=namespaces,verbs=get;list;watch
+
 func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object, r CoralogixReconciler) (ctrl.Result, error) {
 	var err error
 	if err = config.GetClient().Get(ctx, req.NamespacedName, obj); err != nil {
