@@ -111,6 +111,11 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonRemoteDeletionFailed, err)
 		}
 
+		if err := RemoveFinalizer(ctx, log, obj, r); err != nil {
+			log.Error(err, "Error removing finalizer")
+			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
+		}
+
 		if err := removeField(ctx, obj, "status"); err != nil {
 			log.Error(err, "Error removing id from status")
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)

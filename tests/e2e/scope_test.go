@@ -96,12 +96,15 @@ var _ = Describe("Scope", Ordered, func() {
 
 			By("Verifying Scope is populated with a new ID after configured interval")
 			var newScopeID string
-			Eventually(func() string {
+			Eventually(func() bool {
 				fetchedScope := &coralogixv1alpha1.Scope{}
 				Expect(crClient.Get(ctx, types.NamespacedName{Name: scopeName, Namespace: testNamespace}, fetchedScope)).To(Succeed())
+				if fetchedScope.Status.ID == nil {
+					return false
+				}
 				newScopeID = *fetchedScope.Status.ID
-				return newScopeID
-			}, time.Minute, time.Second).Should(Not(Equal(scopeID)))
+				return newScopeID != scopeID
+			}, time.Minute, time.Second).Should(BeTrue())
 
 			By("Verifying Scope with new the ID exists in Coralogix backend")
 			Eventually(func() error {
