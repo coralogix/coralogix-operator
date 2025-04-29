@@ -77,7 +77,7 @@ func (r *ApiKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			log.Error(err, "Error on creating ApiKey")
 			return coralogixreconciler.ManageErrorWithRequeue(ctx, apiKey, reason, err)
 		}
-		return coralogixreconciler.ManageSuccessWithRequeue(ctx, log, apiKey, r.Interval, utils.ReasonRemoteCreatedSuccessfully)
+		return coralogixreconciler.ManageSuccessWithRequeue(ctx, apiKey, r.Interval, utils.ReasonRemoteCreatedSuccessfully)
 	}
 
 	if !apiKey.ObjectMeta.DeletionTimestamp.IsZero() {
@@ -101,7 +101,7 @@ func (r *ApiKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		return coralogixreconciler.ManageErrorWithRequeue(ctx, apiKey, reason, err)
 	}
 
-	return coralogixreconciler.ManageSuccessWithRequeue(ctx, log, apiKey, r.Interval, utils.ReasonRemoteUpdatedSuccessfully)
+	return coralogixreconciler.ManageSuccessWithRequeue(ctx, apiKey, r.Interval, utils.ReasonRemoteUpdatedSuccessfully)
 }
 
 func (r *ApiKeyReconciler) create(ctx context.Context, log logr.Logger, apiKey *coralogixv1alpha1.ApiKey) (error, string) {
@@ -119,8 +119,8 @@ func (r *ApiKeyReconciler) create(ctx context.Context, log logr.Logger, apiKey *
 
 	log.Info("Updating ApiKey status", "id", createResponse.KeyId)
 	if err = config.GetClient().Status().Update(ctx, apiKey); err != nil {
-		if err2 := r.deleteRemoteApiKey(ctx, log, apiKey.Status.Id); err2 != nil {
-			return fmt.Errorf("error to delete api-key after status update error: %w", err2), utils.ReasonRemoteUpdateFailed
+		if err := r.deleteRemoteApiKey(ctx, log, apiKey.Status.Id); err != nil {
+			return fmt.Errorf("error to delete api-key after status update error: %w", err), utils.ReasonRemoteUpdateFailed
 		}
 		return fmt.Errorf("error to update api-key status: %w", err), utils.ReasonRemoteUpdateFailed
 	}
