@@ -46,7 +46,9 @@ spec:
         - -label-selector={{ .Values.coralogixOperator.labelSelector | toJson }}
         - -namespace-selector={{ .Values.coralogixOperator.namespaceSelector | toJson }}
 {{- range $key, $value := .Values.coralogixOperator.reconcileIntervalSeconds }}
+{{- if $value }}
         - -{{ lower $key }}-reconcile-interval-seconds={{ $value }}
+{{- end }}
 {{- end }}
         env:
           - name: CORALOGIX_REGION
