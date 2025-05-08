@@ -239,6 +239,7 @@ var (
 // AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
 //
 // Note that this is only for the latest version of the alerts API. If your account has been created before March 2025, make sure that your account has been migrated before using advanced features of alerts.
+// +kubebuilder:validation:XValidation:rule="(self.alertType.logsImmediate == null && self.alertType.logsImmediate == null) || self.groupByKeys == null",message="groupByKeys is not supported for this alert type"
 type AlertSpec struct {
 	// Name of the alert
 	//+kubebuilder:validation:MinLength=0
@@ -388,6 +389,7 @@ type WebhookSettings struct {
 }
 
 // Type and spec of the webhook.
+// +kubebuilder:validation:XValidation:rule="has(self.integrationRef) || has(self.recipients)",message="Exactly one of integrationRef or recipients is required"
 type IntegrationType struct {
 
 	// Reference to the webhook.
@@ -400,6 +402,7 @@ type IntegrationType struct {
 }
 
 // Reference to the integration.
+// +kubebuilder:validation:XValidation:rule="has(self.backendRef) || has(self.resourceRef)",message="Exactly one of backendRef or resourceRef is required"
 type IntegrationRef struct {
 
 	// Backend reference for the outbound webhook.
@@ -412,6 +415,7 @@ type IntegrationRef struct {
 }
 
 // Outbound webhook reference.
+// +kubebuilder:validation:XValidation:rule="has(self.id) != has(self.name)",message="One of id or name is required"
 type OutboundWebhookBackendRef struct {
 	// Webhook Id.
 	// +optional
@@ -423,6 +427,7 @@ type OutboundWebhookBackendRef struct {
 }
 
 // Reference to the alert on Coralogix.
+// +kubebuilder:validation:XValidation:rule="has(self.id) != has(self.name)",message="One of id or name is required"
 type AlertBackendRef struct {
 
 	// Alert ID.
@@ -472,6 +477,7 @@ const (
 )
 
 // Alert type definitions.
+// +kubebuilder:validation:XValidation:rule="(self.logsImmediate != null ? 1 : 0) + (self.logsThreshold != null ? 1 : 0) + (self.logsRatioThreshold != null ? 1 : 0) + (self.logsTimeRelativeThreshold != null ? 1 : 0) + (self.metricThreshold != null ? 1 : 0) + (self.tracingThreshold != null ? 1 : 0) + (self.tracingImmediate != null ? 1 : 0) + (self.flow != null ? 1 : 0) + (self.logsAnomaly != null ? 1 : 0) + (self.metricAnomaly != null ? 1 : 0) + (self.logsNewValue != null ? 1 : 0) + (self.logsUniqueCount != null ? 1 : 0) == 1",message="Only one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue or logsUniqueCount must be set"
 type AlertTypeDefinition struct {
 
 	// Immediate alerts for logs.
@@ -994,6 +1000,7 @@ type FlowStagesGroupsAlertDefs struct {
 }
 
 // Reference for an alert, backend or Kubernetes resource
+// +kubebuilder:validation:XValidation:rule="has(self.backendRef) != has(self.resourceRef)",message="Exactly one of backendRef or resourceRef must be set"
 type AlertRef struct {
 	// Coralogix id reference.
 	// +optional

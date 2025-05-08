@@ -18,3 +18,7 @@ spec:
           method: Post
           payload: '{"key1": "value1", "key2": "value2"}'
           url: https://example.com
+        emailGroup:
+          emailAddresses:
+            - example@coralogix.com
+              example2@coralogix.com

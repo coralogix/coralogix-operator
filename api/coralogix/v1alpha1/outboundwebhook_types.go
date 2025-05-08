@@ -38,6 +38,7 @@ type OutboundWebhookSpec struct {
 }
 
 // Webhook type
+// +kubebuilder:validation:XValidation:rule="(self.genericWebhook != null ? 1 : 0) + (self.slack != null ? 1 : 0) + (self.pagerDuty != null ? 1 : 0) + (self.sendLog != null ? 1 : 0) + (self.emailGroup != null ? 1 : 0) + (self.microsoftTeams != null ? 1 : 0) + (self.jira != null ? 1 : 0) + (self.opsgenie != null ? 1 : 0) + (self.demisto != null ? 1 : 0) + (self.awsEventBridge != null ? 1 : 0) == 1",message="Exactly one of genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto or awsEventBridge is required"
 type OutboundWebhookType struct {
 	// Generic HTTP(s) webhook.
 	// +optional

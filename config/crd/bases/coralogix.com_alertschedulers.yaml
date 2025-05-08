@@ -95,6 +95,9 @@ spec:
                 required:
                 - whatExpression
                 type: object
+                x-kubernetes-validations:
+                - message: Exactly one of metaLabels or alerts must be set
+                  rule: has(self.metaLabels) != has(self.alerts)
               metaLabels:
                 description: Alert Scheduler meta labels.
                 items:
@@ -160,6 +163,9 @@ spec:
                     - startTime
                     - timezone
                     type: object
+                    x-kubernetes-validations:
+                    - message: Exactly one of endTime or duration must be set
+                      rule: has(self.endTime) != has(self.duration)
                   operation:
                     description: The operation to perform. Can be `mute` or `activate`.
                     enum:
@@ -269,15 +275,25 @@ spec:
                             - startTime
                             - timezone
                             type: object
+                            x-kubernetes-validations:
+                            - message: Exactly one of endTime or duration must be
+                                set
+                              rule: has(self.endTime) != has(self.duration)
                         required:
                         - frequency
                         - repeatEvery
                         - timeFrame
                         type: object
                     type: object
+                    x-kubernetes-validations:
+                    - message: Exactly one of always or dynamic must be set
+                      rule: has(self.always) != has(self.dynamic)
                 required:
                 - operation
                 type: object
+                x-kubernetes-validations:
+                - message: Exactly one of oneTime or recurring must be set
+                  rule: has(self.oneTime) != has(self.recurring)
             required:
             - filter
             - name
