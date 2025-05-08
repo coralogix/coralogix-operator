@@ -10,7 +10,6 @@ metadata:
   name: send-your-data-key-sample
 spec:
   name: send-your-data-key-sample
-  active: false
   owner:
     teamId: 1234567
   presets:
