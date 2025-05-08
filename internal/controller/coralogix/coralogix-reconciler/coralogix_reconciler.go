@@ -17,12 +17,15 @@ package coralogixreconciler
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -45,96 +48,118 @@ type CoralogixReconciler interface {
 	RequeueInterval() time.Duration
 }
 
+// +kubebuilder:rbac:groups="",resources=namespaces,verbs=get;list;watch
+
 func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object, r CoralogixReconciler) (ctrl.Result, error) {
+	if err := config.GetClient().Get(ctx, req.NamespacedName, obj); err != nil {
+		if errors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
+		return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
+	}
+
 	gvk := objToGVK(obj)
 	log := log.FromContext(ctx).WithValues(
 		"gvk", gvk,
 		"name", req.NamespacedName.Name,
 		"namespace", req.NamespacedName.Namespace)
-	var err error
-
-	if err = config.GetClient().Get(ctx, req.NamespacedName, obj); err != nil {
-		if errors.IsNotFound(err) {
-			return ctrl.Result{}, nil
-		}
-		return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, err)
-	}
+	log = log.V(logVerbosity(obj))
 
 	if !r.CheckIDInStatus(obj) {
-		log.V(1).Info("Resource ID is missing; handling creation for resource")
-		if err = r.HandleCreation(ctx, log, obj); err != nil {
+		log.Info("Resource ID is missing; handling creation for resource")
+		if err := r.HandleCreation(ctx, log, obj); err != nil {
 			log.Error(err, "Error handling creation")
-			return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonRemoteCreationFailed, err)
+			return ManageErrorWithRequeue(ctx, obj, utils.ReasonRemoteCreationFailed, err)
 		}
 
-		if err = config.GetClient().Status().Update(ctx, obj); err != nil {
+		if err := config.GetClient().Status().Update(ctx, obj); err != nil {
 			log.Error(err, "Error updating status after creation; handling deletion")
-			if err2 := r.HandleDeletion(ctx, log, obj); err2 != nil {
-				log.Error(err2, "Error deleting from remote after status update failure")
-				return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonRemoteDeletionFailed, err2)
+			if err := r.HandleDeletion(ctx, log, obj); err != nil {
+				log.Error(err, "Error deleting from remote after status update failure")
+				return ManageErrorWithRequeue(ctx, obj, utils.ReasonRemoteDeletionFailed, err)
 			}
-			return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, err)
+			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 		}
 
-		if err = AddFinalizer(ctx, log, obj, r); err != nil {
+		if err := AddFinalizer(ctx, log, obj, r); err != nil {
 			log.Error(err, "Error adding finalizer")
-			return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, err)
+			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 		}
 
-		return ManageSuccessWithRequeue(ctx, log, obj, r.RequeueInterval(), utils.ReasonRemoteCreatedSuccessfully)
+		return ManageSuccessWithRequeue(ctx, obj, r.RequeueInterval(), utils.ReasonRemoteCreatedSuccessfully)
 	}
 
 	if !obj.GetDeletionTimestamp().IsZero() {
-		log.V(1).Info("Resource is being deleted; handling deletion")
-		if err = r.HandleDeletion(ctx, log, obj); err != nil {
+		log.Info("Resource is being deleted; handling deletion")
+		if err := r.HandleDeletion(ctx, log, obj); err != nil {
 			log.Error(err, "Error deleting from remote")
-			return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonRemoteDeletionFailed, err)
+			return ManageErrorWithRequeue(ctx, obj, utils.ReasonRemoteDeletionFailed, err)
 		}
 
-		if err = RemoveFinalizer(ctx, log, obj, r); err != nil {
+		if err := RemoveFinalizer(ctx, log, obj, r); err != nil {
 			log.Error(err, "Error removing finalizer")
-			return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, err)
+			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 		}
 
 		return ctrl.Result{}, nil
 	}
 
 	if !config.GetConfig().Selector.Matches(obj.GetLabels(), obj.GetNamespace()) {
-		log.V(1).Info("Resource doesn't match selector; handling deletion")
-		if err = r.HandleDeletion(ctx, log, obj); err != nil {
+		log.Info("Resource doesn't match selector; handling deletion")
+		if err := r.HandleDeletion(ctx, log, obj); err != nil {
 			log.Error(err, "Error deleting from remote")
-			return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonRemoteDeletionFailed, err)
+			return ManageErrorWithRequeue(ctx, obj, utils.ReasonRemoteDeletionFailed, err)
 		}
+
+		if err := RemoveFinalizer(ctx, log, obj, r); err != nil {
+			log.Error(err, "Error removing finalizer")
+			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
+		}
+
+		if err := removeField(ctx, obj, "status"); err != nil {
+			log.Error(err, "Error removing id from status")
+			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
+		}
+
 		return ctrl.Result{}, nil
 	}
 
-	log.V(1).Info("Handling update")
-	if err = r.HandleUpdate(ctx, log, obj); err != nil {
+	log.Info("Handling update")
+	if err := r.HandleUpdate(ctx, log, obj); err != nil {
 		log.Error(err, "Error handling update")
 		if cxsdk.Code(err) == codes.NotFound {
-			log.V(1).Info("resource not found on remote")
-			uObj := &unstructured.Unstructured{}
-			if err2 := config.GetScheme().Convert(obj, uObj, ctx); err2 != nil {
-				return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, fmt.Errorf("failed to convert object to unstructured: %w", err2))
-			}
-			if err2 := unstructured.SetNestedField(uObj.Object, "", "status", "id"); err2 != nil {
-				return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, fmt.Errorf("error on updating %s status id: %v", gvk, err2))
-			}
-			if err2 := config.GetClient().Status().Update(ctx, uObj); err2 != nil {
-				return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, fmt.Errorf("error on updating %s status: %v", gvk, err2))
+			log.Info("resource not found on remote")
+			if err := removeField(ctx, obj, "status", "id"); err != nil {
+				log.Error(err, "Error removing id from status")
+				return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 			}
 
-			return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonRemoteResourceNotFound, fmt.Errorf("%s not found on remote: %w", gvk, err))
+			return ManageErrorWithRequeue(ctx, obj, utils.ReasonRemoteResourceNotFound, fmt.Errorf("%s not found on remote: %w", gvk, err))
 		}
-		return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonRemoteUpdateFailed, fmt.Errorf("error on updating %s: %w", gvk, err))
+		return ManageErrorWithRequeue(ctx, obj, utils.ReasonRemoteUpdateFailed, fmt.Errorf("error on updating %s: %w", gvk, err))
 	}
 
-	return ManageSuccessWithRequeue(ctx, log, obj, r.RequeueInterval(), utils.ReasonRemoteUpdatedSuccessfully)
+	return ManageSuccessWithRequeue(ctx, obj, r.RequeueInterval(), utils.ReasonRemoteUpdatedSuccessfully)
+}
+
+func removeField(ctx context.Context, obj client.Object, fields ...string) error {
+	u := &unstructured.Unstructured{}
+	if err := config.GetScheme().Convert(obj, u, nil); err != nil {
+		return fmt.Errorf("failed to convert object to unstructured: %w", err)
+	}
+
+	unstructured.RemoveNestedField(u.Object, fields...)
+
+	if err := config.GetClient().Status().Update(ctx, u); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func AddFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r CoralogixReconciler) error {
 	if !controllerutil.ContainsFinalizer(obj, r.FinalizerName()) {
-		log.V(1).Info("Adding finalizer")
+		log.Info("Adding finalizer")
 		controllerutil.AddFinalizer(obj, r.FinalizerName())
 		if err := config.GetClient().Update(ctx, obj); err != nil {
 			return err
@@ -144,7 +169,7 @@ func AddFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r Cor
 }
 
 func RemoveFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r CoralogixReconciler) error {
-	log.V(1).Info("Removing finalizer")
+	log.Info("Removing finalizer")
 	controllerutil.RemoveFinalizer(obj, r.FinalizerName())
 	if err := config.GetClient().Update(ctx, obj); err != nil {
 		return err
@@ -152,7 +177,7 @@ func RemoveFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r 
 	return nil
 }
 
-func ManageErrorWithRequeue(ctx context.Context, log logr.Logger, obj client.Object, reason string, err error) (reconcile.Result, error) {
+func ManageErrorWithRequeue(ctx context.Context, obj client.Object, reason string, err error) (reconcile.Result, error) {
 	// in case of update conflict, don't try to update conditions, as it will fail with the same error.
 	// instead, requeue the request and without flooding with error logs.
 	if errors.IsConflict(err) {
@@ -163,7 +188,7 @@ func ManageErrorWithRequeue(ctx context.Context, log logr.Logger, obj client.Obj
 		conditions := conditionsObj.GetConditions()
 		if utils.SetSyncedConditionFalse(&conditions, obj.GetGeneration(), reason, err.Error()) {
 			conditionsObj.SetConditions(conditions)
-			if err2 := config.GetClient().Status().Update(ctx, obj); err2 != nil {
+			if err := config.GetClient().Status().Update(ctx, obj); err != nil {
 				if errors.IsConflict(err) {
 					return reconcile.Result{Requeue: true}, nil
 				}
@@ -174,14 +199,14 @@ func ManageErrorWithRequeue(ctx context.Context, log logr.Logger, obj client.Obj
 	return reconcile.Result{}, err
 }
 
-func ManageSuccessWithRequeue(ctx context.Context, log logr.Logger, obj client.Object,
+func ManageSuccessWithRequeue(ctx context.Context, obj client.Object,
 	interval time.Duration, reason string) (reconcile.Result, error) {
 	if conditionsObj, ok := (obj).(utils.ConditionsObj); ok {
 		conditions := conditionsObj.GetConditions()
 		if utils.SetSyncedConditionTrue(&conditions, obj.GetGeneration(), reason) {
 			conditionsObj.SetConditions(conditions)
 			if err := config.GetClient().Status().Update(ctx, obj); err != nil {
-				return ManageErrorWithRequeue(ctx, log, obj, utils.ReasonInternalK8sError, err)
+				return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 			}
 		}
 	}
@@ -195,4 +220,24 @@ func objToGVK(obj client.Object) string {
 		return ""
 	}
 	return gvks[0].String()
+}
+
+func logVerbosity(obj runtime.Object) int {
+	const defaultVerbosity = 1
+	metaObj, ok := obj.(metav1.Object)
+	if !ok {
+		return defaultVerbosity
+	}
+
+	val, exists := metaObj.GetAnnotations()[utils.LogVerbosityAnnotationKey]
+	if !exists {
+		return defaultVerbosity
+	}
+
+	verbosity, err := strconv.Atoi(val)
+	if err != nil || verbosity < 0 {
+		return defaultVerbosity
+	}
+
+	return verbosity
 }

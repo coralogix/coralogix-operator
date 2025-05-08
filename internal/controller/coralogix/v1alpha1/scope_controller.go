@@ -61,12 +61,12 @@ func (r *ScopeReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 	if err != nil {
 		return fmt.Errorf("error on extracting create request: %w", err)
 	}
-	log.V(1).Info("Creating remote scope", "scope", protojson.Format(createRequest))
+	log.Info("Creating remote scope", "scope", protojson.Format(createRequest))
 	createResponse, err := r.ScopesClient.Create(ctx, createRequest)
 	if err != nil {
 		return fmt.Errorf("error on creating remote scope: %w", err)
 	}
-	log.V(1).Info("Remote scope created", "response", protojson.Format(createResponse))
+	log.Info("Remote scope created", "response", protojson.Format(createResponse))
 
 	scope.Status = coralogixv1alpha1.ScopeStatus{
 		ID: &createResponse.Scope.Id,
@@ -81,12 +81,12 @@ func (r *ScopeReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
 	}
-	log.V(1).Info("Updating remote scope", "scope", protojson.Format(updateRequest))
+	log.Info("Updating remote scope", "scope", protojson.Format(updateRequest))
 	updateResponse, err := r.ScopesClient.Update(ctx, updateRequest)
 	if err != nil {
 		return err
 	}
-	log.V(1).Info("Remote scope updated", "scope", protojson.Format(updateResponse))
+	log.Info("Remote scope updated", "scope", protojson.Format(updateResponse))
 
 	return nil
 }
@@ -94,13 +94,13 @@ func (r *ScopeReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 func (r *ScopeReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
 	scope := obj.(*coralogixv1alpha1.Scope)
 	id := *scope.Status.ID
-	log.V(1).Info("Deleting scope from remote system", "id", id)
+	log.Info("Deleting scope from remote system", "id", id)
 	_, err := r.ScopesClient.Delete(ctx, &cxsdk.DeleteScopeRequest{Id: id})
 	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.V(1).Error(err, "Error deleting remote scope", "id", id)
+		log.Error(err, "Error deleting remote scope", "id", id)
 		return fmt.Errorf("error deleting remote scope %s: %w", id, err)
 	}
-	log.V(1).Info("Scope deleted from remote system", "id", id)
+	log.Info("Scope deleted from remote system", "id", id)
 	return nil
 }
 

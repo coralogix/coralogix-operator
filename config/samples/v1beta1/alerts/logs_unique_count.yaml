@@ -27,7 +27,7 @@ spec:
                 operation: startsWith
             subsystemName:
               - value: warning
-                operation: or
+                operation: is
               - value: info
                 operation: endsWith
             severity: [ "warning", "info" ]

@@ -29,6 +29,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 )
 
@@ -61,12 +62,12 @@ func (r *AlertSchedulerReconciler) HandleCreation(ctx context.Context, log logr.
 	if err != nil {
 		return fmt.Errorf("error on extracting create request: %w", err)
 	}
-	log.V(1).Info("Creating remote AlertScheduler", "AlertScheduler", protojson.Format(createRequest))
+	log.Info("Creating remote AlertScheduler", "AlertScheduler", protojson.Format(createRequest))
 	createResponse, err := r.AlertSchedulerClient.Create(ctx, createRequest)
 	if err != nil {
 		return fmt.Errorf("error on creating remote AlertScheduler: %w", err)
 	}
-	log.V(1).Info("Remote alertScheduler created", "response", protojson.Format(createResponse))
+	log.Info("Remote alertScheduler created", "response", protojson.Format(createResponse))
 
 	alertScheduler.Status = coralogixv1alpha1.AlertSchedulerStatus{
 		ID: ptr.To(createResponse.AlertSchedulerRule.GetUniqueIdentifier()),
@@ -81,28 +82,28 @@ func (r *AlertSchedulerReconciler) HandleUpdate(ctx context.Context, log logr.Lo
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
 	}
-	log.V(1).Info("Updating remote AlertScheduler", "AlertScheduler", protojson.Format(updateRequest))
+	log.Info("Updating remote AlertScheduler", "AlertScheduler", protojson.Format(updateRequest))
 	updateResponse, err := r.AlertSchedulerClient.Update(ctx, updateRequest)
 	if err != nil {
 		return err
 	}
-	log.V(1).Info("Remote AlertScheduler updated", "AlertScheduler", protojson.Format(updateResponse))
+	log.Info("Remote AlertScheduler updated", "AlertScheduler", protojson.Format(updateResponse))
 
 	return nil
 }
 
 func (r *AlertSchedulerReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
 	alertScheduler := obj.(*coralogixv1alpha1.AlertScheduler)
-	log.V(1).Info("Deleting AlertScheduler from remote system", "id", *alertScheduler.Status.ID)
+	log.Info("Deleting AlertScheduler from remote system", "id", *alertScheduler.Status.ID)
 	_, err := r.AlertSchedulerClient.Delete(ctx,
 		&cxsdk.DeleteAlertSchedulerRuleRequest{
 			AlertSchedulerRuleId: *alertScheduler.Status.ID,
 		})
 	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.V(1).Error(err, "Error deleting remote AlertScheduler", "id", *alertScheduler.Status.ID)
+		log.Error(err, "Error deleting remote AlertScheduler", "id", *alertScheduler.Status.ID)
 		return fmt.Errorf("error deleting remote AlertScheduler %s: %w", *alertScheduler.Status.ID, err)
 	}
-	log.V(1).Info("AlertScheduler deleted from remote system", "id", *alertScheduler.Status.ID)
+	log.Info("AlertScheduler deleted from remote system", "id", *alertScheduler.Status.ID)
 	return nil
 }
 
@@ -115,5 +116,6 @@ func (r *AlertSchedulerReconciler) CheckIDInStatus(obj client.Object) bool {
 func (r *AlertSchedulerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.AlertScheduler{}).
+		WithEventFilter(config.GetConfig().Selector.Predicate()).
 		Complete(r)
 }

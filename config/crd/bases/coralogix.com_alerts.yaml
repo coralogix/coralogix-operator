@@ -37,40 +37,59 @@ spec:
           metadata:
             type: object
           spec:
-            description: AlertSpec defines the desired state of Alert
+            description: |-
+              AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
+
+              Note that this is only for the latest version of the alerts API. If your account has been created before March 2025, make sure that your account has been migrated before using advanced features of alerts.
             properties:
               alertType:
+                description: Type of alert.
                 properties:
                   flow:
+                    description: Flow alerts chaining multiple alerts together.
                     properties:
                       enforceSuppression:
                         default: false
                         type: boolean
                       stages:
                         items:
+                          description: Stages to go through.
                           properties:
                             flowStagesType:
+                              description: Type of stage.
                               properties:
                                 groups:
                                   items:
+                                    description: Flow stage grouping.
                                     properties:
                                       alertDefs:
+                                        description: Alerts to group.
                                         items:
+                                          description: Alert references.
                                           properties:
                                             alertRef:
+                                              description: Reference for an alert,
+                                                backend or Kubernetes resource
                                               properties:
                                                 backendRef:
+                                                  description: Coralogix id reference.
                                                   properties:
                                                     id:
+                                                      description: Alert ID.
                                                       type: string
                                                     name:
+                                                      description: Name of the alert.
                                                       type: string
                                                   type: object
                                                 resourceRef:
+                                                  description: Kubernetes resource
+                                                    reference.
                                                   properties:
                                                     name:
+                                                      description: Name of the resource.
                                                       type: string
                                                     namespace:
+                                                      description: Kubernetes namespace.
                                                       type: string
                                                   required:
                                                   - name
@@ -78,6 +97,7 @@ spec:
                                               type: object
                                             not:
                                               default: false
+                                              description: Inversion.
                                               type: boolean
                                           required:
                                           - alertRef
@@ -85,11 +105,13 @@ spec:
                                           type: object
                                         type: array
                                       alertsOp:
+                                        description: Operation for the alert.
                                         enum:
                                         - and
                                         - or
                                         type: string
                                       nextOp:
+                                        description: Link to the next alert.
                                         enum:
                                         - and
                                         - or
@@ -107,6 +129,7 @@ spec:
                               format: int64
                               type: integer
                             timeframeType:
+                              description: Type of timeframe.
                               enum:
                               - unspecified
                               - upTo
@@ -122,25 +145,33 @@ spec:
                     - stages
                     type: object
                   logsAnomaly:
+                    description: Anomaly alerts for logs.
                     properties:
                       logsFilter:
+                        description: Filter to filter the logs with.
                         properties:
                           simpleFilter:
+                            description: Simple lucene filter.
                             properties:
                               labelFilters:
+                                description: Filter for labels.
                                 properties:
                                   applicationName:
+                                    description: Application name to filter for.
                                     items:
+                                      description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
+                                          description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
                                           type: string
                                         value:
+                                          description: The value
                                           minLength: 0
                                           type: string
                                       required:
@@ -149,7 +180,9 @@ spec:
                                       type: object
                                     type: array
                                   severity:
+                                    description: Severity to filter for.
                                     items:
+                                      description: How severe a log is.
                                       enum:
                                       - debug
                                       - info
@@ -160,17 +193,21 @@ spec:
                                       type: string
                                     type: array
                                   subsystemName:
+                                    description: Subsystem name to filter for.
                                     items:
+                                      description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
+                                          description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
                                           type: string
                                         value:
+                                          description: The value
                                           minLength: 0
                                           type: string
                                       required:
@@ -180,28 +217,36 @@ spec:
                                     type: array
                                 type: object
                               luceneQuery:
+                                description: The query.
                                 type: string
                             type: object
                         type: object
                       notificationPayloadFilter:
+                        description: Filter for the notification payload.
                         items:
                           type: string
                         type: array
                       rules:
+                        description: Rules that match the alert to the data.
                         items:
+                          description: The rule to match the alert's conditions.
                           properties:
                             condition:
+                              description: Condition to match to.
                               properties:
                                 minimumThreshold:
                                   anyOf:
                                   - type: integer
                                   - type: string
                                   default: 0
+                                  description: Minimum value
                                   pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                   x-kubernetes-int-or-string: true
                                 timeWindow:
+                                  description: Time window to evaluate.
                                   properties:
                                     specificValue:
+                                      description: Logs time window type
                                       enum:
                                       - 5m
                                       - 10m
@@ -228,25 +273,33 @@ spec:
                     - rules
                     type: object
                   logsImmediate:
+                    description: Immediate alerts for logs.
                     properties:
                       logsFilter:
+                        description: Filter to filter the logs with.
                         properties:
                           simpleFilter:
+                            description: Simple lucene filter.
                             properties:
                               labelFilters:
+                                description: Filter for labels.
                                 properties:
                                   applicationName:
+                                    description: Application name to filter for.
                                     items:
+                                      description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
+                                          description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
                                           type: string
                                         value:
+                                          description: The value
                                           minLength: 0
                                           type: string
                                       required:
@@ -255,7 +308,9 @@ spec:
                                       type: object
                                     type: array
                                   severity:
+                                    description: Severity to filter for.
                                     items:
+                                      description: How severe a log is.
                                       enum:
                                       - debug
                                       - info
@@ -266,17 +321,21 @@ spec:
                                       type: string
                                     type: array
                                   subsystemName:
+                                    description: Subsystem name to filter for.
                                     items:
+                                      description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
+                                          description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
                                           type: string
                                         value:
+                                          description: The value
                                           minLength: 0
                                           type: string
                                       required:
@@ -286,34 +345,44 @@ spec:
                                     type: array
                                 type: object
                               luceneQuery:
+                                description: The query.
                                 type: string
                             type: object
                         type: object
                       notificationPayloadFilter:
+                        description: Filter for the notification payload.
                         items:
                           type: string
                         type: array
                     type: object
                   logsNewValue:
+                    description: Alerts when a new log value appears.
                     properties:
                       logsFilter:
+                        description: Filter to filter the logs with.
                         properties:
                           simpleFilter:
+                            description: Simple lucene filter.
                             properties:
                               labelFilters:
+                                description: Filter for labels.
                                 properties:
                                   applicationName:
+                                    description: Application name to filter for.
                                     items:
+                                      description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
+                                          description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
                                           type: string
                                         value:
+                                          description: The value
                                           minLength: 0
                                           type: string
                                       required:
@@ -322,7 +391,9 @@ spec:
                                       type: object
                                     type: array
                                   severity:
+                                    description: Severity to filter for.
                                     items:
+                                      description: How severe a log is.
                                       enum:
                                       - debug
                                       - info
@@ -333,17 +404,21 @@ spec:
                                       type: string
                                     type: array
                                   subsystemName:
+                                    description: Subsystem name to filter for.
                                     items:
+                                      description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
+                                          description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
                                           type: string
                                         value:
+                                          description: The value
                                           minLength: 0
                                           type: string
                                       required:
@@ -353,23 +428,31 @@ spec:
                                     type: array
                                 type: object
                               luceneQuery:
+                                description: The query.
                                 type: string
                             type: object
                         type: object
                       notificationPayloadFilter:
+                        description: Filter for the notification payload.
                         items:
                           type: string
                         type: array
                       rules:
+                        description: Rules that match the alert to the data.
                         items:
+                          description: The rule to match the alert's conditions.
                           properties:
                             condition:
+                              description: Condition to match to
                               properties:
                                 keypathToTrack:
+                                  description: Where to look
                                   type: string
                                 timeWindow:
+                                  description: Which time window.
                                   properties:
                                     specificValue:
+                                      description: Time windows.
                                       enum:
                                       - 12h
                                       - 24h
@@ -395,25 +478,33 @@ spec:
                     - rules
                     type: object
                   logsRatioThreshold:
+                    description: Alerts for when a log exceeds a defined ratio.
                     properties:
                       denominator:
+                        description: A filter for logs.
                         properties:
                           simpleFilter:
+                            description: Simple lucene filter.
                             properties:
                               labelFilters:
+                                description: Filter for labels.
                                 properties:
                                   applicationName:
+                                    description: Application name to filter for.
                                     items:
+                                      description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
+                                          description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
                                           type: string
                                         value:
+                                          description: The value
                                           minLength: 0
                                           type: string
                                       required:
@@ -422,7 +513,9 @@ spec:
                                       type: object
                                     type: array
                                   severity:
+                                    description: Severity to filter for.
                                     items:
+                                      description: How severe a log is.
                                       enum:
                                       - debug
                                       - info
@@ -433,17 +526,21 @@ spec:
                                       type: string
                                     type: array
                                   subsystemName:
+                                    description: Subsystem name to filter for.
                                     items:
+                                      description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
+                                          description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
                                           type: string
                                         value:
+                                          description: The value
                                           minLength: 0
                                           type: string
                                       required:
@@ -453,29 +550,37 @@ spec:
                                     type: array
                                 type: object
                               luceneQuery:
+                                description: The query.
                                 type: string
                             type: object
                         type: object
                       denominatorAlias:
                         type: string
                       numerator:
+                        description: A filter for logs.
                         properties:
                           simpleFilter:
+                            description: Simple lucene filter.
                             properties:
                               labelFilters:
+                                description: Filter for labels.
                                 properties:
                                   applicationName:
+                                    description: Application name to filter for.
                                     items:
+                                      description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
+                                          description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
                                           type: string
                                         value:
+                                          description: The value
                                           minLength: 0
                                           type: string
                                       required:
@@ -484,7 +589,9 @@ spec:
                                       type: object
                                     type: array
                                   severity:
+                                    description: Severity to filter for.
                                     items:
+                                      description: How severe a log is.
                                       enum:
                                       - debug
                                       - info
@@ -495,17 +602,21 @@ spec:
                                       type: string
                                     type: array
                                   subsystemName:
+                                    description: Subsystem name to filter for.
                                     items:
+                                      description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
+                                          description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
                                           type: string
                                         value:
+                                          description: The value
                                           minLength: 0
                                           type: string
                                       required:
@@ -515,17 +626,22 @@ spec:
                                     type: array
                                 type: object
                               luceneQuery:
+                                description: The query.
                                 type: string
                             type: object
                         type: object
                       numeratorAlias:
                         type: string
                       rules:
+                        description: Rules that match the alert to the data.
                         items:
+                          description: The rule to match the alert's conditions.
                           properties:
                             condition:
+                              description: Condition to match
                               properties:
                                 conditionType:
+                                  description: Condition to evaluate with.
                                   enum:
                                   - moreThan
                                   - lessThan
@@ -534,11 +650,14 @@ spec:
                                   anyOf:
                                   - type: integer
                                   - type: string
+                                  description: Threshold to pass.
                                   pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                   x-kubernetes-int-or-string: true
                                 timeWindow:
+                                  description: Time window to evaluate.
                                   properties:
                                     specificValue:
+                                      description: Time window type.
                                       enum:
                                       - 5m
                                       - 10m
@@ -559,8 +678,10 @@ spec:
                               - timeWindow
                               type: object
                             override:
+                              description: Override alert properties
                               properties:
                                 priority:
+                                  description: Priority to override it
                                   enum:
                                   - p1
                                   - p2
@@ -584,25 +705,33 @@ spec:
                     - rules
                     type: object
                   logsThreshold:
+                    description: Alerts for when a log crosses a threshold.
                     properties:
                       logsFilter:
+                        description: Filter to filter the logs with.
                         properties:
                           simpleFilter:
+                            description: Simple lucene filter.
                             properties:
                               labelFilters:
+                                description: Filter for labels.
                                 properties:
                                   applicationName:
+                                    description: Application name to filter for.
                                     items:
+                                      description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
+                                          description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
                                           type: string
                                         value:
+                                          description: The value
                                           minLength: 0
                                           type: string
                                       required:
@@ -611,7 +740,9 @@ spec:
                                       type: object
                                     type: array
                                   severity:
+                                    description: Severity to filter for.
                                     items:
+                                      description: How severe a log is.
                                       enum:
                                       - debug
                                       - info
@@ -622,17 +753,21 @@ spec:
                                       type: string
                                     type: array
                                   subsystemName:
+                                    description: Subsystem name to filter for.
                                     items:
+                                      description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
+                                          description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
                                           type: string
                                         value:
+                                          description: The value
                                           minLength: 0
                                           type: string
                                       required:
@@ -642,19 +777,25 @@ spec:
                                     type: array
                                 type: object
                               luceneQuery:
+                                description: The query.
                                 type: string
                             type: object
                         type: object
                       notificationPayloadFilter:
+                        description: Filter for the notification payload.
                         items:
                           type: string
                         type: array
                       rules:
+                        description: Rules that match the alert to the data.
                         items:
+                          description: The rule to match the alert's conditions.
                           properties:
                             condition:
+                              description: Condition to match
                               properties:
                                 logsThresholdConditionType:
+                                  description: Condition type.
                                   enum:
                                   - moreThan
                                   - lessThan
@@ -663,11 +804,15 @@ spec:
                                   anyOf:
                                   - type: integer
                                   - type: string
+                                  description: Threshold to match to.
                                   pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                   x-kubernetes-int-or-string: true
                                 timeWindow:
+                                  description: Time window in which the condition
+                                    is checked.
                                   properties:
                                     specificValue:
+                                      description: Logs time window type
                                       enum:
                                       - 5m
                                       - 10m
@@ -687,8 +832,10 @@ spec:
                               - timeWindow
                               type: object
                             override:
+                              description: Alert overrides.
                               properties:
                                 priority:
+                                  description: Priority to override it
                                   enum:
                                   - p1
                                   - p2
@@ -705,9 +852,12 @@ spec:
                         minItems: 1
                         type: array
                       undetectedValuesManagement:
+                        description: How to work with undetected values.
                         properties:
                           autoRetireTimeframe:
                             default: never
+                            description: Automatically retire the alerts after this
+                              time.
                             enum:
                             - never
                             - 5m
@@ -720,6 +870,8 @@ spec:
                             type: string
                           triggerUndetectedValues:
                             default: false
+                            description: Deactivate triggering the alert on undetected
+                              values.
                             type: boolean
                         required:
                         - autoRetireTimeframe
@@ -729,28 +881,39 @@ spec:
                     - rules
                     type: object
                   logsTimeRelativeThreshold:
+                    description: Alerts are sent when the number of logs matching
+                      a filter is more than or less than a threshold over a specific
+                      time window.
                     properties:
                       ignoreInfinity:
                         default: false
+                        description: Ignore infinity on the threshold value.
                         type: boolean
                       logsFilter:
+                        description: A filter for logs.
                         properties:
                           simpleFilter:
+                            description: Simple lucene filter.
                             properties:
                               labelFilters:
+                                description: Filter for labels.
                                 properties:
                                   applicationName:
+                                    description: Application name to filter for.
                                     items:
+                                      description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
+                                          description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
                                           type: string
                                         value:
+                                          description: The value
                                           minLength: 0
                                           type: string
                                       required:
@@ -759,7 +922,9 @@ spec:
                                       type: object
                                     type: array
                                   severity:
+                                    description: Severity to filter for.
                                     items:
+                                      description: How severe a log is.
                                       enum:
                                       - debug
                                       - info
@@ -770,17 +935,21 @@ spec:
                                       type: string
                                     type: array
                                   subsystemName:
+                                    description: Subsystem name to filter for.
                                     items:
+                                      description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
+                                          description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
                                           type: string
                                         value:
+                                          description: The value
                                           minLength: 0
                                           type: string
                                       required:
@@ -790,19 +959,25 @@ spec:
                                     type: array
                                 type: object
                               luceneQuery:
+                                description: The query.
                                 type: string
                             type: object
                         type: object
                       notificationPayloadFilter:
+                        description: Filter for the notification payload.
                         items:
                           type: string
                         type: array
                       rules:
+                        description: Rules that match the alert to the data.
                         items:
+                          description: The rule to match the alert's conditions.
                           properties:
                             condition:
+                              description: The condition to match to.
                               properties:
                                 comparedTo:
+                                  description: Comparison window.
                                   enum:
                                   - previousHour
                                   - sameHourYesterday
@@ -812,6 +987,7 @@ spec:
                                   - sameDayLastMonth
                                   type: string
                                 conditionType:
+                                  description: How to compare.
                                   enum:
                                   - moreThan
                                   - lessThan
@@ -820,6 +996,7 @@ spec:
                                   anyOf:
                                   - type: integer
                                   - type: string
+                                  description: Threshold to match.
                                   pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                   x-kubernetes-int-or-string: true
                               required:
@@ -828,8 +1005,10 @@ spec:
                               - threshold
                               type: object
                             override:
+                              description: Override alert properties
                               properties:
                                 priority:
+                                  description: Priority to override it
                                   enum:
                                   - p1
                                   - p2
@@ -846,9 +1025,12 @@ spec:
                         minItems: 1
                         type: array
                       undetectedValuesManagement:
+                        description: How to work with undetected values.
                         properties:
                           autoRetireTimeframe:
                             default: never
+                            description: Automatically retire the alerts after this
+                              time.
                             enum:
                             - never
                             - 5m
@@ -861,6 +1043,8 @@ spec:
                             type: string
                           triggerUndetectedValues:
                             default: false
+                            description: Deactivate triggering the alert on undetected
+                              values.
                             type: boolean
                         required:
                         - autoRetireTimeframe
@@ -872,25 +1056,33 @@ spec:
                     - rules
                     type: object
                   logsUniqueCount:
+                    description: Alerts for unique count changes.
                     properties:
                       logsFilter:
+                        description: Filter to filter the logs with.
                         properties:
                           simpleFilter:
+                            description: Simple lucene filter.
                             properties:
                               labelFilters:
+                                description: Filter for labels.
                                 properties:
                                   applicationName:
+                                    description: Application name to filter for.
                                     items:
+                                      description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
+                                          description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
                                           type: string
                                         value:
+                                          description: The value
                                           minLength: 0
                                           type: string
                                       required:
@@ -899,7 +1091,9 @@ spec:
                                       type: object
                                     type: array
                                   severity:
+                                    description: Severity to filter for.
                                     items:
+                                      description: How severe a log is.
                                       enum:
                                       - debug
                                       - info
@@ -910,17 +1104,21 @@ spec:
                                       type: string
                                     type: array
                                   subsystemName:
+                                    description: Subsystem name to filter for.
                                     items:
+                                      description: Label filter specifications
                                       properties:
                                         operation:
-                                          default: or
+                                          default: is
+                                          description: Operation to apply.
                                           enum:
-                                          - or
+                                          - is
                                           - includes
                                           - endsWith
                                           - startsWith
                                           type: string
                                         value:
+                                          description: The value
                                           minLength: 0
                                           type: string
                                       required:
@@ -930,6 +1128,7 @@ spec:
                                     type: array
                                 type: object
                               luceneQuery:
+                                description: The query.
                                 type: string
                             type: object
                         type: object
@@ -937,20 +1136,27 @@ spec:
                         format: int64
                         type: integer
                       notificationPayloadFilter:
+                        description: Filter for the notification payload.
                         items:
                           type: string
                         type: array
                       rules:
+                        description: Rules that match the alert to the data.
                         items:
+                          description: The rule to match the alert's conditions.
                           properties:
                             condition:
+                              description: Condition to match to.
                               properties:
                                 threshold:
+                                  description: Threshold to cross
                                   format: int64
                                   type: integer
                                 timeWindow:
+                                  description: Time window to evaluate.
                                   properties:
                                     specificValue:
+                                      description: Time windows for Logs Unique Count
                                       enum:
                                       - 1m
                                       - 5m
@@ -986,33 +1192,44 @@ spec:
                     - uniqueCountKeypath
                     type: object
                   metricAnomaly:
+                    description: Anomaly alerts for metrics.
                     properties:
                       metricFilter:
+                        description: PromQL filter for metrics
                         properties:
                           promql:
+                            description: 'PromQL query: https://coralogix.com/academy/mastering-metrics-in-coralogix/promql-fundamentals/'
                             type: string
                         type: object
                       rules:
+                        description: Rules that match the alert to the data.
                         items:
+                          description: The rule to match the alert's conditions.
                           properties:
                             condition:
+                              description: Condition to match to.
                               properties:
                                 conditionType:
+                                  description: Condition type.
                                   enum:
                                   - moreThanUsual
                                   - lessThanUsual
                                   type: string
                                 forOverPct:
+                                  description: Percentage for the threshold
                                   format: int32
                                   maximum: 100
                                   type: integer
                                 minNonNullValuesPct:
+                                  description: Replace with a number
                                   format: int32
                                   maximum: 100
                                   type: integer
                                 ofTheLast:
+                                  description: Time window to match within
                                   properties:
                                     specificValue:
+                                      description: Time window type.
                                       enum:
                                       - 1m
                                       - 5m
@@ -1033,6 +1250,7 @@ spec:
                                   anyOf:
                                   - type: integer
                                   - type: string
+                                  description: Threshold to clear.
                                   pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                   x-kubernetes-int-or-string: true
                               required:
@@ -1052,28 +1270,38 @@ spec:
                     - rules
                     type: object
                   metricThreshold:
+                    description: Alerts for when a metric crosses a threshold.
                     properties:
                       metricFilter:
+                        description: Filter for metrics
                         properties:
                           promql:
+                            description: 'PromQL query: https://coralogix.com/academy/mastering-metrics-in-coralogix/promql-fundamentals/'
                             type: string
                         type: object
                       missingValues:
+                        description: Missing values strategies.
                         properties:
                           minNonNullValuesPct:
+                            description: Replace with a number
                             format: int32
                             maximum: 100
                             type: integer
                           replaceWithZero:
                             default: false
+                            description: Replace missing values with 0s
                             type: boolean
                         type: object
                       rules:
+                        description: Rules that match the alert to the data.
                         items:
+                          description: Rules that match the alert to the data.
                           properties:
                             condition:
+                              description: Conditions to match for the rule.
                               properties:
                                 conditionType:
+                                  description: ConditionType type.
                                   enum:
                                   - moreThan
                                   - lessThan
@@ -1083,8 +1311,10 @@ spec:
                                   maximum: 100
                                   type: integer
                                 ofTheLast:
+                                  description: Time window type.
                                   properties:
                                     specificValue:
+                                      description: Time window type.
                                       enum:
                                       - 1m
                                       - 5m
@@ -1114,8 +1344,10 @@ spec:
                               - threshold
                               type: object
                             override:
+                              description: Alert property overrides
                               properties:
                                 priority:
+                                  description: Priority to override it
                                   enum:
                                   - p1
                                   - p2
@@ -1132,9 +1364,12 @@ spec:
                         minItems: 1
                         type: array
                       undetectedValuesManagement:
+                        description: How to work with undetected values.
                         properties:
                           autoRetireTimeframe:
                             default: never
+                            description: Automatically retire the alerts after this
+                              time.
                             enum:
                             - never
                             - 5m
@@ -1147,6 +1382,8 @@ spec:
                             type: string
                           triggerUndetectedValues:
                             default: false
+                            description: Deactivate triggering the alert on undetected
+                              values.
                             type: boolean
                         required:
                         - autoRetireTimeframe
@@ -1158,30 +1395,37 @@ spec:
                     - rules
                     type: object
                   tracingImmediate:
+                    description: Immediate alerts for traces.
                     properties:
                       notificationPayloadFilter:
+                        description: Filter for the notification payload.
                         items:
                           type: string
                         type: array
                       tracingFilter:
+                        description: A simple tracing filter.
                         properties:
                           simple:
+                            description: Simple tracing filter paired with a latency.
                             properties:
                               latencyThresholdMs:
                                 format: int64
                                 type: integer
                               tracingLabelFilters:
+                                description: Filter for traces.
                                 properties:
                                   applicationName:
                                     items:
+                                      description: Filter - values and operation.
                                       properties:
                                         operation:
+                                          description: Tracing filter operations.
                                           enum:
-                                          - or
                                           - includes
                                           - endsWith
                                           - startsWith
                                           - isNot
+                                          - is
                                           type: string
                                         values:
                                           items:
@@ -1194,14 +1438,16 @@ spec:
                                     type: array
                                   operationName:
                                     items:
+                                      description: Filter - values and operation.
                                       properties:
                                         operation:
+                                          description: Tracing filter operations.
                                           enum:
-                                          - or
                                           - includes
                                           - endsWith
                                           - startsWith
                                           - isNot
+                                          - is
                                           type: string
                                         values:
                                           items:
@@ -1214,14 +1460,16 @@ spec:
                                     type: array
                                   serviceName:
                                     items:
+                                      description: Filter - values and operation.
                                       properties:
                                         operation:
+                                          description: Tracing filter operations.
                                           enum:
-                                          - or
                                           - includes
                                           - endsWith
                                           - startsWith
                                           - isNot
+                                          - is
                                           type: string
                                         values:
                                           items:
@@ -1234,16 +1482,19 @@ spec:
                                     type: array
                                   spanFields:
                                     items:
+                                      description: Filter for spans
                                       properties:
                                         filterType:
+                                          description: Filter - values and operation.
                                           properties:
                                             operation:
+                                              description: Tracing filter operations.
                                               enum:
-                                              - or
                                               - includes
                                               - endsWith
                                               - startsWith
                                               - isNot
+                                              - is
                                               type: string
                                             values:
                                               items:
@@ -1262,14 +1513,16 @@ spec:
                                     type: array
                                   subsystemName:
                                     items:
+                                      description: Filter - values and operation.
                                       properties:
                                         operation:
+                                          description: Tracing filter operations.
                                           enum:
-                                          - or
                                           - includes
                                           - endsWith
                                           - startsWith
                                           - isNot
+                                          - is
                                           type: string
                                         values:
                                           items:
@@ -1285,25 +1538,33 @@ spec:
                         type: object
                     type: object
                   tracingThreshold:
+                    description: Alerts for when traces crosses a threshold.
                     properties:
                       notificationPayloadFilter:
+                        description: Filter for the notification payload.
                         items:
                           type: string
                         type: array
                       rules:
+                        description: Rules that match the alert to the data.
                         items:
+                          description: The rule to match the alert's conditions.
                           properties:
                             condition:
+                              description: The condition to match to.
                               properties:
                                 spanAmount:
                                   anyOf:
                                   - type: integer
                                   - type: string
+                                  description: Threshold amount.
                                   pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                   x-kubernetes-int-or-string: true
                                 timeWindow:
+                                  description: Time window to evaluate.
                                   properties:
                                     specificValue:
+                                      description: Time window type for tracing.
                                       enum:
                                       - 5m
                                       - 10m
@@ -1329,24 +1590,29 @@ spec:
                         minItems: 1
                         type: array
                       tracingFilter:
+                        description: Filter the base collection.
                         properties:
                           simple:
+                            description: Simple tracing filter paired with a latency.
                             properties:
                               latencyThresholdMs:
                                 format: int64
                                 type: integer
                               tracingLabelFilters:
+                                description: Filter for traces.
                                 properties:
                                   applicationName:
                                     items:
+                                      description: Filter - values and operation.
                                       properties:
                                         operation:
+                                          description: Tracing filter operations.
                                           enum:
-                                          - or
                                           - includes
                                           - endsWith
                                           - startsWith
                                           - isNot
+                                          - is
                                           type: string
                                         values:
                                           items:
@@ -1359,14 +1625,16 @@ spec:
                                     type: array
                                   operationName:
                                     items:
+                                      description: Filter - values and operation.
                                       properties:
                                         operation:
+                                          description: Tracing filter operations.
                                           enum:
-                                          - or
                                           - includes
                                           - endsWith
                                           - startsWith
                                           - isNot
+                                          - is
                                           type: string
                                         values:
                                           items:
@@ -1379,14 +1647,16 @@ spec:
                                     type: array
                                   serviceName:
                                     items:
+                                      description: Filter - values and operation.
                                       properties:
                                         operation:
+                                          description: Tracing filter operations.
                                           enum:
-                                          - or
                                           - includes
                                           - endsWith
                                           - startsWith
                                           - isNot
+                                          - is
                                           type: string
                                         values:
                                           items:
@@ -1399,16 +1669,19 @@ spec:
                                     type: array
                                   spanFields:
                                     items:
+                                      description: Filter for spans
                                       properties:
                                         filterType:
+                                          description: Filter - values and operation.
                                           properties:
                                             operation:
+                                              description: Tracing filter operations.
                                               enum:
-                                              - or
                                               - includes
                                               - endsWith
                                               - startsWith
                                               - isNot
+                                              - is
                                               type: string
                                             values:
                                               items:
@@ -1427,14 +1700,16 @@ spec:
                                     type: array
                                   subsystemName:
                                     items:
+                                      description: Filter - values and operation.
                                       properties:
                                         operation:
+                                          description: Tracing filter operations.
                                           enum:
-                                          - or
                                           - includes
                                           - endsWith
                                           - startsWith
                                           - isNot
+                                          - is
                                           type: string
                                         values:
                                           items:
@@ -1453,81 +1728,108 @@ spec:
                     type: object
                 type: object
               description:
+                description: Description of the alert
                 type: string
               enabled:
                 default: true
+                description: Enable/disable the alert.
                 type: boolean
               entityLabels:
                 additionalProperties:
                   type: string
+                description: Labels attached to the alert.
                 type: object
               groupByKeys:
+                description: Grouping fields for multiple alerts.
                 items:
                   type: string
                 type: array
               incidentsSettings:
+                description: Settings for the attached incidents.
                 properties:
                   notifyOn:
                     default: triggeredOnly
+                    description: When to notify.
                     enum:
                     - triggeredOnly
                     - triggeredAndResolved
                     type: string
                   retriggeringPeriod:
+                    description: When to re-notify.
                     properties:
                       minutes:
+                        description: Delay between re-triggered alerts.
                         format: int32
                         type: integer
                     type: object
                 type: object
               name:
+                description: Name of the alert
                 minLength: 0
                 type: string
               notificationGroup:
+                description: Where notifications should be sent to.
                 properties:
                   groupByKeys:
+                    description: Group notification by these keys.
                     items:
                       type: string
                     type: array
                   webhooks:
+                    description: Webhooks to trigger for notifications.
                     items:
+                      description: Settings for a notification webhook.
                       properties:
                         integration:
+                          description: Type and spec of webhook.
                           properties:
                             integrationRef:
+                              description: Reference to the webhook.
                               properties:
                                 backendRef:
+                                  description: Backend reference for the outbound
+                                    webhook.
                                   properties:
                                     id:
+                                      description: Webhook Id.
                                       format: int32
                                       type: integer
                                     name:
+                                      description: Name of the webhook.
                                       type: string
                                   type: object
                                 resourceRef:
+                                  description: Resource reference for use with the
+                                    alert notification.
                                   properties:
                                     name:
+                                      description: Name of the resource.
                                       type: string
                                     namespace:
+                                      description: Kubernetes namespace.
                                       type: string
                                   required:
                                   - name
                                   type: object
                               type: object
                             recipients:
+                              description: Recipients for the notification.
                               items:
                                 type: string
                               type: array
                           type: object
                         notifyOn:
                           default: triggeredOnly
+                          description: When to notify.
                           enum:
                           - triggeredOnly
                           - triggeredAndResolved
                           type: string
                         retriggeringPeriod:
+                          description: When to re-trigger.
                           properties:
                             minutes:
+                              description: Delay between re-triggered alerts.
                               format: int32
                               type: integer
                           type: object
@@ -1539,51 +1841,72 @@ spec:
                     type: array
                 type: object
               notificationGroupExcess:
+                description: |-
+                  Do not use.
+                  Deprecated: Legacy field for when multiple notification groups were attached.
                 items:
+                  description: Notification group to use for alert notifications.
                   properties:
                     groupByKeys:
+                      description: Group notification by these keys.
                       items:
                         type: string
                       type: array
                     webhooks:
+                      description: Webhooks to trigger for notifications.
                       items:
+                        description: Settings for a notification webhook.
                         properties:
                           integration:
+                            description: Type and spec of webhook.
                             properties:
                               integrationRef:
+                                description: Reference to the webhook.
                                 properties:
                                   backendRef:
+                                    description: Backend reference for the outbound
+                                      webhook.
                                     properties:
                                       id:
+                                        description: Webhook Id.
                                         format: int32
                                         type: integer
                                       name:
+                                        description: Name of the webhook.
                                         type: string
                                     type: object
                                   resourceRef:
+                                    description: Resource reference for use with the
+                                      alert notification.
                                     properties:
                                       name:
+                                        description: Name of the resource.
                                         type: string
                                       namespace:
+                                        description: Kubernetes namespace.
                                         type: string
                                     required:
                                     - name
                                     type: object
                                 type: object
                               recipients:
+                                description: Recipients for the notification.
                                 items:
                                   type: string
                                 type: array
                             type: object
                           notifyOn:
                             default: triggeredOnly
+                            description: When to notify.
                             enum:
                             - triggeredOnly
                             - triggeredAndResolved
                             type: string
                           retriggeringPeriod:
+                            description: When to re-trigger.
                             properties:
                               minutes:
+                                description: Delay between re-triggered alerts.
                                 format: int32
                                 type: integer
                             type: object
@@ -1599,6 +1922,7 @@ spec:
                 default: false
                 type: boolean
               priority:
+                description: Priority of the alert.
                 enum:
                 - p1
                 - p2
@@ -1607,11 +1931,15 @@ spec:
                 - p5
                 type: string
               schedule:
+                description: Alert activity schedule. Will be activated all the time
+                  if not specified.
                 properties:
                   activeOn:
+                    description: Schedule to have the alert active.
                     properties:
                       dayOfWeek:
                         items:
+                          description: Day of the week.
                           enum:
                           - sunday
                           - monday
@@ -1624,10 +1952,12 @@ spec:
                         type: array
                       endTime:
                         default: "23:59"
+                        description: Time of day.
                         pattern: ^(0\d|1\d|2[0-3]):[0-5]\d$
                         type: string
                       startTime:
                         default: "00:00"
+                        description: Time of day.
                         pattern: ^(0\d|1\d|2[0-3]):[0-5]\d$
                         type: string
                     required:
@@ -1635,6 +1965,7 @@ spec:
                     type: object
                   timeZone:
                     default: UTC+00
+                    description: Time zone.
                     pattern: ^UTC[+-]\d{2}$
                     type: string
                 required:

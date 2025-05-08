@@ -62,12 +62,12 @@ func (r *RecordingRuleGroupSetReconciler) HandleCreation(ctx context.Context, lo
 		Name:   ptr.To(fmt.Sprintf("%s%s", recordingRuleGroupSet.Name, r.RecordingRuleGroupSetSuffix)),
 		Groups: recordingRuleGroupSet.Spec.ExtractRecordingRuleGroups(),
 	}
-	log.V(1).Info("Creating remote recordingRuleGroupSet", "recordingRuleGroupSet", protojson.Format(createRequest))
+	log.Info("Creating remote recordingRuleGroupSet", "recordingRuleGroupSet", protojson.Format(createRequest))
 	createResponse, err := r.RecordingRuleGroupSetClient.Create(ctx, createRequest)
 	if err != nil {
 		return fmt.Errorf("error on creating remote recordingRuleGroupSet: %w", err)
 	}
-	log.V(1).Info("Remote recordingRuleGroupSet created", "response", protojson.Format(createResponse))
+	log.Info("Remote recordingRuleGroupSet created", "response", protojson.Format(createResponse))
 	recordingRuleGroupSet.Status = coralogixv1alpha1.RecordingRuleGroupSetStatus{
 		ID: &createResponse.Id,
 	}
@@ -81,24 +81,24 @@ func (r *RecordingRuleGroupSetReconciler) HandleUpdate(ctx context.Context, log 
 		Id:     *recordingRuleGroupSet.Status.ID,
 		Groups: recordingRuleGroupSet.Spec.ExtractRecordingRuleGroups(),
 	}
-	log.V(1).Info("Updating remote recordingRuleGroupSet", "recordingRuleGroupSet", protojson.Format(updateRequest))
+	log.Info("Updating remote recordingRuleGroupSet", "recordingRuleGroupSet", protojson.Format(updateRequest))
 	updateResponse, err := r.RecordingRuleGroupSetClient.Update(ctx, updateRequest)
 	if err != nil {
 		return err
 	}
-	log.V(1).Info("Remote recordingRuleGroupSet updated", "recordingRuleGroupSet", protojson.Format(updateResponse))
+	log.Info("Remote recordingRuleGroupSet updated", "recordingRuleGroupSet", protojson.Format(updateResponse))
 	return nil
 }
 
 func (r *RecordingRuleGroupSetReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
 	recordingRuleGroupSet := obj.(*coralogixv1alpha1.RecordingRuleGroupSet)
-	log.V(1).Info("Deleting recordingRuleGroupSet from remote system", "id", *recordingRuleGroupSet.Status.ID)
+	log.Info("Deleting recordingRuleGroupSet from remote system", "id", *recordingRuleGroupSet.Status.ID)
 	_, err := r.RecordingRuleGroupSetClient.Delete(ctx, &cxsdk.DeleteRuleGroupSetRequest{Id: *recordingRuleGroupSet.Status.ID})
 	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.V(1).Error(err, "Error deleting remote recordingRuleGroupSet", "id", *recordingRuleGroupSet.Status.ID)
+		log.Error(err, "Error deleting remote recordingRuleGroupSet", "id", *recordingRuleGroupSet.Status.ID)
 		return fmt.Errorf("error deleting remote recordingRuleGroupSet %s: %w", *recordingRuleGroupSet.Status.ID, err)
 	}
-	log.V(1).Info("RecordingRuleGroupSet deleted from remote system", "id", *recordingRuleGroupSet.Status.ID)
+	log.Info("RecordingRuleGroupSet deleted from remote system", "id", *recordingRuleGroupSet.Status.ID)
 	return nil
 }
 

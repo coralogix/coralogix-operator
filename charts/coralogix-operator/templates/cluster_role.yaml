@@ -26,6 +26,7 @@ rules:
       - ""
     resources:
       - configmaps
+      - namespaces
     verbs:
       - get
       - list
@@ -59,6 +60,8 @@ rules:
       - scopes
       - tcologspolicies
       - tcotracespolicies
+      - viewfolders
+      - views
     verbs:
       - create
       - delete
@@ -84,6 +87,8 @@ rules:
       - scopes/finalizers
       - tcologspolicies/finalizers
       - tcotracespolicies/finalizers
+      - viewfolders/finalizers
+      - views/finalizers
     verbs:
       - update
   - apiGroups:
@@ -103,6 +108,8 @@ rules:
       - scopes/status
       - tcologspolicies/status
       - tcotracespolicies/status
+      - viewfolders/status
+      - views/status
     verbs:
       - get
       - patch

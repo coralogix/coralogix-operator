@@ -37,27 +37,36 @@ spec:
           metadata:
             type: object
           spec:
-            description: ApiKeySpec defines the desired state of ApiKey.
+            description: |-
+              ApiKeySpec defines the desired state of a Coralogix ApiKey.
+              See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-keys/
             properties:
               active:
                 default: true
+                description: Whether the ApiKey Is active.
                 type: boolean
               name:
+                description: Name of the ApiKey
                 minLength: 0
                 type: string
               owner:
+                description: Owner of the ApiKey.
                 properties:
                   teamId:
+                    description: Team that owns the key.
                     format: int32
                     type: integer
                   userId:
+                    description: User that owns the key.
                     type: string
                 type: object
               permissions:
+                description: Permissions of the ApiKey
                 items:
                   type: string
                 type: array
               presets:
+                description: Permission Presets that the ApiKey uses.
                 items:
                   type: string
                 type: array

@@ -23,15 +23,20 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 )
 
-// CustomRoleSpec defines the desired state of CustomRole.
+// CustomRoleSpec defines the desired state of a Coralogix Custom Role.
+// See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
 type CustomRoleSpec struct {
+	// Name of the custom role.
 	Name string `json:"name"`
 
+	// Description of the custom role.
 	Description string `json:"description"`
 
+	// Parent role name.
 	ParentRoleName string `json:"parentRoleName"`
 
 	// +kubebuilder:validation:MinItems=1
+	// Custom role permissions.
 	Permissions []string `json:"permissions"`
 }
 

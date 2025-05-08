@@ -21,28 +21,38 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 )
 
-// ApiKeySpec defines the desired state of ApiKey.
+// ApiKeySpec defines the desired state of a Coralogix ApiKey.
+// See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-keys/
 type ApiKeySpec struct {
+
 	//+kubebuilder:validation:MinLength=0
+	// Name of the ApiKey
 	Name string `json:"name"`
 
-	// +optional
 	//+kubebuilder:default=true
+	// Whether the ApiKey Is active.
+	// +optional
 	Active bool `json:"active"`
 
+	// Owner of the ApiKey.
 	Owner ApiKeyOwner `json:"owner"`
 
+	// Permission Presets that the ApiKey uses.
 	// +optional
 	Presets []string `json:"presets,omitempty"`
 
+	// Permissions of the ApiKey
 	// +optional
 	Permissions []string `json:"permissions,omitempty"`
 }
 
+// Owner of an ApiKey.
 type ApiKeyOwner struct {
+	// User that owns the key.
 	// +optional
 	UserId *string `json:"userId,omitempty"`
 
+	// Team that owns the key.
 	// +optional
 	TeamId *uint32 `json:"teamId,omitempty"`
 }
@@ -65,7 +75,6 @@ func (a *ApiKey) SetConditions(conditions []metav1.Condition) {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-
 // ApiKey is the Schema for the apikeys API.
 type ApiKey struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -76,8 +85,7 @@ type ApiKey struct {
 }
 
 // +kubebuilder:object:root=true
-
-// ApiKeyList contains a list of ApiKey.
+// ApiKeyList contains a list of ApiKeys.
 type ApiKeyList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

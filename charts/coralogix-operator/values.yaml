@@ -115,11 +115,44 @@ coralogixOperator:
   # -- Coralogix Account Domain
   domain: ""
 
-  # -- A comma-separated list of key=value labels to filter custom resources
-  labelSelector: ""
+  # -- A selector to filter custom resources (by the custom resources' labels). {} matches all custom resources. Cannot be set to nil.
+  labelSelector: {}
+  ## Example which selects all custom resources with the label app=coralogix-operator and env=production. **Labels are ANDed**.
+  #  labelSelector:
+  #    matchLabels: {
+  #      app: coralogix-operator
+  #      env: production
+  #    }
 
-  # -- A list of namespaces to filter custom resources
-  namespaceSelector: ""
+  ## Example which selects all custom resources with the label app=coralogix-operator or env=production. **Labels are ORed**.
+  #  labelSelector:
+  #    matchExpressions:
+  #      - key: app
+  #        operator: In
+  #        values:
+  #          - coralogix-operator
+  #      - key: env
+  #        operator: In
+  #        values:
+  #          - production
+  #
+
+
+  # -- A selector to filter namespaces (by the namespace's labels). {} matches all namespaces. Cannot be set to nil.
+  namespaceSelector: {}
+  ## Example which selects all custom resources in the namespace coralogix-operator
+  #  namespaceSelector:
+  #    matchLabels: {
+  #      kubernetes.io/metadata.name: default
+  #    }
+
+  ## Example which selects all custom resources which are not in the namespace staging
+  #  namespaceSelector:
+  #    matchExpressions:
+  #      - key: kubernetes.io/metadata.name
+  #        operator: NotIn
+  #        values:
+  #          - staging
 
   # -- The interval in seconds to reconcile each custom resource
   reconcileIntervalSeconds:
@@ -135,6 +168,10 @@ coralogixOperator:
     tcoTracesPolicies: ""
     integration: ""
     alertScheduler: ""
+    dashboard: ""
+    dashboardsFolder: ""
+    view: ""
+    viewFolder: ""
     prometheusRule: ""
 
   # -- resource config for Coralogix operator

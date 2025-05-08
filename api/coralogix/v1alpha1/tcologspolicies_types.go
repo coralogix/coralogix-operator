@@ -28,47 +28,65 @@ import (
 	utils "github.com/coralogix/coralogix-operator/api/coralogix"
 )
 
-// TCOLogsPoliciesSpec defines the desired state of TCOLogsPolicies.
+// TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.
+// See also https://coralogix.com/docs/tco-optimizer-api
 type TCOLogsPoliciesSpec struct {
+	// Coralogix TCO-Policies-List.
 	Policies []TCOLogsPolicy `json:"policies"`
 }
 
+// A TCO policy for logs.
 type TCOLogsPolicy struct {
+	// Name of the policy.
 	Name string `json:"name"`
 
+	// Description of the policy.
 	// +optional
 	Description *string `json:"description,omitempty"`
 
 	// +kubebuilder:validation:Enum=block;high;medium;low
+	// The policy priority.
 	Priority string `json:"priority"`
 
+	// The severities to apply the policy on.
 	Severities []TCOPolicySeverity `json:"severities"`
 
+	// Matches the specified retention.
 	// +optional
 	ArchiveRetention *ArchiveRetention `json:"archiveRetention,omitempty"`
 
+	// The applications to apply the policy on. Applies the policy on all the applications by default.
 	// +optional
 	Applications *TCOPolicyRule `json:"applications,omitempty"`
 
+	// The subsystems to apply the policy on. Applies the policy on all the subsystems by default.
 	// +optional
 	Subsystems *TCOPolicyRule `json:"subsystems,omitempty"`
 }
 
+// Matches the specified retention.
 type ArchiveRetention struct {
+	// Reference to the retention policy
 	BackendRef ArchiveRetentionBackendRef `json:"backendRef"`
 }
 
+// Backend reference to the policy.
 type ArchiveRetentionBackendRef struct {
+	// Name of the policy.
 	Name string `json:"name"`
 }
 
 // +kubebuilder:validation:Enum=info;warning;critical;error;debug;verbose
+// The severities to apply the policy on.
 type TCOPolicySeverity string
 
+// A sincle TCO policy rule.
 type TCOPolicyRule struct {
+	// Names to match.
 	Names []string `json:"names"`
 
 	// +kubebuilder:validation:Enum=is;is_not;start_with;includes
+	// Type of matching for the name.
 	RuleType string `json:"ruleType"`
 }
 
@@ -228,7 +246,6 @@ type TCOLogsPolicies struct {
 }
 
 // +kubebuilder:object:root=true
-
 // TCOLogsPoliciesList contains a list of TCOLogsPolicies.
 type TCOLogsPoliciesList struct {
 	metav1.TypeMeta `json:",inline"`

@@ -1,0 +1,26 @@
+apiVersion: coralogix.com/v1alpha1
+kind: View
+metadata:
+  name: quick-selection-sample
+spec:
+  name: quick-selection-sample
+  searchQuery:
+    query: "region:us-west-2"
+  timeSelection:
+    quickSelection:
+      seconds: 900
+  filters:
+    filters:
+      - name: severity
+        selectedValues:
+          CRITICAL: true
+          ERROR: true
+      - name: applicationName
+        selectedValues:
+          sample-app: true
+      - name: subsystemName
+        selectedValues:
+          sample-subsystem: true
+  folder:
+    resourceRef:
+      name: sample-folder

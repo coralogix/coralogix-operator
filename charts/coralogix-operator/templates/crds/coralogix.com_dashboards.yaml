@@ -80,10 +80,13 @@ spec:
                         time
                       rule: '!(has(self.id) && has(self.path))'
                   resourceRef:
+                    description: Reference to a Coralogix resource within the cluster.
                     properties:
                       name:
+                        description: Name of the resource (not id).
                         type: string
                       namespace:
+                        description: Kubernetes namespace.
                         type: string
                     required:
                     - name

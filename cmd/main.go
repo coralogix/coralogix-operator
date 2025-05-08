@@ -50,7 +50,7 @@ import (
 	//+kubebuilder:scaffold:imports
 )
 
-const OperatorVersion = "0.4.2"
+const OperatorVersion = "0.4.4"
 
 var (
 	scheme   = k8sruntime.NewScheme()
@@ -240,6 +240,20 @@ func main() {
 		Interval:                cfg.ReconcileIntervals[utils.DashboardsFolderKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DashboardsFolder")
+		os.Exit(1)
+	}
+	if err = (&v1alpha1controllers.ViewReconciler{
+		ViewsClient: clientSet.Views(),
+		Interval:    cfg.ReconcileIntervals[utils.ViewKind],
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "View")
+		os.Exit(1)
+	}
+	if err = (&v1alpha1controllers.ViewFolderReconciler{
+		ViewFoldersClient: clientSet.ViewFolders(),
+		Interval:          cfg.ReconcileIntervals[utils.ViewFolderKind],
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ViewFolder")
 		os.Exit(1)
 	}
 
