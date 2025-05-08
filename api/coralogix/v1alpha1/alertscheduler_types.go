@@ -163,6 +163,9 @@ type Weekly struct {
 	Days []Day `json:"days"`
 }
 
+// +kubebuilder:validation:Enum=Sunday;Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;
+type Day string
+
 type Monthly struct {
 	// The days of the month to activate the rule.
 	Days []int32 `json:"days"`

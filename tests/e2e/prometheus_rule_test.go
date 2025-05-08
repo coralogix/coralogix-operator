@@ -18,6 +18,7 @@ import (
 	"context"
 	"time"
 
+	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -35,7 +36,7 @@ var _ = Describe("PrometheusRule", Ordered, func() {
 		crClient             client.Client
 		promRule             *prometheus.PrometheusRule
 		modifiedPromRule     *prometheus.PrometheusRule
-		fetchedAlert         *coralogixv1alpha1.Alert
+		fetchedAlert         *coralogixv1beta1.Alert
 		promRuleName         = "prometheus-rules"
 		alertName            = "test-alert"
 		alertResourceName    = promRuleName + "-" + alertName + "-0"
@@ -88,7 +89,7 @@ var _ = Describe("PrometheusRule", Ordered, func() {
 		Expect(crClient.Create(ctx, promRule)).To(Succeed())
 
 		By("Verifying underlying Alert and RecordingRuleGroupSet were created")
-		fetchedAlert = &coralogixv1alpha1.Alert{}
+		fetchedAlert = &coralogixv1beta1.Alert{}
 		Eventually(func() error {
 			return crClient.Get(ctx, types.NamespacedName{Name: alertResourceName, Namespace: testNamespace}, fetchedAlert)
 		}, time.Minute, time.Second).Should(Succeed())
@@ -107,7 +108,7 @@ var _ = Describe("PrometheusRule", Ordered, func() {
 
 		By("Verifying underlying Alert was updated")
 		Eventually(func() error {
-			fetchedAlert = &coralogixv1alpha1.Alert{}
+			fetchedAlert = &coralogixv1beta1.Alert{}
 			return crClient.Get(ctx, types.NamespacedName{Name: newAlertResourceName, Namespace: testNamespace}, fetchedAlert)
 		}, time.Minute, time.Second).Should(Succeed())
 	})
@@ -115,10 +116,8 @@ var _ = Describe("PrometheusRule", Ordered, func() {
 	It("Should not overwrite advanced Alert fields when updating PrometheusRule", func(ctx context.Context) {
 		By("Using an advanced Alert field - NotificationGroups")
 		modifiedAlert := fetchedAlert.DeepCopy()
-		modifiedAlert.Spec.NotificationGroups = []coralogixv1alpha1.NotificationGroup{
-			{
-				GroupByFields: []string{"coralogix.metadata.sdkId"},
-			},
+		modifiedAlert.Spec.NotificationGroup = &coralogixv1beta1.NotificationGroup{
+			GroupByKeys: []string{"coralogix.metadata.sdkId"},
 		}
 		Expect(crClient.Patch(ctx, modifiedAlert, client.MergeFrom(fetchedAlert))).To(Succeed())
 
@@ -129,7 +128,7 @@ var _ = Describe("PrometheusRule", Ordered, func() {
 
 		By("Verifying underlying Alert time was updated")
 		Eventually(func() string {
-			fetchedAlert = &coralogixv1alpha1.Alert{}
+			fetchedAlert = &coralogixv1beta1.Alert{}
 			Expect(crClient.Get(ctx,
 				types.NamespacedName{Name: newAlertResourceName, Namespace: testNamespace},
 				fetchedAlert)).To(Succeed())
@@ -137,7 +136,7 @@ var _ = Describe("PrometheusRule", Ordered, func() {
 		}, time.Minute, time.Second).Should(Equal("updated"))
 
 		By("Verifying underlying Alert NotificationGroups were not overwritten")
-		Expect(fetchedAlert.Spec.NotificationGroups).To(Equal(modifiedAlert.Spec.NotificationGroups))
+		Expect(*fetchedAlert.Spec.NotificationGroup).To(Equal(*modifiedAlert.Spec.NotificationGroup))
 	})
 
 	It("Should be deleted successfully", func(ctx context.Context) {
@@ -145,7 +144,7 @@ var _ = Describe("PrometheusRule", Ordered, func() {
 		Expect(crClient.Delete(ctx, promRule)).To(Succeed())
 
 		By("Verifying underlying Alert and RecordingRuleGroupSet were deleted")
-		fetchedAlert := &coralogixv1alpha1.Alert{}
+		fetchedAlert := &coralogixv1beta1.Alert{}
 		Eventually(func() bool {
 			err := crClient.Get(ctx, types.NamespacedName{Name: newAlertResourceName, Namespace: testNamespace}, fetchedAlert)
 			return errors.IsNotFound(err)
