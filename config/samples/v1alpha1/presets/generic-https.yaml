@@ -1,0 +1,27 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Preset
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: preset-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: generic-https-sample
+spec:
+  name: generic-https-sample
+  description: This is a sample generic https preset
+  connectorType: genericHttps
+  entityType: alerts
+  parentId: preset_system_generic_https_alerts_empty
+  configOverrides:
+    - conditionType:
+        matchEntityType: {}
+      messageConfig:
+        fields:
+          - fieldName: body
+            template: |
+              {
+                "alias": "{{alert.groupingKey}}",
+                "status": {% if alert.status | lower == "triggered" %}"firing"{% else %}"resolved"{% endif %}
+              }

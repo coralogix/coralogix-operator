@@ -16,6 +16,7 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/coralogix/coralogix-operator/internal/utils"
@@ -51,6 +52,19 @@ var _ = Describe("Alert", Ordered, func() {
 	})
 
 	It("Should be created successfully", func(ctx context.Context) {
+		By("Creating Slack Connector")
+		connectorName := fmt.Sprintf("slack-connector-for-alert-%d", time.Now().Unix())
+		Expect(crClient.Create(ctx, getSampleSlackConnector(connectorName, testNamespace))).To(Succeed())
+
+		By("Creating Slack Preset")
+		presetName := fmt.Sprintf("slack-preset-for-alert-%d", time.Now().Unix())
+		Expect(crClient.Create(ctx, getSampleSlackPreset(presetName, testNamespace))).To(Succeed())
+
+		By("Creating GlobalRouter")
+		globalRouterName := "global-router-for-alert"
+		globalRouter := getSampleGlobalRouter(globalRouterName, testNamespace, connectorName, presetName)
+		Expect(crClient.Create(ctx, globalRouter)).To(Succeed())
+
 		By("Creating Alert")
 		alertName := "promql-alert"
 		alert = &coralogixv1beta1.Alert{
@@ -74,7 +88,57 @@ var _ = Describe("Alert", Ordered, func() {
 							},
 						},
 					},
+					Destinations: []coralogixv1beta1.NotificationDestination{
+						{
+							Connector: coralogixv1beta1.NCRef{
+								ResourceRef: &coralogixv1beta1.ResourceRef{
+									Name: connectorName,
+								},
+							},
+							Preset: &coralogixv1beta1.NCRef{
+								ResourceRef: &coralogixv1beta1.ResourceRef{
+									Name: presetName,
+								},
+							},
+							NotifyOn: coralogixv1beta1.NotifyOnTriggeredAndResolved,
+							TriggeredRoutingOverrides: coralogixv1beta1.NotificationRouting{
+								ConfigOverrides: &coralogixv1beta1.SourceOverrides{
+									OutputSchemaId: "slack_structured",
+									ConnectorConfigFields: []coralogixv1beta1.ConfigField{
+										{
+											FieldName: "channel",
+											Template:  "{{alertDef.priority}}",
+										},
+									},
+									MessageConfigFields: []coralogixv1beta1.ConfigField{
+										{
+											FieldName: "title",
+											Template:  "TRIGGERED PRESET OVERRIDE: {{alert.status}} {{alertDef.priority}} - {{alertDef.name}}",
+										},
+									},
+								},
+							},
+							ResolvedRoutingOverrides: &coralogixv1beta1.NotificationRouting{
+								ConfigOverrides: &coralogixv1beta1.SourceOverrides{
+									OutputSchemaId: "slack_structured",
+									ConnectorConfigFields: []coralogixv1beta1.ConfigField{
+										{
+											FieldName: "channel",
+											Template:  "{{alertDef.priority}}",
+										},
+									},
+									MessageConfigFields: []coralogixv1beta1.ConfigField{
+										{
+											FieldName: "title",
+											Template:  "RESOLVED PRESET OVERRIDE: {{alert.status}} {{alertDef.priority}} - {{alertDef.name}}",
+										},
+									},
+								},
+							},
+						},
+					},
 				},
+
 				Schedule: &coralogixv1beta1.AlertSchedule{
 					TimeZone: "UTC+02",
 					ActiveOn: &coralogixv1beta1.ActiveOn{
@@ -182,6 +246,9 @@ var _ = Describe("Alert", Ordered, func() {
 								},
 							},
 						},
+					},
+					Router: &coralogixv1beta1.NotificationRouter{
+						NotifyOn: coralogixv1beta1.NotifyOnTriggeredAndResolved,
 					},
 				},
 				Schedule: &coralogixv1beta1.AlertSchedule{
