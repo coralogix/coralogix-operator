@@ -1,22 +1,23 @@
 # Prometheus Integration
-The Coralogix Operator integrates with [Prometheus Operator](https://prometheus-operator.dev/) PrometheusRule CRD, to simplify the transition to Coralogix. 
+
+The Coralogix Operator integrates with the [Prometheus Operator](https://prometheus-operator.dev/) PrometheusRule CRD, to simplify the transition to Coralogix.
 By using existing monitoring configurations, the operator makes it easier to adopt Coralogix’s advanced monitoring and alerting features.
 
-The operator watches PrometheusRule resources and automatically creates Coralogix custom resources in the cluster, 
-including Alerts and RecordingRuleGroupSets.
+The operator watches PrometheusRule resources and automatically creates Coralogix custom resources in the cluster including Alerts and RecordingRuleGroupSets.
 
 ## PrometheusRule Integration
-### Alerts:  
-PrometheusRule alerts can be used to configure Coralogix Metric Alerts. Since Coralogix Metric Alerts 
-provide more advanced alerting capabilities than PrometheusRule alerts, this integration is ideal for 
-quickly setting up basic alerts. To leverage the full capabilities of Coralogix Metric Alerts, 
-you should manage the alerts directly through the Coralogix Alert custom resource.
+
+### Alerts
+
+PrometheusRule alerts can be used to configure Coralogix Metric Alerts. Since Coralogix Metric Alerts provide more advanced alerting capabilities than PrometheusRule alerts, this integration is ideal for quickly setting up basic alerts. To leverage the full capabilities of Coralogix Metric Alerts, you should manage the alerts directly through the Coralogix Alert custom resource.
 
 To enable the operator to monitor alerts in a PrometheusRule, add the following annotation to the PrometheusRule:
+
 ```yaml
 app.coralogix.com/track-alerting-rules: "true"
 ```
-The operator will create a Coralogix Alert in the PrometheusRule namespace, for each alert in the PrometheusRule. 
+
+The operator will create a Coralogix Alert in the PrometheusRule namespace, for each alert in the PrometheusRule.
 
 The following Coralogix Alert properties are derived from the PrometheusRule alerting rule:
 - `Alert.Spec.Name`: Set to `rule.Alert` value.
@@ -36,8 +37,10 @@ The following Coralogix Alert properties are derived from the PrometheusRule ale
 
 Other properties will not be overridden by the operator and can be modified directly in the Coralogix Alert resource.
 
-#### Example:
+### Example
+
 For the following PrometheusRule:
+
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
@@ -59,7 +62,9 @@ spec:
             severity: critical
             slack_channel: "#observability"
 ```
+
 The following Coralogix Alert will be created:
+
 ```yaml
 apiVersion: coralogix.com/v1beta1
 kind: Alert
@@ -92,21 +97,24 @@ spec:
   name: example-alert
   phantomMode: false
   priority: p1
-
 ```
 
-### Recording Rules:
-PrometheusRule recording rules can be used to configure Coralogix RecordingRuleGroupSet.
+### Recording Rules
+
+PrometheusRule recording rules can be used to configure the Coralogix RecordingRuleGroupSet.
 
 To enable the operator to monitor recording rules in a PrometheusRule, add the following annotation to the PrometheusRule:
+
 ```yaml
 app.coralogix.com/track-recording-rules: "true"
 ```
-The operator will create a Coralogix RecordingRuleGroupSet in the PrometheusRule namespace, 
-containing all the PrometheusRule's recording rules.
 
-#### Example:
+The operator will create a Coralogix RecordingRuleGroupSet in the PrometheusRule namespace, containing all the PrometheusRule's recording rules.
+
+### Example
+
 For the following PrometheusRule:
+
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
@@ -131,7 +139,9 @@ spec:
         - record: example-record-4
           expr: vector(4)
 ```
+
 The following Coralogix RecordingRuleGroupSet will be created:
+
 ```yaml
 apiVersion: v1
 items:
