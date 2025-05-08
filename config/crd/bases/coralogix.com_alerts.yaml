@@ -14,1007 +14,6 @@ spec:
     singular: alert
   scope: Namespaced
   versions:
-  - name: v1alpha1
-    schema:
-      openAPIV3Schema:
-        description: Alert is the v1alpha1 version Schema for the alerts API. v1alpha1
-          Alert is going to be deprecated, consider using v1beta1.Alert instead.
-        properties:
-          apiVersion:
-            description: |-
-              APIVersion defines the versioned schema of this representation of an object.
-              Servers should convert recognized schemas to the latest internal value, and
-              may reject unrecognized values.
-              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
-            type: string
-          kind:
-            description: |-
-              Kind is a string value representing the REST resource this object represents.
-              Servers may infer this from the endpoint the client submits requests to.
-              Cannot be updated.
-              In CamelCase.
-              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
-            type: string
-          metadata:
-            type: object
-          spec:
-            description: |-
-              AlertSpec defines the desired state of a Coralogix Alert.
-              Deprecated: Upgrade to v1beta1.
-            properties:
-              active:
-                default: true
-                type: boolean
-              alertType:
-                properties:
-                  flow:
-                    properties:
-                      stages:
-                        items:
-                          properties:
-                            groups:
-                              items:
-                                properties:
-                                  innerFlowAlerts:
-                                    properties:
-                                      alerts:
-                                        items:
-                                          properties:
-                                            not:
-                                              default: false
-                                              type: boolean
-                                            userAlertId:
-                                              type: string
-                                          type: object
-                                        type: array
-                                      operator:
-                                        enum:
-                                        - And
-                                        - Or
-                                        type: string
-                                    required:
-                                    - alerts
-                                    - operator
-                                    type: object
-                                  nextOperator:
-                                    enum:
-                                    - And
-                                    - Or
-                                    type: string
-                                required:
-                                - innerFlowAlerts
-                                - nextOperator
-                                type: object
-                              type: array
-                            timeWindow:
-                              properties:
-                                hours:
-                                  type: integer
-                                minutes:
-                                  type: integer
-                                seconds:
-                                  type: integer
-                              type: object
-                          required:
-                          - groups
-                          type: object
-                        type: array
-                    required:
-                    - stages
-                    type: object
-                  metric:
-                    properties:
-                      lucene:
-                        properties:
-                          conditions:
-                            properties:
-                              alertWhen:
-                                enum:
-                                - More
-                                - Less
-                                type: string
-                              arithmeticOperator:
-                                enum:
-                                - Avg
-                                - Min
-                                - Max
-                                - Sum
-                                - Count
-                                - Percentile
-                                type: string
-                              arithmeticOperatorModifier:
-                                type: integer
-                              groupBy:
-                                items:
-                                  type: string
-                                type: array
-                              manageUndetectedValues:
-                                properties:
-                                  autoRetireRatio:
-                                    default: Never
-                                    enum:
-                                    - Never
-                                    - FiveMinutes
-                                    - TenMinutes
-                                    - Hour
-                                    - TwoHours
-                                    - SixHours
-                                    - TwelveHours
-                                    - TwentyFourHours
-                                    type: string
-                                  enableTriggeringOnUndetectedValues:
-                                    default: true
-                                    type: boolean
-                                type: object
-                              metricField:
-                                type: string
-                              minNonNullValuesPercentage:
-                                minimum: 0
-                                multipleOf: 10
-                                type: integer
-                              replaceMissingValueWithZero:
-                                default: false
-                                type: boolean
-                              sampleThresholdPercentage:
-                                minimum: 0
-                                multipleOf: 10
-                                type: integer
-                              threshold:
-                                anyOf:
-                                - type: integer
-                                - type: string
-                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                                x-kubernetes-int-or-string: true
-                              timeWindow:
-                                enum:
-                                - Minute
-                                - FiveMinutes
-                                - TenMinutes
-                                - FifteenMinutes
-                                - TwentyMinutes
-                                - ThirtyMinutes
-                                - Hour
-                                - TwoHours
-                                - FourHours
-                                - SixHours
-                                - TwelveHours
-                                - TwentyFourHours
-                                - ThirtySixHours
-                                type: string
-                            required:
-                            - alertWhen
-                            - arithmeticOperator
-                            - metricField
-                            - threshold
-                            - timeWindow
-                            type: object
-                          searchQuery:
-                            type: string
-                        required:
-                        - conditions
-                        type: object
-                      promql:
-                        properties:
-                          conditions:
-                            properties:
-                              alertWhen:
-                                enum:
-                                - More
-                                - Less
-                                - MoreOrEqual
-                                - LessOrEqual
-                                - MoreThanUsual
-                                - LessThanUsual
-                                type: string
-                              manageUndetectedValues:
-                                properties:
-                                  autoRetireRatio:
-                                    default: Never
-                                    enum:
-                                    - Never
-                                    - FiveMinutes
-                                    - TenMinutes
-                                    - Hour
-                                    - TwoHours
-                                    - SixHours
-                                    - TwelveHours
-                                    - TwentyFourHours
-                                    type: string
-                                  enableTriggeringOnUndetectedValues:
-                                    default: true
-                                    type: boolean
-                                type: object
-                              minNonNullValuesPercentage:
-                                minimum: 0
-                                multipleOf: 10
-                                type: integer
-                              replaceMissingValueWithZero:
-                                type: boolean
-                              sampleThresholdPercentage:
-                                minimum: 0
-                                multipleOf: 10
-                                type: integer
-                              threshold:
-                                anyOf:
-                                - type: integer
-                                - type: string
-                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                                x-kubernetes-int-or-string: true
-                              timeWindow:
-                                enum:
-                                - Minute
-                                - FiveMinutes
-                                - TenMinutes
-                                - FifteenMinutes
-                                - TwentyMinutes
-                                - ThirtyMinutes
-                                - Hour
-                                - TwoHours
-                                - FourHours
-                                - SixHours
-                                - TwelveHours
-                                - TwentyFourHours
-                                - ThirtySixHours
-                                type: string
-                            required:
-                            - alertWhen
-                            - threshold
-                            - timeWindow
-                            type: object
-                          searchQuery:
-                            type: string
-                        required:
-                        - conditions
-                        type: object
-                    type: object
-                  newValue:
-                    properties:
-                      conditions:
-                        properties:
-                          key:
-                            type: string
-                          timeWindow:
-                            enum:
-                            - TwelveHours
-                            - TwentyFourHours
-                            - FortyEightHours
-                            - SeventyTwoHours
-                            - Week
-                            - Month
-                            - TwoMonths
-                            - ThreeMonths
-                            type: string
-                        required:
-                        - key
-                        - timeWindow
-                        type: object
-                      filters:
-                        properties:
-                          alias:
-                            type: string
-                          applications:
-                            items:
-                              type: string
-                            type: array
-                          categories:
-                            items:
-                              type: string
-                            type: array
-                          classes:
-                            items:
-                              type: string
-                            type: array
-                          computers:
-                            items:
-                              type: string
-                            type: array
-                          ips:
-                            items:
-                              type: string
-                            type: array
-                          methods:
-                            items:
-                              type: string
-                            type: array
-                          searchQuery:
-                            type: string
-                          severities:
-                            items:
-                              enum:
-                              - Debug
-                              - Verbose
-                              - Info
-                              - Warning
-                              - Critical
-                              - Error
-                              type: string
-                            type: array
-                          subsystems:
-                            items:
-                              type: string
-                            type: array
-                        type: object
-                    required:
-                    - conditions
-                    type: object
-                  ratio:
-                    properties:
-                      conditions:
-                        properties:
-                          alertWhen:
-                            enum:
-                            - More
-                            - Less
-                            type: string
-                          groupBy:
-                            items:
-                              type: string
-                            type: array
-                          groupByFor:
-                            enum:
-                            - Q1
-                            - Q2
-                            - Both
-                            type: string
-                          ignoreInfinity:
-                            default: false
-                            type: boolean
-                          manageUndetectedValues:
-                            properties:
-                              autoRetireRatio:
-                                default: Never
-                                enum:
-                                - Never
-                                - FiveMinutes
-                                - TenMinutes
-                                - Hour
-                                - TwoHours
-                                - SixHours
-                                - TwelveHours
-                                - TwentyFourHours
-                                type: string
-                              enableTriggeringOnUndetectedValues:
-                                default: true
-                                type: boolean
-                            type: object
-                          ratio:
-                            anyOf:
-                            - type: integer
-                            - type: string
-                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                            x-kubernetes-int-or-string: true
-                          timeWindow:
-                            enum:
-                            - FiveMinutes
-                            - TenMinutes
-                            - FifteenMinutes
-                            - TwentyMinutes
-                            - ThirtyMinutes
-                            - Hour
-                            - TwoHours
-                            - FourHours
-                            - SixHours
-                            - TwelveHours
-                            - TwentyFourHours
-                            - ThirtySixHours
-                            type: string
-                        required:
-                        - alertWhen
-                        - ratio
-                        - timeWindow
-                        type: object
-                      q1Filters:
-                        properties:
-                          alias:
-                            type: string
-                          applications:
-                            items:
-                              type: string
-                            type: array
-                          categories:
-                            items:
-                              type: string
-                            type: array
-                          classes:
-                            items:
-                              type: string
-                            type: array
-                          computers:
-                            items:
-                              type: string
-                            type: array
-                          ips:
-                            items:
-                              type: string
-                            type: array
-                          methods:
-                            items:
-                              type: string
-                            type: array
-                          searchQuery:
-                            type: string
-                          severities:
-                            items:
-                              enum:
-                              - Debug
-                              - Verbose
-                              - Info
-                              - Warning
-                              - Critical
-                              - Error
-                              type: string
-                            type: array
-                          subsystems:
-                            items:
-                              type: string
-                            type: array
-                        type: object
-                      q2Filters:
-                        properties:
-                          alias:
-                            type: string
-                          applications:
-                            items:
-                              type: string
-                            type: array
-                          searchQuery:
-                            type: string
-                          severities:
-                            items:
-                              enum:
-                              - Debug
-                              - Verbose
-                              - Info
-                              - Warning
-                              - Critical
-                              - Error
-                              type: string
-                            type: array
-                          subsystems:
-                            items:
-                              type: string
-                            type: array
-                        type: object
-                    required:
-                    - conditions
-                    type: object
-                  standard:
-                    properties:
-                      conditions:
-                        properties:
-                          alertWhen:
-                            enum:
-                            - More
-                            - Less
-                            - Immediately
-                            - MoreThanUsual
-                            type: string
-                          groupBy:
-                            items:
-                              type: string
-                            type: array
-                          manageUndetectedValues:
-                            properties:
-                              autoRetireRatio:
-                                default: Never
-                                enum:
-                                - Never
-                                - FiveMinutes
-                                - TenMinutes
-                                - Hour
-                                - TwoHours
-                                - SixHours
-                                - TwelveHours
-                                - TwentyFourHours
-                                type: string
-                              enableTriggeringOnUndetectedValues:
-                                default: true
-                                type: boolean
-                            type: object
-                          threshold:
-                            type: integer
-                          timeWindow:
-                            enum:
-                            - FiveMinutes
-                            - TenMinutes
-                            - FifteenMinutes
-                            - TwentyMinutes
-                            - ThirtyMinutes
-                            - Hour
-                            - TwoHours
-                            - FourHours
-                            - SixHours
-                            - TwelveHours
-                            - TwentyFourHours
-                            - ThirtySixHours
-                            type: string
-                        required:
-                        - alertWhen
-                        type: object
-                      filters:
-                        properties:
-                          alias:
-                            type: string
-                          applications:
-                            items:
-                              type: string
-                            type: array
-                          categories:
-                            items:
-                              type: string
-                            type: array
-                          classes:
-                            items:
-                              type: string
-                            type: array
-                          computers:
-                            items:
-                              type: string
-                            type: array
-                          ips:
-                            items:
-                              type: string
-                            type: array
-                          methods:
-                            items:
-                              type: string
-                            type: array
-                          searchQuery:
-                            type: string
-                          severities:
-                            items:
-                              enum:
-                              - Debug
-                              - Verbose
-                              - Info
-                              - Warning
-                              - Critical
-                              - Error
-                              type: string
-                            type: array
-                          subsystems:
-                            items:
-                              type: string
-                            type: array
-                        type: object
-                    required:
-                    - conditions
-                    type: object
-                  timeRelative:
-                    properties:
-                      conditions:
-                        properties:
-                          alertWhen:
-                            enum:
-                            - More
-                            - Less
-                            type: string
-                          groupBy:
-                            items:
-                              type: string
-                            type: array
-                          ignoreInfinity:
-                            default: false
-                            type: boolean
-                          manageUndetectedValues:
-                            properties:
-                              autoRetireRatio:
-                                default: Never
-                                enum:
-                                - Never
-                                - FiveMinutes
-                                - TenMinutes
-                                - Hour
-                                - TwoHours
-                                - SixHours
-                                - TwelveHours
-                                - TwentyFourHours
-                                type: string
-                              enableTriggeringOnUndetectedValues:
-                                default: true
-                                type: boolean
-                            type: object
-                          threshold:
-                            anyOf:
-                            - type: integer
-                            - type: string
-                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                            x-kubernetes-int-or-string: true
-                          timeWindow:
-                            enum:
-                            - PreviousHour
-                            - SameHourYesterday
-                            - SameHourLastWeek
-                            - Yesterday
-                            - SameDayLastWeek
-                            - SameDayLastMonth
-                            type: string
-                        required:
-                        - alertWhen
-                        - threshold
-                        - timeWindow
-                        type: object
-                      filters:
-                        properties:
-                          alias:
-                            type: string
-                          applications:
-                            items:
-                              type: string
-                            type: array
-                          categories:
-                            items:
-                              type: string
-                            type: array
-                          classes:
-                            items:
-                              type: string
-                            type: array
-                          computers:
-                            items:
-                              type: string
-                            type: array
-                          ips:
-                            items:
-                              type: string
-                            type: array
-                          methods:
-                            items:
-                              type: string
-                            type: array
-                          searchQuery:
-                            type: string
-                          severities:
-                            items:
-                              enum:
-                              - Debug
-                              - Verbose
-                              - Info
-                              - Warning
-                              - Critical
-                              - Error
-                              type: string
-                            type: array
-                          subsystems:
-                            items:
-                              type: string
-                            type: array
-                        type: object
-                    required:
-                    - conditions
-                    type: object
-                  tracing:
-                    properties:
-                      conditions:
-                        properties:
-                          alertWhen:
-                            enum:
-                            - More
-                            - Immediately
-                            type: string
-                          groupBy:
-                            items:
-                              type: string
-                            type: array
-                          threshold:
-                            type: integer
-                          timeWindow:
-                            enum:
-                            - FiveMinutes
-                            - TenMinutes
-                            - FifteenMinutes
-                            - TwentyMinutes
-                            - ThirtyMinutes
-                            - Hour
-                            - TwoHours
-                            - FourHours
-                            - SixHours
-                            - TwelveHours
-                            - TwentyFourHours
-                            - ThirtySixHours
-                            type: string
-                        required:
-                        - alertWhen
-                        type: object
-                      filters:
-                        properties:
-                          applications:
-                            items:
-                              type: string
-                            type: array
-                          latencyThresholdMilliseconds:
-                            anyOf:
-                            - type: integer
-                            - type: string
-                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                            x-kubernetes-int-or-string: true
-                          services:
-                            items:
-                              type: string
-                            type: array
-                          subsystems:
-                            items:
-                              type: string
-                            type: array
-                          tagFilters:
-                            items:
-                              properties:
-                                field:
-                                  type: string
-                                values:
-                                  items:
-                                    type: string
-                                  type: array
-                              type: object
-                            type: array
-                        type: object
-                    required:
-                    - conditions
-                    type: object
-                  uniqueCount:
-                    properties:
-                      conditions:
-                        properties:
-                          groupBy:
-                            type: string
-                          key:
-                            type: string
-                          maxUniqueValues:
-                            minimum: 1
-                            type: integer
-                          maxUniqueValuesForGroupBy:
-                            minimum: 1
-                            type: integer
-                          timeWindow:
-                            enum:
-                            - Minute
-                            - FiveMinutes
-                            - TenMinutes
-                            - FifteenMinutes
-                            - TwentyMinutes
-                            - ThirtyMinutes
-                            - Hour
-                            - TwoHours
-                            - FourHours
-                            - SixHours
-                            - TwelveHours
-                            - TwentyFourHours
-                            - ThirtySixHours
-                            type: string
-                        required:
-                        - key
-                        - maxUniqueValues
-                        - timeWindow
-                        type: object
-                      filters:
-                        properties:
-                          alias:
-                            type: string
-                          applications:
-                            items:
-                              type: string
-                            type: array
-                          categories:
-                            items:
-                              type: string
-                            type: array
-                          classes:
-                            items:
-                              type: string
-                            type: array
-                          computers:
-                            items:
-                              type: string
-                            type: array
-                          ips:
-                            items:
-                              type: string
-                            type: array
-                          methods:
-                            items:
-                              type: string
-                            type: array
-                          searchQuery:
-                            type: string
-                          severities:
-                            items:
-                              enum:
-                              - Debug
-                              - Verbose
-                              - Info
-                              - Warning
-                              - Critical
-                              - Error
-                              type: string
-                            type: array
-                          subsystems:
-                            items:
-                              type: string
-                            type: array
-                        type: object
-                    required:
-                    - conditions
-                    type: object
-                type: object
-              description:
-                description: Alert description.
-                type: string
-              expirationDate:
-                properties:
-                  day:
-                    format: int32
-                    maximum: 31
-                    minimum: 1
-                    type: integer
-                  month:
-                    format: int32
-                    maximum: 12
-                    minimum: 1
-                    type: integer
-                  year:
-                    format: int32
-                    maximum: 9999
-                    minimum: 1
-                    type: integer
-                type: object
-              labels:
-                additionalProperties:
-                  type: string
-                type: object
-              name:
-                description: Alert name.
-                minLength: 0
-                type: string
-              notificationGroups:
-                items:
-                  properties:
-                    groupByFields:
-                      items:
-                        type: string
-                      type: array
-                    notifications:
-                      items:
-                        properties:
-                          emailRecipients:
-                            items:
-                              type: string
-                            type: array
-                          integrationName:
-                            type: string
-                          notifyOn:
-                            enum:
-                            - TriggeredOnly
-                            - TriggeredAndResolved
-                            type: string
-                          retriggeringPeriodMinutes:
-                            format: int32
-                            type: integer
-                        type: object
-                      type: array
-                  type: object
-                type: array
-              payloadFilters:
-                items:
-                  type: string
-                type: array
-              scheduling:
-                properties:
-                  daysEnabled:
-                    items:
-                      enum:
-                      - Sunday
-                      - Monday
-                      - Tuesday
-                      - Wednesday
-                      - Thursday
-                      - Friday
-                      - Saturday
-                      type: string
-                    type: array
-                  endTime:
-                    pattern: ^(0\d|1\d|2[0-3]):[0-5]\d$
-                    type: string
-                  startTime:
-                    pattern: ^(0\d|1\d|2[0-3]):[0-5]\d$
-                    type: string
-                  timeZone:
-                    default: UTC+00
-                    pattern: ^UTC[+-]\d{2}$
-                    type: string
-                type: object
-              severity:
-                enum:
-                - Info
-                - Warning
-                - Critical
-                - Error
-                - Low
-                type: string
-              showInInsight:
-                properties:
-                  notifyOn:
-                    default: TriggeredOnly
-                    enum:
-                    - TriggeredOnly
-                    - TriggeredAndResolved
-                    type: string
-                  retriggeringPeriodMinutes:
-                    format: int32
-                    minimum: 1
-                    type: integer
-                type: object
-            required:
-            - alertType
-            - name
-            - severity
-            type: object
-          status:
-            description: AlertStatus defines the observed state of Alert
-            properties:
-              conditions:
-                items:
-                  description: Condition contains details for one aspect of the current
-                    state of this API Resource.
-                  properties:
-                    lastTransitionTime:
-                      description: |-
-                        lastTransitionTime is the last time the condition transitioned from one status to another.
-                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
-                      format: date-time
-                      type: string
-                    message:
-                      description: |-
-                        message is a human readable message indicating details about the transition.
-                        This may be an empty string.
-                      maxLength: 32768
-                      type: string
-                    observedGeneration:
-                      description: |-
-                        observedGeneration represents the .metadata.generation that the condition was set based upon.
-                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
-                        with respect to the current state of the instance.
-                      format: int64
-                      minimum: 0
-                      type: integer
-                    reason:
-                      description: |-
-                        reason contains a programmatic identifier indicating the reason for the condition's last transition.
-                        Producers of specific condition types may define expected values and meanings for this field,
-                        and whether the values are considered a guaranteed API.
-                        The value should be a CamelCase string.
-                        This field may not be empty.
-                      maxLength: 1024
-                      minLength: 1
-                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
-                      type: string
-                    status:
-                      description: status of the condition, one of True, False, Unknown.
-                      enum:
-                      - "True"
-                      - "False"
-                      - Unknown
-                      type: string
-                    type:
-                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
-                      maxLength: 316
-                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
-                      type: string
-                  required:
-                  - lastTransitionTime
-                  - message
-                  - reason
-                  - status
-                  - type
-                  type: object
-                type: array
-              id:
-                type: string
-            type: object
-        type: object
-    served: true
-    storage: false
-    subresources:
-      status: {}
   - name: v1beta1
     schema:
       openAPIV3Schema:
@@ -1082,6 +81,10 @@ spec:
                                                       description: Name of the alert.
                                                       type: string
                                                   type: object
+                                                  x-kubernetes-validations:
+                                                  - message: One of id or name is
+                                                      required
+                                                    rule: has(self.id) != has(self.name)
                                                 resourceRef:
                                                   description: Kubernetes resource
                                                     reference.
@@ -1096,6 +99,10 @@ spec:
                                                   - name
                                                   type: object
                                               type: object
+                                              x-kubernetes-validations:
+                                              - message: Exactly one of backendRef
+                                                  or resourceRef must be set
+                                                rule: has(self.backendRef) != has(self.resourceRef)
                                             not:
                                               default: false
                                               description: Inversion.
@@ -2728,6 +1735,18 @@ spec:
                     - rules
                     type: object
                 type: object
+                x-kubernetes-validations:
+                - message: Only one of logsImmediate, logsThreshold, logsRatioThreshold,
+                    logsTimeRelativeThreshold, metricThreshold, tracingThreshold,
+                    tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue
+                    or logsUniqueCount must be set
+                  rule: '(self.logsImmediate != null ? 1 : 0) + (self.logsThreshold
+                    != null ? 1 : 0) + (self.logsRatioThreshold != null ? 1 : 0) +
+                    (self.logsTimeRelativeThreshold != null ? 1 : 0) + (self.metricThreshold
+                    != null ? 1 : 0) + (self.tracingThreshold != null ? 1 : 0) + (self.tracingImmediate
+                    != null ? 1 : 0) + (self.flow != null ? 1 : 0) + (self.logsAnomaly
+                    != null ? 1 : 0) + (self.metricAnomaly != null ? 1 : 0) + (self.logsNewValue
+                    != null ? 1 : 0) + (self.logsUniqueCount != null ? 1 : 0) == 1'
               description:
                 description: Description of the alert
                 type: string
@@ -2799,6 +1818,9 @@ spec:
                                       description: Name of the webhook.
                                       type: string
                                   type: object
+                                  x-kubernetes-validations:
+                                  - message: One of id or name is required
+                                    rule: has(self.id) != has(self.name)
                                 resourceRef:
                                   description: Resource reference for use with the
                                     alert notification.
@@ -2813,12 +1835,20 @@ spec:
                                   - name
                                   type: object
                               type: object
+                              x-kubernetes-validations:
+                              - message: Exactly one of backendRef or resourceRef
+                                  is required
+                                rule: has(self.backendRef) || has(self.resourceRef)
                             recipients:
                               description: Recipients for the notification.
                               items:
                                 type: string
                               type: array
                           type: object
+                          x-kubernetes-validations:
+                          - message: Exactly one of integrationRef or recipients is
+                              required
+                            rule: has(self.integrationRef) || has(self.recipients)
                         notifyOn:
                           default: triggeredOnly
                           description: When to notify.
@@ -2876,6 +1906,9 @@ spec:
                                         description: Name of the webhook.
                                         type: string
                                     type: object
+                                    x-kubernetes-validations:
+                                    - message: One of id or name is required
+                                      rule: has(self.id) != has(self.name)
                                   resourceRef:
                                     description: Resource reference for use with the
                                       alert notification.
@@ -2890,12 +1923,20 @@ spec:
                                     - name
                                     type: object
                                 type: object
+                                x-kubernetes-validations:
+                                - message: Exactly one of backendRef or resourceRef
+                                    is required
+                                  rule: has(self.backendRef) || has(self.resourceRef)
                               recipients:
                                 description: Recipients for the notification.
                                 items:
                                   type: string
                                 type: array
                             type: object
+                            x-kubernetes-validations:
+                            - message: Exactly one of integrationRef or recipients
+                                is required
+                              rule: has(self.integrationRef) || has(self.recipients)
                           notifyOn:
                             default: triggeredOnly
                             description: When to notify.
@@ -2977,6 +2018,10 @@ spec:
             - name
             - priority
             type: object
+            x-kubernetes-validations:
+            - message: groupByKeys is not supported for this alert type
+              rule: (self.alertType.logsImmediate == null && self.alertType.logsImmediate
+                == null) || !has(self.groupByKeys)
           status:
             description: AlertStatus defines the observed state of Alert
             properties:

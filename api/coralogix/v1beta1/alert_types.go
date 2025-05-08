@@ -239,7 +239,7 @@ var (
 // AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
 //
 // Note that this is only for the latest version of the alerts API. If your account has been created before March 2025, make sure that your account has been migrated before using advanced features of alerts.
-// +kubebuilder:validation:XValidation:rule="(self.alertType.logsImmediate == null && self.alertType.logsImmediate == null) || self.groupByKeys == null",message="groupByKeys is not supported for this alert type"
+// +kubebuilder:validation:XValidation:rule="(self.alertType.logsImmediate == null && self.alertType.logsImmediate == null) || !has(self.groupByKeys)",message="groupByKeys is not supported for this alert type"
 type AlertSpec struct {
 	// Name of the alert
 	//+kubebuilder:validation:MinLength=0

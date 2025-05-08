@@ -31,10 +31,6 @@ serviceMonitor:
   # -- Specifies whether a service monitor should be created.
   create: true
 
-validatingWebhookConfiguration:
-  # -- Specifies whether a ValidatingWebhookConfiguration should be created.
-  create: true
-
 certificate:
   # -- Specifies whether a Certificate should be created.
   create: true
@@ -96,11 +92,6 @@ coralogixOperator:
 
   # Set this to false if PrometheusRule CRD is not available in the cluster.
   prometheusRules:
-    enabled: true
-
-  # Set this to false if you want to disable validation and conversion webhooks.
-  # Leaving true assumes you have cert-manager installed in your cluster.
-  webhooks:
     enabled: true
 
   # --  Coralogix operator Image
