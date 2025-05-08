@@ -37,7 +37,7 @@ The following Coralogix Alert properties are derived from the PrometheusRule ale
 
 Other properties will not be overridden by the operator and can be modified directly in the Coralogix Alert resource.
 
-### Example
+#### Example
 
 For the following PrometheusRule:
 
@@ -111,7 +111,7 @@ app.coralogix.com/track-recording-rules: "true"
 
 The operator will create a Coralogix RecordingRuleGroupSet in the PrometheusRule namespace, containing all the PrometheusRule's recording rules.
 
-### Example
+#### Example
 
 For the following PrometheusRule:
 
