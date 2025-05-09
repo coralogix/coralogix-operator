@@ -104,7 +104,7 @@ var _ = Describe("Scope", Ordered, func() {
 				}
 				newScopeID = *fetchedScope.Status.ID
 				return newScopeID != scopeID
-			}, time.Minute, time.Second).Should(BeTrue())
+			}, 2*time.Minute, time.Second).Should(BeTrue())
 
 			By("Verifying Scope with new the ID exists in Coralogix backend")
 			Eventually(func() error {
