@@ -36,9 +36,6 @@ jobs:
       - name: Install Helm
         run: |
           curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-      - name: Install Cert-Manager
-        run: |
-          make install-cert-manager
       - name: Install Coralogix Operator using Helm
         run: |
           helm install coralogix-operator ./charts/coralogix-operator \
@@ -48,7 +45,6 @@ jobs:
             --set coralogixOperator.image.repository="${{ env.IMG_REPO }}" \
             --set coralogixOperator.image.tag="${{ env.IMG_TAG }}" \
             --set coralogixOperator.region="${{ secrets.CORALOGIX_REGION }}" \
-            --set coralogixOperator.webhooks.enabled=true \
             --set coralogixOperator.reconcileIntervalSeconds.scope=20
       - name: Run e2e Tests
         run: |
