@@ -156,7 +156,8 @@ func getReconcileIntervals() map[string]*string {
 			&interval,
 			fmt.Sprintf("%s-reconcile-interval-seconds", strings.ToLower(gvk.Kind)),
 			interval,
-			fmt.Sprintf("The interval in seconds between succeding reconciliations for %s", gvk.Kind),
+			fmt.Sprintf("The interval in seconds between succeding reconciliations for %s. "+
+				"Should be at least 30 seconds.", gvk.Kind),
 		)
 		result[gvk.Kind] = &interval
 	}
@@ -177,6 +178,10 @@ func parseReconcileIntervals(intervals map[string]*string) (map[string]time.Dura
 		numericInterval, err := strconv.Atoi(*interval)
 		if err != nil {
 			return nil, fmt.Errorf("invalid interval value for %s: %w", crd, err)
+		}
+
+		if numericInterval != 0 && numericInterval < 30 {
+			return nil, fmt.Errorf("interval value should be at least 30 seconds")
 		}
 
 		result[crd] = time.Second * time.Duration(numericInterval)

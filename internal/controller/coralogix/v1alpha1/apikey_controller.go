@@ -77,7 +77,7 @@ func (r *ApiKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			log.Error(err, "Error on creating ApiKey")
 			return coralogixreconciler.ManageErrorWithRequeue(ctx, apiKey, reason, err)
 		}
-		return coralogixreconciler.ManageSuccessWithRequeue(ctx, apiKey, r.Interval, utils.ReasonRemoteCreatedSuccessfully)
+		return coralogixreconciler.ManageSuccessWithRequeue(ctx, apiKey, r.Interval)
 	}
 
 	if !apiKey.ObjectMeta.DeletionTimestamp.IsZero() {
@@ -101,7 +101,7 @@ func (r *ApiKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		return coralogixreconciler.ManageErrorWithRequeue(ctx, apiKey, reason, err)
 	}
 
-	return coralogixreconciler.ManageSuccessWithRequeue(ctx, apiKey, r.Interval, utils.ReasonRemoteUpdatedSuccessfully)
+	return coralogixreconciler.ManageSuccessWithRequeue(ctx, apiKey, r.Interval)
 }
 
 func (r *ApiKeyReconciler) create(ctx context.Context, log logr.Logger, apiKey *coralogixv1alpha1.ApiKey) (error, string) {

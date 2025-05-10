@@ -20,13 +20,12 @@ import (
 )
 
 const (
-	ReasonRemoteCreatedSuccessfully = "RemoteCreatedSuccessfully"
-	ReasonRemoteCreationFailed      = "RemoteCreationFailed"
-	ReasonRemoteUpdatedSuccessfully = "RemoteUpdatedSuccessfully"
-	ReasonRemoteUpdateFailed        = "RemoteUpdateFailed"
-	ReasonRemoteDeletionFailed      = "RemoteDeletionFailed"
-	ReasonRemoteResourceNotFound    = "RemoteResourceNotFound"
-	ReasonInternalK8sError          = "InternalK8sError"
+	ReasonRemoteSyncedSuccessfully = "RemoteSyncedSuccessfully"
+	ReasonRemoteCreationFailed     = "RemoteCreationFailed"
+	ReasonRemoteUpdateFailed       = "RemoteUpdateFailed"
+	ReasonRemoteDeletionFailed     = "RemoteDeletionFailed"
+	ReasonRemoteResourceNotFound   = "RemoteResourceNotFound"
+	ReasonInternalK8sError         = "InternalK8sError"
 
 	ConditionTypeRemoteSynced = "RemoteSynced"
 )

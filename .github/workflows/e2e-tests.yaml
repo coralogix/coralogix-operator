@@ -20,7 +20,7 @@ jobs:
       IMG: coralogix-operator-image:latest
       CORALOGIX_REGION: ${{ secrets.CORALOGIX_REGION }}
       CORALOGIX_API_KEY: ${{ secrets.CORALOGIX_API_KEY }}
-      SCOPE_RECONCILE_INTERVAL_SECONDS: 20
+      SCOPE_RECONCILE_INTERVAL_SECONDS: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v2

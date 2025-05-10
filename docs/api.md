@@ -153,6 +153,8 @@ Note that this is only for the latest version of the alerts API. If your account
         <td>object</td>
         <td>
           Where notifications should be sent to.<br/>
+          <br/>
+            <i>Validations</i>:<li>!(has(self.destinations) && has(self.router)): At most one of Destinations or Router can be set.</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4455,10 +4457,24 @@ Where notifications should be sent to.
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindex">destinations</a></b></td>
+        <td>[]object</td>
+        <td>
+          The destinations for notifications (Notification Center feature).<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>groupByKeys</b></td>
         <td>[]string</td>
         <td>
           Group notification by these keys.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgrouprouter">router</a></b></td>
+        <td>object</td>
+        <td>
+          The router for notifications (Notification Center feature).<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4468,6 +4484,560 @@ Where notifications should be sent to.
           Webhooks to trigger for notifications.<br/>
         </td>
         <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index]
+<sup><sup>[↩ Parent](#alertspecnotificationgroup)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexconnector">connector</a></b></td>
+        <td>object</td>
+        <td>
+          Connector is the connector for the destination. Should be one of backendRef or resourceRef.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>notifyOn</b></td>
+        <td>enum</td>
+        <td>
+          When to notify.<br/>
+          <br/>
+            <i>Enum</i>: triggeredOnly, triggeredAndResolved<br/>
+            <i>Default</i>: triggeredOnly<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindextriggeredroutingoverrides">triggeredRoutingOverrides</a></b></td>
+        <td>object</td>
+        <td>
+          The routing configuration to override from the connector/preset for triggered notifications.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexpreset">preset</a></b></td>
+        <td>object</td>
+        <td>
+          Preset is the preset for the destination. Should be one of backendRef or resourceRef.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexresolvedroutingoverrides">resolvedRoutingOverrides</a></b></td>
+        <td>object</td>
+        <td>
+          Optional routing configuration to override from the connector/preset for resolved notifications.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].connector
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindex)</sup></sup>
+
+
+
+Connector is the connector for the destination. Should be one of backendRef or resourceRef.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexconnectorbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          BackendRef is a reference to a backend resource.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexconnectorresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          ResourceRef is a reference to a Kubernetes resource.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].connector.backendRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexconnector)</sup></sup>
+
+
+
+BackendRef is a reference to a backend resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].connector.resourceRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexconnector)</sup></sup>
+
+
+
+ResourceRef is a reference to a Kubernetes resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].triggeredRoutingOverrides
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindex)</sup></sup>
+
+
+
+The routing configuration to override from the connector/preset for triggered notifications.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindextriggeredroutingoverridesconfigoverrides">configOverrides</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].triggeredRoutingOverrides.configOverrides
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindextriggeredroutingoverrides)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>outputSchemaId</b></td>
+        <td>string</td>
+        <td>
+          The ID of the output schema to use for routing notifications<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindextriggeredroutingoverridesconfigoverridesconnectorconfigfieldsindex">connectorConfigFields</a></b></td>
+        <td>[]object</td>
+        <td>
+          Connector configuration fields.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindextriggeredroutingoverridesconfigoverridesmessageconfigfieldsindex">messageConfigFields</a></b></td>
+        <td>[]object</td>
+        <td>
+          Notification message configuration fields.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].triggeredRoutingOverrides.configOverrides.connectorConfigFields[index]
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindextriggeredroutingoverridesconfigoverrides)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          The name of the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>template</b></td>
+        <td>string</td>
+        <td>
+          The template for the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].triggeredRoutingOverrides.configOverrides.messageConfigFields[index]
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindextriggeredroutingoverridesconfigoverrides)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          The name of the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>template</b></td>
+        <td>string</td>
+        <td>
+          The template for the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].preset
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindex)</sup></sup>
+
+
+
+Preset is the preset for the destination. Should be one of backendRef or resourceRef.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexpresetbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          BackendRef is a reference to a backend resource.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexpresetresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          ResourceRef is a reference to a Kubernetes resource.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].preset.backendRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexpreset)</sup></sup>
+
+
+
+BackendRef is a reference to a backend resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].preset.resourceRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexpreset)</sup></sup>
+
+
+
+ResourceRef is a reference to a Kubernetes resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].resolvedRoutingOverrides
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindex)</sup></sup>
+
+
+
+Optional routing configuration to override from the connector/preset for resolved notifications.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexresolvedroutingoverridesconfigoverrides">configOverrides</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].resolvedRoutingOverrides.configOverrides
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexresolvedroutingoverrides)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>outputSchemaId</b></td>
+        <td>string</td>
+        <td>
+          The ID of the output schema to use for routing notifications<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexresolvedroutingoverridesconfigoverridesconnectorconfigfieldsindex">connectorConfigFields</a></b></td>
+        <td>[]object</td>
+        <td>
+          Connector configuration fields.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupdestinationsindexresolvedroutingoverridesconfigoverridesmessageconfigfieldsindex">messageConfigFields</a></b></td>
+        <td>[]object</td>
+        <td>
+          Notification message configuration fields.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].resolvedRoutingOverrides.configOverrides.connectorConfigFields[index]
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexresolvedroutingoverridesconfigoverrides)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          The name of the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>template</b></td>
+        <td>string</td>
+        <td>
+          The template for the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.destinations[index].resolvedRoutingOverrides.configOverrides.messageConfigFields[index]
+<sup><sup>[↩ Parent](#alertspecnotificationgroupdestinationsindexresolvedroutingoverridesconfigoverrides)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          The name of the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>template</b></td>
+        <td>string</td>
+        <td>
+          The template for the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroup.router
+<sup><sup>[↩ Parent](#alertspecnotificationgroup)</sup></sup>
+
+
+
+The router for notifications (Notification Center feature).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>notifyOn</b></td>
+        <td>enum</td>
+        <td>
+          When to notify.<br/>
+          <br/>
+            <i>Enum</i>: triggeredOnly, triggeredAndResolved<br/>
+            <i>Default</i>: triggeredOnly<br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
@@ -4700,10 +5270,24 @@ Notification group to use for alert notifications.
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindex">destinations</a></b></td>
+        <td>[]object</td>
+        <td>
+          The destinations for notifications (Notification Center feature).<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>groupByKeys</b></td>
         <td>[]string</td>
         <td>
           Group notification by these keys.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexrouter">router</a></b></td>
+        <td>object</td>
+        <td>
+          The router for notifications (Notification Center feature).<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4713,6 +5297,560 @@ Notification group to use for alert notifications.
           Webhooks to trigger for notifications.<br/>
         </td>
         <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index]
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexconnector">connector</a></b></td>
+        <td>object</td>
+        <td>
+          Connector is the connector for the destination. Should be one of backendRef or resourceRef.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>notifyOn</b></td>
+        <td>enum</td>
+        <td>
+          When to notify.<br/>
+          <br/>
+            <i>Enum</i>: triggeredOnly, triggeredAndResolved<br/>
+            <i>Default</i>: triggeredOnly<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindextriggeredroutingoverrides">triggeredRoutingOverrides</a></b></td>
+        <td>object</td>
+        <td>
+          The routing configuration to override from the connector/preset for triggered notifications.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexpreset">preset</a></b></td>
+        <td>object</td>
+        <td>
+          Preset is the preset for the destination. Should be one of backendRef or resourceRef.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexresolvedroutingoverrides">resolvedRoutingOverrides</a></b></td>
+        <td>object</td>
+        <td>
+          Optional routing configuration to override from the connector/preset for resolved notifications.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].connector
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindex)</sup></sup>
+
+
+
+Connector is the connector for the destination. Should be one of backendRef or resourceRef.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexconnectorbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          BackendRef is a reference to a backend resource.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexconnectorresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          ResourceRef is a reference to a Kubernetes resource.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].connector.backendRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexconnector)</sup></sup>
+
+
+
+BackendRef is a reference to a backend resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].connector.resourceRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexconnector)</sup></sup>
+
+
+
+ResourceRef is a reference to a Kubernetes resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].triggeredRoutingOverrides
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindex)</sup></sup>
+
+
+
+The routing configuration to override from the connector/preset for triggered notifications.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindextriggeredroutingoverridesconfigoverrides">configOverrides</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].triggeredRoutingOverrides.configOverrides
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindextriggeredroutingoverrides)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>outputSchemaId</b></td>
+        <td>string</td>
+        <td>
+          The ID of the output schema to use for routing notifications<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindextriggeredroutingoverridesconfigoverridesconnectorconfigfieldsindex">connectorConfigFields</a></b></td>
+        <td>[]object</td>
+        <td>
+          Connector configuration fields.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindextriggeredroutingoverridesconfigoverridesmessageconfigfieldsindex">messageConfigFields</a></b></td>
+        <td>[]object</td>
+        <td>
+          Notification message configuration fields.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].triggeredRoutingOverrides.configOverrides.connectorConfigFields[index]
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindextriggeredroutingoverridesconfigoverrides)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          The name of the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>template</b></td>
+        <td>string</td>
+        <td>
+          The template for the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].triggeredRoutingOverrides.configOverrides.messageConfigFields[index]
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindextriggeredroutingoverridesconfigoverrides)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          The name of the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>template</b></td>
+        <td>string</td>
+        <td>
+          The template for the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].preset
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindex)</sup></sup>
+
+
+
+Preset is the preset for the destination. Should be one of backendRef or resourceRef.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexpresetbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          BackendRef is a reference to a backend resource.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexpresetresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          ResourceRef is a reference to a Kubernetes resource.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].preset.backendRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexpreset)</sup></sup>
+
+
+
+BackendRef is a reference to a backend resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].preset.resourceRef
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexpreset)</sup></sup>
+
+
+
+ResourceRef is a reference to a Kubernetes resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].resolvedRoutingOverrides
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindex)</sup></sup>
+
+
+
+Optional routing configuration to override from the connector/preset for resolved notifications.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexresolvedroutingoverridesconfigoverrides">configOverrides</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].resolvedRoutingOverrides.configOverrides
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexresolvedroutingoverrides)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>outputSchemaId</b></td>
+        <td>string</td>
+        <td>
+          The ID of the output schema to use for routing notifications<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexresolvedroutingoverridesconfigoverridesconnectorconfigfieldsindex">connectorConfigFields</a></b></td>
+        <td>[]object</td>
+        <td>
+          Connector configuration fields.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindexresolvedroutingoverridesconfigoverridesmessageconfigfieldsindex">messageConfigFields</a></b></td>
+        <td>[]object</td>
+        <td>
+          Notification message configuration fields.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].resolvedRoutingOverrides.configOverrides.connectorConfigFields[index]
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexresolvedroutingoverridesconfigoverrides)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          The name of the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>template</b></td>
+        <td>string</td>
+        <td>
+          The template for the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].destinations[index].resolvedRoutingOverrides.configOverrides.messageConfigFields[index]
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindexdestinationsindexresolvedroutingoverridesconfigoverrides)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          The name of the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>template</b></td>
+        <td>string</td>
+        <td>
+          The template for the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.notificationGroupExcess[index].router
+<sup><sup>[↩ Parent](#alertspecnotificationgroupexcessindex)</sup></sup>
+
+
+
+The router for notifications (Notification Center feature).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>notifyOn</b></td>
+        <td>enum</td>
+        <td>
+          When to notify.<br/>
+          <br/>
+            <i>Enum</i>: triggeredOnly, triggeredAndResolved<br/>
+            <i>Default</i>: triggeredOnly<br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
@@ -5129,17 +6267,23 @@ Resource Types:
 
 - [ApiKey](#apikey)
 
+- [Connector](#connector)
+
 - [CustomRole](#customrole)
 
 - [Dashboard](#dashboard)
 
 - [DashboardsFolder](#dashboardsfolder)
 
+- [GlobalRouter](#globalrouter)
+
 - [Group](#group)
 
 - [Integration](#integration)
 
 - [OutboundWebhook](#outboundwebhook)
+
+- [Preset](#preset)
 
 - [RecordingRuleGroupSet](#recordingrulegroupset)
 
@@ -6225,6 +7369,359 @@ with respect to the current state of the instance.<br/>
       </tr></tbody>
 </table>
 
+## Connector
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+Connector is the Schema for the connectors API.
+NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>Connector</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#connectorspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          ConnectorSpec defines the desired state of Connector.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#connectorstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          ConnectorStatus defines the observed state of Connector.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.spec
+<sup><sup>[↩ Parent](#connector)</sup></sup>
+
+
+
+ConnectorSpec defines the desired state of Connector.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#connectorspecconnectorconfig">connectorConfig</a></b></td>
+        <td>object</td>
+        <td>
+          ConnectorConfig is the configuration of the connector.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          Description is the description of the connector.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name is the name of the connector.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>enum</td>
+        <td>
+          Type is the type of the connector. Can be one of slack, genericHttps, or pagerDuty.<br/>
+          <br/>
+            <i>Enum</i>: slack, genericHttps, pagerDuty<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#connectorspecconfigoverridesindex">configOverrides</a></b></td>
+        <td>[]object</td>
+        <td>
+          ConfigOverrides are the entity type config overrides for the connector.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.spec.connectorConfig
+<sup><sup>[↩ Parent](#connectorspec)</sup></sup>
+
+
+
+ConnectorConfig is the configuration of the connector.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#connectorspecconnectorconfigfieldsindex">fields</a></b></td>
+        <td>[]object</td>
+        <td>
+          Fields are the fields of the connector config.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.spec.connectorConfig.fields[index]
+<sup><sup>[↩ Parent](#connectorspecconnectorconfig)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          FieldName is the name of the field. e.g. "channel" for slack.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          Value is the value of the field.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.spec.configOverrides[index]
+<sup><sup>[↩ Parent](#connectorspec)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>entityType</b></td>
+        <td>enum</td>
+        <td>
+          EntityType is the entity type for the config override. Should equal "alerts".<br/>
+          <br/>
+            <i>Enum</i>: alerts<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#connectorspecconfigoverridesindexfieldsindex">fields</a></b></td>
+        <td>[]object</td>
+        <td>
+          Fields are the templated fields for the config override.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.spec.configOverrides[index].fields[index]
+<sup><sup>[↩ Parent](#connectorspecconfigoverridesindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          FieldName is the name of the field. e.g. "channel" for slack.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>template</b></td>
+        <td>string</td>
+        <td>
+          Template is the template for the field.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.status
+<sup><sup>[↩ Parent](#connector)</sup></sup>
+
+
+
+ConnectorStatus defines the observed state of Connector.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#connectorstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.status.conditions[index]
+<sup><sup>[↩ Parent](#connectorstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
 ## CustomRole
 <sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
 
@@ -6982,6 +8479,753 @@ DashboardsFolderStatus defines the observed state of DashboardsFolder.
 
 ### DashboardsFolder.status.conditions[index]
 <sup><sup>[↩ Parent](#dashboardsfolderstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## GlobalRouter
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+GlobalRouter is the Schema for the globalrouters API.
+NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>GlobalRouter</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          GlobalRouterSpec defines the desired state of GlobalRouter.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          GlobalRouterStatus defines the observed state of GlobalRouter.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec
+<sup><sup>[↩ Parent](#globalrouter)</sup></sup>
+
+
+
+GlobalRouterSpec defines the desired state of GlobalRouter.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          Description is the description of the global router.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>entityType</b></td>
+        <td>enum</td>
+        <td>
+          EntityType is the entity type for the global router. Should equal "alerts".<br/>
+          <br/>
+            <i>Enum</i>: alerts<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name is the name of the global router.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>entityLabels</b></td>
+        <td>map[string]string</td>
+        <td>
+          EntityLabels are optional labels to attach to the global router.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspecfallbackindex">fallback</a></b></td>
+        <td>[]object</td>
+        <td>
+          Fallback is the fallback routing target for the global router.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspecrulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          Rules are the routing rules for the global router.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.fallback[index]
+<sup><sup>[↩ Parent](#globalrouterspec)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#globalrouterspecfallbackindexconnector">connector</a></b></td>
+        <td>object</td>
+        <td>
+          Connector is the connector for the routing target. Should be one of backendRef or resourceRef.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>customDetails</b></td>
+        <td>map[string]string</td>
+        <td>
+          CustomDetails are optional custom details to attach to the routing target.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspecfallbackindexpreset">preset</a></b></td>
+        <td>object</td>
+        <td>
+          Preset is the preset for the routing target. Should be one of backendRef or resourceRef.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.fallback[index].connector
+<sup><sup>[↩ Parent](#globalrouterspecfallbackindex)</sup></sup>
+
+
+
+Connector is the connector for the routing target. Should be one of backendRef or resourceRef.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#globalrouterspecfallbackindexconnectorbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          BackendRef is a reference to a backend resource.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspecfallbackindexconnectorresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          ResourceRef is a reference to a Kubernetes resource.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.fallback[index].connector.backendRef
+<sup><sup>[↩ Parent](#globalrouterspecfallbackindexconnector)</sup></sup>
+
+
+
+BackendRef is a reference to a backend resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.fallback[index].connector.resourceRef
+<sup><sup>[↩ Parent](#globalrouterspecfallbackindexconnector)</sup></sup>
+
+
+
+ResourceRef is a reference to a Kubernetes resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource (not id).<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.fallback[index].preset
+<sup><sup>[↩ Parent](#globalrouterspecfallbackindex)</sup></sup>
+
+
+
+Preset is the preset for the routing target. Should be one of backendRef or resourceRef.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#globalrouterspecfallbackindexpresetbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          BackendRef is a reference to a backend resource.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspecfallbackindexpresetresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          ResourceRef is a reference to a Kubernetes resource.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.fallback[index].preset.backendRef
+<sup><sup>[↩ Parent](#globalrouterspecfallbackindexpreset)</sup></sup>
+
+
+
+BackendRef is a reference to a backend resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.fallback[index].preset.resourceRef
+<sup><sup>[↩ Parent](#globalrouterspecfallbackindexpreset)</sup></sup>
+
+
+
+ResourceRef is a reference to a Kubernetes resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource (not id).<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.rules[index]
+<sup><sup>[↩ Parent](#globalrouterspec)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          Condition is the condition for the routing rule.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name is the name of the routing rule.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspecrulesindextargetsindex">targets</a></b></td>
+        <td>[]object</td>
+        <td>
+          Targets are the routing targets for the routing rule.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>customDetails</b></td>
+        <td>map[string]string</td>
+        <td>
+          CustomDetails are optional custom details to attach to the routing rule.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.rules[index].targets[index]
+<sup><sup>[↩ Parent](#globalrouterspecrulesindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#globalrouterspecrulesindextargetsindexconnector">connector</a></b></td>
+        <td>object</td>
+        <td>
+          Connector is the connector for the routing target. Should be one of backendRef or resourceRef.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>customDetails</b></td>
+        <td>map[string]string</td>
+        <td>
+          CustomDetails are optional custom details to attach to the routing target.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspecrulesindextargetsindexpreset">preset</a></b></td>
+        <td>object</td>
+        <td>
+          Preset is the preset for the routing target. Should be one of backendRef or resourceRef.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.rules[index].targets[index].connector
+<sup><sup>[↩ Parent](#globalrouterspecrulesindextargetsindex)</sup></sup>
+
+
+
+Connector is the connector for the routing target. Should be one of backendRef or resourceRef.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#globalrouterspecrulesindextargetsindexconnectorbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          BackendRef is a reference to a backend resource.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspecrulesindextargetsindexconnectorresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          ResourceRef is a reference to a Kubernetes resource.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.rules[index].targets[index].connector.backendRef
+<sup><sup>[↩ Parent](#globalrouterspecrulesindextargetsindexconnector)</sup></sup>
+
+
+
+BackendRef is a reference to a backend resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.rules[index].targets[index].connector.resourceRef
+<sup><sup>[↩ Parent](#globalrouterspecrulesindextargetsindexconnector)</sup></sup>
+
+
+
+ResourceRef is a reference to a Kubernetes resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource (not id).<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.rules[index].targets[index].preset
+<sup><sup>[↩ Parent](#globalrouterspecrulesindextargetsindex)</sup></sup>
+
+
+
+Preset is the preset for the routing target. Should be one of backendRef or resourceRef.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#globalrouterspecrulesindextargetsindexpresetbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          BackendRef is a reference to a backend resource.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspecrulesindextargetsindexpresetresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          ResourceRef is a reference to a Kubernetes resource.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.rules[index].targets[index].preset.backendRef
+<sup><sup>[↩ Parent](#globalrouterspecrulesindextargetsindexpreset)</sup></sup>
+
+
+
+BackendRef is a reference to a backend resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.rules[index].targets[index].preset.resourceRef
+<sup><sup>[↩ Parent](#globalrouterspecrulesindextargetsindexpreset)</sup></sup>
+
+
+
+ResourceRef is a reference to a Kubernetes resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource (not id).<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.status
+<sup><sup>[↩ Parent](#globalrouter)</sup></sup>
+
+
+
+GlobalRouterStatus defines the observed state of GlobalRouter.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#globalrouterstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.status.conditions[index]
+<sup><sup>[↩ Parent](#globalrouterstatus)</sup></sup>
 
 
 
@@ -8305,6 +10549,402 @@ OutboundWebhookStatus defines the observed state of OutboundWebhook
 
 ### OutboundWebhook.status.conditions[index]
 <sup><sup>[↩ Parent](#outboundwebhookstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## Preset
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+Preset is the Schema for the presets API.
+NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>Preset</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#presetspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          PresetSpec defines the desired state of Preset.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#presetstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          PresetStatus defines the observed state of Preset.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Preset.spec
+<sup><sup>[↩ Parent](#preset)</sup></sup>
+
+
+
+PresetSpec defines the desired state of Preset.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>connectorType</b></td>
+        <td>enum</td>
+        <td>
+          ConnectorType is the type of the connector. Can be one of slack, genericHttps, or pagerDuty.<br/>
+          <br/>
+            <i>Enum</i>: slack, genericHttps, pagerDuty<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          Description is the description of the preset.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>entityType</b></td>
+        <td>enum</td>
+        <td>
+          EntityType is the entity type for the preset. Should equal "alerts".<br/>
+          <br/>
+            <i>Enum</i>: alerts<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name is the name of the preset.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#presetspecconfigoverridesindex">configOverrides</a></b></td>
+        <td>[]object</td>
+        <td>
+          ConfigOverrides are the entity type configs, allowing entity type templating.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>parentId</b></td>
+        <td>string</td>
+        <td>
+          ParentId is the ID of the parent preset. For example, "preset_system_slack_alerts_basic".<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Preset.spec.configOverrides[index]
+<sup><sup>[↩ Parent](#presetspec)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#presetspecconfigoverridesindexconditiontype">conditionType</a></b></td>
+        <td>object</td>
+        <td>
+          ConditionType is the condition type for the config override.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.matchEntityType) != has(self.matchEntityTypeAndSubType): exactly one of matchEntityType or matchEntityTypeAndSubType must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#presetspecconfigoverridesindexmessageconfig">messageConfig</a></b></td>
+        <td>object</td>
+        <td>
+          MessageConfig is the message config for the config override.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>payloadType</b></td>
+        <td>string</td>
+        <td>
+          PayloadType is the payload type for the config override.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Preset.spec.configOverrides[index].conditionType
+<sup><sup>[↩ Parent](#presetspecconfigoverridesindex)</sup></sup>
+
+
+
+ConditionType is the condition type for the config override.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>matchEntityType</b></td>
+        <td>object</td>
+        <td>
+          MatchEntityType is used for matching entity types.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#presetspecconfigoverridesindexconditiontypematchentitytypeandsubtype">matchEntityTypeAndSubType</a></b></td>
+        <td>object</td>
+        <td>
+          MatchEntityTypeAndSubType is used for matching entity subtypes.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Preset.spec.configOverrides[index].conditionType.matchEntityTypeAndSubType
+<sup><sup>[↩ Parent](#presetspecconfigoverridesindexconditiontype)</sup></sup>
+
+
+
+MatchEntityTypeAndSubType is used for matching entity subtypes.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>entitySubType</b></td>
+        <td>string</td>
+        <td>
+          EntitySubType is the entity subtype for the config override. For example, "logsImmediateTriggered".<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Preset.spec.configOverrides[index].messageConfig
+<sup><sup>[↩ Parent](#presetspecconfigoverridesindex)</sup></sup>
+
+
+
+MessageConfig is the message config for the config override.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#presetspecconfigoverridesindexmessageconfigfieldsindex">fields</a></b></td>
+        <td>[]object</td>
+        <td>
+          Fields are the fields of the message config.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Preset.spec.configOverrides[index].messageConfig.fields[index]
+<sup><sup>[↩ Parent](#presetspecconfigoverridesindexmessageconfig)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          FieldName is the name of the field. e.g. "title" for slack.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>template</b></td>
+        <td>string</td>
+        <td>
+          Template is the template for the field.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Preset.status
+<sup><sup>[↩ Parent](#preset)</sup></sup>
+
+
+
+PresetStatus defines the observed state of Preset.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#presetstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Preset.status.conditions[index]
+<sup><sup>[↩ Parent](#presetstatus)</sup></sup>
 
 
 

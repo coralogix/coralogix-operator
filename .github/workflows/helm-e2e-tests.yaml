@@ -45,7 +45,7 @@ jobs:
             --set coralogixOperator.image.repository="${{ env.IMG_REPO }}" \
             --set coralogixOperator.image.tag="${{ env.IMG_TAG }}" \
             --set coralogixOperator.region="${{ secrets.CORALOGIX_REGION }}" \
-            --set coralogixOperator.reconcileIntervalSeconds.scope=20
+            --set coralogixOperator.reconcileIntervalSeconds.scope=30
       - name: Run e2e Tests
         run: |
           make e2e-tests

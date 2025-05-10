@@ -1790,11 +1790,203 @@ spec:
               notificationGroup:
                 description: Where notifications should be sent to.
                 properties:
+                  destinations:
+                    description: The destinations for notifications (Notification
+                      Center feature).
+                    items:
+                      properties:
+                        connector:
+                          description: Connector is the connector for the destination.
+                            Should be one of backendRef or resourceRef.
+                          properties:
+                            backendRef:
+                              description: BackendRef is a reference to a backend
+                                resource.
+                              properties:
+                                id:
+                                  type: string
+                              required:
+                              - id
+                              type: object
+                            resourceRef:
+                              description: ResourceRef is a reference to a Kubernetes
+                                resource.
+                              properties:
+                                name:
+                                  description: Name of the resource.
+                                  type: string
+                                namespace:
+                                  description: Kubernetes namespace.
+                                  type: string
+                              required:
+                              - name
+                              type: object
+                          type: object
+                          x-kubernetes-validations:
+                          - message: Exactly one of backendRef or resourceRef must
+                              be set
+                            rule: has(self.backendRef) != has(self.resourceRef)
+                        notifyOn:
+                          default: triggeredOnly
+                          description: When to notify.
+                          enum:
+                          - triggeredOnly
+                          - triggeredAndResolved
+                          type: string
+                        preset:
+                          description: Preset is the preset for the destination. Should
+                            be one of backendRef or resourceRef.
+                          properties:
+                            backendRef:
+                              description: BackendRef is a reference to a backend
+                                resource.
+                              properties:
+                                id:
+                                  type: string
+                              required:
+                              - id
+                              type: object
+                            resourceRef:
+                              description: ResourceRef is a reference to a Kubernetes
+                                resource.
+                              properties:
+                                name:
+                                  description: Name of the resource.
+                                  type: string
+                                namespace:
+                                  description: Kubernetes namespace.
+                                  type: string
+                              required:
+                              - name
+                              type: object
+                          type: object
+                          x-kubernetes-validations:
+                          - message: Exactly one of backendRef or resourceRef must
+                              be set
+                            rule: has(self.backendRef) != has(self.resourceRef)
+                        resolvedRoutingOverrides:
+                          description: Optional routing configuration to override
+                            from the connector/preset for resolved notifications.
+                          properties:
+                            configOverrides:
+                              properties:
+                                connectorConfigFields:
+                                  description: Connector configuration fields.
+                                  items:
+                                    properties:
+                                      fieldName:
+                                        description: The name of the configuration
+                                          field.
+                                        type: string
+                                      template:
+                                        description: The template for the configuration
+                                          field.
+                                        type: string
+                                    required:
+                                    - fieldName
+                                    - template
+                                    type: object
+                                  type: array
+                                messageConfigFields:
+                                  description: Notification message configuration
+                                    fields.
+                                  items:
+                                    properties:
+                                      fieldName:
+                                        description: The name of the configuration
+                                          field.
+                                        type: string
+                                      template:
+                                        description: The template for the configuration
+                                          field.
+                                        type: string
+                                    required:
+                                    - fieldName
+                                    - template
+                                    type: object
+                                  type: array
+                                outputSchemaId:
+                                  description: The ID of the output schema to use
+                                    for routing notifications
+                                  type: string
+                              required:
+                              - outputSchemaId
+                              type: object
+                          type: object
+                        triggeredRoutingOverrides:
+                          description: The routing configuration to override from
+                            the connector/preset for triggered notifications.
+                          properties:
+                            configOverrides:
+                              properties:
+                                connectorConfigFields:
+                                  description: Connector configuration fields.
+                                  items:
+                                    properties:
+                                      fieldName:
+                                        description: The name of the configuration
+                                          field.
+                                        type: string
+                                      template:
+                                        description: The template for the configuration
+                                          field.
+                                        type: string
+                                    required:
+                                    - fieldName
+                                    - template
+                                    type: object
+                                  type: array
+                                messageConfigFields:
+                                  description: Notification message configuration
+                                    fields.
+                                  items:
+                                    properties:
+                                      fieldName:
+                                        description: The name of the configuration
+                                          field.
+                                        type: string
+                                      template:
+                                        description: The template for the configuration
+                                          field.
+                                        type: string
+                                    required:
+                                    - fieldName
+                                    - template
+                                    type: object
+                                  type: array
+                                outputSchemaId:
+                                  description: The ID of the output schema to use
+                                    for routing notifications
+                                  type: string
+                              required:
+                              - outputSchemaId
+                              type: object
+                          type: object
+                      required:
+                      - connector
+                      - notifyOn
+                      - triggeredRoutingOverrides
+                      type: object
+                    type: array
                   groupByKeys:
                     description: Group notification by these keys.
                     items:
                       type: string
                     type: array
+                  router:
+                    description: The router for notifications (Notification Center
+                      feature).
+                    properties:
+                      notifyOn:
+                        default: triggeredOnly
+                        description: When to notify.
+                        enum:
+                        - triggeredOnly
+                        - triggeredAndResolved
+                        type: string
+                    required:
+                    - notifyOn
+                    type: object
                   webhooks:
                     description: Webhooks to trigger for notifications.
                     items:
@@ -1871,6 +2063,9 @@ spec:
                       type: object
                     type: array
                 type: object
+                x-kubernetes-validations:
+                - message: At most one of Destinations or Router can be set.
+                  rule: '!(has(self.destinations) && has(self.router))'
               notificationGroupExcess:
                 description: |-
                   Do not use.
@@ -1878,11 +2073,203 @@ spec:
                 items:
                   description: Notification group to use for alert notifications.
                   properties:
+                    destinations:
+                      description: The destinations for notifications (Notification
+                        Center feature).
+                      items:
+                        properties:
+                          connector:
+                            description: Connector is the connector for the destination.
+                              Should be one of backendRef or resourceRef.
+                            properties:
+                              backendRef:
+                                description: BackendRef is a reference to a backend
+                                  resource.
+                                properties:
+                                  id:
+                                    type: string
+                                required:
+                                - id
+                                type: object
+                              resourceRef:
+                                description: ResourceRef is a reference to a Kubernetes
+                                  resource.
+                                properties:
+                                  name:
+                                    description: Name of the resource.
+                                    type: string
+                                  namespace:
+                                    description: Kubernetes namespace.
+                                    type: string
+                                required:
+                                - name
+                                type: object
+                            type: object
+                            x-kubernetes-validations:
+                            - message: Exactly one of backendRef or resourceRef must
+                                be set
+                              rule: has(self.backendRef) != has(self.resourceRef)
+                          notifyOn:
+                            default: triggeredOnly
+                            description: When to notify.
+                            enum:
+                            - triggeredOnly
+                            - triggeredAndResolved
+                            type: string
+                          preset:
+                            description: Preset is the preset for the destination.
+                              Should be one of backendRef or resourceRef.
+                            properties:
+                              backendRef:
+                                description: BackendRef is a reference to a backend
+                                  resource.
+                                properties:
+                                  id:
+                                    type: string
+                                required:
+                                - id
+                                type: object
+                              resourceRef:
+                                description: ResourceRef is a reference to a Kubernetes
+                                  resource.
+                                properties:
+                                  name:
+                                    description: Name of the resource.
+                                    type: string
+                                  namespace:
+                                    description: Kubernetes namespace.
+                                    type: string
+                                required:
+                                - name
+                                type: object
+                            type: object
+                            x-kubernetes-validations:
+                            - message: Exactly one of backendRef or resourceRef must
+                                be set
+                              rule: has(self.backendRef) != has(self.resourceRef)
+                          resolvedRoutingOverrides:
+                            description: Optional routing configuration to override
+                              from the connector/preset for resolved notifications.
+                            properties:
+                              configOverrides:
+                                properties:
+                                  connectorConfigFields:
+                                    description: Connector configuration fields.
+                                    items:
+                                      properties:
+                                        fieldName:
+                                          description: The name of the configuration
+                                            field.
+                                          type: string
+                                        template:
+                                          description: The template for the configuration
+                                            field.
+                                          type: string
+                                      required:
+                                      - fieldName
+                                      - template
+                                      type: object
+                                    type: array
+                                  messageConfigFields:
+                                    description: Notification message configuration
+                                      fields.
+                                    items:
+                                      properties:
+                                        fieldName:
+                                          description: The name of the configuration
+                                            field.
+                                          type: string
+                                        template:
+                                          description: The template for the configuration
+                                            field.
+                                          type: string
+                                      required:
+                                      - fieldName
+                                      - template
+                                      type: object
+                                    type: array
+                                  outputSchemaId:
+                                    description: The ID of the output schema to use
+                                      for routing notifications
+                                    type: string
+                                required:
+                                - outputSchemaId
+                                type: object
+                            type: object
+                          triggeredRoutingOverrides:
+                            description: The routing configuration to override from
+                              the connector/preset for triggered notifications.
+                            properties:
+                              configOverrides:
+                                properties:
+                                  connectorConfigFields:
+                                    description: Connector configuration fields.
+                                    items:
+                                      properties:
+                                        fieldName:
+                                          description: The name of the configuration
+                                            field.
+                                          type: string
+                                        template:
+                                          description: The template for the configuration
+                                            field.
+                                          type: string
+                                      required:
+                                      - fieldName
+                                      - template
+                                      type: object
+                                    type: array
+                                  messageConfigFields:
+                                    description: Notification message configuration
+                                      fields.
+                                    items:
+                                      properties:
+                                        fieldName:
+                                          description: The name of the configuration
+                                            field.
+                                          type: string
+                                        template:
+                                          description: The template for the configuration
+                                            field.
+                                          type: string
+                                      required:
+                                      - fieldName
+                                      - template
+                                      type: object
+                                    type: array
+                                  outputSchemaId:
+                                    description: The ID of the output schema to use
+                                      for routing notifications
+                                    type: string
+                                required:
+                                - outputSchemaId
+                                type: object
+                            type: object
+                        required:
+                        - connector
+                        - notifyOn
+                        - triggeredRoutingOverrides
+                        type: object
+                      type: array
                     groupByKeys:
                       description: Group notification by these keys.
                       items:
                         type: string
                       type: array
+                    router:
+                      description: The router for notifications (Notification Center
+                        feature).
+                      properties:
+                        notifyOn:
+                          default: triggeredOnly
+                          description: When to notify.
+                          enum:
+                          - triggeredOnly
+                          - triggeredAndResolved
+                          type: string
+                      required:
+                      - notifyOn
+                      type: object
                     webhooks:
                       description: Webhooks to trigger for notifications.
                       items:
@@ -1959,6 +2346,9 @@ spec:
                         type: object
                       type: array
                   type: object
+                  x-kubernetes-validations:
+                  - message: At most one of Destinations or Router can be set.
+                    rule: '!(has(self.destinations) && has(self.router))'
                 type: array
               phantomMode:
                 default: false

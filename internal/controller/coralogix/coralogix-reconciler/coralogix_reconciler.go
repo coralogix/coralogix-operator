@@ -86,7 +86,7 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 		}
 
-		return ManageSuccessWithRequeue(ctx, obj, r.RequeueInterval(), utils.ReasonRemoteCreatedSuccessfully)
+		return ManageSuccessWithRequeue(ctx, obj, r.RequeueInterval())
 	}
 
 	if !obj.GetDeletionTimestamp().IsZero() {
@@ -139,7 +139,7 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 		return ManageErrorWithRequeue(ctx, obj, utils.ReasonRemoteUpdateFailed, fmt.Errorf("error on updating %s: %w", gvk, err))
 	}
 
-	return ManageSuccessWithRequeue(ctx, obj, r.RequeueInterval(), utils.ReasonRemoteUpdatedSuccessfully)
+	return ManageSuccessWithRequeue(ctx, obj, r.RequeueInterval())
 }
 
 func removeField(ctx context.Context, obj client.Object, fields ...string) error {
@@ -199,11 +199,10 @@ func ManageErrorWithRequeue(ctx context.Context, obj client.Object, reason strin
 	return reconcile.Result{}, err
 }
 
-func ManageSuccessWithRequeue(ctx context.Context, obj client.Object,
-	interval time.Duration, reason string) (reconcile.Result, error) {
+func ManageSuccessWithRequeue(ctx context.Context, obj client.Object, interval time.Duration) (reconcile.Result, error) {
 	if conditionsObj, ok := (obj).(utils.ConditionsObj); ok {
 		conditions := conditionsObj.GetConditions()
-		if utils.SetSyncedConditionTrue(&conditions, obj.GetGeneration(), reason) {
+		if utils.SetSyncedConditionTrue(&conditions, obj.GetGeneration(), utils.ReasonRemoteSyncedSuccessfully) {
 			conditionsObj.SetConditions(conditions)
 			if err := config.GetClient().Status().Update(ctx, obj); err != nil {
 				return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
