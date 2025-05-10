@@ -121,6 +121,6 @@ var _ = Describe("OutboundWebhook", Ordered, func() {
 			Url:     "https://example.com",
 		}
 		err := crClient.Create(ctx, outBoundWebhook)
-		Expect(err.Error()).To(ContainSubstring("only one webhook type should be set, but got: [SendLog PagerDuty]"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge"))
 	})
 })
