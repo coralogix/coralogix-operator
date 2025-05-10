@@ -96,7 +96,7 @@ Note that this is only for the latest version of the alerts API. If your account
         <td>
           Type of alert.<br/>
           <br/>
-            <i>Validations</i>:<li>(self.logsImmediate != null ? 1 : 0) + (self.logsThreshold != null ? 1 : 0) + (self.logsRatioThreshold != null ? 1 : 0) + (self.logsTimeRelativeThreshold != null ? 1 : 0) + (self.metricThreshold != null ? 1 : 0) + (self.tracingThreshold != null ? 1 : 0) + (self.tracingImmediate != null ? 1 : 0) + (self.flow != null ? 1 : 0) + (self.logsAnomaly != null ? 1 : 0) + (self.metricAnomaly != null ? 1 : 0) + (self.logsNewValue != null ? 1 : 0) + (self.logsUniqueCount != null ? 1 : 0) == 1: Only one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue or logsUniqueCount must be set</li>
+            <i>Validations</i>:<li>(has(self.logsImmediate) ? 1 : 0) + (has(self.logsThreshold) ? 1 : 0) + (has(self.logsRatioThreshold) ? 1 : 0) + (has(self.logsTimeRelativeThreshold) ? 1 : 0) + (has(self.metricThreshold) ? 1 : 0) + (has(self.tracingThreshold) ? 1 : 0) + (has(self.tracingImmediate) ? 1 : 0) + (has(self.flow) ? 1 : 0) + (has(self.logsAnomaly) ? 1 : 0) + (has(self.metricAnomaly) ? 1 : 0) + (has(self.logsNewValue) ? 1 : 0) + (has(self.logsUniqueCount) ? 1 : 0) == 1: Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue or logsUniqueCount must be set</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -10002,7 +10002,7 @@ See also https://coralogix.com/docs/user-guides/alerting/outbound-webhooks/aws-e
         <td>
           Type of webhook.<br/>
           <br/>
-            <i>Validations</i>:<li>(self.genericWebhook != null ? 1 : 0) + (self.slack != null ? 1 : 0) + (self.pagerDuty != null ? 1 : 0) + (self.sendLog != null ? 1 : 0) + (self.emailGroup != null ? 1 : 0) + (self.microsoftTeams != null ? 1 : 0) + (self.jira != null ? 1 : 0) + (self.opsgenie != null ? 1 : 0) + (self.demisto != null ? 1 : 0) + (self.awsEventBridge != null ? 1 : 0) == 1: Exactly one of genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto or awsEventBridge is required</li>
+            <i>Validations</i>:<li>(has(self.genericWebhook) ? 1 : 0) + (has(self.slack) ? 1 : 0) + (has(self.pagerDuty) ? 1 : 0) + (has(self.sendLog) ? 1 : 0) + (has(self.emailGroup) ? 1 : 0) + (has(self.microsoftTeams) ? 1 : 0) + (has(self.jira) ? 1 : 0) + (has(self.opsgenie) ? 1 : 0) + (has(self.demisto) ? 1 : 0) + (has(self.awsEventBridge) ? 1 : 0) == 1: </li>
         </td>
         <td>true</td>
       </tr></tbody>

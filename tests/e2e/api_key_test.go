@@ -128,7 +128,7 @@ var _ = Describe("ApiKey", Ordered, func() {
 		apiKey.Spec.Owner.UserId = ptr.To("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
 		apiKey.Spec.Owner.TeamId = ptr.To(uint32(12345678))
 		err := crClient.Create(ctx, apiKey)
-		Expect(err.Error()).To(ContainSubstring("only one of the owner user ID or owner team ID can be set"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of userId or teamId must be set"))
 	})
 
 	It("should deny creation of ApiKey without presets and permissions", func(ctx context.Context) {

@@ -552,7 +552,7 @@ const (
 )
 
 // Alert type definitions.
-// +kubebuilder:validation:XValidation:rule="(self.logsImmediate != null ? 1 : 0) + (self.logsThreshold != null ? 1 : 0) + (self.logsRatioThreshold != null ? 1 : 0) + (self.logsTimeRelativeThreshold != null ? 1 : 0) + (self.metricThreshold != null ? 1 : 0) + (self.tracingThreshold != null ? 1 : 0) + (self.tracingImmediate != null ? 1 : 0) + (self.flow != null ? 1 : 0) + (self.logsAnomaly != null ? 1 : 0) + (self.metricAnomaly != null ? 1 : 0) + (self.logsNewValue != null ? 1 : 0) + (self.logsUniqueCount != null ? 1 : 0) == 1",message="Only one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue or logsUniqueCount must be set"
+// +kubebuilder:validation:XValidation:rule="(has(self.logsImmediate) ? 1 : 0) + (has(self.logsThreshold) ? 1 : 0) + (has(self.logsRatioThreshold) ? 1 : 0) + (has(self.logsTimeRelativeThreshold) ? 1 : 0) + (has(self.metricThreshold) ? 1 : 0) + (has(self.tracingThreshold) ? 1 : 0) + (has(self.tracingImmediate) ? 1 : 0) + (has(self.flow) ? 1 : 0) + (has(self.logsAnomaly) ? 1 : 0) + (has(self.metricAnomaly) ? 1 : 0) + (has(self.logsNewValue) ? 1 : 0) + (has(self.logsUniqueCount) ? 1 : 0) == 1", message="Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue or logsUniqueCount must be set"
 type AlertTypeDefinition struct {
 
 	// Immediate alerts for logs.

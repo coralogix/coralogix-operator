@@ -96,7 +96,7 @@ var _ = Describe("AlertScheduler", Ordered, func() {
 			},
 		}
 		err := crClient.Create(ctx, invalidScheduler)
-		Expect(err.Error()).To(ContainSubstring("filter must contain only one of the fields: metaLabels or alerts"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of metaLabels or alerts must be set"))
 	})
 
 	It("Should be rejected when schedule has both OneTime and Recurring", func(ctx context.Context) {
