@@ -55,7 +55,7 @@ var (
 
 // A rule to change data extraction.
 // See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
-// +kubebuilder:validation:XValidation:rule="(self.parse != null ? 1 : 0) + (self.block != null ? 1 : 0) + (self.jsonExtract != null ? 1 : 0) + (self.replace != null ? 1 : 0) + (self.extractTimestamp != null ? 1 : 0) + (self.removeFields != null ? 1 : 0) + (self.jsonStringify != null ? 1 : 0) + (self.extract != null ? 1 : 0) + (self.parseJsonField != null ? 1 : 0) == 1", message="Exactly one of the following fields must be set: parse, block, jsonExtract, replace, extractTimestamp, removeFields, jsonStringify, extract, parseJsonField"
+// +kubebuilder:validation:XValidation:rule="(has(self.parse) ? 1 : 0) + (has(self.block) ? 1 : 0) + (has(self.jsonExtract) ? 1 : 0) + (has(self.replace) ? 1 : 0) + (has(self.extractTimestamp) ? 1 : 0) + (has(self.removeFields) ? 1 : 0) + (has(self.jsonStringify) ? 1 : 0) + (has(self.extract) ? 1 : 0) + (has(self.parseJsonField) ? 1 : 0) == 1"
 type Rule struct {
 
 	// Name of the rule.
