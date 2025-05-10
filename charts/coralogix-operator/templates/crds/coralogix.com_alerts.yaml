@@ -81,6 +81,10 @@ spec:
                                                       description: Name of the alert.
                                                       type: string
                                                   type: object
+                                                  x-kubernetes-validations:
+                                                  - message: One of id or name is
+                                                      required
+                                                    rule: has(self.id) != has(self.name)
                                                 resourceRef:
                                                   description: Kubernetes resource
                                                     reference.
@@ -95,6 +99,10 @@ spec:
                                                   - name
                                                   type: object
                                               type: object
+                                              x-kubernetes-validations:
+                                              - message: Exactly one of backendRef
+                                                  or resourceRef must be set
+                                                rule: has(self.backendRef) != has(self.resourceRef)
                                             not:
                                               default: false
                                               description: Inversion.
@@ -1727,6 +1735,18 @@ spec:
                     - rules
                     type: object
                 type: object
+                x-kubernetes-validations:
+                - message: Exactly one of logsImmediate, logsThreshold, logsRatioThreshold,
+                    logsTimeRelativeThreshold, metricThreshold, tracingThreshold,
+                    tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue
+                    or logsUniqueCount must be set
+                  rule: '(has(self.logsImmediate) ? 1 : 0) + (has(self.logsThreshold)
+                    ? 1 : 0) + (has(self.logsRatioThreshold) ? 1 : 0) + (has(self.logsTimeRelativeThreshold)
+                    ? 1 : 0) + (has(self.metricThreshold) ? 1 : 0) + (has(self.tracingThreshold)
+                    ? 1 : 0) + (has(self.tracingImmediate) ? 1 : 0) + (has(self.flow)
+                    ? 1 : 0) + (has(self.logsAnomaly) ? 1 : 0) + (has(self.metricAnomaly)
+                    ? 1 : 0) + (has(self.logsNewValue) ? 1 : 0) + (has(self.logsUniqueCount)
+                    ? 1 : 0) == 1'
               description:
                 description: Description of the alert
                 type: string
@@ -1990,6 +2010,9 @@ spec:
                                       description: Name of the webhook.
                                       type: string
                                   type: object
+                                  x-kubernetes-validations:
+                                  - message: One of id or name is required
+                                    rule: has(self.id) != has(self.name)
                                 resourceRef:
                                   description: Resource reference for use with the
                                     alert notification.
@@ -2004,12 +2027,20 @@ spec:
                                   - name
                                   type: object
                               type: object
+                              x-kubernetes-validations:
+                              - message: Exactly one of backendRef or resourceRef
+                                  is required
+                                rule: has(self.backendRef) || has(self.resourceRef)
                             recipients:
                               description: Recipients for the notification.
                               items:
                                 type: string
                               type: array
                           type: object
+                          x-kubernetes-validations:
+                          - message: Exactly one of integrationRef or recipients is
+                              required
+                            rule: has(self.integrationRef) || has(self.recipients)
                         notifyOn:
                           default: triggeredOnly
                           description: When to notify.
@@ -2262,6 +2293,9 @@ spec:
                                         description: Name of the webhook.
                                         type: string
                                     type: object
+                                    x-kubernetes-validations:
+                                    - message: One of id or name is required
+                                      rule: has(self.id) != has(self.name)
                                   resourceRef:
                                     description: Resource reference for use with the
                                       alert notification.
@@ -2276,12 +2310,20 @@ spec:
                                     - name
                                     type: object
                                 type: object
+                                x-kubernetes-validations:
+                                - message: Exactly one of backendRef or resourceRef
+                                    is required
+                                  rule: has(self.backendRef) || has(self.resourceRef)
                               recipients:
                                 description: Recipients for the notification.
                                 items:
                                   type: string
                                 type: array
                             type: object
+                            x-kubernetes-validations:
+                            - message: Exactly one of integrationRef or recipients
+                                is required
+                              rule: has(self.integrationRef) || has(self.recipients)
                           notifyOn:
                             default: triggeredOnly
                             description: When to notify.
@@ -2366,6 +2408,10 @@ spec:
             - name
             - priority
             type: object
+            x-kubernetes-validations:
+            - message: groupByKeys is not supported for this alert type
+              rule: (self.alertType.logsImmediate == null && self.alertType.logsImmediate
+                == null) || !has(self.groupByKeys)
           status:
             description: AlertStatus defines the observed state of Alert
             properties:

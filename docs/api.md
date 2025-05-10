@@ -57,6 +57,8 @@ Alert is the Schema for the alerts API.
           AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
 
 Note that this is only for the latest version of the alerts API. If your account has been created before March 2025, make sure that your account has been migrated before using advanced features of alerts.<br/>
+          <br/>
+            <i>Validations</i>:<li>(self.alertType.logsImmediate == null && self.alertType.logsImmediate == null) || !has(self.groupByKeys): groupByKeys is not supported for this alert type</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -93,6 +95,8 @@ Note that this is only for the latest version of the alerts API. If your account
         <td>object</td>
         <td>
           Type of alert.<br/>
+          <br/>
+            <i>Validations</i>:<li>(has(self.logsImmediate) ? 1 : 0) + (has(self.logsThreshold) ? 1 : 0) + (has(self.logsRatioThreshold) ? 1 : 0) + (has(self.logsTimeRelativeThreshold) ? 1 : 0) + (has(self.metricThreshold) ? 1 : 0) + (has(self.tracingThreshold) ? 1 : 0) + (has(self.tracingImmediate) ? 1 : 0) + (has(self.flow) ? 1 : 0) + (has(self.logsAnomaly) ? 1 : 0) + (has(self.metricAnomaly) ? 1 : 0) + (has(self.logsNewValue) ? 1 : 0) + (has(self.logsUniqueCount) ? 1 : 0) == 1: Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue or logsUniqueCount must be set</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -463,6 +467,8 @@ Alert references.
         <td>object</td>
         <td>
           Reference for an alert, backend or Kubernetes resource<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -499,6 +505,8 @@ Reference for an alert, backend or Kubernetes resource
         <td>object</td>
         <td>
           Coralogix id reference.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.id) != has(self.name): One of id or name is required</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5063,6 +5071,8 @@ Settings for a notification webhook.
         <td>object</td>
         <td>
           Type and spec of webhook.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.integrationRef) || has(self.recipients): Exactly one of integrationRef or recipients is required</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -5107,6 +5117,8 @@ Type and spec of webhook.
         <td>object</td>
         <td>
           Reference to the webhook.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) || has(self.resourceRef): Exactly one of backendRef or resourceRef is required</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5141,6 +5153,8 @@ Reference to the webhook.
         <td>object</td>
         <td>
           Backend reference for the outbound webhook.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.id) != has(self.name): One of id or name is required</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5876,6 +5890,8 @@ Settings for a notification webhook.
         <td>object</td>
         <td>
           Type and spec of webhook.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.integrationRef) || has(self.recipients): Exactly one of integrationRef or recipients is required</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -5920,6 +5936,8 @@ Type and spec of webhook.
         <td>object</td>
         <td>
           Reference to the webhook.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) || has(self.resourceRef): Exactly one of backendRef or resourceRef is required</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5954,6 +5972,8 @@ Reference to the webhook.
         <td>object</td>
         <td>
           Backend reference for the outbound webhook.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.id) != has(self.name): One of id or name is required</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6382,6 +6402,8 @@ See also https://coralogix.com/docs/user-guides/alerting/alert-suppression-rules
         <td>
           Alert Scheduler filter. Exactly one of `metaLabels` or `alerts` can be set.
 If none of them set, all alerts will be affected.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.metaLabels) != has(self.alerts): Exactly one of metaLabels or alerts must be set</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -6396,6 +6418,8 @@ If none of them set, all alerts will be affected.<br/>
         <td>object</td>
         <td>
           Alert Scheduler schedule. Exactly one of `oneTime` or `recurring` must be set.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.oneTime) != has(self.recurring): Exactly one of oneTime or recurring must be set</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -6592,6 +6616,8 @@ Alert Scheduler schedule. Exactly one of `oneTime` or `recurring` must be set.
         <td>object</td>
         <td>
           One-time schedule. Conflicts with `recurring`.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.endTime) != has(self.duration): Exactly one of endTime or duration must be set</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6599,6 +6625,8 @@ Alert Scheduler schedule. Exactly one of `oneTime` or `recurring` must be set.
         <td>object</td>
         <td>
           Recurring schedule. Conflicts with `oneTime`.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.always) != has(self.dynamic): Exactly one of always or dynamic must be set</li>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -6766,6 +6794,8 @@ Dynamic schedule.
         <td>object</td>
         <td>
           The time frame of the rule.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.endTime) != has(self.duration): Exactly one of endTime or duration must be set</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -7152,6 +7182,8 @@ ApiKey is the Schema for the apikeys API.
         <td>
           ApiKeySpec defines the desired state of a Coralogix ApiKey.
 See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-keys/<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.presets) || has(self.permissions): At least one of presets or permissions must be set</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -7194,6 +7226,8 @@ See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-
         <td>object</td>
         <td>
           Owner of the ApiKey.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.userId) != has(self.teamId): Exactly one of userId or teamId must be set</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -7977,6 +8011,8 @@ Dashboard is the Schema for the dashboards API.
         <td>object</td>
         <td>
           DashboardSpec defines the desired state of Dashboard.<br/>
+          <br/>
+            <i>Validations</i>:<li>!(has(self.json) && has(self.configMapRef)): Only one of json or configMapRef can be declared at the same time</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -9965,6 +10001,8 @@ See also https://coralogix.com/docs/user-guides/alerting/outbound-webhooks/aws-e
         <td>object</td>
         <td>
           Type of webhook.<br/>
+          <br/>
+            <i>Validations</i>:<li>(has(self.genericWebhook) ? 1 : 0) + (has(self.slack) ? 1 : 0) + (has(self.pagerDuty) ? 1 : 0) + (has(self.sendLog) ? 1 : 0) + (has(self.emailGroup) ? 1 : 0) + (has(self.microsoftTeams) ? 1 : 0) + (has(self.jira) ? 1 : 0) + (has(self.opsgenie) ? 1 : 0) + (has(self.demisto) ? 1 : 0) + (has(self.awsEventBridge) ? 1 : 0) == 1: Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge</li>
         </td>
         <td>true</td>
       </tr></tbody>

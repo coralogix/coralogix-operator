@@ -42,7 +42,6 @@ spec:
         - -leader-elect={{.Values.coralogixOperator.leaderElection.enabled}}
         - -leader-election-id={{ include "coralogixOperator.fullname" . }}
         - -prometheus-rule-controller={{.Values.coralogixOperator.prometheusRules.enabled}}
-        - -enable-webhooks={{.Values.coralogixOperator.webhooks.enabled }}
         - -label-selector={{ .Values.coralogixOperator.labelSelector | toJson }}
         - -namespace-selector={{ .Values.coralogixOperator.namespaceSelector | toJson }}
 {{- range $key, $value := .Values.coralogixOperator.reconcileIntervalSeconds }}
@@ -78,20 +77,3 @@ spec:
           {{- toYaml .Values.coralogixOperator.resources | nindent 12 }}
         securityContext:
           {{- toYaml .Values.coralogixOperator.securityContext | nindent 12 }}
-        {{- if .Values.coralogixOperator.webhooks.enabled }}
-        ports:
-          - containerPort: 9443
-            name: webhook-server
-            protocol: TCP
-        volumeMounts:
-          - mountPath: /tmp/k8s-webhook-server/serving-certs
-            name: webhook-certs
-            readOnly: true
-        {{- end }}
-      {{- if .Values.coralogixOperator.webhooks.enabled }}
-      volumes:
-        - name: webhook-certs
-          secret:
-            secretName: {{ include "coralogixOperator.fullname" . }}-webhook-cert
-            optional: true
-      {{- end }}

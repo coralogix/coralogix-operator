@@ -1,8 +1,6 @@
 
 # Image URL to use all building/pushing image targets
 IMG ?= coralogixrepo/coralogix-operator:latest
-# Enable Webhooks for the operator
-ENABLE_WEBHOOKS ?= false
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.25.0
 
@@ -41,8 +39,8 @@ help: ## Display this help.
 ##@ Development
 
 .PHONY: manifests
-manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+manifests: controller-gen ## Generate ClusterRole and CustomResourceDefinition objects.
+	$(CONTROLLER_GEN) rbac:roleName=manager-role crd paths="./..." output:crd:artifacts:config=config/crd/bases
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
@@ -122,13 +120,8 @@ install-prometheus-crds:
 	kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/master/example/prometheus-operator-crd-full/monitoring.coreos.com_prometheusrules.yaml
 	kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/master/example/prometheus-operator-crd-full/monitoring.coreos.com_servicemonitors.yaml
 
-.PHONY: install-cert-manager
-install-cert-manager:
-		kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/$(CERT_MANAGER_VERSION)/cert-manager.yaml
-		kubectl wait --namespace cert-manager --for=condition=Available --timeout=300s deployments --all
-
 .PHONY: deploy
-deploy: manifests kustomize install-prometheus-crds install-cert-manager
+deploy: manifests kustomize install-prometheus-crds
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | envsubst | kubectl apply -f -
 
@@ -153,7 +146,6 @@ HELM_DOCS ?= $(LOCALBIN)/helm-docs
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.3.0
 CONTROLLER_TOOLS_VERSION ?= v0.17.2
-CERT_MANAGER_VERSION ?= v1.16.1
 HELM_DOCS_VERSION ?= v1.14.2
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"

@@ -96,7 +96,7 @@ var _ = Describe("AlertScheduler", Ordered, func() {
 			},
 		}
 		err := crClient.Create(ctx, invalidScheduler)
-		Expect(err.Error()).To(ContainSubstring("filter must contain only one of the fields: metaLabels or alerts"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of metaLabels or alerts must be set"))
 	})
 
 	It("Should be rejected when schedule has both OneTime and Recurring", func(ctx context.Context) {
@@ -112,7 +112,7 @@ var _ = Describe("AlertScheduler", Ordered, func() {
 		}
 
 		err := crClient.Create(ctx, invalidScheduler)
-		Expect(err.Error()).To(ContainSubstring("schedule must contain only one of the fields: oneTime or recurring"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of oneTime or recurring must be set"))
 	})
 
 	It("Should be rejected when recurring has both always and dynamic", func(ctx context.Context) {
@@ -120,7 +120,7 @@ var _ = Describe("AlertScheduler", Ordered, func() {
 		invalidScheduler := alertScheduler.DeepCopy()
 		invalidScheduler.Spec.Schedule.Recurring.Always = &coralogixv1alpha1.Always{}
 		err := crClient.Create(ctx, invalidScheduler)
-		Expect(err.Error()).To(ContainSubstring("recurring must contain only one of the fields: always or dynamic"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of always or dynamic must be set"))
 	})
 
 	It("Should be deleted successfully", func(ctx context.Context) {

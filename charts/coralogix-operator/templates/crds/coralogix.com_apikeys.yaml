@@ -60,6 +60,9 @@ spec:
                     description: User that owns the key.
                     type: string
                 type: object
+                x-kubernetes-validations:
+                - message: Exactly one of userId or teamId must be set
+                  rule: has(self.userId) != has(self.teamId)
               permissions:
                 description: Permissions of the ApiKey
                 items:
@@ -74,6 +77,9 @@ spec:
             - name
             - owner
             type: object
+            x-kubernetes-validations:
+            - message: At least one of presets or permissions must be set
+              rule: has(self.presets) || has(self.permissions)
           status:
             description: ApiKeyStatus defines the observed state of ApiKey.
             properties:
