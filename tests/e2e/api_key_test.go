@@ -135,7 +135,7 @@ var _ = Describe("ApiKey", Ordered, func() {
 		apiKey.Spec.Presets = nil
 		apiKey.Spec.Permissions = nil
 		err := crClient.Create(ctx, apiKey)
-		Expect(err.Error()).To(ContainSubstring("at least one of the presets or permissions fields must be set"))
+		Expect(err.Error()).To(ContainSubstring("At least one of presets or permissions must be set"))
 	})
 
 	It("should deny creation of inactive ApiKey", func(ctx context.Context) {

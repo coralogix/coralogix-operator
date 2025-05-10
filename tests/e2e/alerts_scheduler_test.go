@@ -112,7 +112,7 @@ var _ = Describe("AlertScheduler", Ordered, func() {
 		}
 
 		err := crClient.Create(ctx, invalidScheduler)
-		Expect(err.Error()).To(ContainSubstring("schedule must contain only one of the fields: oneTime or recurring"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of oneTime or recurring must be set"))
 	})
 
 	It("Should be rejected when recurring has both always and dynamic", func(ctx context.Context) {

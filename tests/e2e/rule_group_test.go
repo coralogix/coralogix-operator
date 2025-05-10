@@ -131,7 +131,7 @@ var _ = Describe("RuleGroup", Ordered, func() {
 		}
 		err := crClient.Create(ctx, ruleGroup)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("at least one rule type should be set in rule 'Worker to category'"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of the following fields should be set: parse, block, jsonExtract, replace, extractTimestamp, removeFields, jsonStringify, extract, parseJsonField"))
 	})
 
 	It("should deny creation of RuleGroup with rule of two types", func(ctx context.Context) {

@@ -221,7 +221,10 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-validations:
-                - rule: '(has(self.genericWebhook) ? 1 : 0) + (has(self.slack) ? 1
+                - message: 'Exactly one of the following fields must be set: genericWebhook,
+                    slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie,
+                    demisto, awsEventBridge'
+                  rule: '(has(self.genericWebhook) ? 1 : 0) + (has(self.slack) ? 1
                     : 0) + (has(self.pagerDuty) ? 1 : 0) + (has(self.sendLog) ? 1
                     : 0) + (has(self.emailGroup) ? 1 : 0) + (has(self.microsoftTeams)
                     ? 1 : 0) + (has(self.jira) ? 1 : 0) + (has(self.opsgenie) ? 1
