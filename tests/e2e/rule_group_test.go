@@ -154,6 +154,6 @@ var _ = Describe("RuleGroup", Ordered, func() {
 			},
 		}
 		err := crClient.Create(ctx, ruleGroup)
-		Expect(err.Error()).To(ContainSubstring("only one rule type should be set in rule 'Worker to category', but got: [Block JsonExtract]"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of the following fields should be set: parse, block, jsonExtract, replace, extractTimestamp, removeFields, jsonStringify, extract, parseJsonField"))
 	})
 })

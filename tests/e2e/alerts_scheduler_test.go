@@ -120,7 +120,7 @@ var _ = Describe("AlertScheduler", Ordered, func() {
 		invalidScheduler := alertScheduler.DeepCopy()
 		invalidScheduler.Spec.Schedule.Recurring.Always = &coralogixv1alpha1.Always{}
 		err := crClient.Create(ctx, invalidScheduler)
-		Expect(err.Error()).To(ContainSubstring("recurring must contain only one of the fields: always or dynamic"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of always or dynamic must be set"))
 	})
 
 	It("Should be deleted successfully", func(ctx context.Context) {
