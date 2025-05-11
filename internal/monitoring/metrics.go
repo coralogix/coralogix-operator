@@ -50,7 +50,6 @@ func RegisterMetrics() error {
 
 var metricsList = []prometheus.Collector{
 	operatorInfoMetric,
-	resourceRejectionsTotalMetric,
 }
 
 var operatorInfoMetric = prometheus.NewGaugeVec(
@@ -68,17 +67,4 @@ func SetOperatorInfoMetric(goVersion, operatorVersion, url string) {
 		"coralogix_url", url,
 	)
 	operatorInfoMetric.WithLabelValues(goVersion, operatorVersion, url).Set(1)
-}
-
-var resourceRejectionsTotalMetric = prometheus.NewCounterVec(
-	prometheus.CounterOpts{
-		Name: "cx_operator_resource_rejections_total",
-		Help: "The total count of rejections by Coralogix Operator validation webhook.",
-	},
-	[]string{"kind", "name", "namespace"},
-)
-
-func IncResourceRejectionsTotalMetric(kind, name, namespace string) {
-	metricsLog.V(1).Info("Incrementing resource total rejected metric", "kind", kind)
-	resourceRejectionsTotalMetric.WithLabelValues(kind, name, namespace).Inc()
 }
