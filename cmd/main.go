@@ -29,7 +29,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/filters"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -45,12 +44,10 @@ import (
 	v1beta1controllers "github.com/coralogix/coralogix-operator/internal/controller/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	"github.com/coralogix/coralogix-operator/internal/utils"
-	webhookcoralogixv1alpha1 "github.com/coralogix/coralogix-operator/internal/webhook/coralogix/v1alpha1"
-	webhookcoralogixv1beta1 "github.com/coralogix/coralogix-operator/internal/webhook/coralogix/v1beta1"
 	//+kubebuilder:scaffold:imports
 )
 
-const OperatorVersion = "0.4.4"
+const OperatorVersion = "0.5.0"
 
 var (
 	scheme   = k8sruntime.NewScheme()
@@ -111,13 +108,6 @@ func main() {
 		LeaderElection:         cfg.EnableLeaderElection,
 		LeaderElectionID:       cfg.LeaderElectionID,
 		PprofBindAddress:       "0.0.0.0:8888",
-	}
-
-	// Check if webhooks are enabled before setting up the webhook server
-	if cfg.EnableWebhooks {
-		mgrOpts.WebhookServer = webhook.NewServer(webhook.Options{
-			TLSOpts: tlsOpts,
-		})
 	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), mgrOpts)
@@ -276,40 +266,6 @@ func main() {
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GlobalRouter")
 		os.Exit(1)
-	}
-
-	if cfg.EnableWebhooks {
-		if err = webhookcoralogixv1alpha1.SetupOutboundWebhookWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "OutboundWebhook")
-			os.Exit(1)
-		}
-
-		if err = webhookcoralogixv1alpha1.SetupRuleGroupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "RuleGroup")
-			os.Exit(1)
-		}
-
-		if err = webhookcoralogixv1alpha1.SetupApiKeyWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "ApiKey")
-			os.Exit(1)
-		}
-
-		if err = webhookcoralogixv1beta1.SetupAlertWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "Alert")
-			os.Exit(1)
-		}
-
-		if err = webhookcoralogixv1alpha1.SetupAlertSchedulerWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "AlertScheduler")
-			os.Exit(1)
-		}
-
-		if err = webhookcoralogixv1alpha1.SetupDashboardWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "Dashboard")
-			os.Exit(1)
-		}
-	} else {
-		setupLog.Info("Webhooks are disabled")
 	}
 
 	//+kubebuilder:scaffold:builder

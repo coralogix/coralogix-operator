@@ -97,36 +97,6 @@ func main() {
 		log.Error(err, "Failed to collect ClusterRoleBinding")
 	}
 
-	log.V(1).Info("Collecting ValidatingWebhookConfiguration")
-	webhookGvk := schema.GroupVersionKind{
-		Group:   admissionAPIGroup,
-		Version: utils.V1APIVersion,
-		Kind:    validatingWebhookKind,
-	}
-	if err := collectOperatorResource(ctx, log, webhookGvk, cfg.ChartName+"-webhook"); err != nil {
-		log.Error(err, "Failed to collect ValidatingWebhookConfiguration")
-	}
-
-	log.V(1).Info("Collecting Certificate")
-	certGvk := schema.GroupVersionKind{
-		Group:   certManagerAPIGroup,
-		Version: utils.V1APIVersion,
-		Kind:    certificateKind,
-	}
-	if err := collectOperatorResource(ctx, log, certGvk, cfg.ChartName+"-serving-cert"); err != nil {
-		log.Error(err, "Failed to collect Certificate")
-	}
-
-	log.V(1).Info("Collecting Issuer")
-	issuerGvk := schema.GroupVersionKind{
-		Group:   certManagerAPIGroup,
-		Version: utils.V1APIVersion,
-		Kind:    issuerKind,
-	}
-	if err := collectOperatorResource(ctx, log, issuerGvk, "selfsigned-issuer"); err != nil {
-		log.Error(err, "Failed to collect Issuer")
-	}
-
 	log.V(1).Info("Collecting CRDs")
 	crdGVK := schema.GroupVersionKind{
 		Group:   apiExtensionsAPIGroup,

@@ -27,9 +27,6 @@ resources:
   kind: RuleGroup
   path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
   version: v1alpha1
-  webhooks:
-    validation: true
-    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -39,9 +36,6 @@ resources:
   kind: OutboundWebhook
   path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
   version: v1alpha1
-  webhooks:
-    validation: true
-    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -51,9 +45,6 @@ resources:
   kind: ApiKey
   path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
   version: v1alpha1
-  webhooks:
-    validation: true
-    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -63,9 +54,6 @@ resources:
   kind: Alert
   path: github.com/coralogix/coralogix-operator/api/coralogix/v1beta1
   version: v1beta1
-  webhooks:
-    validation: true
-    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -129,9 +117,6 @@ resources:
   kind: AlertScheduler
   path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
   version: v1alpha1
-  webhooks:
-    validation: true
-    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -141,9 +126,6 @@ resources:
   kind: Dashboard
   path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
   version: v1alpha1
-  webhooks:
-    validation: true
-    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true

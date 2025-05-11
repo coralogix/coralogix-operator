@@ -14,16 +14,11 @@ The operator provides the following capabilities:
 - **[Prometheus Operator](https://prometheus-operator.dev/) integration:** The Operator leverages PrometheusRule CRD,
   to simplify the transition to Coralogix Alerts by utilizing existing monitoring configurations.
   For more details on this integration, refer to the [Prometheus Integration documentation](https://github.com/coralogix/coralogix-operator/tree/main/docs/prometheus-integration.md).
-- **Running multiple instances:** The operator supports running multiple instances within a single cluster by using namespace and label selectors.
-  For more details, refer to the [Running Multiple Instances documentation](https://github.com/coralogix/coralogix-operator/tree/main/docs/multi-instance-operator.md).
-- **Dynamic admission control:** To prevent invalid resources from causing failures in Coralogix, the operator uses admission webhooks to validate custom resources before they are applied to the cluster.
-  For more Information, refer to - [A note regarding webhooks and cert-manager](README.md#a-note-regarding-webhooks-and-cert-manager).
 - **Metrics collection:** The operator provides metrics for monitoring custom resources and the operator itself.
   For more details, refer to the [Metrics documentation](https://github.com/coralogix/coralogix-operator/tree/main/docs/metrics.md).
 
 ### Prerequisites
 - Kubernetes cluster (v1.16+).
-- [cert-manager](https://cert-manager.io/) installed - The operator uses cert-manager for validation and conversion webhooks.
 - [Prometheus Operator](https://prometheus-operator.dev/) installed - By default, the PrometheusRule Integration is enabled,  
   and a ServiceMonitor is created for the operator. These CRDs are part of the Prometheus Operator.
   If you are not using Prometheus Operator, you can disable it by setting the 
@@ -55,14 +50,6 @@ helm upgrade <my-release> coralogix/coralogix-operator \
 ```sh
 helm delete <my-release>
 ```
-
-## **A note regarding webhooks and cert-manager**
-By default, the operator installs admission webhooks that are used to validate the custom resources before they are applied to the cluster.
-The operator uses [cert-manager](https://cert-manager.io/) for managing certificates, so make sure it is installed before deploying the operator.
-A [certificate](./charts/coralogix-operator/templates/certificate.yaml) and an [issuer](./charts/coralogix-operator/templates/issuer.yaml) will be installed on the cluster as part of the operator installation.
-
-In case you are not interested in using webhooks, you can disable them by setting the `coralogixOperator.webhooks.enabled=false` flag during installation.
-Keep in mind that the operator will not be able to validate the custom resources before applied to the cluster.
 
 ## Contributing
 Please refer to [CONTRIBUTING.md](CONTRIBUTING.md).

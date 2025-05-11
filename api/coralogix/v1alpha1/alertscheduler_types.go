@@ -57,6 +57,7 @@ type AlertSchedulerSpec struct {
 	Schedule Schedule `json:"schedule"`
 }
 
+// +kubebuilder:validation:XValidation:rule="has(self.metaLabels) != has(self.alerts)",message="Exactly one of metaLabels or alerts must be set"
 type Filter struct {
 	// DataPrime query expression - https://coralogix.com/docs/dataprime-query-language.
 	WhatExpression string `json:"whatExpression"`
@@ -82,6 +83,7 @@ type MetaLabel struct {
 	Value *string `json:"value,omitempty"`
 }
 
+// +kubebuilder:validation:XValidation:rule="has(self.oneTime) != has(self.recurring)",message="Exactly one of oneTime or recurring must be set"
 type Schedule struct {
 	// The operation to perform. Can be `mute` or `activate`.
 	// +kubebuilder:validation:Enum=mute;activate
@@ -96,6 +98,7 @@ type Schedule struct {
 	Recurring *Recurring `json:"recurring,omitempty"`
 }
 
+// +kubebuilder:validation:XValidation:rule="has(self.endTime) != has(self.duration)",message="Exactly one of endTime or duration must be set"
 type TimeFrame struct {
 	// The start time of the time frame. In isodate format. For example, `2021-01-01T00:00:00.000`.
 	// +kubebuilder:validation:Pattern=`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$`
@@ -117,6 +120,7 @@ type TimeFrame struct {
 	Timezone string `json:"timezone"`
 }
 
+// +kubebuilder:validation:XValidation:rule="has(self.always) != has(self.dynamic)",message="Exactly one of always or dynamic must be set"
 type Recurring struct {
 	// Recurring always.
 	// +optional

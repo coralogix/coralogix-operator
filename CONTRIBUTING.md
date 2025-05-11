@@ -27,7 +27,8 @@ make docker-build docker-push IMG=<some-registry>/coralogix-operator:<tag>
 ```sh
 make deploy IMG=<some-registry>/coralogix-operator:<tag> 
 ```
-Note: This will install cert-manager and Prometheus Operator CRDs on the cluster if not already installed.
+
+Note: This will install Prometheus Operator CRDs on the cluster if not already installed.
 
 5. To uninstall the operator, run:
 ```sh

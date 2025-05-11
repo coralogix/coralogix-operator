@@ -4,9 +4,6 @@ kind: Kustomization
 resources:
 - manager.yaml
 
-patchesStrategicMerge:
-- manager_webhook_patch.yaml
-
 images:
 - name: controller
   newName: coralogix-operator-image

@@ -62,7 +62,6 @@ type Config struct {
 	CoralogixUrl                string
 	Selector                    Selector
 	ReconcileIntervals          map[string]time.Duration
-	EnableWebhooks              bool
 	PrometheusRuleController    bool
 	RecordingRuleGroupSetSuffix string
 	MetricsAddr                 string
@@ -106,9 +105,6 @@ func InitConfig(setupLog logr.Logger) *Config {
 		namespaceSelector := os.Getenv("NAMESPACE_SELECTOR")
 		flag.StringVar(&namespaceSelector, "namespace-selector", namespaceSelector, "A labelsSelector structure to filter resources by their namespaces' labels.")
 
-		enableWebhooks := os.Getenv("ENABLE_WEBHOOKS")
-		flag.StringVar(&enableWebhooks, "enable-webhooks", enableWebhooks, "Enable webhooks for the operator. Default is true.")
-
 		reconcileIntervals := getReconcileIntervals()
 
 		opts := zap.Options{}
@@ -136,8 +132,6 @@ func InitConfig(setupLog logr.Logger) *Config {
 			os.Exit(1)
 		}
 		cfg.Selector = *selector
-
-		cfg.EnableWebhooks = strings.ToLower(enableWebhooks) != "false"
 
 		cfg.ReconcileIntervals, err = parseReconcileIntervals(reconcileIntervals)
 		if err != nil {

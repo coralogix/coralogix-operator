@@ -19,7 +19,6 @@ const (
 	appsAPIGroup          = "apps"
 	rbacAPIGroup          = "rbac.authorization.k8s.io"
 	apiExtensionsAPIGroup = "apiextensions.k8s.io"
-	certManagerAPIGroup   = "cert-manager.io"
 	admissionAPIGroup     = "admissionregistration.k8s.io"
 
 	deploymentKind         = "Deployment"
@@ -27,8 +26,5 @@ const (
 	serviceAccountKind     = "ServiceAccount"
 	clusterRoleKind        = "ClusterRole"
 	clusterRoleBindingKind = "ClusterRoleBinding"
-	validatingWebhookKind  = "ValidatingWebhookConfiguration"
-	certificateKind        = "Certificate"
-	issuerKind             = "Issuer"
 	crdKind                = "CustomResourceDefinition"
 )

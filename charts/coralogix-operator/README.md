@@ -25,8 +25,7 @@ Kubernetes: `>=1.16.0-0`
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` | ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/ |
-| certificate.create | bool | `true` | Specifies whether a Certificate should be created. |
-| coralogixOperator | object | `{"domain":"","image":{"pullPolicy":"IfNotPresent","repository":"coralogixrepo/coralogix-operator","tag":""},"labelSelector":{},"leaderElection":{"enabled":true},"namespaceSelector":{},"prometheusRules":{"enabled":true},"reconcileIntervalSeconds":{"alert":"","alertScheduler":"","apiKey":"","customRole":"","dashboard":"","dashboardsFolder":"","group":"","integration":"","outboundWebhook":"","prometheusRule":"","recordingRuleGroupSet":"","ruleGroup":"","scope":"","tcoLogsPolicies":"","tcoTracesPolicies":"","view":"","viewFolder":""},"region":"","resources":{},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true},"webhooks":{"enabled":true}}` | Coralogix operator container config |
+| coralogixOperator | object | `{"domain":"","image":{"pullPolicy":"IfNotPresent","repository":"coralogixrepo/coralogix-operator","tag":""},"labelSelector":{},"leaderElection":{"enabled":true},"namespaceSelector":{},"prometheusRules":{"enabled":true},"reconcileIntervalSeconds":{"alert":"","alertScheduler":"","apiKey":"","customRole":"","dashboard":"","dashboardsFolder":"","group":"","integration":"","outboundWebhook":"","prometheusRule":"","recordingRuleGroupSet":"","ruleGroup":"","scope":"","tcoLogsPolicies":"","tcoTracesPolicies":"","view":"","viewFolder":""},"region":"","resources":{},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}}` | Coralogix operator container config |
 | coralogixOperator.domain | string | `""` | Coralogix Account Domain |
 | coralogixOperator.image | object | `{"pullPolicy":"IfNotPresent","repository":"coralogixrepo/coralogix-operator","tag":""}` | Coralogix operator Image |
 | coralogixOperator.labelSelector | object | `{}` | A selector to filter custom resources (by the custom resources' labels). {} matches all custom resources. Cannot be set to nil. |
@@ -39,7 +38,6 @@ Kubernetes: `>=1.16.0-0`
 | deployment.replicas | int | `1` | How many coralogix-operator pods to run |
 | fullnameOverride | string | `""` | Provide a name to substitute for the full names of resources |
 | imagePullSecrets | list | `[]` |  |
-| issuer.create | bool | `true` | Specifies whether an Issuer should be created. |
 | nameOverride | string | `""` | Provide a name in place of coralogix-operator for `app:` labels |
 | nodeSelector | object | `{}` | ref: https://kubernetes.io/docs/user-guide/node-selection/ |
 | podAnnotations | object | `{}` | Annotations to add to the operator pod |
@@ -57,5 +55,4 @@ Kubernetes: `>=1.16.0-0`
 | serviceMonitor | object | `{"create":true}` | Service monitor for Prometheus to use. |
 | serviceMonitor.create | bool | `true` | Specifies whether a service monitor should be created. |
 | tolerations | list | `[]` | ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/ |
-| validatingWebhookConfiguration.create | bool | `true` | Specifies whether a ValidatingWebhookConfiguration should be created. |
 

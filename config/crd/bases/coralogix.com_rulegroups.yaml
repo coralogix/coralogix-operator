@@ -314,6 +314,15 @@ spec:
                         required:
                         - name
                         type: object
+                        x-kubernetes-validations:
+                        - message: 'Exactly one of the following fields should be
+                            set: parse, block, jsonExtract, replace, extractTimestamp,
+                            removeFields, jsonStringify, extract, parseJsonField'
+                          rule: '(has(self.parse) ? 1 : 0) + (has(self.block) ? 1
+                            : 0) + (has(self.jsonExtract) ? 1 : 0) + (has(self.replace)
+                            ? 1 : 0) + (has(self.extractTimestamp) ? 1 : 0) + (has(self.removeFields)
+                            ? 1 : 0) + (has(self.jsonStringify) ? 1 : 0) + (has(self.extract)
+                            ? 1 : 0) + (has(self.parseJsonField) ? 1 : 0) == 1'
                       type: array
                   type: object
                 type: array

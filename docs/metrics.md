@@ -3,7 +3,6 @@
 | Name                           | Type    | Description                                                             | Labels                                                                          | 
 |--------------------------------------|---------|-------------------------------------------------------------------------|---------------------------------------------------------------------------------|
 | cx_operator_info                     | Gauge   | Coralogix Operator information.                                         | go_version, operator_version, coralogix_url, label_selector, namespace_selector |
-| cx_operator_resource_rejections_total | Counter | The total count of rejections by Coralogix Operator validation webhook. | kind, name, namespace                                                           |
 | cx_operator_resource_info            | Gauge   | Coralogix Operator custom resource information.                         | kind, name, namespace, status                                                   |
 
 ## Sending Metrics to Coralogix

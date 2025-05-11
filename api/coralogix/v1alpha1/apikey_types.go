@@ -23,6 +23,7 @@ import (
 
 // ApiKeySpec defines the desired state of a Coralogix ApiKey.
 // See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-keys/
+// +kubebuilder:validation:XValidation:rule="has(self.presets) || has(self.permissions)",message="At least one of presets or permissions must be set"
 type ApiKeySpec struct {
 
 	//+kubebuilder:validation:MinLength=0
@@ -32,6 +33,7 @@ type ApiKeySpec struct {
 	//+kubebuilder:default=true
 	// Whether the ApiKey Is active.
 	// +optional
+	// TODO: add validation for active to be true on create
 	Active bool `json:"active"`
 
 	// Owner of the ApiKey.
@@ -47,6 +49,7 @@ type ApiKeySpec struct {
 }
 
 // Owner of an ApiKey.
+// +kubebuilder:validation:XValidation:rule="has(self.userId) != has(self.teamId)",message="Exactly one of userId or teamId must be set"
 type ApiKeyOwner struct {
 	// User that owns the key.
 	// +optional
