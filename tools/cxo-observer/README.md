@@ -1,33 +1,31 @@
-# cxo-observer
+# CXO Observer
 
 ## Overview
-`cxo-observer` is a CLI tool that collects Kubernetes resources related to the Coralogix Operator installation, 
-including both core operator components and custom resources (CRs) managed by the operator. 
-Additionally, it retrieves logs from the operator’s pods to provide comprehensive visibility. 
-It is useful for support, debugging, and exporting the current state of your Coralogix Operator installation.  
-The output is compressed into a `.tar.gz` file containing files organized by 
-resource group, version, kind, and namespace, to be easily inspected and shared.
+`cxo-observer` is a CLI tool that collects Kubernetes resources related to the Coralogix Operator installation, including both core operator components and custom resources (CRs) managed by the operator.
+Additionally, it retrieves logs from the operator’s pods to provide comprehensive visibility.
+It is useful for support, debugging, and exporting the current state of your Coralogix Operator installation.
+The output is compressed into a `.tar.gz` file containing files organized by resource group, version, kind, and namespace, to be easily inspected and shared.
 Support requests and issues reports should include the output of this tool, including the affected resources.
 
 ### Features
 - Collects Kubernetes resources created by the Coralogix Helm chart (e.g. Deployment, CRDs, ServiceAccount).
-- Collects Coralogix custom resources across the entire cluster by default,
-  with optional filtering by namespace and label selectors.
+- Collects Coralogix custom resources across the entire cluster by default, with optional filtering by namespace and label selectors.
 - Collects logs from the Coralogix Operator pods.
 
 ### Controlling Log Verbosity Per Resource
-To debug a specific custom resource without flooding logs with unrelated information, you can increase its log verbosity 
-by adding the following annotation directly to the resource:
+To debug a specific custom resource without flooding logs with unrelated information, you can increase its log verbosity by adding the following annotation directly to the resource:
+
 ```yaml
   annotations:
     app.coralogix.com/log-verbosity: "0"
 ```
-This annotation instructs the Coralogix Operator to log all activity related to the specific resource—including detailed 
-API requests made to the Coralogix backend.
 
----
+This annotation instructs the Coralogix Operator to log all activity related to the specific resource—including detailed API requests made to the Coralogix backend.
+
+
 ## Installation
 ### Prerequisites
+
 - [Go](https://golang.org/doc/install) 1.16 or later
 
 ```bash
@@ -44,6 +42,7 @@ Example:
 ```bash
 cxo-observer --chart-namespace=observability --namespace-selector=production,staging --label-selector=team=backend,app=api
 ```
+
 If no `--namespace-selector` nor `--label-selector` is provided, all custom resources across the entire cluster will be collected.
 
 ### Flags
