@@ -28,6 +28,8 @@ make docker-build docker-push IMG=<some-registry>/coralogix-operator:<tag>
 make deploy IMG=<some-registry>/coralogix-operator:<tag> 
 ```
 
+Note: This will install Prometheus Operator CRDs on the cluster if not already installed.
+
 5. To uninstall the operator, run:
 ```sh
 make undeploy
