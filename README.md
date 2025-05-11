@@ -14,8 +14,6 @@ The operator provides the following capabilities:
 - **[Prometheus Operator](https://prometheus-operator.dev/) integration:** The Operator leverages PrometheusRule CRD,
   to simplify the transition to Coralogix Alerts by utilizing existing monitoring configurations.
   For more details on this integration, refer to the [Prometheus Integration documentation](https://github.com/coralogix/coralogix-operator/tree/main/docs/prometheus-integration.md).
-- **Running multiple instances:** The operator supports running multiple instances within a single cluster by using namespace and label selectors.
-  For more details, refer to the [Running Multiple Instances documentation](https://github.com/coralogix/coralogix-operator/tree/main/docs/multi-instance-operator.md).
 - **Metrics collection:** The operator provides metrics for monitoring custom resources and the operator itself.
   For more details, refer to the [Metrics documentation](https://github.com/coralogix/coralogix-operator/tree/main/docs/metrics.md).
 
