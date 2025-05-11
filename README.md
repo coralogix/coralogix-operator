@@ -5,8 +5,7 @@
 ![e2e-tests](https://github.com/coralogix/coralogix-operator/actions/workflows/e2e-tests.yaml/badge.svg?style=plastic)
 
 ## Overview
-The Coralogix Operator provides Kubernetes-native deployment and management for Coralogix, 
-designed to simplify and automate the configuration of Coralogix APIs through Kubernetes [custom resources definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) and controllers.
+The Coralogix Operator provides Kubernetes-native deployment and management for Coralogix, designed to simplify and automate the configuration of Coralogix APIs through Kubernetes [Custom Resource Definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) and controllers.
 
 The operator provides the following capabilities:
 - **CRDs and controllers:** Easily deploy and manage various Coralogix features using custom resources, which are automatically reconciled by the operator.
@@ -17,8 +16,7 @@ The operator provides the following capabilities:
   For more details on this integration, refer to the [Prometheus Integration documentation](https://github.com/coralogix/coralogix-operator/tree/main/docs/prometheus-integration.md).
 - **Running multiple instances:** The operator supports running multiple instances within a single cluster by using namespace and label selectors.
   For more details, refer to the [Running Multiple Instances documentation](https://github.com/coralogix/coralogix-operator/tree/main/docs/multi-instance-operator.md).
-- **Dynamic admission control:** To prevent invalid resources from causing failures in Coralogix, the operator uses admission webhooks 
-  to validate custom resources before they are applied to the cluster.
+- **Dynamic admission control:** To prevent invalid resources from causing failures in Coralogix, the operator uses admission webhooks to validate custom resources before they are applied to the cluster.
   For more Information, refer to - [A note regarding webhooks and cert-manager](README.md#a-note-regarding-webhooks-and-cert-manager).
 - **Metrics collection:** The operator provides metrics for monitoring custom resources and the operator itself.
   For more details, refer to the [Metrics documentation](https://github.com/coralogix/coralogix-operator/tree/main/docs/metrics.md).
