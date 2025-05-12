@@ -1,0 +1,43 @@
+apiVersion: coralogix.com/v1alpha1
+kind: DataSet
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: data-set-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: data-set-configmap-sample
+spec:
+  name: data-set-configmap-sample
+  description: This is a sample data set for configmap
+  configMapRef:
+    name: date-to-day
+    key: csv
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: date-to-day
+data:
+  csv: |
+    Date,day of week
+    7/30/21,Friday
+    7/31/21,Saturday
+    8/1/21,Sunday
+    8/2/21,Monday
+    8/4/21,Wednesday
+    8/5/21,Thursday
+    8/6/21,Friday
+    8/7/21,Saturday
+    8/8/21,Sunday
+    8/9/21,Monday
+    8/10/21,Tuesday
+    8/11/21,Wednesday
+    8/12/21,Thursday
+    8/13/21,Friday
+    8/14/21,Saturday
+    8/15/21,Sunday
+    8/16/21,Monday
+    8/17/21,Tuesday
+    8/18/21,Wednesday

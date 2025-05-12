@@ -42,6 +42,8 @@ const (
 	ConnectorKind             = "Connector"
 	PresetKind                = "Preset"
 	GlobalRouterKind          = "GlobalRouter"
+	DataSetKind               = "DataSet"
+	EnrichmentKind            = "Enrichment"
 
 	TrackPrometheusRuleAlertsLabelKey         = "app.coralogix.com/track-alerting-rules"
 	TrackPrometheusRuleRecordingRulesLabelKey = "app.coralogix.com/track-recording-rules"
