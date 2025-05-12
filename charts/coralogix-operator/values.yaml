@@ -6,6 +6,12 @@ fullnameOverride: ""
 
 imagePullSecrets: []
 
+# -- Custom labels to add into metadata
+additionalLabels: {}
+
+# -- Pod labels for Coralogix operator
+podLabels: {}
+
 deployment:
   # -- How many coralogix-operator pods to run
   replicas: 1
@@ -30,6 +36,9 @@ podAnnotations: {}
 serviceMonitor:
   # -- Specifies whether a service monitor should be created.
   create: true
+
+  # -- Additional labels to add for ServiceMonitor 
+  additionalLabels: {}
 
 # -- SecurityContext holds pod-level security attributes and common container settings.
 # -- This defaults to non root user with uid 2000 and gid 2000. *v1.PodSecurityContext  false
