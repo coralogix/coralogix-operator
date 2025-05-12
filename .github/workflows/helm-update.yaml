@@ -19,16 +19,21 @@ jobs:
 
       - name: Update Chart Version
         run: |
-          TAG="${{ github.ref_name }}"
-          TAG_VERSION=$(echo $TAG | sed 's/v//')
-          CURRENT_VERSION=$(grep "version:" charts/coralogix-operator/Chart.yaml | awk '{print $2}')
-          NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. -v OFS=. '{$3+=1}1')
+            TAG="${{ github.ref_name }}"
+            VERSION="${TAG#v}"
 
-          sed -i "s/appVersion:.*/appVersion: $TAG_VERSION/" charts/coralogix-operator/Chart.yaml
-          sed -i "s/version:.*/version: $NEW_VERSION/" charts/coralogix-operator/Chart.yaml
+            sed -i "s/^appVersion:.*/appVersion: $VERSION/" charts/coralogix-operator/Chart.yaml
+            sed -i "s/^version:.*/version: $VERSION/" charts/coralogix-operator/Chart.yaml
+
 
       - name: Update Chart version in Documentation
         run: make helm-sync-docs
+
+      - name: Extract Release Branch from Tag
+        run: |
+          TAG="${{ github.ref_name }}"
+          VERSION="${TAG#v}"
+          echo "RELEASE_BRANCH=$(echo "$VERSION" | cut -d. -f1,2)" >> $GITHUB_ENV
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
@@ -36,9 +41,10 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "Bump version and update appVersion in Chart.yaml"
           title: "Bump version and update appVersion in Chart.yaml"
-          base: main
+          base: release-${{ env.RELEASE_BRANCH }}
           branch: update-chart-version-${{ github.ref_name }}
           add-paths: |
             charts/coralogix-operator/Chart.yaml
+            charts/coralogix-operator/README.md
           body: |
             This pull request bumps the version and updates the appVersion in Chart.yaml to match the tag.
