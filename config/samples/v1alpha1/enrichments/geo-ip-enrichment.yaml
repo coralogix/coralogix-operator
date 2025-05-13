@@ -1,0 +1,27 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Enrichment
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: enrichment-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: enrichment-sample
+spec:
+#  geoIp:
+#    fieldName: attributes.event.name
+#    withAsn: true
+#  suspiciousIp:
+#    fieldName: attributes.event.name
+#  aws:
+#    fieldName: attributes.event.name
+#    resourceType: ec2
+#  custom:
+#    dataSet:
+#      resourceRef:
+#        name: data-set-csv-sample
+#    fieldName: attributes.event.name
+#    enrichedFieldName: attributes.event.name.enriched
+#    selectedColumns:
+#      - day of week

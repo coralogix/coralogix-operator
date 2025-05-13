@@ -35,6 +35,8 @@ rules:
   - customroles
   - dashboards
   - dashboardsfolders
+  - datasets
+  - enrichments
   - globalrouters
   - groups
   - integrations
@@ -65,6 +67,8 @@ rules:
   - customroles/finalizers
   - dashboards/finalizers
   - dashboardsfolders/finalizers
+  - datasets/finalizers
+  - enrichments/finalizers
   - globalrouters/finalizers
   - groups/finalizers
   - integrations/finalizers
@@ -89,6 +93,8 @@ rules:
   - customroles/status
   - dashboards/status
   - dashboardsfolders/status
+  - datasets/status
+  - enrichments/status
   - globalrouters/status
   - groups/status
   - integrations/status
