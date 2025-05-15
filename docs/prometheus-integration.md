@@ -1,7 +1,7 @@
 # Prometheus Integration
 
 The Coralogix Operator integrates with the [Prometheus Operator](https://prometheus-operator.dev/) PrometheusRule CRD, to simplify the transition to Coralogix.
-By using existing monitoring configurations, the operator makes it easier to adopt Coralogix’s advanced monitoring and alerting features.
+By using existing monitoring configurations, the operator makes it easier to adopt Coralogix's advanced monitoring and alerting features.
 
 The operator watches PrometheusRule resources and automatically creates Coralogix custom resources in the cluster including Alerts and RecordingRuleGroupSets.
 
@@ -20,20 +20,20 @@ app.coralogix.com/track-alerting-rules: "true"
 The operator will create a Coralogix Alert in the PrometheusRule namespace, for each alert in the PrometheusRule.
 
 The following Coralogix Alert properties are derived from the PrometheusRule alerting rule:
-- `Alert.Spec.Name`: Set to `rule.Alert` value.
-- `Alert.Spec.Description`: Set to `rule.Annotations["description"]` value.
-- `Alert.Spec.EntityLabels`: Set to `rule.Labels` property.
+
+- `Alert.Spec.Name`: Set to `rule.Alert` value
+- `Alert.Spec.Description`: Set to `rule.Annotations["description"]` value
+- `Alert.Spec.EntityLabels`: Set to `rule.Labels` property
 - `Alert.Spec.Priority`: Set to `rule.Labels["severity"]` value, with the next priority mapping:
-  - `critical` -> `p1`
-  - `error`    -> `p2`
-  - `warning`  -> `p3`
-  - `info`     -> `p4`
-  - `low`      -> `p5`
-  
-- `Alert.Spec.AlertType.MetricThreshold.OfTheLast.SpecificValue`: Set to `rule.For` value.
-- `Alert.Spec.AlertType.MetricThreshold.Rules[0].Condition.ConditionType`: Set to `moreThan`.
-- `Alert.Spec.AlertType.MetricThreshold.Rules[0].Condition.Threshold`: Set to `0`.
-- `Alert.Spec.AlertType.MetricThreshold.Rules[0].Condition.ForOverPct`: Set to `100`.
+    - `critical` -> `p1`
+    - `error` -> `p2`
+    - `warning` -> `p3`
+    - `info` -> `p4`
+    - `low` -> `p5`
+- `Alert.Spec.AlertType.MetricThreshold.OfTheLast.SpecificValue`: Set to `rule.For` value
+- `Alert.Spec.AlertType.MetricThreshold.Rules[0].Condition.ConditionType`: Set to `moreThan`
+- `Alert.Spec.AlertType.MetricThreshold.Rules[0].Condition.Threshold`: Set to `0`
+- `Alert.Spec.AlertType.MetricThreshold.Rules[0].Condition.ForOverPct`: Set to `100`
 
 Other properties will not be overridden by the operator and can be modified directly in the Coralogix Alert resource.
 
