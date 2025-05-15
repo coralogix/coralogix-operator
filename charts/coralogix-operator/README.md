@@ -36,13 +36,13 @@ Kubernetes: `>=1.16.0-0`
 | coralogixOperator.region | string | `""` | Coralogix Account Region |
 | coralogixOperator.resources | object | `{}` | resource config for Coralogix operator |
 | coralogixOperator.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}` | Security context for Coralogix operator container |
+| deployment.podLabels | object | `{}` | Pod labels for Coralogix operator |
 | deployment.replicas | int | `1` | How many coralogix-operator pods to run |
 | fullnameOverride | string | `""` | Provide a name to substitute for the full names of resources |
 | imagePullSecrets | list | `[]` |  |
 | nameOverride | string | `""` | Provide a name in place of coralogix-operator for `app:` labels |
 | nodeSelector | object | `{}` | ref: https://kubernetes.io/docs/user-guide/node-selection/ |
 | podAnnotations | object | `{}` | Annotations to add to the operator pod |
-| podLabels | object | `{}` | Pod labels for Coralogix operator |
 | secret | object | `{"annotations":{},"create":true,"data":{"apiKey":""},"labels":{},"secretKeyReference":{}}` | Configuration for Coralogix operator secret |
 | secret.annotations | object | `{}` | Annotations to add to the Coralogix operator secret |
 | secret.create | bool | `true` | Indicates if the Coralogix operator secret should be created |
@@ -54,8 +54,8 @@ Kubernetes: `>=1.16.0-0`
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | If not set and create is true, a name is generated using the fullname template |
-| serviceMonitor | object | `{"additionalLabels":{},"create":true}` | Service monitor for Prometheus to use. |
-| serviceMonitor.additionalLabels | object | `{}` | Additional labels to add for ServiceMonitor  |
+| serviceMonitor | object | `{"create":true,"labels":{}}` | Service monitor for Prometheus to use. |
 | serviceMonitor.create | bool | `true` | Specifies whether a service monitor should be created. |
+| serviceMonitor.labels | object | `{}` | Additional labels to add for ServiceMonitor  |
 | tolerations | list | `[]` | ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/ |
 

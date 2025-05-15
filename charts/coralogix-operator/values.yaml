@@ -9,12 +9,12 @@ imagePullSecrets: []
 # -- Custom labels to add into metadata
 additionalLabels: {}
 
-# -- Pod labels for Coralogix operator
-podLabels: {}
-
 deployment:
   # -- How many coralogix-operator pods to run
   replicas: 1
+
+  # -- Pod labels for Coralogix operator
+  podLabels: {}
 
 # -- Service account for Coralogix operator to use.
 # -- ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
@@ -38,7 +38,7 @@ serviceMonitor:
   create: true
 
   # -- Additional labels to add for ServiceMonitor 
-  additionalLabels: {}
+  labels: {}
 
 # -- SecurityContext holds pod-level security attributes and common container settings.
 # -- This defaults to non root user with uid 2000 and gid 2000. *v1.PodSecurityContext  false
