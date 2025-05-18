@@ -891,7 +891,7 @@ const (
 	MetricTimeWindowValue36Hours   MetricTimeWindowSpecificValue = "36h"
 )
 
-// +kubebuilder:validation:Enum=moreThan;lessThan
+// +kubebuilder:validation:Enum=moreThan;lessThan;moreThanOrEquals;lessThanOrEquals
 // ConditionType type.
 type MetricThresholdConditionType string
 
