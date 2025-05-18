@@ -153,7 +153,7 @@ var (
 	}
 	MetricThresholdConditionTypeToProto = map[MetricThresholdConditionType]cxsdk.MetricThresholdConditionType{
 		MetricThresholdConditionTypeMoreThan:         cxsdk.MetricThresholdConditionTypeMoreThanOrUnspecified,
-		MetricThresholdConditionTypeLessThan:         cxsdk.MetricThresholdConditionTypeLessThanOrEquals,
+		MetricThresholdConditionTypeLessThan:         cxsdk.MetricThresholdConditionTypeLessThan,
 		MetricThresholdConditionTypeMoreThanOrEquals: cxsdk.MetricThresholdConditionTypeMoreThanOrEquals,
 		MetricThresholdConditionTypeLessThanOrEquals: cxsdk.MetricThresholdConditionTypeLessThanOrEquals,
 	}
