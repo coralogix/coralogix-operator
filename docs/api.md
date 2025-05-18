@@ -3425,7 +3425,7 @@ Conditions to match for the rule.
         <td>
           ConditionType type.<br/>
           <br/>
-            <i>Enum</i>: moreThan, lessThan<br/>
+            <i>Enum</i>: moreThan, lessThan, moreThanOrEquals, lessThanOrEquals<br/>
         </td>
         <td>true</td>
       </tr><tr>
