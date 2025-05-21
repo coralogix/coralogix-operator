@@ -50,7 +50,7 @@ import (
 	//+kubebuilder:scaffold:imports
 )
 
-const OperatorVersion = "0.4.4"
+const OperatorVersion = "0.4.5"
 
 var (
 	scheme   = k8sruntime.NewScheme()
