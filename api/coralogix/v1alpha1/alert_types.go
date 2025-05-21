@@ -86,7 +86,8 @@ type NotificationGroup struct {
 	// +optional
 	GroupByFields []string `json:"groupByFields,omitempty"`
 
-	Notifications []Notification `json:"notifications,omitempty"`
+	// +optional
+	Notifications []Notification `json:"notifications"`
 }
 
 type Notification struct {
