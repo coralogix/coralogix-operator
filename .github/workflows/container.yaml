@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - "main"
+      - "release-*"
     tags:
       - "v*"
     paths-ignore:
@@ -22,6 +23,7 @@ jobs:
   build:
     name: Build Container
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2.4.0
@@ -45,12 +47,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
-      - uses: actions/checkout@v2
-
-      - name: Fetch latest release version
-        id: fetch-latest-release
-        uses: reloc8/action-latest-release-version@1.0.0
-
       - name: Build And Push
         uses: docker/build-push-action@v2.8.0
         with:
@@ -59,5 +55,4 @@ jobs:
           push: ${{ startsWith(github.ref, 'refs/tags/') }}
           tags: |
             ${{ steps.meta.outputs.tags }}
-            coralogixrepo/coralogix-operator:${{ steps.fetch-latest-release.outputs.latest-release }}
-            coralogixrepo/coralogix-operator:latest
+            ${{ env.DOCKERHUB_REGISTRY }}:${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
