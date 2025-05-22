@@ -162,7 +162,7 @@ var _ = Describe("Alert", Ordered, func() {
 									ForOverPct:    50,
 									ConditionType: coralogixv1beta1.MetricThresholdConditionTypeMoreThan,
 									OfTheLast: coralogixv1beta1.MetricTimeWindow{
-										SpecificValue: coralogixv1beta1.MetricTimeWindowValue12Hours,
+										DynamicDuration: pointer.String("12h"),
 									},
 								},
 							},
@@ -274,7 +274,7 @@ var _ = Describe("Alert", Ordered, func() {
 									ForOverPct:    50,
 									ConditionType: coralogixv1beta1.MetricThresholdConditionTypeMoreThan,
 									OfTheLast: coralogixv1beta1.MetricTimeWindow{
-										SpecificValue: coralogixv1beta1.MetricTimeWindowValue12Hours,
+										DynamicDuration: pointer.String("12h"),
 									},
 								},
 							},
@@ -345,7 +345,7 @@ var _ = Describe("Alert", Ordered, func() {
 						Threshold:     coralogix.FloatToQuantity(3),
 						ForOverPct:    50,
 						ConditionType: coralogixv1beta1.MetricAnomalyConditionTypeMoreThanUsual,
-						OfTheLast: coralogixv1beta1.MetricTimeWindow{
+						OfTheLast: coralogixv1beta1.MetricAnomalyTimeWindow{
 							SpecificValue: coralogixv1beta1.MetricTimeWindowValue12Hours,
 						},
 					},

@@ -30,7 +30,7 @@ The following Coralogix Alert properties are derived from the PrometheusRule ale
     - `warning` -> `p3`
     - `info` -> `p4`
     - `low` -> `p5`
-- `Alert.Spec.AlertType.MetricThreshold.OfTheLast.SpecificValue`: Set to `rule.For` value
+- `Alert.Spec.AlertType.MetricThreshold.OfTheLast.DynamicDuration`: Set to `rule.For` value
 - `Alert.Spec.AlertType.MetricThreshold.Rules[0].Condition.ConditionType`: Set to `moreThan`
 - `Alert.Spec.AlertType.MetricThreshold.Rules[0].Condition.Threshold`: Set to `0`
 - `Alert.Spec.AlertType.MetricThreshold.Rules[0].Condition.ForOverPct`: Set to `100`
@@ -87,7 +87,7 @@ spec:
             conditionType: moreThan
             forOverPct: 100
             ofTheLast:
-              specificValue: 5m
+              dynamicDuration: 5m
             threshold: "0"
   description: app latency alert
   enabled: true

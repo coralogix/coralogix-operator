@@ -1253,6 +1253,8 @@ spec:
                                       - 24h
                                       - 36h
                                       type: string
+                                  required:
+                                  - specificValue
                                   type: object
                                 threshold:
                                   anyOf:
@@ -1323,6 +1325,9 @@ spec:
                                 ofTheLast:
                                   description: Time window type.
                                   properties:
+                                    dynamicDuration:
+                                      pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                                      type: string
                                     specificValue:
                                       description: Time window type.
                                       enum:
@@ -1341,6 +1346,10 @@ spec:
                                       - 36h
                                       type: string
                                   type: object
+                                  x-kubernetes-validations:
+                                  - message: Exactly one of specificValue or dynamicDuration
+                                      is required
+                                    rule: has(self.specificValue) != has(self.dynamicDuration)
                                 threshold:
                                   anyOf:
                                   - type: integer

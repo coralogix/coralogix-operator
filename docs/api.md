@@ -3250,7 +3250,7 @@ Time window to match within
           <br/>
             <i>Enum</i>: 1m, 5m, 10m, 15m, 20m, 30m, 1h, 2h, 4h, 6h, 12h, 24h, 36h<br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
@@ -3443,6 +3443,8 @@ Conditions to match for the rule.
         <td>object</td>
         <td>
           Time window type.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.specificValue) != has(self.dynamicDuration): Exactly one of specificValue or dynamicDuration is required</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -3473,6 +3475,13 @@ Time window type.
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>dynamicDuration</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>specificValue</b></td>
         <td>enum</td>
         <td>
