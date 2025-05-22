@@ -22,6 +22,12 @@ github.com/coralogix/coralogix-management-sdk v1.5.0 h1:i6XsaOlRODpUJUh5BejalKUl
 github.com/coralogix/coralogix-management-sdk v1.5.0/go.mod h1:cA+K/oKJeCDr7ElL0fORtLoLAG/00o/yabQnEjph+R0=
 github.com/coralogix/coralogix-management-sdk v1.5.2-0.20250515094945-e6016ca9f86e h1:ISjZkGh9vD/Gd/OcSEbYJFV7WrCHBQWQ9sg027b42CU=
 github.com/coralogix/coralogix-management-sdk v1.5.2-0.20250515094945-e6016ca9f86e/go.mod h1:cA+K/oKJeCDr7ElL0fORtLoLAG/00o/yabQnEjph+R0=
+github.com/coralogix/coralogix-management-sdk v1.5.2-0.20250515143511-4692104f30e8 h1:OMWdNEyKkKNwXxGgya9zIBTH5o9elhKzOuKQwHFULLo=
+github.com/coralogix/coralogix-management-sdk v1.5.2-0.20250515143511-4692104f30e8/go.mod h1:cA+K/oKJeCDr7ElL0fORtLoLAG/00o/yabQnEjph+R0=
+github.com/coralogix/coralogix-management-sdk v1.5.2-0.20250520081303-df4129240a0a h1:mYAgQ8Lnn7O/lOjaEuSY1WRyUGMZ+rlqoImuuSpe4h0=
+github.com/coralogix/coralogix-management-sdk v1.5.2-0.20250520081303-df4129240a0a/go.mod h1:cA+K/oKJeCDr7ElL0fORtLoLAG/00o/yabQnEjph+R0=
+github.com/coralogix/coralogix-management-sdk v1.5.2 h1:rr7nGLDKfNWQTyuwFLXjwW8TZGF0OYaQTwWZ3hO0UWU=
+github.com/coralogix/coralogix-management-sdk v1.5.2/go.mod h1:cA+K/oKJeCDr7ElL0fORtLoLAG/00o/yabQnEjph+R0=
 github.com/cpuguy83/go-md2man/v2 v2.0.4/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

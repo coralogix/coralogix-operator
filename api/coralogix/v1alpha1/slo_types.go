@@ -34,15 +34,17 @@ type SLOSpec struct {
 	SliType SliType           `json:"sliType"`
 	Window  SloWindow         `json:"window"`
 	// +kubebuilder:validation:Maximum:=100
-	TargetThresholdPercentage int32 `json:"targetThresholdPercentage"`
+	TargetThresholdPercentage float32 `json:"targetThresholdPercentage"`
 }
 
 type SliType struct {
 	// +optional
-	Metric *SloMetricType `json:"metric,omitempty"`
+	RequestBasedMetricSli *RequestBasedMetricSli `json:"metric,omitempty"`
+	// +optional
+
 }
 
-type SloMetricType struct {
+type RequestBasedMetricSli struct {
 	// +optional
 	GoodEvents *SloMetricEvent `json:"goodEvents,omitempty"`
 	// +optional
@@ -123,15 +125,13 @@ func (spec *SLOSpec) ExtractSLO() (*cxsdk.Slo, error) {
 }
 
 func (in *SliType) ExpandSliType(slo *cxsdk.Slo) (*cxsdk.Slo, error) {
-	if typeMetric := in.Metric; typeMetric != nil {
-		slo.Sli = &cxsdk.SloMetricSli{
-			MetricSli: &cxsdk.MetricSli{
-				GoodEvents:    extractMetricEvent(typeMetric.GoodEvents),
-				TotalEvents:   extractMetricEvent(typeMetric.TotalEvents),
-				GroupByLabels: typeMetric.GroupByLabels,
+	if requestBasedMetricSli := in.RequestBasedMetricSli; requestBasedMetricSli != nil {
+		slo.Sli = &cxsdk.SloRequestBasedMetricSli{
+			RequestBasedMetricSli: &cxsdk.RequestBasedMetricSli{
+
 			},
 		}
-	}
+	}else if
 
 	return slo, nil
 }
