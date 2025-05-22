@@ -3444,7 +3444,7 @@ Conditions to match for the rule.
         <td>
           Time window type.<br/>
           <br/>
-            <i>Validations</i>:<li>has(self.specificValue) != has(self.dynamicDuration): Exactly one of specificValue or dynamicTimeWindow is required</li>
+            <i>Validations</i>:<li>has(self.specificValue) != has(self.dynamicDuration): Exactly one of specificValue or dynamicDuration is required</li>
         </td>
         <td>true</td>
       </tr><tr>
