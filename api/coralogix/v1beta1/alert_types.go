@@ -866,7 +866,18 @@ type MetricThresholdRuleCondition struct {
 }
 
 // Time window type.
+// +kubebuilder:validation:XValidation:rule="has(self.specificValue) != has(self.dynamicDuration)",message="Exactly one of specificValue or dynamicTimeWindow is required"
 type MetricTimeWindow struct {
+	// +optional
+	SpecificValue *MetricTimeWindowSpecificValue `json:"specificValue,omitempty"`
+	// +optional
+	// +kubebuilder:validation:Pattern:="^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$"
+	DynamicDuration *string `json:"dynamicDuration,omitempty"`
+}
+
+// Time window type.
+type MetricAnomalyTimeWindow struct {
+	// +optional
 	SpecificValue MetricTimeWindowSpecificValue `json:"specificValue,omitempty"`
 }
 
@@ -1158,7 +1169,7 @@ type MetricAnomalyCondition struct {
 	ForOverPct uint32 `json:"forOverPct"`
 
 	// Time window to match within
-	OfTheLast MetricTimeWindow `json:"ofTheLast"`
+	OfTheLast MetricAnomalyTimeWindow `json:"ofTheLast"`
 	// +kubebuilder:validation:Maximum:=100
 	// Replace with a number
 	MinNonNullValuesPct uint32 `json:"minNonNullValuesPct"`
@@ -1989,7 +2000,7 @@ func expandMetricAnomalyCondition(condition MetricAnomalyCondition) *cxsdk.Metri
 	return &cxsdk.MetricAnomalyCondition{
 		Threshold:           wrapperspb.Double(condition.Threshold.AsApproximateFloat64()),
 		ForOverPct:          wrapperspb.UInt32(condition.ForOverPct),
-		OfTheLast:           expandMetricTimeWindow(condition.OfTheLast),
+		OfTheLast:           expandAnomalyMetricTimeWindow(condition.OfTheLast),
 		MinNonNullValuesPct: wrapperspb.UInt32(condition.MinNonNullValuesPct),
 		ConditionType:       MetricAnomalyConditionTypeToProto[condition.ConditionType],
 	}
@@ -2356,6 +2367,24 @@ func expandMetricThresholdCondition(condition MetricThresholdRuleCondition) *cxs
 }
 
 func expandMetricTimeWindow(timeWindow MetricTimeWindow) *cxsdk.MetricTimeWindow {
+	if specificValue := timeWindow.SpecificValue; specificValue != nil {
+		return &cxsdk.MetricTimeWindow{
+			Type: &cxsdk.MetricTimeWindowSpecificValue{
+				MetricTimeWindowSpecificValue: MetricTimeWindowToProto[*specificValue],
+			},
+		}
+	} else if dynamicTimeWindow := timeWindow.DynamicDuration; dynamicTimeWindow != nil {
+		return &cxsdk.MetricTimeWindow{
+			Type: &cxsdk.MetricTimeWindowDynamicDuration{
+				MetricTimeWindowDynamicDuration: wrapperspb.String(*dynamicTimeWindow),
+			},
+		}
+	}
+
+	return nil
+}
+
+func expandAnomalyMetricTimeWindow(timeWindow MetricAnomalyTimeWindow) *cxsdk.MetricTimeWindow {
 	return &cxsdk.MetricTimeWindow{
 		Type: &cxsdk.MetricTimeWindowSpecificValue{
 			MetricTimeWindowSpecificValue: MetricTimeWindowToProto[timeWindow.SpecificValue],

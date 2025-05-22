@@ -28,6 +28,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/pointer"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -429,7 +430,7 @@ func prometheusAlertToMetricThreshold(rule prometheus.Rule) *coralogixv1beta1.Me
 					Threshold:  resource.MustParse("0"),
 					ForOverPct: 100,
 					OfTheLast: coralogixv1beta1.MetricTimeWindow{
-						SpecificValue: getTimeWindow(rule),
+						DynamicDuration: pointer.String(string(rule.For)),
 					},
 					ConditionType: coralogixv1beta1.MetricThresholdConditionTypeMoreThan,
 				},
@@ -456,13 +457,6 @@ var prometheusSeverityToCXPriority = map[string]coralogixv1beta1.AlertPriority{
 	"warning":  coralogixv1beta1.AlertPriorityP3,
 	"info":     coralogixv1beta1.AlertPriorityP4,
 	"low":      coralogixv1beta1.AlertPriorityP5,
-}
-
-func getTimeWindow(rule prometheus.Rule) coralogixv1beta1.MetricTimeWindowSpecificValue {
-	if timeWindow, ok := prometheusAlertForToCoralogixPromqlAlertTimeWindow[rule.For]; ok {
-		return timeWindow
-	}
-	return prometheusAlertForToCoralogixPromqlAlertTimeWindow["1m"]
 }
 
 var prometheusAlertForToCoralogixPromqlAlertTimeWindow = map[prometheus.Duration]coralogixv1beta1.MetricTimeWindowSpecificValue{

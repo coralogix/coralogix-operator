@@ -3443,6 +3443,8 @@ Conditions to match for the rule.
         <td>object</td>
         <td>
           Time window type.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.specificValue) != has(self.dynamicDuration): Exactly one of specificValue or dynamicTimeWindow is required</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -3473,6 +3475,13 @@ Time window type.
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>dynamicDuration</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>specificValue</b></td>
         <td>enum</td>
         <td>
