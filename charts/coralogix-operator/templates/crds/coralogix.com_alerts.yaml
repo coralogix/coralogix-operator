@@ -1345,7 +1345,7 @@ spec:
                                       type: string
                                   type: object
                                   x-kubernetes-validations:
-                                  - message: Exactly one of specificValue or dynamicTimeWindow
+                                  - message: Exactly one of specificValue or dynamicDuration
                                       is required
                                     rule: has(self.specificValue) != has(self.dynamicDuration)
                                 threshold:

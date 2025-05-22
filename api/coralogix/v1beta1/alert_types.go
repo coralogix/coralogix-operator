@@ -866,7 +866,7 @@ type MetricThresholdRuleCondition struct {
 }
 
 // Time window type.
-// +kubebuilder:validation:XValidation:rule="has(self.specificValue) != has(self.dynamicDuration)",message="Exactly one of specificValue or dynamicTimeWindow is required"
+// +kubebuilder:validation:XValidation:rule="has(self.specificValue) != has(self.dynamicDuration)",message="Exactly one of specificValue or dynamicDuration is required"
 type MetricTimeWindow struct {
 	// +optional
 	SpecificValue *MetricTimeWindowSpecificValue `json:"specificValue,omitempty"`
