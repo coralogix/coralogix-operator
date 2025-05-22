@@ -1,0 +1,40 @@
+apiVersion: coralogix.com/v1alpha1
+kind: SLO
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: tco-logs-policies-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  annotations:
+    app.coralogix.com/log-verbosity: "0"
+  name: coralogix-slo-example
+spec:
+  name: coralogix_slo_example
+  serviceName: coralogix-slo-example
+  description: Coralogix SLO example
+  labels:
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/instance: tco-logs-policies-sample
+    app.kubernetes.io/created-by: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+  sliType:
+    metric:
+      goodEvents:
+        query: |
+          count(
+            {app="coralogix-slo-example", status="200"}
+          )
+      totalEvents:
+        query: |
+          count(
+            {app="coralogix-slo-example"}
+          )
+      groupByLabels:
+        - app
+        - status
+  window:
+    timeFrame: 7d
+  targetThresholdPercentage: 10
+

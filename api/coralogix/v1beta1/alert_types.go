@@ -153,7 +153,7 @@ var (
 	}
 	MetricThresholdConditionTypeToProto = map[MetricThresholdConditionType]cxsdk.MetricThresholdConditionType{
 		MetricThresholdConditionTypeMoreThan:         cxsdk.MetricThresholdConditionTypeMoreThanOrUnspecified,
-		MetricThresholdConditionTypeLessThan:         cxsdk.MetricThresholdConditionTypeLessThanOrEquals,
+		MetricThresholdConditionTypeLessThan:         cxsdk.MetricThresholdConditionTypeLessThan,
 		MetricThresholdConditionTypeMoreThanOrEquals: cxsdk.MetricThresholdConditionTypeMoreThanOrEquals,
 		MetricThresholdConditionTypeLessThanOrEquals: cxsdk.MetricThresholdConditionTypeLessThanOrEquals,
 	}
@@ -891,7 +891,7 @@ const (
 	MetricTimeWindowValue36Hours   MetricTimeWindowSpecificValue = "36h"
 )
 
-// +kubebuilder:validation:Enum=moreThan;lessThan
+// +kubebuilder:validation:Enum=moreThan;lessThan;moreThanOrEquals;lessThanOrEquals
 // ConditionType type.
 type MetricThresholdConditionType string
 
