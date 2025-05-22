@@ -1253,6 +1253,8 @@ spec:
                                       - 24h
                                       - 36h
                                       type: string
+                                  required:
+                                  - specificValue
                                   type: object
                                 threshold:
                                   anyOf:

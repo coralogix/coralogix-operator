@@ -877,8 +877,7 @@ type MetricTimeWindow struct {
 
 // Time window type.
 type MetricAnomalyTimeWindow struct {
-	// +optional
-	SpecificValue MetricTimeWindowSpecificValue `json:"specificValue,omitempty"`
+	SpecificValue MetricTimeWindowSpecificValue `json:"specificValue"`
 }
 
 // +kubebuilder:validation:Enum={"1m","5m","10m","15m","20m","30m","1h","2h","4h","6h","12h","24h","36h"}
