@@ -23,14 +23,10 @@ spec:
     metric:
       goodEvents:
         query: |
-          count(
-            {app="coralogix-slo-example", status="200"}
-          )
+            sum(rate(coralogix_logs_events_total{app="coralogix-slo-example", status="success"}[5m]))
       totalEvents:
-        query: |
-          count(
-            {app="coralogix-slo-example"}
-          )
+        query:
+          sum(rate(coralogix_logs_events_total{app="coralogix-slo-example", status="success"}[5m]))
       groupByLabels:
         - app
         - status

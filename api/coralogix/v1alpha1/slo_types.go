@@ -20,7 +20,23 @@ import (
 	"fmt"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+var (
+	WindowSloWindowSchemaToProto = map[SloWindowEnum]cxsdk.SloWindow{
+		"unspecified": cxsdk.SloWindowUnspecified,
+		"1m":          cxsdk.SloWindow1Minute,
+		"5m":          cxsdk.SloWindow5Minutes,
+	}
+	ComparisonOperatorSchemaToProto = map[ComparisonOperator]cxsdk.SloComparisonOperator{
+		"unspecified":         cxsdk.SloComparisonOperatorUnspecified,
+		"greaterThan":         cxsdk.SloComparisonOperatorGreaterThan,
+		"lessThan":            cxsdk.SloComparisonOperatorLessThan,
+		"greaterThanOrEquals": cxsdk.SloComparisonOperatorGreaterThanOrEquals,
+		"lessThanOrEquals":    cxsdk.SloComparisonOperatorLessThanOrEquals,
+	}
 )
 
 // SLOSpec defines the desired state of SLO.
@@ -30,18 +46,18 @@ type SLOSpec struct {
 	// +optional
 	Description *string `json:"description"`
 	// +optional
-	Labels  map[string]string `json:"labels,omitempty"`
-	SliType SliType           `json:"sliType"`
-	Window  SloWindow         `json:"window"`
-	// +kubebuilder:validation:Maximum:=100
-	TargetThresholdPercentage float32 `json:"targetThresholdPercentage"`
+	Labels                    map[string]string `json:"labels,omitempty"`
+	SliType                   SliType           `json:"sliType"`
+	Window                    SloWindow         `json:"window"`
+	TargetThresholdPercentage resource.Quantity `json:"targetThresholdPercentage"`
 }
 
+// +kubebuilder:validation:XValidation:rule="has(self.metric) != has(self.windowBasedMetric)",message="Exactly one of metric or windowBasedMetric must be set"
 type SliType struct {
 	// +optional
 	RequestBasedMetricSli *RequestBasedMetricSli `json:"metric,omitempty"`
 	// +optional
-
+	WindowBasedMetricSli *WindowBasedMetricSli `json:"windowBasedMetric,omitempty"`
 }
 
 type RequestBasedMetricSli struct {
@@ -52,6 +68,20 @@ type RequestBasedMetricSli struct {
 	// +optional
 	GroupByLabels []string `json:"groupByLabels,omitempty"`
 }
+
+type WindowBasedMetricSli struct {
+	// +optional
+	Query              *SloMetricEvent    `json:"query,omitempty"`
+	Window             SloWindowEnum      `json:"window,omitempty"`
+	ComparisonOperator ComparisonOperator `json:"comparisonOperator,omitempty"`
+	Threshold          resource.Quantity  `json:"threshold,omitempty"`
+}
+
+// +kubebuilder:validation:Enum={"unspecified","1m","5m"}
+type SloWindowEnum string
+
+// +kubebuilder:validation:Enum={"unspecified","greaterThan","lessThan","greaterThanOrEquals","lessThanOrEquals"}
+type ComparisonOperator string
 
 type SloMetricEvent struct {
 	Query string `json:"query"`
@@ -86,7 +116,9 @@ var sloTimeFrameMap = map[SloTimeFrame]cxsdk.SloTimeframeEnum{
 // SLOStatus defines the observed state of SLO.
 type SLOStatus struct {
 	// +optional
-	Id *string `json:"id,omitempty"`
+	ID *string `json:"id,omitempty"`
+	// +optional
+	Revision *int32 `json:"revision,omitempty"`
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
@@ -108,7 +140,7 @@ func (spec *SLOSpec) ExtractSLO() (*cxsdk.Slo, error) {
 		Name:                      spec.Name,
 		Description:               spec.Description,
 		Labels:                    spec.Labels,
-		TargetThresholdPercentage: spec.TargetThresholdPercentage,
+		TargetThresholdPercentage: float32(spec.TargetThresholdPercentage.AsApproximateFloat64()),
 	}
 
 	slo, err := spec.SliType.ExpandSliType(slo)
@@ -128,10 +160,20 @@ func (in *SliType) ExpandSliType(slo *cxsdk.Slo) (*cxsdk.Slo, error) {
 	if requestBasedMetricSli := in.RequestBasedMetricSli; requestBasedMetricSli != nil {
 		slo.Sli = &cxsdk.SloRequestBasedMetricSli{
 			RequestBasedMetricSli: &cxsdk.RequestBasedMetricSli{
-
+				GoodEvents:  extractMetricEvent(requestBasedMetricSli.GoodEvents),
+				TotalEvents: extractMetricEvent(requestBasedMetricSli.TotalEvents),
 			},
 		}
-	}else if
+	} else if windowBasedMetricSli := in.WindowBasedMetricSli; windowBasedMetricSli != nil {
+		slo.Sli = &cxsdk.SloWindowBasedMetricSli{
+			WindowBasedMetricSli: &cxsdk.WindowBasedMetricSli{
+				Query:              extractMetricEvent(windowBasedMetricSli.Query),
+				Window:             WindowSloWindowSchemaToProto[windowBasedMetricSli.Window],
+				ComparisonOperator: ComparisonOperatorSchemaToProto[windowBasedMetricSli.ComparisonOperator],
+				Threshold:          float32(windowBasedMetricSli.Threshold.AsApproximateFloat64()),
+			},
+		}
+	}
 
 	return slo, nil
 }

@@ -7,4 +7,4 @@ resources:
 images:
 - name: controller
   newName: coralogix-operator-image
-  newTag: v0.0.1
+  newTag: latest

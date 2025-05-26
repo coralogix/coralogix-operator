@@ -27,7 +27,7 @@ spec:
             threshold: "100.4"
             forOverPct: 20
             ofTheLast:
-              specificValue: 15m
+              dynamicDuration: 1h15m
             conditionType: moreThan
   notificationGroup:
     webhooks:

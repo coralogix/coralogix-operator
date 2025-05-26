@@ -96,7 +96,7 @@ Note that this is only for the latest version of the alerts API. If your account
         <td>
           Type of alert.<br/>
           <br/>
-            <i>Validations</i>:<li>(has(self.logsImmediate) ? 1 : 0) + (has(self.logsThreshold) ? 1 : 0) + (has(self.logsRatioThreshold) ? 1 : 0) + (has(self.logsTimeRelativeThreshold) ? 1 : 0) + (has(self.metricThreshold) ? 1 : 0) + (has(self.tracingThreshold) ? 1 : 0) + (has(self.tracingImmediate) ? 1 : 0) + (has(self.flow) ? 1 : 0) + (has(self.logsAnomaly) ? 1 : 0) + (has(self.metricAnomaly) ? 1 : 0) + (has(self.logsNewValue) ? 1 : 0) + (has(self.logsUniqueCount) ? 1 : 0) == 1: Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue or logsUniqueCount must be set</li>
+            <i>Validations</i>:<li>(has(self.logsImmediate) ? 1 : 0) + (has(self.logsThreshold) ? 1 : 0) + (has(self.logsRatioThreshold) ? 1 : 0) + (has(self.logsTimeRelativeThreshold) ? 1 : 0) + (has(self.metricThreshold) ? 1 : 0) + (has(self.tracingThreshold) ? 1 : 0) + (has(self.tracingImmediate) ? 1 : 0) + (has(self.flow) ? 1 : 0) + (has(self.logsAnomaly) ? 1 : 0) + (has(self.metricAnomaly) ? 1 : 0) + (has(self.logsNewValue) ? 1 : 0) + (has(self.logsUniqueCount) ? 1 : 0) + (has(self.sloThreshold) ? 1 : 0) == 1: Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue, logsUniqueCount, sloThreshold must be set</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -273,6 +273,15 @@ Type of alert.
         <td>object</td>
         <td>
           Alerts for when a metric crosses a threshold.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypeslothreshold">sloThreshold</a></b></td>
+        <td>object</td>
+        <td>
+          Alerts for SLO thresholds.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.errorBudget) != has(self.burnRate): Exactly one of errorBudget or burnRate is required</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -3250,7 +3259,7 @@ Time window to match within
           <br/>
             <i>Enum</i>: 1m, 5m, 10m, 15m, 20m, 30m, 1h, 2h, 4h, 6h, 12h, 24h, 36h<br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
@@ -3443,6 +3452,8 @@ Conditions to match for the rule.
         <td>object</td>
         <td>
           Time window type.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.specificValue) != has(self.dynamicDuration): Exactly one of specificValue or dynamicDuration is required</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -3473,6 +3484,13 @@ Time window type.
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>dynamicDuration</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>specificValue</b></td>
         <td>enum</td>
         <td>
@@ -3547,6 +3565,414 @@ How to work with undetected values.
           Deactivate triggering the alert on undetected values.<br/>
           <br/>
             <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold
+<sup><sup>[↩ Parent](#alertspecalerttype)</sup></sup>
+
+
+
+Alerts for SLO thresholds.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecalerttypeslothresholdslodefinition">sloDefinition</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypeslothresholdburnrate">burnRate</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypeslothresholderrorbudget">errorBudget</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.sloDefinition
+<sup><sup>[↩ Parent](#alertspecalerttypeslothreshold)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecalerttypeslothresholdslodefinitionsloref">sloRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.sloDefinition.sloRef
+<sup><sup>[↩ Parent](#alertspecalerttypeslothresholdslodefinition)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecalerttypeslothresholdslodefinitionslorefbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.id) != has(self.name): Exactly one of id or name must be set</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypeslothresholdslodefinitionslorefresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          Reference to a resource within the cluster.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.sloDefinition.sloRef.backendRef
+<sup><sup>[↩ Parent](#alertspecalerttypeslothresholdslodefinitionsloref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.sloDefinition.sloRef.resourceRef
+<sup><sup>[↩ Parent](#alertspecalerttypeslothresholdslodefinitionsloref)</sup></sup>
+
+
+
+Reference to a resource within the cluster.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.burnRate
+<sup><sup>[↩ Parent](#alertspecalerttypeslothreshold)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecalerttypeslothresholdburnraterulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.burnRate.rules[index]
+<sup><sup>[↩ Parent](#alertspecalerttypeslothresholdburnrate)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecalerttypeslothresholdburnraterulesindexcondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Condition to match<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypeslothresholdburnraterulesindexoverride">override</a></b></td>
+        <td>object</td>
+        <td>
+          Alert overrides.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.burnRate.rules[index].condition
+<sup><sup>[↩ Parent](#alertspecalerttypeslothresholdburnraterulesindex)</sup></sup>
+
+
+
+Condition to match
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>threshold</b></td>
+        <td>int or string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.burnRate.rules[index].override
+<sup><sup>[↩ Parent](#alertspecalerttypeslothresholdburnraterulesindex)</sup></sup>
+
+
+
+Alert overrides.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          Priority to override it<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.errorBudget
+<sup><sup>[↩ Parent](#alertspecalerttypeslothreshold)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecalerttypeslothresholderrorbudgetrulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.errorBudget.rules[index]
+<sup><sup>[↩ Parent](#alertspecalerttypeslothresholderrorbudget)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecalerttypeslothresholderrorbudgetrulesindexcondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Condition to match<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypeslothresholderrorbudgetrulesindexoverride">override</a></b></td>
+        <td>object</td>
+        <td>
+          Alert overrides.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.errorBudget.rules[index].condition
+<sup><sup>[↩ Parent](#alertspecalerttypeslothresholderrorbudgetrulesindex)</sup></sup>
+
+
+
+Condition to match
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>threshold</b></td>
+        <td>int or string</td>
+        <td>
+          Threshold to match to.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.errorBudget.rules[index].override
+<sup><sup>[↩ Parent](#alertspecalerttypeslothresholderrorbudgetrulesindex)</sup></sup>
+
+
+
+Alert overrides.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          Priority to override it<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -5188,7 +5614,7 @@ Backend reference for the outbound webhook.
         <td><b>id</b></td>
         <td>integer</td>
         <td>
-          Webhook Id.<br/>
+          Webhook ID.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -6007,7 +6433,7 @@ Backend reference for the outbound webhook.
         <td><b>id</b></td>
         <td>integer</td>
         <td>
-          Webhook Id.<br/>
+          Webhook ID.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -12485,16 +12911,15 @@ SLOSpec defines the desired state of SLO.
         <td>object</td>
         <td>
           <br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.metric) != has(self.windowBasedMetric): Exactly one of metric or windowBasedMetric must be set</li>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>targetThresholdPercentage</b></td>
-        <td>integer</td>
+        <td>int or string</td>
         <td>
           <br/>
-          <br/>
-            <i>Format</i>: int32<br/>
-            <i>Maximum</i>: 100<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -12540,6 +12965,13 @@ SLOSpec defines the desired state of SLO.
     </thead>
     <tbody><tr>
         <td><b><a href="#slospecslitypemetric">metric</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#slospecslitypewindowbasedmetric">windowBasedMetric</a></b></td>
         <td>object</td>
         <td>
           <br/>
@@ -12644,6 +13076,85 @@ SLOSpec defines the desired state of SLO.
 </table>
 
 
+### SLO.spec.sliType.windowBasedMetric
+<sup><sup>[↩ Parent](#slospecslitype)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>comparisonOperator</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: unspecified, greaterThan, lessThan, greaterThanOrEquals, lessThanOrEquals<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#slospecslitypewindowbasedmetricquery">query</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>threshold</b></td>
+        <td>int or string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>window</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: unspecified, 1m, 5m<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliType.windowBasedMetric.query
+<sup><sup>[↩ Parent](#slospecslitypewindowbasedmetric)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>query</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
 ### SLO.spec.window
 <sup><sup>[↩ Parent](#slospec)</sup></sup>
 
@@ -12701,6 +13212,15 @@ SLOStatus defines the observed state of SLO.
         <td>string</td>
         <td>
           <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>revision</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Format</i>: int32<br/>
         </td>
         <td>false</td>
       </tr></tbody>

@@ -28,6 +28,7 @@ import (
 	"github.com/go-logr/logr"
 	"google.golang.org/protobuf/encoding/protojson"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -68,7 +69,8 @@ func (r *SLOReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj
 
 	receivedSLO := createResponse.GetSlo()
 	slo.Status = coralogixv1alpha1.SLOStatus{
-		Id: &receivedSLO.Id,
+		ID:       receivedSLO.Id,
+		Revision: pointer.Int32(receivedSLO.Revision.Revision),
 	}
 
 	return nil
@@ -80,10 +82,10 @@ func (r *SLOReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj c
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
 	}
-	if slo.Status.Id == nil {
+	if slo.Status.ID == nil {
 		return fmt.Errorf("slo id is nil")
 	}
-	extractedSLO.Id = *slo.Status.Id
+	extractedSLO.Id = slo.Status.ID
 	updateRequest := &cxsdk.ReplaceServiceSloRequest{
 		Slo: extractedSLO,
 	}
@@ -98,11 +100,11 @@ func (r *SLOReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj c
 
 func (r *SLOReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
 	slo := obj.(*coralogixv1alpha1.SLO)
-	if slo.Status.Id == nil {
+	if slo.Status.ID == nil {
 		return fmt.Errorf("slo id is nil")
 	}
 	deleteRequest := &cxsdk.DeleteServiceSloRequest{
-		Id: *slo.Status.Id,
+		Id: *slo.Status.ID,
 	}
 	log.Info("Deleting remote slo", "slo", protojson.Format(deleteRequest))
 	deleteResponse, err := r.SLOsClient.Delete(ctx, deleteRequest)
@@ -120,7 +122,7 @@ func (r *SLOReconciler) FinalizerName() string {
 
 func (r *SLOReconciler) CheckIDInStatus(obj client.Object) bool {
 	slo := obj.(*coralogixv1alpha1.SLO)
-	return slo.Status.Id != nil
+	return slo.Status.ID != nil
 }
 
 func (r *SLOReconciler) RequeueInterval() time.Duration {

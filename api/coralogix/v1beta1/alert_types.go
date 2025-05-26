@@ -425,7 +425,7 @@ type IntegrationRef struct {
 // Outbound webhook reference.
 // +kubebuilder:validation:XValidation:rule="has(self.id) != has(self.name)",message="One of id or name is required"
 type OutboundWebhookBackendRef struct {
-	// Webhook Id.
+	// Webhook ID.
 	// +optional
 	ID *uint32 `json:"id,omitempty"`
 
@@ -552,7 +552,7 @@ const (
 )
 
 // Alert type definitions.
-// +kubebuilder:validation:XValidation:rule="(has(self.logsImmediate) ? 1 : 0) + (has(self.logsThreshold) ? 1 : 0) + (has(self.logsRatioThreshold) ? 1 : 0) + (has(self.logsTimeRelativeThreshold) ? 1 : 0) + (has(self.metricThreshold) ? 1 : 0) + (has(self.tracingThreshold) ? 1 : 0) + (has(self.tracingImmediate) ? 1 : 0) + (has(self.flow) ? 1 : 0) + (has(self.logsAnomaly) ? 1 : 0) + (has(self.metricAnomaly) ? 1 : 0) + (has(self.logsNewValue) ? 1 : 0) + (has(self.logsUniqueCount) ? 1 : 0) == 1", message="Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue or logsUniqueCount must be set"
+// +kubebuilder:validation:XValidation:rule="(has(self.logsImmediate) ? 1 : 0) + (has(self.logsThreshold) ? 1 : 0) + (has(self.logsRatioThreshold) ? 1 : 0) + (has(self.logsTimeRelativeThreshold) ? 1 : 0) + (has(self.metricThreshold) ? 1 : 0) + (has(self.tracingThreshold) ? 1 : 0) + (has(self.tracingImmediate) ? 1 : 0) + (has(self.flow) ? 1 : 0) + (has(self.logsAnomaly) ? 1 : 0) + (has(self.metricAnomaly) ? 1 : 0) + (has(self.logsNewValue) ? 1 : 0) + (has(self.logsUniqueCount) ? 1 : 0) + (has(self.sloThreshold) ? 1 : 0) == 1", message="Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue, logsUniqueCount, sloThreshold must be set"
 type AlertTypeDefinition struct {
 
 	// Immediate alerts for logs.
@@ -602,6 +602,10 @@ type AlertTypeDefinition struct {
 	// Alerts for unique count changes.
 	// +optional
 	LogsUniqueCount *LogsUniqueCount `json:"logsUniqueCount,omitempty"`
+
+	// Alerts for SLO thresholds.
+	// +optional
+	SloThreshold *SloThreshold `json:"sloThreshold,omitempty"`
 }
 
 // Immediate alerts for logs.
@@ -866,8 +870,18 @@ type MetricThresholdRuleCondition struct {
 }
 
 // Time window type.
+// +kubebuilder:validation:XValidation:rule="has(self.specificValue) != has(self.dynamicDuration)",message="Exactly one of specificValue or dynamicDuration is required"
 type MetricTimeWindow struct {
-	SpecificValue MetricTimeWindowSpecificValue `json:"specificValue,omitempty"`
+	// +optional
+	SpecificValue *MetricTimeWindowSpecificValue `json:"specificValue,omitempty"`
+	// +optional
+	// +kubebuilder:validation:Pattern:="^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$"
+	DynamicDuration *string `json:"dynamicDuration,omitempty"`
+}
+
+// Time window type.
+type MetricAnomalyTimeWindow struct {
+	SpecificValue MetricTimeWindowSpecificValue `json:"specificValue"`
 }
 
 // +kubebuilder:validation:Enum={"1m","5m","10m","15m","20m","30m","1h","2h","4h","6h","12h","24h","36h"}
@@ -1158,7 +1172,7 @@ type MetricAnomalyCondition struct {
 	ForOverPct uint32 `json:"forOverPct"`
 
 	// Time window to match within
-	OfTheLast MetricTimeWindow `json:"ofTheLast"`
+	OfTheLast MetricAnomalyTimeWindow `json:"ofTheLast"`
 	// +kubebuilder:validation:Maximum:=100
 	// Replace with a number
 	MinNonNullValuesPct uint32 `json:"minNonNullValuesPct"`
@@ -1341,6 +1355,70 @@ type UndetectedValuesManagement struct {
 	//+kubebuilder:default=never
 	// Automatically retire the alerts after this time.
 	AutoRetireTimeframe AutoRetireTimeframe `json:"autoRetireTimeframe"`
+}
+
+// +kubebuilder:validation:XValidation:rule="has(self.errorBudget) != has(self.burnRate)",message="Exactly one of errorBudget or burnRate is required"
+type SloThreshold struct {
+	SloDefinition SloDefinition `json:"sloDefinition"`
+
+	// +optional
+	ErrorBudget *ErrorBudget `json:"errorBudget,omitempty"`
+
+	// +optional
+	BurnRate *BurnRate `json:"burnRate,omitempty"`
+}
+
+type SloDefinition struct {
+	SloRef SloRef `json:"sloRef"`
+}
+
+// +kubebuilder:validation:XValidation:rule="has(self.backendRef) != has(self.resourceRef)",message="Exactly one of backendRef or resourceRef must be set"
+type SloRef struct {
+	// +optional
+	BackendRef *SloBackendRef `json:"backendRef,omitempty"`
+	// +optional
+	ResourceRef *ResourceRef `json:"resourceRef,omitempty"`
+}
+
+// +kubebuilder:validation:XValidation:rule="has(self.id) != has(self.name)",message="Exactly one of id or name must be set"
+type SloBackendRef struct {
+	// +optional
+	ID *string `json:"id,omitempty"`
+	// +optional
+	Name *string `json:"name,omitempty"`
+}
+
+type ErrorBudget struct {
+	Rules []SloThresholdRule `json:"rules"`
+}
+
+type SloThresholdRule struct {
+	// Condition to match
+	Condition SloThresholdRuleCondition `json:"condition"`
+	// Alert overrides.
+	// +optional
+	Override *AlertOverride `json:"override"`
+}
+
+type SloThresholdRuleCondition struct {
+	// Threshold to match to.
+	Threshold resource.Quantity `json:"threshold"`
+}
+
+type BurnRate struct {
+	Rules []BurnRateRule `json:"rules"`
+}
+
+type BurnRateRule struct {
+	// Condition to match
+	Condition BurnRateRuleCondition `json:"condition"`
+	// Alert overrides.
+	// +optional
+	Override *AlertOverride `json:"override"`
+}
+
+type BurnRateRuleCondition struct {
+	Threshold resource.Quantity `json:"threshold"`
 }
 
 // +kubebuilder:validation:Enum=is;includes;endsWith;startsWith
@@ -1826,7 +1904,7 @@ func expandDaysOfWeek(week []DayOfWeek) []cxsdk.AlertDayOfWeek {
 	return result
 }
 
-func expandAlertTypeDefinition(properties *cxsdk.AlertDefProperties, definition AlertTypeDefinition, listingWebhooksProperties *GetResourceRefProperties) (*cxsdk.AlertDefProperties, error) {
+func expandAlertTypeDefinition(properties *cxsdk.AlertDefProperties, definition AlertTypeDefinition, listingProperties *GetResourceRefProperties) (*cxsdk.AlertDefProperties, error) {
 	if logsImmediate := definition.LogsImmediate; logsImmediate != nil {
 		properties.TypeDefinition = expandLogsImmediate(logsImmediate)
 		properties.Type = cxsdk.AlertDefTypeLogsImmediateOrUnspecified
@@ -1849,7 +1927,7 @@ func expandAlertTypeDefinition(properties *cxsdk.AlertDefProperties, definition 
 		properties.TypeDefinition = expandTracingImmediate(tracingImmediate)
 		properties.Type = cxsdk.AlertDefTypeTracingImmediate
 	} else if flow := definition.Flow; flow != nil {
-		typeDefinition, err := expandFlow(listingWebhooksProperties, flow)
+		typeDefinition, err := expandFlow(listingProperties, flow)
 		if err != nil {
 			return nil, err
 		}
@@ -1867,11 +1945,151 @@ func expandAlertTypeDefinition(properties *cxsdk.AlertDefProperties, definition 
 	} else if logsUniqueCount := definition.LogsUniqueCount; logsUniqueCount != nil {
 		properties.TypeDefinition = expandLogsUniqueCount(logsUniqueCount)
 		properties.Type = cxsdk.AlertDefTypeLogsUniqueCount
+	} else if sloThreshold := definition.SloThreshold; sloThreshold != nil {
+		var err error
+		properties.TypeDefinition, err = expandSloThreshold(listingProperties, sloThreshold)
+		if err != nil {
+			return nil, fmt.Errorf("failed to expand SLO threshold: %w", err)
+		}
+		properties.Type = cxsdk.AlertDefTypeSloThreshold
 	} else {
 		return nil, fmt.Errorf("unsupported alert type definition")
 	}
 
 	return properties, nil
+}
+
+func expandSloThreshold(listingSloProperties *GetResourceRefProperties, sloThreshold *SloThreshold) (*cxsdk.AlertDefPropertiesSlo, error) {
+	sloId, err := getSloId(listingSloProperties, sloThreshold.SloDefinition.SloRef)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get SLO ID: %w", err)
+	}
+	return expandSloThresholdType(&cxsdk.AlertDefPropertiesSlo{
+		SloThreshold: &cxsdk.SloThresholdType{
+			SloDefinition: &cxsdk.AlertSloDefinition{
+				SloId: wrapperspb.String(*sloId),
+			},
+		},
+	}, sloThreshold), nil
+}
+
+func getSloId(listingSloProperties *GetResourceRefProperties, sloRef SloRef) (*string, error) {
+	if backendRef := sloRef.BackendRef; backendRef != nil {
+		if backendRef.ID != nil {
+			return backendRef.ID, nil
+		} else if name := backendRef.Name; name != nil {
+			return convertSloBackendNameToId(listingSloProperties, name)
+		}
+		return nil, fmt.Errorf("SLO backend reference must have either ID or Name")
+	} else if resourceRef := sloRef.ResourceRef; resourceRef != nil {
+		if namespace := resourceRef.Namespace; namespace != nil {
+			listingSloProperties.Namespace = *namespace
+		}
+		return convertSloCrNameToID(listingSloProperties, resourceRef.Name)
+	}
+	return nil, fmt.Errorf("SLO reference must have either backendRef or resourceRef")
+}
+
+func convertSloBackendNameToId(listingSloProperties *GetResourceRefProperties, name *string) (*string, error) {
+	listingSloProperties.Log.V(1).Info("Listing SLOs from the backend")
+	listResp, err := listingSloProperties.Clientset.SLOs().List(listingSloProperties.Ctx, &cxsdk.ListSlosRequest{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list SLOs: %w", err)
+	}
+	for _, slo := range listResp.Slos {
+		if slo.Name == *name {
+			return slo.Id, nil
+		}
+	}
+	return nil, fmt.Errorf("SLO with name %s not found", *name)
+}
+
+func convertSloCrNameToID(listingSloProperties *GetResourceRefProperties, sloCrName string) (*string, error) {
+	ctx, namespace := listingSloProperties.Ctx, listingSloProperties.Namespace
+	u := &unstructured.Unstructured{}
+	u.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   utils.CoralogixAPIGroup,
+		Kind:    "SLO",
+		Version: utils.V1alpha1APIVersion,
+	})
+
+	if err := config.GetClient().Get(ctx, client.ObjectKey{Name: sloCrName, Namespace: namespace}, u); err != nil {
+		return nil, fmt.Errorf("failed to get slo, name: %s, namespace: %s, error: %w", sloCrName, namespace, err)
+	}
+
+	if !config.GetConfig().Selector.Matches(u.GetLabels(), u.GetNamespace()) {
+		return nil, fmt.Errorf("slo %s does not match selector", u.GetName())
+	}
+
+	id, found, err := unstructured.NestedString(u.Object, "status", "id")
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, fmt.Errorf("status.id not found")
+	}
+
+	return &id, nil
+}
+
+func expandSloThresholdType(sloAlert *cxsdk.AlertDefPropertiesSlo, sloThreshold *SloThreshold) *cxsdk.AlertDefPropertiesSlo {
+	if errorBudget := sloThreshold.ErrorBudget; errorBudget != nil {
+		sloAlert.SloThreshold.Threshold = &cxsdk.SloErrorBudgetThresholdType{
+			ErrorBudget: &cxsdk.SloErrorBudgetThreshold{
+				Rules: expandSloErrorBudgetRules(errorBudget.Rules),
+			},
+		}
+	} else if burnRate := sloThreshold.BurnRate; burnRate != nil {
+		sloAlert.SloThreshold.Threshold = &cxsdk.SloBurnRateThresholdType{
+			BurnRate: &cxsdk.SloBurnRateThreshold{
+				Rules: expandSloBurnRate(burnRate.Rules),
+			},
+		}
+	}
+
+	return sloAlert
+}
+
+func expandSloErrorBudgetRules(rules []SloThresholdRule) []*cxsdk.SloThresholdRule {
+	result := make([]*cxsdk.SloThresholdRule, 0, len(rules))
+	for _, rule := range rules {
+		result = append(result, expandSloThresholdRule(rule))
+	}
+	return result
+}
+
+func expandSloThresholdRule(rule SloThresholdRule) *cxsdk.SloThresholdRule {
+	return &cxsdk.SloThresholdRule{
+		Condition: expandSloThresholdRuleCondition(rule.Condition),
+		Override:  expandAlertOverride(rule.Override),
+	}
+}
+
+func expandSloThresholdRuleCondition(condition SloThresholdRuleCondition) *cxsdk.SloThresholdCondition {
+	return &cxsdk.SloThresholdCondition{
+		Threshold: wrapperspb.Double(condition.Threshold.AsApproximateFloat64()),
+	}
+}
+
+func expandSloBurnRate(rules []BurnRateRule) []*cxsdk.SloThresholdRule {
+	result := make([]*cxsdk.SloThresholdRule, 0, len(rules))
+	for _, rule := range rules {
+		result = append(result, expandSloBurnRateRule(rule))
+	}
+	return result
+}
+
+func expandSloBurnRateRule(rule BurnRateRule) *cxsdk.SloThresholdRule {
+	return &cxsdk.SloThresholdRule{
+		Condition: expandSloBurnRateRuleCondition(rule.Condition),
+		Override:  expandAlertOverride(rule.Override),
+	}
+}
+
+func expandSloBurnRateRuleCondition(condition BurnRateRuleCondition) *cxsdk.SloThresholdCondition {
+	return &cxsdk.SloThresholdCondition{
+		Threshold: wrapperspb.Double(condition.Threshold.AsApproximateFloat64()),
+	}
 }
 
 func expandLogsUniqueCount(uniqueCount *LogsUniqueCount) *cxsdk.AlertDefPropertiesLogsUniqueCount {
@@ -1989,7 +2207,7 @@ func expandMetricAnomalyCondition(condition MetricAnomalyCondition) *cxsdk.Metri
 	return &cxsdk.MetricAnomalyCondition{
 		Threshold:           wrapperspb.Double(condition.Threshold.AsApproximateFloat64()),
 		ForOverPct:          wrapperspb.UInt32(condition.ForOverPct),
-		OfTheLast:           expandMetricTimeWindow(condition.OfTheLast),
+		OfTheLast:           expandAnomalyMetricTimeWindow(condition.OfTheLast),
 		MinNonNullValuesPct: wrapperspb.UInt32(condition.MinNonNullValuesPct),
 		ConditionType:       MetricAnomalyConditionTypeToProto[condition.ConditionType],
 	}
@@ -2356,6 +2574,24 @@ func expandMetricThresholdCondition(condition MetricThresholdRuleCondition) *cxs
 }
 
 func expandMetricTimeWindow(timeWindow MetricTimeWindow) *cxsdk.MetricTimeWindow {
+	if specificValue := timeWindow.SpecificValue; specificValue != nil {
+		return &cxsdk.MetricTimeWindow{
+			Type: &cxsdk.MetricTimeWindowSpecificValue{
+				MetricTimeWindowSpecificValue: MetricTimeWindowToProto[*specificValue],
+			},
+		}
+	} else if dynamicTimeWindow := timeWindow.DynamicDuration; dynamicTimeWindow != nil {
+		return &cxsdk.MetricTimeWindow{
+			Type: &cxsdk.MetricTimeWindowDynamicDuration{
+				MetricTimeWindowDynamicDuration: wrapperspb.String(*dynamicTimeWindow),
+			},
+		}
+	}
+
+	return nil
+}
+
+func expandAnomalyMetricTimeWindow(timeWindow MetricAnomalyTimeWindow) *cxsdk.MetricTimeWindow {
 	return &cxsdk.MetricTimeWindow{
 		Type: &cxsdk.MetricTimeWindowSpecificValue{
 			MetricTimeWindowSpecificValue: MetricTimeWindowToProto[timeWindow.SpecificValue],
