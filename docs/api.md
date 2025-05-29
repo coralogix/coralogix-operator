@@ -723,7 +723,7 @@ Time window to evaluate.
         <td>
           Logs time window type<br/>
           <br/>
-            <i>Enum</i>: 5m, 10m, 15m, 30m, 1h, 2h, 6h, 12h, 24h, 36h<br/>
+            <i>Enum</i>: 5m, 10m, 15m, 20m, 30m, 1h, 2h, 4h, 6h, 12h, 24h, 36h<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -2122,7 +2122,7 @@ Time window in which the condition is checked.
         <td>
           Logs time window type<br/>
           <br/>
-            <i>Enum</i>: 5m, 10m, 15m, 30m, 1h, 2h, 6h, 12h, 24h, 36h<br/>
+            <i>Enum</i>: 5m, 10m, 15m, 20m, 30m, 1h, 2h, 4h, 6h, 12h, 24h, 36h<br/>
         </td>
         <td>false</td>
       </tr></tbody>
