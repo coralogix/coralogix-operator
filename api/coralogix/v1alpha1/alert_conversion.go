@@ -19,6 +19,7 @@ import (
 	"strings"
 	"time"
 
+	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/conversion"
@@ -28,6 +29,7 @@ import (
 )
 
 var (
+	logger                      = zap.L().Named("alert-conversion")
 	SeveritiesV1alpha1ToV1beta1 = map[AlertSeverity]v1beta1.AlertPriority{
 		AlertSeverityCritical: v1beta1.AlertPriorityP1,
 		AlertSeverityError:    v1beta1.AlertPriorityP2,
@@ -201,10 +203,20 @@ var (
 
 // ConvertFrom converts from the Hub version (v1beta1) to this version (v1alpha1)
 func (dst *Alert) ConvertFrom(srcRaw conversion.Hub) error {
+	logger.Info("starting conversion from v1beta1 to v1alpha1",
+		zap.String("name", dst.Name),
+		zap.String("namespace", dst.Namespace))
+
 	src, ok := srcRaw.(*v1beta1.Alert)
 	if !ok {
-		return fmt.Errorf("cannot convert from %T to %T", srcRaw, dst)
+		err := fmt.Errorf("invalid conversion: expected *v1beta1.Alert, got %T", srcRaw)
+		logger.Error("conversion failed",
+			zap.Error(err),
+			zap.String("name", dst.Name),
+			zap.String("namespace", dst.Namespace))
+		return err
 	}
+
 	dst.ObjectMeta = src.ObjectMeta
 	dst.Spec = AlertSpec{
 		Name:        src.Spec.Name,
@@ -215,26 +227,50 @@ func (dst *Alert) ConvertFrom(srcRaw conversion.Hub) error {
 		Scheduling:  convertSchedulingV1beta1ToV1alpha1(src.Spec.Schedule),
 	}
 
+	logger.Debug("converting alert type",
+		zap.String("name", dst.Name),
+		zap.String("namespace", dst.Namespace),
+		zap.Any("typeDefinition", src.Spec.TypeDefinition))
+
 	if alertType, payloadFilters := convertAlertTypeV1beta1ToV1alpha1(src.Spec.TypeDefinition, src.Spec.GroupByKeys); alertType != nil {
 		dst.Spec.AlertType = *alertType
 		dst.Spec.PayloadFilters = payloadFilters
 	} else {
-		return fmt.Errorf("failed to convert alert type %s", src.Name)
+		err := fmt.Errorf("failed to convert alert type %s", src.Name)
+		logger.Error("alert type conversion failed",
+			zap.Error(err),
+			zap.String("name", dst.Name),
+			zap.String("namespace", dst.Namespace),
+			zap.Any("typeDefinition", src.Spec.TypeDefinition))
+		return err
 	}
 
 	dst.Spec.NotificationGroups = convertingNotificationGroupsV1beta1ToV1alpha1(src.Spec.NotificationGroup, src.Spec.NotificationGroupExcess)
 	dst.Status.ID = src.Status.ID
 	dst.Status.Conditions = src.Status.Conditions
 
+	logger.Info("successfully converted alert from v1beta1 to v1alpha1",
+		zap.String("name", dst.Name),
+		zap.String("namespace", dst.Namespace))
 	return nil
 }
 
 // ConvertTo converts this Alert (v1alpha1) to the Hub version (v1beta1)
 func (src *Alert) ConvertTo(dstRaw conversion.Hub) error {
+	logger.Info("starting conversion from v1alpha1 to v1beta1",
+		zap.String("name", src.Name),
+		zap.String("namespace", src.Namespace))
+
 	dst, ok := dstRaw.(*v1beta1.Alert)
 	if !ok {
-		return fmt.Errorf("cannot convert from %T to %T", src, dstRaw)
+		err := fmt.Errorf("invalid conversion: expected *v1beta1.Alert, got %T", dstRaw)
+		logger.Error("conversion failed",
+			zap.Error(err),
+			zap.String("name", src.Name),
+			zap.String("namespace", src.Namespace))
+		return err
 	}
+
 	dst.ObjectMeta = src.ObjectMeta
 	dstSpec := v1beta1.AlertSpec{
 		Name:         src.Spec.Name,
@@ -244,6 +280,12 @@ func (src *Alert) ConvertTo(dstRaw conversion.Hub) error {
 		EntityLabels: src.Spec.Labels,
 		Schedule:     convertSchedulingV1alpha1ToV1beta1(src.Spec.Scheduling),
 	}
+
+	logger.Debug("converting alert type",
+		zap.String("name", src.Name),
+		zap.String("namespace", src.Namespace),
+		zap.Any("alertType", src.Spec.AlertType))
+
 	dstSpec.TypeDefinition, dstSpec.GroupByKeys = convertAlertTypeV1alpha1ToV1beta1(src.Spec)
 	if len(src.Spec.NotificationGroups) > 0 {
 		dstSpec.NotificationGroup = convertNotificationGroupsV1alpha1ToV1beta1(src.Spec.NotificationGroups[0])
@@ -256,70 +298,96 @@ func (src *Alert) ConvertTo(dstRaw conversion.Hub) error {
 	dst.Status.ID = src.Status.ID
 	dst.Status.Conditions = src.Status.Conditions
 
+	logger.Info("successfully converted alert from v1alpha1 to v1beta1",
+		zap.String("name", src.Name),
+		zap.String("namespace", src.Namespace))
 	return nil
 }
 
 func convertAlertTypeV1beta1ToV1alpha1(definition v1beta1.AlertTypeDefinition, groupBy []string) (*AlertType, []string) {
+	logger.Debug("converting alert type from v1beta1 to v1alpha1",
+		zap.Any("definition", definition),
+		zap.Strings("groupBy", groupBy))
+
 	if logsImmediate := definition.LogsImmediate; logsImmediate != nil {
+		logger.Debug("converting logs immediate alert type")
 		return &AlertType{
 			Standard: convertLogImmediateV1beta1ToStandardV1alpha1(*logsImmediate, groupBy),
 		}, logsImmediate.NotificationPayloadFilter
 	} else if logsThreshold := definition.LogsThreshold; logsThreshold != nil {
+		logger.Debug("converting logs threshold alert type")
 		return &AlertType{
 			Standard: convertLogsThresholdV1beta1ToStandardV1alpha1(*logsThreshold, groupBy),
 		}, logsThreshold.NotificationPayloadFilter
 	} else if logsRatioThreshold := definition.LogsRatioThreshold; logsRatioThreshold != nil {
+		logger.Debug("converting logs ratio threshold alert type")
 		return &AlertType{
 			Ratio: convertRatioV1beta1ToV1alpha1(*logsRatioThreshold, groupBy),
 		}, nil
 	} else if logsNewValue := definition.LogsNewValue; logsNewValue != nil {
+		logger.Debug("converting logs new value alert type")
 		return &AlertType{
 			NewValue: convertLogsNewValueV1beta1ToV1alpha1(*logsNewValue),
 		}, logsNewValue.NotificationPayloadFilter
 	} else if metricAnomaly := definition.MetricAnomaly; metricAnomaly != nil {
+		logger.Debug("converting metric anomaly alert type")
 		return &AlertType{
 			Metric: convertMetricAnomalyV1beta1ToMetricV1alpha1(*metricAnomaly),
 		}, nil
 	} else if metricThreshold := definition.MetricThreshold; metricThreshold != nil {
+		logger.Debug("converting metric threshold alert type")
 		return &AlertType{
 			Metric: convertMetricThresholdV1beta1ToMetricV1alpha1(*metricThreshold),
 		}, nil
 	} else if flow := definition.Flow; flow != nil {
+		logger.Debug("converting flow alert type")
 		return &AlertType{
 			Flow: convertFlowV1beta1ToV1alpha1(*flow),
 		}, nil
 	} else if tracingThreshold := definition.TracingThreshold; tracingThreshold != nil {
+		logger.Debug("converting tracing threshold alert type")
 		return &AlertType{
 			Tracing: convertTracingThresholdV1beta1ToV1alpha1(*tracingThreshold, groupBy),
 		}, tracingThreshold.NotificationPayloadFilter
 	} else if tracingImmediate := definition.TracingImmediate; tracingImmediate != nil {
+		logger.Debug("converting tracing immediate alert type")
 		return &AlertType{
 			Tracing: convertTracingImmediateV1beta1ToV1alpha1(*tracingImmediate, groupBy),
 		}, tracingImmediate.NotificationPayloadFilter
 	} else if logsUniqueCount := definition.LogsUniqueCount; logsUniqueCount != nil {
+		logger.Debug("converting logs unique count alert type")
 		return &AlertType{
 			UniqueCount: convertLogsUniqueCountV1beta1ToV1alpha1(*logsUniqueCount, groupBy),
 		}, logsUniqueCount.NotificationPayloadFilter
 	} else if timeRelative := definition.LogsTimeRelativeThreshold; timeRelative != nil {
+		logger.Debug("converting time relative alert type")
 		return &AlertType{
 			TimeRelative: convertTimeRelativeV1beta1ToV1alpha1(*timeRelative, groupBy),
 		}, timeRelative.NotificationPayloadFilter
 	} else if logsAnomaly := definition.LogsAnomaly; logsAnomaly != nil {
+		logger.Debug("converting logs anomaly alert type")
 		return &AlertType{
 			Standard: convertLogsAnomalyV1beta1ToStandardV1alpha1(*logsAnomaly, groupBy),
 		}, logsAnomaly.NotificationPayloadFilter
 	}
 
+	logger.Warn("no alert type found in definition")
 	return nil, nil
 }
 
 func convertLogsAnomalyV1beta1ToStandardV1alpha1(anomaly v1beta1.LogsAnomaly, groupBy []string) *Standard {
+	logger.Debug("converting logs anomaly to standard alert",
+		zap.Any("anomaly", anomaly),
+		zap.Strings("groupBy", groupBy))
+
 	if len(anomaly.Rules) == 0 {
+		logger.Warn("no rules found in logs anomaly")
 		return nil
 	}
 	condition := anomaly.Rules[0].Condition
 	timeWindow := logsTimeWindowV1beta1ToV1alpha[condition.TimeWindow.SpecificValue]
-	return &Standard{
+
+	result := &Standard{
 		Filters: convertLogsFilterV1beta1ToV1alpha1(anomaly.LogsFilter),
 		Conditions: StandardConditions{
 			AlertWhen:  StandardAlertWhenMoreThanUsual,
@@ -328,38 +396,72 @@ func convertLogsAnomalyV1beta1ToStandardV1alpha1(anomaly v1beta1.LogsAnomaly, gr
 			GroupBy:    groupBy,
 		},
 	}
+
+	logger.Debug("converted logs anomaly to standard alert",
+		zap.Any("result", result))
+	return result
 }
 
 func convertTimeRelativeV1beta1ToV1alpha1(timeRelative v1beta1.LogsTimeRelativeThreshold, groupBy []string) *TimeRelative {
-	return &TimeRelative{
+	logger.Debug("converting time relative alert",
+		zap.Any("timeRelative", timeRelative),
+		zap.Strings("groupBy", groupBy))
+
+	result := &TimeRelative{
 		Filters:    convertLogsFilterV1beta1ToV1alpha1(&timeRelative.LogsFilter),
 		Conditions: convertTimeRelativeConditionV1beta1ToV1alpha1(timeRelative, groupBy),
 	}
+
+	logger.Debug("converted time relative alert",
+		zap.Any("result", result))
+	return result
 }
 
 func convertTimeRelativeConditionV1beta1ToV1alpha1(timeRelative v1beta1.LogsTimeRelativeThreshold, groupBy []string) TimeRelativeConditions {
+	logger.Debug("converting time relative conditions",
+		zap.Any("timeRelative", timeRelative),
+		zap.Strings("groupBy", groupBy))
+
 	if len(timeRelative.Rules) == 0 {
+		logger.Warn("no rules found in time relative alert")
 		return TimeRelativeConditions{}
 	}
 	condition := timeRelative.Rules[0].Condition
-	return TimeRelativeConditions{
+	result := TimeRelativeConditions{
 		AlertWhen:              timeRelativeConditionTypeV1beta1ToV1alpha1[condition.ConditionType],
 		Threshold:              condition.Threshold.DeepCopy(),
 		TimeWindow:             timeRelativeTimeWindowV1beta1ToV1alpha1[condition.ComparedTo],
 		GroupBy:                groupBy,
 		ManageUndetectedValues: convertUndetectedValuesManagementV1beta1ToV1alpha1(timeRelative.UndetectedValuesManagement),
 	}
+
+	logger.Debug("converted time relative conditions",
+		zap.Any("result", result))
+	return result
 }
 
 func convertLogsUniqueCountV1beta1ToV1alpha1(uniqueCount v1beta1.LogsUniqueCount, groupBy []string) *UniqueCount {
-	return &UniqueCount{
+	logger.Debug("converting logs unique count alert",
+		zap.Any("uniqueCount", uniqueCount),
+		zap.Strings("groupBy", groupBy))
+
+	result := &UniqueCount{
 		Filters:    convertLogsFilterV1beta1ToV1alpha1(uniqueCount.LogsFilter),
 		Conditions: convertLogsUniqueCountConditionV1beta1ToV1alpha1(uniqueCount, groupBy),
 	}
+
+	logger.Debug("converted logs unique count alert",
+		zap.Any("result", result))
+	return result
 }
 
 func convertLogsUniqueCountConditionV1beta1ToV1alpha1(uniqueCount v1beta1.LogsUniqueCount, groupBy []string) UniqueCountConditions {
+	logger.Debug("converting logs unique count conditions",
+		zap.Any("uniqueCount", uniqueCount),
+		zap.Strings("groupBy", groupBy))
+
 	if len(uniqueCount.Rules) == 0 {
+		logger.Warn("no rules found in logs unique count alert")
 		return UniqueCountConditions{}
 	}
 	condition := uniqueCount.Rules[0].Condition
@@ -372,11 +474,19 @@ func convertLogsUniqueCountConditionV1beta1ToV1alpha1(uniqueCount v1beta1.LogsUn
 		parsedUniqueCount.GroupBy = pointer.String(groupBy[0])
 		parsedUniqueCount.MaxUniqueValuesForGroupBy = pointer.Int(int(*uniqueCount.MaxUniqueCountPerGroupByKey))
 	}
+
+	logger.Debug("converted logs unique count conditions",
+		zap.Any("result", parsedUniqueCount))
 	return parsedUniqueCount
 }
 
 func convertTracingThresholdV1beta1ToV1alpha1(tracingThreshold v1beta1.TracingThreshold, groupBy []string) *Tracing {
+	logger.Debug("converting tracing threshold alert",
+		zap.Any("tracingThreshold", tracingThreshold),
+		zap.Strings("groupBy", groupBy))
+
 	if len(tracingThreshold.Rules) == 0 {
+		logger.Warn("no rules found in tracing threshold alert")
 		return nil
 	}
 	condition := tracingThreshold.Rules[0].Condition
@@ -385,7 +495,7 @@ func convertTracingThresholdV1beta1ToV1alpha1(tracingThreshold v1beta1.TracingTh
 	if tracingThreshold.TracingFilter != nil {
 		filters = convertTracingFilterV1beta1ToV1alpha1(*tracingThreshold.TracingFilter)
 	}
-	return &Tracing{
+	result := &Tracing{
 		Filters: filters,
 		Conditions: TracingCondition{
 			AlertWhen:  TracingAlertWhenMore,
@@ -394,6 +504,10 @@ func convertTracingThresholdV1beta1ToV1alpha1(tracingThreshold v1beta1.TracingTh
 			GroupBy:    groupBy,
 		},
 	}
+
+	logger.Debug("converted tracing threshold alert",
+		zap.Any("result", result))
+	return result
 }
 
 func convertTracingImmediateV1beta1ToV1alpha1(tracingImmediate v1beta1.TracingImmediate, groupBy []string) *Tracing {
@@ -526,6 +640,9 @@ func convertLogImmediateV1beta1ToStandardV1alpha1(logsImmediate v1beta1.LogsImme
 }
 
 func convertTracingFilterV1beta1ToV1alpha1(filter v1beta1.TracingFilter) TracingFilters {
+	logger.Debug("converting tracing filter",
+		zap.Any("filter", filter))
+
 	var latencyThresholdMilliseconds resource.Quantity
 	var applications []string
 	if simple := filter.Simple; simple != nil {
@@ -537,13 +654,20 @@ func convertTracingFilterV1beta1ToV1alpha1(filter v1beta1.TracingFilter) Tracing
 		}
 	}
 
-	return TracingFilters{
+	result := TracingFilters{
 		LatencyThresholdMilliseconds: latencyThresholdMilliseconds,
 		Applications:                 applications,
 	}
+
+	logger.Debug("converted tracing filter",
+		zap.Any("result", result))
+	return result
 }
 
 func convertTracingLabelFilterV1beta1ToV1alpha1(filters []v1beta1.TracingFilterType) []string {
+	logger.Debug("converting tracing label filter",
+		zap.Any("filters", filters))
+
 	var result []string
 	for _, filter := range filters {
 		switch filter.Operation {
@@ -565,8 +689,14 @@ func convertTracingLabelFilterV1beta1ToV1alpha1(filters []v1beta1.TracingFilterT
 			for _, value := range filter.Values {
 				result = append(result, "filter:isNot:"+value)
 			}
+		default:
+			logger.Warn("unknown tracing filter operation",
+				zap.String("operation", string(filter.Operation)))
 		}
 	}
+
+	logger.Debug("converted tracing label filter",
+		zap.Any("result", result))
 	return result
 }
 
@@ -636,7 +766,11 @@ func convertUndetectedValuesManagementV1beta1ToV1alpha1(undetectedValues *v1beta
 }
 
 func convertLogsFilterV1beta1ToV1alpha1(filter *v1beta1.LogsFilter) *Filters {
+	logger.Debug("converting logs filter",
+		zap.Any("filter", filter))
+
 	if filter == nil {
+		logger.Debug("logs filter is nil")
 		return nil
 	}
 
@@ -651,22 +785,35 @@ func convertLogsFilterV1beta1ToV1alpha1(filter *v1beta1.LogsFilter) *Filters {
 		filters.Severities = convertSeveritiesFilterV1beta1ToV1alpha1(labelFilters.Severity)
 	}
 
+	logger.Debug("converted logs filter",
+		zap.Any("result", filters))
 	return filters
 }
 
 func convertSeveritiesFilterV1beta1ToV1alpha1(severity []v1beta1.LogSeverity) []FiltersLogSeverity {
+	logger.Debug("converting severities filter",
+		zap.Any("severity", severity))
+
 	if severity == nil {
+		logger.Debug("severity filter is nil")
 		return nil
 	}
 	result := make([]FiltersLogSeverity, len(severity))
 	for i, s := range severity {
 		result[i] = severitiesFilterV1beta1ToV1alpha1[s]
 	}
+
+	logger.Debug("converted severities filter",
+		zap.Any("result", result))
 	return result
 }
 
 func convertLabelFilterV1beta1ToV1alpha1(labelFilters []v1beta1.LabelFilterType) []string {
+	logger.Debug("converting label filter",
+		zap.Any("labelFilters", labelFilters))
+
 	if labelFilters == nil {
+		logger.Debug("label filter is nil")
 		return nil
 	}
 	result := make([]string, len(labelFilters))
@@ -680,13 +827,24 @@ func convertLabelFilterV1beta1ToV1alpha1(labelFilters []v1beta1.LabelFilterType)
 			result[i] = "filter:endsWith:" + labelFilter.Value
 		case v1beta1.LogFilterOperationTypeStartsWith:
 			result[i] = "filter:startsWith:" + labelFilter.Value
+		default:
+			logger.Warn("unknown label filter operation",
+				zap.String("operation", string(labelFilter.Operation)))
 		}
 	}
+
+	logger.Debug("converted label filter",
+		zap.Any("result", result))
 	return result
 }
 
 func convertingNotificationGroupsV1beta1ToV1alpha1(group *v1beta1.NotificationGroup, excess []v1beta1.NotificationGroup) []NotificationGroup {
+	logger.Debug("converting notification groups",
+		zap.Any("group", group),
+		zap.Any("excess", excess))
+
 	if group == nil {
+		logger.Debug("notification group is nil")
 		return nil
 	}
 
@@ -696,18 +854,31 @@ func convertingNotificationGroupsV1beta1ToV1alpha1(group *v1beta1.NotificationGr
 		notificationGroups[i+1] = convertNotificationGroupV1beta1ToV1alpha1(excessGroup)
 	}
 
+	logger.Debug("converted notification groups",
+		zap.Any("result", notificationGroups))
 	return notificationGroups
 }
 
 func convertNotificationGroupV1beta1ToV1alpha1(group v1beta1.NotificationGroup) NotificationGroup {
-	return NotificationGroup{
+	logger.Debug("converting notification group",
+		zap.Any("group", group))
+
+	result := NotificationGroup{
 		GroupByFields: group.GroupByKeys,
 		Notifications: convertWebhooksV1beta1ToV1alpha1(group.Webhooks),
 	}
+
+	logger.Debug("converted notification group",
+		zap.Any("result", result))
+	return result
 }
 
 func convertWebhooksV1beta1ToV1alpha1(webhooks []v1beta1.WebhookSettings) []Notification {
+	logger.Debug("converting webhooks",
+		zap.Any("webhooks", webhooks))
+
 	if webhooks == nil {
+		logger.Debug("webhooks is nil")
 		return nil
 	}
 	notifications := make([]Notification, len(webhooks))
@@ -715,10 +886,15 @@ func convertWebhooksV1beta1ToV1alpha1(webhooks []v1beta1.WebhookSettings) []Noti
 		notifications[i] = convertWebhookV1beta1ToV1alpha1(webhook)
 	}
 
+	logger.Debug("converted webhooks",
+		zap.Any("result", notifications))
 	return notifications
 }
 
 func convertWebhookV1beta1ToV1alpha1(webhook v1beta1.WebhookSettings) Notification {
+	logger.Debug("converting webhook",
+		zap.Any("webhook", webhook))
+
 	var retriggeringPeriodMinutes int32
 	if webhook.RetriggeringPeriod.Minutes != nil {
 		retriggeringPeriodMinutes = int32(*webhook.RetriggeringPeriod.Minutes)
@@ -728,16 +904,25 @@ func convertWebhookV1beta1ToV1alpha1(webhook v1beta1.WebhookSettings) Notificati
 		NotifyOn:                  notifyOnV1beta1ToV1alpha1[webhook.NotifyOn],
 	}
 	notification = convertToIntegrationTypeV1beta1ToV1alpha1(webhook.Integration, &notification)
+
+	logger.Debug("converted webhook",
+		zap.Any("result", notification))
 	return notification
 }
 
 func convertToIntegrationTypeV1beta1ToV1alpha1(integration v1beta1.IntegrationType, notification *Notification) Notification {
+	logger.Debug("converting integration type",
+		zap.Any("integration", integration),
+		zap.Any("notification", notification))
+
 	if integration.IntegrationRef != nil {
 		notification.IntegrationName = convertIntegrationRefV1beta1ToV1alpha1IntegrationName(*integration.IntegrationRef)
 	} else if integration.Recipients != nil {
 		notification.EmailRecipients = integration.Recipients
 	}
 
+	logger.Debug("converted integration type",
+		zap.Any("result", notification))
 	return *notification
 }
 
@@ -749,29 +934,49 @@ func convertIntegrationRefV1beta1ToV1alpha1IntegrationName(integrationRef v1beta
 }
 
 func convertSchedulingV1beta1ToV1alpha1(schedule *v1beta1.AlertSchedule) *Scheduling {
+	logger.Debug("converting scheduling",
+		zap.Any("schedule", schedule))
+
 	if schedule == nil {
+		logger.Debug("schedule is nil")
 		return nil
 	}
 
-	return &Scheduling{
+	result := &Scheduling{
 		DaysEnabled: convertDaysOfWeekV1beta1ToV1alpha1(schedule.ActiveOn.DayOfWeek),
 		StartTime:   convertTimeV1beta1ToV1alpha1(schedule.ActiveOn.StartTime),
 		EndTime:     convertTimeV1beta1ToV1alpha1(schedule.ActiveOn.EndTime),
 		TimeZone:    TimeZone(schedule.TimeZone),
 	}
+
+	logger.Debug("converted scheduling",
+		zap.Any("result", result))
+	return result
 }
 
 func convertTimeV1beta1ToV1alpha1(time *v1beta1.TimeOfDay) *Time {
+	logger.Debug("converting time",
+		zap.Any("time", time))
+
 	if time == nil {
+		logger.Debug("time is nil")
 		return nil
 	}
 
 	timeOfDay := *time
-	return (*Time)(&timeOfDay)
+	result := (*Time)(&timeOfDay)
+
+	logger.Debug("converted time",
+		zap.Any("result", result))
+	return result
 }
 
 func convertDaysOfWeekV1beta1ToV1alpha1(week []v1beta1.DayOfWeek) []Day {
+	logger.Debug("converting days of week",
+		zap.Any("week", week))
+
 	if week == nil {
+		logger.Debug("week is nil")
 		return nil
 	}
 	result := make([]Day, len(week))
@@ -779,22 +984,9 @@ func convertDaysOfWeekV1beta1ToV1alpha1(week []v1beta1.DayOfWeek) []Day {
 		result[i] = dayOfWeekV1beta1ToV1alpha1[day]
 	}
 
+	logger.Debug("converted days of week",
+		zap.Any("result", result))
 	return result
-}
-
-func convertSchedulingV1alpha1ToV1beta1(scheduling *Scheduling) *v1beta1.AlertSchedule {
-	if scheduling == nil {
-		return nil
-	}
-
-	return &v1beta1.AlertSchedule{
-		TimeZone: v1beta1.TimeZone(scheduling.TimeZone),
-		ActiveOn: &v1beta1.ActiveOn{
-			DayOfWeek: convertDaysOfWeekV1alpha1ToV1beta1(scheduling.DaysEnabled),
-			StartTime: convertTimeV1alpha1ToV1beta1(scheduling.StartTime),
-			EndTime:   convertTimeV1alpha1ToV1beta1(scheduling.EndTime),
-		},
-	}
 }
 
 func convertAlertTypeV1alpha1ToV1beta1(srcSpec AlertSpec) (v1beta1.AlertTypeDefinition, []string) {
@@ -1402,4 +1594,27 @@ func convertToIntegrationTypeV1alpha1ToV1beta1(notification Notification) v1beta
 	return v1beta1.IntegrationType{
 		Recipients: notification.EmailRecipients,
 	}
+}
+
+func convertSchedulingV1alpha1ToV1beta1(scheduling *Scheduling) *v1beta1.AlertSchedule {
+	logger.Debug("converting scheduling from v1alpha1 to v1beta1",
+		zap.Any("scheduling", scheduling))
+
+	if scheduling == nil {
+		logger.Debug("scheduling is nil")
+		return nil
+	}
+
+	result := &v1beta1.AlertSchedule{
+		TimeZone: v1beta1.TimeZone(scheduling.TimeZone),
+		ActiveOn: &v1beta1.ActiveOn{
+			DayOfWeek: convertDaysOfWeekV1alpha1ToV1beta1(scheduling.DaysEnabled),
+			StartTime: convertTimeV1alpha1ToV1beta1(scheduling.StartTime),
+			EndTime:   convertTimeV1alpha1ToV1beta1(scheduling.EndTime),
+		},
+	}
+
+	logger.Debug("converted scheduling from v1alpha1 to v1beta1",
+		zap.Any("result", result))
+	return result
 }
