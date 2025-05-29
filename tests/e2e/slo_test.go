@@ -33,7 +33,7 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 )
 
-var _ = Describe("Slo", Ordered, func() {
+var _ = Describe("SLO", Ordered, func() {
 	var (
 		crClient   client.Client
 		slosClient *cxsdk.SLOsClient
