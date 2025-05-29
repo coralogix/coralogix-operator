@@ -110,9 +110,11 @@ var (
 		LogsTimeWindow5Minutes:  cxsdk.LogsTimeWindowValue5MinutesOrUnspecified,
 		LogsTimeWindow10Minutes: cxsdk.LogsTimeWindow10Minutes,
 		LogsTimeWindow15Minutes: cxsdk.LogsTimeWindow15Minutes,
+		LogsTimeWindow20Minutes: cxsdk.LogsTimeWindow20Minutes,
 		LogsTimeWindow30Minutes: cxsdk.LogsTimeWindow30Minutes,
 		LogsTimeWindowHour:      cxsdk.LogsTimeWindow1Hour,
 		LogsTimeWindow2Hours:    cxsdk.LogsTimeWindow2Hours,
+		LogsTimeWindow4Hours:    cxsdk.LogsTimeWindow4Hours,
 		LogsTimeWindow6Hours:    cxsdk.LogsTimeWindow6Hours,
 		LogsTimeWindow12Hours:   cxsdk.LogsTimeWindow12Hours,
 		LogsTimeWindow24Hours:   cxsdk.LogsTimeWindow24Hours,
@@ -665,7 +667,7 @@ type LogsTimeWindow struct {
 	SpecificValue LogsTimeWindowValue `json:"specificValue,omitempty"`
 }
 
-// +kubebuilder:validation:Enum={"5m","10m","15m","30m","1h","2h","6h","12h","24h","36h"}
+// +kubebuilder:validation:Enum={"5m","10m","15m", "20m","30m","1h","2h","4h","6h","12h","24h","36h"}
 // Logs time window type
 type LogsTimeWindowValue string
 
@@ -674,9 +676,11 @@ const (
 	LogsTimeWindow5Minutes  LogsTimeWindowValue = "5m"
 	LogsTimeWindow10Minutes LogsTimeWindowValue = "10m"
 	LogsTimeWindow15Minutes LogsTimeWindowValue = "15m"
+	LogsTimeWindow20Minutes LogsTimeWindowValue = "20m"
 	LogsTimeWindow30Minutes LogsTimeWindowValue = "30m"
 	LogsTimeWindowHour      LogsTimeWindowValue = "1h"
 	LogsTimeWindow2Hours    LogsTimeWindowValue = "2h"
+	LogsTimeWindow4Hours    LogsTimeWindowValue = "4h"
 	LogsTimeWindow6Hours    LogsTimeWindowValue = "6h"
 	LogsTimeWindow12Hours   LogsTimeWindowValue = "12h"
 	LogsTimeWindow24Hours   LogsTimeWindowValue = "24h"
@@ -1992,7 +1996,26 @@ func getSloId(listingSloProperties *GetResourceRefProperties, sloRef SloRef) (*s
 
 func convertSloBackendNameToId(listingSloProperties *GetResourceRefProperties, name *string) (*string, error) {
 	listingSloProperties.Log.V(1).Info("Listing SLOs from the backend")
-	listResp, err := listingSloProperties.Clientset.SLOs().List(listingSloProperties.Ctx, &cxsdk.ListSlosRequest{})
+	listResp, err := listingSloProperties.Clientset.SLOs().List(listingSloProperties.Ctx, &cxsdk.ListSlosRequest{
+		Filters: &cxsdk.SloFilters{
+			Filters: []*cxsdk.SloFilter{
+				{
+					Field: &cxsdk.SloFilterField{
+						Field: &cxsdk.SloConstantFilterField{
+							ConstFilter: cxsdk.SloConstantFilterFieldSloName,
+						},
+					},
+					Predicate: &cxsdk.SloFilterPredicate{
+						Predicate: &cxsdk.SloFilterPredicateIs{
+							Is: &cxsdk.IsSloFilterPredicate{
+								Is: []string{*name},
+							},
+						},
+					},
+				},
+			},
+		},
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list SLOs: %w", err)
 	}
