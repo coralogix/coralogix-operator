@@ -53,11 +53,11 @@ var _ = Describe("Slo", Ordered, func() {
 		Expect(crClient.Create(ctx, slo)).To(Succeed())
 
 		By("Fetching the SLO ID")
-		fetchedslo := &coralogixv1alpha1.SLO{}
+		fetchedSlo := &coralogixv1alpha1.SLO{}
 		Eventually(func(g Gomega) error {
-			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: sloName, Namespace: testNamespace}, fetchedslo)).To(Succeed())
-			if fetchedslo.Status.ID != nil {
-				sloID = *fetchedslo.Status.ID
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: sloName, Namespace: testNamespace}, fetchedSlo)).To(Succeed())
+			if fetchedSlo.Status.ID != nil {
+				sloID = *fetchedSlo.Status.ID
 				return nil
 			}
 			return fmt.Errorf("slo ID is not set")
@@ -132,6 +132,7 @@ var _ = Describe("Slo", Ordered, func() {
 })
 
 func getSampleSlo(name, namespace string) *coralogixv1alpha1.SLO {
+	timeFrame := coralogixv1alpha1.SloTimeFrame7d
 	return &coralogixv1alpha1.SLO{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -143,13 +144,16 @@ func getSampleSlo(name, namespace string) *coralogixv1alpha1.SLO {
 			Labels: map[string]string{
 				"team": "e2e-test",
 			},
-			TargetThresholdPercentage: *resource.NewQuantity(99, resource.DecimalSI),
+			TargetThresholdPercentage: *resource.NewQuantity(10, resource.DecimalSI),
 			SliType: coralogixv1alpha1.SliType{
 				RequestBasedMetricSli: &coralogixv1alpha1.RequestBasedMetricSli{
 					GoodEvents: &coralogixv1alpha1.SloMetricEvent{
-						Query: "sum(rate(http_request_duration_seconds_count{status_code=~\"2..\"}[5m]))",
+						Query: "sum(rate(coralogix_logs_events_total{app=\"coralogix-slo-example\", status=\"success\"}[5m]))",
 					},
 				},
+			},
+			Window: coralogixv1alpha1.SloWindow{
+				TimeFrame: &timeFrame,
 			},
 		},
 	}

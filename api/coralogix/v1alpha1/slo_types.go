@@ -89,7 +89,7 @@ type SloMetricEvent struct {
 
 type SloWindow struct {
 	// +optional
-	TimeFrame *SloTimeFrame `json:"timeFrame"`
+	TimeFrame *SloTimeFrame `json:"timeFrame,omitempty"`
 }
 
 // +kubebuilder:validation:Enum={"unspecified","7d","14d","21d","28d","90d"}
