@@ -16,12 +16,13 @@ package e2e
 
 import (
 	"context"
-	"fmt"
 	"time"
 
+	"github.com/coralogix/coralogix-operator/internal/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -54,13 +55,14 @@ var _ = Describe("SLO", Ordered, func() {
 
 		By("Fetching the SLO ID")
 		fetchedSlo := &coralogixv1alpha1.SLO{}
-		Eventually(func(g Gomega) error {
+		Eventually(func(g Gomega) {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: sloName, Namespace: testNamespace}, fetchedSlo)).To(Succeed())
-			if fetchedSlo.Status.ID != nil {
-				sloID = *fetchedSlo.Status.ID
-				return nil
-			}
-			return fmt.Errorf("slo ID is not set")
+
+			g.Expect(meta.IsStatusConditionTrue(fetchedSlo.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+
+			g.Expect(fetchedSlo.Status.ID).ToNot(BeNil())
+
+			sloID = *fetchedSlo.Status.ID
 		}, time.Minute, time.Second).Should(Succeed())
 
 		By("Verifying SLO exists in Coralogix backend")
