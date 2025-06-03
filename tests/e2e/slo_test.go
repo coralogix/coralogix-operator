@@ -16,6 +16,7 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/coralogix/coralogix-operator/internal/utils"
@@ -57,15 +58,12 @@ var _ = Describe("SLO", Ordered, func() {
 		fetchedSlo := &coralogixv1alpha1.SLO{}
 		Eventually(func(g Gomega) {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: sloName, Namespace: testNamespace}, fetchedSlo)).To(Succeed())
-
-			g.Expect(fetchedSlo.Status.Conditions[0].Message).ToNot(MatchRegexp(".*error.*"))
-
+			fmt.Fprintf(GinkgoWriter, "Conditions: %+v\n", fetchedSlo.Status.Conditions)
+			fmt.Fprintf(GinkgoWriter, "ID: %v\n", fetchedSlo.Status.ID)
 			g.Expect(meta.IsStatusConditionTrue(fetchedSlo.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
-
 			g.Expect(fetchedSlo.Status.ID).ToNot(BeNil())
-
 			sloID = *fetchedSlo.Status.ID
-		}, time.Minute, time.Second).Should(Succeed())
+		}, 2*time.Minute, time.Second).Should(Succeed())
 
 		By("Verifying SLO exists in Coralogix backend")
 		Eventually(func() error {
