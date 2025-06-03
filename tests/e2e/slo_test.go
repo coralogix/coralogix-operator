@@ -53,10 +53,12 @@ var _ = Describe("SLO", Ordered, func() {
 		By("Creating SLO")
 		Expect(crClient.Create(ctx, slo)).To(Succeed())
 
-		By("Fetching the SLO ID")
+		By("Fetching the SLO ID and verifying it is synced with the backend")
 		fetchedSlo := &coralogixv1alpha1.SLO{}
 		Eventually(func(g Gomega) {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: sloName, Namespace: testNamespace}, fetchedSlo)).To(Succeed())
+
+			g.Expect(fetchedSlo.Status.Conditions[0].Message).ToNot(MatchRegexp(".*error.*"))
 
 			g.Expect(meta.IsStatusConditionTrue(fetchedSlo.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 
