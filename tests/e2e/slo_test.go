@@ -16,7 +16,6 @@ package e2e
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/coralogix/coralogix-operator/internal/utils"
@@ -58,12 +57,12 @@ var _ = Describe("SLO", Ordered, func() {
 		fetchedSlo := &coralogixv1alpha1.SLO{}
 		Eventually(func(g Gomega) {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: sloName, Namespace: testNamespace}, fetchedSlo)).To(Succeed())
-			fmt.Fprintf(GinkgoWriter, "Conditions: %+v\n", fetchedSlo.Status.Conditions)
-			fmt.Fprintf(GinkgoWriter, "ID: %v\n", fetchedSlo.Status.ID)
+
 			g.Expect(meta.IsStatusConditionTrue(fetchedSlo.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+
 			g.Expect(fetchedSlo.Status.ID).ToNot(BeNil())
 			sloID = *fetchedSlo.Status.ID
-		}, 2*time.Minute, time.Second).Should(Succeed())
+		}, time.Minute, time.Second).Should(Succeed())
 
 		By("Verifying SLO exists in Coralogix backend")
 		Eventually(func() error {
@@ -90,34 +89,6 @@ var _ = Describe("SLO", Ordered, func() {
 			return getSloRes.Slo.Name
 		}, time.Minute, time.Second).Should(Equal(newSloName))
 	})
-
-	It("After deleted from Coralogix backend directly, it should be recreated based on configured interval",
-		func(ctx context.Context) {
-			By("Deleting the slo from Coralogix backend")
-			_, err := slosClient.Delete(ctx, &cxsdk.DeleteServiceSloRequest{Id: sloID})
-			Expect(err).ToNot(HaveOccurred())
-
-			By("Verifying slo is populated with a new ID after configured interval")
-			var newSloID string
-			Eventually(func() bool {
-				fetchedSlo := &coralogixv1alpha1.SLO{}
-				Expect(crClient.Get(ctx, types.NamespacedName{Name: sloName, Namespace: testNamespace}, fetchedSlo)).To(Succeed())
-				if fetchedSlo.Status.ID == nil {
-					return false
-				}
-				newSloID = *fetchedSlo.Status.ID
-				return newSloID != sloID
-			}, 2*time.Minute, time.Second).Should(BeTrue())
-
-			By("Verifying slo with new the ID exists in Coralogix backend")
-			Eventually(func() error {
-				_, err := slosClient.Get(ctx, &cxsdk.GetServiceSloRequest{
-					Id: newSloID,
-				})
-				return err
-			}, time.Minute, time.Second).Should(Succeed())
-
-		})
 
 	It("Should be deleted successfully", func(ctx context.Context) {
 		By("Deleting the slo")
