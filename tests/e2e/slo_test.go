@@ -146,14 +146,18 @@ func getSampleSlo(name, namespace string) *coralogixv1alpha1.SLO {
 			Labels: map[string]string{
 				"team": "e2e-test",
 			},
-			TargetThresholdPercentage: *resource.NewQuantity(10, resource.DecimalSI),
 			SliType: coralogixv1alpha1.SliType{
 				RequestBasedMetricSli: &coralogixv1alpha1.RequestBasedMetricSli{
 					GoodEvents: &coralogixv1alpha1.SloMetricEvent{
 						Query: "sum(rate(coralogix_logs_events_total{app=\"coralogix-slo-example\", status=\"success\"}[5m]))",
 					},
+					TotalEvents: &coralogixv1alpha1.SloMetricEvent{
+						Query: "sum(rate(coralogix_logs_events_total{app=\"coralogix-slo-example\", status=\"success\"}[5m]))",
+					},
+					GroupByLabels: []string{"app", "status"},
 				},
 			},
+			TargetThresholdPercentage: *resource.NewQuantity(10, resource.DecimalSI),
 			Window: coralogixv1alpha1.SloWindow{
 				TimeFrame: &timeFrame,
 			},
