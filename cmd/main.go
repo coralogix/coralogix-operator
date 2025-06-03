@@ -267,7 +267,6 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "GlobalRouter")
 		os.Exit(1)
 	}
-
 	if err = (&v1alpha1controllers.SLOReconciler{
 		SLOsClient: clientSet.SLOs(),
 		Interval:   cfg.ReconcileIntervals[utils.SLOKind],
