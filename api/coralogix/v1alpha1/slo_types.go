@@ -41,40 +41,57 @@ var (
 
 // SLOSpec defines the desired state of SLO.
 type SLOSpec struct {
-	Name        string `json:"name"`
-	ServiceName string `json:"serviceName"`
+	// SLO name
+	Name string `json:"name"`
 	// +optional
+	// Optional SLO description
 	Description *string `json:"description"`
 	// +optional
-	Labels                    map[string]string `json:"labels,omitempty"`
-	SliType                   SliType           `json:"sliType"`
-	Window                    SloWindow         `json:"window"`
+	// Labels are additional labels to be added to the SLO.
+	Labels map[string]string `json:"labels,omitempty"`
+	// SliType defines the type of SLI used for the SLO. Exactly one of metric or windowBasedMetric must be set.
+	SliType SliType `json:"sliType"`
+	// Window defines the time window for the SLO.
+	Window SloWindow `json:"window"`
+	// TargetThresholdPercentage is the target threshold percentage for the SLO.
 	TargetThresholdPercentage resource.Quantity `json:"targetThresholdPercentage"`
 }
 
-// +kubebuilder:validation:XValidation:rule="has(self.metric) != has(self.windowBasedMetric)",message="Exactly one of metric or windowBasedMetric must be set"
+type SloGrouping struct {
+	// Labels defines the labels to group the SLO by.
+	Labels []string `json:"labels,omitempty"`
+}
+
+// +kubebuilder:validation:XValidation:rule="has(self.requestBasedMetric) != has(self.windowBasedMetric)",message="Exactly one of requestBasedMetricSli or windowBasedMetric must be set"
 type SliType struct {
 	// +optional
-	RequestBasedMetricSli *RequestBasedMetricSli `json:"metric,omitempty"`
+	RequestBasedMetricSli *RequestBasedMetricSli `json:"requestBasedMetric,omitempty"`
 	// +optional
 	WindowBasedMetricSli *WindowBasedMetricSli `json:"windowBasedMetric,omitempty"`
 }
 
 type RequestBasedMetricSli struct {
 	// +optional
+	// GoodEvents defines the good events metric.
 	GoodEvents *SloMetricEvent `json:"goodEvents,omitempty"`
 	// +optional
+	// TotalEvents defines the total events metric.
 	TotalEvents *SloMetricEvent `json:"totalEvents,omitempty"`
 	// +optional
+	// GroupByLabels defines the labels to group the SLI by.
 	GroupByLabels []string `json:"groupByLabels,omitempty"`
 }
 
 type WindowBasedMetricSli struct {
 	// +optional
-	Query              *SloMetricEvent    `json:"query,omitempty"`
-	Window             SloWindowEnum      `json:"window,omitempty"`
+	// Optional query for the metric.
+	Query *SloMetricEvent `json:"query,omitempty"`
+	// Window defines the time window for the SLO. Valid values are "unspecified", "1m", and "5m".
+	Window SloWindowEnum `json:"window,omitempty"`
+	// ComparisonOperator defines the comparison operator for the SLO. Valid values are "unspecified", "greaterThan", "lessThan", "greaterThanOrEquals", and "lessThanOrEquals".
 	ComparisonOperator ComparisonOperator `json:"comparisonOperator,omitempty"`
-	Threshold          resource.Quantity  `json:"threshold,omitempty"`
+	// Threshold defines the threshold for the SLO.
+	Threshold resource.Quantity `json:"threshold,omitempty"`
 }
 
 // +kubebuilder:validation:Enum={"unspecified","1m","5m"}
@@ -84,11 +101,13 @@ type SloWindowEnum string
 type ComparisonOperator string
 
 type SloMetricEvent struct {
+	// Query is the metric query string.
 	Query string `json:"query"`
 }
 
 type SloWindow struct {
 	// +optional
+	// TimeFrame defines the time frame for the SLO window. Valid values are "unspecified", "7d", "14d", "21d", "28d", and "90d".
 	TimeFrame *SloTimeFrame `json:"timeFrame,omitempty"`
 }
 
@@ -154,6 +173,15 @@ func (spec *SLOSpec) ExtractSLO() (*cxsdk.Slo, error) {
 	}
 
 	return slo, nil
+}
+
+func extractGroping(grouping *SloGrouping) *cxsdk.SloGrouping {
+	if grouping == nil {
+		return nil
+	}
+	return &cxsdk.SloGrouping{
+		Labels: grouping.Labels,
+	}
 }
 
 func (in *SliType) ExpandSliType(slo *cxsdk.Slo) (*cxsdk.Slo, error) {

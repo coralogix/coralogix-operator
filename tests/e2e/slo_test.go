@@ -117,7 +117,6 @@ func getSampleSlo(name, namespace string) *coralogixv1alpha1.SLO {
 			Labels: map[string]string{
 				"team": "e2e-test",
 			},
-			ServiceName: "coralogix-slo-example",
 			SliType: coralogixv1alpha1.SliType{
 				RequestBasedMetricSli: &coralogixv1alpha1.RequestBasedMetricSli{
 					GoodEvents: &coralogixv1alpha1.SloMetricEvent{

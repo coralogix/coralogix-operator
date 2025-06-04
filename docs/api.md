@@ -12896,51 +12896,44 @@ SLOSpec defines the desired state of SLO.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>serviceName</b></td>
-        <td>string</td>
-        <td>
-          <br/>
+          SLO name<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#slospecslitype">sliType</a></b></td>
         <td>object</td>
         <td>
+          SliType defines the type of SLI used for the SLO. Exactly one of metric or windowBasedMetric must be set.<br/>
           <br/>
-          <br/>
-            <i>Validations</i>:<li>has(self.metric) != has(self.windowBasedMetric): Exactly one of metric or windowBasedMetric must be set</li>
+            <i>Validations</i>:<li>has(self.requestBasedMetric) != has(self.windowBasedMetric): Exactly one of requestBasedMetricSli or windowBasedMetric must be set</li>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>targetThresholdPercentage</b></td>
         <td>int or string</td>
         <td>
-          <br/>
+          TargetThresholdPercentage is the target threshold percentage for the SLO.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#slospecwindow">window</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Window defines the time window for the SLO.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Optional SLO description<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>labels</b></td>
         <td>map[string]string</td>
         <td>
-          <br/>
+          Labels are additional labels to be added to the SLO.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -12952,7 +12945,7 @@ SLOSpec defines the desired state of SLO.
 
 
 
-
+SliType defines the type of SLI used for the SLO. Exactly one of metric or windowBasedMetric must be set.
 
 <table>
     <thead>
@@ -12964,7 +12957,7 @@ SLOSpec defines the desired state of SLO.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#slospecslitypemetric">metric</a></b></td>
+        <td><b><a href="#slospecslityperequestbasedmetric">requestBasedMetric</a></b></td>
         <td>object</td>
         <td>
           <br/>
@@ -12981,7 +12974,7 @@ SLOSpec defines the desired state of SLO.
 </table>
 
 
-### SLO.spec.sliType.metric
+### SLO.spec.sliType.requestBasedMetric
 <sup><sup>[↩ Parent](#slospecslitype)</sup></sup>
 
 
@@ -12998,36 +12991,36 @@ SLOSpec defines the desired state of SLO.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#slospecslitypemetricgoodevents">goodEvents</a></b></td>
+        <td><b><a href="#slospecslityperequestbasedmetricgoodevents">goodEvents</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          GoodEvents defines the good events metric.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>groupByLabels</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          GroupByLabels defines the labels to group the SLI by.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#slospecslitypemetrictotalevents">totalEvents</a></b></td>
+        <td><b><a href="#slospecslityperequestbasedmetrictotalevents">totalEvents</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          TotalEvents defines the total events metric.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
 </table>
 
 
-### SLO.spec.sliType.metric.goodEvents
-<sup><sup>[↩ Parent](#slospecslitypemetric)</sup></sup>
+### SLO.spec.sliType.requestBasedMetric.goodEvents
+<sup><sup>[↩ Parent](#slospecslityperequestbasedmetric)</sup></sup>
 
 
 
-
+GoodEvents defines the good events metric.
 
 <table>
     <thead>
@@ -13042,19 +13035,19 @@ SLOSpec defines the desired state of SLO.
         <td><b>query</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Query is the metric query string.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
 </table>
 
 
-### SLO.spec.sliType.metric.totalEvents
-<sup><sup>[↩ Parent](#slospecslitypemetric)</sup></sup>
+### SLO.spec.sliType.requestBasedMetric.totalEvents
+<sup><sup>[↩ Parent](#slospecslityperequestbasedmetric)</sup></sup>
 
 
 
-
+TotalEvents defines the total events metric.
 
 <table>
     <thead>
@@ -13069,7 +13062,7 @@ SLOSpec defines the desired state of SLO.
         <td><b>query</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Query is the metric query string.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -13096,7 +13089,7 @@ SLOSpec defines the desired state of SLO.
         <td><b>comparisonOperator</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          ComparisonOperator defines the comparison operator for the SLO. Valid values are "unspecified", "greaterThan", "lessThan", "greaterThanOrEquals", and "lessThanOrEquals".<br/>
           <br/>
             <i>Enum</i>: unspecified, greaterThan, lessThan, greaterThanOrEquals, lessThanOrEquals<br/>
         </td>
@@ -13105,21 +13098,21 @@ SLOSpec defines the desired state of SLO.
         <td><b><a href="#slospecslitypewindowbasedmetricquery">query</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Optional query for the metric.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>threshold</b></td>
         <td>int or string</td>
         <td>
-          <br/>
+          Threshold defines the threshold for the SLO.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>window</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Window defines the time window for the SLO. Valid values are "unspecified", "1m", and "5m".<br/>
           <br/>
             <i>Enum</i>: unspecified, 1m, 5m<br/>
         </td>
@@ -13133,7 +13126,7 @@ SLOSpec defines the desired state of SLO.
 
 
 
-
+Optional query for the metric.
 
 <table>
     <thead>
@@ -13148,7 +13141,7 @@ SLOSpec defines the desired state of SLO.
         <td><b>query</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Query is the metric query string.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -13160,7 +13153,7 @@ SLOSpec defines the desired state of SLO.
 
 
 
-
+Window defines the time window for the SLO.
 
 <table>
     <thead>
@@ -13175,7 +13168,7 @@ SLOSpec defines the desired state of SLO.
         <td><b>timeFrame</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          TimeFrame defines the time frame for the SLO window. Valid values are "unspecified", "7d", "14d", "21d", "28d", and "90d".<br/>
           <br/>
             <i>Enum</i>: unspecified, 7d, 14d, 21d, 28d, 90d<br/>
         </td>

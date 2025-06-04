@@ -12,7 +12,6 @@ metadata:
   name: coralogix-slo-example
 spec:
   name: coralogix_slo_example
-  serviceName: coralogix-slo-example
   description: Coralogix SLO example
   labels:
     app.kubernetes.io/part-of: coralogix-operator
@@ -20,7 +19,7 @@ spec:
     app.kubernetes.io/created-by: coralogix-operator
     app.kubernetes.io/managed-by: kustomize
   sliType:
-    metric:
+    requestBasedMetric:
       goodEvents:
         query: |
             sum(rate(coralogix_logs_events_total{app="coralogix-slo-example", status="success"}[5m]))

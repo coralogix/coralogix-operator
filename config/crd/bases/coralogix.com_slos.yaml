@@ -40,33 +40,42 @@ spec:
             description: SLOSpec defines the desired state of SLO.
             properties:
               description:
+                description: Optional SLO description
                 type: string
               labels:
                 additionalProperties:
                   type: string
+                description: Labels are additional labels to be added to the SLO.
                 type: object
               name:
-                type: string
-              serviceName:
+                description: SLO name
                 type: string
               sliType:
+                description: SliType defines the type of SLI used for the SLO. Exactly
+                  one of metric or windowBasedMetric must be set.
                 properties:
-                  metric:
+                  requestBasedMetric:
                     properties:
                       goodEvents:
+                        description: GoodEvents defines the good events metric.
                         properties:
                           query:
+                            description: Query is the metric query string.
                             type: string
                         required:
                         - query
                         type: object
                       groupByLabels:
+                        description: GroupByLabels defines the labels to group the
+                          SLI by.
                         items:
                           type: string
                         type: array
                       totalEvents:
+                        description: TotalEvents defines the total events metric.
                         properties:
                           query:
+                            description: Query is the metric query string.
                             type: string
                         required:
                         - query
@@ -75,6 +84,9 @@ spec:
                   windowBasedMetric:
                     properties:
                       comparisonOperator:
+                        description: ComparisonOperator defines the comparison operator
+                          for the SLO. Valid values are "unspecified", "greaterThan",
+                          "lessThan", "greaterThanOrEquals", and "lessThanOrEquals".
                         enum:
                         - unspecified
                         - greaterThan
@@ -83,8 +95,10 @@ spec:
                         - lessThanOrEquals
                         type: string
                       query:
+                        description: Optional query for the metric.
                         properties:
                           query:
+                            description: Query is the metric query string.
                             type: string
                         required:
                         - query
@@ -93,9 +107,12 @@ spec:
                         anyOf:
                         - type: integer
                         - type: string
+                        description: Threshold defines the threshold for the SLO.
                         pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                         x-kubernetes-int-or-string: true
                       window:
+                        description: Window defines the time window for the SLO. Valid
+                          values are "unspecified", "1m", and "5m".
                         enum:
                         - unspecified
                         - 1m
@@ -104,17 +121,24 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-validations:
-                - message: Exactly one of metric or windowBasedMetric must be set
-                  rule: has(self.metric) != has(self.windowBasedMetric)
+                - message: Exactly one of requestBasedMetricSli or windowBasedMetric
+                    must be set
+                  rule: has(self.requestBasedMetric) != has(self.windowBasedMetric)
               targetThresholdPercentage:
                 anyOf:
                 - type: integer
                 - type: string
+                description: TargetThresholdPercentage is the target threshold percentage
+                  for the SLO.
                 pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                 x-kubernetes-int-or-string: true
               window:
+                description: Window defines the time window for the SLO.
                 properties:
                   timeFrame:
+                    description: TimeFrame defines the time frame for the SLO window.
+                      Valid values are "unspecified", "7d", "14d", "21d", "28d", and
+                      "90d".
                     enum:
                     - unspecified
                     - 7d
@@ -126,7 +150,6 @@ spec:
                 type: object
             required:
             - name
-            - serviceName
             - sliType
             - targetThresholdPercentage
             - window
