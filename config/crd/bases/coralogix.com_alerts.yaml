@@ -2547,8 +2547,7 @@ spec:
             type: object
             x-kubernetes-validations:
             - message: groupByKeys is not supported for this alert type
-              rule: (self.alertType.logsImmediate == null && self.alertType.logsImmediate
-                == null) || !has(self.groupByKeys)
+              rule: '!has(self.alertType.logsImmediate) || !has(self.groupByKeys)'
           status:
             description: AlertStatus defines the observed state of Alert
             properties:

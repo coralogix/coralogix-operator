@@ -10,8 +10,13 @@ metadata:
   name: slo-threshold-alert
 spec:
   name: slo-threshold alert example
-  description: alert from k8s operator
-  priority: p3
+  description: SLO Alert, Error Budget
+  groupByKeys:
+    - service_name
+  notificationGroup:
+    groupByKeys:
+      - service_name
+  priority: p4
   alertType:
     sloThreshold:
       sloDefinition:

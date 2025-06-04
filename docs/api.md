@@ -58,7 +58,7 @@ Alert is the Schema for the alerts API.
 
 Note that this is only for the latest version of the alerts API. If your account has been created before March 2025, make sure that your account has been migrated before using advanced features of alerts.<br/>
           <br/>
-            <i>Validations</i>:<li>(self.alertType.logsImmediate == null && self.alertType.logsImmediate == null) || !has(self.groupByKeys): groupByKeys is not supported for this alert type</li>
+            <i>Validations</i>:<li>!has(self.alertType.logsImmediate) || !has(self.groupByKeys): groupByKeys is not supported for this alert type</li>
         </td>
         <td>false</td>
       </tr><tr>
