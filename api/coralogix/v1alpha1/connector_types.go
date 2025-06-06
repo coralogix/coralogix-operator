@@ -23,6 +23,9 @@ import (
 )
 
 // ConnectorSpec defines the desired state of Connector.
+// See also https://coralogix.com/docs/user-guides/notification-center/introduction/connectors-explained/
+//
+// Added in v0.4.0
 type ConnectorSpec struct {
 	// Name is the name of the connector.
 	Name string `json:"name"`

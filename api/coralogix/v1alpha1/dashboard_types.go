@@ -33,6 +33,9 @@ import (
 
 // DashboardSpec defines the desired state of Dashboard.
 // TODO: add validation for gzipJson
+// See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-started/
+//
+// Added in v0.4.0
 // +kubebuilder:validation:XValidation:rule="!(has(self.json) && has(self.configMapRef))", message="Only one of json or configMapRef can be declared at the same time"
 type DashboardSpec struct {
 	// +optional

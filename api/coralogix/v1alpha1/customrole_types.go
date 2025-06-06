@@ -25,6 +25,8 @@ import (
 
 // CustomRoleSpec defines the desired state of a Coralogix Custom Role.
 // See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
+//
+// Added in v0.4.0
 type CustomRoleSpec struct {
 	// Name of the custom role.
 	Name string `json:"name"`

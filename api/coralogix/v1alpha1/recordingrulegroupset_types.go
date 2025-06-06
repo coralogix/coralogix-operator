@@ -22,6 +22,8 @@ import (
 
 // RecordingRuleGroupSetSpec defines the desired state of a set of Coralogix recording rule groups.
 // See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
+//
+// Added in v0.4.0
 type RecordingRuleGroupSetSpec struct {
 	// +kubebuilder:validation:MinItems=1
 	// Recording rule groups.

@@ -25,6 +25,8 @@ import (
 
 // ScopeSpec defines the desired state of a Coralogix Scope.
 // See also https://coralogix.com/docs/user-guides/account-management/user-management/scopes/
+//
+// Added in v0.4.0
 type ScopeSpec struct {
 	// Scope display name.
 	Name string `json:"name"`
