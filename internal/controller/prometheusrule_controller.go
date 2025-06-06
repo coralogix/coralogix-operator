@@ -282,7 +282,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 			}
 
 			desiredTypeDefinition := coralogixv1beta1.AlertTypeDefinition{
-				MetricThreshold: prometheusAlertToMetricThreshold(rule),
+				MetricThreshold: prometheusAlertToMetricThreshold(rule, desiredPriority),
 			}
 			desiredTypeDefinition.MetricThreshold.MissingValues.MinNonNullValuesPct = alert.Spec.TypeDefinition.MetricThreshold.MissingValues.MinNonNullValuesPct
 			if !reflect.DeepEqual(alert.Spec.TypeDefinition, desiredTypeDefinition) {
@@ -356,13 +356,14 @@ func shouldTrackAlerts(prometheusRule *prometheus.PrometheusRule) bool {
 }
 
 func prometheusAlertingRuleToAlertSpec(rule *prometheus.Rule) coralogixv1beta1.AlertSpec {
+	priority := getPriority(*rule)
 	return coralogixv1beta1.AlertSpec{
 		Name:         rule.Alert,
 		Description:  rule.Annotations["description"],
 		EntityLabels: rule.Labels,
 		Priority:     getPriority(*rule),
 		TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
-			MetricThreshold: prometheusAlertToMetricThreshold(*rule),
+			MetricThreshold: prometheusAlertToMetricThreshold(*rule, priority),
 		},
 	}
 }
@@ -419,7 +420,7 @@ func prometheusInnerRulesToCoralogixInnerRules(rules []prometheus.Rule) []coralo
 	return result
 }
 
-func prometheusAlertToMetricThreshold(rule prometheus.Rule) *coralogixv1beta1.MetricThreshold {
+func prometheusAlertToMetricThreshold(rule prometheus.Rule, priority coralogixv1beta1.AlertPriority) *coralogixv1beta1.MetricThreshold {
 	return &coralogixv1beta1.MetricThreshold{
 		MetricFilter: coralogixv1beta1.MetricFilter{
 			Promql: rule.Expr.StrVal,
@@ -433,6 +434,9 @@ func prometheusAlertToMetricThreshold(rule prometheus.Rule) *coralogixv1beta1.Me
 						DynamicDuration: pointer.String(string(rule.For)),
 					},
 					ConditionType: coralogixv1beta1.MetricThresholdConditionTypeMoreThan,
+				},
+				Override: &coralogixv1beta1.AlertOverride{
+					Priority: priority,
 				},
 			},
 		},
