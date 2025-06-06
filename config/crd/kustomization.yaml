@@ -21,6 +21,7 @@ resources:
   - bases/coralogix.com_presets.yaml
   - bases/coralogix.com_viewfolders.yaml
   - bases/coralogix.com_views.yaml
+  - bases/coralogix.com_extensions.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 #patchesStrategicMerge:
