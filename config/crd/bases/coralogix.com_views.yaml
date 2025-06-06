@@ -37,7 +37,11 @@ spec:
           metadata:
             type: object
           spec:
-            description: ViewSpec defines the desired state of View.
+            description: |-
+              ViewSpec defines the desired state of View.
+              See also https://coralogix.com/docs/user-guides/monitoring-and-insights/explore-screen/custom-views/
+
+              Added in v0.4.0
             properties:
               filters:
                 description: Filters is the filters for the view.
