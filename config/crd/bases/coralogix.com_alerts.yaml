@@ -259,9 +259,11 @@ spec:
                                       - 5m
                                       - 10m
                                       - 15m
+                                      - 20m
                                       - 30m
                                       - 1h
                                       - 2h
+                                      - 4h
                                       - 6h
                                       - 12h
                                       - 24h
@@ -825,9 +827,11 @@ spec:
                                       - 5m
                                       - 10m
                                       - 15m
+                                      - 20m
                                       - 30m
                                       - 1h
                                       - 2h
+                                      - 4h
                                       - 6h
                                       - 12h
                                       - 24h
@@ -2014,7 +2018,7 @@ spec:
                                     webhook.
                                   properties:
                                     id:
-                                      description: Webhook Id.
+                                      description: Webhook ID.
                                       format: int32
                                       type: integer
                                     name:
@@ -2297,7 +2301,7 @@ spec:
                                       webhook.
                                     properties:
                                       id:
-                                        description: Webhook Id.
+                                        description: Webhook ID.
                                         format: int32
                                         type: integer
                                       name:
@@ -2421,8 +2425,7 @@ spec:
             type: object
             x-kubernetes-validations:
             - message: groupByKeys is not supported for this alert type
-              rule: (self.alertType.logsImmediate == null && self.alertType.logsImmediate
-                == null) || !has(self.groupByKeys)
+              rule: '!has(self.alertType.logsImmediate) || !has(self.groupByKeys)'
           status:
             description: AlertStatus defines the observed state of Alert
             properties:
