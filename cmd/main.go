@@ -127,7 +127,8 @@ func main() {
 		cxsdk.NewAuthContext(cfg.CoralogixApiKey, cfg.CoralogixApiKey),
 		OperatorVersion))
 
-	config.InitClient(mgr.GetClient())
+	instrumented := monitoring.NewInstrumentedClient(mgr.GetClient(), mgr.GetScheme())
+	config.InitClient(instrumented)
 
 	if err = (&v1alpha1controllers.RuleGroupReconciler{
 		RuleGroupClient: clientSet.RuleGroups(),
