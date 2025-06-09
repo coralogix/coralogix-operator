@@ -58,7 +58,7 @@ Alert is the Schema for the alerts API.
 
 Note that this is only for the latest version of the alerts API. If your account has been created before March 2025, make sure that your account has been migrated before using advanced features of alerts.<br/>
           <br/>
-            <i>Validations</i>:<li>(self.alertType.logsImmediate == null && self.alertType.logsImmediate == null) || !has(self.groupByKeys): groupByKeys is not supported for this alert type</li>
+            <i>Validations</i>:<li>!has(self.alertType.logsImmediate) || !has(self.groupByKeys): groupByKeys is not supported for this alert type</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -714,7 +714,7 @@ Time window to evaluate.
         <td>
           Logs time window type<br/>
           <br/>
-            <i>Enum</i>: 5m, 10m, 15m, 30m, 1h, 2h, 6h, 12h, 24h, 36h<br/>
+            <i>Enum</i>: 5m, 10m, 15m, 20m, 30m, 1h, 2h, 4h, 6h, 12h, 24h, 36h<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -2113,7 +2113,7 @@ Time window in which the condition is checked.
         <td>
           Logs time window type<br/>
           <br/>
-            <i>Enum</i>: 5m, 10m, 15m, 30m, 1h, 2h, 6h, 12h, 24h, 36h<br/>
+            <i>Enum</i>: 5m, 10m, 15m, 20m, 30m, 1h, 2h, 4h, 6h, 12h, 24h, 36h<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -5197,7 +5197,7 @@ Backend reference for the outbound webhook.
         <td><b>id</b></td>
         <td>integer</td>
         <td>
-          Webhook Id.<br/>
+          Webhook ID.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -6016,7 +6016,7 @@ Backend reference for the outbound webhook.
         <td><b>id</b></td>
         <td>integer</td>
         <td>
-          Webhook Id.<br/>
+          Webhook ID.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
