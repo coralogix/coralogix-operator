@@ -39,7 +39,11 @@ spec:
           metadata:
             type: object
           spec:
-            description: PresetSpec defines the desired state of Preset.
+            description: |-
+              PresetSpec defines the desired state of Preset.
+              See also https://coralogix.com/docs/user-guides/notification-center/presets/introduction/
+
+              Added in v0.4.0
             properties:
               configOverrides:
                 description: ConfigOverrides are the entity type configs, allowing
