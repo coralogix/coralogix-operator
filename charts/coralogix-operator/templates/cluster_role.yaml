@@ -53,6 +53,7 @@ rules:
       - customroles
       - dashboards
       - dashboardsfolders
+      - extensions
       - globalrouters
       - groups
       - integrations
@@ -83,6 +84,7 @@ rules:
       - customroles/finalizers
       - dashboards/finalizers
       - dashboardsfolders/finalizers
+      - extensions/finalizers
       - globalrouters/finalizers
       - groups/finalizers
       - integrations/finalizers
@@ -107,6 +109,7 @@ rules:
       - customroles/status
       - dashboards/status
       - dashboardsfolders/status
+      - extensions/status
       - globalrouters/status
       - groups/status
       - integrations/status

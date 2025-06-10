@@ -1,0 +1,15 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Extension
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: extension-example
+spec:
+  id: K8sObservability
+  version: 0.0.2
+  itemIds:
+    - 013eb19e-14c0-4994-82c2-6e1603ca865c
+    - abd816a3-384d-4e19-8d9e-79395f21ece5
+    - 8748b765-c973-4a75-b5ad-361135c43e02
+    - 29c015f6-e60a-4edb-92dd-5267cfe6cc1c
