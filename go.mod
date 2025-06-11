@@ -103,4 +103,4 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.5.0 // indirect
 )
 
-replace github.com/coralogix/coralogix-management-sdk => github.com/coralogix/coralogix-management-sdk v1.5.3-0.20250601161708-37320c305dfb
+replace github.com/coralogix/coralogix-management-sdk => github.com/coralogix/coralogix-management-sdk v1.5.3-0.20250611080503-16858ce281ef
