@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- coralogix_v1alpha1_events2metric.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples
