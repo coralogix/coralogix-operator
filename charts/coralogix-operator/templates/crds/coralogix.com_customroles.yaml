@@ -40,6 +40,8 @@ spec:
             description: |-
               CustomRoleSpec defines the desired state of a Coralogix Custom Role.
               See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
+
+              Added in v0.4.0
             properties:
               description:
                 description: Description of the custom role.

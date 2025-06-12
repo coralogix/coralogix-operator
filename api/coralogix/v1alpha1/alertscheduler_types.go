@@ -32,6 +32,8 @@ import (
 // AlertSchedulerSpec defines the desired state Coralogix AlertScheduler.
 // It is used to suppress or activate alerts based on a schedule.
 // See also https://coralogix.com/docs/user-guides/alerting/alert-suppression-rules/
+//
+// Added in v0.4.0
 type AlertSchedulerSpec struct {
 	// Alert Scheduler name.
 	Name string `json:"name"`

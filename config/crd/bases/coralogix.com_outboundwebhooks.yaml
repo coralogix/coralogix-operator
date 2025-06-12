@@ -38,8 +38,10 @@ spec:
             type: object
           spec:
             description: |-
-              OutboundWebhookSpec defines the desired state of OutboundWebhook
+              OutboundWebhookSpec defines the desired state of an outbound webhook.
               See also https://coralogix.com/docs/user-guides/alerting/outbound-webhooks/aws-eventbridge-outbound-webhook/
+
+              Added in v0.4.0
             properties:
               name:
                 description: Name of the webhook.

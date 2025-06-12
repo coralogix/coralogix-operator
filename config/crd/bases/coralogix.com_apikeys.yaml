@@ -40,6 +40,8 @@ spec:
             description: |-
               ApiKeySpec defines the desired state of a Coralogix ApiKey.
               See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-keys/
+
+              Added in v0.4.0
             properties:
               active:
                 default: true

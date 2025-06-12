@@ -106,6 +106,8 @@ spec:
                         description: |-
                           A rule to change data extraction.
                           See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
+
+                          Added in v0.4.0
                         properties:
                           active:
                             default: true

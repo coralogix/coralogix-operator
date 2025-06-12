@@ -28,7 +28,10 @@ import (
 	"github.com/coralogix/coralogix-operator/internal/config"
 )
 
-// GlobalRouterSpec defines the desired state of GlobalRouter.
+// GlobalRouterSpec defines the desired state of the Global Router.
+// See also https://coralogix.com/docs/user-guides/notification-center/routing/
+//
+// Added in v0.4.0
 type GlobalRouterSpec struct {
 	// Name is the name of the global router.
 	Name string `json:"name"`
