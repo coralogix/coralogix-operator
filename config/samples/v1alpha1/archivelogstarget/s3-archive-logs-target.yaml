@@ -1,0 +1,9 @@
+apiVersion: coralogix.com/v1alpha1
+kind: ArchiveLogsTarget
+metadata:
+  name: s3-archivelogs-target
+  namespace: default
+spec:
+  s3Target:
+    region: <your-region>
+    bucketName: <your-bucket-name>
