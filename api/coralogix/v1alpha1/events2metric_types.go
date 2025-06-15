@@ -18,6 +18,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	utils "github.com/coralogix/coralogix-operator/api/coralogix"
 	"google.golang.org/protobuf/types/known/wrapperspb"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -29,20 +30,15 @@ type Events2MetricSpec struct {
 	// +optional
 	Description *string `json:"description,omitempty"`
 	// Represents the limit of the permutations
-	Permutations *int32 `json:"permutations,omitempty"`
+	PermutationsLimit *int32 `json:"permutationsLimit,omitempty"`
 	// E2M metric labels
 	// +optional
 	MetricLabels []MetricLabel `json:"metricLabels,omitempty"`
 	// E2M metric fields
 	// +optional
 	MetricFields []MetricField `json:"metricFields,omitempty"`
-	// E2M type logs2metrics/spans2metrics
-	Type E2MType `json:"type"`
 	// Spans or logs type query
 	Query E2MQuery `json:"query"`
-	// A flag that represents if the e2m is for internal usage
-	// +default=false
-	IsInternal bool `json:"isInternal,omitempty"`
 }
 
 type MetricLabel struct {
@@ -107,6 +103,7 @@ var AggregationTypeSchemaToProto = map[AggregationType]cxsdk.E2MAggregationType{
 }
 
 // AggregationMetadata defines the metadata for aggregation.
+// +kubebuilder:validation:XValidation:rule="has(self.samples) != has(self.histogram)",message="Exactly one of samples or histogram must be set"
 type AggregationMetadata struct {
 	// E2M sample type metadata
 	Samples *SamplesMetadata `json:"samples,omitempty"`
@@ -136,19 +133,8 @@ var E2MAggSamplesSampleTypeSchemaToProto = map[E2MAggSampleType]cxsdk.E2MAggSamp
 // HistogramMetadata defines the metadata for histogram aggregation.
 type HistogramMetadata struct {
 	// Buckets of the E2M
-	Buckets []float32 `json:"buckets"`
+	Buckets []resource.Quantity `json:"buckets"`
 }
-
-// AggregationType defines the type of aggregation to be performed.
-// +kubebuilder:validation:Enum=logs2metrics;spans2metrics
-type E2MType string
-
-const (
-	// Logs2Metrics represents an E2M that converts logs to metrics.
-	Logs2Metrics E2MType = "logs2metrics"
-	// Spans2Metrics represents an E2M that converts spans to metrics.
-	Spans2Metrics E2MType = "spans2metrics"
-)
 
 // E2MQuerySpans defines the query for spans2metrics E2M.
 // +kubebuilder:validation:XValidation:rule="has(self.spans) != has(self.logs)",message="Exactly one of spans or logs must be set"
@@ -235,6 +221,14 @@ type Events2MetricStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
+func (e2m *Events2Metric) GetConditions() []metav1.Condition {
+	return e2m.Status.Conditions
+}
+
+func (e2m *Events2Metric) SetConditions(conditions []metav1.Condition) {
+	e2m.Status.Conditions = conditions
+}
+
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
@@ -260,20 +254,72 @@ func init() {
 	SchemeBuilder.Register(&Events2Metric{}, &Events2MetricList{})
 }
 
-func (spec *Events2MetricSpec) ExtractE2M() *cxsdk.E2M {
-	e2m := &cxsdk.E2M{
-		Name:         wrapperspb.String(spec.Name),
-		Description:  utils.StringPointerToWrapperspbString(spec.Description),
-		Permutations: extractE2mPermutations(spec.Permutations),
-		MetricLabels: extractE2mMetricLabels(spec.MetricLabels),
-		MetricFields: extractE2mMetricFields(spec.MetricFields),
-		IsInternal:   wrapperspb.Bool(spec.IsInternal),
+func (spec *Events2MetricSpec) ExtractCreateE2MRequest() *cxsdk.CreateE2MRequest {
+	e2m := &cxsdk.E2MCreateParams{
+		Name:              wrapperspb.String(spec.Name),
+		Description:       utils.StringPointerToWrapperspbString(spec.Description),
+		PermutationsLimit: utils.Int32PointerToWrapperspbInt32(spec.PermutationsLimit),
+		MetricLabels:      extractE2mMetricLabels(spec.MetricLabels),
+		MetricFields:      extractE2mMetricFields(spec.MetricFields),
 	}
 	e2m = expandE2MQuery(e2m, spec.Query)
+	return &cxsdk.CreateE2MRequest{
+		E2M: e2m,
+	}
+}
+
+func (spec *Events2MetricSpec) ExtractReplaceE2MRequest() *cxsdk.ReplaceE2MRequest {
+	e2m := &cxsdk.ReplaceE2MRequest{
+		E2M: &cxsdk.E2M{
+			Name:         wrapperspb.String(spec.Name),
+			Description:  utils.StringPointerToWrapperspbString(spec.Description),
+			Permutations: extractE2mPermutations(spec.PermutationsLimit),
+			MetricLabels: extractE2mMetricLabels(spec.MetricLabels),
+			MetricFields: extractE2mMetricFields(spec.MetricFields),
+		},
+	}
+	e2m.E2M = expandUpdateE2MQuery(e2m.E2M, spec.Query)
 	return e2m
 }
 
-func expandE2MQuery(e2m *cxsdk.E2M, query E2MQuery) *cxsdk.E2M {
+func extractE2mPermutations(permutations *int32) *cxsdk.E2MPermutations {
+	if permutations == nil {
+		return nil
+	}
+	return &cxsdk.E2MPermutations{
+		Limit: *permutations,
+	}
+}
+
+func expandE2MQuery(e2m *cxsdk.E2MCreateParams, query E2MQuery) *cxsdk.E2MCreateParams {
+	if spans := query.Spans; spans != nil {
+		e2m.Query = &cxsdk.E2MCreateParamsSpansQuery{
+			SpansQuery: &cxsdk.S2MSpansQuery{
+				Lucene:                 utils.StringPointerToWrapperspbString(spans.Lucene),
+				ApplicationnameFilters: utils.StringSliceToWrappedStringSlice(spans.ApplicationNameFilters),
+				SubsystemnameFilters:   utils.StringSliceToWrappedStringSlice(spans.SubsystemNameFilters),
+				ActionFilters:          utils.StringSliceToWrappedStringSlice(spans.ActionFilters),
+				ServiceFilters:         utils.StringSliceToWrappedStringSlice(spans.ServiceFilters),
+			},
+		}
+		e2m.Type = cxsdk.E2MTypeSpans2Metrics
+	} else if logs := query.Logs; logs != nil {
+		e2m.Query = &cxsdk.E2MCreateParamsLogsQuery{
+			LogsQuery: &cxsdk.L2MLogsQuery{
+				Lucene:                 utils.StringPointerToWrapperspbString(logs.Lucene),
+				Alias:                  utils.StringPointerToWrapperspbString(logs.Alias),
+				ApplicationnameFilters: utils.StringSliceToWrappedStringSlice(logs.ApplicationNameFilters),
+				SubsystemnameFilters:   utils.StringSliceToWrappedStringSlice(logs.SubsystemNameFilters),
+				SeverityFilters:        expandL2MSeverityFilters(logs.SeverityFilters),
+			},
+		}
+		e2m.Type = cxsdk.E2MTypeLogs2Metrics
+	}
+
+	return e2m
+}
+
+func expandUpdateE2MQuery(e2m *cxsdk.E2M, query E2MQuery) *cxsdk.E2M {
 	if spans := query.Spans; spans != nil {
 		e2m.Query = &cxsdk.E2MSpansQuery{
 			SpansQuery: &cxsdk.S2MSpansQuery{
@@ -284,6 +330,7 @@ func expandE2MQuery(e2m *cxsdk.E2M, query E2MQuery) *cxsdk.E2M {
 				ServiceFilters:         utils.StringSliceToWrappedStringSlice(spans.ServiceFilters),
 			},
 		}
+		e2m.Type = cxsdk.E2MTypeSpans2Metrics
 	} else if logs := query.Logs; logs != nil {
 		e2m.Query = &cxsdk.E2MLogsQuery{
 			LogsQuery: &cxsdk.L2MLogsQuery{
@@ -294,6 +341,7 @@ func expandE2MQuery(e2m *cxsdk.E2M, query E2MQuery) *cxsdk.E2M {
 				SeverityFilters:        expandL2MSeverityFilters(logs.SeverityFilters),
 			},
 		}
+		e2m.Type = cxsdk.E2MTypeLogs2Metrics
 	}
 
 	return e2m
@@ -310,15 +358,6 @@ func expandL2MSeverityFilters(severityFilters []L2MSeverity) []cxsdk.L2MSeverity
 		}
 	}
 	return expanded
-}
-
-func extractE2mPermutations(permutations *int32) *cxsdk.E2MPermutations {
-	if permutations == nil {
-		return nil
-	}
-	return &cxsdk.E2MPermutations{
-		Limit: *permutations,
-	}
 }
 
 func extractE2mMetricLabels(labels []MetricLabel) []*cxsdk.MetricLabel {
@@ -369,7 +408,7 @@ func expandE2MAggMetadata(metricAggregation *cxsdk.E2MAggregation, metadata Aggr
 	} else if metadata.Histogram != nil {
 		metricAggregation.AggMetadata = &cxsdk.E2MAggregationHistogram{
 			Histogram: &cxsdk.E2MAggHistogram{
-				Buckets: metadata.Histogram.Buckets,
+				Buckets: utils.QuantitiesToFloats32(metadata.Histogram.Buckets),
 			},
 		}
 	}

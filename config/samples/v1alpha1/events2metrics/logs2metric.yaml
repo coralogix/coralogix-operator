@@ -1,0 +1,34 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Events2Metric
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: events2metric-sample
+spec:
+  name: "logs2metric-sample"
+  description: "Sample logs2metric"
+  permutationsLimit: 10000
+  metricLabels:
+    - targetLabel: "Status"
+      sourceField: "status"
+    - targetLabel: "Path"
+      sourceField: "http_referer"
+  query:
+    logs:
+      lucene: "remote_addr_enriched:/.*/"
+      alias: "remote_addr_enriched"
+      applicationNameFilters:
+        - "filter:startsWith:nginx"
+      severityFilters:
+        - "debug"
+#  metricFields:
+#    - targetBaseMetricName: "method"
+#      sourceField: "method"
+#    - targetBaseMetricName: "geo_point"
+#      sourceField: "location_geopoint"
+#      aggregations:
+#        - aggType: "avg"
+#          targetField: "geo_point_avg"
+
+

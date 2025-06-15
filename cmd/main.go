@@ -37,7 +37,6 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/internal/config"
 	controllers "github.com/coralogix/coralogix-operator/internal/controller"
@@ -65,7 +64,6 @@ func init() {
 	utilruntime.Must(v1beta1.AddToScheme(scheme))
 
 	utilruntime.Must(prometheusv1alpha.AddToScheme(scheme))
-	utilruntime.Must(coralogixv1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -271,8 +269,8 @@ func main() {
 	}
 
 	if err = (&v1alpha1controllers.Events2MetricReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		E2MClient: clientSet.Events2Metrics(),
+		Interval:  cfg.ReconcileIntervals[utils.Events2MetricKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Events2Metric")
 		os.Exit(1)

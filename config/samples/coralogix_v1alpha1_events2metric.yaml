@@ -1,9 +1,0 @@
-apiVersion: coralogix.coralogix.com/v1alpha1
-kind: Events2Metric
-metadata:
-  labels:
-    app.kubernetes.io/name: coralogix-operator
-    app.kubernetes.io/managed-by: kustomize
-  name: events2metric-sample
-spec:
-  # TODO(user): Add fields here

@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/coralogix/coralogix-operator/internal/config"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -115,5 +116,6 @@ func (r *ConnectorReconciler) CheckIDInStatus(obj client.Object) bool {
 func (r *ConnectorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.Connector{}).
+		WithEventFilter(config.GetConfig().Selector.Predicate()).
 		Complete(r)
 }
