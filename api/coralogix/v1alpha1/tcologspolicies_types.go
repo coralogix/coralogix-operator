@@ -30,6 +30,8 @@ import (
 
 // TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.
 // See also https://coralogix.com/docs/tco-optimizer-api
+//
+// Added in v0.4.0
 type TCOLogsPoliciesSpec struct {
 	// Coralogix TCO-Policies-List.
 	Policies []TCOLogsPolicy `json:"policies"`

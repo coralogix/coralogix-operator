@@ -37,7 +37,11 @@ spec:
           metadata:
             type: object
           spec:
-            description: DashboardSpec defines the desired state of Dashboard.
+            description: |-
+              DashboardSpec defines the desired state of Dashboard.
+              See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-started/
+
+              Added in v0.4.0
             properties:
               configMapRef:
                 description: model from configmap

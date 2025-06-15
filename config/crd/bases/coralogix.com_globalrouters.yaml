@@ -39,7 +39,11 @@ spec:
           metadata:
             type: object
           spec:
-            description: GlobalRouterSpec defines the desired state of GlobalRouter.
+            description: |-
+              GlobalRouterSpec defines the desired state of the Global Router.
+              See also https://coralogix.com/docs/user-guides/notification-center/routing/
+
+              Added in v0.4.0
             properties:
               description:
                 description: Description is the description of the global router.

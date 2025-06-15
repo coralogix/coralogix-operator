@@ -29,6 +29,8 @@ import (
 // See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/
 //
 // For available integrations see https://coralogix.com/docs/developer-portal/infrastructure-as-code/terraform-provider/integrations/aws-metrics-collector/ or at https://github.com/coralogix/coralogix-operator/tree/main/config/samples/v1alpha1/integrations.
+//
+// Added in v0.4.0
 type IntegrationSpec struct {
 
 	// Unique name of the integration.

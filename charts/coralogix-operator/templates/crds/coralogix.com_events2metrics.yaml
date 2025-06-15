@@ -82,6 +82,10 @@ spec:
                                     type: string
                                 type: object
                             type: object
+                            x-kubernetes-validations:
+                            - message: Exactly one of samples or histogram must be
+                                set
+                              rule: has(self.samples) != has(self.histogram)
                           aggType:
                             description: Aggregation type
                             enum:

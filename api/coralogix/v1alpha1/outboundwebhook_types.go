@@ -26,8 +26,10 @@ import (
 	utils "github.com/coralogix/coralogix-operator/api/coralogix"
 )
 
-// OutboundWebhookSpec defines the desired state of OutboundWebhook
+// OutboundWebhookSpec defines the desired state of an outbound webhook.
 // See also https://coralogix.com/docs/user-guides/alerting/outbound-webhooks/aws-eventbridge-outbound-webhook/
+//
+// Added in v0.4.0
 type OutboundWebhookSpec struct {
 	//+kubebuilder:validation:MinLength=0
 	// Name of the webhook.

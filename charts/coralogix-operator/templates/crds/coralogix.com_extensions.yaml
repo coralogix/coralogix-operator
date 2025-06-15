@@ -4,20 +4,20 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-  name: integrations.coralogix.com
+  name: extensions.coralogix.com
 spec:
   group: coralogix.com
   names:
-    kind: Integration
-    listKind: IntegrationList
-    plural: integrations
-    singular: integration
+    kind: Extension
+    listKind: ExtensionList
+    plural: extensions
+    singular: extension
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Integration is the Schema for the integrations API.
+        description: Extension is the Schema for the extensions API.
         properties:
           apiVersion:
             description: |-
@@ -38,30 +38,25 @@ spec:
             type: object
           spec:
             description: |-
-              IntegrationSpec defines the desired state of a Coralogix (managed) integration.
+              ExtensionSpec defines the desired state of a Coralogix extension.
               See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/
-
-              For available integrations see https://coralogix.com/docs/developer-portal/infrastructure-as-code/terraform-provider/integrations/aws-metrics-collector/ or at https://github.com/coralogix/coralogix-operator/tree/main/config/samples/v1alpha1/integrations.
-
-              Added in v0.4.0
             properties:
-              integrationKey:
-                description: Unique name of the integration.
+              id:
+                description: Id of the extension to deploy.
                 type: string
-              parameters:
-                description: Parameters required by the integration.
-                type: object
-                x-kubernetes-preserve-unknown-fields: true
+              itemIds:
+                description: Item IDs to be used by the extension.
+                items:
+                  type: string
+                type: array
               version:
-                description: Desired version of the integration
+                description: Desired version of the extension.
                 type: string
             required:
-            - integrationKey
-            - parameters
+            - id
             - version
             type: object
           status:
-            description: IntegrationStatus defines the observed state of Integration.
             properties:
               conditions:
                 items:

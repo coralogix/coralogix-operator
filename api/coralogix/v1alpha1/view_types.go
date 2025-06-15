@@ -33,6 +33,9 @@ import (
 )
 
 // ViewSpec defines the desired state of View.
+// See also https://coralogix.com/docs/user-guides/monitoring-and-insights/explore-screen/custom-views/
+//
+// Added in v0.4.0
 type ViewSpec struct {
 	// Name of the view.
 	Name string `json:"name"`
