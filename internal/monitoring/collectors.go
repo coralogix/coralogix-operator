@@ -1,21 +1,9 @@
-// Copyright 2024 Coralogix Ltd.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package monitoring
 
 import (
 	"context"
+	"sync"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	corev1 "k8s.io/api/core/v1"
@@ -62,39 +50,61 @@ func (c *ResourceInfoCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- c.resourceInfoMetric
 }
 
+var (
+	lastCollectTime time.Time
+	cacheTTL        = 30 * time.Second
+	resourceCache   sync.Map // map[schema.GroupVersionKind][]unstructured.Unstructured
+	staleGVKs       sync.Map // map[schema.GroupVersionKind]bool
+)
+
+func MarkGVKStale(gvk schema.GroupVersionKind) {
+	staleGVKs.Store(gvk, true)
+}
+
 func (c *ResourceInfoCollector) Collect(ch chan<- prometheus.Metric) {
-	metricsLog.V(1).Info("Collecting metrics for ResourceInfoCollector")
 	for _, gvk := range c.gvks {
-		resources, err := listResourcesInGVK(gvk)
-		if err != nil {
-			metricsLog.Error(err, "Failed to list resources in GVK", "gvk", gvk)
-			continue
+		refresh := false
+		if val, ok := staleGVKs.Load(gvk); ok && val.(bool) {
+			refresh = true
 		}
 
-		for _, resource := range resources {
-			metric, err := prometheus.NewConstMetric(
-				c.resourceInfoMetric,
-				prometheus.GaugeValue,
-				1,
-				[]string{
-					gvk.Kind,
-					resource.GetName(),
-					resource.GetNamespace(),
-					getResourceStatus(resource),
-				}...,
-			)
-
-			if err != nil {
-				metricsLog.Error(err, "Failed to create metric for custom resource",
-					"kind", gvk.Kind,
-					"name", resource.GetName(),
-					"namespace", resource.GetNamespace(),
-				)
+		cached, ok := resourceCache.Load(gvk)
+		if ok && !refresh && time.Since(lastCollectTime) < cacheTTL {
+			if resources, valid := cached.([]unstructured.Unstructured); valid {
+				emitMetrics(gvk, resources, ch, c.resourceInfoMetric)
 				continue
 			}
-
-			ch <- metric
 		}
+
+		resources, err := listResourcesInGVK(gvk)
+		if err != nil {
+			continue
+		}
+		resourceCache.Store(gvk, resources)
+		staleGVKs.Delete(gvk)
+		emitMetrics(gvk, resources, ch, c.resourceInfoMetric)
+	}
+	lastCollectTime = time.Now()
+}
+
+func emitMetrics(gvk schema.GroupVersionKind, resources []unstructured.Unstructured, ch chan<- prometheus.Metric, desc *prometheus.Desc) {
+	for _, resource := range resources {
+		metric, err := prometheus.NewConstMetric(
+			desc,
+			prometheus.GaugeValue,
+			1,
+			[]string{
+				gvk.Kind,
+				resource.GetName(),
+				resource.GetNamespace(),
+				getResourceStatus(resource),
+			}...,
+		)
+		if err != nil {
+			metricsLog.Error(err, "Failed to create metric", "kind", gvk.Kind, "name", resource.GetName(), "ns", resource.GetNamespace())
+			continue
+		}
+		ch <- metric
 	}
 }
 
