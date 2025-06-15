@@ -41,6 +41,14 @@ func FloatToQuantity(n float64) resource.Quantity {
 	return resource.MustParse(fmt.Sprintf("%f", n))
 }
 
+func QuantitiesToFloats32(arr []resource.Quantity) []float32 {
+	result := make([]float32, 0, len(arr))
+	for _, q := range arr {
+		result = append(result, float32(q.AsApproximateFloat64()))
+	}
+	return result
+}
+
 func StringPointerToWrapperspbString(s *string) *wrapperspb.StringValue {
 	if s == nil {
 		return nil
@@ -53,4 +61,11 @@ func WrapperspbStringToStringPointer(s *wrapperspb.StringValue) *string {
 		return nil
 	}
 	return &s.Value
+}
+
+func Int32PointerToWrapperspbInt32(i *int32) *wrapperspb.Int32Value {
+	if i == nil {
+		return nil
+	}
+	return wrapperspb.Int32(*i)
 }
