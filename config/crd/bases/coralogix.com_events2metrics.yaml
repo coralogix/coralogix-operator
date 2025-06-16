@@ -167,10 +167,11 @@ spec:
                             E2M.
                           enum:
                           - debug
+                          - verbose
                           - info
                           - warn
                           - error
-                          - fatal
+                          - critical
                           type: string
                         type: array
                       subsystemNameFilters:

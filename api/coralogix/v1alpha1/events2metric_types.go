@@ -186,7 +186,7 @@ type E2MQueryLogs struct {
 }
 
 // L2MSeverity defines the severity type for logs2metrics E2M.
-// +kubebuilder:validation:Enum=debug;info;warn;error;fatal
+// +kubebuilder:validation:Enum=debug;verbose;info;warn;error;critical
 type L2MSeverity string
 
 const (

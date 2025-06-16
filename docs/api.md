@@ -9121,7 +9121,7 @@ Logs query for logs2metrics E2M
         <td>
           severity type filters<br/>
           <br/>
-            <i>Enum</i>: debug, info, warn, error, fatal<br/>
+            <i>Enum</i>: debug, verbose, info, warn, error, critical<br/>
         </td>
         <td>false</td>
       </tr><tr>
