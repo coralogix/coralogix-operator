@@ -276,6 +276,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&v1alpha1controllers.ArchiveLogsTargetReconciler{
+		ArchiveLogsTargetsClient: clientSet.ArchiveLogs(),
+		Interval:                 cfg.ReconcileIntervals[utils.ArchiveLogsTargetKind],
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ArchiveLogsTarget")
+		os.Exit(1)
+	}
+
 	if err = (&v1alpha1controllers.Events2MetricReconciler{
 		E2MClient: clientSet.Events2Metrics(),
 		Interval:  cfg.ReconcileIntervals[utils.Events2MetricKind],

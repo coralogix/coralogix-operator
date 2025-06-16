@@ -53,7 +53,7 @@ spec:
                           aggMetadata:
                             description: |-
                               Aggregate metadata, samples or histogram type
-                              Types that are valid to be assigned to AggMetadata: Samples, Histogram
+                              Types that are valid to be assigned to AggMetadata: AggregationTypeSamples, AggregationTypeHistogram
                             properties:
                               histogram:
                                 description: E2M aggregate histogram type metadata
