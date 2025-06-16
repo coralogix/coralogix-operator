@@ -82,6 +82,15 @@ var _ = Describe("Events2Metric", Ordered, func() {
 						},
 					},
 				},
+				Query: coralogixv1alpha1.E2MQuery{
+					Logs: &coralogixv1alpha1.E2MQueryLogs{
+						Lucene:                 pointer.String("status:200 AND request_count:[* TO *]"),
+						Alias:                  pointer.String("e2m-logs"),
+						ApplicationNameFilters: []string{"test-app"},
+						SubsystemNameFilters:   []string{"test-subsystem"},
+						SeverityFilters:        []coralogixv1alpha1.L2MSeverity{coralogixv1alpha1.L2MSeverityCritical, coralogixv1alpha1.L2MSeverityError},
+					},
+				},
 			},
 		}
 

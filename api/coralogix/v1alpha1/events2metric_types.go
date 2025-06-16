@@ -190,27 +190,27 @@ type E2MQueryLogs struct {
 type L2MSeverity string
 
 const (
-	// Debug represents the debug severity level.
-	Debug L2MSeverity = "debug"
-	// Verbose represents the verbose severity level.
-	Verbose L2MSeverity = "verbose"
-	// Info represents the info severity level.
-	Info L2MSeverity = "info"
-	// Warning represents the warning severity level.
-	Warning L2MSeverity = "warn"
-	// Error represents the error severity level.
-	Error L2MSeverity = "error"
-	// Critical represents the critical severity level.
-	Critical L2MSeverity = "critical"
+	// L2MSeverityDebug represents the debug severity level.
+	L2MSeverityDebug L2MSeverity = "debug"
+	// L2MSeverityVerbose represents the verbose severity level.
+	L2MSeverityVerbose L2MSeverity = "verbose"
+	// L2MSeverityInfo represents the info severity level.
+	L2MSeverityInfo L2MSeverity = "info"
+	// L2MSeverityWarning represents the warning severity level.
+	L2MSeverityWarning L2MSeverity = "warn"
+	// L2MSeverityError represents the error severity level.
+	L2MSeverityError L2MSeverity = "error"
+	// L2MSeverityCritical represents the critical severity level.
+	L2MSeverityCritical L2MSeverity = "critical"
 )
 
 var L2MSeveritySchemaToProto = map[L2MSeverity]cxsdk.L2MSeverity{
-	Debug:    cxsdk.L2MSeverityDebug,
-	Verbose:  cxsdk.L2MSeverityVerbose,
-	Info:     cxsdk.L2MSeverityInfo,
-	Warning:  cxsdk.L2MSeverityWarning,
-	Error:    cxsdk.L2MSeverityError,
-	Critical: cxsdk.L2MSeverityCritical,
+	L2MSeverityDebug:    cxsdk.L2MSeverityDebug,
+	L2MSeverityVerbose:  cxsdk.L2MSeverityVerbose,
+	L2MSeverityInfo:     cxsdk.L2MSeverityInfo,
+	L2MSeverityWarning:  cxsdk.L2MSeverityWarning,
+	L2MSeverityError:    cxsdk.L2MSeverityError,
+	L2MSeverityCritical: cxsdk.L2MSeverityCritical,
 }
 
 // Events2MetricStatus defines the observed state of Events2Metric.
