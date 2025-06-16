@@ -19,6 +19,8 @@ jobs:
       IMG_TAG: 0.0.1
       CORALOGIX_REGION: ${{ secrets.CORALOGIX_REGION }}
       CORALOGIX_API_KEY: ${{ secrets.CORALOGIX_API_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      LOGS_BUCKET: ${{ secrets.LOGS_BUCKET }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
