@@ -55,10 +55,10 @@ type MetricField struct {
 	SourceField string `json:"sourceField"`
 	// Represents Aggregation type list
 	// +optional
-	Aggregations []Aggregation `json:"aggregations,omitempty"`
+	Aggregations []MetricFieldAggregation `json:"aggregations,omitempty"`
 }
 
-type Aggregation struct {
+type MetricFieldAggregation struct {
 	// Is enabled. True by default
 	// +default=true
 	Enabled bool `json:"enabled"`
@@ -67,7 +67,7 @@ type Aggregation struct {
 	// Target metric field alias name
 	TargetMetricName string `json:"targetMetricName"`
 	// Aggregate metadata, samples or histogram type
-	// Types that are valid to be assigned to AggMetadata: Samples, Histogram
+	// Types that are valid to be assigned to AggMetadata: AggregationTypeSamples, AggregationTypeHistogram
 	AggMetadata AggregationMetadata `json:"aggMetadata,omitempty"`
 }
 
@@ -76,30 +76,30 @@ type Aggregation struct {
 type AggregationType string
 
 const (
-	// Min represents the minimum value aggregation.
-	Min AggregationType = "min"
-	// Max represents the maximum value aggregation.
-	Max AggregationType = "max"
-	// Count represents the count aggregation.
-	Count AggregationType = "count"
-	// Avg represents the average value aggregation.
-	Avg AggregationType = "avg"
-	// Sum represents the sum aggregation.
-	Sum AggregationType = "sum"
-	// Histogram represents the histogram aggregation.
-	Histogram AggregationType = "histogram"
-	// Samples represents the samples aggregation.
-	Samples AggregationType = "samples"
+	// AggregationTypeMin represents the minimum value aggregation.
+	AggregationTypeMin AggregationType = "min"
+	// AggregationTypeMax represents the maximum value aggregation.
+	AggregationTypeMax AggregationType = "max"
+	// AggregationTypeCount represents the count aggregation.
+	AggregationTypeCount AggregationType = "count"
+	// AggregationTypeAvg represents the average value aggregation.
+	AggregationTypeAvg AggregationType = "avg"
+	// AggregationTypeSum represents the sum aggregation.
+	AggregationTypeSum AggregationType = "sum"
+	// AggregationTypeHistogram represents the histogram aggregation.
+	AggregationTypeHistogram AggregationType = "histogram"
+	// AggregationTypeSamples represents the samples aggregation.
+	AggregationTypeSamples AggregationType = "samples"
 )
 
 var AggregationTypeSchemaToProto = map[AggregationType]cxsdk.E2MAggregationType{
-	Min:       cxsdk.E2MAggregationTypeMin,
-	Max:       cxsdk.E2MAggregationTypeMax,
-	Count:     cxsdk.E2MAggregationTypeCount,
-	Avg:       cxsdk.E2MAggregationTypeAvg,
-	Sum:       cxsdk.E2MAggregationTypeSum,
-	Histogram: cxsdk.E2MAggregationTypeHistogram,
-	Samples:   cxsdk.E2MAggregationTypeSamples,
+	AggregationTypeMin:       cxsdk.E2MAggregationTypeMin,
+	AggregationTypeMax:       cxsdk.E2MAggregationTypeMax,
+	AggregationTypeCount:     cxsdk.E2MAggregationTypeCount,
+	AggregationTypeAvg:       cxsdk.E2MAggregationTypeAvg,
+	AggregationTypeSum:       cxsdk.E2MAggregationTypeSum,
+	AggregationTypeHistogram: cxsdk.E2MAggregationTypeHistogram,
+	AggregationTypeSamples:   cxsdk.E2MAggregationTypeSamples,
 }
 
 // AggregationMetadata defines the metadata for aggregation.
@@ -384,7 +384,7 @@ func extractE2mMetricFields(fields []MetricField) []*cxsdk.MetricField {
 	return metricFields
 }
 
-func extractE2mAggregations(aggregations []Aggregation) []*cxsdk.E2MAggregation {
+func extractE2mAggregations(aggregations []MetricFieldAggregation) []*cxsdk.E2MAggregation {
 	metricAggregations := make([]*cxsdk.E2MAggregation, 0, len(aggregations))
 	for _, aggregation := range aggregations {
 		metricAggregation := &cxsdk.E2MAggregation{
