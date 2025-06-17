@@ -31,31 +31,37 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 )
 
-var _ = Describe("ArchiveLogsTarget", Ordered, func() {
+var _ = Describe("ArchiveMetricsTarget", Ordered, func() {
 	var (
-		crClient          client.Client
-		archiveLogsClient *cxsdk.ArchiveLogsClient
-		archiveLogsTarget *coralogixv1alpha1.ArchiveLogsTarget
-		awsRegion         string
-		logsBucket        string
-		targetName        = "s3-archivelogs-target"
+		crClient             client.Client
+		archiveMetricsClient *cxsdk.ArchiveMetricsClient
+		archiveMetricsTarget *coralogixv1alpha1.ArchiveMetricsTarget
+		awsRegion            string
+		metricsBucket        string
+		targetName           = "s3-archivemetrics-target"
 	)
 
 	BeforeEach(func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		awsRegion = os.Getenv("AWS_REGION")
-		logsBucket = os.Getenv("LOGS_BUCKET")
-		archiveLogsClient = (*cxsdk.ArchiveLogsClient)(ClientsInstance.GetCoralogixClientSet().ArchiveLogs())
-		archiveLogsTarget = &coralogixv1alpha1.ArchiveLogsTarget{
+		metricsBucket = os.Getenv("METRICS_BUCKET")
+		archiveMetricsClient = (*cxsdk.ArchiveMetricsClient)(ClientsInstance.GetCoralogixClientSet().ArchiveMetrics())
+		archiveMetricsTarget = &coralogixv1alpha1.ArchiveMetricsTarget{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      targetName,
 				Namespace: testNamespace,
 			},
-			Spec: coralogixv1alpha1.ArchiveLogsTargetSpec{
-				S3Target: &coralogixv1alpha1.S3Target{
+			Spec: coralogixv1alpha1.ArchiveMetricsTargetSpec{
+				S3Target: &coralogixv1alpha1.S3MetricsTarget{
 					Region:     awsRegion,
-					BucketName: logsBucket,
+					BucketName: metricsBucket,
 				},
+				ResolutionPolicy: &coralogixv1alpha1.ResolutionPolicy{
+					RawResolution:         1,
+					FiveMinutesResolution: 1,
+					OneHourResolution:     1,
+				},
+				RetentionDays: 2,
 			},
 		}
 	})
@@ -63,18 +69,15 @@ var _ = Describe("ArchiveLogsTarget", Ordered, func() {
 	It("Should be set successfully", func(ctx context.Context) {
 
 		By("Setting a storage target in Coralogix backend")
-		Expect(crClient.Create(ctx, archiveLogsTarget)).To(Succeed())
+		Expect(crClient.Create(ctx, archiveMetricsTarget)).To(Succeed())
 
 		By("Fetching the storage target from the backend")
-		fetchedTarget := &coralogixv1alpha1.ArchiveLogsTarget{}
+		fetchedTarget := &coralogixv1alpha1.ArchiveMetricsTarget{}
 		Eventually(func(g Gomega) error {
-			ok := g.Expect(crClient.Get(ctx, types.NamespacedName{Name: targetName, Namespace: testNamespace}, fetchedTarget)).To(Succeed())
-			if !ok {
-				return fmt.Errorf("error fetching target")
-			}
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: targetName, Namespace: testNamespace}, fetchedTarget)).To(Succeed())
 			for _, condition := range fetchedTarget.Status.Conditions {
-				Expect(condition.Type).To(Not(Equal("Failed")))
-				Expect(condition.Status).To(Not(Equal("True")))
+				g.Expect(condition.Type).To(Not(Equal("Failed")))
+				g.Expect(condition.Status).To(Not(Equal("True")))
 			}
 			if fetchedTarget.Status.ID != nil {
 				return nil
@@ -84,23 +87,23 @@ var _ = Describe("ArchiveLogsTarget", Ordered, func() {
 
 		By("Verifying the storage target is set in Coralogix backend")
 		Eventually(func(g Gomega) {
-			archiveLogsTarget, err := archiveLogsClient.Get(ctx)
+			archiveMetricsTarget, err := archiveMetricsClient.Get(ctx)
 			g.Expect(err).ToNot(HaveOccurred())
-			g.Expect(archiveLogsTarget.Target.GetArchiveSpec().IsActive).To(BeTrue())
-			g.Expect(archiveLogsTarget.Target.GetS3().Bucket).To(Equal(logsBucket))
-			g.Expect(archiveLogsTarget.Target.GetS3().Region).To(Equal(&awsRegion))
+			g.Expect(archiveMetricsTarget.TenantConfig.Disabled).To(BeFalse())
+			g.Expect(archiveMetricsTarget.TenantConfig.GetS3().Bucket == metricsBucket).To(BeTrue())
+			g.Expect(archiveMetricsTarget.TenantConfig.GetS3().Region == awsRegion).To(BeTrue())
 		}, time.Minute, time.Second).Should(Succeed())
 	})
 
 	It("Should be deactivated successfully", func(ctx context.Context) {
-		By("Deactivating the archive logs target in Coralogix backend")
-		Expect(crClient.Delete(ctx, archiveLogsTarget)).To(Succeed())
+		By("Deactivating the archive metrics target in Coralogix backend")
+		Expect(crClient.Delete(ctx, archiveMetricsTarget)).To(Succeed())
 
 		By("Verifying target is deactivated in Coralogix backend")
 		Eventually(func(g Gomega) {
-			storageTarget, err := archiveLogsClient.Get(ctx)
+			getTenantConfigResponse, err := archiveMetricsClient.Get(ctx)
 			g.Expect(err).ToNot(HaveOccurred())
-			g.Expect(storageTarget.Target.GetArchiveSpec().IsActive).To(BeFalse())
+			g.Expect(getTenantConfigResponse.TenantConfig.Disabled).To(BeTrue())
 		}, time.Minute, time.Second).Should(Succeed(), "Storage target should be deactivated in Coralogix backend")
 	})
 

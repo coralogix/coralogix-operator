@@ -20,9 +20,11 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 )
 
-// Added in version v1.0.0
 // ArchiveLogsTargetSpec defines the desired state of a Coralogix archive logs target.
+// See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
 // +kubebuilder:validation:XValidation:rule="has(self.s3Target) != has(self.ibmCosTarget)",message="Exactly one of s3Target or ibmCosTarget must be specified"
+//
+// Added in version v1.0.0
 type ArchiveLogsTargetSpec struct {
 	// The S3 target configuration.
 	// +optional
@@ -34,8 +36,8 @@ type ArchiveLogsTargetSpec struct {
 
 type S3Target struct {
 	// The region of the S3 bucket.
-	Region string `json:"region,omitempty"`
-	Bucket string `json:"bucketName,omitempty"`
+	Region     string `json:"region,omitempty"`
+	BucketName string `json:"bucketName,omitempty"`
 }
 
 type IbmCosTarget struct {
@@ -66,7 +68,7 @@ func (s *ArchiveLogsTargetSpec) ExtractSetTargetRequest(isTargetActive bool) (*c
 			TargetSpec: &cxsdk.SetTargetRequestS3{
 				S3: &cxsdk.S3TargetSpec{
 					Region: &s.S3Target.Region,
-					Bucket: s.S3Target.Bucket,
+					Bucket: s.S3Target.BucketName,
 				},
 			},
 		}, nil

@@ -32,6 +32,7 @@ rules:
   - alertschedulers
   - apikeys
   - archivelogstargets
+  - archivemetricstargets
   - connectors
   - customroles
   - dashboards
@@ -64,6 +65,7 @@ rules:
   - alertschedulers/finalizers
   - apikeys/finalizers
   - archivelogstargets/finalizers
+  - archivemetricstargets/finalizers
   - connectors/finalizers
   - customroles/finalizers
   - dashboards/finalizers
@@ -90,6 +92,7 @@ rules:
   - alertschedulers/status
   - apikeys/status
   - archivelogstargets/status
+  - archivemetricstargets/status
   - connectors/status
   - customroles/status
   - dashboards/status
