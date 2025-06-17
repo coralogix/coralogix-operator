@@ -44,12 +44,12 @@ func RegisterMetrics() error {
 			return err
 		}
 	}
+
 	return nil
 }
 
 var metricsList = []prometheus.Collector{
 	operatorInfoMetric,
-	apiCallCounter,
 }
 
 var operatorInfoMetric = prometheus.NewGaugeVec(
@@ -68,11 +68,3 @@ func SetOperatorInfoMetric(goVersion, operatorVersion, url string) {
 	)
 	operatorInfoMetric.WithLabelValues(goVersion, operatorVersion, url).Set(1)
 }
-
-var apiCallCounter = prometheus.NewCounterVec(
-	prometheus.CounterOpts{
-		Name: "cx_operator_kube_api_requests_total",
-		Help: "Total number of Kubernetes API requests made by the operator.",
-	},
-	[]string{"verb", "resource"}, // e.g., "get", "*v1.Pod"
-)
