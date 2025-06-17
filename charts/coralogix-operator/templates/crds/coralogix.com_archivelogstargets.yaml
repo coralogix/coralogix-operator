@@ -4,20 +4,19 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-  name: integrations.coralogix.com
+  name: archivelogstargets.coralogix.com
 spec:
   group: coralogix.com
   names:
-    kind: Integration
-    listKind: IntegrationList
-    plural: integrations
-    singular: integration
+    kind: ArchiveLogsTarget
+    listKind: ArchiveLogsTargetList
+    plural: archivelogstargets
+    singular: archivelogstarget
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Integration is the Schema for the integrations API.
         properties:
           apiVersion:
             description: |-
@@ -38,30 +37,43 @@ spec:
             type: object
           spec:
             description: |-
-              IntegrationSpec defines the desired state of a Coralogix (managed) integration.
-              See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/
-
-              For available integrations see https://coralogix.com/docs/developer-portal/infrastructure-as-code/terraform-provider/integrations/aws-metrics-collector/ or at https://github.com/coralogix/coralogix-operator/tree/main/config/samples/v1alpha1/integrations.
-
-              Added in v0.4.0
+              Added in version v1.0.0
+              ArchiveLogsTargetSpec defines the desired state of a Coralogix archive logs target.
             properties:
-              integrationKey:
-                description: Unique name of the integration.
-                type: string
-              parameters:
-                description: Parameters required by the integration.
+              ibmCosTarget:
+                description: The IBM COS target configuration.
+                properties:
+                  bucketCrn:
+                    description: BucketCrn is the CRN of the IBM COS bucket.
+                    type: string
+                  bucketType:
+                    description: BucketType defines the type of the bucket.
+                    enum:
+                    - UNSPECIFIED
+                    - EXTERNAL
+                    - INTERNAL
+                    type: string
+                  endpoint:
+                    description: Endpoint is the endpoint URL for the IBM COS service.
+                    type: string
+                  serviceCrn:
+                    description: ServiceCrn is the CRN of the service instance.
+                    type: string
                 type: object
-                x-kubernetes-preserve-unknown-fields: true
-              version:
-                description: Desired version of the integration
-                type: string
-            required:
-            - integrationKey
-            - parameters
-            - version
+              s3Target:
+                description: The S3 target configuration.
+                properties:
+                  bucketName:
+                    type: string
+                  region:
+                    description: The region of the S3 bucket.
+                    type: string
+                type: object
             type: object
+            x-kubernetes-validations:
+            - message: Exactly one of s3Target or ibmCosTarget must be specified
+              rule: has(self.s3Target) != has(self.ibmCosTarget)
           status:
-            description: IntegrationStatus defines the observed state of Integration.
             properties:
               conditions:
                 items:
@@ -120,6 +132,7 @@ spec:
                   type: object
                 type: array
               id:
+                description: ID is the identifier of the archive logs target.
                 type: string
             type: object
         type: object

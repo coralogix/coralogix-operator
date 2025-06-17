@@ -37,7 +37,11 @@ spec:
           metadata:
             type: object
           spec:
-            description: DashboardsFolderSpec defines the desired state of DashboardsFolder.
+            description: |-
+              DashboardsFolderSpec defines the desired state of Dashboard Folder.
+              See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-started/
+
+              Added in v0.4.0
             properties:
               customId:
                 description: A custom ID for the folder. If not provided, a random

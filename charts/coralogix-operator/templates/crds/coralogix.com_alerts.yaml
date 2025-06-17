@@ -41,6 +41,8 @@ spec:
               AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
 
               Note that this is only for the latest version of the alerts API. If your account has been created before March 2025, make sure that your account has been migrated before using advanced features of alerts.
+
+              Added in v0.4.0
             properties:
               alertType:
                 description: Type of alert.
@@ -259,9 +261,11 @@ spec:
                                       - 5m
                                       - 10m
                                       - 15m
+                                      - 20m
                                       - 30m
                                       - 1h
                                       - 2h
+                                      - 4h
                                       - 6h
                                       - 12h
                                       - 24h
@@ -825,9 +829,11 @@ spec:
                                       - 5m
                                       - 10m
                                       - 15m
+                                      - 20m
                                       - 30m
                                       - 1h
                                       - 2h
+                                      - 4h
                                       - 6h
                                       - 12h
                                       - 24h
@@ -2014,7 +2020,7 @@ spec:
                                     webhook.
                                   properties:
                                     id:
-                                      description: Webhook Id.
+                                      description: Webhook ID.
                                       format: int32
                                       type: integer
                                     name:
@@ -2297,7 +2303,7 @@ spec:
                                       webhook.
                                     properties:
                                       id:
-                                        description: Webhook Id.
+                                        description: Webhook ID.
                                         format: int32
                                         type: integer
                                       name:
@@ -2421,8 +2427,7 @@ spec:
             type: object
             x-kubernetes-validations:
             - message: groupByKeys is not supported for this alert type
-              rule: (self.alertType.logsImmediate == null && self.alertType.logsImmediate
-                == null) || !has(self.groupByKeys)
+              rule: '!has(self.alertType.logsImmediate) || !has(self.groupByKeys)'
           status:
             description: AlertStatus defines the observed state of Alert
             properties:

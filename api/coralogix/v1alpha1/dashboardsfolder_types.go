@@ -27,7 +27,10 @@ import (
 	"github.com/coralogix/coralogix-operator/internal/config"
 )
 
-// DashboardsFolderSpec defines the desired state of DashboardsFolder.
+// DashboardsFolderSpec defines the desired state of Dashboard Folder.
+// See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-started/
+//
+// Added in v0.4.0
 // +kubebuilder:validation:XValidation:rule="!(has(self.parentFolderId) && has(self.parentFolderRef))",message="Only one of parentFolderID or parentFolderRef can be declared at the same time"
 type DashboardsFolderSpec struct {
 	Name string `json:"name"`

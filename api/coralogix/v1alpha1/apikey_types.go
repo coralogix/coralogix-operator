@@ -23,6 +23,8 @@ import (
 
 // ApiKeySpec defines the desired state of a Coralogix ApiKey.
 // See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-keys/
+//
+// Added in v0.4.0
 // +kubebuilder:validation:XValidation:rule="has(self.presets) || has(self.permissions)",message="At least one of presets or permissions must be set"
 type ApiKeySpec struct {
 

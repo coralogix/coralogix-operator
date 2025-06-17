@@ -30,6 +30,8 @@ import (
 
 // GroupSpec defines the desired state of Coralogix Group.
 // See also https://coralogix.com/docs/user-guides/account-management/user-management/assign-user-roles-and-scopes-via-groups/
+//
+// Added in v0.4.0
 type GroupSpec struct {
 	// Name of the group.
 	Name string `json:"name"`

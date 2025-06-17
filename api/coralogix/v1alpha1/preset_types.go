@@ -24,6 +24,9 @@ import (
 )
 
 // PresetSpec defines the desired state of Preset.
+// See also https://coralogix.com/docs/user-guides/notification-center/presets/introduction/
+//
+// Added in v0.4.0
 type PresetSpec struct {
 	// Name is the name of the preset.
 	Name string `json:"name"`
