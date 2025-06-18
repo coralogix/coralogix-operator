@@ -108,10 +108,11 @@ func (i *ArchiveLogsTarget) SetConditions(conditions []metav1.Condition) {
 	i.Status.Conditions = conditions
 }
 
-// ArchiveLogsTarget is the Schema for the archive logs targets API.
-
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// ArchiveLogsTarget is the Schema for the archive logs targets API.
+//
+// **Added in v0.5.0**
 type ArchiveLogsTarget struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

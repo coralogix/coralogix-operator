@@ -19,9 +19,6 @@ import (
 )
 
 // ViewFolderSpec defines the desired state of folder for views.
-// See also https://coralogix.com/docs/user-guides/monitoring-and-insights/explore-screen/custom-views/
-//
-// Added in v0.4.0
 type ViewFolderSpec struct {
 	// Name of the view folder
 	Name string `json:"name"`
@@ -58,6 +55,9 @@ type ViewFolder struct {
 // +kubebuilder:object:root=true
 
 // ViewFolderList contains a list of ViewFolder.
+// See also https://coralogix.com/docs/user-guides/monitoring-and-insights/explore-screen/custom-views/
+//
+// **Added in v0.4.0**
 type ViewFolderList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

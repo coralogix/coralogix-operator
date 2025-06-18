@@ -30,10 +30,6 @@ import (
 )
 
 // AlertSchedulerSpec defines the desired state Coralogix AlertScheduler.
-// It is used to suppress or activate alerts based on a schedule.
-// See also https://coralogix.com/docs/user-guides/alerting/alert-suppression-rules/
-//
-// Added in v0.4.0
 type AlertSchedulerSpec struct {
 	// Alert Scheduler name.
 	Name string `json:"name"`
@@ -490,8 +486,11 @@ func extractTimeFrame(timeFrame *TimeFrame) (*cxsdk.Timeframe, error) {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-
-// AlertScheduler is the Schema for the alertschedulers API.
+// AlertScheduler is the Schema for the AlertSchedulers API.
+// It is used to suppress or activate alerts based on a schedule.
+// See also https://coralogix.com/docs/user-guides/alerting/alert-suppression-rules/
+//
+// **Added in v0.4.0**
 type AlertScheduler struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
