@@ -37,8 +37,10 @@ spec:
             type: object
           spec:
             description: |-
-              Added in version v1.0.0
               ArchiveLogsTargetSpec defines the desired state of a Coralogix archive logs target.
+              See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
+
+              Added in version v1.0.0
             properties:
               ibmCosTarget:
                 description: The IBM COS target configuration.
