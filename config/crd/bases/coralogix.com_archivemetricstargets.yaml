@@ -17,6 +17,11 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
+        description: |-
+          ArchiveLogsTarget is the Schema for the archive logs targets API.
+          See also https://coralogix.com/docs/archive-s3-bucket-forever
+
+          **Added in v0.5.0**
         properties:
           apiVersion:
             description: |-
@@ -36,12 +41,8 @@ spec:
           metadata:
             type: object
           spec:
-            description: |-
-              Added in version v1.0.0
-              ArchiveMetricsTargetSpec defines the desired state of a Coralogix archive logs target.
-              See also https://coralogix.com/docs/archive-s3-bucket-forever
-
-              Added in version v1.0.0
+            description: ArchiveMetricsTargetSpec defines the desired state of a Coralogix
+              archive logs target.
             properties:
               ibmCosTarget:
                 description: The IBM COS target configuration.

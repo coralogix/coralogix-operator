@@ -22,7 +22,11 @@ Resource Types:
 
 
 
-Alert is the Schema for the alerts API.
+Alert is the Schema for the Alerts API.
+
+Note that this is only for the latest version of the Alerts API. If your account has been created before March 2025, make sure that your account has been migrated before using advanced features of alerts.
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -54,11 +58,7 @@ Alert is the Schema for the alerts API.
         <td><b><a href="#alertspec">spec</a></b></td>
         <td>object</td>
         <td>
-          AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
-
-Note that this is only for the latest version of the alerts API. If your account has been created before March 2025, make sure that your account has been migrated before using advanced features of alerts.
-
-Added in v0.4.0<br/>
+          AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.<br/>
           <br/>
             <i>Validations</i>:<li>!has(self.alertType.logsImmediate) || !has(self.groupByKeys): groupByKeys is not supported for this alert type</li>
         </td>
@@ -80,10 +80,6 @@ Added in v0.4.0<br/>
 
 
 AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
-
-Note that this is only for the latest version of the alerts API. If your account has been created before March 2025, make sure that your account has been migrated before using advanced features of alerts.
-
-Added in v0.4.0
 
 <table>
     <thead>
@@ -6349,7 +6345,11 @@ Resource Types:
 
 
 
-AlertScheduler is the Schema for the alertschedulers API.
+AlertScheduler is the Schema for the AlertSchedulers API.
+It is used to suppress or activate alerts based on a schedule.
+See also https://coralogix.com/docs/user-guides/alerting/alert-suppression-rules/
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -6381,11 +6381,7 @@ AlertScheduler is the Schema for the alertschedulers API.
         <td><b><a href="#alertschedulerspec">spec</a></b></td>
         <td>object</td>
         <td>
-          AlertSchedulerSpec defines the desired state Coralogix AlertScheduler.
-It is used to suppress or activate alerts based on a schedule.
-See also https://coralogix.com/docs/user-guides/alerting/alert-suppression-rules/
-
-Added in v0.4.0<br/>
+          AlertSchedulerSpec defines the desired state Coralogix AlertScheduler.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6405,10 +6401,6 @@ Added in v0.4.0<br/>
 
 
 AlertSchedulerSpec defines the desired state Coralogix AlertScheduler.
-It is used to suppress or activate alerts based on a schedule.
-See also https://coralogix.com/docs/user-guides/alerting/alert-suppression-rules/
-
-Added in v0.4.0
 
 <table>
     <thead>
@@ -7171,7 +7163,10 @@ with respect to the current state of the instance.<br/>
 
 
 
-ApiKey is the Schema for the apikeys API.
+ApiKey is the Schema for the ApiKeys API.
+See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-keys/
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -7203,10 +7198,7 @@ ApiKey is the Schema for the apikeys API.
         <td><b><a href="#apikeyspec">spec</a></b></td>
         <td>object</td>
         <td>
-          ApiKeySpec defines the desired state of a Coralogix ApiKey.
-See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-keys/
-
-Added in v0.4.0<br/>
+          ApiKeySpec defines the desired state of a Coralogix ApiKey.<br/>
           <br/>
             <i>Validations</i>:<li>has(self.presets) || has(self.permissions): At least one of presets or permissions must be set</li>
         </td>
@@ -7228,9 +7220,6 @@ Added in v0.4.0<br/>
 
 
 ApiKeySpec defines the desired state of a Coralogix ApiKey.
-See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-keys/
-
-Added in v0.4.0
 
 <table>
     <thead>
@@ -7438,7 +7427,10 @@ with respect to the current state of the instance.<br/>
 
 
 
+ArchiveLogsTarget is the Schema for the Archive Logs API.
+See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
 
+**Added in v0.5.0**
 
 <table>
     <thead>
@@ -7470,10 +7462,7 @@ with respect to the current state of the instance.<br/>
         <td><b><a href="#archivelogstargetspec">spec</a></b></td>
         <td>object</td>
         <td>
-          ArchiveLogsTargetSpec defines the desired state of a Coralogix archive logs target.
-See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
-
-Added in version v1.0.0<br/>
+          ArchiveLogsTargetSpec defines the desired state of a Coralogix archive logs target.<br/>
           <br/>
             <i>Validations</i>:<li>has(self.s3Target) != has(self.ibmCosTarget): Exactly one of s3Target or ibmCosTarget must be specified</li>
         </td>
@@ -7495,9 +7484,6 @@ Added in version v1.0.0<br/>
 
 
 ArchiveLogsTargetSpec defines the desired state of a Coralogix archive logs target.
-See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
-
-Added in version v1.0.0
 
 <table>
     <thead>
@@ -7728,7 +7714,10 @@ with respect to the current state of the instance.<br/>
 
 
 
+ArchiveLogsTarget is the Schema for the archive logs targets API.
+See also https://coralogix.com/docs/archive-s3-bucket-forever
 
+**Added in v0.5.0**
 
 <table>
     <thead>
@@ -7760,11 +7749,7 @@ with respect to the current state of the instance.<br/>
         <td><b><a href="#archivemetricstargetspec">spec</a></b></td>
         <td>object</td>
         <td>
-          Added in version v1.0.0
-ArchiveMetricsTargetSpec defines the desired state of a Coralogix archive logs target.
-See also https://coralogix.com/docs/archive-s3-bucket-forever
-
-Added in version v1.0.0<br/>
+          ArchiveMetricsTargetSpec defines the desired state of a Coralogix archive logs target.<br/>
           <br/>
             <i>Validations</i>:<li>has(self.s3Target) != has(self.ibmCosTarget): Exactly one of s3Target or ibmCosTarget must be specified</li>
         </td>
@@ -7785,11 +7770,7 @@ Added in version v1.0.0<br/>
 
 
 
-Added in version v1.0.0
 ArchiveMetricsTargetSpec defines the desired state of a Coralogix archive logs target.
-See also https://coralogix.com/docs/archive-s3-bucket-forever
-
-Added in version v1.0.0
 
 <table>
     <thead>
@@ -8084,6 +8065,8 @@ with respect to the current state of the instance.<br/>
 
 
 Connector is the Schema for the connectors API.
+
+**Added in v0.4.0**
 NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
 
 <table>
@@ -8117,9 +8100,7 @@ NOTE: This CRD exposes a new feature and may have breaking changes in future rel
         <td>object</td>
         <td>
           ConnectorSpec defines the desired state of Connector.
-See also https://coralogix.com/docs/user-guides/notification-center/introduction/connectors-explained/
-
-Added in v0.4.0<br/>
+See also https://coralogix.com/docs/user-guides/notification-center/introduction/connectors-explained/<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -8140,8 +8121,6 @@ Added in v0.4.0<br/>
 
 ConnectorSpec defines the desired state of Connector.
 See also https://coralogix.com/docs/user-guides/notification-center/introduction/connectors-explained/
-
-Added in v0.4.0
 
 <table>
     <thead>
@@ -8442,7 +8421,10 @@ with respect to the current state of the instance.<br/>
 
 
 
-CustomRole is the Schema for the customroles API.
+CustomRole is the Schema for the CustomRoles API.
+See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -8474,10 +8456,7 @@ CustomRole is the Schema for the customroles API.
         <td><b><a href="#customrolespec">spec</a></b></td>
         <td>object</td>
         <td>
-          CustomRoleSpec defines the desired state of a Coralogix Custom Role.
-See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
-
-Added in v0.4.0<br/>
+          CustomRoleSpec defines the desired state of a Coralogix Custom Role.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -8497,9 +8476,6 @@ Added in v0.4.0<br/>
 
 
 CustomRoleSpec defines the desired state of a Coralogix Custom Role.
-See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
-
-Added in v0.4.0
 
 <table>
     <thead>
@@ -8662,6 +8638,8 @@ with respect to the current state of the instance.<br/>
 
 Dashboard is the Schema for the dashboards API.
 
+**Added in v0.4.0**
+
 <table>
     <thead>
         <tr>
@@ -8693,9 +8671,7 @@ Dashboard is the Schema for the dashboards API.
         <td>object</td>
         <td>
           DashboardSpec defines the desired state of Dashboard.
-See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-started/
-
-Added in v0.4.0<br/>
+See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-started/<br/>
           <br/>
             <i>Validations</i>:<li>!(has(self.json) && has(self.configMapRef)): Only one of json or configMapRef can be declared at the same time</li>
         </td>
@@ -8718,8 +8694,6 @@ Added in v0.4.0<br/>
 
 DashboardSpec defines the desired state of Dashboard.
 See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-started/
-
-Added in v0.4.0
 
 <table>
     <thead>
@@ -9035,7 +9009,9 @@ with respect to the current state of the instance.<br/>
 
 
 
-DashboardsFolder is the Schema for the dashboardsfolders API.
+DashboardsFolder is the Schema for the DashboardsFolders API.
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -9068,9 +9044,7 @@ DashboardsFolder is the Schema for the dashboardsfolders API.
         <td>object</td>
         <td>
           DashboardsFolderSpec defines the desired state of Dashboard Folder.
-See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-started/
-
-Added in v0.4.0<br/>
+See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-started/<br/>
           <br/>
             <i>Validations</i>:<li>!(has(self.parentFolderId) && has(self.parentFolderRef)): Only one of parentFolderID or parentFolderRef can be declared at the same time</li>
         </td>
@@ -9093,8 +9067,6 @@ Added in v0.4.0<br/>
 
 DashboardsFolderSpec defines the desired state of Dashboard Folder.
 See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-started/
-
-Added in v0.4.0
 
 <table>
     <thead>
@@ -9498,8 +9470,12 @@ with respect to the current state of the instance.<br/>
 
 
 
-GlobalRouter is the Schema for the globalrouters API.
+GlobalRouter is the Schema for the GlobalRouters API.
 NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
+
+See also https://coralogix.com/docs/user-guides/notification-center/routing/
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -9531,10 +9507,7 @@ NOTE: This CRD exposes a new feature and may have breaking changes in future rel
         <td><b><a href="#globalrouterspec">spec</a></b></td>
         <td>object</td>
         <td>
-          GlobalRouterSpec defines the desired state of the Global Router.
-See also https://coralogix.com/docs/user-guides/notification-center/routing/
-
-Added in v0.4.0<br/>
+          GlobalRouterSpec defines the desired state of the Global Router.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -9554,9 +9527,6 @@ Added in v0.4.0<br/>
 
 
 GlobalRouterSpec defines the desired state of the Global Router.
-See also https://coralogix.com/docs/user-guides/notification-center/routing/
-
-Added in v0.4.0
 
 <table>
     <thead>
@@ -10251,7 +10221,10 @@ with respect to the current state of the instance.<br/>
 
 
 
-Group is the Schema for the groups API.
+Group is the Schema for the Groups API.
+See also https://coralogix.com/docs/user-guides/account-management/user-management/assign-user-roles-and-scopes-via-groups/
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -10283,10 +10256,7 @@ Group is the Schema for the groups API.
         <td><b><a href="#groupspec">spec</a></b></td>
         <td>object</td>
         <td>
-          GroupSpec defines the desired state of Coralogix Group.
-See also https://coralogix.com/docs/user-guides/account-management/user-management/assign-user-roles-and-scopes-via-groups/
-
-Added in v0.4.0<br/>
+          GroupSpec defines the desired state of Coralogix Group.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -10306,9 +10276,6 @@ Added in v0.4.0<br/>
 
 
 GroupSpec defines the desired state of Coralogix Group.
-See also https://coralogix.com/docs/user-guides/account-management/user-management/assign-user-roles-and-scopes-via-groups/
-
-Added in v0.4.0
 
 <table>
     <thead>
@@ -10625,7 +10592,12 @@ with respect to the current state of the instance.<br/>
 
 
 
-Integration is the Schema for the integrations API.
+Integration is the Schema for the Integrations API.
+See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/
+
+For available integrations see https://coralogix.com/docs/developer-portal/infrastructure-as-code/terraform-provider/integrations/aws-metrics-collector/ or at https://github.com/coralogix/coralogix-operator/tree/main/config/samples/v1alpha1/integrations.
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -10657,12 +10629,7 @@ Integration is the Schema for the integrations API.
         <td><b><a href="#integrationspec">spec</a></b></td>
         <td>object</td>
         <td>
-          IntegrationSpec defines the desired state of a Coralogix (managed) integration.
-See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/
-
-For available integrations see https://coralogix.com/docs/developer-portal/infrastructure-as-code/terraform-provider/integrations/aws-metrics-collector/ or at https://github.com/coralogix/coralogix-operator/tree/main/config/samples/v1alpha1/integrations.
-
-Added in v0.4.0<br/>
+          IntegrationSpec defines the desired state of a Coralogix (managed) integration.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -10682,11 +10649,6 @@ Added in v0.4.0<br/>
 
 
 IntegrationSpec defines the desired state of a Coralogix (managed) integration.
-See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/
-
-For available integrations see https://coralogix.com/docs/developer-portal/infrastructure-as-code/terraform-provider/integrations/aws-metrics-collector/ or at https://github.com/coralogix/coralogix-operator/tree/main/config/samples/v1alpha1/integrations.
-
-Added in v0.4.0
 
 <table>
     <thead>
@@ -10841,6 +10803,9 @@ with respect to the current state of the instance.<br/>
 
 
 OutboundWebhook is the Schema for the API
+See also https://coralogix.com/docs/user-guides/alerting/outbound-webhooks/aws-eventbridge-outbound-webhook/
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -10872,10 +10837,7 @@ OutboundWebhook is the Schema for the API
         <td><b><a href="#outboundwebhookspec">spec</a></b></td>
         <td>object</td>
         <td>
-          OutboundWebhookSpec defines the desired state of an outbound webhook.
-See also https://coralogix.com/docs/user-guides/alerting/outbound-webhooks/aws-eventbridge-outbound-webhook/
-
-Added in v0.4.0<br/>
+          OutboundWebhookSpec defines the desired state of an outbound webhook.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -10895,9 +10857,6 @@ Added in v0.4.0<br/>
 
 
 OutboundWebhookSpec defines the desired state of an outbound webhook.
-See also https://coralogix.com/docs/user-guides/alerting/outbound-webhooks/aws-eventbridge-outbound-webhook/
-
-Added in v0.4.0
 
 <table>
     <thead>
@@ -11590,6 +11549,9 @@ with respect to the current state of the instance.<br/>
 
 Preset is the Schema for the presets API.
 NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
+See also https://coralogix.com/docs/user-guides/notification-center/presets/introduction/
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -11621,10 +11583,7 @@ NOTE: This CRD exposes a new feature and may have breaking changes in future rel
         <td><b><a href="#presetspec">spec</a></b></td>
         <td>object</td>
         <td>
-          PresetSpec defines the desired state of Preset.
-See also https://coralogix.com/docs/user-guides/notification-center/presets/introduction/
-
-Added in v0.4.0<br/>
+          PresetSpec defines the desired state of Preset.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -11644,9 +11603,6 @@ Added in v0.4.0<br/>
 
 
 PresetSpec defines the desired state of Preset.
-See also https://coralogix.com/docs/user-guides/notification-center/presets/introduction/
-
-Added in v0.4.0
 
 <table>
     <thead>
@@ -11991,6 +11947,9 @@ with respect to the current state of the instance.<br/>
 
 
 RecordingRuleGroupSet is the Schema for the RecordingRuleGroupSets API
+See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -12022,10 +11981,7 @@ RecordingRuleGroupSet is the Schema for the RecordingRuleGroupSets API
         <td><b><a href="#recordingrulegroupsetspec">spec</a></b></td>
         <td>object</td>
         <td>
-          RecordingRuleGroupSetSpec defines the desired state of a set of Coralogix recording rule groups.
-See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
-
-Added in v0.4.0<br/>
+          RecordingRuleGroupSetSpec defines the desired state of a set of Coralogix recording rule groups.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -12045,9 +12001,6 @@ Added in v0.4.0<br/>
 
 
 RecordingRuleGroupSetSpec defines the desired state of a set of Coralogix recording rule groups.
-See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
-
-Added in v0.4.0
 
 <table>
     <thead>
@@ -12282,7 +12235,10 @@ with respect to the current state of the instance.<br/>
 
 
 
-RuleGroup is the Schema for the rulegroups API
+RuleGroup is the Schema for the RuleGroups API
+See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -12488,9 +12444,6 @@ Sub group of rules.
 
 
 A rule to change data extraction.
-See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
-
-Added in v0.4.0
 
 <table>
     <thead>
@@ -13082,6 +13035,9 @@ with respect to the current state of the instance.<br/>
 
 
 Scope is the Schema for the scopes API.
+See also https://coralogix.com/docs/user-guides/account-management/user-management/scopes/
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -13113,10 +13069,7 @@ Scope is the Schema for the scopes API.
         <td><b><a href="#scopespec">spec</a></b></td>
         <td>object</td>
         <td>
-          ScopeSpec defines the desired state of a Coralogix Scope.
-See also https://coralogix.com/docs/user-guides/account-management/user-management/scopes/
-
-Added in v0.4.0<br/>
+          ScopeSpec defines the desired state of a Coralogix Scope.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -13136,9 +13089,6 @@ Added in v0.4.0<br/>
 
 
 ScopeSpec defines the desired state of a Coralogix Scope.
-See also https://coralogix.com/docs/user-guides/account-management/user-management/scopes/
-
-Added in v0.4.0
 
 <table>
     <thead>
@@ -13337,10 +13287,14 @@ with respect to the current state of the instance.<br/>
 
 
 
-TCOLogsPolicies is the Schema for the tcologspolicies API.
+TCOLogsPolicies is the Schema for the TCOLogsPolicies API.
 NOTE: This resource performs an atomic overwrite of all existing TCO logs policies
 in the backend. Any existing policies not defined in this resource will be
 removed. Use with caution as this operation is destructive.
+
+See also https://coralogix.com/docs/tco-optimizer-api
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -13372,10 +13326,7 @@ removed. Use with caution as this operation is destructive.
         <td><b><a href="#tcologspoliciesspec">spec</a></b></td>
         <td>object</td>
         <td>
-          TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.
-See also https://coralogix.com/docs/tco-optimizer-api
-
-Added in v0.4.0<br/>
+          TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -13395,9 +13346,6 @@ Added in v0.4.0<br/>
 
 
 TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.
-See also https://coralogix.com/docs/tco-optimizer-api
-
-Added in v0.4.0
 
 <table>
     <thead>
@@ -13734,6 +13682,10 @@ NOTE: This resource performs an atomic overwrite of all existing TCO traces poli
 in the backend. Any existing policies not defined in this resource will be
 removed. Use with caution as this operation is destructive.
 
+See also https://coralogix.com/docs/tco-optimizer-api
+
+**Added in v0.4.0**
+
 <table>
     <thead>
         <tr>
@@ -13764,10 +13716,7 @@ removed. Use with caution as this operation is destructive.
         <td><b><a href="#tcotracespoliciesspec">spec</a></b></td>
         <td>object</td>
         <td>
-          TCOTracesPoliciesSpec defines the desired state of Coralogix TCO policies for traces.
-See also https://coralogix.com/docs/tco-optimizer-api
-
-Added in v0.4.0<br/>
+          TCOTracesPoliciesSpec defines the desired state of Coralogix TCO policies for traces.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -13787,9 +13736,6 @@ Added in v0.4.0<br/>
 
 
 TCOTracesPoliciesSpec defines the desired state of Coralogix TCO policies for traces.
-See also https://coralogix.com/docs/tco-optimizer-api
-
-Added in v0.4.0
 
 <table>
     <thead>
@@ -14280,10 +14226,7 @@ ViewFolder is the Schema for the viewfolders API.
         <td><b><a href="#viewfolderspec">spec</a></b></td>
         <td>object</td>
         <td>
-          ViewFolderSpec defines the desired state of folder for views.
-See also https://coralogix.com/docs/user-guides/monitoring-and-insights/explore-screen/custom-views/
-
-Added in v0.4.0<br/>
+          ViewFolderSpec defines the desired state of folder for views.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -14303,9 +14246,6 @@ Added in v0.4.0<br/>
 
 
 ViewFolderSpec defines the desired state of folder for views.
-See also https://coralogix.com/docs/user-guides/monitoring-and-insights/explore-screen/custom-views/
-
-Added in v0.4.0
 
 <table>
     <thead>
@@ -14445,7 +14385,10 @@ with respect to the current state of the instance.<br/>
 
 
 
-View is the Schema for the views API.
+View is the Schema for the Views API.
+See also https://coralogix.com/docs/user-guides/monitoring-and-insights/explore-screen/custom-views/
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -14477,10 +14420,7 @@ View is the Schema for the views API.
         <td><b><a href="#viewspec">spec</a></b></td>
         <td>object</td>
         <td>
-          ViewSpec defines the desired state of View.
-See also https://coralogix.com/docs/user-guides/monitoring-and-insights/explore-screen/custom-views/
-
-Added in v0.4.0<br/>
+          ViewSpec defines the desired state of View.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -14500,9 +14440,6 @@ Added in v0.4.0<br/>
 
 
 ViewSpec defines the desired state of View.
-See also https://coralogix.com/docs/user-guides/monitoring-and-insights/explore-screen/custom-views/
-
-Added in v0.4.0
 
 <table>
     <thead>

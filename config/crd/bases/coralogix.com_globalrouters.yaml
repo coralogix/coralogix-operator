@@ -18,8 +18,12 @@ spec:
     schema:
       openAPIV3Schema:
         description: |-
-          GlobalRouter is the Schema for the globalrouters API.
+          GlobalRouter is the Schema for the GlobalRouters API.
           NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
+
+          See also https://coralogix.com/docs/user-guides/notification-center/routing/
+
+          **Added in v0.4.0**
         properties:
           apiVersion:
             description: |-
@@ -39,11 +43,8 @@ spec:
           metadata:
             type: object
           spec:
-            description: |-
-              GlobalRouterSpec defines the desired state of the Global Router.
-              See also https://coralogix.com/docs/user-guides/notification-center/routing/
-
-              Added in v0.4.0
+            description: GlobalRouterSpec defines the desired state of the Global
+              Router.
             properties:
               description:
                 description: Description is the description of the global router.
