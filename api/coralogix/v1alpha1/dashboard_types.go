@@ -32,10 +32,7 @@ import (
 )
 
 // DashboardSpec defines the desired state of Dashboard.
-// TODO: add validation for gzipJson
 // See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-started/
-//
-// Added in v0.4.0
 // +kubebuilder:validation:XValidation:rule="!(has(self.json) && has(self.configMapRef))", message="Only one of json or configMapRef can be declared at the same time"
 type DashboardSpec struct {
 	// +optional
@@ -170,6 +167,8 @@ func (d *Dashboard) SetConditions(conditions []metav1.Condition) {
 // +kubebuilder:subresource:status
 
 // Dashboard is the Schema for the dashboards API.
+//
+// **Added in v0.4.0**
 type Dashboard struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

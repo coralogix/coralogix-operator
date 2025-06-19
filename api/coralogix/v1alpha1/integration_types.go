@@ -26,11 +26,6 @@ import (
 )
 
 // IntegrationSpec defines the desired state of a Coralogix (managed) integration.
-// See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/
-//
-// For available integrations see https://coralogix.com/docs/developer-portal/infrastructure-as-code/terraform-provider/integrations/aws-metrics-collector/ or at https://github.com/coralogix/coralogix-operator/tree/main/config/samples/v1alpha1/integrations.
-//
-// Added in v0.4.0
 type IntegrationSpec struct {
 
 	// Unique name of the integration.
@@ -146,7 +141,12 @@ func (i *Integration) SetConditions(conditions []metav1.Condition) {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
-// Integration is the Schema for the integrations API.
+// Integration is the Schema for the Integrations API.
+// See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/
+//
+// For available integrations see https://coralogix.com/docs/developer-portal/infrastructure-as-code/terraform-provider/integrations/aws-metrics-collector/ or at https://github.com/coralogix/coralogix-operator/tree/main/config/samples/v1alpha1/integrations.
+//
+// **Added in v0.4.0**
 type Integration struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

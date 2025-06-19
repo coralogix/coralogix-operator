@@ -21,9 +21,6 @@ import (
 )
 
 // RecordingRuleGroupSetSpec defines the desired state of a set of Coralogix recording rule groups.
-// See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
-//
-// Added in v0.4.0
 type RecordingRuleGroupSetSpec struct {
 	// +kubebuilder:validation:MinItems=1
 	// Recording rule groups.
@@ -126,6 +123,9 @@ func (r *RecordingRuleGroupSet) SetConditions(conditions []metav1.Condition) {
 //+kubebuilder:storageversion
 
 // RecordingRuleGroupSet is the Schema for the RecordingRuleGroupSets API
+// See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
+//
+// **Added in v0.4.0**
 type RecordingRuleGroupSet struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

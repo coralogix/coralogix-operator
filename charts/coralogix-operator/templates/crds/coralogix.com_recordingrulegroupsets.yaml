@@ -17,8 +17,11 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: RecordingRuleGroupSet is the Schema for the RecordingRuleGroupSets
-          API
+        description: |-
+          RecordingRuleGroupSet is the Schema for the RecordingRuleGroupSets API
+          See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
+
+          **Added in v0.4.0**
         properties:
           apiVersion:
             description: |-
@@ -38,11 +41,8 @@ spec:
           metadata:
             type: object
           spec:
-            description: |-
-              RecordingRuleGroupSetSpec defines the desired state of a set of Coralogix recording rule groups.
-              See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
-
-              Added in v0.4.0
+            description: RecordingRuleGroupSetSpec defines the desired state of a
+              set of Coralogix recording rule groups.
             properties:
               groups:
                 description: Recording rule groups.

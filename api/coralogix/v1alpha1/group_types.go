@@ -29,9 +29,6 @@ import (
 )
 
 // GroupSpec defines the desired state of Coralogix Group.
-// See also https://coralogix.com/docs/user-guides/account-management/user-management/assign-user-roles-and-scopes-via-groups/
-//
-// Added in v0.4.0
 type GroupSpec struct {
 	// Name of the group.
 	Name string `json:"name"`
@@ -267,8 +264,10 @@ func (g *Group) SetConditions(conditions []metav1.Condition) {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-
-// Group is the Schema for the groups API.
+// Group is the Schema for the Groups API.
+// See also https://coralogix.com/docs/user-guides/account-management/user-management/assign-user-roles-and-scopes-via-groups/
+//
+// **Added in v0.4.0**
 type Group struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
