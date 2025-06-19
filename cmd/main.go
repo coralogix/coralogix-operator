@@ -26,6 +26,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/filters"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
@@ -102,8 +103,13 @@ func main() {
 	}
 
 	mgrOpts := ctrl.Options{
-		Scheme:                 scheme,
-		Metrics:                metricsServerOptions,
+		Scheme:  scheme,
+		Metrics: metricsServerOptions,
+		Client: client.Options{
+			Cache: &client.CacheOptions{
+				Unstructured: true,
+			},
+		},
 		HealthProbeBindAddress: cfg.ProbeAddr,
 		LeaderElection:         cfg.EnableLeaderElection,
 		LeaderElectionID:       cfg.LeaderElectionID,
@@ -284,6 +290,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&v1alpha1controllers.ArchiveMetricsTargetReconciler{
+		ArchiveMetricsTargetsClient: clientSet.ArchiveMetrics(),
+		Interval:                    cfg.ReconcileIntervals[utils.ArchiveMetricsTargetKind],
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ArchiveMetricsTarget")
+		os.Exit(1)
+	}
 	if err = (&v1alpha1controllers.Events2MetricReconciler{
 		E2MClient: clientSet.Events2Metrics(),
 		Interval:  cfg.ReconcileIntervals[utils.Events2MetricKind],

@@ -4,14 +4,14 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-  name: archivelogstargets.coralogix.com
+  name: archivemetricstargets.coralogix.com
 spec:
   group: coralogix.com
   names:
-    kind: ArchiveLogsTarget
-    listKind: ArchiveLogsTargetList
-    plural: archivelogstargets
-    singular: archivelogstarget
+    kind: ArchiveMetricsTarget
+    listKind: ArchiveMetricsTargetList
+    plural: archivemetricstargets
+    singular: archivemetricstarget
   scope: Namespaced
   versions:
   - name: v1alpha1
@@ -37,8 +37,9 @@ spec:
             type: object
           spec:
             description: |-
-              ArchiveLogsTargetSpec defines the desired state of a Coralogix archive logs target.
-              See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
+              Added in version v1.0.0
+              ArchiveMetricsTargetSpec defines the desired state of a Coralogix archive logs target.
+              See also https://coralogix.com/docs/archive-s3-bucket-forever
 
               Added in version v1.0.0
             properties:
@@ -62,6 +63,23 @@ spec:
                     description: ServiceCrn is the CRN of the service instance.
                     type: string
                 type: object
+              resolutionPolicy:
+                description: The resolution policy for the metrics.
+                properties:
+                  fiveMinutesResolution:
+                    format: int32
+                    type: integer
+                  oneHourResolution:
+                    format: int32
+                    type: integer
+                  rawResolution:
+                    format: int32
+                    type: integer
+                type: object
+              retentionDays:
+                description: The retention days for the metrics.
+                format: int32
+                type: integer
               s3Target:
                 description: The S3 target configuration.
                 properties:
@@ -134,7 +152,7 @@ spec:
                   type: object
                 type: array
               id:
-                description: ID is the identifier of the archive logs target.
+                description: ID is the identifier of the archive metrics target.
                 type: string
             type: object
         type: object
