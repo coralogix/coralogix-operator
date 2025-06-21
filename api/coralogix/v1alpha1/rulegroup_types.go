@@ -15,8 +15,6 @@
 package v1alpha1
 
 import (
-	"encoding/json"
-
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -322,11 +320,6 @@ const (
 	RuleSeverityCritical RuleSeverity = "Critical"
 )
 
-func (in *RuleGroupSpec) ToString() string {
-	str, _ := json.Marshal(*in)
-	return string(str)
-}
-
 func (in *RuleGroupSpec) ExtractUpdateRuleGroupRequest(id string) *cxsdk.UpdateRuleGroupRequest {
 	ruleGroup := in.ExtractCreateRuleGroupRequest()
 	return &cxsdk.UpdateRuleGroupRequest{
@@ -517,7 +510,7 @@ func expandSourceFiledAndParameters(rule Rule) (sourceField *wrapperspb.StringVa
 		}
 	}
 
-	return
+	return sourceField, parameters
 }
 
 func expandRuleMatchers(applications, subsystems []string, severities []RuleSeverity) []*cxsdk.RuleMatcher {
@@ -545,25 +538,6 @@ func expandRuleMatchers(applications, subsystems []string, severities []RuleSeve
 	}
 
 	return ruleMatchers
-}
-
-func flattenRuleMatchers(matchers []*cxsdk.RuleMatcher) (applications []string, subsystems []string, severities []RuleSeverity) {
-	applications = make([]string, 0)
-	subsystems = make([]string, 0)
-	severities = make([]RuleSeverity, 0)
-
-	for _, m := range matchers {
-		switch m.Constraint.(type) {
-		case *cxsdk.RuleMatcherApplicationName:
-			applications = append(applications, m.GetApplicationName().GetValue().GetValue())
-		case *cxsdk.RuleMatcherSubsystemName:
-			subsystems = append(subsystems, m.GetSubsystemName().GetValue().GetValue())
-		case *cxsdk.RuleMatcherSeverity:
-			severities = append(severities, RulesProtoSeverityToSchemaSeverity[m.GetSeverity().GetValue()])
-		}
-	}
-
-	return applications, subsystems, severities
 }
 
 // RuleGroupStatus defines the observed state of RuleGroup

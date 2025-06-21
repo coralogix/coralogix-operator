@@ -107,7 +107,7 @@ spec:
                       method:
                         description: HTTP Method to use.
                         enum:
-                        - Unkown
+                        - Unknown
                         - Get
                         - Post
                         - Put

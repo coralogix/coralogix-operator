@@ -73,10 +73,7 @@ func (r *TCOTracesPoliciesReconciler) HandleCreation(ctx context.Context, log lo
 	if err := r.overwrite(ctx, log, tcoTracesPolicies); err != nil {
 		return err
 	}
-	if err := coralogixreconciler.AddFinalizer(ctx, log, tcoTracesPolicies, r); err != nil {
-		return err
-	}
-	return nil
+	return coralogixreconciler.AddFinalizer(ctx, log, tcoTracesPolicies, r)
 }
 
 func (r *TCOTracesPoliciesReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {

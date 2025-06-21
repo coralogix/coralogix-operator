@@ -28,7 +28,6 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -41,10 +40,6 @@ import (
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/internal/config"
 	"github.com/coralogix/coralogix-operator/internal/utils"
-)
-
-const (
-	defaultCoralogixNotificationPeriod int32 = 5
 )
 
 //+kubebuilder:rbac:groups=monitoring.coreos.com,resources=prometheusrules,verbs=get;list;watch
@@ -243,10 +238,9 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 						errorsEncountered = append(errorsEncountered, fmt.Errorf("error creating Alert CRD %s: %w", alertName, err))
 					}
 					continue
-				} else {
-					errorsEncountered = append(errorsEncountered, fmt.Errorf("error getting Alert CRD %s: %w", alertName, err))
-					continue
 				}
+				errorsEncountered = append(errorsEncountered, fmt.Errorf("error getting Alert CRD %s: %w", alertName, err))
+				continue
 			}
 
 			updated := false
@@ -431,7 +425,7 @@ func prometheusAlertToMetricThreshold(rule prometheus.Rule, priority coralogixv1
 					Threshold:  resource.MustParse("0"),
 					ForOverPct: 100,
 					OfTheLast: coralogixv1beta1.MetricTimeWindow{
-						DynamicDuration: pointer.String(string(rule.For)),
+						DynamicDuration: ptr.To(string(rule.For)),
 					},
 					ConditionType: coralogixv1beta1.MetricThresholdConditionTypeMoreThan,
 				},
@@ -461,22 +455,6 @@ var prometheusSeverityToCXPriority = map[string]coralogixv1beta1.AlertPriority{
 	"warning":  coralogixv1beta1.AlertPriorityP3,
 	"info":     coralogixv1beta1.AlertPriorityP4,
 	"low":      coralogixv1beta1.AlertPriorityP5,
-}
-
-var prometheusAlertForToCoralogixPromqlAlertTimeWindow = map[prometheus.Duration]coralogixv1beta1.MetricTimeWindowSpecificValue{
-	"1m":  coralogixv1beta1.MetricTimeWindowValue1Minute,
-	"5m":  coralogixv1beta1.MetricTimeWindowValue5Minutes,
-	"10m": coralogixv1beta1.MetricTimeWindowValue10Minutes,
-	"15m": coralogixv1beta1.MetricTimeWindowValue15Minutes,
-	"20m": coralogixv1beta1.MetricTimeWindowValue20Minutes,
-	"30m": coralogixv1beta1.MetricTimeWindowValue30Minutes,
-	"1h":  coralogixv1beta1.MetricTimeWindowValue1Hour,
-	"2h":  coralogixv1beta1.MetricTimeWindowValue2Hours,
-	"4h":  coralogixv1beta1.MetricTimeWindowValue4Hours,
-	"6h":  coralogixv1beta1.MetricTimeWindowValue6Hours,
-	"12":  coralogixv1beta1.MetricTimeWindowValue12Hours,
-	"24h": coralogixv1beta1.MetricTimeWindowValue24Hours,
-	"36h": coralogixv1beta1.MetricTimeWindowValue36Hours,
 }
 
 func getOwnerReference(promRule *prometheus.PrometheusRule) metav1.OwnerReference {

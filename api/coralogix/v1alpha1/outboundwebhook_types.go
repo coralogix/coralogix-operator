@@ -174,7 +174,7 @@ func (in *GenericWebhook) extractGenericWebhookConfig() *cxsdk.GenericWebhookInp
 	}
 }
 
-// +kubebuilder:validation:Enum=Unkown;Get;Post;Put
+// +kubebuilder:validation:Enum=Unknown;Get;Post;Put
 type GenericWebhookMethodType string
 
 const (

@@ -57,8 +57,8 @@ var (
 
 func (r *ApiKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx).WithValues(
-		"apiKey", req.NamespacedName.Name,
-		"namespace", req.NamespacedName.Namespace,
+		"apiKey", req.Name,
+		"namespace", req.Namespace,
 	)
 
 	apiKey := &coralogixv1alpha1.ApiKey{}
@@ -73,15 +73,15 @@ func (r *ApiKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	}
 
 	if ptr.Deref(apiKey.Status.Id, "") == "" {
-		if err, reason := r.create(ctx, log, apiKey); err != nil {
+		if reason, err := r.create(ctx, log, apiKey); err != nil {
 			log.Error(err, "Error on creating ApiKey")
 			return coralogixreconciler.ManageErrorWithRequeue(ctx, apiKey, reason, err)
 		}
 		return coralogixreconciler.ManageSuccessWithRequeue(ctx, apiKey, r.Interval)
 	}
 
-	if !apiKey.ObjectMeta.DeletionTimestamp.IsZero() {
-		if err, reason := r.delete(ctx, log, apiKey); err != nil {
+	if !apiKey.DeletionTimestamp.IsZero() {
+		if reason, err := r.delete(ctx, log, apiKey); err != nil {
 			log.Error(err, "Error on deleting ApiKey")
 			return coralogixreconciler.ManageErrorWithRequeue(ctx, apiKey, reason, err)
 		}
@@ -96,7 +96,7 @@ func (r *ApiKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		return ctrl.Result{}, nil
 	}
 
-	if err, reason := r.update(ctx, log, apiKey); err != nil {
+	if reason, err := r.update(ctx, log, apiKey); err != nil {
 		log.Error(err, "Error on updating ApiKey")
 		return coralogixreconciler.ManageErrorWithRequeue(ctx, apiKey, reason, err)
 	}
@@ -104,12 +104,12 @@ func (r *ApiKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	return coralogixreconciler.ManageSuccessWithRequeue(ctx, apiKey, r.Interval)
 }
 
-func (r *ApiKeyReconciler) create(ctx context.Context, log logr.Logger, apiKey *coralogixv1alpha1.ApiKey) (error, string) {
+func (r *ApiKeyReconciler) create(ctx context.Context, log logr.Logger, apiKey *coralogixv1alpha1.ApiKey) (string, error) {
 	createRequest := apiKey.Spec.ExtractCreateApiKeyRequest()
 	log.Info("Creating remote api-key", "api-key", protojson.Format(createRequest))
 	createResponse, err := r.ApiKeysClient.Create(ctx, createRequest)
 	if err != nil {
-		return fmt.Errorf("error on creating remote api-key: %w", err), utils.ReasonRemoteCreationFailed
+		return utils.ReasonRemoteCreationFailed, fmt.Errorf("error on creating remote api-key: %w", err)
 	}
 	log.Info("Remote api-key created", "response", protojson.Format(createResponse))
 
@@ -120,16 +120,16 @@ func (r *ApiKeyReconciler) create(ctx context.Context, log logr.Logger, apiKey *
 	log.Info("Updating ApiKey status", "id", createResponse.KeyId)
 	if err = config.GetClient().Status().Update(ctx, apiKey); err != nil {
 		if err := r.deleteRemoteApiKey(ctx, log, apiKey.Status.Id); err != nil {
-			return fmt.Errorf("error to delete api-key after status update error: %w", err), utils.ReasonRemoteUpdateFailed
+			return utils.ReasonRemoteUpdateFailed, fmt.Errorf("error to delete api-key after status update error: %w", err)
 		}
-		return fmt.Errorf("error to update api-key status: %w", err), utils.ReasonRemoteUpdateFailed
+		return utils.ReasonRemoteUpdateFailed, fmt.Errorf("error to update api-key status: %w", err)
 	}
 
 	if !controllerutil.ContainsFinalizer(apiKey, apiKeyFinalizerName) {
 		log.Info("Updating ApiKey to add finalizer", "id", createResponse.KeyId)
 		controllerutil.AddFinalizer(apiKey, apiKeyFinalizerName)
 		if err = config.GetClient().Update(ctx, apiKey); err != nil {
-			return fmt.Errorf("error on updating ApiKey: %w", err), utils.ReasonInternalK8sError
+			return utils.ReasonInternalK8sError, fmt.Errorf("error on updating ApiKey: %w", err)
 		}
 	}
 
@@ -137,13 +137,13 @@ func (r *ApiKeyReconciler) create(ctx context.Context, log logr.Logger, apiKey *
 	secret := buildSecret(apiKey, createResponse.GetValue())
 	err = config.GetClient().Create(ctx, secret)
 	if err != nil {
-		return fmt.Errorf("error on creating secret: %w", err), utils.ReasonInternalK8sError
+		return utils.ReasonInternalK8sError, fmt.Errorf("error on creating secret: %w", err)
 	}
 
-	return nil, ""
+	return "", nil
 }
 
-func (r *ApiKeyReconciler) update(ctx context.Context, log logr.Logger, apiKey *coralogixv1alpha1.ApiKey) (error, string) {
+func (r *ApiKeyReconciler) update(ctx context.Context, log logr.Logger, apiKey *coralogixv1alpha1.ApiKey) (string, error) {
 	updateRequest := apiKey.Spec.ExtractUpdateApiKeyRequest(*apiKey.Status.Id)
 	log.Info("Updating remote api-key", "api-key", protojson.Format(updateRequest))
 	updateResponse, err := r.ApiKeysClient.Update(ctx, updateRequest)
@@ -154,17 +154,17 @@ func (r *ApiKeyReconciler) update(ctx context.Context, log logr.Logger, apiKey *
 				Id: ptr.To(""),
 			}
 			if err = config.GetClient().Status().Update(ctx, apiKey); err != nil {
-				return fmt.Errorf("error on updating ApiKey status: %w", err), utils.ReasonInternalK8sError
+				return utils.ReasonInternalK8sError, fmt.Errorf("error on updating ApiKey status: %w", err)
 			}
-			return fmt.Errorf("api-key not found on remote: %w", err), utils.ReasonRemoteResourceNotFound
+			return utils.ReasonRemoteResourceNotFound, fmt.Errorf("api-key not found on remote: %w", err)
 		}
-		return fmt.Errorf("error on updating api-key: %w", err), utils.ReasonRemoteUpdateFailed
+		return utils.ReasonRemoteUpdateFailed, fmt.Errorf("error on updating api-key: %w", err)
 	}
 	log.Info("Remote api-key updated", "api-key", protojson.Format(updateResponse))
 
 	getResponse, err := r.ApiKeysClient.Get(ctx, &cxsdk.GetAPIKeyRequest{KeyId: *apiKey.Status.Id})
 	if err != nil {
-		return fmt.Errorf("error on getting remote api-key: %w", err), utils.ReasonRemoteUpdateFailed
+		return utils.ReasonRemoteUpdateFailed, fmt.Errorf("error on getting remote api-key: %w", err)
 	}
 
 	existsSecret := &corev1.Secret{}
@@ -173,11 +173,11 @@ func (r *ApiKeyReconciler) update(ctx context.Context, log logr.Logger, apiKey *
 		if errors.IsNotFound(err) {
 			log.Info("secret is not found, probably was deleted, recreating it")
 			if err := config.GetClient().Create(ctx, buildSecret(apiKey, getResponse.KeyInfo.GetValue())); err != nil {
-				return fmt.Errorf("error on recreating secret: %w", err), utils.ReasonInternalK8sError
+				return utils.ReasonInternalK8sError, fmt.Errorf("error on recreating secret: %w", err)
 			}
-			return nil, ""
+			return "", nil
 		}
-		return fmt.Errorf("error on getting secret: %w", err), utils.ReasonInternalK8sError
+		return utils.ReasonInternalK8sError, fmt.Errorf("error on getting secret: %w", err)
 	}
 
 	desiredSecretKeyValue := getResponse.KeyInfo.GetValue()
@@ -185,25 +185,25 @@ func (r *ApiKeyReconciler) update(ctx context.Context, log logr.Logger, apiKey *
 		log.Info("updating secret", "secret", apiKey.Name+"-secret")
 		existsSecret.Data["key-value"] = []byte(desiredSecretKeyValue)
 		if err := config.GetClient().Update(ctx, existsSecret); err != nil {
-			return fmt.Errorf("error on updating secret: %w", err), utils.ReasonInternalK8sError
+			return utils.ReasonInternalK8sError, fmt.Errorf("error on updating secret: %w", err)
 		}
 	}
 
-	return nil, ""
+	return "", nil
 }
 
-func (r *ApiKeyReconciler) delete(ctx context.Context, log logr.Logger, apiKey *coralogixv1alpha1.ApiKey) (error, string) {
+func (r *ApiKeyReconciler) delete(ctx context.Context, log logr.Logger, apiKey *coralogixv1alpha1.ApiKey) (string, error) {
 	if err := r.deleteRemoteApiKey(ctx, log, apiKey.Status.Id); err != nil {
-		return fmt.Errorf("error on deleting remote api-key: %w", err), utils.ReasonRemoteDeletionFailed
+		return utils.ReasonRemoteDeletionFailed, fmt.Errorf("error on deleting remote api-key: %w", err)
 	}
 
 	log.Info("Removing finalizer from ApiKey")
 	controllerutil.RemoveFinalizer(apiKey, apiKeyFinalizerName)
 	if err := config.GetClient().Update(ctx, apiKey); err != nil {
-		return fmt.Errorf("error on updating ApiKey: %w", err), utils.ReasonInternalK8sError
+		return utils.ReasonInternalK8sError, fmt.Errorf("error on updating ApiKey: %w", err)
 	}
 
-	return nil, ""
+	return "", nil
 }
 
 func buildSecret(apiKey *coralogixv1alpha1.ApiKey, keyValue string) *corev1.Secret {

@@ -136,50 +136,6 @@ func (r *OutboundWebhookReconciler) CheckIDInStatus(obj client.Object) bool {
 	return outboundWebhook.Status.ID != nil && *outboundWebhook.Status.ID != ""
 }
 
-func getWebhookType(webhook *v1alpha1.OutboundWebhook) string {
-	if webhook.Spec.OutboundWebhookType.GenericWebhook != nil {
-		return "genericWebhook"
-	}
-
-	if webhook.Spec.OutboundWebhookType.Slack != nil {
-		return "slack"
-	}
-
-	if webhook.Spec.OutboundWebhookType.PagerDuty != nil {
-		return "pager_duty"
-	}
-
-	if webhook.Spec.OutboundWebhookType.SendLog != nil {
-		return "send_log"
-	}
-
-	if webhook.Spec.OutboundWebhookType.EmailGroup != nil {
-		return "email_group"
-	}
-
-	if webhook.Spec.OutboundWebhookType.MicrosoftTeams != nil {
-		return "microsoft_teams"
-	}
-
-	if webhook.Spec.OutboundWebhookType.Jira != nil {
-		return "jira"
-	}
-
-	if webhook.Spec.OutboundWebhookType.Opsgenie != nil {
-		return "opsgenie"
-	}
-
-	if webhook.Spec.OutboundWebhookType.Demisto != nil {
-		return "demisto"
-	}
-
-	if webhook.Spec.OutboundWebhookType.AwsEventBridge != nil {
-		return "aws_event_bridge"
-	}
-
-	return "unknown"
-}
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *OutboundWebhookReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).

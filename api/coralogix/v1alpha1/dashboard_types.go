@@ -128,9 +128,9 @@ func ExtractJsonContentFromSpec(ctx context.Context, namespace string, in *Dashb
 		}
 		if content, ok := dashboardConfigMap.Data[configMapRef.Key]; ok {
 			return content, nil
-		} else {
-			return "", fmt.Errorf("cannot find key '%v' in config map '%v'", configMapRef.Key, configMapRef.Name)
 		}
+
+		return "", fmt.Errorf("cannot find key '%v' in config map '%v'", configMapRef.Key, configMapRef.Name)
 	}
 
 	return "", fmt.Errorf("json, gzipContentJson or configMapRef is required")

@@ -1,4 +1,4 @@
-name: generate
+name: sanity
 
 on:
   push:
@@ -42,3 +42,20 @@ jobs:
             echo "    make helm-sync-docs"
             exit 1
           fi
+
+  linters:
+    name: Linter Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v7
+        with:
+          version: v2.0.2
+          args: --timeout=5m

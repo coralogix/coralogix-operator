@@ -83,23 +83,22 @@ func (s *ArchiveMetricsTargetSpec) ExtractConfigureTenantRequest() (*cxsdk.Confi
 				},
 			},
 		}, nil
-	} else {
-
-		return &cxsdk.ConfigureTenantRequest{
-			RetentionPolicy: &cxsdk.RetentionPolicyRequest{
-				RawResolution:         s.ResolutionPolicy.RawResolution,
-				FiveMinutesResolution: s.ResolutionPolicy.FiveMinutesResolution,
-				OneHourResolution:     s.ResolutionPolicy.OneHourResolution,
-			},
-			StorageConfig: &cxsdk.ConfigureTenantRequestIbm{
-				Ibm: &cxsdk.ArchiveIbmConfigV2{
-					Crn:        s.IbmCosTarget.BucketCrn,
-					Endpoint:   s.IbmCosTarget.Endpoint,
-					ServiceCrn: *s.IbmCosTarget.ServiceCrn,
-				},
-			},
-		}, nil
 	}
+
+	return &cxsdk.ConfigureTenantRequest{
+		RetentionPolicy: &cxsdk.RetentionPolicyRequest{
+			RawResolution:         s.ResolutionPolicy.RawResolution,
+			FiveMinutesResolution: s.ResolutionPolicy.FiveMinutesResolution,
+			OneHourResolution:     s.ResolutionPolicy.OneHourResolution,
+		},
+		StorageConfig: &cxsdk.ConfigureTenantRequestIbm{
+			Ibm: &cxsdk.ArchiveIbmConfigV2{
+				Crn:        s.IbmCosTarget.BucketCrn,
+				Endpoint:   s.IbmCosTarget.Endpoint,
+				ServiceCrn: *s.IbmCosTarget.ServiceCrn,
+			},
+		},
+	}, nil
 }
 
 func (s *ArchiveMetricsTargetSpec) ExtractUpdateRequest() (*cxsdk.UpdateTenantRequest, error) {
@@ -113,18 +112,18 @@ func (s *ArchiveMetricsTargetSpec) ExtractUpdateRequest() (*cxsdk.UpdateTenantRe
 				},
 			},
 		}, nil
-	} else {
-		return &cxsdk.UpdateTenantRequest{
-			RetentionDays: &s.RetentionDays,
-			StorageConfig: &cxsdk.UpdateRequestIbm{
-				Ibm: &cxsdk.ArchiveIbmConfigV2{
-					Crn:        s.IbmCosTarget.BucketCrn,
-					Endpoint:   s.IbmCosTarget.Endpoint,
-					ServiceCrn: *s.IbmCosTarget.ServiceCrn,
-				},
-			},
-		}, nil
 	}
+
+	return &cxsdk.UpdateTenantRequest{
+		RetentionDays: &s.RetentionDays,
+		StorageConfig: &cxsdk.UpdateRequestIbm{
+			Ibm: &cxsdk.ArchiveIbmConfigV2{
+				Crn:        s.IbmCosTarget.BucketCrn,
+				Endpoint:   s.IbmCosTarget.Endpoint,
+				ServiceCrn: *s.IbmCosTarget.ServiceCrn,
+			},
+		},
+	}, nil
 }
 
 func (i *ArchiveMetricsTarget) GetConditions() []metav1.Condition {

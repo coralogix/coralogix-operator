@@ -135,7 +135,7 @@ var _ = Describe("Group", Ordered, func() {
 		By("Verifying Group is deleted from Coralogix backend")
 		Eventually(func() codes.Code {
 			_, err := groupsClient.Get(ctx, &cxsdk.GetTeamGroupRequest{
-				GroupId: &cxsdk.TeamGroupID{Id: uint32(groupID)},
+				GroupId: &cxsdk.TeamGroupID{Id: groupID},
 			})
 			return cxsdk.Code(err)
 		}, time.Minute, time.Second).Should(Equal(codes.NotFound))

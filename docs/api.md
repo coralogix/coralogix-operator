@@ -11122,7 +11122,7 @@ Generic HTTP(s) webhook.
         <td>
           HTTP Method to use.<br/>
           <br/>
-            <i>Enum</i>: Unkown, Get, Post, Put<br/>
+            <i>Enum</i>: Unknown, Get, Post, Put<br/>
         </td>
         <td>true</td>
       </tr><tr>
