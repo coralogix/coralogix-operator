@@ -28,11 +28,7 @@ func SetupMetrics() error {
 		return err
 	}
 
-	if err := RegisterCollectors(); err != nil {
-		return err
-	}
-
-	return nil
+	return RegisterCollectors()
 }
 
 func RegisterMetrics() error {

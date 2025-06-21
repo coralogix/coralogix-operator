@@ -26,32 +26,40 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/watch"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	crconfig "sigs.k8s.io/controller-runtime/pkg/config"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/config"
 	"github.com/coralogix/coralogix-operator/internal/controller/mock_clientset"
 )
 
-func setupOutboundWebhooksReconciler(t *testing.T, ctx context.Context, outboundWebhooksClient *mock_clientset.MockOutboundWebhooksClientInterface) (OutboundWebhookReconciler, watch.Interface) {
+func setupOutboundWebhooksReconciler(ctx context.Context, t *testing.T, outboundWebhooksClient *mock_clientset.MockOutboundWebhooksClientInterface) (OutboundWebhookReconciler, watch.Interface) {
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
 	scheme := runtime.NewScheme()
-	utilruntime.Must(coralogixv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(v1alpha1.AddToScheme(scheme))
 
 	mgr, _ := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:  scheme,
 		Metrics: metricsserver.Options{BindAddress: "0"},
+		Controller: crconfig.Controller{
+			SkipNameValidation: ptr.To(true),
+		},
 	})
 
-	go mgr.GetCache().Start(ctx)
+	go func() {
+		if err := mgr.GetCache().Start(ctx); err != nil {
+			t.Errorf("failed to start cache: %v", err)
+			return
+		}
+	}()
 
 	mgr.GetCache().WaitForCacheSync(ctx)
 	withWatch, err := client.NewWithWatch(mgr.GetConfig(), client.Options{
@@ -65,7 +73,8 @@ func setupOutboundWebhooksReconciler(t *testing.T, ctx context.Context, outbound
 	r := OutboundWebhookReconciler{
 		OutboundWebhooksClient: outboundWebhooksClient,
 	}
-	r.SetupWithManager(mgr)
+	err = r.SetupWithManager(mgr)
+	assert.NoError(t, err)
 
 	watcher, _ := withWatch.Watch(ctx, &v1alpha1.OutboundWebhookList{})
 	return r, watcher
@@ -117,7 +126,7 @@ func TestOutboundWebhooksCreation(t *testing.T) {
 							Url:     "url",
 							Method:  "Get",
 							Headers: map[string]string{"key": "value"},
-							Payload: pointer.String("payload"),
+							Payload: ptr.To("payload"),
 						},
 					},
 				},
@@ -142,7 +151,7 @@ func TestOutboundWebhooksCreation(t *testing.T) {
 				})
 			}
 
-			reconciler, watcher := setupOutboundWebhooksReconciler(t, ctx, outboundWebhooksClient)
+			reconciler, watcher := setupOutboundWebhooksReconciler(ctx, t, outboundWebhooksClient)
 
 			err := config.GetClient().Create(ctx, &tt.outboundWebhook)
 
@@ -209,7 +218,7 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 							Url:     "url",
 							Method:  "Get",
 							Headers: map[string]string{"key": "value"},
-							Payload: pointer.String("payload"),
+							Payload: ptr.To("payload"),
 						},
 					},
 				},
@@ -226,7 +235,7 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 							Url:     "updated-url",
 							Method:  "Post",
 							Headers: map[string]string{"updated-key": "updated-value"},
-							Payload: pointer.String("updated-payload"),
+							Payload: ptr.To("updated-payload"),
 						},
 					},
 				},
@@ -251,7 +260,7 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 				})
 			}
 
-			reconciler, watcher := setupOutboundWebhooksReconciler(t, ctx, outboundWebhookClient)
+			reconciler, watcher := setupOutboundWebhooksReconciler(ctx, t, outboundWebhookClient)
 
 			err := config.GetClient().Create(ctx, &tt.outboundWebhook)
 
@@ -277,7 +286,7 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 
 			assert.NoError(t, err)
 
-			tt.updatedWebhook.ObjectMeta.ResourceVersion = outboundWebhook.ObjectMeta.ResourceVersion
+			tt.updatedWebhook.ResourceVersion = outboundWebhook.ResourceVersion
 			err = config.GetClient().Update(ctx, &tt.updatedWebhook)
 			assert.NoError(t, err)
 
@@ -289,6 +298,7 @@ func TestOutboundWebhookUpdate(t *testing.T) {
 					Name:      tt.updatedWebhook.Name,
 				},
 			})
+			assert.NoError(t, err)
 
 			outboundWebhook = &v1alpha1.OutboundWebhook{}
 			err = config.GetClient().Get(ctx, types.NamespacedName{
@@ -347,7 +357,7 @@ func TestOutboundWebhookDeletion(t *testing.T) {
 							Url:     "url",
 							Method:  "Get",
 							Headers: map[string]string{"key": "value"},
-							Payload: pointer.String("payload"),
+							Payload: ptr.To("payload"),
 						},
 					},
 				},
@@ -372,7 +382,7 @@ func TestOutboundWebhookDeletion(t *testing.T) {
 				})
 			}
 
-			reconciler, watcher := setupOutboundWebhooksReconciler(t, ctx, outboundWebhooksClient)
+			reconciler, watcher := setupOutboundWebhooksReconciler(ctx, t, outboundWebhooksClient)
 
 			err := config.GetClient().Create(ctx, &tt.outboundWebhook)
 
@@ -386,6 +396,7 @@ func TestOutboundWebhookDeletion(t *testing.T) {
 					Name:      tt.outboundWebhook.Name,
 				},
 			})
+			assert.NoError(t, err)
 
 			err = config.GetClient().Delete(ctx, &tt.outboundWebhook)
 

@@ -43,10 +43,6 @@ type IntegrationReconciler struct {
 // +kubebuilder:rbac:groups=coralogix.com,resources=integrations/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=coralogix.com,resources=integrations/finalizers,verbs=update
 
-var (
-	integrationFinalizerName = "integration.coralogix.com/finalizer"
-)
-
 func (r *IntegrationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	return coralogixreconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.Integration{}, r)
 }

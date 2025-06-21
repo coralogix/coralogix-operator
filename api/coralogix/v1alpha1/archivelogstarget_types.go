@@ -69,32 +69,31 @@ func (s *ArchiveLogsTargetSpec) ExtractSetTargetRequest(isTargetActive bool) (*c
 				},
 			},
 		}, nil
-	} else {
-		var bucketType cxsdk.IbmBucketType
-		if s.IbmCosTarget.BucketType != nil {
-			switch *s.IbmCosTarget.BucketType {
-			case "UNSPECIFIED":
-				bucketType = cxsdk.IbmBucketTypeUnspecified
-			case "EXTERNAL":
-				bucketType = cxsdk.IbmBucketTypeExternal
-			case "INTERNAL":
-				bucketType = cxsdk.IbmBucketTypeInternal
-
-			}
-		}
-
-		return &cxsdk.SetTargetRequest{
-			IsActive: true,
-			TargetSpec: &cxsdk.SetTargetRequestIbmCos{
-				IbmCos: &cxsdk.IBMCosTargetSpec{
-					BucketCrn:  s.IbmCosTarget.BucketCrn,
-					Endpoint:   s.IbmCosTarget.Endpoint,
-					ServiceCrn: s.IbmCosTarget.ServiceCrn,
-					BucketType: &bucketType,
-				},
-			},
-		}, nil
 	}
+
+	var bucketType cxsdk.IbmBucketType
+	if s.IbmCosTarget.BucketType != nil {
+		switch *s.IbmCosTarget.BucketType {
+		case "UNSPECIFIED":
+			bucketType = cxsdk.IbmBucketTypeUnspecified
+		case "EXTERNAL":
+			bucketType = cxsdk.IbmBucketTypeExternal
+		case "INTERNAL":
+			bucketType = cxsdk.IbmBucketTypeInternal
+		}
+	}
+
+	return &cxsdk.SetTargetRequest{
+		IsActive: true,
+		TargetSpec: &cxsdk.SetTargetRequestIbmCos{
+			IbmCos: &cxsdk.IBMCosTargetSpec{
+				BucketCrn:  s.IbmCosTarget.BucketCrn,
+				Endpoint:   s.IbmCosTarget.Endpoint,
+				ServiceCrn: s.IbmCosTarget.ServiceCrn,
+				BucketType: &bucketType,
+			},
+		},
+	}, nil
 }
 
 func (i *ArchiveLogsTarget) GetConditions() []metav1.Condition {
