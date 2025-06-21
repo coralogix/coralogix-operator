@@ -245,11 +245,7 @@ func (a *AlertScheduler) ExtractUpdateAlertSchedulerRequest() (*cxsdk.UpdateAler
 }
 
 func (a *AlertScheduler) extractAlertScheduler() (*cxsdk.AlertSchedulerRule, error) {
-	metaLabels, err := extractMetaLabels(a.Spec.MetaLabels)
-	if err != nil {
-		return nil, fmt.Errorf("error on extracting meta labels: %w", err)
-	}
-
+	metaLabels := extractMetaLabels(a.Spec.MetaLabels)
 	filter, err := a.extractFilter()
 	if err != nil {
 		return nil, fmt.Errorf("error on extracting filter: %w", err)
@@ -270,7 +266,7 @@ func (a *AlertScheduler) extractAlertScheduler() (*cxsdk.AlertSchedulerRule, err
 	}, nil
 }
 
-func extractMetaLabels(metaLabels []MetaLabel) ([]*cxsdk.MetaLabel, error) {
+func extractMetaLabels(metaLabels []MetaLabel) []*cxsdk.MetaLabel {
 	var result []*cxsdk.MetaLabel
 	for _, ml := range metaLabels {
 		result = append(result, &cxsdk.MetaLabel{
@@ -278,16 +274,12 @@ func extractMetaLabels(metaLabels []MetaLabel) ([]*cxsdk.MetaLabel, error) {
 			Value: ml.Value,
 		})
 	}
-	return result, nil
+	return result
 }
 
 func (a *AlertScheduler) extractFilter() (*cxsdk.AlertSchedulerFilter, error) {
 	if a.Spec.Filter.MetaLabels != nil {
-		metaLabels, err := extractMetaLabels(a.Spec.Filter.MetaLabels)
-		if err != nil {
-			return nil, fmt.Errorf("error on extracting meta labels: %w", err)
-		}
-
+		metaLabels := extractMetaLabels(a.Spec.Filter.MetaLabels)
 		return &cxsdk.AlertSchedulerFilter{
 			WhatExpression: a.Spec.Filter.WhatExpression,
 			WhichAlerts: &cxsdk.AlertSchedulerFilterMetaLabels{

@@ -27,7 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/pointer"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -81,7 +80,7 @@ var _ = Describe("Alert", Ordered, func() {
 						{
 							NotifyOn: coralogixv1beta1.NotifyOnTriggeredOnly,
 							RetriggeringPeriod: coralogixv1beta1.RetriggeringPeriod{
-								Minutes: pointer.Uint32(1),
+								Minutes: ptr.To(uint32(1)),
 							},
 							Integration: coralogixv1beta1.IntegrationType{
 								Recipients: []string{"example@coralogix.com"},
@@ -150,7 +149,7 @@ var _ = Describe("Alert", Ordered, func() {
 				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
 					MetricThreshold: &coralogixv1beta1.MetricThreshold{
 						MissingValues: coralogixv1beta1.MetricMissingValues{
-							MinNonNullValuesPct: pointer.Uint32(10),
+							MinNonNullValuesPct: ptr.To(uint32(10)),
 						},
 						MetricFilter: coralogixv1beta1.MetricFilter{
 							Promql: "http_requests_total{status!~\"4..\"}",
@@ -162,7 +161,7 @@ var _ = Describe("Alert", Ordered, func() {
 									ForOverPct:    50,
 									ConditionType: coralogixv1beta1.MetricThresholdConditionTypeMoreThan,
 									OfTheLast: coralogixv1beta1.MetricTimeWindow{
-										DynamicDuration: pointer.String("12h"),
+										DynamicDuration: ptr.To("12h"),
 									},
 								},
 							},
@@ -236,7 +235,7 @@ var _ = Describe("Alert", Ordered, func() {
 						{
 							NotifyOn: coralogixv1beta1.NotifyOnTriggeredOnly,
 							RetriggeringPeriod: coralogixv1beta1.RetriggeringPeriod{
-								Minutes: pointer.Uint32(1),
+								Minutes: ptr.To(uint32(1)),
 							},
 							Integration: coralogixv1beta1.IntegrationType{
 								IntegrationRef: &coralogixv1beta1.IntegrationRef{
@@ -262,7 +261,7 @@ var _ = Describe("Alert", Ordered, func() {
 				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
 					MetricThreshold: &coralogixv1beta1.MetricThreshold{
 						MissingValues: coralogixv1beta1.MetricMissingValues{
-							MinNonNullValuesPct: pointer.Uint32(10),
+							MinNonNullValuesPct: ptr.To(uint32(10)),
 						},
 						MetricFilter: coralogixv1beta1.MetricFilter{
 							Promql: "http_requests_total{status!~\"4..\"}",
@@ -274,7 +273,7 @@ var _ = Describe("Alert", Ordered, func() {
 									ForOverPct:    50,
 									ConditionType: coralogixv1beta1.MetricThresholdConditionTypeMoreThan,
 									OfTheLast: coralogixv1beta1.MetricTimeWindow{
-										DynamicDuration: pointer.String("12h"),
+										DynamicDuration: ptr.To("12h"),
 									},
 								},
 							},

@@ -25,7 +25,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/wrapperspb"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -77,7 +77,7 @@ func (r *DashboardReconciler) HandleCreation(ctx context.Context, log logr.Logge
 	log.Info("Remote dashboard created", "dashboard", protojson.Format(createResponse))
 
 	dashboard.Status = coralogixv1alpha1.DashboardStatus{
-		ID: pointer.String(createResponse.DashboardId.Value),
+		ID: ptr.To(createResponse.DashboardId.Value),
 	}
 
 	return nil

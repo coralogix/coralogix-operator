@@ -46,16 +46,12 @@ manifests: controller-gen ## Generate ClusterRole and CustomResourceDefinition o
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
-.PHONY: fmt
-fmt: ## Run go fmt against code.
-	go fmt ./...
-
-.PHONY: vet
-vet: ## Run go vet against code.
-	go vet ./...
+.PHONY: lint
+lint:
+	golangci-lint run
 
 .PHONY: unit-tests
-unit-tests: manifests generate fmt vet envtest ## Run tests.
+unit-tests: manifests generate envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./internal/controller/... -coverprofile cover.out
 
 ##@ Documentation
@@ -66,11 +62,11 @@ generate-api-docs: crdoc ## Generate API documentation.
 ##@ Build
 
 .PHONY: build
-build: generate fmt vet ## Build manager binary.
+build: generate ## Build manager binary.
 	go build -o bin/manager cmd/main.go
 
 .PHONY: run
-run: manifests generate fmt vet ## Run a controller from your host.
+run: manifests generate ## Run a controller from your host.
 	go run cmd/main.go
 
 # If you wish built the manager image targeting other platforms you can use the --platform flag.

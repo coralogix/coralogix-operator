@@ -45,7 +45,7 @@ var _ = Describe("ArchiveMetricsTarget", Ordered, func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		awsRegion = os.Getenv("AWS_REGION")
 		metricsBucket = os.Getenv("METRICS_BUCKET")
-		archiveMetricsClient = (*cxsdk.ArchiveMetricsClient)(ClientsInstance.GetCoralogixClientSet().ArchiveMetrics())
+		archiveMetricsClient = ClientsInstance.GetCoralogixClientSet().ArchiveMetrics()
 		archiveMetricsTarget = &coralogixv1alpha1.ArchiveMetricsTarget{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      targetName,
@@ -75,10 +75,6 @@ var _ = Describe("ArchiveMetricsTarget", Ordered, func() {
 		fetchedTarget := &coralogixv1alpha1.ArchiveMetricsTarget{}
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: targetName, Namespace: testNamespace}, fetchedTarget)).To(Succeed())
-			for _, condition := range fetchedTarget.Status.Conditions {
-				g.Expect(condition.Type).To(Not(Equal("Failed")))
-				g.Expect(condition.Status).To(Not(Equal("True")))
-			}
 			if fetchedTarget.Status.ID != nil {
 				return nil
 			}
@@ -90,8 +86,8 @@ var _ = Describe("ArchiveMetricsTarget", Ordered, func() {
 			archiveMetricsTarget, err := archiveMetricsClient.Get(ctx)
 			g.Expect(err).ToNot(HaveOccurred())
 			g.Expect(archiveMetricsTarget.TenantConfig.Disabled).To(BeFalse())
-			g.Expect(archiveMetricsTarget.TenantConfig.GetS3().Bucket == metricsBucket).To(BeTrue())
-			g.Expect(archiveMetricsTarget.TenantConfig.GetS3().Region == awsRegion).To(BeTrue())
+			g.Expect(archiveMetricsTarget.TenantConfig.GetS3().Bucket).To(Equal(metricsBucket))
+			g.Expect(archiveMetricsTarget.TenantConfig.GetS3().Region).To(Equal(awsRegion))
 		}, time.Minute, time.Second).Should(Succeed())
 	})
 

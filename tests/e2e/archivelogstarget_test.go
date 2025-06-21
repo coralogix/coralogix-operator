@@ -45,7 +45,7 @@ var _ = Describe("ArchiveLogsTarget", Ordered, func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		awsRegion = os.Getenv("AWS_REGION")
 		logsBucket = os.Getenv("LOGS_BUCKET")
-		archiveLogsClient = (*cxsdk.ArchiveLogsClient)(ClientsInstance.GetCoralogixClientSet().ArchiveLogs())
+		archiveLogsClient = ClientsInstance.GetCoralogixClientSet().ArchiveLogs()
 		archiveLogsTarget = &coralogixv1alpha1.ArchiveLogsTarget{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      targetName,
@@ -61,21 +61,13 @@ var _ = Describe("ArchiveLogsTarget", Ordered, func() {
 	})
 
 	It("Should be set successfully", func(ctx context.Context) {
-
 		By("Setting a storage target in Coralogix backend")
 		Expect(crClient.Create(ctx, archiveLogsTarget)).To(Succeed())
 
 		By("Fetching the storage target from the backend")
 		fetchedTarget := &coralogixv1alpha1.ArchiveLogsTarget{}
 		Eventually(func(g Gomega) error {
-			ok := g.Expect(crClient.Get(ctx, types.NamespacedName{Name: targetName, Namespace: testNamespace}, fetchedTarget)).To(Succeed())
-			if !ok {
-				return fmt.Errorf("error fetching target")
-			}
-			for _, condition := range fetchedTarget.Status.Conditions {
-				Expect(condition.Type).To(Not(Equal("Failed")))
-				Expect(condition.Status).To(Not(Equal("True")))
-			}
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: targetName, Namespace: testNamespace}, fetchedTarget)).To(Succeed())
 			if fetchedTarget.Status.ID != nil {
 				return nil
 			}

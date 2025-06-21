@@ -29,9 +29,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	crconfig "sigs.k8s.io/controller-runtime/pkg/config"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
@@ -89,10 +90,10 @@ func expectedRuleGroupCRD() *coralogixv1alpha1.RuleGroup {
 			Creator:     "creator",
 			Active:      true,
 			Hidden:      false,
-			Order:       pointer.Int32(1),
+			Order:       ptr.To(int32(1)),
 			RuleSubgroups: []coralogixv1alpha1.RuleSubGroup{
 				{
-					Order: pointer.Int32(1),
+					Order: ptr.To(int32(1)),
 					Rules: []coralogixv1alpha1.Rule{
 						{
 							Name:        "rule_name",
@@ -164,10 +165,18 @@ func TestRuleGroupReconciler_Reconcile(t *testing.T) {
 	mgr, _ := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:  scheme,
 		Metrics: metricsserver.Options{BindAddress: "0"},
+		Controller: crconfig.Controller{
+			SkipNameValidation: ptr.To(true),
+		},
 	})
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go mgr.GetCache().Start(ctx)
+	go func() {
+		if err := mgr.GetCache().Start(ctx); err != nil {
+			t.Errorf("failed to start cache: %v", err)
+			return
+		}
+	}()
 	mgr.GetCache().WaitForCacheSync(ctx)
 	withWatch, err := client.NewWithWatch(mgr.GetConfig(), client.Options{
 		Scheme: mgr.GetScheme(),
@@ -176,7 +185,8 @@ func TestRuleGroupReconciler_Reconcile(t *testing.T) {
 	r := RuleGroupReconciler{
 		RuleGroupClient: ruleGroupClient,
 	}
-	r.SetupWithManager(mgr)
+	err = r.SetupWithManager(mgr)
+	assert.NoError(t, err)
 
 	config.InitClient(withWatch)
 	config.InitScheme(mgr.GetScheme())
@@ -206,6 +216,7 @@ func TestRuleGroupReconciler_Reconcile(t *testing.T) {
 	assert.EqualValues(t, ruleGroupBackendSchema, actualRuleGroup.GetRuleGroup())
 
 	err = withWatch.Delete(ctx, actualRuleGroupCRD)
+	assert.NoError(t, err)
 	<-watcher.ResultChan()
 
 	result, err = r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
@@ -226,10 +237,18 @@ func TestRuleGroupReconciler_Reconcile_5XX_StatusError(t *testing.T) {
 	mgr, _ := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:  scheme,
 		Metrics: metricsserver.Options{BindAddress: "0"},
+		Controller: crconfig.Controller{
+			SkipNameValidation: ptr.To(true),
+		},
 	})
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go mgr.GetCache().Start(ctx)
+	go func() {
+		if err := mgr.GetCache().Start(ctx); err != nil {
+			t.Errorf("failed to start cache: %v", err)
+			return
+		}
+	}()
 	mgr.GetCache().WaitForCacheSync(ctx)
 	withWatch, err := client.NewWithWatch(mgr.GetConfig(), client.Options{
 		Scheme: mgr.GetScheme(),
@@ -238,7 +257,8 @@ func TestRuleGroupReconciler_Reconcile_5XX_StatusError(t *testing.T) {
 	r := RuleGroupReconciler{
 		RuleGroupClient: ruleGroupClient,
 	}
-	r.SetupWithManager(mgr)
+	err = r.SetupWithManager(mgr)
+	assert.NoError(t, err)
 
 	config.InitClient(withWatch)
 	config.InitScheme(mgr.GetScheme())
@@ -282,8 +302,10 @@ func TestRuleGroupReconciler_Reconcile_5XX_StatusError(t *testing.T) {
 	assert.EqualValues(t, ruleGroupBackendSchema, actualRuleGroup.GetRuleGroup())
 
 	err = withWatch.Delete(ctx, actualRuleGroupCRD)
+	assert.NoError(t, err)
 	<-watcher.ResultChan()
-	r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
+	_, err = r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
+	assert.NoError(t, err)
 }
 
 // createRuleGroupClientSimpleMock creates a simple mock for RuleGroupsClientInterface which returns a single rule group.

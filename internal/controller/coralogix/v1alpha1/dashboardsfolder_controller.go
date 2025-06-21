@@ -26,7 +26,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/wrapperspb"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -85,7 +85,7 @@ func (r *DashboardsFolderReconciler) HandleCreation(ctx context.Context, log log
 	}
 	log.Info("Remote dashboard dashboards-folder", "folder", protojson.Format(createResponse))
 
-	folder.Status = coralogixv1alpha1.DashboardsFolderStatus{ID: pointer.String(folderToCreate.Id.GetValue())}
+	folder.Status = coralogixv1alpha1.DashboardsFolderStatus{ID: ptr.To(folderToCreate.Id.GetValue())}
 	return nil
 }
 
