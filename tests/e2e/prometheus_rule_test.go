@@ -63,12 +63,12 @@ var _ = Describe("PrometheusRule", Ordered, func() {
 				Groups: []prometheus.RuleGroup{
 					{
 						Name:     "example.rules",
-						Interval: "60s",
+						Interval: prometheus.DurationPointer("60s"),
 						Rules: []prometheus.Rule{
 							{
 								Alert: alertName,
 								Expr:  intstr.FromString("up == 0"), // Short test expression
-								For:   "5m",
+								For:   prometheus.DurationPointer("5m"),
 								Annotations: map[string]string{
 									"description": "example alert description",
 								},
