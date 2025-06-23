@@ -15,11 +15,13 @@
 package v1alpha1
 
 import (
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-	utils "github.com/coralogix/coralogix-operator/api/coralogix"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+
+	utils "github.com/coralogix/coralogix-operator/api/coralogix"
 )
 
 // Events2MetricSpec defines the desired state of Events2Metric.
@@ -30,6 +32,7 @@ type Events2MetricSpec struct {
 	// +optional
 	Description *string `json:"description,omitempty"`
 	// Represents the limit of the permutations
+	// +optional
 	PermutationsLimit *int32 `json:"permutationsLimit,omitempty"`
 	// E2M metric labels
 	// +optional
@@ -68,7 +71,7 @@ type MetricFieldAggregation struct {
 	TargetMetricName string `json:"targetMetricName"`
 	// Aggregate metadata, samples or histogram type
 	// Types that are valid to be assigned to AggMetadata: AggregationTypeSamples, AggregationTypeHistogram
-	AggMetadata AggregationMetadata `json:"aggMetadata,omitempty"`
+	AggMetadata AggregationMetadata `json:"aggMetadata"`
 }
 
 // AggregationType defines the type of aggregation to be performed.
@@ -106,14 +109,16 @@ var AggregationTypeSchemaToProto = map[AggregationType]cxsdk.E2MAggregationType{
 // +kubebuilder:validation:XValidation:rule="has(self.samples) != has(self.histogram)",message="Exactly one of samples or histogram must be set"
 type AggregationMetadata struct {
 	// E2M sample type metadata
+	// +optional
 	Samples *SamplesMetadata `json:"samples,omitempty"`
 	// E2M aggregate histogram type metadata
+	// +optional
 	Histogram *HistogramMetadata `json:"histogram,omitempty"`
 }
 
 // SamplesMetadata - E2M aggregate sample type
 type SamplesMetadata struct {
-	SampleType E2MAggSampleType `json:"sampleType,omitempty"`
+	SampleType E2MAggSampleType `json:"sampleType"`
 }
 
 // E2MAggSamplesSampleType defines the type of sample aggregation to be performed.

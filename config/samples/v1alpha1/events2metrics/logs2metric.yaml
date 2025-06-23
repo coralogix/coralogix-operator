@@ -22,13 +22,14 @@ spec:
         - "filter:startsWith:nginx"
       severityFilters:
         - "debug"
-#  metricFields:
-#    - targetBaseMetricName: "method"
-#      sourceField: "method"
-#    - targetBaseMetricName: "geo_point"
-#      sourceField: "location_geopoint"
-#      aggregations:
-#        - aggType: "avg"
-#          targetField: "geo_point_avg"
+  metricFields:
+    - targetBaseMetricName: "method"
+      sourceField: "method"
+      aggregations:
+        - aggType: "min"
+          targetMetricName: "Timestamp"
+          aggMetadata:
+            samples:
+              sampleType: "min"
 
 

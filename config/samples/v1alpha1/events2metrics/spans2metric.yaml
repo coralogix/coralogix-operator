@@ -25,13 +25,5 @@ spec:
         - "filter:equals:GET"
       serviceFilters:
         - "filter:equals:nginx"
-#  metricFields:
-#    - targetBaseMetricName: "method"
-#      sourceField: "method"
-#    - targetBaseMetricName: "geo_point"
-#      sourceField: "location_geopoint"
-#      aggregations:
-#        - aggType: "avg"
-#          targetField: "geo_point_avg"
 
 

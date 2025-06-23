@@ -119,7 +119,6 @@ rules:
       - dashboardsfolders/status
       - extensions/status
       - events2metrics/status
-      - events2metrics/status
       - globalrouters/status
       - groups/status
       - integrations/status

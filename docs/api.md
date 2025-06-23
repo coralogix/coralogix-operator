@@ -9581,6 +9581,16 @@ Spans query for spans2metrics E2M
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#events2metricspecmetricfieldsindexaggregationsindexaggmetadata">aggMetadata</a></b></td>
+        <td>object</td>
+        <td>
+          Aggregate metadata, samples or histogram type
+Types that are valid to be assigned to AggMetadata: AggregationTypeSamples, AggregationTypeHistogram<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.samples) != has(self.histogram): Exactly one of samples or histogram must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
         <td><b>aggType</b></td>
         <td>enum</td>
         <td>
@@ -9605,16 +9615,6 @@ Spans query for spans2metrics E2M
           Target metric field alias name<br/>
         </td>
         <td>true</td>
-      </tr><tr>
-        <td><b><a href="#events2metricspecmetricfieldsindexaggregationsindexaggmetadata">aggMetadata</a></b></td>
-        <td>object</td>
-        <td>
-          Aggregate metadata, samples or histogram type
-Types that are valid to be assigned to AggMetadata: AggregationTypeSamples, AggregationTypeHistogram<br/>
-          <br/>
-            <i>Validations</i>:<li>has(self.samples) != has(self.histogram): Exactly one of samples or histogram must be set</li>
-        </td>
-        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -9705,7 +9705,7 @@ E2M sample type metadata
           <br/>
             <i>Enum</i>: min, max<br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
