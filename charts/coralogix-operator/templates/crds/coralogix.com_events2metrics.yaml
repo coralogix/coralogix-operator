@@ -80,6 +80,8 @@ spec:
                                     - min
                                     - max
                                     type: string
+                                required:
+                                - sampleType
                                 type: object
                             type: object
                             x-kubernetes-validations:
@@ -105,6 +107,7 @@ spec:
                             description: Target metric field alias name
                             type: string
                         required:
+                        - aggMetadata
                         - aggType
                         - enabled
                         - targetMetricName
