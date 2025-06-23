@@ -64,6 +64,7 @@ rules:
       - recordingrulegroupsets
       - rulegroups
       - scopes
+      - slos
       - tcologspolicies
       - tcotracespolicies
       - viewfolders
@@ -97,6 +98,7 @@ rules:
       - recordingrulegroupsets/finalizers
       - rulegroups/finalizers
       - scopes/finalizers
+      - slos/finalizers
       - tcologspolicies/finalizers
       - tcotracespolicies/finalizers
       - viewfolders/finalizers
@@ -124,6 +126,7 @@ rules:
       - recordingrulegroupsets/status
       - rulegroups/status
       - scopes/status
+      - slos/status
       - tcologspolicies/status
       - tcotracespolicies/status
       - viewfolders/status
