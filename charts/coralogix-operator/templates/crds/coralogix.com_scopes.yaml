@@ -17,7 +17,11 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Scope is the Schema for the scopes API.
+        description: |-
+          Scope is the Schema for the scopes API.
+          See also https://coralogix.com/docs/user-guides/account-management/user-management/scopes/
+
+          **Added in v0.4.0**
         properties:
           apiVersion:
             description: |-
@@ -37,11 +41,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: |-
-              ScopeSpec defines the desired state of a Coralogix Scope.
-              See also https://coralogix.com/docs/user-guides/account-management/user-management/scopes/
-
-              Added in v0.4.0
+            description: ScopeSpec defines the desired state of a Coralogix Scope.
             properties:
               defaultExpression:
                 description: Default expression to use when no filter matches the

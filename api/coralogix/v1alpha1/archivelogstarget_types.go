@@ -21,10 +21,7 @@ import (
 )
 
 // ArchiveLogsTargetSpec defines the desired state of a Coralogix archive logs target.
-// See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
 // +kubebuilder:validation:XValidation:rule="has(self.s3Target) != has(self.ibmCosTarget)",message="Exactly one of s3Target or ibmCosTarget must be specified"
-//
-// Added in version v1.0.0
 type ArchiveLogsTargetSpec struct {
 	// The S3 target configuration.
 	// +optional
@@ -72,32 +69,31 @@ func (s *ArchiveLogsTargetSpec) ExtractSetTargetRequest(isTargetActive bool) (*c
 				},
 			},
 		}, nil
-	} else {
-		var bucketType cxsdk.IbmBucketType
-		if s.IbmCosTarget.BucketType != nil {
-			switch *s.IbmCosTarget.BucketType {
-			case "UNSPECIFIED":
-				bucketType = cxsdk.IbmBucketTypeUnspecified
-			case "EXTERNAL":
-				bucketType = cxsdk.IbmBucketTypeExternal
-			case "INTERNAL":
-				bucketType = cxsdk.IbmBucketTypeInternal
-
-			}
-		}
-
-		return &cxsdk.SetTargetRequest{
-			IsActive: true,
-			TargetSpec: &cxsdk.SetTargetRequestIbmCos{
-				IbmCos: &cxsdk.IBMCosTargetSpec{
-					BucketCrn:  s.IbmCosTarget.BucketCrn,
-					Endpoint:   s.IbmCosTarget.Endpoint,
-					ServiceCrn: s.IbmCosTarget.ServiceCrn,
-					BucketType: &bucketType,
-				},
-			},
-		}, nil
 	}
+
+	var bucketType cxsdk.IbmBucketType
+	if s.IbmCosTarget.BucketType != nil {
+		switch *s.IbmCosTarget.BucketType {
+		case "UNSPECIFIED":
+			bucketType = cxsdk.IbmBucketTypeUnspecified
+		case "EXTERNAL":
+			bucketType = cxsdk.IbmBucketTypeExternal
+		case "INTERNAL":
+			bucketType = cxsdk.IbmBucketTypeInternal
+		}
+	}
+
+	return &cxsdk.SetTargetRequest{
+		IsActive: true,
+		TargetSpec: &cxsdk.SetTargetRequestIbmCos{
+			IbmCos: &cxsdk.IBMCosTargetSpec{
+				BucketCrn:  s.IbmCosTarget.BucketCrn,
+				Endpoint:   s.IbmCosTarget.Endpoint,
+				ServiceCrn: s.IbmCosTarget.ServiceCrn,
+				BucketType: &bucketType,
+			},
+		},
+	}, nil
 }
 
 func (i *ArchiveLogsTarget) GetConditions() []metav1.Condition {
@@ -108,10 +104,12 @@ func (i *ArchiveLogsTarget) SetConditions(conditions []metav1.Condition) {
 	i.Status.Conditions = conditions
 }
 
-// ArchiveLogsTarget is the Schema for the archive logs targets API.
-
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// ArchiveLogsTarget is the Schema for the Archive Logs API.
+// See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
+//
+// **Added in v0.5.0**
 type ArchiveLogsTarget struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

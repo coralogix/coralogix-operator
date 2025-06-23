@@ -40,7 +40,11 @@ import (
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:storageversion
-// Alert is the Schema for the alerts API.
+// Alert is the Schema for the Alerts API.
+//
+// Note that this is only for the latest version of the Alerts API. If your account has been created before March 2025, make sure that your account has been migrated before using advanced features of alerts.
+//
+// **Added in v0.4.0**
 type Alert struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -239,10 +243,6 @@ var (
 )
 
 // AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
-//
-// Note that this is only for the latest version of the alerts API. If your account has been created before March 2025, make sure that your account has been migrated before using advanced features of alerts.
-//
-// Added in v0.4.0
 // +kubebuilder:validation:XValidation:rule="!has(self.alertType.logsImmediate) || !has(self.groupByKeys)",message="groupByKeys is not supported for this alert type"
 type AlertSpec struct {
 	// Name of the alert
@@ -1460,7 +1460,7 @@ func expandRetriggeringPeriod(alertDefIncidentSettings *cxsdk.AlertDefIncidentSe
 }
 
 func expandNotificationGroupExcess(excess []NotificationGroup, listingAlertsAndWebhooksProperties *GetResourceRefProperties) ([]*cxsdk.AlertDefNotificationGroup, error) {
-	result := make([]*cxsdk.AlertDefNotificationGroup, len(excess))
+	result := make([]*cxsdk.AlertDefNotificationGroup, 0, len(excess))
 	var errs error
 	for _, group := range excess {
 		ng, err := expandNotificationGroup(&group, listingAlertsAndWebhooksProperties)
@@ -1637,17 +1637,10 @@ func expandNotificationDestinations(destinations []NotificationDestination, prop
 			presetId = &id
 		}
 
-		triggeredRoutingOverrides, err := expandRoutingOverrides(destination.TriggeredRoutingOverrides)
-		if err != nil {
-			return nil, fmt.Errorf("failed to expand triggered routing overrides: %w", err)
-		}
-
+		triggeredRoutingOverrides := expandRoutingOverrides(destination.TriggeredRoutingOverrides)
 		var resolvedRoutingOverrides *cxsdk.SourceOverrides
 		if destination.ResolvedRoutingOverrides != nil {
-			resolvedRoutingOverrides, err = expandRoutingOverrides(*destination.ResolvedRoutingOverrides)
-			if err != nil {
-				return nil, fmt.Errorf("failed to expand resolved routing overrides: %w", err)
-			}
+			resolvedRoutingOverrides = expandRoutingOverrides(*destination.ResolvedRoutingOverrides)
 		}
 
 		notificationDestination := &cxsdk.NotificationDestination{
@@ -1668,9 +1661,9 @@ func expandNotificationDestinations(destinations []NotificationDestination, prop
 	return result, nil
 }
 
-func expandRoutingOverrides(overrides NotificationRouting) (*cxsdk.SourceOverrides, error) {
+func expandRoutingOverrides(overrides NotificationRouting) *cxsdk.SourceOverrides {
 	if overrides.ConfigOverrides == nil {
-		return nil, nil
+		return nil
 	}
 
 	connectorOverrides := extractConnectorOverrides(overrides.ConfigOverrides.ConnectorConfigFields)
@@ -1682,7 +1675,7 @@ func expandRoutingOverrides(overrides NotificationRouting) (*cxsdk.SourceOverrid
 		OutputSchemaId:        overrides.ConfigOverrides.OutputSchemaId,
 	}
 
-	return sourceOverrides, nil
+	return sourceOverrides
 }
 
 func extractConnectorOverrides(overrides []ConfigField) []*cxsdk.AlertsConnectorConfigField {
@@ -1815,7 +1808,7 @@ func convertTimeFramesToGMT(start, end *cxsdk.AlertTimeOfDay, daysOfWeek []cxsdk
 }
 
 func daysOfWeekOffsetToGMT(start *cxsdk.AlertTimeOfDay, utc int32) int32 {
-	daysOfWeekOffset := int32(start.Hours-utc) / 24
+	daysOfWeekOffset := (start.Hours - utc) / 24
 	if daysOfWeekOffset < 0 {
 		daysOfWeekOffset += 7
 	}
@@ -1865,11 +1858,7 @@ func expandAlertTypeDefinition(properties *cxsdk.AlertDefProperties, definition 
 		properties.TypeDefinition = expandTracingImmediate(tracingImmediate)
 		properties.Type = cxsdk.AlertDefTypeTracingImmediate
 	} else if flow := definition.Flow; flow != nil {
-		typeDefinition, err := expandFlow(listingWebhooksProperties, flow)
-		if err != nil {
-			return nil, err
-		}
-		properties.TypeDefinition = typeDefinition
+		properties.TypeDefinition = expandFlow(listingWebhooksProperties, flow)
 		properties.Type = cxsdk.AlertDefTypeFlow
 	} else if logsAnomaly := definition.LogsAnomaly; logsAnomaly != nil {
 		properties.TypeDefinition = expandLogsAnomaly(logsAnomaly)
@@ -1983,7 +1972,6 @@ func expandMetricAnomaly(metricAnomaly *MetricAnomaly) *cxsdk.AlertDefProperties
 			Rules: expandMetricAnomalyRules(metricAnomaly.Rules),
 		},
 	}
-
 }
 
 func expandMetricAnomalyRules(rules []MetricAnomalyRule) []*cxsdk.MetricAnomalyRule {
@@ -1991,7 +1979,6 @@ func expandMetricAnomalyRules(rules []MetricAnomalyRule) []*cxsdk.MetricAnomalyR
 	for i := range rules {
 		result[i] = expandMetricAnomalyRule(rules[i])
 	}
-
 	return result
 }
 
@@ -2044,93 +2031,58 @@ func expandLogsAnomalyRuleCondition(condition LogsAnomalyCondition) *cxsdk.LogsA
 	}
 }
 
-func expandFlow(listingAlertsProperties *GetResourceRefProperties, flow *Flow) (*cxsdk.AlertDefPropertiesFlow, error) {
-	stages, err := expandFlowStages(listingAlertsProperties, flow.Stages)
-	if err != nil {
-		return nil, err
-	}
+func expandFlow(listingAlertsProperties *GetResourceRefProperties, flow *Flow) *cxsdk.AlertDefPropertiesFlow {
 	return &cxsdk.AlertDefPropertiesFlow{
 		Flow: &cxsdk.FlowType{
-			Stages:             stages,
+			Stages:             expandFlowStages(listingAlertsProperties, flow.Stages),
 			EnforceSuppression: wrapperspb.Bool(flow.EnforceSuppression),
 		},
-	}, nil
+	}
 }
 
-func expandFlowStages(listingAlertsProperties *GetResourceRefProperties, stages []FlowStage) ([]*cxsdk.FlowStages, error) {
+func expandFlowStages(listingAlertsProperties *GetResourceRefProperties, stages []FlowStage) []*cxsdk.FlowStages {
 	result := make([]*cxsdk.FlowStages, len(stages))
-	var errs error
 	for i, stage := range stages {
-		flowStage, err := expandFlowStage(listingAlertsProperties, stage)
-		if err != nil {
-			errs = errors.Join(errs, err)
-			continue
-		}
-		result[i] = flowStage
+		result[i] = expandFlowStage(listingAlertsProperties, stage)
 	}
 
-	return result, errs
+	return result
 }
 
-func expandFlowStage(listingAlertsProperties *GetResourceRefProperties, stage FlowStage) (*cxsdk.FlowStages, error) {
-	flowStages, err := expandFlowStagesType(listingAlertsProperties, stage.FlowStagesType)
-	if err != nil {
-		return nil, err
-	}
-
+func expandFlowStage(listingAlertsProperties *GetResourceRefProperties, stage FlowStage) *cxsdk.FlowStages {
 	return &cxsdk.FlowStages{
-		FlowStages:    flowStages,
+		FlowStages:    expandFlowStagesType(listingAlertsProperties, stage.FlowStagesType),
 		TimeframeMs:   wrapperspb.Int64(stage.TimeframeMs),
 		TimeframeType: TimeframeTypeToProto[stage.TimeframeType],
-	}, nil
+	}
 }
 
-func expandFlowStagesType(listingAlertsProperties *GetResourceRefProperties, stagesType FlowStagesType) (*cxsdk.FlowStagesGroups, error) {
-	groups, err := expandFlowStagesGroups(listingAlertsProperties, stagesType.Groups)
-	if err != nil {
-		return nil, err
-	}
-
+func expandFlowStagesType(listingAlertsProperties *GetResourceRefProperties, stagesType FlowStagesType) *cxsdk.FlowStagesGroups {
 	return &cxsdk.FlowStagesGroups{
 		FlowStagesGroups: &cxsdk.FlowStagesGroupsValue{
-			Groups: groups,
+			Groups: expandFlowStagesGroups(listingAlertsProperties, stagesType.Groups),
 		},
-	}, nil
+	}
 }
 
-func expandFlowStagesGroups(listingAlertsProperties *GetResourceRefProperties, groups []FlowStageGroup) ([]*cxsdk.FlowStagesGroup, error) {
+func expandFlowStagesGroups(listingAlertsProperties *GetResourceRefProperties, groups []FlowStageGroup) []*cxsdk.FlowStagesGroup {
 	result := make([]*cxsdk.FlowStagesGroup, len(groups))
-	var errs error
 	for i, group := range groups {
-		expandedGroup, err := expandFlowStagesGroup(listingAlertsProperties, group)
-		if err != nil {
-			errs = errors.Join(errs, err)
-			continue
-		}
-		result[i] = expandedGroup
+		result[i] = expandFlowStagesGroup(listingAlertsProperties, group)
 	}
 
-	if errs != nil {
-		return nil, errs
-	}
-
-	return result, nil
+	return result
 }
 
-func expandFlowStagesGroup(listingWebhooksProperties *GetResourceRefProperties, group FlowStageGroup) (*cxsdk.FlowStagesGroup, error) {
-	alertDefs, err := expandFlowStagesGroupsAlertDefs(listingWebhooksProperties, group.AlertDefs)
-	if err != nil {
-		return nil, err
-	}
-
+func expandFlowStagesGroup(listingWebhooksProperties *GetResourceRefProperties, group FlowStageGroup) *cxsdk.FlowStagesGroup {
 	return &cxsdk.FlowStagesGroup{
-		AlertDefs: alertDefs,
+		AlertDefs: expandFlowStagesGroupsAlertDefs(listingWebhooksProperties, group.AlertDefs),
 		NextOp:    FlowStageGroupNextOpToProto[group.NextOp],
 		AlertsOp:  FlowStageGroupAlertsOpToProto[group.AlertsOp],
-	}, nil
+	}
 }
 
-func expandFlowStagesGroupsAlertDefs(listingAlertsProperties *GetResourceRefProperties, alertDefs []FlowStagesGroupsAlertDefs) ([]*cxsdk.FlowStagesGroupsAlertDefs, error) {
+func expandFlowStagesGroupsAlertDefs(listingAlertsProperties *GetResourceRefProperties, alertDefs []FlowStagesGroupsAlertDefs) []*cxsdk.FlowStagesGroupsAlertDefs {
 	result := make([]*cxsdk.FlowStagesGroupsAlertDefs, len(alertDefs))
 	var errs error
 	for i := range alertDefs {
@@ -2142,7 +2094,7 @@ func expandFlowStagesGroupsAlertDefs(listingAlertsProperties *GetResourceRefProp
 		result[i] = expandedAlertDef
 	}
 
-	return result, nil
+	return result
 }
 
 func expandFlowStagesGroupsAlertDef(listingAlertsProperties *GetResourceRefProperties, defs FlowStagesGroupsAlertDefs) (*cxsdk.FlowStagesGroupsAlertDefs, error) {

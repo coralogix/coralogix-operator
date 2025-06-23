@@ -15,8 +15,6 @@
 package v1alpha1
 
 import (
-	"encoding/json"
-
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -54,9 +52,6 @@ var (
 )
 
 // A rule to change data extraction.
-// See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
-//
-// Added in v0.4.0
 // +kubebuilder:validation:XValidation:rule="(has(self.parse) ? 1 : 0) + (has(self.block) ? 1 : 0) + (has(self.jsonExtract) ? 1 : 0) + (has(self.replace) ? 1 : 0) + (has(self.extractTimestamp) ? 1 : 0) + (has(self.removeFields) ? 1 : 0) + (has(self.jsonStringify) ? 1 : 0) + (has(self.extract) ? 1 : 0) + (has(self.parseJsonField) ? 1 : 0) == 1",message="Exactly one of the following fields should be set: parse, block, jsonExtract, replace, extractTimestamp, removeFields, jsonStringify, extract, parseJsonField"
 type Rule struct {
 
@@ -325,11 +320,6 @@ const (
 	RuleSeverityCritical RuleSeverity = "Critical"
 )
 
-func (in *RuleGroupSpec) ToString() string {
-	str, _ := json.Marshal(*in)
-	return string(str)
-}
-
 func (in *RuleGroupSpec) ExtractUpdateRuleGroupRequest(id string) *cxsdk.UpdateRuleGroupRequest {
 	ruleGroup := in.ExtractCreateRuleGroupRequest()
 	return &cxsdk.UpdateRuleGroupRequest{
@@ -520,7 +510,7 @@ func expandSourceFiledAndParameters(rule Rule) (sourceField *wrapperspb.StringVa
 		}
 	}
 
-	return
+	return sourceField, parameters
 }
 
 func expandRuleMatchers(applications, subsystems []string, severities []RuleSeverity) []*cxsdk.RuleMatcher {
@@ -550,25 +540,6 @@ func expandRuleMatchers(applications, subsystems []string, severities []RuleSeve
 	return ruleMatchers
 }
 
-func flattenRuleMatchers(matchers []*cxsdk.RuleMatcher) (applications []string, subsystems []string, severities []RuleSeverity) {
-	applications = make([]string, 0)
-	subsystems = make([]string, 0)
-	severities = make([]RuleSeverity, 0)
-
-	for _, m := range matchers {
-		switch m.Constraint.(type) {
-		case *cxsdk.RuleMatcherApplicationName:
-			applications = append(applications, m.GetApplicationName().GetValue().GetValue())
-		case *cxsdk.RuleMatcherSubsystemName:
-			subsystems = append(subsystems, m.GetSubsystemName().GetValue().GetValue())
-		case *cxsdk.RuleMatcherSeverity:
-			severities = append(severities, RulesProtoSeverityToSchemaSeverity[m.GetSeverity().GetValue()])
-		}
-	}
-
-	return applications, subsystems, severities
-}
-
 // RuleGroupStatus defines the observed state of RuleGroup
 type RuleGroupStatus struct {
 	// +optional
@@ -589,7 +560,10 @@ func (r *RuleGroup) SetConditions(conditions []metav1.Condition) {
 //+kubebuilder:subresource:status
 //+kubebuilder:storageversion
 
-// RuleGroup is the Schema for the rulegroups API
+// RuleGroup is the Schema for the RuleGroups API
+// See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
+//
+// **Added in v0.4.0**
 type RuleGroup struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

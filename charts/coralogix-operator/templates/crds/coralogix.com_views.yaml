@@ -17,7 +17,11 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: View is the Schema for the views API.
+        description: |-
+          View is the Schema for the Views API.
+          See also https://coralogix.com/docs/user-guides/monitoring-and-insights/explore-screen/custom-views/
+
+          **Added in v0.4.0**
         properties:
           apiVersion:
             description: |-
@@ -37,11 +41,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: |-
-              ViewSpec defines the desired state of View.
-              See also https://coralogix.com/docs/user-guides/monitoring-and-insights/explore-screen/custom-views/
-
-              Added in v0.4.0
+            description: ViewSpec defines the desired state of View.
             properties:
               filters:
                 description: Filters is the filters for the view.

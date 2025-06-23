@@ -20,12 +20,8 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 )
 
-// Added in version v1.0.0
 // ArchiveMetricsTargetSpec defines the desired state of a Coralogix archive logs target.
-// See also https://coralogix.com/docs/archive-s3-bucket-forever
 // +kubebuilder:validation:XValidation:rule="has(self.s3Target) != has(self.ibmCosTarget)",message="Exactly one of s3Target or ibmCosTarget must be specified"
-//
-// Added in version v1.0.0
 type ArchiveMetricsTargetSpec struct {
 	// The S3 target configuration.
 	// +optional
@@ -87,23 +83,22 @@ func (s *ArchiveMetricsTargetSpec) ExtractConfigureTenantRequest() (*cxsdk.Confi
 				},
 			},
 		}, nil
-	} else {
-
-		return &cxsdk.ConfigureTenantRequest{
-			RetentionPolicy: &cxsdk.RetentionPolicyRequest{
-				RawResolution:         s.ResolutionPolicy.RawResolution,
-				FiveMinutesResolution: s.ResolutionPolicy.FiveMinutesResolution,
-				OneHourResolution:     s.ResolutionPolicy.OneHourResolution,
-			},
-			StorageConfig: &cxsdk.ConfigureTenantRequestIbm{
-				Ibm: &cxsdk.ArchiveIbmConfigV2{
-					Crn:        s.IbmCosTarget.BucketCrn,
-					Endpoint:   s.IbmCosTarget.Endpoint,
-					ServiceCrn: *s.IbmCosTarget.ServiceCrn,
-				},
-			},
-		}, nil
 	}
+
+	return &cxsdk.ConfigureTenantRequest{
+		RetentionPolicy: &cxsdk.RetentionPolicyRequest{
+			RawResolution:         s.ResolutionPolicy.RawResolution,
+			FiveMinutesResolution: s.ResolutionPolicy.FiveMinutesResolution,
+			OneHourResolution:     s.ResolutionPolicy.OneHourResolution,
+		},
+		StorageConfig: &cxsdk.ConfigureTenantRequestIbm{
+			Ibm: &cxsdk.ArchiveIbmConfigV2{
+				Crn:        s.IbmCosTarget.BucketCrn,
+				Endpoint:   s.IbmCosTarget.Endpoint,
+				ServiceCrn: *s.IbmCosTarget.ServiceCrn,
+			},
+		},
+	}, nil
 }
 
 func (s *ArchiveMetricsTargetSpec) ExtractUpdateRequest() (*cxsdk.UpdateTenantRequest, error) {
@@ -117,18 +112,18 @@ func (s *ArchiveMetricsTargetSpec) ExtractUpdateRequest() (*cxsdk.UpdateTenantRe
 				},
 			},
 		}, nil
-	} else {
-		return &cxsdk.UpdateTenantRequest{
-			RetentionDays: &s.RetentionDays,
-			StorageConfig: &cxsdk.UpdateRequestIbm{
-				Ibm: &cxsdk.ArchiveIbmConfigV2{
-					Crn:        s.IbmCosTarget.BucketCrn,
-					Endpoint:   s.IbmCosTarget.Endpoint,
-					ServiceCrn: *s.IbmCosTarget.ServiceCrn,
-				},
-			},
-		}, nil
 	}
+
+	return &cxsdk.UpdateTenantRequest{
+		RetentionDays: &s.RetentionDays,
+		StorageConfig: &cxsdk.UpdateRequestIbm{
+			Ibm: &cxsdk.ArchiveIbmConfigV2{
+				Crn:        s.IbmCosTarget.BucketCrn,
+				Endpoint:   s.IbmCosTarget.Endpoint,
+				ServiceCrn: *s.IbmCosTarget.ServiceCrn,
+			},
+		},
+	}, nil
 }
 
 func (i *ArchiveMetricsTarget) GetConditions() []metav1.Condition {
@@ -139,10 +134,12 @@ func (i *ArchiveMetricsTarget) SetConditions(conditions []metav1.Condition) {
 	i.Status.Conditions = conditions
 }
 
-// ArchiveLogsTarget is the Schema for the archive logs targets API.
-
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// ArchiveLogsTarget is the Schema for the archive logs targets API.
+// See also https://coralogix.com/docs/archive-s3-bucket-forever
+//
+// **Added in v0.5.0**
 type ArchiveMetricsTarget struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

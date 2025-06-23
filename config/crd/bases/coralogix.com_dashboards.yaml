@@ -17,7 +17,10 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Dashboard is the Schema for the dashboards API.
+        description: |-
+          Dashboard is the Schema for the dashboards API.
+
+          **Added in v0.4.0**
         properties:
           apiVersion:
             description: |-
@@ -40,8 +43,6 @@ spec:
             description: |-
               DashboardSpec defines the desired state of Dashboard.
               See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-started/
-
-              Added in v0.4.0
             properties:
               configMapRef:
                 description: model from configmap

@@ -24,9 +24,6 @@ import (
 )
 
 // PresetSpec defines the desired state of Preset.
-// See also https://coralogix.com/docs/user-guides/notification-center/presets/introduction/
-//
-// Added in v0.4.0
 type PresetSpec struct {
 	// Name is the name of the preset.
 	Name string `json:"name"`
@@ -205,6 +202,9 @@ func ExtractMessageConfig(messageConfig MessageConfig) *cxsdk.MessageConfig {
 
 // Preset is the Schema for the presets API.
 // NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
+// See also https://coralogix.com/docs/user-guides/notification-center/presets/introduction/
+//
+// **Added in v0.4.0**
 type Preset struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

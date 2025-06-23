@@ -17,7 +17,10 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: DashboardsFolder is the Schema for the dashboardsfolders API.
+        description: |-
+          DashboardsFolder is the Schema for the DashboardsFolders API.
+
+          **Added in v0.4.0**
         properties:
           apiVersion:
             description: |-
@@ -40,8 +43,6 @@ spec:
             description: |-
               DashboardsFolderSpec defines the desired state of Dashboard Folder.
               See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-started/
-
-              Added in v0.4.0
             properties:
               customId:
                 description: A custom ID for the folder. If not provided, a random
