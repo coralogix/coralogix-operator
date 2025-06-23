@@ -38,7 +38,6 @@ rules:
   - dashboards
   - dashboardsfolders
   - events2metrics
-  - extensions
   - globalrouters
   - groups
   - integrations
@@ -72,7 +71,6 @@ rules:
   - dashboards/finalizers
   - dashboardsfolders/finalizers
   - events2metrics/finalizers
-  - extensions/finalizers
   - globalrouters/finalizers
   - groups/finalizers
   - integrations/finalizers
@@ -100,7 +98,6 @@ rules:
   - dashboards/status
   - dashboardsfolders/status
   - events2metrics/status
-  - extensions/status
   - globalrouters/status
   - groups/status
   - integrations/status

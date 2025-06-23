@@ -121,7 +121,7 @@ func TestPrometheusRulesConversionToCxParsingRules(t *testing.T) {
 					Groups: []prometheus.RuleGroup{
 						{
 							Name:     "test_1",
-							Interval: "60s",
+							Interval: prometheus.DurationPointer("60s"),
 							Rules: []prometheus.Rule{
 								{
 									Record: "ExampleRecord",
@@ -148,7 +148,7 @@ func TestPrometheusRulesConversionToCxParsingRules(t *testing.T) {
 					Groups: []prometheus.RuleGroup{
 						{
 							Name:     "test_1",
-							Interval: "60s",
+							Interval: prometheus.DurationPointer("60s"),
 							Rules: []prometheus.Rule{
 								{
 									Record: "ExampleRecord",
@@ -240,7 +240,7 @@ func TestPrometheusRulesConvertionToCxAlert(t *testing.T) {
 					Groups: []prometheus.RuleGroup{
 						{
 							Name:     "test_1",
-							Interval: "60s",
+							Interval: prometheus.DurationPointer("60s"),
 							Rules: []prometheus.Rule{
 								{
 									Alert: "ExampleAlert",
@@ -267,7 +267,7 @@ func TestPrometheusRulesConvertionToCxAlert(t *testing.T) {
 					Groups: []prometheus.RuleGroup{
 						{
 							Name:     "test_1",
-							Interval: "60s",
+							Interval: prometheus.DurationPointer("60s"),
 							Rules: []prometheus.Rule{
 								{
 									Alert: "ExampleAlert",

@@ -6310,8 +6310,6 @@ Resource Types:
 
 - [Events2Metric](#events2metric)
 
-- [Extension](#extension)
-
 - [GlobalRouter](#globalrouter)
 
 - [Group](#group)

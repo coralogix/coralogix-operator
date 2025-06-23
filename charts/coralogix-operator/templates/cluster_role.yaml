@@ -55,7 +55,6 @@ rules:
       - customroles
       - dashboards
       - dashboardsfolders
-      - extensions
       - events2metrics
       - globalrouters
       - groups
@@ -89,7 +88,6 @@ rules:
       - customroles/finalizers
       - dashboards/finalizers
       - dashboardsfolders/finalizers
-      - extensions/finalizers
       - events2metrics/finalizers
       - globalrouters/finalizers
       - groups/finalizers
@@ -117,7 +115,6 @@ rules:
       - customroles/status
       - dashboards/status
       - dashboardsfolders/status
-      - extensions/status
       - events2metrics/status
       - globalrouters/status
       - groups/status

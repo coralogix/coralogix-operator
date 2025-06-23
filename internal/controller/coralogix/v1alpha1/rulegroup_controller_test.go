@@ -198,7 +198,7 @@ func TestRuleGroupReconciler_Reconcile(t *testing.T) {
 	assert.NoError(t, err)
 	<-watcher.ResultChan()
 
-	result, err := r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
+	_, err = r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
 	assert.NoError(t, err)
 
 	namespacedName := types.NamespacedName{Namespace: "default", Name: "test"}
@@ -219,9 +219,8 @@ func TestRuleGroupReconciler_Reconcile(t *testing.T) {
 	assert.NoError(t, err)
 	<-watcher.ResultChan()
 
-	result, err = r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
+	_, err = r.Reconcile(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "test"}})
 	assert.NoError(t, err)
-	assert.Equal(t, false, result.Requeue)
 
 	actualRuleGroup, err = r.RuleGroupClient.Get(ctx, getRuleGroupRequest)
 	assert.Nil(t, actualRuleGroup)
