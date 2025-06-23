@@ -26,7 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
@@ -57,8 +57,8 @@ var _ = Describe("Events2Metric", Ordered, func() {
 			},
 			Spec: coralogixv1alpha1.Events2MetricSpec{
 				Name:              e2mName,
-				Description:       pointer.String("e2m from k8s operator"),
-				PermutationsLimit: pointer.Int32(100),
+				Description:       ptr.To("e2m from k8s operator"),
+				PermutationsLimit: ptr.To(int32(100)),
 				MetricLabels: []coralogixv1alpha1.MetricLabel{
 					{
 						TargetLabel: "status",
@@ -84,8 +84,8 @@ var _ = Describe("Events2Metric", Ordered, func() {
 				},
 				Query: coralogixv1alpha1.E2MQuery{
 					Logs: &coralogixv1alpha1.E2MQueryLogs{
-						Lucene:                 pointer.String("status:200 AND request_count:[* TO *]"),
-						Alias:                  pointer.String("e2m-logs"),
+						Lucene:                 ptr.To("status:200 AND request_count:[* TO *]"),
+						Alias:                  ptr.To("e2m-logs"),
 						ApplicationNameFilters: []string{"test-app"},
 						SubsystemNameFilters:   []string{"test-subsystem"},
 						SeverityFilters:        []coralogixv1alpha1.L2MSeverity{coralogixv1alpha1.L2MSeverityCritical, coralogixv1alpha1.L2MSeverityError},
