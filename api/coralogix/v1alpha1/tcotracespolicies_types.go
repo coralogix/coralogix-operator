@@ -29,7 +29,6 @@ import (
 )
 
 // TCOTracesPoliciesSpec defines the desired state of Coralogix TCO policies for traces.
-// See also https://coralogix.com/docs/tco-optimizer-api
 type TCOTracesPoliciesSpec struct {
 	// Coralogix TCO-Policies-List.
 	Policies []TCOTracesPolicy `json:"policies"`
@@ -221,6 +220,10 @@ func (t *TCOTracesPolicies) SetConditions(conditions []metav1.Condition) {
 // NOTE: This resource performs an atomic overwrite of all existing TCO traces policies
 // in the backend. Any existing policies not defined in this resource will be
 // removed. Use with caution as this operation is destructive.
+//
+// See also https://coralogix.com/docs/tco-optimizer-api
+//
+// **Added in v0.4.0**
 type TCOTracesPolicies struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

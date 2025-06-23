@@ -28,7 +28,7 @@ import (
 	"github.com/go-logr/logr"
 	"google.golang.org/protobuf/encoding/protojson"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -70,7 +70,7 @@ func (r *SLOReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj
 	receivedSLO := createResponse.GetSlo()
 	slo.Status = coralogixv1alpha1.SLOStatus{
 		ID:       receivedSLO.Id,
-		Revision: pointer.Int32(receivedSLO.Revision.Revision),
+		Revision: ptr.To(receivedSLO.Revision.Revision),
 	}
 
 	return nil

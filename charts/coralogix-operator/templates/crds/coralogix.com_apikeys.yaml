@@ -17,7 +17,11 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: ApiKey is the Schema for the apikeys API.
+        description: |-
+          ApiKey is the Schema for the ApiKeys API.
+          See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-keys/
+
+          **Added in v0.4.0**
         properties:
           apiVersion:
             description: |-
@@ -37,9 +41,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: |-
-              ApiKeySpec defines the desired state of a Coralogix ApiKey.
-              See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-keys/
+            description: ApiKeySpec defines the desired state of a Coralogix ApiKey.
             properties:
               active:
                 default: true

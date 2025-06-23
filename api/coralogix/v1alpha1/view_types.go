@@ -244,7 +244,10 @@ func (v *View) SetConditions(conditions []metav1.Condition) {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
-// View is the Schema for the views API.
+// View is the Schema for the Views API.
+// See also https://coralogix.com/docs/user-guides/monitoring-and-insights/explore-screen/custom-views/
+//
+// **Added in v0.4.0**
 type View struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

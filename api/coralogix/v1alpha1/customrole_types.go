@@ -24,7 +24,6 @@ import (
 )
 
 // CustomRoleSpec defines the desired state of a Coralogix Custom Role.
-// See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
 type CustomRoleSpec struct {
 	// Name of the custom role.
 	Name string `json:"name"`
@@ -81,7 +80,10 @@ func (c *CustomRole) SetConditions(conditions []metav1.Condition) {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
-// CustomRole is the Schema for the customroles API.
+// CustomRole is the Schema for the CustomRoles API.
+// See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
+//
+// **Added in v0.4.0**
 type CustomRole struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

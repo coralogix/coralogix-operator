@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"context"
+	"k8s.io/utils/ptr"
 	"testing"
 
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -28,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	crconfig "sigs.k8s.io/controller-runtime/pkg/config"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
@@ -37,7 +39,7 @@ import (
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
-func setupReconciler(t *testing.T, ctx context.Context) (PrometheusRuleReconciler, watch.Interface) {
+func setupReconciler(ctx context.Context, t *testing.T) (PrometheusRuleReconciler, watch.Interface) {
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
 	scheme := runtime.NewScheme()
@@ -48,9 +50,17 @@ func setupReconciler(t *testing.T, ctx context.Context) (PrometheusRuleReconcile
 	mgr, _ := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:  scheme,
 		Metrics: metricsserver.Options{BindAddress: "0"},
+		Controller: crconfig.Controller{
+			SkipNameValidation: ptr.To(true),
+		},
 	})
 
-	go mgr.GetCache().Start(ctx)
+	go func() {
+		if err := mgr.GetCache().Start(ctx); err != nil {
+			t.Errorf("failed to start cache: %v", err)
+			return
+		}
+	}()
 
 	mgr.GetCache().WaitForCacheSync(ctx)
 	withWatch, err := client.NewWithWatch(mgr.GetConfig(), client.Options{
@@ -64,7 +74,8 @@ func setupReconciler(t *testing.T, ctx context.Context) (PrometheusRuleReconcile
 
 	assert.NoError(t, err)
 	r := PrometheusRuleReconciler{}
-	r.SetupWithManager(mgr)
+	err = r.SetupWithManager(mgr)
+	assert.NoError(t, err)
 
 	watcher, _ := withWatch.Watch(ctx, &prometheus.PrometheusRuleList{})
 	return r, watcher
@@ -163,7 +174,7 @@ func TestPrometheusRulesConversionToCxParsingRules(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			reconciler, watcher := setupReconciler(t, ctx)
+			reconciler, watcher := setupReconciler(ctx, t)
 
 			var err error
 			if tt.shouldCreate {
@@ -282,7 +293,7 @@ func TestPrometheusRulesConvertionToCxAlert(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			reconciler, watcher := setupReconciler(t, ctx)
+			reconciler, watcher := setupReconciler(ctx, t)
 			var err error
 			if tt.shouldCreate {
 				err = config.GetClient().Create(ctx, tt.prometheusRule)

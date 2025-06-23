@@ -21,6 +21,9 @@ resources:
   - bases/coralogix.com_presets.yaml
   - bases/coralogix.com_viewfolders.yaml
   - bases/coralogix.com_views.yaml
+  - bases/coralogix.com_extensions.yaml
+  - bases/coralogix.com_archivelogstargets.yaml
+  - bases/coralogix.com_archivemetricstargets.yaml
   - bases/coralogix.com_slos.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 

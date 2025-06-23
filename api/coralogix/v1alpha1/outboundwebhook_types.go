@@ -26,8 +26,7 @@ import (
 	utils "github.com/coralogix/coralogix-operator/api/coralogix"
 )
 
-// OutboundWebhookSpec defines the desired state of OutboundWebhook
-// See also https://coralogix.com/docs/user-guides/alerting/outbound-webhooks/aws-eventbridge-outbound-webhook/
+// OutboundWebhookSpec defines the desired state of an outbound webhook.
 type OutboundWebhookSpec struct {
 	//+kubebuilder:validation:MinLength=0
 	// Name of the webhook.
@@ -175,7 +174,7 @@ func (in *GenericWebhook) extractGenericWebhookConfig() *cxsdk.GenericWebhookInp
 	}
 }
 
-// +kubebuilder:validation:Enum=Unkown;Get;Post;Put
+// +kubebuilder:validation:Enum=Unknown;Get;Post;Put
 type GenericWebhookMethodType string
 
 const (
@@ -452,6 +451,9 @@ func (in *OutboundWebhook) SetConditions(conditions []metav1.Condition) {
 //+kubebuilder:subresource:status
 
 // OutboundWebhook is the Schema for the API
+// See also https://coralogix.com/docs/user-guides/alerting/outbound-webhooks/aws-eventbridge-outbound-webhook/
+//
+// **Added in v0.4.0**
 type OutboundWebhook struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

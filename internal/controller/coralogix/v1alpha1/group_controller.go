@@ -23,7 +23,7 @@ import (
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -70,7 +70,7 @@ func (r *GroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 	log.Info("Remote group created", "group", protojson.Format(createResponse))
 
 	group.Status = coralogixv1alpha1.GroupStatus{
-		ID: pointer.String(strconv.Itoa(int(createResponse.GroupId.Id))),
+		ID: ptr.To(strconv.Itoa(int(createResponse.GroupId.Id))),
 	}
 
 	return nil

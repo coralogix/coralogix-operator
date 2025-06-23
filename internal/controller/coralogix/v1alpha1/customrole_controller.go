@@ -23,7 +23,7 @@ import (
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -67,7 +67,7 @@ func (r *CustomRoleReconciler) HandleCreation(ctx context.Context, log logr.Logg
 	log.Info("Remote customRole created", "response", protojson.Format(createResponse))
 
 	customRole.Status = coralogixv1alpha1.CustomRoleStatus{
-		ID: pointer.String(strconv.Itoa(int(createResponse.Id))),
+		ID: ptr.To(strconv.Itoa(int(createResponse.Id))),
 	}
 
 	return nil

@@ -175,15 +175,6 @@ func (spec *SLOSpec) ExtractSLO() (*cxsdk.Slo, error) {
 	return slo, nil
 }
 
-func extractGroping(grouping *SloGrouping) *cxsdk.SloGrouping {
-	if grouping == nil {
-		return nil
-	}
-	return &cxsdk.SloGrouping{
-		Labels: grouping.Labels,
-	}
-}
-
 func (in *SliType) ExpandSliType(slo *cxsdk.Slo) (*cxsdk.Slo, error) {
 	if requestBasedMetricSli := in.RequestBasedMetricSli; requestBasedMetricSli != nil {
 		slo.Sli = &cxsdk.SloRequestBasedMetricSli{

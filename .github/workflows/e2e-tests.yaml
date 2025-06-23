@@ -23,6 +23,9 @@ jobs:
       CORALOGIX_REGION: ${{ secrets.CORALOGIX_REGION }}
       CORALOGIX_API_KEY: ${{ secrets.CORALOGIX_API_KEY }}
       SCOPE_RECONCILE_INTERVAL_SECONDS: 30
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      LOGS_BUCKET: ${{ secrets.LOGS_BUCKET }}
+      METRICS_BUCKET: ${{ secrets.METRICS_BUCKET }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2

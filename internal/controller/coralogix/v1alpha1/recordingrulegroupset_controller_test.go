@@ -16,6 +16,7 @@ package v1alpha1
 
 import (
 	"context"
+	"k8s.io/utils/ptr"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -28,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	crconfig "sigs.k8s.io/controller-runtime/pkg/config"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
@@ -38,7 +40,7 @@ import (
 	"github.com/coralogix/coralogix-operator/internal/controller/mock_clientset"
 )
 
-func setupRecordingRuleReconciler(t *testing.T, ctx context.Context, recordingRuleGroupSetClient *mock_clientset.MockRecordingRulesGroupsClientInterface) (RecordingRuleGroupSetReconciler, watch.Interface) {
+func setupRecordingRuleReconciler(ctx context.Context, t *testing.T, recordingRuleGroupSetClient *mock_clientset.MockRecordingRulesGroupsClientInterface) (RecordingRuleGroupSetReconciler, watch.Interface) {
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
 	scheme := runtime.NewScheme()
@@ -47,9 +49,17 @@ func setupRecordingRuleReconciler(t *testing.T, ctx context.Context, recordingRu
 	mgr, _ := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:  scheme,
 		Metrics: metricsserver.Options{BindAddress: "0"},
+		Controller: crconfig.Controller{
+			SkipNameValidation: ptr.To(true),
+		},
 	})
 
-	go mgr.GetCache().Start(ctx)
+	go func() {
+		if err := mgr.GetCache().Start(ctx); err != nil {
+			t.Errorf("failed to start cache: %v", err)
+			return
+		}
+	}()
 
 	mgr.GetCache().WaitForCacheSync(ctx)
 	withWatch, err := client.NewWithWatch(mgr.GetConfig(), client.Options{
@@ -63,7 +73,8 @@ func setupRecordingRuleReconciler(t *testing.T, ctx context.Context, recordingRu
 	r := RecordingRuleGroupSetReconciler{
 		RecordingRuleGroupSetClient: recordingRuleGroupSetClient,
 	}
-	r.SetupWithManager(mgr)
+	err = r.SetupWithManager(mgr)
+	assert.NoError(t, err)
 
 	watcher, _ := withWatch.Watch(ctx, &coralogixv1alpha1.RecordingRuleGroupSetList{})
 	return r, watcher
@@ -129,7 +140,7 @@ func TestRecordingRuleCreation(t *testing.T) {
 				})
 			}
 
-			reconciler, watcher := setupRecordingRuleReconciler(t, ctx, recordingRuleClient)
+			reconciler, watcher := setupRecordingRuleReconciler(ctx, t, recordingRuleClient)
 
 			err := config.GetClient().Create(ctx, &tt.recordingRule)
 
@@ -209,7 +220,7 @@ func TestRecordingRuleUpdate(t *testing.T) {
 				})
 			}
 
-			reconciler, watcher := setupRecordingRuleReconciler(t, ctx, recordingRuleClient)
+			reconciler, watcher := setupRecordingRuleReconciler(ctx, t, recordingRuleClient)
 
 			err := config.GetClient().Create(ctx, &tt.recordingRule)
 

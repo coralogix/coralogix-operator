@@ -29,7 +29,6 @@ import (
 )
 
 // TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.
-// See also https://coralogix.com/docs/tco-optimizer-api
 type TCOLogsPoliciesSpec struct {
 	// Coralogix TCO-Policies-List.
 	Policies []TCOLogsPolicy `json:"policies"`
@@ -232,11 +231,14 @@ func (t *TCOLogsPolicies) SetConditions(conditions []metav1.Condition) {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-
-// TCOLogsPolicies is the Schema for the tcologspolicies API.
+// TCOLogsPolicies is the Schema for the TCOLogsPolicies API.
 // NOTE: This resource performs an atomic overwrite of all existing TCO logs policies
 // in the backend. Any existing policies not defined in this resource will be
 // removed. Use with caution as this operation is destructive.
+//
+// See also https://coralogix.com/docs/tco-optimizer-api
+//
+// **Added in v0.4.0**
 type TCOLogsPolicies struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

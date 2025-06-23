@@ -27,7 +27,8 @@ import (
 	"github.com/coralogix/coralogix-operator/internal/config"
 )
 
-// DashboardsFolderSpec defines the desired state of DashboardsFolder.
+// DashboardsFolderSpec defines the desired state of Dashboard Folder.
+// See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-started/
 // +kubebuilder:validation:XValidation:rule="!(has(self.parentFolderId) && has(self.parentFolderRef))",message="Only one of parentFolderID or parentFolderRef can be declared at the same time"
 type DashboardsFolderSpec struct {
 	Name string `json:"name"`
@@ -103,7 +104,9 @@ func (df *DashboardsFolder) SetConditions(conditions []metav1.Condition) {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
-// DashboardsFolder is the Schema for the dashboardsfolders API.
+// DashboardsFolder is the Schema for the DashboardsFolders API.
+//
+// **Added in v0.4.0**
 type DashboardsFolder struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

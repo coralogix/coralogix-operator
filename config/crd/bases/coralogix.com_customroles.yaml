@@ -17,7 +17,11 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: CustomRole is the Schema for the customroles API.
+        description: |-
+          CustomRole is the Schema for the CustomRoles API.
+          See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
+
+          **Added in v0.4.0**
         properties:
           apiVersion:
             description: |-
@@ -37,9 +41,8 @@ spec:
           metadata:
             type: object
           spec:
-            description: |-
-              CustomRoleSpec defines the desired state of a Coralogix Custom Role.
-              See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
+            description: CustomRoleSpec defines the desired state of a Coralogix Custom
+              Role.
             properties:
               description:
                 description: Description of the custom role.

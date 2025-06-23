@@ -28,7 +28,7 @@ import (
 	"github.com/coralogix/coralogix-operator/internal/config"
 )
 
-// GlobalRouterSpec defines the desired state of GlobalRouter.
+// GlobalRouterSpec defines the desired state of the Global Router.
 type GlobalRouterSpec struct {
 	// Name is the name of the global router.
 	Name string `json:"name"`
@@ -272,9 +272,12 @@ func (g *GlobalRouter) SetConditions(conditions []metav1.Condition) {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-
-// GlobalRouter is the Schema for the globalrouters API.
+// GlobalRouter is the Schema for the GlobalRouters API.
 // NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
+//
+// See also https://coralogix.com/docs/user-guides/notification-center/routing/
+//
+// **Added in v0.4.0**
 type GlobalRouter struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

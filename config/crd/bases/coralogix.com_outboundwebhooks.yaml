@@ -17,7 +17,11 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: OutboundWebhook is the Schema for the API
+        description: |-
+          OutboundWebhook is the Schema for the API
+          See also https://coralogix.com/docs/user-guides/alerting/outbound-webhooks/aws-eventbridge-outbound-webhook/
+
+          **Added in v0.4.0**
         properties:
           apiVersion:
             description: |-
@@ -37,9 +41,8 @@ spec:
           metadata:
             type: object
           spec:
-            description: |-
-              OutboundWebhookSpec defines the desired state of OutboundWebhook
-              See also https://coralogix.com/docs/user-guides/alerting/outbound-webhooks/aws-eventbridge-outbound-webhook/
+            description: OutboundWebhookSpec defines the desired state of an outbound
+              webhook.
             properties:
               name:
                 description: Name of the webhook.
@@ -104,7 +107,7 @@ spec:
                       method:
                         description: HTTP Method to use.
                         enum:
-                        - Unkown
+                        - Unknown
                         - Get
                         - Post
                         - Put

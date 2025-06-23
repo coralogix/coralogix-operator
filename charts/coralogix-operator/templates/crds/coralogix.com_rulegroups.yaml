@@ -17,7 +17,11 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: RuleGroup is the Schema for the rulegroups API
+        description: |-
+          RuleGroup is the Schema for the RuleGroups API
+          See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
+
+          **Added in v0.4.0**
         properties:
           apiVersion:
             description: |-
@@ -103,9 +107,7 @@ spec:
                     rules:
                       description: List of rules associated with the sub group.
                       items:
-                        description: |-
-                          A rule to change data extraction.
-                          See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
+                        description: A rule to change data extraction.
                         properties:
                           active:
                             default: true

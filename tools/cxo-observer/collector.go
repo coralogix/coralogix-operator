@@ -180,5 +180,4 @@ func dumpLogFile(logs []byte, dir, fileName string) error {
 	}
 
 	return nil
-
 }

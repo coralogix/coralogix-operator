@@ -37,7 +37,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: ViewFolderSpec defines the desired state of ViewFolder.
+            description: ViewFolderSpec defines the desired state of folder for views.
             properties:
               name:
                 description: Name of the view folder

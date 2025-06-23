@@ -61,8 +61,8 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 	gvk := objToGVK(obj)
 	log := log.FromContext(ctx).WithValues(
 		"gvk", gvk,
-		"name", req.NamespacedName.Name,
-		"namespace", req.NamespacedName.Namespace)
+		"name", req.Name,
+		"namespace", req.Namespace)
 	log = log.V(logVerbosity(obj))
 
 	if !r.CheckIDInStatus(obj) {
@@ -150,11 +150,7 @@ func removeField(ctx context.Context, obj client.Object, fields ...string) error
 
 	unstructured.RemoveNestedField(u.Object, fields...)
 
-	if err := config.GetClient().Status().Update(ctx, u); err != nil {
-		return err
-	}
-
-	return nil
+	return config.GetClient().Status().Update(ctx, u)
 }
 
 func AddFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r CoralogixReconciler) error {
@@ -171,10 +167,7 @@ func AddFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r Cor
 func RemoveFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r CoralogixReconciler) error {
 	log.Info("Removing finalizer")
 	controllerutil.RemoveFinalizer(obj, r.FinalizerName())
-	if err := config.GetClient().Update(ctx, obj); err != nil {
-		return err
-	}
-	return nil
+	return config.GetClient().Update(ctx, obj)
 }
 
 func ManageErrorWithRequeue(ctx context.Context, obj client.Object, reason string, err error) (reconcile.Result, error) {

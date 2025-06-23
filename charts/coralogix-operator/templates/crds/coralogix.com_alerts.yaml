@@ -17,7 +17,12 @@ spec:
   - name: v1beta1
     schema:
       openAPIV3Schema:
-        description: Alert is the Schema for the alerts API.
+        description: |-
+          Alert is the Schema for the Alerts API.
+
+          Note that this is only for the latest version of the Alerts API. If your account has been created before March 2025, make sure that your account has been migrated before using advanced features of alerts.
+
+          **Added in v0.4.0**
         properties:
           apiVersion:
             description: |-
@@ -37,10 +42,8 @@ spec:
           metadata:
             type: object
           spec:
-            description: |-
-              AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
-
-              Note that this is only for the latest version of the alerts API. If your account has been created before March 2025, make sure that your account has been migrated before using advanced features of alerts.
+            description: AlertSpec defines the desired state of a Coralogix Alert.
+              For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
             properties:
               alertType:
                 description: Type of alert.

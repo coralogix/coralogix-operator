@@ -17,7 +17,13 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Integration is the Schema for the integrations API.
+        description: |-
+          Integration is the Schema for the Integrations API.
+          See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/
+
+          For available integrations see https://coralogix.com/docs/developer-portal/infrastructure-as-code/terraform-provider/integrations/aws-metrics-collector/ or at https://github.com/coralogix/coralogix-operator/tree/main/config/samples/v1alpha1/integrations.
+
+          **Added in v0.4.0**
         properties:
           apiVersion:
             description: |-
@@ -37,11 +43,8 @@ spec:
           metadata:
             type: object
           spec:
-            description: |-
-              IntegrationSpec defines the desired state of a Coralogix (managed) integration.
-              See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/
-
-              For available integrations see https://coralogix.com/docs/developer-portal/infrastructure-as-code/terraform-provider/integrations/aws-metrics-collector/ or at https://github.com/coralogix/coralogix-operator/tree/main/config/samples/v1alpha1/integrations.
+            description: IntegrationSpec defines the desired state of a Coralogix
+              (managed) integration.
             properties:
               integrationKey:
                 description: Unique name of the integration.

@@ -23,6 +23,7 @@ import (
 )
 
 // ConnectorSpec defines the desired state of Connector.
+// See also https://coralogix.com/docs/user-guides/notification-center/introduction/connectors-explained/
 type ConnectorSpec struct {
 	// Name is the name of the connector.
 	Name string `json:"name"`
@@ -191,8 +192,9 @@ func ExtractConfigOverridesFields(fields []TemplatedConnectorConfigField) []*cxs
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-
 // Connector is the Schema for the connectors API.
+//
+// **Added in v0.4.0**
 // NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
 type Connector struct {
 	metav1.TypeMeta   `json:",inline"`

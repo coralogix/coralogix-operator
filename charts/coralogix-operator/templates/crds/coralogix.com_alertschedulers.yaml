@@ -17,7 +17,12 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: AlertScheduler is the Schema for the alertschedulers API.
+        description: |-
+          AlertScheduler is the Schema for the AlertSchedulers API.
+          It is used to suppress or activate alerts based on a schedule.
+          See also https://coralogix.com/docs/user-guides/alerting/alert-suppression-rules/
+
+          **Added in v0.4.0**
         properties:
           apiVersion:
             description: |-
@@ -37,10 +42,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: |-
-              AlertSchedulerSpec defines the desired state Coralogix AlertScheduler.
-              It is used to suppress or activate alerts based on a schedule.
-              See also https://coralogix.com/docs/user-guides/alerting/alert-suppression-rules/
+            description: AlertSchedulerSpec defines the desired state Coralogix AlertScheduler.
             properties:
               description:
                 description: Alert Scheduler description.

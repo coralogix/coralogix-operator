@@ -22,7 +22,6 @@ import (
 )
 
 // ApiKeySpec defines the desired state of a Coralogix ApiKey.
-// See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-keys/
 // +kubebuilder:validation:XValidation:rule="has(self.presets) || has(self.permissions)",message="At least one of presets or permissions must be set"
 type ApiKeySpec struct {
 
@@ -78,7 +77,10 @@ func (a *ApiKey) SetConditions(conditions []metav1.Condition) {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// ApiKey is the Schema for the apikeys API.
+// ApiKey is the Schema for the ApiKeys API.
+// See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-keys/
+//
+// **Added in v0.4.0**
 type ApiKey struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

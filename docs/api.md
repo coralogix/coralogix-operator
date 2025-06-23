@@ -22,7 +22,11 @@ Resource Types:
 
 
 
-Alert is the Schema for the alerts API.
+Alert is the Schema for the Alerts API.
+
+Note that this is only for the latest version of the Alerts API. If your account has been created before March 2025, make sure that your account has been migrated before using advanced features of alerts.
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -54,9 +58,7 @@ Alert is the Schema for the alerts API.
         <td><b><a href="#alertspec">spec</a></b></td>
         <td>object</td>
         <td>
-          AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
-
-Note that this is only for the latest version of the alerts API. If your account has been created before March 2025, make sure that your account has been migrated before using advanced features of alerts.<br/>
+          AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.<br/>
           <br/>
             <i>Validations</i>:<li>!has(self.alertType.logsImmediate) || !has(self.groupByKeys): groupByKeys is not supported for this alert type</li>
         </td>
@@ -78,8 +80,6 @@ Note that this is only for the latest version of the alerts API. If your account
 
 
 AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
-
-Note that this is only for the latest version of the alerts API. If your account has been created before March 2025, make sure that your account has been migrated before using advanced features of alerts.
 
 <table>
     <thead>
@@ -6713,6 +6713,10 @@ Resource Types:
 
 - [ApiKey](#apikey)
 
+- [ArchiveLogsTarget](#archivelogstarget)
+
+- [ArchiveMetricsTarget](#archivemetricstarget)
+
 - [Connector](#connector)
 
 - [CustomRole](#customrole)
@@ -6720,6 +6724,8 @@ Resource Types:
 - [Dashboard](#dashboard)
 
 - [DashboardsFolder](#dashboardsfolder)
+
+- [Extension](#extension)
 
 - [GlobalRouter](#globalrouter)
 
@@ -6758,7 +6764,11 @@ Resource Types:
 
 
 
-AlertScheduler is the Schema for the alertschedulers API.
+AlertScheduler is the Schema for the AlertSchedulers API.
+It is used to suppress or activate alerts based on a schedule.
+See also https://coralogix.com/docs/user-guides/alerting/alert-suppression-rules/
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -6790,9 +6800,7 @@ AlertScheduler is the Schema for the alertschedulers API.
         <td><b><a href="#alertschedulerspec">spec</a></b></td>
         <td>object</td>
         <td>
-          AlertSchedulerSpec defines the desired state Coralogix AlertScheduler.
-It is used to suppress or activate alerts based on a schedule.
-See also https://coralogix.com/docs/user-guides/alerting/alert-suppression-rules/<br/>
+          AlertSchedulerSpec defines the desired state Coralogix AlertScheduler.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6812,8 +6820,6 @@ See also https://coralogix.com/docs/user-guides/alerting/alert-suppression-rules
 
 
 AlertSchedulerSpec defines the desired state Coralogix AlertScheduler.
-It is used to suppress or activate alerts based on a schedule.
-See also https://coralogix.com/docs/user-guides/alerting/alert-suppression-rules/
 
 <table>
     <thead>
@@ -7576,7 +7582,10 @@ with respect to the current state of the instance.<br/>
 
 
 
-ApiKey is the Schema for the apikeys API.
+ApiKey is the Schema for the ApiKeys API.
+See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-keys/
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -7608,8 +7617,7 @@ ApiKey is the Schema for the apikeys API.
         <td><b><a href="#apikeyspec">spec</a></b></td>
         <td>object</td>
         <td>
-          ApiKeySpec defines the desired state of a Coralogix ApiKey.
-See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-keys/<br/>
+          ApiKeySpec defines the desired state of a Coralogix ApiKey.<br/>
           <br/>
             <i>Validations</i>:<li>has(self.presets) || has(self.permissions): At least one of presets or permissions must be set</li>
         </td>
@@ -7631,7 +7639,6 @@ See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-
 
 
 ApiKeySpec defines the desired state of a Coralogix ApiKey.
-See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-keys/
 
 <table>
     <thead>
@@ -7831,6 +7838,643 @@ with respect to the current state of the instance.<br/>
       </tr></tbody>
 </table>
 
+## ArchiveLogsTarget
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+ArchiveLogsTarget is the Schema for the Archive Logs API.
+See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
+
+**Added in v0.5.0**
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>ArchiveLogsTarget</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#archivelogstargetspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          ArchiveLogsTargetSpec defines the desired state of a Coralogix archive logs target.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.s3Target) != has(self.ibmCosTarget): Exactly one of s3Target or ibmCosTarget must be specified</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#archivelogstargetstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ArchiveLogsTarget.spec
+<sup><sup>[↩ Parent](#archivelogstarget)</sup></sup>
+
+
+
+ArchiveLogsTargetSpec defines the desired state of a Coralogix archive logs target.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#archivelogstargetspecibmcostarget">ibmCosTarget</a></b></td>
+        <td>object</td>
+        <td>
+          The IBM COS target configuration.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#archivelogstargetspecs3target">s3Target</a></b></td>
+        <td>object</td>
+        <td>
+          The S3 target configuration.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ArchiveLogsTarget.spec.ibmCosTarget
+<sup><sup>[↩ Parent](#archivelogstargetspec)</sup></sup>
+
+
+
+The IBM COS target configuration.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>bucketCrn</b></td>
+        <td>string</td>
+        <td>
+          BucketCrn is the CRN of the IBM COS bucket.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>bucketType</b></td>
+        <td>enum</td>
+        <td>
+          BucketType defines the type of the bucket.<br/>
+          <br/>
+            <i>Enum</i>: UNSPECIFIED, EXTERNAL, INTERNAL<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>endpoint</b></td>
+        <td>string</td>
+        <td>
+          Endpoint is the endpoint URL for the IBM COS service.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>serviceCrn</b></td>
+        <td>string</td>
+        <td>
+          ServiceCrn is the CRN of the service instance.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ArchiveLogsTarget.spec.s3Target
+<sup><sup>[↩ Parent](#archivelogstargetspec)</sup></sup>
+
+
+
+The S3 target configuration.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>bucketName</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>region</b></td>
+        <td>string</td>
+        <td>
+          The region of the S3 bucket.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ArchiveLogsTarget.status
+<sup><sup>[↩ Parent](#archivelogstarget)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#archivelogstargetstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          ID is the identifier of the archive logs target.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ArchiveLogsTarget.status.conditions[index]
+<sup><sup>[↩ Parent](#archivelogstargetstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## ArchiveMetricsTarget
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+ArchiveLogsTarget is the Schema for the archive logs targets API.
+See also https://coralogix.com/docs/archive-s3-bucket-forever
+
+**Added in v0.5.0**
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>ArchiveMetricsTarget</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#archivemetricstargetspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          ArchiveMetricsTargetSpec defines the desired state of a Coralogix archive logs target.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.s3Target) != has(self.ibmCosTarget): Exactly one of s3Target or ibmCosTarget must be specified</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#archivemetricstargetstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ArchiveMetricsTarget.spec
+<sup><sup>[↩ Parent](#archivemetricstarget)</sup></sup>
+
+
+
+ArchiveMetricsTargetSpec defines the desired state of a Coralogix archive logs target.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#archivemetricstargetspecibmcostarget">ibmCosTarget</a></b></td>
+        <td>object</td>
+        <td>
+          The IBM COS target configuration.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#archivemetricstargetspecresolutionpolicy">resolutionPolicy</a></b></td>
+        <td>object</td>
+        <td>
+          The resolution policy for the metrics.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>retentionDays</b></td>
+        <td>integer</td>
+        <td>
+          The retention days for the metrics.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#archivemetricstargetspecs3target">s3Target</a></b></td>
+        <td>object</td>
+        <td>
+          The S3 target configuration.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ArchiveMetricsTarget.spec.ibmCosTarget
+<sup><sup>[↩ Parent](#archivemetricstargetspec)</sup></sup>
+
+
+
+The IBM COS target configuration.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>bucketCrn</b></td>
+        <td>string</td>
+        <td>
+          BucketCrn is the CRN of the IBM COS bucket.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>bucketType</b></td>
+        <td>enum</td>
+        <td>
+          BucketType defines the type of the bucket.<br/>
+          <br/>
+            <i>Enum</i>: UNSPECIFIED, EXTERNAL, INTERNAL<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>endpoint</b></td>
+        <td>string</td>
+        <td>
+          Endpoint is the endpoint URL for the IBM COS service.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>serviceCrn</b></td>
+        <td>string</td>
+        <td>
+          ServiceCrn is the CRN of the service instance.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ArchiveMetricsTarget.spec.resolutionPolicy
+<sup><sup>[↩ Parent](#archivemetricstargetspec)</sup></sup>
+
+
+
+The resolution policy for the metrics.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fiveMinutesResolution</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>oneHourResolution</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>rawResolution</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ArchiveMetricsTarget.spec.s3Target
+<sup><sup>[↩ Parent](#archivemetricstargetspec)</sup></sup>
+
+
+
+The S3 target configuration.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>bucketName</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>region</b></td>
+        <td>string</td>
+        <td>
+          The region of the S3 bucket.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ArchiveMetricsTarget.status
+<sup><sup>[↩ Parent](#archivemetricstarget)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#archivemetricstargetstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          ID is the identifier of the archive metrics target.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ArchiveMetricsTarget.status.conditions[index]
+<sup><sup>[↩ Parent](#archivemetricstargetstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
 ## Connector
 <sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
 
@@ -7840,6 +8484,8 @@ with respect to the current state of the instance.<br/>
 
 
 Connector is the Schema for the connectors API.
+
+**Added in v0.4.0**
 NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
 
 <table>
@@ -7872,7 +8518,8 @@ NOTE: This CRD exposes a new feature and may have breaking changes in future rel
         <td><b><a href="#connectorspec">spec</a></b></td>
         <td>object</td>
         <td>
-          ConnectorSpec defines the desired state of Connector.<br/>
+          ConnectorSpec defines the desired state of Connector.
+See also https://coralogix.com/docs/user-guides/notification-center/introduction/connectors-explained/<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -7892,6 +8539,7 @@ NOTE: This CRD exposes a new feature and may have breaking changes in future rel
 
 
 ConnectorSpec defines the desired state of Connector.
+See also https://coralogix.com/docs/user-guides/notification-center/introduction/connectors-explained/
 
 <table>
     <thead>
@@ -8192,7 +8840,10 @@ with respect to the current state of the instance.<br/>
 
 
 
-CustomRole is the Schema for the customroles API.
+CustomRole is the Schema for the CustomRoles API.
+See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -8224,8 +8875,7 @@ CustomRole is the Schema for the customroles API.
         <td><b><a href="#customrolespec">spec</a></b></td>
         <td>object</td>
         <td>
-          CustomRoleSpec defines the desired state of a Coralogix Custom Role.
-See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/<br/>
+          CustomRoleSpec defines the desired state of a Coralogix Custom Role.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -8245,7 +8895,6 @@ See also https://coralogix.com/docs/user-guides/account-management/user-manageme
 
 
 CustomRoleSpec defines the desired state of a Coralogix Custom Role.
-See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
 
 <table>
     <thead>
@@ -8408,6 +9057,8 @@ with respect to the current state of the instance.<br/>
 
 Dashboard is the Schema for the dashboards API.
 
+**Added in v0.4.0**
+
 <table>
     <thead>
         <tr>
@@ -8438,7 +9089,8 @@ Dashboard is the Schema for the dashboards API.
         <td><b><a href="#dashboardspec">spec</a></b></td>
         <td>object</td>
         <td>
-          DashboardSpec defines the desired state of Dashboard.<br/>
+          DashboardSpec defines the desired state of Dashboard.
+See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-started/<br/>
           <br/>
             <i>Validations</i>:<li>!(has(self.json) && has(self.configMapRef)): Only one of json or configMapRef can be declared at the same time</li>
         </td>
@@ -8460,6 +9112,7 @@ Dashboard is the Schema for the dashboards API.
 
 
 DashboardSpec defines the desired state of Dashboard.
+See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-started/
 
 <table>
     <thead>
@@ -8775,7 +9428,9 @@ with respect to the current state of the instance.<br/>
 
 
 
-DashboardsFolder is the Schema for the dashboardsfolders API.
+DashboardsFolder is the Schema for the DashboardsFolders API.
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -8807,7 +9462,8 @@ DashboardsFolder is the Schema for the dashboardsfolders API.
         <td><b><a href="#dashboardsfolderspec">spec</a></b></td>
         <td>object</td>
         <td>
-          DashboardsFolderSpec defines the desired state of DashboardsFolder.<br/>
+          DashboardsFolderSpec defines the desired state of Dashboard Folder.
+See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-started/<br/>
           <br/>
             <i>Validations</i>:<li>!(has(self.parentFolderId) && has(self.parentFolderRef)): Only one of parentFolderID or parentFolderRef can be declared at the same time</li>
         </td>
@@ -8828,7 +9484,8 @@ DashboardsFolder is the Schema for the dashboardsfolders API.
 
 
 
-DashboardsFolderSpec defines the desired state of DashboardsFolder.
+DashboardsFolderSpec defines the desired state of Dashboard Folder.
+See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-started/
 
 <table>
     <thead>
@@ -9017,6 +9674,213 @@ with respect to the current state of the instance.<br/>
       </tr></tbody>
 </table>
 
+## Extension
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+Extension is the Schema for the extensions API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>Extension</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#extensionspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          ExtensionSpec defines the desired state of a Coralogix extension.
+See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#extensionstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Extension.spec
+<sup><sup>[↩ Parent](#extension)</sup></sup>
+
+
+
+ExtensionSpec defines the desired state of a Coralogix extension.
+See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          Id of the extension to deploy.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>version</b></td>
+        <td>string</td>
+        <td>
+          Desired version of the extension.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>itemIds</b></td>
+        <td>[]string</td>
+        <td>
+          Item IDs to be used by the extension.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Extension.status
+<sup><sup>[↩ Parent](#extension)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#extensionstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Extension.status.conditions[index]
+<sup><sup>[↩ Parent](#extensionstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
 ## GlobalRouter
 <sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
 
@@ -9025,8 +9889,12 @@ with respect to the current state of the instance.<br/>
 
 
 
-GlobalRouter is the Schema for the globalrouters API.
+GlobalRouter is the Schema for the GlobalRouters API.
 NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
+
+See also https://coralogix.com/docs/user-guides/notification-center/routing/
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -9058,7 +9926,7 @@ NOTE: This CRD exposes a new feature and may have breaking changes in future rel
         <td><b><a href="#globalrouterspec">spec</a></b></td>
         <td>object</td>
         <td>
-          GlobalRouterSpec defines the desired state of GlobalRouter.<br/>
+          GlobalRouterSpec defines the desired state of the Global Router.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -9077,7 +9945,7 @@ NOTE: This CRD exposes a new feature and may have breaking changes in future rel
 
 
 
-GlobalRouterSpec defines the desired state of GlobalRouter.
+GlobalRouterSpec defines the desired state of the Global Router.
 
 <table>
     <thead>
@@ -9772,7 +10640,10 @@ with respect to the current state of the instance.<br/>
 
 
 
-Group is the Schema for the groups API.
+Group is the Schema for the Groups API.
+See also https://coralogix.com/docs/user-guides/account-management/user-management/assign-user-roles-and-scopes-via-groups/
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -9804,8 +10675,7 @@ Group is the Schema for the groups API.
         <td><b><a href="#groupspec">spec</a></b></td>
         <td>object</td>
         <td>
-          GroupSpec defines the desired state of Coralogix Group.
-See also https://coralogix.com/docs/user-guides/account-management/user-management/assign-user-roles-and-scopes-via-groups/<br/>
+          GroupSpec defines the desired state of Coralogix Group.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -9825,7 +10695,6 @@ See also https://coralogix.com/docs/user-guides/account-management/user-manageme
 
 
 GroupSpec defines the desired state of Coralogix Group.
-See also https://coralogix.com/docs/user-guides/account-management/user-management/assign-user-roles-and-scopes-via-groups/
 
 <table>
     <thead>
@@ -10142,7 +11011,12 @@ with respect to the current state of the instance.<br/>
 
 
 
-Integration is the Schema for the integrations API.
+Integration is the Schema for the Integrations API.
+See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/
+
+For available integrations see https://coralogix.com/docs/developer-portal/infrastructure-as-code/terraform-provider/integrations/aws-metrics-collector/ or at https://github.com/coralogix/coralogix-operator/tree/main/config/samples/v1alpha1/integrations.
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -10174,10 +11048,7 @@ Integration is the Schema for the integrations API.
         <td><b><a href="#integrationspec">spec</a></b></td>
         <td>object</td>
         <td>
-          IntegrationSpec defines the desired state of a Coralogix (managed) integration.
-See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/
-
-For available integrations see https://coralogix.com/docs/developer-portal/infrastructure-as-code/terraform-provider/integrations/aws-metrics-collector/ or at https://github.com/coralogix/coralogix-operator/tree/main/config/samples/v1alpha1/integrations.<br/>
+          IntegrationSpec defines the desired state of a Coralogix (managed) integration.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -10197,9 +11068,6 @@ For available integrations see https://coralogix.com/docs/developer-portal/infra
 
 
 IntegrationSpec defines the desired state of a Coralogix (managed) integration.
-See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/
-
-For available integrations see https://coralogix.com/docs/developer-portal/infrastructure-as-code/terraform-provider/integrations/aws-metrics-collector/ or at https://github.com/coralogix/coralogix-operator/tree/main/config/samples/v1alpha1/integrations.
 
 <table>
     <thead>
@@ -10354,6 +11222,9 @@ with respect to the current state of the instance.<br/>
 
 
 OutboundWebhook is the Schema for the API
+See also https://coralogix.com/docs/user-guides/alerting/outbound-webhooks/aws-eventbridge-outbound-webhook/
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -10385,8 +11256,7 @@ OutboundWebhook is the Schema for the API
         <td><b><a href="#outboundwebhookspec">spec</a></b></td>
         <td>object</td>
         <td>
-          OutboundWebhookSpec defines the desired state of OutboundWebhook
-See also https://coralogix.com/docs/user-guides/alerting/outbound-webhooks/aws-eventbridge-outbound-webhook/<br/>
+          OutboundWebhookSpec defines the desired state of an outbound webhook.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -10405,8 +11275,7 @@ See also https://coralogix.com/docs/user-guides/alerting/outbound-webhooks/aws-e
 
 
 
-OutboundWebhookSpec defines the desired state of OutboundWebhook
-See also https://coralogix.com/docs/user-guides/alerting/outbound-webhooks/aws-eventbridge-outbound-webhook/
+OutboundWebhookSpec defines the desired state of an outbound webhook.
 
 <table>
     <thead>
@@ -10672,7 +11541,7 @@ Generic HTTP(s) webhook.
         <td>
           HTTP Method to use.<br/>
           <br/>
-            <i>Enum</i>: Unkown, Get, Post, Put<br/>
+            <i>Enum</i>: Unknown, Get, Post, Put<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -11099,6 +11968,9 @@ with respect to the current state of the instance.<br/>
 
 Preset is the Schema for the presets API.
 NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
+See also https://coralogix.com/docs/user-guides/notification-center/presets/introduction/
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -11494,6 +12366,9 @@ with respect to the current state of the instance.<br/>
 
 
 RecordingRuleGroupSet is the Schema for the RecordingRuleGroupSets API
+See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -11525,8 +12400,7 @@ RecordingRuleGroupSet is the Schema for the RecordingRuleGroupSets API
         <td><b><a href="#recordingrulegroupsetspec">spec</a></b></td>
         <td>object</td>
         <td>
-          RecordingRuleGroupSetSpec defines the desired state of a set of Coralogix recording rule groups.
-See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/<br/>
+          RecordingRuleGroupSetSpec defines the desired state of a set of Coralogix recording rule groups.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -11546,7 +12420,6 @@ See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules
 
 
 RecordingRuleGroupSetSpec defines the desired state of a set of Coralogix recording rule groups.
-See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
 
 <table>
     <thead>
@@ -11781,7 +12654,10 @@ with respect to the current state of the instance.<br/>
 
 
 
-RuleGroup is the Schema for the rulegroups API
+RuleGroup is the Schema for the RuleGroups API
+See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -11987,7 +12863,6 @@ Sub group of rules.
 
 
 A rule to change data extraction.
-See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
 
 <table>
     <thead>
@@ -12579,6 +13454,9 @@ with respect to the current state of the instance.<br/>
 
 
 Scope is the Schema for the scopes API.
+See also https://coralogix.com/docs/user-guides/account-management/user-management/scopes/
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -12610,8 +13488,7 @@ Scope is the Schema for the scopes API.
         <td><b><a href="#scopespec">spec</a></b></td>
         <td>object</td>
         <td>
-          ScopeSpec defines the desired state of a Coralogix Scope.
-See also https://coralogix.com/docs/user-guides/account-management/user-management/scopes/<br/>
+          ScopeSpec defines the desired state of a Coralogix Scope.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -12631,7 +13508,6 @@ See also https://coralogix.com/docs/user-guides/account-management/user-manageme
 
 
 ScopeSpec defines the desired state of a Coralogix Scope.
-See also https://coralogix.com/docs/user-guides/account-management/user-management/scopes/
 
 <table>
     <thead>
@@ -13304,10 +14180,14 @@ with respect to the current state of the instance.<br/>
 
 
 
-TCOLogsPolicies is the Schema for the tcologspolicies API.
+TCOLogsPolicies is the Schema for the TCOLogsPolicies API.
 NOTE: This resource performs an atomic overwrite of all existing TCO logs policies
 in the backend. Any existing policies not defined in this resource will be
 removed. Use with caution as this operation is destructive.
+
+See also https://coralogix.com/docs/tco-optimizer-api
+
+**Added in v0.4.0**
 
 <table>
     <thead>
@@ -13339,8 +14219,7 @@ removed. Use with caution as this operation is destructive.
         <td><b><a href="#tcologspoliciesspec">spec</a></b></td>
         <td>object</td>
         <td>
-          TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.
-See also https://coralogix.com/docs/tco-optimizer-api<br/>
+          TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -13360,7 +14239,6 @@ See also https://coralogix.com/docs/tco-optimizer-api<br/>
 
 
 TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.
-See also https://coralogix.com/docs/tco-optimizer-api
 
 <table>
     <thead>
@@ -13697,6 +14575,10 @@ NOTE: This resource performs an atomic overwrite of all existing TCO traces poli
 in the backend. Any existing policies not defined in this resource will be
 removed. Use with caution as this operation is destructive.
 
+See also https://coralogix.com/docs/tco-optimizer-api
+
+**Added in v0.4.0**
+
 <table>
     <thead>
         <tr>
@@ -13727,8 +14609,7 @@ removed. Use with caution as this operation is destructive.
         <td><b><a href="#tcotracespoliciesspec">spec</a></b></td>
         <td>object</td>
         <td>
-          TCOTracesPoliciesSpec defines the desired state of Coralogix TCO policies for traces.
-See also https://coralogix.com/docs/tco-optimizer-api<br/>
+          TCOTracesPoliciesSpec defines the desired state of Coralogix TCO policies for traces.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -13748,7 +14629,6 @@ See also https://coralogix.com/docs/tco-optimizer-api<br/>
 
 
 TCOTracesPoliciesSpec defines the desired state of Coralogix TCO policies for traces.
-See also https://coralogix.com/docs/tco-optimizer-api
 
 <table>
     <thead>
@@ -14239,7 +15119,7 @@ ViewFolder is the Schema for the viewfolders API.
         <td><b><a href="#viewfolderspec">spec</a></b></td>
         <td>object</td>
         <td>
-          ViewFolderSpec defines the desired state of ViewFolder.<br/>
+          ViewFolderSpec defines the desired state of folder for views.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -14258,7 +15138,7 @@ ViewFolder is the Schema for the viewfolders API.
 
 
 
-ViewFolderSpec defines the desired state of ViewFolder.
+ViewFolderSpec defines the desired state of folder for views.
 
 <table>
     <thead>
@@ -14398,7 +15278,10 @@ with respect to the current state of the instance.<br/>
 
 
 
-View is the Schema for the views API.
+View is the Schema for the Views API.
+See also https://coralogix.com/docs/user-guides/monitoring-and-insights/explore-screen/custom-views/
+
+**Added in v0.4.0**
 
 <table>
     <thead>
