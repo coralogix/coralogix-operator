@@ -276,6 +276,7 @@ func main() {
 
 	if err = (&v1alpha1controllers.ArchiveLogsTargetReconciler{
 		ArchiveLogsTargetsClient: clientSet.ArchiveLogs(),
+		ArchiveRetentionsClient:  clientSet.ArchiveRetentions(),
 		Interval:                 cfg.ReconcileIntervals[utils.ArchiveLogsTargetKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ArchiveLogsTarget")
