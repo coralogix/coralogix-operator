@@ -65,7 +65,12 @@ func (in *DashboardSpec) ExtractDashboardFromSpec(ctx context.Context, namespace
 	}
 
 	dashboard := new(cxsdk.Dashboard)
-	if err = protojson.Unmarshal([]byte(contentJson), dashboard); err != nil {
+	JSONUnmarshal := protojson.UnmarshalOptions{
+		DiscardUnknown: true,
+		AllowPartial:   true,
+	}
+
+	if err = JSONUnmarshal.Unmarshal([]byte(contentJson), dashboard); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal contentJson: %w", err)
 	}
 
