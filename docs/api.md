@@ -9263,6 +9263,9 @@ with respect to the current state of the instance.<br/>
 
 
 
+See also https://coralogix.com/docs/user-guides/monitoring-and-insights/events2metrics/
+
+**Added in v0.5.0**
 Events2Metric is the Schema for the events2metrics API.
 
 <table>
