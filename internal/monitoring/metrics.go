@@ -22,21 +22,16 @@ import (
 
 var metricsLog = logf.Log.WithName("metrics")
 
-func SetupMetrics() error {
-	metricsLog.V(1).Info("Setting up metrics")
-	if err := RegisterMetrics(); err != nil {
-		return err
-	}
-
-	return RegisterCollectors()
-}
+const (
+	remoteSynced   = "RemoteSynced"
+	remoteUnsynced = "RemoteUnsynced"
+)
 
 func RegisterMetrics() error {
 	metricsLog.V(1).Info("Registering metrics")
 	for _, metric := range metricsList {
 		err := metrics.Registry.Register(metric)
 		if err != nil {
-			metricsLog.Error(err, "Failed to register metric", "metric", metric)
 			return err
 		}
 	}
@@ -46,14 +41,24 @@ func RegisterMetrics() error {
 
 var metricsList = []prometheus.Collector{
 	operatorInfoMetric,
+	resourceInfoMetric,
 }
 
-var operatorInfoMetric = prometheus.NewGaugeVec(
-	prometheus.GaugeOpts{
-		Name: "cx_operator_info",
-		Help: "Coralogix Operator information.",
-	},
-	[]string{"go_version", "operator_version", "coralogix_url"},
+var (
+	operatorInfoMetric = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cx_operator_build_info",
+			Help: "Coralogix Operator build information.",
+		},
+		[]string{"go_version", "operator_version", "coralogix_url"},
+	)
+	resourceInfoMetric = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cx_operator_resource_info",
+			Help: "Coralogix Operator custom resource information.",
+		},
+		[]string{"kind", "name", "namespace", "status"},
+	)
 )
 
 func SetOperatorInfoMetric(goVersion, operatorVersion, url string) {
@@ -63,4 +68,34 @@ func SetOperatorInfoMetric(goVersion, operatorVersion, url string) {
 		"coralogix_url", url,
 	)
 	operatorInfoMetric.WithLabelValues(goVersion, operatorVersion, url).Set(1)
+}
+
+func SetResourceInfoMetricSynced(kind, name, namespace string) {
+	metricsLog.V(1).Info("Setting resource info metric synced",
+		"kind", kind,
+		"name", name,
+		"namespace", namespace,
+	)
+	resourceInfoMetric.WithLabelValues(kind, name, namespace, remoteSynced).Set(1)
+	resourceInfoMetric.DeleteLabelValues(kind, name, namespace, remoteUnsynced)
+}
+
+func SetResourceInfoMetricUnsynced(kind, name, namespace string) {
+	metricsLog.V(1).Info("Setting resource info metric unsynced",
+		"kind", kind,
+		"name", name,
+		"namespace", namespace,
+	)
+	resourceInfoMetric.WithLabelValues(kind, name, namespace, remoteUnsynced).Set(1)
+	resourceInfoMetric.DeleteLabelValues(kind, name, namespace, remoteSynced)
+}
+
+func DeleteResourceInfoMetric(kind, name, namespace string) {
+	metricsLog.V(1).Info("Deleting resource info metric",
+		"kind", kind,
+		"name", name,
+		"namespace", namespace,
+	)
+	resourceInfoMetric.DeleteLabelValues(kind, name, namespace, remoteSynced)
+	resourceInfoMetric.DeleteLabelValues(kind, name, namespace, remoteUnsynced)
 }
