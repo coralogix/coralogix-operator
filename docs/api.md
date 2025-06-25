@@ -6308,6 +6308,8 @@ Resource Types:
 
 - [DashboardsFolder](#dashboardsfolder)
 
+- [Events2Metric](#events2metric)
+
 - [GlobalRouter](#globalrouter)
 
 - [Group](#group)
@@ -9179,6 +9181,606 @@ DashboardsFolderStatus defines the observed state of DashboardsFolder.
 
 ### DashboardsFolder.status.conditions[index]
 <sup><sup>[↩ Parent](#dashboardsfolderstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## Events2Metric
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+See also https://coralogix.com/docs/user-guides/monitoring-and-insights/events2metrics/
+
+**Added in v0.5.0**
+Events2Metric is the Schema for the events2metrics API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>Events2Metric</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#events2metricspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          Events2MetricSpec defines the desired state of Events2Metric.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#events2metricstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          Events2MetricStatus defines the observed state of Events2Metric.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Events2Metric.spec
+<sup><sup>[↩ Parent](#events2metric)</sup></sup>
+
+
+
+Events2MetricSpec defines the desired state of Events2Metric.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the E2M<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#events2metricspecquery">query</a></b></td>
+        <td>object</td>
+        <td>
+          Spans or logs type query<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.spans) != has(self.logs): Exactly one of spans or logs must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          Description of the E2M<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#events2metricspecmetricfieldsindex">metricFields</a></b></td>
+        <td>[]object</td>
+        <td>
+          E2M metric fields<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#events2metricspecmetriclabelsindex">metricLabels</a></b></td>
+        <td>[]object</td>
+        <td>
+          E2M metric labels<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>permutationsLimit</b></td>
+        <td>integer</td>
+        <td>
+          Represents the limit of the permutations<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Events2Metric.spec.query
+<sup><sup>[↩ Parent](#events2metricspec)</sup></sup>
+
+
+
+Spans or logs type query
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#events2metricspecquerylogs">logs</a></b></td>
+        <td>object</td>
+        <td>
+          Logs query for logs2metrics E2M<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#events2metricspecqueryspans">spans</a></b></td>
+        <td>object</td>
+        <td>
+          Spans query for spans2metrics E2M<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Events2Metric.spec.query.logs
+<sup><sup>[↩ Parent](#events2metricspecquery)</sup></sup>
+
+
+
+Logs query for logs2metrics E2M
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>alias</b></td>
+        <td>string</td>
+        <td>
+          alias<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>applicationNameFilters</b></td>
+        <td>[]string</td>
+        <td>
+          application name filters<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>lucene</b></td>
+        <td>string</td>
+        <td>
+          lucene query<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>severityFilters</b></td>
+        <td>[]enum</td>
+        <td>
+          severity type filters<br/>
+          <br/>
+            <i>Enum</i>: debug, verbose, info, warn, error, critical<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>subsystemNameFilters</b></td>
+        <td>[]string</td>
+        <td>
+          subsystem names filters<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Events2Metric.spec.query.spans
+<sup><sup>[↩ Parent](#events2metricspecquery)</sup></sup>
+
+
+
+Spans query for spans2metrics E2M
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>actionFilters</b></td>
+        <td>[]string</td>
+        <td>
+          action filters<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>applicationNameFilters</b></td>
+        <td>[]string</td>
+        <td>
+          application name filters<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>lucene</b></td>
+        <td>string</td>
+        <td>
+          lucene query<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>serviceFilters</b></td>
+        <td>[]string</td>
+        <td>
+          service filters<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>subsystemNameFilters</b></td>
+        <td>[]string</td>
+        <td>
+          subsystem name filters<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Events2Metric.spec.metricFields[index]
+<sup><sup>[↩ Parent](#events2metricspec)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>sourceField</b></td>
+        <td>string</td>
+        <td>
+          Source field<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>targetBaseMetricName</b></td>
+        <td>string</td>
+        <td>
+          Target metric field alias name<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#events2metricspecmetricfieldsindexaggregationsindex">aggregations</a></b></td>
+        <td>[]object</td>
+        <td>
+          Represents Aggregation type list<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Events2Metric.spec.metricFields[index].aggregations[index]
+<sup><sup>[↩ Parent](#events2metricspecmetricfieldsindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#events2metricspecmetricfieldsindexaggregationsindexaggmetadata">aggMetadata</a></b></td>
+        <td>object</td>
+        <td>
+          Aggregate metadata, samples or histogram type
+Types that are valid to be assigned to AggMetadata: AggregationTypeSamples, AggregationTypeHistogram<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.samples) != has(self.histogram): Exactly one of samples or histogram must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>aggType</b></td>
+        <td>enum</td>
+        <td>
+          Aggregation type<br/>
+          <br/>
+            <i>Enum</i>: min, max, count, avg, sum, histogram, samples<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Is enabled. True by default<br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>targetMetricName</b></td>
+        <td>string</td>
+        <td>
+          Target metric field alias name<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Events2Metric.spec.metricFields[index].aggregations[index].aggMetadata
+<sup><sup>[↩ Parent](#events2metricspecmetricfieldsindexaggregationsindex)</sup></sup>
+
+
+
+Aggregate metadata, samples or histogram type
+Types that are valid to be assigned to AggMetadata: AggregationTypeSamples, AggregationTypeHistogram
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#events2metricspecmetricfieldsindexaggregationsindexaggmetadatahistogram">histogram</a></b></td>
+        <td>object</td>
+        <td>
+          E2M aggregate histogram type metadata<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#events2metricspecmetricfieldsindexaggregationsindexaggmetadatasamples">samples</a></b></td>
+        <td>object</td>
+        <td>
+          E2M sample type metadata<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Events2Metric.spec.metricFields[index].aggregations[index].aggMetadata.histogram
+<sup><sup>[↩ Parent](#events2metricspecmetricfieldsindexaggregationsindexaggmetadata)</sup></sup>
+
+
+
+E2M aggregate histogram type metadata
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>buckets</b></td>
+        <td>[]int or string</td>
+        <td>
+          Buckets of the E2M<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Events2Metric.spec.metricFields[index].aggregations[index].aggMetadata.samples
+<sup><sup>[↩ Parent](#events2metricspecmetricfieldsindexaggregationsindexaggmetadata)</sup></sup>
+
+
+
+E2M sample type metadata
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>sampleType</b></td>
+        <td>enum</td>
+        <td>
+          E2MAggSamplesSampleType defines the type of sample aggregation to be performed.<br/>
+          <br/>
+            <i>Enum</i>: min, max<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Events2Metric.spec.metricLabels[index]
+<sup><sup>[↩ Parent](#events2metricspec)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>sourceField</b></td>
+        <td>string</td>
+        <td>
+          Metric label source field<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>targetLabel</b></td>
+        <td>string</td>
+        <td>
+          Metric label target alias name<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Events2Metric.status
+<sup><sup>[↩ Parent](#events2metric)</sup></sup>
+
+
+
+Events2MetricStatus defines the observed state of Events2Metric.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#events2metricstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Events2Metric.status.conditions[index]
+<sup><sup>[↩ Parent](#events2metricstatus)</sup></sup>
 
 
 

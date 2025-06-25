@@ -289,6 +289,13 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "ArchiveMetricsTarget")
 		os.Exit(1)
 	}
+	if err = (&v1alpha1controllers.Events2MetricReconciler{
+		E2MClient: clientSet.Events2Metrics(),
+		Interval:  cfg.ReconcileIntervals[utils.Events2MetricKind],
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Events2Metric")
+		os.Exit(1)
+	}
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
