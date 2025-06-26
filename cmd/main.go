@@ -308,8 +308,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := monitoring.SetupMetrics(); err != nil {
-		setupLog.Error(err, "unable to set up metrics")
+	if err := monitoring.RegisterMetrics(); err != nil {
+		setupLog.Error(err, "unable to register metrics")
 		os.Exit(1)
 	}
 

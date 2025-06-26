@@ -35,6 +35,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	"github.com/coralogix/coralogix-operator/internal/config"
+	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
@@ -196,6 +197,19 @@ func ManageErrorWithRequeue(ctx context.Context, obj client.Object, reason strin
 		}
 	}
 
+	monitoring.DeleteResourceInfoMetric(
+		obj.GetObjectKind().GroupVersionKind().Kind,
+		obj.GetName(),
+		obj.GetNamespace(),
+		"synced",
+	)
+	monitoring.SetResourceInfoMetric(
+		obj.GetObjectKind().GroupVersionKind().Kind,
+		obj.GetName(),
+		obj.GetNamespace(),
+		"unsynced",
+	)
+
 	return reconcile.Result{}, err
 }
 
@@ -210,6 +224,19 @@ func ManageSuccessWithRequeue(ctx context.Context, obj client.Object,
 			}
 		}
 	}
+
+	monitoring.DeleteResourceInfoMetric(
+		obj.GetObjectKind().GroupVersionKind().Kind,
+		obj.GetName(),
+		obj.GetNamespace(),
+		"unsynced",
+	)
+	monitoring.SetResourceInfoMetric(
+		obj.GetObjectKind().GroupVersionKind().Kind,
+		obj.GetName(),
+		obj.GetNamespace(),
+		"synced",
+	)
 
 	return reconcile.Result{RequeueAfter: interval}, nil
 }
