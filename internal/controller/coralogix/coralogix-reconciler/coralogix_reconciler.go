@@ -102,6 +102,19 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 		}
 
+		monitoring.DeleteResourceInfoMetric(
+			obj.GetObjectKind().GroupVersionKind().Kind,
+			obj.GetName(),
+			obj.GetNamespace(),
+			"synced",
+		)
+		monitoring.DeleteResourceInfoMetric(
+			obj.GetObjectKind().GroupVersionKind().Kind,
+			obj.GetName(),
+			obj.GetNamespace(),
+			"unsynced",
+		)
+
 		return ctrl.Result{}, nil
 	}
 
