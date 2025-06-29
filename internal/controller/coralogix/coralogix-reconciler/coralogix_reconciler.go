@@ -35,6 +35,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	"github.com/coralogix/coralogix-operator/internal/config"
+	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
@@ -101,6 +102,11 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 		}
 
+		monitoring.DeleteResourceInfoMetric(
+			obj.GetObjectKind().GroupVersionKind().Kind,
+			obj.GetName(),
+			obj.GetNamespace(),
+		)
 		return ctrl.Result{}, nil
 	}
 
@@ -121,6 +127,11 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 		}
 
+		monitoring.DeleteResourceInfoMetric(
+			obj.GetObjectKind().GroupVersionKind().Kind,
+			obj.GetName(),
+			obj.GetNamespace(),
+		)
 		return ctrl.Result{}, nil
 	}
 
@@ -189,6 +200,12 @@ func ManageErrorWithRequeue(ctx context.Context, obj client.Object, reason strin
 		}
 	}
 
+	monitoring.SetResourceInfoMetricUnsynced(
+		obj.GetObjectKind().GroupVersionKind().Kind,
+		obj.GetName(),
+		obj.GetNamespace(),
+	)
+
 	return reconcile.Result{}, err
 }
 
@@ -202,6 +219,12 @@ func ManageSuccessWithRequeue(ctx context.Context, obj client.Object, interval t
 			}
 		}
 	}
+
+	monitoring.SetResourceInfoMetricSynced(
+		obj.GetObjectKind().GroupVersionKind().Kind,
+		obj.GetName(),
+		obj.GetNamespace(),
+	)
 
 	return reconcile.Result{RequeueAfter: interval}, nil
 }
