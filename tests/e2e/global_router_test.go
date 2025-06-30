@@ -7,7 +7,6 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"google.golang.org/grpc/codes"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -81,11 +80,12 @@ var _ = Describe("GlobalRouter", Ordered, func() {
 		By("Deleting the GlobalRouter")
 		Expect(crClient.Delete(ctx, globalRouter)).To(Succeed())
 
-		By("Verifying GlobalRouter is deleted from Coralogix backend")
-		Eventually(func() codes.Code {
-			_, err := notificationsClient.GetGlobalRouter(ctx, &cxsdk.GetGlobalRouterRequest{Id: globalRouterID})
-			return cxsdk.Code(err)
-		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
+		By("Verifying GlobalRouter is empty in Coralogix backend")
+		Eventually(func() []*cxsdk.RoutingRule {
+			router, err := notificationsClient.GetGlobalRouter(ctx, &cxsdk.GetGlobalRouterRequest{Id: globalRouterID})
+			Expect(err).ToNot(HaveOccurred())
+			return router.GetRouter().Rules
+		}, time.Minute, time.Second).Should(BeEmpty())
 	})
 })
 

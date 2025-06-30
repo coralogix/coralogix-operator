@@ -37,7 +37,16 @@ serviceMonitor:
   # -- Specifies whether a service monitor should be created.
   create: true
 
-  # -- Additional labels to add for ServiceMonitor 
+    # -- The namespace in which the service monitor should be created.
+    # -- If not set, the service monitor will be created in the same namespace as the operator.
+  namespace: ""
+
+  namespaceSelector:
+    # -- Specifies whether the service monitor should select the namespace where the operator is deployed.
+    # -- Useful when the service monitor is deployed in a different namespace than the operator.
+    enabled: false
+
+  # -- Additional labels to add for ServiceMonitor
   labels: {}
 
 # -- SecurityContext holds pod-level security attributes and common container settings.
