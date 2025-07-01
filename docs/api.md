@@ -4706,7 +4706,7 @@ The routing configuration to override from the connector/preset for triggered no
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>outputSchemaId</b></td>
+        <td><b>payloadType</b></td>
         <td>string</td>
         <td>
           The ID of the output schema to use for routing notifications<br/>
@@ -4937,7 +4937,7 @@ Optional routing configuration to override from the connector/preset for resolve
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>outputSchemaId</b></td>
+        <td><b>payloadType</b></td>
         <td>string</td>
         <td>
           The ID of the output schema to use for routing notifications<br/>
@@ -5525,7 +5525,7 @@ The routing configuration to override from the connector/preset for triggered no
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>outputSchemaId</b></td>
+        <td><b>payloadType</b></td>
         <td>string</td>
         <td>
           The ID of the output schema to use for routing notifications<br/>
@@ -5756,7 +5756,7 @@ Optional routing configuration to override from the connector/preset for resolve
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>outputSchemaId</b></td>
+        <td><b>payloadType</b></td>
         <td>string</td>
         <td>
           The ID of the output schema to use for routing notifications<br/>
