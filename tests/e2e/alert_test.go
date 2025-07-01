@@ -102,7 +102,7 @@ var _ = Describe("Alert", Ordered, func() {
 							NotifyOn: coralogixv1beta1.NotifyOnTriggeredAndResolved,
 							TriggeredRoutingOverrides: coralogixv1beta1.NotificationRouting{
 								ConfigOverrides: &coralogixv1beta1.SourceOverrides{
-									OutputSchemaId: "slack_structured",
+									PayloadType: "slack_structured",
 									ConnectorConfigFields: []coralogixv1beta1.ConfigField{
 										{
 											FieldName: "channel",
@@ -119,7 +119,7 @@ var _ = Describe("Alert", Ordered, func() {
 							},
 							ResolvedRoutingOverrides: &coralogixv1beta1.NotificationRouting{
 								ConfigOverrides: &coralogixv1beta1.SourceOverrides{
-									OutputSchemaId: "slack_structured",
+									PayloadType: "slack_structured",
 									ConnectorConfigFields: []coralogixv1beta1.ConfigField{
 										{
 											FieldName: "channel",

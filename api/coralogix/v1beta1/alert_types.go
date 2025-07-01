@@ -509,7 +509,7 @@ type NotificationRouting struct {
 
 type SourceOverrides struct {
 	// The ID of the output schema to use for routing notifications
-	OutputSchemaId string `json:"outputSchemaId"`
+	PayloadType string `json:"payloadType"`
 
 	// Notification message configuration fields.
 	// +optional
@@ -1672,7 +1672,7 @@ func expandRoutingOverrides(overrides NotificationRouting) *cxsdk.SourceOverride
 	sourceOverrides := &cxsdk.SourceOverrides{
 		ConnectorConfigFields: connectorOverrides,
 		MessageConfigFields:   presetOverrides,
-		OutputSchemaId:        overrides.ConfigOverrides.OutputSchemaId,
+		PayloadType:           overrides.ConfigOverrides.PayloadType,
 	}
 
 	return sourceOverrides
