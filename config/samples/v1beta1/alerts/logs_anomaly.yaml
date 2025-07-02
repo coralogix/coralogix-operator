@@ -22,10 +22,10 @@ spec:
           luceneQuery: remote_addr_enriched:/.*/
           labelFilters:
             applicationName:
-              - value: nginx
-                operation: includes
-              - value: subsystem-name
-                operation: startsWith
+              - operation: includes
+                value: nginx
+              - operation: endsWith
+                value: "1.29"
             subsystemName:
               - value: warning
                 operation: is
@@ -37,7 +37,6 @@ spec:
             minimumThreshold: 100
             timeWindow:
               specificValue: 5m
-      notificationPayloadFilter: [ "coralogix.metadata.sdkId" ]
   notificationGroup:
     webhooks:
       - retriggeringPeriod:

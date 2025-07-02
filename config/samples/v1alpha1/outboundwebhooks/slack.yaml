@@ -12,7 +12,7 @@ spec:
   name: slack-webhook
   outboundWebhookType:
     slack:
-      url: https://hooks.slack.com/services
+      url: https://example.com
       attachments:
         - type: "MetricSnapshot"
           isActive: true
