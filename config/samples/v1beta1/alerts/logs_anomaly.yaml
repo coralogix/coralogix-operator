@@ -25,7 +25,7 @@ spec:
               - operation: includes
                 value: nginx
               - operation: endsWith
-                value: 1.29
+                value: "1.29"
             subsystemName:
               - value: warning
                 operation: is

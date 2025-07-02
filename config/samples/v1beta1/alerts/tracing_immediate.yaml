@@ -28,7 +28,8 @@ spec:
                 values: [subsystem-name]
             subsystemName:
               - operation: is
-                value: webapp
+                values:
+                  - webapp
   notificationGroup:
     webhooks:
       - retriggeringPeriod:
