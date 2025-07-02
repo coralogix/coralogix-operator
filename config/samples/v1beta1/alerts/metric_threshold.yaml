@@ -48,7 +48,7 @@ spec:
         notifyOn: triggeredAndResolved
         triggeredRoutingOverrides:
           configOverrides:
-            outputSchemaId: "slack_structured"
+            payloadType: "slack_structured"
             connectorConfigFields:
               - fieldName: channel
                 template: "{{alertDef.priority}}"
@@ -57,7 +57,7 @@ spec:
                 template: "TRIGGERED PRESET OVERRIDE: {{alert.status}} {{alertDef.priority}} - {{alertDef.name}}"
         resolvedRoutingOverrides:
           configOverrides:
-            outputSchemaId: "slack_structured"
+            payloadType: "slack_structured"
             connectorConfigFields:
               - fieldName: channel
                 template: "{{alertDef.priority}}"
