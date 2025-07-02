@@ -22,16 +22,13 @@ spec:
           latencyThresholdMs: 30
           tracingLabelFilters:
             applicationName:
-              - values: [nginx]
-                operation: includes
-              - values: [subsystem-name]
-                operation: startsWith
+              - operation: includes
+                values: [nginx]
+              - operation: startsWith
+                values: [subsystem-name]
             subsystemName:
-              - values: [warning]
-                operation: is
-              - values: [info]
-                operation: endsWith
-      notificationPayloadFilter: [ "coralogix.metadata.sdkId" ]
+              - operation: is
+                value: webapp
   notificationGroup:
     webhooks:
       - retriggeringPeriod:

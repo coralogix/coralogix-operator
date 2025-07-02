@@ -22,15 +22,13 @@ spec:
           luceneQuery: remote_addr_enriched:/.*/
           labelFilters:
             applicationName:
-              - value: nginx
-                operation: includes
-              - value: subsystem-name
-                operation: startsWith
+              - operation: includes
+                value: nginx
+              - operation: endsWith
+                value: 1.29
             subsystemName:
-              - value: warning
-                operation: is
-              - value: info
-                operation: endsWith
+              - operation: is
+                value: webapp
             severity: [ "warning", "info" ]
       notificationPayloadFilter: [ "coralogix.metadata.sdkId" ]
       rules:
