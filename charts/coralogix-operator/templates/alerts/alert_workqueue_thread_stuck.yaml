@@ -1,0 +1,29 @@
+{{- if .Values.alerts.enabled }}
+apiVersion: coralogix.com/v1beta1
+kind: Alert
+metadata:
+  labels:
+    {{- include "coralogixOperator.labels" . | nindent 4 }}
+  name: workqueue-thread-stuck
+  namespace: coralogix-operator
+spec:
+  name: workqueue-thread-stuck alert
+  description: Worker thread stuck - A single reconcile has been running far too long, tying up a worker and slowing the whole controller.
+  priority: p4
+  entityLabels:
+    {{- toYaml .Values.alerts.alert_workqueue_thread_stuck.entityLabels | nindent 4 }}
+  alertType:
+    metricThreshold:
+      metricFilter:
+        promql: |
+          sum(workqueue_unfinished_work_seconds{pod=~"{{include coralogixOperator.fullname . }}.*"})>10
+      missingValues:
+        minNonNullValuesPct: 60
+      rules:
+        - condition:
+            threshold: "10"
+            forOverPct: 20
+            ofTheLast:
+              specificValue: 15m
+            conditionType: moreThan
+{{- end }}

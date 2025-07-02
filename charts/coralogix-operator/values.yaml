@@ -40,6 +40,27 @@ serviceMonitor:
   # -- Additional labels to add for ServiceMonitor 
   labels: {}
 
+# -- Alerts for Coralogix operator
+alerts:
+  labels:
+    release: prometheus
+  enabled: true
+  alert_controller_silent:
+    entityLabels:
+      alert_type: security
+      security_severity: high
+  alert_reconcile_error_ratio:
+    entityLabels:
+      alert_type: security
+      security_severity: high
+  alert_workqueue_depth_growth:
+    entityLabels:
+      alert_type: security
+      security_severity: high
+  alert_workqueue_thread_stuck:
+    entityLabels:
+      alert_type: security
+      security_severity: high
 # -- SecurityContext holds pod-level security attributes and common container settings.
 # -- This defaults to non root user with uid 2000 and gid 2000. *v1.PodSecurityContext  false
 # -- ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
@@ -83,7 +104,7 @@ secret:
 
   # -- Coralogix operator secret data
   data:
-    apiKey: ""
+    apiKey: "cxtp_DUnkqpdrm7L4g7hxj4Fvt49fZGymFu"
 
 # -- Coralogix operator container config
 coralogixOperator:
@@ -102,7 +123,7 @@ coralogixOperator:
     pullPolicy: IfNotPresent
 
   # -- Coralogix Account Region
-  region: ""
+  region: "EU2"
 
   # -- Coralogix Account Domain
   domain: ""

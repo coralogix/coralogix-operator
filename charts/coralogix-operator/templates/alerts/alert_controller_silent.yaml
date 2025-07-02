@@ -1,0 +1,30 @@
+#{{- if .Values.alerts.enabled }}
+apiVersion: coralogix.com/v1beta1
+kind: Alert
+metadata:
+  labels:
+    {{include .Values.alerts.labels | nindent 4 }}
+  name: controller-silent
+  namespace: coralogix-operator
+spec:
+  name: controller-silent alert
+  description: Controller silent - No reconciles for an extended period, hinting at a crash, lost leader election, or API connectivity loss. 
+  priority: p4
+  entityLabels:
+      alert_type: security
+      security_severity: high
+  alertType:
+    metricThreshold:
+      metricFilter:
+        promql: |
+          rate(controller_runtime_reconcile_total{pod=~"{{include coralogixOperator.fullname . }}.*"}) == 0
+      missingValues:
+        minNonNullValuesPct: 60
+      rules:
+        - condition:
+            threshold: "0.3"
+            forOverPct: 20
+            ofTheLast:
+              specificValue: 15m
+            conditionType: moreThan
+#{{- end }}
