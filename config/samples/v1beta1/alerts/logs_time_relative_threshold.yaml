@@ -11,7 +11,6 @@ metadata:
 spec:
   name: logs-time-relative-threshold alert example
   description: alert from k8s operator
-  priority: p1
   entityLabels:
     alert_type: security
     security_severity: high
@@ -35,6 +34,8 @@ spec:
             threshold: "100.4"
             comparedTo: previousHour
             conditionType: moreThan
+          override:
+            priority: p1
   notificationGroup:
     webhooks:
       - retriggeringPeriod:
