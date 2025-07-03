@@ -199,20 +199,18 @@ func expandArchiveRetention(ctx context.Context, coralogixClientSet *cxsdk.Clien
 		return nil, nil
 	}
 
-	ArchiveRetentions, err := coralogixClientSet.ArchiveRetentions().Get(ctx, &cxsdk.GetRetentionsRequest{})
+	archiveRetentions, err := coralogixClientSet.ArchiveRetentions().Get(ctx, &cxsdk.GetRetentionsRequest{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get archive retentions: %w", err)
 	}
 
-	var archiveRetentionID *wrapperspb.StringValue
-	for _, retention := range ArchiveRetentions.Retentions {
+	for _, retention := range archiveRetentions.Retentions {
 		if *utils.WrapperspbStringToStringPointer(retention.Name) == archiveRetention.BackendRef.Name {
-			archiveRetentionID = retention.Id
-			break
+			return &cxsdk.ArchiveRetention{Id: retention.Id}, nil
 		}
 	}
 
-	return &cxsdk.ArchiveRetention{Id: archiveRetentionID}, nil
+	return nil, fmt.Errorf("archive retention with name %s not found", archiveRetention.BackendRef.Name)
 }
 
 // TCOLogsPoliciesStatus defines the observed state of TCOLogsPolicies.
