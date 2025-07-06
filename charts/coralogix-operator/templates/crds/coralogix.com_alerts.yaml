@@ -2372,6 +2372,7 @@ spec:
                 default: false
                 type: boolean
               priority:
+                default: p5
                 description: Priority of the alert.
                 enum:
                 - p1
