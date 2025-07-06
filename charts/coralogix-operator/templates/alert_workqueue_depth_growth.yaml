@@ -3,7 +3,7 @@ apiVersion: coralogix.com/v1beta1
 kind: Alert
 metadata:
   labels:
-    {{- include "coralogixOperator.labels" . | nindent 4 }}
+    {{ include "coralogixOperator.labels" . | nindent 4 }}
   name: workqueue-depth-growth
   namespace: coralogix-operator
 spec:
@@ -11,19 +11,21 @@ spec:
   description: Queue backlog growing - Work-queue depth keeps climbing, showing the controller can’t process events as fast as they arrive.
   priority: p4
   entityLabels:
-    {{- toYaml .Values.alerts.alert_workqueue_depth_growth.entityLabels | nindent 4 }}
+    {{- range $key, $value := .Values.alerts.alert_workqueue_depth_growth.entityLabels }}
+      {{ $key }}: {{ $value }}
+    {{- end }}
   alertType:
     metricThreshold:
       metricFilter:
         promql: |
-          sum(workqueue_depth{pod=~"{{include coralogixOperator.fullname . }}.*"}) > 0.3
+          sum(workqueue_depth{pod=~"{{include "coralogixOperator.fullname" . }}.*"})
       missingValues:
         minNonNullValuesPct: 60
       rules:
         - condition:
-            threshold: "0.3"
+            threshold: "2000"
             forOverPct: 20
             ofTheLast:
-              specificValue: 15m
-            conditionType: moreThan
+              specificValue: 10m
+            conditionType: lessThan
 {{- end }}
