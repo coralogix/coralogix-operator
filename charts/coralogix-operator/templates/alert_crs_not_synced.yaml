@@ -1,0 +1,29 @@
+apiVersion: coralogix.com/v1beta1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/created-by: coralogix-operator
+  name: many-crs-not-synced
+spec:
+  name: Too many Crs are not synced
+  description: |
+    Fires when more than some ratio of the resources managed by the Coralogix Kubernetes Operator are in a RemoteUnsynced state, grouped by kind and namespace.
+
+    This indicates a partial sync failure between Kubernetes and Coralogix for a specific resource type or namespace. A RemoteUnsynced status suggests the operator could not apply or reconcile the desired state to the remote Coralogix backend.
+  priority: p3
+  alertType:
+    metricThreshold:
+      metricFilter:
+        promql: |
+          (count(cx_operator_resource_info{status="RemoteUnsynced"} == 1) by (kind, namespace))/(count(cx_operator_resource_info{} == 1) by (kind, namespace))
+      missingValues:
+        minNonNullValuesPct: 0
+      rules:
+        - condition:
+            threshold: "0.05" # 5% of the resources managed by the operator are in RemoteUnsynced state
+            forOverPct: 100
+            ofTheLast:
+              specificValue: 5m
+            conditionType: moreThan
+  notificationGroup:
