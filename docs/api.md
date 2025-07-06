@@ -113,6 +113,7 @@ AlertSpec defines the desired state of a Coralogix Alert. For more info check - 
           Priority of the alert.<br/>
           <br/>
             <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+            <i>Default</i>: p5<br/>
         </td>
         <td>true</td>
       </tr><tr>
