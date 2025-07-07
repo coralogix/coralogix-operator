@@ -42,8 +42,8 @@ serviceMonitor:
 
 # -- Alerts for Coralogix operator
 alerts:
-  enabled: true
-  alert_controller_silent:
+  enabled: false
+  alert_crs_not_synced:
     entityLabels:
       alert_type: security
       security_severity: high
@@ -51,14 +51,14 @@ alerts:
     entityLabels:
       alert_type: security
       security_severity: high
-  alert_workqueue_depth_growth:
-    entityLabels:
-      alert_type: security
-      security_severity: high
-  alert_workqueue_thread_stuck:
-    entityLabels:
-      alert_type: security
-      security_severity: high
+#  alert_workqueue_depth_growth:
+#   entityLabels:
+#      alert_type: security
+#      security_severity: high
+#  alert_workqueue_thread_stuck:
+#    entityLabels:
+#      alert_type: security
+#      security_severity: high
 # -- SecurityContext holds pod-level security attributes and common container settings.
 # -- This defaults to non root user with uid 2000 and gid 2000. *v1.PodSecurityContext  false
 # -- ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/

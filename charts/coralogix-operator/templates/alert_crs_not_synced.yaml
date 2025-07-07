@@ -1,17 +1,19 @@
+{{- if .Values.alerts.enabled }}
 apiVersion: coralogix.com/v1beta1
 kind: Alert
 metadata:
   labels:
-    app.kubernetes.io/part-of: coralogix-operator
-    app.kubernetes.io/created-by: coralogix-operator
+  {{ include "coralogixOperator.labels" . | nindent 4 }}
   name: many-crs-not-synced
+    namespace: coralogix-operator
 spec:
   name: Too many Crs are not synced
-  description: |
-    Fires when more than some ratio of the resources managed by the Coralogix Kubernetes Operator are in a RemoteUnsynced state, grouped by kind and namespace.
-
-    This indicates a partial sync failure between Kubernetes and Coralogix for a specific resource type or namespace. A RemoteUnsynced status suggests the operator could not apply or reconcile the desired state to the remote Coralogix backend.
+  description: Fires when more than some ratio of the resources managed by the Coralogix Kubernetes Operator are in a RemoteUnsynced state, grouped by kind and namespace. This indicates a partial sync failure between Kubernetes and Coralogix for a specific resource type or namespace. A RemoteUnsynced status suggests the operator could not apply or reconcile the desired state to the remote Coralogix backend.
   priority: p3
+  entityLabels:
+    {{- range $key, $value := .Values.alerts.alert_crs_not_synced.entityLabels }}
+      {{ $key }}: {{ $value }}
+    {{- end }}
   alertType:
     metricThreshold:
       metricFilter:
@@ -27,3 +29,4 @@ spec:
               specificValue: 5m
             conditionType: moreThan
   notificationGroup:
+  {{- end }}
