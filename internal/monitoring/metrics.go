@@ -15,7 +15,12 @@
 package monitoring
 
 import (
+	"context"
+	"net/url"
+	"time"
+
 	"github.com/prometheus/client_golang/prometheus"
+	clientmetrics "k8s.io/client-go/tools/metrics"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 )
@@ -29,6 +34,8 @@ const (
 
 func RegisterMetrics() error {
 	metricsLog.V(1).Info("Registering metrics")
+	clientmetrics.RequestResult = &ResultAdapter{requestsTotalMetric}
+	clientmetrics.RequestLatency = &LatencyAdapter{requestsLatencyMetric}
 	for _, metric := range metricsList {
 		err := metrics.Registry.Register(metric)
 		if err != nil {
@@ -42,6 +49,8 @@ func RegisterMetrics() error {
 var metricsList = []prometheus.Collector{
 	operatorInfoMetric,
 	resourceInfoMetric,
+	requestsTotalMetric,
+	requestsLatencyMetric,
 }
 
 var (
@@ -58,6 +67,21 @@ var (
 			Help: "Coralogix Operator custom resource information.",
 		},
 		[]string{"kind", "name", "namespace", "status"},
+	)
+	requestsTotalMetric = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "cx_operator_client_requests_total",
+			Help: "Total number of Coralogix Operator's in-cluster requests by status code and verb.",
+		},
+		[]string{"code", "verb"},
+	)
+	requestsLatencyMetric = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "cx_operator_client_requests_latency_seconds",
+			Help:    "Histogram of latencies for the Coralogix Operator's in-cluster requests by verb.",
+			Buckets: []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 2.0},
+		},
+		[]string{"verb"},
 	)
 )
 
@@ -98,4 +122,24 @@ func DeleteResourceInfoMetric(kind, name, namespace string) {
 	)
 	resourceInfoMetric.DeleteLabelValues(kind, name, namespace, remoteSynced)
 	resourceInfoMetric.DeleteLabelValues(kind, name, namespace, remoteUnsynced)
+}
+
+var _ clientmetrics.ResultMetric = &ResultAdapter{}
+
+type ResultAdapter struct {
+	metric *prometheus.CounterVec
+}
+
+func (r *ResultAdapter) Increment(_ context.Context, code, verb, _ string) {
+	r.metric.WithLabelValues(code, verb).Inc()
+}
+
+var _ clientmetrics.LatencyMetric = &LatencyAdapter{}
+
+type LatencyAdapter struct {
+	metric *prometheus.HistogramVec
+}
+
+func (l *LatencyAdapter) Observe(_ context.Context, verb string, _ url.URL, latency time.Duration) {
+	l.metric.WithLabelValues(verb).Observe(latency.Seconds())
 }
