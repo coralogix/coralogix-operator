@@ -6,12 +6,12 @@ controller-runtime, and custom metrics implemented by the Coralogix Operator.
 
 ## Custom Metrics
 
-| Name                                          | Type      | Description                                                                       | Labels                                            |
-|-----------------------------------------------|-----------|-----------------------------------------------------------------------------------|---------------------------------------------------|
-| `cx_operator_build_info`                      | Gauge     | Coralogix Operator build information.                                             | `go_version`, `operator_version`, `coralogix_url` |
-| `cx_operator_resource_info`                   | Gauge     | Coralogix Operator custom resource information.                                   | `kind`, `name`, `namespace`, `status`             |
-| `cx_operator_client_requests_total`           | Counter   | Total number of Coralogix Operator's in-cluster requests by status code and verb. | `code`, `verb`                                    |
-| `cx_operator_client_requests_latency_seconds` | Histogram | Histogram of latencies for the Coralogix Operator's in-cluster requests by verb.  | `verb`                                            |
+| Name                                          | Type      | Description                                                                              | Labels                                            |
+|-----------------------------------------------|-----------|------------------------------------------------------------------------------------------|---------------------------------------------------|
+| `cx_operator_build_info`                      | Gauge     | Coralogix Operator build information.                                                    | `go_version`, `operator_version`, `coralogix_url` |
+| `cx_operator_resource_info`                   | Gauge     | Coralogix Operator custom resource information.                                          | `kind`, `name`, `namespace`, `status`             |
+| `cx_operator_client_requests_total`           | Counter   | Total number of Coralogix Operator's in-cluster requests by status code and verb.        | `code`, `verb`                                    |
+| `cx_operator_client_requests_latency_seconds` | Histogram | Histogram of latencies for the Coralogix Operator's in-cluster requests by verb and url. | `verb`, `url`                                     |
 
 ## Accessing the Metrics
 

@@ -78,10 +78,10 @@ var (
 	requestsLatencyMetric = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name:    "cx_operator_client_requests_latency_seconds",
-			Help:    "Histogram of latencies for the Coralogix Operator's in-cluster requests by verb.",
+			Help:    "Histogram of latencies for the Coralogix Operator's in-cluster requests by verb and url.",
 			Buckets: []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 2.0},
 		},
-		[]string{"verb"},
+		[]string{"verb", "url"},
 	)
 )
 
@@ -140,6 +140,6 @@ type LatencyAdapter struct {
 	metric *prometheus.HistogramVec
 }
 
-func (l *LatencyAdapter) Observe(_ context.Context, verb string, _ url.URL, latency time.Duration) {
-	l.metric.WithLabelValues(verb).Observe(latency.Seconds())
+func (l *LatencyAdapter) Observe(_ context.Context, verb string, url url.URL, latency time.Duration) {
+	l.metric.WithLabelValues(verb, url.Path).Observe(latency.Seconds())
 }
