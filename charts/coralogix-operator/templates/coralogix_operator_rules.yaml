@@ -1,0 +1,25 @@
+apiVersion: coralogix.com/v1alpha1
+kind: RecordingRuleGroupSet
+metadata:
+  name: coralogix-operator.rules
+spec:
+  groups:
+    - name: reconcile_rates
+      intervalSeconds: 60
+      rules:
+        - expr: sum(rate(controller_runtime_reconcile_total{pod=~".*coralogix-operator.*"}[2m])) by (controller)
+          record: coralogix_operator:reconcile_total:controller
+        - expr: sum(rate(controller_runtime_reconcile_errors_total{pod=~".*coralogix-operator.*"}[2m])) by (pod)
+          record: coralogix_operator:reconcile_errors_total:pod
+    - name: unsynced_resources
+      intervalSeconds: 60
+      rules:
+        - expr: sum(cx_operator_resource_info{status=~"RemoteUnsynced"}) by (kind)
+          record: coralogix_operator:unsynced_resources_total:kind
+    - name: cpu_and_memory_usage
+      intervalSeconds: 60
+      rules:
+        - expr: sum(rate(container_cpu_usage_seconds_total{container=~"{{ include "coralogixOperator.fullname" . }}.*"}[2m])) by (pod)
+          record: coralogix_operator:cpu_usage_seconds_total:pod
+        - expr: 100*(container_memory_working_set_bytes{container=~"{{ include "coralogixOperator.fullname" . }}.*"} / container_spec_memory_limit_bytes{container=~"{{ include "coralogixOperator.fullname" . }}.*"})
+          record: coralogix_operator:memory_usage_percentage:pod

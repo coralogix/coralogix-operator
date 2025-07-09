@@ -2,8 +2,6 @@
 # This supports shell glob matching, relative path matching, and
 # negation (prefixed with !). Only one pattern per line.
 .DS_Store
-#Alert tbd:
-templates/alert_workqueue_*.yaml
 # Common VCS dirs
 .git/
 .gitignore
