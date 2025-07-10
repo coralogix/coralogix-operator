@@ -4,20 +4,20 @@ kind: Alert
 metadata:
   labels:
     {{ include "coralogixOperator.labels" . | nindent 4 }}
-  name: coralogix-operator-reconcile-error-ratio-alert
+  name: {{ include "coralogixOperator.fullname" . }}-reconcile-error-ratio
 spec:
-  name: CoralogixOperatorReconcileErrorRatioAlert
-  description: High reconcile error ratio - Too many recent reconciliations are failing, usually because of bad config, permission issues, or an upstream service outage.
+  name: {{ include "coralogixOperator.fullname" . }}-reconcile-error-ratio
+  description: High reconcile error ratio - over 10% of reconciliations are failing, usually because of bad config, permission issues, or an upstream service outage.
   priority: p4
   entityLabels:
-    {{- range $key, $value := .Values.alerts.alert_reconcile_error_ratio.entityLabels }}
+    {{- range $key, $value := .Values.alerts.alertReconcileErrorRatio.entityLabels }}
       {{ $key }}: {{ $value }}
     {{- end }}
   alertType:
     metricThreshold:
       metricFilter:
         promql: |
-          sum by (cluster,controller) ( rate(controller_runtime_reconcile_errors_total{pod=~"{{ include "coralogixOperator.fullname" . }}.*"}[10m]))
+          coralogix_operator:reconcile_errors_total:pod
       missingValues:
         minNonNullValuesPct: 60
       rules:

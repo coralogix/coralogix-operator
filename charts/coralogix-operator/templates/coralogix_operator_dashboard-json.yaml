@@ -3,8 +3,7 @@ apiVersion: coralogix.com/v1alpha1
 kind: Dashboard
 metadata:
   labels:
-    app.kubernetes.io/name: coralogix-operator
-    app.kubernetes.io/managed-by: kustomize
+    {{ include "coralogixOperator.labels" . | nindent 4 }}
   name: dashboard-json
 spec:
   json: >
@@ -285,64 +284,6 @@ spec:
                         "decimal": 2,
                         "hashColors": false,
                         "decimalPrecision": false
-                      }
-                    ],
-                    "stackedLine": "STACKED_LINE_UNSPECIFIED"
-                  }
-                }
-              }
-            ]
-          },
-          {
-            "id": {
-              "value": "ad00d2d9-8d2f-41e8-a906-20e5ee795bf5"
-            },
-            "appearance": {
-              "height": 19
-            },
-            "widgets": [
-              {
-                "id": {
-                  "value": "f72d40f5-bb5b-431f-a6e7-2090189d5020"
-                },
-                "title": "Rate of Errors by Controller",
-                "definition": {
-                  "lineChart": {
-                    "legend": {
-                      "isVisible": true,
-                      "columns": [],
-                      "groupByQuery": true,
-                      "placement": "LEGEND_PLACEMENT_AUTO"
-                    },
-                    "tooltip": {
-                      "showLabels": false,
-                      "type": "TOOLTIP_TYPE_ALL"
-                    },
-                    "queryDefinitions": [
-                      {
-                        "id": "3a476bf2-dab3-4ad3-b7c4-71990d257a0b",
-                        "query": {
-                          "metrics": {
-                            "promqlQuery": {
-                              "value": "coralogix_operator:reconcile_total:controller"
-                            },
-                            "filters": [],
-                            "editorMode": "METRICS_QUERY_EDITOR_MODE_TEXT"
-                          }
-                        },
-                        "seriesCountLimit": "20",
-                        "unit": "UNIT_UNSPECIFIED",
-                        "scaleType": "SCALE_TYPE_LINEAR",
-                        "name": "Query 1",
-                        "isVisible": true,
-                        "colorScheme": "classic",
-                        "resolution": {
-                          "bucketsPresented": 96
-                        },
-                        "dataModeType": "DATA_MODE_TYPE_HIGH_UNSPECIFIED",
-                        "customUnit": "",
-                        "decimal": 2,
-                        "hashColors": false
                       }
                     ],
                     "stackedLine": "STACKED_LINE_UNSPECIFIED"

@@ -1,10 +1,10 @@
 apiVersion: coralogix.com/v1alpha1
 kind: RecordingRuleGroupSet
 metadata:
-  name: coralogix-operator.rules
+  name: {{ include "coralogixOperator.fullname" . }}
 spec:
   groups:
-    - name: reconcile_rates
+    - name: reconcile_error_rates
       intervalSeconds: 60
       rules:
         - expr: sum(rate(controller_runtime_reconcile_total{pod=~".*coralogix-operator.*"}[2m])) by (controller)

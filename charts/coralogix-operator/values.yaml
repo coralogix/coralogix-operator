@@ -45,10 +45,10 @@ dashboard:
   enabled: false
 # -- Alerts for Coralogix operator
 alerts:
-  enabled: false
-  alert_crs_not_synced:
+  enabled: true
+  alertCrsNotSynced:
     entityLabels: {}
-  alert_reconcile_error_ratio:
+  alertReconcileErrorRatio:
     entityLabels: {}
       
 # -- SecurityContext holds pod-level security attributes and common container settings.
