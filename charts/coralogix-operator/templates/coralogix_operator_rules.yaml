@@ -1,3 +1,4 @@
+{{- if (or .Values.alerts.enabled .Values.dashboard.enabled) }}
 apiVersion: coralogix.com/v1alpha1
 kind: RecordingRuleGroupSet
 metadata:
@@ -15,7 +16,7 @@ spec:
       intervalSeconds: 60
       rules:
         - expr: sum(cx_operator_resource_info{status=~"RemoteUnsynced"}) by (kind)
-          record: coralogix_operator:unsynced_resources_total:kind
+          record: coralogix_operator:unsynced_resources_count:kind
     - name: cpu_and_memory_usage
       intervalSeconds: 60
       rules:
@@ -23,3 +24,4 @@ spec:
           record: coralogix_operator:cpu_usage_seconds_total:pod
         - expr: 100*(container_memory_working_set_bytes{container=~"{{ include "coralogixOperator.fullname" . }}.*"} / container_spec_memory_limit_bytes{container=~"{{ include "coralogixOperator.fullname" . }}.*"})
           record: coralogix_operator:memory_usage_percentage:pod
+{{- end }}

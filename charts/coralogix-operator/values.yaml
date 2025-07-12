@@ -51,13 +51,14 @@ serviceMonitor:
 
 # -- Dashboard for Coralogix operator
 dashboard:
-  enabled: false
+  enabled: true
+  
 # -- Alerts for Coralogix operator
 alerts:
   enabled: true
   alertCrsNotSynced:
     entityLabels: {}
-  alertReconcileErrorRatio:
+  alertReconcileErrorHigh:
     entityLabels: {}
       
 # -- SecurityContext holds pod-level security attributes and common container settings.

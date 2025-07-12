@@ -2,12 +2,12 @@
 apiVersion: coralogix.com/v1beta1
 kind: Alert
 metadata:
+  name: {{ include "coralogixOperator.fullname" . }}-crs-not-synced
   labels:
   {{ include "coralogixOperator.labels" . | nindent 4 }}
-  name: {{ include "coralogixOperator.fullname" . }}-crs-not-synced
 spec:
   name: {{ include "coralogixOperator.fullname" . }}-crs-not-synced
-  description: Fires when the ratio of RemoteUnsynced state is more than 5%, grouped by kind. This indicates a partial sync failure between Kubernetes and Coralogix for a specific resource type or namespace.
+  description: Fires when the ratio of RemoteUnsynced state is more than 5%, grouped by kind.
   priority: p3
   entityLabels:
     {{- range $key, $value := .Values.alerts.alertCrsNotSynced.entityLabels }}
@@ -17,14 +17,15 @@ spec:
     metricThreshold:
       metricFilter:
         promql: |
-          count(cx_operator_resource_info{status="RemoteUnsynced"}) by (kind)/count(cx_operator_resource_info{}) by (kind)
+          count(cx_operator_resource_info{status="RemoteUnsynced"}) by (kind) / count(cx_operator_resource_info) by (kind)
       missingValues:
         minNonNullValuesPct: 0
       rules:
         - condition:
-            threshold: "0.05" # 5% of the resources managed by the operator are in RemoteUnsynced state
+            threshold: "0.05"
             forOverPct: 100
             ofTheLast:
               specificValue: 5m
             conditionType: moreThan
   {{- end }}
+  
