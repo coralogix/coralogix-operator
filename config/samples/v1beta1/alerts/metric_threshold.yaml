@@ -11,7 +11,6 @@ metadata:
 spec:
   name: metric-threshold alert example
   description: alert from k8s operator
-  priority: p4
   entityLabels:
     alert_type: security
     security_severity: high
@@ -29,6 +28,8 @@ spec:
             ofTheLast:
               dynamicDuration: 1h15m
             conditionType: moreThan
+          override:
+            priority: p4
   notificationGroup:
     webhooks:
       - notifyOn: triggeredOnly
@@ -48,7 +49,7 @@ spec:
         notifyOn: triggeredAndResolved
         triggeredRoutingOverrides:
           configOverrides:
-            outputSchemaId: "slack_structured"
+            payloadType: "slack_structured"
             connectorConfigFields:
               - fieldName: channel
                 template: "{{alertDef.priority}}"
@@ -57,7 +58,7 @@ spec:
                 template: "TRIGGERED PRESET OVERRIDE: {{alert.status}} {{alertDef.priority}} - {{alertDef.name}}"
         resolvedRoutingOverrides:
           configOverrides:
-            outputSchemaId: "slack_structured"
+            payloadType: "slack_structured"
             connectorConfigFields:
               - fieldName: channel
                 template: "{{alertDef.priority}}"

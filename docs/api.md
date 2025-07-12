@@ -113,6 +113,7 @@ AlertSpec defines the desired state of a Coralogix Alert. For more info check - 
           Priority of the alert.<br/>
           <br/>
             <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+            <i>Default</i>: p5<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -4706,7 +4707,7 @@ The routing configuration to override from the connector/preset for triggered no
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>outputSchemaId</b></td>
+        <td><b>payloadType</b></td>
         <td>string</td>
         <td>
           The ID of the output schema to use for routing notifications<br/>
@@ -4937,7 +4938,7 @@ Optional routing configuration to override from the connector/preset for resolve
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>outputSchemaId</b></td>
+        <td><b>payloadType</b></td>
         <td>string</td>
         <td>
           The ID of the output schema to use for routing notifications<br/>
@@ -5525,7 +5526,7 @@ The routing configuration to override from the connector/preset for triggered no
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>outputSchemaId</b></td>
+        <td><b>payloadType</b></td>
         <td>string</td>
         <td>
           The ID of the output schema to use for routing notifications<br/>
@@ -5756,7 +5757,7 @@ Optional routing configuration to override from the connector/preset for resolve
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>outputSchemaId</b></td>
+        <td><b>payloadType</b></td>
         <td>string</td>
         <td>
           The ID of the output schema to use for routing notifications<br/>

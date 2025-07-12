@@ -3,6 +3,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ include "coralogixOperator.fullname" . }}-service-monitor
+  namespace: {{ .Values.serviceMonitor.namespace | default .Release.Namespace }}
   labels:
     {{- include "coralogixOperator.labels" . | nindent 4 }}
     {{- with .Values.serviceMonitor.labels }}
@@ -16,4 +17,9 @@ spec:
   selector:
     matchLabels:
       {{- include "coralogixOperator.selectorLabels" . | nindent 6 }}
+{{- if .Values.serviceMonitor.namespaceSelector.enabled }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+{{- end }}
 {{- end }}

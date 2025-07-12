@@ -1923,12 +1923,12 @@ spec:
                                     - template
                                     type: object
                                   type: array
-                                outputSchemaId:
+                                payloadType:
                                   description: The ID of the output schema to use
                                     for routing notifications
                                   type: string
                               required:
-                              - outputSchemaId
+                              - payloadType
                               type: object
                           type: object
                         triggeredRoutingOverrides:
@@ -1972,12 +1972,12 @@ spec:
                                     - template
                                     type: object
                                   type: array
-                                outputSchemaId:
+                                payloadType:
                                   description: The ID of the output schema to use
                                     for routing notifications
                                   type: string
                               required:
-                              - outputSchemaId
+                              - payloadType
                               type: object
                           type: object
                       required:
@@ -2206,12 +2206,12 @@ spec:
                                       - template
                                       type: object
                                     type: array
-                                  outputSchemaId:
+                                  payloadType:
                                     description: The ID of the output schema to use
                                       for routing notifications
                                     type: string
                                 required:
-                                - outputSchemaId
+                                - payloadType
                                 type: object
                             type: object
                           triggeredRoutingOverrides:
@@ -2255,12 +2255,12 @@ spec:
                                       - template
                                       type: object
                                     type: array
-                                  outputSchemaId:
+                                  payloadType:
                                     description: The ID of the output schema to use
                                       for routing notifications
                                     type: string
                                 required:
-                                - outputSchemaId
+                                - payloadType
                                 type: object
                             type: object
                         required:
@@ -2372,6 +2372,7 @@ spec:
                 default: false
                 type: boolean
               priority:
+                default: p5
                 description: Priority of the alert.
                 enum:
                 - p1

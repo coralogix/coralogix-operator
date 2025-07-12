@@ -48,7 +48,7 @@ import (
 	//+kubebuilder:scaffold:imports
 )
 
-const OperatorVersion = "0.5.0"
+const OperatorVersion = "1.0.0"
 
 var (
 	scheme   = k8sruntime.NewScheme()
@@ -276,6 +276,7 @@ func main() {
 
 	if err = (&v1alpha1controllers.ArchiveLogsTargetReconciler{
 		ArchiveLogsTargetsClient: clientSet.ArchiveLogs(),
+		ArchiveRetentionsClient:  clientSet.ArchiveRetentions(),
 		Interval:                 cfg.ReconcileIntervals[utils.ArchiveLogsTargetKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ArchiveLogsTarget")
@@ -307,7 +308,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := monitoring.SetupMetrics(); err != nil {
+	if err := monitoring.RegisterMetrics(); err != nil {
 		setupLog.Error(err, "unable to set up metrics")
 		os.Exit(1)
 	}

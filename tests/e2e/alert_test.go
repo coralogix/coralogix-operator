@@ -102,7 +102,7 @@ var _ = Describe("Alert", Ordered, func() {
 							NotifyOn: coralogixv1beta1.NotifyOnTriggeredAndResolved,
 							TriggeredRoutingOverrides: coralogixv1beta1.NotificationRouting{
 								ConfigOverrides: &coralogixv1beta1.SourceOverrides{
-									OutputSchemaId: "slack_structured",
+									PayloadType: "slack_structured",
 									ConnectorConfigFields: []coralogixv1beta1.ConfigField{
 										{
 											FieldName: "channel",
@@ -119,7 +119,7 @@ var _ = Describe("Alert", Ordered, func() {
 							},
 							ResolvedRoutingOverrides: &coralogixv1beta1.NotificationRouting{
 								ConfigOverrides: &coralogixv1beta1.SourceOverrides{
-									OutputSchemaId: "slack_structured",
+									PayloadType: "slack_structured",
 									ConnectorConfigFields: []coralogixv1beta1.ConfigField{
 										{
 											FieldName: "channel",
@@ -164,6 +164,9 @@ var _ = Describe("Alert", Ordered, func() {
 										DynamicDuration: ptr.To("12h"),
 									},
 								},
+								Override: &coralogixv1beta1.AlertOverride{
+									Priority: coralogixv1beta1.AlertPriorityP1,
+								},
 							},
 						},
 					},
@@ -185,11 +188,12 @@ var _ = Describe("Alert", Ordered, func() {
 
 		}, time.Minute, time.Second).Should(Succeed())
 
-		By("Verifying Alert exists in Coralogix backend")
-		Eventually(func() error {
-			_, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(alertID)})
-			return err
-		}, time.Minute, time.Second).Should(Succeed())
+		By("Verifying Alert exists in Coralogix backend with the correct priority")
+		Eventually(func(g Gomega) cxsdk.AlertDefPriority {
+			alertDef, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(alertID)})
+			g.Expect(err).ToNot(HaveOccurred())
+			return alertDef.GetAlertDef().GetAlertDefProperties().GetPriority()
+		}, time.Minute, time.Second).Should(Equal(cxsdk.AlertDefPriorityP1))
 	})
 
 	It("Should be updated successfully", func(ctx context.Context) {
