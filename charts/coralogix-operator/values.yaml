@@ -51,11 +51,11 @@ serviceMonitor:
 
 # -- Dashboard for Coralogix operator
 dashboard:
-  enabled: true
-  
+  enabled: false
+
 # -- Alerts for Coralogix operator
 alerts:
-  enabled: true
+  enabled: false
   alertCrsNotSynced:
     entityLabels: {}
   alertReconcileErrorHigh:
