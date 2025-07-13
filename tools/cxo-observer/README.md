@@ -5,7 +5,7 @@
 Additionally, it retrieves logs from the operator’s pods to provide comprehensive visibility.
 It is useful for support, debugging, and exporting the current state of your Coralogix Operator installation.
 The output is compressed into a `.tar.gz` file containing files organized by resource group, version, kind, and namespace, to be easily inspected and shared.
-Support requests and issues reports should include the output of this tool, including the affected resources.
+Support requests and issue reports should include the output of this tool, including the affected resources.
 
 ### Features
 - Collects Kubernetes resources created by the Coralogix Helm chart (e.g. Deployment, CRDs, ServiceAccount).
@@ -43,7 +43,7 @@ Example:
 cxo-observer --chart-namespace=observability --namespace-selector=production,staging --label-selector=team=backend,app=api
 ```
 
-If no `--namespace-selector` nor `--label-selector` is provided, all custom resources across the entire cluster will be collected.
+If neither `--namespace-selector` nor `--label-selector` is provided, all custom resources across the entire cluster will be collected.
 
 ### Flags
 ```bash

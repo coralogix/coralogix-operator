@@ -35,7 +35,7 @@ For a complete list of configuration options, refer to the [Helm Chart Docs](./c
 3. Upgrade the operator:
 ```sh  
 helm upgrade <my-release> coralogix/coralogix-operator \
-  --set secret.data.api
+  --set secret.data.apiKey="<api-key>" \
   --set coralogixOperator.region="<region>"
 ```
 

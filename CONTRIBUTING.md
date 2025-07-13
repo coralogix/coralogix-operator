@@ -60,7 +60,7 @@ We use [kubebuilder](https://book.kubebuilder.io/) for developing the operator.
 When creating or updating CRDs remember to run:
 ```sh
 make manifests generate
-````
+```
 
 Running E2E Tests
 ---------------------
@@ -74,7 +74,7 @@ $ export CORALOGIX_REGION="<region>"
 2. Run the tests:
 ```sh
 $ make e2e-tests
-````
+```
 
 Running Integration Tests
 ---------------------
@@ -83,7 +83,7 @@ The test files are located at [./tests/integration/](./tests/integration).
 In order to run the full integration tests suite, run:
 ```sh
 $ make integration-tests
-````
+```
 
 *Note:* `kuttl` tests create real resources and in a case of failure some resources may not be removed.
 
@@ -96,4 +96,4 @@ To determine the release convention we use [semantic-release](.releaserc.json) -
           {"message": "minor*", "release": "minor"},
           {"message": "patch*", "release": "patch"}
         ]
-````
+```
