@@ -1,0 +1,27 @@
+{{- if (or .Values.alerts.enabled .Values.dashboard.enabled) }}
+apiVersion: coralogix.com/v1alpha1
+kind: RecordingRuleGroupSet
+metadata:
+  name: {{ include "coralogixOperator.fullname" . }}-rules
+spec:
+  groups:
+    - name: reconcile_error_rates
+      intervalSeconds: 60
+      rules:
+        - expr: sum(rate(controller_runtime_reconcile_errors_total{pod=~".*{{ include "coralogixOperator.fullname" . }}*"}[10m])) by (controller)
+          record: {{ include "coralogixOperator.fullname" . }}:reconcile_errors_total:controller
+        - expr: sum(rate(controller_runtime_reconcile_errors_total{pod=~".*{{ include "coralogixOperator.fullname" . }}*"}[10m])) by (pod)
+          record: {{ include "coralogixOperator.fullname" . }}:reconcile_errors_total:pod
+    - name: unsynced_resources
+      intervalSeconds: 60
+      rules:
+        - expr: sum(cx_operator_resource_info{status=~"RemoteUnsynced"}) by (kind)
+          record: {{ include "coralogixOperator.fullname" . }}:unsynced_resources_count:kind
+    - name: cpu_and_memory_usage
+      intervalSeconds: 60
+      rules:
+        - expr: sum(rate(container_cpu_usage_seconds_total{container=~"{{ include "coralogixOperator.fullname" . }}.*"}[10m])) by (pod)
+          record: {{ include "coralogixOperator.fullname" . }}:cpu_usage_seconds_total:pod
+        - expr: 100*(container_memory_working_set_bytes{container=~"{{ include "coralogixOperator.fullname" . }}.*"} / container_spec_memory_limit_bytes{container=~"{{ include "coralogixOperator.fullname" . }}.*"})
+          record: {{ include "coralogixOperator.fullname" . }}:memory_usage_percentage:pod
+{{- end }}

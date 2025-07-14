@@ -7,17 +7,17 @@ metadata:
     {{ include "coralogixOperator.labels" . | nindent 4 }}
 spec:
   name: {{ include "coralogixOperator.fullname" . }}-reconcile-error-high
-  description: High reconcile error high - over 10% of reconciliations are failing, usually because of bad config, permission issues, or an upstream service outage.
+  description: High reconcile error high - over 10% of reconciliations are failing.
   priority: p4
   entityLabels:
-    {{- range $key, $value := .Values.alerts.alertReconcileErrorRatio.entityLabels }}
+    {{- range $key, $value := .Values.alerts.alertReconcileErrorHigh.entityLabels }}
       {{ $key }}: {{ $value }}
     {{- end }}
   alertType:
     metricThreshold:
       metricFilter:
         promql: |
-          coralogix_operator:reconcile_errors_total:pod
+          {{ include "coralogixOperator.fullname" . }}:reconcile_errors_total:pod / sum(rate(controller_runtime_reconcile_total{pod=~".*{{ include "coralogixOperator.fullname" . }}.*"}[10m])) by (pod)
       missingValues:
         minNonNullValuesPct: 0
       rules:
