@@ -11,21 +11,21 @@ spec:
       intervalSeconds: 60
       rules:
         - expr: sum(rate(controller_runtime_reconcile_total{pod=~".*{{ include "coralogixOperator.fullname" . }}.*"}[10m])) by (pod)
-          record: reconcile_rate:pod
+          record: {{ include "coralogixOperator.fullname" . }}:reconcile_total:pod
         - expr: sum(rate(controller_runtime_reconcile_errors_total{pod=~".*{{ include "coralogixOperator.fullname" . }}*"}[10m])) by (controller)
-          record: reconcile_errors_rate:controller
+          record: {{ include "coralogixOperator.fullname" . }}:reconcile_errors_rate:controller
         - expr: sum(rate(controller_runtime_reconcile_errors_total{pod=~".*{{ include "coralogixOperator.fullname" . }}*"}[10m])) by (pod)
-          record: reconcile_errors_rate:pod
+          record: {{ include "coralogixOperator.fullname" . }}:reconcile_errors_rate:pod
     - name: unsynced_resources
       intervalSeconds: 60
       rules:
         - expr: sum(cx_operator_resource_info{status=~"RemoteUnsynced"}) by (kind)
-          record: unsynced_resources_count:kind
+          record: {{ include "coralogixOperator.fullname" . }}:unsynced_resources_count:kind
     - name: cpu_and_memory_usage
       intervalSeconds: 60
       rules:
         - expr: sum(rate(container_cpu_usage_seconds_total{container=~"{{ include "coralogixOperator.fullname" . }}.*"}[10m])) by (pod)
-          record: cpu_usage_seconds_rate:pod
+          record: {{ include "coralogixOperator.fullname" . }}:cpu_usage_seconds_rate:pod
         - expr: 100*(container_memory_working_set_bytes{container=~"{{ include "coralogixOperator.fullname" . }}.*"} / container_spec_memory_limit_bytes{container=~"{{ include "coralogixOperator.fullname" . }}.*"})
-          record: memory_usage_percentage:pod
+          record: {{ include "coralogixOperator.fullname" . }}:memory_usage_percentage:pod
 {{- end }}
