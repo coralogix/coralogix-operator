@@ -4,9 +4,9 @@ set -e
 
 # Paths
 crds_path="config/crd/bases"
-chart_crds_path="charts/coralogix-operator/templates/crds"
+chart_crds_path="charts/coralogix-operator/crds"
 role_file="config/rbac/role.yaml"
-chart_role_file="charts/coralogix-operator/templates/cluster_role.yaml"
+chart_role_file="charts/coralogix-operator/cluster_role.yaml"
 
 errors_found=0
 

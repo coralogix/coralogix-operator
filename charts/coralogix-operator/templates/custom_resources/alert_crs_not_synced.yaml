@@ -7,7 +7,7 @@ metadata:
   {{ include "coralogixOperator.labels" . | nindent 4 }}
 spec:
   name: {{ include "coralogixOperator.fullname" . }}-crs-not-synced
-  description: Fires when the ratio of RemoteUnsynced state is more than 5%, grouped by kind.
+  description: Fires when the ratio of custom resources in RemoteUnsynced state is more than 5%, grouped by kind.
   priority: p3
   entityLabels:
     {{- range $key, $value := .Values.alerts.alertCrsNotSynced.entityLabels }}

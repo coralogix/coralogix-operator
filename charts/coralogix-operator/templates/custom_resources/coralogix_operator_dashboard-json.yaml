@@ -9,7 +9,7 @@ spec:
   json: |
     {
     "id": "rz92iUfa6vJbxlXZudSW1",
-    "name": "Coralogix Operator",
+    "name": {{ include "coralogixOperator.fullname" . }},
     "layout": {
       "sections": [
         {
@@ -265,7 +265,7 @@ spec:
                           "query": {
                             "metrics": {
                               "promqlQuery": {
-                                "value": "{{ include "coralogixOperator.fullname" . }}:unsynced_resources_total:kind"
+                                "value": "unsynced_resources_total:kind"
                               },
                               "filters": [],
                               "editorMode": "METRICS_QUERY_EDITOR_MODE_TEXT"
@@ -323,7 +323,7 @@ spec:
                           "query": {
                             "metrics": {
                               "promqlQuery": {
-                                "value": "{{ include "coralogixOperator.fullname" . }}:reconcile_errors_total:pod"
+                                "value": "reconcile_errors_rate:pod"
                               },
                               "filters": [],
                               "editorMode": "METRICS_QUERY_EDITOR_MODE_TEXT"
@@ -371,7 +371,7 @@ spec:
                           "query": {
                             "metrics": {
                               "promqlQuery": {
-                                "value": "{{ include "coralogixOperator.fullname" . }}:reconcile_errors_total:controller"
+                                "value": "reconcile_errors_rate:controller"
                               },
                               "filters": [],
                               "editorMode": "METRICS_QUERY_EDITOR_MODE_TEXT"
@@ -429,7 +429,7 @@ spec:
                           "query": {
                             "metrics": {
                               "promqlQuery": {
-                                "value": "{{ include "coralogixOperator.fullname" . }}:cpu_usage_seconds_total:pod"
+                                "value": "cpu_usage_seconds_rate:pod"
                               },
                               "filters": [],
                               "editorMode": "METRICS_QUERY_EDITOR_MODE_TEXT"
@@ -488,7 +488,7 @@ spec:
                           "query": {
                             "metrics": {
                               "promqlQuery": {
-                                "value": "{{ include "coralogixOperator.fullname" . }}:memory_usage_percentage:pod"
+                                "value": "memory_usage_percentage:pod"
                               },
                               "filters": [],
                               "editorMode": "METRICS_QUERY_EDITOR_MODE_TEXT"
@@ -618,16 +618,5 @@ spec:
     
   folderRef:
     backendRef:
-      path: {{ include "coralogixOperator.fullname" . }}
----
-apiVersion: coralogix.com/v1alpha1
-kind: DashboardsFolder
-metadata:
-  labels:
-    app.kubernetes.io/name: {{ include "coralogixOperator.fullname" . }}
-    app.kubernetes.io/managed-by: kustomize
-  name: {{ include "coralogixOperator.fullname" . }}
-spec:
-  name: {{ include "coralogixOperator.fullname" . }}
-  customId: "ffa8b720-c5d9-4c08-bb27-e3de0837a8d2"
+      path: {{ include "coralogixOperator.fullname" . }}-folder
 {{- end }}

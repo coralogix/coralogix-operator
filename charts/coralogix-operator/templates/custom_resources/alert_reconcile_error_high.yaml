@@ -17,7 +17,7 @@ spec:
     metricThreshold:
       metricFilter:
         promql: |
-          {{ include "coralogixOperator.fullname" . }}:reconcile_errors_total:pod / sum(rate(controller_runtime_reconcile_total{pod=~".*{{ include "coralogixOperator.fullname" . }}.*"}[10m])) by (pod)
+          reconcile_errors_rate:pod / reconcile_rate:pod
       missingValues:
         minNonNullValuesPct: 0
       rules:

@@ -1,0 +1,11 @@
+{{- if .Values.dashboard.enabled }}
+apiVersion: coralogix.com/v1alpha1
+kind: DashboardsFolder
+metadata:
+  name: {{ include "coralogixOperator.fullname" . }}-folder
+  labels:
+    {{ include "coralogixOperator.labels" . | nindent 4 }}
+spec:
+  name: {{ include "coralogixOperator.fullname" . }}-folder
+  customId: "ffa8b720-c5d9-4c08-bb27-e3de0837a8d2"
+{{- end }}
