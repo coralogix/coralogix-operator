@@ -4,7 +4,7 @@
 set -e
 
 # Paths
-crds_path="charts/coralogix-operator/templates/crds"
+crds_path="charts/coralogix-operator/crds"
 bases_path="config/crd/bases"
 
 echo "Updating Helm CRDs from $bases_path to $crds_path..."
