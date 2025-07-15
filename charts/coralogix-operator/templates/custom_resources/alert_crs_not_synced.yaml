@@ -27,5 +27,4 @@ spec:
             ofTheLast:
               specificValue: 5m
             conditionType: moreThan
-  {{- end }}
-  
+{{- end }}
