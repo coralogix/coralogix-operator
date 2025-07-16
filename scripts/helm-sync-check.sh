@@ -15,16 +15,26 @@ echo "Validating CRDs..."
 # Validate CRDs
 crds_files=$(find "$crds_path" -type f -name "*.yaml")
 for crd_file in $crds_files; do
-    # Extract filename without the path
     crd_filename=$(basename "$crd_file")
-
     chart_crd_file="$chart_crds_path/$crd_filename"
 
     if [ -f "$chart_crd_file" ]; then
-        if ! cmp -s "$crd_file" "$chart_crd_file"; then
-            echo "CRD file $chart_crd_file is outdated, please run make helm-update-crds"
+        # 1. Check if chart CRD contains required annotation
+        if ! grep -q 'helm.sh/resource-policy: keep' "$chart_crd_file"; then
+            echo "CRD file $chart_crd_file is missing 'helm.sh/resource-policy: keep' annotation"
             errors_found=$((errors_found + 1))
         fi
+
+        # 2. Compare contents, ignoring the annotation line
+        tmp_chart_crd=$(mktemp)
+        grep -v 'helm.sh/resource-policy: keep' "$chart_crd_file" > "$tmp_chart_crd"
+
+        if ! cmp -s "$crd_file" "$tmp_chart_crd"; then
+            echo "CRD file $chart_crd_file is outdated (excluding 'helm.sh/resource-policy: keep'), please run make helm-update-crds"
+            errors_found=$((errors_found + 1))
+        fi
+
+        rm -f "$tmp_chart_crd"
     else
         echo "CRD file $chart_crd_file is missing in the Helm chart. Please run make helm-update-crds"
         errors_found=$((errors_found + 1))
@@ -32,7 +42,6 @@ for crd_file in $crds_files; do
 done
 
 echo "Validating role..."
-
 
 # Enforce role changes if the role file has been modified
 if git diff --name-only origin/main...HEAD | grep -q "^$role_file$"; then
