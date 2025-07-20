@@ -44,6 +44,17 @@ helm upgrade <my-release> coralogix/coralogix-operator \
 helm delete <my-release>
 ```
 
+### Optional: Operator Self Monitoring
+To help you monitor the health and performance of the Coralogix operator, we've included a set of recommended resources in this repository. These resources are optional, but highly encouraged for observability, debugging, and operational visibility in production environments.
+To install, run:
+```sh
+kubectl apply -f https://raw.githubusercontent.com/coralogix/coralogix-operator/refs/heads/main/config/self_monitoring/alert_crs_not_synced.yaml
+kubectl apply -f https://raw.githubusercontent.com/coralogix/coralogix-operator/refs/heads/main/config/self_monitoring/alert_reconcile_error_high.yaml
+kubectl apply -f https://raw.githubusercontent.com/coralogix/coralogix-operator/refs/heads/main/config/self_monitoring/dashboard-json.yaml
+kubectl apply -f https://raw.githubusercontent.com/coralogix/coralogix-operator/refs/heads/main/config/self_monitoring/dashboards_folder.yaml
+kubectl apply -f https://raw.githubusercontent.com/coralogix/coralogix-operator/refs/heads/main/config/self_monitoring/recording_rule_group_sets.yaml
+```
+
 ## Contributing
 Please refer to [CONTRIBUTING.md](CONTRIBUTING.md).
 
