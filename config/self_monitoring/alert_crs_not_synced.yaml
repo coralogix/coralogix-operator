@@ -1,0 +1,25 @@
+apiVersion: coralogix.com/v1beta1
+kind: Alert
+metadata:
+  name: coralogix-operator-crs-not-synced
+  labels: {}
+spec:
+  name: coralogix-operator-crs-not-synced
+  description: Fires when the ratio of custom resources in RemoteUnsynced state is more than 5%, grouped by kind.
+  priority: p3
+  entityLabels: {}
+  alertType:
+    metricThreshold:
+      metricFilter:
+        promql: |
+          coralogix_operator:unsynced_resources_count:kind / count(cx_operator_resource_info) by (kind)
+      missingValues:
+        minNonNullValuesPct: 0
+      rules:
+        - condition:
+            threshold: "0.05"
+            forOverPct: 100
+            ofTheLast:
+              specificValue: 5m
+            conditionType: moreThan
+  notificationGroup: {}
