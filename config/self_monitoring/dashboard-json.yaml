@@ -87,7 +87,7 @@ spec:
                   "id": {
                     "value": "0de04f43-0d4f-4b04-9022-454ab3b16b47"
                   },
-                  "title": "Running Instances Info (Available from 0.3.3)",
+                  "title": "Running Instances Info",
                   "definition": {
                     "dataTable": {
                       "query": {
