@@ -126,24 +126,6 @@ spec:
                         },
                         {
                           "field": "subsystem_name"
-                        },
-                        {
-                          "field": "CX_PRODUCT"
-                        },
-                        {
-                          "field": "CX_ID"
-                        },
-                        {
-                          "field": "CX_SERVICE_NAME"
-                        },
-                        {
-                          "field": "CX_ENV_ID"
-                        },
-                        {
-                          "field": "CX_ENV_TYPE"
-                        },
-                        {
-                          "field": "CX_TEAM"
                         }
                       ],
                       "dataModeType": "DATA_MODE_TYPE_HIGH_UNSPECIFIED"
