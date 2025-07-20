@@ -22,5 +22,5 @@ spec:
       rules:
         - expr: sum(rate(container_cpu_usage_seconds_total{container=~"coralogix-operator.*"}[10m])) by (pod)
           record: coralogix_operator:cpu_usage_seconds_rate:pod
-        - expr: 100*(container_memory_working_set_bytes{container=~"coralogix-operator.*"} / container_spec_memory_limit_bytes{container=~"coralogix-operator.*"})
+        - expr: 100*(sum(container_memory_working_set_bytes{container=~"coralogix-operator.*"}) by (pod) / sum(container_spec_memory_limit_bytes{container=~"coralogix-operator.*"}) by (pod))
           record: coralogix_operator:memory_usage_percentage:pod
