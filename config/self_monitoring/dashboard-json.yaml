@@ -93,7 +93,7 @@ spec:
                       "query": {
                         "metrics": {
                           "promqlQuery": {
-                            "value": "cx_operator_info\n"
+                            "value": "cx_operator_build_info\n"
                           },
                           "filters": [],
                           "editorMode": "METRICS_QUERY_EDITOR_MODE_TEXT",
@@ -261,7 +261,7 @@ spec:
                           "query": {
                             "metrics": {
                               "promqlQuery": {
-                                "value": "unsynced_resources_total:kind"
+                                "value": "coralogix_operator:unsynced_resources_count:kind"
                               },
                               "filters": [],
                               "editorMode": "METRICS_QUERY_EDITOR_MODE_TEXT"
@@ -317,7 +317,7 @@ spec:
                           "query": {
                             "metrics": {
                               "promqlQuery": {
-                                "value": "reconcile_errors_rate:pod"
+                                "value": "coralogix_operator:reconcile_errors_rate:pod"
                               },
                               "filters": [],
                               "editorMode": "METRICS_QUERY_EDITOR_MODE_TEXT"
@@ -364,7 +364,7 @@ spec:
                           "query": {
                             "metrics": {
                               "promqlQuery": {
-                                "value": "reconcile_errors_rate:controller"
+                                "value": "coralogix_operator:reconcile_errors_rate:controller"
                               },
                               "filters": [],
                               "editorMode": "METRICS_QUERY_EDITOR_MODE_TEXT"
@@ -421,7 +421,7 @@ spec:
                           "query": {
                             "metrics": {
                               "promqlQuery": {
-                                "value": "cpu_usage_seconds_rate:pod"
+                                "value": "coralogix_operator:cpu_usage_seconds_rate:pod"
                               },
                               "filters": [],
                               "editorMode": "METRICS_QUERY_EDITOR_MODE_TEXT"
@@ -478,7 +478,7 @@ spec:
                           "query": {
                             "metrics": {
                               "promqlQuery": {
-                                "value": "memory_usage_percentage:pod"
+                                "value": "coralogix_operator:memory_usage_percentage:pod"
                               },
                               "filters": [],
                               "editorMode": "METRICS_QUERY_EDITOR_MODE_TEXT"
