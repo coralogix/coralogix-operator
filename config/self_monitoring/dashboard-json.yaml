@@ -2,7 +2,6 @@ apiVersion: coralogix.com/v1alpha1
 kind: Dashboard
 metadata:
   name: coralogix-operator-dashboard-json
-  labels: {}
 spec:
   json: |
     {

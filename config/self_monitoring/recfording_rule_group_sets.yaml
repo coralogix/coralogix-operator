@@ -1,8 +1,7 @@
 apiVersion: coralogix.com/v1alpha1
 kind: RecordingRuleGroupSet
 metadata:
-  name: coralogix-operator-recording-rule-group-sets
-  labels: {}
+  name: coralogix-operator-rules
 spec:
   groups:
     - name: reconcile_rates

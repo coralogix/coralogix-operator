@@ -26,7 +26,6 @@ Kubernetes: `>=1.16.0-0`
 |-----|------|---------|-------------|
 | additionalLabels | object | `{}` | Custom labels to add into metadata |
 | affinity | object | `{}` | ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/ |
-| alerts | object | `{"alertCrsNotSynced":{"entityLabels":{}},"alertReconcileErrorHigh":{"entityLabels":{}},"enabled":false}` | Alerts for Coralogix operator |
 | coralogixOperator | object | `{"domain":"","image":{"pullPolicy":"IfNotPresent","repository":"coralogixrepo/coralogix-operator","tag":""},"labelSelector":{},"leaderElection":{"enabled":true},"namespaceSelector":{},"prometheusRules":{"enabled":true},"reconcileIntervalSeconds":{"alert":"","alertScheduler":"","apiKey":"","customRole":"","dashboard":"","dashboardsFolder":"","group":"","integration":"","outboundWebhook":"","prometheusRule":"","recordingRuleGroupSet":"","ruleGroup":"","scope":"","tcoLogsPolicies":"","tcoTracesPolicies":"","view":"","viewFolder":""},"region":"","resources":{},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}}` | Coralogix operator container config |
 | coralogixOperator.domain | string | `""` | Coralogix Account Domain |
 | coralogixOperator.image | object | `{"pullPolicy":"IfNotPresent","repository":"coralogixrepo/coralogix-operator","tag":""}` | Coralogix operator Image |
@@ -37,7 +36,6 @@ Kubernetes: `>=1.16.0-0`
 | coralogixOperator.region | string | `""` | Coralogix Account Region |
 | coralogixOperator.resources | object | `{}` | resource config for Coralogix operator |
 | coralogixOperator.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}` | Security context for Coralogix operator container |
-| dashboard | object | `{"enabled":false}` | Dashboard for Coralogix operator |
 | deployment.podLabels | object | `{}` | Pod labels for Coralogix operator |
 | deployment.replicas | int | `1` | How many coralogix-operator pods to run |
 | fullnameOverride | string | `""` | Provide a name to substitute for the full names of resources |
