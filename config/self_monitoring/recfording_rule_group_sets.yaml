@@ -7,11 +7,11 @@ spec:
     - name: reconcile_rates
       intervalSeconds: 60
       rules:
-        - expr: sum(rate(controller_runtime_reconcile_total{pod=~".*coralogix-operator.*"}[10m])) by (pod)
+        - expr: sum(rate(controller_runtime_reconcile_total{pod=~"coralogix-operator.*"}[10m])) by (pod)
           record: coralogix_operator:reconcile_rate:pod
-        - expr: sum(rate(controller_runtime_reconcile_errors_total{pod=~".*coralogix-operator*"}[10m])) by (controller)
+        - expr: sum(rate(controller_runtime_reconcile_errors_total{pod=~"coralogix-operator.*"}[10m])) by (controller)
           record: coralogix_operator:reconcile_errors_rate:controller
-        - expr: sum(rate(controller_runtime_reconcile_errors_total{pod=~".*coralogix-operator*"}[10m])) by (pod)
+        - expr: sum(rate(controller_runtime_reconcile_errors_total{pod=~"coralogix-operator.*"}[10m])) by (pod)
           record: coralogix_operator:reconcile_errors_rate:pod
     - name: unsynced_resources
       rules:
