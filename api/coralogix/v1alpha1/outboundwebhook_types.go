@@ -447,6 +447,10 @@ func (in *OutboundWebhook) SetConditions(conditions []metav1.Condition) {
 	in.Status.Conditions = conditions
 }
 
+func (in *OutboundWebhook) HasIDInStatus() bool {
+	return in.Status.ID != nil && *in.Status.ID != ""
+}
+
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 

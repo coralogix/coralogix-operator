@@ -114,11 +114,6 @@ func (r *ArchiveMetricsTargetReconciler) HandleDeletion(ctx context.Context, log
 	return nil
 }
 
-func (r *ArchiveMetricsTargetReconciler) CheckIDInStatus(obj client.Object) bool {
-	archiveMetricsTarget := obj.(*coralogixv1alpha1.ArchiveMetricsTarget)
-	return archiveMetricsTarget.Status.ID != nil && *archiveMetricsTarget.Status.ID != ""
-}
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *ArchiveMetricsTargetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).

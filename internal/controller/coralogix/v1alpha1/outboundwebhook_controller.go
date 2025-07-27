@@ -131,11 +131,6 @@ func getOutboundWebhookStatus(webhook *cxsdk.OutgoingWebhook) (*v1alpha1.Outboun
 	return status, nil
 }
 
-func (r *OutboundWebhookReconciler) CheckIDInStatus(obj client.Object) bool {
-	outboundWebhook := obj.(*v1alpha1.OutboundWebhook)
-	return outboundWebhook.Status.ID != nil && *outboundWebhook.Status.ID != ""
-}
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *OutboundWebhookReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).

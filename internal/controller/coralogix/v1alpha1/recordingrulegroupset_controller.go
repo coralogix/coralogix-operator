@@ -102,11 +102,6 @@ func (r *RecordingRuleGroupSetReconciler) HandleDeletion(ctx context.Context, lo
 	return nil
 }
 
-func (r *RecordingRuleGroupSetReconciler) CheckIDInStatus(obj client.Object) bool {
-	recordingRuleGroupSet := obj.(*coralogixv1alpha1.RecordingRuleGroupSet)
-	return recordingRuleGroupSet.Status.ID != nil && *recordingRuleGroupSet.Status.ID != ""
-}
-
 func (r *RecordingRuleGroupSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.RecordingRuleGroupSet{}).

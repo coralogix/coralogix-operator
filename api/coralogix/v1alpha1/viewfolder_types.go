@@ -40,6 +40,10 @@ func (v *ViewFolder) SetConditions(conditions []metav1.Condition) {
 	v.Status.Conditions = conditions
 }
 
+func (v *ViewFolder) HasIDInStatus() bool {
+	return v.Status.ID != nil && *v.Status.ID != ""
+}
+
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 

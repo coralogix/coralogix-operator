@@ -227,6 +227,10 @@ func (t *TCOLogsPolicies) SetConditions(conditions []metav1.Condition) {
 	t.Status.Conditions = conditions
 }
 
+func (t *TCOLogsPolicies) HasIDInStatus() bool {
+	return true
+}
+
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // TCOLogsPolicies is the Schema for the TCOLogsPolicies API.

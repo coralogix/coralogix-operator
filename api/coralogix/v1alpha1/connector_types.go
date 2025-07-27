@@ -89,6 +89,10 @@ func (c *Connector) SetConditions(conditions []metav1.Condition) {
 	c.Status.Conditions = conditions
 }
 
+func (c *Connector) HasIDInStatus() bool {
+	return c.Status.Id != nil && *c.Status.Id != ""
+}
+
 var (
 	schemaToProtoConnectorType = map[string]cxsdk.ConnectorType{
 		"slack":        cxsdk.ConnectorTypeSlack,

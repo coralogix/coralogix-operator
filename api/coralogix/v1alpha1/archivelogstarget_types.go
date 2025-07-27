@@ -96,12 +96,16 @@ func (s *ArchiveLogsTargetSpec) ExtractSetTargetRequest(isTargetActive bool) (*c
 	}, nil
 }
 
-func (i *ArchiveLogsTarget) GetConditions() []metav1.Condition {
-	return i.Status.Conditions
+func (a *ArchiveLogsTarget) GetConditions() []metav1.Condition {
+	return a.Status.Conditions
 }
 
-func (i *ArchiveLogsTarget) SetConditions(conditions []metav1.Condition) {
-	i.Status.Conditions = conditions
+func (a *ArchiveLogsTarget) SetConditions(conditions []metav1.Condition) {
+	a.Status.Conditions = conditions
+}
+
+func (a *ArchiveLogsTarget) HasIDInStatus() bool {
+	return a.Status.ID != nil && *a.Status.ID != ""
 }
 
 // +kubebuilder:object:root=true

@@ -262,6 +262,10 @@ func (g *Group) SetConditions(conditions []metav1.Condition) {
 	g.Status.Conditions = conditions
 }
 
+func (g *Group) HasIDInStatus() bool {
+	return g.Status.ID != nil && *g.Status.ID != ""
+}
+
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // Group is the Schema for the Groups API.

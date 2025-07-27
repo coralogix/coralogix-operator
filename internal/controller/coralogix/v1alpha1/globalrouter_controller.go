@@ -107,11 +107,6 @@ func (r *GlobalRouterReconciler) HandleDeletion(ctx context.Context, log logr.Lo
 	return nil
 }
 
-func (r *GlobalRouterReconciler) CheckIDInStatus(obj client.Object) bool {
-	globalRouter := obj.(*coralogixv1alpha1.GlobalRouter)
-	return globalRouter.Status.Id != nil && *globalRouter.Status.Id != ""
-}
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *GlobalRouterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).

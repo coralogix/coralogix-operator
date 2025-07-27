@@ -23,6 +23,7 @@ import (
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/wrapperspb"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
@@ -31,6 +32,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 var _ = Describe("Dashboard", Ordered, func() {
@@ -56,6 +58,7 @@ var _ = Describe("Dashboard", Ordered, func() {
 		fetchedDashboard := &coralogixv1alpha1.Dashboard{}
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: dashboardName, Namespace: testNamespace}, fetchedDashboard)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedDashboard.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			if fetchedDashboard.Status.ID != nil {
 				dashboardID = *fetchedDashboard.Status.ID
 				return nil

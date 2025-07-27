@@ -112,6 +112,10 @@ func (s *Scope) SetConditions(conditions []metav1.Condition) {
 	s.Status.Conditions = conditions
 }
 
+func (s *Scope) HasIDInStatus() bool {
+	return s.Status.ID != nil && *s.Status.ID != ""
+}
+
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // Scope is the Schema for the scopes API.

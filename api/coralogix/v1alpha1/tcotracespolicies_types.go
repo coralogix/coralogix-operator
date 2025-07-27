@@ -213,6 +213,10 @@ func (t *TCOTracesPolicies) SetConditions(conditions []metav1.Condition) {
 	t.Status.Conditions = conditions
 }
 
+func (t *TCOTracesPolicies) HasIDInStatus() bool {
+	return true
+}
+
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 

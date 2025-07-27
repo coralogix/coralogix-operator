@@ -23,6 +23,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
@@ -31,6 +32,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 var _ = Describe("Group", Ordered, func() {
@@ -93,6 +95,7 @@ var _ = Describe("Group", Ordered, func() {
 		fetchedGroup := &coralogixv1alpha1.Group{}
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: groupName, Namespace: testNamespace}, fetchedGroup)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedGroup.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			if fetchedGroup.Status.ID != nil {
 				id, err := strconv.Atoi(*fetchedGroup.Status.ID)
 				Expect(err).ToNot(HaveOccurred())

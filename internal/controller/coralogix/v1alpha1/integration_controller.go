@@ -103,11 +103,6 @@ func (r *IntegrationReconciler) HandleDeletion(ctx context.Context, log logr.Log
 	return nil
 }
 
-func (r *IntegrationReconciler) CheckIDInStatus(obj client.Object) bool {
-	integration := obj.(*coralogixv1alpha1.Integration)
-	return integration.Status.Id != nil && *integration.Status.Id != ""
-}
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *IntegrationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).

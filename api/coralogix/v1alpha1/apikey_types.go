@@ -75,6 +75,10 @@ func (a *ApiKey) SetConditions(conditions []metav1.Condition) {
 	a.Status.Conditions = conditions
 }
 
+func (a *ApiKey) HasIDInStatus() bool {
+	return a.Status.Id != nil && *a.Status.Id != ""
+}
+
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // ApiKey is the Schema for the ApiKeys API.

@@ -28,15 +28,12 @@ import (
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // ApiKeyReconciler reconciles a ApiKey object
@@ -56,60 +53,24 @@ var (
 )
 
 func (r *ApiKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx).WithValues(
-		"apiKey", req.Name,
-		"namespace", req.Namespace,
-	)
-
-	apiKey := &coralogixv1alpha1.ApiKey{}
-	if err := config.GetClient().Get(ctx, req.NamespacedName, apiKey); err != nil {
-		if errors.IsNotFound(err) {
-			// Request object not found, could have been deleted after reconcile request.
-			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-			// Return and don't requeue
-			return ctrl.Result{}, nil
-		}
-		return ctrl.Result{}, err
-	}
-
-	if ptr.Deref(apiKey.Status.Id, "") == "" {
-		if reason, err := r.create(ctx, log, apiKey); err != nil {
-			log.Error(err, "Error on creating ApiKey")
-			return coralogixreconciler.ManageErrorWithRequeue(ctx, apiKey, reason, err)
-		}
-		return coralogixreconciler.ManageSuccessWithRequeue(ctx, apiKey, r.Interval)
-	}
-
-	if !apiKey.DeletionTimestamp.IsZero() {
-		if reason, err := r.delete(ctx, log, apiKey); err != nil {
-			log.Error(err, "Error on deleting ApiKey")
-			return coralogixreconciler.ManageErrorWithRequeue(ctx, apiKey, reason, err)
-		}
-		return ctrl.Result{}, nil
-	}
-
-	if !config.GetConfig().Selector.Matches(apiKey.GetLabels(), apiKey.GetNamespace()) {
-		if err := r.deleteRemoteApiKey(ctx, log, apiKey.Status.Id); err != nil {
-			log.Error(err, "Error on deleting ApiKey")
-			return coralogixreconciler.ManageErrorWithRequeue(ctx, apiKey, utils.ReasonRemoteDeletionFailed, err)
-		}
-		return ctrl.Result{}, nil
-	}
-
-	if reason, err := r.update(ctx, log, apiKey); err != nil {
-		log.Error(err, "Error on updating ApiKey")
-		return coralogixreconciler.ManageErrorWithRequeue(ctx, apiKey, reason, err)
-	}
-
-	return coralogixreconciler.ManageSuccessWithRequeue(ctx, apiKey, r.Interval)
+	return coralogixreconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.ApiKey{}, r)
 }
 
-func (r *ApiKeyReconciler) create(ctx context.Context, log logr.Logger, apiKey *coralogixv1alpha1.ApiKey) (string, error) {
+func (r *ApiKeyReconciler) FinalizerName() string {
+	return apiKeyFinalizerName
+}
+
+func (r *ApiKeyReconciler) RequeueInterval() time.Duration {
+	return r.Interval
+}
+
+func (r *ApiKeyReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
+	apiKey := obj.(*coralogixv1alpha1.ApiKey)
 	createRequest := apiKey.Spec.ExtractCreateApiKeyRequest()
 	log.Info("Creating remote api-key", "api-key", protojson.Format(createRequest))
 	createResponse, err := r.ApiKeysClient.Create(ctx, createRequest)
 	if err != nil {
-		return utils.ReasonRemoteCreationFailed, fmt.Errorf("error on creating remote api-key: %w", err)
+		return fmt.Errorf("error on creating remote api-key: %w", err)
 	}
 	log.Info("Remote api-key created", "response", protojson.Format(createResponse))
 
@@ -117,54 +78,29 @@ func (r *ApiKeyReconciler) create(ctx context.Context, log logr.Logger, apiKey *
 		Id: ptr.To(createResponse.KeyId),
 	}
 
-	log.Info("Updating ApiKey status", "id", createResponse.KeyId)
-	if err = config.GetClient().Status().Update(ctx, apiKey); err != nil {
-		if err := r.deleteRemoteApiKey(ctx, log, apiKey.Status.Id); err != nil {
-			return utils.ReasonRemoteUpdateFailed, fmt.Errorf("error to delete api-key after status update error: %w", err)
-		}
-		return utils.ReasonRemoteUpdateFailed, fmt.Errorf("error to update api-key status: %w", err)
-	}
-
-	if !controllerutil.ContainsFinalizer(apiKey, apiKeyFinalizerName) {
-		log.Info("Updating ApiKey to add finalizer", "id", createResponse.KeyId)
-		controllerutil.AddFinalizer(apiKey, apiKeyFinalizerName)
-		if err = config.GetClient().Update(ctx, apiKey); err != nil {
-			return utils.ReasonInternalK8sError, fmt.Errorf("error on updating ApiKey: %w", err)
-		}
-	}
-
 	log.Info("Creating secret for ApiKey", "id", createResponse.KeyId)
 	secret := buildSecret(apiKey, createResponse.GetValue())
 	err = config.GetClient().Create(ctx, secret)
 	if err != nil {
-		return utils.ReasonInternalK8sError, fmt.Errorf("error on creating secret: %w", err)
+		return fmt.Errorf("error on creating secret: %w", err)
 	}
 
-	return "", nil
+	return nil
 }
 
-func (r *ApiKeyReconciler) update(ctx context.Context, log logr.Logger, apiKey *coralogixv1alpha1.ApiKey) (string, error) {
+func (r *ApiKeyReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
+	apiKey := obj.(*coralogixv1alpha1.ApiKey)
 	updateRequest := apiKey.Spec.ExtractUpdateApiKeyRequest(*apiKey.Status.Id)
 	log.Info("Updating remote api-key", "api-key", protojson.Format(updateRequest))
 	updateResponse, err := r.ApiKeysClient.Update(ctx, updateRequest)
 	if err != nil {
-		if cxsdk.Code(err) == codes.NotFound {
-			log.Info("api-key not found on remote, removing id from status")
-			apiKey.Status = coralogixv1alpha1.ApiKeyStatus{
-				Id: ptr.To(""),
-			}
-			if err = config.GetClient().Status().Update(ctx, apiKey); err != nil {
-				return utils.ReasonInternalK8sError, fmt.Errorf("error on updating ApiKey status: %w", err)
-			}
-			return utils.ReasonRemoteResourceNotFound, fmt.Errorf("api-key not found on remote: %w", err)
-		}
-		return utils.ReasonRemoteUpdateFailed, fmt.Errorf("error on updating api-key: %w", err)
+		return err
 	}
 	log.Info("Remote api-key updated", "api-key", protojson.Format(updateResponse))
 
 	getResponse, err := r.ApiKeysClient.Get(ctx, &cxsdk.GetAPIKeyRequest{KeyId: *apiKey.Status.Id})
 	if err != nil {
-		return utils.ReasonRemoteUpdateFailed, fmt.Errorf("error on getting remote api-key: %w", err)
+		return fmt.Errorf("error on getting remote api-key: %w", err)
 	}
 
 	existsSecret := &corev1.Secret{}
@@ -173,11 +109,11 @@ func (r *ApiKeyReconciler) update(ctx context.Context, log logr.Logger, apiKey *
 		if errors.IsNotFound(err) {
 			log.Info("secret is not found, probably was deleted, recreating it")
 			if err := config.GetClient().Create(ctx, buildSecret(apiKey, getResponse.KeyInfo.GetValue())); err != nil {
-				return utils.ReasonInternalK8sError, fmt.Errorf("error on recreating secret: %w", err)
+				return fmt.Errorf("error on recreating secret: %w", err)
 			}
-			return "", nil
+			return nil
 		}
-		return utils.ReasonInternalK8sError, fmt.Errorf("error on getting secret: %w", err)
+		return fmt.Errorf("error on getting secret: %w", err)
 	}
 
 	desiredSecretKeyValue := getResponse.KeyInfo.GetValue()
@@ -185,25 +121,24 @@ func (r *ApiKeyReconciler) update(ctx context.Context, log logr.Logger, apiKey *
 		log.Info("updating secret", "secret", apiKey.Name+"-secret")
 		existsSecret.Data["key-value"] = []byte(desiredSecretKeyValue)
 		if err := config.GetClient().Update(ctx, existsSecret); err != nil {
-			return utils.ReasonInternalK8sError, fmt.Errorf("error on updating secret: %w", err)
+			return fmt.Errorf("error on updating secret: %w", err)
 		}
 	}
 
-	return "", nil
+	return nil
 }
 
-func (r *ApiKeyReconciler) delete(ctx context.Context, log logr.Logger, apiKey *coralogixv1alpha1.ApiKey) (string, error) {
-	if err := r.deleteRemoteApiKey(ctx, log, apiKey.Status.Id); err != nil {
-		return utils.ReasonRemoteDeletionFailed, fmt.Errorf("error on deleting remote api-key: %w", err)
+func (r *ApiKeyReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
+	apiKey := obj.(*coralogixv1alpha1.ApiKey)
+	apiKeyId := apiKey.Status.Id
+	if _, err := r.ApiKeysClient.Delete(ctx, &cxsdk.DeleteAPIKeyRequest{KeyId: *apiKeyId}); err != nil &&
+		cxsdk.Code(err) != codes.NotFound {
+		log.Error(err, "Error on deleting remote api-key", "id", apiKeyId)
+		return fmt.Errorf("error to delete remote api-key -\n%v", apiKeyId)
 	}
+	log.Info("api-key was deleted from remote", "id", apiKeyId)
 
-	log.Info("Removing finalizer from ApiKey")
-	controllerutil.RemoveFinalizer(apiKey, apiKeyFinalizerName)
-	if err := config.GetClient().Update(ctx, apiKey); err != nil {
-		return utils.ReasonInternalK8sError, fmt.Errorf("error on updating ApiKey: %w", err)
-	}
-
-	return "", nil
+	return nil
 }
 
 func buildSecret(apiKey *coralogixv1alpha1.ApiKey, keyValue string) *corev1.Secret {
@@ -223,16 +158,6 @@ func buildSecret(apiKey *coralogixv1alpha1.ApiKey, keyValue string) *corev1.Secr
 			"key-value": []byte(keyValue),
 		},
 	}
-}
-
-func (r *ApiKeyReconciler) deleteRemoteApiKey(ctx context.Context, log logr.Logger, apiKeyId *string) error {
-	log.Info("Deleting api-key from remote", "id", apiKeyId)
-	if _, err := r.ApiKeysClient.Delete(ctx, &cxsdk.DeleteAPIKeyRequest{KeyId: *apiKeyId}); err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.Error(err, "Error on deleting remote api-key", "id", apiKeyId)
-		return fmt.Errorf("error to delete remote api-key -\n%v", apiKeyId)
-	}
-	log.Info("api-key was deleted from remote", "id", apiKeyId)
-	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

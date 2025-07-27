@@ -234,6 +234,10 @@ func (e2m *Events2Metric) SetConditions(conditions []metav1.Condition) {
 	e2m.Status.Conditions = conditions
 }
 
+func (e2m *Events2Metric) HasIDInStatus() bool {
+	return e2m.Status.Id != nil && *e2m.Status.Id != ""
+}
+
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // See also https://coralogix.com/docs/user-guides/monitoring-and-insights/events2metrics/

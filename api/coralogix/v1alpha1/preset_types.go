@@ -108,6 +108,10 @@ func (p *Preset) SetConditions(conditions []metav1.Condition) {
 	p.Status.Conditions = conditions
 }
 
+func (p *Preset) HasIDInStatus() bool {
+	return p.Status.Id != nil && *p.Status.Id != ""
+}
+
 func (p *Preset) ExtractCreateCustomPresetRequest() (*cxsdk.CreateCustomPresetRequest, error) {
 	preset, err := p.extractPreset()
 	if err != nil {

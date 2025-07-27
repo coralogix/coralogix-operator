@@ -109,11 +109,6 @@ func (r *GroupReconciler) HandleDeletion(ctx context.Context, log logr.Logger, o
 	return nil
 }
 
-func (r *GroupReconciler) CheckIDInStatus(obj client.Object) bool {
-	group := obj.(*coralogixv1alpha1.Group)
-	return group.Status.ID != nil && *group.Status.ID != ""
-}
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *GroupReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).

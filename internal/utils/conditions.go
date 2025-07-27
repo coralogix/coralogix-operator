@@ -30,13 +30,6 @@ const (
 	ConditionTypeRemoteSynced = "RemoteSynced"
 )
 
-// ConditionsObj represents a CRD type that has been enabled with metav1.Conditions, it can then benefit of a series of utility methods.
-// +k8s:deepcopy-gen=false
-type ConditionsObj interface {
-	GetConditions() []metav1.Condition
-	SetConditions(conditions []metav1.Condition)
-}
-
 // SetSyncedConditionFalse sets the RemoteSynced condition to False. returns true if the conditions are changed by this call.
 func SetSyncedConditionFalse(conditions *[]metav1.Condition, observedGeneration int64, reason, message string) bool {
 	return meta.SetStatusCondition(conditions, metav1.Condition{

@@ -103,11 +103,6 @@ func (r *Events2MetricReconciler) HandleDeletion(ctx context.Context, log logr.L
 	return nil
 }
 
-func (r *Events2MetricReconciler) CheckIDInStatus(obj client.Object) bool {
-	e2m := obj.(*coralogixv1alpha1.Events2Metric)
-	return e2m.Status.Id != nil && *e2m.Status.Id != ""
-}
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *Events2MetricReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).

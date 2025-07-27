@@ -221,6 +221,10 @@ func (a *AlertScheduler) SetConditions(conditions []metav1.Condition) {
 	a.Status.Conditions = conditions
 }
 
+func (a *AlertScheduler) HasIDInStatus() bool {
+	return a.Status.ID != nil && *a.Status.ID != ""
+}
+
 func (a *AlertScheduler) ExtractCreateAlertSchedulerRequest() (*cxsdk.CreateAlertSchedulerRuleRequest, error) {
 	alertScheduler, err := a.extractAlertScheduler()
 	if err != nil {
