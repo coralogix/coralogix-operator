@@ -34,6 +34,7 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
+	"github.com/coralogix/coralogix-operator/api/coralogix"
 	"github.com/coralogix/coralogix-operator/internal/config"
 	"github.com/coralogix/coralogix-operator/internal/monitoring"
 	"github.com/coralogix/coralogix-operator/internal/utils"
@@ -45,13 +46,12 @@ type CoralogixReconciler interface {
 	HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error
 	HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error
 	FinalizerName() string
-	CheckIDInStatus(obj client.Object) bool
 	RequeueInterval() time.Duration
 }
 
 // +kubebuilder:rbac:groups="",resources=namespaces,verbs=get;list;watch
 
-func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object, r CoralogixReconciler) (ctrl.Result, error) {
+func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Object, r CoralogixReconciler) (ctrl.Result, error) {
 	if err := config.GetClient().Get(ctx, req.NamespacedName, obj); err != nil {
 		if errors.IsNotFound(err) {
 			return ctrl.Result{}, nil
@@ -66,7 +66,7 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj client.Object,
 		"namespace", req.Namespace)
 	log = log.V(logVerbosity(obj))
 
-	if !r.CheckIDInStatus(obj) {
+	if !obj.HasIDInStatus() {
 		log.Info("Resource ID is missing; handling creation for resource")
 		if err := r.HandleCreation(ctx, log, obj); err != nil {
 			log.Error(err, "Error handling creation")
@@ -181,21 +181,19 @@ func RemoveFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r 
 	return config.GetClient().Update(ctx, obj)
 }
 
-func ManageErrorWithRequeue(ctx context.Context, obj client.Object, reason string, err error) (reconcile.Result, error) {
+func ManageErrorWithRequeue(ctx context.Context, obj coralogix.Object, reason string, err error) (reconcile.Result, error) {
 	// in case of update conflict, don't try to update conditions, as it will fail with the same error.
 	// instead, requeue the request and without flooding with error logs.
 	if errors.IsConflict(err) {
 		return reconcile.Result{Requeue: true}, nil
 	}
 
-	if conditionsObj, ok := (obj).(utils.ConditionsObj); ok {
-		conditions := conditionsObj.GetConditions()
-		if utils.SetSyncedConditionFalse(&conditions, obj.GetGeneration(), reason, err.Error()) {
-			conditionsObj.SetConditions(conditions)
-			if err := config.GetClient().Status().Update(ctx, obj); err != nil {
-				if errors.IsConflict(err) {
-					return reconcile.Result{Requeue: true}, nil
-				}
+	conditions := obj.GetConditions()
+	if utils.SetSyncedConditionFalse(&conditions, obj.GetGeneration(), reason, err.Error()) {
+		obj.SetConditions(conditions)
+		if err := config.GetClient().Status().Update(ctx, obj); err != nil {
+			if errors.IsConflict(err) {
+				return reconcile.Result{Requeue: true}, nil
 			}
 		}
 	}
@@ -209,14 +207,12 @@ func ManageErrorWithRequeue(ctx context.Context, obj client.Object, reason strin
 	return reconcile.Result{}, err
 }
 
-func ManageSuccessWithRequeue(ctx context.Context, obj client.Object, interval time.Duration) (reconcile.Result, error) {
-	if conditionsObj, ok := (obj).(utils.ConditionsObj); ok {
-		conditions := conditionsObj.GetConditions()
-		if utils.SetSyncedConditionTrue(&conditions, obj.GetGeneration(), utils.ReasonRemoteSyncedSuccessfully) {
-			conditionsObj.SetConditions(conditions)
-			if err := config.GetClient().Status().Update(ctx, obj); err != nil {
-				return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
-			}
+func ManageSuccessWithRequeue(ctx context.Context, obj coralogix.Object, interval time.Duration) (reconcile.Result, error) {
+	conditions := obj.GetConditions()
+	if utils.SetSyncedConditionTrue(&conditions, obj.GetGeneration(), utils.ReasonRemoteSyncedSuccessfully) {
+		obj.SetConditions(conditions)
+		if err := config.GetClient().Status().Update(ctx, obj); err != nil {
+			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 		}
 	}
 

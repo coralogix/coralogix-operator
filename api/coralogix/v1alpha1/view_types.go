@@ -241,6 +241,10 @@ func (v *View) SetConditions(conditions []metav1.Condition) {
 	v.Status.Conditions = conditions
 }
 
+func (v *View) HasIDInStatus() bool {
+	return v.Status.ID != nil && *v.Status.ID != ""
+}
+
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 

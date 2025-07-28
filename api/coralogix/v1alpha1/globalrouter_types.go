@@ -270,6 +270,10 @@ func (g *GlobalRouter) SetConditions(conditions []metav1.Condition) {
 	g.Status.Conditions = conditions
 }
 
+func (g *GlobalRouter) HasIDInStatus() bool {
+	return g.Status.Id != nil && *g.Status.Id != ""
+}
+
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // GlobalRouter is the Schema for the GlobalRouters API.

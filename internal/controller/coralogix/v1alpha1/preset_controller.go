@@ -107,11 +107,6 @@ func (r *PresetReconciler) HandleDeletion(ctx context.Context, log logr.Logger, 
 	return nil
 }
 
-func (r *PresetReconciler) CheckIDInStatus(obj client.Object) bool {
-	preset := obj.(*coralogixv1alpha1.Preset)
-	return preset.Status.Id != nil && *preset.Status.Id != ""
-}
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *PresetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).

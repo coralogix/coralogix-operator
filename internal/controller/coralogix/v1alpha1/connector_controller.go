@@ -107,11 +107,6 @@ func (r *ConnectorReconciler) HandleDeletion(ctx context.Context, log logr.Logge
 	return nil
 }
 
-func (r *ConnectorReconciler) CheckIDInStatus(obj client.Object) bool {
-	connector := obj.(*coralogixv1alpha1.Connector)
-	return connector.Status.Id != nil && *connector.Status.Id != ""
-}
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *ConnectorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).

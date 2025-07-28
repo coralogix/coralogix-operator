@@ -21,6 +21,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
@@ -28,6 +29,7 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 var _ = Describe("AlertScheduler", Ordered, func() {
@@ -53,6 +55,7 @@ var _ = Describe("AlertScheduler", Ordered, func() {
 		fetchedScheduler := &coralogixv1alpha1.AlertScheduler{}
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertSchedulerName, Namespace: testNamespace}, fetchedScheduler)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedScheduler.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			if fetchedScheduler.Status.ID != nil {
 				alertSchedulerID = *fetchedScheduler.Status.ID
 				return nil

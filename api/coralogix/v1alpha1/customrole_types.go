@@ -77,6 +77,10 @@ func (c *CustomRole) SetConditions(conditions []metav1.Condition) {
 	c.Status.Conditions = conditions
 }
 
+func (c *CustomRole) HasIDInStatus() bool {
+	return c.Status.ID != nil && *c.Status.ID != ""
+}
+
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 

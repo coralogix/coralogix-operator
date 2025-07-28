@@ -118,6 +118,10 @@ func (r *RecordingRuleGroupSet) SetConditions(conditions []metav1.Condition) {
 	r.Status.Conditions = conditions
 }
 
+func (r *RecordingRuleGroupSet) HasIDInStatus() bool {
+	return r.Status.ID != nil && *r.Status.ID != ""
+}
+
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 //+kubebuilder:storageversion

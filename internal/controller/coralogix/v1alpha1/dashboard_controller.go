@@ -114,11 +114,6 @@ func (r *DashboardReconciler) HandleDeletion(ctx context.Context, log logr.Logge
 	return nil
 }
 
-func (r *DashboardReconciler) CheckIDInStatus(obj client.Object) bool {
-	dashboard := obj.(*coralogixv1alpha1.Dashboard)
-	return dashboard.Status.ID != nil && *dashboard.Status.ID != ""
-}
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *DashboardReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).

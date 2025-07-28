@@ -127,11 +127,6 @@ func (r *DashboardsFolderReconciler) HandleDeletion(ctx context.Context, log log
 	return nil
 }
 
-func (r *DashboardsFolderReconciler) CheckIDInStatus(obj client.Object) bool {
-	folder := obj.(*coralogixv1alpha1.DashboardsFolder)
-	return folder.Status.ID != nil && *folder.Status.ID != ""
-}
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *DashboardsFolderReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).

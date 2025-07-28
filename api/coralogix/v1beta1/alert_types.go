@@ -309,6 +309,10 @@ func (a *Alert) SetConditions(conditions []metav1.Condition) {
 	a.Status.Conditions = conditions
 }
 
+func (a *Alert) HasIDInStatus() bool {
+	return a.Status.ID != nil && *a.Status.ID != ""
+}
+
 // +kubebuilder:validation:Pattern=`^UTC[+-]\d{2}$`
 // +kubebuilder:default=UTC+00
 // A time zone expressed in UTC offsets.

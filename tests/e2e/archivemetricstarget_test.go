@@ -22,6 +22,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -29,6 +30,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 var _ = Describe("ArchiveMetricsTarget", Ordered, func() {
@@ -75,6 +77,7 @@ var _ = Describe("ArchiveMetricsTarget", Ordered, func() {
 		fetchedTarget := &coralogixv1alpha1.ArchiveMetricsTarget{}
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: targetName, Namespace: testNamespace}, fetchedTarget)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedTarget.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			if fetchedTarget.Status.ID != nil {
 				return nil
 			}

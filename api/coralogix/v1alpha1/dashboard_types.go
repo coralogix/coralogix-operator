@@ -166,6 +166,10 @@ func (d *Dashboard) SetConditions(conditions []metav1.Condition) {
 	d.Status.Conditions = conditions
 }
 
+func (d *Dashboard) HasIDInStatus() bool {
+	return d.Status.ID != nil && *d.Status.ID != ""
+}
+
 // +kubebuilder:object:root=true
 // +kubebuilder:storageversion
 // +kubebuilder:conversion:hub

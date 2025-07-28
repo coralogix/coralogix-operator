@@ -96,10 +96,6 @@ func (r *TCOLogsPoliciesReconciler) HandleDeletion(ctx context.Context, log logr
 	return nil
 }
 
-func (r *TCOLogsPoliciesReconciler) CheckIDInStatus(_ client.Object) bool {
-	return true
-}
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *TCOLogsPoliciesReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).

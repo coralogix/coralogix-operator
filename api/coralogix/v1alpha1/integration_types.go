@@ -138,6 +138,10 @@ func (i *Integration) SetConditions(conditions []metav1.Condition) {
 	i.Status.Conditions = conditions
 }
 
+func (i *Integration) HasIDInStatus() bool {
+	return i.Status.Id != nil && *i.Status.Id != ""
+}
+
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 

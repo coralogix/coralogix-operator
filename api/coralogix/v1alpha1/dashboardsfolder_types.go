@@ -101,6 +101,10 @@ func (df *DashboardsFolder) SetConditions(conditions []metav1.Condition) {
 	df.Status.Conditions = conditions
 }
 
+func (df *DashboardsFolder) HasIDInStatus() bool {
+	return df.Status.ID != nil && *df.Status.ID != ""
+}
+
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 

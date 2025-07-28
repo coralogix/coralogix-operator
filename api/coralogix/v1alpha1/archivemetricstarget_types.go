@@ -126,12 +126,16 @@ func (s *ArchiveMetricsTargetSpec) ExtractUpdateRequest() (*cxsdk.UpdateTenantRe
 	}, nil
 }
 
-func (i *ArchiveMetricsTarget) GetConditions() []metav1.Condition {
-	return i.Status.Conditions
+func (a *ArchiveMetricsTarget) GetConditions() []metav1.Condition {
+	return a.Status.Conditions
 }
 
-func (i *ArchiveMetricsTarget) SetConditions(conditions []metav1.Condition) {
-	i.Status.Conditions = conditions
+func (a *ArchiveMetricsTarget) SetConditions(conditions []metav1.Condition) {
+	a.Status.Conditions = conditions
+}
+
+func (a *ArchiveMetricsTarget) HasIDInStatus() bool {
+	return a.Status.ID != nil && *a.Status.ID != ""
 }
 
 // +kubebuilder:object:root=true

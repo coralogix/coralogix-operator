@@ -23,6 +23,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -30,6 +31,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 var _ = Describe("CustomRole", Ordered, func() {
@@ -55,6 +57,7 @@ var _ = Describe("CustomRole", Ordered, func() {
 		fetchedCustomRole := &coralogixv1alpha1.CustomRole{}
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: customRoleName, Namespace: testNamespace}, fetchedCustomRole)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedCustomRole.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			if fetchedCustomRole.Status.ID != nil {
 				id, err := strconv.Atoi(*fetchedCustomRole.Status.ID)
 				Expect(err).ToNot(HaveOccurred())

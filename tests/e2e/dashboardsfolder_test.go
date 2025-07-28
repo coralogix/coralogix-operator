@@ -23,6 +23,7 @@ import (
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/wrapperspb"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -30,6 +31,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 const dashboardFolderName = "dashboard-folder-sample"
@@ -57,6 +59,7 @@ var _ = Describe("DashboardsFolder", Ordered, func() {
 		fetchedDashboardsFolder := &coralogixv1alpha1.DashboardsFolder{}
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: dashboardFolderName, Namespace: testNamespace}, fetchedDashboardsFolder)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedDashboardsFolder.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			if fetchedDashboardsFolder.Status.ID != nil {
 				dashboardFolderID = *fetchedDashboardsFolder.Status.ID
 				return nil

@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/coralogix/coralogix-operator/internal/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
@@ -35,6 +34,7 @@ import (
 	"github.com/coralogix/coralogix-operator/api/coralogix"
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 var _ = Describe("Alert", Ordered, func() {

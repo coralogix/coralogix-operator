@@ -24,6 +24,7 @@ import (
 	"google.golang.org/grpc/codes"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
@@ -32,6 +33,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 var _ = Describe("ApiKey", Ordered, func() {
@@ -77,6 +79,7 @@ var _ = Describe("ApiKey", Ordered, func() {
 		fetchedApiKey := &coralogixv1alpha1.ApiKey{}
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: apiKeyName, Namespace: testNamespace}, fetchedApiKey)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedApiKey.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			if fetchedApiKey.Status.Id != nil {
 				apiKeyID = *fetchedApiKey.Status.Id
 				return nil
