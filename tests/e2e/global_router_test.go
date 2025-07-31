@@ -129,7 +129,7 @@ func getSampleGlobalRouter(globalRouterName, testNamespace, slackConnectorName, 
 							},
 							Preset: &coralogixv1alpha1.NCRef{
 								BackendRef: &coralogixv1alpha1.NCBackendRef{
-									ID: "preset_system_slack_alerts_detailed",
+									ID: "preset_system_slack_alerts_basic",
 								},
 							},
 						},

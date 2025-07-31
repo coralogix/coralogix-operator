@@ -45,7 +45,7 @@ spec:
             name: slack-sample
         preset:
           backendRef:
-            id: preset_system_slack_alerts_detailed
+            id: preset_system_slack_alerts_basic
         notifyOn: triggeredAndResolved
         triggeredRoutingOverrides:
           configOverrides:
