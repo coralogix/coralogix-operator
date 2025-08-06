@@ -87,55 +87,6 @@ var _ = Describe("Alert", Ordered, func() {
 							},
 						},
 					},
-					Destinations: []coralogixv1beta1.NotificationDestination{
-						{
-							Connector: coralogixv1beta1.NCRef{
-								ResourceRef: &coralogixv1beta1.ResourceRef{
-									Name: connectorName,
-								},
-							},
-							Preset: &coralogixv1beta1.NCRef{
-								ResourceRef: &coralogixv1beta1.ResourceRef{
-									Name: presetName,
-								},
-							},
-							NotifyOn: coralogixv1beta1.NotifyOnTriggeredAndResolved,
-							TriggeredRoutingOverrides: coralogixv1beta1.NotificationRouting{
-								ConfigOverrides: &coralogixv1beta1.SourceOverrides{
-									PayloadType: "slack_structured",
-									ConnectorConfigFields: []coralogixv1beta1.ConfigField{
-										{
-											FieldName: "channel",
-											Template:  "{{alertDef.priority}}",
-										},
-									},
-									MessageConfigFields: []coralogixv1beta1.ConfigField{
-										{
-											FieldName: "title",
-											Template:  "TRIGGERED PRESET OVERRIDE: {{alert.status}} {{alertDef.priority}} - {{alertDef.name}}",
-										},
-									},
-								},
-							},
-							ResolvedRoutingOverrides: &coralogixv1beta1.NotificationRouting{
-								ConfigOverrides: &coralogixv1beta1.SourceOverrides{
-									PayloadType: "slack_structured",
-									ConnectorConfigFields: []coralogixv1beta1.ConfigField{
-										{
-											FieldName: "channel",
-											Template:  "{{alertDef.priority}}",
-										},
-									},
-									MessageConfigFields: []coralogixv1beta1.ConfigField{
-										{
-											FieldName: "title",
-											Template:  "RESOLVED PRESET OVERRIDE: {{alert.status}} {{alertDef.priority}} - {{alertDef.name}}",
-										},
-									},
-								},
-							},
-						},
-					},
 				},
 
 				Schedule: &coralogixv1beta1.AlertSchedule{

@@ -1809,8 +1809,9 @@ spec:
                 description: Where notifications should be sent to.
                 properties:
                   destinations:
-                    description: The destinations for notifications (Notification
-                      Center feature).
+                    description: |-
+                      Do not use.
+                      Deprecated: This field is deprecated and will be removed in a future version.
                     items:
                       properties:
                         connector:
@@ -2092,8 +2093,9 @@ spec:
                   description: Notification group to use for alert notifications.
                   properties:
                     destinations:
-                      description: The destinations for notifications (Notification
-                        Center feature).
+                      description: |-
+                        Do not use.
+                        Deprecated: This field is deprecated and will be removed in a future version.
                       items:
                         properties:
                           connector:

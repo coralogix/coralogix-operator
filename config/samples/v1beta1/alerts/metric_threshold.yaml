@@ -39,29 +39,3 @@ spec:
           integrationRef:
             resourceRef:
               name: slack-webhook
-    destinations:
-      - connector:
-          resourceRef:
-            name: slack-sample
-        preset:
-          backendRef:
-            id: preset_system_slack_alerts_basic
-        notifyOn: triggeredAndResolved
-        triggeredRoutingOverrides:
-          configOverrides:
-            payloadType: "slack_structured"
-            connectorConfigFields:
-              - fieldName: channel
-                template: "{{alertDef.priority}}"
-            messageConfigFields:
-              - fieldName: title
-                template: "TRIGGERED PRESET OVERRIDE: {{alert.status}} {{alertDef.priority}} - {{alertDef.name}}"
-        resolvedRoutingOverrides:
-          configOverrides:
-            payloadType: "slack_structured"
-            connectorConfigFields:
-              - fieldName: channel
-                template: "{{alertDef.priority}}"
-            messageConfigFields:
-              - fieldName: title
-                template: "RESOLVED PRESET OVERRIDE: {{alert.status}} {{alertDef.priority}} - {{alertDef.name}}"
