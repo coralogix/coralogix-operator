@@ -382,7 +382,8 @@ type NotificationGroup struct {
 	// +optional
 	Webhooks []WebhookSettings `json:"webhooks"`
 
-	// The destinations for notifications (Notification Center feature).
+	// Do not use.
+	// Deprecated: This field is deprecated and will be removed in a future version.
 	// +optional
 	Destinations []NotificationDestination `json:"destinations,omitempty"`
 

@@ -4478,7 +4478,8 @@ Where notifications should be sent to.
         <td><b><a href="#alertspecnotificationgroupdestinationsindex">destinations</a></b></td>
         <td>[]object</td>
         <td>
-          The destinations for notifications (Notification Center feature).<br/>
+          Do not use.
+Deprecated: This field is deprecated and will be removed in a future version.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5297,7 +5298,8 @@ Notification group to use for alert notifications.
         <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindex">destinations</a></b></td>
         <td>[]object</td>
         <td>
-          The destinations for notifications (Notification Center feature).<br/>
+          Do not use.
+Deprecated: This field is deprecated and will be removed in a future version.<br/>
         </td>
         <td>false</td>
       </tr><tr>
