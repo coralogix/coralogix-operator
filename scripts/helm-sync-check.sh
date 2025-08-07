@@ -21,10 +21,27 @@ for crd_file in $crds_files; do
     chart_crd_file="$chart_crds_path/$crd_filename"
 
     if [ -f "$chart_crd_file" ]; then
-        if ! cmp -s "$crd_file" "$chart_crd_file"; then
+        # Ensure the CRD file contains the necessary Helm templating blocks
+        if ! grep -q '{{- *if .*\.Values\.crds\.create *}}' "$chart_crd_file"; then
+            echo "CRD file $chart_crd_file is missing the '{{- if .Values.crds.create }}' block."
+            errors_found=$((errors_found + 1))
+        fi
+
+        if ! grep -q '{{- *end *}}' "$chart_crd_file"; then
+            echo "CRD file $chart_crd_file is missing the '{{- end }}' block."
+            errors_found=$((errors_found + 1))
+        fi
+
+        # Strip Helm templating lines before comparing
+        cleaned_chart_crd=$(mktemp)
+        grep -v '{{- *if .*}}' "$chart_crd_file" | grep -v '{{- *end *}}' > "$cleaned_chart_crd"
+
+        if ! cmp -s "$crd_file" "$cleaned_chart_crd"; then
             echo "CRD file $chart_crd_file is outdated, please run make helm-update-crds"
             errors_found=$((errors_found + 1))
         fi
+
+        rm -f "$cleaned_chart_crd"
     else
         echo "CRD file $chart_crd_file is missing in the Helm chart. Please run make helm-update-crds"
         errors_found=$((errors_found + 1))

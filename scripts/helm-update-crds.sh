@@ -12,11 +12,17 @@ echo "Updating Helm CRDs from $bases_path to $crds_path..."
 # Ensure the target CRDs directory exists
 mkdir -p "$crds_path"
 
-# Copy all files from config/crd/bases to the chart directory
+# Copy and wrap each CRD from bases into Helm chart directory
 for base_file in "$bases_path"/*.yaml; do
     crd_file="$crds_path/$(basename "$base_file")"
-    cp "$base_file" "$crd_file"
-    echo "Copied or updated CRD file: $crd_file"
+
+    {
+        echo "{{- if .Values.crds.create }}"
+        cat "$base_file"
+        echo "{{- end }}"
+    } > "$crd_file"
+
+    echo "Wrapped and wrote CRD file: $crd_file"
 done
 
 # Cleanup: Remove files in the chart directory that no longer exist in config/crd/bases
