@@ -79,6 +79,9 @@ type ConnectorStatus struct {
 	Id *string `json:"id,omitempty"`
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 func (c *Connector) GetConditions() []metav1.Condition {
@@ -87,6 +90,14 @@ func (c *Connector) GetConditions() []metav1.Condition {
 
 func (c *Connector) SetConditions(conditions []metav1.Condition) {
 	c.Status.Conditions = conditions
+}
+
+func (c *Connector) GetPrintableStatus() string {
+	return c.Status.PrintableStatus
+}
+
+func (c *Connector) SetPrintableStatus(printableStatus string) {
+	c.Status.PrintableStatus = printableStatus
 }
 
 func (c *Connector) HasIDInStatus() bool {
@@ -196,6 +207,7 @@ func ExtractConfigOverridesFields(fields []TemplatedConnectorConfigField) []*cxs
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
 // Connector is the Schema for the connectors API.
 //
 // **Added in v0.4.0**

@@ -6,4 +6,4 @@ metadata:
 spec:
   s3Target:
     region: eu-north-1
-    bucketName: coralogix-operator-logs
+    bucketName: cgx-eu2-load-tests-metrics

@@ -1,0 +1,28 @@
+apiVersion: coralogix.com/v1alpha1
+kind: AlertScheduler
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance:  one-time-scheduler-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: one-time-scheduler-sample
+  namespace: coralogix-operator-system
+spec:
+  name: one-time-scheduler-sample
+  description: One time alert scheduler sample
+  enabled: true
+  filter:
+    whatExpression: source logs | filter $d.cpodId:string == '122'
+    alerts:
+        - resourceRef:
+            name: metric-threshold
+  schedule:
+    operation: activate
+    oneTime:
+      startTime: 2026-01-04T00:00:00.000
+      timezone: UTC+2
+      duration:
+        forOver: 7
+        frequency: days

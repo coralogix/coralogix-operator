@@ -546,6 +546,9 @@ type RuleGroupStatus struct {
 	ID *string `json:"id,omitempty"`
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 func (r *RuleGroup) GetConditions() []metav1.Condition {
@@ -556,10 +559,19 @@ func (r *RuleGroup) SetConditions(conditions []metav1.Condition) {
 	r.Status.Conditions = conditions
 }
 
+func (r *RuleGroup) GetPrintableStatus() string {
+	return r.Status.PrintableStatus
+}
+
+func (r *RuleGroup) SetPrintableStatus(printableStatus string) {
+	r.Status.PrintableStatus = printableStatus
+}
+
 func (r *RuleGroup) HasIDInStatus() bool {
 	return r.Status.ID != nil && *r.Status.ID != ""
 }
 
+//+kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 //+kubebuilder:storageversion

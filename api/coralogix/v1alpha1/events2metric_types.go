@@ -224,6 +224,9 @@ type Events2MetricStatus struct {
 	Id *string `json:"id,omitempty"`
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 func (e2m *Events2Metric) GetConditions() []metav1.Condition {
@@ -234,12 +237,21 @@ func (e2m *Events2Metric) SetConditions(conditions []metav1.Condition) {
 	e2m.Status.Conditions = conditions
 }
 
+func (e2m *Events2Metric) GetPrintableStatus() string {
+	return e2m.Status.PrintableStatus
+}
+
+func (e2m *Events2Metric) SetPrintableStatus(printableStatus string) {
+	e2m.Status.PrintableStatus = printableStatus
+}
+
 func (e2m *Events2Metric) HasIDInStatus() bool {
 	return e2m.Status.Id != nil && *e2m.Status.Id != ""
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
 // See also https://coralogix.com/docs/user-guides/monitoring-and-insights/events2metrics/
 //
 // **Added in v0.5.0**

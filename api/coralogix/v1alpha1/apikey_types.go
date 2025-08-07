@@ -65,6 +65,9 @@ type ApiKeyStatus struct {
 	Id *string `json:"id,omitempty"`
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 func (a *ApiKey) GetConditions() []metav1.Condition {
@@ -73,6 +76,14 @@ func (a *ApiKey) GetConditions() []metav1.Condition {
 
 func (a *ApiKey) SetConditions(conditions []metav1.Condition) {
 	a.Status.Conditions = conditions
+}
+
+func (a *ApiKey) GetPrintableStatus() string {
+	return a.Status.PrintableStatus
+}
+
+func (a *ApiKey) SetPrintableStatus(printableStatus string) {
+	a.Status.PrintableStatus = printableStatus
 }
 
 func (a *ApiKey) HasIDInStatus() bool {
@@ -94,6 +105,7 @@ type ApiKey struct {
 }
 
 // +kubebuilder:object:root=true
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
 // ApiKeyList contains a list of ApiKeys.
 type ApiKeyList struct {
 	metav1.TypeMeta `json:",inline"`

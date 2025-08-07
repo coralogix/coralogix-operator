@@ -252,6 +252,9 @@ type GroupStatus struct {
 	ID *string `json:"id,omitempty"`
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 func (g *Group) GetConditions() []metav1.Condition {
@@ -262,12 +265,21 @@ func (g *Group) SetConditions(conditions []metav1.Condition) {
 	g.Status.Conditions = conditions
 }
 
+func (g *Group) GetPrintableStatus() string {
+	return g.Status.PrintableStatus
+}
+
+func (g *Group) SetPrintableStatus(printableStatus string) {
+	g.Status.PrintableStatus = printableStatus
+}
+
 func (g *Group) HasIDInStatus() bool {
 	return g.Status.ID != nil && *g.Status.ID != ""
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
 // Group is the Schema for the Groups API.
 // See also https://coralogix.com/docs/user-guides/account-management/user-management/assign-user-roles-and-scopes-via-groups/
 //

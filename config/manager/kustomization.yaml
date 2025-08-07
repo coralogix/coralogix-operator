@@ -6,5 +6,5 @@ resources:
 
 images:
 - name: controller
-  newName: coralogixrepo/coralogix-operator
-  newTag: latest
+  newName: example.com/coralogix-operator
+  newTag: v0.0.1

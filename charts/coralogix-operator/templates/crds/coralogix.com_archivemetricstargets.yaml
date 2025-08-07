@@ -165,7 +165,7 @@ spec:
     additionalPrinterColumns:
     - name: Status
       type: string
-      jsonPath: .status.id
+      jsonPath: .status.conditions[0].reason
       description: "Status of the resource"
     - name: Age
       type: date

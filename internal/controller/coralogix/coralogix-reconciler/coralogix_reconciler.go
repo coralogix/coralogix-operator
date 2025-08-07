@@ -197,6 +197,15 @@ func ManageErrorWithRequeue(ctx context.Context, obj coralogix.Object, reason st
 			}
 		}
 	}
+	// add logic for printable status the remoteUnsynced value
+	printableStatus := obj.GetPrintableStatus()
+	if printableStatus == "" {
+		printableStatus = "Remote Unsynced"
+	}
+	obj.SetPrintableStatus(printableStatus)
+	if err := config.GetClient().Status().Update(ctx, obj); err != nil {
+		return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
+	}
 
 	monitoring.SetResourceInfoMetricUnsynced(
 		obj.GetObjectKind().GroupVersionKind().Kind,
@@ -211,6 +220,16 @@ func ManageSuccessWithRequeue(ctx context.Context, obj coralogix.Object, interva
 	conditions := obj.GetConditions()
 	if utils.SetSyncedConditionTrue(&conditions, obj.GetGeneration(), utils.ReasonRemoteSyncedSuccessfully) {
 		obj.SetConditions(conditions)
+		if err := config.GetClient().Status().Update(ctx, obj); err != nil {
+			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
+		}
+	}
+
+	// add logic for printable status the remoteSynced value
+	printableStatus := obj.GetPrintableStatus()
+	if printableStatus == "" {
+		printableStatus = "Remote Synced"
+		obj.SetPrintableStatus(printableStatus)
 		if err := config.GetClient().Status().Update(ctx, obj); err != nil {
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 		}

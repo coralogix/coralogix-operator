@@ -67,6 +67,9 @@ type CustomRoleStatus struct {
 	ID *string `json:"id,omitempty"`
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 func (c *CustomRole) GetConditions() []metav1.Condition {
@@ -77,12 +80,21 @@ func (c *CustomRole) SetConditions(conditions []metav1.Condition) {
 	c.Status.Conditions = conditions
 }
 
+func (c *CustomRole) GetPrintableStatus() string {
+	return c.Status.PrintableStatus
+}
+
+func (c *CustomRole) SetPrintableStatus(printableStatus string) {
+	c.Status.PrintableStatus = printableStatus
+}
+
 func (c *CustomRole) HasIDInStatus() bool {
 	return c.Status.ID != nil && *c.Status.ID != ""
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
 
 // CustomRole is the Schema for the CustomRoles API.
 // See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/

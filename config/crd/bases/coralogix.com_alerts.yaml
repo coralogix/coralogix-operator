@@ -2493,6 +2493,8 @@ spec:
                 type: array
               id:
                 type: string
+              printableStatus:
+                type: string
             type: object
         type: object
     served: true

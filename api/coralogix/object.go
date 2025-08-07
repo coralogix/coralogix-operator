@@ -25,4 +25,6 @@ type Object interface {
 	HasIDInStatus() bool
 	GetConditions() []metav1.Condition
 	SetConditions(conditions []metav1.Condition)
+	GetPrintableStatus() string
+	SetPrintableStatus(printableStatus string)
 }

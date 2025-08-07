@@ -128,6 +128,9 @@ type IntegrationStatus struct {
 	Id *string `json:"id,omitempty"`
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 func (i *Integration) GetConditions() []metav1.Condition {
@@ -138,12 +141,21 @@ func (i *Integration) SetConditions(conditions []metav1.Condition) {
 	i.Status.Conditions = conditions
 }
 
+func (i *Integration) GetPrintableStatus() string {
+	return i.Status.PrintableStatus
+}
+
+func (i *Integration) SetPrintableStatus(printableStatus string) {
+	i.Status.PrintableStatus = printableStatus
+}
+
 func (i *Integration) HasIDInStatus() bool {
 	return i.Status.Id != nil && *i.Status.Id != ""
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
 
 // Integration is the Schema for the Integrations API.
 // See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/

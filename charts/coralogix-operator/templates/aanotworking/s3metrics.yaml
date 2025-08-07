@@ -6,7 +6,7 @@ metadata:
 spec:
   s3Target:
     region: eu-north-1
-    bucketName: coralogix-operator-metrics
+    bucketName: cgx-eu2-load-tests-metrics
   resolutionPolicy:
     rawResolution: 1
     fiveMinutesResolution: 1

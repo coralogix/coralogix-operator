@@ -217,6 +217,9 @@ func expandArchiveRetention(ctx context.Context, coralogixClientSet *cxsdk.Clien
 type TCOLogsPoliciesStatus struct {
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 func (t *TCOLogsPolicies) GetConditions() []metav1.Condition {
@@ -227,12 +230,21 @@ func (t *TCOLogsPolicies) SetConditions(conditions []metav1.Condition) {
 	t.Status.Conditions = conditions
 }
 
+func (t *TCOLogsPolicies) GetPrintableStatus() string {
+	return t.Status.PrintableStatus
+}
+
+func (t *TCOLogsPolicies) SetPrintableStatus(printableStatus string) {
+	t.Status.PrintableStatus = printableStatus
+}
+
 func (t *TCOLogsPolicies) HasIDInStatus() bool {
 	return true
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
 // TCOLogsPolicies is the Schema for the TCOLogsPolicies API.
 // NOTE: This resource performs an atomic overwrite of all existing TCO logs policies
 // in the backend. Any existing policies not defined in this resource will be

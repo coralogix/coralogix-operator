@@ -299,6 +299,9 @@ type AlertStatus struct {
 
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 func (a *Alert) GetConditions() []metav1.Condition {
@@ -313,6 +316,15 @@ func (a *Alert) HasIDInStatus() bool {
 	return a.Status.ID != nil && *a.Status.ID != ""
 }
 
+func (a *Alert) GetPrintableStatus() string {
+	return a.Status.PrintableStatus
+}
+
+func (a *Alert) SetPrintableStatus(printableStatus string) {
+	a.Status.PrintableStatus = printableStatus
+}
+
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
 // +kubebuilder:validation:Pattern=`^UTC[+-]\d{2}$`
 // +kubebuilder:default=UTC+00
 // A time zone expressed in UTC offsets.
