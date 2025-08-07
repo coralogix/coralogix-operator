@@ -145,4 +145,11 @@ spec:
     storage: true
     subresources:
       status: {}
-{{- end }}
+    additionalPrinterColumns:
+    - name: Status
+      type: string
+      jsonPath: .status.id
+      description: "Status of the resource"
+    - name: Age
+      type: date
+      jsonPath: .metadata.creationTimestamp
