@@ -197,10 +197,10 @@ func ManageErrorWithRequeue(ctx context.Context, obj coralogix.Object, reason st
 			}
 		}
 	}
-	// add logic for printable status the remoteUnsynced value
+
 	printableStatus := obj.GetPrintableStatus()
 	if printableStatus == "" {
-		printableStatus = "Remote Unsynced"
+		printableStatus = "RemoteUnsynced"
 	}
 	obj.SetPrintableStatus(printableStatus)
 	if err := config.GetClient().Status().Update(ctx, obj); err != nil {
@@ -225,10 +225,9 @@ func ManageSuccessWithRequeue(ctx context.Context, obj coralogix.Object, interva
 		}
 	}
 
-	// add logic for printable status the remoteSynced value
 	printableStatus := obj.GetPrintableStatus()
 	if printableStatus == "" {
-		printableStatus = "Remote Synced"
+		printableStatus = "RemoteSynced"
 		obj.SetPrintableStatus(printableStatus)
 		if err := config.GetClient().Status().Update(ctx, obj); err != nil {
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)

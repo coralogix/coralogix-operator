@@ -6211,6 +6211,13 @@ AlertStatus defines the observed state of Alert
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -7078,6 +7085,13 @@ AlertSchedulerStatus defines the observed state of AlertScheduler.
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -7337,6 +7351,13 @@ ApiKeyStatus defines the observed state of ApiKey.
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
         <td>string</td>
         <td>
           <br/>
@@ -7627,6 +7648,13 @@ The S3 target configuration.
         <td>string</td>
         <td>
           ID is the identifier of the archive logs target.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -7977,6 +8005,13 @@ The S3 target configuration.
         <td>string</td>
         <td>
           ID is the identifier of the archive metrics target.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -8336,6 +8371,13 @@ ConnectorStatus defines the observed state of Connector.
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -8546,6 +8588,13 @@ CustomRoleStatus defines the observed state of CustomRole.
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
         <td>string</td>
         <td>
           <br/>
@@ -8924,6 +8973,13 @@ DashboardStatus defines the observed state of Dashboard.
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -9173,6 +9229,13 @@ DashboardsFolderStatus defines the observed state of DashboardsFolder.
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
         <td>string</td>
         <td>
           <br/>
@@ -9773,6 +9836,13 @@ Events2MetricStatus defines the observed state of Events2Metric.
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
         <td>string</td>
         <td>
           <br/>
@@ -10529,6 +10599,13 @@ GlobalRouterStatus defines the observed state of GlobalRouter.
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -10900,6 +10977,13 @@ GroupStatus defines the observed state of Group.
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -11105,6 +11189,13 @@ IntegrationStatus defines the observed state of Integration.
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
         <td>string</td>
         <td>
           <br/>
@@ -11855,6 +11946,13 @@ OutboundWebhookStatus defines the observed state of OutboundWebhook
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -12254,6 +12352,13 @@ PresetStatus defines the observed state of Preset.
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -12538,6 +12643,13 @@ RecordingRuleGroupSetStatus defines the observed state of RecordingRuleGroupSet
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
         <td>string</td>
         <td>
           <br/>
@@ -13342,6 +13454,13 @@ RuleGroupStatus defines the observed state of RuleGroup
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -13590,6 +13709,13 @@ ScopeStatus defines the observed state of Coralogix Scope.
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
         <td>string</td>
         <td>
           <br/>
@@ -13981,6 +14107,13 @@ TCOLogsPoliciesStatus defines the observed state of TCOLogsPolicies.
     <tbody><tr>
         <td><b><a href="#tcologspoliciesstatusconditionsindex">conditions</a></b></td>
         <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
         <td>
           <br/>
         </td>
@@ -14502,6 +14635,13 @@ TCOTracesPoliciesStatus defines the observed state of TCOTracesPolicies.
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -14688,6 +14828,13 @@ ViewFolderStatus defines the observed state of ViewFolder.
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
         <td>string</td>
         <td>
           <br/>
@@ -15162,6 +15309,13 @@ ViewStatus defines the observed state of View.
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
         <td>string</td>
         <td>
           <br/>

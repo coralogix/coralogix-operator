@@ -92,6 +92,7 @@ func (a *ApiKey) HasIDInStatus() bool {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
 // ApiKey is the Schema for the ApiKeys API.
 // See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-keys/
 //
@@ -105,7 +106,6 @@ type ApiKey struct {
 }
 
 // +kubebuilder:object:root=true
-// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
 // ApiKeyList contains a list of ApiKeys.
 type ApiKeyList struct {
 	metav1.TypeMeta `json:",inline"`

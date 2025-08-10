@@ -40,6 +40,7 @@ import (
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:storageversion
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
 // Alert is the Schema for the Alerts API.
 //
 // Note that this is only for the latest version of the Alerts API. If your account has been created before March 2025, make sure that your account has been migrated before using advanced features of alerts.
@@ -324,7 +325,6 @@ func (a *Alert) SetPrintableStatus(printableStatus string) {
 	a.Status.PrintableStatus = printableStatus
 }
 
-// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
 // +kubebuilder:validation:Pattern=`^UTC[+-]\d{2}$`
 // +kubebuilder:default=UTC+00
 // A time zone expressed in UTC offsets.

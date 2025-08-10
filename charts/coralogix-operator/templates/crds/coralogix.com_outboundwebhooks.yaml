@@ -307,11 +307,3 @@ spec:
     storage: true
     subresources:
       status: {}
-    additionalPrinterColumns:
-    - name: Status
-      type: string
-      jsonPath: .status.conditions[0].reason
-      description: "Status of the resource"
-    - name: Age
-      type: date
-      jsonPath: .metadata.creationTimestamp
