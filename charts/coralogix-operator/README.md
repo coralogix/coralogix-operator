@@ -1,6 +1,6 @@
 # coralogix-operator
 
-![Version: 0.4.8](https://img.shields.io/badge/Version-0.4.8-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.4.8](https://img.shields.io/badge/AppVersion-0.4.8-informational?style=flat-square)
+![Version: 0.4.9](https://img.shields.io/badge/Version-0.4.9-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.4.9](https://img.shields.io/badge/AppVersion-0.4.9-informational?style=flat-square)
 
 Coralogix Operator Helm Chart
 
