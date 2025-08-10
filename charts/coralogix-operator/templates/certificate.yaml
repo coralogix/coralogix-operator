@@ -11,6 +11,6 @@ spec:
     - {{ include "coralogixOperator.fullname" . }}-webhook-service.{{ .Release.Namespace }}.svc.cluster.local
   issuerRef:
     kind: Issuer
-    name: selfsigned-issuer
+    name: {{ include "coralogixOperator.fullname" . }}-selfsigned-issuer
   secretName: {{ include "coralogixOperator.fullname" . }}-webhook-cert
 {{- end }}
