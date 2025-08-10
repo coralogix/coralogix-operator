@@ -198,13 +198,11 @@ func ManageErrorWithRequeue(ctx context.Context, obj coralogix.Object, reason st
 		}
 	}
 
-	printableStatus := obj.GetPrintableStatus()
-	if printableStatus == "" {
-		printableStatus = "RemoteUnsynced"
-	}
-	obj.SetPrintableStatus(printableStatus)
-	if err := config.GetClient().Status().Update(ctx, obj); err != nil {
-		return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
+	if obj.GetPrintableStatus() != "RemoteUnsynced" {
+		obj.SetPrintableStatus("RemoteUnsynced")
+		if err := config.GetClient().Status().Update(ctx, obj); err != nil {
+			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
+		}
 	}
 
 	monitoring.SetResourceInfoMetricUnsynced(
@@ -225,10 +223,8 @@ func ManageSuccessWithRequeue(ctx context.Context, obj coralogix.Object, interva
 		}
 	}
 
-	printableStatus := obj.GetPrintableStatus()
-	if printableStatus == "" {
-		printableStatus = "RemoteSynced"
-		obj.SetPrintableStatus(printableStatus)
+	if obj.GetPrintableStatus() != "RemoteSynced" {
+		obj.SetPrintableStatus("RemoteSynced")
 		if err := config.GetClient().Status().Update(ctx, obj); err != nil {
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 		}
