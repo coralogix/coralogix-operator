@@ -15,7 +15,11 @@ spec:
     singular: archivelogstarget
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .status.printableStatus
+      name: Status
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: |-
@@ -139,9 +143,12 @@ spec:
               id:
                 description: ID is the identifier of the archive logs target.
                 type: string
+              printableStatus:
+                type: string
             type: object
         type: object
     served: true
     storage: true
     subresources:
       status: {}
+{{- end }}
