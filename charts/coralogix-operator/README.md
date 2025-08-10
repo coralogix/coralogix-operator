@@ -36,6 +36,7 @@ Kubernetes: `>=1.16.0-0`
 | coralogixOperator.region | string | `""` | Coralogix Account Region |
 | coralogixOperator.resources | object | `{}` | resource config for Coralogix operator |
 | coralogixOperator.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}` | Security context for Coralogix operator container |
+| crds.create | bool | `true` | Specifies whether the CRDs should be created. |
 | deployment.replicas | int | `1` | How many coralogix-operator pods to run |
 | fullnameOverride | string | `""` | Provide a name to substitute for the full names of resources |
 | imagePullSecrets | list | `[]` |  |

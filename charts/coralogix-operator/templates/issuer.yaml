@@ -4,7 +4,7 @@ kind: Issuer
 metadata:
   labels:
     {{- include "coralogixOperator.labels" . | nindent 4 }}
-  name: selfsigned-issuer
+  name: {{ include "coralogixOperator.fullname" . }}-selfsigned-issuer
 spec:
   selfSigned: {}
 {{- end }}
