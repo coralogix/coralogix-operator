@@ -16,6 +16,10 @@ deployment:
   # -- Pod labels for Coralogix operator
   podLabels: {}
 
+crds:
+  # -- Specifies whether the CRDs should be created.
+  create: true
+
 # -- Service account for Coralogix operator to use.
 # -- ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
 serviceAccount:
