@@ -78,6 +78,7 @@ var _ = Describe("ArchiveMetricsTarget", Ordered, func() {
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: targetName, Namespace: testNamespace}, fetchedTarget)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedTarget.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedTarget.Status.PrintableStatus).To(Equal("RemoteSynced"))
 			if fetchedTarget.Status.ID != nil {
 				return nil
 			}

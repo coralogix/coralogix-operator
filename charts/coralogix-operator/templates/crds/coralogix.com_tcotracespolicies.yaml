@@ -15,7 +15,14 @@ spec:
     singular: tcotracespolicies
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .status.printableStatus
+      name: Status
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: |-
@@ -263,6 +270,8 @@ spec:
                   - type
                   type: object
                 type: array
+              printableStatus:
+                type: string
             type: object
         type: object
     served: true

@@ -98,6 +98,9 @@ type PresetStatus struct {
 	Id *string `json:"id,omitempty"`
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 func (p *Preset) GetConditions() []metav1.Condition {
@@ -106,6 +109,14 @@ func (p *Preset) GetConditions() []metav1.Condition {
 
 func (p *Preset) SetConditions(conditions []metav1.Condition) {
 	p.Status.Conditions = conditions
+}
+
+func (p *Preset) GetPrintableStatus() string {
+	return p.Status.PrintableStatus
+}
+
+func (p *Preset) SetPrintableStatus(printableStatus string) {
+	p.Status.PrintableStatus = printableStatus
 }
 
 func (p *Preset) HasIDInStatus() bool {
@@ -203,6 +214,8 @@ func ExtractMessageConfig(messageConfig MessageConfig) *cxsdk.MessageConfig {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // Preset is the Schema for the presets API.
 // NOTE: This CRD exposes a new feature and may have breaking changes in future releases.

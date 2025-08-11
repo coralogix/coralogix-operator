@@ -60,6 +60,7 @@ var _ = Describe("DashboardsFolder", Ordered, func() {
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: dashboardFolderName, Namespace: testNamespace}, fetchedDashboardsFolder)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedDashboardsFolder.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedDashboardsFolder.Status.PrintableStatus).To(Equal("RemoteSynced"))
 			if fetchedDashboardsFolder.Status.ID != nil {
 				dashboardFolderID = *fetchedDashboardsFolder.Status.ID
 				return nil

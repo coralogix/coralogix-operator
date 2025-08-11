@@ -102,6 +102,9 @@ type ScopeStatus struct {
 	ID *string `json:"id,omitempty"`
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 func (s *Scope) GetConditions() []metav1.Condition {
@@ -112,12 +115,22 @@ func (s *Scope) SetConditions(conditions []metav1.Condition) {
 	s.Status.Conditions = conditions
 }
 
+func (s *Scope) GetPrintableStatus() string {
+	return s.Status.PrintableStatus
+}
+
+func (s *Scope) SetPrintableStatus(printableStatus string) {
+	s.Status.PrintableStatus = printableStatus
+}
+
 func (s *Scope) HasIDInStatus() bool {
 	return s.Status.ID != nil && *s.Status.ID != ""
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // Scope is the Schema for the scopes API.
 // See also https://coralogix.com/docs/user-guides/account-management/user-management/scopes/
 //

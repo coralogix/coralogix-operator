@@ -57,6 +57,7 @@ var _ = Describe("Preset", Ordered, func() {
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: presetName, Namespace: testNamespace}, fetchedPreset)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedPreset.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedPreset.Status.PrintableStatus).To(Equal("RemoteSynced"))
 			if fetchedPreset.Status.Id != nil {
 				presetID = *fetchedPreset.Status.Id
 				return nil

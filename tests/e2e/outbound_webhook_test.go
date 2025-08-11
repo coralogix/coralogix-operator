@@ -71,6 +71,7 @@ var _ = Describe("OutboundWebhook", Ordered, func() {
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: outboundWebhookName, Namespace: testNamespace}, fetchedOutboundWebhook)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedOutboundWebhook.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedOutboundWebhook.Status.PrintableStatus).To(Equal("RemoteSynced"))
 			if fetchedOutboundWebhook.Status.ID != nil {
 				outboundWebhookID = *fetchedOutboundWebhook.Status.ID
 				return nil

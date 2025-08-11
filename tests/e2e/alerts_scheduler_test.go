@@ -56,6 +56,7 @@ var _ = Describe("AlertScheduler", Ordered, func() {
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertSchedulerName, Namespace: testNamespace}, fetchedScheduler)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedScheduler.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedScheduler.Status.PrintableStatus).To(Equal("RemoteSynced"))
 			if fetchedScheduler.Status.ID != nil {
 				alertSchedulerID = *fetchedScheduler.Status.ID
 				return nil

@@ -40,6 +40,8 @@ import (
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:storageversion
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // Alert is the Schema for the Alerts API.
 //
 // Note that this is only for the latest version of the Alerts API. If your account has been created before March 2025, make sure that your account has been migrated before using advanced features of alerts.
@@ -299,6 +301,9 @@ type AlertStatus struct {
 
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 func (a *Alert) GetConditions() []metav1.Condition {
@@ -311,6 +316,14 @@ func (a *Alert) SetConditions(conditions []metav1.Condition) {
 
 func (a *Alert) HasIDInStatus() bool {
 	return a.Status.ID != nil && *a.Status.ID != ""
+}
+
+func (a *Alert) GetPrintableStatus() string {
+	return a.Status.PrintableStatus
+}
+
+func (a *Alert) SetPrintableStatus(printableStatus string) {
+	a.Status.PrintableStatus = printableStatus
 }
 
 // +kubebuilder:validation:Pattern=`^UTC[+-]\d{2}$`

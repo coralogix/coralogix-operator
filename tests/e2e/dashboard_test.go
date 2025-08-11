@@ -59,6 +59,7 @@ var _ = Describe("Dashboard", Ordered, func() {
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: dashboardName, Namespace: testNamespace}, fetchedDashboard)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedDashboard.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedDashboard.Status.PrintableStatus).To(Equal("RemoteSynced"))
 			if fetchedDashboard.Status.ID != nil {
 				dashboardID = *fetchedDashboard.Status.ID
 				return nil

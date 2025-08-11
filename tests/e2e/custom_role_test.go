@@ -58,6 +58,7 @@ var _ = Describe("CustomRole", Ordered, func() {
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: customRoleName, Namespace: testNamespace}, fetchedCustomRole)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedCustomRole.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedCustomRole.Status.PrintableStatus).To(Equal("RemoteSynced"))
 			if fetchedCustomRole.Status.ID != nil {
 				id, err := strconv.Atoi(*fetchedCustomRole.Status.ID)
 				Expect(err).ToNot(HaveOccurred())

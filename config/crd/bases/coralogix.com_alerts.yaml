@@ -14,7 +14,14 @@ spec:
     singular: alert
   scope: Namespaced
   versions:
-  - name: v1beta1
+  - additionalPrinterColumns:
+    - jsonPath: .status.printableStatus
+      name: Status
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1beta1
     schema:
       openAPIV3Schema:
         description: |-
@@ -2492,6 +2499,8 @@ spec:
                   type: object
                 type: array
               id:
+                type: string
+              printableStatus:
                 type: string
             type: object
         type: object

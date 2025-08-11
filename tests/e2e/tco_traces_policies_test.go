@@ -101,6 +101,7 @@ var _ = Describe("TCOTracesPolicies", func() {
 			fetchedTCOTracesPolicies := &coralogixv1alpha1.TCOTracesPolicies{}
 			g.Expect(crClient.Get(ctx, client.ObjectKey{Name: tracesPolicyName, Namespace: testNamespace}, fetchedTCOTracesPolicies)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedTCOTracesPolicies.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedTCOTracesPolicies.Status.PrintableStatus).To(Equal("RemoteSynced"))
 		}, time.Minute, time.Second).Should(Succeed())
 
 		By("Verifying policies exist in the Coralogix backend")

@@ -133,6 +133,8 @@ var _ = Describe("Alert", Ordered, func() {
 
 			g.Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 
+			g.Expect(fetchedAlert.Status.PrintableStatus).To(Equal("RemoteSynced"))
+
 			g.Expect(fetchedAlert.Status.ID).ToNot(BeNil())
 
 			alertID = *fetchedAlert.Status.ID
@@ -249,6 +251,8 @@ var _ = Describe("Alert", Ordered, func() {
 
 			g.Expect(meta.IsStatusConditionFalse(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 
+			g.Expect(fetchedAlert.Status.PrintableStatus).To(Equal("RemoteUnsynced"))
+
 		}, time.Minute, time.Second).Should(Succeed())
 
 		webhook := &coralogixv1alpha1.OutboundWebhook{
@@ -284,6 +288,8 @@ var _ = Describe("Alert", Ordered, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: newAlert.Name, Namespace: newAlert.Namespace}, fetchedAlert)).To(Succeed())
 
 			g.Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+
+			g.Expect(fetchedAlert.Status.PrintableStatus).To(Equal("RemoteSynced"))
 		}, time.Minute, time.Second).Should(Succeed())
 	})
 

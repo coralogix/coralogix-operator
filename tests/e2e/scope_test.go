@@ -58,6 +58,7 @@ var _ = Describe("Scope", Ordered, func() {
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: scopeName, Namespace: testNamespace}, fetchedScope)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedScope.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedScope.Status.PrintableStatus).To(Equal("RemoteSynced"))
 			if fetchedScope.Status.ID != nil {
 				scopeID = *fetchedScope.Status.ID
 				return nil

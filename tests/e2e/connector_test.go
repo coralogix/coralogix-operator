@@ -57,6 +57,7 @@ var _ = Describe("Connector", Ordered, func() {
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: connectorName, Namespace: testNamespace}, fetchedConnector)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedConnector.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedConnector.Status.PrintableStatus).To(Equal("RemoteSynced"))
 			if fetchedConnector.Status.Id != nil {
 				connectorID = *fetchedConnector.Status.Id
 				return nil

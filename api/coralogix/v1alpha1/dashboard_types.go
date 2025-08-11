@@ -156,6 +156,9 @@ type DashboardStatus struct {
 	ID *string `json:"id,omitempty"`
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 func (d *Dashboard) GetConditions() []metav1.Condition {
@@ -166,6 +169,14 @@ func (d *Dashboard) SetConditions(conditions []metav1.Condition) {
 	d.Status.Conditions = conditions
 }
 
+func (d *Dashboard) GetPrintableStatus() string {
+	return d.Status.PrintableStatus
+}
+
+func (d *Dashboard) SetPrintableStatus(printableStatus string) {
+	d.Status.PrintableStatus = printableStatus
+}
+
 func (d *Dashboard) HasIDInStatus() bool {
 	return d.Status.ID != nil && *d.Status.ID != ""
 }
@@ -174,6 +185,8 @@ func (d *Dashboard) HasIDInStatus() bool {
 // +kubebuilder:storageversion
 // +kubebuilder:conversion:hub
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // Dashboard is the Schema for the dashboards API.
 //

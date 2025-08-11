@@ -260,6 +260,9 @@ type GlobalRouterStatus struct {
 	Id *string `json:"id,omitempty"`
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 func (g *GlobalRouter) GetConditions() []metav1.Condition {
@@ -270,12 +273,22 @@ func (g *GlobalRouter) SetConditions(conditions []metav1.Condition) {
 	g.Status.Conditions = conditions
 }
 
+func (g *GlobalRouter) GetPrintableStatus() string {
+	return g.Status.PrintableStatus
+}
+
+func (g *GlobalRouter) SetPrintableStatus(printableStatus string) {
+	g.Status.PrintableStatus = printableStatus
+}
+
 func (g *GlobalRouter) HasIDInStatus() bool {
 	return g.Status.Id != nil && *g.Status.Id != ""
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // GlobalRouter is the Schema for the GlobalRouters API.
 // NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
 //

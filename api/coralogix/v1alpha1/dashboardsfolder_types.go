@@ -91,6 +91,9 @@ type DashboardsFolderStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 	// +optional
 	ID *string `json:"id,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 func (df *DashboardsFolder) GetConditions() []metav1.Condition {
@@ -101,12 +104,22 @@ func (df *DashboardsFolder) SetConditions(conditions []metav1.Condition) {
 	df.Status.Conditions = conditions
 }
 
+func (df *DashboardsFolder) GetPrintableStatus() string {
+	return df.Status.PrintableStatus
+}
+
+func (df *DashboardsFolder) SetPrintableStatus(printableStatus string) {
+	df.Status.PrintableStatus = printableStatus
+}
+
 func (df *DashboardsFolder) HasIDInStatus() bool {
 	return df.Status.ID != nil && *df.Status.ID != ""
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // DashboardsFolder is the Schema for the DashboardsFolders API.
 //

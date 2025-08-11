@@ -82,6 +82,7 @@ var _ = Describe("TCOLogsPolicies", func() {
 			fetchedTCOLogsPolicies := &coralogixv1alpha1.TCOLogsPolicies{}
 			g.Expect(crClient.Get(ctx, client.ObjectKey{Name: logsPolicyName, Namespace: testNamespace}, fetchedTCOLogsPolicies)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedTCOLogsPolicies.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedTCOLogsPolicies.Status.PrintableStatus).To(Equal("RemoteSynced"))
 		}, time.Minute, time.Second).Should(Succeed())
 
 		By("Verifying policies exist in the Coralogix backend")

@@ -190,6 +190,9 @@ type AlertSchedulerStatus struct {
 
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 var (
@@ -219,6 +222,14 @@ func (a *AlertScheduler) GetConditions() []metav1.Condition {
 
 func (a *AlertScheduler) SetConditions(conditions []metav1.Condition) {
 	a.Status.Conditions = conditions
+}
+
+func (a *AlertScheduler) GetPrintableStatus() string {
+	return a.Status.PrintableStatus
+}
+
+func (a *AlertScheduler) SetPrintableStatus(printableStatus string) {
+	a.Status.PrintableStatus = printableStatus
 }
 
 func (a *AlertScheduler) HasIDInStatus() bool {
@@ -482,6 +493,8 @@ func extractTimeFrame(timeFrame *TimeFrame) (*cxsdk.Timeframe, error) {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // AlertScheduler is the Schema for the AlertSchedulers API.
 // It is used to suppress or activate alerts based on a schedule.
 // See also https://coralogix.com/docs/user-guides/alerting/alert-suppression-rules/

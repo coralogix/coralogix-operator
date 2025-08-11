@@ -67,6 +67,7 @@ var _ = Describe("Integration", Ordered, func() {
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: integrationName, Namespace: testNamespace}, fetchedIntegration)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedIntegration.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedIntegration.Status.PrintableStatus).To(Equal("RemoteSynced"))
 			if fetchedIntegration.Status.Id != nil {
 				integrationID = *fetchedIntegration.Status.Id
 				return nil
