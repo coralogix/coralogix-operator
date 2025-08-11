@@ -78,6 +78,7 @@ var _ = Describe("RecordingRuleGroupSet", Ordered, func() {
 				types.NamespacedName{Name: recordingRuleGroupSetName, Namespace: testNamespace},
 				fetchedRecordingRuleGroupSet)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedRecordingRuleGroupSet.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedRecordingRuleGroupSet.Status.PrintableStatus).To(Equal("RemoteSynced"))
 			if fetchedRecordingRuleGroupSet.Status.ID != nil {
 				recordingRuleGroupSetID = *fetchedRecordingRuleGroupSet.Status.ID
 				return nil

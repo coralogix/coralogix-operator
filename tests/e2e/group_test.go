@@ -96,6 +96,7 @@ var _ = Describe("Group", Ordered, func() {
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: groupName, Namespace: testNamespace}, fetchedGroup)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedGroup.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedGroup.Status.PrintableStatus).To(Equal("RemoteSynced"))
 			if fetchedGroup.Status.ID != nil {
 				id, err := strconv.Atoi(*fetchedGroup.Status.ID)
 				Expect(err).ToNot(HaveOccurred())

@@ -80,6 +80,7 @@ var _ = Describe("ApiKey", Ordered, func() {
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: apiKeyName, Namespace: testNamespace}, fetchedApiKey)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedApiKey.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedApiKey.Status.PrintableStatus).To(Equal("RemoteSynced"))
 			if fetchedApiKey.Status.Id != nil {
 				apiKeyID = *fetchedApiKey.Status.Id
 				return nil

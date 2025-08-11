@@ -80,6 +80,7 @@ var _ = Describe("RuleGroup", Ordered, func() {
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: ruleGroupName, Namespace: testNamespace}, fetchedRuleGroup)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedRuleGroup.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedRuleGroup.Status.PrintableStatus).To(Equal("RemoteSynced"))
 			if fetchedRuleGroup.Status.ID != nil {
 				ruleGroupID = *fetchedRuleGroup.Status.ID
 				return nil

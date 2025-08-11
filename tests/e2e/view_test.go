@@ -74,6 +74,7 @@ var _ = Describe("View", Ordered, func() {
 			view := &coralogixv1alpha1.View{}
 			g.Expect(k8sClient.Get(ctx, types.NamespacedName{Name: viewName, Namespace: testNamespace}, view)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(view.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(view.Status.PrintableStatus).To(Equal("RemoteSynced"))
 			if view.Status.ID == nil {
 				return fmt.Errorf("view ID not set")
 			}

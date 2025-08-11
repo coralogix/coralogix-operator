@@ -103,6 +103,8 @@ var _ = Describe("Events2Metric", Ordered, func() {
 
 			g.Expect(meta.IsStatusConditionTrue(fetchedE2M.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 
+			g.Expect(fetchedE2M.Status.PrintableStatus).To(Equal("RemoteSynced"))
+
 			g.Expect(fetchedE2M.Status.Id).ToNot(BeNil())
 
 			e2mID = *fetchedE2M.Status.Id
