@@ -189,19 +189,13 @@ func ManageErrorWithRequeue(ctx context.Context, obj coralogix.Object, reason st
 	}
 
 	conditions := obj.GetConditions()
-	if utils.SetSyncedConditionFalse(&conditions, obj.GetGeneration(), reason, err.Error()) {
+	if utils.SetSyncedConditionFalse(&conditions, obj.GetGeneration(), reason, err.Error()) || obj.GetPrintableStatus() != "RemoteUnsynced" {
 		obj.SetConditions(conditions)
+		obj.SetPrintableStatus("RemoteUnsynced")
 		if err := config.GetClient().Status().Update(ctx, obj); err != nil {
 			if errors.IsConflict(err) {
 				return reconcile.Result{Requeue: true}, nil
 			}
-		}
-	}
-
-	if obj.GetPrintableStatus() != "RemoteUnsynced" {
-		obj.SetPrintableStatus("RemoteUnsynced")
-		if err := config.GetClient().Status().Update(ctx, obj); err != nil {
-			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 		}
 	}
 
@@ -216,14 +210,8 @@ func ManageErrorWithRequeue(ctx context.Context, obj coralogix.Object, reason st
 
 func ManageSuccessWithRequeue(ctx context.Context, obj coralogix.Object, interval time.Duration) (reconcile.Result, error) {
 	conditions := obj.GetConditions()
-	if utils.SetSyncedConditionTrue(&conditions, obj.GetGeneration(), utils.ReasonRemoteSyncedSuccessfully) {
+	if utils.SetSyncedConditionTrue(&conditions, obj.GetGeneration(), utils.ReasonRemoteSyncedSuccessfully) || obj.GetPrintableStatus() != "RemoteSynced" {
 		obj.SetConditions(conditions)
-		if err := config.GetClient().Status().Update(ctx, obj); err != nil {
-			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
-		}
-	}
-
-	if obj.GetPrintableStatus() != "RemoteSynced" {
 		obj.SetPrintableStatus("RemoteSynced")
 		if err := config.GetClient().Status().Update(ctx, obj); err != nil {
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
