@@ -208,6 +208,7 @@ func ExtractConfigOverridesFields(fields []TemplatedConnectorConfigField) []*cxs
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // Connector is the Schema for the connectors API.
 //
 // **Added in v0.4.0**

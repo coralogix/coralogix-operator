@@ -156,6 +156,7 @@ func (i *Integration) HasIDInStatus() bool {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // Integration is the Schema for the Integrations API.
 // See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/

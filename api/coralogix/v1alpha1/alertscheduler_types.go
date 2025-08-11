@@ -494,6 +494,7 @@ func extractTimeFrame(timeFrame *TimeFrame) (*cxsdk.Timeframe, error) {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // AlertScheduler is the Schema for the AlertSchedulers API.
 // It is used to suppress or activate alerts based on a schedule.
 // See also https://coralogix.com/docs/user-guides/alerting/alert-suppression-rules/

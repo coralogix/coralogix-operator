@@ -252,6 +252,7 @@ func (e2m *Events2Metric) HasIDInStatus() bool {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // See also https://coralogix.com/docs/user-guides/monitoring-and-insights/events2metrics/
 //
 // **Added in v0.5.0**

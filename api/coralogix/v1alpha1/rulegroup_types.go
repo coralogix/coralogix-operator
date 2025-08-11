@@ -572,6 +572,7 @@ func (r *RuleGroup) HasIDInStatus() bool {
 }
 
 //+kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+//+kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 //+kubebuilder:storageversion

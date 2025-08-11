@@ -259,6 +259,7 @@ func (v *View) HasIDInStatus() bool {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // View is the Schema for the Views API.
 // See also https://coralogix.com/docs/user-guides/monitoring-and-insights/explore-screen/custom-views/

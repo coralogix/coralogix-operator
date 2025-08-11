@@ -186,6 +186,7 @@ func (d *Dashboard) HasIDInStatus() bool {
 // +kubebuilder:conversion:hub
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // Dashboard is the Schema for the dashboards API.
 //

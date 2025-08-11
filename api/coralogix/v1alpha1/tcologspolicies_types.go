@@ -245,6 +245,7 @@ func (t *TCOLogsPolicies) HasIDInStatus() bool {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // TCOLogsPolicies is the Schema for the TCOLogsPolicies API.
 // NOTE: This resource performs an atomic overwrite of all existing TCO logs policies
 // in the backend. Any existing policies not defined in this resource will be

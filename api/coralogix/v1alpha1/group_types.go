@@ -280,6 +280,7 @@ func (g *Group) HasIDInStatus() bool {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // Group is the Schema for the Groups API.
 // See also https://coralogix.com/docs/user-guides/account-management/user-management/assign-user-roles-and-scopes-via-groups/
 //

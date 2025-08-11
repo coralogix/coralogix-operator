@@ -465,6 +465,7 @@ func (in *OutboundWebhook) HasIDInStatus() bool {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 //+kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+//+kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // OutboundWebhook is the Schema for the API
 // See also https://coralogix.com/docs/user-guides/alerting/outbound-webhooks/aws-eventbridge-outbound-webhook/
