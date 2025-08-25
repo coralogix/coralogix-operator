@@ -1,0 +1,29 @@
+apiVersion: coralogix.com/v1beta1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/name: alert
+    app.kubernetes.io/instance: alert-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: slo-threshold-alert
+spec:
+  name: slo-threshold alert example
+  description: SLO Alert, Error Budget
+  groupByKeys:
+    - service_name
+  notificationGroup:
+    groupByKeys:
+      - service_name
+  priority: p4
+  alertType:
+    sloThreshold:
+      sloDefinition:
+        sloRef:
+          resourceRef:
+            name: coralogix-slo-example
+      errorBudget:
+        rules:
+          - condition:
+              threshold: "0.5"

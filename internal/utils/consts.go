@@ -44,6 +44,7 @@ const (
 	GlobalRouterKind          = "GlobalRouter"
 	ArchiveLogsTargetKind     = "ArchiveLogsTarget"
 	ArchiveMetricsTargetKind  = "ArchiveMetricsTarget"
+	SLOKind                   = "SLO"
 	Events2MetricKind         = "Events2Metric"
 
 	TrackPrometheusRuleAlertsLabelKey         = "app.coralogix.com/track-alerting-rules"

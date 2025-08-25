@@ -23,6 +23,7 @@ resources:
   - bases/coralogix.com_views.yaml
   - bases/coralogix.com_archivelogstargets.yaml
   - bases/coralogix.com_archivemetricstargets.yaml
+  - bases/coralogix.com_slos.yaml
   - bases/coralogix.com_events2metrics.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 

@@ -96,7 +96,7 @@ AlertSpec defines the desired state of a Coralogix Alert. For more info check - 
         <td>
           Type of alert.<br/>
           <br/>
-            <i>Validations</i>:<li>(has(self.logsImmediate) ? 1 : 0) + (has(self.logsThreshold) ? 1 : 0) + (has(self.logsRatioThreshold) ? 1 : 0) + (has(self.logsTimeRelativeThreshold) ? 1 : 0) + (has(self.metricThreshold) ? 1 : 0) + (has(self.tracingThreshold) ? 1 : 0) + (has(self.tracingImmediate) ? 1 : 0) + (has(self.flow) ? 1 : 0) + (has(self.logsAnomaly) ? 1 : 0) + (has(self.metricAnomaly) ? 1 : 0) + (has(self.logsNewValue) ? 1 : 0) + (has(self.logsUniqueCount) ? 1 : 0) == 1: Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue or logsUniqueCount must be set</li>
+            <i>Validations</i>:<li>(has(self.logsImmediate) ? 1 : 0) + (has(self.logsThreshold) ? 1 : 0) + (has(self.logsRatioThreshold) ? 1 : 0) + (has(self.logsTimeRelativeThreshold) ? 1 : 0) + (has(self.metricThreshold) ? 1 : 0) + (has(self.tracingThreshold) ? 1 : 0) + (has(self.tracingImmediate) ? 1 : 0) + (has(self.flow) ? 1 : 0) + (has(self.logsAnomaly) ? 1 : 0) + (has(self.metricAnomaly) ? 1 : 0) + (has(self.logsNewValue) ? 1 : 0) + (has(self.logsUniqueCount) ? 1 : 0) + (has(self.sloThreshold) ? 1 : 0) == 1: Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue, logsUniqueCount, sloThreshold must be set</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -274,6 +274,15 @@ Type of alert.
         <td>object</td>
         <td>
           Alerts for when a metric crosses a threshold.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypeslothreshold">sloThreshold</a></b></td>
+        <td>object</td>
+        <td>
+          Alerts for SLO thresholds.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.errorBudget) != has(self.burnRate): Exactly one of errorBudget or burnRate is required</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -3563,6 +3572,414 @@ How to work with undetected values.
 </table>
 
 
+### Alert.spec.alertType.sloThreshold
+<sup><sup>[↩ Parent](#alertspecalerttype)</sup></sup>
+
+
+
+Alerts for SLO thresholds.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecalerttypeslothresholdslodefinition">sloDefinition</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypeslothresholdburnrate">burnRate</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypeslothresholderrorbudget">errorBudget</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.sloDefinition
+<sup><sup>[↩ Parent](#alertspecalerttypeslothreshold)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecalerttypeslothresholdslodefinitionsloref">sloRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.sloDefinition.sloRef
+<sup><sup>[↩ Parent](#alertspecalerttypeslothresholdslodefinition)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecalerttypeslothresholdslodefinitionslorefbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.id) != has(self.name): Exactly one of id or name must be set</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypeslothresholdslodefinitionslorefresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          Reference to a resource within the cluster.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.sloDefinition.sloRef.backendRef
+<sup><sup>[↩ Parent](#alertspecalerttypeslothresholdslodefinitionsloref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.sloDefinition.sloRef.resourceRef
+<sup><sup>[↩ Parent](#alertspecalerttypeslothresholdslodefinitionsloref)</sup></sup>
+
+
+
+Reference to a resource within the cluster.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.burnRate
+<sup><sup>[↩ Parent](#alertspecalerttypeslothreshold)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecalerttypeslothresholdburnraterulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.burnRate.rules[index]
+<sup><sup>[↩ Parent](#alertspecalerttypeslothresholdburnrate)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecalerttypeslothresholdburnraterulesindexcondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Condition to match<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypeslothresholdburnraterulesindexoverride">override</a></b></td>
+        <td>object</td>
+        <td>
+          Alert overrides.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.burnRate.rules[index].condition
+<sup><sup>[↩ Parent](#alertspecalerttypeslothresholdburnraterulesindex)</sup></sup>
+
+
+
+Condition to match
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>threshold</b></td>
+        <td>int or string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.burnRate.rules[index].override
+<sup><sup>[↩ Parent](#alertspecalerttypeslothresholdburnraterulesindex)</sup></sup>
+
+
+
+Alert overrides.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          Priority to override it<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.errorBudget
+<sup><sup>[↩ Parent](#alertspecalerttypeslothreshold)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecalerttypeslothresholderrorbudgetrulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.errorBudget.rules[index]
+<sup><sup>[↩ Parent](#alertspecalerttypeslothresholderrorbudget)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecalerttypeslothresholderrorbudgetrulesindexcondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Condition to match<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypeslothresholderrorbudgetrulesindexoverride">override</a></b></td>
+        <td>object</td>
+        <td>
+          Alert overrides.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.errorBudget.rules[index].condition
+<sup><sup>[↩ Parent](#alertspecalerttypeslothresholderrorbudgetrulesindex)</sup></sup>
+
+
+
+Condition to match
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>threshold</b></td>
+        <td>int or string</td>
+        <td>
+          Threshold to match to.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.errorBudget.rules[index].override
+<sup><sup>[↩ Parent](#alertspecalerttypeslothresholderrorbudgetrulesindex)</sup></sup>
+
+
+
+Alert overrides.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          Priority to override it<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
 ### Alert.spec.alertType.tracingImmediate
 <sup><sup>[↩ Parent](#alertspecalerttype)</sup></sup>
 
@@ -6335,6 +6752,8 @@ Resource Types:
 - [RuleGroup](#rulegroup)
 
 - [Scope](#scope)
+
+- [SLO](#slo)
 
 - [TCOLogsPolicies](#tcologspolicies)
 
@@ -13727,6 +14146,487 @@ ScopeStatus defines the observed state of Coralogix Scope.
 
 ### Scope.status.conditions[index]
 <sup><sup>[↩ Parent](#scopestatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## SLO
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+SLO is the Schema for the slos API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>SLO</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#slospec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          SLOSpec defines the desired state of SLO. For more information, see: https://coralogix.com/platform/apm/slo-management/<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#slostatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          SLOStatus defines the observed state of SLO.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec
+<sup><sup>[↩ Parent](#slo)</sup></sup>
+
+
+
+SLOSpec defines the desired state of SLO. For more information, see: https://coralogix.com/platform/apm/slo-management/
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          SLO name<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#slospecslitype">sliType</a></b></td>
+        <td>object</td>
+        <td>
+          SliType defines the type of SLI used for the SLO. Exactly one of metric or windowBasedMetric must be set.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.requestBasedMetric) != has(self.windowBasedMetric): Exactly one of requestBasedMetricSli or windowBasedMetric must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>targetThresholdPercentage</b></td>
+        <td>int or string</td>
+        <td>
+          TargetThresholdPercentage is the target threshold percentage for the SLO.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#slospecwindow">window</a></b></td>
+        <td>object</td>
+        <td>
+          Window defines the time window for the SLO.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          Optional SLO description<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>labels</b></td>
+        <td>map[string]string</td>
+        <td>
+          Labels are additional labels to be added to the SLO.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliType
+<sup><sup>[↩ Parent](#slospec)</sup></sup>
+
+
+
+SliType defines the type of SLI used for the SLO. Exactly one of metric or windowBasedMetric must be set.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#slospecslityperequestbasedmetric">requestBasedMetric</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#slospecslitypewindowbasedmetric">windowBasedMetric</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliType.requestBasedMetric
+<sup><sup>[↩ Parent](#slospecslitype)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#slospecslityperequestbasedmetricgoodevents">goodEvents</a></b></td>
+        <td>object</td>
+        <td>
+          GoodEvents defines the good events metric.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>groupByLabels</b></td>
+        <td>[]string</td>
+        <td>
+          GroupByLabels defines the labels to group the SLI by.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#slospecslityperequestbasedmetrictotalevents">totalEvents</a></b></td>
+        <td>object</td>
+        <td>
+          TotalEvents defines the total events metric.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliType.requestBasedMetric.goodEvents
+<sup><sup>[↩ Parent](#slospecslityperequestbasedmetric)</sup></sup>
+
+
+
+GoodEvents defines the good events metric.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>query</b></td>
+        <td>string</td>
+        <td>
+          Query is the metric query string.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliType.requestBasedMetric.totalEvents
+<sup><sup>[↩ Parent](#slospecslityperequestbasedmetric)</sup></sup>
+
+
+
+TotalEvents defines the total events metric.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>query</b></td>
+        <td>string</td>
+        <td>
+          Query is the metric query string.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliType.windowBasedMetric
+<sup><sup>[↩ Parent](#slospecslitype)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>comparisonOperator</b></td>
+        <td>enum</td>
+        <td>
+          ComparisonOperator defines the comparison operator for the SLO. Valid values are "unspecified", "greaterThan", "lessThan", "greaterThanOrEquals", and "lessThanOrEquals".<br/>
+          <br/>
+            <i>Enum</i>: unspecified, greaterThan, lessThan, greaterThanOrEquals, lessThanOrEquals<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#slospecslitypewindowbasedmetricquery">query</a></b></td>
+        <td>object</td>
+        <td>
+          Optional query for the metric.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>threshold</b></td>
+        <td>int or string</td>
+        <td>
+          Threshold defines the threshold for the SLO.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>window</b></td>
+        <td>enum</td>
+        <td>
+          Window defines the time window for the SLO. Valid values are "unspecified", "1m", and "5m".<br/>
+          <br/>
+            <i>Enum</i>: unspecified, 1m, 5m<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliType.windowBasedMetric.query
+<sup><sup>[↩ Parent](#slospecslitypewindowbasedmetric)</sup></sup>
+
+
+
+Optional query for the metric.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>query</b></td>
+        <td>string</td>
+        <td>
+          Query is the metric query string.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.window
+<sup><sup>[↩ Parent](#slospec)</sup></sup>
+
+
+
+Window defines the time window for the SLO.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>timeFrame</b></td>
+        <td>enum</td>
+        <td>
+          TimeFrame defines the time frame for the SLO window. Valid values are "unspecified", "7d", "14d", "21d", "28d", and "90d".<br/>
+          <br/>
+            <i>Enum</i>: unspecified, 7d, 14d, 21d, 28d, 90d<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.status
+<sup><sup>[↩ Parent](#slo)</sup></sup>
+
+
+
+SLOStatus defines the observed state of SLO.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#slostatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>revision</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.status.conditions[index]
+<sup><sup>[↩ Parent](#slostatus)</sup></sup>
 
 
 

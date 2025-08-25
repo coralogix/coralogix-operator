@@ -1428,6 +1428,128 @@ spec:
                     - missingValues
                     - rules
                     type: object
+                  sloThreshold:
+                    description: Alerts for SLO thresholds.
+                    properties:
+                      burnRate:
+                        properties:
+                          rules:
+                            items:
+                              properties:
+                                condition:
+                                  description: Condition to match
+                                  properties:
+                                    threshold:
+                                      anyOf:
+                                      - type: integer
+                                      - type: string
+                                      pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                      x-kubernetes-int-or-string: true
+                                  required:
+                                  - threshold
+                                  type: object
+                                override:
+                                  description: Alert overrides.
+                                  properties:
+                                    priority:
+                                      description: Priority to override it
+                                      enum:
+                                      - p1
+                                      - p2
+                                      - p3
+                                      - p4
+                                      - p5
+                                      type: string
+                                  required:
+                                  - priority
+                                  type: object
+                              required:
+                              - condition
+                              type: object
+                            type: array
+                        required:
+                        - rules
+                        type: object
+                      errorBudget:
+                        properties:
+                          rules:
+                            items:
+                              properties:
+                                condition:
+                                  description: Condition to match
+                                  properties:
+                                    threshold:
+                                      anyOf:
+                                      - type: integer
+                                      - type: string
+                                      description: Threshold to match to.
+                                      pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                      x-kubernetes-int-or-string: true
+                                  required:
+                                  - threshold
+                                  type: object
+                                override:
+                                  description: Alert overrides.
+                                  properties:
+                                    priority:
+                                      description: Priority to override it
+                                      enum:
+                                      - p1
+                                      - p2
+                                      - p3
+                                      - p4
+                                      - p5
+                                      type: string
+                                  required:
+                                  - priority
+                                  type: object
+                              required:
+                              - condition
+                              type: object
+                            type: array
+                        required:
+                        - rules
+                        type: object
+                      sloDefinition:
+                        properties:
+                          sloRef:
+                            properties:
+                              backendRef:
+                                properties:
+                                  id:
+                                    type: string
+                                  name:
+                                    type: string
+                                type: object
+                                x-kubernetes-validations:
+                                - message: Exactly one of id or name must be set
+                                  rule: has(self.id) != has(self.name)
+                              resourceRef:
+                                description: Reference to a resource within the cluster.
+                                properties:
+                                  name:
+                                    description: Name of the resource.
+                                    type: string
+                                  namespace:
+                                    description: Kubernetes namespace.
+                                    type: string
+                                required:
+                                - name
+                                type: object
+                            type: object
+                            x-kubernetes-validations:
+                            - message: Exactly one of backendRef or resourceRef must
+                                be set
+                              rule: has(self.backendRef) != has(self.resourceRef)
+                        required:
+                        - sloRef
+                        type: object
+                    required:
+                    - sloDefinition
+                    type: object
+                    x-kubernetes-validations:
+                    - message: Exactly one of errorBudget or burnRate is required
+                      rule: has(self.errorBudget) != has(self.burnRate)
                   tracingImmediate:
                     description: Immediate alerts for traces.
                     properties:
@@ -1764,15 +1886,15 @@ spec:
                 x-kubernetes-validations:
                 - message: Exactly one of logsImmediate, logsThreshold, logsRatioThreshold,
                     logsTimeRelativeThreshold, metricThreshold, tracingThreshold,
-                    tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue
-                    or logsUniqueCount must be set
+                    tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue,
+                    logsUniqueCount, sloThreshold must be set
                   rule: '(has(self.logsImmediate) ? 1 : 0) + (has(self.logsThreshold)
                     ? 1 : 0) + (has(self.logsRatioThreshold) ? 1 : 0) + (has(self.logsTimeRelativeThreshold)
                     ? 1 : 0) + (has(self.metricThreshold) ? 1 : 0) + (has(self.tracingThreshold)
                     ? 1 : 0) + (has(self.tracingImmediate) ? 1 : 0) + (has(self.flow)
                     ? 1 : 0) + (has(self.logsAnomaly) ? 1 : 0) + (has(self.metricAnomaly)
                     ? 1 : 0) + (has(self.logsNewValue) ? 1 : 0) + (has(self.logsUniqueCount)
-                    ? 1 : 0) == 1'
+                    ? 1 : 0) + (has(self.sloThreshold) ? 1 : 0) == 1'
               description:
                 description: Description of the alert
                 type: string
