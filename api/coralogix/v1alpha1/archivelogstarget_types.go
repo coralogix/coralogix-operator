@@ -56,6 +56,9 @@ type ArchiveLogsTargetStatus struct {
 	ID *string `json:"id,omitempty"` // The ID of the archive logs target, if applicable.
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 func (s *ArchiveLogsTargetSpec) ExtractSetTargetRequest(isTargetActive bool) (*cxsdk.SetTargetRequest, error) {
@@ -96,16 +99,30 @@ func (s *ArchiveLogsTargetSpec) ExtractSetTargetRequest(isTargetActive bool) (*c
 	}, nil
 }
 
-func (i *ArchiveLogsTarget) GetConditions() []metav1.Condition {
-	return i.Status.Conditions
+func (a *ArchiveLogsTarget) GetConditions() []metav1.Condition {
+	return a.Status.Conditions
 }
 
-func (i *ArchiveLogsTarget) SetConditions(conditions []metav1.Condition) {
-	i.Status.Conditions = conditions
+func (a *ArchiveLogsTarget) SetConditions(conditions []metav1.Condition) {
+	a.Status.Conditions = conditions
+}
+
+func (a *ArchiveLogsTarget) GetPrintableStatus() string {
+	return a.Status.PrintableStatus
+}
+
+func (a *ArchiveLogsTarget) SetPrintableStatus(printableStatus string) {
+	a.Status.PrintableStatus = printableStatus
+}
+
+func (a *ArchiveLogsTarget) HasIDInStatus() bool {
+	return a.Status.ID != nil && *a.Status.ID != ""
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // ArchiveLogsTarget is the Schema for the Archive Logs API.
 // See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
 //

@@ -367,8 +367,8 @@ func prometheusRuleToRecordingRuleToRuleGroupSet(log logr.Logger, prometheusRule
 	for _, group := range prometheusRule.Spec.Groups {
 		var interval int32 = 60
 
-		if group.Interval != "" {
-			duration, err := time.ParseDuration(string(group.Interval))
+		if group.Interval != nil && *group.Interval != "" {
+			duration, err := time.ParseDuration(string(*group.Interval))
 			if err != nil {
 				log.V(int(zapcore.WarnLevel)).Info("Failed to parse interval duration", "interval", group.Interval, "error", err, "using default interval")
 			}
@@ -425,7 +425,7 @@ func prometheusAlertToMetricThreshold(rule prometheus.Rule, priority coralogixv1
 					Threshold:  resource.MustParse("0"),
 					ForOverPct: 100,
 					OfTheLast: coralogixv1beta1.MetricTimeWindow{
-						DynamicDuration: ptr.To(string(rule.For)),
+						DynamicDuration: ptr.To(string(ptr.Deref(rule.For, ""))),
 					},
 					ConditionType: coralogixv1beta1.MetricThresholdConditionTypeMoreThan,
 				},

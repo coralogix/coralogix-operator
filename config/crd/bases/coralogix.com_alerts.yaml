@@ -14,7 +14,14 @@ spec:
     singular: alert
   scope: Namespaced
   versions:
-  - name: v1beta1
+  - additionalPrinterColumns:
+    - jsonPath: .status.printableStatus
+      name: Status
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1beta1
     schema:
       openAPIV3Schema:
         description: |-
@@ -1931,8 +1938,9 @@ spec:
                 description: Where notifications should be sent to.
                 properties:
                   destinations:
-                    description: The destinations for notifications (Notification
-                      Center feature).
+                    description: |-
+                      Do not use.
+                      Deprecated: This field is deprecated and will be removed in a future version.
                     items:
                       properties:
                         connector:
@@ -2045,12 +2053,12 @@ spec:
                                     - template
                                     type: object
                                   type: array
-                                outputSchemaId:
+                                payloadType:
                                   description: The ID of the output schema to use
                                     for routing notifications
                                   type: string
                               required:
-                              - outputSchemaId
+                              - payloadType
                               type: object
                           type: object
                         triggeredRoutingOverrides:
@@ -2094,12 +2102,12 @@ spec:
                                     - template
                                     type: object
                                   type: array
-                                outputSchemaId:
+                                payloadType:
                                   description: The ID of the output schema to use
                                     for routing notifications
                                   type: string
                               required:
-                              - outputSchemaId
+                              - payloadType
                               type: object
                           type: object
                       required:
@@ -2214,8 +2222,9 @@ spec:
                   description: Notification group to use for alert notifications.
                   properties:
                     destinations:
-                      description: The destinations for notifications (Notification
-                        Center feature).
+                      description: |-
+                        Do not use.
+                        Deprecated: This field is deprecated and will be removed in a future version.
                       items:
                         properties:
                           connector:
@@ -2328,12 +2337,12 @@ spec:
                                       - template
                                       type: object
                                     type: array
-                                  outputSchemaId:
+                                  payloadType:
                                     description: The ID of the output schema to use
                                       for routing notifications
                                     type: string
                                 required:
-                                - outputSchemaId
+                                - payloadType
                                 type: object
                             type: object
                           triggeredRoutingOverrides:
@@ -2377,12 +2386,12 @@ spec:
                                       - template
                                       type: object
                                     type: array
-                                  outputSchemaId:
+                                  payloadType:
                                     description: The ID of the output schema to use
                                       for routing notifications
                                     type: string
                                 required:
-                                - outputSchemaId
+                                - payloadType
                                 type: object
                             type: object
                         required:
@@ -2494,6 +2503,7 @@ spec:
                 default: false
                 type: boolean
               priority:
+                default: p5
                 description: Priority of the alert.
                 enum:
                 - p1
@@ -2611,6 +2621,8 @@ spec:
                   type: object
                 type: array
               id:
+                type: string
+              printableStatus:
                 type: string
             type: object
         type: object

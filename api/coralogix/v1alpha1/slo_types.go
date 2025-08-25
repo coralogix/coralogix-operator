@@ -39,7 +39,7 @@ var (
 	}
 )
 
-// SLOSpec defines the desired state of SLO.
+// SLOSpec defines the desired state of SLO. For more information, see: https://coralogix.com/platform/apm/slo-management/
 type SLOSpec struct {
 	// SLO name
 	Name string `json:"name"`
@@ -129,7 +129,6 @@ var sloTimeFrameMap = map[SloTimeFrame]cxsdk.SloTimeframeEnum{
 	SloTimeFrame14d:         cxsdk.SloTimeframe14Days,
 	SloTimeFrame21d:         cxsdk.SloTimeframe21Days,
 	SloTimeFrame28d:         cxsdk.SloTimeframe28Days,
-	SloTimeFrame90d:         cxsdk.SloTimeframe90Days,
 }
 
 // SLOStatus defines the observed state of SLO.
@@ -150,8 +149,9 @@ type SLO struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   SLOSpec   `json:"spec,omitempty"`
-	Status SLOStatus `json:"status,omitempty"`
+	Spec            SLOSpec   `json:"spec,omitempty"`
+	Status          SLOStatus `json:"status,omitempty"`
+	PrintableStatus string    `json:"printableStatus,omitempty"`
 }
 
 func (spec *SLOSpec) ExtractSLO() (*cxsdk.Slo, error) {
@@ -226,6 +226,18 @@ func (s *SLO) SetConditions(conditions []metav1.Condition) {
 
 func (s *SLO) GetConditions() []metav1.Condition {
 	return s.Status.Conditions
+}
+
+func (s *SLO) GetPrintableStatus() string {
+	return s.PrintableStatus
+}
+
+func (s *SLO) SetPrintableStatus(status string) {
+	s.PrintableStatus = status
+}
+
+func (s *SLO) HasIDInStatus() bool {
+	return s.Status.ID != nil && *s.Status.ID != ""
 }
 
 // +kubebuilder:object:root=true

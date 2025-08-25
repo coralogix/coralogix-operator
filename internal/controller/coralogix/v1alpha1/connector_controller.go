@@ -29,6 +29,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 )
 
@@ -106,14 +107,10 @@ func (r *ConnectorReconciler) HandleDeletion(ctx context.Context, log logr.Logge
 	return nil
 }
 
-func (r *ConnectorReconciler) CheckIDInStatus(obj client.Object) bool {
-	connector := obj.(*coralogixv1alpha1.Connector)
-	return connector.Status.Id != nil && *connector.Status.Id != ""
-}
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *ConnectorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.Connector{}).
+		WithEventFilter(config.GetConfig().Selector.Predicate()).
 		Complete(r)
 }

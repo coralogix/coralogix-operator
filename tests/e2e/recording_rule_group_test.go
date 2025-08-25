@@ -22,6 +22,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -29,6 +30,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 var _ = Describe("RecordingRuleGroupSet", Ordered, func() {
@@ -75,6 +77,8 @@ var _ = Describe("RecordingRuleGroupSet", Ordered, func() {
 			g.Expect(crClient.Get(ctx,
 				types.NamespacedName{Name: recordingRuleGroupSetName, Namespace: testNamespace},
 				fetchedRecordingRuleGroupSet)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedRecordingRuleGroupSet.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedRecordingRuleGroupSet.Status.PrintableStatus).To(Equal("RemoteSynced"))
 			if fetchedRecordingRuleGroupSet.Status.ID != nil {
 				recordingRuleGroupSetID = *fetchedRecordingRuleGroupSet.Status.ID
 				return nil

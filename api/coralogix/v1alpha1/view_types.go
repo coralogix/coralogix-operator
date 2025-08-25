@@ -231,6 +231,9 @@ type ViewStatus struct {
 	ID *string `json:"id,omitempty"`
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 func (v *View) GetConditions() []metav1.Condition {
@@ -241,8 +244,22 @@ func (v *View) SetConditions(conditions []metav1.Condition) {
 	v.Status.Conditions = conditions
 }
 
+func (v *View) GetPrintableStatus() string {
+	return v.Status.PrintableStatus
+}
+
+func (v *View) SetPrintableStatus(printableStatus string) {
+	v.Status.PrintableStatus = printableStatus
+}
+
+func (v *View) HasIDInStatus() bool {
+	return v.Status.ID != nil && *v.Status.ID != ""
+}
+
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // View is the Schema for the Views API.
 // See also https://coralogix.com/docs/user-guides/monitoring-and-insights/explore-screen/custom-views/

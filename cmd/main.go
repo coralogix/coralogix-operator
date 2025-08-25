@@ -48,7 +48,7 @@ import (
 	//+kubebuilder:scaffold:imports
 )
 
-const OperatorVersion = "0.5.0"
+const OperatorVersion = "1.0.0"
 
 var (
 	scheme   = k8sruntime.NewScheme()
@@ -274,16 +274,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&v1alpha1controllers.ExtensionReconciler{
-		ExtensionsClient: clientSet.Extensions(),
-		Interval:         cfg.ReconcileIntervals[utils.ExtensionKind],
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Extension")
-		os.Exit(1)
-	}
-
 	if err = (&v1alpha1controllers.ArchiveLogsTargetReconciler{
 		ArchiveLogsTargetsClient: clientSet.ArchiveLogs(),
+		ArchiveRetentionsClient:  clientSet.ArchiveRetentions(),
 		Interval:                 cfg.ReconcileIntervals[utils.ArchiveLogsTargetKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ArchiveLogsTarget")
@@ -304,6 +297,13 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "SLO")
 		os.Exit(1)
 	}
+	if err = (&v1alpha1controllers.Events2MetricReconciler{
+		E2MClient: clientSet.Events2Metrics(),
+		Interval:  cfg.ReconcileIntervals[utils.Events2MetricKind],
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Events2Metric")
+		os.Exit(1)
+	}
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
@@ -315,7 +315,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := monitoring.SetupMetrics(); err != nil {
+	if err := monitoring.RegisterMetrics(); err != nil {
 		setupLog.Error(err, "unable to set up metrics")
 		os.Exit(1)
 	}

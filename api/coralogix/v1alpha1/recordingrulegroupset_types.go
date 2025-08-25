@@ -108,6 +108,9 @@ type RecordingRuleGroupSetStatus struct {
 	ID *string `json:"id,omitempty"`
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 func (r *RecordingRuleGroupSet) GetConditions() []metav1.Condition {
@@ -118,8 +121,22 @@ func (r *RecordingRuleGroupSet) SetConditions(conditions []metav1.Condition) {
 	r.Status.Conditions = conditions
 }
 
+func (r *RecordingRuleGroupSet) GetPrintableStatus() string {
+	return r.Status.PrintableStatus
+}
+
+func (r *RecordingRuleGroupSet) SetPrintableStatus(printableStatus string) {
+	r.Status.PrintableStatus = printableStatus
+}
+
+func (r *RecordingRuleGroupSet) HasIDInStatus() bool {
+	return r.Status.ID != nil && *r.Status.ID != ""
+}
+
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+//+kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 //+kubebuilder:storageversion
 
 // RecordingRuleGroupSet is the Schema for the RecordingRuleGroupSets API

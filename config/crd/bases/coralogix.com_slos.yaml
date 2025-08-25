@@ -36,8 +36,11 @@ spec:
             type: string
           metadata:
             type: object
+          printableStatus:
+            type: string
           spec:
-            description: SLOSpec defines the desired state of SLO.
+            description: 'SLOSpec defines the desired state of SLO. For more information,
+              see: https://coralogix.com/platform/apm/slo-management/'
             properties:
               description:
                 description: Optional SLO description

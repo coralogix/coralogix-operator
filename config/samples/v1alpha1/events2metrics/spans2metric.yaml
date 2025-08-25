@@ -1,0 +1,27 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Events2Metric
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: spans2metric-sample
+spec:
+  name: "spans2metric-sample"
+  description: "Sample spans2metric"
+  permutationsLimit: 10000
+  metricLabels:
+    - targetLabel: "Status"
+      sourceField: "status"
+    - targetLabel: "Path"
+      sourceField: "http_referer"
+  query:
+    spans:
+      lucene: "remote_addr_enriched:/.*/"
+      applicationNameFilters:
+        - "filter:startsWith:nginx"
+      subsystemNameFilters:
+        - "filter:startsWith:nginx"
+      actionFilters:
+        - "filter:equals:GET"
+      serviceFilters:
+        - "filter:equals:nginx"

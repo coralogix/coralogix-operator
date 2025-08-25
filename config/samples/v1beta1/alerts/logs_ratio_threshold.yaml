@@ -11,7 +11,6 @@ metadata:
 spec:
   name: logs-ratio-threshold alert example
   description: alert from k8s operator
-  priority: p4
   entityLabels:
     alert_type: security
     security_severity: high
@@ -22,15 +21,13 @@ spec:
           luceneQuery: "mod_date:[20030101 TO 20040101]"
           labelFilters:
             applicationName:
-              - value: nginx
-                operation: includes
-              - value: subsystem-name
-                operation: startsWith
+              - operation: includes
+                value: nginx
+              - operation: endsWith
+                value: "1.29"
             subsystemName:
-              - value: warning
-                operation: is
-              - value: info
-                operation: endsWith
+              - operation: is
+                value: webapp
             severity: [ "warning", "info" ]
       numeratorAlias: "numerator"
       denominator:
@@ -38,15 +35,13 @@ spec:
           luceneQuery: "mod_date:[20020101 TO 20030101]"
           labelFilters:
             applicationName:
-              - value: nginx
-                operation: includes
-              - value: subsystem-name
-                operation: startsWith
+              - operation: includes
+                value: nginx
+              - operation: endsWith
+                value: "1.29"
             subsystemName:
-              - value: warning
+              - value: webapp2
                 operation: is
-              - value: info
-                operation: endsWith
             severity: [ "warning", "info" ]
       denominatorAlias: "denominator"
       rules:

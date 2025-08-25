@@ -35,6 +35,7 @@ import (
 // ArchiveLogsTargetReconciler reconciles a ArchiveLogsTarget object
 type ArchiveLogsTargetReconciler struct {
 	ArchiveLogsTargetsClient *cxsdk.ArchiveLogsClient
+	ArchiveRetentionsClient  *cxsdk.ArchiveRetentionsClient
 	Interval                 time.Duration
 }
 
@@ -68,6 +69,10 @@ func (r *ArchiveLogsTargetReconciler) HandleCreation(ctx context.Context, log lo
 	createResponse, err := r.ArchiveLogsTargetsClient.Update(ctx, createRequest)
 	if err != nil {
 		return fmt.Errorf("error on creating remote archivelogstarget: %w", err)
+	}
+	_, err = r.ArchiveRetentionsClient.Activate(ctx, &cxsdk.ActivateRetentionsRequest{})
+	if err != nil {
+		return fmt.Errorf("error activating archive retentions: %w", err)
 	}
 	log.Info("Remote archivelogstarget created", "response", protojson.Format(createResponse))
 
@@ -110,11 +115,6 @@ func (r *ArchiveLogsTargetReconciler) HandleDeletion(ctx context.Context, log lo
 	}
 	log.Info("archivelogstarget deactivated in remote system")
 	return nil
-}
-
-func (r *ArchiveLogsTargetReconciler) CheckIDInStatus(obj client.Object) bool {
-	archiveLogsTarget := obj.(*coralogixv1alpha1.ArchiveLogsTarget)
-	return archiveLogsTarget.Status.ID != nil && *archiveLogsTarget.Status.ID != ""
 }
 
 // SetupWithManager sets up the controller with the Manager.

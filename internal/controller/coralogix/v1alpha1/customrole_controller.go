@@ -106,11 +106,6 @@ func (r *CustomRoleReconciler) HandleDeletion(ctx context.Context, log logr.Logg
 	return nil
 }
 
-func (r *CustomRoleReconciler) CheckIDInStatus(obj client.Object) bool {
-	customRole := obj.(*coralogixv1alpha1.CustomRole)
-	return customRole.Status.ID != nil && *customRole.Status.ID != ""
-}
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *CustomRoleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).

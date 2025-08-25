@@ -1,0 +1,589 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Dashboard
+metadata:
+  name: coralogix-operator-dashboard-json
+spec:
+  json: |
+    {
+    "name": "coralogix-operator",
+    "layout": {
+      "sections": [
+        {
+          "id": {
+            "value": "c18d11e2-5745-4023-a2a4-5a055625668e"
+          },
+          "rows": [
+            {
+              "id": {
+                "value": "61f36612-0df0-4ed2-a313-1e50d2d5204a"
+              },
+              "appearance": {
+                "height": 19
+              },
+              "widgets": [
+                {
+                  "id": {
+                    "value": "8b8df9b0-1ea5-4b52-863b-a3793b2a8319"
+                  },
+                  "title": "Operator Instances Status",
+                  "definition": {
+                    "hexagon": {
+                      "query": {
+                        "metrics": {
+                          "promqlQuery": {
+                            "value": "kube_pod_container_status_running{container = \"coralogix-operator\"} * on(pod) group_left(image) kube_pod_container_info"
+                          },
+                          "filters": [],
+                          "editorMode": "METRICS_QUERY_EDITOR_MODE_TEXT",
+                          "aggregation": "AGGREGATION_UNSPECIFIED",
+                          "promqlQueryType": "PROM_QL_QUERY_TYPE_INSTANT"
+                        }
+                      },
+                      "min": 0,
+                      "max": 100,
+                      "unit": "UNIT_UNSPECIFIED",
+                      "thresholds": [
+                        {
+                          "from": 0,
+                          "color": "var(--c-severity-log-debug)",
+                          "label": "Unknown"
+                        },
+                        {
+                          "from": 0,
+                          "color": "var(--c-severity-log-error)",
+                          "label": "Not Running"
+                        },
+                        {
+                          "from": 1,
+                          "color": "var(--c-severity-log-verbose)",
+                          "label": "Running"
+                        }
+                      ],
+                      "dataModeType": "DATA_MODE_TYPE_HIGH_UNSPECIFIED",
+                      "customUnit": "",
+                      "decimal": 0,
+                      "thresholdType": "THRESHOLD_TYPE_ABSOLUTE",
+                      "legend": {
+                        "isVisible": true,
+                        "columns": [],
+                        "groupByQuery": true,
+                        "placement": "LEGEND_PLACEMENT_AUTO"
+                      },
+                      "legendBy": "LEGEND_BY_THRESHOLDS"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "id": {
+                "value": "c4ef7cb9-fdc5-4305-9a75-ffe550c80dd3"
+              },
+              "appearance": {
+                "height": 20
+              },
+              "widgets": [
+                {
+                  "id": {
+                    "value": "0de04f43-0d4f-4b04-9022-454ab3b16b47"
+                  },
+                  "title": "Running Instances Info",
+                  "definition": {
+                    "dataTable": {
+                      "query": {
+                        "metrics": {
+                          "promqlQuery": {
+                            "value": "cx_operator_build_info\n"
+                          },
+                          "filters": [],
+                          "editorMode": "METRICS_QUERY_EDITOR_MODE_TEXT",
+                          "promqlQueryType": "PROM_QL_QUERY_TYPE_INSTANT"
+                        }
+                      },
+                      "resultsPerPage": 10,
+                      "rowStyle": "ROW_STYLE_UNSPECIFIED",
+                      "columns": [
+                        {
+                          "field": "pod"
+                        },
+                        {
+                          "field": "namespace"
+                        },
+                        {
+                          "field": "service"
+                        },
+                        {
+                          "field": "go_version"
+                        },
+                        {
+                          "field": "coralogix_url"
+                        },
+                        {
+                          "field": "operator_version"
+                        },
+                        {
+                          "field": "application_name"
+                        },
+                        {
+                          "field": "subsystem_name"
+                        }
+                      ],
+                      "dataModeType": "DATA_MODE_TYPE_HIGH_UNSPECIFIED"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "id": {
+                "value": "c6e7f413-f20f-4c24-a8e0-5e43449712f0"
+              },
+              "appearance": {
+                "height": 17
+              },
+              "widgets": [
+                {
+                  "id": {
+                    "value": "469b1720-ed05-4c96-b6af-21f12c4e0b84"
+                  },
+                  "title": "Unynced Custom Resources",
+                  "definition": {
+                    "dataTable": {
+                      "query": {
+                        "metrics": {
+                          "promqlQuery": {
+                            "value": "cx_operator_resource_info{status=\"RemoteUnsynced\"}"
+                          },
+                          "filters": [],
+                          "editorMode": "METRICS_QUERY_EDITOR_MODE_TEXT",
+                          "promqlQueryType": "PROM_QL_QUERY_TYPE_RANGE"
+                        }
+                      },
+                      "resultsPerPage": 20,
+                      "rowStyle": "ROW_STYLE_UNSPECIFIED",
+                      "columns": [
+                        {
+                          "field": "kind"
+                        },
+                        {
+                          "field": "name"
+                        },
+                        {
+                          "field": "exported_namespace"
+                        },
+                        {
+                          "field": "job"
+                        },
+                        {
+                          "field": "prometheus"
+                        },
+                        {
+                          "field": "instance"
+                        },
+                        {
+                          "field": "service"
+                        },
+                        {
+                          "field": "pod"
+                        },
+                        {
+                          "field": "status"
+                        },
+                        {
+                          "field": "endpoint"
+                        },
+                        {
+                          "field": "namespace"
+                        }
+                      ],
+                      "dataModeType": "DATA_MODE_TYPE_HIGH_UNSPECIFIED"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "options": {
+            "internal": {}
+          }
+        },
+        {
+          "id": {
+            "value": "fc3ff0a3-36c0-49c7-9637-827b0952e856"
+          },
+          "rows": [
+            {
+              "id": {
+                "value": "ad3da2de-1c74-4c1c-b8f1-e5fb1a93ebf9"
+              },
+              "appearance": {
+                "height": 27
+              },
+              "widgets": [
+                {
+                  "id": {
+                    "value": "78ee126c-c23a-4cfc-bb1e-2e200433d3fa"
+                  },
+                  "title": "Unsynced Custom Resources by Kind",
+                  "definition": {
+                    "lineChart": {
+                      "legend": {
+                        "isVisible": true,
+                        "columns": [],
+                        "groupByQuery": true,
+                        "placement": "LEGEND_PLACEMENT_AUTO"
+                      },
+                      "tooltip": {
+                        "showLabels": false,
+                        "type": "TOOLTIP_TYPE_ALL"
+                      },
+                      "queryDefinitions": [
+                        {
+                          "id": "eb8665e5-792f-44cf-b380-186e23f01aea",
+                          "query": {
+                            "metrics": {
+                              "promqlQuery": {
+                                "value": "coralogix_operator:unsynced_resources_count:kind"
+                              },
+                              "filters": [],
+                              "editorMode": "METRICS_QUERY_EDITOR_MODE_TEXT"
+                            }
+                          },
+                          "seriesCountLimit": "20",
+                          "unit": "UNIT_UNSPECIFIED",
+                          "scaleType": "SCALE_TYPE_LINEAR",
+                          "isVisible": true,
+                          "colorScheme": "classic",
+                          "resolution": {
+                            "bucketsPresented": 96
+                          },
+                          "dataModeType": "DATA_MODE_TYPE_HIGH_UNSPECIFIED",
+                          "customUnit": "",
+                          "decimal": 2
+                        }
+                      ],
+                      "stackedLine": "STACKED_LINE_UNSPECIFIED"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "id": {
+                "value": "247839e8-1e2c-415c-8737-586b0e969761"
+              },
+              "appearance": {
+                "height": 19
+              },
+              "widgets": [
+                {
+                  "id": {
+                    "value": "0858d132-abce-44bf-af5a-91139295d90e"
+                  },
+                  "title": "Rate of Errors by Instance",
+                  "definition": {
+                    "lineChart": {
+                      "legend": {
+                        "isVisible": true,
+                        "columns": [],
+                        "groupByQuery": true,
+                        "placement": "LEGEND_PLACEMENT_AUTO"
+                      },
+                      "tooltip": {
+                        "showLabels": false,
+                        "type": "TOOLTIP_TYPE_ALL"
+                      },
+                      "queryDefinitions": [
+                        {
+                          "id": "ed448dec-b509-4df7-9f45-275c339780ef",
+                          "query": {
+                            "metrics": {
+                              "promqlQuery": {
+                                "value": "coralogix_operator:reconcile_errors_rate:pod"
+                              },
+                              "filters": [],
+                              "editorMode": "METRICS_QUERY_EDITOR_MODE_TEXT"
+                            }
+                          },
+                          "seriesCountLimit": "20",
+                          "unit": "UNIT_UNSPECIFIED",
+                          "scaleType": "SCALE_TYPE_LINEAR",
+                          "name": "Query 1",
+                          "isVisible": true,
+                          "colorScheme": "classic",
+                          "resolution": {
+                            "bucketsPresented": 96
+                          },
+                          "dataModeType": "DATA_MODE_TYPE_HIGH_UNSPECIFIED",
+                          "customUnit": "",
+                          "decimal": 2
+                        }
+                      ],
+                      "stackedLine": "STACKED_LINE_UNSPECIFIED"
+                    }
+                  }
+                },
+                {
+                  "id": {
+                    "value": "e8d8099e-1fde-4139-9e9e-149660815492"
+                  },
+                  "title": "Rate of Errors by controller",
+                  "definition": {
+                    "lineChart": {
+                      "legend": {
+                        "isVisible": true,
+                        "columns": [],
+                        "groupByQuery": true,
+                        "placement": "LEGEND_PLACEMENT_AUTO"
+                      },
+                      "tooltip": {
+                        "showLabels": false,
+                        "type": "TOOLTIP_TYPE_ALL"
+                      },
+                      "queryDefinitions": [
+                        {
+                          "id": "5445dab6-c5f9-40cf-bcb7-038f835e8ac6",
+                          "query": {
+                            "metrics": {
+                              "promqlQuery": {
+                                "value": "coralogix_operator:reconcile_errors_rate:controller"
+                              },
+                              "filters": [],
+                              "editorMode": "METRICS_QUERY_EDITOR_MODE_TEXT"
+                            }
+                          },
+                          "seriesCountLimit": "20",
+                          "unit": "UNIT_UNSPECIFIED",
+                          "scaleType": "SCALE_TYPE_LINEAR",
+                          "name": "Query 1",
+                          "isVisible": true,
+                          "colorScheme": "classic",
+                          "resolution": {
+                            "bucketsPresented": 96
+                          },
+                          "dataModeType": "DATA_MODE_TYPE_HIGH_UNSPECIFIED",
+                          "customUnit": "",
+                          "decimal": 2
+                        }
+                      ],
+                      "stackedLine": "STACKED_LINE_UNSPECIFIED"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "id": {
+                "value": "3ea4f0b2-9a91-48c1-80d0-8a13100b308e"
+              },
+              "appearance": {
+                "height": 19
+              },
+              "widgets": [
+                {
+                  "id": {
+                    "value": "7fff8037-6d38-4af4-be9c-14c093e97ed5"
+                  },
+                  "title": "CPU usage seconds",
+                  "definition": {
+                    "lineChart": {
+                      "legend": {
+                        "isVisible": true,
+                        "columns": [],
+                        "groupByQuery": true,
+                        "placement": "LEGEND_PLACEMENT_AUTO"
+                      },
+                      "tooltip": {
+                        "showLabels": false,
+                        "type": "TOOLTIP_TYPE_ALL"
+                      },
+                      "queryDefinitions": [
+                        {
+                          "id": "594324e9-c233-4ad4-9ab0-47704fd37c7e",
+                          "query": {
+                            "metrics": {
+                              "promqlQuery": {
+                                "value": "coralogix_operator:cpu_usage_seconds_rate:pod"
+                              },
+                              "filters": [],
+                              "editorMode": "METRICS_QUERY_EDITOR_MODE_TEXT"
+                            }
+                          },
+                          "seriesCountLimit": "20",
+                          "unit": "UNIT_UNSPECIFIED",
+                          "scaleType": "SCALE_TYPE_LINEAR",
+                          "name": "Query 1",
+                          "isVisible": true,
+                          "colorScheme": "classic",
+                          "resolution": {
+                            "bucketsPresented": 96
+                          },
+                          "dataModeType": "DATA_MODE_TYPE_HIGH_UNSPECIFIED",
+                          "customUnit": "",
+                          "decimal": 2
+                        }
+                      ],
+                      "stackedLine": "STACKED_LINE_UNSPECIFIED"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "id": {
+                "value": "2844da1e-cc10-467f-8803-9ce1929d57c6"
+              },
+              "appearance": {
+                "height": 19
+              },
+              "widgets": [
+                {
+                  "id": {
+                    "value": "2e5fb9e8-3852-46eb-814c-a9e024b41e66"
+                  },
+                  "title": "Memory usage percentage",
+                  "definition": {
+                    "lineChart": {
+                      "legend": {
+                        "isVisible": true,
+                        "columns": [],
+                        "groupByQuery": true,
+                        "placement": "LEGEND_PLACEMENT_AUTO"
+                      },
+                      "tooltip": {
+                        "showLabels": false,
+                        "type": "TOOLTIP_TYPE_ALL"
+                      },
+                      "queryDefinitions": [
+                        {
+                          "id": "8776e7d4-b1e6-462b-ad25-591f03d59f49",
+                          "query": {
+                            "metrics": {
+                              "promqlQuery": {
+                                "value": "coralogix_operator:memory_usage_percentage:pod"
+                              },
+                              "filters": [],
+                              "editorMode": "METRICS_QUERY_EDITOR_MODE_TEXT"
+                            }
+                          },
+                          "seriesCountLimit": "20",
+                          "unit": "UNIT_UNSPECIFIED",
+                          "scaleType": "SCALE_TYPE_LINEAR",
+                          "name": "Query 1",
+                          "isVisible": true,
+                          "colorScheme": "classic",
+                          "resolution": {
+                            "bucketsPresented": 96
+                          },
+                          "dataModeType": "DATA_MODE_TYPE_HIGH_UNSPECIFIED",
+                          "customUnit": "",
+                          "decimal": 2
+                        }
+                      ],
+                      "stackedLine": "STACKED_LINE_UNSPECIFIED"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "id": {
+                "value": "3d585704-5cf8-4b2c-a6b8-53b27ad1c125"
+              },
+              "appearance": {
+                "height": 19
+              },
+              "widgets": [
+                {
+                  "id": {
+                    "value": "1fa2f8da-11c3-476d-b707-858927d171e3"
+                  },
+                  "title": "Operator Logs",
+                  "definition": {
+                    "dataTable": {
+                      "query": {
+                        "dataprime": {
+                          "dataprimeQuery": {
+                            "text": "source logs | filter resource.attributes.k8s_container_name == 'coralogix-operator'"
+                          },
+                          "filters": []
+                        }
+                      },
+                      "resultsPerPage": 100,
+                      "rowStyle": "ROW_STYLE_ONE_LINE",
+                      "columns": [
+                        {
+                          "field": "$m.timestamp",
+                          "width": 200
+                        },
+                        {
+                          "field": "$d",
+                          "width": 1283
+                        },
+                        {
+                          "field": "$l.applicationname",
+                          "width": 160
+                        },
+                        {
+                          "field": "$l.subsystemname",
+                          "width": 150
+                        },
+                        {
+                          "field": "$d.name",
+                          "width": 239
+                        },
+                        {
+                          "field": "$d.namespace",
+                          "width": 200
+                        },
+                        {
+                          "field": "$d.msg",
+                          "width": 200
+                        }
+                      ],
+                      "orderBy": {
+                        "field": "$m.timestamp",
+                        "orderDirection": "ORDER_DIRECTION_DESC"
+                      },
+                      "dataModeType": "DATA_MODE_TYPE_HIGH_UNSPECIFIED"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "options": {
+            "internal": {}
+          }
+        }
+      ]
+    },
+    "variables": [],
+    "filters": [
+      {
+        "source": {
+          "metrics": {
+            "label": "namespace",
+            "operator": {
+              "equals": {
+                "selection": {
+                  "list": {
+                    "values": []
+                  }
+                }
+              }
+            }
+          }
+        },
+        "enabled": true,
+        "collapsed": false
+      }
+    ],
+    "relativeTimeFrame": "604800s",
+    "annotations": [],
+    "off": {}
+    }
+    
+  folderRef:
+    backendRef:
+      path: coralogix-operator-dashboards

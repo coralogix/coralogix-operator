@@ -203,6 +203,9 @@ func expandTCOPolicyTagRule(tag TCOPolicyTag) (*cxsdk.TCOPolicyTagRule, error) {
 type TCOTracesPoliciesStatus struct {
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 func (t *TCOTracesPolicies) GetConditions() []metav1.Condition {
@@ -213,6 +216,20 @@ func (t *TCOTracesPolicies) SetConditions(conditions []metav1.Condition) {
 	t.Status.Conditions = conditions
 }
 
+func (t *TCOTracesPolicies) HasIDInStatus() bool {
+	return true
+}
+
+func (t *TCOTracesPolicies) GetPrintableStatus() string {
+	return t.Status.PrintableStatus
+}
+
+func (t *TCOTracesPolicies) SetPrintableStatus(printableStatus string) {
+	t.Status.PrintableStatus = printableStatus
+}
+
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 

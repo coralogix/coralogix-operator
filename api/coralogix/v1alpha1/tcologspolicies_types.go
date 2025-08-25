@@ -199,26 +199,27 @@ func expandArchiveRetention(ctx context.Context, coralogixClientSet *cxsdk.Clien
 		return nil, nil
 	}
 
-	ArchiveRetentions, err := coralogixClientSet.ArchiveRetentions().Get(ctx, &cxsdk.GetRetentionsRequest{})
+	archiveRetentions, err := coralogixClientSet.ArchiveRetentions().Get(ctx, &cxsdk.GetRetentionsRequest{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get archive retentions: %w", err)
 	}
 
-	var archiveRetentionID *wrapperspb.StringValue
-	for _, retention := range ArchiveRetentions.Retentions {
+	for _, retention := range archiveRetentions.Retentions {
 		if *utils.WrapperspbStringToStringPointer(retention.Name) == archiveRetention.BackendRef.Name {
-			archiveRetentionID = retention.Id
-			break
+			return &cxsdk.ArchiveRetention{Id: retention.Id}, nil
 		}
 	}
 
-	return &cxsdk.ArchiveRetention{Id: archiveRetentionID}, nil
+	return nil, fmt.Errorf("archive retention with name %s not found", archiveRetention.BackendRef.Name)
 }
 
 // TCOLogsPoliciesStatus defines the observed state of TCOLogsPolicies.
 type TCOLogsPoliciesStatus struct {
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 func (t *TCOLogsPolicies) GetConditions() []metav1.Condition {
@@ -229,8 +230,22 @@ func (t *TCOLogsPolicies) SetConditions(conditions []metav1.Condition) {
 	t.Status.Conditions = conditions
 }
 
+func (t *TCOLogsPolicies) GetPrintableStatus() string {
+	return t.Status.PrintableStatus
+}
+
+func (t *TCOLogsPolicies) SetPrintableStatus(printableStatus string) {
+	t.Status.PrintableStatus = printableStatus
+}
+
+func (t *TCOLogsPolicies) HasIDInStatus() bool {
+	return true
+}
+
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // TCOLogsPolicies is the Schema for the TCOLogsPolicies API.
 // NOTE: This resource performs an atomic overwrite of all existing TCO logs policies
 // in the backend. Any existing policies not defined in this resource will be

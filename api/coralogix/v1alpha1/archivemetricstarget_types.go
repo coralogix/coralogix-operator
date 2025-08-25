@@ -66,6 +66,9 @@ type ArchiveMetricsTargetStatus struct {
 	ID *string `json:"id,omitempty"` // The ID of the archive metrics target, if applicable.
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 func (s *ArchiveMetricsTargetSpec) ExtractConfigureTenantRequest() (*cxsdk.ConfigureTenantRequest, error) {
@@ -126,16 +129,30 @@ func (s *ArchiveMetricsTargetSpec) ExtractUpdateRequest() (*cxsdk.UpdateTenantRe
 	}, nil
 }
 
-func (i *ArchiveMetricsTarget) GetConditions() []metav1.Condition {
-	return i.Status.Conditions
+func (a *ArchiveMetricsTarget) GetConditions() []metav1.Condition {
+	return a.Status.Conditions
 }
 
-func (i *ArchiveMetricsTarget) SetConditions(conditions []metav1.Condition) {
-	i.Status.Conditions = conditions
+func (a *ArchiveMetricsTarget) SetConditions(conditions []metav1.Condition) {
+	a.Status.Conditions = conditions
+}
+
+func (a *ArchiveMetricsTarget) GetPrintableStatus() string {
+	return a.Status.PrintableStatus
+}
+
+func (a *ArchiveMetricsTarget) SetPrintableStatus(printableStatus string) {
+	a.Status.PrintableStatus = printableStatus
+}
+
+func (a *ArchiveMetricsTarget) HasIDInStatus() bool {
+	return a.Status.ID != nil && *a.Status.ID != ""
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // ArchiveLogsTarget is the Schema for the archive logs targets API.
 // See also https://coralogix.com/docs/archive-s3-bucket-forever
 //

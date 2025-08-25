@@ -42,10 +42,10 @@ const (
 	ConnectorKind             = "Connector"
 	PresetKind                = "Preset"
 	GlobalRouterKind          = "GlobalRouter"
-	ExtensionKind             = "Extension"
 	ArchiveLogsTargetKind     = "ArchiveLogsTarget"
 	ArchiveMetricsTargetKind  = "ArchiveMetricsTarget"
 	SLOKind                   = "SLO"
+	Events2MetricKind         = "Events2Metric"
 
 	TrackPrometheusRuleAlertsLabelKey         = "app.coralogix.com/track-alerting-rules"
 	TrackPrometheusRuleRecordingRulesLabelKey = "app.coralogix.com/track-recording-rules"

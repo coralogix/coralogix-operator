@@ -65,6 +65,9 @@ type ApiKeyStatus struct {
 	Id *string `json:"id,omitempty"`
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 func (a *ApiKey) GetConditions() []metav1.Condition {
@@ -75,8 +78,22 @@ func (a *ApiKey) SetConditions(conditions []metav1.Condition) {
 	a.Status.Conditions = conditions
 }
 
+func (a *ApiKey) GetPrintableStatus() string {
+	return a.Status.PrintableStatus
+}
+
+func (a *ApiKey) SetPrintableStatus(printableStatus string) {
+	a.Status.PrintableStatus = printableStatus
+}
+
+func (a *ApiKey) HasIDInStatus() bool {
+	return a.Status.Id != nil && *a.Status.Id != ""
+}
+
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // ApiKey is the Schema for the ApiKeys API.
 // See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-keys/
 //

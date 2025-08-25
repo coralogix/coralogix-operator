@@ -437,6 +437,9 @@ type OutboundWebhookStatus struct {
 	ExternalID *string `json:"externalId"`
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 func (in *OutboundWebhook) GetConditions() []metav1.Condition {
@@ -447,8 +450,22 @@ func (in *OutboundWebhook) SetConditions(conditions []metav1.Condition) {
 	in.Status.Conditions = conditions
 }
 
+func (in *OutboundWebhook) GetPrintableStatus() string {
+	return in.Status.PrintableStatus
+}
+
+func (in *OutboundWebhook) SetPrintableStatus(printableStatus string) {
+	in.Status.PrintableStatus = printableStatus
+}
+
+func (in *OutboundWebhook) HasIDInStatus() bool {
+	return in.Status.ID != nil && *in.Status.ID != ""
+}
+
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+//+kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // OutboundWebhook is the Schema for the API
 // See also https://coralogix.com/docs/user-guides/alerting/outbound-webhooks/aws-eventbridge-outbound-webhook/

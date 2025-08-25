@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/coralogix/coralogix-operator/internal/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
@@ -35,6 +34,7 @@ import (
 	"github.com/coralogix/coralogix-operator/api/coralogix"
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 var _ = Describe("Alert", Ordered, func() {
@@ -87,55 +87,6 @@ var _ = Describe("Alert", Ordered, func() {
 							},
 						},
 					},
-					Destinations: []coralogixv1beta1.NotificationDestination{
-						{
-							Connector: coralogixv1beta1.NCRef{
-								ResourceRef: &coralogixv1beta1.ResourceRef{
-									Name: connectorName,
-								},
-							},
-							Preset: &coralogixv1beta1.NCRef{
-								ResourceRef: &coralogixv1beta1.ResourceRef{
-									Name: presetName,
-								},
-							},
-							NotifyOn: coralogixv1beta1.NotifyOnTriggeredAndResolved,
-							TriggeredRoutingOverrides: coralogixv1beta1.NotificationRouting{
-								ConfigOverrides: &coralogixv1beta1.SourceOverrides{
-									OutputSchemaId: "slack_structured",
-									ConnectorConfigFields: []coralogixv1beta1.ConfigField{
-										{
-											FieldName: "channel",
-											Template:  "{{alertDef.priority}}",
-										},
-									},
-									MessageConfigFields: []coralogixv1beta1.ConfigField{
-										{
-											FieldName: "title",
-											Template:  "TRIGGERED PRESET OVERRIDE: {{alert.status}} {{alertDef.priority}} - {{alertDef.name}}",
-										},
-									},
-								},
-							},
-							ResolvedRoutingOverrides: &coralogixv1beta1.NotificationRouting{
-								ConfigOverrides: &coralogixv1beta1.SourceOverrides{
-									OutputSchemaId: "slack_structured",
-									ConnectorConfigFields: []coralogixv1beta1.ConfigField{
-										{
-											FieldName: "channel",
-											Template:  "{{alertDef.priority}}",
-										},
-									},
-									MessageConfigFields: []coralogixv1beta1.ConfigField{
-										{
-											FieldName: "title",
-											Template:  "RESOLVED PRESET OVERRIDE: {{alert.status}} {{alertDef.priority}} - {{alertDef.name}}",
-										},
-									},
-								},
-							},
-						},
-					},
 				},
 
 				Schedule: &coralogixv1beta1.AlertSchedule{
@@ -164,6 +115,9 @@ var _ = Describe("Alert", Ordered, func() {
 										DynamicDuration: ptr.To("12h"),
 									},
 								},
+								Override: &coralogixv1beta1.AlertOverride{
+									Priority: coralogixv1beta1.AlertPriorityP1,
+								},
 							},
 						},
 					},
@@ -179,17 +133,20 @@ var _ = Describe("Alert", Ordered, func() {
 
 			g.Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 
+			g.Expect(fetchedAlert.Status.PrintableStatus).To(Equal("RemoteSynced"))
+
 			g.Expect(fetchedAlert.Status.ID).ToNot(BeNil())
 
 			alertID = *fetchedAlert.Status.ID
 
 		}, time.Minute, time.Second).Should(Succeed())
 
-		By("Verifying Alert exists in Coralogix backend")
-		Eventually(func() error {
-			_, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(alertID)})
-			return err
-		}, time.Minute, time.Second).Should(Succeed())
+		By("Verifying Alert exists in Coralogix backend with the correct priority")
+		Eventually(func(g Gomega) cxsdk.AlertDefPriority {
+			alertDef, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(alertID)})
+			g.Expect(err).ToNot(HaveOccurred())
+			return alertDef.GetAlertDef().GetAlertDefProperties().GetPriority()
+		}, time.Minute, time.Second).Should(Equal(cxsdk.AlertDefPriorityP1))
 	})
 
 	It("Should be updated successfully", func(ctx context.Context) {
@@ -294,6 +251,8 @@ var _ = Describe("Alert", Ordered, func() {
 
 			g.Expect(meta.IsStatusConditionFalse(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 
+			g.Expect(fetchedAlert.Status.PrintableStatus).To(Equal("RemoteUnsynced"))
+
 		}, time.Minute, time.Second).Should(Succeed())
 
 		webhook := &coralogixv1alpha1.OutboundWebhook{
@@ -329,6 +288,8 @@ var _ = Describe("Alert", Ordered, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: newAlert.Name, Namespace: newAlert.Namespace}, fetchedAlert)).To(Succeed())
 
 			g.Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+
+			g.Expect(fetchedAlert.Status.PrintableStatus).To(Equal("RemoteSynced"))
 		}, time.Minute, time.Second).Should(Succeed())
 	})
 

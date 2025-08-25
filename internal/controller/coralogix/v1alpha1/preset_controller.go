@@ -29,6 +29,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 )
 
@@ -106,14 +107,10 @@ func (r *PresetReconciler) HandleDeletion(ctx context.Context, log logr.Logger, 
 	return nil
 }
 
-func (r *PresetReconciler) CheckIDInStatus(obj client.Object) bool {
-	preset := obj.(*coralogixv1alpha1.Preset)
-	return preset.Status.Id != nil && *preset.Status.Id != ""
-}
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *PresetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.Preset{}).
+		WithEventFilter(config.GetConfig().Selector.Predicate()).
 		Complete(r)
 }

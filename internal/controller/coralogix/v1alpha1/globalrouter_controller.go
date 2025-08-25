@@ -29,6 +29,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 )
 
@@ -106,14 +107,10 @@ func (r *GlobalRouterReconciler) HandleDeletion(ctx context.Context, log logr.Lo
 	return nil
 }
 
-func (r *GlobalRouterReconciler) CheckIDInStatus(obj client.Object) bool {
-	globalRouter := obj.(*coralogixv1alpha1.GlobalRouter)
-	return globalRouter.Status.Id != nil && *globalRouter.Status.Id != ""
-}
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *GlobalRouterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.GlobalRouter{}).
+		WithEventFilter(config.GetConfig().Selector.Predicate()).
 		Complete(r)
 }

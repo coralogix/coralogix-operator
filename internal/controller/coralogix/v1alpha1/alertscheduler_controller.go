@@ -107,11 +107,6 @@ func (r *AlertSchedulerReconciler) HandleDeletion(ctx context.Context, log logr.
 	return nil
 }
 
-func (r *AlertSchedulerReconciler) CheckIDInStatus(obj client.Object) bool {
-	alertScheduler := obj.(*coralogixv1alpha1.AlertScheduler)
-	return alertScheduler.Status.ID != nil && *alertScheduler.Status.ID != ""
-}
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *AlertSchedulerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).

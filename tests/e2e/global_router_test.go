@@ -7,7 +7,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"google.golang.org/grpc/codes"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -15,6 +15,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 var _ = Describe("GlobalRouter", Ordered, func() {
@@ -48,6 +49,8 @@ var _ = Describe("GlobalRouter", Ordered, func() {
 		fetchedGlobalRouter := &coralogixv1alpha1.GlobalRouter{}
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: globalRouterName, Namespace: testNamespace}, fetchedGlobalRouter)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedGlobalRouter.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedGlobalRouter.Status.PrintableStatus).To(Equal("RemoteSynced"))
 			if fetchedGlobalRouter.Status.Id != nil {
 				globalRouterID = *fetchedGlobalRouter.Status.Id
 				return nil
@@ -81,11 +84,12 @@ var _ = Describe("GlobalRouter", Ordered, func() {
 		By("Deleting the GlobalRouter")
 		Expect(crClient.Delete(ctx, globalRouter)).To(Succeed())
 
-		By("Verifying GlobalRouter is deleted from Coralogix backend")
-		Eventually(func() codes.Code {
-			_, err := notificationsClient.GetGlobalRouter(ctx, &cxsdk.GetGlobalRouterRequest{Id: globalRouterID})
-			return cxsdk.Code(err)
-		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
+		By("Verifying GlobalRouter is empty in Coralogix backend")
+		Eventually(func() []*cxsdk.RoutingRule {
+			router, err := notificationsClient.GetGlobalRouter(ctx, &cxsdk.GetGlobalRouterRequest{Id: globalRouterID})
+			Expect(err).ToNot(HaveOccurred())
+			return router.GetRouter().Rules
+		}, time.Minute, time.Second).Should(BeEmpty())
 	})
 })
 
@@ -126,7 +130,7 @@ func getSampleGlobalRouter(globalRouterName, testNamespace, slackConnectorName, 
 							},
 							Preset: &coralogixv1alpha1.NCRef{
 								BackendRef: &coralogixv1alpha1.NCBackendRef{
-									ID: "preset_system_slack_alerts_detailed",
+									ID: "preset_system_slack_alerts_basic",
 								},
 							},
 						},

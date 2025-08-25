@@ -113,6 +113,7 @@ AlertSpec defines the desired state of a Coralogix Alert. For more info check - 
           Priority of the alert.<br/>
           <br/>
             <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+            <i>Default</i>: p5<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -4894,7 +4895,8 @@ Where notifications should be sent to.
         <td><b><a href="#alertspecnotificationgroupdestinationsindex">destinations</a></b></td>
         <td>[]object</td>
         <td>
-          The destinations for notifications (Notification Center feature).<br/>
+          Do not use.
+Deprecated: This field is deprecated and will be removed in a future version.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5123,7 +5125,7 @@ The routing configuration to override from the connector/preset for triggered no
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>outputSchemaId</b></td>
+        <td><b>payloadType</b></td>
         <td>string</td>
         <td>
           The ID of the output schema to use for routing notifications<br/>
@@ -5354,7 +5356,7 @@ Optional routing configuration to override from the connector/preset for resolve
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>outputSchemaId</b></td>
+        <td><b>payloadType</b></td>
         <td>string</td>
         <td>
           The ID of the output schema to use for routing notifications<br/>
@@ -5713,7 +5715,8 @@ Notification group to use for alert notifications.
         <td><b><a href="#alertspecnotificationgroupexcessindexdestinationsindex">destinations</a></b></td>
         <td>[]object</td>
         <td>
-          The destinations for notifications (Notification Center feature).<br/>
+          Do not use.
+Deprecated: This field is deprecated and will be removed in a future version.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5942,7 +5945,7 @@ The routing configuration to override from the connector/preset for triggered no
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>outputSchemaId</b></td>
+        <td><b>payloadType</b></td>
         <td>string</td>
         <td>
           The ID of the output schema to use for routing notifications<br/>
@@ -6173,7 +6176,7 @@ Optional routing configuration to override from the connector/preset for resolve
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>outputSchemaId</b></td>
+        <td><b>payloadType</b></td>
         <td>string</td>
         <td>
           The ID of the output schema to use for routing notifications<br/>
@@ -6625,6 +6628,13 @@ AlertStatus defines the observed state of Alert
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -6725,7 +6735,7 @@ Resource Types:
 
 - [DashboardsFolder](#dashboardsfolder)
 
-- [Extension](#extension)
+- [Events2Metric](#events2metric)
 
 - [GlobalRouter](#globalrouter)
 
@@ -7494,6 +7504,13 @@ AlertSchedulerStatus defines the observed state of AlertScheduler.
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -7753,6 +7770,13 @@ ApiKeyStatus defines the observed state of ApiKey.
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
         <td>string</td>
         <td>
           <br/>
@@ -8043,6 +8067,13 @@ The S3 target configuration.
         <td>string</td>
         <td>
           ID is the identifier of the archive logs target.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -8393,6 +8424,13 @@ The S3 target configuration.
         <td>string</td>
         <td>
           ID is the identifier of the archive metrics target.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -8752,6 +8790,13 @@ ConnectorStatus defines the observed state of Connector.
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -8962,6 +9007,13 @@ CustomRoleStatus defines the observed state of CustomRole.
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
         <td>string</td>
         <td>
           <br/>
@@ -9340,6 +9392,13 @@ DashboardStatus defines the observed state of Dashboard.
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -9594,6 +9653,13 @@ DashboardsFolderStatus defines the observed state of DashboardsFolder.
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -9674,7 +9740,7 @@ with respect to the current state of the instance.<br/>
       </tr></tbody>
 </table>
 
-## Extension
+## Events2Metric
 <sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
 
 
@@ -9682,7 +9748,10 @@ with respect to the current state of the instance.<br/>
 
 
 
-Extension is the Schema for the extensions API.
+See also https://coralogix.com/docs/user-guides/monitoring-and-insights/events2metrics/
+
+**Added in v0.5.0**
+Events2Metric is the Schema for the events2metrics API.
 
 <table>
     <thead>
@@ -9702,7 +9771,7 @@ Extension is the Schema for the extensions API.
       <tr>
       <td><b>kind</b></td>
       <td>string</td>
-      <td>Extension</td>
+      <td>Events2Metric</td>
       <td>true</td>
       </tr>
       <tr>
@@ -9711,31 +9780,29 @@ Extension is the Schema for the extensions API.
       <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
       <td>true</td>
       </tr><tr>
-        <td><b><a href="#extensionspec">spec</a></b></td>
+        <td><b><a href="#events2metricspec">spec</a></b></td>
         <td>object</td>
         <td>
-          ExtensionSpec defines the desired state of a Coralogix extension.
-See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/<br/>
+          Events2MetricSpec defines the desired state of Events2Metric.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#extensionstatus">status</a></b></td>
+        <td><b><a href="#events2metricstatus">status</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Events2MetricStatus defines the observed state of Events2Metric.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
 </table>
 
 
-### Extension.spec
-<sup><sup>[↩ Parent](#extension)</sup></sup>
+### Events2Metric.spec
+<sup><sup>[↩ Parent](#events2metric)</sup></sup>
 
 
 
-ExtensionSpec defines the desired state of a Coralogix extension.
-See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/
+Events2MetricSpec defines the desired state of Events2Metric.
 
 <table>
     <thead>
@@ -9747,32 +9814,203 @@ See also https://coralogix.com/docs/user-guides/getting-started/packages-and-ext
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>id</b></td>
+        <td><b>name</b></td>
         <td>string</td>
         <td>
-          Id of the extension to deploy.<br/>
+          Name of the E2M<br/>
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>version</b></td>
-        <td>string</td>
+        <td><b><a href="#events2metricspecquery">query</a></b></td>
+        <td>object</td>
         <td>
-          Desired version of the extension.<br/>
+          Spans or logs type query<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.spans) != has(self.logs): Exactly one of spans or logs must be set</li>
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>itemIds</b></td>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          Description of the E2M<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#events2metricspecmetricfieldsindex">metricFields</a></b></td>
+        <td>[]object</td>
+        <td>
+          E2M metric fields<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#events2metricspecmetriclabelsindex">metricLabels</a></b></td>
+        <td>[]object</td>
+        <td>
+          E2M metric labels<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>permutationsLimit</b></td>
+        <td>integer</td>
+        <td>
+          Represents the limit of the permutations<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Events2Metric.spec.query
+<sup><sup>[↩ Parent](#events2metricspec)</sup></sup>
+
+
+
+Spans or logs type query
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#events2metricspecquerylogs">logs</a></b></td>
+        <td>object</td>
+        <td>
+          Logs query for logs2metrics E2M<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#events2metricspecqueryspans">spans</a></b></td>
+        <td>object</td>
+        <td>
+          Spans query for spans2metrics E2M<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Events2Metric.spec.query.logs
+<sup><sup>[↩ Parent](#events2metricspecquery)</sup></sup>
+
+
+
+Logs query for logs2metrics E2M
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>alias</b></td>
+        <td>string</td>
+        <td>
+          alias<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>applicationNameFilters</b></td>
         <td>[]string</td>
         <td>
-          Item IDs to be used by the extension.<br/>
+          application name filters<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>lucene</b></td>
+        <td>string</td>
+        <td>
+          lucene query<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>severityFilters</b></td>
+        <td>[]enum</td>
+        <td>
+          severity type filters<br/>
+          <br/>
+            <i>Enum</i>: debug, verbose, info, warn, error, critical<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>subsystemNameFilters</b></td>
+        <td>[]string</td>
+        <td>
+          subsystem names filters<br/>
         </td>
         <td>false</td>
       </tr></tbody>
 </table>
 
 
-### Extension.status
-<sup><sup>[↩ Parent](#extension)</sup></sup>
+### Events2Metric.spec.query.spans
+<sup><sup>[↩ Parent](#events2metricspecquery)</sup></sup>
+
+
+
+Spans query for spans2metrics E2M
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>actionFilters</b></td>
+        <td>[]string</td>
+        <td>
+          action filters<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>applicationNameFilters</b></td>
+        <td>[]string</td>
+        <td>
+          application name filters<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>lucene</b></td>
+        <td>string</td>
+        <td>
+          lucene query<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>serviceFilters</b></td>
+        <td>[]string</td>
+        <td>
+          service filters<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>subsystemNameFilters</b></td>
+        <td>[]string</td>
+        <td>
+          subsystem name filters<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Events2Metric.spec.metricFields[index]
+<sup><sup>[↩ Parent](#events2metricspec)</sup></sup>
 
 
 
@@ -9788,7 +10026,228 @@ See also https://coralogix.com/docs/user-guides/getting-started/packages-and-ext
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#extensionstatusconditionsindex">conditions</a></b></td>
+        <td><b>sourceField</b></td>
+        <td>string</td>
+        <td>
+          Source field<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>targetBaseMetricName</b></td>
+        <td>string</td>
+        <td>
+          Target metric field alias name<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#events2metricspecmetricfieldsindexaggregationsindex">aggregations</a></b></td>
+        <td>[]object</td>
+        <td>
+          Represents Aggregation type list<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Events2Metric.spec.metricFields[index].aggregations[index]
+<sup><sup>[↩ Parent](#events2metricspecmetricfieldsindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#events2metricspecmetricfieldsindexaggregationsindexaggmetadata">aggMetadata</a></b></td>
+        <td>object</td>
+        <td>
+          Aggregate metadata, samples or histogram type
+Types that are valid to be assigned to AggMetadata: AggregationTypeSamples, AggregationTypeHistogram<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.samples) != has(self.histogram): Exactly one of samples or histogram must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>aggType</b></td>
+        <td>enum</td>
+        <td>
+          Aggregation type<br/>
+          <br/>
+            <i>Enum</i>: min, max, count, avg, sum, histogram, samples<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Is enabled. True by default<br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>targetMetricName</b></td>
+        <td>string</td>
+        <td>
+          Target metric field alias name<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Events2Metric.spec.metricFields[index].aggregations[index].aggMetadata
+<sup><sup>[↩ Parent](#events2metricspecmetricfieldsindexaggregationsindex)</sup></sup>
+
+
+
+Aggregate metadata, samples or histogram type
+Types that are valid to be assigned to AggMetadata: AggregationTypeSamples, AggregationTypeHistogram
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#events2metricspecmetricfieldsindexaggregationsindexaggmetadatahistogram">histogram</a></b></td>
+        <td>object</td>
+        <td>
+          E2M aggregate histogram type metadata<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#events2metricspecmetricfieldsindexaggregationsindexaggmetadatasamples">samples</a></b></td>
+        <td>object</td>
+        <td>
+          E2M sample type metadata<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Events2Metric.spec.metricFields[index].aggregations[index].aggMetadata.histogram
+<sup><sup>[↩ Parent](#events2metricspecmetricfieldsindexaggregationsindexaggmetadata)</sup></sup>
+
+
+
+E2M aggregate histogram type metadata
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>buckets</b></td>
+        <td>[]int or string</td>
+        <td>
+          Buckets of the E2M<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Events2Metric.spec.metricFields[index].aggregations[index].aggMetadata.samples
+<sup><sup>[↩ Parent](#events2metricspecmetricfieldsindexaggregationsindexaggmetadata)</sup></sup>
+
+
+
+E2M sample type metadata
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>sampleType</b></td>
+        <td>enum</td>
+        <td>
+          E2MAggSamplesSampleType defines the type of sample aggregation to be performed.<br/>
+          <br/>
+            <i>Enum</i>: min, max<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Events2Metric.spec.metricLabels[index]
+<sup><sup>[↩ Parent](#events2metricspec)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>sourceField</b></td>
+        <td>string</td>
+        <td>
+          Metric label source field<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>targetLabel</b></td>
+        <td>string</td>
+        <td>
+          Metric label target alias name<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Events2Metric.status
+<sup><sup>[↩ Parent](#events2metric)</sup></sup>
+
+
+
+Events2MetricStatus defines the observed state of Events2Metric.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#events2metricstatusconditionsindex">conditions</a></b></td>
         <td>[]object</td>
         <td>
           <br/>
@@ -9801,12 +10260,19 @@ See also https://coralogix.com/docs/user-guides/getting-started/packages-and-ext
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
 
-### Extension.status.conditions[index]
-<sup><sup>[↩ Parent](#extensionstatus)</sup></sup>
+### Events2Metric.status.conditions[index]
+<sup><sup>[↩ Parent](#events2metricstatus)</sup></sup>
 
 
 
@@ -10552,6 +11018,13 @@ GlobalRouterStatus defines the observed state of GlobalRouter.
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -10923,6 +11396,13 @@ GroupStatus defines the observed state of Group.
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -11128,6 +11608,13 @@ IntegrationStatus defines the observed state of Integration.
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
         <td>string</td>
         <td>
           <br/>
@@ -11878,6 +12365,13 @@ OutboundWebhookStatus defines the observed state of OutboundWebhook
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -12277,6 +12771,13 @@ PresetStatus defines the observed state of Preset.
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -12561,6 +13062,13 @@ RecordingRuleGroupSetStatus defines the observed state of RecordingRuleGroupSet
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
         <td>string</td>
         <td>
           <br/>
@@ -13365,6 +13873,13 @@ RuleGroupStatus defines the observed state of RuleGroup
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -13618,6 +14133,13 @@ ScopeStatus defines the observed state of Coralogix Scope.
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -13735,10 +14257,17 @@ SLO is the Schema for the slos API.
       <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
       <td>true</td>
       </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#slospec">spec</a></b></td>
         <td>object</td>
         <td>
-          SLOSpec defines the desired state of SLO.<br/>
+          SLOSpec defines the desired state of SLO. For more information, see: https://coralogix.com/platform/apm/slo-management/<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -13757,7 +14286,7 @@ SLO is the Schema for the slos API.
 
 
 
-SLOSpec defines the desired state of SLO.
+SLOSpec defines the desired state of SLO. For more information, see: https://coralogix.com/platform/apm/slo-management/
 
 <table>
     <thead>
@@ -14482,6 +15011,13 @@ TCOLogsPoliciesStatus defines the observed state of TCOLogsPolicies.
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -14999,6 +15535,13 @@ TCOTracesPoliciesStatus defines the observed state of TCOTracesPolicies.
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -15185,6 +15728,13 @@ ViewFolderStatus defines the observed state of ViewFolder.
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
         <td>string</td>
         <td>
           <br/>
@@ -15659,6 +16209,13 @@ ViewStatus defines the observed state of View.
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
         <td>string</td>
         <td>
           <br/>

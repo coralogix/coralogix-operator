@@ -23,6 +23,7 @@ import (
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/wrapperspb"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -30,6 +31,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 var _ = Describe("OutboundWebhook", Ordered, func() {
@@ -68,6 +70,8 @@ var _ = Describe("OutboundWebhook", Ordered, func() {
 		fetchedOutboundWebhook := &coralogixv1alpha1.OutboundWebhook{}
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: outboundWebhookName, Namespace: testNamespace}, fetchedOutboundWebhook)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedOutboundWebhook.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedOutboundWebhook.Status.PrintableStatus).To(Equal("RemoteSynced"))
 			if fetchedOutboundWebhook.Status.ID != nil {
 				outboundWebhookID = *fetchedOutboundWebhook.Status.ID
 				return nil

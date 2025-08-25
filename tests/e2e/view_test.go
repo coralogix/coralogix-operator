@@ -24,6 +24,7 @@ import (
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/wrapperspb"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -31,6 +32,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 var _ = Describe("View", Ordered, func() {
@@ -71,6 +73,8 @@ var _ = Describe("View", Ordered, func() {
 		Eventually(func(g Gomega) error {
 			view := &coralogixv1alpha1.View{}
 			g.Expect(k8sClient.Get(ctx, types.NamespacedName{Name: viewName, Namespace: testNamespace}, view)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(view.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(view.Status.PrintableStatus).To(Equal("RemoteSynced"))
 			if view.Status.ID == nil {
 				return fmt.Errorf("view ID not set")
 			}

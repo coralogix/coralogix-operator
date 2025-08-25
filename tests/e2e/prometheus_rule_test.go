@@ -18,7 +18,6 @@ import (
 	"context"
 	"time"
 
-	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -29,6 +28,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 )
 
 var _ = Describe("PrometheusRule", Ordered, func() {
@@ -63,12 +63,12 @@ var _ = Describe("PrometheusRule", Ordered, func() {
 				Groups: []prometheus.RuleGroup{
 					{
 						Name:     "example.rules",
-						Interval: "60s",
+						Interval: prometheus.DurationPointer("60s"),
 						Rules: []prometheus.Rule{
 							{
 								Alert: alertName,
 								Expr:  intstr.FromString("up == 0"), // Short test expression
-								For:   "5m",
+								For:   prometheus.DurationPointer("5m"),
 								Annotations: map[string]string{
 									"description": "example alert description",
 								},

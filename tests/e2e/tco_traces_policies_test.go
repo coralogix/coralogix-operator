@@ -20,6 +20,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -27,6 +28,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 var _ = Describe("TCOTracesPolicies", func() {
@@ -93,6 +95,14 @@ var _ = Describe("TCOTracesPolicies", func() {
 	It("Should create TCOTracesPolicies successfully", FlakeAttempts(3), func(ctx context.Context) {
 		By("Creating TCOTracesPolicies")
 		Expect(crClient.Create(ctx, TCOTracesPolicies)).To(Succeed())
+
+		By("Verifying TCOTracesPolicies is synced")
+		Eventually(func(g Gomega) {
+			fetchedTCOTracesPolicies := &coralogixv1alpha1.TCOTracesPolicies{}
+			g.Expect(crClient.Get(ctx, client.ObjectKey{Name: tracesPolicyName, Namespace: testNamespace}, fetchedTCOTracesPolicies)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedTCOTracesPolicies.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedTCOTracesPolicies.Status.PrintableStatus).To(Equal("RemoteSynced"))
+		}, time.Minute, time.Second).Should(Succeed())
 
 		By("Verifying policies exist in the Coralogix backend")
 		Eventually(func() []*cxsdk.TCOPolicy {

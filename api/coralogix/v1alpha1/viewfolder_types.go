@@ -30,6 +30,9 @@ type ViewFolderStatus struct {
 	ID *string `json:"id,omitempty"`
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 func (v *ViewFolder) GetConditions() []metav1.Condition {
@@ -40,8 +43,22 @@ func (v *ViewFolder) SetConditions(conditions []metav1.Condition) {
 	v.Status.Conditions = conditions
 }
 
+func (v *ViewFolder) GetPrintableStatus() string {
+	return v.Status.PrintableStatus
+}
+
+func (v *ViewFolder) SetPrintableStatus(printableStatus string) {
+	v.Status.PrintableStatus = printableStatus
+}
+
+func (v *ViewFolder) HasIDInStatus() bool {
+	return v.Status.ID != nil && *v.Status.ID != ""
+}
+
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // ViewFolder is the Schema for the viewfolders API.
 type ViewFolder struct {

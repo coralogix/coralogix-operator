@@ -112,11 +112,6 @@ func (r *ViewFolderReconciler) HandleDeletion(ctx context.Context, log logr.Logg
 	return nil
 }
 
-func (r *ViewFolderReconciler) CheckIDInStatus(obj client.Object) bool {
-	viewFolder := obj.(*coralogixv1alpha1.ViewFolder)
-	return viewFolder.Status.ID != nil && *viewFolder.Status.ID != ""
-}
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *ViewFolderReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).

@@ -40,6 +40,8 @@ import (
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:storageversion
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // Alert is the Schema for the Alerts API.
 //
 // Note that this is only for the latest version of the Alerts API. If your account has been created before March 2025, make sure that your account has been migrated before using advanced features of alerts.
@@ -254,6 +256,7 @@ type AlertSpec struct {
 	Description string `json:"description,omitempty"`
 
 	// Priority of the alert.
+	// +kubebuilder:default=p5
 	Priority AlertPriority `json:"priority"`
 
 	// Enable/disable the alert.
@@ -298,6 +301,9 @@ type AlertStatus struct {
 
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 func (a *Alert) GetConditions() []metav1.Condition {
@@ -306,6 +312,18 @@ func (a *Alert) GetConditions() []metav1.Condition {
 
 func (a *Alert) SetConditions(conditions []metav1.Condition) {
 	a.Status.Conditions = conditions
+}
+
+func (a *Alert) HasIDInStatus() bool {
+	return a.Status.ID != nil && *a.Status.ID != ""
+}
+
+func (a *Alert) GetPrintableStatus() string {
+	return a.Status.PrintableStatus
+}
+
+func (a *Alert) SetPrintableStatus(printableStatus string) {
+	a.Status.PrintableStatus = printableStatus
 }
 
 // +kubebuilder:validation:Pattern=`^UTC[+-]\d{2}$`
@@ -377,7 +395,8 @@ type NotificationGroup struct {
 	// +optional
 	Webhooks []WebhookSettings `json:"webhooks"`
 
-	// The destinations for notifications (Notification Center feature).
+	// Do not use.
+	// Deprecated: This field is deprecated and will be removed in a future version.
 	// +optional
 	Destinations []NotificationDestination `json:"destinations,omitempty"`
 
@@ -509,7 +528,7 @@ type NotificationRouting struct {
 
 type SourceOverrides struct {
 	// The ID of the output schema to use for routing notifications
-	OutputSchemaId string `json:"outputSchemaId"`
+	PayloadType string `json:"payloadType"`
 
 	// Notification message configuration fields.
 	// +optional
@@ -1740,7 +1759,7 @@ func expandRoutingOverrides(overrides NotificationRouting) *cxsdk.SourceOverride
 	sourceOverrides := &cxsdk.SourceOverrides{
 		ConnectorConfigFields: connectorOverrides,
 		MessageConfigFields:   presetOverrides,
-		OutputSchemaId:        overrides.ConfigOverrides.OutputSchemaId,
+		PayloadType:           overrides.ConfigOverrides.PayloadType,
 	}
 
 	return sourceOverrides
@@ -1908,16 +1927,16 @@ func expandAlertTypeDefinition(properties *cxsdk.AlertDefProperties, definition 
 		properties.TypeDefinition = expandLogsImmediate(logsImmediate)
 		properties.Type = cxsdk.AlertDefTypeLogsImmediateOrUnspecified
 	} else if logsThreshold := definition.LogsThreshold; logsThreshold != nil {
-		properties.TypeDefinition = expandLogsThreshold(logsThreshold)
+		properties.TypeDefinition = expandLogsThreshold(logsThreshold, properties.Priority)
 		properties.Type = cxsdk.AlertDefTypeLogsThreshold
 	} else if logsRatioThreshold := definition.LogsRatioThreshold; logsRatioThreshold != nil {
-		properties.TypeDefinition = expandLogsRatioThreshold(logsRatioThreshold)
+		properties.TypeDefinition = expandLogsRatioThreshold(logsRatioThreshold, properties.Priority)
 		properties.Type = cxsdk.AlertDefTypeLogsRatioThreshold
 	} else if logsTimeRelativeThreshold := definition.LogsTimeRelativeThreshold; logsTimeRelativeThreshold != nil {
-		properties.TypeDefinition = expandLogsTimeRelativeThreshold(logsTimeRelativeThreshold)
+		properties.TypeDefinition = expandLogsTimeRelativeThreshold(logsTimeRelativeThreshold, properties.Priority)
 		properties.Type = cxsdk.AlertDefTypeLogsTimeRelativeThreshold
 	} else if metricThreshold := definition.MetricThreshold; metricThreshold != nil {
-		properties.TypeDefinition = expandMetricThreshold(metricThreshold)
+		properties.TypeDefinition = expandMetricThreshold(metricThreshold, properties.Priority)
 		properties.Type = cxsdk.AlertDefTypeMetricThreshold
 	} else if tracingThreshold := definition.TracingThreshold; tracingThreshold != nil {
 		properties.TypeDefinition = expandTracingThreshold(tracingThreshold)
@@ -2075,7 +2094,7 @@ func expandSloErrorBudgetRules(rules []SloThresholdRule) []*cxsdk.SloThresholdRu
 func expandSloThresholdRule(rule SloThresholdRule) *cxsdk.SloThresholdRule {
 	return &cxsdk.SloThresholdRule{
 		Condition: expandSloThresholdRuleCondition(rule.Condition),
-		Override:  expandAlertOverride(rule.Override),
+		Override:  expandAlertOverride(rule.Override, cxsdk.AlertDefPriorityP1),
 	}
 }
 
@@ -2096,7 +2115,7 @@ func expandSloBurnRate(rules []BurnRateRule) []*cxsdk.SloThresholdRule {
 func expandSloBurnRateRule(rule BurnRateRule) *cxsdk.SloThresholdRule {
 	return &cxsdk.SloThresholdRule{
 		Condition: expandSloBurnRateRuleCondition(rule.Condition),
-		Override:  expandAlertOverride(rule.Override),
+		Override:  expandAlertOverride(rule.Override, cxsdk.AlertDefPriorityP1),
 	}
 }
 
@@ -2506,12 +2525,12 @@ func expandTracingTimeWindow(timeWindow TracingTimeWindow) *cxsdk.TracingTimeWin
 	}
 }
 
-func expandMetricThreshold(threshold *MetricThreshold) *cxsdk.AlertDefPropertiesMetricThreshold {
+func expandMetricThreshold(threshold *MetricThreshold, priority cxsdk.AlertDefPriority) *cxsdk.AlertDefPropertiesMetricThreshold {
 	return &cxsdk.AlertDefPropertiesMetricThreshold{
 		MetricThreshold: &cxsdk.MetricThresholdType{
 			MetricFilter:               expandMetricFilter(threshold.MetricFilter),
 			MissingValues:              expandMetricMissingValues(&threshold.MissingValues),
-			Rules:                      expandMetricThresholdRules(threshold.Rules),
+			Rules:                      expandMetricThresholdRules(threshold.Rules, priority),
 			UndetectedValuesManagement: expandUndetectedValuesManagement(threshold.UndetectedValuesManagement),
 		},
 	}
@@ -2525,19 +2544,19 @@ func expandMetricFilter(metricFilter MetricFilter) *cxsdk.MetricFilter {
 	}
 }
 
-func expandMetricThresholdRules(rules []MetricThresholdRule) []*cxsdk.MetricThresholdRule {
+func expandMetricThresholdRules(rules []MetricThresholdRule, priority cxsdk.AlertDefPriority) []*cxsdk.MetricThresholdRule {
 	result := make([]*cxsdk.MetricThresholdRule, len(rules))
 	for i := range rules {
-		result[i] = expandMetricThresholdRule(rules[i])
+		result[i] = expandMetricThresholdRule(rules[i], priority)
 	}
 
 	return result
 }
 
-func expandMetricThresholdRule(rule MetricThresholdRule) *cxsdk.MetricThresholdRule {
+func expandMetricThresholdRule(rule MetricThresholdRule, priority cxsdk.AlertDefPriority) *cxsdk.MetricThresholdRule {
 	return &cxsdk.MetricThresholdRule{
 		Condition: expandMetricThresholdCondition(rule.Condition),
-		Override:  expandAlertOverride(rule.Override),
+		Override:  expandAlertOverride(rule.Override, priority),
 	}
 }
 
@@ -2605,34 +2624,34 @@ func expandLogsImmediate(immediate *LogsImmediate) *cxsdk.AlertDefPropertiesLogs
 	}
 }
 
-func expandLogsThreshold(logsThreshold *LogsThreshold) *cxsdk.AlertDefPropertiesLogsThreshold {
+func expandLogsThreshold(logsThreshold *LogsThreshold, priority cxsdk.AlertDefPriority) *cxsdk.AlertDefPropertiesLogsThreshold {
 	return &cxsdk.AlertDefPropertiesLogsThreshold{
 		LogsThreshold: &cxsdk.LogsThresholdType{
 			LogsFilter:                 expandLogsFilter(logsThreshold.LogsFilter),
 			UndetectedValuesManagement: expandUndetectedValuesManagement(logsThreshold.UndetectedValuesManagement),
-			Rules:                      expandLogsThresholdRules(logsThreshold.Rules),
+			Rules:                      expandLogsThresholdRules(logsThreshold.Rules, priority),
 			NotificationPayloadFilter:  coralogix.StringSliceToWrappedStringSlice(logsThreshold.NotificationPayloadFilter),
 		},
 	}
 }
 
-func expandLogsRatioThreshold(logsRatioThreshold *LogsRatioThreshold) *cxsdk.AlertDefPropertiesLogsRatioThreshold {
+func expandLogsRatioThreshold(logsRatioThreshold *LogsRatioThreshold, priority cxsdk.AlertDefPriority) *cxsdk.AlertDefPropertiesLogsRatioThreshold {
 	return &cxsdk.AlertDefPropertiesLogsRatioThreshold{
 		LogsRatioThreshold: &cxsdk.LogsRatioThresholdType{
 			Numerator:        expandLogsFilter(&logsRatioThreshold.Numerator),
 			NumeratorAlias:   wrapperspb.String(logsRatioThreshold.NumeratorAlias),
 			Denominator:      expandLogsFilter(&logsRatioThreshold.Denominator),
 			DenominatorAlias: wrapperspb.String(logsRatioThreshold.DenominatorAlias),
-			Rules:            expandLogsRatioThresholdRules(logsRatioThreshold.Rules),
+			Rules:            expandLogsRatioThresholdRules(logsRatioThreshold.Rules, priority),
 		},
 	}
 }
 
-func expandLogsTimeRelativeThreshold(threshold *LogsTimeRelativeThreshold) *cxsdk.AlertDefPropertiesLogsTimeRelativeThreshold {
+func expandLogsTimeRelativeThreshold(threshold *LogsTimeRelativeThreshold, priority cxsdk.AlertDefPriority) *cxsdk.AlertDefPropertiesLogsTimeRelativeThreshold {
 	return &cxsdk.AlertDefPropertiesLogsTimeRelativeThreshold{
 		LogsTimeRelativeThreshold: &cxsdk.LogsTimeRelativeThresholdType{
 			LogsFilter:                 expandLogsFilter(&threshold.LogsFilter),
-			Rules:                      expandLogsTimeRelativeRules(threshold.Rules),
+			Rules:                      expandLogsTimeRelativeRules(threshold.Rules, priority),
 			IgnoreInfinity:             wrapperspb.Bool(threshold.IgnoreInfinity),
 			NotificationPayloadFilter:  coralogix.StringSliceToWrappedStringSlice(threshold.NotificationPayloadFilter),
 			UndetectedValuesManagement: expandUndetectedValuesManagement(threshold.UndetectedValuesManagement),
@@ -2640,19 +2659,19 @@ func expandLogsTimeRelativeThreshold(threshold *LogsTimeRelativeThreshold) *cxsd
 	}
 }
 
-func expandLogsTimeRelativeRules(rules []LogsTimeRelativeRule) []*cxsdk.LogsTimeRelativeRule {
+func expandLogsTimeRelativeRules(rules []LogsTimeRelativeRule, priority cxsdk.AlertDefPriority) []*cxsdk.LogsTimeRelativeRule {
 	result := make([]*cxsdk.LogsTimeRelativeRule, len(rules))
 	for i := range rules {
-		result[i] = expandLogsTimeRelativeRule(rules[i])
+		result[i] = expandLogsTimeRelativeRule(rules[i], priority)
 	}
 
 	return result
 }
 
-func expandLogsTimeRelativeRule(rule LogsTimeRelativeRule) *cxsdk.LogsTimeRelativeRule {
+func expandLogsTimeRelativeRule(rule LogsTimeRelativeRule, priority cxsdk.AlertDefPriority) *cxsdk.LogsTimeRelativeRule {
 	return &cxsdk.LogsTimeRelativeRule{
 		Condition: expandLogsTimeRelativeCondition(rule.Condition),
-		Override:  expandAlertOverride(rule.Override),
+		Override:  expandAlertOverride(rule.Override, priority),
 	}
 }
 
@@ -2664,18 +2683,18 @@ func expandLogsTimeRelativeCondition(condition LogsTimeRelativeCondition) *cxsdk
 	}
 }
 
-func expandLogsRatioThresholdRules(rules []LogsRatioThresholdRule) []*cxsdk.LogsRatioRules {
+func expandLogsRatioThresholdRules(rules []LogsRatioThresholdRule, priority cxsdk.AlertDefPriority) []*cxsdk.LogsRatioRules {
 	result := make([]*cxsdk.LogsRatioRules, len(rules))
 	for i := range rules {
-		result[i] = expandLogsRatioThresholdRule(rules[i])
+		result[i] = expandLogsRatioThresholdRule(rules[i], priority)
 	}
 	return result
 }
 
-func expandLogsRatioThresholdRule(rule LogsRatioThresholdRule) *cxsdk.LogsRatioRules {
+func expandLogsRatioThresholdRule(rule LogsRatioThresholdRule, priority cxsdk.AlertDefPriority) *cxsdk.LogsRatioRules {
 	return &cxsdk.LogsRatioRules{
 		Condition: expandLogsRatioCondition(rule.Condition),
-		Override:  expandAlertOverride(rule.Override),
+		Override:  expandAlertOverride(rule.Override, priority),
 	}
 }
 
@@ -2695,9 +2714,11 @@ func expandLogsRatioTimeWindow(timeWindow LogsRatioTimeWindow) *cxsdk.LogsRatioT
 	}
 }
 
-func expandAlertOverride(override *AlertOverride) *cxsdk.AlertDefPriorityOverride {
+func expandAlertOverride(override *AlertOverride, priority cxsdk.AlertDefPriority) *cxsdk.AlertDefPriorityOverride {
 	if override == nil {
-		return &cxsdk.AlertDefPriorityOverride{}
+		return &cxsdk.AlertDefPriorityOverride{
+			Priority: priority,
+		}
 	}
 
 	return &cxsdk.AlertDefPriorityOverride{
@@ -2764,19 +2785,19 @@ func expandUndetectedValuesManagement(management *UndetectedValuesManagement) *c
 	}
 }
 
-func expandLogsThresholdRules(rules []LogsThresholdRule) []*cxsdk.LogsThresholdRule {
+func expandLogsThresholdRules(rules []LogsThresholdRule, priority cxsdk.AlertDefPriority) []*cxsdk.LogsThresholdRule {
 	result := make([]*cxsdk.LogsThresholdRule, len(rules))
 	for i := range rules {
-		result[i] = expandLogsThresholdRule(rules[i])
+		result[i] = expandLogsThresholdRule(rules[i], priority)
 	}
 
 	return result
 }
 
-func expandLogsThresholdRule(rule LogsThresholdRule) *cxsdk.LogsThresholdRule {
+func expandLogsThresholdRule(rule LogsThresholdRule, priority cxsdk.AlertDefPriority) *cxsdk.LogsThresholdRule {
 	return &cxsdk.LogsThresholdRule{
 		Condition: expandLogsThresholdRuleCondition(rule.Condition),
-		Override:  expandAlertOverride(rule.Override),
+		Override:  expandAlertOverride(rule.Override, priority),
 	}
 }
 

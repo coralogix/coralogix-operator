@@ -3,19 +3,21 @@ package e2e
 import (
 	"context"
 	"fmt"
-	"google.golang.org/protobuf/types/known/wrapperspb"
-	"k8s.io/apimachinery/pkg/runtime"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/protobuf/types/known/wrapperspb"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 var _ = Describe("Integration", Ordered, func() {
@@ -64,6 +66,8 @@ var _ = Describe("Integration", Ordered, func() {
 		fetchedIntegration := &coralogixv1alpha1.Integration{}
 		Eventually(func(g Gomega) error {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: integrationName, Namespace: testNamespace}, fetchedIntegration)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedIntegration.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedIntegration.Status.PrintableStatus).To(Equal("RemoteSynced"))
 			if fetchedIntegration.Status.Id != nil {
 				integrationID = *fetchedIntegration.Status.Id
 				return nil

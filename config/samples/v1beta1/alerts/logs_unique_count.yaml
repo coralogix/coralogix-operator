@@ -13,7 +13,7 @@ spec:
   description: alert from k8s operator
   priority: p2
   groupByKeys:
-    - response_time
+    - http_status
   alertType:
     logsUniqueCount:
       logsFilter:
@@ -21,10 +21,10 @@ spec:
           luceneQuery: remote_addr_enriched:/.*/
           labelFilters:
             applicationName:
-              - value: nginx
-                operation: includes
-              - value: subsystem-name
-                operation: startsWith
+              - operation: includes
+                value: nginx
+              - operation: endsWith
+                value: "1.29"
             subsystemName:
               - value: warning
                 operation: is
@@ -38,7 +38,7 @@ spec:
               specificValue: 5m
             threshold: 100
       maxUniqueCountPerGroupByKey: 100
-      uniqueCountKeypath: "response_time"
+      uniqueCountKeypath: "http_status"
   notificationGroup:
     webhooks:
       - retriggeringPeriod:

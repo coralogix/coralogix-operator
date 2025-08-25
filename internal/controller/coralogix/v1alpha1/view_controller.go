@@ -111,11 +111,6 @@ func (r *ViewReconciler) HandleDeletion(ctx context.Context, log logr.Logger, ob
 	return nil
 }
 
-func (r *ViewReconciler) CheckIDInStatus(obj client.Object) bool {
-	view := obj.(*coralogixv1alpha1.View)
-	return view.Status.ID != nil && *view.Status.ID != ""
-}
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *ViewReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
