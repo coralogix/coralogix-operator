@@ -9,8 +9,8 @@ metadata:
     app.kubernetes.io/created-by: coralogix-operator
   name: router-sample
 spec:
-  name: router-sample
-  description: This is a sample global router
+  name: global router
+  description: global router example
   entityType: alerts
   fallback:
     - connector:
@@ -38,11 +38,11 @@ spec:
     - name: second-rule
       condition: "alertDef.priority == \"P2\""
       targets:
-          - connector:
-              resourceRef:
-                name: slack-sample
-            preset:
-              backendRef:
-                id: preset_system_slack_alerts_basic
+        - connector:
+            resourceRef:
+              name: slack-sample
+          preset:
+            backendRef:
+              id: preset_system_slack_alerts_basic
 
 

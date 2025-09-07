@@ -67,17 +67,17 @@ var _ = Describe("GlobalRouter", Ordered, func() {
 
 	It("Should be updated successfully", func(ctx context.Context) {
 		By("Patching the GlobalRouter")
-		newRouterName := "Updated Global Router Name"
+		newRuleName := "Updated Rule Name"
 		modifiedRouter := globalRouter.DeepCopy()
-		modifiedRouter.Spec.Name = newRouterName
+		modifiedRouter.Spec.Rules[0].Name = newRuleName
 		Expect(crClient.Patch(ctx, modifiedRouter, client.MergeFrom(globalRouter))).To(Succeed())
 
 		By("Verifying GlobalRouter is updated in Coralogix backend")
 		Eventually(func() string {
 			getRes, err := notificationsClient.GetGlobalRouter(ctx, &cxsdk.GetGlobalRouterRequest{Id: globalRouterID})
 			Expect(err).ToNot(HaveOccurred())
-			return getRes.GetRouter().GetName()
-		}, time.Minute, time.Second).Should(Equal(newRouterName))
+			return *getRes.GetRouter().Rules[0].Name
+		}, time.Minute, time.Second).Should(Equal(newRuleName))
 	})
 
 	It("Should be deleted successfully", func(ctx context.Context) {
@@ -100,8 +100,8 @@ func getSampleGlobalRouter(globalRouterName, testNamespace, slackConnectorName, 
 			Namespace: testNamespace,
 		},
 		Spec: coralogixv1alpha1.GlobalRouterSpec{
-			Name:        globalRouterName,
-			Description: "This is a sample global router",
+			Name:        "global router",
+			Description: "global router example",
 			EntityType:  "alerts",
 			Fallback: []coralogixv1alpha1.RoutingTarget{
 				{
