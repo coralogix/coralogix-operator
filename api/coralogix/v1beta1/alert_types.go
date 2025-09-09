@@ -429,7 +429,7 @@ type IntegrationType struct {
 
 	// Recipients for the notification.
 	// +optional
-	Recipients []string `json:"recipients"`
+	Recipients []string `json:"recipients,omitempty"`
 }
 
 // Reference to the integration.
@@ -442,7 +442,7 @@ type IntegrationRef struct {
 
 	// Resource reference for use with the alert notification.
 	// +optional
-	ResourceRef *ResourceRef `json:"resourceRef"`
+	ResourceRef *ResourceRef `json:"resourceRef,omitempty"`
 }
 
 // Outbound webhook reference.
@@ -867,7 +867,7 @@ type MetricThreshold struct {
 
 	// How to work with undetected values.
 	// +optional
-	UndetectedValuesManagement *UndetectedValuesManagement `json:"undetectedValuesManagement"`
+	UndetectedValuesManagement *UndetectedValuesManagement `json:"undetectedValuesManagement,omitempty"`
 }
 
 // Filter for metrics
