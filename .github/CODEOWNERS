@@ -1,1 +1,7 @@
-* @coralogix/xdk-maintainers
+* @coralogix/team-iac
+/README.md @coralogix/team-technical-writers
+/docs/metrics.md @coralogix/team-technical-writers
+/charts/coralogix-operator/README.md @coralogix/team-technical-writers
+/docs/prometheus-integration.md @coralogix/team-technical-writers
+/docs/api.md @coralogix/team-technical-writers
+/tools/cxo-observer/README.md @coralogix/team-technical-writers
