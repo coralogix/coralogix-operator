@@ -15,6 +15,8 @@
 package v1alpha1
 
 import (
+	"fmt"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
@@ -65,8 +67,8 @@ func (s *ArchiveLogsTargetSpec) ExtractSetTargetRequest(isTargetActive bool) (*c
 	if s.S3Target != nil {
 		return &cxsdk.SetTargetRequest{
 			IsActive: isTargetActive,
-			TargetSpec: &cxsdk.SetTargetRequestS3{
-				S3: &cxsdk.S3TargetSpec{
+			TargetSpec: &cxsdk.SetS3TargetRequest{
+				S3: &cxsdk.Target{
 					Region: &s.S3Target.Region,
 					Bucket: s.S3Target.BucketName,
 				},
@@ -74,29 +76,7 @@ func (s *ArchiveLogsTargetSpec) ExtractSetTargetRequest(isTargetActive bool) (*c
 		}, nil
 	}
 
-	var bucketType cxsdk.IbmBucketType
-	if s.IbmCosTarget.BucketType != nil {
-		switch *s.IbmCosTarget.BucketType {
-		case "UNSPECIFIED":
-			bucketType = cxsdk.IbmBucketTypeUnspecified
-		case "EXTERNAL":
-			bucketType = cxsdk.IbmBucketTypeExternal
-		case "INTERNAL":
-			bucketType = cxsdk.IbmBucketTypeInternal
-		}
-	}
-
-	return &cxsdk.SetTargetRequest{
-		IsActive: true,
-		TargetSpec: &cxsdk.SetTargetRequestIbmCos{
-			IbmCos: &cxsdk.IBMCosTargetSpec{
-				BucketCrn:  s.IbmCosTarget.BucketCrn,
-				Endpoint:   s.IbmCosTarget.Endpoint,
-				ServiceCrn: s.IbmCosTarget.ServiceCrn,
-				BucketType: &bucketType,
-			},
-		},
-	}, nil
+	return nil, fmt.Errorf("S3Target cannot be nil")
 }
 
 func (a *ArchiveLogsTarget) GetConditions() []metav1.Condition {

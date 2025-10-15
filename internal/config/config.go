@@ -30,6 +30,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	openapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
@@ -59,7 +61,8 @@ var (
 
 type Config struct {
 	CoralogixApiKey             string
-	CoralogixUrl                string
+	CoralogixGrpcUrl            string
+	CoralogixOpenApiUrl         string
 	Selector                    Selector
 	ReconcileIntervals          map[string]time.Duration
 	PrometheusRuleController    bool
@@ -114,7 +117,13 @@ func InitConfig(setupLog logr.Logger) *Config {
 		ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 		var err error
-		cfg.CoralogixUrl, err = getCoralogixUrl(strings.ToUpper(region), domain)
+		cfg.CoralogixGrpcUrl, err = getCoralogixGrpcUrl(strings.ToUpper(region), domain)
+		if err != nil {
+			setupLog.Error(err, "invalid arguments for running operator")
+			os.Exit(1)
+		}
+
+		cfg.CoralogixOpenApiUrl, err = getCoralogixOpenApiUrl(strings.ToUpper(region), domain)
 		if err != nil {
 			setupLog.Error(err, "invalid arguments for running operator")
 			os.Exit(1)
@@ -189,13 +198,9 @@ func parseReconcileIntervals(intervals map[string]*string) (map[string]time.Dura
 	return result, nil
 }
 
-func getCoralogixUrl(region, domain string) (string, error) {
-	if region != "" && domain != "" {
-		return "", fmt.Errorf("region and domain flags are mutually exclusive")
-	}
-
-	if region == "" && domain == "" {
-		return "", fmt.Errorf("region or domain must be set")
+func getCoralogixGrpcUrl(region, domain string) (string, error) {
+	if err := validateRegionAndDomain(region, domain); err != nil {
+		return "", err
 	}
 
 	if region != "" {
@@ -206,6 +211,33 @@ func getCoralogixUrl(region, domain string) (string, error) {
 	}
 
 	return domain, nil
+}
+
+func getCoralogixOpenApiUrl(region, domain string) (string, error) {
+	if err := validateRegionAndDomain(region, domain); err != nil {
+		return "", err
+	}
+
+	if region != "" {
+		if !slices.Contains(validRegions, region) {
+			return "", fmt.Errorf("region value is '%s', but can be one of %q", region, validRegions)
+		}
+		return openapicxsdk.URLFromRegion(strings.ToLower(region)), nil
+	}
+
+	return openapicxsdk.URLFromDomain(domain), nil
+}
+
+func validateRegionAndDomain(region, domain string) error {
+	if region != "" && domain != "" {
+		return fmt.Errorf("region and domain flags are mutually exclusive")
+	}
+
+	if region == "" && domain == "" {
+		return fmt.Errorf("region or domain must be set")
+	}
+
+	return nil
 }
 
 func InitClient(c client.Client) {

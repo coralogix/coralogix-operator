@@ -41,6 +41,7 @@ rules:
   - globalrouters
   - groups
   - integrations
+  - ipaccesses
   - outboundwebhooks
   - presets
   - recordingrulegroupsets
@@ -75,6 +76,7 @@ rules:
   - globalrouters/finalizers
   - groups/finalizers
   - integrations/finalizers
+  - ipaccesses/finalizers
   - outboundwebhooks/finalizers
   - presets/finalizers
   - recordingrulegroupsets/finalizers
@@ -103,6 +105,7 @@ rules:
   - globalrouters/status
   - groups/status
   - integrations/status
+  - ipaccesses/status
   - outboundwebhooks/status
   - presets/status
   - recordingrulegroupsets/status

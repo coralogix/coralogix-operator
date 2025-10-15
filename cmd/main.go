@@ -36,6 +36,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	openapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
@@ -122,9 +123,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	clientSet := cxsdk.NewClientSet(cxsdk.NewCallPropertiesCreatorOperator(
-		strings.ToLower(cfg.CoralogixUrl),
+	clientSet := cxsdk.NewClientSet(cxsdk.NewSDKCallPropertiesCreatorOperator(
+		strings.ToLower(cfg.CoralogixGrpcUrl),
 		cxsdk.NewAuthContext(cfg.CoralogixApiKey, cfg.CoralogixApiKey),
+		OperatorVersion))
+
+	oapiClientSet := openapicxsdk.NewClientSet(openapicxsdk.NewSDKCallPropertiesCreatorOperator(
+		strings.ToLower(cfg.CoralogixOpenApiUrl),
+		cfg.CoralogixApiKey,
 		OperatorVersion))
 
 	config.InitClient(mgr.GetClient())
@@ -304,6 +310,13 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Events2Metric")
 		os.Exit(1)
 	}
+	if err = (&v1alpha1controllers.IPAccessReconciler{
+		IPAccesssClient: oapiClientSet.IPAccess(),
+		Interval:        cfg.ReconcileIntervals[utils.IPAccess],
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "IPAccess")
+		os.Exit(1)
+	}
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
@@ -323,7 +336,7 @@ func main() {
 	monitoring.SetOperatorInfoMetric(
 		runtime.Version(),
 		OperatorVersion,
-		cxsdk.CoralogixGrpcEndpointFromRegion(strings.ToLower(cfg.CoralogixUrl)),
+		cxsdk.CoralogixGrpcEndpointFromRegion(strings.ToLower(cfg.CoralogixGrpcUrl)),
 	)
 
 	setupLog.Info("starting manager")

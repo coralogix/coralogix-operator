@@ -37,7 +37,11 @@ type Clients struct {
 
 func (c *Clients) InitCoralogixClientSet(targetURL, teamsLevelAPIKey string, userLevelAPIKey string) {
 	if c.CxClientSet == nil {
-		cpc := cxsdk.NewCallPropertiesCreator(targetURL, cxsdk.NewAuthContext(teamsLevelAPIKey, userLevelAPIKey))
+		cpc := cxsdk.NewSDKCallPropertiesCreatorOperator(
+			targetURL,
+			cxsdk.NewAuthContext(teamsLevelAPIKey, userLevelAPIKey),
+			"cxo-e2e",
+		)
 		c.CxClientSet = cxsdk.NewClientSet(cpc)
 	}
 }
