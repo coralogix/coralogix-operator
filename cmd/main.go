@@ -174,7 +174,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.ApiKeyReconciler{
-		ApiKeysClient: clientSet.APIKeys(),
+		ApiKeysClient: oapiClientSet.APIKeys(),
 		Interval:      cfg.ReconcileIntervals[utils.ApiKeyKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ApiKey")
@@ -217,14 +217,14 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.IntegrationReconciler{
-		IntegrationsClient: clientSet.Integrations(),
+		IntegrationsClient: oapiClientSet.Integrations(),
 		Interval:           cfg.ReconcileIntervals[utils.IntegrationKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Integration")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.AlertSchedulerReconciler{
-		AlertSchedulerClient: clientSet.AlertSchedulers(),
+		AlertSchedulerClient: oapiClientSet.AlertScheduler(),
 		Interval:             cfg.ReconcileIntervals[utils.AlertSchedulerKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AlertScheduler")
@@ -245,35 +245,35 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.ViewReconciler{
-		ViewsClient: clientSet.Views(),
+		ViewsClient: oapiClientSet.Views(),
 		Interval:    cfg.ReconcileIntervals[utils.ViewKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "View")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.ViewFolderReconciler{
-		ViewFoldersClient: clientSet.ViewFolders(),
+		ViewFoldersClient: oapiClientSet.ViewsFolders(),
 		Interval:          cfg.ReconcileIntervals[utils.ViewFolderKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ViewFolder")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.ConnectorReconciler{
-		NotificationsClient: clientSet.Notifications(),
-		Interval:            cfg.ReconcileIntervals[utils.ConnectorKind],
+		ConnectorsClient: oapiClientSet.Connectors(),
+		Interval:         cfg.ReconcileIntervals[utils.ConnectorKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Connector")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.PresetReconciler{
-		NotificationsClient: clientSet.Notifications(),
-		Interval:            cfg.ReconcileIntervals[utils.PresetKind],
+		PresetsClient: oapiClientSet.Presets(),
+		Interval:      cfg.ReconcileIntervals[utils.PresetKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Preset")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.GlobalRouterReconciler{
-		NotificationsClient: clientSet.Notifications(),
+		GlobalRoutersClient: oapiClientSet.GlobalRouters(),
 		Interval:            cfg.ReconcileIntervals[utils.GlobalRouterKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GlobalRouter")

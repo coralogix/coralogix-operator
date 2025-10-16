@@ -17,25 +17,26 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/go-logr/logr"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/protobuf/encoding/protojson"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	globalrouters "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/global_routers_service"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // GlobalRouterReconciler reconciles a GlobalRouter object
 type GlobalRouterReconciler struct {
-	NotificationsClient *cxsdk.NotificationsClient
+	GlobalRoutersClient *globalrouters.GlobalRoutersServiceAPIService
 	Interval            time.Duration
 }
 
@@ -57,17 +58,20 @@ func (r *GlobalRouterReconciler) FinalizerName() string {
 
 func (r *GlobalRouterReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	globalRouter := obj.(*coralogixv1alpha1.GlobalRouter)
-	createRequest, err := globalRouter.ExtractCreateOrReplaceGlobalRouterRequest(ctx)
+	createRequest, err := globalRouter.ExtractGlobalRouter(ctx)
 	if err != nil {
 		return fmt.Errorf("error on extracting create request: %w", err)
 	}
 
-	log.Info("Creating remote GlobalRouter", "GlobalRouter", protojson.Format(createRequest))
-	createResponse, err := r.NotificationsClient.CreateOrReplaceGlobalRouter(ctx, createRequest)
+	log.Info("Creating remote GlobalRouter", "GlobalRouter", utils.FormatJSON(createRequest))
+	createResponse, httpResp, err := r.GlobalRoutersClient.
+		GlobalRoutersServiceReplaceGlobalRouter(ctx).
+		GlobalRouter(*createRequest).
+		Execute()
 	if err != nil {
-		return fmt.Errorf("error on creating remote GlobalRouter: %w", err)
+		return fmt.Errorf("error on creating remote GlobalRouter: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote globalRouter created", "response", protojson.Format(createResponse))
+	log.Info("Remote globalRouter created", "response", utils.FormatJSON(createResponse))
 
 	globalRouter.Status = coralogixv1alpha1.GlobalRouterStatus{
 		Id: createResponse.Router.Id,
@@ -78,16 +82,19 @@ func (r *GlobalRouterReconciler) HandleCreation(ctx context.Context, log logr.Lo
 
 func (r *GlobalRouterReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	globalRouter := obj.(*coralogixv1alpha1.GlobalRouter)
-	updateRequest, err := globalRouter.ExtractCreateOrReplaceGlobalRouterRequest(ctx)
+	updateRequest, err := globalRouter.ExtractGlobalRouter(ctx)
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
 	}
-	log.Info("Updating remote GlobalRouter", "GlobalRouter", protojson.Format(updateRequest))
-	updateResponse, err := r.NotificationsClient.CreateOrReplaceGlobalRouter(ctx, updateRequest)
+	log.Info("Updating remote GlobalRouter", "GlobalRouter", utils.FormatJSON(updateRequest))
+	updateResponse, httpResp, err := r.GlobalRoutersClient.
+		GlobalRoutersServiceReplaceGlobalRouter(ctx).
+		GlobalRouter(*updateRequest).
+		Execute()
 	if err != nil {
-		return err
+		return cxsdk.NewAPIError(httpResp, err)
 	}
-	log.Info("Remote GlobalRouter updated", "GlobalRouter", protojson.Format(updateResponse))
+	log.Info("Remote GlobalRouter updated", "GlobalRouter", utils.FormatJSON(updateResponse))
 
 	return nil
 }
@@ -95,13 +102,15 @@ func (r *GlobalRouterReconciler) HandleUpdate(ctx context.Context, log logr.Logg
 func (r *GlobalRouterReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
 	globalRouter := obj.(*coralogixv1alpha1.GlobalRouter)
 	log.Info("Deleting GlobalRouter from remote system", "id", *globalRouter.Status.Id)
-	_, err := r.NotificationsClient.DeleteGlobalRouter(ctx,
-		&cxsdk.DeleteGlobalRouterRequest{
-			Id: ptr.Deref(globalRouter.Status.Id, ""),
-		})
-	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.Error(err, "Error deleting remote GlobalRouter", "id", *globalRouter.Status.Id)
-		return fmt.Errorf("error deleting remote GlobalRouter %s: %w", *globalRouter.Status.Id, err)
+	_, httpResp, err := r.GlobalRoutersClient.
+		GlobalRoutersServiceDeleteGlobalRouter(ctx, ptr.Deref(globalRouter.Status.Id, "")).
+		Execute()
+	if err != nil {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); cxsdk.Code(apiErr) != http.StatusNotFound {
+			log.Error(err, "Error deleting remote GlobalRouter", "id", *globalRouter.Status.Id)
+			return fmt.Errorf("error deleting remote GlobalRouter %s: %w",
+				*globalRouter.Status.Id, apiErr)
+		}
 	}
 	log.Info("GlobalRouter deleted from remote system", "id", *globalRouter.Status.Id)
 	return nil

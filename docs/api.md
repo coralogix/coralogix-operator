@@ -11711,7 +11711,8 @@ with respect to the current state of the instance.<br/>
 
 
 IPAccess is the Schema for the ipaccesses API.
-// See also https://coralogix.com/docs/user-guides/account-management/account-settings/ip-access-control/
+See also https://coralogix.com/docs/user-guides/account-management/account-settings/ip-access-control/
+**Added in v1.2.0**
 
 <table>
     <thead>

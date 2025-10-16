@@ -17,8 +17,10 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
+	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 	"github.com/go-logr/logr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -60,12 +62,12 @@ func (r *IPAccessReconciler) HandleCreation(ctx context.Context, log logr.Logger
 		return fmt.Errorf("error on extracting create request: %w", err)
 	}
 	log.Info("Creating remote ipAccess", "ipAccess", utils.FormatJSON(createReq))
-	createRes, _, err := r.IPAccesssClient.
+	createRes, httpResp, err := r.IPAccesssClient.
 		IpAccessServiceCreateCompanyIpAccessSettings(ctx).
 		CreateCompanyIPAccessSettingsRequest(*createReq).
 		Execute()
 	if err != nil {
-		return fmt.Errorf("error on creating remote ipAccess: %w", err)
+		return fmt.Errorf("error on creating remote ipAccess: %w", cxsdk.NewAPIError(httpResp, err))
 	}
 	log.Info("Remote ipAccess created", "response", utils.FormatJSON(createRes))
 	ipAccess.Status = coralogixv1alpha1.IPAccessStatus{
@@ -82,12 +84,12 @@ func (r *IPAccessReconciler) HandleUpdate(ctx context.Context, log logr.Logger, 
 		return fmt.Errorf("error on extracting replace request: %w", err)
 	}
 	log.Info("Replacing remote ipAccess", "ipAccess", utils.FormatJSON(replaceReq))
-	replaceRes, _, err := r.IPAccesssClient.
+	replaceRes, httpResp, err := r.IPAccesssClient.
 		IpAccessServiceReplaceCompanyIpAccessSettings(ctx).
 		ReplaceCompanyIPAccessSettingsRequest(*replaceReq).
 		Execute()
 	if err != nil {
-		return fmt.Errorf("error on replacing remote ipAccess: %w", err)
+		return cxsdk.NewAPIError(httpResp, err)
 	}
 	log.Info("Remote ipAccess replaces", "response", utils.FormatJSON(replaceRes))
 
@@ -107,9 +109,11 @@ func (r *IPAccessReconciler) HandleDeletion(ctx context.Context, log logr.Logger
 		IpAccessServiceDeleteCompanyIpAccessSettings(ctx).
 		Id(*id).
 		Execute()
-	if err != nil && (httpResp != nil && httpResp.StatusCode != 404) {
-		log.Error(err, "Received an error while Deleting a ipAccess")
-		return err
+	if err != nil {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); cxsdk.Code(apiErr) != http.StatusNotFound {
+			log.Error(err, "Error deleting remote IpAccess", "id", *ipAccess.Status.ID)
+			return fmt.Errorf("error deleting remote IpAccess %s: %w", *ipAccess.Status.ID, apiErr)
+		}
 	}
 	log.Info("IPAccess deleted from remote system")
 	return nil

@@ -134,7 +134,8 @@ func (i *IPAccess) HasIDInStatus() bool {
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // IPAccess is the Schema for the ipaccesses API.
-// // See also https://coralogix.com/docs/user-guides/account-management/account-settings/ip-access-control/
+// See also https://coralogix.com/docs/user-guides/account-management/account-settings/ip-access-control/
+// **Added in v1.2.0**
 type IPAccess struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

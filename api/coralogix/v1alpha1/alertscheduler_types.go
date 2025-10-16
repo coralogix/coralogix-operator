@@ -20,10 +20,9 @@ import (
 	"fmt"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	alertscheduler "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/alert_scheduler_rule_service"
 
 	"github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/internal/config"
@@ -196,16 +195,16 @@ type AlertSchedulerStatus struct {
 }
 
 var (
-	schemaToProtoScheduleOperation = map[string]cxsdk.ScheduleOperation{
-		"activate": cxsdk.ScheduleOperationActivate,
-		"mute":     cxsdk.ScheduleOperationMute,
+	schemaToOpenAPIScheduleOperation = map[string]*alertscheduler.ScheduleOperation{
+		"activate": alertscheduler.SCHEDULEOPERATION_SCHEDULE_OPERATION_ACTIVATE.Ptr(),
+		"mute":     alertscheduler.SCHEDULEOPERATION_SCHEDULE_OPERATION_MUTE.Ptr(),
 	}
-	schemaToProtoDurationFrequency = map[string]cxsdk.DurationFrequency{
-		"minutes": cxsdk.DurationFrequencyMinute,
-		"hours":   cxsdk.DurationFrequencyHour,
-		"days":    cxsdk.DurationFrequencyDay,
+	schemaToOpenAPIDurationFrequency = map[string]*alertscheduler.DurationFrequency{
+		"minutes": alertscheduler.DURATIONFREQUENCY_DURATION_FREQUENCY_MINUTE.Ptr(),
+		"hours":   alertscheduler.DURATIONFREQUENCY_DURATION_FREQUENCY_HOUR.Ptr(),
+		"days":    alertscheduler.DURATIONFREQUENCY_DURATION_FREQUENCY_DAY.Ptr(),
 	}
-	daysToProtoValue = map[Day]int32{
+	daysToOpenAPIValue = map[Day]int32{
 		"Sunday":    1,
 		"Monday":    2,
 		"Tuesday":   3,
@@ -236,30 +235,30 @@ func (a *AlertScheduler) HasIDInStatus() bool {
 	return a.Status.ID != nil && *a.Status.ID != ""
 }
 
-func (a *AlertScheduler) ExtractCreateAlertSchedulerRequest() (*cxsdk.CreateAlertSchedulerRuleRequest, error) {
+func (a *AlertScheduler) ExtractCreateAlertSchedulerRequest() (*alertscheduler.CreateAlertSchedulerRuleRequestDataStructure, error) {
 	alertScheduler, err := a.extractAlertScheduler()
 	if err != nil {
 		return nil, fmt.Errorf("error on extracting alert scheduler: %w", err)
 	}
 
-	return &cxsdk.CreateAlertSchedulerRuleRequest{
-		AlertSchedulerRule: alertScheduler,
+	return &alertscheduler.CreateAlertSchedulerRuleRequestDataStructure{
+		AlertSchedulerRule: *alertScheduler,
 	}, nil
 }
 
-func (a *AlertScheduler) ExtractUpdateAlertSchedulerRequest() (*cxsdk.UpdateAlertSchedulerRuleRequest, error) {
+func (a *AlertScheduler) ExtractUpdateAlertSchedulerRequest() (*alertscheduler.UpdateAlertSchedulerRuleRequestDataStructure, error) {
 	alertScheduler, err := a.extractAlertScheduler()
 	if err != nil {
 		return nil, fmt.Errorf("error on extracting alert scheduler: %w", err)
 	}
 
 	alertScheduler.UniqueIdentifier = a.Status.ID
-	return &cxsdk.UpdateAlertSchedulerRuleRequest{
-		AlertSchedulerRule: alertScheduler,
+	return &alertscheduler.UpdateAlertSchedulerRuleRequestDataStructure{
+		AlertSchedulerRule: *alertScheduler,
 	}, nil
 }
 
-func (a *AlertScheduler) extractAlertScheduler() (*cxsdk.AlertSchedulerRule, error) {
+func (a *AlertScheduler) extractAlertScheduler() (*alertscheduler.AlertSchedulerRule, error) {
 	metaLabels := extractMetaLabels(a.Spec.MetaLabels)
 	filter, err := a.extractFilter()
 	if err != nil {
@@ -271,34 +270,34 @@ func (a *AlertScheduler) extractAlertScheduler() (*cxsdk.AlertSchedulerRule, err
 		return nil, fmt.Errorf("error on extracting schedule: %w", err)
 	}
 
-	return &cxsdk.AlertSchedulerRule{
-		Name:        a.Spec.Name,
-		Description: ptr.To(a.Spec.Description),
+	return &alertscheduler.AlertSchedulerRule{
+		Name:        alertscheduler.PtrString(a.Spec.Name),
+		Description: alertscheduler.PtrString(a.Spec.Description),
 		MetaLabels:  metaLabels,
 		Filter:      filter,
 		Schedule:    schedule,
-		Enabled:     a.Spec.Enabled,
+		Enabled:     alertscheduler.PtrBool(a.Spec.Enabled),
 	}, nil
 }
 
-func extractMetaLabels(metaLabels []MetaLabel) []*cxsdk.MetaLabel {
-	var result []*cxsdk.MetaLabel
+func extractMetaLabels(metaLabels []MetaLabel) []alertscheduler.MetaLabelsProtobufV1MetaLabel {
+	var result []alertscheduler.MetaLabelsProtobufV1MetaLabel
 	for _, ml := range metaLabels {
-		result = append(result, &cxsdk.MetaLabel{
-			Key:   ml.Key,
+		result = append(result, alertscheduler.MetaLabelsProtobufV1MetaLabel{
+			Key:   alertscheduler.PtrString(ml.Key),
 			Value: ml.Value,
 		})
 	}
 	return result
 }
 
-func (a *AlertScheduler) extractFilter() (*cxsdk.AlertSchedulerFilter, error) {
+func (a *AlertScheduler) extractFilter() (*alertscheduler.AlertSchedulerRuleProtobufV1Filter, error) {
 	if a.Spec.Filter.MetaLabels != nil {
 		metaLabels := extractMetaLabels(a.Spec.Filter.MetaLabels)
-		return &cxsdk.AlertSchedulerFilter{
-			WhatExpression: a.Spec.Filter.WhatExpression,
-			WhichAlerts: &cxsdk.AlertSchedulerFilterMetaLabels{
-				AlertMetaLabels: &cxsdk.MetaLabels{
+		return &alertscheduler.AlertSchedulerRuleProtobufV1Filter{
+			AlertSchedulerRuleProtobufV1FilterOneOf: &alertscheduler.AlertSchedulerRuleProtobufV1FilterOneOf{
+				WhatExpression: alertscheduler.PtrString(a.Spec.Filter.WhatExpression),
+				AlertMetaLabels: &alertscheduler.MetaLabels{
 					Value: metaLabels,
 				},
 			},
@@ -309,10 +308,10 @@ func (a *AlertScheduler) extractFilter() (*cxsdk.AlertSchedulerFilter, error) {
 			return nil, fmt.Errorf("error on extracting alerts ids: %w", err)
 		}
 
-		return &cxsdk.AlertSchedulerFilter{
-			WhatExpression: a.Spec.Filter.WhatExpression,
-			WhichAlerts: &cxsdk.AlertSchedulerFilterUniqueIDs{
-				AlertUniqueIds: &cxsdk.AlertUniqueIDs{
+		return &alertscheduler.AlertSchedulerRuleProtobufV1Filter{
+			AlertSchedulerRuleProtobufV1FilterOneOf1: &alertscheduler.AlertSchedulerRuleProtobufV1FilterOneOf1{
+				WhatExpression: alertscheduler.PtrString(a.Spec.Filter.WhatExpression),
+				AlertUniqueIds: &alertscheduler.AlertUniqueIds{
 					Value: alertsIds,
 				},
 			},
@@ -368,59 +367,61 @@ func extractAlertId(alert AlertRef, schedulerNamespace string) (string, error) {
 	return *a.Status.ID, nil
 }
 
-func (a *AlertScheduler) extractSchedule() (*cxsdk.Schedule, error) {
-	schedule := &cxsdk.Schedule{
-		ScheduleOperation: schemaToProtoScheduleOperation[a.Spec.Schedule.Operation],
-	}
-
+func (a *AlertScheduler) extractSchedule() (*alertscheduler.Schedule, error) {
 	if a.Spec.Schedule.OneTime != nil {
 		oneTime, err := a.extractOneTime()
 		if err != nil {
 			return nil, fmt.Errorf("error on extracting one time schedule: %w", err)
 		}
-		schedule.Scheduler = oneTime
-		return schedule, nil
+		return &alertscheduler.Schedule{
+			ScheduleOneOf: &alertscheduler.ScheduleOneOf{
+				ScheduleOperation: schemaToOpenAPIScheduleOperation[a.Spec.Schedule.Operation],
+				OneTime:           oneTime,
+			},
+		}, nil
 	} else if a.Spec.Schedule.Recurring != nil {
 		recurring, err := a.extractRecurring()
 		if err != nil {
 			return nil, fmt.Errorf("error on extracting recurring schedule: %w", err)
 		}
-		schedule.Scheduler = recurring
-		return schedule, nil
+		return &alertscheduler.Schedule{
+			ScheduleOneOf1: &alertscheduler.ScheduleOneOf1{
+				ScheduleOperation: schemaToOpenAPIScheduleOperation[a.Spec.Schedule.Operation],
+				Recurring:         recurring,
+			},
+		}, nil
 	}
 
 	return nil, fmt.Errorf("exactly one of `oneTime` or `recurring` must be set")
 }
 
-func (a *AlertScheduler) extractOneTime() (*cxsdk.ScheduleOneTime, error) {
+func (a *AlertScheduler) extractOneTime() (*alertscheduler.OneTime, error) {
 	timeFrame, err := extractTimeFrame(a.Spec.Schedule.OneTime)
 	if err != nil {
 		return nil, fmt.Errorf("error on extracting time frame: %w", err)
 	}
 
-	return &cxsdk.ScheduleOneTime{
-		OneTime: &cxsdk.OneTime{
-			Timeframe: timeFrame,
-		},
+	return &alertscheduler.OneTime{
+		Timeframe: timeFrame,
 	}, nil
 }
 
-func (a *AlertScheduler) extractRecurring() (*cxsdk.ScheduleRecurring, error) {
+func (a *AlertScheduler) extractRecurring() (*alertscheduler.Recurring, error) {
 	if a.Spec.Schedule.Recurring.Dynamic != nil {
 		dynamic, err := a.extractDynamic()
 		if err != nil {
 			return nil, fmt.Errorf("error on extracting dynamic schedule: %w", err)
 		}
 
-		return &cxsdk.ScheduleRecurring{
-			Recurring: &cxsdk.Recurring{
-				Condition: dynamic,
+		return &alertscheduler.Recurring{
+			RecurringOneOf1: &alertscheduler.RecurringOneOf1{
+				Dynamic: dynamic,
 			},
 		}, nil
 	} else if a.Spec.Schedule.Recurring.Always != nil {
-		return &cxsdk.ScheduleRecurring{
-			Recurring: &cxsdk.Recurring{
-				Condition: &cxsdk.RecurringAlways{},
+		return &alertscheduler.Recurring{
+			RecurringOneOf: &alertscheduler.RecurringOneOf{
+				Always: make(map[string]interface{}),
 			},
 		}, nil
 	}
@@ -428,67 +429,82 @@ func (a *AlertScheduler) extractRecurring() (*cxsdk.ScheduleRecurring, error) {
 	return nil, fmt.Errorf("exactly one of `dynamic` or `always` must be set")
 }
 
-func (a *AlertScheduler) extractDynamic() (*cxsdk.RecurringDynamic, error) {
+func (a *AlertScheduler) extractDynamic() (*alertscheduler.RecurringDynamic, error) {
 	timeFrame, err := extractTimeFrame(a.Spec.Schedule.Recurring.Dynamic.TimeFrame)
 	if err != nil {
 		return nil, fmt.Errorf("error on extracting time frame: %w", err)
 	}
 
-	recurringDynamic := &cxsdk.RecurringDynamic{
-		Dynamic: &cxsdk.RecurringDynamicInner{
-			RepeatEvery:     a.Spec.Schedule.Recurring.Dynamic.RepeatEvery,
-			Timeframe:       timeFrame,
-			TerminationDate: a.Spec.Schedule.Recurring.Dynamic.TerminationDate,
-		},
-	}
-
 	if a.Spec.Schedule.Recurring.Dynamic.Frequency.Daily != nil {
-		recurringDynamic.Dynamic.Frequency = &cxsdk.RecurringDynamicDaily{}
+		return &alertscheduler.RecurringDynamic{
+			RecurringDynamicOneOf: &alertscheduler.RecurringDynamicOneOf{
+				Daily:           make(map[string]interface{}),
+				RepeatEvery:     alertscheduler.PtrInt32(a.Spec.Schedule.Recurring.Dynamic.RepeatEvery),
+				Timeframe:       timeFrame,
+				TerminationDate: a.Spec.Schedule.Recurring.Dynamic.TerminationDate,
+			},
+		}, nil
 	} else if weekly := a.Spec.Schedule.Recurring.Dynamic.Frequency.Weekly; weekly != nil {
 		var daysOfWeek []int32
 		for _, day := range weekly.Days {
-			daysOfWeek = append(daysOfWeek, daysToProtoValue[day])
+			daysOfWeek = append(daysOfWeek, daysToOpenAPIValue[day])
 		}
-		recurringDynamic.Dynamic.Frequency = &cxsdk.RecurringDynamicWeekly{
-			Weekly: &cxsdk.Weekly{
-				DaysOfWeek: daysOfWeek,
+		return &alertscheduler.RecurringDynamic{
+			RecurringDynamicOneOf1: &alertscheduler.RecurringDynamicOneOf1{
+				Weekly: &alertscheduler.Weekly{
+					DaysOfWeek: daysOfWeek,
+				},
+				RepeatEvery:     alertscheduler.PtrInt32(a.Spec.Schedule.Recurring.Dynamic.RepeatEvery),
+				Timeframe:       timeFrame,
+				TerminationDate: a.Spec.Schedule.Recurring.Dynamic.TerminationDate,
 			},
-		}
+		}, nil
 	} else if monthly := a.Spec.Schedule.Recurring.Dynamic.Frequency.Monthly; monthly != nil {
-		recurringDynamic.Dynamic.Frequency = &cxsdk.RecurringDynamicMonthly{
-			Monthly: &cxsdk.Monthly{
-				DaysOfMonth: monthly.Days,
+		return &alertscheduler.RecurringDynamic{
+			RecurringDynamicOneOf2: &alertscheduler.RecurringDynamicOneOf2{
+				Monthly: &alertscheduler.Monthly{
+					DaysOfMonth: monthly.Days,
+				},
+				RepeatEvery:     alertscheduler.PtrInt32(a.Spec.Schedule.Recurring.Dynamic.RepeatEvery),
+				Timeframe:       timeFrame,
+				TerminationDate: a.Spec.Schedule.Recurring.Dynamic.TerminationDate,
 			},
-		}
-	} else {
-		return nil, fmt.Errorf("exactly one of `daily`, `weekly` or `monthly` must be set")
+		}, nil
 	}
 
-	return recurringDynamic, nil
+	return nil, fmt.Errorf("exactly one of `daily`, `weekly` or `monthly` must be set")
 }
 
-func extractTimeFrame(timeFrame *TimeFrame) (*cxsdk.Timeframe, error) {
-	result := &cxsdk.Timeframe{
-		StartTime: timeFrame.StartTime,
-		Timezone:  timeFrame.Timezone,
-	}
-
+func extractTimeFrame(timeFrame *TimeFrame) (*alertscheduler.Timeframe, error) {
 	if timeFrame.EndTime != nil {
-		result.Until = &cxsdk.TimeframeEndTime{
-			EndTime: *timeFrame.EndTime,
-		}
-	} else if timeFrame.Duration != nil {
-		result.Until = &cxsdk.TimeframeDuration{
-			Duration: &cxsdk.AlertSchedulerDuration{
-				ForOver:   timeFrame.Duration.ForOver,
-				Frequency: schemaToProtoDurationFrequency[timeFrame.Duration.Frequency],
+		return &alertscheduler.Timeframe{
+			AlertSchedulerRuleServiceGetBulkAlertSchedulerRuleActiveTimeframeParameter: &alertscheduler.AlertSchedulerRuleServiceGetBulkAlertSchedulerRuleActiveTimeframeParameter{
+				StartTime: alertscheduler.PtrString(timeFrame.StartTime),
+				Timezone:  alertscheduler.PtrString(timeFrame.Timezone),
+				EndTime:   timeFrame.EndTime,
 			},
-		}
-	} else {
-		return nil, fmt.Errorf("exactly one of `endTime` or `duration` must be set")
+		}, nil
+	} else if timeFrame.Duration != nil {
+		return &alertscheduler.Timeframe{
+			TimeframeOneOf: &alertscheduler.TimeframeOneOf{
+				StartTime: alertscheduler.PtrString(timeFrame.StartTime),
+				Timezone:  alertscheduler.PtrString(timeFrame.Timezone),
+				Duration: &alertscheduler.V1Duration{
+					ForOver:   alertscheduler.PtrInt32(timeFrame.Duration.ForOver),
+					Frequency: schemaToOpenAPIDurationFrequency[timeFrame.Duration.Frequency],
+				},
+			},
+		}, nil
+
+		//result.Until = &cxsdk.TimeframeDuration{
+		//	Duration: &cxsdk.AlertSchedulerDuration{
+		//		ForOver:   timeFrame.Duration.ForOver,
+		//		Frequency: schemaToProtoDurationFrequency[timeFrame.Duration.Frequency],
+		//	},
+		//}
 	}
 
-	return result, nil
+	return nil, fmt.Errorf("exactly one of `endTime` or `duration` must be set")
 }
 
 // +kubebuilder:object:root=true

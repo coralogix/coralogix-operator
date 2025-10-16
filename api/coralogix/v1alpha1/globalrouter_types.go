@@ -23,7 +23,7 @@ import (
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	globalrouters "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/global_routers_service"
 
 	"github.com/coralogix/coralogix-operator/internal/config"
 )
@@ -92,17 +92,13 @@ type NCRef struct {
 	ResourceRef *ResourceRef `json:"resourceRef,omitempty"`
 }
 
-func (g *GlobalRouter) ExtractCreateOrReplaceGlobalRouterRequest(ctx context.Context) (*cxsdk.CreateOrReplaceGlobalRouterRequest, error) {
-	router, err := g.ExtractGlobalRouter(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to extract global-router: %w", err)
+var (
+	schemaToOpenApiRoutersEntityType = map[string]globalrouters.NotificationCenterEntityType{
+		"alerts": globalrouters.NOTIFICATIONCENTERENTITYTYPE_ALERTS,
 	}
+)
 
-	router.Id = ptr.To("router_default")
-	return &cxsdk.CreateOrReplaceGlobalRouterRequest{Router: router}, nil
-}
-
-func (g *GlobalRouter) ExtractGlobalRouter(ctx context.Context) (*cxsdk.GlobalRouter, error) {
+func (g *GlobalRouter) ExtractGlobalRouter(ctx context.Context) (*globalrouters.GlobalRouter, error) {
 	fallback, err := extractRoutingTargets(ctx, g.Namespace, g.Spec.Fallback)
 	if err != nil {
 		return nil, err
@@ -113,16 +109,18 @@ func (g *GlobalRouter) ExtractGlobalRouter(ctx context.Context) (*cxsdk.GlobalRo
 		return nil, err
 	}
 
-	return &cxsdk.GlobalRouter{
+	return &globalrouters.GlobalRouter{
+		Id:          ptr.To("router_default"),
+		EntityType:  schemaToOpenApiRoutersEntityType[g.Spec.EntityType],
 		Name:        g.Spec.Name,
-		Description: g.Spec.Description,
+		Description: globalrouters.PtrString(g.Spec.Description),
 		Fallback:    fallback,
 		Rules:       rules,
 	}, nil
 }
 
-func extractRoutingRules(ctx context.Context, namespace string, rules []RoutingRule) ([]*cxsdk.RoutingRule, error) {
-	var result []*cxsdk.RoutingRule
+func extractRoutingRules(ctx context.Context, namespace string, rules []RoutingRule) ([]globalrouters.RoutingRule, error) {
+	var result []globalrouters.RoutingRule
 	var errs error
 	for _, rule := range rules {
 		routingRule, err := extractRoutingRule(ctx, namespace, rule)
@@ -130,7 +128,7 @@ func extractRoutingRules(ctx context.Context, namespace string, rules []RoutingR
 			errs = errors.Join(errs, err)
 			continue
 		}
-		result = append(result, routingRule)
+		result = append(result, *routingRule)
 	}
 
 	if errs != nil {
@@ -140,21 +138,21 @@ func extractRoutingRules(ctx context.Context, namespace string, rules []RoutingR
 	return result, nil
 }
 
-func extractRoutingRule(ctx context.Context, namespace string, rule RoutingRule) (*cxsdk.RoutingRule, error) {
+func extractRoutingRule(ctx context.Context, namespace string, rule RoutingRule) (*globalrouters.RoutingRule, error) {
 	targets, err := extractRoutingTargets(ctx, namespace, rule.Targets)
 	if err != nil {
 		return nil, err
 	}
 
-	return &cxsdk.RoutingRule{
+	return &globalrouters.RoutingRule{
 		Name:      ptr.To(rule.Name),
 		Condition: rule.Condition,
 		Targets:   targets,
 	}, nil
 }
 
-func extractRoutingTargets(ctx context.Context, namespace string, targets []RoutingTarget) ([]*cxsdk.RoutingTarget, error) {
-	var result []*cxsdk.RoutingTarget
+func extractRoutingTargets(ctx context.Context, namespace string, targets []RoutingTarget) ([]globalrouters.RoutingTarget, error) {
+	var result []globalrouters.RoutingTarget
 	var errs error
 	for _, target := range targets {
 		routingTarget, err := extractRoutingTarget(ctx, namespace, target)
@@ -162,7 +160,7 @@ func extractRoutingTargets(ctx context.Context, namespace string, targets []Rout
 			errs = errors.Join(errs, err)
 			continue
 		}
-		result = append(result, routingTarget)
+		result = append(result, *routingTarget)
 	}
 
 	if errs != nil {
@@ -172,7 +170,7 @@ func extractRoutingTargets(ctx context.Context, namespace string, targets []Rout
 	return result, nil
 }
 
-func extractRoutingTarget(ctx context.Context, namespace string, target RoutingTarget) (*cxsdk.RoutingTarget, error) {
+func extractRoutingTarget(ctx context.Context, namespace string, target RoutingTarget) (*globalrouters.RoutingTarget, error) {
 	connectorID, err := extractConnectorID(ctx, namespace, target.Connector)
 	if err != nil {
 		return nil, err
@@ -186,7 +184,7 @@ func extractRoutingTarget(ctx context.Context, namespace string, target RoutingT
 		}
 	}
 
-	return &cxsdk.RoutingTarget{
+	return &globalrouters.RoutingTarget{
 		ConnectorId: connectorID,
 		PresetId:    ptr.To(presetID),
 	}, nil

@@ -17,26 +17,27 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
+	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 	"github.com/go-logr/logr"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/protobuf/encoding/protojson"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	presets "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/presets_service"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // PresetReconciler reconciles a Preset object
 type PresetReconciler struct {
-	NotificationsClient *cxsdk.NotificationsClient
-	Interval            time.Duration
+	PresetsClient *presets.PresetsServiceAPIService
+	Interval      time.Duration
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=presets,verbs=get;list;watch;create;update;patch;delete
@@ -57,17 +58,20 @@ func (r *PresetReconciler) FinalizerName() string {
 
 func (r *PresetReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	preset := obj.(*coralogixv1alpha1.Preset)
-	createRequest, err := preset.ExtractCreateCustomPresetRequest()
+	createRequest, err := preset.ExtractPreset()
 	if err != nil {
 		return fmt.Errorf("error on extracting create request: %w", err)
 	}
 
-	log.Info("Creating remote Preset", "Preset", protojson.Format(createRequest))
-	createResponse, err := r.NotificationsClient.CreateCustomPreset(ctx, createRequest)
+	log.Info("Creating remote Preset", "Preset", utils.FormatJSON(createRequest))
+	createResponse, httpResp, err := r.PresetsClient.
+		PresetsServiceCreateCustomPreset(ctx).
+		Preset1(*createRequest).
+		Execute()
 	if err != nil {
-		return fmt.Errorf("error on creating remote Preset: %w", err)
+		return fmt.Errorf("error on creating remote Preset: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote preset created", "response", protojson.Format(createResponse))
+	log.Info("Remote preset created", "response", utils.FormatJSON(createResponse))
 
 	preset.Status = coralogixv1alpha1.PresetStatus{
 		Id: createResponse.Preset.Id,
@@ -78,16 +82,20 @@ func (r *PresetReconciler) HandleCreation(ctx context.Context, log logr.Logger, 
 
 func (r *PresetReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	preset := obj.(*coralogixv1alpha1.Preset)
-	updateRequest, err := preset.ExtractUpdateCustomPresetRequest()
+	updateRequest, err := preset.ExtractPreset()
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
 	}
-	log.Info("Updating remote Preset", "Preset", protojson.Format(updateRequest))
-	updateResponse, err := r.NotificationsClient.ReplaceCustomPreset(ctx, updateRequest)
+	updateRequest.Id = preset.Status.Id
+	log.Info("Updating remote Preset", "Preset", utils.FormatJSON(updateRequest))
+	updateResponse, httpResp, err := r.PresetsClient.
+		PresetsServiceReplaceCustomPreset(ctx).
+		Preset1(*updateRequest).
+		Execute()
 	if err != nil {
-		return err
+		return cxsdk.NewAPIError(httpResp, err)
 	}
-	log.Info("Remote Preset updated", "Preset", protojson.Format(updateResponse))
+	log.Info("Remote Preset updated", "Preset", utils.FormatJSON(updateResponse))
 
 	return nil
 }
@@ -95,13 +103,14 @@ func (r *PresetReconciler) HandleUpdate(ctx context.Context, log logr.Logger, ob
 func (r *PresetReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
 	preset := obj.(*coralogixv1alpha1.Preset)
 	log.Info("Deleting Preset from remote system", "id", *preset.Status.Id)
-	_, err := r.NotificationsClient.DeleteCustomPreset(ctx,
-		&cxsdk.DeleteCustomPresetRequest{
-			Id: ptr.Deref(preset.Status.Id, ""),
-		})
-	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.Error(err, "Error deleting remote Preset", "id", *preset.Status.Id)
-		return fmt.Errorf("error deleting remote Preset %s: %w", *preset.Status.Id, err)
+	_, httpResp, err := r.PresetsClient.
+		PresetsServiceDeleteCustomPreset(ctx, ptr.Deref(preset.Status.Id, "")).
+		Execute()
+	if err != nil {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); cxsdk.Code(apiErr) != http.StatusNotFound {
+			log.Error(err, "Error deleting remote Preset", "id", *preset.Status.Id)
+			return fmt.Errorf("error deleting remote Preset %s: %w", *preset.Status.Id, apiErr)
+		}
 	}
 	log.Info("Preset deleted from remote system", "id", *preset.Status.Id)
 	return nil
