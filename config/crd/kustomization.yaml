@@ -25,6 +25,7 @@ resources:
   - bases/coralogix.com_archivemetricstargets.yaml
   - bases/coralogix.com_slos.yaml
   - bases/coralogix.com_events2metrics.yaml
+  - bases/coralogix.com_ipaccesses.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 #patchesStrategicMerge:

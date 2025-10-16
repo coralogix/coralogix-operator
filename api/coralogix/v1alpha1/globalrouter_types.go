@@ -113,15 +113,9 @@ func (g *GlobalRouter) ExtractGlobalRouter(ctx context.Context) (*cxsdk.GlobalRo
 		return nil, err
 	}
 
-	entityType, ok := schemaToProtoEntityType[g.Spec.EntityType]
-	if !ok {
-		return nil, fmt.Errorf("invalid entity type %s", g.Spec.EntityType)
-	}
-
 	return &cxsdk.GlobalRouter{
 		Name:        g.Spec.Name,
 		Description: g.Spec.Description,
-		EntityType:  entityType,
 		Fallback:    fallback,
 		Rules:       rules,
 	}, nil
