@@ -17,23 +17,27 @@ package v1beta1
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	"github.com/go-logr/logr"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	oapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	alerts "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/alert_definitions_service"
+
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // AlertReconciler reconciles a Alert object
 type AlertReconciler struct {
+	AlertsClient       *alerts.AlertDefinitionsServiceAPIService
 	CoralogixClientSet *cxsdk.ClientSet
 	Interval           time.Duration
 }
@@ -56,7 +60,7 @@ func (r *AlertReconciler) FinalizerName() string {
 
 func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	alert := obj.(*coralogixv1beta1.Alert)
-	alertDefProperties, err := alert.Spec.ExtractAlertProperties(
+	createRequest, err := alert.Spec.ExtractAlertCreateRequest(
 		&coralogixv1beta1.GetResourceRefProperties{
 			Ctx:       ctx,
 			Log:       log,
@@ -68,14 +72,16 @@ func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 		return fmt.Errorf("error on extracting alert properties: %w", err)
 	}
 
-	createRequest := &cxsdk.CreateAlertDefRequest{AlertDefProperties: alertDefProperties}
-	log.Info("Creating remote alert", "alert", protojson.Format(createRequest))
-	createResponse, err := r.CoralogixClientSet.Alerts().Create(ctx, createRequest)
+	log.Info("Creating remote alert", "alert", utils.FormatJSON(createRequest))
+	createResponse, httpResp, err := r.AlertsClient.
+		AlertDefsServiceCreateAlertDef(ctx).
+		AlertDefsServiceCreateAlertDefRequest(*createRequest).
+		Execute()
 	if err != nil {
-		return fmt.Errorf("error on creating remote alert: %w", err)
+		return fmt.Errorf("error on creating remote alert: %w", oapicxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote alert created", "response", protojson.Format(createResponse))
-	alert.Status = coralogixv1beta1.AlertStatus{ID: &createResponse.AlertDef.Id.Value}
+	log.Info("Remote alert created", "response", utils.FormatJSON(createResponse))
+	alert.Status = coralogixv1beta1.AlertStatus{ID: &createResponse.AlertDef.Id}
 	return nil
 }
 
@@ -103,12 +109,15 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
 	}
-	log.Info("Updating remote alert", "alert", protojson.Format(updateRequest))
-	updateResponse, err := r.CoralogixClientSet.Alerts().Replace(ctx, updateRequest)
+	log.Info("Updating remote alert", "alert", utils.FormatJSON(updateRequest))
+	updateResponse, httpResp, err := r.AlertsClient.
+		AlertDefsServiceReplaceAlertDef(ctx).
+		ReplaceAlertDefinitionRequest(updateRequest).
+		Execute()
 	if err != nil {
-		return err
+		return oapicxsdk.NewAPIError(httpResp, err)
 	}
-	log.Info("Remote alert updated", "alert", protojson.Format(updateResponse))
+	log.Info("Remote alert updated", "alert", utils.FormatJSON(updateResponse))
 	return nil
 }
 
@@ -118,10 +127,14 @@ func (r *AlertReconciler) HandleDeletion(ctx context.Context, log logr.Logger, o
 		return fmt.Errorf("alert ID is missing")
 	}
 	log.Info("Deleting alert from remote system", "id", *alert.Status.ID)
-	_, err := r.CoralogixClientSet.Alerts().Delete(ctx, &cxsdk.DeleteAlertDefRequest{Id: wrapperspb.String(*alert.Status.ID)})
-	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.Error(err, "Error deleting remote alert", "id", *alert.Status.ID)
-		return fmt.Errorf("error deleting remote alert %s: %w", *alert.Status.ID, err)
+	_, httpResp, err := r.AlertsClient.
+		AlertDefsServiceDeleteAlertDef(ctx, *alert.Status.ID).
+		Execute()
+	if err != nil {
+		if apiErr := oapicxsdk.NewAPIError(httpResp, err); cxsdk.Code(apiErr) != http.StatusNotFound {
+			log.Error(err, "Error deleting remote alert", "id", *alert.Status.ID)
+			return fmt.Errorf("error deleting remote alert %s: %w", *alert.Status.ID, err)
+		}
 	}
 	log.Info("Alert deleted from remote system", "id", *alert.Status.ID)
 	return nil

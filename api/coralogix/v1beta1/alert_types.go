@@ -31,6 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	alerts "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/alert_definitions_service"
 
 	"github.com/coralogix/coralogix-operator/api/coralogix"
 	"github.com/coralogix/coralogix-operator/internal/config"
@@ -68,39 +69,39 @@ func init() {
 }
 
 var (
-	AlertPriorityToProtoPriority = map[AlertPriority]cxsdk.AlertDefPriority{
-		AlertPriorityP1: cxsdk.AlertDefPriorityP1,
-		AlertPriorityP2: cxsdk.AlertDefPriorityP2,
-		AlertPriorityP3: cxsdk.AlertDefPriorityP3,
-		AlertPriorityP4: cxsdk.AlertDefPriorityP4,
-		AlertPriorityP5: cxsdk.AlertDefPriorityP5OrUnspecified,
+	AlertPriorityToOpenAPIPriority = map[AlertPriority]alerts.AlertDefPriority{
+		AlertPriorityP1: alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P1,
+		AlertPriorityP2: alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P2,
+		AlertPriorityP3: alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P3,
+		AlertPriorityP4: alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P4,
+		AlertPriorityP5: alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P5_OR_UNSPECIFIED,
 	}
-	LogSeverityToProtoSeverity = map[LogSeverity]cxsdk.LogSeverity{
-		LogSeverityDebug:    cxsdk.LogSeverityDebug,
-		LogSeverityInfo:     cxsdk.LogSeverityInfo,
-		LogSeverityWarning:  cxsdk.LogSeverityWarning,
-		LogSeverityError:    cxsdk.LogSeverityError,
-		LogSeverityCritical: cxsdk.LogSeverityCritical,
-		LogSeverityVerbose:  cxsdk.LogSeverityVerboseUnspecified,
+	LogSeverityToOpenAPISeverity = map[LogSeverity]alerts.LogSeverity{
+		LogSeverityDebug:    alerts.LOGSEVERITY_LOG_SEVERITY_DEBUG,
+		LogSeverityInfo:     alerts.LOGSEVERITY_LOG_SEVERITY_INFO,
+		LogSeverityWarning:  alerts.LOGSEVERITY_LOG_SEVERITY_WARNING,
+		LogSeverityError:    alerts.LOGSEVERITY_LOG_SEVERITY_ERROR,
+		LogSeverityCritical: alerts.LOGSEVERITY_LOG_SEVERITY_CRITICAL,
+		LogSeverityVerbose:  alerts.LOGSEVERITY_LOG_SEVERITY_VERBOSE_UNSPECIFIED,
 	}
-	LogsFiltersOperationToProtoOperation = map[LogFilterOperationType]cxsdk.LogFilterOperationType{
-		LogFilterOperationTypeIs:         cxsdk.LogFilterOperationIsOrUnspecified,
-		LogFilterOperationTypeIncludes:   cxsdk.LogFilterOperationIncludes,
-		LogFilterOperationTypeEndWith:    cxsdk.LogFilterOperationEndsWith,
-		LogFilterOperationTypeStartsWith: cxsdk.LogFilterOperationStartsWith,
+	LogsFiltersOperationToOpenAPIOperation = map[LogFilterOperationType]alerts.LogFilterOperationType{
+		LogFilterOperationTypeIs:         alerts.LOGFILTEROPERATIONTYPE_LOG_FILTER_OPERATION_TYPE_IS_OR_UNSPECIFIED,
+		LogFilterOperationTypeIncludes:   alerts.LOGFILTEROPERATIONTYPE_LOG_FILTER_OPERATION_TYPE_INCLUDES,
+		LogFilterOperationTypeEndWith:    alerts.LOGFILTEROPERATIONTYPE_LOG_FILTER_OPERATION_TYPE_ENDS_WITH,
+		LogFilterOperationTypeStartsWith: alerts.LOGFILTEROPERATIONTYPE_LOG_FILTER_OPERATION_TYPE_STARTS_WITH,
 	}
-	DaysOfWeekToProtoDayOfWeek = map[DayOfWeek]cxsdk.AlertDayOfWeek{
-		DayOfWeekSunday:    cxsdk.AlertDayOfWeekSunday,
-		DayOfWeekMonday:    cxsdk.AlertDayOfWeekMonday,
-		DayOfWeekTuesday:   cxsdk.AlertDayOfWeekTuesday,
-		DayOfWeekWednesday: cxsdk.AlertDayOfWeekWednesday,
-		DayOfWeekThursday:  cxsdk.AlertDayOfWeekThursday,
-		DayOfWeekFriday:    cxsdk.AlertDayOfWeekFriday,
-		DayOfWeekSaturday:  cxsdk.AlertDayOfWeekSaturday,
+	DaysOfWeekToOpenAPIDayOfWeek = map[DayOfWeek]alerts.DayOfWeek{
+		DayOfWeekSunday:    alerts.DAYOFWEEK_DAY_OF_WEEK_SUNDAY,
+		DayOfWeekMonday:    alerts.DAYOFWEEK_DAY_OF_WEEK_MONDAY_OR_UNSPECIFIED,
+		DayOfWeekTuesday:   alerts.DAYOFWEEK_DAY_OF_WEEK_TUESDAY,
+		DayOfWeekWednesday: alerts.DAYOFWEEK_DAY_OF_WEEK_WEDNESDAY,
+		DayOfWeekThursday:  alerts.DAYOFWEEK_DAY_OF_WEEK_THURSDAY,
+		DayOfWeekFriday:    alerts.DAYOFWEEK_DAY_OF_WEEK_FRIDAY,
+		DayOfWeekSaturday:  alerts.DAYOFWEEK_DAY_OF_WEEK_SATURDAY,
 	}
-	NotifyOnToProtoNotifyOn = map[NotifyOn]cxsdk.AlertNotifyOn{
-		NotifyOnTriggeredOnly:        cxsdk.AlertNotifyOnTriggeredOnlyUnspecified,
-		NotifyOnTriggeredAndResolved: cxsdk.AlertNotifyOnTriggeredAndResolved,
+	NotifyOnToOpenAPINotifyOn = map[NotifyOn]*alerts.NotifyOn{
+		NotifyOnTriggeredOnly:        alerts.NOTIFYON_NOTIFY_ON_TRIGGERED_ONLY_UNSPECIFIED.Ptr(),
+		NotifyOnTriggeredAndResolved: alerts.NOTIFYON_NOTIFY_ON_TRIGGERED_AND_RESOLVED.Ptr(),
 	}
 	AutoRetireTimeframeToProtoAutoRetireTimeframe = map[AutoRetireTimeframe]cxsdk.AutoRetireTimeframe{
 		AutoRetireTimeframeNeverOrUnspecified: cxsdk.AutoRetireTimeframeNeverOrUnspecified,
@@ -381,7 +382,7 @@ const (
 type RetriggeringPeriod struct {
 	// Delay between re-triggered alerts.
 	// +optional
-	Minutes *uint32 `json:"minutes,omitempty"`
+	Minutes *int64 `json:"minutes,omitempty"`
 }
 
 // Notification group to use for alert notifications.
@@ -450,7 +451,7 @@ type IntegrationRef struct {
 type OutboundWebhookBackendRef struct {
 	// Webhook ID.
 	// +optional
-	ID *uint32 `json:"id,omitempty"`
+	ID *int64 `json:"id,omitempty"`
 
 	// Name of the webhook.
 	// +optional
@@ -1491,7 +1492,7 @@ func NewDefaultAlertStatus() *AlertStatus {
 	}
 }
 
-func (in AlertSpec) ExtractAlertProperties(listingAlertsAndWebhooksProperties *GetResourceRefProperties) (*cxsdk.AlertDefProperties, error) {
+func (in AlertSpec) ExtractAlertCreateRequest(listingAlertsAndWebhooksProperties *GetResourceRefProperties) (*alerts.AlertDefsServiceCreateAlertDefRequest, error) {
 	notificationGroup, err := expandNotificationGroup(in.NotificationGroup, listingAlertsAndWebhooksProperties)
 	if err != nil {
 		return nil, fmt.Errorf("failed to expand notification group: %w", err)
@@ -1502,7 +1503,81 @@ func (in AlertSpec) ExtractAlertProperties(listingAlertsAndWebhooksProperties *G
 		return nil, fmt.Errorf("failed to expand notification group excess: %w", err)
 	}
 
-	alertDefProperties := &cxsdk.AlertDefProperties{
+	if logsImmediate := in.TypeDefinition.LogsImmediate; logsImmediate != nil {
+		return &alerts.AlertDefsServiceCreateAlertDefRequest{
+			AlertDefinitionProperties: &alerts.AlertDefinitionProperties{
+				Name:                    in.Name,
+				Description:             alerts.PtrString(in.Description),
+				Enabled:                 alerts.PtrBool(in.Enabled),
+				Priority:                AlertPriorityToOpenAPIPriority[in.Priority],
+				GroupByKeys:             in.GroupByKeys,
+				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+				NotificationGroup:       notificationGroup,
+				NotificationGroupExcess: notificationGroupExcess,
+				EntityLabels:            ptr.To(in.EntityLabels),
+				PhantomMode:             alerts.PtrBool(in.PhantomMode),
+				ActiveOn:                expandAlertSchedule(in.Schedule),
+				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_LOGS_IMMEDIATE_OR_UNSPECIFIED,
+				LogsImmediate:           expandLogsImmediate(logsImmediate),
+			},
+		}, nil
+	} else if logsThreshold := in.TypeDefinition.LogsThreshold; logsThreshold != nil {
+		properties.TypeDefinition = expandLogsThreshold(logsThreshold, properties.Priority)
+		properties.Type = cxsdk.AlertDefTypeLogsThreshold
+	} else if logsRatioThreshold := in.TypeDefinition.LogsRatioThreshold; logsRatioThreshold != nil {
+		properties.TypeDefinition = expandLogsRatioThreshold(logsRatioThreshold, properties.Priority)
+		properties.Type = cxsdk.AlertDefTypeLogsRatioThreshold
+	} else if logsTimeRelativeThreshold := in.TypeDefinition.LogsTimeRelativeThreshold; logsTimeRelativeThreshold != nil {
+		properties.TypeDefinition = expandLogsTimeRelativeThreshold(logsTimeRelativeThreshold, properties.Priority)
+		properties.Type = cxsdk.AlertDefTypeLogsTimeRelativeThreshold
+	} else if metricThreshold := in.TypeDefinition.MetricThreshold; metricThreshold != nil {
+		properties.TypeDefinition = expandMetricThreshold(metricThreshold, properties.Priority)
+		properties.Type = cxsdk.AlertDefTypeMetricThreshold
+	} else if tracingThreshold := in.TypeDefinition.TracingThreshold; tracingThreshold != nil {
+		properties.TypeDefinition = expandTracingThreshold(tracingThreshold)
+		properties.Type = cxsdk.AlertDefTypeTracingThreshold
+	} else if tracingImmediate := in.TypeDefinition.TracingImmediate; tracingImmediate != nil {
+		properties.TypeDefinition = expandTracingImmediate(tracingImmediate)
+		properties.Type = cxsdk.AlertDefTypeTracingImmediate
+	} else if flow := in.TypeDefinition.Flow; flow != nil {
+		properties.TypeDefinition = expandFlow(listingAlertsAndWebhooksProperties, flow)
+		properties.Type = cxsdk.AlertDefTypeFlow
+	} else if logsAnomaly := in.TypeDefinition.LogsAnomaly; logsAnomaly != nil {
+		properties.TypeDefinition = expandLogsAnomaly(logsAnomaly)
+		properties.Type = cxsdk.AlertDefTypeLogsAnomaly
+	} else if metricAnomaly := in.TypeDefinition.MetricAnomaly; metricAnomaly != nil {
+		properties.TypeDefinition = expandMetricAnomaly(metricAnomaly)
+		properties.Type = cxsdk.AlertDefTypeMetricAnomaly
+	} else if logsNewValue := in.TypeDefinition.LogsNewValue; logsNewValue != nil {
+		properties.TypeDefinition = expandLogsNewValue(logsNewValue)
+		properties.Type = cxsdk.AlertDefTypeLogsNewValue
+	} else if logsUniqueCount := in.TypeDefinition.LogsUniqueCount; logsUniqueCount != nil {
+		properties.TypeDefinition = expandLogsUniqueCount(logsUniqueCount)
+		properties.Type = cxsdk.AlertDefTypeLogsUniqueCount
+	} else if sloThreshold := in.TypeDefinition.SloThreshold; sloThreshold != nil {
+		var err error
+		properties.TypeDefinition, err = expandSloThreshold(listingAlertsAndWebhooksProperties, sloThreshold)
+		if err != nil {
+			return nil, fmt.Errorf("failed to expand SLO threshold: %w", err)
+		}
+		properties.Type = cxsdk.AlertDefTypeSloThreshold
+	}
+
+	return nil, fmt.Errorf("unsupported alert type definition")
+}
+
+func (in AlertSpec) ExtractAlertCreateRequestOld(listingAlertsAndWebhooksProperties *GetResourceRefProperties) (*alerts.AlertDefsServiceCreateAlertDefRequest, error) {
+	notificationGroup, err := expandNotificationGroup(in.NotificationGroup, listingAlertsAndWebhooksProperties)
+	if err != nil {
+		return nil, fmt.Errorf("failed to expand notification group: %w", err)
+	}
+
+	notificationGroupExcess, err := expandNotificationGroupExcess(in.NotificationGroupExcess, listingAlertsAndWebhooksProperties)
+	if err != nil {
+		return nil, fmt.Errorf("failed to expand notification group excess: %w", err)
+	}
+
+	properties := &cxsdk.AlertDefProperties{
 		Name:                    wrapperspb.String(in.Name),
 		Description:             wrapperspb.String(in.Description),
 		Enabled:                 wrapperspb.Bool(in.Enabled),
@@ -1516,38 +1591,74 @@ func (in AlertSpec) ExtractAlertProperties(listingAlertsAndWebhooksProperties *G
 		Schedule:                expandAlertSchedule(in.Schedule),
 	}
 
-	alertDefProperties, err = expandAlertTypeDefinition(alertDefProperties, in.TypeDefinition, listingAlertsAndWebhooksProperties)
-	if err != nil {
-		return nil, fmt.Errorf("failed to expand alert type definition: %w", err)
+	if logsImmediate := in.TypeDefinition.LogsImmediate; logsImmediate != nil {
+		properties.TypeDefinition = expandLogsImmediate(logsImmediate)
+		properties.Type = cxsdk.AlertDefTypeLogsImmediateOrUnspecified
+	} else if logsThreshold := in.TypeDefinition.LogsThreshold; logsThreshold != nil {
+		properties.TypeDefinition = expandLogsThreshold(logsThreshold, properties.Priority)
+		properties.Type = cxsdk.AlertDefTypeLogsThreshold
+	} else if logsRatioThreshold := in.TypeDefinition.LogsRatioThreshold; logsRatioThreshold != nil {
+		properties.TypeDefinition = expandLogsRatioThreshold(logsRatioThreshold, properties.Priority)
+		properties.Type = cxsdk.AlertDefTypeLogsRatioThreshold
+	} else if logsTimeRelativeThreshold := in.TypeDefinition.LogsTimeRelativeThreshold; logsTimeRelativeThreshold != nil {
+		properties.TypeDefinition = expandLogsTimeRelativeThreshold(logsTimeRelativeThreshold, properties.Priority)
+		properties.Type = cxsdk.AlertDefTypeLogsTimeRelativeThreshold
+	} else if metricThreshold := in.TypeDefinition.MetricThreshold; metricThreshold != nil {
+		properties.TypeDefinition = expandMetricThreshold(metricThreshold, properties.Priority)
+		properties.Type = cxsdk.AlertDefTypeMetricThreshold
+	} else if tracingThreshold := in.TypeDefinition.TracingThreshold; tracingThreshold != nil {
+		properties.TypeDefinition = expandTracingThreshold(tracingThreshold)
+		properties.Type = cxsdk.AlertDefTypeTracingThreshold
+	} else if tracingImmediate := in.TypeDefinition.TracingImmediate; tracingImmediate != nil {
+		properties.TypeDefinition = expandTracingImmediate(tracingImmediate)
+		properties.Type = cxsdk.AlertDefTypeTracingImmediate
+	} else if flow := in.TypeDefinition.Flow; flow != nil {
+		properties.TypeDefinition = expandFlow(listingAlertsAndWebhooksProperties, flow)
+		properties.Type = cxsdk.AlertDefTypeFlow
+	} else if logsAnomaly := in.TypeDefinition.LogsAnomaly; logsAnomaly != nil {
+		properties.TypeDefinition = expandLogsAnomaly(logsAnomaly)
+		properties.Type = cxsdk.AlertDefTypeLogsAnomaly
+	} else if metricAnomaly := in.TypeDefinition.MetricAnomaly; metricAnomaly != nil {
+		properties.TypeDefinition = expandMetricAnomaly(metricAnomaly)
+		properties.Type = cxsdk.AlertDefTypeMetricAnomaly
+	} else if logsNewValue := in.TypeDefinition.LogsNewValue; logsNewValue != nil {
+		properties.TypeDefinition = expandLogsNewValue(logsNewValue)
+		properties.Type = cxsdk.AlertDefTypeLogsNewValue
+	} else if logsUniqueCount := in.TypeDefinition.LogsUniqueCount; logsUniqueCount != nil {
+		properties.TypeDefinition = expandLogsUniqueCount(logsUniqueCount)
+		properties.Type = cxsdk.AlertDefTypeLogsUniqueCount
+	} else if sloThreshold := in.TypeDefinition.SloThreshold; sloThreshold != nil {
+		var err error
+		properties.TypeDefinition, err = expandSloThreshold(listingAlertsAndWebhooksProperties, sloThreshold)
+		if err != nil {
+			return nil, fmt.Errorf("failed to expand SLO threshold: %w", err)
+		}
+		properties.Type = cxsdk.AlertDefTypeSloThreshold
+	} else {
+		return nil, fmt.Errorf("unsupported alert type definition")
 	}
 
-	return alertDefProperties, nil
+	return properties, nil
 }
 
-func expandIncidentsSettings(incidentsSettings *IncidentsSettings) *cxsdk.AlertDefIncidentSettings {
+func expandIncidentsSettings(incidentsSettings *IncidentsSettings) *alerts.AlertDefIncidentSettings {
 	if incidentsSettings == nil {
 		return nil
 	}
 
-	alertDefIncidentSettings := &cxsdk.AlertDefIncidentSettings{
-		NotifyOn: NotifyOnToProtoNotifyOn[incidentsSettings.NotifyOn],
+	alertDefIncidentSettings := &alerts.AlertDefIncidentSettings{
+		NotifyOn: NotifyOnToOpenAPINotifyOn[incidentsSettings.NotifyOn],
 	}
-	alertDefIncidentSettings = expandRetriggeringPeriod(alertDefIncidentSettings, incidentsSettings.RetriggeringPeriod)
-	return alertDefIncidentSettings
-}
 
-func expandRetriggeringPeriod(alertDefIncidentSettings *cxsdk.AlertDefIncidentSettings, retriggeringPeriod RetriggeringPeriod) *cxsdk.AlertDefIncidentSettings {
-	if retriggeringPeriod.Minutes != nil {
-		alertDefIncidentSettings.RetriggeringPeriod = &cxsdk.AlertDefIncidentSettingsMinutes{
-			Minutes: wrapperspb.UInt32(*retriggeringPeriod.Minutes),
-		}
+	if incidentsSettings.RetriggeringPeriod.Minutes != nil {
+		alertDefIncidentSettings.Minutes = incidentsSettings.RetriggeringPeriod.Minutes
 	}
 
 	return alertDefIncidentSettings
 }
 
-func expandNotificationGroupExcess(excess []NotificationGroup, listingAlertsAndWebhooksProperties *GetResourceRefProperties) ([]*cxsdk.AlertDefNotificationGroup, error) {
-	result := make([]*cxsdk.AlertDefNotificationGroup, 0, len(excess))
+func expandNotificationGroupExcess(excess []NotificationGroup, listingAlertsAndWebhooksProperties *GetResourceRefProperties) ([]alerts.AlertDefNotificationGroup, error) {
+	result := make([]alerts.AlertDefNotificationGroup, 0, len(excess))
 	var errs error
 	for _, group := range excess {
 		ng, err := expandNotificationGroup(&group, listingAlertsAndWebhooksProperties)
@@ -1555,7 +1666,7 @@ func expandNotificationGroupExcess(excess []NotificationGroup, listingAlertsAndW
 			errs = errors.Join(errs, fmt.Errorf("failed to expand notification group: %w", err))
 			continue
 		}
-		result = append(result, ng)
+		result = append(result, *ng)
 	}
 
 	if errs != nil {
@@ -1565,7 +1676,7 @@ func expandNotificationGroupExcess(excess []NotificationGroup, listingAlertsAndW
 	return result, nil
 }
 
-func expandNotificationGroup(notificationGroup *NotificationGroup, listingAlertsAndWebhooksProperties *GetResourceRefProperties) (*cxsdk.AlertDefNotificationGroup, error) {
+func expandNotificationGroup(notificationGroup *NotificationGroup, listingAlertsAndWebhooksProperties *GetResourceRefProperties) (*alerts.AlertDefNotificationGroup, error) {
 	if notificationGroup == nil {
 		return nil, nil
 	}
@@ -1575,31 +1686,31 @@ func expandNotificationGroup(notificationGroup *NotificationGroup, listingAlerts
 		return nil, fmt.Errorf("failed to expand webhooks settings: %w", err)
 	}
 
-	var destinations []*cxsdk.NotificationDestination
-	var router *cxsdk.NotificationRouter
+	var destinations []alerts.NotificationDestination
+	var router *alerts.NotificationRouter
 	if notificationGroup.Destinations != nil {
 		destinations, err = expandNotificationDestinations(notificationGroup.Destinations, listingAlertsAndWebhooksProperties)
 		if err != nil {
 			return nil, fmt.Errorf("failed to expand notification destinations: %w", err)
 		}
 	} else if notificationGroup.Router != nil {
-		notifyOn := NotifyOnToProtoNotifyOn[notificationGroup.Router.NotifyOn]
-		router = &cxsdk.NotificationRouter{
+		notifyOn := NotifyOnToOpenAPINotifyOn[notificationGroup.Router.NotifyOn]
+		router = &alerts.NotificationRouter{
 			Id:       "router_default",
-			NotifyOn: &notifyOn,
+			NotifyOn: notifyOn,
 		}
 	}
 
-	return &cxsdk.AlertDefNotificationGroup{
-		GroupByKeys:  coralogix.StringSliceToWrappedStringSlice(notificationGroup.GroupByKeys),
+	return &alerts.AlertDefNotificationGroup{
+		GroupByKeys:  notificationGroup.GroupByKeys,
 		Webhooks:     webhooks,
 		Destinations: destinations,
 		Router:       router,
 	}, nil
 }
 
-func expandWebhooksSettings(webhooksSettings []WebhookSettings, listingAlertsAndWebhooksProperties *GetResourceRefProperties) ([]*cxsdk.AlertDefWebhooksSettings, error) {
-	result := make([]*cxsdk.AlertDefWebhooksSettings, len(webhooksSettings))
+func expandWebhooksSettings(webhooksSettings []WebhookSettings, listingAlertsAndWebhooksProperties *GetResourceRefProperties) ([]alerts.AlertDefWebhooksSettings, error) {
+	result := make([]alerts.AlertDefWebhooksSettings, len(webhooksSettings))
 	var errs error
 	for i, setting := range webhooksSettings {
 		expandedWebhookSetting, err := expandWebhookSetting(setting, listingAlertsAndWebhooksProperties)
@@ -1607,7 +1718,7 @@ func expandWebhooksSettings(webhooksSettings []WebhookSettings, listingAlertsAnd
 			errs = errors.Join(errs, fmt.Errorf("failed to expand webhook setting: %w", err))
 			continue
 		}
-		result[i] = expandedWebhookSetting
+		result[i] = *expandedWebhookSetting
 	}
 
 	if errs != nil {
@@ -1616,24 +1727,22 @@ func expandWebhooksSettings(webhooksSettings []WebhookSettings, listingAlertsAnd
 	return result, nil
 }
 
-func expandWebhookSetting(webhooksSetting WebhookSettings, listingAlertsAndWebhooksProperties *GetResourceRefProperties) (*cxsdk.AlertDefWebhooksSettings, error) {
-	notifyOn := NotifyOnToProtoNotifyOn[webhooksSetting.NotifyOn]
+func expandWebhookSetting(webhooksSetting WebhookSettings, listingAlertsAndWebhooksProperties *GetResourceRefProperties) (*alerts.AlertDefWebhooksSettings, error) {
+	notifyOn := NotifyOnToOpenAPINotifyOn[webhooksSetting.NotifyOn]
 	integration, err := expandIntegration(webhooksSetting.Integration, listingAlertsAndWebhooksProperties)
 	if err != nil {
 		return nil, fmt.Errorf("failed to expand integration: %w", err)
 	}
-	return &cxsdk.AlertDefWebhooksSettings{
-		NotifyOn:    &notifyOn,
-		Integration: integration,
-		RetriggeringPeriod: &cxsdk.AlertDefWebhooksSettingsMinutes{
-			Minutes: wrapperspb.UInt32(*webhooksSetting.RetriggeringPeriod.Minutes),
-		},
+	return &alerts.AlertDefWebhooksSettings{
+		NotifyOn:    notifyOn,
+		Integration: *integration,
+		Minutes:     webhooksSetting.RetriggeringPeriod.Minutes,
 	}, nil
 }
 
-func expandIntegration(integration IntegrationType, listingWebhooksProperties *GetResourceRefProperties) (*cxsdk.AlertDefIntegrationType, error) {
+func expandIntegration(integration IntegrationType, listingWebhooksProperties *GetResourceRefProperties) (*alerts.V3IntegrationType, error) {
 	if integrationRef := integration.IntegrationRef; integrationRef != nil {
-		var integrationID *wrapperspb.UInt32Value
+		var integrationID *int64
 		var err error
 
 		if resourceRef := integrationRef.ResourceRef; resourceRef != nil {
@@ -1646,7 +1755,7 @@ func expandIntegration(integration IntegrationType, listingWebhooksProperties *G
 			}
 		} else if backendRef := integrationRef.BackendRef; backendRef != nil {
 			if id := backendRef.ID; id != nil {
-				integrationID = wrapperspb.UInt32(*id)
+				integrationID = id
 			} else if name := backendRef.Name; name != nil {
 				integrationID, err = convertNameToIntegrationID(*name, listingWebhooksProperties)
 				if err != nil {
@@ -1657,16 +1766,16 @@ func expandIntegration(integration IntegrationType, listingWebhooksProperties *G
 			return nil, fmt.Errorf("integration type not found")
 		}
 
-		return &cxsdk.AlertDefIntegrationType{
-			IntegrationType: &cxsdk.AlertDefIntegrationTypeIntegrationID{
+		return &alerts.V3IntegrationType{
+			IntegrationType: &alerts.IntegrationType{
 				IntegrationId: integrationID,
 			},
 		}, nil
 	} else if recipients := integration.Recipients; recipients != nil {
-		return &cxsdk.AlertDefIntegrationType{
-			IntegrationType: &cxsdk.AlertDefIntegrationTypeRecipients{
-				Recipients: &cxsdk.AlertDefRecipients{
-					Emails: coralogix.StringSliceToWrappedStringSlice(recipients),
+		return &alerts.V3IntegrationType{
+			IntegrationType1: &alerts.IntegrationType1{
+				Recipients: &alerts.Recipients{
+					Emails: recipients,
 				},
 			},
 		}, nil
@@ -1675,7 +1784,7 @@ func expandIntegration(integration IntegrationType, listingWebhooksProperties *G
 	return nil, fmt.Errorf("integration type not found")
 }
 
-func convertNameToIntegrationID(name string, properties *GetResourceRefProperties) (*wrapperspb.UInt32Value, error) {
+func convertNameToIntegrationID(name string, properties *GetResourceRefProperties) (*int64, error) {
 	if properties.WebhookNameToId == nil {
 		if err := fillWebhookNameToId(properties); err != nil {
 			return nil, err
@@ -1687,7 +1796,7 @@ func convertNameToIntegrationID(name string, properties *GetResourceRefPropertie
 		return nil, fmt.Errorf("webhook %s not found", name)
 	}
 
-	return wrapperspb.UInt32(id), nil
+	return &id, nil
 }
 
 func fillWebhookNameToId(properties *GetResourceRefProperties) error {
@@ -1698,16 +1807,16 @@ func fillWebhookNameToId(properties *GetResourceRefProperties) error {
 		return err
 	}
 
-	properties.WebhookNameToId = make(map[string]uint32)
+	properties.WebhookNameToId = make(map[string]int64)
 	for _, webhook := range webhooks.Deployed {
-		properties.WebhookNameToId[webhook.Name.Value] = webhook.ExternalId.Value
+		properties.WebhookNameToId[webhook.Name.Value] = int64(webhook.ExternalId.Value)
 	}
 
 	return nil
 }
 
-func expandNotificationDestinations(destinations []NotificationDestination, properties *GetResourceRefProperties) ([]*cxsdk.NotificationDestination, error) {
-	var result []*cxsdk.NotificationDestination
+func expandNotificationDestinations(destinations []NotificationDestination, properties *GetResourceRefProperties) ([]alerts.NotificationDestination, error) {
+	var result []alerts.NotificationDestination
 	for _, destination := range destinations {
 		connectorId, err := getResourceID(destination.Connector, properties, utils.ConnectorKind)
 		if err != nil {
@@ -1725,19 +1834,19 @@ func expandNotificationDestinations(destinations []NotificationDestination, prop
 		}
 
 		triggeredRoutingOverrides := expandRoutingOverrides(destination.TriggeredRoutingOverrides)
-		var resolvedRoutingOverrides *cxsdk.SourceOverrides
+		var resolvedRoutingOverrides *alerts.V3SourceOverrides
 		if destination.ResolvedRoutingOverrides != nil {
 			resolvedRoutingOverrides = expandRoutingOverrides(*destination.ResolvedRoutingOverrides)
 		}
 
-		notificationDestination := &cxsdk.NotificationDestination{
+		notificationDestination := alerts.NotificationDestination{
 			ConnectorId: connectorId,
 			PresetId:    presetId,
-			NotifyOn:    NotifyOnToProtoNotifyOn[destination.NotifyOn],
-			TriggeredRoutingOverrides: &cxsdk.NotificationRouting{
+			NotifyOn:    NotifyOnToOpenAPINotifyOn[destination.NotifyOn],
+			TriggeredRoutingOverrides: &alerts.NotificationRouting{
 				ConfigOverrides: triggeredRoutingOverrides,
 			},
-			ResolvedRouteOverrides: &cxsdk.NotificationRouting{
+			ResolvedRouteOverrides: &alerts.NotificationRouting{
 				ConfigOverrides: resolvedRoutingOverrides,
 			},
 		}
@@ -1748,7 +1857,7 @@ func expandNotificationDestinations(destinations []NotificationDestination, prop
 	return result, nil
 }
 
-func expandRoutingOverrides(overrides NotificationRouting) *cxsdk.SourceOverrides {
+func expandRoutingOverrides(overrides NotificationRouting) *alerts.V3SourceOverrides {
 	if overrides.ConfigOverrides == nil {
 		return nil
 	}
@@ -1756,7 +1865,7 @@ func expandRoutingOverrides(overrides NotificationRouting) *cxsdk.SourceOverride
 	connectorOverrides := extractConnectorOverrides(overrides.ConfigOverrides.ConnectorConfigFields)
 	presetOverrides := extractPresetOverrides(overrides.ConfigOverrides.MessageConfigFields)
 
-	sourceOverrides := &cxsdk.SourceOverrides{
+	sourceOverrides := &alerts.V3SourceOverrides{
 		ConnectorConfigFields: connectorOverrides,
 		MessageConfigFields:   presetOverrides,
 		PayloadType:           overrides.ConfigOverrides.PayloadType,
@@ -1765,10 +1874,10 @@ func expandRoutingOverrides(overrides NotificationRouting) *cxsdk.SourceOverride
 	return sourceOverrides
 }
 
-func extractConnectorOverrides(overrides []ConfigField) []*cxsdk.AlertsConnectorConfigField {
-	var result []*cxsdk.AlertsConnectorConfigField
+func extractConnectorOverrides(overrides []ConfigField) []alerts.V3ConnectorConfigField {
+	var result []alerts.V3ConnectorConfigField
 	for _, override := range overrides {
-		result = append(result, &cxsdk.AlertsConnectorConfigField{
+		result = append(result, alerts.V3ConnectorConfigField{
 			FieldName: override.FieldName,
 			Template:  override.Template,
 		})
@@ -1777,10 +1886,10 @@ func extractConnectorOverrides(overrides []ConfigField) []*cxsdk.AlertsConnector
 	return result
 }
 
-func extractPresetOverrides(overrides []ConfigField) []*cxsdk.AlertsMessageConfigField {
-	var result []*cxsdk.AlertsMessageConfigField
+func extractPresetOverrides(overrides []ConfigField) []alerts.V3MessageConfigField {
+	var result []alerts.V3MessageConfigField
 	for _, override := range overrides {
-		result = append(result, &cxsdk.AlertsMessageConfigField{
+		result = append(result, alerts.V3MessageConfigField{
 			FieldName: override.FieldName,
 			Template:  override.Template,
 		})
@@ -1832,7 +1941,7 @@ func extractIdFromResourceRef(ref *ResourceRef, properties *GetResourceRefProper
 	return id, nil
 }
 
-func expandAlertSchedule(alertSchedule *AlertSchedule) *cxsdk.AlertDefPropertiesActiveOn {
+func expandAlertSchedule(alertSchedule *AlertSchedule) *alerts.ActivitySchedule {
 	if alertSchedule == nil {
 		return nil
 	}
@@ -1844,12 +1953,10 @@ func expandAlertSchedule(alertSchedule *AlertSchedule) *cxsdk.AlertDefProperties
 
 	start, end, daysOfWeek = convertTimeFramesToGMT(start, end, daysOfWeek, utc)
 
-	return &cxsdk.AlertDefPropertiesActiveOn{
-		ActiveOn: &cxsdk.AlertsActivitySchedule{
-			DayOfWeek: daysOfWeek,
-			StartTime: start,
-			EndTime:   end,
-		},
+	return &alerts.ActivitySchedule{
+		DayOfWeek: daysOfWeek,
+		StartTime: *start,
+		EndTime:   *end,
 	}
 }
 
@@ -1866,7 +1973,7 @@ func extractUTC(timeZone TimeZone) int32 {
 	return int32(utc)
 }
 
-func expandTime(time *TimeOfDay) *cxsdk.AlertTimeOfDay {
+func expandTime(time *TimeOfDay) *alerts.TimeOfDay {
 	if time == nil {
 		return nil
 	}
@@ -1875,26 +1982,46 @@ func expandTime(time *TimeOfDay) *cxsdk.AlertTimeOfDay {
 	hours, _ := strconv.Atoi(timeArr[0])
 	minutes, _ := strconv.Atoi(timeArr[1])
 
-	return &cxsdk.AlertTimeOfDay{
+	return &alerts.TimeOfDay{
 		Hours:   int32(hours),
 		Minutes: int32(minutes),
 	}
 }
 
-func convertTimeFramesToGMT(start, end *cxsdk.AlertTimeOfDay, daysOfWeek []cxsdk.AlertDayOfWeek, utc int32) (*cxsdk.AlertTimeOfDay, *cxsdk.AlertTimeOfDay, []cxsdk.AlertDayOfWeek) {
+func convertTimeFramesToGMT(start, end *alerts.TimeOfDay, daysOfWeek []alerts.DayOfWeek, utc int32) (*alerts.TimeOfDay, *alerts.TimeOfDay, []alerts.DayOfWeek) {
+	var dayToIndex = map[alerts.DayOfWeek]int{
+		alerts.DAYOFWEEK_DAY_OF_WEEK_MONDAY_OR_UNSPECIFIED: 0,
+		alerts.DAYOFWEEK_DAY_OF_WEEK_TUESDAY:               1,
+		alerts.DAYOFWEEK_DAY_OF_WEEK_WEDNESDAY:             2,
+		alerts.DAYOFWEEK_DAY_OF_WEEK_THURSDAY:              3,
+		alerts.DAYOFWEEK_DAY_OF_WEEK_FRIDAY:                4,
+		alerts.DAYOFWEEK_DAY_OF_WEEK_SATURDAY:              5,
+		alerts.DAYOFWEEK_DAY_OF_WEEK_SUNDAY:                6,
+	}
+
+	var indexToDay = []alerts.DayOfWeek{
+		alerts.DAYOFWEEK_DAY_OF_WEEK_MONDAY_OR_UNSPECIFIED,
+		alerts.DAYOFWEEK_DAY_OF_WEEK_TUESDAY,
+		alerts.DAYOFWEEK_DAY_OF_WEEK_WEDNESDAY,
+		alerts.DAYOFWEEK_DAY_OF_WEEK_THURSDAY,
+		alerts.DAYOFWEEK_DAY_OF_WEEK_FRIDAY,
+		alerts.DAYOFWEEK_DAY_OF_WEEK_SATURDAY,
+		alerts.DAYOFWEEK_DAY_OF_WEEK_SUNDAY,
+	}
 	daysOfWeekOffset := daysOfWeekOffsetToGMT(start, utc)
 	start.Hours = convertUtcToGmt(start.GetHours(), utc)
 	end.Hours = convertUtcToGmt(end.GetHours(), utc)
 	if daysOfWeekOffset != 0 {
 		for i, d := range daysOfWeek {
-			daysOfWeek[i] = cxsdk.AlertDayOfWeek((int32(d) + daysOfWeekOffset) % 7)
+			idx := (dayToIndex[d] + int(daysOfWeekOffset) + 7) % 7
+			daysOfWeek[i] = indexToDay[idx]
 		}
 	}
 
 	return start, end, daysOfWeek
 }
 
-func daysOfWeekOffsetToGMT(start *cxsdk.AlertTimeOfDay, utc int32) int32 {
+func daysOfWeekOffsetToGMT(start *alerts.TimeOfDay, utc int32) int32 {
 	daysOfWeekOffset := (start.Hours - utc) / 24
 	if daysOfWeekOffset < 0 {
 		daysOfWeekOffset += 7
@@ -1913,64 +2040,13 @@ func convertUtcToGmt(hours, utc int32) int32 {
 	return hours
 }
 
-func expandDaysOfWeek(week []DayOfWeek) []cxsdk.AlertDayOfWeek {
-	result := make([]cxsdk.AlertDayOfWeek, len(week))
+func expandDaysOfWeek(week []DayOfWeek) []alerts.DayOfWeek {
+	result := make([]alerts.DayOfWeek, len(week))
 	for i, d := range week {
-		result[i] = DaysOfWeekToProtoDayOfWeek[d]
+		result[i] = DaysOfWeekToOpenAPIDayOfWeek[d]
 	}
 
 	return result
-}
-
-func expandAlertTypeDefinition(properties *cxsdk.AlertDefProperties, definition AlertTypeDefinition, listingProperties *GetResourceRefProperties) (*cxsdk.AlertDefProperties, error) {
-	if logsImmediate := definition.LogsImmediate; logsImmediate != nil {
-		properties.TypeDefinition = expandLogsImmediate(logsImmediate)
-		properties.Type = cxsdk.AlertDefTypeLogsImmediateOrUnspecified
-	} else if logsThreshold := definition.LogsThreshold; logsThreshold != nil {
-		properties.TypeDefinition = expandLogsThreshold(logsThreshold, properties.Priority)
-		properties.Type = cxsdk.AlertDefTypeLogsThreshold
-	} else if logsRatioThreshold := definition.LogsRatioThreshold; logsRatioThreshold != nil {
-		properties.TypeDefinition = expandLogsRatioThreshold(logsRatioThreshold, properties.Priority)
-		properties.Type = cxsdk.AlertDefTypeLogsRatioThreshold
-	} else if logsTimeRelativeThreshold := definition.LogsTimeRelativeThreshold; logsTimeRelativeThreshold != nil {
-		properties.TypeDefinition = expandLogsTimeRelativeThreshold(logsTimeRelativeThreshold, properties.Priority)
-		properties.Type = cxsdk.AlertDefTypeLogsTimeRelativeThreshold
-	} else if metricThreshold := definition.MetricThreshold; metricThreshold != nil {
-		properties.TypeDefinition = expandMetricThreshold(metricThreshold, properties.Priority)
-		properties.Type = cxsdk.AlertDefTypeMetricThreshold
-	} else if tracingThreshold := definition.TracingThreshold; tracingThreshold != nil {
-		properties.TypeDefinition = expandTracingThreshold(tracingThreshold)
-		properties.Type = cxsdk.AlertDefTypeTracingThreshold
-	} else if tracingImmediate := definition.TracingImmediate; tracingImmediate != nil {
-		properties.TypeDefinition = expandTracingImmediate(tracingImmediate)
-		properties.Type = cxsdk.AlertDefTypeTracingImmediate
-	} else if flow := definition.Flow; flow != nil {
-		properties.TypeDefinition = expandFlow(listingProperties, flow)
-		properties.Type = cxsdk.AlertDefTypeFlow
-	} else if logsAnomaly := definition.LogsAnomaly; logsAnomaly != nil {
-		properties.TypeDefinition = expandLogsAnomaly(logsAnomaly)
-		properties.Type = cxsdk.AlertDefTypeLogsAnomaly
-	} else if metricAnomaly := definition.MetricAnomaly; metricAnomaly != nil {
-		properties.TypeDefinition = expandMetricAnomaly(metricAnomaly)
-		properties.Type = cxsdk.AlertDefTypeMetricAnomaly
-	} else if logsNewValue := definition.LogsNewValue; logsNewValue != nil {
-		properties.TypeDefinition = expandLogsNewValue(logsNewValue)
-		properties.Type = cxsdk.AlertDefTypeLogsNewValue
-	} else if logsUniqueCount := definition.LogsUniqueCount; logsUniqueCount != nil {
-		properties.TypeDefinition = expandLogsUniqueCount(logsUniqueCount)
-		properties.Type = cxsdk.AlertDefTypeLogsUniqueCount
-	} else if sloThreshold := definition.SloThreshold; sloThreshold != nil {
-		var err error
-		properties.TypeDefinition, err = expandSloThreshold(listingProperties, sloThreshold)
-		if err != nil {
-			return nil, fmt.Errorf("failed to expand SLO threshold: %w", err)
-		}
-		properties.Type = cxsdk.AlertDefTypeSloThreshold
-	} else {
-		return nil, fmt.Errorf("unsupported alert type definition")
-	}
-
-	return properties, nil
 }
 
 func expandSloThreshold(listingSloProperties *GetResourceRefProperties, sloThreshold *SloThreshold) (*cxsdk.AlertDefPropertiesSlo, error) {
@@ -2615,12 +2691,15 @@ func expandMetricMissingValues(missingValues *MetricMissingValues) *cxsdk.Metric
 	return nil
 }
 
-func expandLogsImmediate(immediate *LogsImmediate) *cxsdk.AlertDefPropertiesLogsImmediate {
-	return &cxsdk.AlertDefPropertiesLogsImmediate{
-		LogsImmediate: &cxsdk.LogsImmediateType{
-			LogsFilter:                expandLogsFilter(immediate.LogsFilter),
-			NotificationPayloadFilter: coralogix.StringSliceToWrappedStringSlice(immediate.NotificationPayloadFilter),
-		},
+func expandLogsImmediate(immediate *LogsImmediate) *alerts.LogsImmediateType {
+	logsFilter := expandLogsFilter(immediate.LogsFilter)
+	if logsFilter == nil {
+		return nil
+	}
+
+	return &alerts.LogsImmediateType{
+		LogsFilter:                *logsFilter,
+		NotificationPayloadFilter: immediate.NotificationPayloadFilter,
 	}
 }
 
@@ -2726,48 +2805,46 @@ func expandAlertOverride(override *AlertOverride, priority cxsdk.AlertDefPriorit
 	}
 }
 
-func expandLogsFilter(filter *LogsFilter) *cxsdk.LogsFilter {
+func expandLogsFilter(filter *LogsFilter) *alerts.V3LogsFilter {
 	if filter == nil {
 		return nil
 	}
 
-	return &cxsdk.LogsFilter{
-		FilterType: expandSimpleFilter(filter.SimpleFilter),
+	return &alerts.V3LogsFilter{
+		SimpleFilter: expandSimpleFilter(filter.SimpleFilter),
 	}
 }
 
-func expandSimpleFilter(filter LogsSimpleFilter) *cxsdk.LogsFilterSimpleFilter {
-	return &cxsdk.LogsFilterSimpleFilter{
-		SimpleFilter: &cxsdk.SimpleFilter{
-			LuceneQuery:  coralogix.StringPointerToWrapperspbString(filter.LuceneQuery),
-			LabelFilters: expandLabelFilters(filter.LabelFilters),
-		},
+func expandSimpleFilter(filter LogsSimpleFilter) *alerts.LogsSimpleFilter {
+	return &alerts.LogsSimpleFilter{
+		LuceneQuery:  filter.LuceneQuery,
+		LabelFilters: expandLabelFilters(filter.LabelFilters),
 	}
 }
 
-func expandLabelFilters(filters *LabelFilters) *cxsdk.LabelFilters {
-	return &cxsdk.LabelFilters{
+func expandLabelFilters(filters *LabelFilters) *alerts.LabelFilters {
+	return &alerts.LabelFilters{
 		ApplicationName: expandLabelFilterTypes(filters.ApplicationName),
 		SubsystemName:   expandLabelFilterTypes(filters.SubsystemName),
 		Severities:      expandLogSeverities(filters.Severity),
 	}
 }
 
-func expandLogSeverities(severity []LogSeverity) []cxsdk.LogSeverity {
-	result := make([]cxsdk.LogSeverity, len(severity))
+func expandLogSeverities(severity []LogSeverity) []alerts.LogSeverity {
+	result := make([]alerts.LogSeverity, len(severity))
 	for i, s := range severity {
-		result[i] = LogSeverityToProtoSeverity[s]
+		result[i] = LogSeverityToOpenAPISeverity[s]
 	}
 
 	return result
 }
 
-func expandLabelFilterTypes(name []LabelFilterType) []*cxsdk.LabelFilterType {
-	result := make([]*cxsdk.LabelFilterType, len(name))
+func expandLabelFilterTypes(name []LabelFilterType) []alerts.LabelFilterType {
+	result := make([]alerts.LabelFilterType, len(name))
 	for i, n := range name {
-		result[i] = &cxsdk.LabelFilterType{
-			Value:     wrapperspb.String(n.Value),
-			Operation: LogsFiltersOperationToProtoOperation[n.Operation],
+		result[i] = alerts.LabelFilterType{
+			Value:     n.Value,
+			Operation: LogsFiltersOperationToOpenAPIOperation[n.Operation],
 		}
 	}
 
@@ -2822,12 +2899,12 @@ type GetResourceRefProperties struct {
 	Ctx             context.Context
 	Log             logr.Logger
 	AlertNameToId   map[string]string
-	WebhookNameToId map[string]uint32
+	WebhookNameToId map[string]int64
 	Clientset       *cxsdk.ClientSet
 	Namespace       string
 }
 
-func convertCRNameToIntegrationID(name string, properties *GetResourceRefProperties) (*wrapperspb.UInt32Value, error) {
+func convertCRNameToIntegrationID(name string, properties *GetResourceRefProperties) (*int64, error) {
 	ctx, namespace := properties.Ctx, properties.Namespace
 
 	u := &unstructured.Unstructured{}
@@ -2858,5 +2935,5 @@ func convertCRNameToIntegrationID(name string, properties *GetResourceRefPropert
 		return nil, fmt.Errorf("failed to convert externalID to int, externalID: %s, error: %w", externalID, err)
 	}
 
-	return wrapperspb.UInt32(uint32(externalIDInt)), nil
+	return ptr.To(int64(externalIDInt)), nil
 }
