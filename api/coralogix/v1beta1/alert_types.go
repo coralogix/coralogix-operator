@@ -103,33 +103,33 @@ var (
 		NotifyOnTriggeredOnly:        alerts.NOTIFYON_NOTIFY_ON_TRIGGERED_ONLY_UNSPECIFIED.Ptr(),
 		NotifyOnTriggeredAndResolved: alerts.NOTIFYON_NOTIFY_ON_TRIGGERED_AND_RESOLVED.Ptr(),
 	}
-	AutoRetireTimeframeToProtoAutoRetireTimeframe = map[AutoRetireTimeframe]cxsdk.AutoRetireTimeframe{
-		AutoRetireTimeframeNeverOrUnspecified: cxsdk.AutoRetireTimeframeNeverOrUnspecified,
-		AutoRetireTimeframe5M:                 cxsdk.AutoRetireTimeframe5Minutes,
-		AutoRetireTimeframe10M:                cxsdk.AutoRetireTimeframe10Minutes,
-		AutoRetireTimeframe1H:                 cxsdk.AutoRetireTimeframe1Hour,
-		AutoRetireTimeframe2H:                 cxsdk.AutoRetireTimeframe2Hours,
-		AutoRetireTimeframe6H:                 cxsdk.AutoRetireTimeframe6Hours,
-		AutoRetireTimeframe12H:                cxsdk.AutoRetireTimeframe12Hours,
-		AutoRetireTimeframe24H:                cxsdk.AutoRetireTimeframe24Hours,
+	AutoRetireTimeframeToOpenAPIAutoRetireTimeframe = map[AutoRetireTimeframe]alerts.V3AutoRetireTimeframe{
+		AutoRetireTimeframeNeverOrUnspecified: alerts.V3AUTORETIRETIMEFRAME_AUTO_RETIRE_TIMEFRAME_NEVER_OR_UNSPECIFIED,
+		AutoRetireTimeframe5M:                 alerts.V3AUTORETIRETIMEFRAME_AUTO_RETIRE_TIMEFRAME_MINUTES_5,
+		AutoRetireTimeframe10M:                alerts.V3AUTORETIRETIMEFRAME_AUTO_RETIRE_TIMEFRAME_MINUTES_10,
+		AutoRetireTimeframe1H:                 alerts.V3AUTORETIRETIMEFRAME_AUTO_RETIRE_TIMEFRAME_HOUR_1,
+		AutoRetireTimeframe2H:                 alerts.V3AUTORETIRETIMEFRAME_AUTO_RETIRE_TIMEFRAME_HOURS_2,
+		AutoRetireTimeframe6H:                 alerts.V3AUTORETIRETIMEFRAME_AUTO_RETIRE_TIMEFRAME_HOURS_6,
+		AutoRetireTimeframe12H:                alerts.V3AUTORETIRETIMEFRAME_AUTO_RETIRE_TIMEFRAME_HOURS_12,
+		AutoRetireTimeframe24H:                alerts.V3AUTORETIRETIMEFRAME_AUTO_RETIRE_TIMEFRAME_HOURS_24,
 	}
-	LogsTimeWindowToProto = map[LogsTimeWindowValue]cxsdk.LogsTimeWindowValue{
-		LogsTimeWindow5Minutes:  cxsdk.LogsTimeWindowValue5MinutesOrUnspecified,
-		LogsTimeWindow10Minutes: cxsdk.LogsTimeWindow10Minutes,
-		LogsTimeWindow15Minutes: cxsdk.LogsTimeWindow15Minutes,
-		LogsTimeWindow20Minutes: cxsdk.LogsTimeWindow20Minutes,
-		LogsTimeWindow30Minutes: cxsdk.LogsTimeWindow30Minutes,
-		LogsTimeWindowHour:      cxsdk.LogsTimeWindow1Hour,
-		LogsTimeWindow2Hours:    cxsdk.LogsTimeWindow2Hours,
-		LogsTimeWindow4Hours:    cxsdk.LogsTimeWindow4Hours,
-		LogsTimeWindow6Hours:    cxsdk.LogsTimeWindow6Hours,
-		LogsTimeWindow12Hours:   cxsdk.LogsTimeWindow12Hours,
-		LogsTimeWindow24Hours:   cxsdk.LogsTimeWindow24Hours,
-		LogsTimeWindow36Hours:   cxsdk.LogsTimeWindow36Hours,
+	LogsTimeWindowToOpenAPI = map[LogsTimeWindowValue]*alerts.LogsTimeWindowValue{
+		LogsTimeWindow5Minutes:  alerts.LOGSTIMEWINDOWVALUE_LOGS_TIME_WINDOW_VALUE_MINUTES_5_OR_UNSPECIFIED.Ptr(),
+		LogsTimeWindow10Minutes: alerts.LOGSTIMEWINDOWVALUE_LOGS_TIME_WINDOW_VALUE_MINUTES_10.Ptr(),
+		LogsTimeWindow15Minutes: alerts.LOGSTIMEWINDOWVALUE_LOGS_TIME_WINDOW_VALUE_MINUTES_15.Ptr(),
+		LogsTimeWindow20Minutes: alerts.LOGSTIMEWINDOWVALUE_LOGS_TIME_WINDOW_VALUE_MINUTES_20.Ptr(),
+		LogsTimeWindow30Minutes: alerts.LOGSTIMEWINDOWVALUE_LOGS_TIME_WINDOW_VALUE_MINUTES_30.Ptr(),
+		LogsTimeWindowHour:      alerts.LOGSTIMEWINDOWVALUE_LOGS_TIME_WINDOW_VALUE_HOUR_1.Ptr(),
+		LogsTimeWindow2Hours:    alerts.LOGSTIMEWINDOWVALUE_LOGS_TIME_WINDOW_VALUE_HOURS_2.Ptr(),
+		LogsTimeWindow4Hours:    alerts.LOGSTIMEWINDOWVALUE_LOGS_TIME_WINDOW_VALUE_HOURS_4.Ptr(),
+		LogsTimeWindow6Hours:    alerts.LOGSTIMEWINDOWVALUE_LOGS_TIME_WINDOW_VALUE_HOURS_6.Ptr(),
+		LogsTimeWindow12Hours:   alerts.LOGSTIMEWINDOWVALUE_LOGS_TIME_WINDOW_VALUE_HOURS_12.Ptr(),
+		LogsTimeWindow24Hours:   alerts.LOGSTIMEWINDOWVALUE_LOGS_TIME_WINDOW_VALUE_HOURS_24.Ptr(),
+		LogsTimeWindow36Hours:   alerts.LOGSTIMEWINDOWVALUE_LOGS_TIME_WINDOW_VALUE_HOURS_36.Ptr(),
 	}
-	LogsThresholdConditionTypeToProto = map[LogsThresholdConditionType]cxsdk.LogsThresholdConditionType{
-		LogsThresholdConditionTypeMoreThan: cxsdk.LogsThresholdConditionTypeMoreThanOrUnspecified,
-		LogsThresholdConditionTypeLessThan: cxsdk.LogsThresholdConditionTypeLessThan,
+	LogsThresholdConditionTypeToOpenAPI = map[LogsThresholdConditionType]alerts.LogsThresholdConditionType{
+		LogsThresholdConditionTypeMoreThan: alerts.LOGSTHRESHOLDCONDITIONTYPE_LOGS_THRESHOLD_CONDITION_TYPE_MORE_THAN_OR_UNSPECIFIED,
+		LogsThresholdConditionTypeLessThan: alerts.LOGSTHRESHOLDCONDITIONTYPE_LOGS_THRESHOLD_CONDITION_TYPE_LESS_THAN,
 	}
 	LogsRatioTimeWindowToProto = map[LogsRatioTimeWindowValue]cxsdk.LogsRatioTimeWindowValue{
 		LogsRatioTimeWindowMinutes5:  cxsdk.LogsRatioTimeWindowValue5MinutesOrUnspecified,
@@ -1522,11 +1522,41 @@ func (in AlertSpec) ExtractAlertCreateRequest(listingAlertsAndWebhooksProperties
 			},
 		}, nil
 	} else if logsThreshold := in.TypeDefinition.LogsThreshold; logsThreshold != nil {
-		properties.TypeDefinition = expandLogsThreshold(logsThreshold, properties.Priority)
-		properties.Type = cxsdk.AlertDefTypeLogsThreshold
+		return &alerts.AlertDefsServiceCreateAlertDefRequest{
+			AlertDefPropertiesLogsThreshold: &alerts.AlertDefPropertiesLogsThreshold{
+				Name:                    in.Name,
+				Description:             alerts.PtrString(in.Description),
+				Enabled:                 alerts.PtrBool(in.Enabled),
+				Priority:                AlertPriorityToOpenAPIPriority[in.Priority],
+				GroupByKeys:             in.GroupByKeys,
+				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+				NotificationGroup:       notificationGroup,
+				NotificationGroupExcess: notificationGroupExcess,
+				EntityLabels:            ptr.To(in.EntityLabels),
+				PhantomMode:             alerts.PtrBool(in.PhantomMode),
+				ActiveOn:                expandAlertSchedule(in.Schedule),
+				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_LOGS_THRESHOLD,
+				LogsThreshold:           expandLogsThreshold(logsThreshold, AlertPriorityToOpenAPIPriority[in.Priority]),
+			},
+		}, nil
 	} else if logsRatioThreshold := in.TypeDefinition.LogsRatioThreshold; logsRatioThreshold != nil {
-		properties.TypeDefinition = expandLogsRatioThreshold(logsRatioThreshold, properties.Priority)
-		properties.Type = cxsdk.AlertDefTypeLogsRatioThreshold
+		return &alerts.AlertDefsServiceCreateAlertDefRequest{
+			AlertDefPropertiesLogsRatioThreshold: &alerts.AlertDefPropertiesLogsRatioThreshold{
+				Name:                    in.Name,
+				Description:             alerts.PtrString(in.Description),
+				Enabled:                 alerts.PtrBool(in.Enabled),
+				Priority:                AlertPriorityToOpenAPIPriority[in.Priority],
+				GroupByKeys:             in.GroupByKeys,
+				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+				NotificationGroup:       notificationGroup,
+				NotificationGroupExcess: notificationGroupExcess,
+				EntityLabels:            ptr.To(in.EntityLabels),
+				PhantomMode:             alerts.PtrBool(in.PhantomMode),
+				ActiveOn:                expandAlertSchedule(in.Schedule),
+				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_LOGS_THRESHOLD,
+				LogsRatioThreshold:           expandLogsRatioThreshold(logsRatioThreshold, AlertPriorityToOpenAPIPriority[in.Priority]),
+			},
+		}, nil
 	} else if logsTimeRelativeThreshold := in.TypeDefinition.LogsTimeRelativeThreshold; logsTimeRelativeThreshold != nil {
 		properties.TypeDefinition = expandLogsTimeRelativeThreshold(logsTimeRelativeThreshold, properties.Priority)
 		properties.Type = cxsdk.AlertDefTypeLogsTimeRelativeThreshold
@@ -1564,81 +1594,6 @@ func (in AlertSpec) ExtractAlertCreateRequest(listingAlertsAndWebhooksProperties
 	}
 
 	return nil, fmt.Errorf("unsupported alert type definition")
-}
-
-func (in AlertSpec) ExtractAlertCreateRequestOld(listingAlertsAndWebhooksProperties *GetResourceRefProperties) (*alerts.AlertDefsServiceCreateAlertDefRequest, error) {
-	notificationGroup, err := expandNotificationGroup(in.NotificationGroup, listingAlertsAndWebhooksProperties)
-	if err != nil {
-		return nil, fmt.Errorf("failed to expand notification group: %w", err)
-	}
-
-	notificationGroupExcess, err := expandNotificationGroupExcess(in.NotificationGroupExcess, listingAlertsAndWebhooksProperties)
-	if err != nil {
-		return nil, fmt.Errorf("failed to expand notification group excess: %w", err)
-	}
-
-	properties := &cxsdk.AlertDefProperties{
-		Name:                    wrapperspb.String(in.Name),
-		Description:             wrapperspb.String(in.Description),
-		Enabled:                 wrapperspb.Bool(in.Enabled),
-		Priority:                AlertPriorityToProtoPriority[in.Priority],
-		GroupByKeys:             coralogix.StringSliceToWrappedStringSlice(in.GroupByKeys),
-		IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
-		NotificationGroup:       notificationGroup,
-		NotificationGroupExcess: notificationGroupExcess,
-		EntityLabels:            in.EntityLabels,
-		PhantomMode:             wrapperspb.Bool(in.PhantomMode),
-		Schedule:                expandAlertSchedule(in.Schedule),
-	}
-
-	if logsImmediate := in.TypeDefinition.LogsImmediate; logsImmediate != nil {
-		properties.TypeDefinition = expandLogsImmediate(logsImmediate)
-		properties.Type = cxsdk.AlertDefTypeLogsImmediateOrUnspecified
-	} else if logsThreshold := in.TypeDefinition.LogsThreshold; logsThreshold != nil {
-		properties.TypeDefinition = expandLogsThreshold(logsThreshold, properties.Priority)
-		properties.Type = cxsdk.AlertDefTypeLogsThreshold
-	} else if logsRatioThreshold := in.TypeDefinition.LogsRatioThreshold; logsRatioThreshold != nil {
-		properties.TypeDefinition = expandLogsRatioThreshold(logsRatioThreshold, properties.Priority)
-		properties.Type = cxsdk.AlertDefTypeLogsRatioThreshold
-	} else if logsTimeRelativeThreshold := in.TypeDefinition.LogsTimeRelativeThreshold; logsTimeRelativeThreshold != nil {
-		properties.TypeDefinition = expandLogsTimeRelativeThreshold(logsTimeRelativeThreshold, properties.Priority)
-		properties.Type = cxsdk.AlertDefTypeLogsTimeRelativeThreshold
-	} else if metricThreshold := in.TypeDefinition.MetricThreshold; metricThreshold != nil {
-		properties.TypeDefinition = expandMetricThreshold(metricThreshold, properties.Priority)
-		properties.Type = cxsdk.AlertDefTypeMetricThreshold
-	} else if tracingThreshold := in.TypeDefinition.TracingThreshold; tracingThreshold != nil {
-		properties.TypeDefinition = expandTracingThreshold(tracingThreshold)
-		properties.Type = cxsdk.AlertDefTypeTracingThreshold
-	} else if tracingImmediate := in.TypeDefinition.TracingImmediate; tracingImmediate != nil {
-		properties.TypeDefinition = expandTracingImmediate(tracingImmediate)
-		properties.Type = cxsdk.AlertDefTypeTracingImmediate
-	} else if flow := in.TypeDefinition.Flow; flow != nil {
-		properties.TypeDefinition = expandFlow(listingAlertsAndWebhooksProperties, flow)
-		properties.Type = cxsdk.AlertDefTypeFlow
-	} else if logsAnomaly := in.TypeDefinition.LogsAnomaly; logsAnomaly != nil {
-		properties.TypeDefinition = expandLogsAnomaly(logsAnomaly)
-		properties.Type = cxsdk.AlertDefTypeLogsAnomaly
-	} else if metricAnomaly := in.TypeDefinition.MetricAnomaly; metricAnomaly != nil {
-		properties.TypeDefinition = expandMetricAnomaly(metricAnomaly)
-		properties.Type = cxsdk.AlertDefTypeMetricAnomaly
-	} else if logsNewValue := in.TypeDefinition.LogsNewValue; logsNewValue != nil {
-		properties.TypeDefinition = expandLogsNewValue(logsNewValue)
-		properties.Type = cxsdk.AlertDefTypeLogsNewValue
-	} else if logsUniqueCount := in.TypeDefinition.LogsUniqueCount; logsUniqueCount != nil {
-		properties.TypeDefinition = expandLogsUniqueCount(logsUniqueCount)
-		properties.Type = cxsdk.AlertDefTypeLogsUniqueCount
-	} else if sloThreshold := in.TypeDefinition.SloThreshold; sloThreshold != nil {
-		var err error
-		properties.TypeDefinition, err = expandSloThreshold(listingAlertsAndWebhooksProperties, sloThreshold)
-		if err != nil {
-			return nil, fmt.Errorf("failed to expand SLO threshold: %w", err)
-		}
-		properties.Type = cxsdk.AlertDefTypeSloThreshold
-	} else {
-		return nil, fmt.Errorf("unsupported alert type definition")
-	}
-
-	return properties, nil
 }
 
 func expandIncidentsSettings(incidentsSettings *IncidentsSettings) *alerts.AlertDefIncidentSettings {
@@ -2703,26 +2658,22 @@ func expandLogsImmediate(immediate *LogsImmediate) *alerts.LogsImmediateType {
 	}
 }
 
-func expandLogsThreshold(logsThreshold *LogsThreshold, priority cxsdk.AlertDefPriority) *cxsdk.AlertDefPropertiesLogsThreshold {
-	return &cxsdk.AlertDefPropertiesLogsThreshold{
-		LogsThreshold: &cxsdk.LogsThresholdType{
-			LogsFilter:                 expandLogsFilter(logsThreshold.LogsFilter),
-			UndetectedValuesManagement: expandUndetectedValuesManagement(logsThreshold.UndetectedValuesManagement),
-			Rules:                      expandLogsThresholdRules(logsThreshold.Rules, priority),
-			NotificationPayloadFilter:  coralogix.StringSliceToWrappedStringSlice(logsThreshold.NotificationPayloadFilter),
-		},
+func expandLogsThreshold(logsThreshold *LogsThreshold, priority alerts.AlertDefPriority) *alerts.LogsThresholdType {
+	return &alerts.LogsThresholdType{
+		LogsFilter:                 expandLogsFilter(logsThreshold.LogsFilter),
+		UndetectedValuesManagement: expandUndetectedValuesManagement(logsThreshold.UndetectedValuesManagement),
+		Rules:                      expandLogsThresholdRules(logsThreshold.Rules, priority),
+		NotificationPayloadFilter:  logsThreshold.NotificationPayloadFilter,
 	}
 }
 
-func expandLogsRatioThreshold(logsRatioThreshold *LogsRatioThreshold, priority cxsdk.AlertDefPriority) *cxsdk.AlertDefPropertiesLogsRatioThreshold {
-	return &cxsdk.AlertDefPropertiesLogsRatioThreshold{
-		LogsRatioThreshold: &cxsdk.LogsRatioThresholdType{
+func expandLogsRatioThreshold(logsRatioThreshold *LogsRatioThreshold, priority alerts.AlertDefPriority) *alerts.LogsRatioThresholdType {
+	return &alerts.LogsRatioThresholdType{
 			Numerator:        expandLogsFilter(&logsRatioThreshold.Numerator),
-			NumeratorAlias:   wrapperspb.String(logsRatioThreshold.NumeratorAlias),
+			NumeratorAlias:   alerts.PtrString(logsRatioThreshold.NumeratorAlias)),
 			Denominator:      expandLogsFilter(&logsRatioThreshold.Denominator),
-			DenominatorAlias: wrapperspb.String(logsRatioThreshold.DenominatorAlias),
+			DenominatorAlias: alerts.PtrString(logsRatioThreshold.DenominatorAlias),
 			Rules:            expandLogsRatioThresholdRules(logsRatioThreshold.Rules, priority),
-		},
 	}
 }
 
@@ -2793,15 +2744,15 @@ func expandLogsRatioTimeWindow(timeWindow LogsRatioTimeWindow) *cxsdk.LogsRatioT
 	}
 }
 
-func expandAlertOverride(override *AlertOverride, priority cxsdk.AlertDefPriority) *cxsdk.AlertDefPriorityOverride {
+func expandAlertOverride(override *AlertOverride, priority alerts.AlertDefPriority) *alerts.AlertDefOverride {
 	if override == nil {
-		return &cxsdk.AlertDefPriorityOverride{
-			Priority: priority,
+		return &alerts.AlertDefOverride{
+			Priority: priority.Ptr(),
 		}
 	}
 
-	return &cxsdk.AlertDefPriorityOverride{
-		Priority: AlertPriorityToProtoPriority[override.Priority],
+	return &alerts.AlertDefOverride{
+		Priority: AlertPriorityToOpenAPIPriority[override.Priority].Ptr(),
 	}
 }
 
@@ -2851,46 +2802,44 @@ func expandLabelFilterTypes(name []LabelFilterType) []alerts.LabelFilterType {
 	return result
 }
 
-func expandUndetectedValuesManagement(management *UndetectedValuesManagement) *cxsdk.UndetectedValuesManagement {
+func expandUndetectedValuesManagement(management *UndetectedValuesManagement) *alerts.V3UndetectedValuesManagement {
 	if management == nil {
 		return nil
 	}
-	autoRetireTimeframe := AutoRetireTimeframeToProtoAutoRetireTimeframe[management.AutoRetireTimeframe]
-	return &cxsdk.UndetectedValuesManagement{
-		TriggerUndetectedValues: wrapperspb.Bool(management.TriggerUndetectedValues),
+	autoRetireTimeframe := AutoRetireTimeframeToOpenAPIAutoRetireTimeframe[management.AutoRetireTimeframe]
+	return &alerts.V3UndetectedValuesManagement{
+		TriggerUndetectedValues: alerts.PtrBool(management.TriggerUndetectedValues),
 		AutoRetireTimeframe:     &autoRetireTimeframe,
 	}
 }
 
-func expandLogsThresholdRules(rules []LogsThresholdRule, priority cxsdk.AlertDefPriority) []*cxsdk.LogsThresholdRule {
-	result := make([]*cxsdk.LogsThresholdRule, len(rules))
+func expandLogsThresholdRules(rules []LogsThresholdRule, priority alerts.AlertDefPriority) []alerts.LogsThresholdRule {
+	result := make([]alerts.LogsThresholdRule, len(rules))
 	for i := range rules {
-		result[i] = expandLogsThresholdRule(rules[i], priority)
+		result[i] = *expandLogsThresholdRule(rules[i], priority)
 	}
 
 	return result
 }
 
-func expandLogsThresholdRule(rule LogsThresholdRule, priority cxsdk.AlertDefPriority) *cxsdk.LogsThresholdRule {
-	return &cxsdk.LogsThresholdRule{
-		Condition: expandLogsThresholdRuleCondition(rule.Condition),
-		Override:  expandAlertOverride(rule.Override, priority),
+func expandLogsThresholdRule(rule LogsThresholdRule, priority alerts.AlertDefPriority) *alerts.LogsThresholdRule {
+	return &alerts.LogsThresholdRule{
+		Condition: *expandLogsThresholdRuleCondition(rule.Condition),
+		Override:  *expandAlertOverride(rule.Override, priority),
 	}
 }
 
-func expandLogsThresholdRuleCondition(condition LogsThresholdRuleCondition) *cxsdk.LogsThresholdCondition {
-	return &cxsdk.LogsThresholdCondition{
-		Threshold:     wrapperspb.Double(condition.Threshold.AsApproximateFloat64()),
-		TimeWindow:    expandLogsTimeWindow(condition.TimeWindow),
-		ConditionType: LogsThresholdConditionTypeToProto[condition.LogsThresholdConditionType],
+func expandLogsThresholdRuleCondition(condition LogsThresholdRuleCondition) *alerts.LogsThresholdCondition {
+	return &alerts.LogsThresholdCondition{
+		Threshold:     condition.Threshold.AsApproximateFloat64(),
+		TimeWindow:    *expandLogsTimeWindow(condition.TimeWindow),
+		ConditionType: LogsThresholdConditionTypeToOpenAPI[condition.LogsThresholdConditionType],
 	}
 }
 
-func expandLogsTimeWindow(timeWindow LogsTimeWindow) *cxsdk.LogsTimeWindow {
-	return &cxsdk.LogsTimeWindow{
-		Type: &cxsdk.LogsTimeWindowSpecificValue{
-			LogsTimeWindowSpecificValue: LogsTimeWindowToProto[timeWindow.SpecificValue],
-		},
+func expandLogsTimeWindow(timeWindow LogsTimeWindow) *alerts.LogsTimeWindow {
+	return &alerts.LogsTimeWindow{
+		LogsTimeWindowSpecificValue: LogsTimeWindowToOpenAPI[timeWindow.SpecificValue],
 	}
 }
 
