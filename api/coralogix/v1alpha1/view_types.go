@@ -179,7 +179,7 @@ func (v *View) ExtractFolderId(ctx context.Context, log logr.Logger) (*string, e
 func (s *ViewSpec) ExtractTimeSelection() (*views.TimeSelection, error) {
 	if s.TimeSelection.QuickSelection != nil {
 		return &views.TimeSelection{
-			TimeSelectionOneOf: &views.TimeSelectionOneOf{
+			TimeSelectionQuickSelection: &views.TimeSelectionQuickSelection{
 				QuickSelection: &views.QuickTimeSelection{
 					Seconds: int64(s.TimeSelection.QuickSelection.Seconds),
 				},
@@ -187,7 +187,7 @@ func (s *ViewSpec) ExtractTimeSelection() (*views.TimeSelection, error) {
 		}, nil
 	} else if s.TimeSelection.CustomSelection != nil {
 		return &views.TimeSelection{
-			TimeSelectionOneOf1: &views.TimeSelectionOneOf1{
+			TimeSelectionCustomSelection: &views.TimeSelectionCustomSelection{
 				CustomSelection: &views.CustomTimeSelection{
 					FromTime: s.TimeSelection.CustomSelection.FromTime.Time,
 					ToTime:   s.TimeSelection.CustomSelection.ToTime.Time,

@@ -1505,7 +1505,7 @@ func (in AlertSpec) ExtractAlertCreateRequest(listingAlertsAndWebhooksProperties
 
 	if logsImmediate := in.TypeDefinition.LogsImmediate; logsImmediate != nil {
 		return &alerts.AlertDefsServiceCreateAlertDefRequest{
-			AlertDefinitionProperties: &alerts.AlertDefinitionProperties{
+			AlertDefPropertiesLogsImmediate: &alerts.AlertDefPropertiesLogsImmediate{
 				Name:                    in.Name,
 				Description:             alerts.PtrString(in.Description),
 				Enabled:                 alerts.PtrBool(in.Enabled),
@@ -1767,13 +1767,13 @@ func expandIntegration(integration IntegrationType, listingWebhooksProperties *G
 		}
 
 		return &alerts.V3IntegrationType{
-			IntegrationType: &alerts.IntegrationType{
+			IntegrationTypeIntegrationId: &alerts.IntegrationTypeIntegrationId{
 				IntegrationId: integrationID,
 			},
 		}, nil
 	} else if recipients := integration.Recipients; recipients != nil {
 		return &alerts.V3IntegrationType{
-			IntegrationType1: &alerts.IntegrationType1{
+			IntegrationTypeRecipients: &alerts.IntegrationTypeRecipients{
 				Recipients: &alerts.Recipients{
 					Emails: recipients,
 				},

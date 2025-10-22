@@ -295,7 +295,7 @@ func (a *AlertScheduler) extractFilter() (*alertscheduler.AlertSchedulerRuleProt
 	if a.Spec.Filter.MetaLabels != nil {
 		metaLabels := extractMetaLabels(a.Spec.Filter.MetaLabels)
 		return &alertscheduler.AlertSchedulerRuleProtobufV1Filter{
-			AlertSchedulerRuleProtobufV1FilterOneOf: &alertscheduler.AlertSchedulerRuleProtobufV1FilterOneOf{
+			FilterAlertMetaLabels: &alertscheduler.FilterAlertMetaLabels{
 				WhatExpression: alertscheduler.PtrString(a.Spec.Filter.WhatExpression),
 				AlertMetaLabels: &alertscheduler.MetaLabels{
 					Value: metaLabels,
@@ -309,7 +309,7 @@ func (a *AlertScheduler) extractFilter() (*alertscheduler.AlertSchedulerRuleProt
 		}
 
 		return &alertscheduler.AlertSchedulerRuleProtobufV1Filter{
-			AlertSchedulerRuleProtobufV1FilterOneOf1: &alertscheduler.AlertSchedulerRuleProtobufV1FilterOneOf1{
+			FilterAlertUniqueIds: &alertscheduler.FilterAlertUniqueIds{
 				WhatExpression: alertscheduler.PtrString(a.Spec.Filter.WhatExpression),
 				AlertUniqueIds: &alertscheduler.AlertUniqueIds{
 					Value: alertsIds,
@@ -374,7 +374,7 @@ func (a *AlertScheduler) extractSchedule() (*alertscheduler.Schedule, error) {
 			return nil, fmt.Errorf("error on extracting one time schedule: %w", err)
 		}
 		return &alertscheduler.Schedule{
-			ScheduleOneOf: &alertscheduler.ScheduleOneOf{
+			ScheduleOneTime: &alertscheduler.ScheduleOneTime{
 				ScheduleOperation: schemaToOpenAPIScheduleOperation[a.Spec.Schedule.Operation],
 				OneTime:           oneTime,
 			},
@@ -385,7 +385,7 @@ func (a *AlertScheduler) extractSchedule() (*alertscheduler.Schedule, error) {
 			return nil, fmt.Errorf("error on extracting recurring schedule: %w", err)
 		}
 		return &alertscheduler.Schedule{
-			ScheduleOneOf1: &alertscheduler.ScheduleOneOf1{
+			ScheduleRecurring: &alertscheduler.ScheduleRecurring{
 				ScheduleOperation: schemaToOpenAPIScheduleOperation[a.Spec.Schedule.Operation],
 				Recurring:         recurring,
 			},
@@ -414,13 +414,13 @@ func (a *AlertScheduler) extractRecurring() (*alertscheduler.Recurring, error) {
 		}
 
 		return &alertscheduler.Recurring{
-			RecurringOneOf1: &alertscheduler.RecurringOneOf1{
+			RecurringDynamic: &alertscheduler.RecurringDynamic{
 				Dynamic: dynamic,
 			},
 		}, nil
 	} else if a.Spec.Schedule.Recurring.Always != nil {
 		return &alertscheduler.Recurring{
-			RecurringOneOf: &alertscheduler.RecurringOneOf{
+			RecurringAlways: &alertscheduler.RecurringAlways{
 				Always: make(map[string]interface{}),
 			},
 		}, nil
@@ -437,7 +437,7 @@ func (a *AlertScheduler) extractDynamic() (*alertscheduler.RecurringDynamic, err
 
 	if a.Spec.Schedule.Recurring.Dynamic.Frequency.Daily != nil {
 		return &alertscheduler.RecurringDynamic{
-			RecurringDynamicOneOf: &alertscheduler.RecurringDynamicOneOf{
+			Dynamic: &alertscheduler.RecurringDynamic{
 				Daily:           make(map[string]interface{}),
 				RepeatEvery:     alertscheduler.PtrInt32(a.Spec.Schedule.Recurring.Dynamic.RepeatEvery),
 				Timeframe:       timeFrame,
@@ -478,7 +478,7 @@ func (a *AlertScheduler) extractDynamic() (*alertscheduler.RecurringDynamic, err
 func extractTimeFrame(timeFrame *TimeFrame) (*alertscheduler.Timeframe, error) {
 	if timeFrame.EndTime != nil {
 		return &alertscheduler.Timeframe{
-			AlertSchedulerRuleServiceGetBulkAlertSchedulerRuleActiveTimeframeParameter: &alertscheduler.AlertSchedulerRuleServiceGetBulkAlertSchedulerRuleActiveTimeframeParameter{
+			TimeframeEndTime: &alertscheduler.TimeframeEndTime{
 				StartTime: alertscheduler.PtrString(timeFrame.StartTime),
 				Timezone:  alertscheduler.PtrString(timeFrame.Timezone),
 				EndTime:   timeFrame.EndTime,
@@ -486,7 +486,7 @@ func extractTimeFrame(timeFrame *TimeFrame) (*alertscheduler.Timeframe, error) {
 		}, nil
 	} else if timeFrame.Duration != nil {
 		return &alertscheduler.Timeframe{
-			TimeframeOneOf: &alertscheduler.TimeframeOneOf{
+			TimeframeDuration: &alertscheduler.TimeframeDuration{
 				StartTime: alertscheduler.PtrString(timeFrame.StartTime),
 				Timezone:  alertscheduler.PtrString(timeFrame.Timezone),
 				Duration: &alertscheduler.V1Duration{
@@ -495,13 +495,6 @@ func extractTimeFrame(timeFrame *TimeFrame) (*alertscheduler.Timeframe, error) {
 				},
 			},
 		}, nil
-
-		//result.Until = &cxsdk.TimeframeDuration{
-		//	Duration: &cxsdk.AlertSchedulerDuration{
-		//		ForOver:   timeFrame.Duration.ForOver,
-		//		Frequency: schemaToProtoDurationFrequency[timeFrame.Duration.Frequency],
-		//	},
-		//}
 	}
 
 	return nil, fmt.Errorf("exactly one of `endTime` or `duration` must be set")

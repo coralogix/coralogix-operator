@@ -83,21 +83,21 @@ func (s *IntegrationSpec) ExtractParameters() ([]integrations.Parameter, error) 
 		switch v := value.(type) {
 		case string:
 			parameters = append(parameters, integrations.Parameter{
-				Parameter1: &integrations.Parameter1{
+				ParameterStringValue: &integrations.ParameterStringValue{
 					Key:         integrations.PtrString(key),
 					StringValue: integrations.PtrString(v),
 				},
 			})
 		case float64:
 			parameters = append(parameters, integrations.Parameter{
-				Parameter5: &integrations.Parameter5{
+				ParameterNumericValue: &integrations.ParameterNumericValue{
 					Key:          integrations.PtrString(key),
 					NumericValue: integrations.PtrFloat64(v),
 				},
 			})
 		case bool:
 			parameters = append(parameters, integrations.Parameter{
-				Parameter2: &integrations.Parameter2{
+				ParameterBooleanValue: &integrations.ParameterBooleanValue{
 					Key:          integrations.PtrString(key),
 					BooleanValue: integrations.PtrBool(v),
 				},
@@ -110,7 +110,7 @@ func (s *IntegrationSpec) ExtractParameters() ([]integrations.Parameter, error) 
 				}
 			}
 			parameters = append(parameters, integrations.Parameter{
-				Parameter3: &integrations.Parameter3{
+				ParameterStringList: &integrations.ParameterStringList{
 					Key:        integrations.PtrString(key),
 					StringList: &stringList,
 				},
