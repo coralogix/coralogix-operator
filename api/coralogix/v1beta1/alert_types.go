@@ -228,20 +228,20 @@ var (
 		LogsNewValueTimeWindowValue2Months: alerts.LOGSNEWVALUETIMEWINDOWVALUE_LOGS_NEW_VALUE_TIME_WINDOW_VALUE_MONTHS_2.Ptr(),
 		LogsNewValueTimeWindowValue3Months: alerts.LOGSNEWVALUETIMEWINDOWVALUE_LOGS_NEW_VALUE_TIME_WINDOW_VALUE_MONTHS_3.Ptr(),
 	}
-	LogsUniqueCountTimeWindowValueToProto = map[LogsUniqueCountTimeWindowSpecificValue]cxsdk.LogsUniqueValueTimeWindowValue{
-		LogsUniqueCountTimeWindowValue1Minute:   cxsdk.LogsUniqueValueTimeWindowValue1MinuteOrUnspecified,
-		LogsUniqueCountTimeWindowValue5Minutes:  cxsdk.LogsUniqueValueTimeWindowValue5Minutes,
-		LogsUniqueCountTimeWindowValue10Minutes: cxsdk.LogsUniqueValueTimeWindowValue10Minutes,
-		LogsUniqueCountTimeWindowValue15Minutes: cxsdk.LogsUniqueValueTimeWindowValue15Minutes,
-		LogsUniqueCountTimeWindowValue20Minutes: cxsdk.LogsUniqueValueTimeWindowValue20Minutes,
-		LogsUniqueCountTimeWindowValue30Minutes: cxsdk.LogsUniqueValueTimeWindowValue30Minutes,
-		LogsUniqueCountTimeWindowValue1Hour:     cxsdk.LogsUniqueValueTimeWindowValue1Hour,
-		LogsUniqueCountTimeWindowValue2Hours:    cxsdk.LogsUniqueValueTimeWindowValue2Hours,
-		LogsUniqueCountTimeWindowValue4Hours:    cxsdk.LogsUniqueValueTimeWindowValue4Hours,
-		LogsUniqueCountTimeWindowValue6Hours:    cxsdk.LogsUniqueValueTimeWindowValue6Hours,
-		LogsUniqueCountTimeWindowValue12Hours:   cxsdk.LogsUniqueValueTimeWindowValue12Hours,
-		LogsUniqueCountTimeWindowValue24Hours:   cxsdk.LogsUniqueValueTimeWindowValue24Hours,
-		LogsUniqueCountTimeWindowValue36Hours:   cxsdk.LogsUniqueValueTimeWindowValue36Hours,
+	LogsUniqueCountTimeWindowValueToOpenAPI = map[LogsUniqueCountTimeWindowSpecificValue]*alerts.LogsUniqueValueTimeWindowValue{
+		LogsUniqueCountTimeWindowValue1Minute:   alerts.LOGSUNIQUEVALUETIMEWINDOWVALUE_LOGS_UNIQUE_VALUE_TIME_WINDOW_VALUE_MINUTE_1_OR_UNSPECIFIED.Ptr(),
+		LogsUniqueCountTimeWindowValue5Minutes:  alerts.LOGSUNIQUEVALUETIMEWINDOWVALUE_LOGS_UNIQUE_VALUE_TIME_WINDOW_VALUE_MINUTES_5.Ptr(),
+		LogsUniqueCountTimeWindowValue10Minutes: alerts.LOGSUNIQUEVALUETIMEWINDOWVALUE_LOGS_UNIQUE_VALUE_TIME_WINDOW_VALUE_MINUTES_10.Ptr(),
+		LogsUniqueCountTimeWindowValue15Minutes: alerts.LOGSUNIQUEVALUETIMEWINDOWVALUE_LOGS_UNIQUE_VALUE_TIME_WINDOW_VALUE_MINUTES_15.Ptr(),
+		LogsUniqueCountTimeWindowValue20Minutes: alerts.LOGSUNIQUEVALUETIMEWINDOWVALUE_LOGS_UNIQUE_VALUE_TIME_WINDOW_VALUE_MINUTES_20.Ptr(),
+		LogsUniqueCountTimeWindowValue30Minutes: alerts.LOGSUNIQUEVALUETIMEWINDOWVALUE_LOGS_UNIQUE_VALUE_TIME_WINDOW_VALUE_MINUTES_30.Ptr(),
+		LogsUniqueCountTimeWindowValue1Hour:     alerts.LOGSUNIQUEVALUETIMEWINDOWVALUE_LOGS_UNIQUE_VALUE_TIME_WINDOW_VALUE_HOURS_1.Ptr(),
+		LogsUniqueCountTimeWindowValue2Hours:    alerts.LOGSUNIQUEVALUETIMEWINDOWVALUE_LOGS_UNIQUE_VALUE_TIME_WINDOW_VALUE_HOURS_2.Ptr(),
+		LogsUniqueCountTimeWindowValue4Hours:    alerts.LOGSUNIQUEVALUETIMEWINDOWVALUE_LOGS_UNIQUE_VALUE_TIME_WINDOW_VALUE_HOURS_4.Ptr(),
+		LogsUniqueCountTimeWindowValue6Hours:    alerts.LOGSUNIQUEVALUETIMEWINDOWVALUE_LOGS_UNIQUE_VALUE_TIME_WINDOW_VALUE_HOURS_6.Ptr(),
+		LogsUniqueCountTimeWindowValue12Hours:   alerts.LOGSUNIQUEVALUETIMEWINDOWVALUE_LOGS_UNIQUE_VALUE_TIME_WINDOW_VALUE_HOURS_12.Ptr(),
+		LogsUniqueCountTimeWindowValue24Hours:   alerts.LOGSUNIQUEVALUETIMEWINDOWVALUE_LOGS_UNIQUE_VALUE_TIME_WINDOW_VALUE_HOURS_24.Ptr(),
+		LogsUniqueCountTimeWindowValue36Hours:   alerts.LOGSUNIQUEVALUETIMEWINDOWVALUE_LOGS_UNIQUE_VALUE_TIME_WINDOW_VALUE_HOURS_36.Ptr(),
 	}
 )
 
@@ -1704,8 +1704,23 @@ func (in *AlertSpec) ExtractAlertCreateRequest(listingAlertsAndWebhooksPropertie
 			},
 		}, nil
 	} else if logsUniqueCount := in.TypeDefinition.LogsUniqueCount; logsUniqueCount != nil {
-		properties.TypeDefinition = expandLogsUniqueCount(logsUniqueCount)
-		properties.Type = cxsdk.AlertDefTypeLogsUniqueCount
+		return &alerts.AlertDefsServiceCreateAlertDefRequest{
+			AlertDefPropertiesLogsUniqueCount: &alerts.AlertDefPropertiesLogsUniqueCount{
+				Name:                    in.Name,
+				Description:             alerts.PtrString(in.Description),
+				Enabled:                 alerts.PtrBool(in.Enabled),
+				Priority:                priority,
+				GroupByKeys:             in.GroupByKeys,
+				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+				NotificationGroup:       notificationGroup,
+				NotificationGroupExcess: notificationGroupExcess,
+				EntityLabels:            ptr.To(in.EntityLabels),
+				PhantomMode:             alerts.PtrBool(in.PhantomMode),
+				ActiveOn:                expandAlertSchedule(in.Schedule),
+				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_LOGS_UNIQUE_COUNT,
+				LogsUniqueCount:         expandLogsUniqueCount(logsUniqueCount),
+			},
+		}, nil
 	} else if sloThreshold := in.TypeDefinition.SloThreshold; sloThreshold != nil {
 		var err error
 		properties.TypeDefinition, err = expandSloThreshold(listingAlertsAndWebhooksProperties, sloThreshold)
@@ -2278,45 +2293,41 @@ func expandSloBurnRateRuleCondition(condition BurnRateRuleCondition) *cxsdk.SloT
 	}
 }
 
-func expandLogsUniqueCount(uniqueCount *LogsUniqueCount) *cxsdk.AlertDefPropertiesLogsUniqueCount {
-	return &cxsdk.AlertDefPropertiesLogsUniqueCount{
-		LogsUniqueCount: &cxsdk.LogsUniqueCountType{
-			LogsFilter:                  expandLogsFilter(uniqueCount.LogsFilter),
-			Rules:                       expandLogsUniqueCountRules(uniqueCount.Rules),
-			NotificationPayloadFilter:   coralogix.StringSliceToWrappedStringSlice(uniqueCount.NotificationPayloadFilter),
-			MaxUniqueCountPerGroupByKey: wrapperspb.Int64(int64(*uniqueCount.MaxUniqueCountPerGroupByKey)),
-			UniqueCountKeypath:          wrapperspb.String(uniqueCount.UniqueCountKeypath),
-		},
+func expandLogsUniqueCount(uniqueCount *LogsUniqueCount) *alerts.LogsUniqueCountType {
+	return &alerts.LogsUniqueCountType{
+		LogsFilter:                  expandLogsFilter(uniqueCount.LogsFilter),
+		Rules:                       expandLogsUniqueCountRules(uniqueCount.Rules),
+		NotificationPayloadFilter:   uniqueCount.NotificationPayloadFilter,
+		MaxUniqueCountPerGroupByKey: alerts.PtrString(strconv.FormatUint(*uniqueCount.MaxUniqueCountPerGroupByKey, 10)),
+		UniqueCountKeypath:          uniqueCount.UniqueCountKeypath,
 	}
 }
 
-func expandLogsUniqueCountRules(rules []LogsUniqueCountRule) []*cxsdk.LogsUniqueCountRule {
-	result := make([]*cxsdk.LogsUniqueCountRule, len(rules))
+func expandLogsUniqueCountRules(rules []LogsUniqueCountRule) []alerts.LogsUniqueCountRule {
+	result := make([]alerts.LogsUniqueCountRule, len(rules))
 	for i := range rules {
-		result[i] = expandLogsUniqueCountRule(rules[i])
+		result[i] = *expandLogsUniqueCountRule(rules[i])
 	}
 
 	return result
 }
 
-func expandLogsUniqueCountRule(rule LogsUniqueCountRule) *cxsdk.LogsUniqueCountRule {
-	return &cxsdk.LogsUniqueCountRule{
-		Condition: expandLogsUniqueCountCondition(rule.Condition),
+func expandLogsUniqueCountRule(rule LogsUniqueCountRule) *alerts.LogsUniqueCountRule {
+	return &alerts.LogsUniqueCountRule{
+		Condition: *expandLogsUniqueCountCondition(rule.Condition),
 	}
 }
 
-func expandLogsUniqueCountCondition(condition LogsUniqueCountCondition) *cxsdk.LogsUniqueCountCondition {
-	return &cxsdk.LogsUniqueCountCondition{
-		MaxUniqueCount: wrapperspb.Int64(condition.Threshold),
-		TimeWindow:     expandLogsUniqueCountTimeWindow(condition.TimeWindow),
+func expandLogsUniqueCountCondition(condition LogsUniqueCountCondition) *alerts.LogsUniqueCountCondition {
+	return &alerts.LogsUniqueCountCondition{
+		MaxUniqueCount: strconv.FormatInt(condition.Threshold, 10),
+		TimeWindow:     *expandLogsUniqueCountTimeWindow(condition.TimeWindow),
 	}
 }
 
-func expandLogsUniqueCountTimeWindow(timeWindow LogsUniqueCountTimeWindow) *cxsdk.LogsUniqueValueTimeWindow {
-	return &cxsdk.LogsUniqueValueTimeWindow{
-		Type: &cxsdk.LogsUniqueValueTimeWindowSpecificValue{
-			LogsUniqueValueTimeWindowSpecificValue: LogsUniqueCountTimeWindowValueToProto[timeWindow.SpecificValue],
-		},
+func expandLogsUniqueCountTimeWindow(timeWindow LogsUniqueCountTimeWindow) *alerts.LogsUniqueValueTimeWindow {
+	return &alerts.LogsUniqueValueTimeWindow{
+		LogsUniqueValueTimeWindowSpecificValue: LogsUniqueCountTimeWindowValueToOpenAPI[timeWindow.SpecificValue],
 	}
 }
 
