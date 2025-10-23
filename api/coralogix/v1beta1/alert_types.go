@@ -131,22 +131,22 @@ var (
 		LogsThresholdConditionTypeMoreThan: alerts.LOGSTHRESHOLDCONDITIONTYPE_LOGS_THRESHOLD_CONDITION_TYPE_MORE_THAN_OR_UNSPECIFIED,
 		LogsThresholdConditionTypeLessThan: alerts.LOGSTHRESHOLDCONDITIONTYPE_LOGS_THRESHOLD_CONDITION_TYPE_LESS_THAN,
 	}
-	LogsRatioTimeWindowToProto = map[LogsRatioTimeWindowValue]cxsdk.LogsRatioTimeWindowValue{
-		LogsRatioTimeWindowMinutes5:  cxsdk.LogsRatioTimeWindowValue5MinutesOrUnspecified,
-		LogsRatioTimeWindowMinutes10: cxsdk.LogsRatioTimeWindowValue10Minutes,
-		LogsRatioTimeWindowMinutes15: cxsdk.LogsRatioTimeWindowValue15Minutes,
-		LogsRatioTimeWindowMinutes30: cxsdk.LogsRatioTimeWindowValue30Minutes,
-		LogsRatioTimeWindow1Hour:     cxsdk.LogsRatioTimeWindowValue1Hour,
-		LogsRatioTimeWindowHours2:    cxsdk.LogsRatioTimeWindowValue2Hours,
-		LogsRatioTimeWindowHours4:    cxsdk.LogsRatioTimeWindowValue4Hours,
-		LogsRatioTimeWindowHours6:    cxsdk.LogsRatioTimeWindowValue6Hours,
-		LogsRatioTimeWindowHours12:   cxsdk.LogsRatioTimeWindowValue12Hours,
-		LogsRatioTimeWindowHours24:   cxsdk.LogsRatioTimeWindowValue24Hours,
-		LogsRatioTimeWindowHours36:   cxsdk.LogsRatioTimeWindowValue36Hours,
+	LogsRatioTimeWindowToOpenAPI = map[LogsRatioTimeWindowValue]*alerts.LogsRatioTimeWindowValue{
+		LogsRatioTimeWindowMinutes5:  alerts.LOGSRATIOTIMEWINDOWVALUE_LOGS_RATIO_TIME_WINDOW_VALUE_MINUTES_5_OR_UNSPECIFIED.Ptr(),
+		LogsRatioTimeWindowMinutes10: alerts.LOGSRATIOTIMEWINDOWVALUE_LOGS_RATIO_TIME_WINDOW_VALUE_MINUTES_10.Ptr(),
+		LogsRatioTimeWindowMinutes15: alerts.LOGSRATIOTIMEWINDOWVALUE_LOGS_RATIO_TIME_WINDOW_VALUE_MINUTES_15.Ptr(),
+		LogsRatioTimeWindowMinutes30: alerts.LOGSRATIOTIMEWINDOWVALUE_LOGS_RATIO_TIME_WINDOW_VALUE_MINUTES_30.Ptr(),
+		LogsRatioTimeWindow1Hour:     alerts.LOGSRATIOTIMEWINDOWVALUE_LOGS_RATIO_TIME_WINDOW_VALUE_HOUR_1.Ptr(),
+		LogsRatioTimeWindowHours2:    alerts.LOGSRATIOTIMEWINDOWVALUE_LOGS_RATIO_TIME_WINDOW_VALUE_HOURS_2.Ptr(),
+		LogsRatioTimeWindowHours4:    alerts.LOGSRATIOTIMEWINDOWVALUE_LOGS_RATIO_TIME_WINDOW_VALUE_HOURS_4.Ptr(),
+		LogsRatioTimeWindowHours6:    alerts.LOGSRATIOTIMEWINDOWVALUE_LOGS_RATIO_TIME_WINDOW_VALUE_HOURS_6.Ptr(),
+		LogsRatioTimeWindowHours12:   alerts.LOGSRATIOTIMEWINDOWVALUE_LOGS_RATIO_TIME_WINDOW_VALUE_HOURS_12.Ptr(),
+		LogsRatioTimeWindowHours24:   alerts.LOGSRATIOTIMEWINDOWVALUE_LOGS_RATIO_TIME_WINDOW_VALUE_HOURS_24.Ptr(),
+		LogsRatioTimeWindowHours36:   alerts.LOGSRATIOTIMEWINDOWVALUE_LOGS_RATIO_TIME_WINDOW_VALUE_HOURS_36.Ptr(),
 	}
-	LogsRatioConditionTypeToProto = map[LogsRatioConditionType]cxsdk.LogsRatioConditionType{
-		LogsRatioConditionTypeMoreThan: cxsdk.LogsRatioConditionTypeMoreThanOrUnspecified,
-		LogsRatioConditionTypeLessThan: cxsdk.LogsRatioConditionTypeLessThan,
+	LogsRatioConditionTypeToOpenAPI = map[LogsRatioConditionType]alerts.LogsRatioConditionType{
+		LogsRatioConditionTypeMoreThan: alerts.LOGSRATIOCONDITIONTYPE_LOGS_RATIO_CONDITION_TYPE_MORE_THAN_OR_UNSPECIFIED,
+		LogsRatioConditionTypeLessThan: alerts.LOGSRATIOCONDITIONTYPE_LOGS_RATIO_CONDITION_TYPE_LESS_THAN,
 	}
 	LogsTimeRelativeComparedToToProto = map[LogsTimeRelativeComparedTo]cxsdk.LogsTimeRelativeComparedTo{
 		LogsTimeRelativeComparedToPreviousHour:      cxsdk.LogsTimeRelativeComparedToPreviousHourOrUnspecified,
@@ -1554,7 +1554,7 @@ func (in AlertSpec) ExtractAlertCreateRequest(listingAlertsAndWebhooksProperties
 				PhantomMode:             alerts.PtrBool(in.PhantomMode),
 				ActiveOn:                expandAlertSchedule(in.Schedule),
 				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_LOGS_THRESHOLD,
-				LogsRatioThreshold:           expandLogsRatioThreshold(logsRatioThreshold, AlertPriorityToOpenAPIPriority[in.Priority]),
+				LogsRatioThreshold:      expandLogsRatioThreshold(logsRatioThreshold, AlertPriorityToOpenAPIPriority[in.Priority]),
 			},
 		}, nil
 	} else if logsTimeRelativeThreshold := in.TypeDefinition.LogsTimeRelativeThreshold; logsTimeRelativeThreshold != nil {
@@ -2668,13 +2668,27 @@ func expandLogsThreshold(logsThreshold *LogsThreshold, priority alerts.AlertDefP
 }
 
 func expandLogsRatioThreshold(logsRatioThreshold *LogsRatioThreshold, priority alerts.AlertDefPriority) *alerts.LogsRatioThresholdType {
-	return &alerts.LogsRatioThresholdType{
-			Numerator:        expandLogsFilter(&logsRatioThreshold.Numerator),
-			NumeratorAlias:   alerts.PtrString(logsRatioThreshold.NumeratorAlias)),
-			Denominator:      expandLogsFilter(&logsRatioThreshold.Denominator),
-			DenominatorAlias: alerts.PtrString(logsRatioThreshold.DenominatorAlias),
-			Rules:            expandLogsRatioThresholdRules(logsRatioThreshold.Rules, priority),
+	if logsRatioThreshold == nil {
+		return nil
 	}
+
+	thresholdType := &alerts.LogsRatioThresholdType{
+		NumeratorAlias:   alerts.PtrString(logsRatioThreshold.NumeratorAlias),
+		DenominatorAlias: alerts.PtrString(logsRatioThreshold.DenominatorAlias),
+		Rules:            expandLogsRatioThresholdRules(logsRatioThreshold.Rules, priority),
+	}
+
+	Numerator := expandLogsFilter(&logsRatioThreshold.Numerator)
+	if Numerator != nil {
+		thresholdType.Numerator = *Numerator
+	}
+
+	Denominator := expandLogsFilter(&logsRatioThreshold.Denominator)
+	if Denominator != nil {
+		thresholdType.Denominator = *Denominator
+	}
+
+	return thresholdType
 }
 
 func expandLogsTimeRelativeThreshold(threshold *LogsTimeRelativeThreshold, priority cxsdk.AlertDefPriority) *cxsdk.AlertDefPropertiesLogsTimeRelativeThreshold {
@@ -2713,34 +2727,32 @@ func expandLogsTimeRelativeCondition(condition LogsTimeRelativeCondition) *cxsdk
 	}
 }
 
-func expandLogsRatioThresholdRules(rules []LogsRatioThresholdRule, priority cxsdk.AlertDefPriority) []*cxsdk.LogsRatioRules {
-	result := make([]*cxsdk.LogsRatioRules, len(rules))
+func expandLogsRatioThresholdRules(rules []LogsRatioThresholdRule, priority alerts.AlertDefPriority) []alerts.LogsRatioRules {
+	result := make([]alerts.LogsRatioRules, len(rules))
 	for i := range rules {
-		result[i] = expandLogsRatioThresholdRule(rules[i], priority)
+		result[i] = *expandLogsRatioThresholdRule(rules[i], priority)
 	}
 	return result
 }
 
-func expandLogsRatioThresholdRule(rule LogsRatioThresholdRule, priority cxsdk.AlertDefPriority) *cxsdk.LogsRatioRules {
-	return &cxsdk.LogsRatioRules{
-		Condition: expandLogsRatioCondition(rule.Condition),
-		Override:  expandAlertOverride(rule.Override, priority),
+func expandLogsRatioThresholdRule(rule LogsRatioThresholdRule, priority alerts.AlertDefPriority) *alerts.LogsRatioRules {
+	return &alerts.LogsRatioRules{
+		Condition: *expandLogsRatioCondition(rule.Condition),
+		Override:  *expandAlertOverride(rule.Override, priority),
 	}
 }
 
-func expandLogsRatioCondition(condition LogsRatioCondition) *cxsdk.LogsRatioCondition {
-	return &cxsdk.LogsRatioCondition{
-		Threshold:     wrapperspb.Double(condition.Threshold.AsApproximateFloat64()),
-		TimeWindow:    expandLogsRatioTimeWindow(condition.TimeWindow),
-		ConditionType: LogsRatioConditionTypeToProto[condition.ConditionType],
+func expandLogsRatioCondition(condition LogsRatioCondition) *alerts.LogsRatioCondition {
+	return &alerts.LogsRatioCondition{
+		Threshold:     condition.Threshold.AsApproximateFloat64(),
+		TimeWindow:    *expandLogsRatioTimeWindow(condition.TimeWindow),
+		ConditionType: LogsRatioConditionTypeToOpenAPI[condition.ConditionType],
 	}
 }
 
-func expandLogsRatioTimeWindow(timeWindow LogsRatioTimeWindow) *cxsdk.LogsRatioTimeWindow {
-	return &cxsdk.LogsRatioTimeWindow{
-		Type: &cxsdk.LogsRatioTimeWindowSpecificValue{
-			LogsRatioTimeWindowSpecificValue: LogsRatioTimeWindowToProto[timeWindow.SpecificValue],
-		},
+func expandLogsRatioTimeWindow(timeWindow LogsRatioTimeWindow) *alerts.LogsRatioTimeWindow {
+	return &alerts.LogsRatioTimeWindow{
+		LogsRatioTimeWindowSpecificValue: LogsRatioTimeWindowToOpenAPI[timeWindow.SpecificValue],
 	}
 }
 
