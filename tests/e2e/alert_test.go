@@ -80,7 +80,7 @@ var _ = Describe("Alert", Ordered, func() {
 						{
 							NotifyOn: coralogixv1beta1.NotifyOnTriggeredOnly,
 							RetriggeringPeriod: coralogixv1beta1.RetriggeringPeriod{
-								Minutes: ptr.To(uint32(1)),
+								Minutes: ptr.To(int64(1)),
 							},
 							Integration: coralogixv1beta1.IntegrationType{
 								Recipients: []string{"example@coralogix.com"},
@@ -100,7 +100,7 @@ var _ = Describe("Alert", Ordered, func() {
 				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
 					MetricThreshold: &coralogixv1beta1.MetricThreshold{
 						MissingValues: coralogixv1beta1.MetricMissingValues{
-							MinNonNullValuesPct: ptr.To(uint32(10)),
+							MinNonNullValuesPct: ptr.To(int64(10)),
 						},
 						MetricFilter: coralogixv1beta1.MetricFilter{
 							Promql: "http_requests_total{status!~\"4..\"}",
@@ -192,7 +192,7 @@ var _ = Describe("Alert", Ordered, func() {
 						{
 							NotifyOn: coralogixv1beta1.NotifyOnTriggeredOnly,
 							RetriggeringPeriod: coralogixv1beta1.RetriggeringPeriod{
-								Minutes: ptr.To(uint32(1)),
+								Minutes: ptr.To(int64(1)),
 							},
 							Integration: coralogixv1beta1.IntegrationType{
 								IntegrationRef: &coralogixv1beta1.IntegrationRef{
@@ -218,7 +218,7 @@ var _ = Describe("Alert", Ordered, func() {
 				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
 					MetricThreshold: &coralogixv1beta1.MetricThreshold{
 						MissingValues: coralogixv1beta1.MetricMissingValues{
-							MinNonNullValuesPct: ptr.To(uint32(10)),
+							MinNonNullValuesPct: ptr.To(int64(10)),
 						},
 						MetricFilter: coralogixv1beta1.MetricFilter{
 							Promql: "http_requests_total{status!~\"4..\"}",

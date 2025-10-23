@@ -33,7 +33,6 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	alerts "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/alert_definitions_service"
 
-	"github.com/coralogix/coralogix-operator/api/coralogix"
 	"github.com/coralogix/coralogix-operator/internal/config"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
@@ -951,7 +950,7 @@ type MetricMissingValues struct {
 	// +kubebuilder:validation:Maximum:=100
 	// Replace with a number
 	// +optional
-	MinNonNullValuesPct *uint32 `json:"minNonNullValuesPct,omitempty"`
+	MinNonNullValuesPct *int64 `json:"minNonNullValuesPct,omitempty"`
 }
 
 // Tracing threshold alert
@@ -1859,13 +1858,13 @@ func expandIntegration(integration IntegrationType, listingWebhooksProperties *G
 		}
 
 		return &alerts.V3IntegrationType{
-			IntegrationTypeIntegrationId: &alerts.IntegrationTypeIntegrationId{
+			V3IntegrationTypeIntegrationId: &alerts.V3IntegrationTypeIntegrationId{
 				IntegrationId: integrationID,
 			},
 		}, nil
 	} else if recipients := integration.Recipients; recipients != nil {
 		return &alerts.V3IntegrationType{
-			IntegrationTypeRecipients: &alerts.IntegrationTypeRecipients{
+			V3IntegrationTypeRecipients: &alerts.V3IntegrationTypeRecipients{
 				Recipients: &alerts.Recipients{
 					Emails: recipients,
 				},
@@ -2450,7 +2449,7 @@ func expandFlowStages(listingAlertsProperties *GetResourceRefProperties, stages 
 func expandFlowStage(listingAlertsProperties *GetResourceRefProperties, stage FlowStage) *alerts.FlowStages {
 	return &alerts.FlowStages{
 		FlowStagesGroups: expandFlowStagesType(listingAlertsProperties, stage.FlowStagesType),
-		TimeframeMs:      wrapperspb.Int64(stage.TimeframeMs),
+		TimeframeMs:      strconv.FormatInt(stage.TimeframeMs, 10),
 		TimeframeType:    TimeframeTypeToOpenAPI[stage.TimeframeType],
 	}
 }
@@ -2531,7 +2530,7 @@ func convertAlertCrNameToID(listingAlertsProperties *GetResourceRefProperties, a
 	}
 
 	if alertCR.Status.ID == nil {
-		return nil, fmt.Errorf("alert with name %s has no ID", alertCrName)
+		return "", fmt.Errorf("alert with name %s has no ID", alertCrName)
 	}
 
 	return *alertCR.Status.ID, nil
@@ -2737,14 +2736,14 @@ func expandMetricThresholdCondition(condition MetricThresholdRuleCondition) *ale
 func expandMetricTimeWindow(timeWindow MetricTimeWindow) *alerts.MetricTimeWindow {
 	if specificValue := timeWindow.SpecificValue; specificValue != nil {
 		return &alerts.MetricTimeWindow{
-			Type: &cxsdk.MetricTimeWindowSpecificValue{
-				MetricTimeWindowSpecificValue: MetricTimeWindowToProto[*specificValue],
+			MetricTimeWindowMetricTimeWindowSpecificValue: &alerts.MetricTimeWindowMetricTimeWindowSpecificValue{
+				MetricTimeWindowSpecificValue: MetricTimeWindowToOpenAPI[*specificValue],
 			},
 		}
 	} else if dynamicTimeWindow := timeWindow.DynamicDuration; dynamicTimeWindow != nil {
 		return &alerts.MetricTimeWindow{
-			Type: &cxsdk.MetricTimeWindowDynamicDuration{
-				MetricTimeWindowDynamicDuration: wrapperspb.String(*dynamicTimeWindow),
+			MetricTimeWindowMetricTimeWindowDynamicDuration: &alerts.MetricTimeWindowMetricTimeWindowDynamicDuration{
+				MetricTimeWindowDynamicDuration: dynamicTimeWindow,
 			},
 		}
 	}
@@ -2764,15 +2763,15 @@ func expandMetricMissingValues(missingValues *MetricMissingValues) *alerts.Metri
 	if missingValues == nil {
 		return nil
 	} else if missingValues.ReplaceWithZero {
-		return &cxsdk.MetricMissingValues{
-			MissingValues: &cxsdk.MetricMissingValuesReplaceWithZero{
-				ReplaceWithZero: wrapperspb.Bool(true),
+		return &alerts.MetricMissingValues{
+			MetricMissingValuesReplaceWithZero: &alerts.MetricMissingValuesReplaceWithZero{
+				ReplaceWithZero: alerts.PtrBool(true),
 			},
 		}
 	} else if missingValues.MinNonNullValuesPct != nil {
-		return &cxsdk.MetricMissingValues{
-			MissingValues: &cxsdk.MetricMissingValuesMinNonNullValuesPct{
-				MinNonNullValuesPct: wrapperspb.UInt32(*missingValues.MinNonNullValuesPct),
+		return &alerts.MetricMissingValues{
+			MetricMissingValuesMinNonNullValuesPct: &alerts.MetricMissingValuesMinNonNullValuesPct{
+				MinNonNullValuesPct: missingValues.MinNonNullValuesPct,
 			},
 		}
 	}
