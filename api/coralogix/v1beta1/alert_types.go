@@ -166,20 +166,20 @@ var (
 		MetricThresholdConditionTypeMoreThanOrEquals: alerts.METRICTHRESHOLDCONDITIONTYPE_METRIC_THRESHOLD_CONDITION_TYPE_MORE_THAN_OR_EQUALS,
 		MetricThresholdConditionTypeLessThanOrEquals: alerts.METRICTHRESHOLDCONDITIONTYPE_METRIC_THRESHOLD_CONDITION_TYPE_LESS_THAN_OR_EQUALS,
 	}
-	MetricTimeWindowToProto = map[MetricTimeWindowSpecificValue]cxsdk.MetricTimeWindowValue{
-		MetricTimeWindowValue1Minute:   cxsdk.MetricTimeWindowValue1MinuteOrUnspecified,
-		MetricTimeWindowValue5Minutes:  cxsdk.MetricTimeWindowValue5Minutes,
-		MetricTimeWindowValue10Minutes: cxsdk.MetricTimeWindowValue10Minutes,
-		MetricTimeWindowValue15Minutes: cxsdk.MetricTimeWindowValue15Minutes,
-		MetricTimeWindowValue20Minutes: cxsdk.MetricTimeWindowValue20Minutes,
-		MetricTimeWindowValue30Minutes: cxsdk.MetricTimeWindowValue30Minutes,
-		MetricTimeWindowValue1Hour:     cxsdk.MetricTimeWindowValue1Hour,
-		MetricTimeWindowValue2Hours:    cxsdk.MetricTimeWindowValue2Hours,
-		MetricTimeWindowValue4Hours:    cxsdk.MetricTimeWindowValue4Hours,
-		MetricTimeWindowValue6Hours:    cxsdk.MetricTimeWindowValue6Hours,
-		MetricTimeWindowValue12Hours:   cxsdk.MetricTimeWindowValue12Hours,
-		MetricTimeWindowValue24Hours:   cxsdk.MetricTimeWindowValue24Hours,
-		MetricTimeWindowValue36Hours:   cxsdk.MetricTimeWindowValue36Hours,
+	MetricTimeWindowToOpenAPI = map[MetricTimeWindowSpecificValue]*alerts.MetricTimeWindowValue{
+		MetricTimeWindowValue1Minute:   alerts.METRICTIMEWINDOWVALUE_METRIC_TIME_WINDOW_VALUE_MINUTES_1_OR_UNSPECIFIED.Ptr(),
+		MetricTimeWindowValue5Minutes:  alerts.METRICTIMEWINDOWVALUE_METRIC_TIME_WINDOW_VALUE_MINUTES_5.Ptr(),
+		MetricTimeWindowValue10Minutes: alerts.METRICTIMEWINDOWVALUE_METRIC_TIME_WINDOW_VALUE_MINUTES_10.Ptr(),
+		MetricTimeWindowValue15Minutes: alerts.METRICTIMEWINDOWVALUE_METRIC_TIME_WINDOW_VALUE_MINUTES_15.Ptr(),
+		MetricTimeWindowValue20Minutes: alerts.METRICTIMEWINDOWVALUE_METRIC_TIME_WINDOW_VALUE_MINUTES_20.Ptr(),
+		MetricTimeWindowValue30Minutes: alerts.METRICTIMEWINDOWVALUE_METRIC_TIME_WINDOW_VALUE_MINUTES_30.Ptr(),
+		MetricTimeWindowValue1Hour:     alerts.METRICTIMEWINDOWVALUE_METRIC_TIME_WINDOW_VALUE_HOUR_1.Ptr(),
+		MetricTimeWindowValue2Hours:    alerts.METRICTIMEWINDOWVALUE_METRIC_TIME_WINDOW_VALUE_HOURS_2.Ptr(),
+		MetricTimeWindowValue4Hours:    alerts.METRICTIMEWINDOWVALUE_METRIC_TIME_WINDOW_VALUE_HOURS_4.Ptr(),
+		MetricTimeWindowValue6Hours:    alerts.METRICTIMEWINDOWVALUE_METRIC_TIME_WINDOW_VALUE_HOURS_6.Ptr(),
+		MetricTimeWindowValue12Hours:   alerts.METRICTIMEWINDOWVALUE_METRIC_TIME_WINDOW_VALUE_HOURS_12.Ptr(),
+		MetricTimeWindowValue24Hours:   alerts.METRICTIMEWINDOWVALUE_METRIC_TIME_WINDOW_VALUE_HOURS_24.Ptr(),
+		MetricTimeWindowValue36Hours:   alerts.METRICTIMEWINDOWVALUE_METRIC_TIME_WINDOW_VALUE_HOURS_36.Ptr(),
 	}
 	TracingTimeWindowSpecificValueToOpenAPI = map[TracingTimeWindowSpecificValue]*alerts.TracingTimeWindowValue{
 		TracingTimeWindowValue5Minutes:  alerts.TRACINGTIMEWINDOWVALUE_TRACING_TIME_WINDOW_VALUE_MINUTES_5_OR_UNSPECIFIED.Ptr(),
@@ -214,9 +214,9 @@ var (
 		FlowStageGroupAlertsOpAnd: alerts.NEXTOP_NEXT_OP_AND_OR_UNSPECIFIED,
 		FlowStageGroupAlertsOpOr:  alerts.NEXTOP_NEXT_OP_OR,
 	}
-	MetricAnomalyConditionTypeToProto = map[MetricAnomalyConditionType]cxsdk.MetricAnomalyConditionType{
-		MetricAnomalyConditionTypeMoreThanUsual: cxsdk.MetricAnomalyConditionTypeMoreThanOrUnspecified,
-		MetricAnomalyConditionTypeLessThanUsual: cxsdk.MetricAnomalyConditionTypeLessThan,
+	MetricAnomalyConditionTypeToOpenAPI = map[MetricAnomalyConditionType]alerts.MetricAnomalyConditionType{
+		MetricAnomalyConditionTypeMoreThanUsual: alerts.METRICANOMALYCONDITIONTYPE_METRIC_ANOMALY_CONDITION_TYPE_MORE_THAN_USUAL_OR_UNSPECIFIED,
+		MetricAnomalyConditionTypeLessThanUsual: alerts.METRICANOMALYCONDITIONTYPE_METRIC_ANOMALY_CONDITION_TYPE_LESS_THAN_USUAL,
 	}
 	LogsNewValueTimeWindowValueToProto = map[LogsNewValueTimeWindowSpecificValue]cxsdk.LogsNewValueTimeWindowValue{
 		LogsNewValueTimeWindowValue12Hours: cxsdk.LogsNewValueTimeWindowValue12HoursOrUnspecified,
@@ -1195,13 +1195,13 @@ type MetricAnomalyCondition struct {
 
 	// +kubebuilder:validation:Maximum:=100
 	// Percentage for the threshold
-	ForOverPct uint32 `json:"forOverPct"`
+	ForOverPct int64 `json:"forOverPct"`
 
 	// Time window to match within
 	OfTheLast MetricAnomalyTimeWindow `json:"ofTheLast"`
 	// +kubebuilder:validation:Maximum:=100
 	// Replace with a number
-	MinNonNullValuesPct uint32 `json:"minNonNullValuesPct"`
+	MinNonNullValuesPct int64 `json:"minNonNullValuesPct"`
 	// Condition type.
 	ConditionType MetricAnomalyConditionType `json:"conditionType"`
 }
@@ -1668,8 +1668,23 @@ func (in *AlertSpec) ExtractAlertCreateRequest(listingAlertsAndWebhooksPropertie
 			},
 		}, nil
 	} else if metricAnomaly := in.TypeDefinition.MetricAnomaly; metricAnomaly != nil {
-		properties.TypeDefinition = expandMetricAnomaly(metricAnomaly)
-		properties.Type = cxsdk.AlertDefTypeMetricAnomaly
+		return &alerts.AlertDefsServiceCreateAlertDefRequest{
+			AlertDefPropertiesMetricAnomaly: &alerts.AlertDefPropertiesMetricAnomaly{
+				Name:                    in.Name,
+				Description:             alerts.PtrString(in.Description),
+				Enabled:                 alerts.PtrBool(in.Enabled),
+				Priority:                priority,
+				GroupByKeys:             in.GroupByKeys,
+				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+				NotificationGroup:       notificationGroup,
+				NotificationGroupExcess: notificationGroupExcess,
+				EntityLabels:            ptr.To(in.EntityLabels),
+				PhantomMode:             alerts.PtrBool(in.PhantomMode),
+				ActiveOn:                expandAlertSchedule(in.Schedule),
+				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_METRIC_ANOMALY,
+				MetricAnomaly:           expandMetricAnomaly(metricAnomaly),
+			},
+		}, nil
 	} else if logsNewValue := in.TypeDefinition.LogsNewValue; logsNewValue != nil {
 		properties.TypeDefinition = expandLogsNewValue(logsNewValue)
 		properties.Type = cxsdk.AlertDefTypeLogsNewValue
@@ -2330,40 +2345,36 @@ func expandLogsNewValueTimeWindow(timeWindow LogsNewValueTimeWindow) *cxsdk.Logs
 	}
 }
 
-func expandMetricAnomaly(metricAnomaly *MetricAnomaly) *cxsdk.AlertDefPropertiesMetricAnomaly {
-	return &cxsdk.AlertDefPropertiesMetricAnomaly{
-		MetricAnomaly: &cxsdk.MetricAnomalyType{
-			MetricFilter: &cxsdk.MetricFilter{
-				Type: &cxsdk.MetricFilterPromql{
-					Promql: wrapperspb.String(metricAnomaly.MetricFilter.Promql),
-				},
-			},
-			Rules: expandMetricAnomalyRules(metricAnomaly.Rules),
+func expandMetricAnomaly(metricAnomaly *MetricAnomaly) *alerts.MetricAnomalyType {
+	return &alerts.MetricAnomalyType{
+		MetricFilter: alerts.MetricFilter{
+			Promql: metricAnomaly.MetricFilter.Promql,
 		},
+		Rules: expandMetricAnomalyRules(metricAnomaly.Rules),
 	}
 }
 
-func expandMetricAnomalyRules(rules []MetricAnomalyRule) []*cxsdk.MetricAnomalyRule {
-	result := make([]*cxsdk.MetricAnomalyRule, len(rules))
+func expandMetricAnomalyRules(rules []MetricAnomalyRule) []alerts.MetricAnomalyRule {
+	result := make([]alerts.MetricAnomalyRule, len(rules))
 	for i := range rules {
-		result[i] = expandMetricAnomalyRule(rules[i])
+		result[i] = *expandMetricAnomalyRule(rules[i])
 	}
 	return result
 }
 
-func expandMetricAnomalyRule(rule MetricAnomalyRule) *cxsdk.MetricAnomalyRule {
-	return &cxsdk.MetricAnomalyRule{
-		Condition: expandMetricAnomalyCondition(rule.Condition),
+func expandMetricAnomalyRule(rule MetricAnomalyRule) *alerts.MetricAnomalyRule {
+	return &alerts.MetricAnomalyRule{
+		Condition: *expandMetricAnomalyCondition(rule.Condition),
 	}
 }
 
-func expandMetricAnomalyCondition(condition MetricAnomalyCondition) *cxsdk.MetricAnomalyCondition {
-	return &cxsdk.MetricAnomalyCondition{
-		Threshold:           wrapperspb.Double(condition.Threshold.AsApproximateFloat64()),
-		ForOverPct:          wrapperspb.UInt32(condition.ForOverPct),
-		OfTheLast:           expandAnomalyMetricTimeWindow(condition.OfTheLast),
-		MinNonNullValuesPct: wrapperspb.UInt32(condition.MinNonNullValuesPct),
-		ConditionType:       MetricAnomalyConditionTypeToProto[condition.ConditionType],
+func expandMetricAnomalyCondition(condition MetricAnomalyCondition) *alerts.MetricAnomalyCondition {
+	return &alerts.MetricAnomalyCondition{
+		Threshold:           condition.Threshold.AsApproximateFloat64(),
+		ForOverPct:          alerts.PtrInt64(condition.ForOverPct),
+		OfTheLast:           *expandAnomalyMetricTimeWindow(condition.OfTheLast),
+		MinNonNullValuesPct: condition.MinNonNullValuesPct,
+		ConditionType:       MetricAnomalyConditionTypeToOpenAPI[condition.ConditionType],
 	}
 }
 
@@ -2719,10 +2730,10 @@ func expandMetricTimeWindow(timeWindow MetricTimeWindow) *alerts.MetricTimeWindo
 	return nil
 }
 
-func expandAnomalyMetricTimeWindow(timeWindow MetricAnomalyTimeWindow) *cxsdk.MetricTimeWindow {
-	return &cxsdk.MetricTimeWindow{
-		Type: &cxsdk.MetricTimeWindowSpecificValue{
-			MetricTimeWindowSpecificValue: MetricTimeWindowToProto[timeWindow.SpecificValue],
+func expandAnomalyMetricTimeWindow(timeWindow MetricAnomalyTimeWindow) *alerts.MetricTimeWindow {
+	return &alerts.MetricTimeWindow{
+		MetricTimeWindowMetricTimeWindowSpecificValue: &alerts.MetricTimeWindowMetricTimeWindowSpecificValue{
+			MetricTimeWindowSpecificValue: MetricTimeWindowToOpenAPI[timeWindow.SpecificValue],
 		},
 	}
 }
