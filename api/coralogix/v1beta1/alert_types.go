@@ -181,26 +181,26 @@ var (
 		MetricTimeWindowValue24Hours:   cxsdk.MetricTimeWindowValue24Hours,
 		MetricTimeWindowValue36Hours:   cxsdk.MetricTimeWindowValue36Hours,
 	}
-	TracingTimeWindowSpecificValueToProto = map[TracingTimeWindowSpecificValue]cxsdk.TracingTimeWindowValue{
-		TracingTimeWindowValue5Minutes:  cxsdk.TracingTimeWindowValue5MinutesOrUnspecified,
-		TracingTimeWindowValue10Minutes: cxsdk.TracingTimeWindowValue10Minutes,
-		TracingTimeWindowValue15Minutes: cxsdk.TracingTimeWindowValue15Minutes,
-		TracingTimeWindowValue20Minutes: cxsdk.TracingTimeWindowValue20Minutes,
-		TracingTimeWindowValue30Minutes: cxsdk.TracingTimeWindowValue30Minutes,
-		TracingTimeWindowValue1Hour:     cxsdk.TracingTimeWindowValue1Hour,
-		TracingTimeWindowValue2Hours:    cxsdk.TracingTimeWindowValue2Hours,
-		TracingTimeWindowValue4Hours:    cxsdk.TracingTimeWindowValue4Hours,
-		TracingTimeWindowValue6Hours:    cxsdk.TracingTimeWindowValue6Hours,
-		TracingTimeWindowValue12Hours:   cxsdk.TracingTimeWindowValue12Hours,
-		TracingTimeWindowValue24Hours:   cxsdk.TracingTimeWindowValue24Hours,
-		TracingTimeWindowValue36Hours:   cxsdk.TracingTimeWindowValue36Hours,
+	TracingTimeWindowSpecificValueToOpenAPI = map[TracingTimeWindowSpecificValue]*alerts.TracingTimeWindowValue{
+		TracingTimeWindowValue5Minutes:  alerts.TRACINGTIMEWINDOWVALUE_TRACING_TIME_WINDOW_VALUE_MINUTES_5_OR_UNSPECIFIED.Ptr(),
+		TracingTimeWindowValue10Minutes: alerts.TRACINGTIMEWINDOWVALUE_TRACING_TIME_WINDOW_VALUE_MINUTES_10.Ptr(),
+		TracingTimeWindowValue15Minutes: alerts.TRACINGTIMEWINDOWVALUE_TRACING_TIME_WINDOW_VALUE_MINUTES_15.Ptr(),
+		TracingTimeWindowValue20Minutes: alerts.TRACINGTIMEWINDOWVALUE_TRACING_TIME_WINDOW_VALUE_MINUTES_20.Ptr(),
+		TracingTimeWindowValue30Minutes: alerts.TRACINGTIMEWINDOWVALUE_TRACING_TIME_WINDOW_VALUE_MINUTES_30.Ptr(),
+		TracingTimeWindowValue1Hour:     alerts.TRACINGTIMEWINDOWVALUE_TRACING_TIME_WINDOW_VALUE_HOUR_1.Ptr(),
+		TracingTimeWindowValue2Hours:    alerts.TRACINGTIMEWINDOWVALUE_TRACING_TIME_WINDOW_VALUE_HOURS_2.Ptr(),
+		TracingTimeWindowValue4Hours:    alerts.TRACINGTIMEWINDOWVALUE_TRACING_TIME_WINDOW_VALUE_HOURS_4.Ptr(),
+		TracingTimeWindowValue6Hours:    alerts.TRACINGTIMEWINDOWVALUE_TRACING_TIME_WINDOW_VALUE_HOURS_6.Ptr(),
+		TracingTimeWindowValue12Hours:   alerts.TRACINGTIMEWINDOWVALUE_TRACING_TIME_WINDOW_VALUE_HOURS_12.Ptr(),
+		TracingTimeWindowValue24Hours:   alerts.TRACINGTIMEWINDOWVALUE_TRACING_TIME_WINDOW_VALUE_HOURS_24.Ptr(),
+		TracingTimeWindowValue36Hours:   alerts.TRACINGTIMEWINDOWVALUE_TRACING_TIME_WINDOW_VALUE_HOURS_36.Ptr(),
 	}
-	TracingFilterOperationTypeToProto = map[TracingFilterOperationType]cxsdk.TracingFilterOperationType{
-		TracingFilterOperationTypeIs:         cxsdk.TracingFilterOperationTypeIsOrUnspecified,
-		TracingFilterOperationTypeIncludes:   cxsdk.TracingFilterOperationTypeIncludes,
-		TracingFilterOperationTypeEndsWith:   cxsdk.TracingFilterOperationTypeEndsWith,
-		TracingFilterOperationTypeStartsWith: cxsdk.TracingFilterOperationTypeStartsWith,
-		TracingFilterOperationTypeIsNot:      cxsdk.TracingFilterOperationTypeIsNot,
+	TracingFilterOperationTypeToProto = map[TracingFilterOperationType]alerts.TracingFilterOperationType{
+		TracingFilterOperationTypeIs:         alerts.TRACINGFILTEROPERATIONTYPE_TRACING_FILTER_OPERATION_TYPE_IS_OR_UNSPECIFIED,
+		TracingFilterOperationTypeIncludes:   alerts.TRACINGFILTEROPERATIONTYPE_TRACING_FILTER_OPERATION_TYPE_INCLUDES,
+		TracingFilterOperationTypeEndsWith:   alerts.TRACINGFILTEROPERATIONTYPE_TRACING_FILTER_OPERATION_TYPE_ENDS_WITH,
+		TracingFilterOperationTypeStartsWith: alerts.TRACINGFILTEROPERATIONTYPE_TRACING_FILTER_OPERATION_TYPE_STARTS_WITH,
+		TracingFilterOperationTypeIsNot:      alerts.TRACINGFILTEROPERATIONTYPE_TRACING_FILTER_OPERATION_TYPE_IS_NOT,
 	}
 	TimeframeTypeToProto = map[FlowTimeframeType]cxsdk.TimeframeType{
 		TimeframeTypeUnspecified: cxsdk.TimeframeTypeUnspecified,
@@ -1596,8 +1596,23 @@ func (in *AlertSpec) ExtractAlertCreateRequest(listingAlertsAndWebhooksPropertie
 			},
 		}, nil
 	} else if tracingThreshold := in.TypeDefinition.TracingThreshold; tracingThreshold != nil {
-		properties.TypeDefinition = expandTracingThreshold(tracingThreshold)
-		properties.Type = cxsdk.AlertDefTypeTracingThreshold
+		return &alerts.AlertDefsServiceCreateAlertDefRequest{
+			AlertDefPropertiesTracingThreshold: &alerts.AlertDefPropertiesTracingThreshold{
+				Name:                    in.Name,
+				Description:             alerts.PtrString(in.Description),
+				Enabled:                 alerts.PtrBool(in.Enabled),
+				Priority:                priority,
+				GroupByKeys:             in.GroupByKeys,
+				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+				NotificationGroup:       notificationGroup,
+				NotificationGroupExcess: notificationGroupExcess,
+				EntityLabels:            ptr.To(in.EntityLabels),
+				PhantomMode:             alerts.PtrBool(in.PhantomMode),
+				ActiveOn:                expandAlertSchedule(in.Schedule),
+				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_TRACING_THRESHOLD,
+				TracingThreshold:        expandTracingThreshold(tracingThreshold),
+			},
+		}, nil
 	} else if tracingImmediate := in.TypeDefinition.TracingImmediate; tracingImmediate != nil {
 		properties.TypeDefinition = expandTracingImmediate(tracingImmediate)
 		properties.Type = cxsdk.AlertDefTypeTracingImmediate
@@ -2473,14 +2488,17 @@ func convertAlertNameToID(listingAlertsProperties *GetResourceRefProperties, ale
 	return wrapperspb.String(alertID), nil
 }
 
-func expandTracingThreshold(tracingThreshold *TracingThreshold) *cxsdk.AlertDefPropertiesTracingThreshold {
-	return &cxsdk.AlertDefPropertiesTracingThreshold{
-		TracingThreshold: &cxsdk.TracingThresholdType{
-			TracingFilter:             expandTracingFilter(tracingThreshold.TracingFilter),
-			Rules:                     expandTracingThresholdRules(tracingThreshold.Rules),
-			NotificationPayloadFilter: coralogix.StringSliceToWrappedStringSlice(tracingThreshold.NotificationPayloadFilter),
-		},
+func expandTracingThreshold(tracingThreshold *TracingThreshold) *alerts.TracingThresholdType {
+	tracingThresholdType := &alerts.TracingThresholdType{
+		Rules:                     expandTracingThresholdRules(tracingThreshold.Rules),
+		NotificationPayloadFilter: tracingThreshold.NotificationPayloadFilter,
 	}
+
+	if tracingFilter := tracingThreshold.TracingFilter; tracingFilter != nil {
+		tracingThresholdType.TracingFilter = *expandTracingFilter(tracingFilter)
+	}
+
+	return tracingThresholdType
 }
 
 func expandTracingImmediate(tracingImmediate *TracingImmediate) *cxsdk.AlertDefPropertiesTracingImmediate {
@@ -2492,31 +2510,29 @@ func expandTracingImmediate(tracingImmediate *TracingImmediate) *cxsdk.AlertDefP
 	}
 }
 
-func expandTracingFilter(filter *TracingFilter) *cxsdk.TracingFilter {
+func expandTracingFilter(filter *TracingFilter) *alerts.TracingFilter {
 	if filter == nil {
 		return nil
 	}
 
-	return &cxsdk.TracingFilter{
-		FilterType: expandTracingSimpleFilter(filter.Simple),
+	return &alerts.TracingFilter{
+		SimpleFilter: expandTracingSimpleFilter(filter.Simple),
 	}
 }
 
-func expandTracingSimpleFilter(filter *TracingSimpleFilter) *cxsdk.TracingFilterSimpleFilter {
-	return &cxsdk.TracingFilterSimpleFilter{
-		SimpleFilter: &cxsdk.TracingSimpleFilter{
-			TracingLabelFilters: expandTracingLabelFilters(filter.TracingLabelFilters),
-			LatencyThresholdMs:  wrapperspb.UInt64(*filter.LatencyThresholdMs),
-		},
+func expandTracingSimpleFilter(filter *TracingSimpleFilter) *alerts.TracingSimpleFilter {
+	return &alerts.TracingSimpleFilter{
+		TracingLabelFilters: expandTracingLabelFilters(filter.TracingLabelFilters),
+		LatencyThresholdMs:  wrapperspb.UInt64(*filter.LatencyThresholdMs),
 	}
 }
 
-func expandTracingLabelFilters(filters *TracingLabelFilters) *cxsdk.TracingLabelFilters {
+func expandTracingLabelFilters(filters *TracingLabelFilters) *alerts.TracingLabelFilters {
 	if filters == nil {
 		return nil
 	}
 
-	return &cxsdk.TracingLabelFilters{
+	return &alerts.TracingLabelFilters{
 		ApplicationName: expandTracingFilterTypes(filters.ApplicationName),
 		SubsystemName:   expandTracingFilterTypes(filters.SubsystemName),
 		ServiceName:     expandTracingFilterTypes(filters.ServiceName),
@@ -2525,66 +2541,64 @@ func expandTracingLabelFilters(filters *TracingLabelFilters) *cxsdk.TracingLabel
 	}
 }
 
-func expandTracingFilterTypes(filters []TracingFilterType) []*cxsdk.TracingFilterType {
-	result := make([]*cxsdk.TracingFilterType, len(filters))
+func expandTracingFilterTypes(filters []TracingFilterType) []alerts.TracingFilterType {
+	result := make([]alerts.TracingFilterType, len(filters))
 	for i := range filters {
-		result[i] = expandTracingFilterType(filters[i])
+		result[i] = *expandTracingFilterType(filters[i])
 	}
 
 	return result
 }
 
-func expandTracingFilterType(filterType TracingFilterType) *cxsdk.TracingFilterType {
-	return &cxsdk.TracingFilterType{
-		Values:    coralogix.StringSliceToWrappedStringSlice(filterType.Values),
+func expandTracingFilterType(filterType TracingFilterType) *alerts.TracingFilterType {
+	return &alerts.TracingFilterType{
+		Values:    filterType.Values,
 		Operation: TracingFilterOperationTypeToProto[filterType.Operation],
 	}
 }
 
-func expandTracingSpanFieldsFilterTypes(fields []TracingSpanFieldsFilterType) []*cxsdk.TracingSpanFieldsFilterType {
-	result := make([]*cxsdk.TracingSpanFieldsFilterType, len(fields))
+func expandTracingSpanFieldsFilterTypes(fields []TracingSpanFieldsFilterType) []alerts.TracingSpanFieldsFilterType {
+	result := make([]alerts.TracingSpanFieldsFilterType, len(fields))
 	for i := range fields {
-		result[i] = expandTracingSpanFieldsFilterType(fields[i])
+		result[i] = *expandTracingSpanFieldsFilterType(fields[i])
 	}
 
 	return result
 }
 
-func expandTracingSpanFieldsFilterType(filterType TracingSpanFieldsFilterType) *cxsdk.TracingSpanFieldsFilterType {
-	return &cxsdk.TracingSpanFieldsFilterType{
-		Key:        wrapperspb.String(filterType.Key),
-		FilterType: expandTracingFilterType(filterType.FilterType),
+func expandTracingSpanFieldsFilterType(filterType TracingSpanFieldsFilterType) *alerts.TracingSpanFieldsFilterType {
+	return &alerts.TracingSpanFieldsFilterType{
+		Key:        filterType.Key,
+		FilterType: *expandTracingFilterType(filterType.FilterType),
 	}
 }
 
-func expandTracingThresholdRules(rules []TracingThresholdRule) []*cxsdk.TracingThresholdRule {
-	result := make([]*cxsdk.TracingThresholdRule, len(rules))
+func expandTracingThresholdRules(rules []TracingThresholdRule) []alerts.TracingThresholdRule {
+	result := make([]alerts.TracingThresholdRule, len(rules))
 	for i := range rules {
-		result[i] = expandTracingThresholdRule(rules[i])
+		result[i] = *expandTracingThresholdRule(rules[i])
 	}
 
 	return result
 }
 
-func expandTracingThresholdRule(rule TracingThresholdRule) *cxsdk.TracingThresholdRule {
-	return &cxsdk.TracingThresholdRule{
-		Condition: expandTracingThresholdCondition(rule.Condition),
+func expandTracingThresholdRule(rule TracingThresholdRule) *alerts.TracingThresholdRule {
+	return &alerts.TracingThresholdRule{
+		Condition: *expandTracingThresholdCondition(rule.Condition),
 	}
 }
 
-func expandTracingThresholdCondition(condition TracingThresholdRuleCondition) *cxsdk.TracingThresholdCondition {
-	return &cxsdk.TracingThresholdCondition{
-		SpanAmount:    wrapperspb.Double(condition.SpanAmount.AsApproximateFloat64()),
-		TimeWindow:    expandTracingTimeWindow(condition.TimeWindow),
-		ConditionType: cxsdk.TracingThresholdConditionTypeMoreThanOrUnspecified,
+func expandTracingThresholdCondition(condition TracingThresholdRuleCondition) *alerts.TracingThresholdCondition {
+	return &alerts.TracingThresholdCondition{
+		SpanAmount:    condition.SpanAmount.AsApproximateFloat64(),
+		TimeWindow:    *expandTracingTimeWindow(condition.TimeWindow),
+		ConditionType: alerts.TRACINGTHRESHOLDCONDITIONTYPE_TRACING_THRESHOLD_CONDITION_TYPE_MORE_THAN_OR_UNSPECIFIED,
 	}
 }
 
-func expandTracingTimeWindow(timeWindow TracingTimeWindow) *cxsdk.TracingTimeWindow {
-	return &cxsdk.TracingTimeWindow{
-		Type: &cxsdk.TracingTimeWindowSpecificValue{
-			TracingTimeWindowValue: TracingTimeWindowSpecificValueToProto[timeWindow.SpecificValue],
-		},
+func expandTracingTimeWindow(timeWindow TracingTimeWindow) *alerts.TracingTimeWindow {
+	return &alerts.TracingTimeWindow{
+		TracingTimeWindowValue: TracingTimeWindowSpecificValueToOpenAPI[timeWindow.SpecificValue],
 	}
 }
 
