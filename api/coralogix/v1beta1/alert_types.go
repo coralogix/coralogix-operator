@@ -218,15 +218,15 @@ var (
 		MetricAnomalyConditionTypeMoreThanUsual: alerts.METRICANOMALYCONDITIONTYPE_METRIC_ANOMALY_CONDITION_TYPE_MORE_THAN_USUAL_OR_UNSPECIFIED,
 		MetricAnomalyConditionTypeLessThanUsual: alerts.METRICANOMALYCONDITIONTYPE_METRIC_ANOMALY_CONDITION_TYPE_LESS_THAN_USUAL,
 	}
-	LogsNewValueTimeWindowValueToProto = map[LogsNewValueTimeWindowSpecificValue]cxsdk.LogsNewValueTimeWindowValue{
-		LogsNewValueTimeWindowValue12Hours: cxsdk.LogsNewValueTimeWindowValue12HoursOrUnspecified,
-		LogsNewValueTimeWindowValue24Hours: cxsdk.LogsNewValueTimeWindowValue24Hours,
-		LogsNewValueTimeWindowValue48Hours: cxsdk.LogsNewValueTimeWindowValue48Hours,
-		LogsNewValueTimeWindowValue72Hours: cxsdk.LogsNewValueTimeWindowValue72Hours,
-		LogsNewValueTimeWindowValue1Week:   cxsdk.LogsNewValueTimeWindowValue1Week,
-		LogsNewValueTimeWindowValue1Month:  cxsdk.LogsNewValueTimeWindowValue1Month,
-		LogsNewValueTimeWindowValue2Months: cxsdk.LogsNewValueTimeWindowValue2Months,
-		LogsNewValueTimeWindowValue3Months: cxsdk.LogsNewValueTimeWindowValue3Months,
+	LogsNewValueTimeWindowValueToOpenAPI = map[LogsNewValueTimeWindowSpecificValue]*alerts.LogsNewValueTimeWindowValue{
+		LogsNewValueTimeWindowValue12Hours: alerts.LOGSNEWVALUETIMEWINDOWVALUE_LOGS_NEW_VALUE_TIME_WINDOW_VALUE_HOURS_12_OR_UNSPECIFIED.Ptr(),
+		LogsNewValueTimeWindowValue24Hours: alerts.LOGSNEWVALUETIMEWINDOWVALUE_LOGS_NEW_VALUE_TIME_WINDOW_VALUE_HOURS_24.Ptr(),
+		LogsNewValueTimeWindowValue48Hours: alerts.LOGSNEWVALUETIMEWINDOWVALUE_LOGS_NEW_VALUE_TIME_WINDOW_VALUE_HOURS_48.Ptr(),
+		LogsNewValueTimeWindowValue72Hours: alerts.LOGSNEWVALUETIMEWINDOWVALUE_LOGS_NEW_VALUE_TIME_WINDOW_VALUE_HOURS_72.Ptr(),
+		LogsNewValueTimeWindowValue1Week:   alerts.LOGSNEWVALUETIMEWINDOWVALUE_LOGS_NEW_VALUE_TIME_WINDOW_VALUE_WEEK_1.Ptr(),
+		LogsNewValueTimeWindowValue1Month:  alerts.LOGSNEWVALUETIMEWINDOWVALUE_LOGS_NEW_VALUE_TIME_WINDOW_VALUE_MONTH_1.Ptr(),
+		LogsNewValueTimeWindowValue2Months: alerts.LOGSNEWVALUETIMEWINDOWVALUE_LOGS_NEW_VALUE_TIME_WINDOW_VALUE_MONTHS_2.Ptr(),
+		LogsNewValueTimeWindowValue3Months: alerts.LOGSNEWVALUETIMEWINDOWVALUE_LOGS_NEW_VALUE_TIME_WINDOW_VALUE_MONTHS_3.Ptr(),
 	}
 	LogsUniqueCountTimeWindowValueToProto = map[LogsUniqueCountTimeWindowSpecificValue]cxsdk.LogsUniqueValueTimeWindowValue{
 		LogsUniqueCountTimeWindowValue1Minute:   cxsdk.LogsUniqueValueTimeWindowValue1MinuteOrUnspecified,
@@ -1686,8 +1686,23 @@ func (in *AlertSpec) ExtractAlertCreateRequest(listingAlertsAndWebhooksPropertie
 			},
 		}, nil
 	} else if logsNewValue := in.TypeDefinition.LogsNewValue; logsNewValue != nil {
-		properties.TypeDefinition = expandLogsNewValue(logsNewValue)
-		properties.Type = cxsdk.AlertDefTypeLogsNewValue
+		return &alerts.AlertDefsServiceCreateAlertDefRequest{
+			AlertDefPropertiesLogsNewValue: &alerts.AlertDefPropertiesLogsNewValue{
+				Name:                    in.Name,
+				Description:             alerts.PtrString(in.Description),
+				Enabled:                 alerts.PtrBool(in.Enabled),
+				Priority:                priority,
+				GroupByKeys:             in.GroupByKeys,
+				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+				NotificationGroup:       notificationGroup,
+				NotificationGroupExcess: notificationGroupExcess,
+				EntityLabels:            ptr.To(in.EntityLabels),
+				PhantomMode:             alerts.PtrBool(in.PhantomMode),
+				ActiveOn:                expandAlertSchedule(in.Schedule),
+				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_LOGS_NEW_VALUE,
+				LogsNewValue:            expandLogsNewValue(logsNewValue),
+			},
+		}, nil
 	} else if logsUniqueCount := in.TypeDefinition.LogsUniqueCount; logsUniqueCount != nil {
 		properties.TypeDefinition = expandLogsUniqueCount(logsUniqueCount)
 		properties.Type = cxsdk.AlertDefTypeLogsUniqueCount
@@ -2305,43 +2320,39 @@ func expandLogsUniqueCountTimeWindow(timeWindow LogsUniqueCountTimeWindow) *cxsd
 	}
 }
 
-func expandLogsNewValue(logsNewValue *LogsNewValue) *cxsdk.AlertDefPropertiesLogsNewValue {
-	return &cxsdk.AlertDefPropertiesLogsNewValue{
-		LogsNewValue: &cxsdk.LogsNewValueType{
-			LogsFilter:                expandLogsFilter(logsNewValue.LogsFilter),
-			Rules:                     expandLogsNewValueRules(logsNewValue.Rules),
-			NotificationPayloadFilter: coralogix.StringSliceToWrappedStringSlice(logsNewValue.NotificationPayloadFilter),
-		},
+func expandLogsNewValue(logsNewValue *LogsNewValue) *alerts.LogsNewValueType {
+	return &alerts.LogsNewValueType{
+		LogsFilter:                expandLogsFilter(logsNewValue.LogsFilter),
+		Rules:                     expandLogsNewValueRules(logsNewValue.Rules),
+		NotificationPayloadFilter: logsNewValue.NotificationPayloadFilter,
 	}
 }
 
-func expandLogsNewValueRules(rules []LogsNewValueRule) []*cxsdk.LogsNewValueRule {
-	result := make([]*cxsdk.LogsNewValueRule, len(rules))
+func expandLogsNewValueRules(rules []LogsNewValueRule) []alerts.LogsNewValueRule {
+	result := make([]alerts.LogsNewValueRule, len(rules))
 	for i := range rules {
-		result[i] = expandLogsNewValueRule(rules[i])
+		result[i] = *expandLogsNewValueRule(rules[i])
 	}
 
 	return result
 }
 
-func expandLogsNewValueRule(rule LogsNewValueRule) *cxsdk.LogsNewValueRule {
-	return &cxsdk.LogsNewValueRule{
-		Condition: expandLogsNewValueRuleCondition(rule.Condition),
+func expandLogsNewValueRule(rule LogsNewValueRule) *alerts.LogsNewValueRule {
+	return &alerts.LogsNewValueRule{
+		Condition: *expandLogsNewValueRuleCondition(rule.Condition),
 	}
 }
 
-func expandLogsNewValueRuleCondition(condition LogsNewValueRuleCondition) *cxsdk.LogsNewValueCondition {
-	return &cxsdk.LogsNewValueCondition{
-		KeypathToTrack: wrapperspb.String(condition.KeypathToTrack),
-		TimeWindow:     expandLogsNewValueTimeWindow(condition.TimeWindow),
+func expandLogsNewValueRuleCondition(condition LogsNewValueRuleCondition) *alerts.LogsNewValueCondition {
+	return &alerts.LogsNewValueCondition{
+		KeypathToTrack: condition.KeypathToTrack,
+		TimeWindow:     *expandLogsNewValueTimeWindow(condition.TimeWindow),
 	}
 }
 
-func expandLogsNewValueTimeWindow(timeWindow LogsNewValueTimeWindow) *cxsdk.LogsNewValueTimeWindow {
-	return &cxsdk.LogsNewValueTimeWindow{
-		Type: &cxsdk.LogsNewValueTimeWindowSpecificValue{
-			LogsNewValueTimeWindowSpecificValue: LogsNewValueTimeWindowValueToProto[timeWindow.SpecificValue],
-		},
+func expandLogsNewValueTimeWindow(timeWindow LogsNewValueTimeWindow) *alerts.LogsNewValueTimeWindow {
+	return &alerts.LogsNewValueTimeWindow{
+		LogsNewValueTimeWindowSpecificValue: LogsNewValueTimeWindowValueToOpenAPI[timeWindow.SpecificValue],
 	}
 }
 
