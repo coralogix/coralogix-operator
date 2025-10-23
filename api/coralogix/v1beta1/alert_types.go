@@ -160,11 +160,11 @@ var (
 		LogsTimeRelativeConditionTypeMoreThan: alerts.LOGSTIMERELATIVECONDITIONTYPE_LOGS_TIME_RELATIVE_CONDITION_TYPE_MORE_THAN_OR_UNSPECIFIED,
 		LogsTimeRelativeConditionTypeLessThan: alerts.LOGSTIMERELATIVECONDITIONTYPE_LOGS_TIME_RELATIVE_CONDITION_TYPE_LESS_THAN,
 	}
-	MetricThresholdConditionTypeToProto = map[MetricThresholdConditionType]cxsdk.MetricThresholdConditionType{
-		MetricThresholdConditionTypeMoreThan:         cxsdk.MetricThresholdConditionTypeMoreThanOrUnspecified,
-		MetricThresholdConditionTypeLessThan:         cxsdk.MetricThresholdConditionTypeLessThan,
-		MetricThresholdConditionTypeMoreThanOrEquals: cxsdk.MetricThresholdConditionTypeMoreThanOrEquals,
-		MetricThresholdConditionTypeLessThanOrEquals: cxsdk.MetricThresholdConditionTypeLessThanOrEquals,
+	MetricThresholdConditionTypeToOpenAPI = map[MetricThresholdConditionType]alerts.MetricThresholdConditionType{
+		MetricThresholdConditionTypeMoreThan:         alerts.METRICTHRESHOLDCONDITIONTYPE_METRIC_THRESHOLD_CONDITION_TYPE_MORE_THAN_OR_UNSPECIFIED,
+		MetricThresholdConditionTypeLessThan:         alerts.METRICTHRESHOLDCONDITIONTYPE_METRIC_THRESHOLD_CONDITION_TYPE_LESS_THAN,
+		MetricThresholdConditionTypeMoreThanOrEquals: alerts.METRICTHRESHOLDCONDITIONTYPE_METRIC_THRESHOLD_CONDITION_TYPE_MORE_THAN_OR_EQUALS,
+		MetricThresholdConditionTypeLessThanOrEquals: alerts.METRICTHRESHOLDCONDITIONTYPE_METRIC_THRESHOLD_CONDITION_TYPE_LESS_THAN_OR_EQUALS,
 	}
 	MetricTimeWindowToProto = map[MetricTimeWindowSpecificValue]cxsdk.MetricTimeWindowValue{
 		MetricTimeWindowValue1Minute:   cxsdk.MetricTimeWindowValue1MinuteOrUnspecified,
@@ -1492,7 +1492,7 @@ func NewDefaultAlertStatus() *AlertStatus {
 	}
 }
 
-func (in AlertSpec) ExtractAlertCreateRequest(listingAlertsAndWebhooksProperties *GetResourceRefProperties) (*alerts.AlertDefsServiceCreateAlertDefRequest, error) {
+func (in *AlertSpec) ExtractAlertCreateRequest(listingAlertsAndWebhooksProperties *GetResourceRefProperties) (*alerts.AlertDefsServiceCreateAlertDefRequest, error) {
 	notificationGroup, err := expandNotificationGroup(in.NotificationGroup, listingAlertsAndWebhooksProperties)
 	if err != nil {
 		return nil, fmt.Errorf("failed to expand notification group: %w", err)
@@ -1578,8 +1578,23 @@ func (in AlertSpec) ExtractAlertCreateRequest(listingAlertsAndWebhooksProperties
 			},
 		}, nil
 	} else if metricThreshold := in.TypeDefinition.MetricThreshold; metricThreshold != nil {
-		properties.TypeDefinition = expandMetricThreshold(metricThreshold, properties.Priority)
-		properties.Type = cxsdk.AlertDefTypeMetricThreshold
+		return &alerts.AlertDefsServiceCreateAlertDefRequest{
+			AlertDefPropertiesMetricThreshold: &alerts.AlertDefPropertiesMetricThreshold{
+				Name:                    in.Name,
+				Description:             alerts.PtrString(in.Description),
+				Enabled:                 alerts.PtrBool(in.Enabled),
+				Priority:                priority,
+				GroupByKeys:             in.GroupByKeys,
+				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+				NotificationGroup:       notificationGroup,
+				NotificationGroupExcess: notificationGroupExcess,
+				EntityLabels:            ptr.To(in.EntityLabels),
+				PhantomMode:             alerts.PtrBool(in.PhantomMode),
+				ActiveOn:                expandAlertSchedule(in.Schedule),
+				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_METRIC_THRESHOLD,
+				MetricThreshold:         expandMetricThreshold(metricThreshold, priority),
+			},
+		}, nil
 	} else if tracingThreshold := in.TypeDefinition.TracingThreshold; tracingThreshold != nil {
 		properties.TypeDefinition = expandTracingThreshold(tracingThreshold)
 		properties.Type = cxsdk.AlertDefTypeTracingThreshold
@@ -2573,59 +2588,67 @@ func expandTracingTimeWindow(timeWindow TracingTimeWindow) *cxsdk.TracingTimeWin
 	}
 }
 
-func expandMetricThreshold(threshold *MetricThreshold, priority cxsdk.AlertDefPriority) *cxsdk.AlertDefPropertiesMetricThreshold {
-	return &cxsdk.AlertDefPropertiesMetricThreshold{
-		MetricThreshold: &cxsdk.MetricThresholdType{
-			MetricFilter:               expandMetricFilter(threshold.MetricFilter),
-			MissingValues:              expandMetricMissingValues(&threshold.MissingValues),
-			Rules:                      expandMetricThresholdRules(threshold.Rules, priority),
-			UndetectedValuesManagement: expandUndetectedValuesManagement(threshold.UndetectedValuesManagement),
-		},
+func expandMetricThreshold(threshold *MetricThreshold, priority alerts.AlertDefPriority) *alerts.MetricThresholdType {
+	thresholdType := &alerts.MetricThresholdType{
+		MetricFilter:               *expandMetricFilter(threshold.MetricFilter),
+		Rules:                      expandMetricThresholdRules(threshold.Rules, priority),
+		UndetectedValuesManagement: expandUndetectedValuesManagement(threshold.UndetectedValuesManagement),
+	}
+
+	missingValues := expandMetricMissingValues(&threshold.MissingValues)
+	if missingValues != nil {
+		thresholdType.MissingValues = *missingValues
+	}
+
+	return thresholdType
+}
+
+func expandMetricFilter(metricFilter MetricFilter) *alerts.MetricFilter {
+	return &alerts.MetricFilter{
+		Promql: metricFilter.Promql,
 	}
 }
 
-func expandMetricFilter(metricFilter MetricFilter) *cxsdk.MetricFilter {
-	return &cxsdk.MetricFilter{
-		Type: &cxsdk.MetricFilterPromql{
-			Promql: wrapperspb.String(metricFilter.Promql),
-		},
-	}
-}
-
-func expandMetricThresholdRules(rules []MetricThresholdRule, priority cxsdk.AlertDefPriority) []*cxsdk.MetricThresholdRule {
-	result := make([]*cxsdk.MetricThresholdRule, len(rules))
+func expandMetricThresholdRules(rules []MetricThresholdRule, priority alerts.AlertDefPriority) []alerts.MetricThresholdRule {
+	result := make([]alerts.MetricThresholdRule, len(rules))
 	for i := range rules {
-		result[i] = expandMetricThresholdRule(rules[i], priority)
+		result[i] = *expandMetricThresholdRule(rules[i], priority)
 	}
 
 	return result
 }
 
-func expandMetricThresholdRule(rule MetricThresholdRule, priority cxsdk.AlertDefPriority) *cxsdk.MetricThresholdRule {
-	return &cxsdk.MetricThresholdRule{
-		Condition: expandMetricThresholdCondition(rule.Condition),
-		Override:  expandAlertOverride(rule.Override, priority),
+func expandMetricThresholdRule(rule MetricThresholdRule, priority alerts.AlertDefPriority) *alerts.MetricThresholdRule {
+	return &alerts.MetricThresholdRule{
+		Condition: *expandMetricThresholdCondition(rule.Condition),
+		Override:  *expandAlertOverride(rule.Override, priority),
 	}
 }
 
-func expandMetricThresholdCondition(condition MetricThresholdRuleCondition) *cxsdk.MetricThresholdCondition {
-	return &cxsdk.MetricThresholdCondition{
-		Threshold:     wrapperspb.Double(condition.Threshold.AsApproximateFloat64()),
-		ForOverPct:    wrapperspb.UInt32(condition.ForOverPct),
-		OfTheLast:     expandMetricTimeWindow(condition.OfTheLast),
-		ConditionType: MetricThresholdConditionTypeToProto[condition.ConditionType],
+func expandMetricThresholdCondition(condition MetricThresholdRuleCondition) *alerts.MetricThresholdCondition {
+	metricThresholdCondition := &alerts.MetricThresholdCondition{
+		Threshold:     condition.Threshold.AsApproximateFloat64(),
+		ForOverPct:    int64(condition.ForOverPct),
+		ConditionType: MetricThresholdConditionTypeToOpenAPI[condition.ConditionType],
 	}
+
+	ofTheLast := expandMetricTimeWindow(condition.OfTheLast)
+	if ofTheLast != nil {
+		metricThresholdCondition.OfTheLast = *ofTheLast
+	}
+
+	return metricThresholdCondition
 }
 
-func expandMetricTimeWindow(timeWindow MetricTimeWindow) *cxsdk.MetricTimeWindow {
+func expandMetricTimeWindow(timeWindow MetricTimeWindow) *alerts.MetricTimeWindow {
 	if specificValue := timeWindow.SpecificValue; specificValue != nil {
-		return &cxsdk.MetricTimeWindow{
+		return &alerts.MetricTimeWindow{
 			Type: &cxsdk.MetricTimeWindowSpecificValue{
 				MetricTimeWindowSpecificValue: MetricTimeWindowToProto[*specificValue],
 			},
 		}
 	} else if dynamicTimeWindow := timeWindow.DynamicDuration; dynamicTimeWindow != nil {
-		return &cxsdk.MetricTimeWindow{
+		return &alerts.MetricTimeWindow{
 			Type: &cxsdk.MetricTimeWindowDynamicDuration{
 				MetricTimeWindowDynamicDuration: wrapperspb.String(*dynamicTimeWindow),
 			},
@@ -2643,7 +2666,7 @@ func expandAnomalyMetricTimeWindow(timeWindow MetricAnomalyTimeWindow) *cxsdk.Me
 	}
 }
 
-func expandMetricMissingValues(missingValues *MetricMissingValues) *cxsdk.MetricMissingValues {
+func expandMetricMissingValues(missingValues *MetricMissingValues) *alerts.MetricMissingValues {
 	if missingValues == nil {
 		return nil
 	} else if missingValues.ReplaceWithZero {
