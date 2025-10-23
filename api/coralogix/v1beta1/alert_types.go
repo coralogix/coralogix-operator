@@ -202,17 +202,17 @@ var (
 		TracingFilterOperationTypeStartsWith: alerts.TRACINGFILTEROPERATIONTYPE_TRACING_FILTER_OPERATION_TYPE_STARTS_WITH,
 		TracingFilterOperationTypeIsNot:      alerts.TRACINGFILTEROPERATIONTYPE_TRACING_FILTER_OPERATION_TYPE_IS_NOT,
 	}
-	TimeframeTypeToProto = map[FlowTimeframeType]cxsdk.TimeframeType{
-		TimeframeTypeUnspecified: cxsdk.TimeframeTypeUnspecified,
-		TimeframeTypeUpTo:        cxsdk.TimeframeTypeUpTo,
+	TimeframeTypeToOpenAPI = map[FlowTimeframeType]alerts.TimeframeType{
+		TimeframeTypeUnspecified: alerts.TIMEFRAMETYPE_TIMEFRAME_TYPE_UNSPECIFIED,
+		TimeframeTypeUpTo:        alerts.TIMEFRAMETYPE_TIMEFRAME_TYPE_UP_TO,
 	}
-	FlowStageGroupAlertsOpToProto = map[FlowStageGroupAlertsOp]cxsdk.AlertsOp{
-		FlowStageGroupAlertsOpAnd: cxsdk.AlertsOpAndOrUnspecified,
-		FlowStageGroupAlertsOpOr:  cxsdk.AlertsOpOr,
+	FlowStageGroupAlertsOpToOpenAPI = map[FlowStageGroupAlertsOp]alerts.AlertsOp{
+		FlowStageGroupAlertsOpAnd: alerts.ALERTSOP_ALERTS_OP_AND_OR_UNSPECIFIED,
+		FlowStageGroupAlertsOpOr:  alerts.ALERTSOP_ALERTS_OP_OR,
 	}
-	FlowStageGroupNextOpToProto = map[FlowStageGroupAlertsOp]cxsdk.NextOp{
-		FlowStageGroupAlertsOpAnd: cxsdk.NextOpAndOrUnspecified,
-		FlowStageGroupAlertsOpOr:  cxsdk.NextOpOr,
+	FlowStageGroupNextOpToOpenAPI = map[FlowStageGroupAlertsOp]alerts.NextOp{
+		FlowStageGroupAlertsOpAnd: alerts.NEXTOP_NEXT_OP_AND_OR_UNSPECIFIED,
+		FlowStageGroupAlertsOpOr:  alerts.NEXTOP_NEXT_OP_OR,
 	}
 	MetricAnomalyConditionTypeToProto = map[MetricAnomalyConditionType]cxsdk.MetricAnomalyConditionType{
 		MetricAnomalyConditionTypeMoreThanUsual: cxsdk.MetricAnomalyConditionTypeMoreThanOrUnspecified,
@@ -1632,11 +1632,41 @@ func (in *AlertSpec) ExtractAlertCreateRequest(listingAlertsAndWebhooksPropertie
 			},
 		}, nil
 	} else if flow := in.TypeDefinition.Flow; flow != nil {
-		properties.TypeDefinition = expandFlow(listingAlertsAndWebhooksProperties, flow)
-		properties.Type = cxsdk.AlertDefTypeFlow
+		return &alerts.AlertDefsServiceCreateAlertDefRequest{
+			AlertDefPropertiesFlow: &alerts.AlertDefPropertiesFlow{
+				Name:                    in.Name,
+				Description:             alerts.PtrString(in.Description),
+				Enabled:                 alerts.PtrBool(in.Enabled),
+				Priority:                priority,
+				GroupByKeys:             in.GroupByKeys,
+				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+				NotificationGroup:       notificationGroup,
+				NotificationGroupExcess: notificationGroupExcess,
+				EntityLabels:            ptr.To(in.EntityLabels),
+				PhantomMode:             alerts.PtrBool(in.PhantomMode),
+				ActiveOn:                expandAlertSchedule(in.Schedule),
+				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_FLOW,
+				Flow:                    expandFlow(listingAlertsAndWebhooksProperties, flow),
+			},
+		}, nil
 	} else if logsAnomaly := in.TypeDefinition.LogsAnomaly; logsAnomaly != nil {
-		properties.TypeDefinition = expandLogsAnomaly(logsAnomaly)
-		properties.Type = cxsdk.AlertDefTypeLogsAnomaly
+		return &alerts.AlertDefsServiceCreateAlertDefRequest{
+			AlertDefPropertiesLogsAnomaly: &alerts.AlertDefPropertiesLogsAnomaly{
+				Name:                    in.Name,
+				Description:             alerts.PtrString(in.Description),
+				Enabled:                 alerts.PtrBool(in.Enabled),
+				Priority:                priority,
+				GroupByKeys:             in.GroupByKeys,
+				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+				NotificationGroup:       notificationGroup,
+				NotificationGroupExcess: notificationGroupExcess,
+				EntityLabels:            ptr.To(in.EntityLabels),
+				PhantomMode:             alerts.PtrBool(in.PhantomMode),
+				ActiveOn:                expandAlertSchedule(in.Schedule),
+				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_LOGS_ANOMALY,
+				LogsAnomaly:             expandLogsAnomaly(logsAnomaly),
+			},
+		}, nil
 	} else if metricAnomaly := in.TypeDefinition.MetricAnomaly; metricAnomaly != nil {
 		properties.TypeDefinition = expandMetricAnomaly(metricAnomaly)
 		properties.Type = cxsdk.AlertDefTypeMetricAnomaly
@@ -2337,92 +2367,86 @@ func expandMetricAnomalyCondition(condition MetricAnomalyCondition) *cxsdk.Metri
 	}
 }
 
-func expandLogsAnomaly(anomaly *LogsAnomaly) *cxsdk.AlertDefPropertiesLogsAnomaly {
-	return &cxsdk.AlertDefPropertiesLogsAnomaly{
-		LogsAnomaly: &cxsdk.LogsAnomalyType{
-			LogsFilter:                expandLogsFilter(anomaly.LogsFilter),
-			Rules:                     expandLogsAnomalyRules(anomaly.Rules),
-			NotificationPayloadFilter: coralogix.StringSliceToWrappedStringSlice(anomaly.NotificationPayloadFilter),
-		},
+func expandLogsAnomaly(anomaly *LogsAnomaly) *alerts.LogsAnomalyType {
+	return &alerts.LogsAnomalyType{
+		LogsFilter:                expandLogsFilter(anomaly.LogsFilter),
+		Rules:                     expandLogsAnomalyRules(anomaly.Rules),
+		NotificationPayloadFilter: anomaly.NotificationPayloadFilter,
 	}
 }
 
-func expandLogsAnomalyRules(rules []LogsAnomalyRule) []*cxsdk.LogsAnomalyRule {
-	result := make([]*cxsdk.LogsAnomalyRule, len(rules))
+func expandLogsAnomalyRules(rules []LogsAnomalyRule) []alerts.LogsAnomalyRule {
+	result := make([]alerts.LogsAnomalyRule, len(rules))
 	for i := range rules {
-		result[i] = expandLogsAnomalyRule(rules[i])
+		result[i] = *expandLogsAnomalyRule(rules[i])
 	}
 
 	return result
 }
 
-func expandLogsAnomalyRule(rule LogsAnomalyRule) *cxsdk.LogsAnomalyRule {
-	return &cxsdk.LogsAnomalyRule{
-		Condition: expandLogsAnomalyRuleCondition(rule.Condition),
+func expandLogsAnomalyRule(rule LogsAnomalyRule) *alerts.LogsAnomalyRule {
+	return &alerts.LogsAnomalyRule{
+		Condition: *expandLogsAnomalyRuleCondition(rule.Condition),
 	}
 }
 
-func expandLogsAnomalyRuleCondition(condition LogsAnomalyCondition) *cxsdk.LogsAnomalyCondition {
-	return &cxsdk.LogsAnomalyCondition{
-		MinimumThreshold: wrapperspb.Double(condition.MinimumThreshold.AsApproximateFloat64()),
-		TimeWindow:       expandLogsTimeWindow(condition.TimeWindow),
-		ConditionType:    cxsdk.LogsAnomalyConditionTypeMoreThanOrUnspecified,
+func expandLogsAnomalyRuleCondition(condition LogsAnomalyCondition) *alerts.LogsAnomalyCondition {
+	return &alerts.LogsAnomalyCondition{
+		MinimumThreshold: condition.MinimumThreshold.AsApproximateFloat64(),
+		TimeWindow:       *expandLogsTimeWindow(condition.TimeWindow),
+		ConditionType:    alerts.LOGSANOMALYCONDITIONTYPE_LOGS_ANOMALY_CONDITION_TYPE_MORE_THAN_USUAL_OR_UNSPECIFIED,
 	}
 }
 
-func expandFlow(listingAlertsProperties *GetResourceRefProperties, flow *Flow) *cxsdk.AlertDefPropertiesFlow {
-	return &cxsdk.AlertDefPropertiesFlow{
-		Flow: &cxsdk.FlowType{
-			Stages:             expandFlowStages(listingAlertsProperties, flow.Stages),
-			EnforceSuppression: wrapperspb.Bool(flow.EnforceSuppression),
-		},
+func expandFlow(listingAlertsProperties *GetResourceRefProperties, flow *Flow) *alerts.FlowType {
+	return &alerts.FlowType{
+		Stages:             expandFlowStages(listingAlertsProperties, flow.Stages),
+		EnforceSuppression: alerts.PtrBool(flow.EnforceSuppression),
 	}
 }
 
-func expandFlowStages(listingAlertsProperties *GetResourceRefProperties, stages []FlowStage) []*cxsdk.FlowStages {
-	result := make([]*cxsdk.FlowStages, len(stages))
+func expandFlowStages(listingAlertsProperties *GetResourceRefProperties, stages []FlowStage) []alerts.FlowStages {
+	result := make([]alerts.FlowStages, len(stages))
 	for i, stage := range stages {
-		result[i] = expandFlowStage(listingAlertsProperties, stage)
+		result[i] = *expandFlowStage(listingAlertsProperties, stage)
 	}
 
 	return result
 }
 
-func expandFlowStage(listingAlertsProperties *GetResourceRefProperties, stage FlowStage) *cxsdk.FlowStages {
-	return &cxsdk.FlowStages{
-		FlowStages:    expandFlowStagesType(listingAlertsProperties, stage.FlowStagesType),
-		TimeframeMs:   wrapperspb.Int64(stage.TimeframeMs),
-		TimeframeType: TimeframeTypeToProto[stage.TimeframeType],
+func expandFlowStage(listingAlertsProperties *GetResourceRefProperties, stage FlowStage) *alerts.FlowStages {
+	return &alerts.FlowStages{
+		FlowStagesGroups: expandFlowStagesType(listingAlertsProperties, stage.FlowStagesType),
+		TimeframeMs:      wrapperspb.Int64(stage.TimeframeMs),
+		TimeframeType:    TimeframeTypeToOpenAPI[stage.TimeframeType],
 	}
 }
 
-func expandFlowStagesType(listingAlertsProperties *GetResourceRefProperties, stagesType FlowStagesType) *cxsdk.FlowStagesGroups {
-	return &cxsdk.FlowStagesGroups{
-		FlowStagesGroups: &cxsdk.FlowStagesGroupsValue{
-			Groups: expandFlowStagesGroups(listingAlertsProperties, stagesType.Groups),
-		},
+func expandFlowStagesType(listingAlertsProperties *GetResourceRefProperties, stagesType FlowStagesType) *alerts.FlowStagesGroups {
+	return &alerts.FlowStagesGroups{
+		Groups: expandFlowStagesGroups(listingAlertsProperties, stagesType.Groups),
 	}
 }
 
-func expandFlowStagesGroups(listingAlertsProperties *GetResourceRefProperties, groups []FlowStageGroup) []*cxsdk.FlowStagesGroup {
-	result := make([]*cxsdk.FlowStagesGroup, len(groups))
+func expandFlowStagesGroups(listingAlertsProperties *GetResourceRefProperties, groups []FlowStageGroup) []alerts.FlowStagesGroup {
+	result := make([]alerts.FlowStagesGroup, len(groups))
 	for i, group := range groups {
-		result[i] = expandFlowStagesGroup(listingAlertsProperties, group)
+		result[i] = *expandFlowStagesGroup(listingAlertsProperties, group)
 	}
 
 	return result
 }
 
-func expandFlowStagesGroup(listingWebhooksProperties *GetResourceRefProperties, group FlowStageGroup) *cxsdk.FlowStagesGroup {
-	return &cxsdk.FlowStagesGroup{
+func expandFlowStagesGroup(listingWebhooksProperties *GetResourceRefProperties, group FlowStageGroup) *alerts.FlowStagesGroup {
+	return &alerts.FlowStagesGroup{
 		AlertDefs: expandFlowStagesGroupsAlertDefs(listingWebhooksProperties, group.AlertDefs),
-		NextOp:    FlowStageGroupNextOpToProto[group.NextOp],
-		AlertsOp:  FlowStageGroupAlertsOpToProto[group.AlertsOp],
+		NextOp:    FlowStageGroupNextOpToOpenAPI[group.NextOp],
+		AlertsOp:  FlowStageGroupAlertsOpToOpenAPI[group.AlertsOp],
 	}
 }
 
-func expandFlowStagesGroupsAlertDefs(listingAlertsProperties *GetResourceRefProperties, alertDefs []FlowStagesGroupsAlertDefs) []*cxsdk.FlowStagesGroupsAlertDefs {
-	result := make([]*cxsdk.FlowStagesGroupsAlertDefs, len(alertDefs))
+func expandFlowStagesGroupsAlertDefs(listingAlertsProperties *GetResourceRefProperties, alertDefs []FlowStagesGroupsAlertDefs) []alerts.FlowStagesGroupsAlertDefs {
+	result := make([]alerts.FlowStagesGroupsAlertDefs, len(alertDefs))
 	var errs error
 	for i := range alertDefs {
 		expandedAlertDef, err := expandFlowStagesGroupsAlertDef(listingAlertsProperties, alertDefs[i])
@@ -2430,28 +2454,28 @@ func expandFlowStagesGroupsAlertDefs(listingAlertsProperties *GetResourceRefProp
 			errs = errors.Join(errs, err)
 			continue
 		}
-		result[i] = expandedAlertDef
+		result[i] = *expandedAlertDef
 	}
 
 	return result
 }
 
-func expandFlowStagesGroupsAlertDef(listingAlertsProperties *GetResourceRefProperties, defs FlowStagesGroupsAlertDefs) (*cxsdk.FlowStagesGroupsAlertDefs, error) {
+func expandFlowStagesGroupsAlertDef(listingAlertsProperties *GetResourceRefProperties, defs FlowStagesGroupsAlertDefs) (*alerts.FlowStagesGroupsAlertDefs, error) {
 	id, err := expandAlertRef(listingAlertsProperties, defs.AlertRef)
 	if err != nil {
 		return nil, err
 	}
 
-	return &cxsdk.FlowStagesGroupsAlertDefs{
+	return &alerts.FlowStagesGroupsAlertDefs{
 		Id:  id,
-		Not: wrapperspb.Bool(defs.Not),
+		Not: alerts.PtrBool(defs.Not),
 	}, nil
 }
 
-func expandAlertRef(listingAlertsProperties *GetResourceRefProperties, ref AlertRef) (*wrapperspb.StringValue, error) {
+func expandAlertRef(listingAlertsProperties *GetResourceRefProperties, ref AlertRef) (string, error) {
 	if backendRef := ref.BackendRef; backendRef != nil {
 		if id := backendRef.ID; id != nil {
-			return wrapperspb.String(*id), nil
+			return *id, nil
 		} else if name := backendRef.Name; name != nil {
 			return convertAlertNameToID(listingAlertsProperties, *name)
 		}
@@ -2462,32 +2486,32 @@ func expandAlertRef(listingAlertsProperties *GetResourceRefProperties, ref Alert
 		return convertAlertCrNameToID(listingAlertsProperties, resourceRef.Name)
 	}
 
-	return nil, fmt.Errorf("alert ref not found")
+	return "", fmt.Errorf("alert ref not found")
 }
 
-func convertAlertCrNameToID(listingAlertsProperties *GetResourceRefProperties, alertCrName string) (*wrapperspb.StringValue, error) {
+func convertAlertCrNameToID(listingAlertsProperties *GetResourceRefProperties, alertCrName string) (string, error) {
 	ctx, namespace := listingAlertsProperties.Ctx, listingAlertsProperties.Namespace
 	alertCR := &Alert{}
 	err := config.GetClient().Get(ctx, client.ObjectKey{Name: alertCrName, Namespace: namespace}, alertCR)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get alert %w", err)
+		return "", fmt.Errorf("failed to get alert %w", err)
 	}
 
 	if alertCR.Status.ID == nil {
 		return nil, fmt.Errorf("alert with name %s has no ID", alertCrName)
 	}
 
-	return wrapperspb.String(*alertCR.Status.ID), nil
+	return *alertCR.Status.ID, nil
 }
 
-func convertAlertNameToID(listingAlertsProperties *GetResourceRefProperties, alertName string) (*wrapperspb.StringValue, error) {
+func convertAlertNameToID(listingAlertsProperties *GetResourceRefProperties, alertName string) (string, error) {
 	if listingAlertsProperties.AlertNameToId == nil {
 		listingAlertsProperties.AlertNameToId = make(map[string]string)
 		log, alertsClient, ctx := listingAlertsProperties.Log, listingAlertsProperties.Clientset.Alerts(), listingAlertsProperties.Ctx
 		log.V(1).Info("Listing all alerts")
 		listAlertsResp, err := alertsClient.List(ctx, &cxsdk.ListAlertDefsRequest{})
 		if err != nil {
-			return nil, fmt.Errorf("failed to list all alerts %w", err)
+			return "", fmt.Errorf("failed to list all alerts %w", err)
 		}
 
 		for _, alert := range listAlertsResp.GetAlertDefs() {
@@ -2497,10 +2521,10 @@ func convertAlertNameToID(listingAlertsProperties *GetResourceRefProperties, ale
 
 	alertID, ok := listingAlertsProperties.AlertNameToId[alertName]
 	if !ok {
-		return nil, fmt.Errorf("alert with name %s not found", alertName)
+		return "", fmt.Errorf("alert with name %s not found", alertName)
 	}
 
-	return wrapperspb.String(alertID), nil
+	return alertID, nil
 }
 
 func expandTracingThreshold(tracingThreshold *TracingThreshold) *alerts.TracingThresholdType {
