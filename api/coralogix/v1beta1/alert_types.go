@@ -1614,8 +1614,23 @@ func (in *AlertSpec) ExtractAlertCreateRequest(listingAlertsAndWebhooksPropertie
 			},
 		}, nil
 	} else if tracingImmediate := in.TypeDefinition.TracingImmediate; tracingImmediate != nil {
-		properties.TypeDefinition = expandTracingImmediate(tracingImmediate)
-		properties.Type = cxsdk.AlertDefTypeTracingImmediate
+		return &alerts.AlertDefsServiceCreateAlertDefRequest{
+			AlertDefPropertiesTracingImmediate: &alerts.AlertDefPropertiesTracingImmediate{
+				Name:                    in.Name,
+				Description:             alerts.PtrString(in.Description),
+				Enabled:                 alerts.PtrBool(in.Enabled),
+				Priority:                priority,
+				GroupByKeys:             in.GroupByKeys,
+				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+				NotificationGroup:       notificationGroup,
+				NotificationGroupExcess: notificationGroupExcess,
+				EntityLabels:            ptr.To(in.EntityLabels),
+				PhantomMode:             alerts.PtrBool(in.PhantomMode),
+				ActiveOn:                expandAlertSchedule(in.Schedule),
+				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_TRACING_IMMEDIATE,
+				TracingImmediate:        expandTracingImmediate(tracingImmediate),
+			},
+		}, nil
 	} else if flow := in.TypeDefinition.Flow; flow != nil {
 		properties.TypeDefinition = expandFlow(listingAlertsAndWebhooksProperties, flow)
 		properties.Type = cxsdk.AlertDefTypeFlow
@@ -2501,13 +2516,16 @@ func expandTracingThreshold(tracingThreshold *TracingThreshold) *alerts.TracingT
 	return tracingThresholdType
 }
 
-func expandTracingImmediate(tracingImmediate *TracingImmediate) *cxsdk.AlertDefPropertiesTracingImmediate {
-	return &cxsdk.AlertDefPropertiesTracingImmediate{
-		TracingImmediate: &cxsdk.TracingImmediateType{
-			TracingFilter:             expandTracingFilter(tracingImmediate.TracingFilter),
-			NotificationPayloadFilter: coralogix.StringSliceToWrappedStringSlice(tracingImmediate.NotificationPayloadFilter),
-		},
+func expandTracingImmediate(tracingImmediate *TracingImmediate) *alerts.TracingImmediateType {
+	result := &alerts.TracingImmediateType{
+		NotificationPayloadFilter: tracingImmediate.NotificationPayloadFilter,
 	}
+
+	if tracingFilter := tracingImmediate.TracingFilter; tracingFilter != nil {
+		result.TracingFilter = *expandTracingFilter(tracingFilter)
+	}
+
+	return result
 }
 
 func expandTracingFilter(filter *TracingFilter) *alerts.TracingFilter {
@@ -2521,9 +2539,14 @@ func expandTracingFilter(filter *TracingFilter) *alerts.TracingFilter {
 }
 
 func expandTracingSimpleFilter(filter *TracingSimpleFilter) *alerts.TracingSimpleFilter {
+	var latencyThresholdStr string
+	if filter.LatencyThresholdMs != nil {
+		latencyThresholdStr = strconv.FormatUint(*filter.LatencyThresholdMs, 10)
+	}
+
 	return &alerts.TracingSimpleFilter{
 		TracingLabelFilters: expandTracingLabelFilters(filter.TracingLabelFilters),
-		LatencyThresholdMs:  wrapperspb.UInt64(*filter.LatencyThresholdMs),
+		LatencyThresholdMs:  latencyThresholdStr,
 	}
 }
 

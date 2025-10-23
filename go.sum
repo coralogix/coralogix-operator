@@ -20,6 +20,8 @@ github.com/coralogix/coralogix-management-sdk v1.9.3-0.20251022113053-231f0a1598
 github.com/coralogix/coralogix-management-sdk v1.9.3-0.20251022113053-231f0a159839/go.mod h1:hC1w7mD+AZhGGw6krKRYEsKst+pYfH6SuUYM001X+tk=
 github.com/coralogix/coralogix-management-sdk v1.9.3-0.20251023080454-cb796dafab1d h1:1DujrSa+fibOMQJb0OepDlXiHpQcAfeWZoJ/ALo99bU=
 github.com/coralogix/coralogix-management-sdk v1.9.3-0.20251023080454-cb796dafab1d/go.mod h1:hC1w7mD+AZhGGw6krKRYEsKst+pYfH6SuUYM001X+tk=
+github.com/coralogix/coralogix-management-sdk v1.9.3-0.20251023091056-387f434107c6 h1:c3E7oLoTlVZ1XkFmxGXUO4Pr2LTE1K8WmyGXmPub5DU=
+github.com/coralogix/coralogix-management-sdk v1.9.3-0.20251023091056-387f434107c6/go.mod h1:hC1w7mD+AZhGGw6krKRYEsKst+pYfH6SuUYM001X+tk=
 github.com/coralogix/grpc-gateway/v2 v2.0.0-20251015134251-4d8694a21a7c h1:aOfG9Pwe7Fp/m+tdybObODwgeK5st/+9df/QUw0dzBQ=
 github.com/coralogix/grpc-gateway/v2 v2.0.0-20251015134251-4d8694a21a7c/go.mod h1:bqGO/kNOHTFiDIfPmXLQcox10aWQs5Q3b9sXUFoaFFk=
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
