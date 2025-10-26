@@ -64,6 +64,12 @@ securityContext:
   seccompProfile:
     type: RuntimeDefault
 
+# -- Additional volumes on the output Deployment definition.
+volumes: []
+
+# -- Additional volumeMounts on the output Deployment definition.
+volumeMounts: []
+
 # -- Define which Nodes the Pods are scheduled on.
 # -- ref: https://kubernetes.io/docs/user-guide/node-selection/
 nodeSelector: {}
