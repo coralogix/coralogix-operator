@@ -295,7 +295,7 @@ func (a *AlertScheduler) extractFilter() (*alertscheduler.AlertSchedulerRuleProt
 	if a.Spec.Filter.MetaLabels != nil {
 		metaLabels := extractMetaLabels(a.Spec.Filter.MetaLabels)
 		return &alertscheduler.AlertSchedulerRuleProtobufV1Filter{
-			FilterAlertMetaLabels: &alertscheduler.FilterAlertMetaLabels{
+			AlertSchedulerRuleProtobufV1FilterAlertMetaLabels: &alertscheduler.AlertSchedulerRuleProtobufV1FilterAlertMetaLabels{
 				WhatExpression: alertscheduler.PtrString(a.Spec.Filter.WhatExpression),
 				AlertMetaLabels: &alertscheduler.MetaLabels{
 					Value: metaLabels,
@@ -309,7 +309,7 @@ func (a *AlertScheduler) extractFilter() (*alertscheduler.AlertSchedulerRuleProt
 		}
 
 		return &alertscheduler.AlertSchedulerRuleProtobufV1Filter{
-			FilterAlertUniqueIds: &alertscheduler.FilterAlertUniqueIds{
+			AlertSchedulerRuleProtobufV1FilterAlertUniqueIds: &alertscheduler.AlertSchedulerRuleProtobufV1FilterAlertUniqueIds{
 				WhatExpression: alertscheduler.PtrString(a.Spec.Filter.WhatExpression),
 				AlertUniqueIds: &alertscheduler.AlertUniqueIds{
 					Value: alertsIds,

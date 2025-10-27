@@ -106,9 +106,6 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 		Id:                 wrapperspb.String(*alert.Status.ID),
 		AlertDefProperties: alertDefProperties,
 	}
-	if err != nil {
-		return fmt.Errorf("error on extracting update request: %w", err)
-	}
 	log.Info("Updating remote alert", "alert", utils.FormatJSON(updateRequest))
 	updateResponse, httpResp, err := r.AlertsClient.
 		AlertDefsServiceReplaceAlertDef(ctx).

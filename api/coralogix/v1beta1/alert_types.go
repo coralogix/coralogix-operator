@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	"github.com/go-logr/logr"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -1721,12 +1720,27 @@ func (in *AlertSpec) ExtractAlertCreateRequest(listingAlertsAndWebhooksPropertie
 			},
 		}, nil
 	} else if sloThreshold := in.TypeDefinition.SloThreshold; sloThreshold != nil {
-		var err error
-		properties.TypeDefinition, err = expandSloThreshold(listingAlertsAndWebhooksProperties, sloThreshold)
+		sloThresholdType, err := expandSloThreshold(listingAlertsAndWebhooksProperties, sloThreshold)
 		if err != nil {
 			return nil, fmt.Errorf("failed to expand SLO threshold: %w", err)
 		}
-		properties.Type = cxsdk.AlertDefTypeSloThreshold
+		return &alerts.AlertDefsServiceCreateAlertDefRequest{
+			AlertDefPropertiesSloThreshold: &alerts.AlertDefPropertiesSloThreshold{
+				Name:                    in.Name,
+				Description:             alerts.PtrString(in.Description),
+				Enabled:                 alerts.PtrBool(in.Enabled),
+				Priority:                priority,
+				GroupByKeys:             in.GroupByKeys,
+				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+				NotificationGroup:       notificationGroup,
+				NotificationGroupExcess: notificationGroupExcess,
+				EntityLabels:            ptr.To(in.EntityLabels),
+				PhantomMode:             alerts.PtrBool(in.PhantomMode),
+				ActiveOn:                expandAlertSchedule(in.Schedule),
+				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_SLO_THRESHOLD,
+				SloThreshold:            sloThresholdType,
+			},
+		}, nil
 	}
 
 	return nil, fmt.Errorf("unsupported alert type definition")
@@ -2140,38 +2154,32 @@ func expandDaysOfWeek(week []DayOfWeek) []alerts.DayOfWeek {
 	return result
 }
 
-func expandSloThreshold(listingSloProperties *GetResourceRefProperties, sloThreshold *SloThreshold) (*cxsdk.AlertDefPropertiesSlo, error) {
+func expandSloThreshold(listingSloProperties *GetResourceRefProperties, sloThreshold *SloThreshold) (*alerts.SloThresholdType, error) {
 	sloId, err := getSloId(listingSloProperties, sloThreshold.SloDefinition.SloRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get SLO ID: %w", err)
 	}
-	return expandSloThresholdType(&cxsdk.AlertDefPropertiesSlo{
-		SloThreshold: &cxsdk.SloThresholdType{
-			SloDefinition: &cxsdk.AlertSloDefinition{
-				SloId: wrapperspb.String(*sloId),
-			},
-		},
-	}, sloThreshold), nil
+	return expandSloThresholdType(sloId, sloThreshold)
 }
 
-func getSloId(listingSloProperties *GetResourceRefProperties, sloRef SloRef) (*string, error) {
+func getSloId(listingSloProperties *GetResourceRefProperties, sloRef SloRef) (string, error) {
 	if backendRef := sloRef.BackendRef; backendRef != nil {
 		if backendRef.ID != nil {
-			return backendRef.ID, nil
+			return *backendRef.ID, nil
 		} else if name := backendRef.Name; name != nil {
 			return convertSloBackendNameToId(listingSloProperties, name)
 		}
-		return nil, fmt.Errorf("SLO backend reference must have either ID or Name")
+		return "", fmt.Errorf("SLO backend reference must have either ID or Name")
 	} else if resourceRef := sloRef.ResourceRef; resourceRef != nil {
 		if namespace := resourceRef.Namespace; namespace != nil {
 			listingSloProperties.Namespace = *namespace
 		}
 		return convertSloCrNameToID(listingSloProperties, resourceRef.Name)
 	}
-	return nil, fmt.Errorf("SLO reference must have either backendRef or resourceRef")
+	return "", fmt.Errorf("SLO reference must have either backendRef or resourceRef")
 }
 
-func convertSloBackendNameToId(listingSloProperties *GetResourceRefProperties, name *string) (*string, error) {
+func convertSloBackendNameToId(listingSloProperties *GetResourceRefProperties, name *string) (string, error) {
 	listingSloProperties.Log.V(1).Info("Listing SLOs from the backend")
 	listResp, err := listingSloProperties.Clientset.SLOs().List(listingSloProperties.Ctx, &cxsdk.ListSlosRequest{
 		Filters: &cxsdk.SloFilters{
@@ -2194,17 +2202,19 @@ func convertSloBackendNameToId(listingSloProperties *GetResourceRefProperties, n
 		},
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to list SLOs: %w", err)
+		return "", fmt.Errorf("failed to list SLOs: %w", err)
 	}
 	for _, slo := range listResp.Slos {
 		if slo.Name == *name {
-			return slo.Id, nil
+			if slo.Id != nil {
+				return *slo.Id, nil
+			}
 		}
 	}
-	return nil, fmt.Errorf("SLO with name %s not found", *name)
+	return "", fmt.Errorf("SLO with name %s not found", *name)
 }
 
-func convertSloCrNameToID(listingSloProperties *GetResourceRefProperties, sloCrName string) (*string, error) {
+func convertSloCrNameToID(listingSloProperties *GetResourceRefProperties, sloCrName string) (string, error) {
 	ctx, namespace := listingSloProperties.Ctx, listingSloProperties.Namespace
 	u := &unstructured.Unstructured{}
 	u.SetGroupVersionKind(schema.GroupVersionKind{
@@ -2214,81 +2224,93 @@ func convertSloCrNameToID(listingSloProperties *GetResourceRefProperties, sloCrN
 	})
 
 	if err := config.GetClient().Get(ctx, client.ObjectKey{Name: sloCrName, Namespace: namespace}, u); err != nil {
-		return nil, fmt.Errorf("failed to get slo, name: %s, namespace: %s, error: %w", sloCrName, namespace, err)
+		return "", fmt.Errorf("failed to get slo, name: %s, namespace: %s, error: %w", sloCrName, namespace, err)
 	}
 
 	if !config.GetConfig().Selector.Matches(u.GetLabels(), u.GetNamespace()) {
-		return nil, fmt.Errorf("slo %s does not match selector", u.GetName())
+		return "", fmt.Errorf("slo %s does not match selector", u.GetName())
 	}
 
 	id, found, err := unstructured.NestedString(u.Object, "status", "id")
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	if !found {
-		return nil, fmt.Errorf("status.id not found")
+		return "", fmt.Errorf("status.id not found")
 	}
 
-	return &id, nil
+	return id, nil
 }
 
-func expandSloThresholdType(sloAlert *cxsdk.AlertDefPropertiesSlo, sloThreshold *SloThreshold) *cxsdk.AlertDefPropertiesSlo {
+func expandSloThresholdType(sloId string, sloThreshold *SloThreshold) (*alerts.SloThresholdType, error) {
 	if errorBudget := sloThreshold.ErrorBudget; errorBudget != nil {
-		sloAlert.SloThreshold.Threshold = &cxsdk.SloErrorBudgetThresholdType{
-			ErrorBudget: &cxsdk.SloErrorBudgetThreshold{
-				Rules: expandSloErrorBudgetRules(errorBudget.Rules),
+		return &alerts.SloThresholdType{
+			SloThresholdTypeErrorBudget: &alerts.SloThresholdTypeErrorBudget{
+				ErrorBudget: &alerts.ErrorBudgetThreshold{
+					Rules: expandSloErrorBudgetRules(errorBudget.Rules),
+				},
+				SloDefinition: alerts.V3SloDefinition{
+					SloId: sloId,
+				},
 			},
-		}
+		}, nil
 	} else if burnRate := sloThreshold.BurnRate; burnRate != nil {
-		sloAlert.SloThreshold.Threshold = &cxsdk.SloBurnRateThresholdType{
-			BurnRate: &cxsdk.SloBurnRateThreshold{
-				Rules: expandSloBurnRate(burnRate.Rules),
+		return &alerts.SloThresholdType{
+			SloThresholdTypeBurnRate: &alerts.SloThresholdTypeBurnRate{
+				BurnRate: &alerts.BurnRateThreshold{
+					BurnRateThresholdSingle: &alerts.BurnRateThresholdSingle{
+						Rules: expandSloBurnRate(burnRate.Rules),
+					},
+				},
+				SloDefinition: alerts.V3SloDefinition{
+					SloId: sloId,
+				},
 			},
-		}
+		}, nil
 	}
 
-	return sloAlert
+	return nil, fmt.Errorf("unsupported SLO threshold type")
 }
 
-func expandSloErrorBudgetRules(rules []SloThresholdRule) []*cxsdk.SloThresholdRule {
-	result := make([]*cxsdk.SloThresholdRule, 0, len(rules))
+func expandSloErrorBudgetRules(rules []SloThresholdRule) []alerts.SloThresholdRule {
+	result := make([]alerts.SloThresholdRule, 0, len(rules))
 	for _, rule := range rules {
-		result = append(result, expandSloThresholdRule(rule))
+		result = append(result, *expandSloThresholdRule(rule))
 	}
 	return result
 }
 
-func expandSloThresholdRule(rule SloThresholdRule) *cxsdk.SloThresholdRule {
-	return &cxsdk.SloThresholdRule{
-		Condition: expandSloThresholdRuleCondition(rule.Condition),
-		Override:  expandAlertOverride(rule.Override, cxsdk.AlertDefPriorityP1),
+func expandSloThresholdRule(rule SloThresholdRule) *alerts.SloThresholdRule {
+	return &alerts.SloThresholdRule{
+		Condition: *expandSloThresholdRuleCondition(rule.Condition),
+		Override:  *expandAlertOverride(rule.Override, alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P1),
 	}
 }
 
-func expandSloThresholdRuleCondition(condition SloThresholdRuleCondition) *cxsdk.SloThresholdCondition {
-	return &cxsdk.SloThresholdCondition{
-		Threshold: wrapperspb.Double(condition.Threshold.AsApproximateFloat64()),
+func expandSloThresholdRuleCondition(condition SloThresholdRuleCondition) *alerts.SloThresholdCondition {
+	return &alerts.SloThresholdCondition{
+		Threshold: condition.Threshold.AsApproximateFloat64(),
 	}
 }
 
-func expandSloBurnRate(rules []BurnRateRule) []*cxsdk.SloThresholdRule {
-	result := make([]*cxsdk.SloThresholdRule, 0, len(rules))
+func expandSloBurnRate(rules []BurnRateRule) []alerts.SloThresholdRule {
+	result := make([]alerts.SloThresholdRule, 0, len(rules))
 	for _, rule := range rules {
-		result = append(result, expandSloBurnRateRule(rule))
+		result = append(result, *expandSloBurnRateRule(rule))
 	}
 	return result
 }
 
-func expandSloBurnRateRule(rule BurnRateRule) *cxsdk.SloThresholdRule {
-	return &cxsdk.SloThresholdRule{
-		Condition: expandSloBurnRateRuleCondition(rule.Condition),
-		Override:  expandAlertOverride(rule.Override, cxsdk.AlertDefPriorityP1),
+func expandSloBurnRateRule(rule BurnRateRule) *alerts.SloThresholdRule {
+	return &alerts.SloThresholdRule{
+		Condition: *expandSloBurnRateRuleCondition(rule.Condition),
+		Override:  *expandAlertOverride(rule.Override, alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P1),
 	}
 }
 
-func expandSloBurnRateRuleCondition(condition BurnRateRuleCondition) *cxsdk.SloThresholdCondition {
-	return &cxsdk.SloThresholdCondition{
-		Threshold: wrapperspb.Double(condition.Threshold.AsApproximateFloat64()),
+func expandSloBurnRateRuleCondition(condition BurnRateRuleCondition) *alerts.SloThresholdCondition {
+	return &alerts.SloThresholdCondition{
+		Threshold: condition.Threshold.AsApproximateFloat64(),
 	}
 }
 
