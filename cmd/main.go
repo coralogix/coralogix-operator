@@ -143,6 +143,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&v1beta1controllers.AlertReconciler{
+		AlertsClient:       oapiClientSet.Alerts(),
 		CoralogixClientSet: clientSet,
 		Interval:           cfg.ReconcileIntervals[utils.AlertKind],
 	}).SetupWithManager(mgr); err != nil {
@@ -167,7 +168,7 @@ func main() {
 	}
 
 	if err = (&v1alpha1controllers.OutboundWebhookReconciler{
-		OutboundWebhooksClient: clientSet.Webhooks(),
+		OutboundWebhooksClient: oapiClientSet.Webhooks(),
 		Interval:               cfg.ReconcileIntervals[utils.OutboundWebhookKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "OutboundWebhook")

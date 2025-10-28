@@ -1746,6 +1746,262 @@ func (in *AlertSpec) ExtractAlertCreateRequest(listingAlertsAndWebhooksPropertie
 	return nil, fmt.Errorf("unsupported alert type definition")
 }
 
+func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksProperties *GetResourceRefProperties) (*alerts.AlertDefProperties, error) {
+	notificationGroup, err := expandNotificationGroup(in.NotificationGroup, listingAlertsAndWebhooksProperties)
+	if err != nil {
+		return nil, fmt.Errorf("failed to expand notification group: %w", err)
+	}
+
+	notificationGroupExcess, err := expandNotificationGroupExcess(in.NotificationGroupExcess, listingAlertsAndWebhooksProperties)
+	if err != nil {
+		return nil, fmt.Errorf("failed to expand notification group excess: %w", err)
+	}
+
+	priority := AlertPriorityToOpenAPIPriority[in.Priority]
+
+	if logsImmediate := in.TypeDefinition.LogsImmediate; logsImmediate != nil {
+		return &alerts.AlertDefProperties{
+			AlertDefPropertiesLogsImmediate: &alerts.AlertDefPropertiesLogsImmediate{
+				Name:                    in.Name,
+				Description:             alerts.PtrString(in.Description),
+				Enabled:                 alerts.PtrBool(in.Enabled),
+				Priority:                priority,
+				GroupByKeys:             in.GroupByKeys,
+				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+				NotificationGroup:       notificationGroup,
+				NotificationGroupExcess: notificationGroupExcess,
+				EntityLabels:            ptr.To(in.EntityLabels),
+				PhantomMode:             alerts.PtrBool(in.PhantomMode),
+				ActiveOn:                expandAlertSchedule(in.Schedule),
+				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_LOGS_IMMEDIATE_OR_UNSPECIFIED,
+				LogsImmediate:           expandLogsImmediate(logsImmediate),
+			},
+		}, nil
+	} else if logsThreshold := in.TypeDefinition.LogsThreshold; logsThreshold != nil {
+		return &alerts.AlertDefProperties{
+			AlertDefPropertiesLogsThreshold: &alerts.AlertDefPropertiesLogsThreshold{
+				Name:                    in.Name,
+				Description:             alerts.PtrString(in.Description),
+				Enabled:                 alerts.PtrBool(in.Enabled),
+				Priority:                priority,
+				GroupByKeys:             in.GroupByKeys,
+				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+				NotificationGroup:       notificationGroup,
+				NotificationGroupExcess: notificationGroupExcess,
+				EntityLabels:            ptr.To(in.EntityLabels),
+				PhantomMode:             alerts.PtrBool(in.PhantomMode),
+				ActiveOn:                expandAlertSchedule(in.Schedule),
+				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_LOGS_THRESHOLD,
+				LogsThreshold:           expandLogsThreshold(logsThreshold, priority),
+			},
+		}, nil
+	} else if logsRatioThreshold := in.TypeDefinition.LogsRatioThreshold; logsRatioThreshold != nil {
+		return &alerts.AlertDefProperties{
+			AlertDefPropertiesLogsRatioThreshold: &alerts.AlertDefPropertiesLogsRatioThreshold{
+				Name:                    in.Name,
+				Description:             alerts.PtrString(in.Description),
+				Enabled:                 alerts.PtrBool(in.Enabled),
+				Priority:                priority,
+				GroupByKeys:             in.GroupByKeys,
+				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+				NotificationGroup:       notificationGroup,
+				NotificationGroupExcess: notificationGroupExcess,
+				EntityLabels:            ptr.To(in.EntityLabels),
+				PhantomMode:             alerts.PtrBool(in.PhantomMode),
+				ActiveOn:                expandAlertSchedule(in.Schedule),
+				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_LOGS_THRESHOLD,
+				LogsRatioThreshold:      expandLogsRatioThreshold(logsRatioThreshold, priority),
+			},
+		}, nil
+	} else if logsTimeRelativeThreshold := in.TypeDefinition.LogsTimeRelativeThreshold; logsTimeRelativeThreshold != nil {
+		return &alerts.AlertDefProperties{
+			AlertDefPropertiesLogsTimeRelativeThreshold: &alerts.AlertDefPropertiesLogsTimeRelativeThreshold{
+				Name:                      in.Name,
+				Description:               alerts.PtrString(in.Description),
+				Enabled:                   alerts.PtrBool(in.Enabled),
+				Priority:                  priority,
+				GroupByKeys:               in.GroupByKeys,
+				IncidentsSettings:         expandIncidentsSettings(in.IncidentsSettings),
+				NotificationGroup:         notificationGroup,
+				NotificationGroupExcess:   notificationGroupExcess,
+				EntityLabels:              ptr.To(in.EntityLabels),
+				PhantomMode:               alerts.PtrBool(in.PhantomMode),
+				ActiveOn:                  expandAlertSchedule(in.Schedule),
+				Type:                      alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_LOGS_TIME_RELATIVE_THRESHOLD,
+				LogsTimeRelativeThreshold: expandLogsTimeRelativeThreshold(logsTimeRelativeThreshold, priority),
+			},
+		}, nil
+	} else if metricThreshold := in.TypeDefinition.MetricThreshold; metricThreshold != nil {
+		return &alerts.AlertDefProperties{
+			AlertDefPropertiesMetricThreshold: &alerts.AlertDefPropertiesMetricThreshold{
+				Name:                    in.Name,
+				Description:             alerts.PtrString(in.Description),
+				Enabled:                 alerts.PtrBool(in.Enabled),
+				Priority:                priority,
+				GroupByKeys:             in.GroupByKeys,
+				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+				NotificationGroup:       notificationGroup,
+				NotificationGroupExcess: notificationGroupExcess,
+				EntityLabels:            ptr.To(in.EntityLabels),
+				PhantomMode:             alerts.PtrBool(in.PhantomMode),
+				ActiveOn:                expandAlertSchedule(in.Schedule),
+				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_METRIC_THRESHOLD,
+				MetricThreshold:         expandMetricThreshold(metricThreshold, priority),
+			},
+		}, nil
+	} else if tracingThreshold := in.TypeDefinition.TracingThreshold; tracingThreshold != nil {
+		return &alerts.AlertDefProperties{
+			AlertDefPropertiesTracingThreshold: &alerts.AlertDefPropertiesTracingThreshold{
+				Name:                    in.Name,
+				Description:             alerts.PtrString(in.Description),
+				Enabled:                 alerts.PtrBool(in.Enabled),
+				Priority:                priority,
+				GroupByKeys:             in.GroupByKeys,
+				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+				NotificationGroup:       notificationGroup,
+				NotificationGroupExcess: notificationGroupExcess,
+				EntityLabels:            ptr.To(in.EntityLabels),
+				PhantomMode:             alerts.PtrBool(in.PhantomMode),
+				ActiveOn:                expandAlertSchedule(in.Schedule),
+				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_TRACING_THRESHOLD,
+				TracingThreshold:        expandTracingThreshold(tracingThreshold),
+			},
+		}, nil
+	} else if tracingImmediate := in.TypeDefinition.TracingImmediate; tracingImmediate != nil {
+		return &alerts.AlertDefProperties{
+			AlertDefPropertiesTracingImmediate: &alerts.AlertDefPropertiesTracingImmediate{
+				Name:                    in.Name,
+				Description:             alerts.PtrString(in.Description),
+				Enabled:                 alerts.PtrBool(in.Enabled),
+				Priority:                priority,
+				GroupByKeys:             in.GroupByKeys,
+				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+				NotificationGroup:       notificationGroup,
+				NotificationGroupExcess: notificationGroupExcess,
+				EntityLabels:            ptr.To(in.EntityLabels),
+				PhantomMode:             alerts.PtrBool(in.PhantomMode),
+				ActiveOn:                expandAlertSchedule(in.Schedule),
+				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_TRACING_IMMEDIATE,
+				TracingImmediate:        expandTracingImmediate(tracingImmediate),
+			},
+		}, nil
+	} else if flow := in.TypeDefinition.Flow; flow != nil {
+		return &alerts.AlertDefProperties{
+			AlertDefPropertiesFlow: &alerts.AlertDefPropertiesFlow{
+				Name:                    in.Name,
+				Description:             alerts.PtrString(in.Description),
+				Enabled:                 alerts.PtrBool(in.Enabled),
+				Priority:                priority,
+				GroupByKeys:             in.GroupByKeys,
+				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+				NotificationGroup:       notificationGroup,
+				NotificationGroupExcess: notificationGroupExcess,
+				EntityLabels:            ptr.To(in.EntityLabels),
+				PhantomMode:             alerts.PtrBool(in.PhantomMode),
+				ActiveOn:                expandAlertSchedule(in.Schedule),
+				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_FLOW,
+				Flow:                    expandFlow(listingAlertsAndWebhooksProperties, flow),
+			},
+		}, nil
+	} else if logsAnomaly := in.TypeDefinition.LogsAnomaly; logsAnomaly != nil {
+		return &alerts.AlertDefProperties{
+			AlertDefPropertiesLogsAnomaly: &alerts.AlertDefPropertiesLogsAnomaly{
+				Name:                    in.Name,
+				Description:             alerts.PtrString(in.Description),
+				Enabled:                 alerts.PtrBool(in.Enabled),
+				Priority:                priority,
+				GroupByKeys:             in.GroupByKeys,
+				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+				NotificationGroup:       notificationGroup,
+				NotificationGroupExcess: notificationGroupExcess,
+				EntityLabels:            ptr.To(in.EntityLabels),
+				PhantomMode:             alerts.PtrBool(in.PhantomMode),
+				ActiveOn:                expandAlertSchedule(in.Schedule),
+				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_LOGS_ANOMALY,
+				LogsAnomaly:             expandLogsAnomaly(logsAnomaly),
+			},
+		}, nil
+	} else if metricAnomaly := in.TypeDefinition.MetricAnomaly; metricAnomaly != nil {
+		return &alerts.AlertDefProperties{
+			AlertDefPropertiesMetricAnomaly: &alerts.AlertDefPropertiesMetricAnomaly{
+				Name:                    in.Name,
+				Description:             alerts.PtrString(in.Description),
+				Enabled:                 alerts.PtrBool(in.Enabled),
+				Priority:                priority,
+				GroupByKeys:             in.GroupByKeys,
+				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+				NotificationGroup:       notificationGroup,
+				NotificationGroupExcess: notificationGroupExcess,
+				EntityLabels:            ptr.To(in.EntityLabels),
+				PhantomMode:             alerts.PtrBool(in.PhantomMode),
+				ActiveOn:                expandAlertSchedule(in.Schedule),
+				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_METRIC_ANOMALY,
+				MetricAnomaly:           expandMetricAnomaly(metricAnomaly),
+			},
+		}, nil
+	} else if logsNewValue := in.TypeDefinition.LogsNewValue; logsNewValue != nil {
+		return &alerts.AlertDefProperties{
+			AlertDefPropertiesLogsNewValue: &alerts.AlertDefPropertiesLogsNewValue{
+				Name:                    in.Name,
+				Description:             alerts.PtrString(in.Description),
+				Enabled:                 alerts.PtrBool(in.Enabled),
+				Priority:                priority,
+				GroupByKeys:             in.GroupByKeys,
+				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+				NotificationGroup:       notificationGroup,
+				NotificationGroupExcess: notificationGroupExcess,
+				EntityLabels:            ptr.To(in.EntityLabels),
+				PhantomMode:             alerts.PtrBool(in.PhantomMode),
+				ActiveOn:                expandAlertSchedule(in.Schedule),
+				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_LOGS_NEW_VALUE,
+				LogsNewValue:            expandLogsNewValue(logsNewValue),
+			},
+		}, nil
+	} else if logsUniqueCount := in.TypeDefinition.LogsUniqueCount; logsUniqueCount != nil {
+		return &alerts.AlertDefProperties{
+			AlertDefPropertiesLogsUniqueCount: &alerts.AlertDefPropertiesLogsUniqueCount{
+				Name:                    in.Name,
+				Description:             alerts.PtrString(in.Description),
+				Enabled:                 alerts.PtrBool(in.Enabled),
+				Priority:                priority,
+				GroupByKeys:             in.GroupByKeys,
+				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+				NotificationGroup:       notificationGroup,
+				NotificationGroupExcess: notificationGroupExcess,
+				EntityLabels:            ptr.To(in.EntityLabels),
+				PhantomMode:             alerts.PtrBool(in.PhantomMode),
+				ActiveOn:                expandAlertSchedule(in.Schedule),
+				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_LOGS_UNIQUE_COUNT,
+				LogsUniqueCount:         expandLogsUniqueCount(logsUniqueCount),
+			},
+		}, nil
+	} else if sloThreshold := in.TypeDefinition.SloThreshold; sloThreshold != nil {
+		sloThresholdType, err := expandSloThreshold(listingAlertsAndWebhooksProperties, sloThreshold)
+		if err != nil {
+			return nil, fmt.Errorf("failed to expand SLO threshold: %w", err)
+		}
+		return &alerts.AlertDefProperties{
+			AlertDefPropertiesSloThreshold: &alerts.AlertDefPropertiesSloThreshold{
+				Name:                    in.Name,
+				Description:             alerts.PtrString(in.Description),
+				Enabled:                 alerts.PtrBool(in.Enabled),
+				Priority:                priority,
+				GroupByKeys:             in.GroupByKeys,
+				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+				NotificationGroup:       notificationGroup,
+				NotificationGroupExcess: notificationGroupExcess,
+				EntityLabels:            ptr.To(in.EntityLabels),
+				PhantomMode:             alerts.PtrBool(in.PhantomMode),
+				ActiveOn:                expandAlertSchedule(in.Schedule),
+				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_SLO_THRESHOLD,
+				SloThreshold:            sloThresholdType,
+			},
+		}, nil
+	}
+
+	return nil, fmt.Errorf("unsupported alert type definition")
+}
+
 func expandIncidentsSettings(incidentsSettings *IncidentsSettings) *alerts.AlertDefIncidentSettings {
 	if incidentsSettings == nil {
 		return nil

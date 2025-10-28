@@ -3204,7 +3204,7 @@ Condition to match to.
         <td>
           Percentage for the threshold<br/>
           <br/>
-            <i>Format</i>: int32<br/>
+            <i>Format</i>: int64<br/>
             <i>Maximum</i>: 100<br/>
         </td>
         <td>true</td>
@@ -3214,7 +3214,7 @@ Condition to match to.
         <td>
           Replace with a number<br/>
           <br/>
-            <i>Format</i>: int32<br/>
+            <i>Format</i>: int64<br/>
             <i>Maximum</i>: 100<br/>
         </td>
         <td>true</td>
@@ -3362,7 +3362,7 @@ Missing values strategies.
         <td>
           Replace with a number<br/>
           <br/>
-            <i>Format</i>: int32<br/>
+            <i>Format</i>: int64<br/>
             <i>Maximum</i>: 100<br/>
         </td>
         <td>false</td>
@@ -4868,7 +4868,7 @@ When to re-notify.
         <td>
           Delay between re-triggered alerts.<br/>
           <br/>
-            <i>Format</i>: int32<br/>
+            <i>Format</i>: int64<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -5618,7 +5618,7 @@ Backend reference for the outbound webhook.
         <td>
           Webhook ID.<br/>
           <br/>
-            <i>Format</i>: int32<br/>
+            <i>Format</i>: int64<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5688,7 +5688,7 @@ When to re-trigger.
         <td>
           Delay between re-triggered alerts.<br/>
           <br/>
-            <i>Format</i>: int32<br/>
+            <i>Format</i>: int64<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -6438,7 +6438,7 @@ Backend reference for the outbound webhook.
         <td>
           Webhook ID.<br/>
           <br/>
-            <i>Format</i>: int32<br/>
+            <i>Format</i>: int64<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6508,7 +6508,7 @@ When to re-trigger.
         <td>
           Delay between re-triggered alerts.<br/>
           <br/>
-            <i>Format</i>: int32<br/>
+            <i>Format</i>: int64<br/>
         </td>
         <td>false</td>
       </tr></tbody>

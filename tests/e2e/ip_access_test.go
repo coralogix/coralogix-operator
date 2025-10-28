@@ -67,7 +67,7 @@ var _ = Describe("IPAccess", func() {
 					{
 						Name:    ptr.To("VPN"),
 						IPRange: "198.51.100.0/24",
-						Enabled: ptr.To(true),
+						Enabled: ptr.To(false),
 					},
 				},
 			},

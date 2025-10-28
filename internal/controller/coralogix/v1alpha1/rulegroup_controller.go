@@ -29,13 +29,12 @@ import (
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/config"
-	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 )
 
 // RuleGroupReconciler reconciles a RuleGroup object
 type RuleGroupReconciler struct {
-	RuleGroupClient clientset.RuleGroupsClientInterface
+	RuleGroupClient *cxsdk.RuleGroupsClient
 	Interval        time.Duration
 }
 

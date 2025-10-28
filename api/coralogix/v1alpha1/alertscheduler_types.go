@@ -407,73 +407,73 @@ func (a *AlertScheduler) extractOneTime() (*alertscheduler.OneTime, error) {
 }
 
 func (a *AlertScheduler) extractRecurring() (*alertscheduler.Recurring, error) {
-	if a.Spec.Schedule.Recurring.Dynamic != nil {
-		dynamic, err := a.extractDynamic()
-		if err != nil {
-			return nil, fmt.Errorf("error on extracting dynamic schedule: %w", err)
-		}
-
-		return &alertscheduler.Recurring{
-			RecurringDynamic: &alertscheduler.RecurringDynamic{
-				Dynamic: dynamic,
-			},
-		}, nil
-	} else if a.Spec.Schedule.Recurring.Always != nil {
-		return &alertscheduler.Recurring{
-			RecurringAlways: &alertscheduler.RecurringAlways{
-				Always: make(map[string]interface{}),
-			},
-		}, nil
-	}
+	//if a.Spec.Schedule.Recurring.Dynamic != nil {
+	//	dynamic, err := a.extractDynamic()
+	//	if err != nil {
+	//		return nil, fmt.Errorf("error on extracting dynamic schedule: %w", err)
+	//	}
+	//
+	//	return &alertscheduler.Recurring{
+	//		RecurringDynamic: &alertscheduler.RecurringDynamic{
+	//			Dynamic: dynamic,
+	//		},
+	//	}, nil
+	//} else if a.Spec.Schedule.Recurring.Always != nil {
+	//	return &alertscheduler.Recurring{
+	//		RecurringAlways: &alertscheduler.RecurringAlways{
+	//			Always: make(map[string]interface{}),
+	//		},
+	//	}, nil
+	//}
 
 	return nil, fmt.Errorf("exactly one of `dynamic` or `always` must be set")
 }
 
-func (a *AlertScheduler) extractDynamic() (*alertscheduler.RecurringDynamic, error) {
-	timeFrame, err := extractTimeFrame(a.Spec.Schedule.Recurring.Dynamic.TimeFrame)
-	if err != nil {
-		return nil, fmt.Errorf("error on extracting time frame: %w", err)
-	}
-
-	if a.Spec.Schedule.Recurring.Dynamic.Frequency.Daily != nil {
-		return &alertscheduler.RecurringDynamic{
-			Dynamic: &alertscheduler.RecurringDynamic{
-				Daily:           make(map[string]interface{}),
-				RepeatEvery:     alertscheduler.PtrInt32(a.Spec.Schedule.Recurring.Dynamic.RepeatEvery),
-				Timeframe:       timeFrame,
-				TerminationDate: a.Spec.Schedule.Recurring.Dynamic.TerminationDate,
-			},
-		}, nil
-	} else if weekly := a.Spec.Schedule.Recurring.Dynamic.Frequency.Weekly; weekly != nil {
-		var daysOfWeek []int32
-		for _, day := range weekly.Days {
-			daysOfWeek = append(daysOfWeek, daysToOpenAPIValue[day])
-		}
-		return &alertscheduler.RecurringDynamic{
-			RecurringDynamicOneOf1: &alertscheduler.RecurringDynamicOneOf1{
-				Weekly: &alertscheduler.Weekly{
-					DaysOfWeek: daysOfWeek,
-				},
-				RepeatEvery:     alertscheduler.PtrInt32(a.Spec.Schedule.Recurring.Dynamic.RepeatEvery),
-				Timeframe:       timeFrame,
-				TerminationDate: a.Spec.Schedule.Recurring.Dynamic.TerminationDate,
-			},
-		}, nil
-	} else if monthly := a.Spec.Schedule.Recurring.Dynamic.Frequency.Monthly; monthly != nil {
-		return &alertscheduler.RecurringDynamic{
-			RecurringDynamicOneOf2: &alertscheduler.RecurringDynamicOneOf2{
-				Monthly: &alertscheduler.Monthly{
-					DaysOfMonth: monthly.Days,
-				},
-				RepeatEvery:     alertscheduler.PtrInt32(a.Spec.Schedule.Recurring.Dynamic.RepeatEvery),
-				Timeframe:       timeFrame,
-				TerminationDate: a.Spec.Schedule.Recurring.Dynamic.TerminationDate,
-			},
-		}, nil
-	}
-
-	return nil, fmt.Errorf("exactly one of `daily`, `weekly` or `monthly` must be set")
-}
+//func (a *AlertScheduler) extractDynamic() (*alertscheduler.RecurringDynamic, error) {
+//	timeFrame, err := extractTimeFrame(a.Spec.Schedule.Recurring.Dynamic.TimeFrame)
+//	if err != nil {
+//		return nil, fmt.Errorf("error on extracting time frame: %w", err)
+//	}
+//
+//	if a.Spec.Schedule.Recurring.Dynamic.Frequency.Daily != nil {
+//		return &alertscheduler.RecurringDynamic{
+//			Dynamic: &alertscheduler.RecurringDynamic{
+//				Daily:           make(map[string]interface{}),
+//				RepeatEvery:     alertscheduler.PtrInt32(a.Spec.Schedule.Recurring.Dynamic.RepeatEvery),
+//				Timeframe:       timeFrame,
+//				TerminationDate: a.Spec.Schedule.Recurring.Dynamic.TerminationDate,
+//			},
+//		}, nil
+//	} else if weekly := a.Spec.Schedule.Recurring.Dynamic.Frequency.Weekly; weekly != nil {
+//		var daysOfWeek []int32
+//		for _, day := range weekly.Days {
+//			daysOfWeek = append(daysOfWeek, daysToOpenAPIValue[day])
+//		}
+//		return &alertscheduler.RecurringDynamic{
+//			RecurringDynamicOneOf1: &alertscheduler.RecurringDynamicOneOf1{
+//				Weekly: &alertscheduler.Weekly{
+//					DaysOfWeek: daysOfWeek,
+//				},
+//				RepeatEvery:     alertscheduler.PtrInt32(a.Spec.Schedule.Recurring.Dynamic.RepeatEvery),
+//				Timeframe:       timeFrame,
+//				TerminationDate: a.Spec.Schedule.Recurring.Dynamic.TerminationDate,
+//			},
+//		}, nil
+//	} else if monthly := a.Spec.Schedule.Recurring.Dynamic.Frequency.Monthly; monthly != nil {
+//		return &alertscheduler.RecurringDynamic{
+//			RecurringDynamicOneOf2: &alertscheduler.RecurringDynamicOneOf2{
+//				Monthly: &alertscheduler.Monthly{
+//					DaysOfMonth: monthly.Days,
+//				},
+//				RepeatEvery:     alertscheduler.PtrInt32(a.Spec.Schedule.Recurring.Dynamic.RepeatEvery),
+//				Timeframe:       timeFrame,
+//				TerminationDate: a.Spec.Schedule.Recurring.Dynamic.TerminationDate,
+//			},
+//		}, nil
+//	}
+//
+//	return nil, fmt.Errorf("exactly one of `daily`, `weekly` or `monthly` must be set")
+//}
 
 func extractTimeFrame(timeFrame *TimeFrame) (*alertscheduler.Timeframe, error) {
 	if timeFrame.EndTime != nil {

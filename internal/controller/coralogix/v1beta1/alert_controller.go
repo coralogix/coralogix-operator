@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -87,7 +86,7 @@ func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 
 func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	alert := obj.(*coralogixv1beta1.Alert)
-	alertDefProperties, err := alert.Spec.ExtractAlertProperties(
+	props, err := alert.Spec.ExtractAlertDefProperties(
 		&coralogixv1beta1.GetResourceRefProperties{
 			Ctx:       ctx,
 			Log:       log,
@@ -102,10 +101,12 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 	if alert.Status.ID == nil {
 		return fmt.Errorf("alert ID is missing")
 	}
-	updateRequest := &cxsdk.ReplaceAlertDefRequest{
-		Id:                 wrapperspb.String(*alert.Status.ID),
-		AlertDefProperties: alertDefProperties,
+
+	updateRequest := alerts.ReplaceAlertDefinitionRequest{
+		AlertDefProperties: *props,
+		Id:                 *alert.Status.ID,
 	}
+
 	log.Info("Updating remote alert", "alert", utils.FormatJSON(updateRequest))
 	updateResponse, httpResp, err := r.AlertsClient.
 		AlertDefsServiceReplaceAlertDef(ctx).
