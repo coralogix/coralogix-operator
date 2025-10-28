@@ -17,16 +17,16 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
 
-	"google.golang.org/protobuf/encoding/protojson"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	dashboards "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/dashboard_service"
 
 	"github.com/coralogix/coralogix-operator/internal/config"
 )
@@ -58,19 +58,14 @@ type DashboardFolderRef struct {
 	ResourceRef *ResourceRef `json:"resourceRef,omitempty"`
 }
 
-func (in *DashboardSpec) ExtractDashboardFromSpec(ctx context.Context, namespace string) (*cxsdk.Dashboard, error) {
+func (in *DashboardSpec) ExtractDashboardFromSpec(ctx context.Context, namespace string) (*dashboards.Dashboard, error) {
 	contentJson, err := ExtractJsonContentFromSpec(ctx, namespace, in)
 	if err != nil {
 		return nil, err
 	}
 
-	dashboard := new(cxsdk.Dashboard)
-	JSONUnmarshal := protojson.UnmarshalOptions{
-		DiscardUnknown: true,
-		AllowPartial:   true,
-	}
-
-	if err = JSONUnmarshal.Unmarshal([]byte(contentJson), dashboard); err != nil {
+	dashboard := new(dashboards.Dashboard)
+	if err = json.Unmarshal([]byte(contentJson), dashboard); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal contentJson: %w", err)
 	}
 
@@ -82,36 +77,58 @@ func (in *DashboardSpec) ExtractDashboardFromSpec(ctx context.Context, namespace
 	return dashboard, nil
 }
 
-func expandDashboardFolder(ctx context.Context, namespace string, in *DashboardSpec, dashboard *cxsdk.Dashboard) (*cxsdk.Dashboard, error) {
+func expandDashboardFolder(ctx context.Context, namespace string, in *DashboardSpec, dashboard *dashboards.Dashboard) (*dashboards.Dashboard, error) {
+	var folderID *dashboards.UUID
+	var folderPath *dashboards.FolderPath
+
 	if folderRef := in.FolderRef; folderRef != nil {
 		if backendRef := folderRef.BackendRef; backendRef != nil {
 			if id := backendRef.ID; id != nil {
-				dashboard.Folder = &cxsdk.DashboardFolderID{
-					FolderId: &cxsdk.UUID{
-						Value: *id,
-					},
-				}
+				folderID = &dashboards.UUID{Value: id}
 			} else if path := backendRef.Path; path != nil {
-				segments := strings.Split(*path, "/")
-				dashboard.Folder = &cxsdk.DashboardFolderPath{
-					FolderPath: &cxsdk.FolderPath{
-						Segments: segments,
-					},
-				}
+				folderPath = &dashboards.FolderPath{Segments: strings.Split(*path, "/")}
 			}
 		} else if resourceRef := folderRef.ResourceRef; resourceRef != nil {
-			folderId, err := GetFolderIdFromFolderCR(ctx, namespace, *resourceRef)
+			id, err := GetFolderIdFromFolderCR(ctx, namespace, *resourceRef)
 			if err != nil {
 				return nil, err
 			}
-			dashboard.Folder = &cxsdk.DashboardFolderID{
-				FolderId: &cxsdk.UUID{
-					Value: folderId,
-				},
-			}
+			folderID = &dashboards.UUID{Value: &id}
 		} else {
 			return nil, fmt.Errorf("folderRef.BackendRef or folderRef.ResourceRef is required")
 		}
+	}
+
+	switch v := dashboard.GetActualInstance().(type) {
+
+	case *dashboards.DashboardFiveMinutesFolderIdAbsoluteTimeFrame:
+		v.FolderId = folderID
+	case *dashboards.DashboardFiveMinutesFolderIdRelativeTimeFrame:
+		v.FolderId = folderID
+	case *dashboards.DashboardOffFolderIdAbsoluteTimeFrame:
+		v.FolderId = folderID
+	case *dashboards.DashboardOffFolderIdRelativeTimeFrame:
+		v.FolderId = folderID
+	case *dashboards.DashboardTwoMinutesFolderIdAbsoluteTimeFrame:
+		v.FolderId = folderID
+	case *dashboards.DashboardTwoMinutesFolderIdRelativeTimeFrame:
+		v.FolderId = folderID
+
+	case *dashboards.DashboardFiveMinutesFolderPathAbsoluteTimeFrame:
+		v.FolderPath = folderPath
+	case *dashboards.DashboardFiveMinutesFolderPathRelativeTimeFrame:
+		v.FolderPath = folderPath
+	case *dashboards.DashboardOffFolderPathAbsoluteTimeFrame:
+		v.FolderPath = folderPath
+	case *dashboards.DashboardOffFolderPathRelativeTimeFrame:
+		v.FolderPath = folderPath
+	case *dashboards.DashboardTwoMinutesFolderPathAbsoluteTimeFrame:
+		v.FolderPath = folderPath
+	case *dashboards.DashboardTwoMinutesFolderPathRelativeTimeFrame:
+		v.FolderPath = folderPath
+
+	default:
+		return nil, fmt.Errorf("unsupported dashboard type: %T", v)
 	}
 
 	return dashboard, nil

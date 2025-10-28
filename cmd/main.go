@@ -232,7 +232,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.DashboardReconciler{
-		DashboardsClient: clientSet.Dashboards(),
+		DashboardsClient: oapiClientSet.Dashboards(),
 		Interval:         cfg.ReconcileIntervals[utils.DashboardKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Dashboard")

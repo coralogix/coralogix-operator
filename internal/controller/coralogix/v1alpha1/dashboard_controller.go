@@ -17,27 +17,25 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/go-logr/logr"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/types/known/wrapperspb"
-	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	dashboards "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/dashboard_service"
 
-	utils "github.com/coralogix/coralogix-operator/api/coralogix"
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // DashboardReconciler reconciles a Dashboard object
 type DashboardReconciler struct {
-	DashboardsClient *cxsdk.DashboardsClient
+	DashboardsClient *dashboards.DashboardServiceAPIService
 	Interval         time.Duration
 }
 
@@ -64,18 +62,21 @@ func (r *DashboardReconciler) HandleCreation(ctx context.Context, log logr.Logge
 	if err != nil {
 		return fmt.Errorf("error on extracting dashboard from spec: %w", err)
 	}
-	createRequest := &cxsdk.CreateDashboardRequest{
-		Dashboard: dashboardToCreate,
+	createRequest := dashboards.CreateDashboardRequestDataStructure{
+		Dashboard: *dashboardToCreate,
 	}
-	log.Info("Creating remote dashboard", "dashboard", protojson.Format(createRequest))
-	createResponse, err := r.DashboardsClient.Create(ctx, createRequest)
+	log.Info("Creating remote dashboard", "dashboard", utils.FormatJSON(createRequest))
+	createResponse, httpResp, err := r.DashboardsClient.
+		DashboardsServiceCreateDashboard(ctx).
+		CreateDashboardRequestDataStructure(createRequest).
+		Execute()
 	if err != nil {
-		return fmt.Errorf("error on creating remote dashboard: %w", err)
+		return fmt.Errorf("error on creating remote dashboard: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote dashboard created", "dashboard", protojson.Format(createResponse))
+	log.Info("Remote dashboard created", "dashboard", utils.FormatJSON(createResponse))
 
 	dashboard.Status = coralogixv1alpha1.DashboardStatus{
-		ID: ptr.To(createResponse.DashboardId.Value),
+		ID: createResponse.DashboardId,
 	}
 
 	return nil
@@ -87,16 +88,18 @@ func (r *DashboardReconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 	if err != nil {
 		return fmt.Errorf("error on extracting dashboard from spec: %w", err)
 	}
-	dashboardToUpdate.Id = utils.StringPointerToWrapperspbString(dashboard.Status.ID)
-	updateRequest := &cxsdk.ReplaceDashboardRequest{
-		Dashboard: dashboardToUpdate,
+	updateRequest := dashboards.ReplaceDashboardRequestDataStructure{
+		Dashboard: *dashboardToUpdate,
 	}
-	log.Info("Updating remote dashboard", "dashboard", protojson.Format(updateRequest))
-	updateResponse, err := r.DashboardsClient.Replace(ctx, updateRequest)
+	log.Info("Updating remote dashboard", "dashboard", utils.FormatJSON(updateRequest))
+	updateResponse, httpResp, err := r.DashboardsClient.
+		DashboardsServiceReplaceDashboard(ctx).
+		ReplaceDashboardRequestDataStructure(updateRequest).
+		Execute()
 	if err != nil {
-		return fmt.Errorf("error on updating remote dashboard: %w", err)
+		return cxsdk.NewAPIError(httpResp, err)
 	}
-	log.Info("Remote dashboard updated", "dashboard", protojson.Format(updateResponse))
+	log.Info("Remote dashboard updated", "dashboard", utils.FormatJSON(updateResponse))
 
 	return nil
 }
@@ -105,10 +108,14 @@ func (r *DashboardReconciler) HandleDeletion(ctx context.Context, log logr.Logge
 	dashboard := obj.(*coralogixv1alpha1.Dashboard)
 	id := *dashboard.Status.ID
 	log.Info("Deleting dashboard from remote system", "id", id)
-	_, err := r.DashboardsClient.Delete(ctx, &cxsdk.DeleteDashboardRequest{DashboardId: wrapperspb.String(id)})
-	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.Error(err, "Error deleting remote dashboard", "id", id)
-		return fmt.Errorf("error deleting remote dashboard %s: %w", id, err)
+	_, httpResp, err := r.DashboardsClient.
+		DashboardsServiceDeleteDashboard(ctx, id).
+		Execute()
+	if err != nil {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); cxsdk.Code(apiErr) != http.StatusNotFound {
+			log.Error(err, "Error deleting remote dashboard", "id", id)
+			return fmt.Errorf("error deleting remote dashboard %s: %w", id, err)
+		}
 	}
 	log.Info("Dashboard deleted from remote system", "id", id)
 	return nil
