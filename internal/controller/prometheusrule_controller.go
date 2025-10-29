@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -224,7 +225,11 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 	for alertName, rules := range alertMap {
 		for i, rule := range rules {
 			alert := &coralogixv1beta1.Alert{}
-			alertName := fmt.Sprintf("%s-%s-%d", prometheusRule.Name, alertName, i)
+			alertName := fmt.Sprintf("%s-%s-%d",
+				prometheusRule.Name,
+				sanitizeName(alertName),
+				i,
+			)
 			alertsToKeep[alertName] = true
 			if err := config.GetClient().Get(ctx, client.ObjectKey{Namespace: prometheusRule.Namespace, Name: alertName}, alert); err != nil {
 				if k8serrors.IsNotFound(err) {
@@ -425,7 +430,7 @@ func prometheusAlertToMetricThreshold(rule prometheus.Rule, priority coralogixv1
 					Threshold:  resource.MustParse("0"),
 					ForOverPct: 100,
 					OfTheLast: coralogixv1beta1.MetricTimeWindow{
-						DynamicDuration: ptr.To(string(ptr.Deref(rule.For, ""))),
+						DynamicDuration: ptr.To(string(ptr.Deref(rule.For, "1m"))),
 					},
 					ConditionType: coralogixv1beta1.MetricThresholdConditionTypeMoreThan,
 				},
@@ -464,6 +469,18 @@ func getOwnerReference(promRule *prometheus.PrometheusRule) metav1.OwnerReferenc
 		Name:       promRule.Name,
 		UID:        promRule.UID,
 	}
+}
+
+// sanitizeName converts any string into a valid Kubernetes resource name
+// according to RFC 1123 (lowercase alphanumeric, '-', or '.').
+func sanitizeName(name string) string {
+	name = strings.ToLower(name)
+	// Replace any invalid characters (anything not a-z, 0-9, '-', or '.') with '-'
+	re := regexp.MustCompile(`[^a-z0-9.-]+`)
+	name = re.ReplaceAllString(name, "-")
+	// Trim leading/trailing non-alphanumeric characters
+	name = strings.Trim(name, "-.")
+	return name
 }
 
 // SetupWithManager sets up the controller with the Manager.

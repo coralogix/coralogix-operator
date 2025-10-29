@@ -61,4 +61,6 @@ Kubernetes: `>=1.16.0-0`
 | serviceMonitor.namespace | string | `""` | If not set, the service monitor will be created in the same namespace as the operator. |
 | serviceMonitor.namespaceSelector.enabled | bool | `false` | Useful when the service monitor is deployed in a different namespace than the operator. |
 | tolerations | list | `[]` | ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/ |
+| volumeMounts | list | `[]` | Additional volumeMounts on the output Deployment definition. |
+| volumes | list | `[]` | Additional volumes on the output Deployment definition. |
 
