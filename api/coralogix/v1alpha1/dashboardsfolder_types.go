@@ -18,11 +18,10 @@ import (
 	"context"
 	"fmt"
 
-	"google.golang.org/protobuf/types/known/wrapperspb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	dashboardsfolders "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/dashboard_folders_service"
 
 	"github.com/coralogix/coralogix-operator/internal/config"
 )
@@ -45,35 +44,36 @@ type DashboardsFolderSpec struct {
 	ParentFolderRef *ResourceRef `json:"parentFolderRef,omitempty"`
 }
 
-func (in *DashboardsFolderSpec) ExtractDashboardsFolderFromSpec(ctx context.Context, namespace string) (*cxsdk.DashboardFolder, error) {
-	dashboardFolder := new(cxsdk.DashboardFolder)
-	dashboardFolder.Name = wrapperspb.String(in.Name)
+func (in *DashboardsFolderSpec) ExtractDashboardsFolderFromSpec(ctx context.Context, namespace string) (*dashboardsfolders.DashboardFolder, error) {
+	folder := &dashboardsfolders.DashboardFolder{
+		Name: dashboardsfolders.PtrString(in.Name),
+	}
 
 	if parentID := in.ParentFolderID; parentID != nil {
-		dashboardFolder.ParentId = wrapperspb.String(*parentID)
+		folder.ParentId = parentID
 	} else if parentRef := in.ParentFolderRef; parentRef != nil {
 		var err error
-		parentId, err := GetFolderIdFromFolderCR(ctx, namespace, *parentRef)
+		folder.ParentId, err = GetFolderIdFromFolderCR(ctx, namespace, *parentRef)
 		if err != nil {
 			return nil, err
 		}
-		dashboardFolder.ParentId = wrapperspb.String(parentId)
 	}
-	return dashboardFolder, nil
+
+	return folder, nil
 }
 
-func GetFolderIdFromFolderCR(ctx context.Context, namespace string, parentRef ResourceRef) (string, error) {
+func GetFolderIdFromFolderCR(ctx context.Context, namespace string, parentRef ResourceRef) (*string, error) {
 	df := &DashboardsFolder{}
 	if parentRef.Namespace != nil {
 		namespace = *parentRef.Namespace
 	}
 	if err := config.GetClient().Get(ctx, client.ObjectKey{Name: parentRef.Name, Namespace: namespace}, df); err != nil {
-		return "", fmt.Errorf("failed to get DashboardsFolder: %w", err)
+		return nil, fmt.Errorf("failed to get DashboardsFolder: %w", err)
 	}
 	if df.Status.ID == nil || *df.Status.ID == "" {
-		return "", fmt.Errorf("failed to get DashboardsFolder ID")
+		return nil, fmt.Errorf("failed to get DashboardsFolder ID")
 	}
-	return *df.Status.ID, nil
+	return df.Status.ID, nil
 }
 
 type DashboardFolderRefBackendRef struct {

@@ -93,7 +93,7 @@ func expandDashboardFolder(ctx context.Context, namespace string, in *DashboardS
 			if err != nil {
 				return nil, err
 			}
-			folderID = &dashboards.UUID{Value: &id}
+			folderID = &dashboards.UUID{Value: id}
 		} else {
 			return nil, fmt.Errorf("folderRef.BackendRef or folderRef.ResourceRef is required")
 		}

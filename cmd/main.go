@@ -239,7 +239,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.DashboardsFolderReconciler{
-		DashboardsFoldersClient: clientSet.DashboardsFolders(),
+		DashboardsFoldersClient: oapiClientSet.DashboardFolders(),
 		Interval:                cfg.ReconcileIntervals[utils.DashboardsFolderKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DashboardsFolder")
