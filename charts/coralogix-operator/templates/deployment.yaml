@@ -29,6 +29,10 @@ spec:
       serviceAccountName: {{ include "coralogixOperator.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.securityContext | nindent 8 }}
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
@@ -80,3 +84,7 @@ spec:
           {{- toYaml .Values.coralogixOperator.resources | nindent 12 }}
         securityContext:
           {{- toYaml .Values.coralogixOperator.securityContext | nindent 12 }}
+        {{- with .Values.volumeMounts }}
+        volumeMounts:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
