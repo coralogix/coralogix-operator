@@ -19,7 +19,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	targets "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/target_service"
 )
 
 // ArchiveLogsTargetSpec defines the desired state of a Coralogix archive logs target.
@@ -63,15 +63,13 @@ type ArchiveLogsTargetStatus struct {
 	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
-func (s *ArchiveLogsTargetSpec) ExtractSetTargetRequest(isTargetActive bool) (*cxsdk.SetTargetRequest, error) {
+func (s *ArchiveLogsTargetSpec) ExtractSetTargetRequest(isTargetActive bool) (*targets.SetTargetResponse, error) {
 	if s.S3Target != nil {
-		return &cxsdk.SetTargetRequest{
+		return &targets.SetTargetResponse{
 			IsActive: isTargetActive,
-			TargetSpec: &cxsdk.SetS3TargetRequest{
-				S3: &cxsdk.Target{
-					Region: &s.S3Target.Region,
-					Bucket: s.S3Target.BucketName,
-				},
+			S3: &targets.S3TargetSpec{
+				Region: &s.S3Target.Region,
+				Bucket: s.S3Target.BucketName,
 			},
 		}, nil
 	}

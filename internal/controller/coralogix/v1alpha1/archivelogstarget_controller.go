@@ -20,21 +20,22 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/protobuf/encoding/protojson"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	oapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	targets "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/target_service"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // ArchiveLogsTargetReconciler reconciles a ArchiveLogsTarget object
 type ArchiveLogsTargetReconciler struct {
-	ArchiveLogsTargetsClient *cxsdk.ArchiveLogsClient
+	ArchiveLogsTargetsClient *targets.TargetServiceAPIService
 	ArchiveRetentionsClient  *cxsdk.ArchiveRetentionsClient
 	Interval                 time.Duration
 }
@@ -65,16 +66,19 @@ func (r *ArchiveLogsTargetReconciler) HandleCreation(ctx context.Context, log lo
 	if err != nil {
 		return fmt.Errorf("error on extracting create archivelogstarget request: %w", err)
 	}
-	log.Info("Creating remote archivelogstarget", "archivelogstarget", protojson.Format(createRequest))
-	createResponse, err := r.ArchiveLogsTargetsClient.Update(ctx, createRequest)
+	log.Info("Creating remote archivelogstarget", "archivelogstarget", utils.FormatJSON(createRequest))
+	createResponse, httpResp, err := r.ArchiveLogsTargetsClient.
+		S3TargetServiceSetTarget(ctx).
+		SetTargetResponse(*createRequest).
+		Execute()
 	if err != nil {
-		return fmt.Errorf("error on creating remote archivelogstarget: %w", err)
+		return fmt.Errorf("error on creating remote archivelogstarget: %w", oapicxsdk.NewAPIError(httpResp, err))
 	}
 	_, err = r.ArchiveRetentionsClient.Activate(ctx, &cxsdk.ActivateRetentionsRequest{})
 	if err != nil {
 		return fmt.Errorf("error activating archive retentions: %w", err)
 	}
-	log.Info("Remote archivelogstarget created", "response", protojson.Format(createResponse))
+	log.Info("Remote archivelogstarget created", "response", utils.FormatJSON(createResponse))
 
 	id := "archiveLogsTaget"
 	archivelogstarget.Status = coralogixv1alpha1.ArchiveLogsTargetStatus{
@@ -90,12 +94,15 @@ func (r *ArchiveLogsTargetReconciler) HandleUpdate(ctx context.Context, log logr
 	if err != nil {
 		return fmt.Errorf("error on extracting update archivelogstarget request: %w", err)
 	}
-	log.Info("Updating remote archivelogstarget", "archivelogstarget", protojson.Format(updateRequest))
-	updateResponse, err := r.ArchiveLogsTargetsClient.Update(ctx, updateRequest)
+	log.Info("Updating remote archivelogstarget", "archivelogstarget", utils.FormatJSON(updateRequest))
+	updateResponse, httpResp, err := r.ArchiveLogsTargetsClient.
+		S3TargetServiceSetTarget(ctx).
+		SetTargetResponse(*updateRequest).
+		Execute()
 	if err != nil {
-		return err
+		return oapicxsdk.NewAPIError(httpResp, err)
 	}
-	log.Info("Remote archivelogstarget updated", "archivelogstarget", protojson.Format(updateResponse))
+	log.Info("Remote archivelogstarget updated", "archivelogstarget", utils.FormatJSON(updateResponse))
 
 	return nil
 }
@@ -108,10 +115,15 @@ func (r *ArchiveLogsTargetReconciler) HandleDeletion(ctx context.Context, log lo
 		log.Error(err, "Error extracting delete archivelogstarget request")
 		return fmt.Errorf("error extracting delete archivelogstarget request: %w", err)
 	}
-	_, err = r.ArchiveLogsTargetsClient.Update(ctx, deleteTargetRequest)
-	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.Error(err, "Error deactivating remote archivelogstarget")
-		return fmt.Errorf("error deactivating remote archivelogstarget %w", err)
+	_, httpResp, err := r.ArchiveLogsTargetsClient.
+		S3TargetServiceSetTarget(ctx).
+		SetTargetResponse(*deleteTargetRequest).
+		Execute()
+	if err != nil {
+		if apiErr := oapicxsdk.NewAPIError(httpResp, err); !oapicxsdk.IsNotFound(apiErr) {
+			log.Error(err, "Error deactivating remote archivelogstarget")
+			return fmt.Errorf("error deactivating remote archivelogstarget %w", apiErr)
+		}
 	}
 	log.Info("archivelogstarget deactivated in remote system")
 	return nil
