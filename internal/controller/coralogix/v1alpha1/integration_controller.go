@@ -17,7 +17,6 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -102,7 +101,7 @@ func (r *IntegrationReconciler) HandleDeletion(ctx context.Context, log logr.Log
 	log.Info("Deleting integration from remote system", "id", *integration.Status.Id)
 	_, httpResp, err := r.IntegrationsClient.IntegrationServiceDeleteIntegration(ctx, *integration.Status.Id).Execute()
 	if err != nil {
-		if apiErr := cxsdk.NewAPIError(httpResp, err); cxsdk.Code(apiErr) != http.StatusNotFound {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
 			log.Error(err, "Error deleting remote integration", "id", *integration.Status.Id)
 			return fmt.Errorf("error deleting remote integration %s: %w", *integration.Status.Id, apiErr)
 		}

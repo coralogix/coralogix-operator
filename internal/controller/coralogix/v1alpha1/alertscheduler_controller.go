@@ -17,7 +17,6 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -106,9 +105,9 @@ func (r *AlertSchedulerReconciler) HandleDeletion(ctx context.Context, log logr.
 		AlertSchedulerRuleServiceDeleteAlertSchedulerRule(ctx, *alertScheduler.Status.ID).
 		Execute()
 	if err != nil {
-		if apiErr := cxsdk.NewAPIError(httpResp, err); cxsdk.Code(apiErr) != http.StatusNotFound {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
 			log.Error(err, "Error deleting remote AlertScheduler", "id", *alertScheduler.Status.ID)
-			return fmt.Errorf("error deleting remote AlertScheduler %s: %w", *alertScheduler.Status.ID, err)
+			return fmt.Errorf("error deleting remote AlertScheduler %s: %w", *alertScheduler.Status.ID, apiErr)
 		}
 	}
 	log.Info("AlertScheduler deleted from remote system", "id", *alertScheduler.Status.ID)

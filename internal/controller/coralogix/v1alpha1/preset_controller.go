@@ -17,7 +17,6 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
@@ -107,7 +106,7 @@ func (r *PresetReconciler) HandleDeletion(ctx context.Context, log logr.Logger, 
 		PresetsServiceDeleteCustomPreset(ctx, ptr.Deref(preset.Status.Id, "")).
 		Execute()
 	if err != nil {
-		if apiErr := cxsdk.NewAPIError(httpResp, err); cxsdk.Code(apiErr) != http.StatusNotFound {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
 			log.Error(err, "Error deleting remote Preset", "id", *preset.Status.Id)
 			return fmt.Errorf("error deleting remote Preset %s: %w", *preset.Status.Id, apiErr)
 		}

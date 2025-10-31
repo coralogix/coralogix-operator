@@ -17,7 +17,6 @@ package coralogixreconciler
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"strconv"
 	"time"
 
@@ -140,7 +139,7 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 	log.Info("Handling update")
 	if err := r.HandleUpdate(ctx, log, obj); err != nil {
 		log.Error(err, "Error handling update")
-		if cxsdk.Code(err) == codes.NotFound || oapisdk.Code(err) == http.StatusNotFound {
+		if cxsdk.Code(err) == codes.NotFound || oapisdk.IsNotFound(err) {
 			log.Info("resource not found on remote")
 			if err := removeField(ctx, obj, "status", "id"); err != nil {
 				log.Error(err, "Error removing id from status")

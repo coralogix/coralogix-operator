@@ -17,7 +17,6 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"strconv"
 	"time"
 
@@ -115,7 +114,7 @@ func (r *OutboundWebhookReconciler) HandleDeletion(ctx context.Context, log logr
 	_, httpResp, err := r.OutboundWebhooksClient.OutgoingWebhooksServiceDeleteOutgoingWebhook(ctx, *outboundWebhook.Status.ID).
 		Execute()
 	if err != nil {
-		if apiErr := cxsdk.NewAPIError(httpResp, err); cxsdk.Code(apiErr) != http.StatusNotFound {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
 			log.Error(apiErr, "Error deleting remote outbound-webhook", "id", *outboundWebhook.Status.ID)
 			return fmt.Errorf("error deleting remote outbound-webhook %s: %w", *outboundWebhook.Status.ID, apiErr)
 		}

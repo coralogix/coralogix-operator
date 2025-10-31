@@ -17,7 +17,6 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -112,9 +111,9 @@ func (r *DashboardReconciler) HandleDeletion(ctx context.Context, log logr.Logge
 		DashboardsServiceDeleteDashboard(ctx, id).
 		Execute()
 	if err != nil {
-		if apiErr := cxsdk.NewAPIError(httpResp, err); cxsdk.Code(apiErr) != http.StatusNotFound {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
 			log.Error(err, "Error deleting remote dashboard", "id", id)
-			return fmt.Errorf("error deleting remote dashboard %s: %w", id, err)
+			return fmt.Errorf("error deleting remote dashboard %s: %w", id, apiErr)
 		}
 	}
 	log.Info("Dashboard deleted from remote system", "id", id)

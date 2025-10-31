@@ -17,7 +17,6 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"strconv"
 	"time"
 
@@ -113,9 +112,9 @@ func (r *ViewReconciler) HandleDeletion(ctx context.Context, log logr.Logger, ob
 
 	_, httpResp, err := r.ViewsClient.ViewsServiceDeleteView(ctx, int32(id)).Execute()
 	if err != nil {
-		if apiErr := cxsdk.NewAPIError(httpResp, err); cxsdk.Code(apiErr) != http.StatusNotFound {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
 			log.Error(err, "Error deleting remote view", "id", *view.Status.ID)
-			return fmt.Errorf("error deleting remote view %s: %w", *view.Status.ID, err)
+			return fmt.Errorf("error deleting remote view %s: %w", *view.Status.ID, apiErr)
 		}
 	}
 	log.Info("View deleted from remote system", "id", *view.Status.ID)

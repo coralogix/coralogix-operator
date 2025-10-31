@@ -17,7 +17,6 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -106,7 +105,7 @@ func (r *GlobalRouterReconciler) HandleDeletion(ctx context.Context, log logr.Lo
 		GlobalRoutersServiceDeleteGlobalRouter(ctx, ptr.Deref(globalRouter.Status.Id, "")).
 		Execute()
 	if err != nil {
-		if apiErr := cxsdk.NewAPIError(httpResp, err); cxsdk.Code(apiErr) != http.StatusNotFound {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
 			log.Error(err, "Error deleting remote GlobalRouter", "id", *globalRouter.Status.Id)
 			return fmt.Errorf("error deleting remote GlobalRouter %s: %w",
 				*globalRouter.Status.Id, apiErr)

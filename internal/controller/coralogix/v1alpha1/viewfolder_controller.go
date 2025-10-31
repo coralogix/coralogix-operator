@@ -17,7 +17,6 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -104,9 +103,9 @@ func (r *ViewFolderReconciler) HandleDeletion(ctx context.Context, log logr.Logg
 		Execute()
 
 	if err != nil {
-		if apiErr := cxsdk.NewAPIError(httpResp, err); cxsdk.Code(apiErr) != http.StatusNotFound {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
 			log.Error(err, "Error deleting remote ViewFolder", "id", *viewFolder.Status.ID)
-			return fmt.Errorf("error deleting remote ViewFolder %s: %w", *viewFolder.Status.ID, err)
+			return fmt.Errorf("error deleting remote ViewFolder %s: %w", *viewFolder.Status.ID, apiErr)
 		}
 	}
 	log.Info("ViewFolder deleted from remote system", "id", *viewFolder.Status.ID)

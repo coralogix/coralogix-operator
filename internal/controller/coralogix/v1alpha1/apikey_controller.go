@@ -17,7 +17,6 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -144,8 +143,8 @@ func (r *ApiKeyReconciler) HandleDeletion(ctx context.Context, log logr.Logger, 
 		ApiKeysServiceDeleteApiKey(ctx, *apiKeyId).
 		Execute()
 	if err != nil {
-		if apiErr := cxsdk.NewAPIError(httpResp, err); cxsdk.Code(apiErr) != http.StatusNotFound {
-			log.Error(err, "Error on deleting remote api-key", "id", apiKeyId)
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+			log.Error(apiErr, "Error on deleting remote api-key", "id", apiKeyId)
 			return fmt.Errorf("error to delete remote api-key -\n%v", apiKeyId)
 		}
 	}

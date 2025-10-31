@@ -17,7 +17,6 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -108,7 +107,7 @@ func (r *ConnectorReconciler) HandleDeletion(ctx context.Context, log logr.Logge
 		Execute()
 
 	if err != nil {
-		if apiErr := cxsdk.NewAPIError(httpResp, err); cxsdk.Code(apiErr) != http.StatusNotFound {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
 			log.Error(apiErr, "Error deleting remote Connector", "id", *connector.Status.Id)
 			return fmt.Errorf("error deleting remote Connector %s: %w", *connector.Status.Id, apiErr)
 		}

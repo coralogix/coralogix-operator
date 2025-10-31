@@ -17,7 +17,6 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/coralogix/coralogix-operator/internal/utils"
@@ -120,9 +119,9 @@ func (r *DashboardsFolderReconciler) HandleDeletion(ctx context.Context, log log
 		DashboardFoldersServiceDeleteDashboardFolder(context.Background(), *id).
 		Execute()
 	if err != nil {
-		if apiErr := cxsdk.NewAPIError(httpResp, err); cxsdk.Code(apiErr) != http.StatusNotFound {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
 			log.Error(err, "Error deleting remote dashboards-folder", "id", id)
-			return fmt.Errorf("error deleting remote dashboards-folder %s: %w", *id, err)
+			return fmt.Errorf("error deleting remote dashboards-folder %s: %w", *id, apiErr)
 		}
 	}
 	log.Info("Dashboards-folder deleted from remote", "id", id)

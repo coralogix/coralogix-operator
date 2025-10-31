@@ -17,7 +17,6 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
@@ -110,7 +109,7 @@ func (r *IPAccessReconciler) HandleDeletion(ctx context.Context, log logr.Logger
 		Id(*id).
 		Execute()
 	if err != nil {
-		if apiErr := cxsdk.NewAPIError(httpResp, err); cxsdk.Code(apiErr) != http.StatusNotFound {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
 			log.Error(err, "Error deleting remote IpAccess", "id", *ipAccess.Status.ID)
 			return fmt.Errorf("error deleting remote IpAccess %s: %w", *ipAccess.Status.ID, apiErr)
 		}

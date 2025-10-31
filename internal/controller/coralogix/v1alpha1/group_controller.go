@@ -17,7 +17,6 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"strconv"
 	"time"
 
@@ -113,9 +112,9 @@ func (r *GroupReconciler) HandleDeletion(ctx context.Context, log logr.Logger, o
 		TeamPermissionsMgmtServiceDeleteTeamGroup(ctx, int64(id)).
 		Execute()
 	if err != nil {
-		if apiErr := oapicxsdk.NewAPIError(httpResp, err); cxsdk.Code(apiErr) != http.StatusNotFound {
+		if apiErr := oapicxsdk.NewAPIError(httpResp, err); !oapicxsdk.IsNotFound(apiErr) {
 			log.Error(err, "Error deleting remote group", "id", *group.Status.ID)
-			return fmt.Errorf("error deleting remote group %s: %w", *group.Status.ID, err)
+			return fmt.Errorf("error deleting remote group %s: %w", *group.Status.ID, apiErr)
 		}
 	}
 	log.Info("Group deleted from remote system", "id", *group.Status.ID)
