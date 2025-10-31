@@ -25,6 +25,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	groups "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/team_permissions_management_service"
+
 	"github.com/coralogix/coralogix-operator/internal/config"
 )
 
@@ -79,7 +81,7 @@ type ResourceRef struct {
 
 func (g *Group) ExtractCreateGroupRequest(
 	ctx context.Context,
-	cxClient *cxsdk.ClientSet) (*cxsdk.CreateTeamGroupRequest, error) {
+	cxClient *cxsdk.ClientSet) (*groups.CreateTeamGroupRequest, error) {
 	usersIds, err := g.ExtractUsersIDs(ctx, cxClient)
 	if err != nil {
 		return nil, err
@@ -95,8 +97,8 @@ func (g *Group) ExtractCreateGroupRequest(
 		return nil, err
 	}
 
-	return &cxsdk.CreateTeamGroupRequest{
-		Name:           g.Spec.Name,
+	return &groups.CreateTeamGroupRequest{
+		Name:           groups.PtrString(g.Spec.Name),
 		Description:    g.Spec.Description,
 		UserIds:        usersIds,
 		RoleIds:        rolesIds,
@@ -106,7 +108,7 @@ func (g *Group) ExtractCreateGroupRequest(
 
 func (g *Group) ExtractUpdateGroupRequest(
 	ctx context.Context, cxClient *cxsdk.ClientSet,
-	groupID string) (*cxsdk.UpdateTeamGroupRequest, error) {
+	groupID string) (*groups.UpdateTeamGroupRequest, error) {
 	usersIds, err := g.ExtractUsersIDs(ctx, cxClient)
 	if err != nil {
 		return nil, err
@@ -127,17 +129,17 @@ func (g *Group) ExtractUpdateGroupRequest(
 		return nil, err
 	}
 
-	return &cxsdk.UpdateTeamGroupRequest{
-		GroupId:        ptr.To(cxsdk.TeamGroupID{Id: uint32(id)}),
-		Name:           g.Spec.Name,
+	return &groups.UpdateTeamGroupRequest{
+		GroupId:        ptr.To(groups.TeamGroupId{Id: groups.PtrInt64(int64(id))}),
+		Name:           groups.PtrString(g.Spec.Name),
 		Description:    g.Spec.Description,
-		UserUpdates:    ptr.To(cxsdk.UpdateTeamGroupRequestUserUpdates{UserIds: usersIds}),
-		RoleUpdates:    ptr.To(cxsdk.UpdateTeamGroupRequestRoleUpdates{RoleIds: rolesIds}),
+		UserUpdates:    ptr.To(groups.UserUpdates{UserIds: usersIds}),
+		RoleUpdates:    ptr.To(groups.RoleUpdates{RoleIds: rolesIds}),
 		NextGenScopeId: scopeId,
 	}, nil
 }
 
-func (g *Group) ExtractUsersIDs(ctx context.Context, cxClient *cxsdk.ClientSet) ([]*cxsdk.UserID, error) {
+func (g *Group) ExtractUsersIDs(ctx context.Context, cxClient *cxsdk.ClientSet) ([]groups.V1UserId, error) {
 	if g.Spec.Members == nil {
 		return nil, nil
 	}
@@ -147,14 +149,14 @@ func (g *Group) ExtractUsersIDs(ctx context.Context, cxClient *cxsdk.ClientSet) 
 		return nil, err
 	}
 
-	var usersIDs []*cxsdk.UserID
+	var usersIDs []groups.V1UserId
 	var errs error
 	for _, member := range g.Spec.Members {
 		found := false
 		for _, user := range users {
 			if user.UserName == member.UserName {
 				found = true
-				usersIDs = append(usersIDs, &cxsdk.UserID{Id: *user.ID})
+				usersIDs = append(usersIDs, groups.V1UserId{Id: user.ID})
 				break
 			}
 		}
@@ -170,8 +172,8 @@ func (g *Group) ExtractUsersIDs(ctx context.Context, cxClient *cxsdk.ClientSet) 
 	return usersIDs, nil
 }
 
-func (g *Group) ExtractRolesIds() ([]*cxsdk.RoleID, error) {
-	var rolesIds []*cxsdk.RoleID
+func (g *Group) ExtractRolesIds() ([]groups.RoleId, error) {
+	var rolesIds []groups.RoleId
 	var errs error
 	for _, customRole := range g.Spec.CustomRoles {
 		roleID, err := g.getRoleIDFromCustomRole(customRole)
@@ -179,7 +181,7 @@ func (g *Group) ExtractRolesIds() ([]*cxsdk.RoleID, error) {
 			errs = errors.Join(errs, err)
 			continue
 		}
-		rolesIds = append(rolesIds, roleID)
+		rolesIds = append(rolesIds, *roleID)
 	}
 
 	if errs != nil {
@@ -189,7 +191,7 @@ func (g *Group) ExtractRolesIds() ([]*cxsdk.RoleID, error) {
 	return rolesIds, nil
 }
 
-func (g *Group) getRoleIDFromCustomRole(customRole GroupCustomRole) (*cxsdk.RoleID, error) {
+func (g *Group) getRoleIDFromCustomRole(customRole GroupCustomRole) (*groups.RoleId, error) {
 	var namespace string
 	if customRole.ResourceRef.Namespace != nil {
 		namespace = *customRole.ResourceRef.Namespace
@@ -215,7 +217,7 @@ func (g *Group) getRoleIDFromCustomRole(customRole GroupCustomRole) (*cxsdk.Role
 		return nil, err
 	}
 
-	return &cxsdk.RoleID{Id: uint32(roleID)}, nil
+	return &groups.RoleId{Id: groups.PtrInt64(int64(roleID))}, nil
 }
 
 func (g *Group) ExtractScopeId() (*string, error) {

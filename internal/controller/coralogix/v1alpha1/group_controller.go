@@ -17,17 +17,19 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/coralogix/coralogix-operator/internal/utils"
 	"github.com/go-logr/logr"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/protobuf/encoding/protojson"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	oapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	groups "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/team_permissions_management_service"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/config"
@@ -36,8 +38,9 @@ import (
 
 // GroupReconciler reconciles a Group object
 type GroupReconciler struct {
-	CXClientSet *cxsdk.ClientSet
-	Interval    time.Duration
+	GroupsClient *groups.TeamPermissionsManagementServiceAPIService
+	CXClientSet  *cxsdk.ClientSet
+	Interval     time.Duration
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=groups,verbs=get;list;watch;create;update;patch;delete
@@ -62,15 +65,18 @@ func (r *GroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 	if err != nil {
 		return fmt.Errorf("error on extracting create request: %w", err)
 	}
-	log.Info("Creating remote group", "group", protojson.Format(createRequest))
-	createResponse, err := r.CXClientSet.Groups().Create(ctx, createRequest)
+	log.Info("Creating remote group", "group", utils.FormatJSON(createRequest))
+	createResponse, httpResp, err := r.GroupsClient.
+		TeamPermissionsMgmtServiceCreateTeamGroup(ctx).
+		CreateTeamGroupRequest(*createRequest).
+		Execute()
 	if err != nil {
-		return fmt.Errorf("error on creating remote group: %w", err)
+		return fmt.Errorf("error on creating remote group: %w", oapicxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote group created", "group", protojson.Format(createResponse))
+	log.Info("Remote group created", "group", utils.FormatJSON(createResponse))
 
 	group.Status = coralogixv1alpha1.GroupStatus{
-		ID: ptr.To(strconv.Itoa(int(createResponse.GroupId.Id))),
+		ID: ptr.To(strconv.Itoa(int(*createResponse.GroupId.Id))),
 	}
 
 	return nil
@@ -82,12 +88,15 @@ func (r *GroupReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
 	}
-	log.Info("Updating remote group", "group", protojson.Format(updateRequest))
-	updateResponse, err := r.CXClientSet.Groups().Update(ctx, updateRequest)
+	log.Info("Updating remote group", "group", utils.FormatJSON(updateRequest))
+	updateResponse, httpResp, err := r.GroupsClient.
+		TeamPermissionsMgmtServiceUpdateTeamGroup(ctx).
+		UpdateTeamGroupRequest(*updateRequest).
+		Execute()
 	if err != nil {
-		return err
+		return oapicxsdk.NewAPIError(httpResp, err)
 	}
-	log.Info("Remote group updated", "group", protojson.Format(updateResponse))
+	log.Info("Remote group updated", "group", utils.FormatJSON(updateResponse))
 
 	return nil
 }
@@ -100,10 +109,14 @@ func (r *GroupReconciler) HandleDeletion(ctx context.Context, log logr.Logger, o
 		return fmt.Errorf("error on converting custom-role id to int: %w", err)
 	}
 
-	_, err = r.CXClientSet.Groups().Delete(ctx, &cxsdk.DeleteTeamGroupRequest{GroupId: &cxsdk.TeamGroupID{Id: uint32(id)}})
-	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.Error(err, "Error deleting remote group", "id", *group.Status.ID)
-		return fmt.Errorf("error deleting remote group %s: %w", *group.Status.ID, err)
+	_, httpResp, err := r.GroupsClient.
+		TeamPermissionsMgmtServiceDeleteTeamGroup(ctx, int64(id)).
+		Execute()
+	if err != nil {
+		if apiErr := oapicxsdk.NewAPIError(httpResp, err); cxsdk.Code(apiErr) != http.StatusNotFound {
+			log.Error(err, "Error deleting remote group", "id", *group.Status.ID)
+			return fmt.Errorf("error deleting remote group %s: %w", *group.Status.ID, err)
+		}
 	}
 	log.Info("Group deleted from remote system", "id", *group.Status.ID)
 	return nil
