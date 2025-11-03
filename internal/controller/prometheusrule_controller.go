@@ -16,6 +16,8 @@ package controllers
 
 import (
 	"context"
+	"crypto/sha1"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"reflect"
@@ -42,6 +44,8 @@ import (
 	"github.com/coralogix/coralogix-operator/internal/config"
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
+
+const managedByLabelKey = "app.kubernetes.io/managed-by"
 
 //+kubebuilder:rbac:groups=monitoring.coreos.com,resources=prometheusrules,verbs=get;list;watch
 
@@ -121,7 +125,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleRecordingRuleToCxRecordi
 			recordingRuleGroupSet.Name = prometheusRule.Name
 			recordingRuleGroupSet.Namespace = prometheusRule.Namespace
 			recordingRuleGroupSet.Labels = prometheusRule.Labels
-			recordingRuleGroupSet.Labels["app.kubernetes.io/managed-by"] = prometheusRule.Name
+			recordingRuleGroupSet.Labels[managedByLabelKey] = truncateLabelValue(prometheusRule.Name)
 			recordingRuleGroupSet.OwnerReferences = []metav1.OwnerReference{getOwnerReference(prometheusRule)}
 			recordingRuleGroupSet.Spec = desiredRecordingRuleGroupSetSpec
 			if err = config.GetClient().Create(ctx, recordingRuleGroupSet); err != nil {
@@ -135,7 +139,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleRecordingRuleToCxRecordi
 
 	updated := false
 	desiredLabels := prometheusRule.Labels
-	desiredLabels["app.kubernetes.io/managed-by"] = prometheusRule.Name
+	desiredLabels[managedByLabelKey] = truncateLabelValue(prometheusRule.Name)
 	if !reflect.DeepEqual(recordingRuleGroupSet.Labels, desiredLabels) {
 		recordingRuleGroupSet.Labels = desiredLabels
 		updated = true
@@ -236,7 +240,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 					alert.Name = alertName
 					alert.Namespace = prometheusRule.Namespace
 					alert.Labels = prometheusRule.Labels
-					alert.Labels["app.kubernetes.io/managed-by"] = prometheusRule.Name
+					alert.Labels[managedByLabelKey] = truncateLabelValue(prometheusRule.Name)
 					alert.OwnerReferences = []metav1.OwnerReference{getOwnerReference(prometheusRule)}
 					alert.Spec = prometheusAlertingRuleToAlertSpec(&rule)
 					if err = config.GetClient().Create(ctx, alert); err != nil {
@@ -250,7 +254,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 
 			updated := false
 			desiredLabels := prometheusRule.Labels
-			desiredLabels["app.kubernetes.io/managed-by"] = prometheusRule.Name
+			desiredLabels[managedByLabelKey] = truncateLabelValue(prometheusRule.Name)
 			if !reflect.DeepEqual(alert.Labels, desiredLabels) {
 				alert.Labels = desiredLabels
 				updated = true
@@ -298,7 +302,11 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 	}
 
 	var childAlerts coralogixv1beta1.AlertList
-	if err := config.GetClient().List(ctx, &childAlerts, client.InNamespace(prometheusRule.Namespace), client.MatchingLabels{"app.kubernetes.io/managed-by": prometheusRule.Name}); err != nil {
+	if err := config.GetClient().List(
+		ctx,
+		&childAlerts,
+		client.InNamespace(prometheusRule.Namespace),
+		client.MatchingLabels{managedByLabelKey: truncateLabelValue(prometheusRule.Name)}); err != nil {
 		return fmt.Errorf("received an error while trying to list Alerts: %w", err)
 	}
 
@@ -318,7 +326,11 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 
 func (r *PrometheusRuleReconciler) deleteCxAlerts(ctx context.Context, prometheusRule *prometheus.PrometheusRule) error {
 	var childAlerts coralogixv1beta1.AlertList
-	err := config.GetClient().List(ctx, &childAlerts, client.InNamespace(prometheusRule.Namespace), client.MatchingLabels{"app.kubernetes.io/managed-by": prometheusRule.Name})
+	err := config.GetClient().List(
+		ctx,
+		&childAlerts,
+		client.InNamespace(prometheusRule.Namespace),
+		client.MatchingLabels{managedByLabelKey: truncateLabelValue(prometheusRule.Name)})
 	if err != nil {
 		return fmt.Errorf("received an error while trying to list Alerts: %w", err)
 	}
@@ -481,6 +493,15 @@ func sanitizeName(name string) string {
 	// Trim leading/trailing non-alphanumeric characters
 	name = strings.Trim(name, "-.")
 	return name
+}
+
+// truncateLabelValue ensures label values stay under 63 chars.
+func truncateLabelValue(value string) string {
+	if len(value) <= 63 {
+		return value
+	}
+	h := sha1.Sum([]byte(value))
+	return fmt.Sprintf("%s-%s", value[:40], hex.EncodeToString(h[:])[:8])
 }
 
 // SetupWithManager sets up the controller with the Manager.
