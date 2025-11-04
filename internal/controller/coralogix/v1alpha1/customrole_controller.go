@@ -112,7 +112,7 @@ func (r *CustomRoleReconciler) HandleDeletion(ctx context.Context, log logr.Logg
 	if err != nil {
 		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
 			log.Error(err, "Error deleting remote customRole", "id", *customRole.Status.ID)
-			return fmt.Errorf("error deleting remote customRole %s: %w", *customRole.Status.ID, err)
+			return fmt.Errorf("error deleting remote customRole %s: %w", *customRole.Status.ID, apiErr)
 		}
 	}
 	log.Info("CustomRole deleted from remote system", "id", *customRole.Status.ID)

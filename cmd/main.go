@@ -190,7 +190,7 @@ func main() {
 	}
 
 	if err = (&v1alpha1controllers.ScopeReconciler{
-		ScopesClient: clientSet.Scopes(),
+		ScopesClient: oapiClientSet.Scopes(),
 		Interval:     cfg.ReconcileIntervals[utils.ScopeKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Scope")
