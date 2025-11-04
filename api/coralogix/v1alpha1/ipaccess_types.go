@@ -21,10 +21,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var SupportAccessToOpenAPI = map[string]*ipaccess.CoralogixCustomerSupportAccess{
-	"unspecified": ipaccess.CORALOGIXCUSTOMERSUPPORTACCESS_CORALOGIX_CUSTOMER_SUPPORT_ACCESS_UNSPECIFIED.Ptr(),
-	"disabled":    ipaccess.CORALOGIXCUSTOMERSUPPORTACCESS_CORALOGIX_CUSTOMER_SUPPORT_ACCESS_DISABLED.Ptr(),
-	"enabled":     ipaccess.CORALOGIXCUSTOMERSUPPORTACCESS_CORALOGIX_CUSTOMER_SUPPORT_ACCESS_ENABLED.Ptr(),
+var SupportAccessToOpenAPI = map[string]ipaccess.CoralogixCustomerSupportAccess{
+	"unspecified": ipaccess.CORALOGIXCUSTOMERSUPPORTACCESS_CORALOGIX_CUSTOMER_SUPPORT_ACCESS_UNSPECIFIED,
+	"disabled":    ipaccess.CORALOGIXCUSTOMERSUPPORTACCESS_CORALOGIX_CUSTOMER_SUPPORT_ACCESS_DISABLED,
+	"enabled":     ipaccess.CORALOGIXCUSTOMERSUPPORTACCESS_CORALOGIX_CUSTOMER_SUPPORT_ACCESS_ENABLED,
 }
 
 // IPAccessSpec defines the desired state of IPAccess.
@@ -58,7 +58,7 @@ func (i *IPAccess) ExtractCreateIPAccessRequest() (*ipaccess.CreateCompanyIPAcce
 	}
 
 	req := &ipaccess.CreateCompanyIPAccessSettingsRequest{
-		EnableCoralogixCustomerSupportAccess: supportAccess,
+		EnableCoralogixCustomerSupportAccess: supportAccess.Ptr(),
 		IpAccess:                             ExtractIPAccessRules(i.Spec.IPAccess),
 	}
 
@@ -73,7 +73,7 @@ func (i *IPAccess) ExtractReplaceIPAccessRequest() (*ipaccess.ReplaceCompanyIPAc
 
 	req := &ipaccess.ReplaceCompanyIPAccessSettingsRequest{
 		Id:                                   i.Status.ID,
-		EnableCoralogixCustomerSupportAccess: supportAccess,
+		EnableCoralogixCustomerSupportAccess: supportAccess.Ptr(),
 		IpAccess:                             ExtractIPAccessRules(i.Spec.IPAccess),
 	}
 

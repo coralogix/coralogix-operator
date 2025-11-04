@@ -125,10 +125,10 @@ func (p *Preset) HasIDInStatus() bool {
 }
 
 var (
-	schemaToOpenApiPresetConnectorType = map[string]*presets.ConnectorType{
-		"slack":        presets.CONNECTORTYPE_SLACK.Ptr(),
-		"genericHttps": presets.CONNECTORTYPE_GENERIC_HTTPS.Ptr(),
-		"pagerDuty":    presets.CONNECTORTYPE_PAGERDUTY.Ptr(),
+	schemaToOpenApiPresetConnectorType = map[string]presets.ConnectorType{
+		"slack":        presets.CONNECTORTYPE_SLACK,
+		"genericHttps": presets.CONNECTORTYPE_GENERIC_HTTPS,
+		"pagerDuty":    presets.CONNECTORTYPE_PAGERDUTY,
 	}
 	schemaToOpenApiPresetsEntityType = map[string]presets.NotificationCenterEntityType{
 		"alerts": presets.NOTIFICATIONCENTERENTITYTYPE_ALERTS,
@@ -146,7 +146,7 @@ func (p *Preset) ExtractPreset() (*presets.Preset1, error) {
 	if !ok {
 		return nil, fmt.Errorf("invalid connector type %s", p.Spec.ConnectorType)
 	}
-	preset.ConnectorType = connectorType
+	preset.ConnectorType = connectorType.Ptr()
 
 	entityType, ok := schemaToOpenApiPresetsEntityType[p.Spec.EntityType]
 	if !ok {

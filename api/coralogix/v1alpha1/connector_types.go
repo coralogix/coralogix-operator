@@ -110,8 +110,8 @@ var (
 		"genericHttps": connectors.CONNECTORTYPE_GENERIC_HTTPS,
 		"pagerDuty":    connectors.CONNECTORTYPE_PAGERDUTY,
 	}
-	schemaToOpenApiEntityType = map[string]*connectors.NotificationCenterEntityType{
-		"alerts": connectors.NOTIFICATIONCENTERENTITYTYPE_ALERTS.Ptr(),
+	schemaToOpenApiEntityType = map[string]connectors.NotificationCenterEntityType{
+		"alerts": connectors.NOTIFICATIONCENTERENTITYTYPE_ALERTS,
 	}
 )
 
@@ -161,7 +161,7 @@ func ExtractEntityTypeConfigOverrides(overrides []EntityTypeConfigOverrides) ([]
 		}
 
 		entityTypeConfigOverrides := connectors.EntityTypeConfigOverrides{
-			EntityType: entityType,
+			EntityType: entityType.Ptr(),
 		}
 
 		entityTypeConfigOverrides.Fields = ExtractConfigOverridesFields(override.Fields)

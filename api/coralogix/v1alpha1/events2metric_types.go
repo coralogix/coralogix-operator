@@ -96,14 +96,14 @@ const (
 	AggregationTypeSamples AggregationType = "samples"
 )
 
-var AggregationTypeSchemaToOpenAPI = map[AggregationType]*events2metrics.AggType{
-	AggregationTypeMin:       events2metrics.AGGTYPE_AGG_TYPE_MIN.Ptr(),
-	AggregationTypeMax:       events2metrics.AGGTYPE_AGG_TYPE_MAX.Ptr(),
-	AggregationTypeCount:     events2metrics.AGGTYPE_AGG_TYPE_COUNT.Ptr(),
-	AggregationTypeAvg:       events2metrics.AGGTYPE_AGG_TYPE_AVG.Ptr(),
-	AggregationTypeSum:       events2metrics.AGGTYPE_AGG_TYPE_SUM.Ptr(),
-	AggregationTypeHistogram: events2metrics.AGGTYPE_AGG_TYPE_HISTOGRAM.Ptr(),
-	AggregationTypeSamples:   events2metrics.AGGTYPE_AGG_TYPE_SAMPLES.Ptr(),
+var AggregationTypeSchemaToOpenAPI = map[AggregationType]events2metrics.AggType{
+	AggregationTypeMin:       events2metrics.AGGTYPE_AGG_TYPE_MIN,
+	AggregationTypeMax:       events2metrics.AGGTYPE_AGG_TYPE_MAX,
+	AggregationTypeCount:     events2metrics.AGGTYPE_AGG_TYPE_COUNT,
+	AggregationTypeAvg:       events2metrics.AGGTYPE_AGG_TYPE_AVG,
+	AggregationTypeSum:       events2metrics.AGGTYPE_AGG_TYPE_SUM,
+	AggregationTypeHistogram: events2metrics.AGGTYPE_AGG_TYPE_HISTOGRAM,
+	AggregationTypeSamples:   events2metrics.AGGTYPE_AGG_TYPE_SAMPLES,
 }
 
 // AggregationMetadata defines the metadata for aggregation.
@@ -416,7 +416,7 @@ func extractE2mAggregations(aggregations []MetricFieldAggregation) []events2metr
 			metricAggregations = append(metricAggregations, events2metrics.V2Aggregation{
 				V2AggregationSamples: &events2metrics.V2AggregationSamples{
 					Enabled:          events2metrics.PtrBool(aggregation.Enabled),
-					AggType:          AggregationTypeSchemaToOpenAPI[aggregation.AggType],
+					AggType:          AggregationTypeSchemaToOpenAPI[aggregation.AggType].Ptr(),
 					TargetMetricName: events2metrics.PtrString(aggregation.TargetMetricName),
 					Samples: &events2metrics.E2MAggSamples{
 						SampleType: E2MAggSamplesSampleTypeSchemaToOpenAPI[aggregation.AggMetadata.Samples.SampleType],
@@ -427,7 +427,7 @@ func extractE2mAggregations(aggregations []MetricFieldAggregation) []events2metr
 			metricAggregations = append(metricAggregations, events2metrics.V2Aggregation{
 				V2AggregationHistogram: &events2metrics.V2AggregationHistogram{
 					Enabled:          events2metrics.PtrBool(aggregation.Enabled),
-					AggType:          AggregationTypeSchemaToOpenAPI[aggregation.AggType],
+					AggType:          AggregationTypeSchemaToOpenAPI[aggregation.AggType].Ptr(),
 					TargetMetricName: events2metrics.PtrString(aggregation.TargetMetricName),
 					Histogram: &events2metrics.E2MAggHistogram{
 						Buckets: utils.QuantitiesToFloats32(aggregation.AggMetadata.Histogram.Buckets),

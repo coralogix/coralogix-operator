@@ -80,7 +80,7 @@ func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 		return fmt.Errorf("error on creating remote alert: %w", oapicxsdk.NewAPIError(httpResp, err))
 	}
 	log.Info("Remote alert created", "response", utils.FormatJSON(createResponse))
-	alert.Status = coralogixv1beta1.AlertStatus{ID: &createResponse.AlertDef.Id}
+	alert.Status = coralogixv1beta1.AlertStatus{ID: createResponse.AlertDef.Id}
 	return nil
 }
 
@@ -103,8 +103,8 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 	}
 
 	updateRequest := alerts.ReplaceAlertDefinitionRequest{
-		AlertDefProperties: *props,
-		Id:                 *alert.Status.ID,
+		AlertDefProperties: props,
+		Id:                 alert.Status.ID,
 	}
 
 	log.Info("Updating remote alert", "alert", utils.FormatJSON(updateRequest))

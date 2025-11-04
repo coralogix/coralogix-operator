@@ -100,7 +100,6 @@ func expandDashboardFolder(ctx context.Context, namespace string, in *DashboardS
 	}
 
 	switch v := dashboard.GetActualInstance().(type) {
-
 	case *dashboards.DashboardFiveMinutesFolderIdAbsoluteTimeFrame:
 		v.FolderId = folderID
 	case *dashboards.DashboardFiveMinutesFolderIdRelativeTimeFrame:

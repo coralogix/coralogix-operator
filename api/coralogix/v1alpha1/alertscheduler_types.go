@@ -195,14 +195,14 @@ type AlertSchedulerStatus struct {
 }
 
 var (
-	schemaToOpenAPIScheduleOperation = map[string]*alertscheduler.ScheduleOperation{
-		"activate": alertscheduler.SCHEDULEOPERATION_SCHEDULE_OPERATION_ACTIVATE.Ptr(),
-		"mute":     alertscheduler.SCHEDULEOPERATION_SCHEDULE_OPERATION_MUTE.Ptr(),
+	schemaToOpenAPIScheduleOperation = map[string]alertscheduler.ScheduleOperation{
+		"activate": alertscheduler.SCHEDULEOPERATION_SCHEDULE_OPERATION_ACTIVATE,
+		"mute":     alertscheduler.SCHEDULEOPERATION_SCHEDULE_OPERATION_MUTE,
 	}
-	schemaToOpenAPIDurationFrequency = map[string]*alertscheduler.DurationFrequency{
-		"minutes": alertscheduler.DURATIONFREQUENCY_DURATION_FREQUENCY_MINUTE.Ptr(),
-		"hours":   alertscheduler.DURATIONFREQUENCY_DURATION_FREQUENCY_HOUR.Ptr(),
-		"days":    alertscheduler.DURATIONFREQUENCY_DURATION_FREQUENCY_DAY.Ptr(),
+	schemaToOpenAPIDurationFrequency = map[string]alertscheduler.DurationFrequency{
+		"minutes": alertscheduler.DURATIONFREQUENCY_DURATION_FREQUENCY_MINUTE,
+		"hours":   alertscheduler.DURATIONFREQUENCY_DURATION_FREQUENCY_HOUR,
+		"days":    alertscheduler.DURATIONFREQUENCY_DURATION_FREQUENCY_DAY,
 	}
 	daysToOpenAPIValue = map[Day]int32{
 		"Sunday":    1,
@@ -375,7 +375,7 @@ func (a *AlertScheduler) extractSchedule() (*alertscheduler.Schedule, error) {
 		}
 		return &alertscheduler.Schedule{
 			ScheduleOneTime: &alertscheduler.ScheduleOneTime{
-				ScheduleOperation: schemaToOpenAPIScheduleOperation[a.Spec.Schedule.Operation],
+				ScheduleOperation: schemaToOpenAPIScheduleOperation[a.Spec.Schedule.Operation].Ptr(),
 				OneTime:           oneTime,
 			},
 		}, nil
@@ -386,7 +386,7 @@ func (a *AlertScheduler) extractSchedule() (*alertscheduler.Schedule, error) {
 		}
 		return &alertscheduler.Schedule{
 			ScheduleRecurring: &alertscheduler.ScheduleRecurring{
-				ScheduleOperation: schemaToOpenAPIScheduleOperation[a.Spec.Schedule.Operation],
+				ScheduleOperation: schemaToOpenAPIScheduleOperation[a.Spec.Schedule.Operation].Ptr(),
 				Recurring:         recurring,
 			},
 		}, nil
@@ -491,7 +491,7 @@ func extractTimeFrame(timeFrame *TimeFrame) (*alertscheduler.Timeframe, error) {
 				Timezone:  alertscheduler.PtrString(timeFrame.Timezone),
 				Duration: &alertscheduler.V1Duration{
 					ForOver:   alertscheduler.PtrInt32(timeFrame.Duration.ForOver),
-					Frequency: schemaToOpenAPIDurationFrequency[timeFrame.Duration.Frequency],
+					Frequency: schemaToOpenAPIDurationFrequency[timeFrame.Duration.Frequency].Ptr(),
 				},
 			},
 		}, nil

@@ -38,10 +38,10 @@ type ScopeSpec struct {
 	DefaultExpression string `json:"defaultExpression"`
 }
 
-var entityTypeSchemaToOpenAPI = map[string]*scopes.V1EntityType{
-	"logs":        scopes.V1ENTITYTYPE_ENTITY_TYPE_LOGS.Ptr(),
-	"spans":       scopes.V1ENTITYTYPE_ENTITY_TYPE_SPANS.Ptr(),
-	"unspecified": scopes.V1ENTITYTYPE_ENTITY_TYPE_UNSPECIFIED.Ptr(),
+var entityTypeSchemaToOpenAPI = map[string]scopes.V1EntityType{
+	"logs":        scopes.V1ENTITYTYPE_ENTITY_TYPE_LOGS,
+	"spans":       scopes.V1ENTITYTYPE_ENTITY_TYPE_SPANS,
+	"unspecified": scopes.V1ENTITYTYPE_ENTITY_TYPE_UNSPECIFIED,
 }
 
 // ScopeFilter defines a filter to include data in a scope.
@@ -87,7 +87,7 @@ func (s *ScopeSpec) ExtractScopeFilters() ([]scopes.ScopesV1Filter, error) {
 	var filters []scopes.ScopesV1Filter
 	for _, f := range s.Filters {
 		filters = append(filters, scopes.ScopesV1Filter{
-			EntityType: entityTypeSchemaToOpenAPI[f.EntityType],
+			EntityType: entityTypeSchemaToOpenAPI[f.EntityType].Ptr(),
 			Expression: scopes.PtrString(f.Expression),
 		})
 	}
