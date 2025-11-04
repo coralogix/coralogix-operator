@@ -15,12 +15,10 @@
 package v1alpha1
 
 import (
-	"strconv"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	customroles "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/role_management_service"
 )
 
 // CustomRoleSpec defines the desired state of a Coralogix Custom Role.
@@ -39,26 +37,23 @@ type CustomRoleSpec struct {
 	Permissions []string `json:"permissions"`
 }
 
-func (s *CustomRoleSpec) ExtractCreateCustomRoleRequest() *cxsdk.CreateRoleRequest {
-	return &cxsdk.CreateRoleRequest{
-		Name:        s.Name,
-		Description: s.Description,
-		ParentRole:  ptr.To(cxsdk.CreateRoleRequestParentRoleName{ParentRoleName: s.ParentRoleName}),
-		Permissions: s.Permissions,
+func (s *CustomRoleSpec) ExtractCreateCustomRoleRequest() *customroles.RoleManagementServiceCreateRoleRequest {
+	return &customroles.RoleManagementServiceCreateRoleRequest{
+		CreateRoleRequestParentRoleName: &customroles.CreateRoleRequestParentRoleName{
+			Name:           customroles.PtrString(s.Name),
+			Description:    customroles.PtrString(s.Description),
+			ParentRoleName: customroles.PtrString(s.ParentRoleName),
+			Permissions:    s.Permissions,
+		},
 	}
 }
 
-func (s *CustomRoleSpec) ExtractUpdateCustomRoleRequest(id string) (*cxsdk.UpdateRoleRequest, error) {
-	roleID, err := strconv.Atoi(id)
-	if err != nil {
-		return &cxsdk.UpdateRoleRequest{}, err
-	}
-	return &cxsdk.UpdateRoleRequest{
-		RoleId:         uint32(roleID),
+func (s *CustomRoleSpec) ExtractUpdateCustomRoleRequest() *customroles.RoleManagementServiceUpdateRoleRequest {
+	return &customroles.RoleManagementServiceUpdateRoleRequest{
 		NewName:        ptr.To(s.Name),
 		NewDescription: ptr.To(s.Description),
-		NewPermissions: ptr.To(cxsdk.RolePermissions{Permissions: s.Permissions}),
-	}, nil
+		NewPermissions: ptr.To(customroles.V2Permissions{Permissions: s.Permissions}),
+	}
 }
 
 // CustomRoleStatus defines the observed state of CustomRole.

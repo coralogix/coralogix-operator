@@ -21,22 +21,22 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/protobuf/encoding/protojson"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	customroles "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/role_management_service"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/config"
 	"github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // CustomRoleReconciler reconciles a CustomRole object
 type CustomRoleReconciler struct {
-	CustomRolesClient *cxsdk.RolesClient
+	CustomRolesClient *customroles.RoleManagementServiceAPIService
 	Interval          time.Duration
 }
 
@@ -59,15 +59,18 @@ func (r *CustomRoleReconciler) RequeueInterval() time.Duration {
 func (r *CustomRoleReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	customRole := obj.(*coralogixv1alpha1.CustomRole)
 	createRequest := customRole.Spec.ExtractCreateCustomRoleRequest()
-	log.Info("Creating remote customRole", "customRole", protojson.Format(createRequest))
-	createResponse, err := r.CustomRolesClient.Create(ctx, createRequest)
+	log.Info("Creating remote customRole", "customRole", utils.FormatJSON(createRequest))
+	createResponse, httpResp, err := r.CustomRolesClient.
+		RoleManagementServiceCreateRole(ctx).
+		RoleManagementServiceCreateRoleRequest(*createRequest).
+		Execute()
 	if err != nil {
-		return fmt.Errorf("error on creating remote customRole: %w", err)
+		return fmt.Errorf("error on creating remote customRole: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote customRole created", "response", protojson.Format(createResponse))
+	log.Info("Remote customRole created", "response", utils.FormatJSON(createResponse))
 
 	customRole.Status = coralogixv1alpha1.CustomRoleStatus{
-		ID: ptr.To(strconv.Itoa(int(createResponse.Id))),
+		ID: ptr.To(strconv.Itoa(int(*createResponse.Id))),
 	}
 
 	return nil
@@ -75,16 +78,23 @@ func (r *CustomRoleReconciler) HandleCreation(ctx context.Context, log logr.Logg
 
 func (r *CustomRoleReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	customRole := obj.(*coralogixv1alpha1.CustomRole)
-	updateRequest, err := customRole.Spec.ExtractUpdateCustomRoleRequest(*customRole.Status.ID)
+	id, err := strconv.Atoi(*customRole.Status.ID)
 	if err != nil {
-		return fmt.Errorf("error on extracting update request: %w", err)
+		return fmt.Errorf("error on converting custom-role id to int: %w", err)
 	}
-	log.Info("Updating remote customRole", "customRole", protojson.Format(updateRequest))
-	updateResponse, err := r.CustomRolesClient.Update(ctx, updateRequest)
+
+	updateRequest := customRole.Spec.ExtractUpdateCustomRoleRequest()
+
+	log.Info("Updating remote customRole", "customRole", utils.FormatJSON(updateRequest))
+	updateResponse, httpResp, err := r.CustomRolesClient.
+		RoleManagementServiceUpdateRole(ctx, int64(id)).
+		RoleManagementServiceUpdateRoleRequest(*updateRequest).
+		Execute()
+
 	if err != nil {
-		return err
+		return cxsdk.NewAPIError(httpResp, err)
 	}
-	log.Info("Remote customRole updated", "customRole", protojson.Format(updateResponse))
+	log.Info("Remote customRole updated", "customRole", utils.FormatJSON(updateResponse))
 
 	return nil
 }
@@ -97,10 +107,13 @@ func (r *CustomRoleReconciler) HandleDeletion(ctx context.Context, log logr.Logg
 		return fmt.Errorf("error on converting custom-role id to int: %w", err)
 	}
 
-	_, err = r.CustomRolesClient.Delete(ctx, &cxsdk.DeleteRoleRequest{RoleId: uint32(id)})
-	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.Error(err, "Error deleting remote customRole", "id", *customRole.Status.ID)
-		return fmt.Errorf("error deleting remote customRole %s: %w", *customRole.Status.ID, err)
+	_, httpResp, err := r.CustomRolesClient.RoleManagementServiceDeleteRole(ctx, int64(id)).
+		Execute()
+	if err != nil {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+			log.Error(err, "Error deleting remote customRole", "id", *customRole.Status.ID)
+			return fmt.Errorf("error deleting remote customRole %s: %w", *customRole.Status.ID, err)
+		}
 	}
 	log.Info("CustomRole deleted from remote system", "id", *customRole.Status.ID)
 	return nil
