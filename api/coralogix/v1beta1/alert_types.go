@@ -30,6 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	oapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 	alerts "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/alert_definitions_service"
 
 	"github.com/coralogix/coralogix-operator/internal/config"
@@ -2161,16 +2162,16 @@ func convertNameToIntegrationID(name string, properties *GetResourceRefPropertie
 }
 
 func fillWebhookNameToId(properties *GetResourceRefProperties) error {
-	log, client, ctx := properties.Log, properties.Clientset.Webhooks(), properties.Ctx
+	log, client, ctx := properties.Log, properties.ClientSet.Webhooks(), properties.Ctx
 	log.V(1).Info("Listing webhooks from the backend")
-	webhooks, err := client.List(ctx, &cxsdk.ListAllOutgoingWebhooksRequest{})
+	webhooks, httpResp, err := client.OutgoingWebhooksServiceListAllOutgoingWebhooks(ctx).Execute()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to list webhooks: %w", oapicxsdk.NewAPIError(httpResp, err))
 	}
 
 	properties.WebhookNameToId = make(map[string]int64)
 	for _, webhook := range webhooks.Deployed {
-		properties.WebhookNameToId[webhook.Name.Value] = int64(webhook.ExternalId.Value)
+		properties.WebhookNameToId[webhook.Name] = webhook.ExternalId
 	}
 
 	return nil
@@ -2817,15 +2818,50 @@ func convertAlertCrNameToID(listingAlertsProperties *GetResourceRefProperties, a
 func convertAlertNameToID(listingAlertsProperties *GetResourceRefProperties, alertName string) (string, error) {
 	if listingAlertsProperties.AlertNameToId == nil {
 		listingAlertsProperties.AlertNameToId = make(map[string]string)
-		log, alertsClient, ctx := listingAlertsProperties.Log, listingAlertsProperties.Clientset.Alerts(), listingAlertsProperties.Ctx
+		log, alertsClient, ctx := listingAlertsProperties.Log, listingAlertsProperties.ClientSet.Alerts(), listingAlertsProperties.Ctx
 		log.V(1).Info("Listing all alerts")
-		listAlertsResp, err := alertsClient.List(ctx, &cxsdk.ListAlertDefsRequest{})
+		listAlertsResp, httpResp, err := alertsClient.AlertDefsServiceListAlertDefs(ctx).Execute()
 		if err != nil {
-			return "", fmt.Errorf("failed to list all alerts %w", err)
+			return "", fmt.Errorf("failed to list all alerts %w", oapicxsdk.NewAPIError(httpResp, err))
 		}
 
 		for _, alert := range listAlertsResp.GetAlertDefs() {
-			listingAlertsProperties.AlertNameToId[alert.AlertDefProperties.Name.Value] = alert.GetId().GetValue()
+			var name string
+
+			props := alert.GetAlertDefProperties()
+			switch {
+			case props.AlertDefPropertiesFlow != nil && props.AlertDefPropertiesFlow.Name != nil:
+				name = *props.AlertDefPropertiesFlow.Name
+			case props.AlertDefPropertiesLogsAnomaly != nil && props.AlertDefPropertiesLogsAnomaly.Name != nil:
+				name = *props.AlertDefPropertiesLogsAnomaly.Name
+			case props.AlertDefPropertiesLogsImmediate != nil && props.AlertDefPropertiesLogsImmediate.Name != nil:
+				name = *props.AlertDefPropertiesLogsImmediate.Name
+			case props.AlertDefPropertiesLogsNewValue != nil && props.AlertDefPropertiesLogsNewValue.Name != nil:
+				name = *props.AlertDefPropertiesLogsNewValue.Name
+			case props.AlertDefPropertiesLogsRatioThreshold != nil && props.AlertDefPropertiesLogsRatioThreshold.Name != nil:
+				name = *props.AlertDefPropertiesLogsRatioThreshold.Name
+			case props.AlertDefPropertiesLogsThreshold != nil && props.AlertDefPropertiesLogsThreshold.Name != nil:
+				name = *props.AlertDefPropertiesLogsThreshold.Name
+			case props.AlertDefPropertiesLogsTimeRelativeThreshold != nil && props.AlertDefPropertiesLogsTimeRelativeThreshold.Name != nil:
+				name = *props.AlertDefPropertiesLogsTimeRelativeThreshold.Name
+			case props.AlertDefPropertiesLogsUniqueCount != nil && props.AlertDefPropertiesLogsUniqueCount.Name != nil:
+				name = *props.AlertDefPropertiesLogsUniqueCount.Name
+			case props.AlertDefPropertiesMetricAnomaly != nil && props.AlertDefPropertiesMetricAnomaly.Name != nil:
+				name = *props.AlertDefPropertiesMetricAnomaly.Name
+			case props.AlertDefPropertiesMetricThreshold != nil && props.AlertDefPropertiesMetricThreshold.Name != nil:
+				name = *props.AlertDefPropertiesMetricThreshold.Name
+			case props.AlertDefPropertiesSloThreshold != nil && props.AlertDefPropertiesSloThreshold.Name != nil:
+				name = *props.AlertDefPropertiesSloThreshold.Name
+			case props.AlertDefPropertiesTracingImmediate != nil && props.AlertDefPropertiesTracingImmediate.Name != nil:
+				name = *props.AlertDefPropertiesTracingImmediate.Name
+			case props.AlertDefPropertiesTracingThreshold != nil && props.AlertDefPropertiesTracingThreshold.Name != nil:
+				name = *props.AlertDefPropertiesTracingThreshold.Name
+			default:
+				log.V(1).Info("Skipping alert with missing name", "alertID", alert.GetId())
+				continue
+			}
+
+			listingAlertsProperties.AlertNameToId[name] = alert.GetId()
 		}
 	}
 
@@ -3271,6 +3307,7 @@ type GetResourceRefProperties struct {
 	AlertNameToId   map[string]string
 	WebhookNameToId map[string]int64
 	Clientset       *cxsdk.ClientSet
+	ClientSet       *oapicxsdk.ClientSet
 	Namespace       string
 }
 

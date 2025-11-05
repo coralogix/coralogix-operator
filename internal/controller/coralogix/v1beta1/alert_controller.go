@@ -36,8 +36,8 @@ import (
 
 // AlertReconciler reconciles a Alert object
 type AlertReconciler struct {
-	AlertsClient       *alerts.AlertDefinitionsServiceAPIService
 	CoralogixClientSet *cxsdk.ClientSet
+	ClientSet          *oapicxsdk.ClientSet
 	Interval           time.Duration
 }
 
@@ -64,6 +64,7 @@ func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 			Ctx:       ctx,
 			Log:       log,
 			Clientset: r.CoralogixClientSet,
+			ClientSet: r.ClientSet,
 			Namespace: alert.Namespace,
 		},
 	)
@@ -72,7 +73,7 @@ func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 	}
 
 	log.Info("Creating remote alert", "alert", utils.FormatJSON(createRequest))
-	createResponse, httpResp, err := r.AlertsClient.
+	createResponse, httpResp, err := r.ClientSet.Alerts().
 		AlertDefsServiceCreateAlertDef(ctx).
 		AlertDefsServiceCreateAlertDefRequest(*createRequest).
 		Execute()
@@ -91,6 +92,7 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 			Ctx:       ctx,
 			Log:       log,
 			Clientset: r.CoralogixClientSet,
+			ClientSet: r.ClientSet,
 			Namespace: alert.Namespace,
 		},
 	)
@@ -108,7 +110,7 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 	}
 
 	log.Info("Updating remote alert", "alert", utils.FormatJSON(updateRequest))
-	updateResponse, httpResp, err := r.AlertsClient.
+	updateResponse, httpResp, err := r.ClientSet.Alerts().
 		AlertDefsServiceReplaceAlertDef(ctx).
 		ReplaceAlertDefinitionRequest(updateRequest).
 		Execute()
@@ -125,7 +127,7 @@ func (r *AlertReconciler) HandleDeletion(ctx context.Context, log logr.Logger, o
 		return fmt.Errorf("alert ID is missing")
 	}
 	log.Info("Deleting alert from remote system", "id", *alert.Status.ID)
-	_, httpResp, err := r.AlertsClient.
+	_, httpResp, err := r.ClientSet.Alerts().
 		AlertDefsServiceDeleteAlertDef(ctx, *alert.Status.ID).
 		Execute()
 	if err != nil {
