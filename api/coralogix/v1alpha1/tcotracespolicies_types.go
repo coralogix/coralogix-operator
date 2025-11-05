@@ -17,15 +17,13 @@ package v1alpha1
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 
-	"google.golang.org/protobuf/types/known/wrapperspb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-
-	utils "github.com/coralogix/coralogix-operator/api/coralogix"
+	tcopolicies "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/policies_service"
 )
 
 // TCOTracesPoliciesSpec defines the desired state of Coralogix TCO policies for traces.
@@ -86,8 +84,10 @@ type TCOPolicyTag struct {
 	RuleType string `json:"ruleType"`
 }
 
-func (s *TCOTracesPoliciesSpec) ExtractOverwriteTracesPoliciesRequest(ctx context.Context, coralogixClientSet *cxsdk.ClientSet) (*cxsdk.AtomicOverwriteSpanPoliciesRequest, error) {
-	var policies []*cxsdk.CreateSpanPolicyRequest
+func (s *TCOTracesPoliciesSpec) ExtractOverwriteTracesPoliciesRequest(
+	ctx context.Context,
+	coralogixClientSet *cxsdk.ClientSet) (*tcopolicies.AtomicOverwriteSpanPoliciesRequest, error) {
+	var policies []tcopolicies.CreateSpanPolicyRequest
 	var errs error
 
 	for _, policy := range s.Policies {
@@ -95,7 +95,7 @@ func (s *TCOTracesPoliciesSpec) ExtractOverwriteTracesPoliciesRequest(ctx contex
 		if err != nil {
 			errs = errors.Join(errs, err)
 		} else {
-			policies = append(policies, policyReq)
+			policies = append(policies, *policyReq)
 		}
 	}
 
@@ -103,16 +103,13 @@ func (s *TCOTracesPoliciesSpec) ExtractOverwriteTracesPoliciesRequest(ctx contex
 		return nil, errs
 	}
 
-	return &cxsdk.AtomicOverwriteSpanPoliciesRequest{Policies: policies}, nil
+	return &tcopolicies.AtomicOverwriteSpanPoliciesRequest{Policies: policies}, nil
 }
 
-func (p *TCOTracesPolicy) ExtractCreateSpanPolicyRequest(ctx context.Context, coralogixClientSet *cxsdk.ClientSet) (*cxsdk.CreateSpanPolicyRequest, error) {
+func (p *TCOTracesPolicy) ExtractCreateSpanPolicyRequest(
+	ctx context.Context,
+	coralogixClientSet *cxsdk.ClientSet) (*tcopolicies.CreateSpanPolicyRequest, error) {
 	var errs error
-	priority, err := expandTCOPolicyPriority(p.Priority)
-	if err != nil {
-		errs = errors.Join(errs, err)
-	}
-
 	applicationRule, err := expandTCOPolicyRule(p.Applications)
 	if err != nil {
 		errs = errors.Join(errs, err)
@@ -133,12 +130,7 @@ func (p *TCOTracesPolicy) ExtractCreateSpanPolicyRequest(ctx context.Context, co
 		errs = errors.Join(errs, err)
 	}
 
-	tagsRules, err := expandTCOPolicyTagRules(p.Tags)
-	if err != nil {
-		errs = errors.Join(errs, err)
-	}
-
-	archiveRetentionID, err := expandArchiveRetention(ctx, coralogixClientSet, p.ArchiveRetention)
+	archiveRetention, err := expandArchiveRetention(ctx, coralogixClientSet, p.ArchiveRetention)
 	if err != nil {
 		errs = errors.Join(errs, err)
 	}
@@ -147,56 +139,37 @@ func (p *TCOTracesPolicy) ExtractCreateSpanPolicyRequest(ctx context.Context, co
 		return nil, errs
 	}
 
-	req := &cxsdk.CreateSpanPolicyRequest{
-		Policy: &cxsdk.CreateGenericPolicyRequest{
-			Name:             wrapperspb.String(p.Name),
-			Description:      utils.StringPointerToWrapperspbString(p.Description),
-			Priority:         priority,
+	req := &tcopolicies.CreateSpanPolicyRequest{
+		Policy: tcopolicies.CreateGenericPolicyRequest{
+			Name:             p.Name,
+			Description:      ptr.Deref(p.Description, ""),
+			Priority:         PrioritySchemaToOpenAPI[p.Priority],
 			ApplicationRule:  applicationRule,
 			SubsystemRule:    subsystemRule,
-			ArchiveRetention: archiveRetentionID,
+			ArchiveRetention: archiveRetention,
 		},
-		SpanRules: &cxsdk.TCOSpanRules{
+		SpanRules: tcopolicies.SpanRules{
 			ServiceRule: serviceRule,
 			ActionRule:  actionRule,
-			TagRules:    tagsRules,
+			TagRules:    expandTCOPolicyTagRules(p.Tags),
 		},
 	}
 
 	return req, nil
 }
 
-func expandTCOPolicyTagRules(tags []TCOPolicyTag) ([]*cxsdk.TCOPolicyTagRule, error) {
-	var tagRules []*cxsdk.TCOPolicyTagRule
-	var errs error
+func expandTCOPolicyTagRules(tags []TCOPolicyTag) []tcopolicies.TagRule {
+	var tagRules []tcopolicies.TagRule
 
 	for _, tag := range tags {
-		tagRule, err := expandTCOPolicyTagRule(tag)
-		if err != nil {
-			errs = errors.Join(errs, err)
-		} else {
-			tagRules = append(tagRules, tagRule)
-		}
+		tagRules = append(tagRules, tcopolicies.TagRule{
+			TagName:    tag.Name,
+			TagValue:   strings.Join(tag.Values, ","),
+			RuleTypeId: RuleTypeIdSchemaToOpenAPI[tag.RuleType],
+		})
 	}
 
-	if errs != nil {
-		return nil, errs
-	}
-
-	return tagRules, nil
-}
-
-func expandTCOPolicyTagRule(tag TCOPolicyTag) (*cxsdk.TCOPolicyTagRule, error) {
-	ruleType, ok := cxsdk.TCOPolicyRuleTypeValueLookup["RULE_TYPE_ID_"+strings.ToUpper(tag.RuleType)]
-	if !ok {
-		return nil, fmt.Errorf("invalid rule type for TCO policy: %s", tag.RuleType)
-	}
-
-	return &cxsdk.TCOPolicyTagRule{
-		TagName:    wrapperspb.String(tag.Name),
-		TagValue:   wrapperspb.String(strings.Join(tag.Values, ",")),
-		RuleTypeId: cxsdk.TCOPolicyRuleTypeID(ruleType),
-	}, nil
+	return tagRules
 }
 
 // TCOTracesPoliciesStatus defines the observed state of TCOTracesPolicies.
