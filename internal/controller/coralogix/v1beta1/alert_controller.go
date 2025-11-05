@@ -59,7 +59,7 @@ func (r *AlertReconciler) FinalizerName() string {
 
 func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	alert := obj.(*coralogixv1beta1.Alert)
-	createRequest, err := alert.Spec.ExtractAlertCreateRequest(
+	props, err := alert.Spec.ExtractAlertDefProperties(
 		&coralogixv1beta1.GetResourceRefProperties{
 			Ctx:       ctx,
 			Log:       log,
@@ -72,10 +72,14 @@ func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 		return fmt.Errorf("error on extracting alert properties: %w", err)
 	}
 
+	createRequest := &alerts.CreateAlertDefinitionRequest{
+		AlertDefProperties: props,
+	}
+
 	log.Info("Creating remote alert", "alert", utils.FormatJSON(createRequest))
 	createResponse, httpResp, err := r.ClientSet.Alerts().
 		AlertDefsServiceCreateAlertDef(ctx).
-		AlertDefsServiceCreateAlertDefRequest(*createRequest).
+		CreateAlertDefinitionRequest(*createRequest).
 		Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote alert: %w", oapicxsdk.NewAPIError(httpResp, err))

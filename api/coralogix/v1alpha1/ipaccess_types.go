@@ -90,7 +90,7 @@ func ExtractIPAccessRules(specRules []IPAccessRule) []ipaccess.IpAccess {
 		ipAccess[i] = ipaccess.IpAccess{
 			Name:    rule.Name,
 			IpRange: rule.IPRange,
-			Enabled: *rule.Enabled,
+			Enabled: rule.Enabled,
 		}
 	}
 	return ipAccess

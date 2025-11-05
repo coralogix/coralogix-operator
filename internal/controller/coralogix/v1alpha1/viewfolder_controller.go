@@ -81,11 +81,13 @@ func (r *ViewFolderReconciler) HandleCreation(ctx context.Context, log logr.Logg
 func (r *ViewFolderReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	viewFolder := obj.(*coralogixv1alpha1.ViewFolder)
 	replaceRequest := &viewfolders.ViewFolder1{
+		Id:   viewFolder.Status.ID,
 		Name: viewFolder.Spec.Name,
 	}
 
 	log.Info("Updating remote ViewFolder", "ViewFolder", utils.FormatJSON(replaceRequest))
-	updateResponse, httpResp, err := r.ViewFoldersClient.ViewsFoldersServiceReplaceViewFolder(ctx, *viewFolder.Status.ID).
+	updateResponse, httpResp, err := r.ViewFoldersClient.
+		ViewsFoldersServiceReplaceViewFolder(ctx).
 		ViewFolder1(*replaceRequest).
 		Execute()
 	if err != nil {
