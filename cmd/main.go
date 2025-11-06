@@ -301,7 +301,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.SLOReconciler{
-		SLOsClient: clientSet.SLOs(),
+		SLOsClient: oapiClientSet.SLOs(),
 		Interval:   cfg.ReconcileIntervals[utils.SLOKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "SLO")

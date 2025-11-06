@@ -19,23 +19,24 @@ package v1alpha1
 import (
 	"fmt"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	slos "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/slos_service"
 )
 
 var (
-	WindowSloWindowSchemaToProto = map[SloWindowEnum]cxsdk.SloWindow{
-		"unspecified": cxsdk.SloWindowUnspecified,
-		"1m":          cxsdk.SloWindow1Minute,
-		"5m":          cxsdk.SloWindow5Minutes,
+	WindowSloWindowSchemaToOpenAPI = map[SloWindowEnum]slos.WindowSloWindow{
+		"unspecified": slos.WINDOWSLOWINDOW_WINDOW_SLO_WINDOW_UNSPECIFIED,
+		"1m":          slos.WINDOWSLOWINDOW_WINDOW_SLO_WINDOW_1_MINUTE,
+		"5m":          slos.WINDOWSLOWINDOW_WINDOW_SLO_WINDOW_5_MINUTES,
 	}
-	ComparisonOperatorSchemaToProto = map[ComparisonOperator]cxsdk.SloComparisonOperator{
-		"unspecified":         cxsdk.SloComparisonOperatorUnspecified,
-		"greaterThan":         cxsdk.SloComparisonOperatorGreaterThan,
-		"lessThan":            cxsdk.SloComparisonOperatorLessThan,
-		"greaterThanOrEquals": cxsdk.SloComparisonOperatorGreaterThanOrEquals,
-		"lessThanOrEquals":    cxsdk.SloComparisonOperatorLessThanOrEquals,
+	ComparisonOperatorSchemaToOpenAPI = map[ComparisonOperator]slos.ComparisonOperator{
+		"unspecified":         slos.COMPARISONOPERATOR_COMPARISON_OPERATOR_UNSPECIFIED,
+		"greaterThan":         slos.COMPARISONOPERATOR_COMPARISON_OPERATOR_GREATER_THAN,
+		"lessThan":            slos.COMPARISONOPERATOR_COMPARISON_OPERATOR_LESS_THAN,
+		"greaterThanOrEquals": slos.COMPARISONOPERATOR_COMPARISON_OPERATOR_GREATER_THAN_OR_EQUALS,
+		"lessThanOrEquals":    slos.COMPARISONOPERATOR_COMPARISON_OPERATOR_LESS_THAN_OR_EQUALS,
 	}
 )
 
@@ -48,7 +49,7 @@ type SLOSpec struct {
 	Description *string `json:"description"`
 	// +optional
 	// Labels are additional labels to be added to the SLO.
-	Labels map[string]string `json:"labels,omitempty"`
+	Labels *map[string]string `json:"labels,omitempty"`
 	// SliType defines the type of SLI used for the SLO. Exactly one of metric or windowBasedMetric must be set.
 	SliType SliType `json:"sliType"`
 	// Window defines the time window for the SLO.
@@ -71,12 +72,10 @@ type SliType struct {
 }
 
 type RequestBasedMetricSli struct {
-	// +optional
 	// GoodEvents defines the good events metric.
-	GoodEvents *SloMetricEvent `json:"goodEvents,omitempty"`
-	// +optional
+	GoodEvents SloMetricEvent `json:"goodEvents"`
 	// TotalEvents defines the total events metric.
-	TotalEvents *SloMetricEvent `json:"totalEvents,omitempty"`
+	TotalEvents SloMetricEvent `json:"totalEvents"`
 	// +optional
 	// GroupByLabels defines the labels to group the SLI by.
 	GroupByLabels []string `json:"groupByLabels,omitempty"`
@@ -123,12 +122,12 @@ const (
 	SloTimeFrame90d         SloTimeFrame = "90d"
 )
 
-var sloTimeFrameMap = map[SloTimeFrame]cxsdk.SloTimeframeEnum{
-	SloTimeFrameUnspecified: cxsdk.SloTimeframeUnspecified,
-	SloTimeFrame7d:          cxsdk.SloTimeframe7Days,
-	SloTimeFrame14d:         cxsdk.SloTimeframe14Days,
-	SloTimeFrame21d:         cxsdk.SloTimeframe21Days,
-	SloTimeFrame28d:         cxsdk.SloTimeframe28Days,
+var sloTimeFrameSchemaToOpenAPI = map[SloTimeFrame]slos.SloTimeFrame{
+	SloTimeFrameUnspecified: slos.SLOTIMEFRAME_SLO_TIME_FRAME_UNSPECIFIED,
+	SloTimeFrame7d:          slos.SLOTIMEFRAME_SLO_TIME_FRAME_7_DAYS,
+	SloTimeFrame14d:         slos.SLOTIMEFRAME_SLO_TIME_FRAME_14_DAYS,
+	SloTimeFrame21d:         slos.SLOTIMEFRAME_SLO_TIME_FRAME_21_DAYS,
+	SloTimeFrame28d:         slos.SLOTIMEFRAME_SLO_TIME_FRAME_28_DAYS,
 }
 
 // SLOStatus defines the observed state of SLO.
@@ -154,70 +153,111 @@ type SLO struct {
 	PrintableStatus string    `json:"printableStatus,omitempty"`
 }
 
-func (spec *SLOSpec) ExtractSLO() (*cxsdk.Slo, error) {
-	slo := &cxsdk.Slo{
-		Name:                      spec.Name,
-		Description:               spec.Description,
-		Labels:                    spec.Labels,
-		TargetThresholdPercentage: float32(spec.TargetThresholdPercentage.AsApproximateFloat64()),
-	}
-
-	slo, err := spec.SliType.ExpandSliType(slo)
-	if err != nil {
-		return nil, err
-	}
-
-	slo, err = spec.Window.ExpandSloWindow(slo)
-	if err != nil {
-		return nil, err
-	}
-
-	return slo, nil
-}
-
-func (in *SliType) ExpandSliType(slo *cxsdk.Slo) (*cxsdk.Slo, error) {
-	if requestBasedMetricSli := in.RequestBasedMetricSli; requestBasedMetricSli != nil {
-		slo.Sli = &cxsdk.SloRequestBasedMetricSli{
-			RequestBasedMetricSli: &cxsdk.RequestBasedMetricSli{
-				GoodEvents:  extractMetricEvent(requestBasedMetricSli.GoodEvents),
-				TotalEvents: extractMetricEvent(requestBasedMetricSli.TotalEvents),
-			},
+func (s *SLO) ExtractSLOCreateRequest() (*slos.SlosServiceCreateSloRequest, error) {
+	if requestBasedMetricSli := s.Spec.SliType.RequestBasedMetricSli; requestBasedMetricSli != nil {
+		requestBased, err := s.Spec.ExtractRequestBasedMetricSli()
+		if err != nil {
+			return nil, fmt.Errorf("error extracting request based metric SLI: %w", err)
 		}
-	} else if windowBasedMetricSli := in.WindowBasedMetricSli; windowBasedMetricSli != nil {
-		slo.Sli = &cxsdk.SloWindowBasedMetricSli{
-			WindowBasedMetricSli: &cxsdk.WindowBasedMetricSli{
-				Query:              extractMetricEvent(windowBasedMetricSli.Query),
-				Window:             WindowSloWindowSchemaToProto[windowBasedMetricSli.Window],
-				ComparisonOperator: ComparisonOperatorSchemaToProto[windowBasedMetricSli.ComparisonOperator],
-				Threshold:          float32(windowBasedMetricSli.Threshold.AsApproximateFloat64()),
-			},
+
+		return &slos.SlosServiceCreateSloRequest{
+			SloRequestBasedMetricSli: requestBased,
+		}, nil
+	} else if windowBasedMetricSli := s.Spec.SliType.WindowBasedMetricSli; windowBasedMetricSli != nil {
+		windowBased, err := s.Spec.ExtractWindowBasedMetricSli()
+		if err != nil {
+			return nil, fmt.Errorf("error extracting window based metric SLI: %w", err)
 		}
+		return &slos.SlosServiceCreateSloRequest{
+			SloWindowBasedMetricSli: windowBased,
+		}, nil
 	}
 
-	return slo, nil
+	return nil, fmt.Errorf("sliType must be set to either requestBasedMetricSli or windowBasedMetricSli")
 }
 
-func extractMetricEvent(metricEvent *SloMetricEvent) *cxsdk.Metric {
-	if metricEvent == nil {
-		return nil
+func (s *SLO) ExtractSLOUpdateRequest() (*slos.SlosServiceReplaceSloRequest, error) {
+	if requestBasedMetricSli := s.Spec.SliType.RequestBasedMetricSli; requestBasedMetricSli != nil {
+		requestBased, err := s.Spec.ExtractRequestBasedMetricSli()
+		if err != nil {
+			return nil, fmt.Errorf("error extracting request based metric SLI: %w", err)
+		}
+
+		requestBased.Id = s.Status.ID
+		return &slos.SlosServiceReplaceSloRequest{
+			SloRequestBasedMetricSli: requestBased,
+		}, nil
+	} else if windowBasedMetricSli := s.Spec.SliType.WindowBasedMetricSli; windowBasedMetricSli != nil {
+		windowBased, err := s.Spec.ExtractWindowBasedMetricSli()
+		if err != nil {
+			return nil, fmt.Errorf("error extracting window based metric SLI: %w", err)
+		}
+
+		windowBased.Id = s.Status.ID
+		return &slos.SlosServiceReplaceSloRequest{
+			SloWindowBasedMetricSli: windowBased,
+		}, nil
 	}
-	return &cxsdk.Metric{
-		Query: metricEvent.Query,
-	}
+
+	return nil, fmt.Errorf("sliType must be set to either requestBasedMetricSli or windowBasedMetricSli")
 }
 
-func (in SloWindow) ExpandSloWindow(slo *cxsdk.Slo) (*cxsdk.Slo, error) {
-	if timeFrame := in.TimeFrame; timeFrame != nil {
-		sloTimeFrame, ok := sloTimeFrameMap[*timeFrame]
+func (s *SLOSpec) ExtractRequestBasedMetricSli() (*slos.SloRequestBasedMetricSli, error) {
+	timeFrame, err := s.Window.ExpandTimeFrame()
+	if err != nil {
+		return nil, fmt.Errorf("error expanding time frame: %w", err)
+	}
+
+	return &slos.SloRequestBasedMetricSli{
+		Name:                      s.Name,
+		Description:               s.Description,
+		Labels:                    s.Labels,
+		SloTimeFrame:              timeFrame,
+		TargetThresholdPercentage: float32(s.TargetThresholdPercentage.AsApproximateFloat64()),
+		RequestBasedMetricSli: &slos.RequestBasedMetricSli{
+			GoodEvents: slos.Metric{
+				Query: s.SliType.RequestBasedMetricSli.GoodEvents.Query,
+			},
+			TotalEvents: slos.Metric{
+				Query: s.SliType.RequestBasedMetricSli.TotalEvents.Query,
+			},
+		},
+	}, nil
+}
+
+func (s *SLOSpec) ExtractWindowBasedMetricSli() (*slos.SloWindowBasedMetricSli, error) {
+	timeFrame, err := s.Window.ExpandTimeFrame()
+	if err != nil {
+		return nil, fmt.Errorf("error expanding time frame: %w", err)
+	}
+
+	return &slos.SloWindowBasedMetricSli{
+		Name:                      s.Name,
+		Description:               s.Description,
+		Labels:                    s.Labels,
+		SloTimeFrame:              timeFrame,
+		TargetThresholdPercentage: float32(s.TargetThresholdPercentage.AsApproximateFloat64()),
+		WindowBasedMetricSli: &slos.WindowBasedMetricSli{
+			Query: slos.Metric{
+				Query: s.SliType.WindowBasedMetricSli.Query.Query,
+			},
+			Window:             WindowSloWindowSchemaToOpenAPI[s.SliType.WindowBasedMetricSli.Window],
+			ComparisonOperator: ComparisonOperatorSchemaToOpenAPI[s.SliType.WindowBasedMetricSli.ComparisonOperator],
+			Threshold:          float32(s.SliType.WindowBasedMetricSli.Threshold.AsApproximateFloat64()),
+		},
+	}, nil
+}
+
+func (w *SloWindow) ExpandTimeFrame() (*slos.SloTimeFrame, error) {
+	if w.TimeFrame != nil {
+		tf, ok := sloTimeFrameSchemaToOpenAPI[*w.TimeFrame]
 		if !ok {
-			return nil, fmt.Errorf("invalid SLO time frame: %s", *timeFrame)
+			return nil, fmt.Errorf("invalid SLO time frame: %s", *w.TimeFrame)
 		}
-		slo.Window = &cxsdk.SloTimeframe{
-			SloTimeFrame: sloTimeFrame,
-		}
+		return tf.Ptr(), nil
 	}
 
-	return slo, nil
+	return nil, nil
 }
 
 func (s *SLO) SetConditions(conditions []metav1.Condition) {
