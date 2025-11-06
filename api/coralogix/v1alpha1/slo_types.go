@@ -138,19 +138,23 @@ type SLOStatus struct {
 	Revision *int32 `json:"revision,omitempty"`
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // SLO is the Schema for the slos API.
+// See also https://coralogix.com/platform/apm/slo-management/
 type SLO struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec            SLOSpec   `json:"spec,omitempty"`
-	Status          SLOStatus `json:"status,omitempty"`
-	PrintableStatus string    `json:"printableStatus,omitempty"`
+	Spec   SLOSpec   `json:"spec,omitempty"`
+	Status SLOStatus `json:"status,omitempty"`
 }
 
 func (s *SLO) ExtractSLOCreateRequest() (*slos.SlosServiceCreateSloRequest, error) {
@@ -269,11 +273,11 @@ func (s *SLO) GetConditions() []metav1.Condition {
 }
 
 func (s *SLO) GetPrintableStatus() string {
-	return s.PrintableStatus
+	return s.Status.PrintableStatus
 }
 
 func (s *SLO) SetPrintableStatus(status string) {
-	s.PrintableStatus = status
+	s.Status.PrintableStatus = status
 }
 
 func (s *SLO) HasIDInStatus() bool {

@@ -135,8 +135,8 @@ var (
 	}
 )
 
-func (p *Preset) ExtractPreset() (*presets.Preset1, error) {
-	preset := &presets.Preset1{
+func (p *Preset) ExtractPreset() (*presets.Preset, error) {
+	preset := &presets.Preset{
 		Name:        p.Spec.Name,
 		Description: presets.PtrString(p.Spec.Description),
 		ParentId:    p.Spec.ParentId,

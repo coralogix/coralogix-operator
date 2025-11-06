@@ -14481,6 +14481,7 @@ with respect to the current state of the instance.<br/>
 
 
 SLO is the Schema for the slos API.
+See also https://coralogix.com/platform/apm/slo-management/
 
 <table>
     <thead>
@@ -14508,13 +14509,6 @@ SLO is the Schema for the slos API.
       <td>object</td>
       <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
       <td>true</td>
-      </tr><tr>
-        <td><b>printableStatus</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
       </tr><tr>
         <td><b><a href="#slospec">spec</a></b></td>
         <td>object</td>
@@ -14653,19 +14647,19 @@ SliType defines the type of SLI used for the SLO. Exactly one of metric or windo
         <td>
           GoodEvents defines the good events metric.<br/>
         </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>groupByLabels</b></td>
-        <td>[]string</td>
-        <td>
-          GroupByLabels defines the labels to group the SLI by.<br/>
-        </td>
-        <td>false</td>
+        <td>true</td>
       </tr><tr>
         <td><b><a href="#slospecslityperequestbasedmetrictotalevents">totalEvents</a></b></td>
         <td>object</td>
         <td>
           TotalEvents defines the total events metric.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>groupByLabels</b></td>
+        <td>[]string</td>
+        <td>
+          GroupByLabels defines the labels to group the SLI by.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -14859,6 +14853,13 @@ SLOStatus defines the observed state of SLO.
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
         <td>string</td>
         <td>
           <br/>

@@ -57,15 +57,19 @@ func (r *GlobalRouterReconciler) FinalizerName() string {
 
 func (r *GlobalRouterReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	globalRouter := obj.(*coralogixv1alpha1.GlobalRouter)
-	createRequest, err := globalRouter.ExtractGlobalRouter(ctx)
+	router, err := globalRouter.ExtractGlobalRouter(ctx)
 	if err != nil {
 		return fmt.Errorf("error on extracting create request: %w", err)
 	}
 
-	log.Info("Creating remote GlobalRouter", "GlobalRouter", utils.FormatJSON(createRequest))
+	replaceRequest := &globalrouters.ReplaceGlobalRouterRequest{
+		Router: router,
+	}
+
+	log.Info("Creating remote GlobalRouter", "GlobalRouter", utils.FormatJSON(replaceRequest))
 	createResponse, httpResp, err := r.GlobalRoutersClient.
 		GlobalRoutersServiceReplaceGlobalRouter(ctx).
-		GlobalRouter(*createRequest).
+		ReplaceGlobalRouterRequest(*replaceRequest).
 		Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote GlobalRouter: %w", cxsdk.NewAPIError(httpResp, err))
@@ -81,14 +85,19 @@ func (r *GlobalRouterReconciler) HandleCreation(ctx context.Context, log logr.Lo
 
 func (r *GlobalRouterReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	globalRouter := obj.(*coralogixv1alpha1.GlobalRouter)
-	updateRequest, err := globalRouter.ExtractGlobalRouter(ctx)
+	router, err := globalRouter.ExtractGlobalRouter(ctx)
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
 	}
-	log.Info("Updating remote GlobalRouter", "GlobalRouter", utils.FormatJSON(updateRequest))
+
+	replaceRequest := &globalrouters.ReplaceGlobalRouterRequest{
+		Router: router,
+	}
+
+	log.Info("Updating remote GlobalRouter", "GlobalRouter", utils.FormatJSON(replaceRequest))
 	updateResponse, httpResp, err := r.GlobalRoutersClient.
 		GlobalRoutersServiceReplaceGlobalRouter(ctx).
-		GlobalRouter(*updateRequest).
+		ReplaceGlobalRouterRequest(*replaceRequest).
 		Execute()
 	if err != nil {
 		return cxsdk.NewAPIError(httpResp, err)

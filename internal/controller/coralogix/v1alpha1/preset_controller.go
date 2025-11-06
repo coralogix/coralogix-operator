@@ -57,15 +57,18 @@ func (r *PresetReconciler) FinalizerName() string {
 
 func (r *PresetReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	preset := obj.(*coralogixv1alpha1.Preset)
-	createRequest, err := preset.ExtractPreset()
+	requestPreset, err := preset.ExtractPreset()
 	if err != nil {
 		return fmt.Errorf("error on extracting create request: %w", err)
+	}
+	createRequest := &presets.CreateCustomPresetRequest{
+		Preset: requestPreset,
 	}
 
 	log.Info("Creating remote Preset", "Preset", utils.FormatJSON(createRequest))
 	createResponse, httpResp, err := r.PresetsClient.
 		PresetsServiceCreateCustomPreset(ctx).
-		Preset1(*createRequest).
+		CreateCustomPresetRequest(*createRequest).
 		Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote Preset: %w", cxsdk.NewAPIError(httpResp, err))
@@ -81,15 +84,18 @@ func (r *PresetReconciler) HandleCreation(ctx context.Context, log logr.Logger, 
 
 func (r *PresetReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	preset := obj.(*coralogixv1alpha1.Preset)
-	updateRequest, err := preset.ExtractPreset()
+	requestPreset, err := preset.ExtractPreset()
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
 	}
-	updateRequest.Id = preset.Status.Id
+	requestPreset.Id = preset.Status.Id
+	updateRequest := &presets.ReplaceCustomPresetRequest{
+		Preset: requestPreset,
+	}
 	log.Info("Updating remote Preset", "Preset", utils.FormatJSON(updateRequest))
 	updateResponse, httpResp, err := r.PresetsClient.
 		PresetsServiceReplaceCustomPreset(ctx).
-		Preset1(*updateRequest).
+		ReplaceCustomPresetRequest(*updateRequest).
 		Execute()
 	if err != nil {
 		return cxsdk.NewAPIError(httpResp, err)

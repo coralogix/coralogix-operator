@@ -115,8 +115,8 @@ var (
 	}
 )
 
-func (c *Connector) ExtractConnector() (*connectors.Connector1, error) {
-	connector := &connectors.Connector1{
+func (c *Connector) ExtractConnector() (*connectors.Connector, error) {
+	connector := &connectors.Connector{
 		Name:        c.Spec.Name,
 		Description: connectors.PtrString(c.Spec.Description),
 	}
