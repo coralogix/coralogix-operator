@@ -64,6 +64,12 @@ var _ = Describe("Alert", Ordered, func() {
 		globalRouter := getSampleGlobalRouter(globalRouterName, testNamespace, connectorName, presetName)
 		Expect(crClient.Create(ctx, globalRouter)).To(Succeed())
 
+		By("Creating OutboundWebhooks")
+		firstWebhookName := "first-webhook-for-alert"
+		Expect(crClient.Create(ctx, getSampleWebhook(firstWebhookName, testNamespace))).To(Succeed())
+		secondWebhookName := "second-webhook-for-alert"
+		Expect(crClient.Create(ctx, getSampleWebhook(secondWebhookName, testNamespace))).To(Succeed())
+
 		By("Creating Alert")
 		alertName := "promql-alert"
 		alert = &coralogixv1beta1.Alert{
@@ -84,6 +90,32 @@ var _ = Describe("Alert", Ordered, func() {
 							},
 							Integration: coralogixv1beta1.IntegrationType{
 								Recipients: []string{"example@coralogix.com"},
+							},
+						},
+						{
+							NotifyOn: coralogixv1beta1.NotifyOnTriggeredOnly,
+							RetriggeringPeriod: coralogixv1beta1.RetriggeringPeriod{
+								Minutes: ptr.To(int64(1)),
+							},
+							Integration: coralogixv1beta1.IntegrationType{
+								IntegrationRef: &coralogixv1beta1.IntegrationRef{
+									ResourceRef: &coralogixv1beta1.ResourceRef{
+										Name: firstWebhookName,
+									},
+								},
+							},
+						},
+						{
+							NotifyOn: coralogixv1beta1.NotifyOnTriggeredOnly,
+							RetriggeringPeriod: coralogixv1beta1.RetriggeringPeriod{
+								Minutes: ptr.To(int64(1)),
+							},
+							Integration: coralogixv1beta1.IntegrationType{
+								IntegrationRef: &coralogixv1beta1.IntegrationRef{
+									BackendRef: &coralogixv1beta1.OutboundWebhookBackendRef{
+										Name: ptr.To(secondWebhookName),
+									},
+								},
 							},
 						},
 					},

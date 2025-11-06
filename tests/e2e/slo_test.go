@@ -57,8 +57,8 @@ var _ = Describe("SLO", Ordered, func() {
 		fetchedSlo := &coralogixv1alpha1.SLO{}
 		Eventually(func(g Gomega) {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: sloName, Namespace: testNamespace}, fetchedSlo)).To(Succeed())
-
 			g.Expect(meta.IsStatusConditionTrue(fetchedSlo.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedSlo.Status.PrintableStatus).To(Equal("RemoteSynced"))
 
 			g.Expect(fetchedSlo.Status.ID).ToNot(BeNil())
 			sloID = *fetchedSlo.Status.ID

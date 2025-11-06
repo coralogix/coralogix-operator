@@ -46,20 +46,7 @@ var _ = Describe("OutboundWebhook", Ordered, func() {
 	BeforeEach(func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		OutboundWebhooksClient = ClientsInstance.GetCoralogixClientSet().Webhooks()
-		outBoundWebhook = &coralogixv1alpha1.OutboundWebhook{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      outboundWebhookName,
-				Namespace: testNamespace,
-			},
-			Spec: coralogixv1alpha1.OutboundWebhookSpec{
-				Name: outboundWebhookName,
-				OutboundWebhookType: coralogixv1alpha1.OutboundWebhookType{
-					PagerDuty: &coralogixv1alpha1.PagerDuty{
-						ServiceKey: "12345678-1234-1234-1234-123456789012",
-					},
-				},
-			},
-		}
+		outBoundWebhook = getSampleWebhook(outboundWebhookName, testNamespace)
 	})
 
 	It("Should be created successfully", func(ctx context.Context) {
@@ -128,3 +115,20 @@ var _ = Describe("OutboundWebhook", Ordered, func() {
 		Expect(err.Error()).To(ContainSubstring("Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge"))
 	})
 })
+
+func getSampleWebhook(name, namespace string) *coralogixv1alpha1.OutboundWebhook {
+	return &coralogixv1alpha1.OutboundWebhook{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: testNamespace,
+		},
+		Spec: coralogixv1alpha1.OutboundWebhookSpec{
+			Name: name,
+			OutboundWebhookType: coralogixv1alpha1.OutboundWebhookType{
+				PagerDuty: &coralogixv1alpha1.PagerDuty{
+					ServiceKey: "12345678-1234-1234-1234-123456789012",
+				},
+			},
+		},
+	}
+}
