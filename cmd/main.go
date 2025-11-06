@@ -143,9 +143,8 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&v1beta1controllers.AlertReconciler{
-		CoralogixClientSet: clientSet,
-		ClientSet:          oapiClientSet,
-		Interval:           cfg.ReconcileIntervals[utils.AlertKind],
+		ClientSet: oapiClientSet,
+		Interval:  cfg.ReconcileIntervals[utils.AlertKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Alert")
 		os.Exit(1)

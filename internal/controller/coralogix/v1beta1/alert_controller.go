@@ -36,9 +36,8 @@ import (
 
 // AlertReconciler reconciles a Alert object
 type AlertReconciler struct {
-	CoralogixClientSet *cxsdk.ClientSet
-	ClientSet          *oapicxsdk.ClientSet
-	Interval           time.Duration
+	ClientSet *oapicxsdk.ClientSet
+	Interval  time.Duration
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=alerts,verbs=get;list;watch;create;update;patch;delete
@@ -63,7 +62,6 @@ func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 		&coralogixv1beta1.GetResourceRefProperties{
 			Ctx:       ctx,
 			Log:       log,
-			Clientset: r.CoralogixClientSet,
 			ClientSet: r.ClientSet,
 			Namespace: alert.Namespace,
 		},
@@ -95,7 +93,6 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 		&coralogixv1beta1.GetResourceRefProperties{
 			Ctx:       ctx,
 			Log:       log,
-			Clientset: r.CoralogixClientSet,
 			ClientSet: r.ClientSet,
 			Namespace: alert.Namespace,
 		},

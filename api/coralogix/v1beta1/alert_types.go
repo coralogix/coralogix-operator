@@ -29,9 +29,9 @@ import (
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	oapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 	alerts "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/alert_definitions_service"
+	slos "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/slos_service"
 
 	"github.com/coralogix/coralogix-operator/internal/config"
 	"github.com/coralogix/coralogix-operator/internal/utils"
@@ -2182,33 +2182,42 @@ func getSloId(listingSloProperties *GetResourceRefProperties, sloRef SloRef) (st
 
 func convertSloBackendNameToId(listingSloProperties *GetResourceRefProperties, name *string) (string, error) {
 	listingSloProperties.Log.V(1).Info("Listing SLOs from the backend")
-	listResp, err := listingSloProperties.Clientset.SLOs().List(listingSloProperties.Ctx, &cxsdk.ListSlosRequest{
-		Filters: &cxsdk.SloFilters{
-			Filters: []*cxsdk.SloFilter{
-				{
-					Field: &cxsdk.SloFilterField{
-						Field: &cxsdk.SloConstantFilterField{
-							ConstFilter: cxsdk.SloConstantFilterFieldSloName,
-						},
+	filters := slos.SloFilters{
+		Filters: []slos.SloFilter{
+			{
+				Field: slos.SloFilterField{
+					SloFilterFieldConstFilter: &slos.SloFilterFieldConstFilter{
+						ConstFilter: slos.SLOCONSTANTFILTERFIELD_SLO_CONST_FILTER_FIELD_SLO_NAME.Ptr(),
 					},
-					Predicate: &cxsdk.SloFilterPredicate{
-						Predicate: &cxsdk.SloFilterPredicateIs{
-							Is: &cxsdk.IsSloFilterPredicate{
-								Is: []string{*name},
-							},
-						},
+				},
+				Predicate: slos.SloFilterPredicate{
+					Is: &slos.IsFilterPredicate{
+						Is: []string{*name},
 					},
 				},
 			},
 		},
-	})
+	}
+	listResp, httpResp, err := listingSloProperties.ClientSet.SLOs().
+		SlosServiceListSlos(listingSloProperties.Ctx).
+		Filters(filters).
+		Execute()
 	if err != nil {
-		return "", fmt.Errorf("failed to list SLOs: %w", err)
+		return "", fmt.Errorf("failed to list SLOs: %w", oapicxsdk.NewAPIError(httpResp, err))
 	}
 	for _, slo := range listResp.Slos {
-		if slo.Name == *name {
-			if slo.Id != nil {
-				return *slo.Id, nil
+		switch {
+		case slo.SloWindowBasedMetricSli != nil:
+			if slo.SloWindowBasedMetricSli.Name == *name {
+				if slo.SloWindowBasedMetricSli.Id != nil {
+					return *slo.SloWindowBasedMetricSli.Id, nil
+				}
+			}
+		case slo.SloRequestBasedMetricSli != nil:
+			if slo.SloRequestBasedMetricSli.Name == *name {
+				if slo.SloRequestBasedMetricSli.Id != nil {
+					return *slo.SloRequestBasedMetricSli.Id, nil
+				}
 			}
 		}
 	}
@@ -3050,7 +3059,6 @@ type GetResourceRefProperties struct {
 	Log             logr.Logger
 	AlertNameToId   map[string]string
 	WebhookNameToId map[string]int64
-	Clientset       *cxsdk.ClientSet
 	ClientSet       *oapicxsdk.ClientSet
 	Namespace       string
 }
