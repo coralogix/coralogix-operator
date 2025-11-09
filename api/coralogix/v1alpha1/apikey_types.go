@@ -113,7 +113,7 @@ type ApiKeyList struct {
 }
 
 func (s *ApiKeySpec) ExtractCreateApiKeyRequest() *apikeys.CreateApiKeyRequest {
-	owner := apikeys.Owner{}
+	owner := &apikeys.Owner{}
 	if s.Owner.UserId != nil {
 		owner.OwnerUserId = &apikeys.OwnerUserId{UserId: s.Owner.UserId}
 	}
@@ -122,9 +122,9 @@ func (s *ApiKeySpec) ExtractCreateApiKeyRequest() *apikeys.CreateApiKeyRequest {
 	}
 
 	return &apikeys.CreateApiKeyRequest{
-		Name:  s.Name,
+		Name:  apikeys.PtrString(s.Name),
 		Owner: owner,
-		KeyPermissions: apikeys.CreateApiKeyRequestKeyPermissions{
+		KeyPermissions: &apikeys.CreateApiKeyRequestKeyPermissions{
 			Presets:     s.Presets,
 			Permissions: s.Permissions,
 		},

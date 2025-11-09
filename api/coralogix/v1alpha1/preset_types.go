@@ -137,7 +137,7 @@ var (
 
 func (p *Preset) ExtractPreset() (*presets.Preset, error) {
 	preset := &presets.Preset{
-		Name:        p.Spec.Name,
+		Name:        presets.PtrString(p.Spec.Name),
 		Description: presets.PtrString(p.Spec.Description),
 		ParentId:    p.Spec.ParentId,
 	}
@@ -153,7 +153,7 @@ func (p *Preset) ExtractPreset() (*presets.Preset, error) {
 		return nil, fmt.Errorf("invalid entity type %s", p.Spec.EntityType)
 	}
 
-	preset.EntityType = entityType
+	preset.EntityType = entityType.Ptr()
 	preset.ConfigOverrides = ExtractConfigOverrides(p.Spec.ConfigOverrides)
 	return preset, nil
 }
@@ -193,8 +193,8 @@ func ExtractMessageConfig(messageConfig MessageConfig) *presets.MessageConfig {
 	var fields []presets.NotificationCenterMessageConfigField
 	for _, field := range messageConfig.Fields {
 		fields = append(fields, presets.NotificationCenterMessageConfigField{
-			FieldName: field.FieldName,
-			Template:  field.Template,
+			FieldName: presets.PtrString(field.FieldName),
+			Template:  presets.PtrString(field.Template),
 		})
 	}
 

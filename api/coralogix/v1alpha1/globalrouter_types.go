@@ -111,8 +111,8 @@ func (g *GlobalRouter) ExtractGlobalRouter(ctx context.Context) (*globalrouters.
 
 	return &globalrouters.GlobalRouter{
 		Id:          ptr.To("router_default"),
-		EntityType:  schemaToOpenApiRoutersEntityType[g.Spec.EntityType],
-		Name:        g.Spec.Name,
+		EntityType:  schemaToOpenApiRoutersEntityType[g.Spec.EntityType].Ptr(),
+		Name:        globalrouters.PtrString(g.Spec.Name),
 		Description: globalrouters.PtrString(g.Spec.Description),
 		Fallback:    fallback,
 		Rules:       rules,
@@ -146,7 +146,7 @@ func extractRoutingRule(ctx context.Context, namespace string, rule RoutingRule)
 
 	return &globalrouters.RoutingRule{
 		Name:      ptr.To(rule.Name),
-		Condition: rule.Condition,
+		Condition: globalrouters.PtrString(rule.Condition),
 		Targets:   targets,
 	}, nil
 }
@@ -185,7 +185,7 @@ func extractRoutingTarget(ctx context.Context, namespace string, target RoutingT
 	}
 
 	return &globalrouters.RoutingTarget{
-		ConnectorId: connectorID,
+		ConnectorId: globalrouters.PtrString(connectorID),
 		PresetId:    ptr.To(presetID),
 	}, nil
 }

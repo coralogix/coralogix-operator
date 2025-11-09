@@ -22,7 +22,7 @@ spec:
       sloDefinition:
         sloRef:
           resourceRef:
-            name: coralogix-slo-example
+            name: request-based-slo-example
       errorBudget:
         rules:
           - condition:

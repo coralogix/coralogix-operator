@@ -71,7 +71,7 @@ func (r *IntegrationReconciler) HandleCreation(ctx context.Context, log logr.Log
 	log.Info("Remote integration created", "response", utils.FormatJSON(createResponse))
 
 	integration.Status = coralogixv1alpha1.IntegrationStatus{
-		Id: &createResponse.IntegrationId,
+		Id: createResponse.IntegrationId,
 	}
 
 	return nil
@@ -79,7 +79,7 @@ func (r *IntegrationReconciler) HandleCreation(ctx context.Context, log logr.Log
 
 func (r *IntegrationReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	integration := obj.(*coralogixv1alpha1.Integration)
-	updateRequest, err := integration.Spec.ExtractUpdateIntegrationRequest(*integration.Status.Id)
+	updateRequest, err := integration.Spec.ExtractUpdateIntegrationRequest(integration.Status.Id)
 	if err != nil {
 		return fmt.Errorf("error on extracting update integration request: %w", err)
 	}

@@ -98,8 +98,8 @@ type GenericWebhook struct {
 
 func (in *GenericWebhook) extractGenericWebhookConfig() *webhooks.GenericWebhookConfig {
 	return &webhooks.GenericWebhookConfig{
-		Uuid:    gouuid.NewString(),
-		Method:  GenericWebhookMethodTypeToOpenAPI[in.Method],
+		Uuid:    webhooks.PtrString(gouuid.NewString()),
+		Method:  GenericWebhookMethodTypeToOpenAPI[in.Method].Ptr(),
 		Headers: ptr.To(in.Headers),
 		Payload: in.Payload,
 	}
@@ -140,7 +140,7 @@ func (in *Slack) extractSlackConfig() *webhooks.SlackConfig {
 	digests := make([]webhooks.Digest, 0)
 	for _, digest := range in.Digests {
 		digests = append(digests, webhooks.Digest{
-			Type:     SlackConfigDigestTypeToOpenAPI[digest.Type],
+			Type:     SlackConfigDigestTypeToOpenAPI[digest.Type].Ptr(),
 			IsActive: webhooks.PtrBool(digest.IsActive),
 		})
 	}
@@ -148,7 +148,7 @@ func (in *Slack) extractSlackConfig() *webhooks.SlackConfig {
 	attachments := make([]webhooks.Attachment, 0)
 	for _, attachment := range in.Attachments {
 		attachments = append(attachments, webhooks.Attachment{
-			Type:     SlackConfigAttachmentTypeToOpenAPI[attachment.Type],
+			Type:     SlackConfigAttachmentTypeToOpenAPI[attachment.Type].Ptr(),
 			IsActive: webhooks.PtrBool(attachment.IsActive),
 		})
 	}
@@ -225,7 +225,7 @@ type PagerDuty struct {
 
 func (in *PagerDuty) extractPagerDutyConfig() *webhooks.PagerDutyConfig {
 	return &webhooks.PagerDutyConfig{
-		ServiceKey: in.ServiceKey,
+		ServiceKey: webhooks.PtrString(in.ServiceKey),
 	}
 }
 
@@ -250,8 +250,8 @@ type SendLogStatus struct {
 
 func (in *SendLog) extractSendLogConfig() *webhooks.SendLogConfig {
 	return &webhooks.SendLogConfig{
-		Payload: in.Payload,
-		Uuid:    gouuid.NewString(),
+		Payload: webhooks.PtrString(in.Payload),
+		Uuid:    webhooks.PtrString(gouuid.NewString()),
 	}
 }
 
@@ -290,9 +290,9 @@ type Jira struct {
 
 func (in *Jira) extractJiraConfig() *webhooks.JiraConfig {
 	return &webhooks.JiraConfig{
-		ApiToken:   in.ApiToken,
-		Email:      in.Email,
-		ProjectKey: in.ProjectKey,
+		ApiToken:   webhooks.PtrString(in.ApiToken),
+		Email:      webhooks.PtrString(in.Email),
+		ProjectKey: webhooks.PtrString(in.ProjectKey),
 	}
 }
 
@@ -308,8 +308,8 @@ type Demisto struct {
 
 func (in *Demisto) extractDemistoConfig() *webhooks.DemistoConfig {
 	return &webhooks.DemistoConfig{
-		Uuid:    in.Uuid,
-		Payload: in.Payload,
+		Uuid:    webhooks.PtrString(in.Uuid),
+		Payload: webhooks.PtrString(in.Payload),
 	}
 }
 
@@ -323,11 +323,11 @@ type AwsEventBridge struct {
 
 func (in *AwsEventBridge) extractAwsEventBridgeConfig() *webhooks.AwsEventBridgeConfig {
 	return &webhooks.AwsEventBridgeConfig{
-		EventBusArn: in.EventBusArn,
-		Detail:      in.Detail,
-		DetailType:  in.DetailType,
-		Source:      in.Source,
-		RoleName:    in.RoleName,
+		EventBusArn: webhooks.PtrString(in.EventBusArn),
+		Detail:      webhooks.PtrString(in.Detail),
+		DetailType:  webhooks.PtrString(in.DetailType),
+		Source:      webhooks.PtrString(in.Source),
+		RoleName:    webhooks.PtrString(in.RoleName),
 	}
 }
 
@@ -388,7 +388,7 @@ func (in *OutboundWebhook) ExtractCreateOutboundWebhookRequest() (*webhooks.Crea
 	}
 
 	return &webhooks.CreateOutgoingWebhookRequest{
-		Data: *webhookData,
+		Data: webhookData,
 	}, nil
 }
 
@@ -403,8 +403,8 @@ func (in *OutboundWebhook) ExtractUpdateOutboundWebhookRequest() (*webhooks.Upda
 	}
 
 	return &webhooks.UpdateOutgoingWebhookRequest{
-		Id:   *in.Status.ID,
-		Data: *webhookData,
+		Id:   in.Status.ID,
+		Data: webhookData,
 	}, nil
 }
 
@@ -412,8 +412,8 @@ func (in *OutboundWebhookSpec) ExtractOutgoingWebhookInputData() (*webhooks.Outg
 	if genericWebhook := in.OutboundWebhookType.GenericWebhook; genericWebhook != nil {
 		return &webhooks.OutgoingWebhookInputData{
 			OutgoingWebhookInputDataGenericWebhook: &webhooks.OutgoingWebhookInputDataGenericWebhook{
-				Name:           in.Name,
-				Type:           webhooks.WEBHOOKTYPE_GENERIC,
+				Name:           webhooks.PtrString(in.Name),
+				Type:           webhooks.WEBHOOKTYPE_GENERIC.Ptr(),
 				Url:            webhooks.PtrString(genericWebhook.Url),
 				GenericWebhook: genericWebhook.extractGenericWebhookConfig(),
 			},
@@ -421,8 +421,8 @@ func (in *OutboundWebhookSpec) ExtractOutgoingWebhookInputData() (*webhooks.Outg
 	} else if slack := in.OutboundWebhookType.Slack; slack != nil {
 		return &webhooks.OutgoingWebhookInputData{
 			OutgoingWebhookInputDataSlack: &webhooks.OutgoingWebhookInputDataSlack{
-				Name:  in.Name,
-				Type:  webhooks.WEBHOOKTYPE_SLACK,
+				Name:  webhooks.PtrString(in.Name),
+				Type:  webhooks.WEBHOOKTYPE_SLACK.Ptr(),
 				Url:   webhooks.PtrString(slack.Url),
 				Slack: slack.extractSlackConfig(),
 			},
@@ -430,16 +430,16 @@ func (in *OutboundWebhookSpec) ExtractOutgoingWebhookInputData() (*webhooks.Outg
 	} else if pagerDuty := in.OutboundWebhookType.PagerDuty; pagerDuty != nil {
 		return &webhooks.OutgoingWebhookInputData{
 			OutgoingWebhookInputDataPagerDuty: &webhooks.OutgoingWebhookInputDataPagerDuty{
-				Name:      in.Name,
-				Type:      webhooks.WEBHOOKTYPE_PAGERDUTY,
+				Name:      webhooks.PtrString(in.Name),
+				Type:      webhooks.WEBHOOKTYPE_PAGERDUTY.Ptr(),
 				PagerDuty: pagerDuty.extractPagerDutyConfig(),
 			},
 		}, nil
 	} else if sendLog := in.OutboundWebhookType.SendLog; sendLog != nil {
 		return &webhooks.OutgoingWebhookInputData{
 			OutgoingWebhookInputDataSendLog: &webhooks.OutgoingWebhookInputDataSendLog{
-				Name:    in.Name,
-				Type:    webhooks.WEBHOOKTYPE_SEND_LOG,
+				Name:    webhooks.PtrString(in.Name),
+				Type:    webhooks.WEBHOOKTYPE_SEND_LOG.Ptr(),
 				Url:     webhooks.PtrString(sendLog.Url),
 				SendLog: sendLog.extractSendLogConfig(),
 			},
@@ -447,19 +447,16 @@ func (in *OutboundWebhookSpec) ExtractOutgoingWebhookInputData() (*webhooks.Outg
 	} else if emailGroup := in.OutboundWebhookType.EmailGroup; emailGroup != nil {
 		return &webhooks.OutgoingWebhookInputData{
 			OutgoingWebhookInputDataEmailGroup: &webhooks.OutgoingWebhookInputDataEmailGroup{
-				Name:       in.Name,
-				Type:       webhooks.WEBHOOKTYPE_EMAIL_GROUP,
+				Name:       webhooks.PtrString(in.Name),
+				Type:       webhooks.WEBHOOKTYPE_EMAIL_GROUP.Ptr(),
 				EmailGroup: emailGroup.extractEmailGroupConfig(),
 			},
 		}, nil
 	} else if microsoftTeams := in.OutboundWebhookType.MicrosoftTeams; microsoftTeams != nil {
-		//data.Config = microsoftTeams.extractMicrosoftTeamsConfig()
-		//data.Url = microsoftTeams.Url)
-		//data.Type = cxsdk.WebhookTypeMicrosoftTeams
 		return &webhooks.OutgoingWebhookInputData{
 			OutgoingWebhookInputDataMicrosoftTeams: &webhooks.OutgoingWebhookInputDataMicrosoftTeams{
-				Name:           in.Name,
-				Type:           webhooks.WEBHOOKTYPE_MICROSOFT_TEAMS,
+				Name:           webhooks.PtrString(in.Name),
+				Type:           webhooks.WEBHOOKTYPE_MICROSOFT_TEAMS.Ptr(),
 				Url:            webhooks.PtrString(microsoftTeams.Url),
 				MicrosoftTeams: map[string]interface{}{},
 			},
@@ -467,8 +464,8 @@ func (in *OutboundWebhookSpec) ExtractOutgoingWebhookInputData() (*webhooks.Outg
 	} else if jira := in.OutboundWebhookType.Jira; jira != nil {
 		return &webhooks.OutgoingWebhookInputData{
 			OutgoingWebhookInputDataJira: &webhooks.OutgoingWebhookInputDataJira{
-				Name: in.Name,
-				Type: webhooks.WEBHOOKTYPE_JIRA,
+				Name: webhooks.PtrString(in.Name),
+				Type: webhooks.WEBHOOKTYPE_JIRA.Ptr(),
 				Url:  webhooks.PtrString(jira.Url),
 				Jira: jira.extractJiraConfig(),
 			},
@@ -479,8 +476,8 @@ func (in *OutboundWebhookSpec) ExtractOutgoingWebhookInputData() (*webhooks.Outg
 		//data.Url = opsgenie.Url)
 		return &webhooks.OutgoingWebhookInputData{
 			OutgoingWebhookInputDataOpsgenie: &webhooks.OutgoingWebhookInputDataOpsgenie{
-				Name:     in.Name,
-				Type:     webhooks.WEBHOOKTYPE_OPSGENIE,
+				Name:     webhooks.PtrString(in.Name),
+				Type:     webhooks.WEBHOOKTYPE_OPSGENIE.Ptr(),
 				Url:      webhooks.PtrString(opsgenie.Url),
 				Opsgenie: map[string]interface{}{},
 			},
@@ -488,8 +485,8 @@ func (in *OutboundWebhookSpec) ExtractOutgoingWebhookInputData() (*webhooks.Outg
 	} else if demisto := in.OutboundWebhookType.Demisto; demisto != nil {
 		return &webhooks.OutgoingWebhookInputData{
 			OutgoingWebhookInputDataDemisto: &webhooks.OutgoingWebhookInputDataDemisto{
-				Name:    in.Name,
-				Type:    webhooks.WEBHOOKTYPE_DEMISTO,
+				Name:    webhooks.PtrString(in.Name),
+				Type:    webhooks.WEBHOOKTYPE_DEMISTO.Ptr(),
 				Url:     webhooks.PtrString(demisto.Url),
 				Demisto: demisto.extractDemistoConfig(),
 			},
@@ -497,8 +494,8 @@ func (in *OutboundWebhookSpec) ExtractOutgoingWebhookInputData() (*webhooks.Outg
 	} else if in.OutboundWebhookType.AwsEventBridge != nil {
 		return &webhooks.OutgoingWebhookInputData{
 			OutgoingWebhookInputDataAwsEventBridge: &webhooks.OutgoingWebhookInputDataAwsEventBridge{
-				Name:           in.Name,
-				Type:           webhooks.WEBHOOKTYPE_AWS_EVENT_BRIDGE,
+				Name:           webhooks.PtrString(in.Name),
+				Type:           webhooks.WEBHOOKTYPE_AWS_EVENT_BRIDGE.Ptr(),
 				AwsEventBridge: in.OutboundWebhookType.AwsEventBridge.extractAwsEventBridgeConfig(),
 			},
 		}, nil

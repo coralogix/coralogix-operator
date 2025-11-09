@@ -78,7 +78,7 @@ func (r *ApiKeyReconciler) HandleCreation(ctx context.Context, log logr.Logger, 
 	log.Info("Remote api-key created", "response", utils.FormatJSON(createResponse))
 
 	apiKey.Status = coralogixv1alpha1.ApiKeyStatus{
-		Id: ptr.To(createResponse.KeyId),
+		Id: createResponse.KeyId,
 	}
 
 	log.Info("Creating secret for ApiKey", "id", createResponse.KeyId)

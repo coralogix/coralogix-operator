@@ -44,7 +44,7 @@ func (s *IntegrationSpec) ExtractCreateIntegrationRequest() (*integrations.SaveI
 		return nil, fmt.Errorf("failed to extract parameters: %w", err)
 	}
 	return &integrations.SaveIntegrationRequest{
-		Metadata: integrations.IntegrationMetadata{
+		Metadata: &integrations.IntegrationMetadata{
 			IntegrationKey: integrations.PtrString(s.IntegrationKey),
 			Version:        integrations.PtrString(s.Version),
 			IntegrationParameters: &integrations.GenericIntegrationParameters{
@@ -54,7 +54,7 @@ func (s *IntegrationSpec) ExtractCreateIntegrationRequest() (*integrations.SaveI
 	}, nil
 }
 
-func (s *IntegrationSpec) ExtractUpdateIntegrationRequest(id string) (*integrations.UpdateIntegrationRequest, error) {
+func (s *IntegrationSpec) ExtractUpdateIntegrationRequest(id *string) (*integrations.UpdateIntegrationRequest, error) {
 	parameters, err := s.ExtractParameters()
 	if err != nil {
 		return nil, fmt.Errorf("failed to extract parameters: %w", err)
@@ -62,7 +62,7 @@ func (s *IntegrationSpec) ExtractUpdateIntegrationRequest(id string) (*integrati
 
 	return &integrations.UpdateIntegrationRequest{
 		Id: id,
-		Metadata: integrations.IntegrationMetadata{
+		Metadata: &integrations.IntegrationMetadata{
 			IntegrationKey: integrations.PtrString(s.IntegrationKey),
 			Version:        integrations.PtrString(s.Version),
 			IntegrationParameters: &integrations.GenericIntegrationParameters{

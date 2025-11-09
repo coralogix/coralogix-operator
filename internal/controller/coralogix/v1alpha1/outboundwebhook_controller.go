@@ -74,14 +74,14 @@ func (r *OutboundWebhookReconciler) HandleCreation(ctx context.Context, log logr
 
 	log.Info("Getting outbound-webhook from remote", "id", createResponse.Id)
 	remoteOutboundWebhook, httpResp, err := r.OutboundWebhooksClient.
-		OutgoingWebhooksServiceGetOutgoingWebhook(ctx, createResponse.Id).
+		OutgoingWebhooksServiceGetOutgoingWebhook(ctx, *createResponse.Id).
 		Execute()
 	if err != nil {
 		return fmt.Errorf("error to get outbound-webhook %w", cxsdk.NewAPIError(httpResp, err))
 	}
 	log.Info(fmt.Sprintf("outbound-webhook was read\n%s", utils.FormatJSON(remoteOutboundWebhook)))
 
-	status, err := getOutboundWebhookStatus(&remoteOutboundWebhook.Webhook)
+	status, err := getOutboundWebhookStatus(remoteOutboundWebhook.Webhook)
 	if err != nil {
 		return fmt.Errorf("error on getting outbound-webhook status: %w", err)
 	}
@@ -130,55 +130,42 @@ func getOutboundWebhookStatus(webhook *webhooks.OutgoingWebhook) (*v1alpha1.Outb
 
 	status := &v1alpha1.OutboundWebhookStatus{}
 
+	extract := func(id *string, externalID *int64) (*string, *string) {
+		if id == nil {
+			return nil, nil
+		}
+		var ext *string
+		if externalID != nil {
+			ext = ptr.To(strconv.Itoa(int(*externalID)))
+		}
+		return id, ext
+	}
+
 	switch {
 	case webhook.OutgoingWebhookAwsEventBridge != nil:
-		status.ID = ptr.To(webhook.OutgoingWebhookAwsEventBridge.Id)
-		status.ExternalID = ptr.To(strconv.Itoa(int(webhook.OutgoingWebhookAwsEventBridge.ExternalId)))
-
+		status.ID, status.ExternalID = extract(webhook.OutgoingWebhookAwsEventBridge.Id, webhook.OutgoingWebhookAwsEventBridge.ExternalId)
 	case webhook.OutgoingWebhookDemisto != nil:
-		status.ID = ptr.To(webhook.OutgoingWebhookDemisto.Id)
-		status.ExternalID = ptr.To(strconv.Itoa(int(webhook.OutgoingWebhookDemisto.ExternalId)))
-
+		status.ID, status.ExternalID = extract(webhook.OutgoingWebhookDemisto.Id, webhook.OutgoingWebhookDemisto.ExternalId)
 	case webhook.OutgoingWebhookEmailGroup != nil:
-		status.ID = ptr.To(webhook.OutgoingWebhookEmailGroup.Id)
-		status.ExternalID = ptr.To(strconv.Itoa(int(webhook.OutgoingWebhookEmailGroup.ExternalId)))
-
+		status.ID, status.ExternalID = extract(webhook.OutgoingWebhookEmailGroup.Id, webhook.OutgoingWebhookEmailGroup.ExternalId)
 	case webhook.OutgoingWebhookGenericWebhook != nil:
-		status.ID = ptr.To(webhook.OutgoingWebhookGenericWebhook.Id)
-		status.ExternalID = ptr.To(strconv.Itoa(int(webhook.OutgoingWebhookGenericWebhook.ExternalId)))
-
+		status.ID, status.ExternalID = extract(webhook.OutgoingWebhookGenericWebhook.Id, webhook.OutgoingWebhookGenericWebhook.ExternalId)
 	case webhook.OutgoingWebhookIbmEventNotifications != nil:
-		status.ID = ptr.To(webhook.OutgoingWebhookIbmEventNotifications.Id)
-		status.ExternalID = ptr.To(strconv.Itoa(int(webhook.OutgoingWebhookIbmEventNotifications.ExternalId)))
-
+		status.ID, status.ExternalID = extract(webhook.OutgoingWebhookIbmEventNotifications.Id, webhook.OutgoingWebhookIbmEventNotifications.ExternalId)
 	case webhook.OutgoingWebhookJira != nil:
-		status.ID = ptr.To(webhook.OutgoingWebhookJira.Id)
-		status.ExternalID = ptr.To(strconv.Itoa(int(webhook.OutgoingWebhookJira.ExternalId)))
-
+		status.ID, status.ExternalID = extract(webhook.OutgoingWebhookJira.Id, webhook.OutgoingWebhookJira.ExternalId)
 	case webhook.OutgoingWebhookMicrosoftTeams != nil:
-		status.ID = ptr.To(webhook.OutgoingWebhookMicrosoftTeams.Id)
-		status.ExternalID = ptr.To(strconv.Itoa(int(webhook.OutgoingWebhookMicrosoftTeams.ExternalId)))
-
+		status.ID, status.ExternalID = extract(webhook.OutgoingWebhookMicrosoftTeams.Id, webhook.OutgoingWebhookMicrosoftTeams.ExternalId)
 	case webhook.OutgoingWebhookMsTeamsWorkflow != nil:
-		status.ID = ptr.To(webhook.OutgoingWebhookMsTeamsWorkflow.Id)
-		status.ExternalID = ptr.To(strconv.Itoa(int(webhook.OutgoingWebhookMsTeamsWorkflow.ExternalId)))
-
+		status.ID, status.ExternalID = extract(webhook.OutgoingWebhookMsTeamsWorkflow.Id, webhook.OutgoingWebhookMsTeamsWorkflow.ExternalId)
 	case webhook.OutgoingWebhookOpsgenie != nil:
-		status.ID = ptr.To(webhook.OutgoingWebhookOpsgenie.Id)
-		status.ExternalID = ptr.To(strconv.Itoa(int(webhook.OutgoingWebhookOpsgenie.ExternalId)))
-
+		status.ID, status.ExternalID = extract(webhook.OutgoingWebhookOpsgenie.Id, webhook.OutgoingWebhookOpsgenie.ExternalId)
 	case webhook.OutgoingWebhookPagerDuty != nil:
-		status.ID = ptr.To(webhook.OutgoingWebhookPagerDuty.Id)
-		status.ExternalID = ptr.To(strconv.Itoa(int(webhook.OutgoingWebhookPagerDuty.ExternalId)))
-
+		status.ID, status.ExternalID = extract(webhook.OutgoingWebhookPagerDuty.Id, webhook.OutgoingWebhookPagerDuty.ExternalId)
 	case webhook.OutgoingWebhookSendLog != nil:
-		status.ID = ptr.To(webhook.OutgoingWebhookSendLog.Id)
-		status.ExternalID = ptr.To(strconv.Itoa(int(webhook.OutgoingWebhookSendLog.ExternalId)))
-
+		status.ID, status.ExternalID = extract(webhook.OutgoingWebhookSendLog.Id, webhook.OutgoingWebhookSendLog.ExternalId)
 	case webhook.OutgoingWebhookSlack != nil:
-		status.ID = ptr.To(webhook.OutgoingWebhookSlack.Id)
-		status.ExternalID = ptr.To(strconv.Itoa(int(webhook.OutgoingWebhookSlack.ExternalId)))
-
+		status.ID, status.ExternalID = extract(webhook.OutgoingWebhookSlack.Id, webhook.OutgoingWebhookSlack.ExternalId)
 	default:
 		return nil, fmt.Errorf("unsupported or unknown outbound-webhook type")
 	}

@@ -117,7 +117,7 @@ var (
 
 func (c *Connector) ExtractConnector() (*connectors.Connector, error) {
 	connector := &connectors.Connector{
-		Name:        c.Spec.Name,
+		Name:        connectors.PtrString(c.Spec.Name),
 		Description: connectors.PtrString(c.Spec.Description),
 	}
 
@@ -125,7 +125,7 @@ func (c *Connector) ExtractConnector() (*connectors.Connector, error) {
 	if !ok {
 		return nil, fmt.Errorf("unsupported connector type: %s", c.Spec.Type)
 	}
-	connector.Type = connectorType
+	connector.Type = connectorType.Ptr()
 
 	connector.ConnectorConfig = &connectors.ConnectorConfig{
 		Fields: ExtractConnectorConfigFields(c.Spec.ConnectorConfig.Fields),
