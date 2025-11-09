@@ -120,7 +120,7 @@ func getSampleWebhook(name, namespace string) *coralogixv1alpha1.OutboundWebhook
 	return &coralogixv1alpha1.OutboundWebhook{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: testNamespace,
+			Namespace: namespace,
 		},
 		Spec: coralogixv1alpha1.OutboundWebhookSpec{
 			Name: name,

@@ -204,15 +204,15 @@ var (
 		"hours":   alertscheduler.DURATIONFREQUENCY_DURATION_FREQUENCY_HOUR,
 		"days":    alertscheduler.DURATIONFREQUENCY_DURATION_FREQUENCY_DAY,
 	}
-	daysToOpenAPIValue = map[Day]int32{
-		"Sunday":    1,
-		"Monday":    2,
-		"Tuesday":   3,
-		"Wednesday": 4,
-		"Thursday":  5,
-		"Friday":    6,
-		"Saturday":  7,
-	}
+	//daysToOpenAPIValue = map[Day]int32{
+	//	"Sunday":    1,
+	//	"Monday":    2,
+	//	"Tuesday":   3,
+	//	"Wednesday": 4,
+	//	"Thursday":  5,
+	//	"Friday":    6,
+	//	"Saturday":  7,
+	//}
 )
 
 func (a *AlertScheduler) GetConditions() []metav1.Condition {

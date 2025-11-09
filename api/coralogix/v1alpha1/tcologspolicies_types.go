@@ -138,29 +138,9 @@ func (s *TCOLogsPoliciesSpec) ExtractOverwriteLogPoliciesRequest(
 func (p *TCOLogsPolicy) ExtractCreateLogPolicyRequest(
 	ctx context.Context,
 	coralogixClientSet *cxsdk.ClientSet) (*tcopolicies.CreateLogPolicyRequest, error) {
-	var errs error
-	applicationRule, err := expandTCOPolicyRule(p.Applications)
-	if err != nil {
-		errs = errors.Join(errs, err)
-	}
-
-	subsystemRule, err := expandTCOPolicyRule(p.Subsystems)
-	if err != nil {
-		errs = errors.Join(errs, err)
-	}
-
-	severities, err := expandTCOPolicySeverities(p.Severities)
-	if err != nil {
-		errs = errors.Join(errs, err)
-	}
-
 	archiveRetention, err := expandArchiveRetention(ctx, coralogixClientSet, p.ArchiveRetention)
 	if err != nil {
-		errs = errors.Join(errs, err)
-	}
-
-	if errs != nil {
-		return nil, errs
+		return nil, err
 	}
 
 	req := &tcopolicies.CreateLogPolicyRequest{
@@ -168,36 +148,36 @@ func (p *TCOLogsPolicy) ExtractCreateLogPolicyRequest(
 			Name:             p.Name,
 			Description:      ptr.Deref(p.Description, ""),
 			Priority:         PrioritySchemaToOpenAPI[p.Priority],
-			ApplicationRule:  applicationRule,
-			SubsystemRule:    subsystemRule,
+			ApplicationRule:  expandTCOPolicyRule(p.Applications),
+			SubsystemRule:    expandTCOPolicyRule(p.Subsystems),
 			ArchiveRetention: archiveRetention,
 		},
 		LogRules: tcopolicies.LogRules{
-			Severities: severities,
+			Severities: expandTCOPolicySeverities(p.Severities),
 		},
 	}
 
 	return req, nil
 }
 
-func expandTCOPolicyRule(rule *TCOPolicyRule) (*tcopolicies.QuotaV1Rule, error) {
+func expandTCOPolicyRule(rule *TCOPolicyRule) *tcopolicies.QuotaV1Rule {
 	if rule == nil {
-		return nil, nil
+		return nil
 	}
 
 	return &tcopolicies.QuotaV1Rule{
 		Name:       tcopolicies.PtrString(strings.Join(rule.Names, ",")),
 		RuleTypeId: RuleTypeIdSchemaToOpenAPI[rule.RuleType].Ptr(),
-	}, nil
+	}
 }
 
-func expandTCOPolicySeverities(severities []TCOPolicySeverity) ([]tcopolicies.QuotaV1Severity, error) {
+func expandTCOPolicySeverities(severities []TCOPolicySeverity) []tcopolicies.QuotaV1Severity {
 	var result []tcopolicies.QuotaV1Severity
 	for _, severity := range severities {
 		result = append(result, TCOPolicySeveritySchemaToOpenAPI[severity])
 	}
 
-	return result, nil
+	return result
 }
 
 func expandArchiveRetention(

@@ -109,34 +109,9 @@ func (s *TCOTracesPoliciesSpec) ExtractOverwriteTracesPoliciesRequest(
 func (p *TCOTracesPolicy) ExtractCreateSpanPolicyRequest(
 	ctx context.Context,
 	coralogixClientSet *cxsdk.ClientSet) (*tcopolicies.CreateSpanPolicyRequest, error) {
-	var errs error
-	applicationRule, err := expandTCOPolicyRule(p.Applications)
-	if err != nil {
-		errs = errors.Join(errs, err)
-	}
-
-	subsystemRule, err := expandTCOPolicyRule(p.Subsystems)
-	if err != nil {
-		errs = errors.Join(errs, err)
-	}
-
-	serviceRule, err := expandTCOPolicyRule(p.Services)
-	if err != nil {
-		errs = errors.Join(errs, err)
-	}
-
-	actionRule, err := expandTCOPolicyRule(p.Actions)
-	if err != nil {
-		errs = errors.Join(errs, err)
-	}
-
 	archiveRetention, err := expandArchiveRetention(ctx, coralogixClientSet, p.ArchiveRetention)
 	if err != nil {
-		errs = errors.Join(errs, err)
-	}
-
-	if errs != nil {
-		return nil, errs
+		return nil, err
 	}
 
 	req := &tcopolicies.CreateSpanPolicyRequest{
@@ -144,13 +119,13 @@ func (p *TCOTracesPolicy) ExtractCreateSpanPolicyRequest(
 			Name:             p.Name,
 			Description:      ptr.Deref(p.Description, ""),
 			Priority:         PrioritySchemaToOpenAPI[p.Priority],
-			ApplicationRule:  applicationRule,
-			SubsystemRule:    subsystemRule,
+			ApplicationRule:  expandTCOPolicyRule(p.Applications),
+			SubsystemRule:    expandTCOPolicyRule(p.Subsystems),
 			ArchiveRetention: archiveRetention,
 		},
 		SpanRules: tcopolicies.SpanRules{
-			ServiceRule: serviceRule,
-			ActionRule:  actionRule,
+			ServiceRule: expandTCOPolicyRule(p.Services),
+			ActionRule:  expandTCOPolicyRule(p.Actions),
 			TagRules:    expandTCOPolicyTagRules(p.Tags),
 		},
 	}
