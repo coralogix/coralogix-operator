@@ -11,11 +11,9 @@ metadata:
 spec:
   name: slo-threshold alert example
   description: SLO Alert, Error Budget
-  groupByKeys:
-    - service_name
-  notificationGroup:
-    groupByKeys:
-      - service_name
+  entityLabels:
+    alert_type: security
+    security_severity: high
   priority: p4
   alertType:
     sloThreshold:
