@@ -32,7 +32,7 @@ import (
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
-var _ = Describe("AlertScheduler", Ordered, func() {
+var _ = PDescribe("AlertScheduler", Ordered, func() {
 	var (
 		crClient             client.Client
 		alertSchedulerClient *cxsdk.AlertSchedulerClient

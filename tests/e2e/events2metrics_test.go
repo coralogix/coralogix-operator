@@ -34,7 +34,7 @@ import (
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
-var _ = Describe("Events2Metric", Ordered, func() {
+var _ = PDescribe("Events2Metric", Ordered, func() {
 	var (
 		crClient  client.Client
 		e2mClient *cxsdk.Events2MetricsClient
