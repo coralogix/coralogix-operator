@@ -11,14 +11,8 @@ metadata:
 spec:
   name: global router
   description: global router example
-  entityType: alerts
-  fallback:
-    - connector:
-        resourceRef:
-          name: slack-sample
-      preset:
-        backendRef:
-          id: preset_system_slack_alerts_basic
+  entityLabelMatcher:
+    routing.group: global
   rules:
     - name: first-rule
       condition: "alertDef.priority == \"P1\""

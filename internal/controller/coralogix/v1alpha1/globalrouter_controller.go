@@ -62,14 +62,14 @@ func (r *GlobalRouterReconciler) HandleCreation(ctx context.Context, log logr.Lo
 		return fmt.Errorf("error on extracting create request: %w", err)
 	}
 
-	replaceRequest := &globalrouters.ReplaceGlobalRouterRequest{
+	createRequest := &globalrouters.CreateGlobalRouterRequest{
 		Router: router,
 	}
 
-	log.Info("Creating remote GlobalRouter", "GlobalRouter", utils.FormatJSON(replaceRequest))
+	log.Info("Creating remote GlobalRouter", "GlobalRouter", utils.FormatJSON(createRequest))
 	createResponse, httpResp, err := r.GlobalRoutersClient.
-		GlobalRoutersServiceReplaceGlobalRouter(ctx).
-		ReplaceGlobalRouterRequest(*replaceRequest).
+		GlobalRoutersServiceCreateGlobalRouter(ctx).
+		CreateGlobalRouterRequest(*createRequest).
 		Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote GlobalRouter: %w", cxsdk.NewAPIError(httpResp, err))
@@ -90,6 +90,7 @@ func (r *GlobalRouterReconciler) HandleUpdate(ctx context.Context, log logr.Logg
 		return fmt.Errorf("error on extracting update request: %w", err)
 	}
 
+	router.Id = globalRouter.Status.Id
 	replaceRequest := &globalrouters.ReplaceGlobalRouterRequest{
 		Router: router,
 	}

@@ -36,13 +36,13 @@ type GlobalRouterSpec struct {
 	// Description is the description of the global router.
 	Description string `json:"description"`
 
-	// EntityType is the entity type for the global router. Should equal "alerts".
-	// +kubebuilder:validation:Enum=alerts
-	EntityType string `json:"entityType"`
-
 	// EntityLabels are optional labels to attach to the global router.
 	// +optional
 	EntityLabels map[string]string `json:"entityLabels,omitempty"`
+
+	// EntityLabelMatcher is an optional label matcher to filter entities for the global router.
+	// +optional
+	EntityLabelMatcher *map[string]string `json:"entityLabelMatcher,omitempty"`
 
 	// Fallback is the fallback routing target for the global router.
 	// +optional
@@ -56,6 +56,11 @@ type GlobalRouterSpec struct {
 type RoutingRule struct {
 	// Name is the name of the routing rule.
 	Name string `json:"name"`
+
+	// EntityType is the entity type for the global router.
+	// +kubebuilder:validation:Enum=alerts
+	// +optional
+	EntityType *string `json:"entityType,omitempty"`
 
 	// CustomDetails are optional custom details to attach to the routing rule.
 	// +optional
@@ -93,7 +98,7 @@ type NCRef struct {
 }
 
 var (
-	schemaToOpenApiRoutersEntityType = map[string]globalrouters.NotificationCenterEntityType{
+	EntityTypeSchemaToOpenAPI = map[string]globalrouters.NotificationCenterEntityType{
 		"alerts": globalrouters.NOTIFICATIONCENTERENTITYTYPE_ALERTS,
 	}
 )
@@ -110,12 +115,11 @@ func (g *GlobalRouter) ExtractGlobalRouter(ctx context.Context) (*globalrouters.
 	}
 
 	return &globalrouters.GlobalRouter{
-		Id:          ptr.To("router_default"),
-		EntityType:  schemaToOpenApiRoutersEntityType[g.Spec.EntityType].Ptr(),
-		Name:        globalrouters.PtrString(g.Spec.Name),
-		Description: globalrouters.PtrString(g.Spec.Description),
-		Fallback:    fallback,
-		Rules:       rules,
+		Name:               globalrouters.PtrString(g.Spec.Name),
+		Description:        globalrouters.PtrString(g.Spec.Description),
+		EntityLabelMatcher: g.Spec.EntityLabelMatcher,
+		Fallback:           fallback,
+		Rules:              rules,
 	}, nil
 }
 
@@ -144,11 +148,21 @@ func extractRoutingRule(ctx context.Context, namespace string, rule RoutingRule)
 		return nil, err
 	}
 
-	return &globalrouters.RoutingRule{
-		Name:      ptr.To(rule.Name),
+	routingRule := &globalrouters.RoutingRule{
+		Name:      globalrouters.PtrString(rule.Name),
 		Condition: globalrouters.PtrString(rule.Condition),
 		Targets:   targets,
-	}, nil
+	}
+
+	if rule.EntityType != nil {
+		entityType, ok := EntityTypeSchemaToOpenAPI[*rule.EntityType]
+		if !ok {
+			return nil, fmt.Errorf("invalid entity type: %s", *rule.EntityType)
+		}
+		routingRule.EntityType = entityType.Ptr()
+	}
+
+	return routingRule, nil
 }
 
 func extractRoutingTargets(ctx context.Context, namespace string, targets []RoutingTarget) ([]globalrouters.RoutingTarget, error) {

@@ -10432,21 +10432,19 @@ GlobalRouterSpec defines the desired state of the Global Router.
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>entityType</b></td>
-        <td>enum</td>
-        <td>
-          EntityType is the entity type for the global router. Should equal "alerts".<br/>
-          <br/>
-            <i>Enum</i>: alerts<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
           Name is the name of the global router.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>entityLabelMatcher</b></td>
+        <td>map[string]string</td>
+        <td>
+          EntityLabelMatcher is an optional label matcher to filter entities for the global router.<br/>
+        </td>
+        <td>false</td>
       </tr><tr>
         <td><b>entityLabels</b></td>
         <td>map[string]string</td>
@@ -10749,6 +10747,15 @@ ResourceRef is a reference to a Kubernetes resource.
         <td>map[string]string</td>
         <td>
           CustomDetails are optional custom details to attach to the routing rule.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>entityType</b></td>
+        <td>enum</td>
+        <td>
+          EntityType is the entity type for the global router.<br/>
+          <br/>
+            <i>Enum</i>: alerts<br/>
         </td>
         <td>false</td>
       </tr></tbody>

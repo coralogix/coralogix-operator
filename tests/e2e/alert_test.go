@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"time"
 
+	gouuid "github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
@@ -60,7 +61,7 @@ var _ = Describe("Alert", Ordered, func() {
 		Expect(crClient.Create(ctx, getSampleSlackPreset(presetName, testNamespace))).To(Succeed())
 
 		By("Creating GlobalRouter")
-		globalRouterName := "global-router-for-alert"
+		globalRouterName := "global-router-for-alert" + gouuid.NewString()
 		globalRouter := getSampleGlobalRouter(globalRouterName, testNamespace, connectorName, presetName)
 		Expect(crClient.Create(ctx, globalRouter)).To(Succeed())
 
