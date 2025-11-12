@@ -24,9 +24,9 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	oapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 	tcopolicies "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/policies_service"
+	archiveretentions "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/retentions_service"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/config"
@@ -35,9 +35,9 @@ import (
 
 // TCOLogsPoliciesReconciler reconciles a TCOLogsPolicies object
 type TCOLogsPoliciesReconciler struct {
-	CoralogixClientSet *cxsdk.ClientSet
-	TCOPoliciesClient  *tcopolicies.PoliciesServiceAPIService
-	Interval           time.Duration
+	TCOPoliciesClient       *tcopolicies.PoliciesServiceAPIService
+	ArchiveRetentionsClient *archiveretentions.RetentionsServiceAPIService
+	Interval                time.Duration
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=tcologspolicies,verbs=get;list;watch;create;update;patch;delete
@@ -53,7 +53,7 @@ func (r *TCOLogsPoliciesReconciler) RequeueInterval() time.Duration {
 }
 
 func (r *TCOLogsPoliciesReconciler) overwrite(ctx context.Context, log logr.Logger, tcoLogsPolicies *coralogixv1alpha1.TCOLogsPolicies) error {
-	overwriteRequest, err := tcoLogsPolicies.Spec.ExtractOverwriteLogPoliciesRequest(ctx, r.CoralogixClientSet)
+	overwriteRequest, err := tcoLogsPolicies.Spec.ExtractOverwriteLogPoliciesRequest(ctx, r.ArchiveRetentionsClient)
 	if err != nil {
 		return fmt.Errorf("error on extracting overwrite log policies request: %w", err)
 	}

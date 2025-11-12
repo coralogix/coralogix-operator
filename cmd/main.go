@@ -204,17 +204,17 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.TCOLogsPoliciesReconciler{
-		CoralogixClientSet: clientSet,
-		TCOPoliciesClient:  oapiClientSet.TCOPolicies(),
-		Interval:           cfg.ReconcileIntervals[utils.TCOLogsPoliciesKind],
+		TCOPoliciesClient:       oapiClientSet.TCOPolicies(),
+		ArchiveRetentionsClient: oapiClientSet.ArchiveRetentions(),
+		Interval:                cfg.ReconcileIntervals[utils.TCOLogsPoliciesKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "TCOLogsPolicies")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.TCOTracesPoliciesReconciler{
-		CoralogixClientSet: clientSet,
-		TCOPoliciesClient:  oapiClientSet.TCOPolicies(),
-		Interval:           cfg.ReconcileIntervals[utils.TCOTracesPoliciesKind],
+		TCOPoliciesClient:       oapiClientSet.TCOPolicies(),
+		ArchiveRetentionsClient: oapiClientSet.ArchiveRetentions(),
+		Interval:                cfg.ReconcileIntervals[utils.TCOTracesPoliciesKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "TCOTracesPolicies")
 		os.Exit(1)
@@ -284,7 +284,7 @@ func main() {
 	}
 
 	if err = (&v1alpha1controllers.ArchiveLogsTargetReconciler{
-		ArchiveLogsTargetsClient: oapiClientSet.ArchiveLogsTarget(),
+		ArchiveLogsTargetsClient: oapiClientSet.ArchiveLogs(),
 		ArchiveRetentionsClient:  clientSet.ArchiveRetentions(),
 		Interval:                 cfg.ReconcileIntervals[utils.ArchiveLogsTargetKind],
 	}).SetupWithManager(mgr); err != nil {

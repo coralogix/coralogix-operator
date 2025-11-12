@@ -22,8 +22,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	tcopolicies "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/policies_service"
+	archiveretentions "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/retentions_service"
 )
 
 // TCOTracesPoliciesSpec defines the desired state of Coralogix TCO policies for traces.
@@ -86,12 +86,12 @@ type TCOPolicyTag struct {
 
 func (s *TCOTracesPoliciesSpec) ExtractOverwriteTracesPoliciesRequest(
 	ctx context.Context,
-	coralogixClientSet *cxsdk.ClientSet) (*tcopolicies.AtomicOverwriteSpanPoliciesRequest, error) {
+	archiveRetentionsClient *archiveretentions.RetentionsServiceAPIService) (*tcopolicies.AtomicOverwriteSpanPoliciesRequest, error) {
 	var policies []tcopolicies.CreateSpanPolicyRequest
 	var errs error
 
 	for _, policy := range s.Policies {
-		policyReq, err := policy.ExtractCreateSpanPolicyRequest(ctx, coralogixClientSet)
+		policyReq, err := policy.ExtractCreateSpanPolicyRequest(ctx, archiveRetentionsClient)
 		if err != nil {
 			errs = errors.Join(errs, err)
 		} else {
@@ -108,8 +108,8 @@ func (s *TCOTracesPoliciesSpec) ExtractOverwriteTracesPoliciesRequest(
 
 func (p *TCOTracesPolicy) ExtractCreateSpanPolicyRequest(
 	ctx context.Context,
-	coralogixClientSet *cxsdk.ClientSet) (*tcopolicies.CreateSpanPolicyRequest, error) {
-	archiveRetention, err := expandArchiveRetention(ctx, coralogixClientSet, p.ArchiveRetention)
+	archiveRetentionsClient *archiveretentions.RetentionsServiceAPIService) (*tcopolicies.CreateSpanPolicyRequest, error) {
+	archiveRetention, err := expandArchiveRetention(ctx, archiveRetentionsClient, p.ArchiveRetention)
 	if err != nil {
 		return nil, err
 	}

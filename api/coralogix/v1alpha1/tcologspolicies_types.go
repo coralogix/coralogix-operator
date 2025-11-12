@@ -23,10 +23,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 	tcopolicies "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/policies_service"
-
-	utils "github.com/coralogix/coralogix-operator/api/coralogix"
+	archiveretentions "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/retentions_service"
 )
 
 // TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.
@@ -115,12 +114,12 @@ type TCOPolicyRule struct {
 
 func (s *TCOLogsPoliciesSpec) ExtractOverwriteLogPoliciesRequest(
 	ctx context.Context,
-	coralogixClientSet *cxsdk.ClientSet) (*tcopolicies.AtomicOverwriteLogPoliciesRequest, error) {
+	archiveRetentionsClient *archiveretentions.RetentionsServiceAPIService) (*tcopolicies.AtomicOverwriteLogPoliciesRequest, error) {
 	var policies []tcopolicies.CreateLogPolicyRequest
 	var errs error
 
 	for _, policy := range s.Policies {
-		policyReq, err := policy.ExtractCreateLogPolicyRequest(ctx, coralogixClientSet)
+		policyReq, err := policy.ExtractCreateLogPolicyRequest(ctx, archiveRetentionsClient)
 		if err != nil {
 			errs = errors.Join(errs, err)
 		} else {
@@ -137,8 +136,8 @@ func (s *TCOLogsPoliciesSpec) ExtractOverwriteLogPoliciesRequest(
 
 func (p *TCOLogsPolicy) ExtractCreateLogPolicyRequest(
 	ctx context.Context,
-	coralogixClientSet *cxsdk.ClientSet) (*tcopolicies.CreateLogPolicyRequest, error) {
-	archiveRetention, err := expandArchiveRetention(ctx, coralogixClientSet, p.ArchiveRetention)
+	archiveRetentionsClient *archiveretentions.RetentionsServiceAPIService) (*tcopolicies.CreateLogPolicyRequest, error) {
+	archiveRetention, err := expandArchiveRetention(ctx, archiveRetentionsClient, p.ArchiveRetention)
 	if err != nil {
 		return nil, err
 	}
@@ -182,20 +181,22 @@ func expandTCOPolicySeverities(severities []TCOPolicySeverity) []tcopolicies.Quo
 
 func expandArchiveRetention(
 	ctx context.Context,
-	coralogixClientSet *cxsdk.ClientSet,
+	archiveRetentionsClient *archiveretentions.RetentionsServiceAPIService,
 	archiveRetention *ArchiveRetention) (*tcopolicies.ArchiveRetention, error) {
 	if archiveRetention == nil {
 		return nil, nil
 	}
 
-	archiveRetentions, err := coralogixClientSet.ArchiveRetentions().Get(ctx, &cxsdk.GetRetentionsRequest{})
+	resp, httpResp, err := archiveRetentionsClient.
+		RetentionsServiceGetRetentions(ctx).
+		Execute()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get archive retentions: %w", err)
+		return nil, fmt.Errorf("failed to get archive retentions: %w", cxsdk.NewAPIError(httpResp, err))
 	}
 
-	for _, retention := range archiveRetentions.Retentions {
-		if *utils.WrapperspbStringToStringPointer(retention.Name) == archiveRetention.BackendRef.Name {
-			return &tcopolicies.ArchiveRetention{Id: tcopolicies.PtrString(retention.Id.GetValue())}, nil
+	for _, retention := range resp.Retentions {
+		if retention.Name != nil && *retention.Name == archiveRetention.BackendRef.Name {
+			return &tcopolicies.ArchiveRetention{Id: retention.Id}, nil
 		}
 	}
 
