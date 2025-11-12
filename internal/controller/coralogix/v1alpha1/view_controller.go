@@ -17,6 +17,7 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"math"
 	"strconv"
 	"time"
 
@@ -85,6 +86,10 @@ func (r *ViewReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj 
 		return fmt.Errorf("error on converting view id to int: %w", err)
 	}
 
+	if viewId < math.MinInt32 || viewId > math.MaxInt32 {
+		return fmt.Errorf("view id (%d) is out of int32 bounds", viewId)
+	}
+
 	updateRequest, err := view.ExtractReplaceRequest(ctx, log)
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
@@ -105,7 +110,7 @@ func (r *ViewReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj 
 func (r *ViewReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
 	view := obj.(*coralogixv1alpha1.View)
 	log.Info("Deleting view from remote system", "id", *view.Status.ID)
-	id, err := strconv.Atoi(*view.Status.ID)
+	id, err := strconv.ParseInt(*view.Status.ID, 10, 32)
 	if err != nil {
 		return fmt.Errorf("error on converting view id to int: %w", err)
 	}
