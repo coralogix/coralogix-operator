@@ -35,7 +35,7 @@ import (
 	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
-var _ = PDescribe("Dashboard", Ordered, func() {
+var _ = Describe("Dashboard", Ordered, func() {
 	var (
 		crClient         client.Client
 		dashboardsClient *cxsdk.DashboardsClient
