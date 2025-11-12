@@ -15,8 +15,9 @@
 package v1alpha1
 
 import (
-	apikeys "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/api_keys_service"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	apikeys "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/api_keys_service"
 )
 
 // ApiKeySpec defines the desired state of a Coralogix ApiKey.

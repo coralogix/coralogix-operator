@@ -194,7 +194,7 @@ var (
 		TracingTimeWindowValue24Hours:   alerts.TRACINGTIMEWINDOWVALUE_TRACING_TIME_WINDOW_VALUE_HOURS_24,
 		TracingTimeWindowValue36Hours:   alerts.TRACINGTIMEWINDOWVALUE_TRACING_TIME_WINDOW_VALUE_HOURS_36,
 	}
-	TracingFilterOperationTypeToProto = map[TracingFilterOperationType]alerts.TracingFilterOperationType{
+	TracingFilterOperationTypeToOpenAPI = map[TracingFilterOperationType]alerts.TracingFilterOperationType{
 		TracingFilterOperationTypeIs:         alerts.TRACINGFILTEROPERATIONTYPE_TRACING_FILTER_OPERATION_TYPE_IS_OR_UNSPECIFIED,
 		TracingFilterOperationTypeIncludes:   alerts.TRACINGFILTEROPERATIONTYPE_TRACING_FILTER_OPERATION_TYPE_INCLUDES,
 		TracingFilterOperationTypeEndsWith:   alerts.TRACINGFILTEROPERATIONTYPE_TRACING_FILTER_OPERATION_TYPE_ENDS_WITH,
@@ -2702,7 +2702,7 @@ func expandTracingFilterTypes(filters []TracingFilterType) []alerts.TracingFilte
 func expandTracingFilterType(filterType TracingFilterType) *alerts.TracingFilterType {
 	return &alerts.TracingFilterType{
 		Values:    filterType.Values,
-		Operation: TracingFilterOperationTypeToProto[filterType.Operation].Ptr(),
+		Operation: TracingFilterOperationTypeToOpenAPI[filterType.Operation].Ptr(),
 	}
 }
 
