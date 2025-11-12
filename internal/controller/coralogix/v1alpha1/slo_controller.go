@@ -1,18 +1,16 @@
-/*
-Copyright 2024.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2024 Coralogix Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package v1alpha1
 
@@ -21,24 +19,24 @@ import (
 	"fmt"
 	"time"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
-	"github.com/coralogix/coralogix-operator/internal/config"
-	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 	"github.com/go-logr/logr"
-	"google.golang.org/protobuf/encoding/protojson"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	slos "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/slos_service"
+
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/internal/config"
+	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // SLOReconciler reconciles a SLO object
 type SLOReconciler struct {
-	SLOsClient *cxsdk.SLOsClient
-	client.Client
-	Scheme   *runtime.Scheme
-	Interval time.Duration
+	SLOsClient *slos.SlosServiceAPIService
+	Interval   time.Duration
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=slos,verbs=get;list;watch;create;update;patch;delete
@@ -53,24 +51,38 @@ func (r *SLOReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 
 func (r *SLOReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	slo := obj.(*coralogixv1alpha1.SLO)
-	extractedSLO, err := slo.Spec.ExtractSLO()
+	createRequest, err := slo.ExtractSLOCreateRequest()
 	if err != nil {
 		return fmt.Errorf("error on extracting create request: %w", err)
 	}
-	createRequest := &cxsdk.CreateServiceSloRequest{
-		Slo: extractedSLO,
-	}
-	log.Info("Creating remote slo", "slo", protojson.Format(createRequest))
-	createResponse, err := r.SLOsClient.Create(ctx, createRequest)
-	if err != nil {
-		return fmt.Errorf("error on creating remote slo: %w", err)
-	}
-	log.Info("Remote slo created", "response", protojson.Format(createResponse))
 
+	log.Info("Creating remote slo", "slo", utils.FormatJSON(createRequest))
+	createResponse, httpResp, err := r.SLOsClient.
+		SlosServiceCreateSlo(ctx).
+		SlosServiceReplaceSloRequest(*createRequest).
+		Execute()
+	if err != nil {
+		return fmt.Errorf("error on creating remote slo: %w", cxsdk.NewAPIError(httpResp, err))
+	}
+	log.Info("Remote slo created", "response", utils.FormatJSON(createResponse))
 	receivedSLO := createResponse.GetSlo()
+
+	var sloID string
+	var revision int32
+	switch {
+	case receivedSLO.SloRequestBasedMetricSli != nil:
+		sloID = receivedSLO.SloRequestBasedMetricSli.GetId()
+		revision = ptr.To(receivedSLO.SloRequestBasedMetricSli.GetRevision()).GetRevision()
+	case receivedSLO.SloWindowBasedMetricSli != nil:
+		sloID = receivedSLO.SloWindowBasedMetricSli.GetId()
+		revision = ptr.To(receivedSLO.SloWindowBasedMetricSli.GetRevision()).GetRevision()
+	default:
+		return fmt.Errorf("unknown slo type")
+	}
+
 	slo.Status = coralogixv1alpha1.SLOStatus{
-		ID:       receivedSLO.Id,
-		Revision: ptr.To(receivedSLO.Revision.Revision),
+		ID:       ptr.To(sloID),
+		Revision: ptr.To(revision),
 	}
 
 	return nil
@@ -78,23 +90,23 @@ func (r *SLOReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj
 
 func (r *SLOReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	slo := obj.(*coralogixv1alpha1.SLO)
-	extractedSLO, err := slo.Spec.ExtractSLO()
+	updateRequest, err := slo.ExtractSLOUpdateRequest()
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
 	}
 	if slo.Status.ID == nil {
 		return fmt.Errorf("slo id is nil")
 	}
-	extractedSLO.Id = slo.Status.ID
-	updateRequest := &cxsdk.ReplaceServiceSloRequest{
-		Slo: extractedSLO,
-	}
-	log.Info("Updating remote slo", "slo", protojson.Format(updateRequest))
-	updateResponse, err := r.SLOsClient.Update(ctx, updateRequest)
+
+	log.Info("Updating remote slo", "slo", utils.FormatJSON(updateRequest))
+	updateResponse, httpResp, err := r.SLOsClient.
+		SlosServiceReplaceSlo(ctx).
+		SlosServiceReplaceSloRequest(*updateRequest).
+		Execute()
 	if err != nil {
-		return fmt.Errorf("error on updating remote slo: %w", err)
+		return cxsdk.NewAPIError(httpResp, err)
 	}
-	log.Info("Remote slo updated", "response", protojson.Format(updateResponse))
+	log.Info("Remote slo updated", "response", utils.FormatJSON(updateResponse))
 	return nil
 }
 
@@ -103,15 +115,17 @@ func (r *SLOReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj
 	if slo.Status.ID == nil {
 		return fmt.Errorf("slo id is nil")
 	}
-	deleteRequest := &cxsdk.DeleteServiceSloRequest{
-		Id: *slo.Status.ID,
-	}
-	log.Info("Deleting remote slo", "slo", protojson.Format(deleteRequest))
-	deleteResponse, err := r.SLOsClient.Delete(ctx, deleteRequest)
+
+	log.Info("Deleting remote slo", "sloId", *slo.Status.ID)
+	deleteResponse, httpResp, err := r.SLOsClient.
+		SlosServiceDeleteSlo(ctx, *slo.Status.ID).
+		Execute()
 	if err != nil {
-		return fmt.Errorf("error on deleting remote slo: %w", err)
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+			return fmt.Errorf("error on deleting remote slo: %w", err)
+		}
 	}
-	log.Info("Remote slo deleted", "response", protojson.Format(deleteResponse))
+	log.Info("Remote slo deleted", "response", utils.FormatJSON(deleteResponse))
 
 	return nil
 }

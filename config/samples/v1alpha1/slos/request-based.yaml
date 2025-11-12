@@ -3,26 +3,19 @@ kind: SLO
 metadata:
   labels:
     app.kubernetes.io/name: coralogix-operator
-    app.kubernetes.io/instance: tco-logs-policies-sample
+    app.kubernetes.io/instance: slo-sample
     app.kubernetes.io/part-of: coralogix-operator
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/created-by: coralogix-operator
-  annotations:
-    app.coralogix.com/log-verbosity: "0"
-  name: coralogix-slo-example
+  name: request-based-slo-example
 spec:
-  name: coralogix_slo_example
+  name: request-based-slo-example
   description: Coralogix SLO example
-  labels:
-    app.kubernetes.io/part-of: coralogix-operator
-    app.kubernetes.io/instance: tco-logs-policies-sample
-    app.kubernetes.io/created-by: coralogix-operator
-    app.kubernetes.io/managed-by: kustomize
   sliType:
     requestBasedMetric:
       goodEvents:
         query: |
-            sum(rate(coralogix_logs_events_total{app="coralogix-slo-example", status="success"}[5m]))
+            sum(rate(coralogix_logs_events_total{app="coralogix-slo-example", status="success"}[10m]))
       totalEvents:
         query:
           sum(rate(coralogix_logs_events_total{app="coralogix-slo-example", status="success"}[5m]))

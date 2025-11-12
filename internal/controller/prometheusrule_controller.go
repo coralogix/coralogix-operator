@@ -452,7 +452,7 @@ func prometheusAlertToMetricThreshold(rule prometheus.Rule, priority coralogixv1
 			},
 		},
 		MissingValues: coralogixv1beta1.MetricMissingValues{
-			MinNonNullValuesPct: ptr.To(uint32(0)),
+			MinNonNullValuesPct: ptr.To(int64(0)),
 		},
 	}
 }

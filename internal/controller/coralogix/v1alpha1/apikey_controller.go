@@ -20,8 +20,6 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/protobuf/encoding/protojson"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,16 +27,18 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	apikeys "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/api_keys_service"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // ApiKeyReconciler reconciles a ApiKey object
 type ApiKeyReconciler struct {
-	ApiKeysClient *cxsdk.ApikeysClient
+	ApiKeysClient *apikeys.APIKeysServiceAPIService
 	Interval      time.Duration
 }
 
@@ -67,15 +67,18 @@ func (r *ApiKeyReconciler) RequeueInterval() time.Duration {
 func (r *ApiKeyReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	apiKey := obj.(*coralogixv1alpha1.ApiKey)
 	createRequest := apiKey.Spec.ExtractCreateApiKeyRequest()
-	log.Info("Creating remote api-key", "api-key", protojson.Format(createRequest))
-	createResponse, err := r.ApiKeysClient.Create(ctx, createRequest)
+	log.Info("Creating remote api-key", "api-key", utils.FormatJSON(createRequest))
+	createResponse, httpResp, err := r.ApiKeysClient.
+		ApiKeysServiceCreateApiKey(context.Background()).
+		CreateApiKeyRequest(*createRequest).
+		Execute()
 	if err != nil {
-		return fmt.Errorf("error on creating remote api-key: %w", err)
+		return fmt.Errorf("error on creating remote api-key: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote api-key created", "response", protojson.Format(createResponse))
+	log.Info("Remote api-key created", "response", utils.FormatJSON(createResponse))
 
 	apiKey.Status = coralogixv1alpha1.ApiKeyStatus{
-		Id: ptr.To(createResponse.KeyId),
+		Id: createResponse.KeyId,
 	}
 
 	log.Info("Creating secret for ApiKey", "id", createResponse.KeyId)
@@ -90,17 +93,22 @@ func (r *ApiKeyReconciler) HandleCreation(ctx context.Context, log logr.Logger, 
 
 func (r *ApiKeyReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	apiKey := obj.(*coralogixv1alpha1.ApiKey)
-	updateRequest := apiKey.Spec.ExtractUpdateApiKeyRequest(*apiKey.Status.Id)
-	log.Info("Updating remote api-key", "api-key", protojson.Format(updateRequest))
-	updateResponse, err := r.ApiKeysClient.Update(ctx, updateRequest)
+	updateRequest := apiKey.Spec.ExtractUpdateApiKeyRequest()
+	log.Info("Updating remote api-key", "api-key", utils.FormatJSON(updateRequest))
+	updateResponse, httpResp, err := r.ApiKeysClient.
+		ApiKeysServiceUpdateApiKey(context.Background(), *apiKey.Status.Id).
+		UpdateApiKeyRequest(*updateRequest).
+		Execute()
 	if err != nil {
-		return err
+		return cxsdk.NewAPIError(httpResp, err)
 	}
-	log.Info("Remote api-key updated", "api-key", protojson.Format(updateResponse))
+	log.Info("Remote api-key updated", "api-key", utils.FormatJSON(updateResponse))
 
-	getResponse, err := r.ApiKeysClient.Get(ctx, &cxsdk.GetAPIKeyRequest{KeyId: *apiKey.Status.Id})
+	getResponse, httpResp, err := r.ApiKeysClient.
+		ApiKeysServiceGetApiKey(context.Background(), *apiKey.Status.Id).
+		Execute()
 	if err != nil {
-		return fmt.Errorf("error on getting remote api-key: %w", err)
+		return fmt.Errorf("error on getting remote api-key: %w", cxsdk.NewAPIError(httpResp, err))
 	}
 
 	existsSecret := &corev1.Secret{}
@@ -131,10 +139,14 @@ func (r *ApiKeyReconciler) HandleUpdate(ctx context.Context, log logr.Logger, ob
 func (r *ApiKeyReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
 	apiKey := obj.(*coralogixv1alpha1.ApiKey)
 	apiKeyId := apiKey.Status.Id
-	if _, err := r.ApiKeysClient.Delete(ctx, &cxsdk.DeleteAPIKeyRequest{KeyId: *apiKeyId}); err != nil &&
-		cxsdk.Code(err) != codes.NotFound {
-		log.Error(err, "Error on deleting remote api-key", "id", apiKeyId)
-		return fmt.Errorf("error to delete remote api-key -\n%v", apiKeyId)
+	_, httpResp, err := r.ApiKeysClient.
+		ApiKeysServiceDeleteApiKey(ctx, *apiKeyId).
+		Execute()
+	if err != nil {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+			log.Error(apiErr, "Error on deleting remote api-key", "id", apiKeyId)
+			return fmt.Errorf("error to delete remote api-key -\n%v", apiKeyId)
+		}
 	}
 	log.Info("api-key was deleted from remote", "id", apiKeyId)
 

@@ -19,8 +19,9 @@ package v1alpha1
 import (
 	"fmt"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	presets "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/presets_service"
 )
 
 // PresetSpec defines the desired state of Preset.
@@ -123,70 +124,60 @@ func (p *Preset) HasIDInStatus() bool {
 	return p.Status.Id != nil && *p.Status.Id != ""
 }
 
-func (p *Preset) ExtractCreateCustomPresetRequest() (*cxsdk.CreateCustomPresetRequest, error) {
-	preset, err := p.extractPreset()
-	if err != nil {
-		return nil, fmt.Errorf("failed to extract preset: %w", err)
+var (
+	schemaToOpenApiPresetConnectorType = map[string]presets.ConnectorType{
+		"slack":        presets.CONNECTORTYPE_SLACK,
+		"genericHttps": presets.CONNECTORTYPE_GENERIC_HTTPS,
+		"pagerDuty":    presets.CONNECTORTYPE_PAGERDUTY,
 	}
-
-	return &cxsdk.CreateCustomPresetRequest{
-		Preset: preset,
-	}, nil
-}
-
-func (p *Preset) ExtractUpdateCustomPresetRequest() (*cxsdk.ReplaceCustomPresetRequest, error) {
-	preset, err := p.extractPreset()
-	if err != nil {
-		return nil, fmt.Errorf("failed to extract preset: %w", err)
+	schemaToOpenApiPresetsEntityType = map[string]presets.NotificationCenterEntityType{
+		"alerts": presets.NOTIFICATIONCENTERENTITYTYPE_ALERTS,
 	}
+)
 
-	preset.Id = p.Status.Id
-	return &cxsdk.ReplaceCustomPresetRequest{
-		Preset: preset,
-	}, nil
-}
-
-func (p *Preset) extractPreset() (*cxsdk.Preset, error) {
-	preset := &cxsdk.Preset{
-		Name:        p.Spec.Name,
-		Description: p.Spec.Description,
+func (p *Preset) ExtractPreset() (*presets.Preset, error) {
+	preset := &presets.Preset{
+		Name:        presets.PtrString(p.Spec.Name),
+		Description: presets.PtrString(p.Spec.Description),
 		ParentId:    p.Spec.ParentId,
 	}
 
-	connectorType, ok := schemaToProtoConnectorType[p.Spec.ConnectorType]
+	connectorType, ok := schemaToOpenApiPresetConnectorType[p.Spec.ConnectorType]
 	if !ok {
 		return nil, fmt.Errorf("invalid connector type %s", p.Spec.ConnectorType)
 	}
-	preset.ConnectorType = connectorType
+	preset.ConnectorType = connectorType.Ptr()
 
-	entityType, ok := schemaToProtoEntityType[p.Spec.EntityType]
+	entityType, ok := schemaToOpenApiPresetsEntityType[p.Spec.EntityType]
 	if !ok {
 		return nil, fmt.Errorf("invalid entity type %s", p.Spec.EntityType)
 	}
 
-	preset.EntityType = entityType
+	preset.EntityType = entityType.Ptr()
 	preset.ConfigOverrides = ExtractConfigOverrides(p.Spec.ConfigOverrides)
 	return preset, nil
 }
 
-func ExtractConfigOverrides(overrides []ConfigOverride) []*cxsdk.ConfigOverrides {
-	var result []*cxsdk.ConfigOverrides
+func ExtractConfigOverrides(overrides []ConfigOverride) []presets.ConfigOverrides {
+	var result []presets.ConfigOverrides
 	for _, override := range overrides {
-		configOverride := &cxsdk.ConfigOverrides{
+		configOverride := presets.ConfigOverrides{
 			PayloadType: override.PayloadType,
 		}
 
 		configOverride.MessageConfig = ExtractMessageConfig(override.MessageConfig)
 
 		if override.ConditionType.MatchEntityType != nil {
-			configOverride.ConditionType = &cxsdk.ConditionType{
-				Condition: &cxsdk.ConditionTypeMatchEntityType{},
+			configOverride.ConditionType = &presets.NotificationCenterConditionType{
+				NotificationCenterConditionTypeMatchEntityType: &presets.NotificationCenterConditionTypeMatchEntityType{
+					MatchEntityType: map[string]interface{}{},
+				},
 			}
 		} else if override.ConditionType.MatchEntityTypeAndSubType != nil {
-			configOverride.ConditionType = &cxsdk.ConditionType{
-				Condition: &cxsdk.ConditionTypeMatchEntityTypeAndSubType{
-					MatchEntityTypeAndSubType: &cxsdk.MatchEntityTypeAndSubTypeCondition{
-						EntitySubType: override.ConditionType.MatchEntityTypeAndSubType.EntitySubType,
+			configOverride.ConditionType = &presets.NotificationCenterConditionType{
+				NotificationCenterConditionTypeMatchEntityTypeAndSubType: &presets.NotificationCenterConditionTypeMatchEntityTypeAndSubType{
+					MatchEntityTypeAndSubType: &presets.MatchEntityTypeAndSubTypeCondition{
+						EntitySubType: presets.PtrString(override.ConditionType.MatchEntityTypeAndSubType.EntitySubType),
 					},
 				},
 			}
@@ -198,16 +189,16 @@ func ExtractConfigOverrides(overrides []ConfigOverride) []*cxsdk.ConfigOverrides
 	return result
 }
 
-func ExtractMessageConfig(messageConfig MessageConfig) *cxsdk.MessageConfig {
-	var fields []*cxsdk.MessageConfigField
+func ExtractMessageConfig(messageConfig MessageConfig) *presets.MessageConfig {
+	var fields []presets.NotificationCenterMessageConfigField
 	for _, field := range messageConfig.Fields {
-		fields = append(fields, &cxsdk.MessageConfigField{
-			FieldName: field.FieldName,
-			Template:  field.Template,
+		fields = append(fields, presets.NotificationCenterMessageConfigField{
+			FieldName: presets.PtrString(field.FieldName),
+			Template:  presets.PtrString(field.Template),
 		})
 	}
 
-	return &cxsdk.MessageConfig{
+	return &presets.MessageConfig{
 		Fields: fields,
 	}
 }

@@ -16,9 +16,8 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	apikeys "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/api_keys_service"
 )
 
 // ApiKeySpec defines the desired state of a Coralogix ApiKey.
@@ -114,33 +113,31 @@ type ApiKeyList struct {
 	Items           []ApiKey `json:"items"`
 }
 
-func (s *ApiKeySpec) ExtractCreateApiKeyRequest() *cxsdk.CreateAPIKeyRequest {
-	owner := &cxsdk.Owner{}
+func (s *ApiKeySpec) ExtractCreateApiKeyRequest() *apikeys.CreateApiKeyRequest {
+	owner := &apikeys.Owner{}
 	if s.Owner.UserId != nil {
-		owner.Owner = &cxsdk.OwnerUserID{UserId: *s.Owner.UserId}
+		owner.OwnerUserId = &apikeys.OwnerUserId{UserId: s.Owner.UserId}
 	}
 	if s.Owner.TeamId != nil {
-		owner.Owner = &cxsdk.OwnerTeamID{TeamId: *s.Owner.TeamId}
+		owner.OwnerTeamId = &apikeys.OwnerTeamId{TeamId: apikeys.PtrInt64(int64(*s.Owner.TeamId))}
 	}
 
-	return &cxsdk.CreateAPIKeyRequest{
-		Name:  s.Name,
+	return &apikeys.CreateApiKeyRequest{
+		Name:  apikeys.PtrString(s.Name),
 		Owner: owner,
-		KeyPermissions: &cxsdk.APIKeyPermissions{
+		KeyPermissions: &apikeys.CreateApiKeyRequestKeyPermissions{
 			Presets:     s.Presets,
 			Permissions: s.Permissions,
 		},
-		Hashed: false,
 	}
 }
 
-func (s *ApiKeySpec) ExtractUpdateApiKeyRequest(id string) *cxsdk.UpdateAPIKeyRequest {
-	return &cxsdk.UpdateAPIKeyRequest{
-		KeyId:       id,
-		NewName:     ptr.To(s.Name),
-		IsActive:    ptr.To(s.Active),
-		Presets:     ptr.To(cxsdk.APIKeyPresetsUpdate{Presets: s.Presets}),
-		Permissions: ptr.To(cxsdk.APIKeyPermissionsUpdate{Permissions: s.Permissions}),
+func (s *ApiKeySpec) ExtractUpdateApiKeyRequest() *apikeys.UpdateApiKeyRequest {
+	return &apikeys.UpdateApiKeyRequest{
+		NewName:     apikeys.PtrString(s.Name),
+		IsActive:    apikeys.PtrBool(s.Active),
+		Presets:     &apikeys.Presets{Presets: s.Presets},
+		Permissions: &apikeys.UpdateApiKeyRequestPermissions{Permissions: s.Permissions},
 	}
 }
 

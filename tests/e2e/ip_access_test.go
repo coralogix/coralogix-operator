@@ -67,7 +67,7 @@ var _ = Describe("IPAccess", func() {
 					{
 						Name:    ptr.To("VPN"),
 						IPRange: "198.51.100.0/24",
-						Enabled: ptr.To(true),
+						Enabled: ptr.To(false),
 					},
 				},
 			},
@@ -93,7 +93,7 @@ var _ = Describe("IPAccess", func() {
 			}
 		}, time.Minute, time.Second).Should(Succeed())
 
-		By("Fetching IPAccess from Coralogix backend via OpenAPI SDK")
+		By("Verifying IpAccess exists in Coralogix backend")
 		Eventually(func(g Gomega) {
 			getRes, _, err := ipAccessClient.IpAccessServiceGetCompanyIpAccessSettings(ctx).Id(ipAccessID).Execute()
 			g.Expect(err).ToNot(HaveOccurred())
@@ -101,13 +101,12 @@ var _ = Describe("IPAccess", func() {
 			g.Expect(getRes.Settings.EnableCoralogixCustomerSupportAccess).ToNot(BeNil())
 			g.Expect(*getRes.Settings.EnableCoralogixCustomerSupportAccess).To(Equal(ipaccess.CORALOGIXCUSTOMERSUPPORTACCESS_CORALOGIX_CUSTOMER_SUPPORT_ACCESS_DISABLED))
 
-			// Ensure entries exist
 			g.Expect(getRes.Settings.IpAccess).ToNot(BeNil())
 			found := false
 			for _, rule := range *getRes.Settings.IpAccess {
 				if rule.Name != nil && *rule.Name == "VPN" {
 					found = true
-					g.Expect(rule.IpRange).To(Equal("198.51.100.0/24"))
+					g.Expect(*rule.IpRange).To(Equal("198.51.100.0/24"))
 				}
 			}
 			g.Expect(found).To(BeTrue(), "VPN rule should be present in backend")

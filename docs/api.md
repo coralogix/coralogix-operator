@@ -3204,7 +3204,7 @@ Condition to match to.
         <td>
           Percentage for the threshold<br/>
           <br/>
-            <i>Format</i>: int32<br/>
+            <i>Format</i>: int64<br/>
             <i>Maximum</i>: 100<br/>
         </td>
         <td>true</td>
@@ -3214,7 +3214,7 @@ Condition to match to.
         <td>
           Replace with a number<br/>
           <br/>
-            <i>Format</i>: int32<br/>
+            <i>Format</i>: int64<br/>
             <i>Maximum</i>: 100<br/>
         </td>
         <td>true</td>
@@ -3362,7 +3362,7 @@ Missing values strategies.
         <td>
           Replace with a number<br/>
           <br/>
-            <i>Format</i>: int32<br/>
+            <i>Format</i>: int64<br/>
             <i>Maximum</i>: 100<br/>
         </td>
         <td>false</td>
@@ -4868,7 +4868,7 @@ When to re-notify.
         <td>
           Delay between re-triggered alerts.<br/>
           <br/>
-            <i>Format</i>: int32<br/>
+            <i>Format</i>: int64<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -5618,7 +5618,7 @@ Backend reference for the outbound webhook.
         <td>
           Webhook ID.<br/>
           <br/>
-            <i>Format</i>: int32<br/>
+            <i>Format</i>: int64<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5688,7 +5688,7 @@ When to re-trigger.
         <td>
           Delay between re-triggered alerts.<br/>
           <br/>
-            <i>Format</i>: int32<br/>
+            <i>Format</i>: int64<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -6438,7 +6438,7 @@ Backend reference for the outbound webhook.
         <td>
           Webhook ID.<br/>
           <br/>
-            <i>Format</i>: int32<br/>
+            <i>Format</i>: int64<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6508,7 +6508,7 @@ When to re-trigger.
         <td>
           Delay between re-triggered alerts.<br/>
           <br/>
-            <i>Format</i>: int32<br/>
+            <i>Format</i>: int64<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10432,21 +10432,19 @@ GlobalRouterSpec defines the desired state of the Global Router.
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>entityType</b></td>
-        <td>enum</td>
-        <td>
-          EntityType is the entity type for the global router. Should equal "alerts".<br/>
-          <br/>
-            <i>Enum</i>: alerts<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
           Name is the name of the global router.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>entityLabelMatcher</b></td>
+        <td>map[string]string</td>
+        <td>
+          EntityLabelMatcher is an optional label matcher to filter entities for the global router.<br/>
+        </td>
+        <td>false</td>
       </tr><tr>
         <td><b>entityLabels</b></td>
         <td>map[string]string</td>
@@ -10749,6 +10747,15 @@ ResourceRef is a reference to a Kubernetes resource.
         <td>map[string]string</td>
         <td>
           CustomDetails are optional custom details to attach to the routing rule.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>entityType</b></td>
+        <td>enum</td>
+        <td>
+          EntityType is the entity type for the global router.<br/>
+          <br/>
+            <i>Enum</i>: alerts<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11711,7 +11718,8 @@ with respect to the current state of the instance.<br/>
 
 
 IPAccess is the Schema for the ipaccesses API.
-// See also https://coralogix.com/docs/user-guides/account-management/account-settings/ip-access-control/
+See also https://coralogix.com/docs/user-guides/account-management/account-settings/ip-access-control/
+**Added in v1.2.0**
 
 <table>
     <thead>
@@ -14480,6 +14488,7 @@ with respect to the current state of the instance.<br/>
 
 
 SLO is the Schema for the slos API.
+See also https://coralogix.com/platform/apm/slo-management/
 
 <table>
     <thead>
@@ -14507,13 +14516,6 @@ SLO is the Schema for the slos API.
       <td>object</td>
       <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
       <td>true</td>
-      </tr><tr>
-        <td><b>printableStatus</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
       </tr><tr>
         <td><b><a href="#slospec">spec</a></b></td>
         <td>object</td>
@@ -14652,19 +14654,19 @@ SliType defines the type of SLI used for the SLO. Exactly one of metric or windo
         <td>
           GoodEvents defines the good events metric.<br/>
         </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>groupByLabels</b></td>
-        <td>[]string</td>
-        <td>
-          GroupByLabels defines the labels to group the SLI by.<br/>
-        </td>
-        <td>false</td>
+        <td>true</td>
       </tr><tr>
         <td><b><a href="#slospecslityperequestbasedmetrictotalevents">totalEvents</a></b></td>
         <td>object</td>
         <td>
           TotalEvents defines the total events metric.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>groupByLabels</b></td>
+        <td>[]string</td>
+        <td>
+          GroupByLabels defines the labels to group the SLI by.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -14858,6 +14860,13 @@ SLOStatus defines the observed state of SLO.
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
         <td>string</td>
         <td>
           <br/>

@@ -1279,7 +1279,7 @@ func (in *MetricMissingValues) DeepCopyInto(out *MetricMissingValues) {
 	*out = *in
 	if in.MinNonNullValuesPct != nil {
 		in, out := &in.MinNonNullValuesPct, &out.MinNonNullValuesPct
-		*out = new(uint32)
+		*out = new(int64)
 		**out = **in
 	}
 }
@@ -1532,7 +1532,7 @@ func (in *OutboundWebhookBackendRef) DeepCopyInto(out *OutboundWebhookBackendRef
 	*out = *in
 	if in.ID != nil {
 		in, out := &in.ID, &out.ID
-		*out = new(uint32)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.Name != nil {
@@ -1577,7 +1577,7 @@ func (in *RetriggeringPeriod) DeepCopyInto(out *RetriggeringPeriod) {
 	*out = *in
 	if in.Minutes != nil {
 		in, out := &in.Minutes, &out.Minutes
-		*out = new(uint32)
+		*out = new(int64)
 		**out = **in
 	}
 }

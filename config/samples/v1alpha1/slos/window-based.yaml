@@ -1,0 +1,24 @@
+apiVersion: coralogix.com/v1alpha1
+kind: SLO
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: slo-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: window-based-slo-example
+spec:
+  name: window-based-slo-example
+  description: Coralogix SLO example
+  sliType:
+    windowBasedMetric:
+      query:
+        query: sum(rate(coralogix_logs_events_total{app="coralogix-slo-example", status="success"}[10m]))
+      window: 1m
+      comparisonOperator: greaterThan
+      threshold: "0.232"
+  window:
+    timeFrame: 7d
+  targetThresholdPercentage: 10
+

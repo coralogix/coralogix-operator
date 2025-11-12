@@ -17,18 +17,13 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/go-logr/logr"
-	"google.golang.org/protobuf/types/known/timestamppb"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	views "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/views_service"
 
-	utils "github.com/coralogix/coralogix-operator/api/coralogix"
 	"github.com/coralogix/coralogix-operator/internal/config"
 )
 
@@ -100,7 +95,7 @@ type Folder struct {
 	ResourceRef *ResourceRef `json:"resourceRef"`
 }
 
-func (v *View) ExtractCreateRequest(ctx context.Context, log logr.Logger) (*cxsdk.CreateViewRequest, error) {
+func (v *View) ExtractCreateRequest(ctx context.Context, log logr.Logger) (*views.ViewFolder, error) {
 	timeSelection, err := v.Spec.ExtractTimeSelection()
 	if err != nil {
 		return nil, fmt.Errorf("error on extracting time selection: %w", err)
@@ -116,23 +111,18 @@ func (v *View) ExtractCreateRequest(ctx context.Context, log logr.Logger) (*cxsd
 		query = sq.Query
 	}
 
-	return &cxsdk.CreateViewRequest{
-		Name: utils.StringPointerToWrapperspbString(ptr.To(v.Spec.Name)),
-		SearchQuery: &cxsdk.SearchQuery{
-			Query: utils.StringPointerToWrapperspbString(ptr.To(query)),
+	return &views.ViewFolder{
+		Name: v.Spec.Name,
+		SearchQuery: &views.SearchQuery{
+			Query: query,
 		},
-		TimeSelection: timeSelection,
+		TimeSelection: *timeSelection,
 		Filters:       v.Spec.ExtractFilters(),
-		FolderId:      utils.StringPointerToWrapperspbString(folderId),
+		FolderId:      folderId,
 	}, nil
 }
 
-func (v *View) ExtractReplaceRequest(ctx context.Context, log logr.Logger) (*cxsdk.ReplaceViewRequest, error) {
-	viewId, err := strconv.Atoi(*v.Status.ID)
-	if err != nil {
-		return nil, fmt.Errorf("error on converting view id to int: %w", err)
-	}
-
+func (v *View) ExtractReplaceRequest(ctx context.Context, log logr.Logger) (*views.View1, error) {
 	timeSelection, err := v.Spec.ExtractTimeSelection()
 	if err != nil {
 		return nil, fmt.Errorf("error on extracting time selection: %w", err)
@@ -148,17 +138,14 @@ func (v *View) ExtractReplaceRequest(ctx context.Context, log logr.Logger) (*cxs
 		query = sq.Query
 	}
 
-	return &cxsdk.ReplaceViewRequest{
-		View: &cxsdk.View{
-			Id:   wrapperspb.Int32(int32(viewId)),
-			Name: utils.StringPointerToWrapperspbString(ptr.To(v.Spec.Name)),
-			SearchQuery: &cxsdk.SearchQuery{
-				Query: utils.StringPointerToWrapperspbString(ptr.To(query)),
-			},
-			TimeSelection: timeSelection,
-			Filters:       v.Spec.ExtractFilters(),
-			FolderId:      utils.StringPointerToWrapperspbString(folderId),
+	return &views.View1{
+		Name: v.Spec.Name,
+		SearchQuery: &views.SearchQuery{
+			Query: query,
 		},
+		TimeSelection: *timeSelection,
+		Filters:       v.Spec.ExtractFilters(),
+		FolderId:      folderId,
 	}, nil
 }
 
@@ -189,21 +176,21 @@ func (v *View) ExtractFolderId(ctx context.Context, log logr.Logger) (*string, e
 	return vf.Status.ID, nil
 }
 
-func (s *ViewSpec) ExtractTimeSelection() (*cxsdk.TimeSelection, error) {
+func (s *ViewSpec) ExtractTimeSelection() (*views.TimeSelection, error) {
 	if s.TimeSelection.QuickSelection != nil {
-		return &cxsdk.TimeSelection{
-			SelectionType: &cxsdk.ViewTimeSelectionQuick{
-				QuickSelection: &cxsdk.QuickTimeSelection{
-					Seconds: s.TimeSelection.QuickSelection.Seconds,
+		return &views.TimeSelection{
+			TimeSelectionQuickSelection: &views.TimeSelectionQuickSelection{
+				QuickSelection: &views.QuickTimeSelection{
+					Seconds: int64(s.TimeSelection.QuickSelection.Seconds),
 				},
 			},
 		}, nil
 	} else if s.TimeSelection.CustomSelection != nil {
-		return &cxsdk.TimeSelection{
-			SelectionType: &cxsdk.ViewTimeSelectionCustom{
-				CustomSelection: &cxsdk.CustomTimeSelection{
-					FromTime: timestamppb.New(s.TimeSelection.CustomSelection.FromTime.Time),
-					ToTime:   timestamppb.New(s.TimeSelection.CustomSelection.ToTime.Time),
+		return &views.TimeSelection{
+			TimeSelectionCustomSelection: &views.TimeSelectionCustomSelection{
+				CustomSelection: &views.CustomTimeSelection{
+					FromTime: s.TimeSelection.CustomSelection.FromTime.Time,
+					ToTime:   s.TimeSelection.CustomSelection.ToTime.Time,
 				},
 			},
 		}, nil
@@ -212,15 +199,15 @@ func (s *ViewSpec) ExtractTimeSelection() (*cxsdk.TimeSelection, error) {
 	return nil, fmt.Errorf("no time selection provided")
 }
 
-func (s *ViewSpec) ExtractFilters() *cxsdk.SelectedFilters {
-	var filters []*cxsdk.ViewFilter
+func (s *ViewSpec) ExtractFilters() *views.SelectedFilters {
+	var filters []views.ViewsV1Filter
 	for _, filter := range s.Filters.Filters {
-		filters = append(filters, &cxsdk.ViewFilter{
-			Name:           utils.StringPointerToWrapperspbString(ptr.To(filter.Name)),
+		filters = append(filters, views.ViewsV1Filter{
+			Name:           filter.Name,
 			SelectedValues: filter.SelectedValues,
 		})
 	}
-	return &cxsdk.SelectedFilters{
+	return &views.SelectedFilters{
 		Filters: filters,
 	}
 }

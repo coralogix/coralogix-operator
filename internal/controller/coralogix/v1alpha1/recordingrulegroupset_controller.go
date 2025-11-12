@@ -29,13 +29,12 @@ import (
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/config"
-	"github.com/coralogix/coralogix-operator/internal/controller/clientset"
 	"github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
 )
 
 // RecordingRuleGroupSetReconciler reconciles a RecordingRuleGroupSet object
 type RecordingRuleGroupSetReconciler struct {
-	RecordingRuleGroupSetClient clientset.RecordingRulesGroupsClientInterface
+	RecordingRuleGroupSetClient *cxsdk.RecordingRuleGroupSetsClient
 	Interval                    time.Duration
 	RecordingRuleGroupSetSuffix string
 }

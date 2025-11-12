@@ -19,21 +19,22 @@ import (
 	"fmt"
 	"time"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	"github.com/go-logr/logr"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/protobuf/encoding/protojson"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	scopes "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/scopes_service"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/config"
 	"github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // ScopeReconciler reconciles a Scope object
 type ScopeReconciler struct {
-	ScopesClient *cxsdk.ScopesClient
+	ScopesClient *scopes.ScopesServiceAPIService
 	Interval     time.Duration
 }
 
@@ -61,15 +62,18 @@ func (r *ScopeReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 	if err != nil {
 		return fmt.Errorf("error on extracting create request: %w", err)
 	}
-	log.Info("Creating remote scope", "scope", protojson.Format(createRequest))
-	createResponse, err := r.ScopesClient.Create(ctx, createRequest)
+	log.Info("Creating remote scope", "scope", utils.FormatJSON(createRequest))
+	createResponse, httpResp, err := r.ScopesClient.
+		ScopesServiceCreateScope(ctx).
+		CreateScopeRequest(*createRequest).
+		Execute()
 	if err != nil {
-		return fmt.Errorf("error on creating remote scope: %w", err)
+		return fmt.Errorf("error on creating remote scope: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote scope created", "response", protojson.Format(createResponse))
+	log.Info("Remote scope created", "response", utils.FormatJSON(createResponse))
 
 	scope.Status = coralogixv1alpha1.ScopeStatus{
-		ID: &createResponse.Scope.Id,
+		ID: createResponse.Scope.Id,
 	}
 
 	return nil
@@ -81,12 +85,15 @@ func (r *ScopeReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
 	}
-	log.Info("Updating remote scope", "scope", protojson.Format(updateRequest))
-	updateResponse, err := r.ScopesClient.Update(ctx, updateRequest)
+	log.Info("Updating remote scope", "scope", utils.FormatJSON(updateRequest))
+	updateResponse, httpResp, err := r.ScopesClient.
+		ScopesServiceUpdateScope(ctx).
+		UpdateScopeRequest(*updateRequest).
+		Execute()
 	if err != nil {
-		return err
+		return cxsdk.NewAPIError(httpResp, err)
 	}
-	log.Info("Remote scope updated", "scope", protojson.Format(updateResponse))
+	log.Info("Remote scope updated", "scope", utils.FormatJSON(updateResponse))
 
 	return nil
 }
@@ -95,10 +102,14 @@ func (r *ScopeReconciler) HandleDeletion(ctx context.Context, log logr.Logger, o
 	scope := obj.(*coralogixv1alpha1.Scope)
 	id := *scope.Status.ID
 	log.Info("Deleting scope from remote system", "id", id)
-	_, err := r.ScopesClient.Delete(ctx, &cxsdk.DeleteScopeRequest{Id: id})
-	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.Error(err, "Error deleting remote scope", "id", id)
-		return fmt.Errorf("error deleting remote scope %s: %w", id, err)
+	_, httpResp, err := r.ScopesClient.
+		ScopesServiceDeleteScope(ctx, id).
+		Execute()
+	if err != nil {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+			log.Error(err, "Error deleting remote scope", "id", id)
+			return fmt.Errorf("error deleting remote scope %s: %w", id, apiErr)
+		}
 	}
 	log.Info("Scope deleted from remote system", "id", id)
 	return nil

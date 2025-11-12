@@ -57,18 +57,18 @@ spec:
               description:
                 description: Description is the description of the global router.
                 type: string
+              entityLabelMatcher:
+                additionalProperties:
+                  type: string
+                description: EntityLabelMatcher is an optional label matcher to filter
+                  entities for the global router.
+                type: object
               entityLabels:
                 additionalProperties:
                   type: string
                 description: EntityLabels are optional labels to attach to the global
                   router.
                 type: object
-              entityType:
-                description: EntityType is the entity type for the global router.
-                  Should equal "alerts".
-                enum:
-                - alerts
-                type: string
               fallback:
                 description: Fallback is the fallback routing target for the global
                   router.
@@ -160,6 +160,11 @@ spec:
                       description: CustomDetails are optional custom details to attach
                         to the routing rule.
                       type: object
+                    entityType:
+                      description: EntityType is the entity type for the global router.
+                      enum:
+                      - alerts
+                      type: string
                     name:
                       description: Name is the name of the routing rule.
                       type: string
@@ -248,7 +253,6 @@ spec:
                 type: array
             required:
             - description
-            - entityType
             - name
             type: object
           status:

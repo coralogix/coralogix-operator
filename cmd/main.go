@@ -143,8 +143,8 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&v1beta1controllers.AlertReconciler{
-		CoralogixClientSet: clientSet,
-		Interval:           cfg.ReconcileIntervals[utils.AlertKind],
+		ClientSet: oapiClientSet,
+		Interval:  cfg.ReconcileIntervals[utils.AlertKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Alert")
 		os.Exit(1)
@@ -167,21 +167,21 @@ func main() {
 	}
 
 	if err = (&v1alpha1controllers.OutboundWebhookReconciler{
-		OutboundWebhooksClient: clientSet.Webhooks(),
+		OutboundWebhooksClient: oapiClientSet.Webhooks(),
 		Interval:               cfg.ReconcileIntervals[utils.OutboundWebhookKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "OutboundWebhook")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.ApiKeyReconciler{
-		ApiKeysClient: clientSet.APIKeys(),
+		ApiKeysClient: oapiClientSet.APIKeys(),
 		Interval:      cfg.ReconcileIntervals[utils.ApiKeyKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ApiKey")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.CustomRoleReconciler{
-		CustomRolesClient: clientSet.Roles(),
+		CustomRolesClient: oapiClientSet.CustomRoles(),
 		Interval:          cfg.ReconcileIntervals[utils.CustomRoleKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CustomRole")
@@ -189,35 +189,38 @@ func main() {
 	}
 
 	if err = (&v1alpha1controllers.ScopeReconciler{
-		ScopesClient: clientSet.Scopes(),
+		ScopesClient: oapiClientSet.Scopes(),
 		Interval:     cfg.ReconcileIntervals[utils.ScopeKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Scope")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.GroupReconciler{
-		CXClientSet: clientSet,
-		Interval:    cfg.ReconcileIntervals[utils.GroupKind],
+		GroupsClient: oapiClientSet.Groups(),
+		CXClientSet:  clientSet,
+		Interval:     cfg.ReconcileIntervals[utils.GroupKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Group")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.TCOLogsPoliciesReconciler{
-		CoralogixClientSet: clientSet,
-		Interval:           cfg.ReconcileIntervals[utils.TCOLogsPoliciesKind],
+		TCOPoliciesClient:       oapiClientSet.TCOPolicies(),
+		ArchiveRetentionsClient: oapiClientSet.ArchiveRetentions(),
+		Interval:                cfg.ReconcileIntervals[utils.TCOLogsPoliciesKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "TCOLogsPolicies")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.TCOTracesPoliciesReconciler{
-		CoralogixClientSet: clientSet,
-		Interval:           cfg.ReconcileIntervals[utils.TCOTracesPoliciesKind],
+		TCOPoliciesClient:       oapiClientSet.TCOPolicies(),
+		ArchiveRetentionsClient: oapiClientSet.ArchiveRetentions(),
+		Interval:                cfg.ReconcileIntervals[utils.TCOTracesPoliciesKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "TCOTracesPolicies")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.IntegrationReconciler{
-		IntegrationsClient: clientSet.Integrations(),
+		IntegrationsClient: oapiClientSet.Integrations(),
 		Interval:           cfg.ReconcileIntervals[utils.IntegrationKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Integration")
@@ -238,42 +241,42 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.DashboardsFolderReconciler{
-		DashboardsFoldersClient: clientSet.DashboardsFolders(),
+		DashboardsFoldersClient: oapiClientSet.DashboardFolders(),
 		Interval:                cfg.ReconcileIntervals[utils.DashboardsFolderKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DashboardsFolder")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.ViewReconciler{
-		ViewsClient: clientSet.Views(),
+		ViewsClient: oapiClientSet.Views(),
 		Interval:    cfg.ReconcileIntervals[utils.ViewKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "View")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.ViewFolderReconciler{
-		ViewFoldersClient: clientSet.ViewFolders(),
+		ViewFoldersClient: oapiClientSet.ViewsFolders(),
 		Interval:          cfg.ReconcileIntervals[utils.ViewFolderKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ViewFolder")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.ConnectorReconciler{
-		NotificationsClient: clientSet.Notifications(),
-		Interval:            cfg.ReconcileIntervals[utils.ConnectorKind],
+		ConnectorsClient: oapiClientSet.Connectors(),
+		Interval:         cfg.ReconcileIntervals[utils.ConnectorKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Connector")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.PresetReconciler{
-		NotificationsClient: clientSet.Notifications(),
-		Interval:            cfg.ReconcileIntervals[utils.PresetKind],
+		PresetsClient: oapiClientSet.Presets(),
+		Interval:      cfg.ReconcileIntervals[utils.PresetKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Preset")
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.GlobalRouterReconciler{
-		NotificationsClient: clientSet.Notifications(),
+		GlobalRoutersClient: oapiClientSet.GlobalRouters(),
 		Interval:            cfg.ReconcileIntervals[utils.GlobalRouterKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GlobalRouter")
@@ -281,7 +284,7 @@ func main() {
 	}
 
 	if err = (&v1alpha1controllers.ArchiveLogsTargetReconciler{
-		ArchiveLogsTargetsClient: clientSet.ArchiveLogs(),
+		ArchiveLogsTargetsClient: oapiClientSet.ArchiveLogs(),
 		ArchiveRetentionsClient:  clientSet.ArchiveRetentions(),
 		Interval:                 cfg.ReconcileIntervals[utils.ArchiveLogsTargetKind],
 	}).SetupWithManager(mgr); err != nil {
@@ -297,7 +300,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.SLOReconciler{
-		SLOsClient: clientSet.SLOs(),
+		SLOsClient: oapiClientSet.SLOs(),
 		Interval:   cfg.ReconcileIntervals[utils.SLOKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "SLO")

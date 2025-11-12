@@ -18,12 +18,10 @@ import (
 	"fmt"
 
 	gouuid "github.com/google/uuid"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-
-	utils "github.com/coralogix/coralogix-operator/api/coralogix"
+	webhooks "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/outgoing_webhooks_service"
 )
 
 // OutboundWebhookSpec defines the desired state of an outbound webhook.
@@ -80,51 +78,6 @@ type OutboundWebhookType struct {
 	AwsEventBridge *AwsEventBridge `json:"awsEventBridge,omitempty"`
 }
 
-func (in *OutboundWebhookType) appendOutgoingWebhookConfig(data *cxsdk.OutgoingWebhookInputData) (*cxsdk.OutgoingWebhookInputData, error) {
-	if genericWebhook := in.GenericWebhook; genericWebhook != nil {
-		data.Config = genericWebhook.extractGenericWebhookConfig()
-		data.Type = cxsdk.WebhookTypeGeneric
-		data.Url = wrapperspb.String(genericWebhook.Url)
-	} else if slack := in.Slack; slack != nil {
-		data.Config = slack.extractSlackConfig()
-		data.Type = cxsdk.WebhookTypeSlack
-		data.Url = wrapperspb.String(slack.Url)
-	} else if pagerDuty := in.PagerDuty; pagerDuty != nil {
-		data.Config = pagerDuty.extractPagerDutyConfig()
-		data.Type = cxsdk.WebhookTypePagerduty
-	} else if sendLog := in.SendLog; sendLog != nil {
-		data.Config = sendLog.extractSendLogConfig()
-		data.Type = cxsdk.WebhookTypeSendLog
-		data.Url = wrapperspb.String(sendLog.Url)
-	} else if emailGroup := in.EmailGroup; emailGroup != nil {
-		data.Config = emailGroup.extractEmailGroupConfig()
-		data.Type = cxsdk.WebhookTypeEmailGroup
-	} else if microsoftTeams := in.MicrosoftTeams; microsoftTeams != nil {
-		data.Config = microsoftTeams.extractMicrosoftTeamsConfig()
-		data.Url = wrapperspb.String(microsoftTeams.Url)
-		data.Type = cxsdk.WebhookTypeMicrosoftTeams
-	} else if jira := in.Jira; jira != nil {
-		data.Config = jira.extractJiraConfig()
-		data.Url = wrapperspb.String(jira.Url)
-		data.Type = cxsdk.WebhookTypeJira
-	} else if opsgenie := in.Opsgenie; opsgenie != nil {
-		data.Config = opsgenie.extractOpsgenieConfig()
-		data.Type = cxsdk.WebhookTypeOpsgenie
-		data.Url = wrapperspb.String(opsgenie.Url)
-	} else if demisto := in.Demisto; demisto != nil {
-		data.Config = demisto.extractDemistoConfig()
-		data.Url = wrapperspb.String(demisto.Url)
-		data.Type = cxsdk.WebhookTypeDemisto
-	} else if in.AwsEventBridge != nil {
-		data.Config = in.AwsEventBridge.extractAwsEventBridgeConfig()
-		data.Type = cxsdk.WebhookTypeAwsEventBridge
-	} else {
-		return nil, fmt.Errorf("unsupported outbound-webhook type")
-	}
-
-	return data, nil
-}
-
 // Generic HTTP(s) webhook.
 type GenericWebhook struct {
 
@@ -143,34 +96,12 @@ type GenericWebhook struct {
 	Payload *string `json:"payload"`
 }
 
-// Status of the webhook call.
-type GenericWebhookStatus struct {
-	// ID
-	Uuid string `json:"uuid"`
-
-	// Called URL
-	Url string `json:"url"`
-
-	// HTTP method.
-	Method GenericWebhookMethodType `json:"method"`
-
-	// Headers of the call.
-	// +optional
-	Headers map[string]string `json:"headers"`
-
-	// Payland of the call.
-	// +optional
-	Payload *string `json:"payload"`
-}
-
-func (in *GenericWebhook) extractGenericWebhookConfig() *cxsdk.GenericWebhookInputData {
-	return &cxsdk.GenericWebhookInputData{
-		GenericWebhook: &cxsdk.GenericWebhookConfig{
-			Uuid:    wrapperspb.String(gouuid.NewString()),
-			Method:  GenericWebhookMethodTypeToProto[in.Method],
-			Headers: in.Headers,
-			Payload: utils.StringPointerToWrapperspbString(in.Payload),
-		},
+func (in *GenericWebhook) extractGenericWebhookConfig() *webhooks.GenericWebhookConfig {
+	return &webhooks.GenericWebhookConfig{
+		Uuid:    webhooks.PtrString(gouuid.NewString()),
+		Method:  GenericWebhookMethodTypeToOpenAPI[in.Method].Ptr(),
+		Headers: ptr.To(in.Headers),
+		Payload: in.Payload,
 	}
 }
 
@@ -185,13 +116,12 @@ const (
 )
 
 var (
-	GenericWebhookMethodTypeToProto = map[GenericWebhookMethodType]cxsdk.GenericWebhookConfigMethodType{
-		GenericWebhookMethodTypeUNKNOWN: cxsdk.GenericWebhookConfigUnknown,
-		GenericWebhookMethodTypeGet:     cxsdk.GenericWebhookConfigGet,
-		GenericWebhookMethodTypePost:    cxsdk.GenericWebhookConfigPost,
-		GenericWebhookMethodTypePut:     cxsdk.GenericWebhookConfigPut,
+	GenericWebhookMethodTypeToOpenAPI = map[GenericWebhookMethodType]webhooks.MethodType{
+		GenericWebhookMethodTypeUNKNOWN: webhooks.METHODTYPE_UNKNOWN,
+		GenericWebhookMethodTypeGet:     webhooks.METHODTYPE_GET,
+		GenericWebhookMethodTypePost:    webhooks.METHODTYPE_POST,
+		GenericWebhookMethodTypePut:     webhooks.METHODTYPE_PUT,
 	}
-	GenericWebhookMethodTypeFromProto = utils.ReverseMap(GenericWebhookMethodTypeToProto)
 )
 
 type Slack struct {
@@ -206,28 +136,26 @@ type Slack struct {
 	Url         string                  `json:"url"`
 }
 
-func (in *Slack) extractSlackConfig() *cxsdk.SlackWebhookInputData {
-	digests := make([]*cxsdk.SlackConfigDigest, 0)
+func (in *Slack) extractSlackConfig() *webhooks.SlackConfig {
+	digests := make([]webhooks.Digest, 0)
 	for _, digest := range in.Digests {
-		digests = append(digests, &cxsdk.SlackConfigDigest{
-			Type:     SlackConfigDigestTypeToProto[digest.Type],
-			IsActive: wrapperspb.Bool(digest.IsActive),
+		digests = append(digests, webhooks.Digest{
+			Type:     SlackConfigDigestTypeToOpenAPI[digest.Type].Ptr(),
+			IsActive: webhooks.PtrBool(digest.IsActive),
 		})
 	}
 
-	attachments := make([]*cxsdk.SlackConfigAttachment, 0)
+	attachments := make([]webhooks.Attachment, 0)
 	for _, attachment := range in.Attachments {
-		attachments = append(attachments, &cxsdk.SlackConfigAttachment{
-			Type:     SlackConfigAttachmentTypeToProto[attachment.Type],
-			IsActive: wrapperspb.Bool(attachment.IsActive),
+		attachments = append(attachments, webhooks.Attachment{
+			Type:     SlackConfigAttachmentTypeToOpenAPI[attachment.Type].Ptr(),
+			IsActive: webhooks.PtrBool(attachment.IsActive),
 		})
 	}
 
-	return &cxsdk.SlackWebhookInputData{
-		Slack: &cxsdk.SlackConfig{
-			Digests:     digests,
-			Attachments: attachments,
-		},
+	return &webhooks.SlackConfig{
+		Digests:     digests,
+		Attachments: attachments,
 	}
 }
 
@@ -244,14 +172,13 @@ const (
 )
 
 var (
-	SlackConfigDigestTypeToProto = map[SlackConfigDigestType]cxsdk.SlackConfigDigestType{
-		SlackConfigDigestTypeUnknown:              cxsdk.SlackConfigUnknown,
-		SlackConfigDigestTypeErrorAndCriticalLogs: cxsdk.SlackConfigErrorAndCriticalLogs,
-		SlackConfigDigestTypeFlowAnomalies:        cxsdk.SlackConfigFlowAnomalies,
-		SlackConfigSpikeAnomalies:                 cxsdk.SlackConfigSpikeAnomalies,
-		SlackConfigDigestTypeDataUsage:            cxsdk.SlackConfigDataUsage,
+	SlackConfigDigestTypeToOpenAPI = map[SlackConfigDigestType]webhooks.DigestType{
+		SlackConfigDigestTypeUnknown:              webhooks.DIGESTTYPE_UNKNOWN,
+		SlackConfigDigestTypeErrorAndCriticalLogs: webhooks.DIGESTTYPE_ERROR_AND_CRITICAL_LOGS,
+		SlackConfigDigestTypeFlowAnomalies:        webhooks.DIGESTTYPE_FLOW_ANOMALIES,
+		SlackConfigSpikeAnomalies:                 webhooks.DIGESTTYPE_SPIKE_ANOMALIES,
+		SlackConfigDigestTypeDataUsage:            webhooks.DIGESTTYPE_DATA_USAGE,
 	}
-	SlackConfigDigestTypeFromProto = utils.ReverseMap(SlackConfigDigestTypeToProto)
 )
 
 // Digest config.
@@ -283,12 +210,11 @@ const (
 )
 
 var (
-	SlackConfigAttachmentTypeToProto = map[SlackConfigAttachmentType]cxsdk.SlackConfigAttachmentType{
-		SlackConfigAttachmentTypeEmpty:          cxsdk.SlackConfigEmpty,
-		SlackConfigAttachmentTypeMetricSnapshot: cxsdk.SlackConfigMetricSnapshot,
-		SlackConfigAttachmentTypeLogs:           cxsdk.SlackConfigLogs,
+	SlackConfigAttachmentTypeToOpenAPI = map[SlackConfigAttachmentType]webhooks.AttachmentType{
+		SlackConfigAttachmentTypeEmpty:          webhooks.ATTACHMENTTYPE_EMPTY,
+		SlackConfigAttachmentTypeMetricSnapshot: webhooks.ATTACHMENTTYPE_METRIC_SNAPSHOT,
+		SlackConfigAttachmentTypeLogs:           webhooks.ATTACHMENTTYPE_LOGS,
 	}
-	SlackConfigAttachmentTypeFromProto = utils.ReverseMap(SlackConfigAttachmentTypeToProto)
 )
 
 // PagerDuty configuration.
@@ -297,11 +223,9 @@ type PagerDuty struct {
 	ServiceKey string `json:"serviceKey"`
 }
 
-func (in *PagerDuty) extractPagerDutyConfig() *cxsdk.PagerDutyWebhookInputData {
-	return &cxsdk.PagerDutyWebhookInputData{
-		PagerDuty: &cxsdk.PagerDutyConfig{
-			ServiceKey: wrapperspb.String(in.ServiceKey),
-		},
+func (in *PagerDuty) extractPagerDutyConfig() *webhooks.PagerDutyConfig {
+	return &webhooks.PagerDutyConfig{
+		ServiceKey: webhooks.PtrString(in.ServiceKey),
 	}
 }
 
@@ -324,12 +248,10 @@ type SendLogStatus struct {
 	Uuid string `json:"uuid"`
 }
 
-func (in *SendLog) extractSendLogConfig() *cxsdk.SendLogWebhookInputData {
-	return &cxsdk.SendLogWebhookInputData{
-		SendLog: &cxsdk.SendLogConfig{
-			Payload: wrapperspb.String(in.Payload),
-			Uuid:    wrapperspb.String(gouuid.NewString()),
-		},
+func (in *SendLog) extractSendLogConfig() *webhooks.SendLogConfig {
+	return &webhooks.SendLogConfig{
+		Payload: webhooks.PtrString(in.Payload),
+		Uuid:    webhooks.PtrString(gouuid.NewString()),
 	}
 }
 
@@ -339,11 +261,9 @@ type EmailGroup struct {
 	EmailAddresses []string `json:"emailAddresses"`
 }
 
-func (in *EmailGroup) extractEmailGroupConfig() *cxsdk.EmailGroupWebhookInputData {
-	return &cxsdk.EmailGroupWebhookInputData{
-		EmailGroup: &cxsdk.EmailGroupConfig{
-			EmailAddresses: utils.StringSliceToWrappedStringSlice(in.EmailAddresses),
-		},
+func (in *EmailGroup) extractEmailGroupConfig() *webhooks.EmailGroupConfig {
+	return &webhooks.EmailGroupConfig{
+		EmailAddresses: in.EmailAddresses,
 	}
 }
 
@@ -351,12 +271,6 @@ func (in *EmailGroup) extractEmailGroupConfig() *cxsdk.EmailGroupWebhookInputDat
 type MicrosoftTeams struct {
 	// Teams URL
 	Url string `json:"url"`
-}
-
-func (in *MicrosoftTeams) extractMicrosoftTeamsConfig() *cxsdk.MicrosoftTeamsWebhookInputData {
-	return &cxsdk.MicrosoftTeamsWebhookInputData{
-		MicrosoftTeams: &cxsdk.MicrosoftTeamsConfig{},
-	}
 }
 
 // Jira configuration
@@ -374,24 +288,16 @@ type Jira struct {
 	Url string `json:"url"`
 }
 
-func (in *Jira) extractJiraConfig() *cxsdk.JiraWebhookInputData {
-	return &cxsdk.JiraWebhookInputData{
-		Jira: &cxsdk.JiraConfig{
-			ApiToken:   wrapperspb.String(in.ApiToken),
-			Email:      wrapperspb.String(in.Email),
-			ProjectKey: wrapperspb.String(in.ProjectKey),
-		},
+func (in *Jira) extractJiraConfig() *webhooks.JiraConfig {
+	return &webhooks.JiraConfig{
+		ApiToken:   webhooks.PtrString(in.ApiToken),
+		Email:      webhooks.PtrString(in.Email),
+		ProjectKey: webhooks.PtrString(in.ProjectKey),
 	}
 }
 
 type Opsgenie struct {
 	Url string `json:"url"`
-}
-
-func (in *Opsgenie) extractOpsgenieConfig() *cxsdk.OpsgenieWebhookInputData {
-	return &cxsdk.OpsgenieWebhookInputData{
-		Opsgenie: &cxsdk.OpsgenieConfig{},
-	}
 }
 
 type Demisto struct {
@@ -400,12 +306,10 @@ type Demisto struct {
 	Url     string `json:"url"`
 }
 
-func (in *Demisto) extractDemistoConfig() *cxsdk.DemistoWebhookInputData {
-	return &cxsdk.DemistoWebhookInputData{
-		Demisto: &cxsdk.DemistoConfig{
-			Uuid:    wrapperspb.String(in.Uuid),
-			Payload: wrapperspb.String(in.Payload),
-		},
+func (in *Demisto) extractDemistoConfig() *webhooks.DemistoConfig {
+	return &webhooks.DemistoConfig{
+		Uuid:    webhooks.PtrString(in.Uuid),
+		Payload: webhooks.PtrString(in.Payload),
 	}
 }
 
@@ -417,15 +321,13 @@ type AwsEventBridge struct {
 	RoleName    string `json:"roleName"`
 }
 
-func (in *AwsEventBridge) extractAwsEventBridgeConfig() *cxsdk.AwsEventBridgeWebhookInputData {
-	return &cxsdk.AwsEventBridgeWebhookInputData{
-		AwsEventBridge: &cxsdk.AwsEventBridgeConfig{
-			EventBusArn: wrapperspb.String(in.EventBusArn),
-			Detail:      wrapperspb.String(in.Detail),
-			DetailType:  wrapperspb.String(in.DetailType),
-			Source:      wrapperspb.String(in.Source),
-			RoleName:    wrapperspb.String(in.RoleName),
-		},
+func (in *AwsEventBridge) extractAwsEventBridgeConfig() *webhooks.AwsEventBridgeConfig {
+	return &webhooks.AwsEventBridgeConfig{
+		EventBusArn: webhooks.PtrString(in.EventBusArn),
+		Detail:      webhooks.PtrString(in.Detail),
+		DetailType:  webhooks.PtrString(in.DetailType),
+		Source:      webhooks.PtrString(in.Source),
+		RoleName:    webhooks.PtrString(in.RoleName),
 	}
 }
 
@@ -479,18 +381,18 @@ type OutboundWebhook struct {
 	Status OutboundWebhookStatus `json:"status,omitempty"`
 }
 
-func (in *OutboundWebhook) ExtractCreateOutboundWebhookRequest() (*cxsdk.CreateOutgoingWebhookRequest, error) {
+func (in *OutboundWebhook) ExtractCreateOutboundWebhookRequest() (*webhooks.CreateOutgoingWebhookRequest, error) {
 	webhookData, err := in.Spec.ExtractOutgoingWebhookInputData()
 	if err != nil {
 		return nil, err
 	}
 
-	return &cxsdk.CreateOutgoingWebhookRequest{
+	return &webhooks.CreateOutgoingWebhookRequest{
 		Data: webhookData,
 	}, nil
 }
 
-func (in *OutboundWebhook) ExtractUpdateOutboundWebhookRequest() (*cxsdk.UpdateOutgoingWebhookRequest, error) {
+func (in *OutboundWebhook) ExtractUpdateOutboundWebhookRequest() (*webhooks.UpdateOutgoingWebhookRequest, error) {
 	webhookData, err := in.Spec.ExtractOutgoingWebhookInputData()
 	if err != nil {
 		return nil, err
@@ -500,17 +402,106 @@ func (in *OutboundWebhook) ExtractUpdateOutboundWebhookRequest() (*cxsdk.UpdateO
 		return nil, fmt.Errorf("outbound-webhook id is not set")
 	}
 
-	return &cxsdk.UpdateOutgoingWebhookRequest{
-		Id:   *in.Status.ID,
+	return &webhooks.UpdateOutgoingWebhookRequest{
+		Id:   in.Status.ID,
 		Data: webhookData,
 	}, nil
 }
 
-func (in *OutboundWebhookSpec) ExtractOutgoingWebhookInputData() (*cxsdk.OutgoingWebhookInputData, error) {
-	webhookData := &cxsdk.OutgoingWebhookInputData{
-		Name: wrapperspb.String(in.Name),
+func (in *OutboundWebhookSpec) ExtractOutgoingWebhookInputData() (*webhooks.OutgoingWebhookInputData, error) {
+	if genericWebhook := in.OutboundWebhookType.GenericWebhook; genericWebhook != nil {
+		return &webhooks.OutgoingWebhookInputData{
+			OutgoingWebhookInputDataGenericWebhook: &webhooks.OutgoingWebhookInputDataGenericWebhook{
+				Name:           webhooks.PtrString(in.Name),
+				Type:           webhooks.WEBHOOKTYPE_GENERIC.Ptr(),
+				Url:            webhooks.PtrString(genericWebhook.Url),
+				GenericWebhook: genericWebhook.extractGenericWebhookConfig(),
+			},
+		}, nil
+	} else if slack := in.OutboundWebhookType.Slack; slack != nil {
+		return &webhooks.OutgoingWebhookInputData{
+			OutgoingWebhookInputDataSlack: &webhooks.OutgoingWebhookInputDataSlack{
+				Name:  webhooks.PtrString(in.Name),
+				Type:  webhooks.WEBHOOKTYPE_SLACK.Ptr(),
+				Url:   webhooks.PtrString(slack.Url),
+				Slack: slack.extractSlackConfig(),
+			},
+		}, nil
+	} else if pagerDuty := in.OutboundWebhookType.PagerDuty; pagerDuty != nil {
+		return &webhooks.OutgoingWebhookInputData{
+			OutgoingWebhookInputDataPagerDuty: &webhooks.OutgoingWebhookInputDataPagerDuty{
+				Name:      webhooks.PtrString(in.Name),
+				Type:      webhooks.WEBHOOKTYPE_PAGERDUTY.Ptr(),
+				PagerDuty: pagerDuty.extractPagerDutyConfig(),
+			},
+		}, nil
+	} else if sendLog := in.OutboundWebhookType.SendLog; sendLog != nil {
+		return &webhooks.OutgoingWebhookInputData{
+			OutgoingWebhookInputDataSendLog: &webhooks.OutgoingWebhookInputDataSendLog{
+				Name:    webhooks.PtrString(in.Name),
+				Type:    webhooks.WEBHOOKTYPE_SEND_LOG.Ptr(),
+				Url:     webhooks.PtrString(sendLog.Url),
+				SendLog: sendLog.extractSendLogConfig(),
+			},
+		}, nil
+	} else if emailGroup := in.OutboundWebhookType.EmailGroup; emailGroup != nil {
+		return &webhooks.OutgoingWebhookInputData{
+			OutgoingWebhookInputDataEmailGroup: &webhooks.OutgoingWebhookInputDataEmailGroup{
+				Name:       webhooks.PtrString(in.Name),
+				Type:       webhooks.WEBHOOKTYPE_EMAIL_GROUP.Ptr(),
+				EmailGroup: emailGroup.extractEmailGroupConfig(),
+			},
+		}, nil
+	} else if microsoftTeams := in.OutboundWebhookType.MicrosoftTeams; microsoftTeams != nil {
+		return &webhooks.OutgoingWebhookInputData{
+			OutgoingWebhookInputDataMicrosoftTeams: &webhooks.OutgoingWebhookInputDataMicrosoftTeams{
+				Name:           webhooks.PtrString(in.Name),
+				Type:           webhooks.WEBHOOKTYPE_MICROSOFT_TEAMS.Ptr(),
+				Url:            webhooks.PtrString(microsoftTeams.Url),
+				MicrosoftTeams: map[string]interface{}{},
+			},
+		}, nil
+	} else if jira := in.OutboundWebhookType.Jira; jira != nil {
+		return &webhooks.OutgoingWebhookInputData{
+			OutgoingWebhookInputDataJira: &webhooks.OutgoingWebhookInputDataJira{
+				Name: webhooks.PtrString(in.Name),
+				Type: webhooks.WEBHOOKTYPE_JIRA.Ptr(),
+				Url:  webhooks.PtrString(jira.Url),
+				Jira: jira.extractJiraConfig(),
+			},
+		}, nil
+	} else if opsgenie := in.OutboundWebhookType.Opsgenie; opsgenie != nil {
+		//data.Config = opsgenie.extractOpsgenieConfig()
+		//data.Type = cxsdk.WebhookTypeOpsgenie
+		//data.Url = opsgenie.Url)
+		return &webhooks.OutgoingWebhookInputData{
+			OutgoingWebhookInputDataOpsgenie: &webhooks.OutgoingWebhookInputDataOpsgenie{
+				Name:     webhooks.PtrString(in.Name),
+				Type:     webhooks.WEBHOOKTYPE_OPSGENIE.Ptr(),
+				Url:      webhooks.PtrString(opsgenie.Url),
+				Opsgenie: map[string]interface{}{},
+			},
+		}, nil
+	} else if demisto := in.OutboundWebhookType.Demisto; demisto != nil {
+		return &webhooks.OutgoingWebhookInputData{
+			OutgoingWebhookInputDataDemisto: &webhooks.OutgoingWebhookInputDataDemisto{
+				Name:    webhooks.PtrString(in.Name),
+				Type:    webhooks.WEBHOOKTYPE_DEMISTO.Ptr(),
+				Url:     webhooks.PtrString(demisto.Url),
+				Demisto: demisto.extractDemistoConfig(),
+			},
+		}, nil
+	} else if in.OutboundWebhookType.AwsEventBridge != nil {
+		return &webhooks.OutgoingWebhookInputData{
+			OutgoingWebhookInputDataAwsEventBridge: &webhooks.OutgoingWebhookInputDataAwsEventBridge{
+				Name:           webhooks.PtrString(in.Name),
+				Type:           webhooks.WEBHOOKTYPE_AWS_EVENT_BRIDGE.Ptr(),
+				AwsEventBridge: in.OutboundWebhookType.AwsEventBridge.extractAwsEventBridgeConfig(),
+			},
+		}, nil
 	}
-	return in.OutboundWebhookType.appendOutgoingWebhookConfig(webhookData)
+
+	return nil, fmt.Errorf("unsupported outbound-webhook type")
 }
 
 //+kubebuilder:object:root=true

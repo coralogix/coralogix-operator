@@ -15,12 +15,9 @@
 package v1alpha1
 
 import (
-	"fmt"
-	"strings"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	scopes "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/scopes_service"
 )
 
 // ScopeSpec defines the desired state of a Coralogix Scope.
@@ -41,6 +38,12 @@ type ScopeSpec struct {
 	DefaultExpression string `json:"defaultExpression"`
 }
 
+var entityTypeSchemaToOpenAPI = map[string]scopes.V1EntityType{
+	"logs":        scopes.V1ENTITYTYPE_ENTITY_TYPE_LOGS,
+	"spans":       scopes.V1ENTITYTYPE_ENTITY_TYPE_SPANS,
+	"unspecified": scopes.V1ENTITYTYPE_ENTITY_TYPE_UNSPECIFIED,
+}
+
 // ScopeFilter defines a filter to include data in a scope.
 type ScopeFilter struct {
 	// +kubebuilder:validation:Enum=logs;spans;unspecified
@@ -51,27 +54,27 @@ type ScopeFilter struct {
 	Expression string `json:"expression"`
 }
 
-func (s *ScopeSpec) ExtractCreateScopeRequest() (*cxsdk.CreateScopeRequest, error) {
+func (s *ScopeSpec) ExtractCreateScopeRequest() (*scopes.CreateScopeRequest, error) {
 	filters, err := s.ExtractScopeFilters()
 	if err != nil {
 		return nil, err
 	}
 
-	return &cxsdk.CreateScopeRequest{
+	return &scopes.CreateScopeRequest{
 		DisplayName:       s.Name,
 		Description:       s.Description,
 		Filters:           filters,
-		DefaultExpression: s.DefaultExpression,
+		DefaultExpression: scopes.PtrString(s.DefaultExpression),
 	}, nil
 }
 
-func (s *ScopeSpec) ExtractUpdateScopeRequest(id string) (*cxsdk.UpdateScopeRequest, error) {
+func (s *ScopeSpec) ExtractUpdateScopeRequest(id string) (*scopes.UpdateScopeRequest, error) {
 	filters, err := s.ExtractScopeFilters()
 	if err != nil {
 		return nil, err
 	}
 
-	return &cxsdk.UpdateScopeRequest{
+	return &scopes.UpdateScopeRequest{
 		Id:                id,
 		DisplayName:       s.Name,
 		Description:       s.Description,
@@ -80,16 +83,12 @@ func (s *ScopeSpec) ExtractUpdateScopeRequest(id string) (*cxsdk.UpdateScopeRequ
 	}, nil
 }
 
-func (s *ScopeSpec) ExtractScopeFilters() ([]*cxsdk.ScopeFilter, error) {
-	var filters []*cxsdk.ScopeFilter
+func (s *ScopeSpec) ExtractScopeFilters() ([]scopes.ScopesV1Filter, error) {
+	var filters []scopes.ScopesV1Filter
 	for _, f := range s.Filters {
-		entityType, ok := cxsdk.EntityTypeValueLookup["ENTITY_TYPE_"+strings.ToUpper(f.EntityType)]
-		if !ok {
-			return nil, fmt.Errorf("invalid entity type: %s", f.EntityType)
-		}
-		filters = append(filters, &cxsdk.ScopeFilter{
-			EntityType: cxsdk.EntityType(entityType),
-			Expression: f.Expression,
+		filters = append(filters, scopes.ScopesV1Filter{
+			EntityType: entityTypeSchemaToOpenAPI[f.EntityType].Ptr(),
+			Expression: scopes.PtrString(f.Expression),
 		})
 	}
 

@@ -18,11 +18,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"google.golang.org/protobuf/types/known/wrapperspb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	integrations "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/integration_service"
 )
 
 // IntegrationSpec defines the desired state of a Coralogix (managed) integration.
@@ -39,80 +38,81 @@ type IntegrationSpec struct {
 	Parameters runtime.RawExtension `json:"parameters"`
 }
 
-func (s *IntegrationSpec) ExtractCreateIntegrationRequest() (*cxsdk.SaveIntegrationRequest, error) {
+func (s *IntegrationSpec) ExtractCreateIntegrationRequest() (*integrations.SaveIntegrationRequest, error) {
 	parameters, err := s.ExtractParameters()
 	if err != nil {
 		return nil, fmt.Errorf("failed to extract parameters: %w", err)
 	}
-	return &cxsdk.SaveIntegrationRequest{
-		Metadata: &cxsdk.IntegrationMetadata{
-			IntegrationKey: wrapperspb.String(s.IntegrationKey),
-			Version:        wrapperspb.String(s.Version),
-			SpecificData: &cxsdk.IntegrationMetadataIntegrationParameters{
-				IntegrationParameters: &cxsdk.GenericIntegrationParameters{
-					Parameters: parameters,
-				},
+	return &integrations.SaveIntegrationRequest{
+		Metadata: &integrations.IntegrationMetadata{
+			IntegrationKey: integrations.PtrString(s.IntegrationKey),
+			Version:        integrations.PtrString(s.Version),
+			IntegrationParameters: &integrations.GenericIntegrationParameters{
+				Parameters: parameters,
 			},
 		},
 	}, nil
 }
 
-func (s *IntegrationSpec) ExtractUpdateIntegrationRequest(id string) (*cxsdk.UpdateIntegrationRequest, error) {
+func (s *IntegrationSpec) ExtractUpdateIntegrationRequest(id *string) (*integrations.UpdateIntegrationRequest, error) {
 	parameters, err := s.ExtractParameters()
 	if err != nil {
 		return nil, fmt.Errorf("failed to extract parameters: %w", err)
 	}
-	return &cxsdk.UpdateIntegrationRequest{
-		Id: wrapperspb.String(id),
-		Metadata: &cxsdk.IntegrationMetadata{
-			IntegrationKey: wrapperspb.String(s.IntegrationKey),
-			Version:        wrapperspb.String(s.Version),
-			SpecificData: &cxsdk.IntegrationMetadataIntegrationParameters{
-				IntegrationParameters: &cxsdk.GenericIntegrationParameters{
-					Parameters: parameters,
-				},
+
+	return &integrations.UpdateIntegrationRequest{
+		Id: id,
+		Metadata: &integrations.IntegrationMetadata{
+			IntegrationKey: integrations.PtrString(s.IntegrationKey),
+			Version:        integrations.PtrString(s.Version),
+			IntegrationParameters: &integrations.GenericIntegrationParameters{
+				Parameters: parameters,
 			},
 		},
 	}, nil
 }
 
-func (s *IntegrationSpec) ExtractParameters() ([]*cxsdk.IntegrationParameter, error) {
+func (s *IntegrationSpec) ExtractParameters() ([]integrations.Parameter, error) {
 	var rawParams map[string]interface{}
 	if err := json.Unmarshal(s.Parameters.Raw, &rawParams); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal parameters: %w", err)
 	}
 
-	var parameters []*cxsdk.IntegrationParameter
+	var parameters []integrations.Parameter
 	for key, value := range rawParams {
 		switch v := value.(type) {
 		case string:
-			parameters = append(parameters, &cxsdk.IntegrationParameter{
-				Key:   key,
-				Value: &cxsdk.IntegrationParameterStringValue{StringValue: wrapperspb.String(v)},
+			parameters = append(parameters, integrations.Parameter{
+				ParameterStringValue: &integrations.ParameterStringValue{
+					Key:         integrations.PtrString(key),
+					StringValue: integrations.PtrString(v),
+				},
 			})
 		case float64:
-			parameters = append(parameters, &cxsdk.IntegrationParameter{
-				Key:   key,
-				Value: &cxsdk.IntegrationParameterNumericValue{NumericValue: wrapperspb.Double(v)},
+			parameters = append(parameters, integrations.Parameter{
+				ParameterNumericValue: &integrations.ParameterNumericValue{
+					Key:          integrations.PtrString(key),
+					NumericValue: integrations.PtrFloat64(v),
+				},
 			})
 		case bool:
-			parameters = append(parameters, &cxsdk.IntegrationParameter{
-				Key:   key,
-				Value: &cxsdk.IntegrationParameterBooleanValue{BooleanValue: wrapperspb.Bool(v)},
+			parameters = append(parameters, integrations.Parameter{
+				ParameterBooleanValue: &integrations.ParameterBooleanValue{
+					Key:          integrations.PtrString(key),
+					BooleanValue: integrations.PtrBool(v),
+				},
 			})
 		case []interface{}:
-			var stringList []*wrapperspb.StringValue
+			var stringList integrations.StringList
 			for _, item := range v {
 				if str, ok := item.(string); ok {
-					stringList = append(stringList, wrapperspb.String(str))
+					stringList.Values = append(stringList.Values, str)
 				}
 			}
-			parameters = append(parameters, &cxsdk.IntegrationParameter{
-				Key: key,
-				Value: &cxsdk.IntegrationParameterStringList{
-					StringList: &cxsdk.IntegrationParameterStringListInner{
-						Values: stringList,
-					},
+			parameters = append(parameters, integrations.Parameter{
+				ParameterStringList: &integrations.ParameterStringList{
+					Key:        integrations.PtrString(key),
+					StringList: &stringList,
 				},
 			})
 		default:

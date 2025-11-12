@@ -20,22 +20,21 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	integrations "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/integration_service"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/config"
 	"github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // IntegrationReconciler reconciles a Integration object
 type IntegrationReconciler struct {
-	IntegrationsClient *cxsdk.IntegrationsClient
+	IntegrationsClient *integrations.IntegrationServiceAPIService
 	Interval           time.Duration
 }
 
@@ -61,15 +60,18 @@ func (r *IntegrationReconciler) HandleCreation(ctx context.Context, log logr.Log
 	if err != nil {
 		return fmt.Errorf("error on extracting create integration request: %w", err)
 	}
-	log.Info("Creating remote integration", "integration", protojson.Format(createRequest))
-	createResponse, err := r.IntegrationsClient.Create(ctx, createRequest)
+	log.Info("Creating remote integration", "integration", utils.FormatJSON(createRequest))
+	createResponse, httpResp, err := r.IntegrationsClient.
+		IntegrationServiceSaveIntegration(ctx).
+		SaveIntegrationRequest(*createRequest).
+		Execute()
 	if err != nil {
-		return fmt.Errorf("error on creating remote integration: %w", err)
+		return fmt.Errorf("error on creating remote integration: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote integration created", "response", protojson.Format(createResponse))
+	log.Info("Remote integration created", "response", utils.FormatJSON(createResponse))
 
 	integration.Status = coralogixv1alpha1.IntegrationStatus{
-		Id: &createResponse.IntegrationId.Value,
+		Id: createResponse.IntegrationId,
 	}
 
 	return nil
@@ -77,16 +79,19 @@ func (r *IntegrationReconciler) HandleCreation(ctx context.Context, log logr.Log
 
 func (r *IntegrationReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	integration := obj.(*coralogixv1alpha1.Integration)
-	updateRequest, err := integration.Spec.ExtractUpdateIntegrationRequest(*integration.Status.Id)
+	updateRequest, err := integration.Spec.ExtractUpdateIntegrationRequest(integration.Status.Id)
 	if err != nil {
 		return fmt.Errorf("error on extracting update integration request: %w", err)
 	}
-	log.Info("Updating remote integration", "integration", protojson.Format(updateRequest))
-	updateResponse, err := r.IntegrationsClient.Update(ctx, updateRequest)
+	log.Info("Updating remote integration", "integration", utils.FormatJSON(updateRequest))
+	updateResponse, httpResp, err := r.IntegrationsClient.
+		IntegrationServiceUpdateIntegration(ctx).
+		UpdateIntegrationRequest(*updateRequest).
+		Execute()
 	if err != nil {
-		return err
+		return cxsdk.NewAPIError(httpResp, err)
 	}
-	log.Info("Remote integration updated", "integration", protojson.Format(updateResponse))
+	log.Info("Remote integration updated", "integration", utils.FormatJSON(updateResponse))
 
 	return nil
 }
@@ -94,10 +99,12 @@ func (r *IntegrationReconciler) HandleUpdate(ctx context.Context, log logr.Logge
 func (r *IntegrationReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
 	integration := obj.(*coralogixv1alpha1.Integration)
 	log.Info("Deleting integration from remote system", "id", *integration.Status.Id)
-	_, err := r.IntegrationsClient.Delete(ctx, &cxsdk.DeleteIntegrationRequest{IntegrationId: wrapperspb.String(*integration.Status.Id)})
-	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.Error(err, "Error deleting remote integration", "id", *integration.Status.Id)
-		return fmt.Errorf("error deleting remote integration %s: %w", *integration.Status.Id, err)
+	_, httpResp, err := r.IntegrationsClient.IntegrationServiceDeleteIntegration(ctx, *integration.Status.Id).Execute()
+	if err != nil {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+			log.Error(err, "Error deleting remote integration", "id", *integration.Status.Id)
+			return fmt.Errorf("error deleting remote integration %s: %w", *integration.Status.Id, apiErr)
+		}
 	}
 	log.Info("integration deleted from remote system", "id", *integration.Status.Id)
 	return nil

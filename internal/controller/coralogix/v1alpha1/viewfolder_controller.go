@@ -20,23 +20,21 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/protobuf/encoding/protojson"
-	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	viewfolders "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/folders_for_views_service"
 
-	utils "github.com/coralogix/coralogix-operator/api/coralogix"
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // ViewFolderReconciler reconciles a ViewFolder object
 type ViewFolderReconciler struct {
-	ViewFoldersClient *cxsdk.ViewFoldersClient
+	ViewFoldersClient *viewfolders.FoldersForViewsServiceAPIService
 	Interval          time.Duration
 }
 
@@ -58,19 +56,23 @@ func (r *ViewFolderReconciler) FinalizerName() string {
 
 func (r *ViewFolderReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	viewFolder := obj.(*coralogixv1alpha1.ViewFolder)
-	createRequest := &cxsdk.CreateViewFolderRequest{
-		Name: utils.StringPointerToWrapperspbString(ptr.To(viewFolder.Spec.Name)),
+	createRequest := &viewfolders.CreateViewFolderRequest{
+		Name: viewfolders.PtrString(viewFolder.Spec.Name),
 	}
 
-	log.Info("Creating remote ViewFolder", "ViewFolder", protojson.Format(createRequest))
-	createResponse, err := r.ViewFoldersClient.Create(ctx, createRequest)
+	log.Info("Creating remote ViewFolder", "ViewFolder", utils.FormatJSON(createRequest))
+	createResponse, httpResp, err := r.
+		ViewFoldersClient.
+		ViewsFoldersServiceCreateViewFolder(ctx).
+		CreateViewFolderRequest(*createRequest).
+		Execute()
 	if err != nil {
-		return fmt.Errorf("error on creating remote ViewFolder: %w", err)
+		return fmt.Errorf("error on creating remote ViewFolder: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote viewFolder created", "response", protojson.Format(createResponse))
+	log.Info("Remote viewFolder created", "response", utils.FormatJSON(createResponse))
 
 	viewFolder.Status = coralogixv1alpha1.ViewFolderStatus{
-		ID: utils.WrapperspbStringToStringPointer(createResponse.Folder.GetId()),
+		ID: createResponse.Id,
 	}
 
 	return nil
@@ -78,19 +80,20 @@ func (r *ViewFolderReconciler) HandleCreation(ctx context.Context, log logr.Logg
 
 func (r *ViewFolderReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	viewFolder := obj.(*coralogixv1alpha1.ViewFolder)
-	replaceRequest := &cxsdk.ReplaceViewFolderRequest{
-		Folder: &cxsdk.ViewFolder{
-			Id:   utils.StringPointerToWrapperspbString(viewFolder.Status.ID),
-			Name: utils.StringPointerToWrapperspbString(ptr.To(viewFolder.Spec.Name)),
-		},
+	replaceRequest := &viewfolders.ViewFolder1{
+		Id:   viewFolder.Status.ID,
+		Name: viewFolder.Spec.Name,
 	}
 
-	log.Info("Updating remote ViewFolder", "ViewFolder", protojson.Format(replaceRequest))
-	updateResponse, err := r.ViewFoldersClient.Replace(ctx, replaceRequest)
+	log.Info("Updating remote ViewFolder", "ViewFolder", utils.FormatJSON(replaceRequest))
+	updateResponse, httpResp, err := r.ViewFoldersClient.
+		ViewsFoldersServiceReplaceViewFolder(ctx).
+		ViewFolder1(*replaceRequest).
+		Execute()
 	if err != nil {
-		return err
+		return cxsdk.NewAPIError(httpResp, err)
 	}
-	log.Info("Remote ViewFolder updated", "ViewFolder", protojson.Format(updateResponse))
+	log.Info("Remote ViewFolder updated", "ViewFolder", utils.FormatJSON(updateResponse))
 
 	return nil
 }
@@ -98,15 +101,14 @@ func (r *ViewFolderReconciler) HandleUpdate(ctx context.Context, log logr.Logger
 func (r *ViewFolderReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
 	viewFolder := obj.(*coralogixv1alpha1.ViewFolder)
 	log.Info("Deleting ViewFolder from remote system", "id", *viewFolder.Status.ID)
-	_, err := r.ViewFoldersClient.Delete(ctx,
-		&cxsdk.DeleteViewFolderRequest{
-			Id: utils.StringPointerToWrapperspbString(viewFolder.Status.ID),
-		},
-	)
+	_, httpResp, err := r.ViewFoldersClient.ViewsFoldersServiceDeleteViewFolder(ctx, *viewFolder.Status.ID).
+		Execute()
 
-	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.Error(err, "Error deleting remote ViewFolder", "id", *viewFolder.Status.ID)
-		return fmt.Errorf("error deleting remote ViewFolder %s: %w", *viewFolder.Status.ID, err)
+	if err != nil {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+			log.Error(err, "Error deleting remote ViewFolder", "id", *viewFolder.Status.ID)
+			return fmt.Errorf("error deleting remote ViewFolder %s: %w", *viewFolder.Status.ID, apiErr)
+		}
 	}
 	log.Info("ViewFolder deleted from remote system", "id", *viewFolder.Status.ID)
 	return nil

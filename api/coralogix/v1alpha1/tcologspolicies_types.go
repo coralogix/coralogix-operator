@@ -20,12 +20,12 @@ import (
 	"fmt"
 	"strings"
 
-	"google.golang.org/protobuf/types/known/wrapperspb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-
-	utils "github.com/coralogix/coralogix-operator/api/coralogix"
+	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	tcopolicies "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/policies_service"
+	archiveretentions "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/retentions_service"
 )
 
 // TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.
@@ -75,6 +75,29 @@ type ArchiveRetentionBackendRef struct {
 	Name string `json:"name"`
 }
 
+var (
+	TCOPolicySeveritySchemaToOpenAPI = map[TCOPolicySeverity]tcopolicies.QuotaV1Severity{
+		"info":     tcopolicies.QUOTAV1SEVERITY_SEVERITY_INFO,
+		"warning":  tcopolicies.QUOTAV1SEVERITY_SEVERITY_WARNING,
+		"critical": tcopolicies.QUOTAV1SEVERITY_SEVERITY_CRITICAL,
+		"error":    tcopolicies.QUOTAV1SEVERITY_SEVERITY_ERROR,
+		"debug":    tcopolicies.QUOTAV1SEVERITY_SEVERITY_DEBUG,
+		"verbose":  tcopolicies.QUOTAV1SEVERITY_SEVERITY_VERBOSE,
+	}
+	PrioritySchemaToOpenAPI = map[string]tcopolicies.QuotaV1Priority{
+		"block":  tcopolicies.QUOTAV1PRIORITY_PRIORITY_TYPE_BLOCK,
+		"high":   tcopolicies.QUOTAV1PRIORITY_PRIORITY_TYPE_HIGH,
+		"medium": tcopolicies.QUOTAV1PRIORITY_PRIORITY_TYPE_MEDIUM,
+		"low":    tcopolicies.QUOTAV1PRIORITY_PRIORITY_TYPE_LOW,
+	}
+	RuleTypeIdSchemaToOpenAPI = map[string]tcopolicies.RuleTypeId{
+		"is":         tcopolicies.RULETYPEID_RULE_TYPE_ID_IS,
+		"is_not":     tcopolicies.RULETYPEID_RULE_TYPE_ID_IS_NOT,
+		"start_with": tcopolicies.RULETYPEID_RULE_TYPE_ID_START_WITH,
+		"includes":   tcopolicies.RULETYPEID_RULE_TYPE_ID_INCLUDES,
+	}
+)
+
 // +kubebuilder:validation:Enum=info;warning;critical;error;debug;verbose
 // The severities to apply the policy on.
 type TCOPolicySeverity string
@@ -89,16 +112,18 @@ type TCOPolicyRule struct {
 	RuleType string `json:"ruleType"`
 }
 
-func (s *TCOLogsPoliciesSpec) ExtractOverwriteLogPoliciesRequest(ctx context.Context, coralogixClientSet *cxsdk.ClientSet) (*cxsdk.AtomicOverwriteLogPoliciesRequest, error) {
-	var policies []*cxsdk.CreateLogPolicyRequest
+func (s *TCOLogsPoliciesSpec) ExtractOverwriteLogPoliciesRequest(
+	ctx context.Context,
+	archiveRetentionsClient *archiveretentions.RetentionsServiceAPIService) (*tcopolicies.AtomicOverwriteLogPoliciesRequest, error) {
+	var policies []tcopolicies.CreateLogPolicyRequest
 	var errs error
 
 	for _, policy := range s.Policies {
-		policyReq, err := policy.ExtractCreateLogPolicyRequest(ctx, coralogixClientSet)
+		policyReq, err := policy.ExtractCreateLogPolicyRequest(ctx, archiveRetentionsClient)
 		if err != nil {
 			errs = errors.Join(errs, err)
 		} else {
-			policies = append(policies, policyReq)
+			policies = append(policies, *policyReq)
 		}
 	}
 
@@ -106,107 +131,72 @@ func (s *TCOLogsPoliciesSpec) ExtractOverwriteLogPoliciesRequest(ctx context.Con
 		return nil, errs
 	}
 
-	return &cxsdk.AtomicOverwriteLogPoliciesRequest{Policies: policies}, nil
+	return &tcopolicies.AtomicOverwriteLogPoliciesRequest{Policies: policies}, nil
 }
 
-func (p *TCOLogsPolicy) ExtractCreateLogPolicyRequest(ctx context.Context, coralogixClientSet *cxsdk.ClientSet) (*cxsdk.CreateLogPolicyRequest, error) {
-	var errs error
-	priority, err := expandTCOPolicyPriority(p.Priority)
+func (p *TCOLogsPolicy) ExtractCreateLogPolicyRequest(
+	ctx context.Context,
+	archiveRetentionsClient *archiveretentions.RetentionsServiceAPIService) (*tcopolicies.CreateLogPolicyRequest, error) {
+	archiveRetention, err := expandArchiveRetention(ctx, archiveRetentionsClient, p.ArchiveRetention)
 	if err != nil {
-		errs = errors.Join(errs, err)
+		return nil, err
 	}
 
-	applicationRule, err := expandTCOPolicyRule(p.Applications)
-	if err != nil {
-		errs = errors.Join(errs, err)
-	}
-
-	subsystemRule, err := expandTCOPolicyRule(p.Subsystems)
-	if err != nil {
-		errs = errors.Join(errs, err)
-	}
-
-	severities, err := expandTCOPolicySeverities(p.Severities)
-	if err != nil {
-		errs = errors.Join(errs, err)
-	}
-
-	archiveRetentionID, err := expandArchiveRetention(ctx, coralogixClientSet, p.ArchiveRetention)
-	if err != nil {
-		errs = errors.Join(errs, err)
-	}
-
-	if errs != nil {
-		return nil, errs
-	}
-
-	req := &cxsdk.CreateLogPolicyRequest{
-		Policy: &cxsdk.CreateGenericPolicyRequest{
-			Name:             wrapperspb.String(p.Name),
-			Description:      utils.StringPointerToWrapperspbString(p.Description),
-			Priority:         priority,
-			ApplicationRule:  applicationRule,
-			SubsystemRule:    subsystemRule,
-			ArchiveRetention: archiveRetentionID,
+	req := &tcopolicies.CreateLogPolicyRequest{
+		Policy: tcopolicies.CreateGenericPolicyRequest{
+			Name:             p.Name,
+			Description:      ptr.Deref(p.Description, ""),
+			Priority:         PrioritySchemaToOpenAPI[p.Priority],
+			ApplicationRule:  expandTCOPolicyRule(p.Applications),
+			SubsystemRule:    expandTCOPolicyRule(p.Subsystems),
+			ArchiveRetention: archiveRetention,
 		},
-		LogRules: &cxsdk.TCOLogRules{
-			Severities: severities,
+		LogRules: tcopolicies.LogRules{
+			Severities: expandTCOPolicySeverities(p.Severities),
 		},
 	}
 
 	return req, nil
 }
 
-func expandTCOPolicyPriority(priority string) (cxsdk.TCOPolicyPriority, error) {
-	priorityValue, ok := cxsdk.TCOPolicyPriorityValueLookup["PRIORITY_TYPE_"+strings.ToUpper(priority)]
-	if !ok {
-		return 0, fmt.Errorf("invalid priority for TCO policy: %s", priority)
-	}
-	return cxsdk.TCOPolicyPriority(priorityValue), nil
-}
-
-func expandTCOPolicyRule(rule *TCOPolicyRule) (*cxsdk.TCOPolicyRule, error) {
+func expandTCOPolicyRule(rule *TCOPolicyRule) *tcopolicies.QuotaV1Rule {
 	if rule == nil {
-		return nil, nil
+		return nil
 	}
 
-	ruleType, ok := cxsdk.TCOPolicyRuleTypeValueLookup["RULE_TYPE_ID_"+strings.ToUpper(rule.RuleType)]
-	if !ok {
-		return nil, fmt.Errorf("invalid rule type for TCO policy: %s", rule.RuleType)
+	return &tcopolicies.QuotaV1Rule{
+		Name:       tcopolicies.PtrString(strings.Join(rule.Names, ",")),
+		RuleTypeId: RuleTypeIdSchemaToOpenAPI[rule.RuleType].Ptr(),
 	}
-
-	return &cxsdk.TCOPolicyRule{
-		Name:       wrapperspb.String(strings.Join(rule.Names, ",")),
-		RuleTypeId: cxsdk.TCOPolicyRuleTypeID(ruleType),
-	}, nil
 }
 
-func expandTCOPolicySeverities(severities []TCOPolicySeverity) ([]cxsdk.TCOPolicySeverity, error) {
-	var result []cxsdk.TCOPolicySeverity
+func expandTCOPolicySeverities(severities []TCOPolicySeverity) []tcopolicies.QuotaV1Severity {
+	var result []tcopolicies.QuotaV1Severity
 	for _, severity := range severities {
-		severityValue, ok := cxsdk.TCOPolicySeverityValueLookup["SEVERITY_"+strings.ToUpper(string(severity))]
-		if !ok {
-			return nil, fmt.Errorf("invalid severity for TCO policy: %s", severity)
-		}
-		result = append(result, cxsdk.TCOPolicySeverity(severityValue))
+		result = append(result, TCOPolicySeveritySchemaToOpenAPI[severity])
 	}
 
-	return result, nil
+	return result
 }
 
-func expandArchiveRetention(ctx context.Context, coralogixClientSet *cxsdk.ClientSet, archiveRetention *ArchiveRetention) (*cxsdk.ArchiveRetention, error) {
+func expandArchiveRetention(
+	ctx context.Context,
+	archiveRetentionsClient *archiveretentions.RetentionsServiceAPIService,
+	archiveRetention *ArchiveRetention) (*tcopolicies.ArchiveRetention, error) {
 	if archiveRetention == nil {
 		return nil, nil
 	}
 
-	archiveRetentions, err := coralogixClientSet.ArchiveRetentions().Get(ctx, &cxsdk.GetRetentionsRequest{})
+	resp, httpResp, err := archiveRetentionsClient.
+		RetentionsServiceGetRetentions(ctx).
+		Execute()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get archive retentions: %w", err)
+		return nil, fmt.Errorf("failed to get archive retentions: %w", cxsdk.NewAPIError(httpResp, err))
 	}
 
-	for _, retention := range archiveRetentions.Retentions {
-		if *utils.WrapperspbStringToStringPointer(retention.Name) == archiveRetention.BackendRef.Name {
-			return &cxsdk.ArchiveRetention{Id: retention.Id}, nil
+	for _, retention := range resp.Retentions {
+		if retention.Name != nil && *retention.Name == archiveRetention.BackendRef.Name {
+			return &tcopolicies.ArchiveRetention{Id: retention.Id}, nil
 		}
 	}
 

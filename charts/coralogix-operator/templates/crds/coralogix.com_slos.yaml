@@ -15,10 +15,19 @@ spec:
     singular: slo
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .status.printableStatus
+      name: Status
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: SLO is the Schema for the slos API.
+        description: |-
+          SLO is the Schema for the slos API.
+          See also https://coralogix.com/platform/apm/slo-management/
         properties:
           apiVersion:
             description: |-
@@ -37,8 +46,6 @@ spec:
             type: string
           metadata:
             type: object
-          printableStatus:
-            type: string
           spec:
             description: 'SLOSpec defines the desired state of SLO. For more information,
               see: https://coralogix.com/platform/apm/slo-management/'
@@ -84,6 +91,9 @@ spec:
                         required:
                         - query
                         type: object
+                    required:
+                    - goodEvents
+                    - totalEvents
                     type: object
                   windowBasedMetric:
                     properties:
@@ -218,6 +228,8 @@ spec:
                   type: object
                 type: array
               id:
+                type: string
+              printableStatus:
                 type: string
               revision:
                 format: int32

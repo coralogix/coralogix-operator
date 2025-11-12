@@ -27,8 +27,8 @@ spec:
                       resourceRef:
                         name: logs-new-value
                   - alertRef:
-                      backendRef:
-                        name: metric-threshold alert example
+                      resourceRef:
+                        name: metric-threshold
                     not: true
                 nextOp: and
                 alertsOp: or
@@ -42,7 +42,7 @@ spec:
                         name: logs-new-value
                   - alertRef:
                       resourceRef:
-                        name: logs-ratio-threshold
+                        name: logs-threshold
                     not: true
                 nextOp: and
                 alertsOp: or

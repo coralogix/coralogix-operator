@@ -21,10 +21,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var SupportAccessToOpenAPI = map[string]*ipaccess.CoralogixCustomerSupportAccess{
-	"unspecified": ipaccess.CORALOGIXCUSTOMERSUPPORTACCESS_CORALOGIX_CUSTOMER_SUPPORT_ACCESS_UNSPECIFIED.Ptr(),
-	"disabled":    ipaccess.CORALOGIXCUSTOMERSUPPORTACCESS_CORALOGIX_CUSTOMER_SUPPORT_ACCESS_DISABLED.Ptr(),
-	"enabled":     ipaccess.CORALOGIXCUSTOMERSUPPORTACCESS_CORALOGIX_CUSTOMER_SUPPORT_ACCESS_ENABLED.Ptr(),
+var SupportAccessToOpenAPI = map[string]ipaccess.CoralogixCustomerSupportAccess{
+	"unspecified": ipaccess.CORALOGIXCUSTOMERSUPPORTACCESS_CORALOGIX_CUSTOMER_SUPPORT_ACCESS_UNSPECIFIED,
+	"disabled":    ipaccess.CORALOGIXCUSTOMERSUPPORTACCESS_CORALOGIX_CUSTOMER_SUPPORT_ACCESS_DISABLED,
+	"enabled":     ipaccess.CORALOGIXCUSTOMERSUPPORTACCESS_CORALOGIX_CUSTOMER_SUPPORT_ACCESS_ENABLED,
 }
 
 // IPAccessSpec defines the desired state of IPAccess.
@@ -58,7 +58,7 @@ func (i *IPAccess) ExtractCreateIPAccessRequest() (*ipaccess.CreateCompanyIPAcce
 	}
 
 	req := &ipaccess.CreateCompanyIPAccessSettingsRequest{
-		EnableCoralogixCustomerSupportAccess: supportAccess,
+		EnableCoralogixCustomerSupportAccess: supportAccess.Ptr(),
 		IpAccess:                             ExtractIPAccessRules(i.Spec.IPAccess),
 	}
 
@@ -73,7 +73,7 @@ func (i *IPAccess) ExtractReplaceIPAccessRequest() (*ipaccess.ReplaceCompanyIPAc
 
 	req := &ipaccess.ReplaceCompanyIPAccessSettingsRequest{
 		Id:                                   i.Status.ID,
-		EnableCoralogixCustomerSupportAccess: supportAccess,
+		EnableCoralogixCustomerSupportAccess: supportAccess.Ptr(),
 		IpAccess:                             ExtractIPAccessRules(i.Spec.IPAccess),
 	}
 
@@ -89,7 +89,7 @@ func ExtractIPAccessRules(specRules []IPAccessRule) []ipaccess.IpAccess {
 	for i, rule := range specRules {
 		ipAccess[i] = ipaccess.IpAccess{
 			Name:    rule.Name,
-			IpRange: rule.IPRange,
+			IpRange: ipaccess.PtrString(rule.IPRange),
 			Enabled: rule.Enabled,
 		}
 	}
@@ -134,7 +134,8 @@ func (i *IPAccess) HasIDInStatus() bool {
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // IPAccess is the Schema for the ipaccesses API.
-// // See also https://coralogix.com/docs/user-guides/account-management/account-settings/ip-access-control/
+// See also https://coralogix.com/docs/user-guides/account-management/account-settings/ip-access-control/
+// **Added in v1.2.0**
 type IPAccess struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

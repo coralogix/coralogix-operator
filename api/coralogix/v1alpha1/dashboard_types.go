@@ -104,10 +104,12 @@ func expandDashboardFolder(ctx context.Context, namespace string, in *DashboardS
 			if err != nil {
 				return nil, err
 			}
-			dashboard.Folder = &cxsdk.DashboardFolderID{
-				FolderId: &cxsdk.UUID{
-					Value: folderId,
-				},
+			if folderId != nil {
+				dashboard.Folder = &cxsdk.DashboardFolderID{
+					FolderId: &cxsdk.UUID{
+						Value: *folderId,
+					},
+				}
 			}
 		} else {
 			return nil, fmt.Errorf("folderRef.BackendRef or folderRef.ResourceRef is required")

@@ -39,6 +39,7 @@ var _ = Describe("Connector", Ordered, func() {
 		notificationsClient *cxsdk.NotificationsClient
 		connectorID         string
 		connector           *coralogixv1alpha1.Connector
+		connectorName       string
 	)
 
 	BeforeAll(func() {
@@ -48,7 +49,7 @@ var _ = Describe("Connector", Ordered, func() {
 
 	It("Should be created successfully", func(ctx context.Context) {
 		By("Creating Connector")
-		connectorName := fmt.Sprintf("slack-connector-%d", time.Now().Unix())
+		connectorName = fmt.Sprintf("slack-connector-%d", time.Now().Unix())
 		connector = getSampleSlackConnector(connectorName, testNamespace)
 		Expect(crClient.Create(ctx, connector)).To(Succeed())
 
@@ -70,6 +71,7 @@ var _ = Describe("Connector", Ordered, func() {
 			_, err := notificationsClient.GetConnector(ctx, &cxsdk.GetConnectorRequest{
 				Id: connectorID,
 			})
+
 			return err
 		}, time.Minute, time.Second).Should(Succeed())
 	})
@@ -90,6 +92,34 @@ var _ = Describe("Connector", Ordered, func() {
 			return getConnectorRes.GetConnector().GetName()
 		}, time.Minute, time.Second).Should(Equal(newConnectorName))
 	})
+
+	It("After deleted from Coralogix backend directly, it should be recreated based on configured interval",
+		func(ctx context.Context) {
+			By("Deleting the Connector from Coralogix backend")
+			_, err := notificationsClient.DeleteConnector(ctx, &cxsdk.DeleteConnectorRequest{Id: connectorID})
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Verifying Connector is populated with a new ID after configured interval")
+			var newConnectorID string
+			Eventually(func() bool {
+				fetchedConnector := &coralogixv1alpha1.Connector{}
+				Expect(crClient.Get(ctx, types.NamespacedName{Name: connectorName, Namespace: testNamespace}, fetchedConnector)).To(Succeed())
+				if fetchedConnector.Status.Id == nil {
+					return false
+				}
+				newConnectorID = *fetchedConnector.Status.Id
+				return newConnectorID != connectorID
+			}, 2*time.Minute, time.Second).Should(BeTrue())
+
+			By("Verifying Scope with new the ID exists in Coralogix backend")
+			Eventually(func() error {
+				_, err := notificationsClient.GetConnector(ctx, &cxsdk.GetConnectorRequest{
+					Id: newConnectorID,
+				})
+
+				return err
+			}, time.Minute, time.Second).Should(Succeed())
+		})
 
 	It("Should be deleted successfully", func(ctx context.Context) {
 		By("Deleting the Connector")

@@ -79,6 +79,7 @@ spec:
         - --label-selector=${LABEL_SELECTOR}
         - --namespace-selector=${NAMESPACE_SELECTOR}
         - --scope-reconcile-interval-seconds=${SCOPE_RECONCILE_INTERVAL_SECONDS}
+        - --connector-reconcile-interval-seconds=${CONNECTOR_RECONCILE_INTERVAL_SECONDS}
         name: manager
         image: controller
         imagePullPolicy: IfNotPresent

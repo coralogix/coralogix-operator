@@ -1239,12 +1239,12 @@ spec:
                                   type: string
                                 forOverPct:
                                   description: Percentage for the threshold
-                                  format: int32
+                                  format: int64
                                   maximum: 100
                                   type: integer
                                 minNonNullValuesPct:
                                   description: Replace with a number
-                                  format: int32
+                                  format: int64
                                   maximum: 100
                                   type: integer
                                 ofTheLast:
@@ -1308,7 +1308,7 @@ spec:
                         properties:
                           minNonNullValuesPct:
                             description: Replace with a number
-                            format: int32
+                            format: int64
                             maximum: 100
                             type: integer
                           replaceWithZero:
@@ -1926,7 +1926,7 @@ spec:
                     properties:
                       minutes:
                         description: Delay between re-triggered alerts.
-                        format: int32
+                        format: int64
                         type: integer
                     type: object
                 type: object
@@ -2152,7 +2152,7 @@ spec:
                                   properties:
                                     id:
                                       description: Webhook ID.
-                                      format: int32
+                                      format: int64
                                       type: integer
                                     name:
                                       description: Name of the webhook.
@@ -2201,7 +2201,7 @@ spec:
                           properties:
                             minutes:
                               description: Delay between re-triggered alerts.
-                              format: int32
+                              format: int64
                               type: integer
                           type: object
                       required:
@@ -2436,7 +2436,7 @@ spec:
                                     properties:
                                       id:
                                         description: Webhook ID.
-                                        format: int32
+                                        format: int64
                                         type: integer
                                       name:
                                         description: Name of the webhook.
@@ -2485,7 +2485,7 @@ spec:
                             properties:
                               minutes:
                                 description: Delay between re-triggered alerts.
-                                format: int32
+                                format: int64
                                 type: integer
                             type: object
                         required:

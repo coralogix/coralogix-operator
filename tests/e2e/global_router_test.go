@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	gouuid "github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"google.golang.org/grpc/codes"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -41,7 +43,7 @@ var _ = Describe("GlobalRouter", Ordered, func() {
 		Expect(crClient.Create(ctx, getSampleSlackPreset(presetName, testNamespace))).To(Succeed())
 
 		By("Creating GlobalRouter")
-		globalRouterName := "global-router-sample"
+		globalRouterName := "global-router-sample" + gouuid.NewString()
 		globalRouter = getSampleGlobalRouter(globalRouterName, testNamespace, connectorName, presetName)
 		Expect(crClient.Create(ctx, globalRouter)).To(Succeed())
 
@@ -84,12 +86,11 @@ var _ = Describe("GlobalRouter", Ordered, func() {
 		By("Deleting the GlobalRouter")
 		Expect(crClient.Delete(ctx, globalRouter)).To(Succeed())
 
-		By("Verifying GlobalRouter is empty in Coralogix backend")
-		Eventually(func() []*cxsdk.RoutingRule {
-			router, err := notificationsClient.GetGlobalRouter(ctx, &cxsdk.GetGlobalRouterRequest{Id: globalRouterID})
-			Expect(err).ToNot(HaveOccurred())
-			return router.GetRouter().Rules
-		}, time.Minute, time.Second).Should(BeEmpty())
+		By("Verifying GlobalRouter is deleted in Coralogix backend")
+		Eventually(func() codes.Code {
+			_, err := notificationsClient.GetGlobalRouter(ctx, &cxsdk.GetGlobalRouterRequest{Id: globalRouterID})
+			return cxsdk.Code(err)
+		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
 	})
 })
 
@@ -100,22 +101,10 @@ func getSampleGlobalRouter(globalRouterName, testNamespace, slackConnectorName, 
 			Namespace: testNamespace,
 		},
 		Spec: coralogixv1alpha1.GlobalRouterSpec{
-			Name:        "global router",
+			Name:        globalRouterName,
 			Description: "global router example",
-			EntityType:  "alerts",
-			Fallback: []coralogixv1alpha1.RoutingTarget{
-				{
-					Connector: coralogixv1alpha1.NCRef{
-						ResourceRef: &coralogixv1alpha1.ResourceRef{
-							Name: slackConnectorName,
-						},
-					},
-					Preset: &coralogixv1alpha1.NCRef{
-						BackendRef: &coralogixv1alpha1.NCBackendRef{
-							ID: "preset_system_slack_alerts_basic",
-						},
-					},
-				},
+			EntityLabelMatcher: &map[string]string{
+				"routing.group": gouuid.NewString(),
 			},
 			Rules: []coralogixv1alpha1.RoutingRule{
 				{

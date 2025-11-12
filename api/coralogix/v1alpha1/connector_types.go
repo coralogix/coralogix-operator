@@ -19,7 +19,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	connectors "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/connectors_service"
 )
 
 // ConnectorSpec defines the desired state of Connector.
@@ -105,51 +105,29 @@ func (c *Connector) HasIDInStatus() bool {
 }
 
 var (
-	schemaToProtoConnectorType = map[string]cxsdk.ConnectorType{
-		"slack":        cxsdk.ConnectorTypeSlack,
-		"genericHttps": cxsdk.ConnectorTypeGenericHTTPS,
-		"pagerDuty":    cxsdk.ConnectorTypePagerDuty,
+	schemaToOpenApiConnectorType = map[string]connectors.ConnectorType{
+		"slack":        connectors.CONNECTORTYPE_SLACK,
+		"genericHttps": connectors.CONNECTORTYPE_GENERIC_HTTPS,
+		"pagerDuty":    connectors.CONNECTORTYPE_PAGERDUTY,
 	}
-	schemaToProtoEntityType = map[string]cxsdk.NotificationsEntityType{
-		"alerts": cxsdk.NotificationsEntityTypeAlerts,
+	schemaToOpenApiEntityType = map[string]connectors.NotificationCenterEntityType{
+		"alerts": connectors.NOTIFICATIONCENTERENTITYTYPE_ALERTS,
 	}
 )
 
-func (c *Connector) ExtractCreateConnectorRequest() (*cxsdk.CreateConnectorRequest, error) {
-	connector, err := c.ExtractConnector()
-	if err != nil {
-		return nil, fmt.Errorf("failed to extract connector: %w", err)
-	}
-	return &cxsdk.CreateConnectorRequest{
-		Connector: connector,
-	}, nil
-}
-
-func (c *Connector) ExtractUpdateConnectorRequest() (*cxsdk.ReplaceConnectorRequest, error) {
-	connector, err := c.ExtractConnector()
-	if err != nil {
-		return nil, fmt.Errorf("failed to extract connector: %w", err)
+func (c *Connector) ExtractConnector() (*connectors.Connector, error) {
+	connector := &connectors.Connector{
+		Name:        connectors.PtrString(c.Spec.Name),
+		Description: connectors.PtrString(c.Spec.Description),
 	}
 
-	connector.Id = c.Status.Id
-	return &cxsdk.ReplaceConnectorRequest{
-		Connector: connector,
-	}, nil
-}
-
-func (c *Connector) ExtractConnector() (*cxsdk.Connector, error) {
-	connector := &cxsdk.Connector{
-		Name:        c.Spec.Name,
-		Description: c.Spec.Description,
-	}
-
-	connectorType, ok := schemaToProtoConnectorType[c.Spec.Type]
+	connectorType, ok := schemaToOpenApiConnectorType[c.Spec.Type]
 	if !ok {
 		return nil, fmt.Errorf("unsupported connector type: %s", c.Spec.Type)
 	}
-	connector.Type = connectorType
+	connector.Type = connectorType.Ptr()
 
-	connector.ConnectorConfig = &cxsdk.ConnectorConfig{
+	connector.ConnectorConfig = &connectors.ConnectorConfig{
 		Fields: ExtractConnectorConfigFields(c.Spec.ConnectorConfig.Fields),
 	}
 
@@ -162,28 +140,28 @@ func (c *Connector) ExtractConnector() (*cxsdk.Connector, error) {
 	return connector, nil
 }
 
-func ExtractConnectorConfigFields(fields []ConnectorConfigField) []*cxsdk.ConnectorConfigField {
-	var result []*cxsdk.ConnectorConfigField
+func ExtractConnectorConfigFields(fields []ConnectorConfigField) []connectors.NotificationCenterConnectorConfigField {
+	var result []connectors.NotificationCenterConnectorConfigField
 	for _, field := range fields {
-		result = append(result, &cxsdk.ConnectorConfigField{
-			FieldName: field.FieldName,
-			Value:     field.Value,
+		result = append(result, connectors.NotificationCenterConnectorConfigField{
+			FieldName: connectors.PtrString(field.FieldName),
+			Value:     connectors.PtrString(field.Value),
 		})
 	}
 
 	return result
 }
 
-func ExtractEntityTypeConfigOverrides(overrides []EntityTypeConfigOverrides) ([]*cxsdk.EntityTypeConfigOverrides, error) {
-	var result []*cxsdk.EntityTypeConfigOverrides
+func ExtractEntityTypeConfigOverrides(overrides []EntityTypeConfigOverrides) ([]connectors.EntityTypeConfigOverrides, error) {
+	var result []connectors.EntityTypeConfigOverrides
 	for _, override := range overrides {
-		entityType, ok := schemaToProtoEntityType[override.EntityType]
+		entityType, ok := schemaToOpenApiEntityType[override.EntityType]
 		if !ok {
 			return nil, fmt.Errorf("invalid entity type %s", override.EntityType)
 		}
 
-		entityTypeConfigOverrides := &cxsdk.EntityTypeConfigOverrides{
-			EntityType: entityType,
+		entityTypeConfigOverrides := connectors.EntityTypeConfigOverrides{
+			EntityType: entityType.Ptr(),
 		}
 
 		entityTypeConfigOverrides.Fields = ExtractConfigOverridesFields(override.Fields)
@@ -193,12 +171,12 @@ func ExtractEntityTypeConfigOverrides(overrides []EntityTypeConfigOverrides) ([]
 	return result, nil
 }
 
-func ExtractConfigOverridesFields(fields []TemplatedConnectorConfigField) []*cxsdk.TemplatedConnectorConfigField {
-	var result []*cxsdk.TemplatedConnectorConfigField
+func ExtractConfigOverridesFields(fields []TemplatedConnectorConfigField) []connectors.TemplatedConnectorConfigField {
+	var result []connectors.TemplatedConnectorConfigField
 	for _, field := range fields {
-		result = append(result, &cxsdk.TemplatedConnectorConfigField{
-			FieldName: field.FieldName,
-			Template:  field.Template,
+		result = append(result, connectors.TemplatedConnectorConfigField{
+			FieldName: connectors.PtrString(field.FieldName),
+			Template:  connectors.PtrString(field.Template),
 		})
 	}
 

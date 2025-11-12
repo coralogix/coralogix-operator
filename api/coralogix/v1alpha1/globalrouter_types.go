@@ -23,7 +23,7 @@ import (
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	globalrouters "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/global_routers_service"
 
 	"github.com/coralogix/coralogix-operator/internal/config"
 )
@@ -36,13 +36,13 @@ type GlobalRouterSpec struct {
 	// Description is the description of the global router.
 	Description string `json:"description"`
 
-	// EntityType is the entity type for the global router. Should equal "alerts".
-	// +kubebuilder:validation:Enum=alerts
-	EntityType string `json:"entityType"`
-
 	// EntityLabels are optional labels to attach to the global router.
 	// +optional
 	EntityLabels map[string]string `json:"entityLabels,omitempty"`
+
+	// EntityLabelMatcher is an optional label matcher to filter entities for the global router.
+	// +optional
+	EntityLabelMatcher *map[string]string `json:"entityLabelMatcher,omitempty"`
 
 	// Fallback is the fallback routing target for the global router.
 	// +optional
@@ -56,6 +56,11 @@ type GlobalRouterSpec struct {
 type RoutingRule struct {
 	// Name is the name of the routing rule.
 	Name string `json:"name"`
+
+	// EntityType is the entity type for the global router.
+	// +kubebuilder:validation:Enum=alerts
+	// +optional
+	EntityType *string `json:"entityType,omitempty"`
 
 	// CustomDetails are optional custom details to attach to the routing rule.
 	// +optional
@@ -92,17 +97,13 @@ type NCRef struct {
 	ResourceRef *ResourceRef `json:"resourceRef,omitempty"`
 }
 
-func (g *GlobalRouter) ExtractCreateOrReplaceGlobalRouterRequest(ctx context.Context) (*cxsdk.CreateOrReplaceGlobalRouterRequest, error) {
-	router, err := g.ExtractGlobalRouter(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to extract global-router: %w", err)
+var (
+	EntityTypeSchemaToOpenAPI = map[string]globalrouters.NotificationCenterEntityType{
+		"alerts": globalrouters.NOTIFICATIONCENTERENTITYTYPE_ALERTS,
 	}
+)
 
-	router.Id = ptr.To("router_default")
-	return &cxsdk.CreateOrReplaceGlobalRouterRequest{Router: router}, nil
-}
-
-func (g *GlobalRouter) ExtractGlobalRouter(ctx context.Context) (*cxsdk.GlobalRouter, error) {
+func (g *GlobalRouter) ExtractGlobalRouter(ctx context.Context) (*globalrouters.GlobalRouter, error) {
 	fallback, err := extractRoutingTargets(ctx, g.Namespace, g.Spec.Fallback)
 	if err != nil {
 		return nil, err
@@ -113,16 +114,17 @@ func (g *GlobalRouter) ExtractGlobalRouter(ctx context.Context) (*cxsdk.GlobalRo
 		return nil, err
 	}
 
-	return &cxsdk.GlobalRouter{
-		Name:        g.Spec.Name,
-		Description: g.Spec.Description,
-		Fallback:    fallback,
-		Rules:       rules,
+	return &globalrouters.GlobalRouter{
+		Name:               globalrouters.PtrString(g.Spec.Name),
+		Description:        globalrouters.PtrString(g.Spec.Description),
+		EntityLabelMatcher: g.Spec.EntityLabelMatcher,
+		Fallback:           fallback,
+		Rules:              rules,
 	}, nil
 }
 
-func extractRoutingRules(ctx context.Context, namespace string, rules []RoutingRule) ([]*cxsdk.RoutingRule, error) {
-	var result []*cxsdk.RoutingRule
+func extractRoutingRules(ctx context.Context, namespace string, rules []RoutingRule) ([]globalrouters.RoutingRule, error) {
+	var result []globalrouters.RoutingRule
 	var errs error
 	for _, rule := range rules {
 		routingRule, err := extractRoutingRule(ctx, namespace, rule)
@@ -130,7 +132,7 @@ func extractRoutingRules(ctx context.Context, namespace string, rules []RoutingR
 			errs = errors.Join(errs, err)
 			continue
 		}
-		result = append(result, routingRule)
+		result = append(result, *routingRule)
 	}
 
 	if errs != nil {
@@ -140,21 +142,31 @@ func extractRoutingRules(ctx context.Context, namespace string, rules []RoutingR
 	return result, nil
 }
 
-func extractRoutingRule(ctx context.Context, namespace string, rule RoutingRule) (*cxsdk.RoutingRule, error) {
+func extractRoutingRule(ctx context.Context, namespace string, rule RoutingRule) (*globalrouters.RoutingRule, error) {
 	targets, err := extractRoutingTargets(ctx, namespace, rule.Targets)
 	if err != nil {
 		return nil, err
 	}
 
-	return &cxsdk.RoutingRule{
-		Name:      ptr.To(rule.Name),
-		Condition: rule.Condition,
+	routingRule := &globalrouters.RoutingRule{
+		Name:      globalrouters.PtrString(rule.Name),
+		Condition: globalrouters.PtrString(rule.Condition),
 		Targets:   targets,
-	}, nil
+	}
+
+	if rule.EntityType != nil {
+		entityType, ok := EntityTypeSchemaToOpenAPI[*rule.EntityType]
+		if !ok {
+			return nil, fmt.Errorf("invalid entity type: %s", *rule.EntityType)
+		}
+		routingRule.EntityType = entityType.Ptr()
+	}
+
+	return routingRule, nil
 }
 
-func extractRoutingTargets(ctx context.Context, namespace string, targets []RoutingTarget) ([]*cxsdk.RoutingTarget, error) {
-	var result []*cxsdk.RoutingTarget
+func extractRoutingTargets(ctx context.Context, namespace string, targets []RoutingTarget) ([]globalrouters.RoutingTarget, error) {
+	var result []globalrouters.RoutingTarget
 	var errs error
 	for _, target := range targets {
 		routingTarget, err := extractRoutingTarget(ctx, namespace, target)
@@ -162,7 +174,7 @@ func extractRoutingTargets(ctx context.Context, namespace string, targets []Rout
 			errs = errors.Join(errs, err)
 			continue
 		}
-		result = append(result, routingTarget)
+		result = append(result, *routingTarget)
 	}
 
 	if errs != nil {
@@ -172,7 +184,7 @@ func extractRoutingTargets(ctx context.Context, namespace string, targets []Rout
 	return result, nil
 }
 
-func extractRoutingTarget(ctx context.Context, namespace string, target RoutingTarget) (*cxsdk.RoutingTarget, error) {
+func extractRoutingTarget(ctx context.Context, namespace string, target RoutingTarget) (*globalrouters.RoutingTarget, error) {
 	connectorID, err := extractConnectorID(ctx, namespace, target.Connector)
 	if err != nil {
 		return nil, err
@@ -186,8 +198,8 @@ func extractRoutingTarget(ctx context.Context, namespace string, target RoutingT
 		}
 	}
 
-	return &cxsdk.RoutingTarget{
-		ConnectorId: connectorID,
+	return &globalrouters.RoutingTarget{
+		ConnectorId: globalrouters.PtrString(connectorID),
 		PresetId:    ptr.To(presetID),
 	}, nil
 }
