@@ -15,9 +15,12 @@
 package v1alpha1
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"strconv"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
+
+	recordingrules "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/recording_rules_service"
 )
 
 // RecordingRuleGroupSetSpec defines the desired state of a set of Coralogix recording rule groups.
@@ -27,46 +30,46 @@ type RecordingRuleGroupSetSpec struct {
 	Groups []RecordingRuleGroup `json:"groups"`
 }
 
-func (in *RecordingRuleGroupSetSpec) ExtractRecordingRuleGroups() []*cxsdk.InRuleGroup {
-	result := make([]*cxsdk.InRuleGroup, 0, len(in.Groups))
+func (in *RecordingRuleGroupSetSpec) ExtractRecordingRuleGroups() []recordingrules.InRuleGroup {
+	result := make([]recordingrules.InRuleGroup, 0, len(in.Groups))
 	for _, ruleGroup := range in.Groups {
 		rg := expandRecordingRuleGroup(ruleGroup)
-		result = append(result, rg)
+		result = append(result, *rg)
 	}
 	return result
 }
 
-func expandRecordingRuleGroup(group RecordingRuleGroup) *cxsdk.InRuleGroup {
-	interval := new(uint32)
-	*interval = uint32(group.IntervalSeconds)
+func expandRecordingRuleGroup(group RecordingRuleGroup) *recordingrules.InRuleGroup {
+	interval := new(int64)
+	*interval = int64(group.IntervalSeconds)
 
-	limit := new(uint64)
-	*limit = uint64(group.Limit)
+	limit := new(string)
+	*limit = strconv.FormatInt(group.Limit, 10)
 
 	rules := expandRecordingRules(group.Rules)
 
-	return &cxsdk.InRuleGroup{
-		Name:     group.Name,
+	return &recordingrules.InRuleGroup{
+		Name:     recordingrules.PtrString(group.Name),
 		Interval: interval,
 		Limit:    limit,
 		Rules:    rules,
 	}
 }
 
-func expandRecordingRules(rules []RecordingRule) []*cxsdk.InRule {
-	result := make([]*cxsdk.InRule, 0, len(rules))
+func expandRecordingRules(rules []RecordingRule) []recordingrules.InRule {
+	result := make([]recordingrules.InRule, 0, len(rules))
 	for _, r := range rules {
 		rule := extractRecordingRule(r)
-		result = append(result, rule)
+		result = append(result, *rule)
 	}
 	return result
 }
 
-func extractRecordingRule(rule RecordingRule) *cxsdk.InRule {
-	return &cxsdk.InRule{
-		Record: rule.Record,
-		Expr:   rule.Expr,
-		Labels: rule.Labels,
+func extractRecordingRule(rule RecordingRule) *recordingrules.InRule {
+	return &recordingrules.InRule{
+		Record: recordingrules.PtrString(rule.Record),
+		Expr:   recordingrules.PtrString(rule.Expr),
+		Labels: ptr.To(rule.Labels),
 	}
 }
 

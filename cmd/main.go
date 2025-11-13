@@ -136,7 +136,7 @@ func main() {
 	config.InitClient(mgr.GetClient())
 
 	if err = (&v1alpha1controllers.RuleGroupReconciler{
-		RuleGroupClient: clientSet.RuleGroups(),
+		RuleGroupClient: oapiClientSet.RuleGroups(),
 		Interval:        cfg.ReconcileIntervals[utils.RuleGroupKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RuleGroup")
@@ -158,7 +158,7 @@ func main() {
 		}
 	}
 	if err = (&v1alpha1controllers.RecordingRuleGroupSetReconciler{
-		RecordingRuleGroupSetClient: clientSet.RecordingRuleGroups(),
+		RecordingRulesClient:        oapiClientSet.RecordingRules(),
 		Interval:                    cfg.ReconcileIntervals[utils.RecordingRuleGroupSetKind],
 		RecordingRuleGroupSetSuffix: cfg.RecordingRuleGroupSetSuffix,
 	}).SetupWithManager(mgr); err != nil {

@@ -20,21 +20,21 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/protobuf/encoding/protojson"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	rulegroups "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/rule_groups_service"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/config"
 	"github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 )
 
 // RuleGroupReconciler reconciles a RuleGroup object
 type RuleGroupReconciler struct {
-	RuleGroupClient *cxsdk.RuleGroupsClient
+	RuleGroupClient *rulegroups.RuleGroupsServiceAPIService
 	Interval        time.Duration
 }
 
@@ -57,14 +57,17 @@ func (r *RuleGroupReconciler) RequeueInterval() time.Duration {
 func (r *RuleGroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	ruleGroup := obj.(*coralogixv1alpha1.RuleGroup)
 	createRequest := ruleGroup.Spec.ExtractCreateRuleGroupRequest()
-	log.Info("Creating remote ruleGroup", "ruleGroup", protojson.Format(createRequest))
-	createResponse, err := r.RuleGroupClient.Create(ctx, createRequest)
+	log.Info("Creating remote ruleGroup", "ruleGroup", utils.FormatJSON(createRequest))
+	createResponse, httpResp, err := r.RuleGroupClient.
+		RuleGroupsServiceCreateRuleGroup(ctx).
+		RuleGroupsServiceCreateRuleGroupRequest(*createRequest).
+		Execute()
 	if err != nil {
-		return fmt.Errorf("error on creating remote ruleGroup: %w", err)
+		return fmt.Errorf("error on creating remote ruleGroup: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote ruleGroup created", "response", protojson.Format(createResponse))
+	log.Info("Remote ruleGroup created", "response", utils.FormatJSON(createResponse))
 	ruleGroup.Status = coralogixv1alpha1.RuleGroupStatus{
-		ID: &createResponse.RuleGroup.Id.Value,
+		ID: createResponse.RuleGroup.Id,
 	}
 
 	return nil
@@ -72,13 +75,16 @@ func (r *RuleGroupReconciler) HandleCreation(ctx context.Context, log logr.Logge
 
 func (r *RuleGroupReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	ruleGroup := obj.(*coralogixv1alpha1.RuleGroup)
-	updateRequest := ruleGroup.Spec.ExtractUpdateRuleGroupRequest(*ruleGroup.Status.ID)
-	log.Info("Updating remote ruleGroup", "ruleGroup", protojson.Format(updateRequest))
-	updateResponse, err := r.RuleGroupClient.Update(ctx, updateRequest)
+	updateRequest := ruleGroup.Spec.ExtractCreateRuleGroupRequest()
+	log.Info("Updating remote ruleGroup", "ruleGroup", utils.FormatJSON(updateRequest))
+	updateResponse, httpResp, err := r.RuleGroupClient.
+		RuleGroupsServiceUpdateRuleGroup(ctx, *ruleGroup.Status.ID).
+		RuleGroupsServiceCreateRuleGroupRequest(*updateRequest).
+		Execute()
 	if err != nil {
-		return err
+		return cxsdk.NewAPIError(httpResp, err)
 	}
-	log.Info("Remote ruleGroup updated", "ruleGroup", protojson.Format(updateResponse))
+	log.Info("Remote ruleGroup updated", "ruleGroup", utils.FormatJSON(updateResponse))
 	return nil
 }
 
@@ -86,10 +92,14 @@ func (r *RuleGroupReconciler) HandleDeletion(ctx context.Context, log logr.Logge
 	ruleGroup := obj.(*coralogixv1alpha1.RuleGroup)
 	id := *ruleGroup.Status.ID
 	log.Info("Deleting ruleGroup from remote system", "id", id)
-	_, err := r.RuleGroupClient.Delete(ctx, &cxsdk.DeleteRuleGroupRequest{GroupId: id})
-	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.Error(err, "Error deleting remote ruleGroup", "id", id)
-		return fmt.Errorf("error deleting remote ruleGroup %s: %w", id, err)
+	_, httpResp, err := r.RuleGroupClient.
+		RuleGroupsServiceDeleteRuleGroup(ctx, id).
+		Execute()
+	if err != nil {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+			log.Error(err, "Error deleting remote ruleGroup", "id", id)
+			return fmt.Errorf("error deleting remote ruleGroup %s: %w", id, apiErr)
+		}
 	}
 	log.Info("RuleGroup deleted from remote system", "id", id)
 	return nil
