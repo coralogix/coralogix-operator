@@ -15,39 +15,38 @@
 package v1alpha1
 
 import (
-	"google.golang.org/protobuf/types/known/wrapperspb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	rulegroups "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/rule_groups_service"
 
 	utils "github.com/coralogix/coralogix-operator/api/coralogix"
 )
 
 var (
-	RulesSchemaSeverityToProtoSeverity = map[RuleSeverity]cxsdk.SeverityConstraintValue{
-		RuleSeverityDebug:    cxsdk.SeverityConstraintValueDebugOrUnspecified,
-		RuleSeverityVerbose:  cxsdk.SeverityConstraintValueVerbose,
-		RuleSeverityInfo:     cxsdk.SeverityConstraintValueInfo,
-		RuleSeverityWarning:  cxsdk.SeverityConstraintValueWarning,
-		RuleSeverityError:    cxsdk.SeverityConstraintValueError,
-		RuleSeverityCritical: cxsdk.SeverityConstraintValueCritical,
+	RulesSchemaSeverityToOpenAPISeverity = map[RuleSeverity]rulegroups.Value{
+		RuleSeverityDebug:    rulegroups.VALUE_VALUE_DEBUG_OR_UNSPECIFIED,
+		RuleSeverityVerbose:  rulegroups.VALUE_VALUE_VERBOSE,
+		RuleSeverityInfo:     rulegroups.VALUE_VALUE_INFO,
+		RuleSeverityWarning:  rulegroups.VALUE_VALUE_WARNING,
+		RuleSeverityError:    rulegroups.VALUE_VALUE_ERROR,
+		RuleSeverityCritical: rulegroups.VALUE_VALUE_CRITICAL,
 	}
-	RulesProtoSeverityToSchemaSeverity                         = utils.ReverseMap(RulesSchemaSeverityToProtoSeverity)
-	RulesSchemaDestinationFieldToProtoSeverityDestinationField = map[DestinationField]cxsdk.JSONExtractParametersDestinationField{
-		DestinationFieldCategory:     cxsdk.JSONExtractParametersDestinationFieldCategoryOrUnspecified,
-		DestinationFieldClassName:    cxsdk.JSONExtractParametersDestinationFieldClassName,
-		DestinationFieldMethod:       cxsdk.JSONExtractParametersDestinationFieldMethodName,
-		DestinationFieldThreadID:     cxsdk.JSONExtractParametersDestinationFieldThreadID,
-		DestinationFieldRuleSeverity: cxsdk.JSONExtractParametersDestinationFieldSeverity,
+	RulesOpenAPISeverityToSchemaSeverity                         = utils.ReverseMap(RulesSchemaSeverityToOpenAPISeverity)
+	RulesSchemaDestinationFieldToOpenAPISeverityDestinationField = map[DestinationField]rulegroups.DestinationField{
+		DestinationFieldCategory:     rulegroups.DESTINATIONFIELD_DESTINATION_FIELD_CATEGORY_OR_UNSPECIFIED,
+		DestinationFieldClassName:    rulegroups.DESTINATIONFIELD_DESTINATION_FIELD_CLASSNAME,
+		DestinationFieldMethod:       rulegroups.DESTINATIONFIELD_DESTINATION_FIELD_METHODNAME,
+		DestinationFieldThreadID:     rulegroups.DESTINATIONFIELD_DESTINATION_FIELD_THREADID,
+		DestinationFieldRuleSeverity: rulegroups.DESTINATIONFIELD_DESTINATION_FIELD_SEVERITY,
 	}
-	RulesSchemaFormatStandardToProtoFormatStandard = map[FieldFormatStandard]cxsdk.ExtractTimestampParametersFormatStandard{
-		FieldFormatStandardStrftime: cxsdk.ExtractTimestampParametersFormatStandardStrftimeOrUnspecified,
-		FieldFormatStandardJavaSDF:  cxsdk.ExtractTimestampParametersFormatStandardJavasdf,
-		FieldFormatStandardGolang:   cxsdk.ExtractTimestampParametersFormatStandardGolang,
-		FieldFormatStandardSecondTS: cxsdk.ExtractTimestampParametersFormatStandardSecondsTS,
-		FieldFormatStandardMilliTS:  cxsdk.ExtractTimestampParametersFormatStandardMilliTS,
-		FieldFormatStandardMicroTS:  cxsdk.ExtractTimestampParametersFormatStandardMicroTS,
-		FieldFormatStandardNanoTS:   cxsdk.ExtractTimestampParametersFormatStandardNanoTS,
+	RulesSchemaFormatStandardToOpenAPIFormatStandard = map[FieldFormatStandard]rulegroups.FormatStandard{
+		FieldFormatStandardStrftime: rulegroups.FORMATSTANDARD_FORMAT_STANDARD_STRFTIME_OR_UNSPECIFIED,
+		FieldFormatStandardJavaSDF:  rulegroups.FORMATSTANDARD_FORMAT_STANDARD_JAVASDF,
+		FieldFormatStandardGolang:   rulegroups.FORMATSTANDARD_FORMAT_STANDARD_GOLANG,
+		FieldFormatStandardSecondTS: rulegroups.FORMATSTANDARD_FORMAT_STANDARD_SECONDSTS,
+		FieldFormatStandardMilliTS:  rulegroups.FORMATSTANDARD_FORMAT_STANDARD_MILLITS,
+		FieldFormatStandardMicroTS:  rulegroups.FORMATSTANDARD_FORMAT_STANDARD_MICROTS,
+		FieldFormatStandardNanoTS:   rulegroups.FORMATSTANDARD_FORMAT_STANDARD_NANOTS,
 	}
 )
 
@@ -320,191 +319,174 @@ const (
 	RuleSeverityCritical RuleSeverity = "Critical"
 )
 
-func (in *RuleGroupSpec) ExtractUpdateRuleGroupRequest(id string) *cxsdk.UpdateRuleGroupRequest {
-	ruleGroup := in.ExtractCreateRuleGroupRequest()
-	return &cxsdk.UpdateRuleGroupRequest{
-		GroupId:   wrapperspb.String(id),
-		RuleGroup: ruleGroup,
-	}
-}
-
-func (in *RuleGroupSpec) ExtractCreateRuleGroupRequest() *cxsdk.CreateRuleGroupRequest {
-	name := wrapperspb.String(in.Name)
-	description := wrapperspb.String(in.Description)
-	enabled := wrapperspb.Bool(in.Active)
-	hidden := wrapperspb.Bool(in.Hidden)
-	creator := wrapperspb.String(in.Creator)
+func (in *RuleGroupSpec) ExtractCreateRuleGroupRequest() *rulegroups.RuleGroupsServiceCreateRuleGroupRequest {
 	ruleMatchers := expandRuleMatchers(in.Applications, in.Subsystems, in.Severities)
 	ruleSubGroups := expandRuleSubGroups(in.RuleSubgroups)
 	order := expandOrder(in.Order)
 
-	return &cxsdk.CreateRuleGroupRequest{
-		Name:          name,
-		Description:   description,
-		Enabled:       enabled,
-		Hidden:        hidden,
-		Creator:       creator,
+	return &rulegroups.RuleGroupsServiceCreateRuleGroupRequest{
+		Name:          rulegroups.PtrString(in.Name),
+		Description:   rulegroups.PtrString(in.Description),
+		Enabled:       rulegroups.PtrBool(in.Active),
+		Hidden:        rulegroups.PtrBool(in.Hidden),
+		Creator:       rulegroups.PtrString(in.Creator),
 		RuleMatchers:  ruleMatchers,
 		RuleSubgroups: ruleSubGroups,
 		Order:         order,
 	}
 }
 
-func expandOrder(order *int32) *wrapperspb.UInt32Value {
+func expandOrder(order *int32) *int64 {
 	if order != nil {
-		return wrapperspb.UInt32(uint32(*order))
+		return rulegroups.PtrInt64(int64(*order))
 	}
 	return nil
 }
 
-func expandRuleSubGroups(subGroups []RuleSubGroup) []*cxsdk.CreateRuleGroupRequestCreateRuleSubgroup {
-	ruleSubGroups := make([]*cxsdk.CreateRuleGroupRequestCreateRuleSubgroup, 0, len(subGroups))
+func expandRuleSubGroups(subGroups []RuleSubGroup) []rulegroups.CreateRuleGroupRequestCreateRuleSubgroup {
+	ruleSubGroups := make([]rulegroups.CreateRuleGroupRequestCreateRuleSubgroup, 0, len(subGroups))
 	for i, subGroup := range subGroups {
 		rsg := expandRuleSubGroup(subGroup)
-		rsg.Order = wrapperspb.UInt32(uint32(i + 1))
-		ruleSubGroups = append(ruleSubGroups, rsg)
+		rsg.Order = rulegroups.PtrInt64(int64(i + 1))
+		ruleSubGroups = append(ruleSubGroups, *rsg)
 	}
 	return ruleSubGroups
 }
 
-func expandRuleSubGroup(subGroup RuleSubGroup) *cxsdk.CreateRuleGroupRequestCreateRuleSubgroup {
-	enabled := wrapperspb.Bool(subGroup.Active)
+func expandRuleSubGroup(subGroup RuleSubGroup) *rulegroups.CreateRuleGroupRequestCreateRuleSubgroup {
 	rules := expandRules(subGroup.Rules)
-	return &cxsdk.CreateRuleGroupRequestCreateRuleSubgroup{
-		Enabled: enabled,
+	return &rulegroups.CreateRuleGroupRequestCreateRuleSubgroup{
+		Enabled: rulegroups.PtrBool(subGroup.Active),
 		Rules:   rules,
 	}
 }
 
-func expandRules(rules []Rule) []*cxsdk.CreateRuleGroupRequestCreateRuleSubgroupCreateRule {
-	expandedRules := make([]*cxsdk.CreateRuleGroupRequestCreateRuleSubgroupCreateRule, 0, len(rules))
+func expandRules(rules []Rule) []rulegroups.CreateRuleGroupRequestCreateRuleSubgroupCreateRule {
+	expandedRules := make([]rulegroups.CreateRuleGroupRequestCreateRuleSubgroupCreateRule, 0, len(rules))
 	for i, rule := range rules {
 		r := expandRule(rule)
-		r.Order = wrapperspb.UInt32(uint32(i + 1))
-		expandedRules = append(expandedRules, r)
+		r.Order = rulegroups.PtrInt64(int64(i + 1))
+		expandedRules = append(expandedRules, *r)
 	}
 	return expandedRules
 }
 
-func expandRule(rule Rule) *cxsdk.CreateRuleGroupRequestCreateRuleSubgroupCreateRule {
-	name := wrapperspb.String(rule.Name)
-	description := wrapperspb.String(rule.Description)
-	enabled := wrapperspb.Bool(rule.Active)
+func expandRule(rule Rule) *rulegroups.CreateRuleGroupRequestCreateRuleSubgroupCreateRule {
 	sourceFiled, parameters := expandSourceFiledAndParameters(rule)
 
-	return &cxsdk.CreateRuleGroupRequestCreateRuleSubgroupCreateRule{
-		Name:        name,
-		Description: description,
-		SourceField: sourceFiled,
+	return &rulegroups.CreateRuleGroupRequestCreateRuleSubgroupCreateRule{
+		Name:        rulegroups.PtrString(rule.Name),
+		Description: rulegroups.PtrString(rule.Description),
+		SourceField: rulegroups.PtrString(sourceFiled),
 		Parameters:  parameters,
-		Enabled:     enabled,
+		Enabled:     rulegroups.PtrBool(rule.Active),
 	}
 }
 
-func expandSourceFiledAndParameters(rule Rule) (sourceField *wrapperspb.StringValue, parameters *cxsdk.RuleParameters) {
+func expandSourceFiledAndParameters(rule Rule) (sourceField string, parameters *rulegroups.RuleParameters) {
 	if parse := rule.Parse; parse != nil {
-		sourceField = wrapperspb.String(parse.SourceField)
-		parameters = &cxsdk.RuleParameters{
-			RuleParameters: &cxsdk.RuleParametersParseParameters{
-				ParseParameters: &cxsdk.ParseParameters{
-					DestinationField: wrapperspb.String(parse.DestinationField),
-					Rule:             wrapperspb.String(parse.Regex),
+		sourceField = parse.SourceField
+		parameters = &rulegroups.RuleParameters{
+			RuleParametersParseParameters: &rulegroups.RuleParametersParseParameters{
+				ParseParameters: &rulegroups.ParseParameters{
+					DestinationField: rulegroups.PtrString(parse.DestinationField),
+					Rule:             rulegroups.PtrString(parse.Regex),
 				},
 			},
 		}
 	} else if parseJsonField := rule.ParseJsonField; parseJsonField != nil {
-		sourceField = wrapperspb.String(parseJsonField.SourceField)
-		parameters = &cxsdk.RuleParameters{
-			RuleParameters: &cxsdk.RuleParametersJSONParseParameters{
-				JsonParseParameters: &cxsdk.JSONParseParameters{
-					DestinationField: wrapperspb.String(parseJsonField.DestinationField),
-					DeleteSource:     wrapperspb.Bool(!parseJsonField.KeepSourceField),
-					OverrideDest:     wrapperspb.Bool(!parseJsonField.KeepDestinationField),
-					EscapedValue:     wrapperspb.Bool(true),
+		sourceField = parseJsonField.SourceField
+		parameters = &rulegroups.RuleParameters{
+			RuleParametersJsonParseParameters: &rulegroups.RuleParametersJsonParseParameters{
+				JsonParseParameters: &rulegroups.JsonParseParameters{
+					DestinationField: rulegroups.PtrString(parseJsonField.DestinationField),
+					DeleteSource:     rulegroups.PtrBool(!parseJsonField.KeepSourceField),
+					OverrideDest:     rulegroups.PtrBool(!parseJsonField.KeepDestinationField),
+					EscapedValue:     rulegroups.PtrBool(true),
 				},
 			},
 		}
 	} else if jsonStringify := rule.JsonStringify; jsonStringify != nil {
-		sourceField = wrapperspb.String(jsonStringify.SourceField)
-		parameters = &cxsdk.RuleParameters{
-			RuleParameters: &cxsdk.RuleParametersJSONStringifyParameters{
-				JsonStringifyParameters: &cxsdk.JSONStringifyParameters{
-					DestinationField: wrapperspb.String(jsonStringify.DestinationField),
-					DeleteSource:     wrapperspb.Bool(!jsonStringify.KeepSourceField),
+		sourceField = jsonStringify.SourceField
+		parameters = &rulegroups.RuleParameters{
+			RuleParametersJsonStringifyParameters: &rulegroups.RuleParametersJsonStringifyParameters{
+				JsonStringifyParameters: &rulegroups.JsonStringifyParameters{
+					DestinationField: rulegroups.PtrString(jsonStringify.DestinationField),
+					DeleteSource:     rulegroups.PtrBool(!jsonStringify.KeepSourceField),
 				},
 			},
 		}
 	} else if jsonExtract := rule.JsonExtract; jsonExtract != nil {
-		sourceField = wrapperspb.String("text")
-		destinationField := RulesSchemaDestinationFieldToProtoSeverityDestinationField[jsonExtract.DestinationField]
-		jsonKey := wrapperspb.String(jsonExtract.JsonKey)
-		parameters = &cxsdk.RuleParameters{
-			RuleParameters: &cxsdk.RuleParametersJSONExtractParameters{
-				JsonExtractParameters: &cxsdk.JSONExtractParameters{
-					DestinationFieldType: destinationField,
+		sourceField = "text"
+		destinationField := RulesSchemaDestinationFieldToOpenAPISeverityDestinationField[jsonExtract.DestinationField]
+		jsonKey := rulegroups.PtrString(jsonExtract.JsonKey)
+		parameters = &rulegroups.RuleParameters{
+			RuleParametersJsonExtractParameters: &rulegroups.RuleParametersJsonExtractParameters{
+				JsonExtractParameters: &rulegroups.JsonExtractParameters{
+					DestinationFieldType: destinationField.Ptr(),
 					Rule:                 jsonKey,
 				},
 			},
 		}
 	} else if removeFields := rule.RemoveFields; removeFields != nil {
-		sourceField = wrapperspb.String("text")
-		parameters = &cxsdk.RuleParameters{
-			RuleParameters: &cxsdk.RuleParametersRemoveFieldsParameters{
-				RemoveFieldsParameters: &cxsdk.RemoveFieldsParameters{
+		sourceField = "text"
+		parameters = &rulegroups.RuleParameters{
+			RuleParametersRemoveFieldsParameters: &rulegroups.RuleParametersRemoveFieldsParameters{
+				RemoveFieldsParameters: &rulegroups.RemoveFieldsParameters{
 					Fields: removeFields.ExcludedFields,
 				},
 			},
 		}
 	} else if extractTimestamp := rule.ExtractTimestamp; extractTimestamp != nil {
-		sourceField = wrapperspb.String(extractTimestamp.SourceField)
-		standard := RulesSchemaFormatStandardToProtoFormatStandard[extractTimestamp.FieldFormatStandard]
-		format := wrapperspb.String(extractTimestamp.TimeFormat)
-		parameters = &cxsdk.RuleParameters{
-			RuleParameters: &cxsdk.RuleParametersExtractTimestampParameters{
-				ExtractTimestampParameters: &cxsdk.ExtractTimestampParameters{
-					Standard: standard,
+		sourceField = extractTimestamp.SourceField
+		standard := RulesSchemaFormatStandardToOpenAPIFormatStandard[extractTimestamp.FieldFormatStandard]
+		format := rulegroups.PtrString(extractTimestamp.TimeFormat)
+		parameters = &rulegroups.RuleParameters{
+			RuleParametersExtractTimestampParameters: &rulegroups.RuleParametersExtractTimestampParameters{
+				ExtractTimestampParameters: &rulegroups.ExtractTimestampParameters{
+					Standard: standard.Ptr(),
 					Format:   format,
 				},
 			},
 		}
 	} else if block := rule.Block; block != nil {
-		sourceField = wrapperspb.String(block.SourceField)
+		sourceField = block.SourceField
 		if block.BlockingAllMatchingBlocks {
-			parameters = &cxsdk.RuleParameters{
-				RuleParameters: &cxsdk.RuleParametersBlockParameters{
-					BlockParameters: &cxsdk.BlockParameters{
-						KeepBlockedLogs: wrapperspb.Bool(block.KeepBlockedLogs),
-						Rule:            wrapperspb.String(block.Regex),
+			parameters = &rulegroups.RuleParameters{
+				RuleParametersBlockParameters: &rulegroups.RuleParametersBlockParameters{
+					BlockParameters: &rulegroups.BlockParameters{
+						KeepBlockedLogs: rulegroups.PtrBool(block.KeepBlockedLogs),
+						Rule:            rulegroups.PtrString(block.Regex),
 					},
 				},
 			}
 		} else {
-			parameters = &cxsdk.RuleParameters{
-				RuleParameters: &cxsdk.RuleParametersAllowParameters{
-					AllowParameters: &cxsdk.AllowParameters{
-						KeepBlockedLogs: wrapperspb.Bool(block.KeepBlockedLogs),
-						Rule:            wrapperspb.String(block.Regex),
+			parameters = &rulegroups.RuleParameters{
+				RuleParametersAllowParameters: &rulegroups.RuleParametersAllowParameters{
+					AllowParameters: &rulegroups.AllowParameters{
+						KeepBlockedLogs: rulegroups.PtrBool(block.KeepBlockedLogs),
+						Rule:            rulegroups.PtrString(block.Regex),
 					},
 				},
 			}
 		}
 	} else if replace := rule.Replace; replace != nil {
-		sourceField = wrapperspb.String(replace.SourceField)
-		parameters = &cxsdk.RuleParameters{
-			RuleParameters: &cxsdk.RuleParametersReplaceParameters{
-				ReplaceParameters: &cxsdk.ReplaceParameters{
-					DestinationField: wrapperspb.String(replace.DestinationField),
-					ReplaceNewVal:    wrapperspb.String(replace.ReplacementString),
-					Rule:             wrapperspb.String(replace.Regex),
+		sourceField = replace.SourceField
+		parameters = &rulegroups.RuleParameters{
+			RuleParametersReplaceParameters: &rulegroups.RuleParametersReplaceParameters{
+				ReplaceParameters: &rulegroups.ReplaceParameters{
+					DestinationField: rulegroups.PtrString(replace.DestinationField),
+					ReplaceNewVal:    rulegroups.PtrString(replace.ReplacementString),
+					Rule:             rulegroups.PtrString(replace.Regex),
 				},
 			},
 		}
 	} else if extract := rule.Extract; extract != nil {
-		sourceField = wrapperspb.String(extract.SourceField)
-		parameters = &cxsdk.RuleParameters{
-			RuleParameters: &cxsdk.RuleParametersExtractParameters{
-				ExtractParameters: &cxsdk.ExtractParameters{
-					Rule: wrapperspb.String(extract.Regex),
+		sourceField = extract.SourceField
+		parameters = &rulegroups.RuleParameters{
+			RuleParametersExtractParameters: &rulegroups.RuleParametersExtractParameters{
+				ExtractParameters: &rulegroups.ExtractParameters{
+					Rule: rulegroups.PtrString(extract.Regex),
 				},
 			},
 		}
@@ -513,28 +495,28 @@ func expandSourceFiledAndParameters(rule Rule) (sourceField *wrapperspb.StringVa
 	return sourceField, parameters
 }
 
-func expandRuleMatchers(applications, subsystems []string, severities []RuleSeverity) []*cxsdk.RuleMatcher {
-	ruleMatchers := make([]*cxsdk.RuleMatcher, 0, len(applications)+len(subsystems)+len(severities))
+func expandRuleMatchers(applications, subsystems []string, severities []RuleSeverity) []rulegroups.RuleMatcher {
+	ruleMatchers := make([]rulegroups.RuleMatcher, 0, len(applications)+len(subsystems)+len(severities))
 
 	for _, app := range applications {
-		constraintStr := wrapperspb.String(app)
-		applicationNameConstraint := cxsdk.ApplicationNameConstraint{Value: constraintStr}
-		ruleMatcherApplicationName := cxsdk.RuleMatcherApplicationName{ApplicationName: &applicationNameConstraint}
-		ruleMatchers = append(ruleMatchers, &cxsdk.RuleMatcher{Constraint: &ruleMatcherApplicationName})
+		constraintStr := rulegroups.PtrString(app)
+		applicationNameConstraint := rulegroups.ApplicationNameConstraint{Value: constraintStr}
+		ruleMatcherApplicationName := rulegroups.RuleMatcherApplicationName{ApplicationName: &applicationNameConstraint}
+		ruleMatchers = append(ruleMatchers, rulegroups.RuleMatcher{RuleMatcherApplicationName: &ruleMatcherApplicationName})
 	}
 
 	for _, subSys := range subsystems {
-		constraintStr := wrapperspb.String(subSys)
-		subsystemNameConstraint := cxsdk.SubsystemNameConstraint{Value: constraintStr}
-		ruleMatcherApplicationName := cxsdk.RuleMatcherSubsystemName{SubsystemName: &subsystemNameConstraint}
-		ruleMatchers = append(ruleMatchers, &cxsdk.RuleMatcher{Constraint: &ruleMatcherApplicationName})
+		constraintStr := rulegroups.PtrString(subSys)
+		subsystemNameConstraint := rulegroups.SubsystemNameConstraint{Value: constraintStr}
+		ruleMatcherApplicationName := rulegroups.RuleMatcherSubsystemName{SubsystemName: &subsystemNameConstraint}
+		ruleMatchers = append(ruleMatchers, rulegroups.RuleMatcher{RuleMatcherSubsystemName: &ruleMatcherApplicationName})
 	}
 
 	for _, sev := range severities {
-		constraintEnum := RulesSchemaSeverityToProtoSeverity[sev]
-		severityConstraint := cxsdk.SeverityConstraint{Value: constraintEnum}
-		ruleMatcherSeverity := cxsdk.RuleMatcherSeverity{Severity: &severityConstraint}
-		ruleMatchers = append(ruleMatchers, &cxsdk.RuleMatcher{Constraint: &ruleMatcherSeverity})
+		constraintEnum := RulesSchemaSeverityToOpenAPISeverity[sev]
+		severityConstraint := rulegroups.SeverityConstraint{Value: constraintEnum.Ptr()}
+		ruleMatcherSeverity := rulegroups.RuleMatcherSeverity{Severity: &severityConstraint}
+		ruleMatchers = append(ruleMatchers, rulegroups.RuleMatcher{RuleMatcherSeverity: &ruleMatcherSeverity})
 	}
 
 	return ruleMatchers
