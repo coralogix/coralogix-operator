@@ -87,6 +87,44 @@ var _ = Describe("TCOTracesPolicies", func() {
 							},
 						},
 					},
+					{
+						Name:     "sample policy 2",
+						Priority: "high",
+						Disabled: ptr.To(true),
+						Applications: &coralogixv1alpha1.TCOPolicyRule{
+							Names:    []string{"prod"},
+							RuleType: "is",
+						},
+						Subsystems: &coralogixv1alpha1.TCOPolicyRule{
+							Names:    []string{"mobile"},
+							RuleType: "is",
+						},
+						Actions: &coralogixv1alpha1.TCOPolicyRule{
+							Names:    []string{"action1", "action2"},
+							RuleType: "is",
+						},
+						Services: &coralogixv1alpha1.TCOPolicyRule{
+							Names:    []string{"service", "system"},
+							RuleType: "includes",
+						},
+						Tags: []coralogixv1alpha1.TCOPolicyTag{
+							{
+								Name:     "tags.app",
+								Values:   []string{"purchases", "signups"},
+								RuleType: "start_with",
+							},
+							{
+								Name:     "tags.http",
+								Values:   []string{"GET", "POST"},
+								RuleType: "is",
+							},
+						},
+						ArchiveRetention: &coralogixv1alpha1.ArchiveRetention{
+							BackendRef: coralogixv1alpha1.ArchiveRetentionBackendRef{
+								Name: "Default",
+							},
+						},
+					},
 				},
 			},
 		}

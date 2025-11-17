@@ -68,6 +68,25 @@ var _ = Describe("TCOLogsPolicies", func() {
 							},
 						},
 					},
+					{
+						Name:       "sample policy 2",
+						Priority:   "high",
+						Disabled:   ptr.To(true),
+						Severities: []coralogixv1alpha1.TCOPolicySeverity{"critical", "error"},
+						Applications: &coralogixv1alpha1.TCOPolicyRule{
+							Names:    []string{"prod"},
+							RuleType: "start_with",
+						},
+						Subsystems: &coralogixv1alpha1.TCOPolicyRule{
+							Names:    []string{"mobile"},
+							RuleType: "is",
+						},
+						ArchiveRetention: &coralogixv1alpha1.ArchiveRetention{
+							BackendRef: coralogixv1alpha1.ArchiveRetentionBackendRef{
+								Name: "Default",
+							},
+						},
+					},
 				},
 			},
 		}

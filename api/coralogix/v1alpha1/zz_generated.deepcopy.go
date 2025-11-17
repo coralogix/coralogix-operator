@@ -4116,6 +4116,11 @@ func (in *TCOLogsPolicy) DeepCopyInto(out *TCOLogsPolicy) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.Disabled != nil {
+		in, out := &in.Disabled, &out.Disabled
+		*out = new(bool)
+		**out = **in
+	}
 	if in.Severities != nil {
 		in, out := &in.Severities, &out.Severities
 		*out = make([]TCOPolicySeverity, len(*in))
@@ -4297,6 +4302,11 @@ func (in *TCOTracesPolicy) DeepCopyInto(out *TCOTracesPolicy) {
 	if in.Description != nil {
 		in, out := &in.Description, &out.Description
 		*out = new(string)
+		**out = **in
+	}
+	if in.Disabled != nil {
+		in, out := &in.Disabled, &out.Disabled
+		*out = new(bool)
 		**out = **in
 	}
 	if in.ArchiveRetention != nil {

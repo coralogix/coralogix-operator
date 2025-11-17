@@ -15112,6 +15112,13 @@ A TCO policy for logs.
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>disabled</b></td>
+        <td>boolean</td>
+        <td>
+          Whether the policy is disabled.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#tcologspoliciesspecpoliciesindexsubsystems">subsystems</a></b></td>
         <td>object</td>
         <td>
@@ -15504,6 +15511,13 @@ Coralogix TCO policy for traces.
         <td>string</td>
         <td>
           Description of the policy.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>disabled</b></td>
+        <td>boolean</td>
+        <td>
+          Whether the policy is disabled.<br/>
         </td>
         <td>false</td>
       </tr><tr>
