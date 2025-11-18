@@ -38,11 +38,10 @@ type GlobalRouterSpec struct {
 
 	// EntityLabels are optional labels to attach to the global router.
 	// +optional
-	EntityLabels map[string]string `json:"entityLabels,omitempty"`
+	EntityLabels *map[string]string `json:"entityLabels,omitempty"`
 
-	// EntityLabelMatcher is an optional label matcher to filter entities for the global router.
-	// +optional
-	EntityLabelMatcher *map[string]string `json:"entityLabelMatcher,omitempty"`
+	// RoutingLabels Allow to configure routing labels which are used for routers resolution.
+	RoutingLabels RoutingLabels `json:"routingLabels"`
 
 	// Fallback is the fallback routing target for the global router.
 	// +optional
@@ -51,6 +50,20 @@ type GlobalRouterSpec struct {
 	// Rules are the routing rules for the global router.
 	// +optional
 	Rules []RoutingRule `json:"rules,omitempty"`
+}
+
+type RoutingLabels struct {
+	// Environment is the environment routing label.
+	// +optional
+	Environment *string `json:"environment,omitempty"`
+
+	// Service is the service routing label.
+	// +optional
+	Service *string `json:"service,omitempty"`
+
+	// Team is the team routing label.
+	// +optional
+	Team *string `json:"team,omitempty"`
 }
 
 type RoutingRule struct {
@@ -115,11 +128,16 @@ func (g *GlobalRouter) ExtractGlobalRouter(ctx context.Context) (*globalrouters.
 	}
 
 	return &globalrouters.GlobalRouter{
-		Name:               globalrouters.PtrString(g.Spec.Name),
-		Description:        globalrouters.PtrString(g.Spec.Description),
-		EntityLabelMatcher: g.Spec.EntityLabelMatcher,
-		Fallback:           fallback,
-		Rules:              rules,
+		Name:         globalrouters.PtrString(g.Spec.Name),
+		Description:  globalrouters.PtrString(g.Spec.Description),
+		EntityLabels: g.Spec.EntityLabels,
+		RoutingLabels: &globalrouters.RoutingLabels{
+			Environment: g.Spec.RoutingLabels.Environment,
+			Service:     g.Spec.RoutingLabels.Service,
+			Team:        g.Spec.RoutingLabels.Team,
+		},
+		Fallback: fallback,
+		Rules:    rules,
 	}, nil
 }
 

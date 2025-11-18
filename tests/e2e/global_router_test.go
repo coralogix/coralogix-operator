@@ -12,6 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
@@ -103,8 +104,10 @@ func getSampleGlobalRouter(globalRouterName, testNamespace, slackConnectorName, 
 		Spec: coralogixv1alpha1.GlobalRouterSpec{
 			Name:        globalRouterName,
 			Description: "global router example",
-			EntityLabelMatcher: &map[string]string{
-				"routing.group": gouuid.NewString(),
+			RoutingLabels: coralogixv1alpha1.RoutingLabels{
+				Environment: ptr.To(gouuid.NewString()),
+				Service:     ptr.To(gouuid.NewString()),
+				Team:        ptr.To(gouuid.NewString()),
 			},
 			Rules: []coralogixv1alpha1.RoutingRule{
 				{

@@ -56,12 +56,6 @@ spec:
               description:
                 description: Description is the description of the global router.
                 type: string
-              entityLabelMatcher:
-                additionalProperties:
-                  type: string
-                description: EntityLabelMatcher is an optional label matcher to filter
-                  entities for the global router.
-                type: object
               entityLabels:
                 additionalProperties:
                   type: string
@@ -146,6 +140,20 @@ spec:
               name:
                 description: Name is the name of the global router.
                 type: string
+              routingLabels:
+                description: RoutingLabels Allow to configure routing labels which
+                  are used for routers resolution.
+                properties:
+                  environment:
+                    description: Environment is the environment routing label.
+                    type: string
+                  service:
+                    description: Service is the service routing label.
+                    type: string
+                  team:
+                    description: Team is the team routing label.
+                    type: string
+                type: object
               rules:
                 description: Rules are the routing rules for the global router.
                 items:
@@ -253,6 +261,7 @@ spec:
             required:
             - description
             - name
+            - routingLabels
             type: object
           status:
             description: GlobalRouterStatus defines the observed state of GlobalRouter.

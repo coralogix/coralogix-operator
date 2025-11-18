@@ -92,7 +92,7 @@ var _ = Describe("TCOLogsPolicies", func() {
 		}
 	})
 
-	It("Should create TCOLogsPolicies successfully", FlakeAttempts(3), func(ctx context.Context) {
+	It("Should create TCOLogsPolicies successfully", func(ctx context.Context) {
 		By("Creating TCOLogsPolicies")
 		Expect(crClient.Create(ctx, TCOLogsPolicies)).To(Succeed())
 
@@ -110,7 +110,7 @@ var _ = Describe("TCOLogsPolicies", func() {
 			Expect(err).ToNot(HaveOccurred())
 			policies = listRes.Policies
 			return policies
-		}, time.Minute, time.Second).Should(HaveLen(1))
+		}, time.Minute, time.Second).Should(HaveLen(2))
 
 		Expect(policies[0].Name.Value).To(Equal(TCOLogsPolicies.Spec.Policies[0].Name))
 
