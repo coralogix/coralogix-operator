@@ -146,7 +146,8 @@ var _ = Describe("IPAccess", func() {
 		Eventually(func(g Gomega) {
 			res, _, err := ipAccessClient.IpAccessServiceGetCompanyIpAccessSettings(ctx).Id(ipAccessID).Execute()
 			g.Expect(err).ToNot(HaveOccurred())
-			g.Expect(res.Settings.IpAccess).To(BeNil())
+			g.Expect(res.Settings.IpAccess).ToNot(BeNil())
+			g.Expect(*res.Settings.IpAccess).To(BeEmpty())
 		}, time.Minute, time.Second).Should(Succeed())
 	})
 })
