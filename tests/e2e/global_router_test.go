@@ -104,7 +104,7 @@ func getSampleGlobalRouter(globalRouterName, testNamespace, slackConnectorName, 
 		Spec: coralogixv1alpha1.GlobalRouterSpec{
 			Name:        globalRouterName,
 			Description: "global router example",
-			RoutingLabels: coralogixv1alpha1.RoutingLabels{
+			RoutingLabels: &coralogixv1alpha1.RoutingLabels{
 				Environment: ptr.To(gouuid.NewString()),
 				Service:     ptr.To(gouuid.NewString()),
 				Team:        ptr.To(gouuid.NewString()),

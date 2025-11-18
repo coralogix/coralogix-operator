@@ -138,12 +138,16 @@ spec:
                   - connector
                   type: object
                 type: array
+              id:
+                description: ID of the global router.
+                type: string
               name:
                 description: Name is the name of the global router.
                 type: string
               routingLabels:
-                description: RoutingLabels Allow to configure routing labels which
-                  are used for routers resolution.
+                description: |-
+                  RoutingLabels Allows to configure routing labels which are used for routers resolution.
+                  Should be used only if ID is not set to `router_default`.
                 properties:
                   environment:
                     description: Environment is the environment routing label.
@@ -262,7 +266,6 @@ spec:
             required:
             - description
             - name
-            - routingLabels
             type: object
           status:
             description: GlobalRouterStatus defines the observed state of GlobalRouter.

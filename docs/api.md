@@ -10439,13 +10439,6 @@ GlobalRouterSpec defines the desired state of the Global Router.
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b><a href="#globalrouterspecroutinglabels">routingLabels</a></b></td>
-        <td>object</td>
-        <td>
-          RoutingLabels Allow to configure routing labels which are used for routers resolution.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>entityLabels</b></td>
         <td>map[string]string</td>
         <td>
@@ -10460,51 +10453,25 @@ GlobalRouterSpec defines the desired state of the Global Router.
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          ID of the global router.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspecroutinglabels">routingLabels</a></b></td>
+        <td>object</td>
+        <td>
+          RoutingLabels Allows to configure routing labels which are used for routers resolution.
+Should be used only if ID is not set to `router_default`.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#globalrouterspecrulesindex">rules</a></b></td>
         <td>[]object</td>
         <td>
           Rules are the routing rules for the global router.<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### GlobalRouter.spec.routingLabels
-<sup><sup>[↩ Parent](#globalrouterspec)</sup></sup>
-
-
-
-RoutingLabels Allow to configure routing labels which are used for routers resolution.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>environment</b></td>
-        <td>string</td>
-        <td>
-          Environment is the environment routing label.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>service</b></td>
-        <td>string</td>
-        <td>
-          Service is the service routing label.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>team</b></td>
-        <td>string</td>
-        <td>
-          Team is the team routing label.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10740,6 +10707,48 @@ ResourceRef is a reference to a Kubernetes resource.
         <td>string</td>
         <td>
           Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.routingLabels
+<sup><sup>[↩ Parent](#globalrouterspec)</sup></sup>
+
+
+
+RoutingLabels Allows to configure routing labels which are used for routers resolution.
+Should be used only if ID is not set to `router_default`.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>environment</b></td>
+        <td>string</td>
+        <td>
+          Environment is the environment routing label.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>service</b></td>
+        <td>string</td>
+        <td>
+          Service is the service routing label.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>team</b></td>
+        <td>string</td>
+        <td>
+          Team is the team routing label.<br/>
         </td>
         <td>false</td>
       </tr></tbody>

@@ -36,12 +36,18 @@ type GlobalRouterSpec struct {
 	// Description is the description of the global router.
 	Description string `json:"description"`
 
+	// ID of the global router.
+	// +optional
+	ID *string `json:"id,omitempty"`
+
 	// EntityLabels are optional labels to attach to the global router.
 	// +optional
 	EntityLabels *map[string]string `json:"entityLabels,omitempty"`
 
-	// RoutingLabels Allow to configure routing labels which are used for routers resolution.
-	RoutingLabels RoutingLabels `json:"routingLabels"`
+	// RoutingLabels Allows to configure routing labels which are used for routers resolution.
+	// Should be used only if ID is not set to `router_default`.
+	// +optional
+	RoutingLabels *RoutingLabels `json:"routingLabels,omitempty"`
 
 	// Fallback is the fallback routing target for the global router.
 	// +optional
@@ -52,6 +58,8 @@ type GlobalRouterSpec struct {
 	Rules []RoutingRule `json:"rules,omitempty"`
 }
 
+// RoutingLabels defines the routing labels for the Global Router.
+// At least one of the routing labels fields must be set, in case ID is not set to `router_default`.
 type RoutingLabels struct {
 	// Environment is the environment routing label.
 	// +optional
@@ -128,17 +136,26 @@ func (g *GlobalRouter) ExtractGlobalRouter(ctx context.Context) (*globalrouters.
 	}
 
 	return &globalrouters.GlobalRouter{
-		Name:         globalrouters.PtrString(g.Spec.Name),
-		Description:  globalrouters.PtrString(g.Spec.Description),
-		EntityLabels: g.Spec.EntityLabels,
-		RoutingLabels: &globalrouters.RoutingLabels{
-			Environment: g.Spec.RoutingLabels.Environment,
-			Service:     g.Spec.RoutingLabels.Service,
-			Team:        g.Spec.RoutingLabels.Team,
-		},
-		Fallback: fallback,
-		Rules:    rules,
+		Name:          globalrouters.PtrString(g.Spec.Name),
+		Description:   globalrouters.PtrString(g.Spec.Description),
+		Id:            g.Spec.ID,
+		EntityLabels:  g.Spec.EntityLabels,
+		RoutingLabels: extractRoutingLabels(g.Spec.RoutingLabels),
+		Fallback:      fallback,
+		Rules:         rules,
 	}, nil
+}
+
+func extractRoutingLabels(routingLabels *RoutingLabels) *globalrouters.RoutingLabels {
+	if routingLabels == nil {
+		return nil
+	}
+
+	return &globalrouters.RoutingLabels{
+		Environment: routingLabels.Environment,
+		Service:     routingLabels.Service,
+		Team:        routingLabels.Team,
+	}
 }
 
 func extractRoutingRules(ctx context.Context, namespace string, rules []RoutingRule) ([]globalrouters.RoutingRule, error) {
