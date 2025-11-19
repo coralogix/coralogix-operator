@@ -116,8 +116,8 @@ coralogixOperator:
 
   # --  Coralogix operator Image
   image:
-    repository: coralogixrepo/coralogix-operator
-    tag: ""
+    repository: public.ecr.aws/w3s4j9x9/cx-operator-go-convertor
+    tag: "version"
     pullPolicy: IfNotPresent
 
   # -- Coralogix Account Region
