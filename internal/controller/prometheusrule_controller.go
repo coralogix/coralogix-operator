@@ -351,7 +351,6 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 				errorsEncountered = append(errorsEncountered, fmt.Errorf("error updating Alert CRD %s: %w", alertName, err))
 			}
 		}
-		}
 	}
 
 	var childAlerts coralogixv1beta1.AlertList
