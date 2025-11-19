@@ -24,18 +24,44 @@ The following Coralogix Alert properties are derived from the PrometheusRule ale
 - `Alert.Spec.Name`: Set to `rule.Alert` value
 - `Alert.Spec.Description`: Set to `rule.Annotations["description"]` value
 - `Alert.Spec.EntityLabels`: Set to `rule.Labels` property
-- `Alert.Spec.Priority`: Set to `rule.Labels["severity"]` value, with the next priority mapping:
+- `Alert.Spec.Priority`: Set to `rule.Labels["severity"]` value, with the following priority mapping:
     - `critical` -> `p1`
-    - `error` -> `p2`
-    - `warning` -> `p3`
+    - `high`, `error` -> `p2`
+    - `moderate`, `warning` -> `p3` (also default for unknown/dynamic severities)
     - `info` -> `p4`
     - `low` -> `p5`
+- `Alert.Spec.Description`: Automatically converts Go template syntax to Tera template syntax (see [Template Conversion Guide](./PROMETHEUS_TEMPLATE_CONVERSION.md))
+- `Alert.Spec.EntityLabels`: Automatically converts Go templates in label values, and adds `routing.group: main` label
+- `Alert.Spec.AlertType.MetricThreshold.OfTheLast.DynamicDuration`: Automatically validates and clamps duration to 1-2160 minutes range
 - `Alert.Spec.AlertType.MetricThreshold.OfTheLast.DynamicDuration`: Set to `rule.For` value
 - `Alert.Spec.AlertType.MetricThreshold.Rules[0].Condition.ConditionType`: Set to `moreThan`
 - `Alert.Spec.AlertType.MetricThreshold.Rules[0].Condition.Threshold`: Set to `0`
 - `Alert.Spec.AlertType.MetricThreshold.Rules[0].Condition.ForOverPct`: Set to `100`
 
 Other properties will not be overridden by the operator and can be modified directly in the Coralogix Alert resource.
+
+### Template Conversion
+
+The operator automatically converts Prometheus Go template syntax to Coralogix Tera template syntax. This includes:
+
+- **Description templates:** `{{ $labels.pod }}` → `{{ alert.groups[0].keyValues.pod }}`
+- **Value references:** `{{ $value }}` → `{{ alert.value }}`
+- **Entity label templates:** Go templates in label values are converted to Tera syntax
+
+For detailed information on template conversion, see the [Template Conversion Guide](./PROMETHEUS_TEMPLATE_CONVERSION.md).
+
+### Duration Validation
+
+Alert durations (`for` field) are automatically validated and clamped to the valid range:
+- **Minimum:** 1 minute
+- **Maximum:** 2160 minutes (36 hours)
+
+Durations outside this range are automatically adjusted to the nearest valid value.
+
+### Automatic Labels
+
+The operator automatically adds the following label to all alerts:
+- `routing.group: main` - Used for alert routing and organization
 
 #### Example
 
