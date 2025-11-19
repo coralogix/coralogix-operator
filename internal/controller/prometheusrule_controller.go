@@ -267,12 +267,36 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 			}
 
 			desiredDescription := rule.Annotations["description"]
+			// Convert description if it contains Go templates
+			if utils.ContainsGoTemplate(desiredDescription) {
+				desiredDescription = utils.SanitizeDescriptionForTera(desiredDescription)
+			}
+			
 			if alert.Spec.Description != desiredDescription {
 				alert.Spec.Description = desiredDescription
 				updated = true
 			}
 
-			desiredEntityLabels := rule.Labels
+			// Convert entity labels if they contain Go templates
+			desiredEntityLabels := make(map[string]string)
+			for key, value := range rule.Labels {
+				if utils.ContainsGoTemplate(value) {
+					convertedValue := utils.ConvertPrometheusTemplateToTera(value)
+					// If conversion resulted in something that's clearly not Tera-compatible,
+					// use a generic placeholder
+					if strings.Contains(convertedValue, "{{") && 
+						!strings.Contains(convertedValue, "alert.groups[0].keyValues") && 
+						!strings.Contains(convertedValue, "alert.value") {
+						convertedValue = "[field conversion not supported]"
+					}
+					desiredEntityLabels[key] = convertedValue
+				} else {
+					desiredEntityLabels[key] = value
+				}
+			}
+			
+			// Add routing.group label to all alerts
+			desiredEntityLabels["routing.group"] = "main"
 			if !reflect.DeepEqual(alert.Spec.EntityLabels, desiredEntityLabels) {
 				alert.Spec.EntityLabels = desiredEntityLabels
 				updated = true
@@ -368,10 +392,38 @@ func shouldTrackAlerts(prometheusRule *prometheus.PrometheusRule) bool {
 
 func prometheusAlertingRuleToAlertSpec(rule *prometheus.Rule) coralogixv1beta1.AlertSpec {
 	priority := getPriority(*rule)
+	
+	// Convert description if it contains Go templates
+	description := rule.Annotations["description"]
+	if utils.ContainsGoTemplate(description) {
+		description = utils.SanitizeDescriptionForTera(description)
+	}
+	
+	// Convert entity labels if they contain Go templates
+	entityLabels := make(map[string]string)
+	for key, value := range rule.Labels {
+		if utils.ContainsGoTemplate(value) {
+			convertedValue := utils.ConvertPrometheusTemplateToTera(value)
+			// If conversion resulted in something that's clearly not Tera-compatible,
+			// use a generic placeholder
+			if strings.Contains(convertedValue, "{{") && 
+				!strings.Contains(convertedValue, "alert.groups[0].keyValues") && 
+				!strings.Contains(convertedValue, "alert.value") {
+				convertedValue = "[field conversion not supported]"
+			}
+			entityLabels[key] = convertedValue
+		} else {
+			entityLabels[key] = value
+		}
+	}
+	
+	// Add routing.group label to all alerts
+	entityLabels["routing.group"] = "main"
+	
 	return coralogixv1beta1.AlertSpec{
 		Name:         rule.Alert,
-		Description:  rule.Annotations["description"],
-		EntityLabels: rule.Labels,
+		Description:  description,
+		EntityLabels: entityLabels,
 		Priority:     getPriority(*rule),
 		TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
 			MetricThreshold: prometheusAlertToMetricThreshold(*rule, priority),
@@ -431,7 +483,39 @@ func prometheusInnerRulesToCoralogixInnerRules(rules []prometheus.Rule) []coralo
 	return result
 }
 
+// validateAndClampDuration validates and clamps duration to Coralogix valid range (1-2160 minutes)
+// Returns the duration string clamped to valid range, defaulting to maximum (2160m) if out of range
+func validateAndClampDuration(durationStr string) string {
+	const minMinutes = 1
+	const maxMinutes = 2160
+	
+	// Parse the duration
+	duration, err := time.ParseDuration(durationStr)
+	if err != nil {
+		// If parsing fails, return maximum duration
+		return fmt.Sprintf("%dm", maxMinutes)
+	}
+	
+	// Convert to minutes
+	minutes := int(duration.Minutes())
+	
+	// Clamp to valid range
+	if minutes < minMinutes {
+		return fmt.Sprintf("%dm", minMinutes)
+	}
+	if minutes > maxMinutes {
+		return fmt.Sprintf("%dm", maxMinutes)
+	}
+	
+	// Return original duration string if within valid range
+	return durationStr
+}
+
 func prometheusAlertToMetricThreshold(rule prometheus.Rule, priority coralogixv1beta1.AlertPriority) *coralogixv1beta1.MetricThreshold {
+	// Get the duration and validate/clamp it
+	durationStr := string(ptr.Deref(rule.For, "1m"))
+	validatedDuration := validateAndClampDuration(durationStr)
+	
 	return &coralogixv1beta1.MetricThreshold{
 		MetricFilter: coralogixv1beta1.MetricFilter{
 			Promql: rule.Expr.StrVal,
@@ -442,7 +526,7 @@ func prometheusAlertToMetricThreshold(rule prometheus.Rule, priority coralogixv1
 					Threshold:  resource.MustParse("0"),
 					ForOverPct: 100,
 					OfTheLast: coralogixv1beta1.MetricTimeWindow{
-						DynamicDuration: ptr.To(string(ptr.Deref(rule.For, "1m"))),
+						DynamicDuration: ptr.To(validatedDuration),
 					},
 					ConditionType: coralogixv1beta1.MetricThresholdConditionTypeMoreThan,
 				},
@@ -459,16 +543,25 @@ func prometheusAlertToMetricThreshold(rule prometheus.Rule, priority coralogixv1
 
 func getPriority(rule prometheus.Rule) coralogixv1beta1.AlertPriority {
 	if severityStr, ok := rule.Labels["severity"]; ok && severityStr != "" {
+		// If severity contains Go template syntax, default to p3 (don't convert)
+		if utils.ContainsGoTemplate(severityStr) {
+			return coralogixv1beta1.AlertPriorityP3
+		}
 		if priority, ok := prometheusSeverityToCXPriority[strings.ToLower(severityStr)]; ok {
 			return priority
 		}
+		// If severity exists but is not in the mapping (dynamic/unknown severity), default to p3
+		return coralogixv1beta1.AlertPriorityP3
 	}
-	return coralogixv1beta1.AlertPriorityP4
+	// If no severity label, default to p3
+	return coralogixv1beta1.AlertPriorityP3
 }
 
 var prometheusSeverityToCXPriority = map[string]coralogixv1beta1.AlertPriority{
 	"critical": coralogixv1beta1.AlertPriorityP1,
+	"high":     coralogixv1beta1.AlertPriorityP2,
 	"error":    coralogixv1beta1.AlertPriorityP2,
+	"moderate": coralogixv1beta1.AlertPriorityP3,
 	"warning":  coralogixv1beta1.AlertPriorityP3,
 	"info":     coralogixv1beta1.AlertPriorityP4,
 	"low":      coralogixv1beta1.AlertPriorityP5,

@@ -70,7 +70,7 @@ spec:
               secretKeyRef:
                 name: {{ include "coralogixOperator.secretName" . }}
                 key: {{ include "coralogixOperator.secretKey" . }}
-        image: {{ .Values.coralogixOperator.image.repository }}:v{{ .Values.coralogixOperator.image.tag | default .Chart.AppVersion }}
+        image: {{ .Values.coralogixOperator.image.repository }}:{{ .Values.coralogixOperator.image.tag | default .Chart.AppVersion }}
         imagePullPolicy: {{ .Values.coralogixOperator.image.pullPolicy }}
         livenessProbe:
           httpGet:
