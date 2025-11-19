@@ -571,18 +571,18 @@ func prometheusAlertToMetricThreshold(rule prometheus.Rule, priority coralogixv1
 
 func getPriority(rule prometheus.Rule) coralogixv1beta1.AlertPriority {
 	if severityStr, ok := rule.Labels["severity"]; ok && severityStr != "" {
-		// If severity contains Go template syntax, default to p3 (don't convert)
+		// If severity contains Go template syntax, default to p4 (don't convert)
 		if utils.ContainsGoTemplate(severityStr) {
-			return coralogixv1beta1.AlertPriorityP3
+			return coralogixv1beta1.AlertPriorityP4
 		}
 		if priority, ok := prometheusSeverityToCXPriority[strings.ToLower(severityStr)]; ok {
 			return priority
 		}
-		// If severity exists but is not in the mapping (dynamic/unknown severity), default to p3
-		return coralogixv1beta1.AlertPriorityP3
+		// If severity exists but is not in the mapping (dynamic/unknown severity), default to p4
+		return coralogixv1beta1.AlertPriorityP4
 	}
-	// If no severity label, default to p3
-	return coralogixv1beta1.AlertPriorityP3
+	// If no severity label, default to p4
+	return coralogixv1beta1.AlertPriorityP4
 }
 
 var prometheusSeverityToCXPriority = map[string]coralogixv1beta1.AlertPriority{
@@ -592,7 +592,7 @@ var prometheusSeverityToCXPriority = map[string]coralogixv1beta1.AlertPriority{
 	"moderate": coralogixv1beta1.AlertPriorityP3,
 	"warning":  coralogixv1beta1.AlertPriorityP3,
 	"info":     coralogixv1beta1.AlertPriorityP4,
-	"low":      coralogixv1beta1.AlertPriorityP5,
+	"low":      coralogixv1beta1.AlertPriorityP4,
 }
 
 func getOwnerReference(promRule *prometheus.PrometheusRule) metav1.OwnerReference {
