@@ -40,6 +40,7 @@ spec:
     - name: second policy
       priority: low
       description: This is the second policy
+      disabled: true
       actions:
           names:
           - action3
