@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -183,145 +184,173 @@ func (r *PrometheusRuleReconciler) deleteCxRecordingRule(ctx context.Context, re
 	return nil
 }
 
+// ruleKey generates a unique key for a rule based on alert name, expression, and other identifying characteristics
+func ruleKey(rule prometheus.Rule) string {
+	// Create a key from alert name, expression, for duration, and labels
+	keyParts := []string{
+		strings.ToLower(rule.Alert),
+		rule.Expr.StrVal,
+		string(ptr.Deref(rule.For, "1m")),
+	}
+	// Sort labels for consistent key generation
+	labelKeys := make([]string, 0, len(rule.Labels))
+	for k := range rule.Labels {
+		labelKeys = append(labelKeys, k)
+	}
+	sort.Strings(labelKeys)
+	for _, k := range labelKeys {
+		keyParts = append(keyParts, k+"="+rule.Labels[k])
+	}
+	return strings.Join(keyParts, "||")
+}
+
 func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx context.Context, prometheusRule *prometheus.PrometheusRule) error {
 	// A single PrometheusRule can have multiple alerts with the same name, while the Alert CRD from coralogix can only manage one alert.
-	// alertMap is used to map an alert name with potentially multiple alerts from the promrule CRD. For example:
+	// We deduplicate alerts based on alert name, expression, duration, and labels to avoid creating duplicate alerts.
+	// alertMap is used to map a unique rule key to the first occurrence of that rule. For example:
 	//
 	// A prometheusRule with the following rules:
 	// rules:
 	//   - alert: Example
 	//     expr: metric > 10
 	//   - alert: Example
-	//     expr: metric > 20
+	//     expr: metric > 10  (duplicate - same expression)
+	//   - alert: Example
+	//     expr: metric > 20  (different expression)
 	//
 	// Would be mapped into:
-	//   map[string][]prometheus.Rule{
-	// 	   "Example": []prometheus.Rule{
-	// 		 {
-	//          Alert: Example,
-	//          Expr: "metric > 10"
-	// 		 },
-	// 		 {
-	//          Alert: Example,
-	//          Expr: "metric > 100"
-	// 		 },
-	// 	   },
+	//   map[string]prometheus.Rule{
+	// 	   "example||metric > 10||5m||severity=critical": {Alert: Example, Expr: "metric > 10"},
+	// 	   "example||metric > 20||5m||severity=critical": {Alert: Example, Expr: "metric > 20"},
 	//   }
 	//
-	// To later on generate coralogix Alert CRDs using the alert name followed by it's index on the array, making sure we don't clash names.
-	alertMap := make(map[string][]prometheus.Rule)
-	var a string
+	// This ensures duplicate alerts (same name, expression, duration, labels) are only created once.
+	alertMap := make(map[string]prometheus.Rule)
 	for _, group := range prometheusRule.Spec.Groups {
 		for _, rule := range group.Rules {
 			if rule.Alert != "" {
-				a = strings.ToLower(rule.Alert)
-				if _, ok := alertMap[a]; !ok {
-					alertMap[a] = []prometheus.Rule{rule}
-					continue
+				key := ruleKey(rule)
+				// Only keep the first occurrence of a duplicate rule
+				if _, exists := alertMap[key]; !exists {
+					alertMap[key] = rule
 				}
-				alertMap[a] = append(alertMap[a], rule)
 			}
 		}
 	}
 
 	alertsToKeep := make(map[string]bool)
 	var errorsEncountered []error
-	for alertName, rules := range alertMap {
-		for i, rule := range rules {
-			alert := &coralogixv1beta1.Alert{}
-			alertName := fmt.Sprintf("%s-%s-%d",
-				prometheusRule.Name,
-				sanitizeName(alertName),
-				i,
-			)
-			alertsToKeep[alertName] = true
-			if err := config.GetClient().Get(ctx, client.ObjectKey{Namespace: prometheusRule.Namespace, Name: alertName}, alert); err != nil {
-				if k8serrors.IsNotFound(err) {
-					alert.Name = alertName
-					alert.Namespace = prometheusRule.Namespace
-					alert.Labels = prometheusRule.Labels
-					alert.Labels[managedByLabelKey] = truncateLabelValue(prometheusRule.Name)
-					alert.OwnerReferences = []metav1.OwnerReference{getOwnerReference(prometheusRule)}
-					alert.Spec = prometheusAlertingRuleToAlertSpec(&rule)
-					if err = config.GetClient().Create(ctx, alert); err != nil {
-						errorsEncountered = append(errorsEncountered, fmt.Errorf("error creating Alert CRD %s: %w", alertName, err))
-					}
-					continue
+	
+	// Convert map to slice and sort for consistent ordering
+	type ruleEntry struct {
+		key  string
+		rule prometheus.Rule
+	}
+	rulesList := make([]ruleEntry, 0, len(alertMap))
+	for key, rule := range alertMap {
+		rulesList = append(rulesList, ruleEntry{key: key, rule: rule})
+	}
+	sort.Slice(rulesList, func(i, j int) bool {
+		return rulesList[i].key < rulesList[j].key
+	})
+	
+	for i, entry := range rulesList {
+		rule := entry.rule
+		alertNameLower := strings.ToLower(rule.Alert)
+		alert := &coralogixv1beta1.Alert{}
+		alertName := fmt.Sprintf("%s-%s-%d",
+			prometheusRule.Name,
+			sanitizeName(alertNameLower),
+			i,
+		)
+		alertsToKeep[alertName] = true
+		if err := config.GetClient().Get(ctx, client.ObjectKey{Namespace: prometheusRule.Namespace, Name: alertName}, alert); err != nil {
+			if k8serrors.IsNotFound(err) {
+				alert.Name = alertName
+				alert.Namespace = prometheusRule.Namespace
+				alert.Labels = prometheusRule.Labels
+				alert.Labels[managedByLabelKey] = truncateLabelValue(prometheusRule.Name)
+				alert.OwnerReferences = []metav1.OwnerReference{getOwnerReference(prometheusRule)}
+				alert.Spec = prometheusAlertingRuleToAlertSpec(&rule)
+				if err = config.GetClient().Create(ctx, alert); err != nil {
+					errorsEncountered = append(errorsEncountered, fmt.Errorf("error creating Alert CRD %s: %w", alertName, err))
 				}
-				errorsEncountered = append(errorsEncountered, fmt.Errorf("error getting Alert CRD %s: %w", alertName, err))
 				continue
 			}
+			errorsEncountered = append(errorsEncountered, fmt.Errorf("error getting Alert CRD %s: %w", alertName, err))
+			continue
+		}
 
-			updated := false
-			desiredLabels := prometheusRule.Labels
-			desiredLabels[managedByLabelKey] = truncateLabelValue(prometheusRule.Name)
-			if !reflect.DeepEqual(alert.Labels, desiredLabels) {
-				alert.Labels = desiredLabels
-				updated = true
-			}
+		updated := false
+		desiredLabels := prometheusRule.Labels
+		desiredLabels[managedByLabelKey] = truncateLabelValue(prometheusRule.Name)
+		if !reflect.DeepEqual(alert.Labels, desiredLabels) {
+			alert.Labels = desiredLabels
+			updated = true
+		}
 
-			desiredOwnerReferences := []metav1.OwnerReference{getOwnerReference(prometheusRule)}
-			if !reflect.DeepEqual(alert.OwnerReferences, desiredOwnerReferences) {
-				alert.OwnerReferences = desiredOwnerReferences
-				updated = true
-			}
+		desiredOwnerReferences := []metav1.OwnerReference{getOwnerReference(prometheusRule)}
+		if !reflect.DeepEqual(alert.OwnerReferences, desiredOwnerReferences) {
+			alert.OwnerReferences = desiredOwnerReferences
+			updated = true
+		}
 
-			desiredDescription := rule.Annotations["description"]
-			// Convert description if it contains Go templates
-			if utils.ContainsGoTemplate(desiredDescription) {
-				desiredDescription = utils.SanitizeDescriptionForTera(desiredDescription)
-			}
-			
-			if alert.Spec.Description != desiredDescription {
-				alert.Spec.Description = desiredDescription
-				updated = true
-			}
+		desiredDescription := rule.Annotations["description"]
+		// Convert description if it contains Go templates
+		if utils.ContainsGoTemplate(desiredDescription) {
+			desiredDescription = utils.SanitizeDescriptionForTera(desiredDescription)
+		}
+		
+		if alert.Spec.Description != desiredDescription {
+			alert.Spec.Description = desiredDescription
+			updated = true
+		}
 
-			// Convert entity labels if they contain Go templates
-			desiredEntityLabels := make(map[string]string)
-			for key, value := range rule.Labels {
-				if utils.ContainsGoTemplate(value) {
-					convertedValue := utils.ConvertPrometheusTemplateToTera(value)
-					// If conversion resulted in something that's clearly not Tera-compatible,
-					// use a generic placeholder
-					if strings.Contains(convertedValue, "{{") && 
-						!strings.Contains(convertedValue, "alert.groups[0].keyValues") && 
-						!strings.Contains(convertedValue, "alert.value") {
-						convertedValue = "[field conversion not supported]"
-					}
-					desiredEntityLabels[key] = convertedValue
-				} else {
-					desiredEntityLabels[key] = value
+		// Convert entity labels if they contain Go templates
+		desiredEntityLabels := make(map[string]string)
+		for key, value := range rule.Labels {
+			if utils.ContainsGoTemplate(value) {
+				convertedValue := utils.ConvertPrometheusTemplateToTera(value)
+				// If conversion resulted in something that's clearly not Tera-compatible,
+				// use a generic placeholder
+				if strings.Contains(convertedValue, "{{") && 
+					!strings.Contains(convertedValue, "alert.groups[0].keyValues") && 
+					!strings.Contains(convertedValue, "alert.value") {
+					convertedValue = "[field conversion not supported]"
 				}
+				desiredEntityLabels[key] = convertedValue
+			} else {
+				desiredEntityLabels[key] = value
 			}
-			
-			// Add routing.group label to all alerts
-			desiredEntityLabels["routing.group"] = "main"
-			if !reflect.DeepEqual(alert.Spec.EntityLabels, desiredEntityLabels) {
-				alert.Spec.EntityLabels = desiredEntityLabels
-				updated = true
-			}
+		}
+		
+		// Add routing.group label to all alerts
+		desiredEntityLabels["routing.group"] = "main"
+		if !reflect.DeepEqual(alert.Spec.EntityLabels, desiredEntityLabels) {
+			alert.Spec.EntityLabels = desiredEntityLabels
+			updated = true
+		}
 
-			desiredPriority := getPriority(rule)
-			if alert.Spec.Priority != desiredPriority {
-				alert.Spec.Priority = desiredPriority
-				updated = true
-			}
+		desiredPriority := getPriority(rule)
+		if alert.Spec.Priority != desiredPriority {
+			alert.Spec.Priority = desiredPriority
+			updated = true
+		}
 
-			desiredTypeDefinition := coralogixv1beta1.AlertTypeDefinition{
-				MetricThreshold: prometheusAlertToMetricThreshold(rule, desiredPriority),
-			}
-			desiredTypeDefinition.MetricThreshold.MissingValues.MinNonNullValuesPct = alert.Spec.TypeDefinition.MetricThreshold.MissingValues.MinNonNullValuesPct
-			if !reflect.DeepEqual(alert.Spec.TypeDefinition, desiredTypeDefinition) {
-				alert.Spec.TypeDefinition = desiredTypeDefinition
-				updated = true
-			}
+		desiredTypeDefinition := coralogixv1beta1.AlertTypeDefinition{
+			MetricThreshold: prometheusAlertToMetricThreshold(rule, desiredPriority),
+		}
+		desiredTypeDefinition.MetricThreshold.MissingValues.MinNonNullValuesPct = alert.Spec.TypeDefinition.MetricThreshold.MissingValues.MinNonNullValuesPct
+		if !reflect.DeepEqual(alert.Spec.TypeDefinition, desiredTypeDefinition) {
+			alert.Spec.TypeDefinition = desiredTypeDefinition
+			updated = true
+		}
 
-			if updated {
-				if err := config.GetClient().Update(ctx, alert); err != nil {
-					errorsEncountered = append(errorsEncountered, fmt.Errorf("error updating Alert CRD %s: %w", alertName, err))
-				}
+		if updated {
+			if err := config.GetClient().Update(ctx, alert); err != nil {
+				errorsEncountered = append(errorsEncountered, fmt.Errorf("error updating Alert CRD %s: %w", alertName, err))
 			}
+		}
 		}
 	}
 
