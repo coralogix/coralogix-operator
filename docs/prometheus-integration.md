@@ -32,8 +32,7 @@ The following Coralogix Alert properties are derived from the PrometheusRule ale
     - `low` -> `p5`
 - `Alert.Spec.Description`: Automatically converts Go template syntax to Tera template syntax (see [Template Conversion Guide](./PROMETHEUS_TEMPLATE_CONVERSION.md))
 - `Alert.Spec.EntityLabels`: Automatically converts Go templates in label values, and adds `routing.group: main` label
-- `Alert.Spec.AlertType.MetricThreshold.OfTheLast.DynamicDuration`: Automatically validates and clamps duration to 1-2160 minutes range
-- `Alert.Spec.AlertType.MetricThreshold.OfTheLast.DynamicDuration`: Set to `rule.For` value
+- `Alert.Spec.AlertType.MetricThreshold.OfTheLast.DynamicDuration`: Set to `rule.For` value (automatically validated and clamped to 1-2160 minutes range)
 - `Alert.Spec.AlertType.MetricThreshold.Rules[0].Condition.ConditionType`: Set to `moreThan`
 - `Alert.Spec.AlertType.MetricThreshold.Rules[0].Condition.Threshold`: Set to `0`
 - `Alert.Spec.AlertType.MetricThreshold.Rules[0].Condition.ForOverPct`: Set to `100`
