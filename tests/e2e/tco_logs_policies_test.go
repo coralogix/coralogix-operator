@@ -68,12 +68,31 @@ var _ = Describe("TCOLogsPolicies", func() {
 							},
 						},
 					},
+					{
+						Name:       "sample policy 2",
+						Priority:   "high",
+						Disabled:   ptr.To(true),
+						Severities: []coralogixv1alpha1.TCOPolicySeverity{"critical", "error"},
+						Applications: &coralogixv1alpha1.TCOPolicyRule{
+							Names:    []string{"prod"},
+							RuleType: "start_with",
+						},
+						Subsystems: &coralogixv1alpha1.TCOPolicyRule{
+							Names:    []string{"mobile"},
+							RuleType: "is",
+						},
+						ArchiveRetention: &coralogixv1alpha1.ArchiveRetention{
+							BackendRef: coralogixv1alpha1.ArchiveRetentionBackendRef{
+								Name: "Default",
+							},
+						},
+					},
 				},
 			},
 		}
 	})
 
-	It("Should create TCOLogsPolicies successfully", FlakeAttempts(3), func(ctx context.Context) {
+	It("Should create TCOLogsPolicies successfully", func(ctx context.Context) {
 		By("Creating TCOLogsPolicies")
 		Expect(crClient.Create(ctx, TCOLogsPolicies)).To(Succeed())
 
@@ -91,7 +110,7 @@ var _ = Describe("TCOLogsPolicies", func() {
 			Expect(err).ToNot(HaveOccurred())
 			policies = listRes.Policies
 			return policies
-		}, time.Minute, time.Second).Should(HaveLen(1))
+		}, time.Minute, time.Second).Should(HaveLen(2))
 
 		Expect(policies[0].Name.Value).To(Equal(TCOLogsPolicies.Spec.Policies[0].Name))
 

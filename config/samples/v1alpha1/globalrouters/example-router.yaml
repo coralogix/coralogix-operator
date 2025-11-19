@@ -11,8 +11,8 @@ metadata:
 spec:
   name: global router
   description: global router example
-  entityLabelMatcher:
-    routing.group: global
+  routingLabels:
+    team: iac
   rules:
     - name: first-rule
       condition: "alertDef.priority == \"P1\""

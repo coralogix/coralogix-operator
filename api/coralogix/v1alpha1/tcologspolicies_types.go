@@ -47,6 +47,10 @@ type TCOLogsPolicy struct {
 	// The policy priority.
 	Priority string `json:"priority"`
 
+	// +optional
+	// Whether the policy is disabled.
+	Disabled *bool `json:"disabled,omitempty"`
+
 	// The severities to apply the policy on.
 	Severities []TCOPolicySeverity `json:"severities"`
 
@@ -147,6 +151,7 @@ func (p *TCOLogsPolicy) ExtractCreateLogPolicyRequest(
 			Name:             p.Name,
 			Description:      ptr.Deref(p.Description, ""),
 			Priority:         PrioritySchemaToOpenAPI[p.Priority],
+			Disabled:         p.Disabled,
 			ApplicationRule:  expandTCOPolicyRule(p.Applications),
 			SubsystemRule:    expandTCOPolicyRule(p.Subsystems),
 			ArchiveRetention: archiveRetention,
