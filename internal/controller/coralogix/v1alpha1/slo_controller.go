@@ -59,7 +59,7 @@ func (r *SLOReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj
 	log.Info("Creating remote slo", "slo", utils.FormatJSON(createRequest))
 	createResponse, httpResp, err := r.SLOsClient.
 		SlosServiceCreateSlo(ctx).
-		SlosServiceReplaceSloRequest(*createRequest).
+		SlosServiceCreateSloRequest(*createRequest).
 		Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote slo: %w", cxsdk.NewAPIError(httpResp, err))
