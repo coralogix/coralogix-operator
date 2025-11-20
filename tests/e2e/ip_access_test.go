@@ -45,8 +45,11 @@ var _ = Describe("IPAccess", func() {
 	BeforeEach(func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 
+		url, ok := cxsdk.URLFromRegion(cxsdk.RegionFromEnv())
+		Expect(ok).To(BeTrue(), "CORALOGIX_REGION must be set to a valid region")
+
 		cpc := cxsdk.NewSDKCallPropertiesCreator(
-			cxsdk.URLFromRegion(cxsdk.RegionFromEnv()),
+			url,
 			cxsdk.APIKeyFromEnv(),
 		)
 		ipAccessClient = cxsdk.NewIPAccessClient(cpc)
