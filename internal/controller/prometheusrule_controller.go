@@ -240,7 +240,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 
 	alertsToKeep := make(map[string]bool)
 	var errorsEncountered []error
-	
+
 	// Convert map to slice and sort for consistent ordering
 	type ruleEntry struct {
 		key  string
@@ -253,7 +253,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 	sort.Slice(rulesList, func(i, j int) bool {
 		return rulesList[i].key < rulesList[j].key
 	})
-	
+
 	for i, entry := range rulesList {
 		rule := entry.rule
 		alertNameLower := strings.ToLower(rule.Alert)
@@ -300,7 +300,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 		if utils.ContainsGoTemplate(desiredDescription) {
 			desiredDescription = utils.SanitizeDescriptionForTera(desiredDescription)
 		}
-		
+
 		if alert.Spec.Description != desiredDescription {
 			alert.Spec.Description = desiredDescription
 			updated = true
@@ -313,9 +313,9 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 				convertedValue := utils.ConvertPrometheusTemplateToTera(value)
 				// If conversion resulted in something that's clearly not Tera-compatible,
 				// use a generic placeholder
-				if strings.Contains(convertedValue, "{{") && 
-					!strings.Contains(convertedValue, "alert.groups[0].keyValues") && 
-					!strings.Contains(convertedValue, "alert.value") {
+				if strings.Contains(convertedValue, "{{") &&
+					!strings.Contains(convertedValue, "alert.groups[0].keyValues") &&
+					!strings.Contains(convertedValue, "alert.groups[0].details.metricThreshold.avgValueOverThreshold") {
 					convertedValue = "[field conversion not supported]"
 				}
 				desiredEntityLabels[key] = convertedValue
@@ -323,7 +323,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 				desiredEntityLabels[key] = value
 			}
 		}
-		
+
 		// Add routing.group label to all alerts
 		desiredEntityLabels["routing.group"] = "main"
 		if !reflect.DeepEqual(alert.Spec.EntityLabels, desiredEntityLabels) {
@@ -420,13 +420,13 @@ func shouldTrackAlerts(prometheusRule *prometheus.PrometheusRule) bool {
 
 func prometheusAlertingRuleToAlertSpec(rule *prometheus.Rule) coralogixv1beta1.AlertSpec {
 	priority := getPriority(*rule)
-	
+
 	// Convert description if it contains Go templates
 	description := rule.Annotations["description"]
 	if utils.ContainsGoTemplate(description) {
 		description = utils.SanitizeDescriptionForTera(description)
 	}
-	
+
 	// Convert entity labels if they contain Go templates
 	entityLabels := make(map[string]string)
 	for key, value := range rule.Labels {
@@ -434,8 +434,8 @@ func prometheusAlertingRuleToAlertSpec(rule *prometheus.Rule) coralogixv1beta1.A
 			convertedValue := utils.ConvertPrometheusTemplateToTera(value)
 			// If conversion resulted in something that's clearly not Tera-compatible,
 			// use a generic placeholder
-			if strings.Contains(convertedValue, "{{") && 
-				!strings.Contains(convertedValue, "alert.groups[0].keyValues") && 
+			if strings.Contains(convertedValue, "{{") &&
+				!strings.Contains(convertedValue, "alert.groups[0].keyValues") &&
 				!strings.Contains(convertedValue, "alert.value") {
 				convertedValue = "[field conversion not supported]"
 			}
@@ -444,10 +444,10 @@ func prometheusAlertingRuleToAlertSpec(rule *prometheus.Rule) coralogixv1beta1.A
 			entityLabels[key] = value
 		}
 	}
-	
+
 	// Add routing.group label to all alerts
 	entityLabels["routing.group"] = "main"
-	
+
 	return coralogixv1beta1.AlertSpec{
 		Name:         rule.Alert,
 		Description:  description,
@@ -516,17 +516,17 @@ func prometheusInnerRulesToCoralogixInnerRules(rules []prometheus.Rule) []coralo
 func validateAndClampDuration(durationStr string) string {
 	const minMinutes = 1
 	const maxMinutes = 2160
-	
+
 	// Parse the duration
 	duration, err := time.ParseDuration(durationStr)
 	if err != nil {
 		// If parsing fails, return maximum duration
 		return fmt.Sprintf("%dm", maxMinutes)
 	}
-	
+
 	// Convert to minutes
 	minutes := int(duration.Minutes())
-	
+
 	// Clamp to valid range
 	if minutes < minMinutes {
 		return fmt.Sprintf("%dm", minMinutes)
@@ -534,7 +534,7 @@ func validateAndClampDuration(durationStr string) string {
 	if minutes > maxMinutes {
 		return fmt.Sprintf("%dm", maxMinutes)
 	}
-	
+
 	// Return original duration string if within valid range
 	return durationStr
 }
@@ -543,7 +543,7 @@ func prometheusAlertToMetricThreshold(rule prometheus.Rule, priority coralogixv1
 	// Get the duration and validate/clamp it
 	durationStr := string(ptr.Deref(rule.For, "1m"))
 	validatedDuration := validateAndClampDuration(durationStr)
-	
+
 	return &coralogixv1beta1.MetricThreshold{
 		MetricFilter: coralogixv1beta1.MetricFilter{
 			Promql: rule.Expr.StrVal,

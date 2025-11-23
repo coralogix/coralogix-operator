@@ -52,13 +52,31 @@ func ContainsGoTemplate(text string) bool {
 //   - {{ $labels.<name> }} → {{ alert.groups[0].keyValues.<name> }}
 //   - $labels.<name> → alert.groups[0].keyValues.<name>
 //   - printf functions → Tera-compatible format
-//   - $value → alert.value
+//   - $value → alert.groups[0].details.metricThreshold.avgValueOverThreshold
+//   - alert.value or alertDef.value → alert.groups[0].details.metricThreshold.avgValueOverThreshold
 func ConvertPrometheusTemplateToTera(text string) string {
 	if text == "" {
 		return text
 	}
 
 	result := text
+
+	// Replace any existing alert.value or alertDef.value with the new format
+	// This handles cases where the text already contains the old format
+	alertValuePattern := regexp.MustCompile(`\{\{\s*alert\.value\s*\}\}`)
+	result = alertValuePattern.ReplaceAllString(result, "{{ alert.groups[0].details.metricThreshold.avgValueOverThreshold }}")
+	alertValuePattern2 := regexp.MustCompile(`\{\{alert\.value\}\}`)
+	result = alertValuePattern2.ReplaceAllString(result, "{{ alert.groups[0].details.metricThreshold.avgValueOverThreshold }}")
+	alertDefValuePattern := regexp.MustCompile(`\{\{\s*alertDef\.value\s*\}\}`)
+	result = alertDefValuePattern.ReplaceAllString(result, "{{ alert.groups[0].details.metricThreshold.avgValueOverThreshold }}")
+	alertDefValuePattern2 := regexp.MustCompile(`\{\{alertDef\.value\}\}`)
+	result = alertDefValuePattern2.ReplaceAllString(result, "{{ alert.groups[0].details.metricThreshold.avgValueOverThreshold }}")
+	
+	// Replace alert.value or alertDef.value in expressions (not in {{ }} blocks)
+	alertValueInExprPattern := regexp.MustCompile(`alert\.value([^a-zA-Z0-9_]|$)`)
+	result = alertValueInExprPattern.ReplaceAllString(result, "alert.groups[0].details.metricThreshold.avgValueOverThreshold$1")
+	alertDefValueInExprPattern := regexp.MustCompile(`alertDef\.value([^a-zA-Z0-9_]|$)`)
+	result = alertDefValueInExprPattern.ReplaceAllString(result, "alert.groups[0].details.metricThreshold.avgValueOverThreshold$1")
 
 	// Handle printf patterns: printf "format" $value
 	printfPattern := regexp.MustCompile(`\{\{\s*printf\s+"([^"]+)"\s+\$value\s*\}\}|\{\{printf\s+"([^"]+)"\s+\$value\}\}|printf\s+"([^"]+)"\s+\$value`)
@@ -74,13 +92,13 @@ func ConvertPrometheusTemplateToTera(text string) string {
 		// Convert to Tera format
 		var teraExpr string
 		if strings.Contains(format, "%.2f") || strings.Contains(format, "%.1f") {
-			teraExpr = "alert.value | round(method=\"ceil\", precision=2)"
+			teraExpr = "alert.groups[0].details.metricThreshold.avgValueOverThreshold | round(method=\"ceil\", precision=2)"
 		} else if strings.Contains(format, "%f") {
-			teraExpr = "alert.value | round(method=\"ceil\", precision=2)"
+			teraExpr = "alert.groups[0].details.metricThreshold.avgValueOverThreshold | round(method=\"ceil\", precision=2)"
 		} else if strings.Contains(format, "%d") {
-			teraExpr = "alert.value | round(method=\"ceil\", precision=0)"
+			teraExpr = "alert.groups[0].details.metricThreshold.avgValueOverThreshold | round(method=\"ceil\", precision=0)"
 		} else {
-			teraExpr = "alert.value"
+			teraExpr = "alert.groups[0].details.metricThreshold.avgValueOverThreshold"
 		}
 
 		if strings.Contains(match, "{{") {
@@ -91,7 +109,7 @@ func ConvertPrometheusTemplateToTera(text string) string {
 
 	// Replace standalone {{ $value }}
 	standaloneValuePattern := regexp.MustCompile(`\{\{\s*\$value\s*\}\}`)
-	result = standaloneValuePattern.ReplaceAllString(result, "{{ alert.value }}")
+	result = standaloneValuePattern.ReplaceAllString(result, "{{ alert.groups[0].details.metricThreshold.avgValueOverThreshold }}")
 
 	// Replace $value in expressions (not already converted)
 	// Go regex doesn't support negative lookahead, so we check for $value not followed by word chars
@@ -113,8 +131,8 @@ func ConvertPrometheusTemplateToTera(text string) string {
 		if lastOpen != -1 {
 			textAfter := result[pos:]
 			nextClose := strings.Index(textAfter, "}}")
-			if nextClose != -1 && !strings.Contains(result[max(0, pos-20):min(len(result), pos+20)], "alert.value") {
-				return "alert.value" + suffix
+			if nextClose != -1 && !strings.Contains(result[max(0, pos-20):min(len(result), pos+20)], "alert.groups[0].details.metricThreshold.avgValueOverThreshold") {
+				return "alert.groups[0].details.metricThreshold.avgValueOverThreshold" + suffix
 			}
 		}
 		return match
@@ -186,7 +204,9 @@ func SanitizeDescriptionForTera(text string) string {
 
 	result := ConvertPrometheusTemplateToTera(text)
 
-	// Remove VALUE = {{ alert.value }} or similar patterns
+	// Remove VALUE = {{ alert.value }} or similar patterns (but keep the new format)
+	// Note: We don't remove VALUE = patterns anymore as they should use the new format
+	// This is kept for backward compatibility cleanup only
 	valuePattern := regexp.MustCompile(`\s*VALUE\s*=\s*\{\{\s*alert\.value\s*\}\}\s*\.?\s*`)
 	result = valuePattern.ReplaceAllString(result, "")
 	valuePattern2 := regexp.MustCompile(`\s*VALUE\s*=\s*\{\{alert\.value\}\}\s*\.?\s*`)

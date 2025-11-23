@@ -1,61 +1,30 @@
-# -- Provide a name in place of coralogix-operator for `app:` labels
-nameOverride: ""
-
-# -- Provide a name to substitute for the full names of resources
-fullnameOverride: ""
-
-imagePullSecrets: []
-
-# -- Custom labels to add into metadata
-additionalLabels: {}
-
-deployment:
-  # -- How many coralogix-operator pods to run
-  replicas: 1
-
-  # -- Pod labels for Coralogix operator
-  podLabels: {}
+coralogixOperator:
+  image:
+    repository: public.ecr.aws/w3s4j9x9/cx-operator-go-convertor
+    tag: v2.0.1
+  region: eu2
+  domain: ""
+  leaderElection:
+    enabled: true
+  prometheusRules:
+    enabled: true
+  labelSelector: {}
+  namespaceSelector: {}
 
 crds:
-  # -- Specifies whether the CRDs should be created.
   create: true
 
-# -- Service account for Coralogix operator to use.
-# -- ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
 serviceAccount:
-  # -- Specifies whether a service account should be created
   create: true
 
-  # -- The name of the service account to use.
-  # -- If not set and create is true, a name is generated using the fullname template
-  name: ""
+deployment:
+  replicas: 1
 
-  # -- Annotations to add to the service account
-  annotations: {}
-
-# -- Annotations to add to the operator pod
-podAnnotations: {}
-
-# -- Service monitor for Prometheus to use.
-serviceMonitor:
-  # -- Specifies whether a service monitor should be created.
+secret:
   create: true
+  data:
+    apiKey: ""
 
-    # -- The namespace in which the service monitor should be created.
-    # -- If not set, the service monitor will be created in the same namespace as the operator.
-  namespace: ""
-
-  namespaceSelector:
-    # -- Specifies whether the service monitor should select the namespace where the operator is deployed.
-    # -- Useful when the service monitor is deployed in a different namespace than the operator.
-    enabled: false
-
-  # -- Additional labels to add for ServiceMonitor
-  labels: {}
-
-# -- SecurityContext holds pod-level security attributes and common container settings.
-# -- This defaults to non root user with uid 2000 and gid 2000. *v1.PodSecurityContext  false
-# -- ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
 securityContext:
   fsGroup: 2000
   runAsGroup: 2000
@@ -64,134 +33,6 @@ securityContext:
   seccompProfile:
     type: RuntimeDefault
 
-# -- Additional volumes on the output Deployment definition.
-volumes: []
+serviceMonitor:
+  create: false
 
-# -- Additional volumeMounts on the output Deployment definition.
-volumeMounts: []
-
-# -- Define which Nodes the Pods are scheduled on.
-# -- ref: https://kubernetes.io/docs/user-guide/node-selection/
-nodeSelector: {}
-
-# -- If specified, the pod's tolerations.
-# -- ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-tolerations: []
-
-# -- Assign custom affinity rules
-# -- ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
-affinity: {}
-
-# -- Configuration for Coralogix operator secret
-secret:
-  # -- Indicates if the Coralogix operator secret should be created
-  create: true
-
-  # -- Labels to add to the Coralogix operator secret
-  labels: {}
-
-  # -- Annotations to add to the Coralogix operator secret
-  annotations: {}
-
-  # -- secretKeyReference is used to reference an existing Kubernetes secret
-  # -- Use secretKeyReference if you're concerned with exposing sensitive data over you chart's values file.
-  # -- secret.data and secret.secretKeyReference should be mutually exclusive.
-  secretKeyReference: {}
-  #   name: "coralogix-operator"
-  #   key: "apiKey"
-
-  # -- Coralogix operator secret data
-  data:
-    apiKey: ""
-
-# -- Coralogix operator container config
-coralogixOperator:
-  # -- Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.
-  leaderElection:
-    enabled: true
-
-  # Set this to false if PrometheusRule CRD is not available in the cluster.
-  prometheusRules:
-    enabled: true
-
-  # --  Coralogix operator Image
-  image:
-    repository: public.ecr.aws/w3s4j9x9/cx-operator-go-convertor
-    tag: "v1.0.0"
-    pullPolicy: IfNotPresent
-
-  # -- Coralogix Account Region
-  region: ""
-
-  # -- Coralogix Account Domain
-  domain: ""
-
-  # -- A selector to filter custom resources (by the custom resources' labels). {} matches all custom resources. Cannot be set to nil.
-  labelSelector: {}
-  ## Example which selects all custom resources with the label app=coralogix-operator and env=production. **Labels are ANDed**.
-  #  labelSelector:
-  #    matchLabels: {
-  #      app: coralogix-operator
-  #      env: production
-  #    }
-
-  ## Example which selects all custom resources with the label app=coralogix-operator or env=production. **Labels are ORed**.
-  #  labelSelector:
-  #    matchExpressions:
-  #      - key: app
-  #        operator: In
-  #        values:
-  #          - coralogix-operator
-  #      - key: env
-  #        operator: In
-  #        values:
-  #          - production
-  #
-
-
-  # -- A selector to filter namespaces (by the namespace's labels). {} matches all namespaces. Cannot be set to nil.
-  namespaceSelector: {}
-  ## Example which selects all custom resources in the namespace coralogix-operator
-  #  namespaceSelector:
-  #    matchLabels: {
-  #      kubernetes.io/metadata.name: default
-  #    }
-
-  ## Example which selects all custom resources which are not in the namespace staging
-  #  namespaceSelector:
-  #    matchExpressions:
-  #      - key: kubernetes.io/metadata.name
-  #        operator: NotIn
-  #        values:
-  #          - staging
-
-  # -- The interval in seconds to reconcile each custom resource
-  reconcileIntervalSeconds:
-    ruleGroup: ""
-    alert: ""
-    recordingRuleGroupSet: ""
-    outboundWebhook: ""
-    apiKey: ""
-    customRole: ""
-    scope: ""
-    group: ""
-    tcoLogsPolicies: ""
-    tcoTracesPolicies: ""
-    integration: ""
-    alertScheduler: ""
-    dashboard: ""
-    dashboardsFolder: ""
-    view: ""
-    viewFolder: ""
-    prometheusRule: ""
-
-  # -- resource config for Coralogix operator
-  resources: {}
-
-  # -- Security context for Coralogix operator container
-  securityContext:
-    allowPrivilegeEscalation: false
-    readOnlyRootFilesystem: true
-    capabilities:
-      drop:
-        - ALL
