@@ -101,5 +101,10 @@ func stringToLabelSelector(selectorStr string) (labels.Selector, error) {
 	if err := json.Unmarshal([]byte(selectorStr), &labelSelector); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal label selector JSON: %s, %w", selectorStr, err)
 	}
+	// If the selector is empty (no matchLabels and no matchExpressions), treat it as "match everything"
+	// This handles the case where Helm passes {} which becomes "{}" JSON string
+	if len(labelSelector.MatchLabels) == 0 && len(labelSelector.MatchExpressions) == 0 {
+		return labels.Everything(), nil
+	}
 	return metav1.LabelSelectorAsSelector(&labelSelector)
 }
