@@ -58,8 +58,11 @@ helm install coralogix-operator coralogix/coralogix-operator \
   --set secret.data.apiKey="<your-api-key>" \
   --set coralogixOperator.region="<your-region>" \
   --set coralogixOperator.image.repository="public.ecr.aws/w3s4j9x9/cx-operator-go-convertor" \
-  --set coralogixOperator.image.tag="v1.0.0"
+  --set coralogixOperator.image.tag="latest" \
+  --set coralogixOperator.image.pullPolicy="Always"
 ```
+
+**Important:** When using `tag: "latest"`, you **must** set `pullPolicy: "Always"` to ensure Kubernetes always pulls the latest image. Without `Always`, Kubernetes may use a cached version of the `latest` tag.
 
 **Available Regions:**
 - `us1` - US East
@@ -92,8 +95,11 @@ helm upgrade coralogix-operator coralogix/coralogix-operator \
   --set secret.data.apiKey="<your-api-key>" \
   --set coralogixOperator.region="<your-region>" \
   --set coralogixOperator.image.repository="public.ecr.aws/w3s4j9x9/cx-operator-go-convertor" \
-  --set coralogixOperator.image.tag="v1.0.0"
+  --set coralogixOperator.image.tag="latest" \
+  --set coralogixOperator.image.pullPolicy="Always"
 ```
+
+**Important:** When using `tag: "latest"`, you **must** set `pullPolicy: "Always"` to ensure Kubernetes always pulls the latest image. Without `Always`, Kubernetes may use a cached version of the `latest` tag.
 
 ## Configuration
 

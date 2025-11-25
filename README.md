@@ -37,8 +37,11 @@ helm install coralogix-operator coralogix/coralogix-operator \
   --set secret.data.apiKey="<api-key>" \
   --set coralogixOperator.region="<region>" \
   --set coralogixOperator.image.repository="public.ecr.aws/w3s4j9x9/cx-operator-go-convertor" \
-  --set coralogixOperator.image.tag="v1.0.0"
+  --set coralogixOperator.image.tag="latest" \
+  --set coralogixOperator.image.pullPolicy="Always"
 ```
+
+**Note:** Using `tag: "latest"` with `pullPolicy: "Always"` ensures you always get the latest image. For production, consider using a specific version tag like `"v2.0.3"` for stability.
 
 For a complete list of configuration options, refer to the [Helm Chart Docs](./charts/coralogix-operator/README.md).
 
@@ -49,8 +52,11 @@ helm upgrade coralogix-operator coralogix/coralogix-operator \
   --set secret.data.apiKey="<api-key>" \
   --set coralogixOperator.region="<region>" \
   --set coralogixOperator.image.repository="public.ecr.aws/w3s4j9x9/cx-operator-go-convertor" \
-  --set coralogixOperator.image.tag="v1.0.0"
+  --set coralogixOperator.image.tag="latest" \
+  --set coralogixOperator.image.pullPolicy="Always"
 ```
+
+**Note:** Using `tag: "latest"` with `pullPolicy: "Always"` ensures you always get the latest image. For production, consider using a specific version tag like `"v2.0.3"` for stability.
 
 4. To uninstall the operator, run:
 ```sh
