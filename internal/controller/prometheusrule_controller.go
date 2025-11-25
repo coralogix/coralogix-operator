@@ -456,6 +456,11 @@ func prometheusAlertingRuleToAlertSpec(rule *prometheus.Rule) coralogixv1beta1.A
 		TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
 			MetricThreshold: prometheusAlertToMetricThreshold(*rule, priority),
 		},
+		NotificationGroup: &coralogixv1beta1.NotificationGroup{
+			Router: &coralogixv1beta1.NotificationRouter{
+				NotifyOn: coralogixv1beta1.NotifyOnTriggeredOnly,
+			},
+		},
 	}
 }
 
