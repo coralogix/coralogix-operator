@@ -111,9 +111,14 @@ The operator uses a custom image with template conversion capabilities:
 coralogixOperator:
   image:
     repository: public.ecr.aws/w3s4j9x9/cx-operator-go-convertor
-    tag: "v1.0.0"  # or "latest"
-    pullPolicy: IfNotPresent
+    tag: "latest"  # Use "latest" for always getting the newest version, or specific version like "v2.0.3" for stability
+    pullPolicy: Always  # REQUIRED when using "latest" tag to ensure fresh image pulls
 ```
+
+**Important Notes:**
+- When using `tag: "latest"`, you **must** set `pullPolicy: "Always"` to ensure you always get the latest image
+- For production environments, consider using a specific version tag (e.g., `"v2.0.3"`) for better stability and reproducibility
+- The `Always` pull policy ensures Kubernetes checks for and pulls the latest image on every pod restart
 
 ### Advanced Configuration
 
