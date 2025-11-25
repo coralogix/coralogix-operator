@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
-	"sort"
 	"strings"
 	"time"
 
@@ -184,56 +183,13 @@ func (r *PrometheusRuleReconciler) deleteCxRecordingRule(ctx context.Context, re
 	return nil
 }
 
-// ruleKey generates a unique key for a rule based on alert name, expression, and other identifying characteristics
-func ruleKey(rule prometheus.Rule) string {
-	// Create a key from alert name, expression, for duration, and labels
-	keyParts := []string{
-		strings.ToLower(rule.Alert),
-		rule.Expr.StrVal,
-		string(ptr.Deref(rule.For, "1m")),
-	}
-	// Sort labels for consistent key generation
-	labelKeys := make([]string, 0, len(rule.Labels))
-	for k := range rule.Labels {
-		labelKeys = append(labelKeys, k)
-	}
-	sort.Strings(labelKeys)
-	for _, k := range labelKeys {
-		keyParts = append(keyParts, k+"="+rule.Labels[k])
-	}
-	return strings.Join(keyParts, "||")
-}
-
 func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx context.Context, prometheusRule *prometheus.PrometheusRule) error {
-	// A single PrometheusRule can have multiple alerts with the same name, while the Alert CRD from coralogix can only manage one alert.
-	// We deduplicate alerts based on alert name, expression, duration, and labels to avoid creating duplicate alerts.
-	// alertMap is used to map a unique rule key to the first occurrence of that rule. For example:
-	//
-	// A prometheusRule with the following rules:
-	// rules:
-	//   - alert: Example
-	//     expr: metric > 10
-	//   - alert: Example
-	//     expr: metric > 10  (duplicate - same expression)
-	//   - alert: Example
-	//     expr: metric > 20  (different expression)
-	//
-	// Would be mapped into:
-	//   map[string]prometheus.Rule{
-	// 	   "example||metric > 10||5m||severity=critical": {Alert: Example, Expr: "metric > 10"},
-	// 	   "example||metric > 20||5m||severity=critical": {Alert: Example, Expr: "metric > 20"},
-	//   }
-	//
-	// This ensures duplicate alerts (same name, expression, duration, labels) are only created once.
-	alertMap := make(map[string]prometheus.Rule)
+	// Collect all alerting rules from all groups
+	var allRules []prometheus.Rule
 	for _, group := range prometheusRule.Spec.Groups {
 		for _, rule := range group.Rules {
 			if rule.Alert != "" {
-				key := ruleKey(rule)
-				// Only keep the first occurrence of a duplicate rule
-				if _, exists := alertMap[key]; !exists {
-					alertMap[key] = rule
-				}
+				allRules = append(allRules, rule)
 			}
 		}
 	}
@@ -241,21 +197,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 	alertsToKeep := make(map[string]bool)
 	var errorsEncountered []error
 
-	// Convert map to slice and sort for consistent ordering
-	type ruleEntry struct {
-		key  string
-		rule prometheus.Rule
-	}
-	rulesList := make([]ruleEntry, 0, len(alertMap))
-	for key, rule := range alertMap {
-		rulesList = append(rulesList, ruleEntry{key: key, rule: rule})
-	}
-	sort.Slice(rulesList, func(i, j int) bool {
-		return rulesList[i].key < rulesList[j].key
-	})
-
-	for i, entry := range rulesList {
-		rule := entry.rule
+	for i, rule := range allRules {
 		alertNameLower := strings.ToLower(rule.Alert)
 		alert := &coralogixv1beta1.Alert{}
 		alertName := fmt.Sprintf("%s-%s-%d",
