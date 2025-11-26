@@ -36,27 +36,11 @@ import (
 )
 
 var (
-	cfg                       = &Config{}
-	CrClient                  client.Client
-	scheme                    *runtime.Scheme
-	once                      sync.Once
-	operatorRegionToSdkRegion = map[string]string{
-		"APAC1":   "AP1",
-		"AP1":     "AP1",
-		"APAC2":   "AP2",
-		"AP2":     "AP2",
-		"APAC3":   "AP3",
-		"AP3":     "AP3",
-		"EUROPE1": "EU1",
-		"EU1":     "EU1",
-		"EUROPE2": "EU2",
-		"EU2":     "EU2",
-		"USA1":    "US1",
-		"US1":     "US1",
-		"USA2":    "US2",
-		"US2":     "US2",
-	}
-	validRegions = getKeys(operatorRegionToSdkRegion)
+	cfg          = &Config{}
+	CrClient     client.Client
+	scheme       *runtime.Scheme
+	once         sync.Once
+	validRegions = []string{"AP1", "AP2", "AP3", "EU1", "EU2", "US1", "US2"}
 )
 
 type Config struct {
@@ -207,7 +191,7 @@ func getCoralogixGrpcUrl(region, domain string) (string, error) {
 		if !slices.Contains(validRegions, region) {
 			return "", fmt.Errorf("region value is '%s', but can be one of %q", region, validRegions)
 		}
-		return operatorRegionToSdkRegion[region], nil
+		return region, nil
 	}
 
 	return domain, nil
@@ -254,12 +238,4 @@ func GetClient() client.Client {
 
 func GetScheme() *runtime.Scheme {
 	return scheme
-}
-
-func getKeys[K, V comparable](m map[K]V) []K {
-	result := make([]K, 0)
-	for k := range m {
-		result = append(result, k)
-	}
-	return result
 }

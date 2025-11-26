@@ -13,7 +13,7 @@ spec:
   description: alert from k8s operator
   priority: p4
   entityLabels:
-    alert_type: security
+    routing.team: iac
     security_severity: high
   alertType:
     metricThreshold:

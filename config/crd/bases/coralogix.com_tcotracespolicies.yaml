@@ -120,6 +120,9 @@ spec:
                     description:
                       description: Description of the policy.
                       type: string
+                    disabled:
+                      description: Whether the policy is disabled.
+                      type: boolean
                     name:
                       description: Name of the policy.
                       type: string
