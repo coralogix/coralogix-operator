@@ -2133,8 +2133,6 @@ spec:
                         - triggeredOnly
                         - triggeredAndResolved
                         type: string
-                    required:
-                    - notifyOn
                     type: object
                   webhooks:
                     description: Webhooks to trigger for notifications.
@@ -2417,8 +2415,6 @@ spec:
                           - triggeredOnly
                           - triggeredAndResolved
                           type: string
-                      required:
-                      - notifyOn
                       type: object
                     webhooks:
                       description: Webhooks to trigger for notifications.

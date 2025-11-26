@@ -28,14 +28,14 @@ func ContainsGoTemplate(text string) bool {
 
 	// Check for common Go template patterns
 	goTemplatePatterns := []*regexp.Regexp{
-		regexp.MustCompile(`\{\{\s*\$labels\.`),           // {{ $labels.
-		regexp.MustCompile(`\$labels\.\w+`),               // $labels.name
-		regexp.MustCompile(`\{\{\s*printf\s+`),            // {{ printf
-		regexp.MustCompile(`\{\{\s*\$value\s*\}\}`),      // {{ $value }}
-		regexp.MustCompile(`\$value[^a-zA-Z0-9_]`),        // $value (not followed by word char) - Go regex doesn't support lookahead
-		regexp.MustCompile(`\$value$`),                    // $value at end of string
-		regexp.MustCompile(`\{\{.*\$labels`),              // {{ ... $labels
-		regexp.MustCompile(`\{\{.*\$value`),               // {{ ... $value
+		regexp.MustCompile(`\{\{\s*\$labels\.`),     // {{ $labels.
+		regexp.MustCompile(`\$labels\.\w+`),         // $labels.name
+		regexp.MustCompile(`\{\{\s*printf\s+`),      // {{ printf
+		regexp.MustCompile(`\{\{\s*\$value\s*\}\}`), // {{ $value }}
+		regexp.MustCompile(`\$value[^a-zA-Z0-9_]`),  // $value (not followed by word char) - Go regex doesn't support lookahead
+		regexp.MustCompile(`\$value$`),              // $value at end of string
+		regexp.MustCompile(`\{\{.*\$labels`),        // {{ ... $labels
+		regexp.MustCompile(`\{\{.*\$value`),         // {{ ... $value
 	}
 
 	for _, pattern := range goTemplatePatterns {
@@ -71,7 +71,7 @@ func ConvertPrometheusTemplateToTera(text string) string {
 	result = alertDefValuePattern.ReplaceAllString(result, "{{ alert.groups[0].details.metricThreshold.avgValueOverThreshold }}")
 	alertDefValuePattern2 := regexp.MustCompile(`\{\{alertDef\.value\}\}`)
 	result = alertDefValuePattern2.ReplaceAllString(result, "{{ alert.groups[0].details.metricThreshold.avgValueOverThreshold }}")
-	
+
 	// Replace alert.value or alertDef.value in expressions (not in {{ }} blocks)
 	alertValueInExprPattern := regexp.MustCompile(`alert\.value([^a-zA-Z0-9_]|$)`)
 	result = alertValueInExprPattern.ReplaceAllString(result, "alert.groups[0].details.metricThreshold.avgValueOverThreshold$1")
@@ -120,7 +120,7 @@ func ConvertPrometheusTemplateToTera(text string) string {
 		if len(match) > 6 { // "$value" is 6 chars
 			suffix = match[6:]
 		}
-		
+
 		// Check if we're in a template block
 		pos := strings.Index(result, match)
 		if pos == -1 {
@@ -131,7 +131,7 @@ func ConvertPrometheusTemplateToTera(text string) string {
 		if lastOpen != -1 {
 			textAfter := result[pos:]
 			nextClose := strings.Index(textAfter, "}}")
-			if nextClose != -1 && !strings.Contains(result[max(0, pos-20):min(len(result), pos+20)], "alert.groups[0].details.metricThreshold.avgValueOverThreshold") {
+			if nextClose != -1 && !strings.Contains(result[maxInt(0, pos-20):minInt(len(result), pos+20)], "alert.groups[0].details.metricThreshold.avgValueOverThreshold") {
 				return "alert.groups[0].details.metricThreshold.avgValueOverThreshold" + suffix
 			}
 		}
@@ -160,7 +160,7 @@ func ConvertPrometheusTemplateToTera(text string) string {
 		match := matches[i]
 		start, end := match[0], match[1]
 		// Check if already converted
-		context := result[max(0, start-30):min(len(result), end+30)]
+		context := result[maxInt(0, start-30):minInt(len(result), end+30)]
 		if strings.Contains(context, "alert.groups[0].keyValues") {
 			continue
 		}
@@ -244,17 +244,16 @@ func SanitizeDescriptionForTera(text string) string {
 }
 
 // Helper functions for min/max
-func min(a, b int) int {
+func minInt(a, b int) int {
 	if a < b {
 		return a
 	}
 	return b
 }
 
-func max(a, b int) int {
+func maxInt(a, b int) int {
 	if a > b {
 		return a
 	}
 	return b
 }
-
