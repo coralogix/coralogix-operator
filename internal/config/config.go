@@ -206,7 +206,11 @@ func getCoralogixOpenApiUrl(region, domain string) (string, error) {
 		if !slices.Contains(validRegions, region) {
 			return "", fmt.Errorf("region value is '%s', but can be one of %q", region, validRegions)
 		}
-		return openapicxsdk.URLFromRegion(strings.ToLower(region)), nil
+		url, ok := openapicxsdk.URLFromRegion(strings.ToLower(region))
+		if !ok {
+			return "", fmt.Errorf("unable to get OpenAPI URL from region '%s'", region)
+		}
+		return url, nil
 	}
 
 	return openapicxsdk.URLFromDomain(domain), nil
