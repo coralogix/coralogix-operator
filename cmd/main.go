@@ -128,10 +128,11 @@ func main() {
 		cxsdk.NewAuthContext(cfg.CoralogixApiKey, cfg.CoralogixApiKey),
 		OperatorVersion))
 
-	oapiClientSet := openapicxsdk.NewClientSet(openapicxsdk.NewSDKCallPropertiesCreatorOperator(
-		strings.ToLower(cfg.CoralogixOpenApiUrl),
-		cfg.CoralogixApiKey,
-		OperatorVersion))
+	oapiClientSet := openapicxsdk.NewClientSet(openapicxsdk.NewConfigBuilder().
+		WithURL(cfg.CoralogixOpenApiUrl).
+		WithAPIKey(cfg.CoralogixApiKey).
+		WithOperatorVersion(OperatorVersion).
+		Build())
 
 	config.InitClient(mgr.GetClient())
 
