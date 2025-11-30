@@ -45,11 +45,8 @@ var _ = Describe("IPAccess", func() {
 	BeforeEach(func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 
-		cpc := cxsdk.NewSDKCallPropertiesCreator(
-			cxsdk.URLFromRegion(cxsdk.RegionFromEnv()),
-			cxsdk.APIKeyFromEnv(),
-		)
-		ipAccessClient = cxsdk.NewIPAccessClient(cpc)
+		cfg := cxsdk.NewConfigBuilder().WithAPIKeyEnv().WithRegionEnv().Build()
+		ipAccessClient = cxsdk.NewIPAccessClient(cfg)
 
 		ipAccessCR = &coralogixv1alpha1.IPAccess{
 			ObjectMeta: metav1.ObjectMeta{
