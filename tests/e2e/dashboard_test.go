@@ -51,7 +51,16 @@ var _ = Describe("Dashboard", Ordered, func() {
 
 	It("Should be created successfully", func(ctx context.Context) {
 		By("Creating Dashboard")
-		dashboard = getSampleDashboard(testDashboardJson)
+		json := getDashboardJson("Test Dashboard")
+		dashboard = &coralogixv1alpha1.Dashboard{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "dashboard-sample",
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1alpha1.DashboardSpec{
+				Json: &json,
+			},
+		}
 		Expect(crClient.Create(ctx, dashboard)).To(Succeed())
 
 		By("Fetching the Dashboard ID")
@@ -77,7 +86,7 @@ var _ = Describe("Dashboard", Ordered, func() {
 	It("Should be updated successfully", func(ctx context.Context) {
 		By("Patching the Dashboard")
 		modifiedDashboard := dashboard.DeepCopy()
-		modifiedDashboard.Spec.Json = ptr.To(testUpdatedDashboardJson)
+		modifiedDashboard.Spec.Json = ptr.To(getDashboardJson("Test Updated Dashboard"))
 		Expect(crClient.Patch(ctx, modifiedDashboard, client.MergeFrom(dashboard))).To(Succeed())
 
 		By("Verifying Dashboard is updated in Coralogix backend")
@@ -100,72 +109,32 @@ var _ = Describe("Dashboard", Ordered, func() {
 	})
 })
 
-func getSampleDashboard(json string) *coralogixv1alpha1.Dashboard {
-	return &coralogixv1alpha1.Dashboard{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "dashboard-sample",
-			Namespace: testNamespace,
-		},
-		Spec: coralogixv1alpha1.DashboardSpec{
-			Json: &json,
-		},
-	}
+func getDashboardJson(name string) string {
+	return fmt.Sprintf(`{
+  "name": "%s",
+  "layout": {
+    "sections": [
+      {
+        "id": {
+          "value": "ab19801c-bdbb-428e-999d-703c1d7a5ff4"
+        },
+        "rows": [],
+        "options": {
+          "custom": {
+            "name": "New Section",
+            "collapsed": false,
+            "color": {
+              "predefined": "SECTION_PREDEFINED_COLOR_UNSPECIFIED"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "variables": [],
+  "filters": [],
+  "relativeTimeFrame": "900s",
+  "annotations": [],
+  "off": {}
+}`, name)
 }
-
-const testDashboardJson = `{
-  "id": "ExtweBMerfqxXCn3d84Xp",
-  "name": "Test Dashboard",
-  "layout": {
-    "sections": [
-      {
-        "id": {
-          "value": "ab19801c-bdbb-428e-999d-703c1d7a5ff4"
-        },
-        "rows": [],
-        "options": {
-          "custom": {
-            "name": "New Section",
-            "collapsed": false,
-            "color": {
-              "predefined": "SECTION_PREDEFINED_COLOR_UNSPECIFIED"
-            }
-          }
-        }
-      }
-    ]
-  },
-  "variables": [],
-  "filters": [],
-  "relativeTimeFrame": "900s",
-  "annotations": [],
-  "off": {}
-}`
-
-const testUpdatedDashboardJson = `{
-  "id": "ExtweBMerfqxXCn3d84Xp",
-  "name": "Test Updated Dashboard",
-  "layout": {
-    "sections": [
-      {
-        "id": {
-          "value": "ab19801c-bdbb-428e-999d-703c1d7a5ff4"
-        },
-        "rows": [],
-        "options": {
-          "custom": {
-            "name": "New Section",
-            "collapsed": false,
-            "color": {
-              "predefined": "SECTION_PREDEFINED_COLOR_UNSPECIFIED"
-            }
-          }
-        }
-      }
-    ]
-  },
-  "variables": [],
-  "filters": [],
-  "relativeTimeFrame": "900s",
-  "annotations": [],
-  "off": {}
-}`
