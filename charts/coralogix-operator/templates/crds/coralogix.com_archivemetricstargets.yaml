@@ -52,42 +52,22 @@ spec:
             description: ArchiveMetricsTargetSpec defines the desired state of a Coralogix
               archive logs target.
             properties:
-              ibmCosTarget:
-                description: The IBM COS target configuration.
-                properties:
-                  bucketCrn:
-                    description: BucketCrn is the CRN of the IBM COS bucket.
-                    type: string
-                  bucketType:
-                    description: BucketType defines the type of the bucket.
-                    enum:
-                    - UNSPECIFIED
-                    - EXTERNAL
-                    - INTERNAL
-                    type: string
-                  endpoint:
-                    description: Endpoint is the endpoint URL for the IBM COS service.
-                    type: string
-                  serviceCrn:
-                    description: ServiceCrn is the CRN of the service instance.
-                    type: string
-                type: object
               resolutionPolicy:
                 description: The resolution policy for the metrics.
                 properties:
                   fiveMinutesResolution:
-                    format: int32
+                    format: int64
                     type: integer
                   oneHourResolution:
-                    format: int32
+                    format: int64
                     type: integer
                   rawResolution:
-                    format: int32
+                    format: int64
                     type: integer
                 type: object
               retentionDays:
                 description: The retention days for the metrics.
-                format: int32
+                format: int64
                 type: integer
               s3Target:
                 description: The S3 target configuration.
@@ -99,9 +79,6 @@ spec:
                     type: string
                 type: object
             type: object
-            x-kubernetes-validations:
-            - message: Exactly one of s3Target or ibmCosTarget must be specified
-              rule: has(self.s3Target) != has(self.ibmCosTarget)
           status:
             properties:
               conditions:

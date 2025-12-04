@@ -20,12 +20,12 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/protobuf/encoding/protojson"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	archivemetrics "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/metrics_data_archive_service"
+	"github.com/coralogix/coralogix-operator/internal/utils"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/internal/config"
@@ -34,7 +34,7 @@ import (
 
 // ArchiveMetricsTargetReconciler reconciles a ArchiveMetricsTarget object
 type ArchiveMetricsTargetReconciler struct {
-	ArchiveMetricsTargetsClient *cxsdk.ArchiveMetricsClient
+	ArchiveMetricsTargetsClient *archivemetrics.MetricsDataArchiveServiceAPIService
 	Interval                    time.Duration
 }
 
@@ -65,20 +65,26 @@ func (r *ArchiveMetricsTargetReconciler) HandleCreation(ctx context.Context, log
 	if err != nil {
 		return fmt.Errorf("error on extracting create archivemetricstarget request: %w", err)
 	}
-	log.Info("Creating remote archivemetricstarget", "archivemetricstarget", protojson.Format(configureTenantRequest))
-	createResponse, err := r.ArchiveMetricsTargetsClient.ConfigureTenant(ctx, configureTenantRequest)
+	log.Info("Creating remote archivemetricstarget", "archivemetricstarget", utils.FormatJSON(configureTenantRequest))
+	createResponse, httpResp, err := r.ArchiveMetricsTargetsClient.
+		MetricsConfiguratorPublicServiceConfigureTenant(ctx).
+		MetricsConfiguratorPublicServiceConfigureTenantRequest(*configureTenantRequest).
+		Execute()
 	if err != nil {
-		return fmt.Errorf("error on creating remote archivemetricstarget: %w", err)
+		return fmt.Errorf("error on creating remote archivemetricstarget: %w", cxsdk.NewAPIError(httpResp, err))
 	}
 	updateRequest, err := archiveMetricsTarget.Spec.ExtractUpdateRequest()
 	if err != nil {
 		return fmt.Errorf("error on extracting update archivemetricstarget request: %w", err)
 	}
-	_, err = r.ArchiveMetricsTargetsClient.Update(ctx, updateRequest)
+	_, httpResp, err = r.ArchiveMetricsTargetsClient.
+		MetricsConfiguratorPublicServiceUpdate(ctx).
+		MetricsConfiguratorPublicServiceUpdateRequest(*updateRequest).
+		Execute()
 	if err != nil {
-		return fmt.Errorf("error on updating remote archivemetricstarget: %w", err)
+		return cxsdk.NewAPIError(httpResp, err)
 	}
-	log.Info("Remote archivemetricstarget created", "response", protojson.Format(createResponse))
+	log.Info("Remote archivemetricstarget created", "response", utils.FormatJSON(createResponse))
 
 	id := "archiveMetricsTarget"
 	archiveMetricsTarget.Status = coralogixv1alpha1.ArchiveMetricsTargetStatus{
@@ -94,10 +100,13 @@ func (r *ArchiveMetricsTargetReconciler) HandleUpdate(ctx context.Context, log l
 	if err != nil {
 		return fmt.Errorf("error on extracting update archivemetricstarget request: %w", err)
 	}
-	log.Info("Updating remote archivemetricstarget", "archivemetricstarget", protojson.Format(updateRequest))
-	_, err = r.ArchiveMetricsTargetsClient.Update(ctx, updateRequest)
+	log.Info("Updating remote archivemetricstarget", "archivemetricstarget", utils.FormatJSON(updateRequest))
+	_, httpResp, err := r.ArchiveMetricsTargetsClient.
+		MetricsConfiguratorPublicServiceUpdate(ctx).
+		MetricsConfiguratorPublicServiceUpdateRequest(*updateRequest).
+		Execute()
 	if err != nil {
-		return err
+		return cxsdk.NewAPIError(httpResp, err)
 	}
 	log.Info("Remote archivemetricstarget updated")
 
@@ -105,10 +114,14 @@ func (r *ArchiveMetricsTargetReconciler) HandleUpdate(ctx context.Context, log l
 }
 
 func (r *ArchiveMetricsTargetReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
-	_, err := r.ArchiveMetricsTargetsClient.Disable(ctx)
-	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.Error(err, "Error deactivating remote archivemetricstarget")
-		return fmt.Errorf("error deactivating remote archivemetricstarget %w", err)
+	_, httpResp, err := r.ArchiveMetricsTargetsClient.
+		MetricsConfiguratorPublicServiceDisableArchive(ctx).
+		Execute()
+	if err != nil {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+			log.Error(err, "Error deactivating remote archivemetricstarget")
+			return fmt.Errorf("error deactivating remote archivemetricstarget: %w", err)
+		}
 	}
 	log.Info("archivemetricstarget deactivated in remote system")
 	return nil

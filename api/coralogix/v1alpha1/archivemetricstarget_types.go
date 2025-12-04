@@ -15,50 +15,34 @@
 package v1alpha1
 
 import (
+	"fmt"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	archivemetrics "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/metrics_data_archive_service"
 )
 
 // ArchiveMetricsTargetSpec defines the desired state of a Coralogix archive logs target.
-// +kubebuilder:validation:XValidation:rule="has(self.s3Target) != has(self.ibmCosTarget)",message="Exactly one of s3Target or ibmCosTarget must be specified"
 type ArchiveMetricsTargetSpec struct {
 	// The S3 target configuration.
 	// +optional
 	S3Target *S3MetricsTarget `json:"s3Target,omitempty"`
-	// The IBM COS target configuration.
-	// +optional
-	IbmCosTarget *IbmCosMetricsTarget `json:"ibmCosTarget,omitempty"`
 	// The resolution policy for the metrics.
 	ResolutionPolicy *ResolutionPolicy `json:"resolutionPolicy,omitempty"`
 	// The retention days for the metrics.
-	RetentionDays uint32 `json:"retentionDays,omitempty"`
+	RetentionDays *int64 `json:"retentionDays,omitempty"`
 }
 
 type ResolutionPolicy struct {
-	RawResolution         uint32 `json:"rawResolution,omitempty"`
-	FiveMinutesResolution uint32 `json:"fiveMinutesResolution,omitempty"`
-	OneHourResolution     uint32 `json:"oneHourResolution,omitempty"`
+	RawResolution         *int64 `json:"rawResolution,omitempty"`
+	FiveMinutesResolution *int64 `json:"fiveMinutesResolution,omitempty"`
+	OneHourResolution     *int64 `json:"oneHourResolution,omitempty"`
 }
 
 type S3MetricsTarget struct {
 	// The region of the S3 bucket.
-	Region     string `json:"region,omitempty"`
-	BucketName string `json:"bucketName,omitempty"`
-}
-
-type IbmCosMetricsTarget struct {
-	// BucketCrn is the CRN of the IBM COS bucket.
-	BucketCrn string `json:"bucketCrn,omitempty"`
-	// Endpoint is the endpoint URL for the IBM COS service.
-	Endpoint string `json:"endpoint,omitempty"`
-	// ServiceCrn is the CRN of the service instance.
-	// +optional
-	ServiceCrn *string `json:"serviceCrn,omitempty"`
-	// BucketType defines the type of the bucket.
-	// +kubebuilder:validation:Enum=UNSPECIFIED;EXTERNAL;INTERNAL
-	// +optional
-	BucketType *string `json:"bucketType,omitempty"`
+	Region     *string `json:"region,omitempty"`
+	BucketName *string `json:"bucketName,omitempty"`
 }
 
 type ArchiveMetricsTargetStatus struct {
@@ -71,16 +55,16 @@ type ArchiveMetricsTargetStatus struct {
 	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
-func (s *ArchiveMetricsTargetSpec) ExtractConfigureTenantRequest() (*cxsdk.ConfigureTenantRequest, error) {
+func (s *ArchiveMetricsTargetSpec) ExtractConfigureTenantRequest() (*archivemetrics.MetricsConfiguratorPublicServiceConfigureTenantRequest, error) {
 	if s.S3Target != nil {
-		return &cxsdk.ConfigureTenantRequest{
-			RetentionPolicy: &cxsdk.RetentionPolicyRequest{
-				RawResolution:         s.ResolutionPolicy.RawResolution,
-				FiveMinutesResolution: s.ResolutionPolicy.FiveMinutesResolution,
-				OneHourResolution:     s.ResolutionPolicy.OneHourResolution,
-			},
-			StorageConfig: &cxsdk.ConfigureTenantRequestS3{
-				S3: &cxsdk.ArchiveS3Config{
+		return &archivemetrics.MetricsConfiguratorPublicServiceConfigureTenantRequest{
+			ConfigureTenantRequestS3: &archivemetrics.ConfigureTenantRequestS3{
+				RetentionPolicy: &archivemetrics.RetentionPolicyRequest{
+					RawResolution:         s.ResolutionPolicy.RawResolution,
+					FiveMinutesResolution: s.ResolutionPolicy.FiveMinutesResolution,
+					OneHourResolution:     s.ResolutionPolicy.OneHourResolution,
+				},
+				S3: &archivemetrics.S3Config{
 					Region: s.S3Target.Region,
 					Bucket: s.S3Target.BucketName,
 				},
@@ -88,28 +72,15 @@ func (s *ArchiveMetricsTargetSpec) ExtractConfigureTenantRequest() (*cxsdk.Confi
 		}, nil
 	}
 
-	return &cxsdk.ConfigureTenantRequest{
-		RetentionPolicy: &cxsdk.RetentionPolicyRequest{
-			RawResolution:         s.ResolutionPolicy.RawResolution,
-			FiveMinutesResolution: s.ResolutionPolicy.FiveMinutesResolution,
-			OneHourResolution:     s.ResolutionPolicy.OneHourResolution,
-		},
-		StorageConfig: &cxsdk.ConfigureTenantRequestIbm{
-			Ibm: &cxsdk.ArchiveIbmConfigV2{
-				Crn:        s.IbmCosTarget.BucketCrn,
-				Endpoint:   s.IbmCosTarget.Endpoint,
-				ServiceCrn: *s.IbmCosTarget.ServiceCrn,
-			},
-		},
-	}, nil
+	return nil, fmt.Errorf("archive metrics target does not have a S3Target")
 }
 
-func (s *ArchiveMetricsTargetSpec) ExtractUpdateRequest() (*cxsdk.UpdateTenantRequest, error) {
+func (s *ArchiveMetricsTargetSpec) ExtractUpdateRequest() (*archivemetrics.MetricsConfiguratorPublicServiceUpdateRequest, error) {
 	if s.S3Target != nil {
-		return &cxsdk.UpdateTenantRequest{
-			RetentionDays: &s.RetentionDays,
-			StorageConfig: &cxsdk.UpdateRequestS3{
-				S3: &cxsdk.ArchiveS3Config{
+		return &archivemetrics.MetricsConfiguratorPublicServiceUpdateRequest{
+			UpdateRequestS3: &archivemetrics.UpdateRequestS3{
+				RetentionDays: s.RetentionDays,
+				S3: &archivemetrics.S3Config{
 					Region: s.S3Target.Region,
 					Bucket: s.S3Target.BucketName,
 				},
@@ -117,16 +88,7 @@ func (s *ArchiveMetricsTargetSpec) ExtractUpdateRequest() (*cxsdk.UpdateTenantRe
 		}, nil
 	}
 
-	return &cxsdk.UpdateTenantRequest{
-		RetentionDays: &s.RetentionDays,
-		StorageConfig: &cxsdk.UpdateRequestIbm{
-			Ibm: &cxsdk.ArchiveIbmConfigV2{
-				Crn:        s.IbmCosTarget.BucketCrn,
-				Endpoint:   s.IbmCosTarget.Endpoint,
-				ServiceCrn: *s.IbmCosTarget.ServiceCrn,
-			},
-		},
-	}, nil
+	return nil, fmt.Errorf("archive metrics target does not have a S3Target")
 }
 
 func (a *ArchiveMetricsTarget) GetConditions() []metav1.Condition {

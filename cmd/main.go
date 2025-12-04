@@ -294,7 +294,7 @@ func main() {
 	}
 
 	if err = (&v1alpha1controllers.ArchiveMetricsTargetReconciler{
-		ArchiveMetricsTargetsClient: clientSet.ArchiveMetrics(),
+		ArchiveMetricsTargetsClient: oapiClientSet.ArchiveMetrics(),
 		Interval:                    cfg.ReconcileIntervals[utils.ArchiveMetricsTargetKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ArchiveMetricsTarget")
