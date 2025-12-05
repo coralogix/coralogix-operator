@@ -184,119 +184,113 @@ func (r *PrometheusRuleReconciler) deleteCxRecordingRule(ctx context.Context, re
 }
 
 func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx context.Context, prometheusRule *prometheus.PrometheusRule) error {
-	// A single PrometheusRule can have multiple alerts with the same name, while the Alert CRD from coralogix can only manage one alert.
-	// alertMap is used to map an alert name with potentially multiple alerts from the promrule CRD. For example:
-	//
-	// A prometheusRule with the following rules:
-	// rules:
-	//   - alert: Example
-	//     expr: metric > 10
-	//   - alert: Example
-	//     expr: metric > 20
-	//
-	// Would be mapped into:
-	//   map[string][]prometheus.Rule{
-	// 	   "Example": []prometheus.Rule{
-	// 		 {
-	//          Alert: Example,
-	//          Expr: "metric > 10"
-	// 		 },
-	// 		 {
-	//          Alert: Example,
-	//          Expr: "metric > 100"
-	// 		 },
-	// 	   },
-	//   }
-	//
-	// To later on generate coralogix Alert CRDs using the alert name followed by it's index on the array, making sure we don't clash names.
-	alertMap := make(map[string][]prometheus.Rule)
-	var a string
+	// Collect all alerting rules from all groups
+	var allRules []prometheus.Rule
 	for _, group := range prometheusRule.Spec.Groups {
 		for _, rule := range group.Rules {
 			if rule.Alert != "" {
-				a = strings.ToLower(rule.Alert)
-				if _, ok := alertMap[a]; !ok {
-					alertMap[a] = []prometheus.Rule{rule}
-					continue
-				}
-				alertMap[a] = append(alertMap[a], rule)
+				allRules = append(allRules, rule)
 			}
 		}
 	}
 
 	alertsToKeep := make(map[string]bool)
 	var errorsEncountered []error
-	for alertName, rules := range alertMap {
-		for i, rule := range rules {
-			alert := &coralogixv1beta1.Alert{}
-			alertName := fmt.Sprintf("%s-%s-%d",
-				prometheusRule.Name,
-				sanitizeName(alertName),
-				i,
-			)
-			alertsToKeep[alertName] = true
-			if err := config.GetClient().Get(ctx, client.ObjectKey{Namespace: prometheusRule.Namespace, Name: alertName}, alert); err != nil {
-				if k8serrors.IsNotFound(err) {
-					alert.Name = alertName
-					alert.Namespace = prometheusRule.Namespace
-					alert.Labels = prometheusRule.Labels
-					alert.Labels[managedByLabelKey] = truncateLabelValue(prometheusRule.Name)
-					alert.OwnerReferences = []metav1.OwnerReference{getOwnerReference(prometheusRule)}
-					alert.Spec = prometheusAlertingRuleToAlertSpec(&rule)
-					if err = config.GetClient().Create(ctx, alert); err != nil {
-						errorsEncountered = append(errorsEncountered, fmt.Errorf("error creating Alert CRD %s: %w", alertName, err))
-					}
-					continue
+
+	for i, rule := range allRules {
+		alertNameLower := strings.ToLower(rule.Alert)
+		alert := &coralogixv1beta1.Alert{}
+		alertName := fmt.Sprintf("%s-%s-%d",
+			prometheusRule.Name,
+			sanitizeName(alertNameLower),
+			i,
+		)
+		alertsToKeep[alertName] = true
+		if err := config.GetClient().Get(ctx, client.ObjectKey{Namespace: prometheusRule.Namespace, Name: alertName}, alert); err != nil {
+			if k8serrors.IsNotFound(err) {
+				alert.Name = alertName
+				alert.Namespace = prometheusRule.Namespace
+				alert.Labels = prometheusRule.Labels
+				alert.Labels[managedByLabelKey] = truncateLabelValue(prometheusRule.Name)
+				alert.OwnerReferences = []metav1.OwnerReference{getOwnerReference(prometheusRule)}
+				alert.Spec = prometheusAlertingRuleToAlertSpec(&rule)
+				if err = config.GetClient().Create(ctx, alert); err != nil {
+					errorsEncountered = append(errorsEncountered, fmt.Errorf("error creating Alert CRD %s: %w", alertName, err))
 				}
-				errorsEncountered = append(errorsEncountered, fmt.Errorf("error getting Alert CRD %s: %w", alertName, err))
 				continue
 			}
+			errorsEncountered = append(errorsEncountered, fmt.Errorf("error getting Alert CRD %s: %w", alertName, err))
+			continue
+		}
 
-			updated := false
-			desiredLabels := prometheusRule.Labels
-			desiredLabels[managedByLabelKey] = truncateLabelValue(prometheusRule.Name)
-			if !reflect.DeepEqual(alert.Labels, desiredLabels) {
-				alert.Labels = desiredLabels
-				updated = true
-			}
+		updated := false
+		desiredLabels := prometheusRule.Labels
+		desiredLabels[managedByLabelKey] = truncateLabelValue(prometheusRule.Name)
+		if !reflect.DeepEqual(alert.Labels, desiredLabels) {
+			alert.Labels = desiredLabels
+			updated = true
+		}
 
-			desiredOwnerReferences := []metav1.OwnerReference{getOwnerReference(prometheusRule)}
-			if !reflect.DeepEqual(alert.OwnerReferences, desiredOwnerReferences) {
-				alert.OwnerReferences = desiredOwnerReferences
-				updated = true
-			}
+		desiredOwnerReferences := []metav1.OwnerReference{getOwnerReference(prometheusRule)}
+		if !reflect.DeepEqual(alert.OwnerReferences, desiredOwnerReferences) {
+			alert.OwnerReferences = desiredOwnerReferences
+			updated = true
+		}
 
-			desiredDescription := rule.Annotations["description"]
-			if alert.Spec.Description != desiredDescription {
-				alert.Spec.Description = desiredDescription
-				updated = true
-			}
+		desiredDescription := rule.Annotations["description"]
+		// Convert description if it contains Go templates
+		if utils.ContainsGoTemplate(desiredDescription) {
+			desiredDescription = utils.SanitizeDescriptionForTera(desiredDescription)
+		}
 
-			desiredEntityLabels := rule.Labels
-			if !reflect.DeepEqual(alert.Spec.EntityLabels, desiredEntityLabels) {
-				alert.Spec.EntityLabels = desiredEntityLabels
-				updated = true
-			}
+		if alert.Spec.Description != desiredDescription {
+			alert.Spec.Description = desiredDescription
+			updated = true
+		}
 
-			desiredPriority := getPriority(rule)
-			if alert.Spec.Priority != desiredPriority {
-				alert.Spec.Priority = desiredPriority
-				updated = true
-			}
-
-			desiredTypeDefinition := coralogixv1beta1.AlertTypeDefinition{
-				MetricThreshold: prometheusAlertToMetricThreshold(rule, desiredPriority),
-			}
-			desiredTypeDefinition.MetricThreshold.MissingValues.MinNonNullValuesPct = alert.Spec.TypeDefinition.MetricThreshold.MissingValues.MinNonNullValuesPct
-			if !reflect.DeepEqual(alert.Spec.TypeDefinition, desiredTypeDefinition) {
-				alert.Spec.TypeDefinition = desiredTypeDefinition
-				updated = true
-			}
-
-			if updated {
-				if err := config.GetClient().Update(ctx, alert); err != nil {
-					errorsEncountered = append(errorsEncountered, fmt.Errorf("error updating Alert CRD %s: %w", alertName, err))
+		// Convert entity labels if they contain Go templates
+		desiredEntityLabels := make(map[string]string)
+		for key, value := range rule.Labels {
+			if utils.ContainsGoTemplate(value) {
+				convertedValue := utils.ConvertPrometheusTemplateToTera(value)
+				// If conversion resulted in something that's clearly not Tera-compatible,
+				// use a generic placeholder
+				if strings.Contains(convertedValue, "{{") &&
+					!strings.Contains(convertedValue, "alert.groups[0].keyValues") &&
+					!strings.Contains(convertedValue, "alert.groups[0].details.metricThreshold.avgValueOverThreshold") {
+					convertedValue = "[field conversion not supported]"
 				}
+				desiredEntityLabels[key] = convertedValue
+			} else {
+				desiredEntityLabels[key] = value
+			}
+		}
+
+		// Add routing.group label to all alerts
+		desiredEntityLabels["routing.group"] = "main"
+		if !reflect.DeepEqual(alert.Spec.EntityLabels, desiredEntityLabels) {
+			alert.Spec.EntityLabels = desiredEntityLabels
+			updated = true
+		}
+
+		desiredPriority := getPriority(rule)
+		if alert.Spec.Priority != desiredPriority {
+			alert.Spec.Priority = desiredPriority
+			updated = true
+		}
+
+		desiredTypeDefinition := coralogixv1beta1.AlertTypeDefinition{
+			MetricThreshold: prometheusAlertToMetricThreshold(rule, desiredPriority),
+		}
+		desiredTypeDefinition.MetricThreshold.MissingValues.MinNonNullValuesPct = alert.Spec.TypeDefinition.MetricThreshold.MissingValues.MinNonNullValuesPct
+		if !reflect.DeepEqual(alert.Spec.TypeDefinition, desiredTypeDefinition) {
+			alert.Spec.TypeDefinition = desiredTypeDefinition
+			updated = true
+		}
+
+		if updated {
+			if err := config.GetClient().Update(ctx, alert); err != nil {
+				errorsEncountered = append(errorsEncountered, fmt.Errorf("error updating Alert CRD %s: %w", alertName, err))
 			}
 		}
 	}
@@ -368,13 +362,46 @@ func shouldTrackAlerts(prometheusRule *prometheus.PrometheusRule) bool {
 
 func prometheusAlertingRuleToAlertSpec(rule *prometheus.Rule) coralogixv1beta1.AlertSpec {
 	priority := getPriority(*rule)
+
+	// Convert description if it contains Go templates
+	description := rule.Annotations["description"]
+	if utils.ContainsGoTemplate(description) {
+		description = utils.SanitizeDescriptionForTera(description)
+	}
+
+	// Convert entity labels if they contain Go templates
+	entityLabels := make(map[string]string)
+	for key, value := range rule.Labels {
+		if utils.ContainsGoTemplate(value) {
+			convertedValue := utils.ConvertPrometheusTemplateToTera(value)
+			// If conversion resulted in something that's clearly not Tera-compatible,
+			// use a generic placeholder
+			if strings.Contains(convertedValue, "{{") &&
+				!strings.Contains(convertedValue, "alert.groups[0].keyValues") &&
+				!strings.Contains(convertedValue, "alert.value") {
+				convertedValue = "[field conversion not supported]"
+			}
+			entityLabels[key] = convertedValue
+		} else {
+			entityLabels[key] = value
+		}
+	}
+
+	// Add routing.group label to all alerts
+	entityLabels["routing.group"] = "main"
+
 	return coralogixv1beta1.AlertSpec{
 		Name:         rule.Alert,
-		Description:  rule.Annotations["description"],
-		EntityLabels: rule.Labels,
+		Description:  description,
+		EntityLabels: entityLabels,
 		Priority:     getPriority(*rule),
 		TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
 			MetricThreshold: prometheusAlertToMetricThreshold(*rule, priority),
+		},
+		NotificationGroup: &coralogixv1beta1.NotificationGroup{
+			Router: &coralogixv1beta1.NotificationRouter{
+				NotifyOn: coralogixv1beta1.NotifyOnTriggeredOnly,
+			},
 		},
 	}
 }
@@ -431,7 +458,39 @@ func prometheusInnerRulesToCoralogixInnerRules(rules []prometheus.Rule) []coralo
 	return result
 }
 
+// validateAndClampDuration validates and clamps duration to Coralogix valid range (1-2160 minutes)
+// Returns the duration string clamped to valid range, defaulting to maximum (2160m) if out of range
+func validateAndClampDuration(durationStr string) string {
+	const minMinutes = 1
+	const maxMinutes = 2160
+
+	// Parse the duration
+	duration, err := time.ParseDuration(durationStr)
+	if err != nil {
+		// If parsing fails, return maximum duration
+		return fmt.Sprintf("%dm", maxMinutes)
+	}
+
+	// Convert to minutes
+	minutes := int(duration.Minutes())
+
+	// Clamp to valid range
+	if minutes < minMinutes {
+		return fmt.Sprintf("%dm", minMinutes)
+	}
+	if minutes > maxMinutes {
+		return fmt.Sprintf("%dm", maxMinutes)
+	}
+
+	// Return original duration string if within valid range
+	return durationStr
+}
+
 func prometheusAlertToMetricThreshold(rule prometheus.Rule, priority coralogixv1beta1.AlertPriority) *coralogixv1beta1.MetricThreshold {
+	// Get the duration and validate/clamp it
+	durationStr := string(ptr.Deref(rule.For, "1m"))
+	validatedDuration := validateAndClampDuration(durationStr)
+
 	return &coralogixv1beta1.MetricThreshold{
 		MetricFilter: coralogixv1beta1.MetricFilter{
 			Promql: rule.Expr.StrVal,
@@ -442,7 +501,7 @@ func prometheusAlertToMetricThreshold(rule prometheus.Rule, priority coralogixv1
 					Threshold:  resource.MustParse("0"),
 					ForOverPct: 100,
 					OfTheLast: coralogixv1beta1.MetricTimeWindow{
-						DynamicDuration: ptr.To(string(ptr.Deref(rule.For, "1m"))),
+						DynamicDuration: ptr.To(validatedDuration),
 					},
 					ConditionType: coralogixv1beta1.MetricThresholdConditionTypeMoreThan,
 				},
@@ -459,19 +518,28 @@ func prometheusAlertToMetricThreshold(rule prometheus.Rule, priority coralogixv1
 
 func getPriority(rule prometheus.Rule) coralogixv1beta1.AlertPriority {
 	if severityStr, ok := rule.Labels["severity"]; ok && severityStr != "" {
+		// If severity contains Go template syntax, default to p3 (don't convert)
+		if utils.ContainsGoTemplate(severityStr) {
+			return coralogixv1beta1.AlertPriorityP3
+		}
 		if priority, ok := prometheusSeverityToCXPriority[strings.ToLower(severityStr)]; ok {
 			return priority
 		}
+		// If severity exists but is not in the mapping (dynamic/unknown severity), default to p3
+		return coralogixv1beta1.AlertPriorityP3
 	}
-	return coralogixv1beta1.AlertPriorityP4
+	// If no severity label, default to p3
+	return coralogixv1beta1.AlertPriorityP3
 }
 
 var prometheusSeverityToCXPriority = map[string]coralogixv1beta1.AlertPriority{
 	"critical": coralogixv1beta1.AlertPriorityP1,
+	"high":     coralogixv1beta1.AlertPriorityP2,
 	"error":    coralogixv1beta1.AlertPriorityP2,
+	"moderate": coralogixv1beta1.AlertPriorityP3,
 	"warning":  coralogixv1beta1.AlertPriorityP3,
 	"info":     coralogixv1beta1.AlertPriorityP4,
-	"low":      coralogixv1beta1.AlertPriorityP5,
+	"low":      coralogixv1beta1.AlertPriorityP3,
 }
 
 func getOwnerReference(promRule *prometheus.PrometheusRule) metav1.OwnerReference {

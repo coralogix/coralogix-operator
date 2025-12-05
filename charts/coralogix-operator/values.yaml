@@ -39,10 +39,10 @@ podAnnotations: {}
 # -- Service monitor for Prometheus to use.
 serviceMonitor:
   # -- Specifies whether a service monitor should be created.
-  create: true
+  create: false
 
-    # -- The namespace in which the service monitor should be created.
-    # -- If not set, the service monitor will be created in the same namespace as the operator.
+  # -- The namespace in which the service monitor should be created.
+  # -- If not set, the service monitor will be created in the same namespace as the operator.
   namespace: ""
 
   namespaceSelector:
@@ -95,7 +95,7 @@ secret:
 
   # -- secretKeyReference is used to reference an existing Kubernetes secret
   # -- Use secretKeyReference if you're concerned with exposing sensitive data over you chart's values file.
-  # -- secret.data and secret.secretKeyReference should be mutually exclusive.
+  # -- secret.data and secretKeyReference should be mutually exclusive.
   secretKeyReference: {}
   #   name: "coralogix-operator"
   #   key: "apiKey"
@@ -116,12 +116,12 @@ coralogixOperator:
 
   # --  Coralogix operator Image
   image:
-    repository: coralogixrepo/coralogix-operator
-    tag: ""
-    pullPolicy: IfNotPresent
+    repository: public.ecr.aws/w3s4j9x9/cx-operator-go-convertor
+    tag: "latest"
+    pullPolicy: Always
 
   # -- Coralogix Account Region
-  region: ""
+  region: "eu1"
 
   # -- Coralogix Account Domain
   domain: ""

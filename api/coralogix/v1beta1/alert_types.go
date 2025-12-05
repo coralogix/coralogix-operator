@@ -503,7 +503,7 @@ type NotificationDestination struct {
 type NotificationRouter struct {
 	// +kubebuilder:default=triggeredOnly
 	// When to notify.
-	NotifyOn NotifyOn `json:"notifyOn"`
+	NotifyOn NotifyOn `json:"notifyOn,omitempty"`
 }
 
 // +kubebuilder:validation:XValidation:rule="has(self.backendRef) != has(self.resourceRef)",message="Exactly one of backendRef or resourceRef must be set"
