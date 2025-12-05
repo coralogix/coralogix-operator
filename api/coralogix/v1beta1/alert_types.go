@@ -1431,7 +1431,29 @@ type SloThresholdRuleCondition struct {
 }
 
 type BurnRate struct {
-	Rules []BurnRateRule `json:"rules"`
+	Rules        []BurnRateRule  `json:"rules"`
+	BurnRateType SloBurnRateType `json:"type"`
+}
+
+// +kubebuilder:validation:XValidation:rule="has(self.single) != has(self.dual)",message="Exactly one of single or dual must be set"
+type SloBurnRateType struct {
+	// +optional
+	Single *SloBurnRateTypeSingle `json:"single"`
+	// +optional
+	Dual *SloBurnRateTypeDual `json:"dual"`
+}
+
+type SloBurnRateTypeSingle struct {
+	TimeDuration TimeDuration `json:"timeDuration"`
+}
+
+type SloBurnRateTypeDual struct {
+	TimeDuration TimeDuration `json:"timeDuration"`
+}
+
+type TimeDuration struct {
+	Duration int              `json:"duration"`
+	Unit     TimeDurationUnit `json:"unit"`
 }
 
 type BurnRateRule struct {
@@ -1456,6 +1478,16 @@ const (
 	LogFilterOperationTypeIncludes   LogFilterOperationType = "includes"
 	LogFilterOperationTypeEndWith    LogFilterOperationType = "endsWith"
 	LogFilterOperationTypeStartsWith LogFilterOperationType = "startsWith"
+)
+
+// +kubebuilder:validation:Enum=unspecified;hours
+// Time duration unit for a Burn Rate Slo.
+type TimeDurationUnit string
+
+// Operation type for log filter values.
+const (
+	TimeDurationUnitUnspecified TimeDurationUnit = "unspecified"
+	TimeDurationUnitHours       TimeDurationUnit = "hours"
 )
 
 // +kubebuilder:validation:Enum=debug;info;warning;error;critical;verbose
@@ -2270,14 +2302,7 @@ func expandSloThresholdType(sloId string, sloThreshold *SloThreshold) (*alerts.S
 	} else if burnRate := sloThreshold.BurnRate; burnRate != nil {
 		return &alerts.SloThresholdType{
 			SloThresholdTypeBurnRate: &alerts.SloThresholdTypeBurnRate{
-				BurnRate: &alerts.BurnRateThreshold{
-					BurnRateThresholdSingle: &alerts.BurnRateThresholdSingle{
-						Rules: expandSloBurnRate(burnRate.Rules),
-					},
-				},
-				SloDefinition: &alerts.V3SloDefinition{
-					SloId: alerts.PtrString(sloId),
-				},
+				BurnRate: expandSloBurnRate(*burnRate),
 			},
 		}, nil
 	}
@@ -2306,7 +2331,43 @@ func expandSloThresholdRuleCondition(condition SloThresholdRuleCondition) *alert
 	}
 }
 
-func expandSloBurnRate(rules []BurnRateRule) []alerts.SloThresholdRule {
+func expandSloBurnRate(burnRate BurnRate) *alerts.BurnRateThreshold {
+	if burnRate.BurnRateType.Single != nil {
+		duration := strconv.Itoa(burnRate.BurnRateType.Single.TimeDuration.Duration)
+		return &alerts.BurnRateThreshold{
+			BurnRateThresholdSingle: &alerts.BurnRateThresholdSingle{
+				Rules: expandSloBurnRateRules(burnRate.Rules),
+				Single: &alerts.BurnRateTypeSingle{
+					TimeDuration: &alerts.TimeDuration{
+						Unit:     expandDurationUnit(burnRate.BurnRateType.Single.TimeDuration.Unit),
+						Duration: &duration,
+					},
+				},
+			},
+		}
+	}
+	duration := strconv.Itoa(burnRate.BurnRateType.Dual.TimeDuration.Duration)
+	return &alerts.BurnRateThreshold{
+		BurnRateThresholdDual: &alerts.BurnRateThresholdDual{
+			Rules: expandSloBurnRateRules(burnRate.Rules),
+			Dual: &alerts.BurnRateTypeDual{
+				TimeDuration: &alerts.TimeDuration{
+					Duration: &duration,
+					Unit:     expandDurationUnit(burnRate.BurnRateType.Dual.TimeDuration.Unit),
+				},
+			},
+		},
+	}
+}
+
+func expandDurationUnit(durationUnit TimeDurationUnit) *alerts.DurationUnit {
+	if durationUnit == TimeDurationUnitHours {
+		return alerts.DURATIONUNIT_DURATION_UNIT_HOURS.Ptr()
+	}
+	return alerts.DURATIONUNIT_DURATION_UNIT_UNSPECIFIED.Ptr()
+}
+
+func expandSloBurnRateRules(rules []BurnRateRule) []alerts.SloThresholdRule {
 	result := make([]alerts.SloThresholdRule, 0, len(rules))
 	for _, rule := range rules {
 		result = append(result, *expandSloBurnRateRule(rule))

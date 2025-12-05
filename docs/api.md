@@ -3769,6 +3769,15 @@ Reference to a resource within the cluster.
           <br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypeslothresholdburnratetype">type</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.single) != has(self.dual): Exactly one of single or dual must be set</li>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
@@ -3857,6 +3866,166 @@ Alert overrides.
           Priority to override it<br/>
           <br/>
             <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.burnRate.type
+<sup><sup>[↩ Parent](#alertspecalerttypeslothresholdburnrate)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecalerttypeslothresholdburnratetypedual">dual</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypeslothresholdburnratetypesingle">single</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.burnRate.type.dual
+<sup><sup>[↩ Parent](#alertspecalerttypeslothresholdburnratetype)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecalerttypeslothresholdburnratetypedualtimeduration">timeDuration</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.burnRate.type.dual.timeDuration
+<sup><sup>[↩ Parent](#alertspecalerttypeslothresholdburnratetypedual)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>duration</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>unit</b></td>
+        <td>enum</td>
+        <td>
+          Time duration unit for a Burn Rate Slo.<br/>
+          <br/>
+            <i>Enum</i>: unspecified, hours<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.burnRate.type.single
+<sup><sup>[↩ Parent](#alertspecalerttypeslothresholdburnratetype)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecalerttypeslothresholdburnratetypesingletimeduration">timeDuration</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.sloThreshold.burnRate.type.single.timeDuration
+<sup><sup>[↩ Parent](#alertspecalerttypeslothresholdburnratetypesingle)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>duration</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>unit</b></td>
+        <td>enum</td>
+        <td>
+          Time duration unit for a Burn Rate Slo.<br/>
+          <br/>
+            <i>Enum</i>: unspecified, hours<br/>
         </td>
         <td>true</td>
       </tr></tbody>
