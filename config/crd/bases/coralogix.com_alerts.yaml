@@ -1466,8 +1466,55 @@ spec:
                               - condition
                               type: object
                             type: array
+                          type:
+                            properties:
+                              dual:
+                                properties:
+                                  timeDuration:
+                                    properties:
+                                      duration:
+                                        type: integer
+                                      unit:
+                                        description: Time duration unit for a Burn
+                                          Rate Slo.
+                                        enum:
+                                        - unspecified
+                                        - hours
+                                        type: string
+                                    required:
+                                    - duration
+                                    - unit
+                                    type: object
+                                required:
+                                - timeDuration
+                                type: object
+                              single:
+                                properties:
+                                  timeDuration:
+                                    properties:
+                                      duration:
+                                        type: integer
+                                      unit:
+                                        description: Time duration unit for a Burn
+                                          Rate Slo.
+                                        enum:
+                                        - unspecified
+                                        - hours
+                                        type: string
+                                    required:
+                                    - duration
+                                    - unit
+                                    type: object
+                                required:
+                                - timeDuration
+                                type: object
+                            type: object
+                            x-kubernetes-validations:
+                            - message: Exactly one of single or dual must be set
+                              rule: has(self.single) != has(self.dual)
                         required:
                         - rules
+                        - type
                         type: object
                       errorBudget:
                         properties:
