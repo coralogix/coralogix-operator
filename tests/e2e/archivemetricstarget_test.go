@@ -20,6 +20,7 @@ import (
 	"os"
 	"time"
 
+	archivemetrics "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/metrics_data_archive_service"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -55,15 +56,15 @@ var _ = Describe("ArchiveMetricsTarget", Ordered, func() {
 			},
 			Spec: coralogixv1alpha1.ArchiveMetricsTargetSpec{
 				S3Target: &coralogixv1alpha1.S3MetricsTarget{
-					Region:     awsRegion,
-					BucketName: metricsBucket,
+					Region:     archivemetrics.PtrString(awsRegion),
+					BucketName: archivemetrics.PtrString(metricsBucket),
 				},
 				ResolutionPolicy: &coralogixv1alpha1.ResolutionPolicy{
-					RawResolution:         1,
-					FiveMinutesResolution: 1,
-					OneHourResolution:     1,
+					RawResolution:         archivemetrics.PtrInt64(1),
+					FiveMinutesResolution: archivemetrics.PtrInt64(1),
+					OneHourResolution:     archivemetrics.PtrInt64(1),
 				},
-				RetentionDays: 2,
+				RetentionDays: archivemetrics.PtrInt64(2),
 			},
 		}
 	})

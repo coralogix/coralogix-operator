@@ -8202,8 +8202,6 @@ See also https://coralogix.com/docs/archive-s3-bucket-forever
         <td>object</td>
         <td>
           ArchiveMetricsTargetSpec defines the desired state of a Coralogix archive logs target.<br/>
-          <br/>
-            <i>Validations</i>:<li>has(self.s3Target) != has(self.ibmCosTarget): Exactly one of s3Target or ibmCosTarget must be specified</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -8234,13 +8232,6 @@ ArchiveMetricsTargetSpec defines the desired state of a Coralogix archive logs t
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#archivemetricstargetspecibmcostarget">ibmCosTarget</a></b></td>
-        <td>object</td>
-        <td>
-          The IBM COS target configuration.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b><a href="#archivemetricstargetspecresolutionpolicy">resolutionPolicy</a></b></td>
         <td>object</td>
         <td>
@@ -8253,7 +8244,7 @@ ArchiveMetricsTargetSpec defines the desired state of a Coralogix archive logs t
         <td>
           The retention days for the metrics.<br/>
           <br/>
-            <i>Format</i>: int32<br/>
+            <i>Format</i>: int64<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -8261,56 +8252,6 @@ ArchiveMetricsTargetSpec defines the desired state of a Coralogix archive logs t
         <td>object</td>
         <td>
           The S3 target configuration.<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ArchiveMetricsTarget.spec.ibmCosTarget
-<sup><sup>[↩ Parent](#archivemetricstargetspec)</sup></sup>
-
-
-
-The IBM COS target configuration.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>bucketCrn</b></td>
-        <td>string</td>
-        <td>
-          BucketCrn is the CRN of the IBM COS bucket.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>bucketType</b></td>
-        <td>enum</td>
-        <td>
-          BucketType defines the type of the bucket.<br/>
-          <br/>
-            <i>Enum</i>: UNSPECIFIED, EXTERNAL, INTERNAL<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>endpoint</b></td>
-        <td>string</td>
-        <td>
-          Endpoint is the endpoint URL for the IBM COS service.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>serviceCrn</b></td>
-        <td>string</td>
-        <td>
-          ServiceCrn is the CRN of the service instance.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -8339,7 +8280,7 @@ The resolution policy for the metrics.
         <td>
           <br/>
           <br/>
-            <i>Format</i>: int32<br/>
+            <i>Format</i>: int64<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -8348,7 +8289,7 @@ The resolution policy for the metrics.
         <td>
           <br/>
           <br/>
-            <i>Format</i>: int32<br/>
+            <i>Format</i>: int64<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -8357,7 +8298,7 @@ The resolution policy for the metrics.
         <td>
           <br/>
           <br/>
-            <i>Format</i>: int32<br/>
+            <i>Format</i>: int64<br/>
         </td>
         <td>false</td>
       </tr></tbody>
