@@ -4,7 +4,7 @@
 
 Coralogix Operator Helm Chart
 
-**Homepage:** <https://github.com/coralogix/coralogix-operator/v2>
+**Homepage:** <https://github.com/coralogix/coralogix-operator>
 
 ## Maintainers
 
@@ -14,7 +14,7 @@ Coralogix Operator Helm Chart
 
 ## Source Code
 
-* <https://github.com/coralogix/coralogix-operator/v2>
+* <https://github.com/coralogix/coralogix-operator>
 
 ## Requirements
 

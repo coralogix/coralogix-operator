@@ -7,7 +7,7 @@ layout:
 - go.kubebuilder.io/v4
 multigroup: true
 projectName: coralogix-operator
-repo: github.com/coralogix/coralogix-operator/v2
+repo: github.com/coralogix/coralogix-operator
 resources:
 - api:
     crdVersion: v1

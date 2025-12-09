@@ -2,16 +2,16 @@
 [![license](https://img.shields.io/github/license/coralogix/coralogix-operator.svg)](https://raw.githubusercontent.com/coralogix/coralogix-operator/main/LICENSE)
 ![GitHub tag (latest SemVer pre-release)](https://img.shields.io/github/v/tag/coralogix/coralogix-operator.svg?include_prereleases&style=plastic)
 ![Go Report Card](https://goreportcard.com/badge/github.com/coralogix/coralogix-operator/v2)
-![e2e-tests](https://github.com/coralogix/coralogix-operator/v2/actions/workflows/e2e-tests.yaml/badge.svg?style=plastic)
+![e2e-tests](https://github.com/coralogix/coralogix-operator/actions/workflows/e2e-tests.yaml/badge.svg?style=plastic)
 
 ## Overview
 The Coralogix Operator provides Kubernetes-native deployment and management for Coralogix, designed to simplify and automate the configuration of Coralogix APIs through Kubernetes [Custom Resource Definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) and controllers.
 
 The operator provides the following capabilities:
 
-- **CRDs and controllers:** Easily deploy and manage various Coralogix features using custom resources, which are automatically reconciled by the operator. For a complete list of available CRDs and their details, refer to the [API documentation](https://github.com/coralogix/coralogix-operator/v2/tree/main/docs/api.md). For examples of custom resources, refer to the [samples directory](https://github.com/coralogix/coralogix-operator/v2/tree/main/config/samples).
-- **[Prometheus Operator](https://prometheus-operator.dev/) integration:** The Operator leverages PrometheusRule CRD, to simplify the transition to Coralogix Alerts by utilizing existing monitoring configurations. For more details on this integration, refer to the [Prometheus Integration documentation](https://github.com/coralogix/coralogix-operator/v2/tree/main/docs/prometheus-integration.md).
-- **Metrics collection:** The operator provides metrics for monitoring custom resources and the operator itself. For more details, refer to the [Metrics documentation](https://github.com/coralogix/coralogix-operator/v2/tree/main/docs/metrics.md).
+- **CRDs and controllers:** Easily deploy and manage various Coralogix features using custom resources, which are automatically reconciled by the operator. For a complete list of available CRDs and their details, refer to the [API documentation](https://github.com/coralogix/coralogix-operator/tree/main/docs/api.md). For examples of custom resources, refer to the [samples directory](https://github.com/coralogix/coralogix-operator/tree/main/config/samples).
+- **[Prometheus Operator](https://prometheus-operator.dev/) integration:** The Operator leverages PrometheusRule CRD, to simplify the transition to Coralogix Alerts by utilizing existing monitoring configurations. For more details on this integration, refer to the [Prometheus Integration documentation](https://github.com/coralogix/coralogix-operator/tree/main/docs/prometheus-integration.md).
+- **Metrics collection:** The operator provides metrics for monitoring custom resources and the operator itself. For more details, refer to the [Metrics documentation](https://github.com/coralogix/coralogix-operator/tree/main/docs/metrics.md).
 
 ### Prerequisites
 - Kubernetes cluster (v1.16+).

@@ -8,7 +8,7 @@ You are contributing under the terms and conditions of the [Contributor License 
 ---------------------
 1. Clone the operator repository and navigate to the project directory:
 ```
-git clone https://github.com/coralogix/coralogix-operator/v2.git 
+git clone https://github.com/coralogix/coralogix-operator.git 
 cd coralogix-operator
 ```
 
