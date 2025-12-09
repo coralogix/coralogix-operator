@@ -33,8 +33,8 @@ import (
 	alerts "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/alert_definitions_service"
 	slos "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/slos_service"
 
-	"github.com/coralogix/coralogix-operator/internal/config"
-	"github.com/coralogix/coralogix-operator/internal/utils"
+	"github.com/coralogix/coralogix-operator/v2/internal/config"
+	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // +kubebuilder:object:root=true

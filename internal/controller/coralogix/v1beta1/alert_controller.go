@@ -28,10 +28,10 @@ import (
 	oapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 	alerts "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/alert_definitions_service"
 
-	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
-	"github.com/coralogix/coralogix-operator/internal/config"
-	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/internal/utils"
+	coralogixv1beta1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1beta1"
+	"github.com/coralogix/coralogix-operator/v2/internal/config"
+	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
+	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // AlertReconciler reconciles a Alert object

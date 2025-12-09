@@ -7,7 +7,7 @@ layout:
 - go.kubebuilder.io/v4
 multigroup: true
 projectName: coralogix-operator
-repo: github.com/coralogix/coralogix-operator
+repo: github.com/coralogix/coralogix-operator/v2
 resources:
 - api:
     crdVersion: v1
@@ -16,7 +16,7 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: RecordingRuleGroupSet
-  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -25,7 +25,7 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: RuleGroup
-  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -34,7 +34,7 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: OutboundWebhook
-  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -43,7 +43,7 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: ApiKey
-  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -52,7 +52,7 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: Alert
-  path: github.com/coralogix/coralogix-operator/api/coralogix/v1beta1
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1beta1
   version: v1beta1
 - api:
     crdVersion: v1
@@ -61,7 +61,7 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: CustomRole
-  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -70,7 +70,7 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: Scope
-  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -79,7 +79,7 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: Group
-  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -88,7 +88,7 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: TCOLogsPolicies
-  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -97,7 +97,7 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: TCOTracesPolicies
-  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -106,7 +106,7 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: Integration
-  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -115,7 +115,7 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: AlertScheduler
-  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -124,7 +124,7 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: Dashboard
-  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -133,7 +133,7 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: DashboardsFolder
-  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -142,7 +142,7 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: ViewFolder
-  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -151,7 +151,7 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: View
-  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -160,7 +160,7 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: Connector
-  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -169,7 +169,7 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: Preset
-  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -178,7 +178,7 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: GlobalRouter
-  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -187,7 +187,7 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: Events2Metric
-  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -196,7 +196,7 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: SLO
-  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -205,6 +205,6 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: IPAccess
-  path: github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
   version: v1alpha1
 version: "3"

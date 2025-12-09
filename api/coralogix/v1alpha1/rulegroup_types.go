@@ -19,7 +19,7 @@ import (
 
 	rulegroups "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/rule_groups_service"
 
-	utils "github.com/coralogix/coralogix-operator/api/coralogix"
+	utils "github.com/coralogix/coralogix-operator/v2/api/coralogix"
 )
 
 var (
@@ -300,7 +300,7 @@ type RuleGroupSpec struct {
 
 	// Rules within the same subgroup have an OR relationship,
 	// while rules in different subgroups have an AND relationship.
-	// Refer to https://github.com/coralogix/coralogix-operator/blob/main/config/samples/v1alpha1/rulegroups/mixed_rulegroup.yaml
+	// Refer to https://github.com/coralogix/coralogix-operator/v2/blob/main/config/samples/v1alpha1/rulegroups/mixed_rulegroup.yaml
 	// for an example.
 	// +optional
 	RuleSubgroups []RuleSubGroup `json:"subgroups,omitempty"`

@@ -25,7 +25,7 @@ import (
 
 	globalrouters "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/global_routers_service"
 
-	"github.com/coralogix/coralogix-operator/internal/config"
+	"github.com/coralogix/coralogix-operator/v2/internal/config"
 )
 
 // GlobalRouterSpec defines the desired state of the Global Router.
