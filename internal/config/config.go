@@ -32,7 +32,7 @@ import (
 
 	openapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 
-	"github.com/coralogix/coralogix-operator/internal/utils"
+	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 var (

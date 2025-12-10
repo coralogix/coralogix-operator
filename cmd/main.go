@@ -38,14 +38,14 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	openapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 
-	"github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
-	"github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
-	"github.com/coralogix/coralogix-operator/internal/config"
-	controllers "github.com/coralogix/coralogix-operator/internal/controller"
-	v1alpha1controllers "github.com/coralogix/coralogix-operator/internal/controller/coralogix/v1alpha1"
-	v1beta1controllers "github.com/coralogix/coralogix-operator/internal/controller/coralogix/v1beta1"
-	"github.com/coralogix/coralogix-operator/internal/monitoring"
-	"github.com/coralogix/coralogix-operator/internal/utils"
+	"github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/v2/api/coralogix/v1beta1"
+	"github.com/coralogix/coralogix-operator/v2/internal/config"
+	controllers "github.com/coralogix/coralogix-operator/v2/internal/controller"
+	v1alpha1controllers "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/v1alpha1"
+	v1beta1controllers "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/v1beta1"
+	"github.com/coralogix/coralogix-operator/v2/internal/monitoring"
+	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 	//+kubebuilder:scaffold:imports
 )
 

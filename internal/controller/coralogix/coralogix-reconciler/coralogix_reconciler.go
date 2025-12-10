@@ -35,10 +35,10 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	oapisdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 
-	"github.com/coralogix/coralogix-operator/api/coralogix"
-	"github.com/coralogix/coralogix-operator/internal/config"
-	"github.com/coralogix/coralogix-operator/internal/monitoring"
-	"github.com/coralogix/coralogix-operator/internal/utils"
+	"github.com/coralogix/coralogix-operator/v2/api/coralogix"
+	"github.com/coralogix/coralogix-operator/v2/internal/config"
+	"github.com/coralogix/coralogix-operator/v2/internal/monitoring"
+	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // CoralogixReconciler defines the required methods for all Coralogix controllers.

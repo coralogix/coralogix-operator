@@ -25,8 +25,8 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
-	"github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
-	"github.com/coralogix/coralogix-operator/internal/config"
+	"github.com/coralogix/coralogix-operator/v2/api/coralogix/v1beta1"
+	"github.com/coralogix/coralogix-operator/v2/internal/config"
 )
 
 // AlertSchedulerSpec defines the desired state Coralogix AlertScheduler.

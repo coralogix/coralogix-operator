@@ -27,7 +27,7 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	groups "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/team_permissions_management_service"
 
-	"github.com/coralogix/coralogix-operator/internal/config"
+	"github.com/coralogix/coralogix-operator/v2/internal/config"
 )
 
 // GroupSpec defines the desired state of Coralogix Group.

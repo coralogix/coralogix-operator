@@ -23,7 +23,7 @@ import (
 
 	dashboardsfolders "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/dashboard_folders_service"
 
-	"github.com/coralogix/coralogix-operator/internal/config"
+	"github.com/coralogix/coralogix-operator/v2/internal/config"
 )
 
 // DashboardsFolderSpec defines the desired state of Dashboard Folder.

@@ -5,6 +5,6 @@ resources:
 - manager.yaml
 
 images:
-- name: controller
-  newName: coralogixrepo/coralogix-operator
-  newTag: latest
+  - name: controller
+    newName: coralogixrepo/coralogix-operator
+    newTag: latest
