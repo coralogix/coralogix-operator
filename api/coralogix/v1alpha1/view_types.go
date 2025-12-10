@@ -24,7 +24,7 @@ import (
 
 	views "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/views_service"
 
-	"github.com/coralogix/coralogix-operator/internal/config"
+	"github.com/coralogix/coralogix-operator/v2/internal/config"
 )
 
 // ViewSpec defines the desired state of View.

@@ -20,7 +20,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/coralogix/coralogix-operator/internal/utils"
+	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 	"github.com/go-logr/logr"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -29,9 +29,9 @@ import (
 	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 	webhooks "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/outgoing_webhooks_service"
 
-	"github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
-	"github.com/coralogix/coralogix-operator/internal/config"
-	coralogixreconcile "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
+	"github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/v2/internal/config"
+	coralogixreconcile "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
 )
 
 // OutboundWebhookReconciler reconciles a OutboundWebhook object

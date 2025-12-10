@@ -19,7 +19,7 @@ import (
 
 	rulegroups "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/rule_groups_service"
 
-	utils "github.com/coralogix/coralogix-operator/api/coralogix"
+	utils "github.com/coralogix/coralogix-operator/v2/api/coralogix"
 )
 
 var (

@@ -31,7 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
-	"github.com/coralogix/coralogix-operator/internal/utils"
+	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 func collectOperatorResource(ctx context.Context, log logr.Logger, gvk schema.GroupVersionKind, name string) error {

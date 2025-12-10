@@ -33,10 +33,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
-	coralogixv1beta1 "github.com/coralogix/coralogix-operator/api/coralogix/v1beta1"
-	"github.com/coralogix/coralogix-operator/internal/config"
-	"github.com/coralogix/coralogix-operator/internal/utils"
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
+	coralogixv1beta1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1beta1"
+	"github.com/coralogix/coralogix-operator/v2/internal/config"
+	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 func setupReconciler(ctx context.Context, t *testing.T) (PrometheusRuleReconciler, watch.Interface) {

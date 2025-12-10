@@ -29,8 +29,8 @@ import (
 	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 	ipaccess "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/ip_access_service"
 
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
-	"github.com/coralogix/coralogix-operator/internal/utils"
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 var _ = Describe("IPAccess", func() {

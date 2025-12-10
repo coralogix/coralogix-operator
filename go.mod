@@ -1,4 +1,4 @@
-module github.com/coralogix/coralogix-operator
+module github.com/coralogix/coralogix-operator/v2
 
 go 1.24.0
 
