@@ -28,7 +28,7 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
-	"github.com/coralogix/coralogix-operator/internal/config"
+	"github.com/coralogix/coralogix-operator/v2/internal/config"
 )
 
 // DashboardSpec defines the desired state of Dashboard.

@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/coralogix/coralogix-operator/internal/config"
+	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -28,9 +28,9 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
-	utils "github.com/coralogix/coralogix-operator/api/coralogix"
-	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/api/coralogix/v1alpha1"
-	coralogixreconciler "github.com/coralogix/coralogix-operator/internal/controller/coralogix/coralogix-reconciler"
+	utils "github.com/coralogix/coralogix-operator/v2/api/coralogix"
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
+	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
 )
 
 // Events2MetricReconciler reconciles a Events2Metric object

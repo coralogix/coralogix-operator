@@ -21,7 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/scheme"
 
-	"github.com/coralogix/coralogix-operator/internal/utils"
+	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 var (

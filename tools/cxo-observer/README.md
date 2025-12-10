@@ -29,7 +29,7 @@ This annotation instructs the Coralogix Operator to log all activity related to 
 - [Go](https://golang.org/doc/install) 1.16 or later
 
 ```bash
-go install github.com/coralogix/coralogix-operator/tools/cxo-observer@<your-operator-version>
+go install github.com/coralogix/coralogix-operator/v2/tools/cxo-observer@<your-operator-version>
 ```
 
 ## Usage

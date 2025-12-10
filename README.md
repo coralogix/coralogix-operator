@@ -1,7 +1,7 @@
 # Coralogix Operator
 [![license](https://img.shields.io/github/license/coralogix/coralogix-operator.svg)](https://raw.githubusercontent.com/coralogix/coralogix-operator/main/LICENSE)
 ![GitHub tag (latest SemVer pre-release)](https://img.shields.io/github/v/tag/coralogix/coralogix-operator.svg?include_prereleases&style=plastic)
-![Go Report Card](https://goreportcard.com/badge/github.com/coralogix/coralogix-operator)
+![Go Report Card](https://goreportcard.com/badge/github.com/coralogix/coralogix-operator/v2)
 ![e2e-tests](https://github.com/coralogix/coralogix-operator/actions/workflows/e2e-tests.yaml/badge.svg?style=plastic)
 
 ## Overview
