@@ -2303,6 +2303,9 @@ func expandSloThresholdType(sloId string, sloThreshold *SloThreshold) (*alerts.S
 		return &alerts.SloThresholdType{
 			SloThresholdTypeBurnRate: &alerts.SloThresholdTypeBurnRate{
 				BurnRate: expandSloBurnRate(*burnRate),
+				SloDefinition: &alerts.V3SloDefinition{
+					SloId: alerts.PtrString(sloId),
+				},
 			},
 		}, nil
 	}
