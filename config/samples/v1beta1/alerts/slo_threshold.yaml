@@ -7,9 +7,9 @@ metadata:
     app.kubernetes.io/part-of: coralogix-operator
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/created-by: coralogix-operator
-  name: slo-threshold-alert
+  name: slo-threshold-alert-error-budget-example
 spec:
-  name: slo-threshold alert example
+  name: SLO Error Budget Alert
   description: SLO Alert, Error Budget
   entityLabels:
     alert_type: security
@@ -25,3 +25,37 @@ spec:
         rules:
           - condition:
               threshold: "0.5"
+---
+apiVersion: coralogix.com/v1beta1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/name: alert
+    app.kubernetes.io/instance: alert-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: slo-threshold-alert-burn-rate-example
+spec:
+  name: SLO Burn Rate Alert
+  description: SLO Alert, Burn Rate
+  enabled: true
+  phantomMode: false
+  priority: p1
+  alertType:
+    sloThreshold:
+      burnRate:
+        rules:
+          - condition:
+              threshold: "1"
+            override:
+              priority: p1
+        type:
+          single:
+            timeDuration:
+              duration: 1
+              unit: hours
+      sloDefinition:
+        sloRef:
+          resourceRef:
+            name: window-based-slo-example
