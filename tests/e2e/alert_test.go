@@ -120,6 +120,9 @@ var _ = Describe("Alert", Ordered, func() {
 							},
 						},
 					},
+					Router: &coralogixv1beta1.NotificationRouter{
+						NotifyOn: coralogixv1beta1.NotifyOnTriggeredAndResolved,
+					},
 				},
 
 				Schedule: &coralogixv1beta1.AlertSchedule{

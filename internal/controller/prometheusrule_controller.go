@@ -57,6 +57,8 @@ const managedByLabelKey = "app.kubernetes.io/managed-by"
 //+kubebuilder:rbac:groups=coralogix.com,resources=alerts/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=coralogix.com,resources=alerts/finalizers,verbs=update
 
+// +kubebuilder:rbac:groups=apiextensions.k8s.io,resources=customresourcedefinitions,verbs=get
+
 // PrometheusRuleReconciler reconciles a PrometheusRule object
 type PrometheusRuleReconciler struct {
 	Interval time.Duration

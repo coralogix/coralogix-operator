@@ -15,14 +15,20 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
+	"fmt"
 	"os"
 	"runtime"
 	"strings"
 
+	"github.com/go-logr/logr"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	prometheusv1alpha "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -66,6 +72,8 @@ func init() {
 	utilruntime.Must(v1beta1.AddToScheme(scheme))
 
 	utilruntime.Must(prometheusv1alpha.AddToScheme(scheme))
+
+	utilruntime.Must(apiextensionsv1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -149,14 +157,6 @@ func main() {
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Alert")
 		os.Exit(1)
-	}
-	if cfg.PrometheusRuleController {
-		if err = (&controllers.PrometheusRuleReconciler{
-			Interval: cfg.ReconcileIntervals[utils.PrometheusRuleKind],
-		}).SetupWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create controller", "controller", "PrometheusRule")
-			os.Exit(1)
-		}
 	}
 	if err = (&v1alpha1controllers.RecordingRuleGroupSetReconciler{
 		RecordingRulesClient:        oapiClientSet.RecordingRules(),
@@ -321,6 +321,26 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "IPAccess")
 		os.Exit(1)
 	}
+
+	enablePromeRuleController, err := shouldEnablePromRuleController(
+		context.Background(),
+		setupLog,
+		cfg,
+		mgr.GetAPIReader(),
+	)
+	if err != nil {
+		setupLog.Error(err, "unable to determine whether to enable PrometheusRule controller")
+		os.Exit(1)
+	}
+	if enablePromeRuleController {
+		if err = (&controllers.PrometheusRuleReconciler{
+			Interval: cfg.ReconcileIntervals[utils.PrometheusRuleKind],
+		}).SetupWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", "PrometheusRule")
+			os.Exit(1)
+		}
+	}
+
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
@@ -348,4 +368,42 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+}
+
+func shouldEnablePromRuleController(ctx context.Context,
+	log logr.Logger,
+	cfg *config.Config,
+	c client.Reader,
+) (bool, error) {
+	if !cfg.PrometheusRuleController {
+		log.Info("PrometheusRule controller disabled via configuration")
+		return false, nil
+	}
+
+	exists, err := prometheusRuleCRDExists(ctx, c)
+	if err != nil {
+		return false, fmt.Errorf("failed to check PrometheusRule CRD existence: %w", err)
+	}
+
+	if !exists {
+		log.Info(
+			"PrometheusRule controller requested but CRD not found; controller will be disabled")
+		return false, nil
+	}
+
+	log.Info("Enabling PrometheusRule controller")
+	return true, nil
+}
+
+func prometheusRuleCRDExists(ctx context.Context, c client.Reader) (bool, error) {
+	crd := &apiextensionsv1.CustomResourceDefinition{}
+	err := c.Get(ctx, types.NamespacedName{Name: "prometheusrules.monitoring.coreos.com"}, crd)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
 }
