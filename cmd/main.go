@@ -322,7 +322,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	enablePromeRuleController, err := shouldEnablePromRuleController(
+	enablePromRuleController, err := shouldEnablePromRuleController(
 		context.Background(),
 		setupLog,
 		cfg,
@@ -332,7 +332,7 @@ func main() {
 		setupLog.Error(err, "unable to determine whether to enable PrometheusRule controller")
 		os.Exit(1)
 	}
-	if enablePromeRuleController {
+	if enablePromRuleController {
 		if err = (&controllers.PrometheusRuleReconciler{
 			Interval: cfg.ReconcileIntervals[utils.PrometheusRuleKind],
 		}).SetupWithManager(mgr); err != nil {
