@@ -50,6 +50,10 @@ spec:
           spec:
             description: ApiKeySpec defines the desired state of a Coralogix ApiKey.
             properties:
+              accessPolicy:
+                description: JSON string representing the access policy for this API
+                  key. Defines granular permissions for users and groups.
+                type: string
               active:
                 default: true
                 description: Whether the ApiKey Is active.

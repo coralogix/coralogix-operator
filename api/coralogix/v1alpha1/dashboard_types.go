@@ -86,17 +86,13 @@ func expandDashboardFolder(ctx context.Context, namespace string, in *DashboardS
 	if folderRef := in.FolderRef; folderRef != nil {
 		if backendRef := folderRef.BackendRef; backendRef != nil {
 			if id := backendRef.ID; id != nil {
-				dashboard.Folder = &cxsdk.DashboardFolderID{
-					FolderId: &cxsdk.UUID{
-						Value: *id,
-					},
+				dashboard.FolderId = &cxsdk.UUID{
+					Value: *id,
 				}
 			} else if path := backendRef.Path; path != nil {
 				segments := strings.Split(*path, "/")
-				dashboard.Folder = &cxsdk.DashboardFolderPath{
-					FolderPath: &cxsdk.FolderPath{
-						Segments: segments,
-					},
+				dashboard.FolderPath = &cxsdk.FolderPath{
+					Segments: segments,
 				}
 			}
 		} else if resourceRef := folderRef.ResourceRef; resourceRef != nil {
@@ -105,10 +101,8 @@ func expandDashboardFolder(ctx context.Context, namespace string, in *DashboardS
 				return nil, err
 			}
 			if folderId != nil {
-				dashboard.Folder = &cxsdk.DashboardFolderID{
-					FolderId: &cxsdk.UUID{
-						Value: *folderId,
-					},
+				dashboard.FolderId = &cxsdk.UUID{
+					Value: *folderId,
 				}
 			}
 		} else {

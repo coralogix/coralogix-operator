@@ -44,6 +44,10 @@ type ApiKeySpec struct {
 	// Permissions of the ApiKey
 	// +optional
 	Permissions []string `json:"permissions,omitempty"`
+
+	// JSON string representing the access policy for this API key. Defines granular permissions for users and groups.
+	// +optional
+	AccessPolicy *string `json:"accessPolicy,omitempty"`
 }
 
 // Owner of an ApiKey.
@@ -129,15 +133,17 @@ func (s *ApiKeySpec) ExtractCreateApiKeyRequest() *apikeys.CreateApiKeyRequest {
 			Presets:     s.Presets,
 			Permissions: s.Permissions,
 		},
+		AccessPolicy: s.AccessPolicy,
 	}
 }
 
 func (s *ApiKeySpec) ExtractUpdateApiKeyRequest() *apikeys.UpdateApiKeyRequest {
 	return &apikeys.UpdateApiKeyRequest{
-		NewName:     apikeys.PtrString(s.Name),
-		IsActive:    apikeys.PtrBool(s.Active),
-		Presets:     &apikeys.Presets{Presets: s.Presets},
-		Permissions: &apikeys.UpdateApiKeyRequestPermissions{Permissions: s.Permissions},
+		NewName:      apikeys.PtrString(s.Name),
+		IsActive:     apikeys.PtrBool(s.Active),
+		Presets:      &apikeys.Presets{Presets: s.Presets},
+		Permissions:  &apikeys.UpdateApiKeyRequestPermissions{Permissions: s.Permissions},
+		AccessPolicy: s.AccessPolicy,
 	}
 }
 
