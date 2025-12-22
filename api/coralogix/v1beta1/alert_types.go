@@ -399,6 +399,11 @@ type NotificationGroup struct {
 	// Deprecated: This field is deprecated and will be removed in a future version.
 	// +optional
 	Destinations []NotificationDestination `json:"destinations,omitempty"`
+
+	// The router for notifications (Notification Center feature).
+	// where to route notifications.
+	// +optional
+	Router *NotificationRouter `json:"router,omitempty"`
 }
 
 // Settings for a notification webhook.
