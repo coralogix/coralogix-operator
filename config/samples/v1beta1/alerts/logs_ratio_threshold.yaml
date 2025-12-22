@@ -54,4 +54,4 @@ spec:
             priority: p2
   notificationGroup:
     router:
-      notifyOn: triggeredOnly
+      notifyOn: triggeredAndResolved

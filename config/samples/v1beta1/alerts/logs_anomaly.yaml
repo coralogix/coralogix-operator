@@ -39,7 +39,7 @@ spec:
               specificValue: 5m
   notificationGroup:
     router:
-      notifyOn: triggeredOnly
+      notifyOn: triggeredAndResolved
 
 ---
 

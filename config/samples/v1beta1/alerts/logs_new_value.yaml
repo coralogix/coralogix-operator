@@ -38,4 +38,4 @@ spec:
       notificationPayloadFilter: [ "coralogix.metadata.sdkId" ]
   notificationGroup:
     router:
-      notifyOn: triggeredOnly
+      notifyOn: triggeredAndResolved

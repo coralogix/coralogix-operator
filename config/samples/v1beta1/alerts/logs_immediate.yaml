@@ -34,7 +34,7 @@ spec:
             severity: [ "warning", "info" ]
   notificationGroup:
     router:
-      notifyOn: triggeredOnly
+      notifyOn: triggeredAndResolved
   schedule:
     timeZone: UTC+02
     activeOn:

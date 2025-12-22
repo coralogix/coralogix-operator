@@ -32,4 +32,4 @@ spec:
                   - webapp
   notificationGroup:
     router:
-      notifyOn: triggeredOnly
+      notifyOn: triggeredAndResolved

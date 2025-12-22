@@ -32,4 +32,4 @@ spec:
             priority: p4
   notificationGroup:
     router:
-      notifyOn: triggeredOnly
+      notifyOn: triggeredAndResolved

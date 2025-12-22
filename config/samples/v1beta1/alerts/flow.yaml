@@ -49,5 +49,5 @@ spec:
       enforceSuppression: false
   notificationGroup:
     router:
-      notifyOn: triggeredOnly
+      notifyOn: triggeredAndResolved
     

@@ -30,4 +30,4 @@ spec:
             conditionType: moreThanUsual
   notificationGroup:
     router:
-      notifyOn: triggeredOnly
+      notifyOn: triggeredAndResolved

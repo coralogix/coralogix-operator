@@ -38,4 +38,4 @@ spec:
             priority: p1
   notificationGroup:
     router:
-      notifyOn: triggeredOnly
+      notifyOn: triggeredAndResolved
