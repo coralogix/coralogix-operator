@@ -37,10 +37,5 @@ spec:
               specificValue: 12h
       notificationPayloadFilter: [ "coralogix.metadata.sdkId" ]
   notificationGroup:
-    webhooks:
-      - retriggeringPeriod:
-          minutes: 1440
-        integration:
-          integrationRef:
-            resourceRef:
-              name: slack-webhook
+    router:
+      notifyOn: triggeredOnly

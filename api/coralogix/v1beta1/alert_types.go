@@ -401,8 +401,9 @@ type NotificationGroup struct {
 	Destinations []NotificationDestination `json:"destinations,omitempty"`
 
 	// The router for notifications (Notification Center feature).
+	// where to route notifications.
 	// +optional
-	Router *NotificationRouter `json:"router,omitempty"`
+	Router []Router `json:"router,omitempty"`
 }
 
 // Settings for a notification webhook.
@@ -498,6 +499,19 @@ type NotificationDestination struct {
 	// Optional routing configuration to override from the connector/preset for resolved notifications.
 	// +optional
 	ResolvedRoutingOverrides *NotificationRouting `json:"resolvedRoutingOverrides,omitempty"`
+}
+
+type Router struct {
+	// +kubebuilder:default=triggeredOnly
+	// When to notify.
+	Properties  []RouterProperty `json:"properties"`
+	Description string           `json:"description"`
+	NotifyOn    string           `json:"notifyOn"`
+}
+type RouterProperty struct {
+	// +kubebuilder:default=triggeredOnly
+	// When to notify.
+	// +required
 }
 
 type NotificationRouter struct {

@@ -40,9 +40,5 @@ spec:
             priority: p3
   notificationGroup:
     webhooks:
-      - retriggeringPeriod:
-          minutes: 1440
-        integration:
-          integrationRef:
-            resourceRef:
-              name: slack-webhook
+    router:
+      notifyOn: triggeredOnly

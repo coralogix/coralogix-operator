@@ -38,17 +38,8 @@ spec:
             timeWindow:
               specificValue: 5m
   notificationGroup:
-    webhooks:
-      - retriggeringPeriod:
-          minutes: 1440
-        integration:
-          integrationRef:
-            resourceRef:
-              name: slack-webhook
-      - retriggeringPeriod:
-          minutes: 1440
-        integration:
-          recipients: [ example@coralogix.com ]
+    router:
+      notifyOn: triggeredOnly
 
 ---
 

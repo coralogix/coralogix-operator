@@ -29,10 +29,5 @@ spec:
             minNonNullValuesPct: 60
             conditionType: moreThanUsual
   notificationGroup:
-    webhooks:
-      - retriggeringPeriod:
-          minutes: 1440
-        integration:
-          integrationRef:
-            resourceRef:
-              name: slack-webhook
+    router:
+      notifyOn: triggeredOnly

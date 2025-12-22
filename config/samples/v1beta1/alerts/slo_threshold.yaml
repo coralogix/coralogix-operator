@@ -25,6 +25,9 @@ spec:
         rules:
           - condition:
               threshold: "0.5"
+  notificationGroup:
+    router:
+      notifyOn: triggeredOnly
 ---
 apiVersion: coralogix.com/v1beta1
 kind: Alert
@@ -59,3 +62,6 @@ spec:
         sloRef:
           resourceRef:
             name: window-based-slo-example
+  notificationGroup:
+    router:
+      notifyOn: triggeredOnly
