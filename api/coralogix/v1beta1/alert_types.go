@@ -400,7 +400,7 @@ type NotificationGroup struct {
 	// +optional
 	Destinations []NotificationDestination `json:"destinations,omitempty"`
 
-	// The router for notifications (Notification Center feature).
+	// The router for notifications (Notification Center feature) where to route notifications to.
 	// +optional
 	Router *NotificationRouter `json:"router,omitempty"`
 }

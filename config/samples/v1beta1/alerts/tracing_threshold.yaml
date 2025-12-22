@@ -36,10 +36,5 @@ spec:
             timeWindow:
               specificValue: 5m
   notificationGroup:
-    webhooks:
-      - retriggeringPeriod:
-          minutes: 1440
-        integration:
-          integrationRef:
-            resourceRef:
-              name: slack-webhook
+    router:
+      notifyOn: triggeredAndResolved

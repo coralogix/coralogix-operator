@@ -33,13 +33,8 @@ spec:
                 operation: endsWith
             severity: [ "warning", "info" ]
   notificationGroup:
-    webhooks:
-      - retriggeringPeriod:
-          minutes: 1440
-        integration:
-          integrationRef:
-            resourceRef:
-              name: slack-webhook
+    router:
+      notifyOn: triggeredAndResolved
   schedule:
     timeZone: UTC+02
     activeOn:

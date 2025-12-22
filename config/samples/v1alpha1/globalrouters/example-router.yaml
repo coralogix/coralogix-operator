@@ -38,5 +38,3 @@ spec:
           preset:
             backendRef:
               id: preset_system_slack_alerts_basic
-
-

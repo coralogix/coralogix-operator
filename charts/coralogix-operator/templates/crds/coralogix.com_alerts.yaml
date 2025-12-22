@@ -2171,7 +2171,7 @@ spec:
                     type: array
                   router:
                     description: The router for notifications (Notification Center
-                      feature).
+                      feature) where to route notifications to.
                     properties:
                       notifyOn:
                         default: triggeredOnly
@@ -2455,7 +2455,7 @@ spec:
                       type: array
                     router:
                       description: The router for notifications (Notification Center
-                        feature).
+                        feature) where to route notifications to.
                       properties:
                         notifyOn:
                           default: triggeredOnly

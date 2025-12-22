@@ -5079,7 +5079,7 @@ Deprecated: This field is deprecated and will be removed in a future version.<br
         <td><b><a href="#alertspecnotificationgrouprouter">router</a></b></td>
         <td>object</td>
         <td>
-          The router for notifications (Notification Center feature).<br/>
+          The router for notifications (Notification Center feature) where to route notifications to.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5622,7 +5622,7 @@ Optional routing configuration to override from the connector/preset for resolve
 
 
 
-The router for notifications (Notification Center feature).
+The router for notifications (Notification Center feature) where to route notifications to.
 
 <table>
     <thead>
@@ -5899,7 +5899,7 @@ Deprecated: This field is deprecated and will be removed in a future version.<br
         <td><b><a href="#alertspecnotificationgroupexcessindexrouter">router</a></b></td>
         <td>object</td>
         <td>
-          The router for notifications (Notification Center feature).<br/>
+          The router for notifications (Notification Center feature) where to route notifications to.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6442,7 +6442,7 @@ Optional routing configuration to override from the connector/preset for resolve
 
 
 
-The router for notifications (Notification Center feature).
+The router for notifications (Notification Center feature) where to route notifications to.
 
 <table>
     <thead>

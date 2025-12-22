@@ -40,10 +40,5 @@ spec:
       maxUniqueCountPerGroupByKey: 100
       uniqueCountKeypath: "http_status"
   notificationGroup:
-    webhooks:
-      - retriggeringPeriod:
-          minutes: 1440
-        integration:
-          integrationRef:
-            resourceRef:
-              name: slack-webhook
+    router:
+      notifyOn: triggeredAndResolved
