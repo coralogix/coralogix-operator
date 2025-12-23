@@ -11,8 +11,12 @@ metadata:
 spec:
   name: team-key-sample
   owner:
-    teamId: 1234567
+    teamId: 4013254
   presets:
     - APM
   permissions:
     - ALERTS-MAP:READ
+  accessPolicy: "{ \"version\": \"v2025-01-01\", 
+  \"rules\": [], \"default\": { \"permissions\": { \"team-custom-api-keys:ReadConfig\": \"grant\", 
+  \"team-custom-api-keys:Manage\": \"grant\", \"team-custom-api-keys:ReadAccessPolicy\": \"grant\", 
+  \"team-custom-api-keys:UpdateAccessPolicy\": \"grant\" }, \"additionalInfo\": null } }"

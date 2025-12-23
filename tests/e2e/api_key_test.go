@@ -61,6 +61,15 @@ var _ = Describe("ApiKey", Ordered, func() {
 				},
 				Presets:     []string{"APM"},
 				Permissions: []string{"ALERTS-MAP:READ"},
+				AccessPolicy: ptr.To(
+					"{ \"version\": \"v2025-01-01\", " +
+						"\"rules\": [], " +
+						"\"default\": { \"permissions\": " +
+						"{ \"team-custom-api-keys:ReadConfig\": \"grant\", " +
+						"\"team-custom-api-keys:Manage\": \"grant\", " +
+						"\"team-custom-api-keys:ReadAccessPolicy\": \"grant\", " +
+						"\"team-custom-api-keys:UpdateAccessPolicy\": \"grant\" }, " +
+						"\"additionalInfo\": null } }"),
 			},
 		}
 	})

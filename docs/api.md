@@ -7854,6 +7854,13 @@ ApiKeySpec defines the desired state of a Coralogix ApiKey.
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>accessPolicy</b></td>
+        <td>string</td>
+        <td>
+          JSON string representing the access policy for this API key. Defines granular permissions for users and groups.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>active</b></td>
         <td>boolean</td>
         <td>
