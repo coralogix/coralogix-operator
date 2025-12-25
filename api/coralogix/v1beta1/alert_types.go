@@ -261,7 +261,7 @@ type AlertSpec struct {
 
 	// Enable/disable the alert.
 	//+kubebuilder:default=true
-	Enabled bool `json:"enabled,omitempty"`
+	Enabled *bool `json:"enabled,omitempty"`
 
 	// Grouping fields for multiple alerts.
 	// +optional
@@ -1541,7 +1541,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			AlertDefPropertiesLogsImmediate: &alerts.AlertDefPropertiesLogsImmediate{
 				Name:                    alerts.PtrString(in.Name),
 				Description:             alerts.PtrString(in.Description),
-				Enabled:                 alerts.PtrBool(in.Enabled),
+				Enabled:                 in.Enabled,
 				Priority:                priority.Ptr(),
 				GroupByKeys:             in.GroupByKeys,
 				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
@@ -1559,7 +1559,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			AlertDefPropertiesLogsThreshold: &alerts.AlertDefPropertiesLogsThreshold{
 				Name:                    alerts.PtrString(in.Name),
 				Description:             alerts.PtrString(in.Description),
-				Enabled:                 alerts.PtrBool(in.Enabled),
+				Enabled:                 in.Enabled,
 				Priority:                priority.Ptr(),
 				GroupByKeys:             in.GroupByKeys,
 				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
@@ -1577,7 +1577,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			AlertDefPropertiesLogsRatioThreshold: &alerts.AlertDefPropertiesLogsRatioThreshold{
 				Name:                    alerts.PtrString(in.Name),
 				Description:             alerts.PtrString(in.Description),
-				Enabled:                 alerts.PtrBool(in.Enabled),
+				Enabled:                 in.Enabled,
 				Priority:                priority.Ptr(),
 				GroupByKeys:             in.GroupByKeys,
 				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
@@ -1595,7 +1595,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			AlertDefPropertiesLogsTimeRelativeThreshold: &alerts.AlertDefPropertiesLogsTimeRelativeThreshold{
 				Name:                      alerts.PtrString(in.Name),
 				Description:               alerts.PtrString(in.Description),
-				Enabled:                   alerts.PtrBool(in.Enabled),
+				Enabled:                   in.Enabled,
 				Priority:                  priority.Ptr(),
 				GroupByKeys:               in.GroupByKeys,
 				IncidentsSettings:         expandIncidentsSettings(in.IncidentsSettings),
@@ -1613,7 +1613,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			AlertDefPropertiesMetricThreshold: &alerts.AlertDefPropertiesMetricThreshold{
 				Name:                    alerts.PtrString(in.Name),
 				Description:             alerts.PtrString(in.Description),
-				Enabled:                 alerts.PtrBool(in.Enabled),
+				Enabled:                 in.Enabled,
 				Priority:                priority.Ptr(),
 				GroupByKeys:             in.GroupByKeys,
 				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
@@ -1631,7 +1631,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			AlertDefPropertiesTracingThreshold: &alerts.AlertDefPropertiesTracingThreshold{
 				Name:                    alerts.PtrString(in.Name),
 				Description:             alerts.PtrString(in.Description),
-				Enabled:                 alerts.PtrBool(in.Enabled),
+				Enabled:                 in.Enabled,
 				Priority:                priority.Ptr(),
 				GroupByKeys:             in.GroupByKeys,
 				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
@@ -1649,7 +1649,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			AlertDefPropertiesTracingImmediate: &alerts.AlertDefPropertiesTracingImmediate{
 				Name:                    alerts.PtrString(in.Name),
 				Description:             alerts.PtrString(in.Description),
-				Enabled:                 alerts.PtrBool(in.Enabled),
+				Enabled:                 in.Enabled,
 				Priority:                priority.Ptr(),
 				GroupByKeys:             in.GroupByKeys,
 				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
@@ -1667,7 +1667,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			AlertDefPropertiesFlow: &alerts.AlertDefPropertiesFlow{
 				Name:                    alerts.PtrString(in.Name),
 				Description:             alerts.PtrString(in.Description),
-				Enabled:                 alerts.PtrBool(in.Enabled),
+				Enabled:                 in.Enabled,
 				Priority:                priority.Ptr(),
 				GroupByKeys:             in.GroupByKeys,
 				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
@@ -1685,7 +1685,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			AlertDefPropertiesLogsAnomaly: &alerts.AlertDefPropertiesLogsAnomaly{
 				Name:                    alerts.PtrString(in.Name),
 				Description:             alerts.PtrString(in.Description),
-				Enabled:                 alerts.PtrBool(in.Enabled),
+				Enabled:                 in.Enabled,
 				Priority:                priority.Ptr(),
 				GroupByKeys:             in.GroupByKeys,
 				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
@@ -1703,7 +1703,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			AlertDefPropertiesMetricAnomaly: &alerts.AlertDefPropertiesMetricAnomaly{
 				Name:                    alerts.PtrString(in.Name),
 				Description:             alerts.PtrString(in.Description),
-				Enabled:                 alerts.PtrBool(in.Enabled),
+				Enabled:                 in.Enabled,
 				Priority:                priority.Ptr(),
 				GroupByKeys:             in.GroupByKeys,
 				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
@@ -1721,7 +1721,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			AlertDefPropertiesLogsNewValue: &alerts.AlertDefPropertiesLogsNewValue{
 				Name:                    alerts.PtrString(in.Name),
 				Description:             alerts.PtrString(in.Description),
-				Enabled:                 alerts.PtrBool(in.Enabled),
+				Enabled:                 in.Enabled,
 				Priority:                priority.Ptr(),
 				GroupByKeys:             in.GroupByKeys,
 				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
@@ -1739,7 +1739,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			AlertDefPropertiesLogsUniqueCount: &alerts.AlertDefPropertiesLogsUniqueCount{
 				Name:                    alerts.PtrString(in.Name),
 				Description:             alerts.PtrString(in.Description),
-				Enabled:                 alerts.PtrBool(in.Enabled),
+				Enabled:                 in.Enabled,
 				Priority:                priority.Ptr(),
 				GroupByKeys:             in.GroupByKeys,
 				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
@@ -1761,7 +1761,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			AlertDefPropertiesSloThreshold: &alerts.AlertDefPropertiesSloThreshold{
 				Name:                    alerts.PtrString(in.Name),
 				Description:             alerts.PtrString(in.Description),
-				Enabled:                 alerts.PtrBool(in.Enabled),
+				Enabled:                 in.Enabled,
 				Priority:                priority.Ptr(),
 				GroupByKeys:             in.GroupByKeys,
 				IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
