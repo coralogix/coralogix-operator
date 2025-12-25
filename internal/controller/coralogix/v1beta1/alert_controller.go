@@ -17,15 +17,13 @@ package v1beta1
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/go-logr/logr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-	oapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 	alerts "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/alert_definitions_service"
 
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1beta1"
@@ -36,7 +34,7 @@ import (
 
 // AlertReconciler reconciles a Alert object
 type AlertReconciler struct {
-	ClientSet *oapicxsdk.ClientSet
+	ClientSet *cxsdk.ClientSet
 	Interval  time.Duration
 }
 
@@ -80,7 +78,7 @@ func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 		CreateAlertDefinitionRequest(*createRequest).
 		Execute()
 	if err != nil {
-		return fmt.Errorf("error on creating remote alert: %w", oapicxsdk.NewAPIError(httpResp, err))
+		return fmt.Errorf("error on creating remote alert: %w", cxsdk.NewAPIError(httpResp, err))
 	}
 	log.Info("Remote alert created", "response", utils.FormatJSON(createResponse))
 	alert.Status = coralogixv1beta1.AlertStatus{ID: createResponse.AlertDef.Id}
@@ -116,7 +114,7 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 		ReplaceAlertDefinitionRequest(updateRequest).
 		Execute()
 	if err != nil {
-		return oapicxsdk.NewAPIError(httpResp, err)
+		return cxsdk.NewAPIError(httpResp, err)
 	}
 	log.Info("Remote alert updated", "alert", utils.FormatJSON(updateResponse))
 	return nil
@@ -132,7 +130,7 @@ func (r *AlertReconciler) HandleDeletion(ctx context.Context, log logr.Logger, o
 		AlertDefsServiceDeleteAlertDef(ctx, *alert.Status.ID).
 		Execute()
 	if err != nil {
-		if apiErr := oapicxsdk.NewAPIError(httpResp, err); cxsdk.Code(apiErr) != http.StatusNotFound {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
 			log.Error(err, "Error deleting remote alert", "id", *alert.Status.ID)
 			return fmt.Errorf("error deleting remote alert %s: %w", *alert.Status.ID, err)
 		}
