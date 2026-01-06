@@ -120,10 +120,10 @@ func getSampleSlo(name, namespace string) *coralogixv1alpha1.SLO {
 			SliType: coralogixv1alpha1.SliType{
 				RequestBasedMetricSli: &coralogixv1alpha1.RequestBasedMetricSli{
 					GoodEvents: coralogixv1alpha1.SloMetricEvent{
-						Query: "sum(rate(coralogix_logs_events_total{app=\"coralogix-slo-example\", status=\"success\"}[5m]))",
+						Query: "sum(rate(coralogix_logs_events_total{app=\"coralogix-slo-example\", status=\"success\"}[1m]))",
 					},
 					TotalEvents: coralogixv1alpha1.SloMetricEvent{
-						Query: "sum(rate(coralogix_logs_events_total{app=\"coralogix-slo-example\", status=\"success\"}[5m]))",
+						Query: "sum(rate(coralogix_logs_events_total{app=\"coralogix-slo-example\", status=\"success\"}[1m]))",
 					},
 					GroupByLabels: []string{"app", "status"},
 				},
