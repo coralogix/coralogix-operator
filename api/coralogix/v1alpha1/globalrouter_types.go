@@ -225,7 +225,7 @@ func extractRoutingTarget(ctx context.Context, namespace string, target RoutingT
 		return nil, err
 	}
 
-	var presetID string
+	var presetID *string
 	if target.Preset != nil {
 		presetID, err = extractPresetID(ctx, namespace, target.Preset)
 		if err != nil {
@@ -235,7 +235,7 @@ func extractRoutingTarget(ctx context.Context, namespace string, target RoutingT
 
 	return &globalrouters.RoutingTarget{
 		ConnectorId: globalrouters.PtrString(connectorID),
-		PresetId:    ptr.To(presetID),
+		PresetId:    presetID,
 	}, nil
 }
 
@@ -265,9 +265,9 @@ func extractConnectorID(ctx context.Context, namespace string, connector NCRef) 
 	return *c.Status.Id, nil
 }
 
-func extractPresetID(ctx context.Context, namespace string, preset *NCRef) (string, error) {
+func extractPresetID(ctx context.Context, namespace string, preset *NCRef) (*string, error) {
 	if preset.BackendRef != nil {
-		return preset.BackendRef.ID, nil
+		return ptr.To(preset.BackendRef.ID), nil
 	}
 
 	if preset.ResourceRef != nil && preset.ResourceRef.Namespace != nil {
@@ -277,18 +277,18 @@ func extractPresetID(ctx context.Context, namespace string, preset *NCRef) (stri
 	p := &Preset{}
 	err := config.GetClient().Get(ctx, client.ObjectKey{Name: preset.ResourceRef.Name, Namespace: namespace}, p)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if !config.GetConfig().Selector.Matches(p.Labels, p.Namespace) {
-		return "", fmt.Errorf("preset %s does not match selector", p.Name)
+		return nil, fmt.Errorf("preset %s does not match selector", p.Name)
 	}
 
 	if p.Status.Id == nil {
-		return "", fmt.Errorf("ID is not populated for Preset %s", p.Name)
+		return nil, fmt.Errorf("ID is not populated for Preset %s", p.Name)
 	}
 
-	return *p.Status.Id, nil
+	return p.Status.Id, nil
 }
 
 type NCBackendRef struct {
