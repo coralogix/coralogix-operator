@@ -29,7 +29,7 @@ import (
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
-	"github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
+	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 

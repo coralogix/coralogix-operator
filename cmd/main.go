@@ -196,14 +196,6 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Scope")
 		os.Exit(1)
 	}
-	if err = (&v1alpha1controllers.GroupReconciler{
-		GroupsClient: oapiClientSet.Groups(),
-		CXClientSet:  clientSet,
-		Interval:     cfg.ReconcileIntervals[utils.GroupKind],
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Group")
-		os.Exit(1)
-	}
 	if err = (&v1alpha1controllers.TCOLogsPoliciesReconciler{
 		TCOPoliciesClient:       oapiClientSet.TCOPolicies(),
 		ArchiveRetentionsClient: oapiClientSet.ArchiveRetentions(),

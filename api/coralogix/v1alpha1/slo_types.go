@@ -212,18 +212,19 @@ func (s *SLOSpec) ExtractRequestBasedMetricSli() (*slos.SloRequestBasedMetricSli
 		return nil, fmt.Errorf("error expanding time frame: %w", err)
 	}
 
+	targetThresholdPercentage := float32(s.TargetThresholdPercentage.AsApproximateFloat64())
 	return &slos.SloRequestBasedMetricSli{
-		Name:                      s.Name,
+		Name:                      &s.Name,
 		Description:               s.Description,
 		Labels:                    s.Labels,
 		SloTimeFrame:              timeFrame,
-		TargetThresholdPercentage: float32(s.TargetThresholdPercentage.AsApproximateFloat64()),
+		TargetThresholdPercentage: &targetThresholdPercentage,
 		RequestBasedMetricSli: &slos.RequestBasedMetricSli{
-			GoodEvents: slos.Metric{
-				Query: s.SliType.RequestBasedMetricSli.GoodEvents.Query,
+			GoodEvents: &slos.Metric{
+				Query: &s.SliType.RequestBasedMetricSli.GoodEvents.Query,
 			},
-			TotalEvents: slos.Metric{
-				Query: s.SliType.RequestBasedMetricSli.TotalEvents.Query,
+			TotalEvents: &slos.Metric{
+				Query: &s.SliType.RequestBasedMetricSli.TotalEvents.Query,
 			},
 		},
 	}, nil
@@ -235,19 +236,22 @@ func (s *SLOSpec) ExtractWindowBasedMetricSli() (*slos.SloWindowBasedMetricSli, 
 		return nil, fmt.Errorf("error expanding time frame: %w", err)
 	}
 
+	targetThresholdPercentage := float32(s.TargetThresholdPercentage.AsApproximateFloat64())
+	windowBasedMetricSliThreshold := float32(s.SliType.WindowBasedMetricSli.Threshold.AsApproximateFloat64())
+
 	return &slos.SloWindowBasedMetricSli{
-		Name:                      s.Name,
+		Name:                      &s.Name,
 		Description:               s.Description,
 		Labels:                    s.Labels,
 		SloTimeFrame:              timeFrame,
-		TargetThresholdPercentage: float32(s.TargetThresholdPercentage.AsApproximateFloat64()),
+		TargetThresholdPercentage: &targetThresholdPercentage,
 		WindowBasedMetricSli: &slos.WindowBasedMetricSli{
-			Query: slos.Metric{
-				Query: s.SliType.WindowBasedMetricSli.Query.Query,
+			Query: &slos.Metric{
+				Query: &s.SliType.WindowBasedMetricSli.Query.Query,
 			},
-			Window:             WindowSloWindowSchemaToOpenAPI[s.SliType.WindowBasedMetricSli.Window],
-			ComparisonOperator: ComparisonOperatorSchemaToOpenAPI[s.SliType.WindowBasedMetricSli.ComparisonOperator],
-			Threshold:          float32(s.SliType.WindowBasedMetricSli.Threshold.AsApproximateFloat64()),
+			Window:             WindowSloWindowSchemaToOpenAPI[s.SliType.WindowBasedMetricSli.Window].Ptr(),
+			ComparisonOperator: ComparisonOperatorSchemaToOpenAPI[s.SliType.WindowBasedMetricSli.ComparisonOperator].Ptr(),
+			Threshold:          &windowBasedMetricSliThreshold,
 		},
 	}, nil
 }

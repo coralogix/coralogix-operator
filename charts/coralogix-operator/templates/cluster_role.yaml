@@ -3,8 +3,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: {{ include "coralogixOperator.fullname" . }}
-  labels:
-    {{- include "coralogixOperator.labels" . | nindent 4 }}
+  labels: {{- include "coralogixOperator.labels" . | nindent 4 }}
 rules:
   - nonResourceURLs:
       - /metrics
@@ -63,7 +62,6 @@ rules:
       - dashboardsfolders
       - events2metrics
       - globalrouters
-      - groups
       - integrations
       - ipaccesses
       - outboundwebhooks
@@ -98,7 +96,6 @@ rules:
       - dashboardsfolders/finalizers
       - events2metrics/finalizers
       - globalrouters/finalizers
-      - groups/finalizers
       - integrations/finalizers
       - ipaccesses/finalizers
       - outboundwebhooks/finalizers
@@ -127,7 +124,6 @@ rules:
       - dashboardsfolders/status
       - events2metrics/status
       - globalrouters/status
-      - groups/status
       - integrations/status
       - ipaccesses/status
       - outboundwebhooks/status

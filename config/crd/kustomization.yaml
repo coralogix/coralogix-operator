@@ -10,7 +10,6 @@ resources:
   - bases/coralogix.com_connectors.yaml
   - bases/coralogix.com_customroles.yaml
   - bases/coralogix.com_scopes.yaml
-  - bases/coralogix.com_groups.yaml
   - bases/coralogix.com_globalrouters.yaml
   - bases/coralogix.com_tcologspolicies.yaml
   - bases/coralogix.com_tcotracespolicies.yaml
