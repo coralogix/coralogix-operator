@@ -105,7 +105,7 @@ func (g *Group) ExtractCreateGroupRequest(
 		return nil, err
 	}
 
-	roleId, err := g.ExtractRoleId(*g.Spec.CustomRole)
+	roleId, err := g.ExtractRoleId()
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +139,7 @@ func (g *Group) ExtractUpdateGroupRequest(
 		return nil, err
 	}
 
-	roleId, err := g.ExtractRoleId(*g.Spec.CustomRole)
+	roleId, err := g.ExtractRoleId()
 	if err != nil {
 		return nil, err
 	}
@@ -216,16 +216,19 @@ func (g *Group) ExtractUsersIDs(ctx context.Context, cxClient *cxsdk.ClientSet) 
 	return usersIDs, nil
 }
 
-func (g *Group) ExtractRoleId(customRole GroupCustomRole) (int64, error) {
+func (g *Group) ExtractRoleId() (int64, error) {
+	if g.Spec.CustomRole == nil {
+		return 0, nil
+	}
 	var namespace string
-	if customRole.ResourceRef.Namespace != nil {
-		namespace = *customRole.ResourceRef.Namespace
+	if ns := g.Spec.CustomRole.ResourceRef.Namespace; ns != nil {
+		namespace = *ns
 	} else {
 		namespace = g.Namespace
 	}
 
 	cr := &CustomRole{}
-	if err := config.GetClient().Get(context.Background(), client.ObjectKey{Name: customRole.ResourceRef.Name, Namespace: namespace}, cr); err != nil {
+	if err := config.GetClient().Get(context.Background(), client.ObjectKey{Name: g.Spec.CustomRole.ResourceRef.Name, Namespace: namespace}, cr); err != nil {
 		return 0, err
 	}
 
@@ -234,7 +237,7 @@ func (g *Group) ExtractRoleId(customRole GroupCustomRole) (int64, error) {
 	}
 
 	if cr.Status.ID == nil {
-		return 0, fmt.Errorf("ID is not populated for CustomRole %s", customRole.ResourceRef.Name)
+		return 0, fmt.Errorf("ID is not populated for CustomRole %s", g.Spec.CustomRole.ResourceRef.Name)
 	}
 
 	roleID, err := strconv.Atoi(*cr.Status.ID)
