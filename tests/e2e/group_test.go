@@ -70,11 +70,9 @@ var _ = Describe("Group", Ordered, func() {
 						Name: scopeName,
 					},
 				},
-				CustomRoles: []coralogixv1alpha1.GroupCustomRole{
-					{
-						ResourceRef: coralogixv1alpha1.ResourceRef{
-							Name: customRoleName,
-						},
+				CustomRole: &coralogixv1alpha1.GroupCustomRole{
+					ResourceRef: coralogixv1alpha1.ResourceRef{
+						Name: customRoleName,
 					},
 				},
 			},

@@ -50,28 +50,24 @@ spec:
           spec:
             description: GroupSpec defines the desired state of Coralogix Group.
             properties:
-              customRoles:
+              customRole:
                 description: Custom roles applied to the group.
-                items:
-                  description: Custom role reference.
-                  properties:
-                    resourceRef:
-                      description: Reference to the custom role within the cluster.
-                      properties:
-                        name:
-                          description: Name of the resource (not id).
-                          type: string
-                        namespace:
-                          description: Kubernetes namespace.
-                          type: string
-                      required:
-                      - name
-                      type: object
-                  required:
-                  - resourceRef
-                  type: object
-                minItems: 1
-                type: array
+                properties:
+                  resourceRef:
+                    description: Reference to the custom role within the cluster.
+                    properties:
+                      name:
+                        description: Name of the resource (not id).
+                        type: string
+                      namespace:
+                        description: Kubernetes namespace.
+                        type: string
+                    required:
+                    - name
+                    type: object
+                required:
+                - resourceRef
+                type: object
               description:
                 description: Description of the group.
                 type: string
@@ -109,7 +105,6 @@ spec:
                 - resourceRef
                 type: object
             required:
-            - customRoles
             - name
             type: object
           status:
