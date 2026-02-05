@@ -2217,17 +2217,19 @@ func getSloId(listingSloProperties *GetResourceRefProperties, sloRef SloRef) (st
 
 func convertSloBackendNameToId(listingSloProperties *GetResourceRefProperties, name *string) (string, error) {
 	listingSloProperties.Log.V(1).Info("Listing SLOs from the backend")
-	filters := slos.SloFilters{
-		Filters: []slos.SloFilter{
-			{
-				Field: slos.SloFilterField{
-					SloFilterFieldConstFilter: &slos.SloFilterFieldConstFilter{
-						ConstFilter: slos.SLOCONSTANTFILTERFIELD_SLO_CONST_FILTER_FIELD_SLO_NAME.Ptr(),
-					},
+	filters := []slos.SloFilter{
+		{
+			Field: &slos.SloFilterField{
+				SloFilterFieldConstFilter: &slos.SloFilterFieldConstFilter{
+					ConstFilter: slos.SLOCONSTANTFILTERFIELD_SLO_CONST_FILTER_FIELD_SLO_NAME.Ptr(),
 				},
-				Predicate: slos.SloFilterPredicate{
-					Is: &slos.IsFilterPredicate{
-						Is: []string{*name},
+			},
+			Predicate: &slos.SloFilterPredicate{
+				Is: &slos.SloFilterPredicateIs{
+					IsFilterPredicateStringValues: &slos.IsFilterPredicateStringValues{
+						StringValues: &slos.StringValues{
+							Values: []string{*name},
+						},
 					},
 				},
 			},
@@ -2243,13 +2245,13 @@ func convertSloBackendNameToId(listingSloProperties *GetResourceRefProperties, n
 	for _, slo := range listResp.Slos {
 		switch {
 		case slo.SloWindowBasedMetricSli != nil:
-			if slo.SloWindowBasedMetricSli.Name == *name {
+			if ptr.Deref(slo.SloWindowBasedMetricSli.Name, "") == *name {
 				if slo.SloWindowBasedMetricSli.Id != nil {
 					return *slo.SloWindowBasedMetricSli.Id, nil
 				}
 			}
 		case slo.SloRequestBasedMetricSli != nil:
-			if slo.SloRequestBasedMetricSli.Name == *name {
+			if ptr.Deref(slo.SloRequestBasedMetricSli.Name, "") == *name {
 				if slo.SloRequestBasedMetricSli.Id != nil {
 					return *slo.SloRequestBasedMetricSli.Id, nil
 				}
