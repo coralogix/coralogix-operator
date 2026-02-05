@@ -11,12 +11,13 @@ metadata:
 spec:
   name: group-sample
   description: "This is a sample group"
+  groupType: open
   members:
     - userName: example@coralogix.com
     - userName: example2@coralogix.com
   scope:
     resourceRef:
       name: scope-sample
-  customRoles:
-    - resourceRef:
+  customRole:
+    resourceRef:
         name: custom-role-sample

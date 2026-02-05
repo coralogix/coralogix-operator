@@ -61,6 +61,7 @@ var _ = Describe("Group", Ordered, func() {
 			Spec: coralogixv1alpha1.GroupSpec{
 				Name:        groupName,
 				Description: ptr.To("This is a sample group"),
+				GroupType:   ptr.To("open"),
 				Members: []coralogixv1alpha1.Member{
 					{UserName: "example@coralogix.com"},
 					{UserName: "example2@coralogix.com"},
