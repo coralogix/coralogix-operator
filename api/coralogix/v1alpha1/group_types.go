@@ -29,6 +29,15 @@ import (
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 )
 
+var (
+	groupTypeSchemaToOpenAPI = map[string]groups.GroupType{
+		"unspecified": groups.GROUPTYPE_GROUP_TYPE_UNSPECIFIED,
+		"open":        groups.GROUPTYPE_GROUP_TYPE_OPEN,
+		"closed":      groups.GROUPTYPE_GROUP_TYPE_CLOSED,
+		"restricted":  groups.GROUPTYPE_GROUP_TYPE_RESTRICTED,
+	}
+)
+
 // GroupSpec defines the desired state of Coralogix Group.
 type GroupSpec struct {
 	// Name of the group.
@@ -36,6 +45,11 @@ type GroupSpec struct {
 
 	// Description of the group.
 	Description *string `json:"description,omitempty"`
+
+	// Type of the group.
+	// +optional
+	// +kubebuilder:validation:Enum=unspecified;open;closed;restricted
+	GroupType *string `json:"groupType,omitempty"`
 
 	// Members of the group.
 	// +optional
@@ -81,6 +95,11 @@ type ResourceRef struct {
 func (g *Group) ExtractCreateGroupRequest(
 	ctx context.Context,
 	cxClient *cxsdk.ClientSet) (*groups.CreateTeamGroupRequest, error) {
+	var groupType *groups.GroupType
+	if g.Spec.GroupType != nil {
+		groupType = groupTypeSchemaToOpenAPI[*g.Spec.GroupType].Ptr()
+	}
+
 	usersIds, err := g.ExtractUsersIDs(ctx, cxClient)
 	if err != nil {
 		return nil, err
@@ -99,6 +118,7 @@ func (g *Group) ExtractCreateGroupRequest(
 	return &groups.CreateTeamGroupRequest{
 		Name:        groups.PtrString(g.Spec.Name),
 		Description: g.Spec.Description,
+		GroupType:   groupType,
 		UserIds:     usersIds,
 		RoleId:      &roleId,
 		Scope: &groups.V2Scope{
@@ -109,6 +129,11 @@ func (g *Group) ExtractCreateGroupRequest(
 
 func (g *Group) ExtractUpdateGroupRequest(
 	ctx context.Context, cxClient *cxsdk.ClientSet) (*groups.UpdateTeamGroupRequest, error) {
+	var groupType *groups.GroupType
+	if g.Spec.GroupType != nil {
+		groupType = groupTypeSchemaToOpenAPI[*g.Spec.GroupType].Ptr()
+	}
+
 	usersIds, err := g.ExtractUsersIDs(ctx, cxClient)
 	if err != nil {
 		return nil, err
@@ -127,6 +152,7 @@ func (g *Group) ExtractUpdateGroupRequest(
 	return &groups.UpdateTeamGroupRequest{
 		Name:        groups.PtrString(g.Spec.Name),
 		Description: g.Spec.Description,
+		GroupType:   groupType,
 		UserUpdates: &groups.UserUpdates{
 			Operation: &groups.UserUpdatesOperation{
 				UserUpdatesOperationSet: &groups.UserUpdatesOperationSet{

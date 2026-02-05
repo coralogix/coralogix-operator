@@ -72,6 +72,14 @@ spec:
               description:
                 description: Description of the group.
                 type: string
+              groupType:
+                description: Type of the group.
+                enum:
+                - unspecified
+                - open
+                - closed
+                - restricted
+                type: string
               members:
                 description: Members of the group.
                 items:

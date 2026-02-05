@@ -1943,6 +1943,11 @@ func (in *GroupSpec) DeepCopyInto(out *GroupSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.GroupType != nil {
+		in, out := &in.GroupType, &out.GroupType
+		*out = new(string)
+		**out = **in
+	}
 	if in.Members != nil {
 		in, out := &in.Members, &out.Members
 		*out = make([]Member, len(*in))

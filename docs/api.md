@@ -11376,6 +11376,15 @@ GroupSpec defines the desired state of Coralogix Group.
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>groupType</b></td>
+        <td>enum</td>
+        <td>
+          Type of the group.<br/>
+          <br/>
+            <i>Enum</i>: unspecified, open, closed, restricted<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#groupspecmembersindex">members</a></b></td>
         <td>[]object</td>
         <td>
