@@ -28,7 +28,7 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	oapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
-	groups "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/team_permissions_management_service"
+	groups "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/team_groups_management_service"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
@@ -37,7 +37,7 @@ import (
 
 // GroupReconciler reconciles a Group object
 type GroupReconciler struct {
-	GroupsClient *groups.TeamPermissionsManagementServiceAPIService
+	GroupsClient *groups.TeamGroupsManagementServiceAPIService
 	CXClientSet  *cxsdk.ClientSet
 	Interval     time.Duration
 }
@@ -66,7 +66,7 @@ func (r *GroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 	}
 	log.Info("Creating remote group", "group", utils.FormatJSON(createRequest))
 	createResponse, httpResp, err := r.GroupsClient.
-		TeamPermissionsMgmtServiceCreateTeamGroup(ctx).
+		GroupsMgmtServiceCreateTeamGroup(ctx).
 		CreateTeamGroupRequest(*createRequest).
 		Execute()
 	if err != nil {
@@ -75,7 +75,7 @@ func (r *GroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 	log.Info("Remote group created", "group", utils.FormatJSON(createResponse))
 
 	group.Status = coralogixv1alpha1.GroupStatus{
-		ID: ptr.To(strconv.Itoa(int(*createResponse.GroupId.Id))),
+		ID: ptr.To(strconv.Itoa(int(*createResponse.Group.GroupId))),
 	}
 
 	return nil
@@ -83,13 +83,18 @@ func (r *GroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 
 func (r *GroupReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	group := obj.(*coralogixv1alpha1.Group)
-	updateRequest, err := group.ExtractUpdateGroupRequest(ctx, r.CXClientSet, *group.Status.ID)
+	updateRequest, err := group.ExtractUpdateGroupRequest(ctx, r.CXClientSet)
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
 	}
 	log.Info("Updating remote group", "group", utils.FormatJSON(updateRequest))
+	id, err := strconv.Atoi(*group.Status.ID)
+	if err != nil {
+		return fmt.Errorf("error converting group ID to int: %w", err)
+	}
+
 	updateResponse, httpResp, err := r.GroupsClient.
-		TeamPermissionsMgmtServiceUpdateTeamGroup(ctx).
+		GroupsMgmtServiceUpdateTeamGroup(ctx, int64(id)).
 		UpdateTeamGroupRequest(*updateRequest).
 		Execute()
 	if err != nil {
@@ -102,14 +107,14 @@ func (r *GroupReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 
 func (r *GroupReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
 	group := obj.(*coralogixv1alpha1.Group)
-	log.Info("Deleting group from remote system", "id", *group.Status.ID)
 	id, err := strconv.Atoi(*group.Status.ID)
 	if err != nil {
-		return fmt.Errorf("error on converting custom-role id to int: %w", err)
+		return fmt.Errorf("error converting group ID to int: %w", err)
 	}
 
+	log.Info("Deleting group from remote system", "id", *group.Status.ID)
 	_, httpResp, err := r.GroupsClient.
-		TeamPermissionsMgmtServiceDeleteTeamGroup(ctx, int64(id)).
+		GroupsMgmtServiceDeleteTeamGroup(ctx, int64(id)).
 		Execute()
 	if err != nil {
 		if apiErr := oapicxsdk.NewAPIError(httpResp, err); !oapicxsdk.IsNotFound(apiErr) {

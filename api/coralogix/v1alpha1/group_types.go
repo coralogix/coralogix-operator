@@ -21,11 +21,10 @@ import (
 	"strconv"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
-	groups "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/team_permissions_management_service"
+	groups "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/team_groups_management_service"
 
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 )
@@ -42,9 +41,9 @@ type GroupSpec struct {
 	// +optional
 	Members []Member `json:"members,omitempty"`
 
-	// +kubebuilder:validation:MinItems=1
 	// Custom roles applied to the group.
-	CustomRoles []GroupCustomRole `json:"customRoles"`
+	// +optional
+	CustomRole *GroupCustomRole `json:"customRole,omitempty"`
 
 	// Scope attached to the group.
 	// +optional
@@ -87,7 +86,7 @@ func (g *Group) ExtractCreateGroupRequest(
 		return nil, err
 	}
 
-	rolesIds, err := g.ExtractRolesIds()
+	roleId, err := g.ExtractRoleId(*g.Spec.CustomRole)
 	if err != nil {
 		return nil, err
 	}
@@ -98,23 +97,24 @@ func (g *Group) ExtractCreateGroupRequest(
 	}
 
 	return &groups.CreateTeamGroupRequest{
-		Name:           groups.PtrString(g.Spec.Name),
-		Description:    g.Spec.Description,
-		UserIds:        usersIds,
-		RoleIds:        rolesIds,
-		NextGenScopeId: scopeId,
+		Name:        groups.PtrString(g.Spec.Name),
+		Description: g.Spec.Description,
+		UserIds:     usersIds,
+		RoleId:      &roleId,
+		Scope: &groups.V2Scope{
+			ScopeId: scopeId,
+		},
 	}, nil
 }
 
 func (g *Group) ExtractUpdateGroupRequest(
-	ctx context.Context, cxClient *cxsdk.ClientSet,
-	groupID string) (*groups.UpdateTeamGroupRequest, error) {
+	ctx context.Context, cxClient *cxsdk.ClientSet) (*groups.UpdateTeamGroupRequest, error) {
 	usersIds, err := g.ExtractUsersIDs(ctx, cxClient)
 	if err != nil {
 		return nil, err
 	}
 
-	rolesIds, err := g.ExtractRolesIds()
+	roleId, err := g.ExtractRoleId(*g.Spec.CustomRole)
 	if err != nil {
 		return nil, err
 	}
@@ -124,22 +124,40 @@ func (g *Group) ExtractUpdateGroupRequest(
 		return nil, err
 	}
 
-	id, err := strconv.Atoi(groupID)
-	if err != nil {
-		return nil, err
-	}
-
 	return &groups.UpdateTeamGroupRequest{
-		GroupId:        ptr.To(groups.TeamGroupId{Id: groups.PtrInt64(int64(id))}),
-		Name:           groups.PtrString(g.Spec.Name),
-		Description:    g.Spec.Description,
-		UserUpdates:    ptr.To(groups.UserUpdates{UserIds: usersIds}),
-		RoleUpdates:    ptr.To(groups.RoleUpdates{RoleIds: rolesIds}),
-		NextGenScopeId: scopeId,
+		Name:        groups.PtrString(g.Spec.Name),
+		Description: g.Spec.Description,
+		UserUpdates: &groups.UserUpdates{
+			Operation: &groups.UserUpdatesOperation{
+				UserUpdatesOperationSet: &groups.UserUpdatesOperationSet{
+					Set: &groups.UserIdList{
+						UserIds: usersIds,
+					},
+				},
+			},
+		},
+		RoleUpdate: &groups.RoleUpdate{
+			Action: &groups.RoleUpdateAction{
+				RoleUpdateActionSetRoleId: &groups.RoleUpdateActionSetRoleId{
+					SetRoleId: &groups.SetRoleId{
+						Value: &roleId,
+					},
+				},
+			},
+		},
+		ScopeUpdate: &groups.ScopeUpdate{
+			Action: &groups.ScopeUpdateAction{
+				ScopeUpdateActionSetScopeId: &groups.ScopeUpdateActionSetScopeId{
+					SetScopeId: &groups.SetScopeId{
+						Value: scopeId,
+					},
+				},
+			},
+		},
 	}, nil
 }
 
-func (g *Group) ExtractUsersIDs(ctx context.Context, cxClient *cxsdk.ClientSet) ([]groups.V1UserId, error) {
+func (g *Group) ExtractUsersIDs(ctx context.Context, cxClient *cxsdk.ClientSet) ([]string, error) {
 	if g.Spec.Members == nil {
 		return nil, nil
 	}
@@ -149,14 +167,14 @@ func (g *Group) ExtractUsersIDs(ctx context.Context, cxClient *cxsdk.ClientSet) 
 		return nil, err
 	}
 
-	var usersIDs []groups.V1UserId
+	var usersIDs []string
 	var errs error
 	for _, member := range g.Spec.Members {
 		found := false
 		for _, user := range users {
 			if user.UserName == member.UserName {
 				found = true
-				usersIDs = append(usersIDs, groups.V1UserId{Id: user.ID})
+				usersIDs = append(usersIDs, *user.ID)
 				break
 			}
 		}
@@ -172,26 +190,7 @@ func (g *Group) ExtractUsersIDs(ctx context.Context, cxClient *cxsdk.ClientSet) 
 	return usersIDs, nil
 }
 
-func (g *Group) ExtractRolesIds() ([]groups.RoleId, error) {
-	var rolesIds []groups.RoleId
-	var errs error
-	for _, customRole := range g.Spec.CustomRoles {
-		roleID, err := g.getRoleIDFromCustomRole(customRole)
-		if err != nil {
-			errs = errors.Join(errs, err)
-			continue
-		}
-		rolesIds = append(rolesIds, *roleID)
-	}
-
-	if errs != nil {
-		return nil, errs
-	}
-
-	return rolesIds, nil
-}
-
-func (g *Group) getRoleIDFromCustomRole(customRole GroupCustomRole) (*groups.RoleId, error) {
+func (g *Group) ExtractRoleId(customRole GroupCustomRole) (int64, error) {
 	var namespace string
 	if customRole.ResourceRef.Namespace != nil {
 		namespace = *customRole.ResourceRef.Namespace
@@ -201,23 +200,23 @@ func (g *Group) getRoleIDFromCustomRole(customRole GroupCustomRole) (*groups.Rol
 
 	cr := &CustomRole{}
 	if err := config.GetClient().Get(context.Background(), client.ObjectKey{Name: customRole.ResourceRef.Name, Namespace: namespace}, cr); err != nil {
-		return nil, err
+		return 0, err
 	}
 
 	if !config.GetConfig().Selector.Matches(cr.Labels, cr.Namespace) {
-		return nil, fmt.Errorf("custom role %s does not match selector", cr.Name)
+		return 0, fmt.Errorf("custom role %s does not match selector", cr.Name)
 	}
 
 	if cr.Status.ID == nil {
-		return nil, fmt.Errorf("ID is not populated for CustomRole %s", customRole.ResourceRef.Name)
+		return 0, fmt.Errorf("ID is not populated for CustomRole %s", customRole.ResourceRef.Name)
 	}
 
 	roleID, err := strconv.Atoi(*cr.Status.ID)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
-	return &groups.RoleId{Id: groups.PtrInt64(int64(roleID))}, nil
+	return int64(roleID), nil
 }
 
 func (g *Group) ExtractScopeId() (*string, error) {
