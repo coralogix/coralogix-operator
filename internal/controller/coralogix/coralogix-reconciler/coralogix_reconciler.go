@@ -70,16 +70,15 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 	if !obj.HasIDInStatus() {
 		log.Info("Resource ID is missing; handling creation for resource")
 		if err := r.HandleCreation(ctx, log, obj); err != nil {
+			if oapisdk.IsDeserializationError(err) {
+				return ManageErrorWithRequeue(ctx, obj, utils.ReasonDeserializationError, err)
+			}
 			log.Error(err, "Error handling creation")
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonRemoteCreationFailed, err)
 		}
 
 		if err := config.GetClient().Status().Update(ctx, obj); err != nil {
-			log.Error(err, "Error updating status after creation; handling deletion")
-			if err := r.HandleDeletion(ctx, log, obj); err != nil {
-				log.Error(err, "Error deleting from remote after status update failure")
-				return ManageErrorWithRequeue(ctx, obj, utils.ReasonRemoteDeletionFailed, err)
-			}
+			log.Error(err, "Error updating status after creation")
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 		}
 
@@ -95,6 +94,9 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 		log.Info("Resource is being deleted; handling deletion")
 		if err := r.HandleDeletion(ctx, log, obj); err != nil {
 			log.Error(err, "Error deleting from remote")
+			if oapisdk.IsDeserializationError(err) {
+				return ManageErrorWithRequeue(ctx, obj, utils.ReasonDeserializationError, err)
+			}
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonRemoteDeletionFailed, err)
 		}
 
@@ -147,6 +149,8 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 			}
 
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonRemoteResourceNotFound, fmt.Errorf("%s not found on remote: %w", gvk, err))
+		} else if oapisdk.IsDeserializationError(err) {
+			return ManageErrorWithRequeue(ctx, obj, utils.ReasonDeserializationError, err)
 		}
 		return ManageErrorWithRequeue(ctx, obj, utils.ReasonRemoteUpdateFailed, fmt.Errorf("error on updating %s: %w", gvk, err))
 	}
@@ -190,6 +194,13 @@ func ManageErrorWithRequeue(ctx context.Context, obj coralogix.Object, reason st
 	}
 
 	conditions := obj.GetConditions()
+
+	// in case of deserialization error, don't update the condition again to avoid infinite loop, and exit silently.
+	if reason == utils.ReasonDeserializationError &&
+		utils.GetReasonForRemoteSyncedCondition(conditions) == utils.ReasonDeserializationError {
+		return reconcile.Result{}, nil
+	}
+
 	if utils.SetSyncedConditionFalse(&conditions, obj.GetGeneration(), reason, err.Error()) || obj.GetPrintableStatus() != "RemoteUnsynced" {
 		obj.SetConditions(conditions)
 		obj.SetPrintableStatus("RemoteUnsynced")
