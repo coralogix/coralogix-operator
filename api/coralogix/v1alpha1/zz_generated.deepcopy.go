@@ -1943,17 +1943,20 @@ func (in *GroupSpec) DeepCopyInto(out *GroupSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.GroupType != nil {
+		in, out := &in.GroupType, &out.GroupType
+		*out = new(string)
+		**out = **in
+	}
 	if in.Members != nil {
 		in, out := &in.Members, &out.Members
 		*out = make([]Member, len(*in))
 		copy(*out, *in)
 	}
-	if in.CustomRoles != nil {
-		in, out := &in.CustomRoles, &out.CustomRoles
-		*out = make([]GroupCustomRole, len(*in))
-		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
-		}
+	if in.CustomRole != nil {
+		in, out := &in.CustomRole, &out.CustomRole
+		*out = new(GroupCustomRole)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.Scope != nil {
 		in, out := &in.Scope, &out.Scope

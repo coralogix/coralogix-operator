@@ -11355,13 +11355,6 @@ GroupSpec defines the desired state of Coralogix Group.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#groupspeccustomrolesindex">customRoles</a></b></td>
-        <td>[]object</td>
-        <td>
-          Custom roles applied to the group.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
@@ -11369,10 +11362,26 @@ GroupSpec defines the desired state of Coralogix Group.
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b><a href="#groupspeccustomrole">customRole</a></b></td>
+        <td>object</td>
+        <td>
+          Custom roles applied to the group.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
           Description of the group.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>groupType</b></td>
+        <td>enum</td>
+        <td>
+          Type of the group.<br/>
+          <br/>
+            <i>Enum</i>: unspecified, open, closed, restricted<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -11393,12 +11402,12 @@ GroupSpec defines the desired state of Coralogix Group.
 </table>
 
 
-### Group.spec.customRoles[index]
+### Group.spec.customRole
 <sup><sup>[↩ Parent](#groupspec)</sup></sup>
 
 
 
-Custom role reference.
+Custom roles applied to the group.
 
 <table>
     <thead>
@@ -11410,7 +11419,7 @@ Custom role reference.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#groupspeccustomrolesindexresourceref">resourceRef</a></b></td>
+        <td><b><a href="#groupspeccustomroleresourceref">resourceRef</a></b></td>
         <td>object</td>
         <td>
           Reference to the custom role within the cluster.<br/>
@@ -11420,8 +11429,8 @@ Custom role reference.
 </table>
 
 
-### Group.spec.customRoles[index].resourceRef
-<sup><sup>[↩ Parent](#groupspeccustomrolesindex)</sup></sup>
+### Group.spec.customRole.resourceRef
+<sup><sup>[↩ Parent](#groupspeccustomrole)</sup></sup>
 
 
 
