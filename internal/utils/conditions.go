@@ -26,6 +26,7 @@ const (
 	ReasonRemoteDeletionFailed     = "RemoteDeletionFailed"
 	ReasonRemoteResourceNotFound   = "RemoteResourceNotFound"
 	ReasonInternalK8sError         = "InternalK8sError"
+	ReasonDeserializationError     = "DeserializationError"
 
 	ConditionTypeRemoteSynced = "RemoteSynced"
 )
@@ -50,4 +51,13 @@ func SetSyncedConditionTrue(conditions *[]metav1.Condition, observedGeneration i
 		Message:            "Remote resource synced",
 		ObservedGeneration: observedGeneration,
 	})
+}
+
+// GetReasonForRemoteSyncedCondition returns the Reason for the RemoteSynced condition from the given conditions slice.
+func GetReasonForRemoteSyncedCondition(conditions []metav1.Condition) string {
+	cond := meta.FindStatusCondition(conditions, ConditionTypeRemoteSynced)
+	if cond != nil {
+		return cond.Reason
+	}
+	return ""
 }
