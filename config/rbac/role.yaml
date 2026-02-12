@@ -40,6 +40,7 @@ rules:
   - archivelogstargets
   - archivemetricstargets
   - connectors
+  - customenrichments
   - customroles
   - dashboards
   - dashboardsfolders
@@ -75,6 +76,7 @@ rules:
   - archivelogstargets/finalizers
   - archivemetricstargets/finalizers
   - connectors/finalizers
+  - customenrichments/finalizers
   - customroles/finalizers
   - dashboards/finalizers
   - dashboardsfolders/finalizers
@@ -104,6 +106,7 @@ rules:
   - archivelogstargets/status
   - archivemetricstargets/status
   - connectors/status
+  - customenrichments/status
   - customroles/status
   - dashboards/status
   - dashboardsfolders/status

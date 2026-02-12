@@ -47,6 +47,7 @@ const (
 	SLOKind                   = "SLO"
 	Events2MetricKind         = "Events2Metric"
 	IPAccess                  = "IPAccess"
+	CustomEnrichmentKind      = "CustomEnrichment"
 
 	TrackPrometheusRuleAlertsLabelKey         = "app.coralogix.com/track-alerting-rules"
 	TrackPrometheusRuleRecordingRulesLabelKey = "app.coralogix.com/track-recording-rules"
