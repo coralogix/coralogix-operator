@@ -6906,6 +6906,8 @@ Resource Types:
 
 - [DashboardsFolder](#dashboardsfolder)
 
+- [Enrichment](#enrichment)
+
 - [Events2Metric](#events2metric)
 
 - [GlobalRouter](#globalrouter)
@@ -10056,6 +10058,476 @@ DashboardsFolderStatus defines the observed state of DashboardsFolder.
 
 ### DashboardsFolder.status.conditions[index]
 <sup><sup>[↩ Parent](#dashboardsfolderstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## Enrichment
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+Enrichment is the Schema for the enrichments API.
+See also https://coralogix.com/docs/user-guides/data-transformation/enrichments/custom-enrichment/#configuration.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>Enrichment</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#enrichmentspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          EnrichmentSpec defines the desired state of Enrichment.<br/>
+          <br/>
+            <i>Validations</i>:<li>(has(self.geoIp) ? 1 : 0) + (has(self.suspiciousIp) ? 1 : 0) + (has(self.aws) ? 1 : 0) + (has(self.custom) ? 1 : 0) == 1: Exactly one of geoIp, suspiciousIp, aws, or custom must be set</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#enrichmentstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          EnrichmentStatus defines the observed state of Enrichment.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Enrichment.spec
+<sup><sup>[↩ Parent](#enrichment)</sup></sup>
+
+
+
+EnrichmentSpec defines the desired state of Enrichment.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#enrichmentspecaws">aws</a></b></td>
+        <td>object</td>
+        <td>
+          Coralogix allows you to enrich your logs with the data from a chosen AWS resource.
+The feature enriches every log that contains a particular resourceId,
+associated with the metadata of a chosen AWS resource.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#enrichmentspeccustom">custom</a></b></td>
+        <td>object</td>
+        <td>
+          Custom Log Enrichment with Coralogix enables you to easily enrich your log data.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#enrichmentspecgeoip">geoIp</a></b></td>
+        <td>object</td>
+        <td>
+          Set of fields to enrich with geo_ip information.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#enrichmentspecsuspiciousip">suspiciousIp</a></b></td>
+        <td>object</td>
+        <td>
+          Coralogix allows you to automatically discover threats on your web servers
+by enriching your logs with the most updated IP blacklists.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Enrichment.spec.aws
+<sup><sup>[↩ Parent](#enrichmentspec)</sup></sup>
+
+
+
+Coralogix allows you to enrich your logs with the data from a chosen AWS resource.
+The feature enriches every log that contains a particular resourceId,
+associated with the metadata of a chosen AWS resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>resourceType</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Enrichment.spec.custom
+<sup><sup>[↩ Parent](#enrichmentspec)</sup></sup>
+
+
+
+Custom Log Enrichment with Coralogix enables you to easily enrich your log data.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#enrichmentspeccustomdataset">dataSet</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>enrichedFieldName</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>selectedColumns</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Enrichment.spec.custom.dataSet
+<sup><sup>[↩ Parent](#enrichmentspeccustom)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#enrichmentspeccustomdatasetbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          BackendRef is a reference to a DataSet in the backend.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#enrichmentspeccustomdatasetresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          ResourceRef is a reference to a DataSet resource in the cluster.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Enrichment.spec.custom.dataSet.backendRef
+<sup><sup>[↩ Parent](#enrichmentspeccustomdataset)</sup></sup>
+
+
+
+BackendRef is a reference to a DataSet in the backend.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>integer</td>
+        <td>
+          ID of the DataSet in the backend.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Enrichment.spec.custom.dataSet.resourceRef
+<sup><sup>[↩ Parent](#enrichmentspeccustomdataset)</sup></sup>
+
+
+
+ResourceRef is a reference to a DataSet resource in the cluster.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource (not id).<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Enrichment.spec.geoIp
+<sup><sup>[↩ Parent](#enrichmentspec)</sup></sup>
+
+
+
+Set of fields to enrich with geo_ip information.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>withAsn</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Enrichment.spec.suspiciousIp
+<sup><sup>[↩ Parent](#enrichmentspec)</sup></sup>
+
+
+
+Coralogix allows you to automatically discover threats on your web servers
+by enriching your logs with the most updated IP blacklists.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Enrichment.status
+<sup><sup>[↩ Parent](#enrichment)</sup></sup>
+
+
+
+EnrichmentStatus defines the observed state of Enrichment.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#enrichmentstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Enrichment.status.conditions[index]
+<sup><sup>[↩ Parent](#enrichmentstatus)</sup></sup>
 
 
 

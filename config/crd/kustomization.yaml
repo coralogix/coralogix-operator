@@ -27,6 +27,7 @@ resources:
   - bases/coralogix.com_events2metrics.yaml
   - bases/coralogix.com_ipaccesses.yaml
   - bases/coralogix.com_customenrichments.yaml
+  - bases/coralogix.com_enrichments.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 #patchesStrategicMerge:

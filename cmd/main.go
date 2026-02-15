@@ -328,6 +328,13 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "CustomEnrichment")
 		os.Exit(1)
 	}
+	if err = (&v1alpha1controllers.EnrichmentReconciler{
+		EnrichmentsClient: oapiClientSet.Enrichments(),
+		Interval:          cfg.ReconcileIntervals[utils.EnrichmentKind],
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Enrichment")
+		os.Exit(1)
+	}
 
 	enablePromRuleController, err := shouldEnablePromRuleController(
 		context.Background(),
