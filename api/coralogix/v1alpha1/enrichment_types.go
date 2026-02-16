@@ -26,21 +26,30 @@ import (
 )
 
 // EnrichmentSpec defines the desired state of Enrichment.
-// +kubebuilder:validation:XValidation:rule="(has(self.geoIp) ? 1 : 0) + (has(self.suspiciousIp) ? 1 : 0) + (has(self.aws) ? 1 : 0) + (has(self.custom) ? 1 : 0) == 1", message="Exactly one of geoIp, suspiciousIp, aws, or custom must be set"
 type EnrichmentSpec struct {
+	// +kubebuilder:validation:MinItems=1
+	// List of enrichments to apply. Each enrichment must have exactly one of GeoIp, SuspiciousIp, Aws, or Custom set.
+	// Will overwrite the existing enrichments on the Coralogix side,
+	// so it should contain all enrichments that should be applied, not just the new ones.
+	Enrichments []EnrichmentType `json:"enrichments"`
+}
+
+// EnrichmentType must have exactly one of GeoIp, SuspiciousIp, Aws, or Custom set.
+// +kubebuilder:validation:XValidation:rule="(has(self.geoIp) ? 1 : 0) + (has(self.suspiciousIp) ? 1 : 0) + (has(self.aws) ? 1 : 0) + (has(self.custom) ? 1 : 0) == 1", message="Exactly one of geoIp, suspiciousIp, aws, or custom must be set"
+type EnrichmentType struct {
 	// Set of fields to enrich with geo_ip information.
 	// +optional
 	GeoIp *GeoIpEnrichmentType `json:"geoIp,omitempty"`
 
 	// Coralogix allows you to automatically discover threats on your web servers
 	// by enriching your logs with the most updated IP blacklists.
-	SuspiciousIp *SuspiciousIpEnrichment `json:"suspiciousIp,omitempty"`
+	SuspiciousIp *SuspiciousIpEnrichmentType `json:"suspiciousIp,omitempty"`
 
 	// Coralogix allows you to enrich your logs with the data from a chosen AWS resource.
 	// The feature enriches every log that contains a particular resourceId,
 	// associated with the metadata of a chosen AWS resource.
 	// +optional
-	Aws *AwsEnrichment `json:"aws,omitempty"`
+	Aws *AwsEnrichmentType `json:"aws,omitempty"`
 
 	// Custom Log Enrichment with Coralogix enables you to easily enrich your log data.
 	// +optional
@@ -54,11 +63,11 @@ type GeoIpEnrichmentType struct {
 	WithAsn *bool `json:"withAsn,omitempty"`
 }
 
-type SuspiciousIpEnrichment struct {
+type SuspiciousIpEnrichmentType struct {
 	FieldName string `json:"fieldName"`
 }
 
-type AwsEnrichment struct {
+type AwsEnrichmentType struct {
 	FieldName string `json:"fieldName"`
 
 	ResourceType string `json:"resourceType"`
@@ -74,21 +83,21 @@ type CustomEnrichmentType struct {
 	SelectedColumns []string `json:"selectedColumns,omitempty"`
 
 	// +kubebuilder:validation:XValidation:rule="has(self.backendRef) != has(self.resourceRef)", message="Exactly one of backendRef or resourceRef must be set"
-	DataSet DataSetRef `json:"dataSet"`
+	CustomEnrichmentRef CustomEnrichmentRef `json:"customEnrichmentRef"`
 }
 
-type DataSetRef struct {
-	// BackendRef is a reference to a DataSet in the backend.
+type CustomEnrichmentRef struct {
+	// BackendRef is a reference to a CustomEnrichment in the backend.
 	// +optional
-	BackendRef *DataSetBackendRef `json:"backendRef,omitempty"`
+	BackendRef *CustomEnrichmentBackendRef `json:"backendRef,omitempty"`
 
-	// ResourceRef is a reference to a DataSet resource in the cluster.
+	// ResourceRef is a reference to a CustomEnrichment resource in the cluster.
 	// +optional
 	ResourceRef *ResourceRef `json:"resourceRef,omitempty"`
 }
 
-type DataSetBackendRef struct {
-	// ID of the DataSet in the backend.
+type CustomEnrichmentBackendRef struct {
+	// ID of the CustomEnrichment in the backend.
 	Id uint32 `json:"id"`
 }
 
@@ -110,6 +119,8 @@ type EnrichmentStatus struct {
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // Enrichment is the Schema for the enrichments API.
+// Will overwrite the existing enrichments on the Coralogix side,
+// so it should contain all enrichments that should be applied, not just the new ones.
 // See also https://coralogix.com/docs/user-guides/data-transformation/enrichments/custom-enrichment/#configuration.
 type Enrichment struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -145,83 +156,88 @@ func (e *Enrichment) SetPrintableStatus(printableStatus string) {
 }
 
 func (e *Enrichment) HasIDInStatus() bool {
-	return e.Status.Id != nil && *e.Status.Id != ""
+	return true
 }
 
-func (e *Enrichment) ExtractEnrichmentsCreationRequest(ctx context.Context) (*enrichments.EnrichmentsCreationRequest, error) {
+func (e *Enrichment) ExtractAtomicOverwriteRequest(ctx context.Context) (
+	*enrichments.EnrichmentServiceAtomicOverwriteEnrichmentsRequest, error) {
 	var reqs []enrichments.EnrichmentRequestModel
-	if e.Spec.GeoIp != nil {
-		reqs = []enrichments.EnrichmentRequestModel{{
-			FieldName: e.Spec.GeoIp.FieldName,
-			EnrichmentType: enrichments.EnrichmentType{
-				EnrichmentTypeGeoIp: &enrichments.EnrichmentTypeGeoIp{
-					GeoIp: &enrichments.GeoIpType{
-						WithAsn: e.Spec.GeoIp.WithAsn,
+	for _, enrichment := range e.Spec.Enrichments {
+		if enrichment.GeoIp != nil {
+			reqs = append(reqs, enrichments.EnrichmentRequestModel{
+				FieldName: enrichment.GeoIp.FieldName,
+				EnrichmentType: enrichments.EnrichmentType{
+					EnrichmentTypeGeoIp: &enrichments.EnrichmentTypeGeoIp{
+						GeoIp: &enrichments.GeoIpType{
+							WithAsn: enrichment.GeoIp.WithAsn,
+						},
 					},
 				},
-			},
-		}}
-	} else if e.Spec.SuspiciousIp != nil {
-		reqs = []enrichments.EnrichmentRequestModel{{
-			FieldName: e.Spec.SuspiciousIp.FieldName,
-			EnrichmentType: enrichments.EnrichmentType{
-				EnrichmentTypeSuspiciousIp: &enrichments.EnrichmentTypeSuspiciousIp{},
-			},
-		}}
-	} else if e.Spec.Aws != nil {
-		reqs = []enrichments.EnrichmentRequestModel{{
-			FieldName: e.Spec.Aws.FieldName,
-			EnrichmentType: enrichments.EnrichmentType{
-				EnrichmentTypeAws: &enrichments.EnrichmentTypeAws{
-					Aws: &enrichments.AwsType{
-						ResourceType: enrichments.PtrString(e.Spec.Aws.ResourceType),
+			})
+		} else if enrichment.SuspiciousIp != nil {
+			reqs = append(reqs, enrichments.EnrichmentRequestModel{
+				FieldName: enrichment.SuspiciousIp.FieldName,
+				EnrichmentType: enrichments.EnrichmentType{
+					EnrichmentTypeSuspiciousIp: &enrichments.EnrichmentTypeSuspiciousIp{
+						SuspiciousIp: map[string]any{},
 					},
 				},
-			},
-		}}
-	} else if e.Spec.Custom != nil {
-		customEnrichmentID, err := e.ExtractCustomEnrichmentID(ctx, &e.Spec.Custom.DataSet)
-		if err != nil {
-			return nil, err
-		}
-
-		model := enrichments.EnrichmentRequestModel{
-			FieldName: e.Spec.Custom.FieldName,
-			EnrichmentType: enrichments.EnrichmentType{
-				EnrichmentTypeCustomEnrichment: &enrichments.EnrichmentTypeCustomEnrichment{
-					CustomEnrichment: &enrichments.CustomEnrichmentType{
-						Id: &customEnrichmentID,
+			})
+		} else if enrichment.Aws != nil {
+			reqs = append(reqs, enrichments.EnrichmentRequestModel{
+				FieldName: enrichment.Aws.FieldName,
+				EnrichmentType: enrichments.EnrichmentType{
+					EnrichmentTypeAws: &enrichments.EnrichmentTypeAws{
+						Aws: &enrichments.AwsType{
+							ResourceType: enrichments.PtrString(enrichment.Aws.ResourceType),
+						},
 					},
 				},
-			},
-		}
-		if e.Spec.Custom.EnrichedFieldName != nil {
-			model.EnrichedFieldName = e.Spec.Custom.EnrichedFieldName
-		}
+			})
+		} else if enrichment.Custom != nil {
+			customEnrichmentID, err := e.ExtractCustomEnrichmentID(ctx, &enrichment.Custom.CustomEnrichmentRef)
+			if err != nil {
+				return nil, err
+			}
 
-		if len(e.Spec.Custom.SelectedColumns) > 0 {
-			model.SelectedColumns = e.Spec.Custom.SelectedColumns
-		}
+			model := enrichments.EnrichmentRequestModel{
+				FieldName: enrichment.Custom.FieldName,
+				EnrichmentType: enrichments.EnrichmentType{
+					EnrichmentTypeCustomEnrichment: &enrichments.EnrichmentTypeCustomEnrichment{
+						CustomEnrichment: &enrichments.CustomEnrichmentType{
+							Id: &customEnrichmentID,
+						},
+					},
+				},
+			}
+			if enrichment.Custom.EnrichedFieldName != nil {
+				model.EnrichedFieldName = enrichment.Custom.EnrichedFieldName
+			}
 
-		reqs = []enrichments.EnrichmentRequestModel{model}
-	} else {
-		return nil, fmt.Errorf("invalid spec: exactly one of geoIp, suspiciousIp, aws, or custom must be set")
+			if len(enrichment.Custom.SelectedColumns) > 0 {
+				model.SelectedColumns = enrichment.Custom.SelectedColumns
+			}
+
+			reqs = append(reqs, model)
+		} else {
+			return nil, fmt.Errorf("invalid spec: exactly one of geoIp, suspiciousIp, aws, or custom must be set")
+		}
 	}
 
-	return &enrichments.EnrichmentsCreationRequest{
+	return &enrichments.EnrichmentServiceAtomicOverwriteEnrichmentsRequest{
 		RequestEnrichments: reqs,
 	}, nil
 }
 
-func (e *Enrichment) ExtractCustomEnrichmentID(ctx context.Context, dataSet *DataSetRef) (int64, error) {
-	if dataSet.BackendRef != nil {
-		return int64(dataSet.BackendRef.Id), nil
+func (e *Enrichment) ExtractCustomEnrichmentID(ctx context.Context, customEnrichment *CustomEnrichmentRef) (int64, error) {
+	if customEnrichment.BackendRef != nil {
+		return int64(customEnrichment.BackendRef.Id), nil
 	}
-	if dataSet.ResourceRef == nil {
-		return 0, fmt.Errorf("dataSet must have backendRef or resourceRef")
+	if customEnrichment.ResourceRef == nil {
+		return 0, fmt.Errorf("customEnrichment must have backendRef or resourceRef")
 	}
 
-	ref := dataSet.ResourceRef
+	ref := customEnrichment.ResourceRef
 	ns := e.Namespace
 	if ref.Namespace != nil && *ref.Namespace != "" {
 		ns = *ref.Namespace

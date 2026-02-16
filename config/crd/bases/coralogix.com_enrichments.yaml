@@ -26,6 +26,8 @@ spec:
       openAPIV3Schema:
         description: |-
           Enrichment is the Schema for the enrichments API.
+          Will overwrite the existing enrichments on the Coralogix side,
+          so it should contain all enrichments that should be applied, not just the new ones.
           See also https://coralogix.com/docs/user-guides/data-transformation/enrichments/custom-enrichment/#configuration.
         properties:
           apiVersion:
@@ -48,92 +50,108 @@ spec:
           spec:
             description: EnrichmentSpec defines the desired state of Enrichment.
             properties:
-              aws:
+              enrichments:
                 description: |-
-                  Coralogix allows you to enrich your logs with the data from a chosen AWS resource.
-                  The feature enriches every log that contains a particular resourceId,
-                  associated with the metadata of a chosen AWS resource.
-                properties:
-                  fieldName:
-                    type: string
-                  resourceType:
-                    type: string
-                required:
-                - fieldName
-                - resourceType
-                type: object
-              custom:
-                description: Custom Log Enrichment with Coralogix enables you to easily
-                  enrich your log data.
-                properties:
-                  dataSet:
-                    properties:
-                      backendRef:
-                        description: BackendRef is a reference to a DataSet in the
-                          backend.
-                        properties:
-                          id:
-                            description: ID of the DataSet in the backend.
-                            format: int32
-                            type: integer
-                        required:
-                        - id
-                        type: object
-                      resourceRef:
-                        description: ResourceRef is a reference to a DataSet resource
-                          in the cluster.
-                        properties:
-                          name:
-                            description: Name of the resource (not id).
+                  List of enrichments to apply. Each enrichment must have exactly one of GeoIp, SuspiciousIp, Aws, or Custom set.
+                  Will overwrite the existing enrichments on the Coralogix side,
+                  so it should contain all enrichments that should be applied, not just the new ones.
+                items:
+                  description: EnrichmentType must have exactly one of GeoIp, SuspiciousIp,
+                    Aws, or Custom set.
+                  properties:
+                    aws:
+                      description: |-
+                        Coralogix allows you to enrich your logs with the data from a chosen AWS resource.
+                        The feature enriches every log that contains a particular resourceId,
+                        associated with the metadata of a chosen AWS resource.
+                      properties:
+                        fieldName:
+                          type: string
+                        resourceType:
+                          type: string
+                      required:
+                      - fieldName
+                      - resourceType
+                      type: object
+                    custom:
+                      description: Custom Log Enrichment with Coralogix enables you
+                        to easily enrich your log data.
+                      properties:
+                        customEnrichmentRef:
+                          properties:
+                            backendRef:
+                              description: BackendRef is a reference to a CustomEnrichment
+                                in the backend.
+                              properties:
+                                id:
+                                  description: ID of the CustomEnrichment in the backend.
+                                  format: int32
+                                  type: integer
+                              required:
+                              - id
+                              type: object
+                            resourceRef:
+                              description: ResourceRef is a reference to a CustomEnrichment
+                                resource in the cluster.
+                              properties:
+                                name:
+                                  description: Name of the resource (not id).
+                                  type: string
+                                namespace:
+                                  description: Kubernetes namespace.
+                                  type: string
+                              required:
+                              - name
+                              type: object
+                          type: object
+                          x-kubernetes-validations:
+                          - message: Exactly one of backendRef or resourceRef must
+                              be set
+                            rule: has(self.backendRef) != has(self.resourceRef)
+                        enrichedFieldName:
+                          type: string
+                        fieldName:
+                          type: string
+                        selectedColumns:
+                          items:
                             type: string
-                          namespace:
-                            description: Kubernetes namespace.
-                            type: string
-                        required:
-                        - name
-                        type: object
-                    type: object
-                    x-kubernetes-validations:
-                    - message: Exactly one of backendRef or resourceRef must be set
-                      rule: has(self.backendRef) != has(self.resourceRef)
-                  enrichedFieldName:
-                    type: string
-                  fieldName:
-                    type: string
-                  selectedColumns:
-                    items:
-                      type: string
-                    type: array
-                required:
-                - dataSet
-                - fieldName
-                type: object
-              geoIp:
-                description: Set of fields to enrich with geo_ip information.
-                properties:
-                  fieldName:
-                    type: string
-                  withAsn:
-                    type: boolean
-                required:
-                - fieldName
-                type: object
-              suspiciousIp:
-                description: |-
-                  Coralogix allows you to automatically discover threats on your web servers
-                  by enriching your logs with the most updated IP blacklists.
-                properties:
-                  fieldName:
-                    type: string
-                required:
-                - fieldName
-                type: object
+                          type: array
+                      required:
+                      - customEnrichmentRef
+                      - fieldName
+                      type: object
+                    geoIp:
+                      description: Set of fields to enrich with geo_ip information.
+                      properties:
+                        fieldName:
+                          type: string
+                        withAsn:
+                          type: boolean
+                      required:
+                      - fieldName
+                      type: object
+                    suspiciousIp:
+                      description: |-
+                        Coralogix allows you to automatically discover threats on your web servers
+                        by enriching your logs with the most updated IP blacklists.
+                      properties:
+                        fieldName:
+                          type: string
+                      required:
+                      - fieldName
+                      type: object
+                  type: object
+                  x-kubernetes-validations:
+                  - message: Exactly one of geoIp, suspiciousIp, aws, or custom must
+                      be set
+                    rule: '(has(self.geoIp) ? 1 : 0) + (has(self.suspiciousIp) ? 1
+                      : 0) + (has(self.aws) ? 1 : 0) + (has(self.custom) ? 1 : 0)
+                      == 1'
+                minItems: 1
+                type: array
+            required:
+            - enrichments
             type: object
-            x-kubernetes-validations:
-            - message: Exactly one of geoIp, suspiciousIp, aws, or custom must be
-                set
-              rule: '(has(self.geoIp) ? 1 : 0) + (has(self.suspiciousIp) ? 1 : 0)
-                + (has(self.aws) ? 1 : 0) + (has(self.custom) ? 1 : 0) == 1'
           status:
             description: EnrichmentStatus defines the observed state of Enrichment.
             properties:

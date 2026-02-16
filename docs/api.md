@@ -10141,6 +10141,8 @@ with respect to the current state of the instance.<br/>
 
 
 Enrichment is the Schema for the enrichments API.
+Will overwrite the existing enrichments on the Coralogix side,
+so it should contain all enrichments that should be applied, not just the new ones.
 See also https://coralogix.com/docs/user-guides/data-transformation/enrichments/custom-enrichment/#configuration.
 
 <table>
@@ -10174,8 +10176,6 @@ See also https://coralogix.com/docs/user-guides/data-transformation/enrichments/
         <td>object</td>
         <td>
           EnrichmentSpec defines the desired state of Enrichment.<br/>
-          <br/>
-            <i>Validations</i>:<li>(has(self.geoIp) ? 1 : 0) + (has(self.suspiciousIp) ? 1 : 0) + (has(self.aws) ? 1 : 0) + (has(self.custom) ? 1 : 0) == 1: Exactly one of geoIp, suspiciousIp, aws, or custom must be set</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -10206,7 +10206,36 @@ EnrichmentSpec defines the desired state of Enrichment.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#enrichmentspecaws">aws</a></b></td>
+        <td><b><a href="#enrichmentspecenrichmentsindex">enrichments</a></b></td>
+        <td>[]object</td>
+        <td>
+          List of enrichments to apply. Each enrichment must have exactly one of GeoIp, SuspiciousIp, Aws, or Custom set.
+Will overwrite the existing enrichments on the Coralogix side,
+so it should contain all enrichments that should be applied, not just the new ones.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Enrichment.spec.enrichments[index]
+<sup><sup>[↩ Parent](#enrichmentspec)</sup></sup>
+
+
+
+EnrichmentType must have exactly one of GeoIp, SuspiciousIp, Aws, or Custom set.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#enrichmentspecenrichmentsindexaws">aws</a></b></td>
         <td>object</td>
         <td>
           Coralogix allows you to enrich your logs with the data from a chosen AWS resource.
@@ -10215,21 +10244,21 @@ associated with the metadata of a chosen AWS resource.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#enrichmentspeccustom">custom</a></b></td>
+        <td><b><a href="#enrichmentspecenrichmentsindexcustom">custom</a></b></td>
         <td>object</td>
         <td>
           Custom Log Enrichment with Coralogix enables you to easily enrich your log data.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#enrichmentspecgeoip">geoIp</a></b></td>
+        <td><b><a href="#enrichmentspecenrichmentsindexgeoip">geoIp</a></b></td>
         <td>object</td>
         <td>
           Set of fields to enrich with geo_ip information.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#enrichmentspecsuspiciousip">suspiciousIp</a></b></td>
+        <td><b><a href="#enrichmentspecenrichmentsindexsuspiciousip">suspiciousIp</a></b></td>
         <td>object</td>
         <td>
           Coralogix allows you to automatically discover threats on your web servers
@@ -10240,8 +10269,8 @@ by enriching your logs with the most updated IP blacklists.<br/>
 </table>
 
 
-### Enrichment.spec.aws
-<sup><sup>[↩ Parent](#enrichmentspec)</sup></sup>
+### Enrichment.spec.enrichments[index].aws
+<sup><sup>[↩ Parent](#enrichmentspecenrichmentsindex)</sup></sup>
 
 
 
@@ -10276,8 +10305,8 @@ associated with the metadata of a chosen AWS resource.
 </table>
 
 
-### Enrichment.spec.custom
-<sup><sup>[↩ Parent](#enrichmentspec)</sup></sup>
+### Enrichment.spec.enrichments[index].custom
+<sup><sup>[↩ Parent](#enrichmentspecenrichmentsindex)</sup></sup>
 
 
 
@@ -10293,7 +10322,7 @@ Custom Log Enrichment with Coralogix enables you to easily enrich your log data.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#enrichmentspeccustomdataset">dataSet</a></b></td>
+        <td><b><a href="#enrichmentspecenrichmentsindexcustomcustomenrichmentref">customEnrichmentRef</a></b></td>
         <td>object</td>
         <td>
           <br/>
@@ -10326,8 +10355,8 @@ Custom Log Enrichment with Coralogix enables you to easily enrich your log data.
 </table>
 
 
-### Enrichment.spec.custom.dataSet
-<sup><sup>[↩ Parent](#enrichmentspeccustom)</sup></sup>
+### Enrichment.spec.enrichments[index].custom.customEnrichmentRef
+<sup><sup>[↩ Parent](#enrichmentspecenrichmentsindexcustom)</sup></sup>
 
 
 
@@ -10343,29 +10372,29 @@ Custom Log Enrichment with Coralogix enables you to easily enrich your log data.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#enrichmentspeccustomdatasetbackendref">backendRef</a></b></td>
+        <td><b><a href="#enrichmentspecenrichmentsindexcustomcustomenrichmentrefbackendref">backendRef</a></b></td>
         <td>object</td>
         <td>
-          BackendRef is a reference to a DataSet in the backend.<br/>
+          BackendRef is a reference to a CustomEnrichment in the backend.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#enrichmentspeccustomdatasetresourceref">resourceRef</a></b></td>
+        <td><b><a href="#enrichmentspecenrichmentsindexcustomcustomenrichmentrefresourceref">resourceRef</a></b></td>
         <td>object</td>
         <td>
-          ResourceRef is a reference to a DataSet resource in the cluster.<br/>
+          ResourceRef is a reference to a CustomEnrichment resource in the cluster.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
 </table>
 
 
-### Enrichment.spec.custom.dataSet.backendRef
-<sup><sup>[↩ Parent](#enrichmentspeccustomdataset)</sup></sup>
+### Enrichment.spec.enrichments[index].custom.customEnrichmentRef.backendRef
+<sup><sup>[↩ Parent](#enrichmentspecenrichmentsindexcustomcustomenrichmentref)</sup></sup>
 
 
 
-BackendRef is a reference to a DataSet in the backend.
+BackendRef is a reference to a CustomEnrichment in the backend.
 
 <table>
     <thead>
@@ -10380,7 +10409,7 @@ BackendRef is a reference to a DataSet in the backend.
         <td><b>id</b></td>
         <td>integer</td>
         <td>
-          ID of the DataSet in the backend.<br/>
+          ID of the CustomEnrichment in the backend.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -10389,12 +10418,12 @@ BackendRef is a reference to a DataSet in the backend.
 </table>
 
 
-### Enrichment.spec.custom.dataSet.resourceRef
-<sup><sup>[↩ Parent](#enrichmentspeccustomdataset)</sup></sup>
+### Enrichment.spec.enrichments[index].custom.customEnrichmentRef.resourceRef
+<sup><sup>[↩ Parent](#enrichmentspecenrichmentsindexcustomcustomenrichmentref)</sup></sup>
 
 
 
-ResourceRef is a reference to a DataSet resource in the cluster.
+ResourceRef is a reference to a CustomEnrichment resource in the cluster.
 
 <table>
     <thead>
@@ -10423,8 +10452,8 @@ ResourceRef is a reference to a DataSet resource in the cluster.
 </table>
 
 
-### Enrichment.spec.geoIp
-<sup><sup>[↩ Parent](#enrichmentspec)</sup></sup>
+### Enrichment.spec.enrichments[index].geoIp
+<sup><sup>[↩ Parent](#enrichmentspecenrichmentsindex)</sup></sup>
 
 
 
@@ -10457,8 +10486,8 @@ Set of fields to enrich with geo_ip information.
 </table>
 
 
-### Enrichment.spec.suspiciousIp
-<sup><sup>[↩ Parent](#enrichmentspec)</sup></sup>
+### Enrichment.spec.enrichments[index].suspiciousIp
+<sup><sup>[↩ Parent](#enrichmentspecenrichmentsindex)</sup></sup>
 
 
 

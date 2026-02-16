@@ -17,11 +17,9 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/go-logr/logr"
-	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -57,68 +55,58 @@ func (r *EnrichmentReconciler) RequeueInterval() time.Duration {
 	return r.Interval
 }
 
-func (r *EnrichmentReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
-	enrichment := obj.(*coralogixv1alpha1.Enrichment)
-	createRequest, err := enrichment.ExtractEnrichmentsCreationRequest(ctx)
+func (r *EnrichmentReconciler) Overwrite(ctx context.Context, log logr.Logger, enr *coralogixv1alpha1.Enrichment) error {
+	overwriteRequest, err := enr.ExtractAtomicOverwriteRequest(ctx)
 	if err != nil {
 		return fmt.Errorf("error on extracting enrichments creation request: %w", err)
 	}
-	log.Info("Creating remote enrichment", "enrichment", utils.FormatJSON(createRequest))
-	addResponse, httpResp, err := r.EnrichmentsClient.
-		EnrichmentServiceAddEnrichments(ctx).
-		EnrichmentsCreationRequest(*createRequest).
+	log.Info("Overwriting remote enrichments", "enrichment", utils.FormatJSON(overwriteRequest))
+	overwriteResponse, httpResp, err := r.EnrichmentsClient.
+		EnrichmentServiceAtomicOverwriteEnrichments(ctx).
+		EnrichmentServiceAtomicOverwriteEnrichmentsRequest(*overwriteRequest).
 		Execute()
 	if err != nil {
-		return fmt.Errorf("error on creating remote enrichment: %w", cxsdk.NewAPIError(httpResp, err))
+		return fmt.Errorf("error on overwriting remote enrichments: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote enrichment created", "response", utils.FormatJSON(addResponse))
-
-	if len(addResponse.Enrichments) == 0 {
-		return fmt.Errorf("no enrichments created, empty response")
-	}
-
-	if len(addResponse.Enrichments) > 1 {
-		return fmt.Errorf("unexpected multiple enrichments created, expected 1 but got %d", len(addResponse.Enrichments))
-	}
-
-	id := addResponse.Enrichments[0].Id
-	log.Info("Updating enrichment status with enrichment ID", "enrichmentId", id)
-	enrichment.Status.Id = ptr.To(strconv.Itoa(int(id)))
+	log.Info("Remote enrichments overwritten", "response", utils.FormatJSON(overwriteResponse))
 	return nil
 }
 
-// HandleUpdate performs delete-then-recreate because the enrichment API does not support update.
+func (r *EnrichmentReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
+	enrichment := obj.(*coralogixv1alpha1.Enrichment)
+	if err := r.Overwrite(ctx, log, enrichment); err != nil {
+		return err
+	}
+
+	return coralogixreconciler.AddFinalizer(ctx, log, enrichment, r)
+}
+
 func (r *EnrichmentReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
-	if err := r.HandleDeletion(ctx, log, obj); err != nil {
-		return fmt.Errorf("error on deleting enrichment during update: %w", err)
+	enrichment := obj.(*coralogixv1alpha1.Enrichment)
+	if err := r.Overwrite(ctx, log, enrichment); err != nil {
+		return err
 	}
 
-	if err := r.HandleCreation(ctx, log, obj); err != nil {
-		return fmt.Errorf("error on creating enrichment during update: %w", err)
-	}
-
-	return nil
+	return coralogixreconciler.AddFinalizer(ctx, log, enrichment, r)
 }
 
 func (r *EnrichmentReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
-	enrichment := obj.(*coralogixv1alpha1.Enrichment)
-	id, err := strconv.Atoi(*enrichment.Status.Id)
-	if err != nil {
-		return fmt.Errorf("error converting enrichment ID to int: %w", err)
+	log.Info("Deleting remote enrichments")
+	overwriteRequest := enrichments.EnrichmentServiceAtomicOverwriteEnrichmentsRequest{
+		RequestEnrichments: []enrichments.EnrichmentRequestModel{},
 	}
-
-	log.Info("Deleting enrichments from remote", "ids", id)
 	_, httpResp, err := r.EnrichmentsClient.
-		EnrichmentServiceRemoveEnrichments(ctx).
-		EnrichmentIds([]int64{int64(id)}).
+		EnrichmentServiceAtomicOverwriteEnrichments(ctx).
+		EnrichmentServiceAtomicOverwriteEnrichmentsRequest(overwriteRequest).
 		Execute()
 	if err != nil {
 		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
-			log.Error(err, "Error deleting remote enrichments", "id", id)
-			return fmt.Errorf("delete remote enrichments: %w", apiErr)
+			log.Error(apiErr, "Received an error while Deleting remote enrichments")
+			return apiErr
 		}
 	}
-	log.Info("Enrichments deleted from remote", "id", id)
+
+	log.Info("Remote enrichments deleted")
 	return nil
 }
 
