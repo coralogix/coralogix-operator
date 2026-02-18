@@ -82,7 +82,7 @@ var _ = Describe("Enrichment", Ordered, func() {
 		Eventually(func(g Gomega) {
 			resp, _, err := enrichmentsClient.EnrichmentServiceGetEnrichments(ctx).Execute()
 			g.Expect(err).NotTo(HaveOccurred())
-			g.Expect(resp.Enrichments).To(HaveLen(0))
+			g.Expect(resp.Enrichments).To(BeEmpty())
 		}, time.Minute, time.Second).Should(Succeed())
 	})
 })

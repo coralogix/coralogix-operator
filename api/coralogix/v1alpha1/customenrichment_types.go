@@ -141,6 +141,7 @@ func readConfigMap(ctx context.Context, configMapRef corev1.ConfigMapKeySelector
 type CustomEnrichmentStatus struct {
 	// +optional
 	Id *string `json:"id,omitempty"`
+
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 

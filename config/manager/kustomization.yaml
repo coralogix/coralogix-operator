@@ -2,9 +2,9 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-- manager.yaml
+  - manager.yaml
 
 images:
-- name: controller
-  newName: example.com/coralogix-operator
-  newTag: v0.0.4
+  - name: controller
+    newName: coralogixrepo/coralogix-operator
+    newTag: latest
