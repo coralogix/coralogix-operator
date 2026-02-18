@@ -1,8 +1,6 @@
 apiVersion: coralogix.com/v1alpha1
 kind: Enrichment
 metadata:
-  annotations:
-    app.coralogix.com/log-verbosity: "0"
   labels:
     app.kubernetes.io/name: coralogix-operator
     app.kubernetes.io/instance: enrichment-sample
@@ -12,9 +10,6 @@ metadata:
   name: enrichment-sample
 spec:
   enrichments:
-    #    - aws:
-    #        fieldName: attributes.event.source
-    #        resourceType: EC2
     - suspiciousIp:
         fieldName: attributes.event.namespace
     - geoIp:
