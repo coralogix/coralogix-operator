@@ -58,9 +58,11 @@ rules:
       - archivelogstargets
       - archivemetricstargets
       - connectors
+      - customenrichments
       - customroles
       - dashboards
       - dashboardsfolders
+      - enrichments
       - events2metrics
       - globalrouters
       - groups
@@ -93,9 +95,11 @@ rules:
       - archivelogstargets/finalizers
       - archivemetricstargets/finalizers
       - connectors/finalizers
+      - customenrichments/finalizers
       - customroles/finalizers
       - dashboards/finalizers
       - dashboardsfolders/finalizers
+      - enrichments/finalizers
       - events2metrics/finalizers
       - globalrouters/finalizers
       - groups/finalizers
@@ -122,9 +126,11 @@ rules:
       - archivelogstargets/status
       - archivemetricstargets/status
       - connectors/status
+      - customenrichments/status
       - customroles/status
       - dashboards/status
       - dashboardsfolders/status
+      - enrichments/status
       - events2metrics/status
       - globalrouters/status
       - groups/status

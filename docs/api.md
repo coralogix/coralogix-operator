@@ -6898,11 +6898,15 @@ Resource Types:
 
 - [Connector](#connector)
 
+- [CustomEnrichment](#customenrichment)
+
 - [CustomRole](#customrole)
 
 - [Dashboard](#dashboard)
 
 - [DashboardsFolder](#dashboardsfolder)
+
+- [Enrichment](#enrichment)
 
 - [Events2Metric](#events2metric)
 
@@ -8996,6 +9000,275 @@ with respect to the current state of the instance.<br/>
       </tr></tbody>
 </table>
 
+## CustomEnrichment
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+CustomEnrichment is the Schema for the customenrichments API.
+See also https://coralogix.com/docs/user-guides/data-transformation/enrichments/custom-enrichment/#configuration.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>CustomEnrichment</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#customenrichmentspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          CustomEnrichmentSpec defines the desired state of CustomEnrichment.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.csv) != has(self.configMapRef): Exactly one of csv or configMapRef must be set</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#customenrichmentstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          CustomEnrichmentStatus defines the observed state of CustomEnrichment.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### CustomEnrichment.spec
+<sup><sup>[↩ Parent](#customenrichment)</sup></sup>
+
+
+
+CustomEnrichmentSpec defines the desired state of CustomEnrichment.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          The description of the custom enrichment.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          The name of the custom enrichment.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#customenrichmentspecconfigmapref">configMapRef</a></b></td>
+        <td>object</td>
+        <td>
+          Reference to a ConfigMap that contains the CSV data. Conflicts with CSV.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>csv</b></td>
+        <td>string</td>
+        <td>
+          Inline CSV data. Conflicts with ConfigMapRef.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### CustomEnrichment.spec.configMapRef
+<sup><sup>[↩ Parent](#customenrichmentspec)</sup></sup>
+
+
+
+Reference to a ConfigMap that contains the CSV data. Conflicts with CSV.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key to select.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the ConfigMap or its key must be defined<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### CustomEnrichment.status
+<sup><sup>[↩ Parent](#customenrichment)</sup></sup>
+
+
+
+CustomEnrichmentStatus defines the observed state of CustomEnrichment.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#customenrichmentstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### CustomEnrichment.status.conditions[index]
+<sup><sup>[↩ Parent](#customenrichmentstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
 ## CustomRole
 <sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
 
@@ -9785,6 +10058,505 @@ DashboardsFolderStatus defines the observed state of DashboardsFolder.
 
 ### DashboardsFolder.status.conditions[index]
 <sup><sup>[↩ Parent](#dashboardsfolderstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## Enrichment
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+Enrichment is the Schema for the enrichments API.
+Will overwrite the existing enrichments on the Coralogix side,
+so it should contain all enrichments that should be applied, not just the new ones.
+See also https://coralogix.com/docs/user-guides/data-transformation/enrichments/custom-enrichment/#configuration.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>Enrichment</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#enrichmentspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          EnrichmentSpec defines the desired state of Enrichment.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#enrichmentstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          EnrichmentStatus defines the observed state of Enrichment.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Enrichment.spec
+<sup><sup>[↩ Parent](#enrichment)</sup></sup>
+
+
+
+EnrichmentSpec defines the desired state of Enrichment.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#enrichmentspecenrichmentsindex">enrichments</a></b></td>
+        <td>[]object</td>
+        <td>
+          List of enrichments to apply. Each enrichment must have exactly one of GeoIp, SuspiciousIp, Aws, or Custom set.
+Will overwrite the existing enrichments on the Coralogix side,
+so it should contain all enrichments that should be applied, not just the new ones.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Enrichment.spec.enrichments[index]
+<sup><sup>[↩ Parent](#enrichmentspec)</sup></sup>
+
+
+
+EnrichmentType must have exactly one of GeoIp, SuspiciousIp, Aws, or Custom set.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#enrichmentspecenrichmentsindexaws">aws</a></b></td>
+        <td>object</td>
+        <td>
+          Coralogix allows you to enrich your logs with the data from a chosen AWS resource.
+The feature enriches every log that contains a particular resourceId,
+associated with the metadata of a chosen AWS resource.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#enrichmentspecenrichmentsindexcustom">custom</a></b></td>
+        <td>object</td>
+        <td>
+          Custom Log Enrichment with Coralogix enables you to easily enrich your log data.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#enrichmentspecenrichmentsindexgeoip">geoIp</a></b></td>
+        <td>object</td>
+        <td>
+          Set of fields to enrich with geo_ip information.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#enrichmentspecenrichmentsindexsuspiciousip">suspiciousIp</a></b></td>
+        <td>object</td>
+        <td>
+          Coralogix allows you to automatically discover threats on your web servers
+by enriching your logs with the most updated IP blacklists.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Enrichment.spec.enrichments[index].aws
+<sup><sup>[↩ Parent](#enrichmentspecenrichmentsindex)</sup></sup>
+
+
+
+Coralogix allows you to enrich your logs with the data from a chosen AWS resource.
+The feature enriches every log that contains a particular resourceId,
+associated with the metadata of a chosen AWS resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>resourceType</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Enrichment.spec.enrichments[index].custom
+<sup><sup>[↩ Parent](#enrichmentspecenrichmentsindex)</sup></sup>
+
+
+
+Custom Log Enrichment with Coralogix enables you to easily enrich your log data.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#enrichmentspecenrichmentsindexcustomcustomenrichmentref">customEnrichmentRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>enrichedFieldName</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>selectedColumns</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Enrichment.spec.enrichments[index].custom.customEnrichmentRef
+<sup><sup>[↩ Parent](#enrichmentspecenrichmentsindexcustom)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#enrichmentspecenrichmentsindexcustomcustomenrichmentrefbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          BackendRef is a reference to a CustomEnrichment in the backend.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#enrichmentspecenrichmentsindexcustomcustomenrichmentrefresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          ResourceRef is a reference to a CustomEnrichment resource in the cluster.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Enrichment.spec.enrichments[index].custom.customEnrichmentRef.backendRef
+<sup><sup>[↩ Parent](#enrichmentspecenrichmentsindexcustomcustomenrichmentref)</sup></sup>
+
+
+
+BackendRef is a reference to a CustomEnrichment in the backend.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>integer</td>
+        <td>
+          ID of the CustomEnrichment in the backend.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Enrichment.spec.enrichments[index].custom.customEnrichmentRef.resourceRef
+<sup><sup>[↩ Parent](#enrichmentspecenrichmentsindexcustomcustomenrichmentref)</sup></sup>
+
+
+
+ResourceRef is a reference to a CustomEnrichment resource in the cluster.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource (not id).<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Enrichment.spec.enrichments[index].geoIp
+<sup><sup>[↩ Parent](#enrichmentspecenrichmentsindex)</sup></sup>
+
+
+
+Set of fields to enrich with geo_ip information.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>withAsn</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Enrichment.spec.enrichments[index].suspiciousIp
+<sup><sup>[↩ Parent](#enrichmentspecenrichmentsindex)</sup></sup>
+
+
+
+Coralogix allows you to automatically discover threats on your web servers
+by enriching your logs with the most updated IP blacklists.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Enrichment.status
+<sup><sup>[↩ Parent](#enrichment)</sup></sup>
+
+
+
+EnrichmentStatus defines the observed state of Enrichment.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#enrichmentstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Enrichment.status.conditions[index]
+<sup><sup>[↩ Parent](#enrichmentstatus)</sup></sup>
 
 
 
