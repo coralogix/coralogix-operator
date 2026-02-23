@@ -16,6 +16,7 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -128,7 +129,7 @@ func newCSVCustomEnrichment(namespace string) *coralogixv1alpha1.CustomEnrichmen
 			Namespace: namespace,
 		},
 		Spec: coralogixv1alpha1.CustomEnrichmentSpec{
-			Name:        customEnrichmentRefName,
+			Name:        fmt.Sprintf("custom-enrichment-%d", time.Now().UnixNano()),
 			Description: "Sample custom enrichment for e2e that uses an inline CSV.",
 			CSV: ptr.To(`Date,day of week
 7/30/21,Friday
