@@ -1,0 +1,19 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Connector
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: connector-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: email-sample
+spec:
+  name: email-sample
+  description: Email connector example
+  type: email
+  connectorConfig:
+    fields:
+      - fieldName: emailAddresses
+        value: '["email1@example.com","email2@example.com"]'
+  configOverrides: []

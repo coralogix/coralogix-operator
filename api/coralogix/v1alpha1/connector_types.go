@@ -31,8 +31,8 @@ type ConnectorSpec struct {
 	// Description is the description of the connector.
 	Description string `json:"description"`
 
-	// Type is the type of the connector. Can be one of slack, genericHttps, or pagerDuty.
-	// +kubebuilder:validation:Enum=slack;genericHttps;pagerDuty
+	// Type is the type of the connector. Can be one of slack, genericHttps, pagerDuty, email, or serviceNow.
+	// +kubebuilder:validation:Enum=slack;genericHttps;pagerDuty;email;serviceNow
 	Type string `json:"type"`
 
 	// ConnectorConfig is the configuration of the connector.
@@ -109,6 +109,8 @@ var (
 		"slack":        connectors.CONNECTORTYPE_SLACK,
 		"genericHttps": connectors.CONNECTORTYPE_GENERIC_HTTPS,
 		"pagerDuty":    connectors.CONNECTORTYPE_PAGERDUTY,
+		"email":        connectors.CONNECTORTYPE_EMAIL,
+		"serviceNow":   connectors.CONNECTORTYPE_SERVICE_NOW,
 	}
 	schemaToOpenApiEntityType = map[string]connectors.NotificationCenterEntityType{
 		"alerts": connectors.NOTIFICATIONCENTERENTITYTYPE_ALERTS,
