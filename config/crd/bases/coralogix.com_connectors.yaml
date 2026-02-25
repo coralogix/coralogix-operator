@@ -114,11 +114,13 @@ spec:
                 type: string
               type:
                 description: Type is the type of the connector. Can be one of slack,
-                  genericHttps, or pagerDuty.
+                  genericHttps, pagerDuty, email, or serviceNow.
                 enum:
                 - slack
                 - genericHttps
                 - pagerDuty
+                - email
+                - serviceNow
                 type: string
             required:
             - connectorConfig

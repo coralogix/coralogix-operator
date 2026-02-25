@@ -1,0 +1,26 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Preset
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: preset-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: email-sample
+spec:
+  name: email-sample
+  description: Email preset example
+  connectorType: email
+  entityType: alerts
+  parentId: preset_system_email_alerts
+  configOverrides:
+    - payloadType: email_default
+      conditionType:
+        matchEntityType: {}
+      messageConfig:
+        fields:
+          - fieldName: customSubject
+            template: "{{ alertDef.name }}"
+          - fieldName: customContent
+            template: "<div>content-example</div>"
