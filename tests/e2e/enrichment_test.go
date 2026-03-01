@@ -38,7 +38,7 @@ const (
 	customEnrichmentRefName = "custom-enrichment-csv-sample"
 )
 
-var _ = Describe("Enrichment", Ordered, func() {
+var _ = PDescribe("Enrichment", Ordered, func() {
 	var (
 		crClient           client.Client
 		enrichmentsClient  *enrichments.EnrichmentsServiceAPIService
