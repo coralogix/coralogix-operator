@@ -29,6 +29,10 @@ spec:
               - operation: is
                 value: webapp
             severity: [ "warning", "info" ]
+      noDataPolicy:
+        state: alerting
+        autoRetireSeconds: 1800
+      evaluationDelayMs: 30000
       notificationPayloadFilter: [ "coralogix.metadata.sdkId" ]
       rules:
         - condition:

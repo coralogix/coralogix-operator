@@ -242,6 +242,12 @@ var (
 		LogsUniqueCountTimeWindowValue24Hours:   alerts.LOGSUNIQUEVALUETIMEWINDOWVALUE_LOGS_UNIQUE_VALUE_TIME_WINDOW_VALUE_HOURS_24,
 		LogsUniqueCountTimeWindowValue36Hours:   alerts.LOGSUNIQUEVALUETIMEWINDOWVALUE_LOGS_UNIQUE_VALUE_TIME_WINDOW_VALUE_HOURS_36,
 	}
+	NoDataPolicyStateToOpenAPI = map[NoDataPolicyState]alerts.NoDataPolicyState{
+		NoDataPolicyStateOk:       alerts.NODATAPOLICYSTATE_NO_DATA_POLICY_STATE_OK,
+		NoDataPolicyStateAlerting: alerts.NODATAPOLICYSTATE_NO_DATA_POLICY_STATE_ALERTING,
+		NoDataPolicyStateKeepLast: alerts.NODATAPOLICYSTATE_NO_DATA_POLICY_STATE_KEEP_LAST,
+		NoDataPolicyStateNoData:   alerts.NODATAPOLICYSTATE_NO_DATA_POLICY_STATE_NO_DATA,
+	}
 )
 
 // AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
@@ -376,6 +382,28 @@ const (
 	AutoRetireTimeframe12H                AutoRetireTimeframe = "12h"
 	AutoRetireTimeframe24H                AutoRetireTimeframe = "24h"
 )
+
+// +kubebuilder:validation:Enum=ok;alerting;keepLast;noData
+// State to use when no data is present.
+type NoDataPolicyState string
+
+const (
+	NoDataPolicyStateOk       NoDataPolicyState = "ok"
+	NoDataPolicyStateAlerting NoDataPolicyState = "alerting"
+	NoDataPolicyStateKeepLast NoDataPolicyState = "keepLast"
+	NoDataPolicyStateNoData   NoDataPolicyState = "noData"
+)
+
+// NoDataPolicy defines how to handle missing data in alerts.
+type NoDataPolicy struct {
+	// State to use when no data is present.
+	State NoDataPolicyState `json:"state"`
+
+	// The timeframe in seconds for auto retiring values that were detected as no-data.
+	// Must be a multiple of 60 seconds.
+	// +optional
+	AutoRetireSeconds *int32 `json:"autoRetireSeconds,omitempty"`
+}
 
 // When to re-trigger the alert.
 type RetriggeringPeriod struct {
@@ -654,6 +682,14 @@ type LogsThreshold struct {
 	// +optional
 	UndetectedValuesManagement *UndetectedValuesManagement `json:"undetectedValuesManagement,omitempty"`
 
+	// Policy for handling missing data.
+	// +optional
+	NoDataPolicy *NoDataPolicy `json:"noDataPolicy,omitempty"`
+
+	// Evaluation delay in milliseconds.
+	// +optional
+	EvaluationDelayMs *int32 `json:"evaluationDelayMs,omitempty"`
+
 	// +kubebuilder:validation:MinItems=1
 	// Rules that match the alert to the data.
 	Rules []LogsThresholdRule `json:"rules"`
@@ -731,6 +767,11 @@ type LogsRatioThreshold struct {
 	NumeratorAlias   string     `json:"numeratorAlias"`
 	Denominator      LogsFilter `json:"denominator"`
 	DenominatorAlias string     `json:"denominatorAlias"`
+
+	// Evaluation delay in milliseconds.
+	// +optional
+	EvaluationDelayMs *int32 `json:"evaluationDelayMs,omitempty"`
+
 	// +kubebuilder:validation:MinItems=1
 	// Rules that match the alert to the data.
 	Rules []LogsRatioThresholdRule `json:"rules"`
@@ -852,6 +893,10 @@ type LogsTimeRelativeThreshold struct {
 	// How to work with undetected values.
 	// +optional
 	UndetectedValuesManagement *UndetectedValuesManagement `json:"undetectedValuesManagement"`
+
+	// Evaluation delay in milliseconds.
+	// +optional
+	EvaluationDelayMs *int32 `json:"evaluationDelayMs,omitempty"`
 }
 
 // Alerts for when a metric crosses a threshold.
@@ -868,6 +913,14 @@ type MetricThreshold struct {
 	// How to work with undetected values.
 	// +optional
 	UndetectedValuesManagement *UndetectedValuesManagement `json:"undetectedValuesManagement,omitempty"`
+
+	// Policy for handling missing data.
+	// +optional
+	NoDataPolicy *NoDataPolicy `json:"noDataPolicy,omitempty"`
+
+	// Evaluation delay in milliseconds.
+	// +optional
+	EvaluationDelayMs *int32 `json:"evaluationDelayMs,omitempty"`
 }
 
 // Filter for metrics
@@ -1159,6 +1212,10 @@ type LogsAnomaly struct {
 	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
+
+	// Evaluation delay in milliseconds.
+	// +optional
+	EvaluationDelayMs *int32 `json:"evaluationDelayMs,omitempty"`
 }
 
 // The rule to match the alert's conditions.
@@ -1185,6 +1242,10 @@ type MetricAnomaly struct {
 	// +kubebuilder:validation:MinItems=1
 	// Rules that match the alert to the data.
 	Rules []MetricAnomalyRule `json:"rules"`
+
+	// Evaluation delay in milliseconds.
+	// +optional
+	EvaluationDelayMs *int32 `json:"evaluationDelayMs,omitempty"`
 }
 
 // Condition to match to.
@@ -2472,7 +2533,8 @@ func expandMetricAnomaly(metricAnomaly *MetricAnomaly) *alerts.MetricAnomalyType
 		MetricFilter: &alerts.MetricFilter{
 			Promql: alerts.PtrString(metricAnomaly.MetricFilter.Promql),
 		},
-		Rules: expandMetricAnomalyRules(metricAnomaly.Rules),
+		Rules:             expandMetricAnomalyRules(metricAnomaly.Rules),
+		EvaluationDelayMs: metricAnomaly.EvaluationDelayMs,
 	}
 }
 
@@ -2505,6 +2567,7 @@ func expandLogsAnomaly(anomaly *LogsAnomaly) *alerts.LogsAnomalyType {
 		LogsFilter:                expandLogsFilter(anomaly.LogsFilter),
 		Rules:                     expandLogsAnomalyRules(anomaly.Rules),
 		NotificationPayloadFilter: anomaly.NotificationPayloadFilter,
+		EvaluationDelayMs:         anomaly.EvaluationDelayMs,
 	}
 }
 
@@ -2822,6 +2885,8 @@ func expandMetricThreshold(threshold *MetricThreshold, priority alerts.AlertDefP
 		MetricFilter:               expandMetricFilter(threshold.MetricFilter),
 		Rules:                      expandMetricThresholdRules(threshold.Rules, priority),
 		UndetectedValuesManagement: expandUndetectedValuesManagement(threshold.UndetectedValuesManagement),
+		NoDataPolicy:               expandNoDataPolicy(threshold.NoDataPolicy),
+		EvaluationDelayMs:          threshold.EvaluationDelayMs,
 	}
 
 	missingValues := expandMetricMissingValues(&threshold.MissingValues)
@@ -2931,6 +2996,8 @@ func expandLogsThreshold(logsThreshold *LogsThreshold, priority alerts.AlertDefP
 	return &alerts.LogsThresholdType{
 		LogsFilter:                 expandLogsFilter(logsThreshold.LogsFilter),
 		UndetectedValuesManagement: expandUndetectedValuesManagement(logsThreshold.UndetectedValuesManagement),
+		NoDataPolicy:               expandNoDataPolicy(logsThreshold.NoDataPolicy),
+		EvaluationDelayMs:          logsThreshold.EvaluationDelayMs,
 		Rules:                      expandLogsThresholdRules(logsThreshold.Rules, priority),
 		NotificationPayloadFilter:  logsThreshold.NotificationPayloadFilter,
 	}
@@ -2942,9 +3009,10 @@ func expandLogsRatioThreshold(logsRatioThreshold *LogsRatioThreshold, priority a
 	}
 
 	thresholdType := &alerts.LogsRatioThresholdType{
-		NumeratorAlias:   alerts.PtrString(logsRatioThreshold.NumeratorAlias),
-		DenominatorAlias: alerts.PtrString(logsRatioThreshold.DenominatorAlias),
-		Rules:            expandLogsRatioThresholdRules(logsRatioThreshold.Rules, priority),
+		NumeratorAlias:    alerts.PtrString(logsRatioThreshold.NumeratorAlias),
+		DenominatorAlias:  alerts.PtrString(logsRatioThreshold.DenominatorAlias),
+		EvaluationDelayMs: logsRatioThreshold.EvaluationDelayMs,
+		Rules:             expandLogsRatioThresholdRules(logsRatioThreshold.Rules, priority),
 	}
 
 	Numerator := expandLogsFilter(&logsRatioThreshold.Numerator)
@@ -2967,6 +3035,7 @@ func expandLogsTimeRelativeThreshold(threshold *LogsTimeRelativeThreshold, prior
 		IgnoreInfinity:             alerts.PtrBool(threshold.IgnoreInfinity),
 		NotificationPayloadFilter:  threshold.NotificationPayloadFilter,
 		UndetectedValuesManagement: expandUndetectedValuesManagement(threshold.UndetectedValuesManagement),
+		EvaluationDelayMs:          threshold.EvaluationDelayMs,
 	}
 }
 
@@ -3090,6 +3159,18 @@ func expandUndetectedValuesManagement(management *UndetectedValuesManagement) *a
 		TriggerUndetectedValues: alerts.PtrBool(management.TriggerUndetectedValues),
 		AutoRetireTimeframe:     &autoRetireTimeframe,
 	}
+}
+
+func expandNoDataPolicy(policy *NoDataPolicy) *alerts.NoDataPolicy {
+	if policy == nil {
+		return nil
+	}
+	state := NoDataPolicyStateToOpenAPI[policy.State]
+	noDataPolicy := &alerts.NoDataPolicy{
+		State:             &state,
+		AutoRetireSeconds: policy.AutoRetireSeconds,
+	}
+	return noDataPolicy
 }
 
 func expandLogsThresholdRules(rules []LogsThresholdRule, priority alerts.AlertDefPriority) []alerts.LogsThresholdRule {

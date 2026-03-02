@@ -32,6 +32,7 @@ spec:
               - value: info
                 operation: endsWith
             severity: [ "warning", "info" ]
+      evaluationDelayMs: 30000
       rules:
         - condition:
             minimumThreshold: 100

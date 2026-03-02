@@ -20,6 +20,7 @@ spec:
       metricFilter:
         promql: |
           sum(rate(http_requests_total{job="api-server"}[5m])) by (status)
+      evaluationDelayMs: 60000
       rules:
         - condition:
             threshold: "100.4"
