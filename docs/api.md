@@ -622,6 +622,15 @@ Anomaly alerts for logs.
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>evaluationDelayMs</b></td>
+        <td>integer</td>
+        <td>
+          Evaluation delay in milliseconds.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#alertspecalerttypelogsanomalylogsfilter">logsFilter</a></b></td>
         <td>object</td>
         <td>
@@ -1481,6 +1490,15 @@ Alerts for when a log exceeds a defined ratio.
           Rules that match the alert to the data.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>evaluationDelayMs</b></td>
+        <td>integer</td>
+        <td>
+          Evaluation delay in milliseconds.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -2000,10 +2018,26 @@ Alerts for when a log crosses a threshold.
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>evaluationDelayMs</b></td>
+        <td>integer</td>
+        <td>
+          Evaluation delay in milliseconds.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#alertspecalerttypelogsthresholdlogsfilter">logsFilter</a></b></td>
         <td>object</td>
         <td>
           Filter to filter the logs with.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypelogsthresholdnodatapolicy">noDataPolicy</a></b></td>
+        <td>object</td>
+        <td>
+          Policy for handling missing data.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2337,6 +2371,45 @@ Label filter specifications
 </table>
 
 
+### Alert.spec.alertType.logsThreshold.noDataPolicy
+<sup><sup>[↩ Parent](#alertspecalerttypelogsthreshold)</sup></sup>
+
+
+
+Policy for handling missing data.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>state</b></td>
+        <td>enum</td>
+        <td>
+          State to use when no data is present.<br/>
+          <br/>
+            <i>Enum</i>: ok, alerting, keepLast, noData<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>autoRetireSeconds</b></td>
+        <td>integer</td>
+        <td>
+          The timeframe in seconds for auto retiring values that were detected as no-data.
+Must be a multiple of 60 seconds.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
 ### Alert.spec.alertType.logsThreshold.undetectedValuesManagement
 <sup><sup>[↩ Parent](#alertspecalerttypelogsthreshold)</sup></sup>
 
@@ -2415,6 +2488,15 @@ Alerts are sent when the number of logs matching a filter is more than or less t
           Rules that match the alert to the data.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>evaluationDelayMs</b></td>
+        <td>integer</td>
+        <td>
+          Evaluation delay in milliseconds.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
       </tr><tr>
         <td><b>notificationPayloadFilter</b></td>
         <td>[]string</td>
@@ -3115,6 +3197,15 @@ Anomaly alerts for metrics.
           Rules that match the alert to the data.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>evaluationDelayMs</b></td>
+        <td>integer</td>
+        <td>
+          Evaluation delay in milliseconds.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -3302,6 +3393,22 @@ Alerts for when a metric crosses a threshold.
           Rules that match the alert to the data.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>evaluationDelayMs</b></td>
+        <td>integer</td>
+        <td>
+          Evaluation delay in milliseconds.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypemetricthresholdnodatapolicy">noDataPolicy</a></b></td>
+        <td>object</td>
+        <td>
+          Policy for handling missing data.<br/>
+        </td>
+        <td>false</td>
       </tr><tr>
         <td><b><a href="#alertspecalerttypemetricthresholdundetectedvaluesmanagement">undetectedValuesManagement</a></b></td>
         <td>object</td>
@@ -3529,6 +3636,45 @@ Alert property overrides
             <i>Enum</i>: p1, p2, p3, p4, p5<br/>
         </td>
         <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.metricThreshold.noDataPolicy
+<sup><sup>[↩ Parent](#alertspecalerttypemetricthreshold)</sup></sup>
+
+
+
+Policy for handling missing data.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>state</b></td>
+        <td>enum</td>
+        <td>
+          State to use when no data is present.<br/>
+          <br/>
+            <i>Enum</i>: ok, alerting, keepLast, noData<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>autoRetireSeconds</b></td>
+        <td>integer</td>
+        <td>
+          The timeframe in seconds for auto retiring values that were detected as no-data.
+Must be a multiple of 60 seconds.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
