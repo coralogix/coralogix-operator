@@ -228,7 +228,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.AlertSchedulerReconciler{
-		AlertSchedulerClient: clientSet.AlertSchedulers(),
+		AlertSchedulerClient: oapiClientSet.AlertScheduler(),
 		Interval:             cfg.ReconcileIntervals[utils.AlertSchedulerKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AlertScheduler")
