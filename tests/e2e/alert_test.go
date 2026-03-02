@@ -141,6 +141,10 @@ var _ = Describe("Alert", Ordered, func() {
 						MetricFilter: coralogixv1beta1.MetricFilter{
 							Promql: "http_requests_total{status!~\"4..\"}",
 						},
+						NoDataPolicy: &coralogixv1beta1.NoDataPolicy{
+							State:             coralogixv1beta1.NoDataPolicyStateAlerting,
+							AutoRetireSeconds: ptr.To(int32(1800)),
+						},
 						Rules: []coralogixv1beta1.MetricThresholdRule{
 							{
 								Condition: coralogixv1beta1.MetricThresholdRuleCondition{

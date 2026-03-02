@@ -801,6 +801,26 @@ spec:
                                 type: string
                             type: object
                         type: object
+                      noDataPolicy:
+                        description: Policy for handling missing data.
+                        properties:
+                          autoRetireSeconds:
+                            description: |-
+                              The timeframe in seconds for auto retiring values that were detected as no-data.
+                              Must be a multiple of 60 seconds.
+                            format: int32
+                            type: integer
+                          state:
+                            description: State to use when no data is present.
+                            enum:
+                            - ok
+                            - alerting
+                            - keepLast
+                            - noData
+                            type: string
+                        required:
+                        - state
+                        type: object
                       notificationPayloadFilter:
                         description: Filter for the notification payload.
                         items:
@@ -1315,6 +1335,26 @@ spec:
                             default: false
                             description: Replace missing values with 0s
                             type: boolean
+                        type: object
+                      noDataPolicy:
+                        description: Policy for handling missing data.
+                        properties:
+                          autoRetireSeconds:
+                            description: |-
+                              The timeframe in seconds for auto retiring values that were detected as no-data.
+                              Must be a multiple of 60 seconds.
+                            format: int32
+                            type: integer
+                          state:
+                            description: State to use when no data is present.
+                            enum:
+                            - ok
+                            - alerting
+                            - keepLast
+                            - noData
+                            type: string
+                        required:
+                        - state
                         type: object
                       rules:
                         description: Rules that match the alert to the data.

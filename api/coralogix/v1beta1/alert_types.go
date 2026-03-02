@@ -242,6 +242,12 @@ var (
 		LogsUniqueCountTimeWindowValue24Hours:   alerts.LOGSUNIQUEVALUETIMEWINDOWVALUE_LOGS_UNIQUE_VALUE_TIME_WINDOW_VALUE_HOURS_24,
 		LogsUniqueCountTimeWindowValue36Hours:   alerts.LOGSUNIQUEVALUETIMEWINDOWVALUE_LOGS_UNIQUE_VALUE_TIME_WINDOW_VALUE_HOURS_36,
 	}
+	NoDataPolicyStateToOpenAPI = map[NoDataPolicyState]alerts.NoDataPolicyState{
+		NoDataPolicyStateOk:       alerts.NODATAPOLICYSTATE_NO_DATA_POLICY_STATE_OK,
+		NoDataPolicyStateAlerting: alerts.NODATAPOLICYSTATE_NO_DATA_POLICY_STATE_ALERTING,
+		NoDataPolicyStateKeepLast: alerts.NODATAPOLICYSTATE_NO_DATA_POLICY_STATE_KEEP_LAST,
+		NoDataPolicyStateNoData:   alerts.NODATAPOLICYSTATE_NO_DATA_POLICY_STATE_NO_DATA,
+	}
 )
 
 // AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
@@ -376,6 +382,28 @@ const (
 	AutoRetireTimeframe12H                AutoRetireTimeframe = "12h"
 	AutoRetireTimeframe24H                AutoRetireTimeframe = "24h"
 )
+
+// +kubebuilder:validation:Enum=ok;alerting;keepLast;noData
+// State to use when no data is present.
+type NoDataPolicyState string
+
+const (
+	NoDataPolicyStateOk       NoDataPolicyState = "ok"
+	NoDataPolicyStateAlerting NoDataPolicyState = "alerting"
+	NoDataPolicyStateKeepLast NoDataPolicyState = "keepLast"
+	NoDataPolicyStateNoData   NoDataPolicyState = "noData"
+)
+
+// NoDataPolicy defines how to handle missing data in alerts.
+type NoDataPolicy struct {
+	// State to use when no data is present.
+	State NoDataPolicyState `json:"state"`
+
+	// The timeframe in seconds for auto retiring values that were detected as no-data.
+	// Must be a multiple of 60 seconds.
+	// +optional
+	AutoRetireSeconds *int32 `json:"autoRetireSeconds,omitempty"`
+}
 
 // When to re-trigger the alert.
 type RetriggeringPeriod struct {
@@ -654,6 +682,10 @@ type LogsThreshold struct {
 	// +optional
 	UndetectedValuesManagement *UndetectedValuesManagement `json:"undetectedValuesManagement,omitempty"`
 
+	// Policy for handling missing data.
+	// +optional
+	NoDataPolicy *NoDataPolicy `json:"noDataPolicy,omitempty"`
+
 	// +kubebuilder:validation:MinItems=1
 	// Rules that match the alert to the data.
 	Rules []LogsThresholdRule `json:"rules"`
@@ -868,6 +900,10 @@ type MetricThreshold struct {
 	// How to work with undetected values.
 	// +optional
 	UndetectedValuesManagement *UndetectedValuesManagement `json:"undetectedValuesManagement,omitempty"`
+
+	// Policy for handling missing data.
+	// +optional
+	NoDataPolicy *NoDataPolicy `json:"noDataPolicy,omitempty"`
 }
 
 // Filter for metrics
@@ -2822,6 +2858,7 @@ func expandMetricThreshold(threshold *MetricThreshold, priority alerts.AlertDefP
 		MetricFilter:               expandMetricFilter(threshold.MetricFilter),
 		Rules:                      expandMetricThresholdRules(threshold.Rules, priority),
 		UndetectedValuesManagement: expandUndetectedValuesManagement(threshold.UndetectedValuesManagement),
+		NoDataPolicy:               expandNoDataPolicy(threshold.NoDataPolicy),
 	}
 
 	missingValues := expandMetricMissingValues(&threshold.MissingValues)
@@ -2931,6 +2968,7 @@ func expandLogsThreshold(logsThreshold *LogsThreshold, priority alerts.AlertDefP
 	return &alerts.LogsThresholdType{
 		LogsFilter:                 expandLogsFilter(logsThreshold.LogsFilter),
 		UndetectedValuesManagement: expandUndetectedValuesManagement(logsThreshold.UndetectedValuesManagement),
+		NoDataPolicy:               expandNoDataPolicy(logsThreshold.NoDataPolicy),
 		Rules:                      expandLogsThresholdRules(logsThreshold.Rules, priority),
 		NotificationPayloadFilter:  logsThreshold.NotificationPayloadFilter,
 	}
@@ -3090,6 +3128,18 @@ func expandUndetectedValuesManagement(management *UndetectedValuesManagement) *a
 		TriggerUndetectedValues: alerts.PtrBool(management.TriggerUndetectedValues),
 		AutoRetireTimeframe:     &autoRetireTimeframe,
 	}
+}
+
+func expandNoDataPolicy(policy *NoDataPolicy) *alerts.NoDataPolicy {
+	if policy == nil {
+		return nil
+	}
+	state := NoDataPolicyStateToOpenAPI[policy.State]
+	noDataPolicy := &alerts.NoDataPolicy{
+		State:             &state,
+		AutoRetireSeconds: policy.AutoRetireSeconds,
+	}
+	return noDataPolicy
 }
 
 func expandLogsThresholdRules(rules []LogsThresholdRule, priority alerts.AlertDefPriority) []alerts.LogsThresholdRule {
