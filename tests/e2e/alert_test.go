@@ -145,6 +145,7 @@ var _ = Describe("Alert", Ordered, func() {
 							State:             coralogixv1beta1.NoDataPolicyStateAlerting,
 							AutoRetireSeconds: ptr.To(int32(1800)),
 						},
+						EvaluationDelayMs: ptr.To(int32(60000)),
 						Rules: []coralogixv1beta1.MetricThresholdRule{
 							{
 								Condition: coralogixv1beta1.MetricThresholdRuleCondition{

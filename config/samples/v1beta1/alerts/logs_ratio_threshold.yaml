@@ -44,6 +44,7 @@ spec:
                 operation: is
             severity: [ "warning", "info" ]
       denominatorAlias: "denominator"
+      evaluationDelayMs: 30000
       rules:
         - condition:
             timeWindow:

@@ -29,6 +29,7 @@ spec:
               - operation: is
                 value: webapp
             severity: [ "warning", "info" ]
+      evaluationDelayMs: 30000
       rules:
         - condition:
             threshold: "100.4"

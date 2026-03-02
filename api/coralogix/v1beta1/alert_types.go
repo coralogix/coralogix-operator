@@ -686,6 +686,10 @@ type LogsThreshold struct {
 	// +optional
 	NoDataPolicy *NoDataPolicy `json:"noDataPolicy,omitempty"`
 
+	// Evaluation delay in milliseconds.
+	// +optional
+	EvaluationDelayMs *int32 `json:"evaluationDelayMs,omitempty"`
+
 	// +kubebuilder:validation:MinItems=1
 	// Rules that match the alert to the data.
 	Rules []LogsThresholdRule `json:"rules"`
@@ -763,6 +767,11 @@ type LogsRatioThreshold struct {
 	NumeratorAlias   string     `json:"numeratorAlias"`
 	Denominator      LogsFilter `json:"denominator"`
 	DenominatorAlias string     `json:"denominatorAlias"`
+
+	// Evaluation delay in milliseconds.
+	// +optional
+	EvaluationDelayMs *int32 `json:"evaluationDelayMs,omitempty"`
+
 	// +kubebuilder:validation:MinItems=1
 	// Rules that match the alert to the data.
 	Rules []LogsRatioThresholdRule `json:"rules"`
@@ -884,6 +893,10 @@ type LogsTimeRelativeThreshold struct {
 	// How to work with undetected values.
 	// +optional
 	UndetectedValuesManagement *UndetectedValuesManagement `json:"undetectedValuesManagement"`
+
+	// Evaluation delay in milliseconds.
+	// +optional
+	EvaluationDelayMs *int32 `json:"evaluationDelayMs,omitempty"`
 }
 
 // Alerts for when a metric crosses a threshold.
@@ -904,6 +917,10 @@ type MetricThreshold struct {
 	// Policy for handling missing data.
 	// +optional
 	NoDataPolicy *NoDataPolicy `json:"noDataPolicy,omitempty"`
+
+	// Evaluation delay in milliseconds.
+	// +optional
+	EvaluationDelayMs *int32 `json:"evaluationDelayMs,omitempty"`
 }
 
 // Filter for metrics
@@ -1195,6 +1212,10 @@ type LogsAnomaly struct {
 	// Filter for the notification payload.
 	// +optional
 	NotificationPayloadFilter []string `json:"notificationPayloadFilter"`
+
+	// Evaluation delay in milliseconds.
+	// +optional
+	EvaluationDelayMs *int32 `json:"evaluationDelayMs,omitempty"`
 }
 
 // The rule to match the alert's conditions.
@@ -1221,6 +1242,10 @@ type MetricAnomaly struct {
 	// +kubebuilder:validation:MinItems=1
 	// Rules that match the alert to the data.
 	Rules []MetricAnomalyRule `json:"rules"`
+
+	// Evaluation delay in milliseconds.
+	// +optional
+	EvaluationDelayMs *int32 `json:"evaluationDelayMs,omitempty"`
 }
 
 // Condition to match to.
@@ -2508,7 +2533,8 @@ func expandMetricAnomaly(metricAnomaly *MetricAnomaly) *alerts.MetricAnomalyType
 		MetricFilter: &alerts.MetricFilter{
 			Promql: alerts.PtrString(metricAnomaly.MetricFilter.Promql),
 		},
-		Rules: expandMetricAnomalyRules(metricAnomaly.Rules),
+		Rules:             expandMetricAnomalyRules(metricAnomaly.Rules),
+		EvaluationDelayMs: metricAnomaly.EvaluationDelayMs,
 	}
 }
 
@@ -2541,6 +2567,7 @@ func expandLogsAnomaly(anomaly *LogsAnomaly) *alerts.LogsAnomalyType {
 		LogsFilter:                expandLogsFilter(anomaly.LogsFilter),
 		Rules:                     expandLogsAnomalyRules(anomaly.Rules),
 		NotificationPayloadFilter: anomaly.NotificationPayloadFilter,
+		EvaluationDelayMs:         anomaly.EvaluationDelayMs,
 	}
 }
 
@@ -2859,6 +2886,7 @@ func expandMetricThreshold(threshold *MetricThreshold, priority alerts.AlertDefP
 		Rules:                      expandMetricThresholdRules(threshold.Rules, priority),
 		UndetectedValuesManagement: expandUndetectedValuesManagement(threshold.UndetectedValuesManagement),
 		NoDataPolicy:               expandNoDataPolicy(threshold.NoDataPolicy),
+		EvaluationDelayMs:          threshold.EvaluationDelayMs,
 	}
 
 	missingValues := expandMetricMissingValues(&threshold.MissingValues)
@@ -2969,6 +2997,7 @@ func expandLogsThreshold(logsThreshold *LogsThreshold, priority alerts.AlertDefP
 		LogsFilter:                 expandLogsFilter(logsThreshold.LogsFilter),
 		UndetectedValuesManagement: expandUndetectedValuesManagement(logsThreshold.UndetectedValuesManagement),
 		NoDataPolicy:               expandNoDataPolicy(logsThreshold.NoDataPolicy),
+		EvaluationDelayMs:          logsThreshold.EvaluationDelayMs,
 		Rules:                      expandLogsThresholdRules(logsThreshold.Rules, priority),
 		NotificationPayloadFilter:  logsThreshold.NotificationPayloadFilter,
 	}
@@ -2980,9 +3009,10 @@ func expandLogsRatioThreshold(logsRatioThreshold *LogsRatioThreshold, priority a
 	}
 
 	thresholdType := &alerts.LogsRatioThresholdType{
-		NumeratorAlias:   alerts.PtrString(logsRatioThreshold.NumeratorAlias),
-		DenominatorAlias: alerts.PtrString(logsRatioThreshold.DenominatorAlias),
-		Rules:            expandLogsRatioThresholdRules(logsRatioThreshold.Rules, priority),
+		NumeratorAlias:    alerts.PtrString(logsRatioThreshold.NumeratorAlias),
+		DenominatorAlias:  alerts.PtrString(logsRatioThreshold.DenominatorAlias),
+		EvaluationDelayMs: logsRatioThreshold.EvaluationDelayMs,
+		Rules:             expandLogsRatioThresholdRules(logsRatioThreshold.Rules, priority),
 	}
 
 	Numerator := expandLogsFilter(&logsRatioThreshold.Numerator)
@@ -3005,6 +3035,7 @@ func expandLogsTimeRelativeThreshold(threshold *LogsTimeRelativeThreshold, prior
 		IgnoreInfinity:             alerts.PtrBool(threshold.IgnoreInfinity),
 		NotificationPayloadFilter:  threshold.NotificationPayloadFilter,
 		UndetectedValuesManagement: expandUndetectedValuesManagement(threshold.UndetectedValuesManagement),
+		EvaluationDelayMs:          threshold.EvaluationDelayMs,
 	}
 }
 

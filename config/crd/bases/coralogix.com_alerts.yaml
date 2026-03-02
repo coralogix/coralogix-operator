@@ -165,6 +165,10 @@ spec:
                   logsAnomaly:
                     description: Anomaly alerts for logs.
                     properties:
+                      evaluationDelayMs:
+                        description: Evaluation delay in milliseconds.
+                        format: int32
+                        type: integer
                       logsFilter:
                         description: Filter to filter the logs with.
                         properties:
@@ -576,6 +580,10 @@ spec:
                         type: object
                       denominatorAlias:
                         type: string
+                      evaluationDelayMs:
+                        description: Evaluation delay in milliseconds.
+                        format: int32
+                        type: integer
                       numerator:
                         description: A filter for logs.
                         properties:
@@ -727,6 +735,10 @@ spec:
                   logsThreshold:
                     description: Alerts for when a log crosses a threshold.
                     properties:
+                      evaluationDelayMs:
+                        description: Evaluation delay in milliseconds.
+                        format: int32
+                        type: integer
                       logsFilter:
                         description: Filter to filter the logs with.
                         properties:
@@ -927,6 +939,10 @@ spec:
                       a filter is more than or less than a threshold over a specific
                       time window.
                     properties:
+                      evaluationDelayMs:
+                        description: Evaluation delay in milliseconds.
+                        format: int32
+                        type: integer
                       ignoreInfinity:
                         default: false
                         description: Ignore infinity on the threshold value.
@@ -1236,6 +1252,10 @@ spec:
                   metricAnomaly:
                     description: Anomaly alerts for metrics.
                     properties:
+                      evaluationDelayMs:
+                        description: Evaluation delay in milliseconds.
+                        format: int32
+                        type: integer
                       metricFilter:
                         description: PromQL filter for metrics
                         properties:
@@ -1316,6 +1336,10 @@ spec:
                   metricThreshold:
                     description: Alerts for when a metric crosses a threshold.
                     properties:
+                      evaluationDelayMs:
+                        description: Evaluation delay in milliseconds.
+                        format: int32
+                        type: integer
                       metricFilter:
                         description: Filter for metrics
                         properties:
