@@ -42,6 +42,7 @@ type ConnectorReconciler struct {
 // +kubebuilder:rbac:groups=coralogix.com,resources=connectors,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=coralogix.com,resources=connectors/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=coralogix.com,resources=connectors/finalizers,verbs=update
+// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 
 func (r *ConnectorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	return coralogixreconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.Connector{}, r)
@@ -57,7 +58,7 @@ func (r *ConnectorReconciler) FinalizerName() string {
 
 func (r *ConnectorReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	connector := obj.(*coralogixv1alpha1.Connector)
-	requestConnector, err := connector.ExtractConnector()
+	requestConnector, err := connector.ExtractConnector(ctx)
 	if err != nil {
 		return fmt.Errorf("error on extracting create request: %w", err)
 	}
@@ -85,7 +86,7 @@ func (r *ConnectorReconciler) HandleCreation(ctx context.Context, log logr.Logge
 
 func (r *ConnectorReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	connector := obj.(*coralogixv1alpha1.Connector)
-	requestConnector, err := connector.ExtractConnector()
+	requestConnector, err := connector.ExtractConnector(ctx)
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
 	}

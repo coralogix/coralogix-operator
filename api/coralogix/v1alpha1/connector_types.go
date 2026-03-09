@@ -15,11 +15,16 @@
 package v1alpha1
 
 import (
+	"context"
 	"fmt"
 
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	connectors "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/connectors_service"
+
+	"github.com/coralogix/coralogix-operator/v2/internal/config"
 )
 
 // ConnectorSpec defines the desired state of Connector.
@@ -48,12 +53,21 @@ type ConnectorConfig struct {
 	Fields []ConnectorConfigField `json:"fields"`
 }
 
+// ConnectorConfigField defines a field in the connector configuration.
+// +kubebuilder:validation:XValidation:rule="(has(self.value) ? 1 : 0) + (has(self.secretKeyRef) ? 1 : 0) == 1",message="Exactly one of value or secretKeyRef must be set"
 type ConnectorConfigField struct {
 	// FieldName is the name of the field. e.g. "channel" for slack.
 	FieldName string `json:"fieldName"`
 
-	// Value is the value of the field.
-	Value string `json:"value"`
+	// Value is the literal value of the field. Conflicts with SecretKeyRef.
+	// +optional
+	Value *string `json:"value,omitempty"`
+
+	// SecretKeyRef is a reference to a secret key containing the field value.
+	// Use this for sensitive data like API keys, integration keys, or tokens.
+	// Conflicts with Value.
+	// +optional
+	SecretKeyRef *corev1.SecretKeySelector `json:"secretKeyRef,omitempty"`
 }
 
 type EntityTypeConfigOverrides struct {
@@ -117,7 +131,7 @@ var (
 	}
 )
 
-func (c *Connector) ExtractConnector() (*connectors.Connector, error) {
+func (c *Connector) ExtractConnector(ctx context.Context) (*connectors.Connector, error) {
 	connector := &connectors.Connector{
 		Name:        connectors.PtrString(c.Spec.Name),
 		Description: connectors.PtrString(c.Spec.Description),
@@ -129,8 +143,12 @@ func (c *Connector) ExtractConnector() (*connectors.Connector, error) {
 	}
 	connector.Type = connectorType.Ptr()
 
+	fields, err := ExtractConnectorConfigFields(ctx, c.Spec.ConnectorConfig.Fields, c.Namespace)
+	if err != nil {
+		return nil, fmt.Errorf("failed to extract connector config fields: %w", err)
+	}
 	connector.ConnectorConfig = &connectors.ConnectorConfig{
-		Fields: ExtractConnectorConfigFields(c.Spec.ConnectorConfig.Fields),
+		Fields: fields,
 	}
 
 	configOverrides, err := ExtractEntityTypeConfigOverrides(c.Spec.ConfigOverrides)
@@ -142,16 +160,29 @@ func (c *Connector) ExtractConnector() (*connectors.Connector, error) {
 	return connector, nil
 }
 
-func ExtractConnectorConfigFields(fields []ConnectorConfigField) []connectors.NotificationCenterConnectorConfigField {
+func ExtractConnectorConfigFields(ctx context.Context, fields []ConnectorConfigField, namespace string) ([]connectors.NotificationCenterConnectorConfigField, error) {
 	var result []connectors.NotificationCenterConnectorConfigField
 	for _, field := range fields {
+		var value string
+		if field.Value != nil {
+			value = *field.Value
+		} else if field.SecretKeyRef != nil {
+			secretValue, err := readSecret(ctx, *field.SecretKeyRef, namespace)
+			if err != nil {
+				return nil, fmt.Errorf("failed to read secret for field '%s': %w", field.FieldName, err)
+			}
+			value = secretValue
+		} else {
+			return nil, fmt.Errorf("field '%s' must have either value or secretKeyRef set", field.FieldName)
+		}
+
 		result = append(result, connectors.NotificationCenterConnectorConfigField{
 			FieldName: connectors.PtrString(field.FieldName),
-			Value:     connectors.PtrString(field.Value),
+			Value:     connectors.PtrString(value),
 		})
 	}
 
-	return result
+	return result, nil
 }
 
 func ExtractEntityTypeConfigOverrides(overrides []EntityTypeConfigOverrides) ([]connectors.EntityTypeConfigOverrides, error) {
@@ -183,6 +214,19 @@ func ExtractConfigOverridesFields(fields []TemplatedConnectorConfigField) []conn
 	}
 
 	return result
+}
+
+func readSecret(ctx context.Context, secretKeyRef corev1.SecretKeySelector, namespace string) (string, error) {
+	secret := &corev1.Secret{}
+	if err := config.GetClient().Get(ctx, client.ObjectKey{Namespace: namespace, Name: secretKeyRef.Name}, secret); err != nil {
+		return "", fmt.Errorf("failed to get secret '%s': %w", secretKeyRef.Name, err)
+	}
+
+	if value, ok := secret.Data[secretKeyRef.Key]; ok {
+		return string(value), nil
+	}
+
+	return "", fmt.Errorf("cannot find key '%s' in secret '%s'", secretKeyRef.Key, secretKeyRef.Name)
 }
 
 // +kubebuilder:object:root=true

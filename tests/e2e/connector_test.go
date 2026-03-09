@@ -22,9 +22,11 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
@@ -135,6 +137,73 @@ var _ = Describe("Connector", Ordered, func() {
 	})
 })
 
+var _ = Describe("Connector with SecretKeyRef", Ordered, func() {
+	var (
+		crClient            client.Client
+		notificationsClient *cxsdk.NotificationsClient
+		connectorID         string
+		connector           *coralogixv1alpha1.Connector
+		connectorName       string
+		secret              *corev1.Secret
+		secretName          string
+	)
+
+	BeforeAll(func() {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		notificationsClient = ClientsInstance.GetCoralogixClientSet().Notifications()
+	})
+
+	It("Should create connector with secret reference successfully", func(ctx context.Context) {
+		By("Creating a Secret with the integration key")
+		secretName = fmt.Sprintf("pagerduty-secret-%d", time.Now().Unix())
+		secret = createTestSecret(secretName, testNamespace, "integration-key", "test-integration-key-value")
+		Expect(crClient.Create(ctx, secret)).To(Succeed())
+
+		By("Creating Connector with SecretKeyRef")
+		connectorName = fmt.Sprintf("pagerduty-connector-%d", time.Now().Unix())
+		connector = getSamplePagerDutyConnectorWithSecret(connectorName, testNamespace, secretName, "integration-key")
+		Expect(crClient.Create(ctx, connector)).To(Succeed())
+
+		By("Fetching the Connector ID")
+		fetchedConnector := &coralogixv1alpha1.Connector{}
+		Eventually(func(g Gomega) error {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: connectorName, Namespace: testNamespace}, fetchedConnector)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedConnector.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedConnector.Status.PrintableStatus).To(Equal("RemoteSynced"))
+			if fetchedConnector.Status.Id != nil {
+				connectorID = *fetchedConnector.Status.Id
+				return nil
+			}
+			return fmt.Errorf("connector ID is not set")
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying Connector exists in Coralogix backend")
+		Eventually(func() error {
+			_, err := notificationsClient.GetConnector(ctx, &cxsdk.GetConnectorRequest{
+				Id: connectorID,
+			})
+
+			return err
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should be deleted successfully", func(ctx context.Context) {
+		By("Deleting the Connector")
+		Expect(crClient.Delete(ctx, connector)).To(Succeed())
+
+		By("Verifying Connector is deleted from Coralogix backend")
+		Eventually(func() codes.Code {
+			_, err := notificationsClient.GetConnector(ctx, &cxsdk.GetConnectorRequest{
+				Id: connectorID,
+			})
+			return cxsdk.Code(err)
+		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
+
+		By("Deleting the Secret")
+		Expect(crClient.Delete(ctx, secret)).To(Succeed())
+	})
+})
+
 func getSampleSlackConnector(name, namespace string) *coralogixv1alpha1.Connector {
 	return &coralogixv1alpha1.Connector{
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
@@ -144,9 +213,9 @@ func getSampleSlackConnector(name, namespace string) *coralogixv1alpha1.Connecto
 			Type:        "slack",
 			ConnectorConfig: coralogixv1alpha1.ConnectorConfig{
 				Fields: []coralogixv1alpha1.ConnectorConfigField{
-					{FieldName: "channel", Value: "general"},
-					{FieldName: "integrationId", Value: "Slack"},
-					{FieldName: "fallbackChannel", Value: "fallback_general"},
+					{FieldName: "channel", Value: ptr.To("general")},
+					{FieldName: "integrationId", Value: ptr.To("Slack")},
+					{FieldName: "fallbackChannel", Value: ptr.To("fallback_general")},
 				},
 			},
 			ConfigOverrides: []coralogixv1alpha1.EntityTypeConfigOverrides{
@@ -160,6 +229,42 @@ func getSampleSlackConnector(name, namespace string) *coralogixv1alpha1.Connecto
 					},
 				},
 			},
+		},
+	}
+}
+
+func getSamplePagerDutyConnectorWithSecret(name, namespace, secretName, secretKey string) *coralogixv1alpha1.Connector {
+	return &coralogixv1alpha1.Connector{
+		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
+		Spec: coralogixv1alpha1.ConnectorSpec{
+			Name:        name,
+			Description: "PagerDuty connector with secret integration key",
+			Type:        "pagerDuty",
+			ConnectorConfig: coralogixv1alpha1.ConnectorConfig{
+				Fields: []coralogixv1alpha1.ConnectorConfigField{
+					{
+						FieldName: "integrationKey",
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: secretName,
+							},
+							Key: secretKey,
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func createTestSecret(name, namespace, key, value string) *corev1.Secret {
+	return &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Data: map[string][]byte{
+			key: []byte(value),
 		},
 	}
 }
