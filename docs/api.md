@@ -8930,7 +8930,7 @@ ConnectorConfig is the configuration of the connector.
 
 
 
-
+ConnectorConfigField defines a field in the connector configuration.
 
 <table>
     <thead>
@@ -8949,12 +8949,70 @@ ConnectorConfig is the configuration of the connector.
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b><a href="#connectorspecconnectorconfigfieldsindexsecretkeyref">secretKeyRef</a></b></td>
+        <td>object</td>
+        <td>
+          SecretKeyRef is a reference to a secret key containing the field value.
+Use this for sensitive data like API keys, integration keys, or tokens.
+Conflicts with Value.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          Value is the value of the field.<br/>
+          Value is the literal value of the field. Conflicts with SecretKeyRef.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.spec.connectorConfig.fields[index].secretKeyRef
+<sup><sup>[↩ Parent](#connectorspecconnectorconfigfieldsindex)</sup></sup>
+
+
+
+SecretKeyRef is a reference to a secret key containing the field value.
+Use this for sensitive data like API keys, integration keys, or tokens.
+Conflicts with Value.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key of the secret to select from.  Must be a valid secret key.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the Secret or its key must be defined<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
