@@ -30,7 +30,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // ConnectorReconciler reconciles a Connector object
@@ -42,6 +41,7 @@ type ConnectorReconciler struct {
 // +kubebuilder:rbac:groups=coralogix.com,resources=connectors,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=coralogix.com,resources=connectors/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=coralogix.com,resources=connectors/finalizers,verbs=update
+// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 
 func (r *ConnectorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	return coralogixreconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.Connector{}, r)
@@ -57,7 +57,7 @@ func (r *ConnectorReconciler) FinalizerName() string {
 
 func (r *ConnectorReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	connector := obj.(*coralogixv1alpha1.Connector)
-	requestConnector, err := connector.ExtractConnector()
+	requestConnector, err := connector.ExtractConnector(ctx)
 	if err != nil {
 		return fmt.Errorf("error on extracting create request: %w", err)
 	}
@@ -66,7 +66,7 @@ func (r *ConnectorReconciler) HandleCreation(ctx context.Context, log logr.Logge
 		Connector: requestConnector,
 	}
 
-	log.Info("Creating remote Connector", "Connector", utils.FormatJSON(createRequest))
+	log.Info("Creating remote Connector", "name", connector.Spec.Name, "type", connector.Spec.Type)
 	createResponse, httpResp, err := r.ConnectorsClient.
 		ConnectorsServiceCreateConnector(ctx).
 		CreateConnectorRequest(createRequest).
@@ -74,7 +74,7 @@ func (r *ConnectorReconciler) HandleCreation(ctx context.Context, log logr.Logge
 	if err != nil {
 		return fmt.Errorf("error on creating remote Connector: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote connector created", "response", utils.FormatJSON(createResponse))
+	log.Info("Remote connector created", "name", connector.Spec.Name, "id", createResponse.Connector.GetId())
 
 	connector.Status = coralogixv1alpha1.ConnectorStatus{
 		Id: createResponse.Connector.Id,
@@ -85,7 +85,7 @@ func (r *ConnectorReconciler) HandleCreation(ctx context.Context, log logr.Logge
 
 func (r *ConnectorReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	connector := obj.(*coralogixv1alpha1.Connector)
-	requestConnector, err := connector.ExtractConnector()
+	requestConnector, err := connector.ExtractConnector(ctx)
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
 	}
@@ -93,7 +93,7 @@ func (r *ConnectorReconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 	updateRequest := &connectors.ReplaceConnectorRequest{
 		Connector: requestConnector,
 	}
-	log.Info("Updating remote Connector", "Connector", utils.FormatJSON(updateRequest))
+	log.Info("Updating remote Connector", "name", connector.Spec.Name, "id", *connector.Status.Id)
 	updateResponse, httpResp, err := r.ConnectorsClient.
 		ConnectorsServiceReplaceConnector(ctx).
 		ReplaceConnectorRequest(*updateRequest).
@@ -101,7 +101,7 @@ func (r *ConnectorReconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 	if err != nil {
 		return cxsdk.NewAPIError(httpResp, err)
 	}
-	log.Info("Remote Connector updated", "Connector", utils.FormatJSON(updateResponse))
+	log.Info("Remote Connector updated", "name", connector.Spec.Name, "id", updateResponse.Connector.GetId())
 
 	return nil
 }
