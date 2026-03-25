@@ -13197,7 +13197,7 @@ OutboundWebhookSpec defines the desired state of an outbound webhook.
         <td>
           Type of webhook.<br/>
           <br/>
-            <i>Validations</i>:<li>(has(self.genericWebhook) ? 1 : 0) + (has(self.slack) ? 1 : 0) + (has(self.pagerDuty) ? 1 : 0) + (has(self.sendLog) ? 1 : 0) + (has(self.emailGroup) ? 1 : 0) + (has(self.microsoftTeams) ? 1 : 0) + (has(self.jira) ? 1 : 0) + (has(self.opsgenie) ? 1 : 0) + (has(self.demisto) ? 1 : 0) + (has(self.awsEventBridge) ? 1 : 0) == 1: Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge</li>
+            <i>Validations</i>:<li>(has(self.genericWebhook) ? 1 : 0) + (has(self.slack) ? 1 : 0) + (has(self.pagerDuty) ? 1 : 0) + (has(self.sendLog) ? 1 : 0) + (has(self.emailGroup) ? 1 : 0) + (has(self.microsoftTeams) ? 1 : 0) + (has(self.jira) ? 1 : 0) + (has(self.opsgenie) ? 1 : 0) + (has(self.demisto) ? 1 : 0) + (has(self.awsEventBridge) ? 1 : 0) + (has(self.ibmEventNotifications) ? 1 : 0) == 1: Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge, ibmEventNotifications</li>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -13246,6 +13246,13 @@ Type of webhook.
         <td>object</td>
         <td>
           Generic HTTP(s) webhook.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypeibmeventnotifications">ibmEventNotifications</a></b></td>
+        <td>object</td>
+        <td>
+          IBM event notifications message.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -13463,6 +13470,70 @@ Generic HTTP(s) webhook.
           Payload of the webhook call.<br/>
         </td>
         <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### OutboundWebhook.spec.outboundWebhookType.ibmEventNotifications
+<sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktype)</sup></sup>
+
+
+
+IBM event notifications message.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>endpointType</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: DefaultOrPublic, Private<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>eventNotificationsInstanceId</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>regionId</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>sourceId</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>sourceName</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>url</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 

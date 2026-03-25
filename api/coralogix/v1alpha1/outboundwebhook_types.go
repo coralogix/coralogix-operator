@@ -35,7 +35,7 @@ type OutboundWebhookSpec struct {
 }
 
 // Webhook type
-// +kubebuilder:validation:XValidation:rule="(has(self.genericWebhook) ? 1 : 0) + (has(self.slack) ? 1 : 0) + (has(self.pagerDuty) ? 1 : 0) + (has(self.sendLog) ? 1 : 0) + (has(self.emailGroup) ? 1 : 0) + (has(self.microsoftTeams) ? 1 : 0) + (has(self.jira) ? 1 : 0) + (has(self.opsgenie) ? 1 : 0) + (has(self.demisto) ? 1 : 0) + (has(self.awsEventBridge) ? 1 : 0) == 1",message="Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge"
+// +kubebuilder:validation:XValidation:rule="(has(self.genericWebhook) ? 1 : 0) + (has(self.slack) ? 1 : 0) + (has(self.pagerDuty) ? 1 : 0) + (has(self.sendLog) ? 1 : 0) + (has(self.emailGroup) ? 1 : 0) + (has(self.microsoftTeams) ? 1 : 0) + (has(self.jira) ? 1 : 0) + (has(self.opsgenie) ? 1 : 0) + (has(self.demisto) ? 1 : 0) + (has(self.awsEventBridge) ? 1 : 0) + (has(self.ibmEventNotifications) ? 1 : 0) == 1",message="Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge, ibmEventNotifications"
 type OutboundWebhookType struct {
 	// Generic HTTP(s) webhook.
 	// +optional
@@ -76,6 +76,10 @@ type OutboundWebhookType struct {
 	// AWS eventbridge message.
 	// +optional
 	AwsEventBridge *AwsEventBridge `json:"awsEventBridge,omitempty"`
+
+	// IBM event notifications message.
+	// +optional
+	IbmEventNotifications *IbmEventNotifications `json:"ibmEventNotifications,omitempty"`
 }
 
 // Generic HTTP(s) webhook.
@@ -331,6 +335,40 @@ func (in *AwsEventBridge) extractAwsEventBridgeConfig() *webhooks.AwsEventBridge
 	}
 }
 
+type IbmEventNotifications struct {
+	Url                          string                                  `json:"url"`
+	EndpointType                 IbmEventNotificationsEndpointType       `json:"endpointType"`
+	EventNotificationsInstanceId string                                  `json:"eventNotificationsInstanceId"`
+	RegionId                     string                                  `json:"regionId"`
+	SourceId                     string                                  `json:"sourceId"`
+	SourceName                   string                                  `json:"sourceName"`
+}
+
+func (in *IbmEventNotifications) extractIbmEventNotificationsConfig() *webhooks.IbmEventNotificationsConfig {
+	return &webhooks.IbmEventNotificationsConfig{
+		EndpointType:                 IbmEventNotificationsEndpointTypeToOpenAPI[in.EndpointType].Ptr(),
+		EventNotificationsInstanceId: webhooks.PtrString(in.EventNotificationsInstanceId),
+		RegionId:                     webhooks.PtrString(in.RegionId),
+		SourceId:                     webhooks.PtrString(in.SourceId),
+		SourceName:                   webhooks.PtrString(in.SourceName),
+	}
+}
+
+// +kubebuilder:validation:Enum=DefaultOrPublic;Private
+type IbmEventNotificationsEndpointType string
+
+const (
+	IbmEventNotificationsEndpointTypeDefaultOrPublic IbmEventNotificationsEndpointType = "DefaultOrPublic"
+	IbmEventNotificationsEndpointTypePrivate         IbmEventNotificationsEndpointType = "Private"
+)
+
+var (
+	IbmEventNotificationsEndpointTypeToOpenAPI = map[IbmEventNotificationsEndpointType]webhooks.EndpointType{
+		IbmEventNotificationsEndpointTypeDefaultOrPublic: webhooks.ENDPOINTTYPE_ENDPOINT_TYPE_DEFAULT_OR_PUBLIC,
+		IbmEventNotificationsEndpointTypePrivate:         webhooks.ENDPOINTTYPE_ENDPOINT_TYPE_PRIVATE,
+	}
+)
+
 // OutboundWebhookStatus defines the observed state of OutboundWebhook
 type OutboundWebhookStatus struct {
 	// +optional
@@ -497,6 +535,15 @@ func (in *OutboundWebhookSpec) ExtractOutgoingWebhookInputData() (*webhooks.Outg
 				Name:           webhooks.PtrString(in.Name),
 				Type:           webhooks.WEBHOOKTYPE_AWS_EVENT_BRIDGE.Ptr(),
 				AwsEventBridge: in.OutboundWebhookType.AwsEventBridge.extractAwsEventBridgeConfig(),
+			},
+		}, nil
+	} else if ibmEventNotifications := in.OutboundWebhookType.IbmEventNotifications; ibmEventNotifications != nil {
+		return &webhooks.OutgoingWebhookInputData{
+			OutgoingWebhookInputDataIbmEventNotifications: &webhooks.OutgoingWebhookInputDataIbmEventNotifications{
+				Name:                  webhooks.PtrString(in.Name),
+				Type:                  webhooks.WEBHOOKTYPE_IBM_EVENT_NOTIFICATIONS.Ptr(),
+				Url:                   webhooks.PtrString(ibmEventNotifications.Url),
+				IbmEventNotifications: ibmEventNotifications.extractIbmEventNotificationsConfig(),
 			},
 		}, nil
 	}
