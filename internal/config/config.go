@@ -40,7 +40,7 @@ var (
 	CrClient     client.Client
 	scheme       *runtime.Scheme
 	once         sync.Once
-	validRegions = []string{"AP1", "AP2", "AP3", "EU1", "EU2", "US1", "US2"}
+	validRegions = []string{"AP1", "AP2", "AP3", "EU1", "EU2", "US1", "US2", "US3"}
 )
 
 type Config struct {
