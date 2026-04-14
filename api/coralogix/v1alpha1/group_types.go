@@ -156,7 +156,7 @@ func (g *Group) ExtractUpdateGroupRequest(
 		UserUpdates: &groups.UserUpdates{
 			Operation: &groups.UserUpdatesOperation{
 				UserUpdatesOperationSet: &groups.UserUpdatesOperationSet{
-					Set: &groups.UserIdList{
+					Set: groups.UserIdList{
 						UserIds: usersIds,
 					},
 				},
@@ -165,7 +165,7 @@ func (g *Group) ExtractUpdateGroupRequest(
 		RoleUpdate: &groups.RoleUpdate{
 			Action: &groups.RoleUpdateAction{
 				RoleUpdateActionSetRoleId: &groups.RoleUpdateActionSetRoleId{
-					SetRoleId: &groups.SetRoleId{
+					SetRoleId: groups.SetRoleId{
 						Value: &roleId,
 					},
 				},
@@ -174,7 +174,7 @@ func (g *Group) ExtractUpdateGroupRequest(
 		ScopeUpdate: &groups.ScopeUpdate{
 			Action: &groups.ScopeUpdateAction{
 				ScopeUpdateActionSetScopeId: &groups.ScopeUpdateActionSetScopeId{
-					SetScopeId: &groups.SetScopeId{
+					SetScopeId: groups.SetScopeId{
 						Value: scopeId,
 					},
 				},

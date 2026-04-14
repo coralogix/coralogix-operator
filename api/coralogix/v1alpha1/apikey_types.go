@@ -120,10 +120,10 @@ type ApiKeyList struct {
 func (s *ApiKeySpec) ExtractCreateApiKeyRequest() *apikeys.CreateApiKeyRequest {
 	owner := &apikeys.Owner{}
 	if s.Owner.UserId != nil {
-		owner.OwnerUserId = &apikeys.OwnerUserId{UserId: s.Owner.UserId}
+		owner.OwnerUserId = &apikeys.OwnerUserId{UserId: *s.Owner.UserId}
 	}
 	if s.Owner.TeamId != nil {
-		owner.OwnerTeamId = &apikeys.OwnerTeamId{TeamId: apikeys.PtrInt64(int64(*s.Owner.TeamId))}
+		owner.OwnerTeamId = &apikeys.OwnerTeamId{TeamId: int64(*s.Owner.TeamId)}
 	}
 
 	return &apikeys.CreateApiKeyRequest{

@@ -1612,7 +1612,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 				PhantomMode:             alerts.PtrBool(in.PhantomMode),
 				ActiveOn:                expandAlertSchedule(in.Schedule),
 				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_LOGS_IMMEDIATE_OR_UNSPECIFIED.Ptr(),
-				LogsImmediate:           expandLogsImmediate(logsImmediate),
+				LogsImmediate:           *expandLogsImmediate(logsImmediate),
 			},
 		}, nil
 	} else if logsThreshold := in.TypeDefinition.LogsThreshold; logsThreshold != nil {
@@ -1630,7 +1630,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 				PhantomMode:             alerts.PtrBool(in.PhantomMode),
 				ActiveOn:                expandAlertSchedule(in.Schedule),
 				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_LOGS_THRESHOLD.Ptr(),
-				LogsThreshold:           expandLogsThreshold(logsThreshold, priority),
+				LogsThreshold:           *expandLogsThreshold(logsThreshold, priority),
 			},
 		}, nil
 	} else if logsRatioThreshold := in.TypeDefinition.LogsRatioThreshold; logsRatioThreshold != nil {
@@ -1648,7 +1648,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 				PhantomMode:             alerts.PtrBool(in.PhantomMode),
 				ActiveOn:                expandAlertSchedule(in.Schedule),
 				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_LOGS_RATIO_THRESHOLD.Ptr(),
-				LogsRatioThreshold:      expandLogsRatioThreshold(logsRatioThreshold, priority),
+				LogsRatioThreshold:      *expandLogsRatioThreshold(logsRatioThreshold, priority),
 			},
 		}, nil
 	} else if logsTimeRelativeThreshold := in.TypeDefinition.LogsTimeRelativeThreshold; logsTimeRelativeThreshold != nil {
@@ -1666,7 +1666,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 				PhantomMode:               alerts.PtrBool(in.PhantomMode),
 				ActiveOn:                  expandAlertSchedule(in.Schedule),
 				Type:                      alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_LOGS_TIME_RELATIVE_THRESHOLD.Ptr(),
-				LogsTimeRelativeThreshold: expandLogsTimeRelativeThreshold(logsTimeRelativeThreshold, priority),
+				LogsTimeRelativeThreshold: *expandLogsTimeRelativeThreshold(logsTimeRelativeThreshold, priority),
 			},
 		}, nil
 	} else if metricThreshold := in.TypeDefinition.MetricThreshold; metricThreshold != nil {
@@ -1684,7 +1684,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 				PhantomMode:             alerts.PtrBool(in.PhantomMode),
 				ActiveOn:                expandAlertSchedule(in.Schedule),
 				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_METRIC_THRESHOLD.Ptr(),
-				MetricThreshold:         expandMetricThreshold(metricThreshold, priority),
+				MetricThreshold:         *expandMetricThreshold(metricThreshold, priority),
 			},
 		}, nil
 	} else if tracingThreshold := in.TypeDefinition.TracingThreshold; tracingThreshold != nil {
@@ -1702,7 +1702,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 				PhantomMode:             alerts.PtrBool(in.PhantomMode),
 				ActiveOn:                expandAlertSchedule(in.Schedule),
 				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_TRACING_THRESHOLD.Ptr(),
-				TracingThreshold:        expandTracingThreshold(tracingThreshold),
+				TracingThreshold:        *expandTracingThreshold(tracingThreshold),
 			},
 		}, nil
 	} else if tracingImmediate := in.TypeDefinition.TracingImmediate; tracingImmediate != nil {
@@ -1720,7 +1720,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 				PhantomMode:             alerts.PtrBool(in.PhantomMode),
 				ActiveOn:                expandAlertSchedule(in.Schedule),
 				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_TRACING_IMMEDIATE.Ptr(),
-				TracingImmediate:        expandTracingImmediate(tracingImmediate),
+				TracingImmediate:        *expandTracingImmediate(tracingImmediate),
 			},
 		}, nil
 	} else if flow := in.TypeDefinition.Flow; flow != nil {
@@ -1738,7 +1738,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 				PhantomMode:             alerts.PtrBool(in.PhantomMode),
 				ActiveOn:                expandAlertSchedule(in.Schedule),
 				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_FLOW.Ptr(),
-				Flow:                    expandFlow(listingAlertsAndWebhooksProperties, flow),
+				Flow:                    *expandFlow(listingAlertsAndWebhooksProperties, flow),
 			},
 		}, nil
 	} else if logsAnomaly := in.TypeDefinition.LogsAnomaly; logsAnomaly != nil {
@@ -1756,7 +1756,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 				PhantomMode:             alerts.PtrBool(in.PhantomMode),
 				ActiveOn:                expandAlertSchedule(in.Schedule),
 				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_LOGS_ANOMALY.Ptr(),
-				LogsAnomaly:             expandLogsAnomaly(logsAnomaly),
+				LogsAnomaly:             *expandLogsAnomaly(logsAnomaly),
 			},
 		}, nil
 	} else if metricAnomaly := in.TypeDefinition.MetricAnomaly; metricAnomaly != nil {
@@ -1774,7 +1774,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 				PhantomMode:             alerts.PtrBool(in.PhantomMode),
 				ActiveOn:                expandAlertSchedule(in.Schedule),
 				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_METRIC_ANOMALY.Ptr(),
-				MetricAnomaly:           expandMetricAnomaly(metricAnomaly),
+				MetricAnomaly:           *expandMetricAnomaly(metricAnomaly),
 			},
 		}, nil
 	} else if logsNewValue := in.TypeDefinition.LogsNewValue; logsNewValue != nil {
@@ -1792,7 +1792,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 				PhantomMode:             alerts.PtrBool(in.PhantomMode),
 				ActiveOn:                expandAlertSchedule(in.Schedule),
 				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_LOGS_NEW_VALUE.Ptr(),
-				LogsNewValue:            expandLogsNewValue(logsNewValue),
+				LogsNewValue:            *expandLogsNewValue(logsNewValue),
 			},
 		}, nil
 	} else if logsUniqueCount := in.TypeDefinition.LogsUniqueCount; logsUniqueCount != nil {
@@ -1810,7 +1810,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 				PhantomMode:             alerts.PtrBool(in.PhantomMode),
 				ActiveOn:                expandAlertSchedule(in.Schedule),
 				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_LOGS_UNIQUE_COUNT.Ptr(),
-				LogsUniqueCount:         expandLogsUniqueCount(logsUniqueCount),
+				LogsUniqueCount:         *expandLogsUniqueCount(logsUniqueCount),
 			},
 		}, nil
 	} else if sloThreshold := in.TypeDefinition.SloThreshold; sloThreshold != nil {
@@ -1832,7 +1832,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 				PhantomMode:             alerts.PtrBool(in.PhantomMode),
 				ActiveOn:                expandAlertSchedule(in.Schedule),
 				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_SLO_THRESHOLD.Ptr(),
-				SloThreshold:            sloThresholdType,
+				SloThreshold:            *sloThresholdType,
 			},
 		}, nil
 	}
@@ -1967,13 +1967,13 @@ func expandIntegration(integration IntegrationType, listingWebhooksProperties *G
 
 		return &alerts.V3IntegrationType{
 			V3IntegrationTypeIntegrationId: &alerts.V3IntegrationTypeIntegrationId{
-				IntegrationId: integrationID,
+				IntegrationId: *integrationID,
 			},
 		}, nil
 	} else if recipients := integration.Recipients; recipients != nil {
 		return &alerts.V3IntegrationType{
 			V3IntegrationTypeRecipients: &alerts.V3IntegrationTypeRecipients{
-				Recipients: &alerts.Recipients{
+				Recipients: alerts.Recipients{
 					Emails: recipients,
 				},
 			},
@@ -2282,13 +2282,13 @@ func convertSloBackendNameToId(listingSloProperties *GetResourceRefProperties, n
 		{
 			Field: &slos.SloFilterField{
 				SloFilterFieldConstFilter: &slos.SloFilterFieldConstFilter{
-					ConstFilter: slos.SLOCONSTANTFILTERFIELD_SLO_CONST_FILTER_FIELD_SLO_NAME.Ptr(),
+					ConstFilter: slos.SLOCONSTANTFILTERFIELD_SLO_CONST_FILTER_FIELD_SLO_NAME,
 				},
 			},
 			Predicate: &slos.SloFilterPredicate{
 				Is: &slos.SloFilterPredicateIs{
 					IsFilterPredicateStringValues: &slos.IsFilterPredicateStringValues{
-						StringValues: &slos.StringValues{
+						StringValues: slos.StringValues{
 							Values: []string{*name},
 						},
 					},
@@ -2354,7 +2354,7 @@ func expandSloThresholdType(sloId string, sloThreshold *SloThreshold) (*alerts.S
 	if errorBudget := sloThreshold.ErrorBudget; errorBudget != nil {
 		return &alerts.SloThresholdType{
 			SloThresholdTypeErrorBudget: &alerts.SloThresholdTypeErrorBudget{
-				ErrorBudget: &alerts.ErrorBudgetThreshold{
+				ErrorBudget: alerts.ErrorBudgetThreshold{
 					Rules: expandSloErrorBudgetRules(errorBudget.Rules),
 				},
 				SloDefinition: &alerts.V3SloDefinition{
@@ -2365,7 +2365,7 @@ func expandSloThresholdType(sloId string, sloThreshold *SloThreshold) (*alerts.S
 	} else if burnRate := sloThreshold.BurnRate; burnRate != nil {
 		return &alerts.SloThresholdType{
 			SloThresholdTypeBurnRate: &alerts.SloThresholdTypeBurnRate{
-				BurnRate: expandSloBurnRate(*burnRate),
+				BurnRate: *expandSloBurnRate(*burnRate),
 				SloDefinition: &alerts.V3SloDefinition{
 					SloId: alerts.PtrString(sloId),
 				},
@@ -2403,7 +2403,7 @@ func expandSloBurnRate(burnRate BurnRate) *alerts.BurnRateThreshold {
 		return &alerts.BurnRateThreshold{
 			BurnRateThresholdSingle: &alerts.BurnRateThresholdSingle{
 				Rules: expandSloBurnRateRules(burnRate.Rules),
-				Single: &alerts.BurnRateTypeSingle{
+				Single: alerts.BurnRateTypeSingle{
 					TimeDuration: &alerts.TimeDuration{
 						Unit:     expandDurationUnit(burnRate.BurnRateType.Single.TimeDuration.Unit),
 						Duration: &duration,
@@ -2416,7 +2416,7 @@ func expandSloBurnRate(burnRate BurnRate) *alerts.BurnRateThreshold {
 	return &alerts.BurnRateThreshold{
 		BurnRateThresholdDual: &alerts.BurnRateThresholdDual{
 			Rules: expandSloBurnRateRules(burnRate.Rules),
-			Dual: &alerts.BurnRateTypeDual{
+			Dual: alerts.BurnRateTypeDual{
 				TimeDuration: &alerts.TimeDuration{
 					Duration: &duration,
 					Unit:     expandDurationUnit(burnRate.BurnRateType.Dual.TimeDuration.Unit),
@@ -2938,13 +2938,13 @@ func expandMetricTimeWindow(timeWindow MetricTimeWindow) *alerts.MetricTimeWindo
 	if specificValue := timeWindow.SpecificValue; specificValue != nil {
 		return &alerts.MetricTimeWindow{
 			MetricTimeWindowMetricTimeWindowSpecificValue: &alerts.MetricTimeWindowMetricTimeWindowSpecificValue{
-				MetricTimeWindowSpecificValue: MetricTimeWindowToOpenAPI[*specificValue].Ptr(),
+				MetricTimeWindowSpecificValue: MetricTimeWindowToOpenAPI[*specificValue],
 			},
 		}
 	} else if dynamicTimeWindow := timeWindow.DynamicDuration; dynamicTimeWindow != nil {
 		return &alerts.MetricTimeWindow{
 			MetricTimeWindowMetricTimeWindowDynamicDuration: &alerts.MetricTimeWindowMetricTimeWindowDynamicDuration{
-				MetricTimeWindowDynamicDuration: dynamicTimeWindow,
+				MetricTimeWindowDynamicDuration: *dynamicTimeWindow,
 			},
 		}
 	}
@@ -2955,7 +2955,7 @@ func expandMetricTimeWindow(timeWindow MetricTimeWindow) *alerts.MetricTimeWindo
 func expandAnomalyMetricTimeWindow(timeWindow MetricAnomalyTimeWindow) *alerts.MetricTimeWindow {
 	return &alerts.MetricTimeWindow{
 		MetricTimeWindowMetricTimeWindowSpecificValue: &alerts.MetricTimeWindowMetricTimeWindowSpecificValue{
-			MetricTimeWindowSpecificValue: MetricTimeWindowToOpenAPI[timeWindow.SpecificValue].Ptr(),
+			MetricTimeWindowSpecificValue: MetricTimeWindowToOpenAPI[timeWindow.SpecificValue],
 		},
 	}
 }
@@ -2966,13 +2966,13 @@ func expandMetricMissingValues(missingValues *MetricMissingValues) *alerts.Metri
 	} else if missingValues.ReplaceWithZero {
 		return &alerts.MetricMissingValues{
 			MetricMissingValuesReplaceWithZero: &alerts.MetricMissingValuesReplaceWithZero{
-				ReplaceWithZero: alerts.PtrBool(true),
+				ReplaceWithZero: true,
 			},
 		}
 	} else if missingValues.MinNonNullValuesPct != nil {
 		return &alerts.MetricMissingValues{
 			MetricMissingValuesMinNonNullValuesPct: &alerts.MetricMissingValuesMinNonNullValuesPct{
-				MinNonNullValuesPct: missingValues.MinNonNullValuesPct,
+				MinNonNullValuesPct: *missingValues.MinNonNullValuesPct,
 			},
 		}
 	}

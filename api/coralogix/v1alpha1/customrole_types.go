@@ -42,7 +42,7 @@ func (s *CustomRoleSpec) ExtractCreateCustomRoleRequest() *customroles.RoleManag
 		CreateRoleRequestParentRoleName: &customroles.CreateRoleRequestParentRoleName{
 			Name:           customroles.PtrString(s.Name),
 			Description:    customroles.PtrString(s.Description),
-			ParentRoleName: customroles.PtrString(s.ParentRoleName),
+			ParentRoleName: s.ParentRoleName,
 			Permissions:    s.Permissions,
 		},
 	}

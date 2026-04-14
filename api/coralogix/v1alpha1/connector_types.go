@@ -119,12 +119,12 @@ func (c *Connector) HasIDInStatus() bool {
 }
 
 var (
-	schemaToOpenApiConnectorType = map[string]connectors.ConnectorType{
-		"slack":        connectors.CONNECTORTYPE_SLACK,
-		"genericHttps": connectors.CONNECTORTYPE_GENERIC_HTTPS,
-		"pagerDuty":    connectors.CONNECTORTYPE_PAGERDUTY,
-		"email":        connectors.CONNECTORTYPE_EMAIL,
-		"serviceNow":   connectors.CONNECTORTYPE_SERVICE_NOW,
+	schemaToOpenApiConnectorType = map[string]connectors.NotificationCenterConnectorType{
+		"slack":        connectors.NOTIFICATIONCENTERCONNECTORTYPE_SLACK,
+		"genericHttps": connectors.NOTIFICATIONCENTERCONNECTORTYPE_GENERIC_HTTPS,
+		"pagerDuty":    connectors.NOTIFICATIONCENTERCONNECTORTYPE_PAGERDUTY,
+		"email":        connectors.NOTIFICATIONCENTERCONNECTORTYPE_EMAIL,
+		"serviceNow":   connectors.NOTIFICATIONCENTERCONNECTORTYPE_SERVICE_NOW,
 	}
 	schemaToOpenApiEntityType = map[string]connectors.NotificationCenterEntityType{
 		"alerts": connectors.NOTIFICATIONCENTERENTITYTYPE_ALERTS,

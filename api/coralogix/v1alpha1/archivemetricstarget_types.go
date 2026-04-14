@@ -64,7 +64,7 @@ func (s *ArchiveMetricsTargetSpec) ExtractConfigureTenantRequest() (*archivemetr
 					FiveMinutesResolution: s.ResolutionPolicy.FiveMinutesResolution,
 					OneHourResolution:     s.ResolutionPolicy.OneHourResolution,
 				},
-				S3: &archivemetrics.S3Config{
+				S3: archivemetrics.S3Config{
 					Region: s.S3Target.Region,
 					Bucket: s.S3Target.BucketName,
 				},
@@ -80,7 +80,7 @@ func (s *ArchiveMetricsTargetSpec) ExtractUpdateRequest() (*archivemetrics.Metri
 		return &archivemetrics.MetricsConfiguratorPublicServiceUpdateRequest{
 			UpdateRequestS3: &archivemetrics.UpdateRequestS3{
 				RetentionDays: s.RetentionDays,
-				S3: &archivemetrics.S3Config{
+				S3: archivemetrics.S3Config{
 					Region: s.S3Target.Region,
 					Bucket: s.S3Target.BucketName,
 				},

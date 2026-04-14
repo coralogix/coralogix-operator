@@ -125,11 +125,11 @@ func (p *Preset) HasIDInStatus() bool {
 }
 
 var (
-	schemaToOpenApiPresetConnectorType = map[string]presets.ConnectorType{
-		"slack":        presets.CONNECTORTYPE_SLACK,
-		"genericHttps": presets.CONNECTORTYPE_GENERIC_HTTPS,
-		"pagerDuty":    presets.CONNECTORTYPE_PAGERDUTY,
-		"email":        presets.CONNECTORTYPE_EMAIL,
+	schemaToOpenApiPresetConnectorType = map[string]presets.NotificationCenterConnectorType{
+		"slack":        presets.NOTIFICATIONCENTERCONNECTORTYPE_SLACK,
+		"genericHttps": presets.NOTIFICATIONCENTERCONNECTORTYPE_GENERIC_HTTPS,
+		"pagerDuty":    presets.NOTIFICATIONCENTERCONNECTORTYPE_PAGERDUTY,
+		"email":        presets.NOTIFICATIONCENTERCONNECTORTYPE_EMAIL,
 	}
 	schemaToOpenApiPresetsEntityType = map[string]presets.NotificationCenterEntityType{
 		"alerts": presets.NOTIFICATIONCENTERENTITYTYPE_ALERTS,
@@ -177,7 +177,7 @@ func ExtractConfigOverrides(overrides []ConfigOverride) []presets.ConfigOverride
 		} else if override.ConditionType.MatchEntityTypeAndSubType != nil {
 			configOverride.ConditionType = &presets.NotificationCenterConditionType{
 				NotificationCenterConditionTypeMatchEntityTypeAndSubType: &presets.NotificationCenterConditionTypeMatchEntityTypeAndSubType{
-					MatchEntityTypeAndSubType: &presets.MatchEntityTypeAndSubTypeCondition{
+					MatchEntityTypeAndSubType: presets.MatchEntityTypeAndSubTypeCondition{
 						EntitySubType: presets.PtrString(override.ConditionType.MatchEntityTypeAndSubType.EntitySubType),
 					},
 				},

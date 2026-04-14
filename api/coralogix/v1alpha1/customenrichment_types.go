@@ -75,7 +75,7 @@ func (c *CustomEnrichment) ExtractCreateCustomEnrichmentRequest(ctx context.Cont
 			FileTextual: &customenrichments.FileTextual{
 				Name:      customenrichments.PtrString(name),
 				Extension: customenrichments.PtrString("csv"),
-				Textual:   fileContent,
+				Textual:   *fileContent,
 			},
 		},
 	}, nil
@@ -118,7 +118,7 @@ func (c *CustomEnrichment) ExtractUpdateCustomEnrichmentRequest(ctx context.Cont
 			FileTextual: &customenrichments.FileTextual{
 				Name:      customenrichments.PtrString(name),
 				Extension: customenrichments.PtrString("csv"),
-				Textual:   fileContent,
+				Textual:   *fileContent,
 			},
 		},
 	}, nil
