@@ -1612,7 +1612,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 				PhantomMode:             alerts.PtrBool(in.PhantomMode),
 				ActiveOn:                expandAlertSchedule(in.Schedule),
 				Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_LOGS_IMMEDIATE_OR_UNSPECIFIED.Ptr(),
-				LogsImmediate:           *expandLogsImmediate(logsImmediate),
+				LogsImmediate:           expandLogsImmediate(logsImmediate),
 			},
 		}, nil
 	} else if logsThreshold := in.TypeDefinition.LogsThreshold; logsThreshold != nil {
@@ -2980,14 +2980,9 @@ func expandMetricMissingValues(missingValues *MetricMissingValues) *alerts.Metri
 	return nil
 }
 
-func expandLogsImmediate(immediate *LogsImmediate) *alerts.LogsImmediateType {
-	logsFilter := expandLogsFilter(immediate.LogsFilter)
-	if logsFilter == nil {
-		return nil
-	}
-
-	return &alerts.LogsImmediateType{
-		LogsFilter:                logsFilter,
+func expandLogsImmediate(immediate *LogsImmediate) alerts.LogsImmediateType {
+	return alerts.LogsImmediateType{
+		LogsFilter:                expandLogsFilter(immediate.LogsFilter),
 		NotificationPayloadFilter: immediate.NotificationPayloadFilter,
 	}
 }
