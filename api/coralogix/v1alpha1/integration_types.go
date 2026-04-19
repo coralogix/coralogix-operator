@@ -85,21 +85,21 @@ func (s *IntegrationSpec) ExtractParameters() ([]integrations.Parameter, error) 
 			parameters = append(parameters, integrations.Parameter{
 				ParameterStringValue: &integrations.ParameterStringValue{
 					Key:         integrations.PtrString(key),
-					StringValue: integrations.PtrString(v),
+					StringValue: v,
 				},
 			})
 		case float64:
 			parameters = append(parameters, integrations.Parameter{
 				ParameterNumericValue: &integrations.ParameterNumericValue{
 					Key:          integrations.PtrString(key),
-					NumericValue: integrations.PtrFloat64(v),
+					NumericValue: v,
 				},
 			})
 		case bool:
 			parameters = append(parameters, integrations.Parameter{
 				ParameterBooleanValue: &integrations.ParameterBooleanValue{
 					Key:          integrations.PtrString(key),
-					BooleanValue: integrations.PtrBool(v),
+					BooleanValue: v,
 				},
 			})
 		case []interface{}:
@@ -112,7 +112,7 @@ func (s *IntegrationSpec) ExtractParameters() ([]integrations.Parameter, error) 
 			parameters = append(parameters, integrations.Parameter{
 				ParameterStringList: &integrations.ParameterStringList{
 					Key:        integrations.PtrString(key),
-					StringList: &stringList,
+					StringList: stringList,
 				},
 			})
 		default:

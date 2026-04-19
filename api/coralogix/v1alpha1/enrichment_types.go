@@ -168,7 +168,7 @@ func (e *Enrichment) ExtractAtomicOverwriteRequest(ctx context.Context) (
 				FieldName: enrichment.GeoIp.FieldName,
 				EnrichmentType: enrichments.EnrichmentType{
 					EnrichmentTypeGeoIp: &enrichments.EnrichmentTypeGeoIp{
-						GeoIp: &enrichments.GeoIpType{
+						GeoIp: enrichments.GeoIpType{
 							WithAsn: enrichment.GeoIp.WithAsn,
 						},
 					},
@@ -188,7 +188,7 @@ func (e *Enrichment) ExtractAtomicOverwriteRequest(ctx context.Context) (
 				FieldName: enrichment.Aws.FieldName,
 				EnrichmentType: enrichments.EnrichmentType{
 					EnrichmentTypeAws: &enrichments.EnrichmentTypeAws{
-						Aws: &enrichments.AwsType{
+						Aws: enrichments.AwsType{
 							ResourceType: enrichments.PtrString(enrichment.Aws.ResourceType),
 						},
 					},
@@ -204,7 +204,7 @@ func (e *Enrichment) ExtractAtomicOverwriteRequest(ctx context.Context) (
 				FieldName: enrichment.Custom.FieldName,
 				EnrichmentType: enrichments.EnrichmentType{
 					EnrichmentTypeCustomEnrichment: &enrichments.EnrichmentTypeCustomEnrichment{
-						CustomEnrichment: &enrichments.CustomEnrichmentType{
+						CustomEnrichment: enrichments.CustomEnrichmentType{
 							Id: &customEnrichmentID,
 						},
 					},

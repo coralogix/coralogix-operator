@@ -275,7 +275,7 @@ func (a *AlertScheduler) extractFilter() (*alertscheduler.AlertSchedulerRuleProt
 		return &alertscheduler.AlertSchedulerRuleProtobufV1Filter{
 			AlertSchedulerRuleProtobufV1FilterAlertMetaLabels: &alertscheduler.AlertSchedulerRuleProtobufV1FilterAlertMetaLabels{
 				WhatExpression: ptr.To(a.Spec.Filter.WhatExpression),
-				AlertMetaLabels: &alertscheduler.MetaLabels{
+				AlertMetaLabels: alertscheduler.MetaLabels{
 					Value: metaLabels,
 				},
 			},
@@ -289,7 +289,7 @@ func (a *AlertScheduler) extractFilter() (*alertscheduler.AlertSchedulerRuleProt
 		return &alertscheduler.AlertSchedulerRuleProtobufV1Filter{
 			AlertSchedulerRuleProtobufV1FilterAlertUniqueIds: &alertscheduler.AlertSchedulerRuleProtobufV1FilterAlertUniqueIds{
 				WhatExpression: ptr.To(a.Spec.Filter.WhatExpression),
-				AlertUniqueIds: &alertscheduler.AlertUniqueIds{
+				AlertUniqueIds: alertscheduler.AlertUniqueIds{
 					Value: alertsIds,
 				},
 			},
@@ -378,7 +378,7 @@ func (a *AlertScheduler) extractOneTime() (*alertscheduler.ScheduleOneTime, erro
 	}
 
 	return &alertscheduler.ScheduleOneTime{
-		OneTime: &alertscheduler.OneTime{
+		OneTime: alertscheduler.OneTime{
 			Timeframe: timeFrame,
 		},
 	}, nil
@@ -392,15 +392,15 @@ func (a *AlertScheduler) extractRecurring() (*alertscheduler.ScheduleRecurring, 
 		}
 
 		return &alertscheduler.ScheduleRecurring{
-			Recurring: &alertscheduler.Recurring{
+			Recurring: alertscheduler.Recurring{
 				RecurringSchedule: &alertscheduler.RecurringSchedule{
-					Schedule: dynamic,
+					Schedule: *dynamic,
 				},
 			},
 		}, nil
 	} else if a.Spec.Schedule.Recurring.Always != nil {
 		return &alertscheduler.ScheduleRecurring{
-			Recurring: &alertscheduler.Recurring{
+			Recurring: alertscheduler.Recurring{
 				RecurringAlwaysActive: &alertscheduler.RecurringAlwaysActive{
 					AlwaysActive: map[string]interface{}{},
 				},
@@ -435,7 +435,7 @@ func (a *AlertScheduler) extractDynamic() (*alertscheduler.RecurringDynamic, err
 		}
 		return &alertscheduler.RecurringDynamic{
 			RecurringDynamicWeekly: &alertscheduler.RecurringDynamicWeekly{
-				Weekly: &alertscheduler.Weekly{
+				Weekly: alertscheduler.Weekly{
 					DaysOfWeek: daysOfWeek,
 				},
 				RepeatEvery:     &repeatEvery,
@@ -446,7 +446,7 @@ func (a *AlertScheduler) extractDynamic() (*alertscheduler.RecurringDynamic, err
 	} else if monthly := a.Spec.Schedule.Recurring.Dynamic.Frequency.Monthly; monthly != nil {
 		return &alertscheduler.RecurringDynamic{
 			RecurringDynamicMonthly: &alertscheduler.RecurringDynamicMonthly{
-				Monthly: &alertscheduler.Monthly{
+				Monthly: alertscheduler.Monthly{
 					DaysOfMonth: monthly.Days,
 				},
 				RepeatEvery:     &repeatEvery,
@@ -465,7 +465,7 @@ func extractTimeFrame(timeFrame *TimeFrame) (*alertscheduler.Timeframe, error) {
 			TimeframeEndTime: &alertscheduler.TimeframeEndTime{
 				StartTime: ptr.To(timeFrame.StartTime),
 				Timezone:  ptr.To(timeFrame.Timezone),
-				EndTime:   timeFrame.EndTime,
+				EndTime:   *timeFrame.EndTime,
 			},
 		}, nil
 	} else if timeFrame.Duration != nil {
@@ -474,7 +474,7 @@ func extractTimeFrame(timeFrame *TimeFrame) (*alertscheduler.Timeframe, error) {
 			TimeframeDuration: &alertscheduler.TimeframeDuration{
 				StartTime: ptr.To(timeFrame.StartTime),
 				Timezone:  ptr.To(timeFrame.Timezone),
-				Duration: &alertscheduler.V1Duration{
+				Duration: alertscheduler.V1Duration{
 					ForOver:   ptr.To(timeFrame.Duration.ForOver),
 					Frequency: &frequency,
 				},

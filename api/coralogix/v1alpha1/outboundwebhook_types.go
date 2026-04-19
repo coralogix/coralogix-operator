@@ -415,7 +415,7 @@ func (in *OutboundWebhookSpec) ExtractOutgoingWebhookInputData() (*webhooks.Outg
 				Name:           webhooks.PtrString(in.Name),
 				Type:           webhooks.WEBHOOKTYPE_GENERIC.Ptr(),
 				Url:            webhooks.PtrString(genericWebhook.Url),
-				GenericWebhook: genericWebhook.extractGenericWebhookConfig(),
+				GenericWebhook: *genericWebhook.extractGenericWebhookConfig(),
 			},
 		}, nil
 	} else if slack := in.OutboundWebhookType.Slack; slack != nil {
@@ -424,7 +424,7 @@ func (in *OutboundWebhookSpec) ExtractOutgoingWebhookInputData() (*webhooks.Outg
 				Name:  webhooks.PtrString(in.Name),
 				Type:  webhooks.WEBHOOKTYPE_SLACK.Ptr(),
 				Url:   webhooks.PtrString(slack.Url),
-				Slack: slack.extractSlackConfig(),
+				Slack: *slack.extractSlackConfig(),
 			},
 		}, nil
 	} else if pagerDuty := in.OutboundWebhookType.PagerDuty; pagerDuty != nil {
@@ -432,7 +432,7 @@ func (in *OutboundWebhookSpec) ExtractOutgoingWebhookInputData() (*webhooks.Outg
 			OutgoingWebhookInputDataPagerDuty: &webhooks.OutgoingWebhookInputDataPagerDuty{
 				Name:      webhooks.PtrString(in.Name),
 				Type:      webhooks.WEBHOOKTYPE_PAGERDUTY.Ptr(),
-				PagerDuty: pagerDuty.extractPagerDutyConfig(),
+				PagerDuty: *pagerDuty.extractPagerDutyConfig(),
 			},
 		}, nil
 	} else if sendLog := in.OutboundWebhookType.SendLog; sendLog != nil {
@@ -441,7 +441,7 @@ func (in *OutboundWebhookSpec) ExtractOutgoingWebhookInputData() (*webhooks.Outg
 				Name:    webhooks.PtrString(in.Name),
 				Type:    webhooks.WEBHOOKTYPE_SEND_LOG.Ptr(),
 				Url:     webhooks.PtrString(sendLog.Url),
-				SendLog: sendLog.extractSendLogConfig(),
+				SendLog: *sendLog.extractSendLogConfig(),
 			},
 		}, nil
 	} else if emailGroup := in.OutboundWebhookType.EmailGroup; emailGroup != nil {
@@ -449,7 +449,7 @@ func (in *OutboundWebhookSpec) ExtractOutgoingWebhookInputData() (*webhooks.Outg
 			OutgoingWebhookInputDataEmailGroup: &webhooks.OutgoingWebhookInputDataEmailGroup{
 				Name:       webhooks.PtrString(in.Name),
 				Type:       webhooks.WEBHOOKTYPE_EMAIL_GROUP.Ptr(),
-				EmailGroup: emailGroup.extractEmailGroupConfig(),
+				EmailGroup: *emailGroup.extractEmailGroupConfig(),
 			},
 		}, nil
 	} else if microsoftTeams := in.OutboundWebhookType.MicrosoftTeams; microsoftTeams != nil {
@@ -467,7 +467,7 @@ func (in *OutboundWebhookSpec) ExtractOutgoingWebhookInputData() (*webhooks.Outg
 				Name: webhooks.PtrString(in.Name),
 				Type: webhooks.WEBHOOKTYPE_JIRA.Ptr(),
 				Url:  webhooks.PtrString(jira.Url),
-				Jira: jira.extractJiraConfig(),
+				Jira: *jira.extractJiraConfig(),
 			},
 		}, nil
 	} else if opsgenie := in.OutboundWebhookType.Opsgenie; opsgenie != nil {
@@ -488,7 +488,7 @@ func (in *OutboundWebhookSpec) ExtractOutgoingWebhookInputData() (*webhooks.Outg
 				Name:    webhooks.PtrString(in.Name),
 				Type:    webhooks.WEBHOOKTYPE_DEMISTO.Ptr(),
 				Url:     webhooks.PtrString(demisto.Url),
-				Demisto: demisto.extractDemistoConfig(),
+				Demisto: *demisto.extractDemistoConfig(),
 			},
 		}, nil
 	} else if in.OutboundWebhookType.AwsEventBridge != nil {
@@ -496,7 +496,7 @@ func (in *OutboundWebhookSpec) ExtractOutgoingWebhookInputData() (*webhooks.Outg
 			OutgoingWebhookInputDataAwsEventBridge: &webhooks.OutgoingWebhookInputDataAwsEventBridge{
 				Name:           webhooks.PtrString(in.Name),
 				Type:           webhooks.WEBHOOKTYPE_AWS_EVENT_BRIDGE.Ptr(),
-				AwsEventBridge: in.OutboundWebhookType.AwsEventBridge.extractAwsEventBridgeConfig(),
+				AwsEventBridge: *in.OutboundWebhookType.AwsEventBridge.extractAwsEventBridgeConfig(),
 			},
 		}, nil
 	}

@@ -180,7 +180,7 @@ func (s *ViewSpec) ExtractTimeSelection() (*views.TimeSelection, error) {
 	if s.TimeSelection.QuickSelection != nil {
 		return &views.TimeSelection{
 			TimeSelectionQuickSelection: &views.TimeSelectionQuickSelection{
-				QuickSelection: &views.QuickTimeSelection{
+				QuickSelection: views.QuickTimeSelection{
 					Seconds: int64(s.TimeSelection.QuickSelection.Seconds),
 				},
 			},
@@ -188,7 +188,7 @@ func (s *ViewSpec) ExtractTimeSelection() (*views.TimeSelection, error) {
 	} else if s.TimeSelection.CustomSelection != nil {
 		return &views.TimeSelection{
 			TimeSelectionCustomSelection: &views.TimeSelectionCustomSelection{
-				CustomSelection: &views.CustomTimeSelection{
+				CustomSelection: views.CustomTimeSelection{
 					FromTime: s.TimeSelection.CustomSelection.FromTime.Time,
 					ToTime:   s.TimeSelection.CustomSelection.ToTime.Time,
 				},

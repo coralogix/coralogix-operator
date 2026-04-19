@@ -157,14 +157,14 @@ type SLO struct {
 	Status SLOStatus `json:"status,omitempty"`
 }
 
-func (s *SLO) ExtractSLOCreateRequest() (*slos.SlosServiceReplaceSloRequest, error) {
+func (s *SLO) ExtractSLOCreateRequest() (*slos.SlosServiceCreateSloRequest, error) {
 	if requestBasedMetricSli := s.Spec.SliType.RequestBasedMetricSli; requestBasedMetricSli != nil {
 		requestBased, err := s.Spec.ExtractRequestBasedMetricSli()
 		if err != nil {
 			return nil, fmt.Errorf("error extracting request based metric SLI: %w", err)
 		}
 
-		return &slos.SlosServiceReplaceSloRequest{
+		return &slos.SlosServiceCreateSloRequest{
 			SloRequestBasedMetricSli: requestBased,
 		}, nil
 	} else if windowBasedMetricSli := s.Spec.SliType.WindowBasedMetricSli; windowBasedMetricSli != nil {
@@ -172,7 +172,7 @@ func (s *SLO) ExtractSLOCreateRequest() (*slos.SlosServiceReplaceSloRequest, err
 		if err != nil {
 			return nil, fmt.Errorf("error extracting window based metric SLI: %w", err)
 		}
-		return &slos.SlosServiceReplaceSloRequest{
+		return &slos.SlosServiceCreateSloRequest{
 			SloWindowBasedMetricSli: windowBased,
 		}, nil
 	}
@@ -218,7 +218,7 @@ func (s *SLOSpec) ExtractRequestBasedMetricSli() (*slos.SloRequestBasedMetricSli
 		Labels:                    s.Labels,
 		SloTimeFrame:              timeFrame,
 		TargetThresholdPercentage: slos.PtrFloat32(float32(s.TargetThresholdPercentage.AsApproximateFloat64())),
-		RequestBasedMetricSli: &slos.RequestBasedMetricSli{
+		RequestBasedMetricSli: slos.RequestBasedMetricSli{
 			GoodEvents: &slos.Metric{
 				Query: slos.PtrString(s.SliType.RequestBasedMetricSli.GoodEvents.Query),
 			},
@@ -241,7 +241,7 @@ func (s *SLOSpec) ExtractWindowBasedMetricSli() (*slos.SloWindowBasedMetricSli, 
 		Labels:                    s.Labels,
 		SloTimeFrame:              timeFrame,
 		TargetThresholdPercentage: slos.PtrFloat32(float32(s.TargetThresholdPercentage.AsApproximateFloat64())),
-		WindowBasedMetricSli: &slos.WindowBasedMetricSli{
+		WindowBasedMetricSli: slos.WindowBasedMetricSli{
 			Query: &slos.Metric{
 				Query: slos.PtrString(s.SliType.WindowBasedMetricSli.Query.Query),
 			},
