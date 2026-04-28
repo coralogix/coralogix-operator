@@ -17,16 +17,27 @@ jobs:
   validate-crds:
     name: Validate CRDs (K8s ${{ matrix.k8s-version }})
     runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
       matrix:
-        k8s-version:
-          - "1.26.15"
-          - "1.27.16"
-          - "1.28.13"
-          - "1.29.10"
-          - "1.30.6"
-          - "1.31.2"
+        include:
+          - k8s-version: "1.28.15"
+            experimental: false
+          - k8s-version: "1.29.14"
+            experimental: false
+          - k8s-version: "1.30.13"
+            experimental: false
+          - k8s-version: "1.31.14"
+            experimental: false
+          - k8s-version: "1.32.11"
+            experimental: false
+          - k8s-version: "1.33.7"
+            experimental: false
+          - k8s-version: "1.34.3"
+            experimental: false
+          - k8s-version: "1.35.1"
+            experimental: false
     steps:
       - name: Checkout
         uses: actions/checkout@v4
