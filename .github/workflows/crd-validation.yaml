@@ -44,8 +44,14 @@ jobs:
             --set coralogixOperator.region="EU2"
       - name: Verify CRDs are installed
         run: |
-          kubectl get crds | grep coralogix.com
-          kubectl get crd enrichments.coralogix.com -o yaml | head -20
+          expected=$(ls -1 charts/coralogix-operator/templates/crds/*.yaml | wc -l)
+          actual=$(kubectl get crds -o name | grep -c coralogix.com)
+          echo "Expected CRDs: $expected, Installed CRDs: $actual"
+          if [ "$expected" -ne "$actual" ]; then
+            echo "ERROR: CRD count mismatch!"
+            kubectl get crds | grep coralogix.com
+            exit 1
+          fi
       - name: Verify operator deployment
         run: |
           kubectl -n coralogix-operator-system wait --for=condition=available deployment/coralogix-operator --timeout=120s
