@@ -1,3 +1,6 @@
+# Validates that Helm can install the chart (including CRDs) on several Kubernetes versions.
+# Kind ships a small set of pre-built kindest/node images per kind release; many older tags
+# remain on Docker Hub. See: https://github.com/kubernetes-sigs/kind/releases
 name: crd-validation
 on:
   push:
@@ -18,6 +21,8 @@ jobs:
       fail-fast: false
       matrix:
         k8s-version:
+          - "1.26.15"
+          - "1.27.16"
           - "1.28.13"
           - "1.29.10"
           - "1.30.6"
@@ -35,21 +40,29 @@ jobs:
       - name: Install Prometheus Operator CRDs
         run: |
           make install-prometheus-crds
-      - name: Install Coralogix Operator CRDs
+      - name: Install Coralogix Operator (Helm)
         run: |
+          set -euo pipefail
           helm install coralogix-operator ./charts/coralogix-operator \
             --namespace coralogix-operator-system \
             --create-namespace \
             --set secret.data.apiKey="test-key" \
             --set coralogixOperator.region="EU2"
-      - name: Verify CRDs are installed
+          status="$(helm status coralogix-operator -n coralogix-operator-system -o json | jq -r .info.status)"
+          if [ "${status}" != "deployed" ]; then
+            echo "helm install finished but release status is '${status}', expected 'deployed'"
+            exit 1
+          fi
+      - name: Verify Coralogix CRD count matches chart
         run: |
-          expected=$(ls -1 charts/coralogix-operator/templates/crds/*.yaml | wc -l)
-          actual=$(kubectl get crds -o name | grep -c coralogix.com)
-          echo "Expected CRDs: $expected, Installed CRDs: $actual"
-          if [ "$expected" -ne "$actual" ]; then
-            echo "ERROR: CRD count mismatch!"
-            kubectl get crds | grep coralogix.com
+          set -euo pipefail
+          expected="$(find charts/coralogix-operator/templates/crds -maxdepth 1 -type f -name '*.yaml' | wc -l | awk '{print $1}')"
+          installed="$(kubectl get crd -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' | grep -cE '\.coralogix\.com$' || true)"
+          echo "CRD YAML files in chart: ${expected}"
+          echo "Installed *.coralogix.com CRDs: ${installed}"
+          if [ "${expected}" != "${installed}" ]; then
+            echo "Mismatch: chart defines ${expected} CRD files but cluster has ${installed} coralogix.com CRDs"
+            kubectl get crd -o name | grep coralogix.com || true
             exit 1
           fi
       - name: Verify operator deployment
