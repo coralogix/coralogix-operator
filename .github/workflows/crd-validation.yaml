@@ -10,8 +10,6 @@ on:
       - release-*
 permissions:
   contents: read
-permissions:
-  contents: read
 jobs:
   validate-crds:
     name: Validate CRDs (K8s ${{ matrix.k8s-version }})
