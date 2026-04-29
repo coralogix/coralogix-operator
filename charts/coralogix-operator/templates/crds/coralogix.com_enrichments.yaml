@@ -148,6 +148,7 @@ spec:
                     rule: '(has(self.geoIp) ? 1 : 0) + (has(self.suspiciousIp) ? 1
                       : 0) + (has(self.aws) ? 1 : 0) + (has(self.custom) ? 1 : 0)
                       == 1'
+                maxItems: 100
                 minItems: 1
                 type: array
             required:
