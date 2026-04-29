@@ -28,6 +28,7 @@ import (
 // EnrichmentSpec defines the desired state of Enrichment.
 type EnrichmentSpec struct {
 	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=100
 	// List of enrichments to apply. Each enrichment must have exactly one of GeoIp, SuspiciousIp, Aws, or Custom set.
 	// Will overwrite the existing enrichments on the Coralogix side,
 	// so it should contain all enrichments that should be applied, not just the new ones.
