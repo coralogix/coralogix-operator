@@ -1,1 +1,7 @@
 * @coralogix/team-iac @coralogix/team-eco-system
+
+# Technical writers own documentation
+README.md @coralogix/team-technical-writers
+docs/metrics.md @coralogix/team-technical-writers
+docs/prometheus-integration.md @coralogix/team-technical-writers
+tools/cxo-observer/README.md @coralogix/team-technical-writers
