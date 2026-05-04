@@ -16,6 +16,7 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -30,6 +31,35 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
+
+var _ = Describe("TCOLogsPolicies schema validation", func() {
+	It("should reject a policy with more than 50 subsystem names", func(ctx context.Context) {
+		names := make([]string, 51)
+		for i := range names {
+			names[i] = fmt.Sprintf("subsystem-%d", i)
+		}
+		policy := &coralogixv1alpha1.TCOLogsPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "too-many-subsystems",
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
+					Name:       "over-limit",
+					Priority:   "low",
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					Subsystems: &coralogixv1alpha1.TCOPolicyRule{
+						Names:    names,
+						RuleType: "is",
+					},
+				}},
+			},
+		}
+		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("Too many"))
+	})
+})
 
 var _ = Describe("TCOLogsPolicies", func() {
 	var (
