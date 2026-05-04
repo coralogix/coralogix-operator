@@ -69,6 +69,8 @@ spec:
                           description: Names to match.
                           items:
                             type: string
+                          maxItems: 50
+                          minItems: 1
                           type: array
                         ruleType:
                           description: Type of matching for the name.
@@ -135,6 +137,8 @@ spec:
                           description: Names to match.
                           items:
                             type: string
+                          maxItems: 50
+                          minItems: 1
                           type: array
                         ruleType:
                           description: Type of matching for the name.
