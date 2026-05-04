@@ -108,6 +108,8 @@ type TCOPolicySeverity string
 
 // A sincle TCO policy rule.
 type TCOPolicyRule struct {
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=50
 	// Names to match.
 	Names []string `json:"names"`
 

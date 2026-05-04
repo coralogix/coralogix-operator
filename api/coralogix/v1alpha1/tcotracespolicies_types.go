@@ -80,6 +80,8 @@ type TCOPolicyTag struct {
 	// Tag names to match.
 	Name string `json:"name"`
 
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=50
 	// Values to match for
 	Values []string `json:"values"`
 
