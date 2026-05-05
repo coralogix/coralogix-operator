@@ -9,6 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/wrapperspb"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -130,5 +131,103 @@ var _ = Describe("Integration", Ordered, func() {
 			})
 			return cxsdk.Code(err)
 		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
+	})
+})
+
+var _ = Describe("Integration with ParametersFromSecret", Ordered, func() {
+	var (
+		crClient           client.Client
+		integrationsClient *cxsdk.IntegrationsClient
+		integrationID      string
+		integration        *coralogixv1alpha1.Integration
+		secret             *corev1.Secret
+		integrationName    string
+		secretName         string
+	)
+
+	BeforeAll(func() {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		integrationsClient = ClientsInstance.GetCoralogixClientSet().Integrations()
+	})
+
+	It("Should create integration with secret-sourced parameter", func(ctx context.Context) {
+		By("Creating a Secret with the AwsRoleArn")
+		secretName = fmt.Sprintf("aws-metrics-collector-secret-%d", time.Now().Unix())
+		secret = createTestSecret(secretName, testNamespace, "role-arn", "arn:aws:iam::123456789012:role/example-role")
+		Expect(crClient.Create(ctx, secret)).To(Succeed())
+
+		By("Creating Integration with parametersFromSecret")
+		integrationName = fmt.Sprintf("aws-metrics-collector-with-secret-%d", time.Now().Unix())
+		integration = &coralogixv1alpha1.Integration{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      integrationName,
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1alpha1.IntegrationSpec{
+				IntegrationKey: "aws-metrics-collector",
+				Version:        "0.1.0",
+				Parameters: runtime.RawExtension{
+					Raw: []byte(`{
+						"ApplicationName": "cxo",
+						"SubsystemName": "aws-metrics-collector",
+						"MetricNamespaces": ["AWS/S3"],
+						"IntegrationName": "cxo-integration-with-secret",
+						"AwsRegion": "eu-north-1",
+						"WithAggregations": false,
+						"EnrichWithTags": true
+					}`),
+				},
+				ParametersFromSecret: map[string]corev1.SecretKeySelector{
+					"AwsRoleArn": {
+						LocalObjectReference: corev1.LocalObjectReference{Name: secretName},
+						Key:                  "role-arn",
+					},
+				},
+			},
+		}
+		Expect(crClient.Create(ctx, integration)).To(Succeed())
+
+		By("Fetching the Integration ID")
+		fetchedIntegration := &coralogixv1alpha1.Integration{}
+		Eventually(func(g Gomega) error {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: integrationName, Namespace: testNamespace}, fetchedIntegration)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedIntegration.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedIntegration.Status.PrintableStatus).To(Equal("RemoteSynced"))
+			if fetchedIntegration.Status.Id != nil {
+				integrationID = *fetchedIntegration.Status.Id
+				return nil
+			}
+			return fmt.Errorf("integration ID is not set")
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying Integration was created in Coralogix backend with the secret-sourced parameter")
+		Eventually(func() string {
+			res, err := integrationsClient.Get(ctx, &cxsdk.GetDeployedIntegrationRequest{
+				IntegrationId: wrapperspb.String(integrationID),
+			})
+			Expect(err).ToNot(HaveOccurred())
+			for _, p := range res.Integration.GetParameters() {
+				if p.Key == "AwsRoleArn" {
+					return p.Value.(*cxsdk.IntegrationParameterStringValue).StringValue.Value
+				}
+			}
+			return ""
+		}, time.Minute, time.Second).Should(Equal("arn:aws:iam::123456789012:role/example-role"))
+	})
+
+	It("Should be deleted successfully", func(ctx context.Context) {
+		By("Deleting the Integration")
+		Expect(crClient.Delete(ctx, integration)).To(Succeed())
+
+		By("Verifying Integration is deleted from Coralogix backend")
+		Eventually(func() codes.Code {
+			_, err := integrationsClient.Get(ctx, &cxsdk.GetDeployedIntegrationRequest{
+				IntegrationId: wrapperspb.String(integrationID),
+			})
+			return cxsdk.Code(err)
+		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
+
+		By("Deleting the Secret")
+		Expect(crClient.Delete(ctx, secret)).To(Succeed())
 	})
 })

@@ -15,9 +15,11 @@
 package v1alpha1
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
@@ -36,17 +38,31 @@ type IntegrationSpec struct {
 	// +kubebuilder:pruning:PreserveUnknownFields
 	// Parameters required by the integration.
 	Parameters runtime.RawExtension `json:"parameters"`
+
+	// ParametersFromSecret is a map of parameter names to references of Kubernetes
+	// Secret keys whose values should be used as the parameter value at reconcile time.
+	// Use this for sensitive parameters (API keys, service account keys, tokens, etc.)
+	// so that secret material does not need to live in the manifest.
+	//
+	// A given parameter name must appear in either Parameters or ParametersFromSecret,
+	// not both. Only string-valued parameters are supported via this field; numeric,
+	// boolean, and list-valued parameters must be set inline in Parameters.
+	// +optional
+	ParametersFromSecret map[string]corev1.SecretKeySelector `json:"parametersFromSecret,omitempty"`
 }
 
-func (s *IntegrationSpec) ExtractCreateIntegrationRequest() (*integrations.SaveIntegrationRequest, error) {
-	parameters, err := s.ExtractParameters()
+// ExtractCreateIntegrationRequest builds a SaveIntegrationRequest, resolving any
+// ParametersFromSecret references against Kubernetes Secrets in the Integration's
+// namespace.
+func (i *Integration) ExtractCreateIntegrationRequest(ctx context.Context) (*integrations.SaveIntegrationRequest, error) {
+	parameters, err := i.Spec.ExtractParameters(ctx, i.Namespace)
 	if err != nil {
 		return nil, fmt.Errorf("failed to extract parameters: %w", err)
 	}
 	return &integrations.SaveIntegrationRequest{
 		Metadata: &integrations.IntegrationMetadata{
-			IntegrationKey: integrations.PtrString(s.IntegrationKey),
-			Version:        integrations.PtrString(s.Version),
+			IntegrationKey: integrations.PtrString(i.Spec.IntegrationKey),
+			Version:        integrations.PtrString(i.Spec.Version),
 			IntegrationParameters: &integrations.GenericIntegrationParameters{
 				Parameters: parameters,
 			},
@@ -54,8 +70,11 @@ func (s *IntegrationSpec) ExtractCreateIntegrationRequest() (*integrations.SaveI
 	}, nil
 }
 
-func (s *IntegrationSpec) ExtractUpdateIntegrationRequest(id *string) (*integrations.UpdateIntegrationRequest, error) {
-	parameters, err := s.ExtractParameters()
+// ExtractUpdateIntegrationRequest builds an UpdateIntegrationRequest, resolving any
+// ParametersFromSecret references against Kubernetes Secrets in the Integration's
+// namespace.
+func (i *Integration) ExtractUpdateIntegrationRequest(ctx context.Context, id *string) (*integrations.UpdateIntegrationRequest, error) {
+	parameters, err := i.Spec.ExtractParameters(ctx, i.Namespace)
 	if err != nil {
 		return nil, fmt.Errorf("failed to extract parameters: %w", err)
 	}
@@ -63,8 +82,8 @@ func (s *IntegrationSpec) ExtractUpdateIntegrationRequest(id *string) (*integrat
 	return &integrations.UpdateIntegrationRequest{
 		Id: id,
 		Metadata: &integrations.IntegrationMetadata{
-			IntegrationKey: integrations.PtrString(s.IntegrationKey),
-			Version:        integrations.PtrString(s.Version),
+			IntegrationKey: integrations.PtrString(i.Spec.IntegrationKey),
+			Version:        integrations.PtrString(i.Spec.Version),
 			IntegrationParameters: &integrations.GenericIntegrationParameters{
 				Parameters: parameters,
 			},
@@ -72,10 +91,28 @@ func (s *IntegrationSpec) ExtractUpdateIntegrationRequest(id *string) (*integrat
 	}, nil
 }
 
-func (s *IntegrationSpec) ExtractParameters() ([]integrations.Parameter, error) {
-	var rawParams map[string]interface{}
-	if err := json.Unmarshal(s.Parameters.Raw, &rawParams); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal parameters: %w", err)
+// ExtractParameters returns the merged parameter set for the Integration, with
+// inline Parameters values combined with ParametersFromSecret references resolved
+// from Kubernetes Secrets in the given namespace.
+//
+// A parameter name appearing in both Parameters and ParametersFromSecret is rejected.
+func (s *IntegrationSpec) ExtractParameters(ctx context.Context, namespace string) ([]integrations.Parameter, error) {
+	rawParams := map[string]interface{}{}
+	if len(s.Parameters.Raw) > 0 {
+		if err := json.Unmarshal(s.Parameters.Raw, &rawParams); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal parameters: %w", err)
+		}
+	}
+
+	for key, ref := range s.ParametersFromSecret {
+		if _, exists := rawParams[key]; exists {
+			return nil, fmt.Errorf("parameter %q is set in both parameters and parametersFromSecret; only one source is allowed", key)
+		}
+		value, err := readSecret(ctx, ref, namespace)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read secret for parameter %q: %w", key, err)
+		}
+		rawParams[key] = value
 	}
 
 	var parameters []integrations.Parameter
