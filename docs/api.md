@@ -829,8 +829,6 @@ Filter for labels.
         <td>[]enum</td>
         <td>
           Severity to filter for.<br/>
-          <br/>
-            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1041,8 +1039,6 @@ Filter for labels.
         <td>[]enum</td>
         <td>
           Severity to filter for.<br/>
-          <br/>
-            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1260,8 +1256,6 @@ Filter for labels.
         <td>[]enum</td>
         <td>
           Severity to filter for.<br/>
-          <br/>
-            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1592,8 +1586,6 @@ Filter for labels.
         <td>[]enum</td>
         <td>
           Severity to filter for.<br/>
-          <br/>
-            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1770,8 +1762,6 @@ Filter for labels.
         <td>[]enum</td>
         <td>
           Severity to filter for.<br/>
-          <br/>
-            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2282,8 +2272,6 @@ Filter for labels.
         <td>[]enum</td>
         <td>
           Severity to filter for.<br/>
-          <br/>
-            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2604,8 +2592,6 @@ Filter for labels.
         <td>[]enum</td>
         <td>
           Severity to filter for.<br/>
-          <br/>
-            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2986,8 +2972,6 @@ Filter for labels.
         <td>[]enum</td>
         <td>
           Severity to filter for.<br/>
-          <br/>
-            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6887,8 +6871,6 @@ Schedule to have the alert active.
         <td>[]enum</td>
         <td>
           <br/>
-          <br/>
-            <i>Enum</i>: sunday, monday, tuesday, wednesday, thursday, friday, saturday<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -7663,8 +7645,6 @@ The rule will be activated in a recurring mode (daily, weekly or monthly).
         <td>[]enum</td>
         <td>
           The days of the week to activate the rule.<br/>
-          <br/>
-            <i>Enum</i>: Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -11034,8 +11014,6 @@ Logs query for logs2metrics E2M
         <td>[]enum</td>
         <td>
           severity type filters<br/>
-          <br/>
-            <i>Enum</i>: debug, verbose, info, warn, error, critical<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -12740,6 +12718,67 @@ IntegrationSpec defines the desired state of a Coralogix (managed) integration.
           Desired version of the integration<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b><a href="#integrationspecparametersfromsecretkey">parametersFromSecret</a></b></td>
+        <td>map[string]object</td>
+        <td>
+          ParametersFromSecret is a map of parameter names to references of Kubernetes
+Secret keys whose values should be used as the parameter value at reconcile time.
+Use this for sensitive parameters (API keys, service account keys, tokens, etc.)
+so that secret material does not need to live in the manifest.
+
+A given parameter name must appear in either Parameters or ParametersFromSecret,
+not both. Only string-valued parameters are supported via this field; numeric,
+boolean, and list-valued parameters must be set inline in Parameters.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Integration.spec.parametersFromSecret[key]
+<sup><sup>[↩ Parent](#integrationspec)</sup></sup>
+
+
+
+SecretKeySelector selects a key of a Secret.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key of the secret to select from.  Must be a valid secret key.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the Secret or its key must be defined<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -14699,8 +14738,6 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td>[]enum</td>
         <td>
           Rules will execute on logs that match the these severities.<br/>
-          <br/>
-            <i>Enum</i>: Debug, Verbose, Info, Warning, Error, Critical<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -16238,8 +16275,6 @@ A TCO policy for logs.
         <td>[]enum</td>
         <td>
           The severities to apply the policy on.<br/>
-          <br/>
-            <i>Enum</i>: info, warning, critical, error, debug, verbose<br/>
         </td>
         <td>true</td>
       </tr><tr>

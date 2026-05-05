@@ -56,7 +56,7 @@ func (r *IntegrationReconciler) RequeueInterval() time.Duration {
 
 func (r *IntegrationReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	integration := obj.(*coralogixv1alpha1.Integration)
-	createRequest, err := integration.Spec.ExtractCreateIntegrationRequest()
+	createRequest, err := integration.ExtractCreateIntegrationRequest(ctx)
 	if err != nil {
 		return fmt.Errorf("error on extracting create integration request: %w", err)
 	}
@@ -79,7 +79,7 @@ func (r *IntegrationReconciler) HandleCreation(ctx context.Context, log logr.Log
 
 func (r *IntegrationReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	integration := obj.(*coralogixv1alpha1.Integration)
-	updateRequest, err := integration.Spec.ExtractUpdateIntegrationRequest(integration.Status.Id)
+	updateRequest, err := integration.ExtractUpdateIntegrationRequest(ctx, integration.Status.Id)
 	if err != nil {
 		return fmt.Errorf("error on extracting update integration request: %w", err)
 	}
