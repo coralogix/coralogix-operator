@@ -829,6 +829,8 @@ Filter for labels.
         <td>[]enum</td>
         <td>
           Severity to filter for.<br/>
+          <br/>
+            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1039,6 +1041,8 @@ Filter for labels.
         <td>[]enum</td>
         <td>
           Severity to filter for.<br/>
+          <br/>
+            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1256,6 +1260,8 @@ Filter for labels.
         <td>[]enum</td>
         <td>
           Severity to filter for.<br/>
+          <br/>
+            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1586,6 +1592,8 @@ Filter for labels.
         <td>[]enum</td>
         <td>
           Severity to filter for.<br/>
+          <br/>
+            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1762,6 +1770,8 @@ Filter for labels.
         <td>[]enum</td>
         <td>
           Severity to filter for.<br/>
+          <br/>
+            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2272,6 +2282,8 @@ Filter for labels.
         <td>[]enum</td>
         <td>
           Severity to filter for.<br/>
+          <br/>
+            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2592,6 +2604,8 @@ Filter for labels.
         <td>[]enum</td>
         <td>
           Severity to filter for.<br/>
+          <br/>
+            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2972,6 +2986,8 @@ Filter for labels.
         <td>[]enum</td>
         <td>
           Severity to filter for.<br/>
+          <br/>
+            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6871,6 +6887,8 @@ Schedule to have the alert active.
         <td>[]enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: sunday, monday, tuesday, wednesday, thursday, friday, saturday<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -7645,6 +7663,8 @@ The rule will be activated in a recurring mode (daily, weekly or monthly).
         <td>[]enum</td>
         <td>
           The days of the week to activate the rule.<br/>
+          <br/>
+            <i>Enum</i>: Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -11014,6 +11034,8 @@ Logs query for logs2metrics E2M
         <td>[]enum</td>
         <td>
           severity type filters<br/>
+          <br/>
+            <i>Enum</i>: debug, verbose, info, warn, error, critical<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -14738,6 +14760,8 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td>[]enum</td>
         <td>
           Rules will execute on logs that match the these severities.<br/>
+          <br/>
+            <i>Enum</i>: Debug, Verbose, Info, Warning, Error, Critical<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -16275,6 +16299,8 @@ A TCO policy for logs.
         <td>[]enum</td>
         <td>
           The severities to apply the policy on.<br/>
+          <br/>
+            <i>Enum</i>: info, warning, critical, error, debug, verbose<br/>
         </td>
         <td>true</td>
       </tr><tr>
