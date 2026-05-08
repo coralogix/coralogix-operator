@@ -20,8 +20,13 @@ import (
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	"github.com/coralogix/coralogix-operator/v2/internal/config"
 
 	integrations "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/integration_service"
 )
@@ -35,9 +40,11 @@ type IntegrationSpec struct {
 	// Desired version of the integration
 	Version string `json:"version"`
 
+	// Inline parameters for the integration. May be omitted entirely when all
+	// parameters come from ParametersFromSecret.
 	// +kubebuilder:pruning:PreserveUnknownFields
-	// Parameters required by the integration.
-	Parameters runtime.RawExtension `json:"parameters"`
+	// +optional
+	Parameters runtime.RawExtension `json:"parameters,omitempty"`
 
 	// ParametersFromSecret is a map of parameter names to references of Kubernetes
 	// Secret keys whose values should be used as the parameter value at reconcile time.
@@ -47,6 +54,11 @@ type IntegrationSpec struct {
 	// A given parameter name must appear in either Parameters or ParametersFromSecret,
 	// not both. Only string-valued parameters are supported via this field; numeric,
 	// boolean, and list-valued parameters must be set inline in Parameters.
+	//
+	// If a SecretKeySelector has Optional set to true, a missing Secret or missing
+	// key is silently skipped — the resulting Integration will be created or updated
+	// in Coralogix without that parameter. Other read errors (RBAC, transient API
+	// failures) still cause reconciliation to fail and retry.
 	// +optional
 	ParametersFromSecret map[string]corev1.SecretKeySelector `json:"parametersFromSecret,omitempty"`
 }
@@ -96,7 +108,10 @@ func (i *Integration) ExtractUpdateIntegrationRequest(ctx context.Context, id *s
 // from Kubernetes Secrets in the given namespace.
 //
 // A parameter name appearing in both Parameters and ParametersFromSecret is rejected.
+// References whose Optional flag is set to true are silently skipped if the Secret
+// or key is missing; other read errors propagate.
 func (s *IntegrationSpec) ExtractParameters(ctx context.Context, namespace string) ([]integrations.Parameter, error) {
+	logger := log.FromContext(ctx)
 	rawParams := map[string]interface{}{}
 	if len(s.Parameters.Raw) > 0 {
 		if err := json.Unmarshal(s.Parameters.Raw, &rawParams); err != nil {
@@ -108,11 +123,26 @@ func (s *IntegrationSpec) ExtractParameters(ctx context.Context, namespace strin
 		if _, exists := rawParams[key]; exists {
 			return nil, fmt.Errorf("parameter %q is set in both parameters and parametersFromSecret; only one source is allowed", key)
 		}
-		value, err := readSecret(ctx, ref, namespace)
-		if err != nil {
+		optional := ref.Optional != nil && *ref.Optional
+
+		secret := &corev1.Secret{}
+		if err := config.GetClient().Get(ctx, client.ObjectKey{Namespace: namespace, Name: ref.Name}, secret); err != nil {
+			if optional && apierrors.IsNotFound(err) {
+				logger.V(1).Info("optional secret reference skipped: secret not found", "parameter", key, "secret", ref.Name, "namespace", namespace)
+				continue
+			}
 			return nil, fmt.Errorf("failed to read secret for parameter %q: %w", key, err)
 		}
-		rawParams[key] = value
+
+		value, ok := secret.Data[ref.Key]
+		if !ok {
+			if optional {
+				logger.V(1).Info("optional secret reference skipped: key not found in secret", "parameter", key, "secret", ref.Name, "key", ref.Key)
+				continue
+			}
+			return nil, fmt.Errorf("failed to read secret for parameter %q: cannot find key %q in secret %q", key, ref.Key, ref.Name)
+		}
+		rawParams[key] = string(value)
 	}
 
 	var parameters []integrations.Parameter

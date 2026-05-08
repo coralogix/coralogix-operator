@@ -12727,19 +12727,20 @@ IntegrationSpec defines the desired state of a Coralogix (managed) integration.
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>parameters</b></td>
-        <td>object</td>
-        <td>
-          Parameters required by the integration.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>version</b></td>
         <td>string</td>
         <td>
           Desired version of the integration<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>parameters</b></td>
+        <td>object</td>
+        <td>
+          Inline parameters for the integration. May be omitted entirely when all
+parameters come from ParametersFromSecret.<br/>
+        </td>
+        <td>false</td>
       </tr><tr>
         <td><b><a href="#integrationspecparametersfromsecretkey">parametersFromSecret</a></b></td>
         <td>map[string]object</td>
@@ -12751,7 +12752,12 @@ so that secret material does not need to live in the manifest.
 
 A given parameter name must appear in either Parameters or ParametersFromSecret,
 not both. Only string-valued parameters are supported via this field; numeric,
-boolean, and list-valued parameters must be set inline in Parameters.<br/>
+boolean, and list-valued parameters must be set inline in Parameters.
+
+If a SecretKeySelector has Optional set to true, a missing Secret or missing
+key is silently skipped — the resulting Integration will be created or updated
+in Coralogix without that parameter. Other read errors (RBAC, transient API
+failures) still cause reconciliation to fail and retry.<br/>
         </td>
         <td>false</td>
       </tr></tbody>

@@ -57,7 +57,9 @@ spec:
                 description: Unique name of the integration.
                 type: string
               parameters:
-                description: Parameters required by the integration.
+                description: |-
+                  Inline parameters for the integration. May be omitted entirely when all
+                  parameters come from ParametersFromSecret.
                 type: object
                 x-kubernetes-preserve-unknown-fields: true
               parametersFromSecret:
@@ -93,13 +95,17 @@ spec:
                   A given parameter name must appear in either Parameters or ParametersFromSecret,
                   not both. Only string-valued parameters are supported via this field; numeric,
                   boolean, and list-valued parameters must be set inline in Parameters.
+
+                  If a SecretKeySelector has Optional set to true, a missing Secret or missing
+                  key is silently skipped — the resulting Integration will be created or updated
+                  in Coralogix without that parameter. Other read errors (RBAC, transient API
+                  failures) still cause reconciliation to fail and retry.
                 type: object
               version:
                 description: Desired version of the integration
                 type: string
             required:
             - integrationKey
-            - parameters
             - version
             type: object
           status:
