@@ -106,7 +106,8 @@ type SloMetricEvent struct {
 
 type SloWindow struct {
 	// +optional
-	// TimeFrame defines the time frame for the SLO window. Valid values are "unspecified", "7d", "14d", "21d", "28d", and "90d".
+	// TimeFrame defines the time frame for the SLO window. Valid values are "unspecified", "7d", "14d", "21d", and "28d".
+	// Deprecated: "90d" is no longer supported by the Coralogix API and will be rejected by the operator.
 	TimeFrame *SloTimeFrame `json:"timeFrame,omitempty"`
 }
 
