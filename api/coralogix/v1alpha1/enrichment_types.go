@@ -179,7 +179,7 @@ func (e *Enrichment) HasIDInStatus() bool {
 }
 
 func (e *Enrichment) ExtractAtomicOverwriteRequest(ctx context.Context) (
-	*enrichments.EnrichmentServiceAtomicOverwriteEnrichmentsRequest, error) {
+	*enrichments.EnrichmentServiceAtomicOverwriteAllEnrichmentsRequest, error) {
 	var reqs []enrichments.EnrichmentRequestModel
 	for _, enrichment := range e.Spec.Enrichments {
 		if enrichment.GeoIp != nil {
@@ -246,7 +246,7 @@ func (e *Enrichment) ExtractAtomicOverwriteRequest(ctx context.Context) (
 		}
 	}
 
-	return &enrichments.EnrichmentServiceAtomicOverwriteEnrichmentsRequest{
+	return &enrichments.EnrichmentServiceAtomicOverwriteAllEnrichmentsRequest{
 		RequestEnrichments: reqs,
 	}, nil
 }

@@ -62,8 +62,8 @@ func (r *EnrichmentReconciler) Overwrite(ctx context.Context, log logr.Logger, e
 	}
 	log.Info("Overwriting remote enrichments", "enrichment", utils.FormatJSON(overwriteRequest))
 	overwriteResponse, httpResp, err := r.EnrichmentsClient.
-		EnrichmentServiceAtomicOverwriteEnrichments(ctx).
-		EnrichmentServiceAtomicOverwriteEnrichmentsRequest(*overwriteRequest).
+		EnrichmentServiceAtomicOverwriteAllEnrichments(ctx).
+		EnrichmentServiceAtomicOverwriteAllEnrichmentsRequest(*overwriteRequest).
 		Execute()
 	if err != nil {
 		return fmt.Errorf("error on overwriting remote enrichments: %w", cxsdk.NewAPIError(httpResp, err))
@@ -92,12 +92,12 @@ func (r *EnrichmentReconciler) HandleUpdate(ctx context.Context, log logr.Logger
 
 func (r *EnrichmentReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
 	log.Info("Deleting remote enrichments")
-	overwriteRequest := enrichments.EnrichmentServiceAtomicOverwriteEnrichmentsRequest{
+	overwriteRequest := enrichments.EnrichmentServiceAtomicOverwriteAllEnrichmentsRequest{
 		RequestEnrichments: []enrichments.EnrichmentRequestModel{},
 	}
 	_, httpResp, err := r.EnrichmentsClient.
-		EnrichmentServiceAtomicOverwriteEnrichments(ctx).
-		EnrichmentServiceAtomicOverwriteEnrichmentsRequest(overwriteRequest).
+		EnrichmentServiceAtomicOverwriteAllEnrichments(ctx).
+		EnrichmentServiceAtomicOverwriteAllEnrichmentsRequest(overwriteRequest).
 		Execute()
 	if err != nil {
 		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
