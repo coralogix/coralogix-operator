@@ -64,7 +64,7 @@ func TestEnrichmentExtractAtomicOverwriteRequestIncludesNonCustomFieldOptions(t 
 	if req.RequestEnrichments[0].EnrichmentType.EnrichmentTypeGeoIp == nil {
 		t.Fatal("geo_ip enrichment type was not set")
 	}
-	if got := req.RequestEnrichments[0].EnrichmentType.EnrichmentTypeGeoIp.GeoIp.WithAsn; got == nil || *got != true {
+	if got := req.RequestEnrichments[0].EnrichmentType.EnrichmentTypeGeoIp.GeoIp.WithAsn; got == nil || !*got {
 		t.Fatalf("geo_ip WithAsn = %v, want true", got)
 	}
 
