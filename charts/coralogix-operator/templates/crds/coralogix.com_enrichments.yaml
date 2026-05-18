@@ -66,10 +66,16 @@ spec:
                         The feature enriches every log that contains a particular resourceId,
                         associated with the metadata of a chosen AWS resource.
                       properties:
+                        enrichedFieldName:
+                          type: string
                         fieldName:
                           type: string
                         resourceType:
                           type: string
+                        selectedColumns:
+                          items:
+                            type: string
+                          type: array
                       required:
                       - fieldName
                       - resourceType
@@ -124,8 +130,14 @@ spec:
                     geoIp:
                       description: Set of fields to enrich with geo_ip information.
                       properties:
+                        enrichedFieldName:
+                          type: string
                         fieldName:
                           type: string
+                        selectedColumns:
+                          items:
+                            type: string
+                          type: array
                         withAsn:
                           type: boolean
                       required:
@@ -136,8 +148,14 @@ spec:
                         Coralogix allows you to automatically discover threats on your web servers
                         by enriching your logs with the most updated IP blacklists.
                       properties:
+                        enrichedFieldName:
+                          type: string
                         fieldName:
                           type: string
+                        selectedColumns:
+                          items:
+                            type: string
+                          type: array
                       required:
                       - fieldName
                       type: object

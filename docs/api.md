@@ -10505,6 +10505,20 @@ associated with the metadata of a chosen AWS resource.
           <br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>enrichedFieldName</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>selectedColumns</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -10680,6 +10694,20 @@ Set of fields to enrich with geo_ip information.
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>enrichedFieldName</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>selectedColumns</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>withAsn</b></td>
         <td>boolean</td>
         <td>
@@ -10714,6 +10742,20 @@ by enriching your logs with the most updated IP blacklists.
           <br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>enrichedFieldName</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>selectedColumns</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 

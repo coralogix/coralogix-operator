@@ -61,15 +61,33 @@ type GeoIpEnrichmentType struct {
 	FieldName string `json:"fieldName"`
 
 	// +optional
+	EnrichedFieldName *string `json:"enrichedFieldName,omitempty"`
+
+	// +optional
+	SelectedColumns []string `json:"selectedColumns,omitempty"`
+
+	// +optional
 	WithAsn *bool `json:"withAsn,omitempty"`
 }
 
 type SuspiciousIpEnrichmentType struct {
 	FieldName string `json:"fieldName"`
+
+	// +optional
+	EnrichedFieldName *string `json:"enrichedFieldName,omitempty"`
+
+	// +optional
+	SelectedColumns []string `json:"selectedColumns,omitempty"`
 }
 
 type AwsEnrichmentType struct {
 	FieldName string `json:"fieldName"`
+
+	// +optional
+	EnrichedFieldName *string `json:"enrichedFieldName,omitempty"`
+
+	// +optional
+	SelectedColumns []string `json:"selectedColumns,omitempty"`
 
 	ResourceType string `json:"resourceType"`
 }
@@ -165,7 +183,7 @@ func (e *Enrichment) ExtractAtomicOverwriteRequest(ctx context.Context) (
 	var reqs []enrichments.EnrichmentRequestModel
 	for _, enrichment := range e.Spec.Enrichments {
 		if enrichment.GeoIp != nil {
-			reqs = append(reqs, enrichments.EnrichmentRequestModel{
+			model := enrichments.EnrichmentRequestModel{
 				FieldName: enrichment.GeoIp.FieldName,
 				EnrichmentType: enrichments.EnrichmentType{
 					EnrichmentTypeGeoIp: &enrichments.EnrichmentTypeGeoIp{
@@ -174,18 +192,26 @@ func (e *Enrichment) ExtractAtomicOverwriteRequest(ctx context.Context) (
 						},
 					},
 				},
-			})
+			}
+			applyEnrichmentFieldOptions(&model, enrichment.GeoIp.EnrichedFieldName, enrichment.GeoIp.SelectedColumns)
+			reqs = append(reqs, model)
 		} else if enrichment.SuspiciousIp != nil {
-			reqs = append(reqs, enrichments.EnrichmentRequestModel{
+			model := enrichments.EnrichmentRequestModel{
 				FieldName: enrichment.SuspiciousIp.FieldName,
 				EnrichmentType: enrichments.EnrichmentType{
 					EnrichmentTypeSuspiciousIp: &enrichments.EnrichmentTypeSuspiciousIp{
 						SuspiciousIp: map[string]any{},
 					},
 				},
-			})
+			}
+			applyEnrichmentFieldOptions(
+				&model,
+				enrichment.SuspiciousIp.EnrichedFieldName,
+				enrichment.SuspiciousIp.SelectedColumns,
+			)
+			reqs = append(reqs, model)
 		} else if enrichment.Aws != nil {
-			reqs = append(reqs, enrichments.EnrichmentRequestModel{
+			model := enrichments.EnrichmentRequestModel{
 				FieldName: enrichment.Aws.FieldName,
 				EnrichmentType: enrichments.EnrichmentType{
 					EnrichmentTypeAws: &enrichments.EnrichmentTypeAws{
@@ -194,7 +220,9 @@ func (e *Enrichment) ExtractAtomicOverwriteRequest(ctx context.Context) (
 						},
 					},
 				},
-			})
+			}
+			applyEnrichmentFieldOptions(&model, enrichment.Aws.EnrichedFieldName, enrichment.Aws.SelectedColumns)
+			reqs = append(reqs, model)
 		} else if enrichment.Custom != nil {
 			customEnrichmentID, err := e.ExtractCustomEnrichmentID(ctx, &enrichment.Custom.CustomEnrichmentRef)
 			if err != nil {
@@ -211,14 +239,7 @@ func (e *Enrichment) ExtractAtomicOverwriteRequest(ctx context.Context) (
 					},
 				},
 			}
-			if enrichment.Custom.EnrichedFieldName != nil {
-				model.EnrichedFieldName = enrichment.Custom.EnrichedFieldName
-			}
-
-			if len(enrichment.Custom.SelectedColumns) > 0 {
-				model.SelectedColumns = enrichment.Custom.SelectedColumns
-			}
-
+			applyEnrichmentFieldOptions(&model, enrichment.Custom.EnrichedFieldName, enrichment.Custom.SelectedColumns)
 			reqs = append(reqs, model)
 		} else {
 			return nil, fmt.Errorf("invalid spec: exactly one of geoIp, suspiciousIp, aws, or custom must be set")
@@ -228,6 +249,19 @@ func (e *Enrichment) ExtractAtomicOverwriteRequest(ctx context.Context) (
 	return &enrichments.EnrichmentServiceAtomicOverwriteEnrichmentsRequest{
 		RequestEnrichments: reqs,
 	}, nil
+}
+
+func applyEnrichmentFieldOptions(
+	model *enrichments.EnrichmentRequestModel,
+	enrichedFieldName *string,
+	selectedColumns []string,
+) {
+	if enrichedFieldName != nil {
+		model.EnrichedFieldName = enrichedFieldName
+	}
+	if len(selectedColumns) > 0 {
+		model.SelectedColumns = selectedColumns
+	}
 }
 
 func (e *Enrichment) ExtractCustomEnrichmentID(ctx context.Context, customEnrichment *CustomEnrichmentRef) (int64, error) {

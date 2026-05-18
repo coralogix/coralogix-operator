@@ -12,9 +12,24 @@ spec:
   enrichments:
     - suspiciousIp:
         fieldName: attributes.event.namespace
+        enrichedFieldName: suspicious_ip_enriched
+        selectedColumns:
+          - classification
+          - threat_score
     - geoIp:
         fieldName: resource.attributes.service.name
+        enrichedFieldName: geo_ip_enriched
+        selectedColumns:
+          - city
+          - country
         withAsn: true
+    - aws:
+        fieldName: attributes.aws_resource_id
+        enrichedFieldName: aws_resource_enriched
+        selectedColumns:
+          - resourceId
+          - accountId
+        resourceType: AWS::EC2::Instance
     - custom:
         fieldName: resource.attributes.service.name
         customEnrichmentRef:
