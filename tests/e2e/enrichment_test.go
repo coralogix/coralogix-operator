@@ -78,6 +78,7 @@ var _ = PDescribe("Enrichment", Ordered, func() {
 				g,
 				resp.Enrichments,
 				"attributes.event.namespace",
+				"suspiciousIp",
 				"suspicious_ip_enriched",
 				[]string{"classification", "threat_score"},
 			)
@@ -85,6 +86,7 @@ var _ = PDescribe("Enrichment", Ordered, func() {
 				g,
 				resp.Enrichments,
 				"resource.attributes.service.name",
+				"geoIp",
 				"geo_ip_enriched",
 				[]string{"city", "country"},
 			)
@@ -144,11 +146,12 @@ func assertBackendEnrichmentFieldOptions(
 	g Gomega,
 	enrichmentList []enrichments.Enrichment,
 	fieldName string,
+	enrichmentType string,
 	enrichedFieldName string,
 	selectedColumns []string,
 ) {
 	for _, backendEnrichment := range enrichmentList {
-		if backendEnrichment.FieldName == fieldName {
+		if backendEnrichment.FieldName == fieldName && backendEnrichmentHasType(backendEnrichment, enrichmentType) {
 			g.Expect(backendEnrichment.EnrichedFieldName).ToNot(BeNil())
 			g.Expect(*backendEnrichment.EnrichedFieldName).To(Equal(enrichedFieldName))
 			g.Expect(backendEnrichment.SelectedColumns).To(ConsistOf(stringsToInterfaces(selectedColumns)...))
@@ -156,7 +159,22 @@ func assertBackendEnrichmentFieldOptions(
 		}
 	}
 
-	g.Expect(enrichmentList).To(ContainElement(HaveField("FieldName", fieldName)))
+	g.Expect(false).To(BeTrue(), "expected backend enrichment with fieldName %q and type %q", fieldName, enrichmentType)
+}
+
+func backendEnrichmentHasType(backendEnrichment enrichments.Enrichment, enrichmentType string) bool {
+	switch enrichmentType {
+	case "suspiciousIp":
+		return backendEnrichment.EnrichmentType.EnrichmentTypeSuspiciousIp != nil
+	case "geoIp":
+		return backendEnrichment.EnrichmentType.EnrichmentTypeGeoIp != nil
+	case "customEnrichment":
+		return backendEnrichment.EnrichmentType.EnrichmentTypeCustomEnrichment != nil
+	case "aws":
+		return backendEnrichment.EnrichmentType.EnrichmentTypeAws != nil
+	default:
+		return false
+	}
 }
 
 func stringsToInterfaces(values []string) []interface{} {
