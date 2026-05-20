@@ -6,15 +6,17 @@ permissions:
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     tags:
       - "v*"
     paths:
-      - '/README.md'
-      - '/docs/metrics.md'
-      - '/charts/coralogix-operator/README.md'
-      - '/docs/prometheus-integration.md'
-      - '/docs/api.md'
-      - '/tools/cxo-observer/README.md'
+      - 'README.md'
+      - 'docs/metrics.md'
+      - 'charts/coralogix-operator/README.md'
+      - 'docs/prometheus-integration.md'
+      - 'docs/api.md'
+      - 'tools/cxo-observer/README.md'
 jobs:
   trigger_action:
     runs-on: ubuntu-latest
