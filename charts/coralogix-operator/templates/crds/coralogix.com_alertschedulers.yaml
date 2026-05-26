@@ -61,12 +61,19 @@ spec:
                   scheduler will be disabled. True by default.
                 type: boolean
               filter:
-                description: |-
-                  Alert Scheduler filter. Exactly one of `metaLabels` or `alerts` can be set.
-                  If none of them set, all alerts will be affected.
+                description: Alert Scheduler filter. Exactly one of `allAlerts`, `metaLabels`,
+                  `alerts`, or `alertUniqueIds` must be set.
                 properties:
+                  alertUniqueIds:
+                    description: Backend alert unique IDs. Conflicts with `allAlerts`,
+                      `metaLabels`, and `alerts`.
+                    items:
+                      type: string
+                    minItems: 1
+                    type: array
                   alerts:
-                    description: Alert references. Conflicts with `metaLabels`.
+                    description: Alert references. Conflicts with `allAlerts`, `metaLabels`,
+                      and `alertUniqueIds`.
                     items:
                       properties:
                         resourceRef:
@@ -86,9 +93,15 @@ spec:
                       required:
                       - resourceRef
                       type: object
+                    minItems: 1
                     type: array
+                  allAlerts:
+                    description: Whether the scheduler applies to all alerts. Conflicts
+                      with `metaLabels`, `alerts`, and `alertUniqueIds`.
+                    type: boolean
                   metaLabels:
-                    description: Alert Scheduler meta labels. Conflicts with `alerts`.
+                    description: Alert Scheduler meta labels. Conflicts with `allAlerts`,
+                      `alerts`, and `alertUniqueIds`.
                     items:
                       properties:
                         key:
@@ -98,6 +111,7 @@ spec:
                       required:
                       - key
                       type: object
+                    minItems: 1
                     type: array
                   whatExpression:
                     description: DataPrime query expression - https://coralogix.com/docs/dataprime-query-language.
@@ -106,8 +120,16 @@ spec:
                 - whatExpression
                 type: object
                 x-kubernetes-validations:
-                - message: Exactly one of metaLabels or alerts must be set
-                  rule: has(self.metaLabels) != has(self.alerts)
+                - message: Exactly one of allAlerts, metaLabels, alerts, or alertUniqueIds
+                    must be set
+                  rule: '(has(self.allAlerts) ? 1 : 0) + (has(self.metaLabels) ? 1
+                    : 0) + (has(self.alerts) ? 1 : 0) + (has(self.alertUniqueIds)
+                    ? 1 : 0) == 1'
+                - message: allAlerts must be true when set
+                  rule: '!has(self.allAlerts) || self.allAlerts == true'
+                - message: alertUniqueIds must not contain empty values
+                  rule: '!has(self.alertUniqueIds) || self.alertUniqueIds.all(id,
+                    id.size() > 0)'
               metaLabels:
                 description: Alert Scheduler meta labels.
                 items:
