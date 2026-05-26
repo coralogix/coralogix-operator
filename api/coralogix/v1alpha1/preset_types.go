@@ -65,15 +65,14 @@ type ConfigOverride struct {
 // +kubebuilder:validation:XValidation:rule="has(self.matchEntityType) != has(self.matchEntityTypeAndSubType)", message="exactly one of matchEntityType or matchEntityTypeAndSubType must be set"
 type ConditionType struct {
 	// MatchEntityType is used for matching entity types.
+	// +kubebuilder:validation:MaxProperties=0
 	// +optional
-	MatchEntityType *MatchEntityType `json:"matchEntityType,omitempty"`
+	MatchEntityType *map[string]string `json:"matchEntityType,omitempty"`
 
 	// MatchEntityTypeAndSubType is used for matching entity subtypes.
 	// +optional
 	MatchEntityTypeAndSubType *MatchEntityTypeAndSubType `json:"matchEntityTypeAndSubType,omitempty"`
 }
-
-type MatchEntityType struct{}
 
 type MatchEntityTypeAndSubType struct {
 	// EntitySubType is the entity subtype for the config override. For example, "logsImmediateTriggered".

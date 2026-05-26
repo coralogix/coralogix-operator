@@ -14157,7 +14157,7 @@ ConditionType is the condition type for the config override.
     </thead>
     <tbody><tr>
         <td><b>matchEntityType</b></td>
-        <td>object</td>
+        <td>map[string]string</td>
         <td>
           MatchEntityType is used for matching entity types.<br/>
         </td>

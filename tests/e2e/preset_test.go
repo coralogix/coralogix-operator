@@ -228,7 +228,7 @@ func getSampleServiceNowPreset(name, namespace string) *coralogixv1alpha1.Preset
 				{
 					PayloadType: &payloadType,
 					ConditionType: coralogixv1alpha1.ConditionType{
-						MatchEntityType: &coralogixv1alpha1.MatchEntityType{},
+						MatchEntityType: &map[string]string{},
 					},
 					MessageConfig: coralogixv1alpha1.MessageConfig{
 						Fields: []coralogixv1alpha1.MessageConfigField{},
