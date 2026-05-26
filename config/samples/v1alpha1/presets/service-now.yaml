@@ -1,0 +1,22 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Preset
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: preset-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: service-now-sample
+spec:
+  name: service-now-sample
+  description: ServiceNow preset example
+  connectorType: serviceNow
+  entityType: cases
+  parentId: preset_system_service_now_cases_basic
+  configOverrides:
+    - payloadType: service_now_default
+      conditionType:
+        matchEntityType: {}
+      messageConfig:
+        fields: []

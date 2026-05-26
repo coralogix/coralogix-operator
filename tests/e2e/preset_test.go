@@ -99,6 +99,77 @@ var _ = Describe("Preset", Ordered, func() {
 	})
 })
 
+var _ = Describe("ServiceNow Preset", Ordered, func() {
+	var (
+		crClient            client.Client
+		notificationsClient *cxsdk.NotificationsClient
+		presetID            string
+		preset              *coralogixv1alpha1.Preset
+	)
+
+	BeforeAll(func() {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		notificationsClient = ClientsInstance.GetCoralogixClientSet().Notifications()
+	})
+
+	It("Should be created successfully", func(ctx context.Context) {
+		By("Creating ServiceNow Preset")
+		presetName := fmt.Sprintf("service-now-preset-%d", time.Now().Unix())
+		preset = getSampleServiceNowPreset(presetName, testNamespace)
+		Expect(crClient.Create(ctx, preset)).To(Succeed())
+
+		By("Fetching the ServiceNow Preset ID")
+		fetchedPreset := &coralogixv1alpha1.Preset{}
+		Eventually(func(g Gomega) error {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: presetName, Namespace: testNamespace}, fetchedPreset)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedPreset.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedPreset.Status.PrintableStatus).To(Equal("RemoteSynced"))
+			if fetchedPreset.Status.Id != nil {
+				presetID = *fetchedPreset.Status.Id
+				return nil
+			}
+			return fmt.Errorf("serviceNow preset ID is not set")
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying ServiceNow Preset exists in Coralogix backend")
+		Eventually(func(g Gomega) error {
+			getPresetRes, err := notificationsClient.GetPreset(ctx, &cxsdk.GetPresetRequest{Id: presetID})
+			if err != nil {
+				return err
+			}
+			g.Expect(getPresetRes.GetPreset().GetConnectorType().String()).To(Equal("SERVICE_NOW"))
+			g.Expect(getPresetRes.GetPreset().GetEntityType().String()).To(Equal("CASES"))
+			return nil
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should be updated successfully", func(ctx context.Context) {
+		By("Patching the ServiceNow Preset")
+		newPresetName := fmt.Sprintf("service-now-preset-updated-%d", time.Now().Unix())
+		modifiedPreset := preset.DeepCopy()
+		modifiedPreset.Spec.Name = newPresetName
+		Expect(crClient.Patch(ctx, modifiedPreset, client.MergeFrom(preset))).To(Succeed())
+
+		By("Verifying ServiceNow Preset is updated in Coralogix backend")
+		Eventually(func() string {
+			getPresetRes, err := notificationsClient.GetPreset(ctx, &cxsdk.GetPresetRequest{Id: presetID})
+			Expect(err).ToNot(HaveOccurred())
+			return getPresetRes.GetPreset().GetName()
+		}, time.Minute, time.Second).Should(Equal(newPresetName))
+	})
+
+	It("Should be deleted successfully", func(ctx context.Context) {
+		By("Deleting the ServiceNow Preset")
+		Expect(crClient.Delete(ctx, preset)).To(Succeed())
+
+		By("Verifying ServiceNow Preset is deleted from Coralogix backend")
+		Eventually(func() codes.Code {
+			_, err := notificationsClient.GetPreset(ctx, &cxsdk.GetPresetRequest{Id: presetID})
+			return cxsdk.Code(err)
+		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
+	})
+})
+
 func getSampleSlackPreset(name, namespace string) *coralogixv1alpha1.Preset {
 	parentID := "preset_system_slack_alerts_basic"
 
@@ -131,6 +202,36 @@ func getSampleSlackPreset(name, namespace string) *coralogixv1alpha1.Preset {
 								Template:  "{{alertDef.description}}",
 							},
 						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func getSampleServiceNowPreset(name, namespace string) *coralogixv1alpha1.Preset {
+	parentID := "preset_system_service_now_cases_basic"
+	payloadType := "service_now_default"
+
+	return &coralogixv1alpha1.Preset{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: coralogixv1alpha1.PresetSpec{
+			Name:          name,
+			Description:   "This is a sample ServiceNow preset",
+			ConnectorType: "serviceNow",
+			EntityType:    "cases",
+			ParentId:      &parentID,
+			ConfigOverrides: []coralogixv1alpha1.ConfigOverride{
+				{
+					PayloadType: &payloadType,
+					ConditionType: coralogixv1alpha1.ConditionType{
+						MatchEntityType: &coralogixv1alpha1.MatchEntityType{},
+					},
+					MessageConfig: coralogixv1alpha1.MessageConfig{
+						Fields: []coralogixv1alpha1.MessageConfigField{},
 					},
 				},
 			},

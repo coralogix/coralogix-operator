@@ -14050,9 +14050,9 @@ PresetSpec defines the desired state of Preset.
         <td><b>connectorType</b></td>
         <td>enum</td>
         <td>
-          ConnectorType is the type of the connector. Can be one of slack, genericHttps, pagerDuty, or email.<br/>
+          ConnectorType is the type of the connector. Can be one of slack, genericHttps, pagerDuty, email, or serviceNow.<br/>
           <br/>
-            <i>Enum</i>: slack, genericHttps, pagerDuty, email<br/>
+            <i>Enum</i>: slack, genericHttps, pagerDuty, email, serviceNow<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -14066,9 +14066,9 @@ PresetSpec defines the desired state of Preset.
         <td><b>entityType</b></td>
         <td>enum</td>
         <td>
-          EntityType is the entity type for the preset. Should equal "alerts".<br/>
+          EntityType is the entity type for the preset. Can be one of alerts or cases.<br/>
           <br/>
-            <i>Enum</i>: alerts<br/>
+            <i>Enum</i>: alerts, cases<br/>
         </td>
         <td>true</td>
       </tr><tr>

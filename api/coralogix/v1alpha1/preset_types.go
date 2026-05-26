@@ -36,12 +36,12 @@ type PresetSpec struct {
 	// +optional
 	ParentId *string `json:"parentId,omitempty"`
 
-	// ConnectorType is the type of the connector. Can be one of slack, genericHttps, pagerDuty, or email.
-	// +kubebuilder:validation:Enum=slack;genericHttps;pagerDuty;email
+	// ConnectorType is the type of the connector. Can be one of slack, genericHttps, pagerDuty, email, or serviceNow.
+	// +kubebuilder:validation:Enum=slack;genericHttps;pagerDuty;email;serviceNow
 	ConnectorType string `json:"connectorType"`
 
-	// EntityType is the entity type for the preset. Should equal "alerts".
-	// +kubebuilder:validation:Enum=alerts
+	// EntityType is the entity type for the preset. Can be one of alerts or cases.
+	// +kubebuilder:validation:Enum=alerts;cases
 	EntityType string `json:"entityType"`
 
 	// ConfigOverrides are the entity type configs, allowing entity type templating.
@@ -130,9 +130,11 @@ var (
 		"genericHttps": presets.NOTIFICATIONCENTERCONNECTORTYPE_GENERIC_HTTPS,
 		"pagerDuty":    presets.NOTIFICATIONCENTERCONNECTORTYPE_PAGERDUTY,
 		"email":        presets.NOTIFICATIONCENTERCONNECTORTYPE_EMAIL,
+		"serviceNow":   presets.NOTIFICATIONCENTERCONNECTORTYPE_SERVICE_NOW,
 	}
 	schemaToOpenApiPresetsEntityType = map[string]presets.NotificationCenterEntityType{
 		"alerts": presets.NOTIFICATIONCENTERENTITYTYPE_ALERTS,
+		"cases":  presets.NOTIFICATIONCENTERENTITYTYPE_CASES,
 	}
 )
 
@@ -191,7 +193,7 @@ func ExtractConfigOverrides(overrides []ConfigOverride) []presets.ConfigOverride
 }
 
 func ExtractMessageConfig(messageConfig MessageConfig) *presets.MessageConfig {
-	var fields []presets.NotificationCenterMessageConfigField
+	fields := make([]presets.NotificationCenterMessageConfigField, 0, len(messageConfig.Fields))
 	for _, field := range messageConfig.Fields {
 		fields = append(fields, presets.NotificationCenterMessageConfigField{
 			FieldName: presets.PtrString(field.FieldName),
