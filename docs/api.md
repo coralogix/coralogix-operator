@@ -13306,7 +13306,7 @@ OutboundWebhookSpec defines the desired state of an outbound webhook.
         <td>
           Type of webhook.<br/>
           <br/>
-            <i>Validations</i>:<li>(has(self.genericWebhook) ? 1 : 0) + (has(self.slack) ? 1 : 0) + (has(self.pagerDuty) ? 1 : 0) + (has(self.sendLog) ? 1 : 0) + (has(self.emailGroup) ? 1 : 0) + (has(self.microsoftTeams) ? 1 : 0) + (has(self.jira) ? 1 : 0) + (has(self.opsgenie) ? 1 : 0) + (has(self.demisto) ? 1 : 0) + (has(self.awsEventBridge) ? 1 : 0) == 1: Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge</li>
+            <i>Validations</i>:<li>(has(self.genericWebhook) ? 1 : 0) + (has(self.slack) ? 1 : 0) + (has(self.pagerDuty) ? 1 : 0) + (has(self.sendLog) ? 1 : 0) + (has(self.emailGroup) ? 1 : 0) + (has(self.microsoftTeams) ? 1 : 0) + (has(self.microsoftTeamsWorkflow) ? 1 : 0) + (has(self.jira) ? 1 : 0) + (has(self.opsgenie) ? 1 : 0) + (has(self.demisto) ? 1 : 0) + (has(self.awsEventBridge) ? 1 : 0) == 1: Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, microsoftTeamsWorkflow, jira, opsgenie, demisto, awsEventBridge</li>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -13369,6 +13369,13 @@ Type of webhook.
         <td>object</td>
         <td>
           Teams message.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypemicrosoftteamsworkflow">microsoftTeamsWorkflow</a></b></td>
+        <td>object</td>
+        <td>
+          Teams Workflow message.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -13645,6 +13652,33 @@ Teams message.
         <td>string</td>
         <td>
           Teams URL<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### OutboundWebhook.spec.outboundWebhookType.microsoftTeamsWorkflow
+<sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktype)</sup></sup>
+
+
+
+Teams Workflow message.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>url</b></td>
+        <td>string</td>
+        <td>
+          Teams Workflow URL<br/>
         </td>
         <td>true</td>
       </tr></tbody>
