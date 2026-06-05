@@ -16,6 +16,7 @@ package e2e
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -49,6 +50,9 @@ var _ = Describe("QuotaAllocationRuleSet", Ordered, func() {
 		quotasClient = cxsdk.NewClientSet(cfg).Quotas()
 		var err error
 		snapshot, err = getQuotaAllocationRuleSet(ctx, quotasClient)
+		if cxsdk.Code(err) == http.StatusForbidden {
+			Skip("quota allocation rule set API is not enabled for the configured API key")
+		}
 		Expect(err).ToNot(HaveOccurred())
 		snapshotSet = true
 	})
