@@ -39,6 +39,7 @@ var _ = Describe("QuotaAllocationRuleSet", Ordered, func() {
 		quotasClient *quotas.QuotaAllocationRuleSetServiceAPIService
 		ruleSet      *coralogixv1alpha1.QuotaAllocationRuleSet
 		snapshot     *quotas.QuotaAllocationEntityTypeRuleSet
+		snapshotSet  bool
 		crName       = "quota-allocation-rule-set-sample"
 	)
 
@@ -49,6 +50,7 @@ var _ = Describe("QuotaAllocationRuleSet", Ordered, func() {
 		var err error
 		snapshot, err = getQuotaAllocationRuleSet(ctx, quotasClient)
 		Expect(err).ToNot(HaveOccurred())
+		snapshotSet = true
 	})
 
 	BeforeEach(func() {
@@ -79,7 +81,9 @@ var _ = Describe("QuotaAllocationRuleSet", Ordered, func() {
 	})
 
 	AfterAll(func(ctx context.Context) {
-		defer restoreQuotaAllocationRuleSet(ctx, quotasClient, snapshot)
+		if snapshotSet {
+			defer restoreQuotaAllocationRuleSet(ctx, quotasClient, snapshot)
+		}
 
 		_ = crClient.Delete(ctx, ruleSet)
 		Eventually(func() bool {

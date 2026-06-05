@@ -145,6 +145,21 @@ func TestExtractQuotaAllocationRuleSetRequestRejectsPercentageAboveOneHundred(t 
 	require.ErrorContains(t, err, `quota allocation rule entityType "logs" has percentage allocation greater than 100`)
 }
 
+func TestExtractQuotaAllocationRuleSetRequestRejectsUnspecifiedAboveOneHundred(t *testing.T) {
+	allocationType := QuotaAllocationTypeUnspecified
+	spec := &QuotaAllocationRuleSetSpec{
+		Rules: []QuotaAllocationRule{{
+			EntityType:     "logs",
+			Allocation:     resource.MustParse("101"),
+			AllocationType: &allocationType,
+			Enabled:        true,
+		}},
+	}
+
+	_, err := spec.ExtractQuotaAllocationRuleSetRequest()
+	require.ErrorContains(t, err, `quota allocation rule entityType "logs" has percentage allocation greater than 100`)
+}
+
 func TestQuotaAllocationRuleSetYAMLDecodesIntegerAndFractionalAllocations(t *testing.T) {
 	manifest := []byte(`
 apiVersion: coralogix.com/v1alpha1

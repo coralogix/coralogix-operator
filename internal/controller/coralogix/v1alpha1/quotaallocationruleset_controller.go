@@ -85,6 +85,9 @@ func (r *QuotaAllocationRuleSetReconciler) withPreservedManagedRules(ctx context
 	if err != nil {
 		return nil, err
 	}
+	if err := RejectManagedQuotaAllocationRuleCollisions(plannedRules, currentRuleSet.Rules); err != nil {
+		return nil, err
+	}
 	return PreserveManagedQuotaAllocationRules(plannedRules, currentRuleSet.Rules), nil
 }
 
@@ -173,6 +176,27 @@ func PreserveManagedQuotaAllocationRules(
 func quotaAllocationRuleWithoutReadOnlyFields(rule quotas.QuotaAllocationEntityTypeRule) quotas.QuotaAllocationEntityTypeRule {
 	rule.CxManaged = nil
 	return rule
+}
+
+// RejectManagedQuotaAllocationRuleCollisions rejects user rules that would replace backend-managed entity types.
+func RejectManagedQuotaAllocationRuleCollisions(
+	plannedRules []quotas.QuotaAllocationEntityTypeRule,
+	currentRules []quotas.QuotaAllocationEntityTypeRule,
+) error {
+	managedEntityTypes := make(map[string]struct{}, len(currentRules))
+	for _, rule := range currentRules {
+		if rule.GetCxManaged() {
+			managedEntityTypes[rule.EntityType] = struct{}{}
+		}
+	}
+
+	for _, rule := range plannedRules {
+		if _, exists := managedEntityTypes[rule.EntityType]; exists {
+			return fmt.Errorf("quota allocation rule entityType %q is managed by Coralogix and cannot be replaced", rule.EntityType)
+		}
+	}
+
+	return nil
 }
 
 func (r *QuotaAllocationRuleSetReconciler) FinalizerName() string {

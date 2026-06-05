@@ -73,6 +73,28 @@ func TestPreserveManagedQuotaAllocationRulesKeepsManagedRulesOnDelete(t *testing
 	require.Nil(t, result[0].CxManaged)
 }
 
+func TestRejectManagedQuotaAllocationRuleCollisionsRejectsManagedEntityType(t *testing.T) {
+	planned := []quotas.QuotaAllocationEntityTypeRule{quotaRule("logs", false)}
+	current := []quotas.QuotaAllocationEntityTypeRule{
+		quotaRule("logs", true),
+		quotaRule("metrics", true),
+	}
+
+	err := RejectManagedQuotaAllocationRuleCollisions(planned, current)
+
+	require.ErrorContains(t, err, `quota allocation rule entityType "logs" is managed by Coralogix and cannot be replaced`)
+}
+
+func TestRejectManagedQuotaAllocationRuleCollisionsAllowsUserManagedEntityType(t *testing.T) {
+	planned := []quotas.QuotaAllocationEntityTypeRule{quotaRule("logs", false)}
+	current := []quotas.QuotaAllocationEntityTypeRule{
+		quotaRule("logs", false),
+		quotaRule("metrics", true),
+	}
+
+	require.NoError(t, RejectManagedQuotaAllocationRuleCollisions(planned, current))
+}
+
 func TestEnsureSingleSelectedRuleSetRejectsAnotherActiveResource(t *testing.T) {
 	scheme := runtime.NewScheme()
 	require.NoError(t, coralogixv1alpha1.AddToScheme(scheme))

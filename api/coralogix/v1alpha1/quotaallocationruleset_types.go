@@ -93,7 +93,7 @@ func (s *QuotaAllocationRuleSetSpec) ExtractQuotaAllocationRules() ([]quotas.Quo
 		if rule.Allocation.Sign() < 0 {
 			return nil, fmt.Errorf("quota allocation rule entityType %q has negative allocation", rule.EntityType)
 		}
-		if (rule.AllocationType == nil || *rule.AllocationType == QuotaAllocationTypePercentage) &&
+		if (rule.AllocationType == nil || *rule.AllocationType == QuotaAllocationTypePercentage || *rule.AllocationType == QuotaAllocationTypeUnspecified) &&
 			rule.Allocation.Cmp(maxQuotaAllocationPercentage) > 0 {
 			return nil, fmt.Errorf("quota allocation rule entityType %q has percentage allocation greater than 100", rule.EntityType)
 		}
