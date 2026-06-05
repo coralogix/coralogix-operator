@@ -54,6 +54,11 @@ var _ = Describe("QuotaAllocationRuleSet", Ordered, func() {
 			Skip("quota allocation rule set API is not enabled for the configured API key")
 		}
 		Expect(err).ToNot(HaveOccurred())
+		err = replaceQuotaAllocationRuleSet(ctx, quotasClient, snapshot)
+		if cxsdk.Code(err) == http.StatusForbidden {
+			Skip("quota allocation rule set API manage permission is not enabled for the configured API key")
+		}
+		Expect(err).ToNot(HaveOccurred())
 		snapshotSet = true
 	})
 
@@ -178,19 +183,26 @@ func restoreQuotaAllocationRuleSet(ctx context.Context, quotasClient *quotas.Quo
 		return
 	}
 
-	restoreRules := make([]quotas.QuotaAllocationEntityTypeRule, 0, len(snapshot.Rules))
-	for _, rule := range snapshot.Rules {
-		rule.CxManaged = nil
-		restoreRules = append(restoreRules, rule)
+	Expect(replaceQuotaAllocationRuleSet(ctx, quotasClient, snapshot)).To(Succeed())
+}
+
+func replaceQuotaAllocationRuleSet(ctx context.Context, quotasClient *quotas.QuotaAllocationRuleSetServiceAPIService, ruleSet *quotas.QuotaAllocationEntityTypeRuleSet) error {
+	restoreRules := []quotas.QuotaAllocationEntityTypeRule{}
+	if ruleSet != nil {
+		restoreRules = make([]quotas.QuotaAllocationEntityTypeRule, 0, len(ruleSet.Rules))
+		for _, rule := range ruleSet.Rules {
+			rule.CxManaged = nil
+			restoreRules = append(restoreRules, rule)
+		}
 	}
 
-	_, _, err := quotasClient.
+	_, httpResp, err := quotasClient.
 		QuotaAllocationRuleSetServiceReplaceQuotaAllocationRuleSet(ctx).
 		ReplaceQuotaAllocationRuleSetRequest(quotas.ReplaceQuotaAllocationRuleSetRequest{
 			RuleSet: quotas.QuotaAllocationEntityTypeRuleSet{Rules: restoreRules},
 		}).
 		Execute()
-	Expect(err).ToNot(HaveOccurred())
+	return cxsdk.NewAPIError(httpResp, err)
 }
 
 func findUserQuotaAllocationRule(rules []quotas.QuotaAllocationEntityTypeRule, entityType string) *quotas.QuotaAllocationEntityTypeRule {

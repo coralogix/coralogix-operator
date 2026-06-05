@@ -177,6 +177,7 @@ coralogixOperator:
     group: ""
     tcoLogsPolicies: ""
     tcoTracesPolicies: ""
+    quotaAllocationRuleSet: ""
     integration: ""
     alertScheduler: ""
     dashboard: ""
