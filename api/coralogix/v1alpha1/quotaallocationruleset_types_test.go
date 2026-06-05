@@ -20,6 +20,7 @@ import (
 	quotas "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/quota_allocation_rule_set_service"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"sigs.k8s.io/yaml"
 )
 
 func TestExtractQuotaAllocationRuleSetRequestDefaultsAllocationType(t *testing.T) {
@@ -55,6 +56,24 @@ func TestExtractQuotaAllocationRuleSetRequestMapsLockedUnits(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, ruleSet.Rules, 1)
 	require.Equal(t, quotas.QUOTAALLOCATIONTYPE_QUOTA_ALLOCATION_TYPE_LOCKED_UNITS, ruleSet.Rules[0].GetAllocationType())
+}
+
+func TestExtractQuotaAllocationRuleSetRequestAllowsLockedUnitsAboveOneHundred(t *testing.T) {
+	allocationType := QuotaAllocationTypeLockedUnits
+	spec := &QuotaAllocationRuleSetSpec{
+		Rules: []QuotaAllocationRule{{
+			EntityType:     "metrics",
+			Allocation:     resource.MustParse("1000"),
+			AllocationType: &allocationType,
+			Enabled:        true,
+			CanOverflow:    false,
+		}},
+	}
+
+	ruleSet, err := spec.ExtractQuotaAllocationRuleSetRequest()
+	require.NoError(t, err)
+	require.Len(t, ruleSet.Rules, 1)
+	require.Equal(t, float32(1000), ruleSet.Rules[0].Allocation)
 }
 
 func TestExtractQuotaAllocationRuleSetRequestPreservesFractionalAllocation(t *testing.T) {
@@ -96,4 +115,60 @@ func TestExtractQuotaAllocationRuleSetRequestRejectsNegativeAllocation(t *testin
 
 	_, err := spec.ExtractQuotaAllocationRuleSetRequest()
 	require.ErrorContains(t, err, `quota allocation rule entityType "logs" has negative allocation`)
+}
+
+func TestExtractQuotaAllocationRuleSetRequestRejectsDefaultPercentageAboveOneHundred(t *testing.T) {
+	spec := &QuotaAllocationRuleSetSpec{
+		Rules: []QuotaAllocationRule{{
+			EntityType: "logs",
+			Allocation: resource.MustParse("101"),
+			Enabled:    true,
+		}},
+	}
+
+	_, err := spec.ExtractQuotaAllocationRuleSetRequest()
+	require.ErrorContains(t, err, `quota allocation rule entityType "logs" has percentage allocation greater than 100`)
+}
+
+func TestExtractQuotaAllocationRuleSetRequestRejectsPercentageAboveOneHundred(t *testing.T) {
+	allocationType := QuotaAllocationTypePercentage
+	spec := &QuotaAllocationRuleSetSpec{
+		Rules: []QuotaAllocationRule{{
+			EntityType:     "logs",
+			Allocation:     resource.MustParse("101"),
+			AllocationType: &allocationType,
+			Enabled:        true,
+		}},
+	}
+
+	_, err := spec.ExtractQuotaAllocationRuleSetRequest()
+	require.ErrorContains(t, err, `quota allocation rule entityType "logs" has percentage allocation greater than 100`)
+}
+
+func TestQuotaAllocationRuleSetYAMLDecodesIntegerAndFractionalAllocations(t *testing.T) {
+	manifest := []byte(`
+apiVersion: coralogix.com/v1alpha1
+kind: QuotaAllocationRuleSet
+metadata:
+  name: example
+spec:
+  rules:
+    - entityType: logs
+      allocation: 60
+      enabled: true
+      canOverflow: true
+    - entityType: metrics
+      allocation: "12.5"
+      enabled: true
+      canOverflow: false
+`)
+
+	var ruleSet QuotaAllocationRuleSet
+	require.NoError(t, yaml.Unmarshal(manifest, &ruleSet))
+
+	request, err := ruleSet.Spec.ExtractQuotaAllocationRuleSetRequest()
+	require.NoError(t, err)
+	require.Len(t, request.Rules, 2)
+	require.Equal(t, float32(60), request.Rules[0].Allocation)
+	require.Equal(t, float32(12.5), request.Rules[1].Allocation)
 }

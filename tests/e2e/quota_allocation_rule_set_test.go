@@ -79,14 +79,14 @@ var _ = Describe("QuotaAllocationRuleSet", Ordered, func() {
 	})
 
 	AfterAll(func(ctx context.Context) {
+		defer restoreQuotaAllocationRuleSet(ctx, quotasClient, snapshot)
+
 		_ = crClient.Delete(ctx, ruleSet)
 		Eventually(func() bool {
 			fetched := &coralogixv1alpha1.QuotaAllocationRuleSet{}
 			err := crClient.Get(ctx, client.ObjectKey{Name: crName, Namespace: testNamespace}, fetched)
 			return apierrors.IsNotFound(err)
 		}, time.Minute, time.Second).Should(BeTrue())
-
-		restoreQuotaAllocationRuleSet(ctx, quotasClient, snapshot)
 	})
 
 	It("Should create and delete QuotaAllocationRuleSet successfully", func(ctx context.Context) {

@@ -53,6 +53,10 @@ func (r *QuotaAllocationRuleSetReconciler) RequeueInterval() time.Duration {
 }
 
 func (r *QuotaAllocationRuleSetReconciler) replace(ctx context.Context, log logr.Logger, quotaAllocationRuleSet *coralogixv1alpha1.QuotaAllocationRuleSet) error {
+	if err := r.ensureSingleSelectedRuleSet(ctx, quotaAllocationRuleSet); err != nil {
+		return err
+	}
+
 	ruleSet, err := quotaAllocationRuleSet.Spec.ExtractQuotaAllocationRuleSetRequest()
 	if err != nil {
 		return fmt.Errorf("error on extracting quota allocation rule set request: %w", err)
@@ -102,6 +106,44 @@ func (r *QuotaAllocationRuleSetReconciler) getCurrentRuleSet(ctx context.Context
 	}
 
 	return getResponse.RuleSet, nil
+}
+
+func (r *QuotaAllocationRuleSetReconciler) ensureSingleSelectedRuleSet(ctx context.Context, quotaAllocationRuleSet *coralogixv1alpha1.QuotaAllocationRuleSet) error {
+	other, err := r.findOtherSelectedRuleSet(ctx, quotaAllocationRuleSet)
+	if err != nil {
+		return err
+	}
+	if other != nil {
+		return fmt.Errorf(
+			"only one selected QuotaAllocationRuleSet can manage account-level quota allocation rules; %s/%s already exists",
+			other.Namespace,
+			other.Name,
+		)
+	}
+	return nil
+}
+
+func (r *QuotaAllocationRuleSetReconciler) findOtherSelectedRuleSet(ctx context.Context, quotaAllocationRuleSet *coralogixv1alpha1.QuotaAllocationRuleSet) (*coralogixv1alpha1.QuotaAllocationRuleSet, error) {
+	ruleSets := &coralogixv1alpha1.QuotaAllocationRuleSetList{}
+	if err := config.GetClient().List(ctx, ruleSets); err != nil {
+		return nil, fmt.Errorf("error on listing quota allocation rule sets: %w", err)
+	}
+
+	for i := range ruleSets.Items {
+		ruleSet := &ruleSets.Items[i]
+		if ruleSet.UID == quotaAllocationRuleSet.UID {
+			continue
+		}
+		if !ruleSet.DeletionTimestamp.IsZero() {
+			continue
+		}
+		if !config.GetConfig().Selector.Matches(ruleSet.Labels, ruleSet.Namespace) {
+			continue
+		}
+		return ruleSet, nil
+	}
+
+	return nil, nil
 }
 
 // PreserveManagedQuotaAllocationRules appends backend-managed rules that are not replaced by the planned entity types.
@@ -154,7 +196,19 @@ func (r *QuotaAllocationRuleSetReconciler) HandleUpdate(ctx context.Context, log
 	return coralogixreconciler.AddFinalizer(ctx, log, quotaAllocationRuleSet, r)
 }
 
-func (r *QuotaAllocationRuleSetReconciler) HandleDeletion(ctx context.Context, log logr.Logger, _ client.Object) error {
+func (r *QuotaAllocationRuleSetReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
+	quotaAllocationRuleSet := obj.(*coralogixv1alpha1.QuotaAllocationRuleSet)
+	if other, err := r.findOtherSelectedRuleSet(ctx, quotaAllocationRuleSet); err != nil {
+		return err
+	} else if other != nil {
+		log.Info(
+			"Skipping remote QuotaAllocationRuleSet deletion because another selected resource exists",
+			"otherNamespace", other.Namespace,
+			"otherName", other.Name,
+		)
+		return nil
+	}
+
 	log.Info("Deleting QuotaAllocationRuleSet")
 	ruleSet, err := r.getCurrentRuleSet(ctx)
 	if err != nil {

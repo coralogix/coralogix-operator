@@ -15,10 +15,18 @@
 package v1alpha1
 
 import (
+	"context"
 	"testing"
 
 	quotas "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/quota_allocation_rule_set_service"
 	"github.com/stretchr/testify/require"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/v2/internal/config"
 )
 
 func TestPreserveManagedQuotaAllocationRulesAppendsManagedRules(t *testing.T) {
@@ -63,6 +71,41 @@ func TestPreserveManagedQuotaAllocationRulesKeepsManagedRulesOnDelete(t *testing
 	require.Len(t, result, 1)
 	require.Equal(t, "metrics", result[0].EntityType)
 	require.Nil(t, result[0].CxManaged)
+}
+
+func TestEnsureSingleSelectedRuleSetRejectsAnotherActiveResource(t *testing.T) {
+	scheme := runtime.NewScheme()
+	require.NoError(t, coralogixv1alpha1.AddToScheme(scheme))
+
+	current := &coralogixv1alpha1.QuotaAllocationRuleSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "current",
+			Namespace: "team-a",
+			UID:       types.UID("current"),
+		},
+	}
+	other := &coralogixv1alpha1.QuotaAllocationRuleSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "other",
+			Namespace: "team-b",
+			UID:       types.UID("other"),
+		},
+	}
+
+	originalClient := config.GetClient()
+	originalSelector := config.GetConfig().Selector
+	t.Cleanup(func() {
+		config.InitClient(originalClient)
+		config.GetConfig().Selector = originalSelector
+	})
+
+	config.InitClient(fake.NewClientBuilder().WithScheme(scheme).WithObjects(current, other).Build())
+	config.GetConfig().Selector = config.Selector{}
+
+	err := (&QuotaAllocationRuleSetReconciler{}).ensureSingleSelectedRuleSet(context.Background(), current)
+
+	require.ErrorContains(t, err, "only one selected QuotaAllocationRuleSet can manage account-level quota allocation rules")
+	require.ErrorContains(t, err, "team-b/other")
 }
 
 func quotaRule(entityType string, cxManaged bool) quotas.QuotaAllocationEntityTypeRule {

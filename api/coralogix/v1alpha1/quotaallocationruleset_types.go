@@ -69,6 +69,8 @@ var quotaAllocationTypeSchemaToOpenAPI = map[QuotaAllocationType]quotas.QuotaAll
 	QuotaAllocationTypeUnspecified: quotas.QUOTAALLOCATIONTYPE_QUOTA_ALLOCATION_TYPE_UNSPECIFIED,
 }
 
+var maxQuotaAllocationPercentage = resource.MustParse("100")
+
 // ExtractQuotaAllocationRuleSetRequest converts the Kubernetes spec to the OpenAPI quota rule set model.
 func (s *QuotaAllocationRuleSetSpec) ExtractQuotaAllocationRuleSetRequest() (*quotas.QuotaAllocationEntityTypeRuleSet, error) {
 	rules, err := s.ExtractQuotaAllocationRules()
@@ -90,6 +92,10 @@ func (s *QuotaAllocationRuleSetSpec) ExtractQuotaAllocationRules() ([]quotas.Quo
 		}
 		if rule.Allocation.Sign() < 0 {
 			return nil, fmt.Errorf("quota allocation rule entityType %q has negative allocation", rule.EntityType)
+		}
+		if (rule.AllocationType == nil || *rule.AllocationType == QuotaAllocationTypePercentage) &&
+			rule.Allocation.Cmp(maxQuotaAllocationPercentage) > 0 {
+			return nil, fmt.Errorf("quota allocation rule entityType %q has percentage allocation greater than 100", rule.EntityType)
 		}
 		seenEntityTypes[rule.EntityType] = struct{}{}
 		rules = append(rules, rule.ExtractQuotaAllocationEntityTypeRule())
