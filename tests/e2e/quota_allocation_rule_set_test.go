@@ -101,16 +101,16 @@ var _ = Describe("QuotaAllocationRuleSet", Ordered, func() {
 		By("Verifying quota allocation rules exist in Coralogix backend")
 		Eventually(func(g Gomega) {
 			backendRuleSet := getQuotaAllocationRuleSet(ctx, quotasClient)
-			g.Expect(findQuotaAllocationRule(backendRuleSet.Rules, "logs", false)).ToNot(BeNil())
-			g.Expect(findQuotaAllocationRule(backendRuleSet.Rules, "metrics", false)).ToNot(BeNil())
+			g.Expect(findUserQuotaAllocationRule(backendRuleSet.Rules, "logs")).ToNot(BeNil())
+			g.Expect(findUserQuotaAllocationRule(backendRuleSet.Rules, "metrics")).ToNot(BeNil())
 
-			logsRule := findQuotaAllocationRule(backendRuleSet.Rules, "logs", false)
+			logsRule := findUserQuotaAllocationRule(backendRuleSet.Rules, "logs")
 			g.Expect(logsRule.Allocation).To(Equal(float32(60)))
 			g.Expect(logsRule.GetAllocationType()).To(Equal(quotas.QUOTAALLOCATIONTYPE_QUOTA_ALLOCATION_TYPE_PERCENTAGE))
 			g.Expect(logsRule.Enabled).To(BeTrue())
 			g.Expect(logsRule.CanOverflow).To(BeTrue())
 
-			metricsRule := findQuotaAllocationRule(backendRuleSet.Rules, "metrics", false)
+			metricsRule := findUserQuotaAllocationRule(backendRuleSet.Rules, "metrics")
 			g.Expect(metricsRule.Allocation).To(Equal(float32(40)))
 			g.Expect(metricsRule.GetAllocationType()).To(Equal(quotas.QUOTAALLOCATIONTYPE_QUOTA_ALLOCATION_TYPE_PERCENTAGE))
 			g.Expect(metricsRule.Enabled).To(BeTrue())
@@ -123,8 +123,8 @@ var _ = Describe("QuotaAllocationRuleSet", Ordered, func() {
 		By("Verifying user-managed quota allocation rules were deleted in Coralogix backend")
 		Eventually(func(g Gomega) {
 			backendRuleSet := getQuotaAllocationRuleSet(ctx, quotasClient)
-			g.Expect(findQuotaAllocationRule(backendRuleSet.Rules, "logs", false)).To(BeNil())
-			g.Expect(findQuotaAllocationRule(backendRuleSet.Rules, "metrics", false)).To(BeNil())
+			g.Expect(findUserQuotaAllocationRule(backendRuleSet.Rules, "logs")).To(BeNil())
+			g.Expect(findUserQuotaAllocationRule(backendRuleSet.Rules, "metrics")).To(BeNil())
 		}, time.Minute, time.Second).Should(Succeed())
 	})
 })
@@ -146,7 +146,11 @@ func getQuotaAllocationRuleSet(ctx context.Context, quotasClient *quotas.QuotaAl
 
 func restoreQuotaAllocationRuleSet(ctx context.Context, quotasClient *quotas.QuotaAllocationRuleSetServiceAPIService, snapshot *quotas.QuotaAllocationEntityTypeRuleSet) {
 	if snapshot == nil || len(snapshot.Rules) == 0 {
-		_, _, _ = quotasClient.QuotaAllocationRuleSetServiceDeleteQuotaAllocationRuleSet(ctx).Execute()
+		_, httpResp, err := quotasClient.QuotaAllocationRuleSetServiceDeleteQuotaAllocationRuleSet(ctx).Execute()
+		if err != nil {
+			apiErr := cxsdk.NewAPIError(httpResp, err)
+			Expect(cxsdk.IsNotFound(apiErr)).To(BeTrue(), "unexpected quota allocation rule set delete error: %v", err)
+		}
 		return
 	}
 
@@ -156,17 +160,18 @@ func restoreQuotaAllocationRuleSet(ctx context.Context, quotasClient *quotas.Quo
 		restoreRules = append(restoreRules, rule)
 	}
 
-	_, _, _ = quotasClient.
+	_, _, err := quotasClient.
 		QuotaAllocationRuleSetServiceReplaceQuotaAllocationRuleSet(ctx).
 		ReplaceQuotaAllocationRuleSetRequest(quotas.ReplaceQuotaAllocationRuleSetRequest{
 			RuleSet: quotas.QuotaAllocationEntityTypeRuleSet{Rules: restoreRules},
 		}).
 		Execute()
+	Expect(err).ToNot(HaveOccurred())
 }
 
-func findQuotaAllocationRule(rules []quotas.QuotaAllocationEntityTypeRule, entityType string, cxManaged bool) *quotas.QuotaAllocationEntityTypeRule {
+func findUserQuotaAllocationRule(rules []quotas.QuotaAllocationEntityTypeRule, entityType string) *quotas.QuotaAllocationEntityTypeRule {
 	for i := range rules {
-		if rules[i].EntityType == entityType && rules[i].GetCxManaged() == cxManaged {
+		if rules[i].EntityType == entityType && !rules[i].GetCxManaged() {
 			return &rules[i]
 		}
 	}
