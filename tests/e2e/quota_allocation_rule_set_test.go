@@ -1,0 +1,175 @@
+// Copyright 2024 Coralogix Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package e2e
+
+import (
+	"context"
+	"time"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	quotas "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/quota_allocation_rule_set_service"
+
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/v2/internal/utils"
+)
+
+var _ = Describe("QuotaAllocationRuleSet", Ordered, func() {
+	var (
+		crClient     client.Client
+		quotasClient *quotas.QuotaAllocationRuleSetServiceAPIService
+		ruleSet      *coralogixv1alpha1.QuotaAllocationRuleSet
+		snapshot     *quotas.QuotaAllocationEntityTypeRuleSet
+		crName       = "quota-allocation-rule-set-sample"
+	)
+
+	BeforeAll(func(ctx context.Context) {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		cfg := cxsdk.NewConfigBuilder().WithAPIKeyEnv().WithRegionEnv().Build()
+		quotasClient = cxsdk.NewClientSet(cfg).Quotas()
+		snapshot = getQuotaAllocationRuleSet(ctx, quotasClient)
+	})
+
+	BeforeEach(func() {
+		ruleSet = &coralogixv1alpha1.QuotaAllocationRuleSet{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      crName,
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1alpha1.QuotaAllocationRuleSetSpec{
+				Rules: []coralogixv1alpha1.QuotaAllocationRule{
+					{
+						EntityType:     "logs",
+						Allocation:     60,
+						AllocationType: quotaAllocationTypePtr(coralogixv1alpha1.QuotaAllocationTypePercentage),
+						Enabled:        true,
+						CanOverflow:    true,
+					},
+					{
+						EntityType:     "metrics",
+						Allocation:     40,
+						AllocationType: quotaAllocationTypePtr(coralogixv1alpha1.QuotaAllocationTypePercentage),
+						Enabled:        true,
+						CanOverflow:    false,
+					},
+				},
+			},
+		}
+	})
+
+	AfterAll(func(ctx context.Context) {
+		_ = crClient.Delete(ctx, ruleSet)
+		Eventually(func() bool {
+			fetched := &coralogixv1alpha1.QuotaAllocationRuleSet{}
+			err := crClient.Get(ctx, client.ObjectKey{Name: crName, Namespace: testNamespace}, fetched)
+			return apierrors.IsNotFound(err)
+		}, time.Minute, time.Second).Should(BeTrue())
+
+		restoreQuotaAllocationRuleSet(ctx, quotasClient, snapshot)
+	})
+
+	It("Should create and delete QuotaAllocationRuleSet successfully", func(ctx context.Context) {
+		By("Creating QuotaAllocationRuleSet")
+		Expect(crClient.Create(ctx, ruleSet)).To(Succeed())
+
+		By("Verifying QuotaAllocationRuleSet is synced")
+		Eventually(func(g Gomega) {
+			fetched := &coralogixv1alpha1.QuotaAllocationRuleSet{}
+			g.Expect(crClient.Get(ctx, client.ObjectKey{Name: crName, Namespace: testNamespace}, fetched)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying quota allocation rules exist in Coralogix backend")
+		Eventually(func(g Gomega) {
+			backendRuleSet := getQuotaAllocationRuleSet(ctx, quotasClient)
+			g.Expect(findQuotaAllocationRule(backendRuleSet.Rules, "logs", false)).ToNot(BeNil())
+			g.Expect(findQuotaAllocationRule(backendRuleSet.Rules, "metrics", false)).ToNot(BeNil())
+
+			logsRule := findQuotaAllocationRule(backendRuleSet.Rules, "logs", false)
+			g.Expect(logsRule.Allocation).To(Equal(float32(60)))
+			g.Expect(logsRule.GetAllocationType()).To(Equal(quotas.QUOTAALLOCATIONTYPE_QUOTA_ALLOCATION_TYPE_PERCENTAGE))
+			g.Expect(logsRule.Enabled).To(BeTrue())
+			g.Expect(logsRule.CanOverflow).To(BeTrue())
+
+			metricsRule := findQuotaAllocationRule(backendRuleSet.Rules, "metrics", false)
+			g.Expect(metricsRule.Allocation).To(Equal(float32(40)))
+			g.Expect(metricsRule.GetAllocationType()).To(Equal(quotas.QUOTAALLOCATIONTYPE_QUOTA_ALLOCATION_TYPE_PERCENTAGE))
+			g.Expect(metricsRule.Enabled).To(BeTrue())
+			g.Expect(metricsRule.CanOverflow).To(BeFalse())
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Deleting the QuotaAllocationRuleSet")
+		Expect(crClient.Delete(ctx, ruleSet)).To(Succeed())
+
+		By("Verifying user-managed quota allocation rules were deleted in Coralogix backend")
+		Eventually(func(g Gomega) {
+			backendRuleSet := getQuotaAllocationRuleSet(ctx, quotasClient)
+			g.Expect(findQuotaAllocationRule(backendRuleSet.Rules, "logs", false)).To(BeNil())
+			g.Expect(findQuotaAllocationRule(backendRuleSet.Rules, "metrics", false)).To(BeNil())
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+})
+
+func quotaAllocationTypePtr(allocationType coralogixv1alpha1.QuotaAllocationType) *coralogixv1alpha1.QuotaAllocationType {
+	return &allocationType
+}
+
+func getQuotaAllocationRuleSet(ctx context.Context, quotasClient *quotas.QuotaAllocationRuleSetServiceAPIService) *quotas.QuotaAllocationEntityTypeRuleSet {
+	response, _, err := quotasClient.
+		QuotaAllocationRuleSetServiceGetQuotaAllocationRuleSet(ctx).
+		Id("quota-allocation-rule-set").
+		Execute()
+	if err != nil || response == nil || response.RuleSet == nil {
+		return &quotas.QuotaAllocationEntityTypeRuleSet{}
+	}
+	return response.RuleSet
+}
+
+func restoreQuotaAllocationRuleSet(ctx context.Context, quotasClient *quotas.QuotaAllocationRuleSetServiceAPIService, snapshot *quotas.QuotaAllocationEntityTypeRuleSet) {
+	if snapshot == nil || len(snapshot.Rules) == 0 {
+		_, _, _ = quotasClient.QuotaAllocationRuleSetServiceDeleteQuotaAllocationRuleSet(ctx).Execute()
+		return
+	}
+
+	restoreRules := make([]quotas.QuotaAllocationEntityTypeRule, 0, len(snapshot.Rules))
+	for _, rule := range snapshot.Rules {
+		rule.CxManaged = nil
+		restoreRules = append(restoreRules, rule)
+	}
+
+	_, _, _ = quotasClient.
+		QuotaAllocationRuleSetServiceReplaceQuotaAllocationRuleSet(ctx).
+		ReplaceQuotaAllocationRuleSetRequest(quotas.ReplaceQuotaAllocationRuleSetRequest{
+			RuleSet: quotas.QuotaAllocationEntityTypeRuleSet{Rules: restoreRules},
+		}).
+		Execute()
+}
+
+func findQuotaAllocationRule(rules []quotas.QuotaAllocationEntityTypeRule, entityType string, cxManaged bool) *quotas.QuotaAllocationEntityTypeRule {
+	for i := range rules {
+		if rules[i].EntityType == entityType && rules[i].GetCxManaged() == cxManaged {
+			return &rules[i]
+		}
+	}
+
+	return nil
+}

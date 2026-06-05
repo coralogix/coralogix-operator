@@ -52,6 +52,7 @@ rules:
   - ipaccesses
   - outboundwebhooks
   - presets
+  - quotaallocationrulesets
   - recordingrulegroupsets
   - rulegroups
   - scopes
@@ -89,6 +90,7 @@ rules:
   - ipaccesses/finalizers
   - outboundwebhooks/finalizers
   - presets/finalizers
+  - quotaallocationrulesets/finalizers
   - recordingrulegroupsets/finalizers
   - rulegroups/finalizers
   - scopes/finalizers
@@ -120,6 +122,7 @@ rules:
   - ipaccesses/status
   - outboundwebhooks/status
   - presets/status
+  - quotaallocationrulesets/status
   - recordingrulegroupsets/status
   - rulegroups/status
   - scopes/status

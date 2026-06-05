@@ -12,6 +12,7 @@ resources:
   - bases/coralogix.com_scopes.yaml
   - bases/coralogix.com_groups.yaml
   - bases/coralogix.com_globalrouters.yaml
+  - bases/coralogix.com_quotaallocationrulesets.yaml
   - bases/coralogix.com_tcologspolicies.yaml
   - bases/coralogix.com_tcotracespolicies.yaml
   - bases/coralogix.com_integrations.yaml
