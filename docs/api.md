@@ -14484,12 +14484,10 @@ QuotaAllocationRule defines quota allocation for a single entity type.
     </thead>
     <tbody><tr>
         <td><b>allocation</b></td>
-        <td>integer</td>
+        <td>int or string</td>
         <td>
-          Allocation value. Percent allocations are 0-100; locked unit allocations are absolute units.<br/>
-          <br/>
-            <i>Format</i>: int64<br/>
-            <i>Minimum</i>: 0<br/>
+          Allocation value. Percent allocations are 0-100; locked unit allocations are absolute units.
+Fractional values must be supplied as quoted quantities, for example "12.5".<br/>
         </td>
         <td>true</td>
       </tr><tr>

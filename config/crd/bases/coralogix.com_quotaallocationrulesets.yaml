@@ -60,11 +60,14 @@ spec:
                     single entity type.
                   properties:
                     allocation:
-                      description: Allocation value. Percent allocations are 0-100;
-                        locked unit allocations are absolute units.
-                      format: int64
-                      minimum: 0
-                      type: integer
+                      anyOf:
+                      - type: integer
+                      - type: string
+                      description: |-
+                        Allocation value. Percent allocations are 0-100; locked unit allocations are absolute units.
+                        Fractional values must be supplied as quoted quantities, for example "12.5".
+                      pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                      x-kubernetes-int-or-string: true
                     allocationType:
                       description: |-
                         Interprets allocation as a percentage, locked units, or unspecified.

@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	quotas "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/quota_allocation_rule_set_service"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -37,8 +38,8 @@ type QuotaAllocationRule struct {
 	EntityType string `json:"entityType"`
 
 	// Allocation value. Percent allocations are 0-100; locked unit allocations are absolute units.
-	// +kubebuilder:validation:Minimum=0
-	Allocation int64 `json:"allocation"`
+	// Fractional values must be supplied as quoted quantities, for example "12.5".
+	Allocation resource.Quantity `json:"allocation"`
 
 	// Interprets allocation as a percentage, locked units, or unspecified.
 	// Defaults to percentage when omitted.
@@ -87,6 +88,9 @@ func (s *QuotaAllocationRuleSetSpec) ExtractQuotaAllocationRules() ([]quotas.Quo
 		if _, exists := seenEntityTypes[rule.EntityType]; exists {
 			return nil, fmt.Errorf("duplicate quota allocation rule entityType %q", rule.EntityType)
 		}
+		if rule.Allocation.Sign() < 0 {
+			return nil, fmt.Errorf("quota allocation rule entityType %q has negative allocation", rule.EntityType)
+		}
 		seenEntityTypes[rule.EntityType] = struct{}{}
 		rules = append(rules, rule.ExtractQuotaAllocationEntityTypeRule())
 	}
@@ -104,7 +108,7 @@ func (r *QuotaAllocationRule) ExtractQuotaAllocationEntityTypeRule() quotas.Quot
 
 	return quotas.QuotaAllocationEntityTypeRule{
 		EntityType:     r.EntityType,
-		Allocation:     float32(r.Allocation),
+		Allocation:     float32(r.Allocation.AsApproximateFloat64()),
 		AllocationType: openAPIAllocationType.Ptr(),
 		Enabled:        r.Enabled,
 		CanOverflow:    r.CanOverflow,

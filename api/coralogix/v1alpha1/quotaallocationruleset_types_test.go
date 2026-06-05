@@ -19,13 +19,14 @@ import (
 
 	quotas "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/quota_allocation_rule_set_service"
 	"github.com/stretchr/testify/require"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 func TestExtractQuotaAllocationRuleSetRequestDefaultsAllocationType(t *testing.T) {
 	spec := &QuotaAllocationRuleSetSpec{
 		Rules: []QuotaAllocationRule{{
 			EntityType:  "logs",
-			Allocation:  60,
+			Allocation:  resource.MustParse("60"),
 			Enabled:     true,
 			CanOverflow: true,
 		}},
@@ -43,7 +44,7 @@ func TestExtractQuotaAllocationRuleSetRequestMapsLockedUnits(t *testing.T) {
 	spec := &QuotaAllocationRuleSetSpec{
 		Rules: []QuotaAllocationRule{{
 			EntityType:     "metrics",
-			Allocation:     1000,
+			Allocation:     resource.MustParse("1000"),
 			AllocationType: &allocationType,
 			Enabled:        true,
 			CanOverflow:    false,
@@ -56,14 +57,43 @@ func TestExtractQuotaAllocationRuleSetRequestMapsLockedUnits(t *testing.T) {
 	require.Equal(t, quotas.QUOTAALLOCATIONTYPE_QUOTA_ALLOCATION_TYPE_LOCKED_UNITS, ruleSet.Rules[0].GetAllocationType())
 }
 
+func TestExtractQuotaAllocationRuleSetRequestPreservesFractionalAllocation(t *testing.T) {
+	spec := &QuotaAllocationRuleSetSpec{
+		Rules: []QuotaAllocationRule{{
+			EntityType:  "logs",
+			Allocation:  resource.MustParse("12.5"),
+			Enabled:     true,
+			CanOverflow: true,
+		}},
+	}
+
+	ruleSet, err := spec.ExtractQuotaAllocationRuleSetRequest()
+	require.NoError(t, err)
+	require.Len(t, ruleSet.Rules, 1)
+	require.Equal(t, float32(12.5), ruleSet.Rules[0].Allocation)
+}
+
 func TestExtractQuotaAllocationRuleSetRequestRejectsDuplicateEntityTypes(t *testing.T) {
 	spec := &QuotaAllocationRuleSetSpec{
 		Rules: []QuotaAllocationRule{
-			{EntityType: "logs", Allocation: 60, Enabled: true},
-			{EntityType: "logs", Allocation: 40, Enabled: true},
+			{EntityType: "logs", Allocation: resource.MustParse("60"), Enabled: true},
+			{EntityType: "logs", Allocation: resource.MustParse("40"), Enabled: true},
 		},
 	}
 
 	_, err := spec.ExtractQuotaAllocationRuleSetRequest()
 	require.ErrorContains(t, err, `duplicate quota allocation rule entityType "logs"`)
+}
+
+func TestExtractQuotaAllocationRuleSetRequestRejectsNegativeAllocation(t *testing.T) {
+	spec := &QuotaAllocationRuleSetSpec{
+		Rules: []QuotaAllocationRule{{
+			EntityType: "logs",
+			Allocation: resource.MustParse("-1"),
+			Enabled:    true,
+		}},
+	}
+
+	_, err := spec.ExtractQuotaAllocationRuleSetRequest()
+	require.ErrorContains(t, err, `quota allocation rule entityType "logs" has negative allocation`)
 }

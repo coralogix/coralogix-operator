@@ -22,6 +22,7 @@ import (
 	. "github.com/onsi/gomega"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -45,7 +46,9 @@ var _ = Describe("QuotaAllocationRuleSet", Ordered, func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		cfg := cxsdk.NewConfigBuilder().WithAPIKeyEnv().WithRegionEnv().Build()
 		quotasClient = cxsdk.NewClientSet(cfg).Quotas()
-		snapshot = getQuotaAllocationRuleSet(ctx, quotasClient)
+		var err error
+		snapshot, err = getQuotaAllocationRuleSet(ctx, quotasClient)
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	BeforeEach(func() {
@@ -58,14 +61,14 @@ var _ = Describe("QuotaAllocationRuleSet", Ordered, func() {
 				Rules: []coralogixv1alpha1.QuotaAllocationRule{
 					{
 						EntityType:     "logs",
-						Allocation:     60,
+						Allocation:     resource.MustParse("60"),
 						AllocationType: quotaAllocationTypePtr(coralogixv1alpha1.QuotaAllocationTypePercentage),
 						Enabled:        true,
 						CanOverflow:    true,
 					},
 					{
 						EntityType:     "metrics",
-						Allocation:     40,
+						Allocation:     resource.MustParse("40"),
 						AllocationType: quotaAllocationTypePtr(coralogixv1alpha1.QuotaAllocationTypePercentage),
 						Enabled:        true,
 						CanOverflow:    false,
@@ -100,7 +103,8 @@ var _ = Describe("QuotaAllocationRuleSet", Ordered, func() {
 
 		By("Verifying quota allocation rules exist in Coralogix backend")
 		Eventually(func(g Gomega) {
-			backendRuleSet := getQuotaAllocationRuleSet(ctx, quotasClient)
+			backendRuleSet, err := getQuotaAllocationRuleSet(ctx, quotasClient)
+			g.Expect(err).ToNot(HaveOccurred())
 			g.Expect(findUserQuotaAllocationRule(backendRuleSet.Rules, "logs")).ToNot(BeNil())
 			g.Expect(findUserQuotaAllocationRule(backendRuleSet.Rules, "metrics")).ToNot(BeNil())
 
@@ -122,7 +126,8 @@ var _ = Describe("QuotaAllocationRuleSet", Ordered, func() {
 
 		By("Verifying user-managed quota allocation rules were deleted in Coralogix backend")
 		Eventually(func(g Gomega) {
-			backendRuleSet := getQuotaAllocationRuleSet(ctx, quotasClient)
+			backendRuleSet, err := getQuotaAllocationRuleSet(ctx, quotasClient)
+			g.Expect(err).ToNot(HaveOccurred())
 			g.Expect(findUserQuotaAllocationRule(backendRuleSet.Rules, "logs")).To(BeNil())
 			g.Expect(findUserQuotaAllocationRule(backendRuleSet.Rules, "metrics")).To(BeNil())
 		}, time.Minute, time.Second).Should(Succeed())
@@ -133,15 +138,22 @@ func quotaAllocationTypePtr(allocationType coralogixv1alpha1.QuotaAllocationType
 	return &allocationType
 }
 
-func getQuotaAllocationRuleSet(ctx context.Context, quotasClient *quotas.QuotaAllocationRuleSetServiceAPIService) *quotas.QuotaAllocationEntityTypeRuleSet {
-	response, _, err := quotasClient.
+func getQuotaAllocationRuleSet(ctx context.Context, quotasClient *quotas.QuotaAllocationRuleSetServiceAPIService) (*quotas.QuotaAllocationEntityTypeRuleSet, error) {
+	response, httpResp, err := quotasClient.
 		QuotaAllocationRuleSetServiceGetQuotaAllocationRuleSet(ctx).
 		Id("quota-allocation-rule-set").
 		Execute()
-	if err != nil || response == nil || response.RuleSet == nil {
-		return &quotas.QuotaAllocationEntityTypeRuleSet{}
+	if err != nil {
+		apiErr := cxsdk.NewAPIError(httpResp, err)
+		if cxsdk.IsNotFound(apiErr) {
+			return &quotas.QuotaAllocationEntityTypeRuleSet{}, nil
+		}
+		return nil, apiErr
 	}
-	return response.RuleSet
+	if response == nil || response.RuleSet == nil {
+		return &quotas.QuotaAllocationEntityTypeRuleSet{}, nil
+	}
+	return response.RuleSet, nil
 }
 
 func restoreQuotaAllocationRuleSet(ctx context.Context, quotasClient *quotas.QuotaAllocationRuleSetServiceAPIService, snapshot *quotas.QuotaAllocationEntityTypeRuleSet) {
