@@ -85,6 +85,10 @@ var _ = Describe("QuotaAllocationRuleSet", Ordered, func() {
 			defer restoreQuotaAllocationRuleSet(ctx, quotasClient, snapshot)
 		}
 
+		if ruleSet == nil {
+			return
+		}
+
 		_ = crClient.Delete(ctx, ruleSet)
 		Eventually(func() bool {
 			fetched := &coralogixv1alpha1.QuotaAllocationRuleSet{}
