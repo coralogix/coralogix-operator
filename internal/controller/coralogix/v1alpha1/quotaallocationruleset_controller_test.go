@@ -27,6 +27,7 @@ import (
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
+	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 func TestPreserveManagedQuotaAllocationRulesAppendsManagedRules(t *testing.T) {
@@ -128,6 +129,74 @@ func TestEnsureSingleSelectedRuleSetRejectsAnotherActiveResource(t *testing.T) {
 
 	require.ErrorContains(t, err, "only one selected QuotaAllocationRuleSet can manage account-level quota allocation rules")
 	require.ErrorContains(t, err, "team-b/other")
+}
+
+func TestQuotaAllocationRuleSetRemoteSynced(t *testing.T) {
+	tests := []struct {
+		name    string
+		ruleSet *coralogixv1alpha1.QuotaAllocationRuleSet
+		want    bool
+	}{
+		{
+			name: "synced current generation",
+			ruleSet: quotaAllocationRuleSetWithRemoteSyncedCondition(
+				metav1.ConditionTrue,
+				2,
+				2,
+			),
+			want: true,
+		},
+		{
+			name: "synced stale generation",
+			ruleSet: quotaAllocationRuleSetWithRemoteSyncedCondition(
+				metav1.ConditionTrue,
+				2,
+				1,
+			),
+			want: false,
+		},
+		{
+			name: "not synced",
+			ruleSet: quotaAllocationRuleSetWithRemoteSyncedCondition(
+				metav1.ConditionFalse,
+				2,
+				2,
+			),
+			want: false,
+		},
+		{
+			name:    "nil",
+			ruleSet: nil,
+			want:    false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, quotaAllocationRuleSetRemoteSynced(tt.ruleSet))
+		})
+	}
+}
+
+func quotaAllocationRuleSetWithRemoteSyncedCondition(
+	status metav1.ConditionStatus,
+	generation int64,
+	observedGeneration int64,
+) *coralogixv1alpha1.QuotaAllocationRuleSet {
+	return &coralogixv1alpha1.QuotaAllocationRuleSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Generation: generation,
+		},
+		Status: coralogixv1alpha1.QuotaAllocationRuleSetStatus{
+			Conditions: []metav1.Condition{
+				{
+					Type:               utils.ConditionTypeRemoteSynced,
+					Status:             status,
+					ObservedGeneration: observedGeneration,
+				},
+			},
+		},
+	}
 }
 
 func quotaRule(entityType string, cxManaged bool) quotas.QuotaAllocationEntityTypeRule {

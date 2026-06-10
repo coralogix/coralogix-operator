@@ -21,6 +21,8 @@ import (
 
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 	"github.com/go-logr/logr"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -224,13 +226,19 @@ func (r *QuotaAllocationRuleSetReconciler) HandleDeletion(ctx context.Context, l
 	quotaAllocationRuleSet := obj.(*coralogixv1alpha1.QuotaAllocationRuleSet)
 	if other, err := r.findOtherSelectedRuleSet(ctx, quotaAllocationRuleSet); err != nil {
 		return err
-	} else if other != nil {
+	} else if quotaAllocationRuleSetRemoteSynced(other) {
 		log.Info(
-			"Skipping remote QuotaAllocationRuleSet deletion because another selected resource exists",
+			"Skipping remote QuotaAllocationRuleSet deletion because another selected resource is synced",
 			"otherNamespace", other.Namespace,
 			"otherName", other.Name,
 		)
 		return nil
+	} else if other != nil {
+		log.Info(
+			"Continuing remote QuotaAllocationRuleSet deletion because another selected resource has not synced",
+			"otherNamespace", other.Namespace,
+			"otherName", other.Name,
+		)
 	}
 
 	log.Info("Deleting QuotaAllocationRuleSet")
@@ -269,6 +277,17 @@ func (r *QuotaAllocationRuleSetReconciler) HandleDeletion(ctx context.Context, l
 
 	log.Info("quota-allocation-rule-set user-managed rules were deleted from remote")
 	return nil
+}
+
+func quotaAllocationRuleSetRemoteSynced(ruleSet *coralogixv1alpha1.QuotaAllocationRuleSet) bool {
+	if ruleSet == nil {
+		return false
+	}
+
+	condition := meta.FindStatusCondition(ruleSet.Status.Conditions, utils.ConditionTypeRemoteSynced)
+	return condition != nil &&
+		condition.Status == metav1.ConditionTrue &&
+		condition.ObservedGeneration == ruleSet.Generation
 }
 
 // SetupWithManager sets up the controller with the Manager.
