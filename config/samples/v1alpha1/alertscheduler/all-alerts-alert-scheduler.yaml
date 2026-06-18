@@ -1,0 +1,21 @@
+apiVersion: coralogix.com/v1alpha1
+kind: AlertScheduler
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: all-alerts-scheduler-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: all-alerts-scheduler-sample
+spec:
+  name: all-alerts-scheduler-sample
+  description: All alerts scheduler sample
+  enabled: true
+  filter:
+    whatExpression: source logs | filter $d.cpodId:string == '122'
+    allAlerts: true
+  schedule:
+    operation: mute
+    recurring:
+      always: {}

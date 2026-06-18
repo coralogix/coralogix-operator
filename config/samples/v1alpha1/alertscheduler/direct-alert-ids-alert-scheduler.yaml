@@ -1,0 +1,22 @@
+apiVersion: coralogix.com/v1alpha1
+kind: AlertScheduler
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: direct-alert-ids-scheduler-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: direct-alert-ids-scheduler-sample
+spec:
+  name: direct-alert-ids-scheduler-sample
+  description: Direct backend alert IDs scheduler sample
+  enabled: true
+  filter:
+    whatExpression: source logs | filter $d.cpodId:string == '122'
+    alertUniqueIds:
+      - replace-with-backend-alert-id
+  schedule:
+    operation: mute
+    recurring:
+      always: {}

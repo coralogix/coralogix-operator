@@ -7167,10 +7167,9 @@ AlertSchedulerSpec defines the desired state Coralogix AlertScheduler.
         <td><b><a href="#alertschedulerspecfilter">filter</a></b></td>
         <td>object</td>
         <td>
-          Alert Scheduler filter. Exactly one of `metaLabels` or `alerts` can be set.
-If none of them set, all alerts will be affected.<br/>
+          Alert Scheduler filter. Exactly one of `allAlerts`, `metaLabels`, `alerts`, or `alertUniqueIds` must be set.<br/>
           <br/>
-            <i>Validations</i>:<li>has(self.metaLabels) != has(self.alerts): Exactly one of metaLabels or alerts must be set</li>
+            <i>Validations</i>:<li>(has(self.allAlerts) ? 1 : 0) + (has(self.metaLabels) ? 1 : 0) + (has(self.alerts) ? 1 : 0) + (has(self.alertUniqueIds) ? 1 : 0) == 1: Exactly one of allAlerts, metaLabels, alerts, or alertUniqueIds must be set</li><li>!has(self.allAlerts) || self.allAlerts == true: allAlerts must be true when set</li><li>!has(self.alertUniqueIds) || self.alertUniqueIds.all(id, id.size() > 0): alertUniqueIds must not contain empty values</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -7221,8 +7220,7 @@ If none of them set, all alerts will be affected.<br/>
 
 
 
-Alert Scheduler filter. Exactly one of `metaLabels` or `alerts` can be set.
-If none of them set, all alerts will be affected.
+Alert Scheduler filter. Exactly one of `allAlerts`, `metaLabels`, `alerts`, or `alertUniqueIds` must be set.
 
 <table>
     <thead>
@@ -7241,17 +7239,31 @@ If none of them set, all alerts will be affected.
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>alertUniqueIds</b></td>
+        <td>[]string</td>
+        <td>
+          Backend alert unique IDs. Conflicts with `allAlerts`, `metaLabels`, and `alerts`.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#alertschedulerspecfilteralertsindex">alerts</a></b></td>
         <td>[]object</td>
         <td>
-          Alert references. Conflicts with `metaLabels`.<br/>
+          Alert references. Conflicts with `allAlerts`, `metaLabels`, and `alertUniqueIds`.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>allAlerts</b></td>
+        <td>boolean</td>
+        <td>
+          Whether the scheduler applies to all alerts. Conflicts with `metaLabels`, `alerts`, and `alertUniqueIds`.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertschedulerspecfiltermetalabelsindex">metaLabels</a></b></td>
         <td>[]object</td>
         <td>
-          Alert Scheduler meta labels. Conflicts with `alerts`.<br/>
+          Alert Scheduler meta labels. Conflicts with `allAlerts`, `alerts`, and `alertUniqueIds`.<br/>
         </td>
         <td>false</td>
       </tr></tbody>

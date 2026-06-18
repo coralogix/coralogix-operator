@@ -17,6 +17,7 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -28,7 +29,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+
+	"github.com/coralogix/coralogix-operator/v2/api/coralogix"
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
+	coralogixv1beta1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
@@ -44,7 +48,7 @@ var _ = Describe("AlertScheduler", Ordered, func() {
 	BeforeEach(func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		alertSchedulerClient = ClientsInstance.GetCoralogixClientSet().AlertSchedulers()
-		alertScheduler = getSampleAlertScheduler(alertSchedulerName, testNamespace)
+		alertScheduler = getSampleAlertScheduler(alertSchedulerName)
 	})
 
 	It("Should be created successfully", func(ctx context.Context) {
@@ -69,6 +73,9 @@ var _ = Describe("AlertScheduler", Ordered, func() {
 			_, err := alertSchedulerClient.Get(ctx, &cxsdk.GetAlertSchedulerRuleRequest{AlertSchedulerRuleId: alertSchedulerID})
 			return err
 		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying the meta-label filter is preserved in Coralogix backend")
+		expectBackendMetaLabelsFilter(ctx, alertSchedulerClient, alertSchedulerID, alertScheduler.Spec.Filter.WhatExpression)
 	})
 
 	It("Should be updated successfully", func(ctx context.Context) {
@@ -100,7 +107,66 @@ var _ = Describe("AlertScheduler", Ordered, func() {
 			},
 		}
 		err := crClient.Create(ctx, invalidScheduler)
-		Expect(err.Error()).To(ContainSubstring("Exactly one of metaLabels or alerts must be set"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of allAlerts, metaLabels, alerts, or alertUniqueIds must be set"))
+	})
+
+	It("Should be rejected when allAlerts is false", func(ctx context.Context) {
+		By("Creating an AlertScheduler with allAlerts set to false")
+		invalidScheduler := alertScheduler.DeepCopy()
+		invalidScheduler.Name = "alert-scheduler-all-alerts-false"
+		invalidScheduler.Spec.Name = invalidScheduler.Name
+		invalidScheduler.Spec.Filter.MetaLabels = nil
+		invalidScheduler.Spec.Filter.AllAlerts = ptr.To(false)
+
+		err := crClient.Create(ctx, invalidScheduler)
+		Expect(err.Error()).To(ContainSubstring("allAlerts must be true when set"))
+	})
+
+	It("Should sync an all-alert filter", func(ctx context.Context) {
+		scheduler := getSampleAlertScheduler(fmt.Sprintf("alert-scheduler-all-alerts-%d", time.Now().UnixNano()))
+		scheduler.Spec.Filter.MetaLabels = nil
+		scheduler.Spec.Filter.AllAlerts = ptr.To(true)
+
+		By("Creating an AlertScheduler that applies to all alerts")
+		id := createAlertSchedulerAndWait(ctx, crClient, scheduler)
+
+		By("Verifying the all-alert filter is preserved in Coralogix backend")
+		expectBackendUniqueIDsFilter(ctx, alertSchedulerClient, id, scheduler.Spec.Filter.WhatExpression, nil)
+
+		By("Deleting the all-alert AlertScheduler")
+		Expect(crClient.Delete(ctx, scheduler)).To(Succeed())
+	})
+
+	It("Should sync resource-ref and direct alert-ID filters", func(ctx context.Context) {
+		alertName := fmt.Sprintf("alert-for-scheduler-%d", time.Now().UnixNano())
+		alert := getSampleAlertForScheduler(alertName, testNamespace)
+
+		By("Creating a referenced Alert")
+		Expect(crClient.Create(ctx, alert)).To(Succeed())
+		alertID := waitForAlertID(ctx, crClient, alertName)
+
+		resourceRefScheduler := getSampleAlertScheduler(fmt.Sprintf("alert-scheduler-resource-ref-%d", time.Now().UnixNano()))
+		resourceRefScheduler.Spec.Filter.MetaLabels = nil
+		resourceRefScheduler.Spec.Filter.Alerts = []coralogixv1alpha1.AlertRef{
+			{ResourceRef: &coralogixv1alpha1.ResourceRef{Name: alertName}},
+		}
+
+		By("Creating an AlertScheduler that selects an Alert resource reference")
+		resourceRefSchedulerID := createAlertSchedulerAndWait(ctx, crClient, resourceRefScheduler)
+		expectBackendUniqueIDsFilter(ctx, alertSchedulerClient, resourceRefSchedulerID, resourceRefScheduler.Spec.Filter.WhatExpression, []string{alertID})
+
+		directIDScheduler := getSampleAlertScheduler(fmt.Sprintf("alert-scheduler-direct-id-%d", time.Now().UnixNano()))
+		directIDScheduler.Spec.Filter.MetaLabels = nil
+		directIDScheduler.Spec.Filter.AlertUniqueIDs = []string{alertID}
+
+		By("Creating an AlertScheduler that selects a direct backend alert ID")
+		directIDSchedulerID := createAlertSchedulerAndWait(ctx, crClient, directIDScheduler)
+		expectBackendUniqueIDsFilter(ctx, alertSchedulerClient, directIDSchedulerID, directIDScheduler.Spec.Filter.WhatExpression, []string{alertID})
+
+		By("Deleting resource-ref and direct-ID AlertSchedulers")
+		Expect(crClient.Delete(ctx, resourceRefScheduler)).To(Succeed())
+		Expect(crClient.Delete(ctx, directIDScheduler)).To(Succeed())
+		Expect(crClient.Delete(ctx, alert)).To(Succeed())
 	})
 
 	It("Should be rejected when schedule has both OneTime and Recurring", func(ctx context.Context) {
@@ -139,11 +205,70 @@ var _ = Describe("AlertScheduler", Ordered, func() {
 	})
 })
 
-func getSampleAlertScheduler(name, namespace string) *coralogixv1alpha1.AlertScheduler {
+func createAlertSchedulerAndWait(ctx context.Context, crClient client.Client, scheduler *coralogixv1alpha1.AlertScheduler) string {
+	Expect(crClient.Create(ctx, scheduler)).To(Succeed())
+
+	fetchedScheduler := &coralogixv1alpha1.AlertScheduler{}
+	var schedulerID string
+	Eventually(func(g Gomega) {
+		g.Expect(crClient.Get(ctx, types.NamespacedName{Name: scheduler.Name, Namespace: scheduler.Namespace}, fetchedScheduler)).To(Succeed())
+		g.Expect(meta.IsStatusConditionTrue(fetchedScheduler.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+		g.Expect(fetchedScheduler.Status.PrintableStatus).To(Equal("RemoteSynced"))
+		g.Expect(fetchedScheduler.Status.ID).ToNot(BeNil())
+		schedulerID = *fetchedScheduler.Status.ID
+	}, time.Minute, time.Second).Should(Succeed())
+
+	return schedulerID
+}
+
+func waitForAlertID(ctx context.Context, crClient client.Client, name string) string {
+	fetchedAlert := &coralogixv1beta1.Alert{}
+	var alertID string
+	Eventually(func(g Gomega) {
+		g.Expect(crClient.Get(ctx, types.NamespacedName{Name: name, Namespace: testNamespace}, fetchedAlert)).To(Succeed())
+		g.Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+		g.Expect(fetchedAlert.Status.PrintableStatus).To(Equal("RemoteSynced"))
+		g.Expect(fetchedAlert.Status.ID).ToNot(BeNil())
+		alertID = *fetchedAlert.Status.ID
+	}, time.Minute, time.Second).Should(Succeed())
+
+	return alertID
+}
+
+func expectBackendMetaLabelsFilter(ctx context.Context, alertSchedulerClient *cxsdk.AlertSchedulerClient, schedulerID, whatExpression string) {
+	Eventually(func(g Gomega) {
+		getSchedulerRes, err := alertSchedulerClient.Get(ctx, &cxsdk.GetAlertSchedulerRuleRequest{AlertSchedulerRuleId: schedulerID})
+		g.Expect(err).ToNot(HaveOccurred())
+		filter := getSchedulerRes.AlertSchedulerRule.GetFilter()
+		metaLabels := filter.GetAlertMetaLabels()
+		g.Expect(metaLabels).ToNot(BeNil())
+		g.Expect(filter.GetWhatExpression()).To(Equal(whatExpression))
+		g.Expect(metaLabels.GetValue()).ToNot(BeEmpty())
+	}, time.Minute, time.Second).Should(Succeed())
+}
+
+func expectBackendUniqueIDsFilter(ctx context.Context, alertSchedulerClient *cxsdk.AlertSchedulerClient, schedulerID, whatExpression string, wantIDs []string) {
+	Eventually(func(g Gomega) {
+		getSchedulerRes, err := alertSchedulerClient.Get(ctx, &cxsdk.GetAlertSchedulerRuleRequest{AlertSchedulerRuleId: schedulerID})
+		g.Expect(err).ToNot(HaveOccurred())
+		filter := getSchedulerRes.AlertSchedulerRule.GetFilter()
+		alertUniqueIDs := filter.GetAlertUniqueIds()
+		g.Expect(alertUniqueIDs).ToNot(BeNil())
+		g.Expect(filter.GetWhatExpression()).To(Equal(whatExpression))
+		gotIDs := alertUniqueIDs.GetValue()
+		if wantIDs == nil {
+			g.Expect(gotIDs).To(BeEmpty())
+			return
+		}
+		g.Expect(reflect.DeepEqual(gotIDs, wantIDs)).To(BeTrue())
+	}, time.Minute, time.Second).Should(Succeed())
+}
+
+func getSampleAlertScheduler(name string) *coralogixv1alpha1.AlertScheduler {
 	return &coralogixv1alpha1.AlertScheduler{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: namespace,
+			Namespace: testNamespace,
 		},
 		Spec: coralogixv1alpha1.AlertSchedulerSpec{
 			Name:        name,
@@ -171,6 +296,60 @@ func getSampleAlertScheduler(name, namespace string) *coralogixv1alpha1.AlertSch
 							Duration: &coralogixv1alpha1.Duration{
 								ForOver:   2,
 								Frequency: "hours",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func getSampleAlertForScheduler(name, namespace string) *coralogixv1beta1.Alert {
+	return &coralogixv1beta1.Alert{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: coralogixv1beta1.AlertSpec{
+			Name:        name,
+			Description: "alert for alert scheduler e2e",
+			Priority:    coralogixv1beta1.AlertPriorityP1,
+			NotificationGroup: &coralogixv1beta1.NotificationGroup{
+				Webhooks: []coralogixv1beta1.WebhookSettings{
+					{
+						NotifyOn: coralogixv1beta1.NotifyOnTriggeredOnly,
+						RetriggeringPeriod: coralogixv1beta1.RetriggeringPeriod{
+							Minutes: ptr.To(int64(1)),
+						},
+						Integration: coralogixv1beta1.IntegrationType{
+							Recipients: []string{"example@coralogix.com"},
+						},
+					},
+				},
+			},
+			TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
+				MetricThreshold: &coralogixv1beta1.MetricThreshold{
+					MissingValues: coralogixv1beta1.MetricMissingValues{
+						MinNonNullValuesPct: ptr.To(int64(10)),
+					},
+					MetricFilter: coralogixv1beta1.MetricFilter{
+						Promql: "http_requests_total{status!~\"4..\"}",
+					},
+					NoDataPolicy: &coralogixv1beta1.NoDataPolicy{
+						State:             coralogixv1beta1.NoDataPolicyStateAlerting,
+						AutoRetireSeconds: ptr.To(int32(1800)),
+					},
+					EvaluationDelayMs: ptr.To(int32(60000)),
+					Rules: []coralogixv1beta1.MetricThresholdRule{
+						{
+							Condition: coralogixv1beta1.MetricThresholdRuleCondition{
+								Threshold:     coralogix.FloatToQuantity(3),
+								ForOverPct:    50,
+								ConditionType: coralogixv1beta1.MetricThresholdConditionTypeMoreThan,
+								OfTheLast: coralogixv1beta1.MetricTimeWindow{
+									DynamicDuration: ptr.To("12h"),
+								},
 							},
 						},
 					},

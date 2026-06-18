@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
@@ -47,26 +48,38 @@ type AlertSchedulerSpec struct {
 	// +optional
 	MetaLabels []MetaLabel `json:"metaLabels,omitempty"`
 
-	// Alert Scheduler filter. Exactly one of `metaLabels` or `alerts` can be set.
-	// If none of them set, all alerts will be affected.
+	// Alert Scheduler filter. Exactly one of `allAlerts`, `metaLabels`, `alerts`, or `alertUniqueIds` must be set.
 	Filter Filter `json:"filter"`
 
 	// Alert Scheduler schedule. Exactly one of `oneTime` or `recurring` must be set.
 	Schedule Schedule `json:"schedule"`
 }
 
-// +kubebuilder:validation:XValidation:rule="has(self.metaLabels) != has(self.alerts)",message="Exactly one of metaLabels or alerts must be set"
+// +kubebuilder:validation:XValidation:rule="(has(self.allAlerts) ? 1 : 0) + (has(self.metaLabels) ? 1 : 0) + (has(self.alerts) ? 1 : 0) + (has(self.alertUniqueIds) ? 1 : 0) == 1",message="Exactly one of allAlerts, metaLabels, alerts, or alertUniqueIds must be set"
+// +kubebuilder:validation:XValidation:rule="!has(self.allAlerts) || self.allAlerts == true",message="allAlerts must be true when set"
+// +kubebuilder:validation:XValidation:rule="!has(self.alertUniqueIds) || self.alertUniqueIds.all(id, id.size() > 0)",message="alertUniqueIds must not contain empty values"
 type Filter struct {
 	// DataPrime query expression - https://coralogix.com/docs/dataprime-query-language.
 	WhatExpression string `json:"whatExpression"`
 
-	// Alert Scheduler meta labels. Conflicts with `alerts`.
+	// Whether the scheduler applies to all alerts. Conflicts with `metaLabels`, `alerts`, and `alertUniqueIds`.
 	// +optional
+	AllAlerts *bool `json:"allAlerts,omitempty"`
+
+	// Alert Scheduler meta labels. Conflicts with `allAlerts`, `alerts`, and `alertUniqueIds`.
+	// +optional
+	// +kubebuilder:validation:MinItems=1
 	MetaLabels []MetaLabel `json:"metaLabels,omitempty"`
 
-	// Alert references. Conflicts with `metaLabels`.
+	// Alert references. Conflicts with `allAlerts`, `metaLabels`, and `alertUniqueIds`.
 	// +optional
+	// +kubebuilder:validation:MinItems=1
 	Alerts []AlertRef `json:"alerts,omitempty"`
+
+	// Backend alert unique IDs. Conflicts with `allAlerts`, `metaLabels`, and `alerts`.
+	// +optional
+	// +kubebuilder:validation:MinItems=1
+	AlertUniqueIDs []string `json:"alertUniqueIds,omitempty"`
 }
 
 type AlertRef struct {
@@ -270,7 +283,19 @@ func extractMetaLabels(metaLabels []MetaLabel) []alertscheduler.MetaLabelsProtob
 }
 
 func (a *AlertScheduler) extractFilter() (*alertscheduler.AlertSchedulerRuleProtobufV1Filter, error) {
-	if a.Spec.Filter.MetaLabels != nil {
+	if selectorModeCount(a.Spec.Filter) != 1 {
+		return nil, fmt.Errorf("exactly one of `allAlerts`, `metaLabels`, `alerts`, or `alertUniqueIds` must be set")
+	}
+
+	if a.Spec.Filter.AllAlerts != nil {
+		if !*a.Spec.Filter.AllAlerts {
+			return nil, fmt.Errorf("allAlerts must be true when set")
+		}
+		return extractAlertUniqueIDsFilter(a.Spec.Filter.WhatExpression, nil), nil
+	} else if a.Spec.Filter.MetaLabels != nil {
+		if len(a.Spec.Filter.MetaLabels) == 0 {
+			return nil, fmt.Errorf("metaLabels must not be empty")
+		}
 		metaLabels := extractMetaLabels(a.Spec.Filter.MetaLabels)
 		return &alertscheduler.AlertSchedulerRuleProtobufV1Filter{
 			AlertSchedulerRuleProtobufV1FilterAlertMetaLabels: &alertscheduler.AlertSchedulerRuleProtobufV1FilterAlertMetaLabels{
@@ -281,22 +306,68 @@ func (a *AlertScheduler) extractFilter() (*alertscheduler.AlertSchedulerRuleProt
 			},
 		}, nil
 	} else if a.Spec.Filter.Alerts != nil {
+		if len(a.Spec.Filter.Alerts) == 0 {
+			return nil, fmt.Errorf("alerts must not be empty")
+		}
 		alertsIds, err := a.extractAlertsIds()
 		if err != nil {
 			return nil, fmt.Errorf("error on extracting alerts ids: %w", err)
 		}
 
-		return &alertscheduler.AlertSchedulerRuleProtobufV1Filter{
-			AlertSchedulerRuleProtobufV1FilterAlertUniqueIds: &alertscheduler.AlertSchedulerRuleProtobufV1FilterAlertUniqueIds{
-				WhatExpression: ptr.To(a.Spec.Filter.WhatExpression),
-				AlertUniqueIds: alertscheduler.AlertUniqueIds{
-					Value: alertsIds,
-				},
-			},
-		}, nil
+		return extractAlertUniqueIDsFilter(a.Spec.Filter.WhatExpression, alertsIds), nil
+	} else if a.Spec.Filter.AlertUniqueIDs != nil {
+		alertUniqueIDs, err := validateAlertUniqueIDs(a.Spec.Filter.AlertUniqueIDs)
+		if err != nil {
+			return nil, err
+		}
+
+		return extractAlertUniqueIDsFilter(a.Spec.Filter.WhatExpression, alertUniqueIDs), nil
 	}
 
-	return nil, nil
+	return nil, fmt.Errorf("exactly one of `allAlerts`, `metaLabels`, `alerts`, or `alertUniqueIds` must be set")
+}
+
+func selectorModeCount(filter Filter) int {
+	count := 0
+	if filter.AllAlerts != nil {
+		count++
+	}
+	if filter.MetaLabels != nil {
+		count++
+	}
+	if filter.Alerts != nil {
+		count++
+	}
+	if filter.AlertUniqueIDs != nil {
+		count++
+	}
+	return count
+}
+
+func extractAlertUniqueIDsFilter(whatExpression string, alertUniqueIDs []string) *alertscheduler.AlertSchedulerRuleProtobufV1Filter {
+	return &alertscheduler.AlertSchedulerRuleProtobufV1Filter{
+		AlertSchedulerRuleProtobufV1FilterAlertUniqueIds: &alertscheduler.AlertSchedulerRuleProtobufV1FilterAlertUniqueIds{
+			WhatExpression: ptr.To(whatExpression),
+			AlertUniqueIds: alertscheduler.AlertUniqueIds{
+				Value: alertUniqueIDs,
+			},
+		},
+	}
+}
+
+func validateAlertUniqueIDs(alertUniqueIDs []string) ([]string, error) {
+	if len(alertUniqueIDs) == 0 {
+		return nil, fmt.Errorf("alertUniqueIds must not be empty")
+	}
+
+	result := make([]string, 0, len(alertUniqueIDs))
+	for i, alertUniqueID := range alertUniqueIDs {
+		if strings.TrimSpace(alertUniqueID) == "" {
+			return nil, fmt.Errorf("alertUniqueIds[%d] must not be empty", i)
+		}
+		result = append(result, alertUniqueID)
+	}
+	return result, nil
 }
 
 func (a *AlertScheduler) extractAlertsIds() ([]string, error) {
@@ -320,8 +391,12 @@ func (a *AlertScheduler) extractAlertsIds() ([]string, error) {
 }
 
 func extractAlertId(alert AlertRef, schedulerNamespace string) (string, error) {
+	if alert.ResourceRef == nil {
+		return "", fmt.Errorf("resourceRef is required")
+	}
+
 	var namespace string
-	if alert.ResourceRef != nil && alert.ResourceRef.Namespace != nil {
+	if alert.ResourceRef.Namespace != nil {
 		namespace = *alert.ResourceRef.Namespace
 	} else {
 		namespace = schedulerNamespace
