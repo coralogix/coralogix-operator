@@ -61,8 +61,11 @@ spec:
                         override.
                       properties:
                         matchEntityType:
+                          additionalProperties:
+                            type: string
                           description: MatchEntityType is used for matching entity
                             types.
+                          maxProperties: 0
                           type: object
                         matchEntityTypeAndSubType:
                           description: MatchEntityTypeAndSubType is used for matching
@@ -114,21 +117,23 @@ spec:
                 type: array
               connectorType:
                 description: ConnectorType is the type of the connector. Can be one
-                  of slack, genericHttps, pagerDuty, or email.
+                  of slack, genericHttps, pagerDuty, email, or serviceNow.
                 enum:
                 - slack
                 - genericHttps
                 - pagerDuty
                 - email
+                - serviceNow
                 type: string
               description:
                 description: Description is the description of the preset.
                 type: string
               entityType:
-                description: EntityType is the entity type for the preset. Should
-                  equal "alerts".
+                description: EntityType is the entity type for the preset. Can be
+                  one of alerts or cases.
                 enum:
                 - alerts
+                - cases
                 type: string
               name:
                 description: Name is the name of the preset.

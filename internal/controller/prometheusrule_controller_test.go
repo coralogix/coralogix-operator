@@ -16,8 +16,9 @@ package controllers
 
 import (
 	"context"
-	"k8s.io/utils/ptr"
+	"fmt"
 	"testing"
+	"time"
 
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/stretchr/testify/assert"
@@ -27,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	crconfig "sigs.k8s.io/controller-runtime/pkg/config"
@@ -82,6 +84,10 @@ func setupReconciler(ctx context.Context, t *testing.T) (PrometheusRuleReconcile
 }
 
 func TestPrometheusRulesConversionToCxParsingRules(t *testing.T) {
+	testSuffix := time.Now().UnixNano()
+	emptyRuleName := fmt.Sprintf("test-%d", testSuffix)
+	ruleWithRulesName := fmt.Sprintf("new-with-rules-%d", testSuffix)
+
 	tests := []struct {
 		name           string
 		prometheusRule *prometheus.PrometheusRule
@@ -94,7 +100,7 @@ func TestPrometheusRulesConversionToCxParsingRules(t *testing.T) {
 			shouldCreate: true,
 			prometheusRule: &prometheus.PrometheusRule{
 				ObjectMeta: ctrl.ObjectMeta{
-					Name:      "test",
+					Name:      emptyRuleName,
 					Namespace: "default",
 					Labels: map[string]string{
 						utils.TrackPrometheusRuleRecordingRulesLabelKey: "true",
@@ -111,7 +117,7 @@ func TestPrometheusRulesConversionToCxParsingRules(t *testing.T) {
 			shouldCreate: true,
 			prometheusRule: &prometheus.PrometheusRule{
 				ObjectMeta: ctrl.ObjectMeta{
-					Name:      "new-with-rules",
+					Name:      ruleWithRulesName,
 					Namespace: "default",
 					Labels: map[string]string{
 						utils.TrackPrometheusRuleRecordingRulesLabelKey: "true",
@@ -138,7 +144,7 @@ func TestPrometheusRulesConversionToCxParsingRules(t *testing.T) {
 			shouldFail: false,
 			prometheusRule: &prometheus.PrometheusRule{
 				ObjectMeta: ctrl.ObjectMeta{
-					Name:      "new-with-rules",
+					Name:      ruleWithRulesName,
 					Namespace: "default",
 					Labels: map[string]string{
 						utils.TrackPrometheusRuleRecordingRulesLabelKey: "true",
@@ -201,6 +207,10 @@ func TestPrometheusRulesConversionToCxParsingRules(t *testing.T) {
 }
 
 func TestPrometheusRulesConvertionToCxAlert(t *testing.T) {
+	testSuffix := time.Now().UnixNano()
+	emptyRuleName := fmt.Sprintf("test-alert-%d", testSuffix)
+	ruleWithRulesName := fmt.Sprintf("new-with-alerting-rules-%d", testSuffix)
+
 	tests := []struct {
 		name           string
 		prometheusRule *prometheus.PrometheusRule
@@ -213,7 +223,7 @@ func TestPrometheusRulesConvertionToCxAlert(t *testing.T) {
 			shouldCreate: true,
 			prometheusRule: &prometheus.PrometheusRule{
 				ObjectMeta: ctrl.ObjectMeta{
-					Name:      "test-alert",
+					Name:      emptyRuleName,
 					Namespace: "default",
 					Labels: map[string]string{
 						utils.TrackPrometheusRuleAlertsLabelKey: "true",
@@ -230,7 +240,7 @@ func TestPrometheusRulesConvertionToCxAlert(t *testing.T) {
 			shouldCreate: true,
 			prometheusRule: &prometheus.PrometheusRule{
 				ObjectMeta: ctrl.ObjectMeta{
-					Name:      "new-with-alerting-rules",
+					Name:      ruleWithRulesName,
 					Namespace: "default",
 					Labels: map[string]string{
 						utils.TrackPrometheusRuleAlertsLabelKey: "true",
@@ -257,7 +267,7 @@ func TestPrometheusRulesConvertionToCxAlert(t *testing.T) {
 			shouldFail: false,
 			prometheusRule: &prometheus.PrometheusRule{
 				ObjectMeta: ctrl.ObjectMeta{
-					Name:      "new-with-alerting-rules",
+					Name:      ruleWithRulesName,
 					Namespace: "default",
 					Labels: map[string]string{
 						utils.TrackPrometheusRuleAlertsLabelKey: "true",
