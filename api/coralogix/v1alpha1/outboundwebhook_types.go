@@ -35,7 +35,7 @@ type OutboundWebhookSpec struct {
 }
 
 // Webhook type
-// +kubebuilder:validation:XValidation:rule="(has(self.genericWebhook) ? 1 : 0) + (has(self.slack) ? 1 : 0) + (has(self.pagerDuty) ? 1 : 0) + (has(self.sendLog) ? 1 : 0) + (has(self.emailGroup) ? 1 : 0) + (has(self.microsoftTeams) ? 1 : 0) + (has(self.jira) ? 1 : 0) + (has(self.opsgenie) ? 1 : 0) + (has(self.demisto) ? 1 : 0) + (has(self.awsEventBridge) ? 1 : 0) == 1",message="Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge"
+// +kubebuilder:validation:XValidation:rule="(has(self.genericWebhook) ? 1 : 0) + (has(self.slack) ? 1 : 0) + (has(self.pagerDuty) ? 1 : 0) + (has(self.sendLog) ? 1 : 0) + (has(self.emailGroup) ? 1 : 0) + (has(self.microsoftTeams) ? 1 : 0) + (has(self.microsoftTeamsWorkflow) ? 1 : 0) + (has(self.jira) ? 1 : 0) + (has(self.opsgenie) ? 1 : 0) + (has(self.demisto) ? 1 : 0) + (has(self.awsEventBridge) ? 1 : 0) == 1",message="Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, microsoftTeamsWorkflow, jira, opsgenie, demisto, awsEventBridge"
 type OutboundWebhookType struct {
 	// Generic HTTP(s) webhook.
 	// +optional
@@ -60,6 +60,10 @@ type OutboundWebhookType struct {
 	// Teams message.
 	// +optional
 	MicrosoftTeams *MicrosoftTeams `json:"microsoftTeams,omitempty"`
+
+	// Teams Workflow message.
+	// +optional
+	MicrosoftTeamsWorkflow *MicrosoftTeamsWorkflow `json:"microsoftTeamsWorkflow,omitempty"`
 
 	// Jira issue.
 	// +optional
@@ -273,6 +277,12 @@ type MicrosoftTeams struct {
 	Url string `json:"url"`
 }
 
+// Microsoft Teams Workflow configuration.
+type MicrosoftTeamsWorkflow struct {
+	// Teams Workflow URL
+	Url string `json:"url"`
+}
+
 // Jira configuration
 type Jira struct {
 	// API token
@@ -459,6 +469,15 @@ func (in *OutboundWebhookSpec) ExtractOutgoingWebhookInputData() (*webhooks.Outg
 				Type:           webhooks.WEBHOOKTYPE_MICROSOFT_TEAMS.Ptr(),
 				Url:            webhooks.PtrString(microsoftTeams.Url),
 				MicrosoftTeams: map[string]interface{}{},
+			},
+		}, nil
+	} else if microsoftTeamsWorkflow := in.OutboundWebhookType.MicrosoftTeamsWorkflow; microsoftTeamsWorkflow != nil {
+		return &webhooks.OutgoingWebhookInputData{
+			OutgoingWebhookInputDataMsTeamsWorkflow: &webhooks.OutgoingWebhookInputDataMsTeamsWorkflow{
+				Name:            webhooks.PtrString(in.Name),
+				Type:            webhooks.WEBHOOKTYPE_MS_TEAMS_WORKFLOW.Ptr(),
+				Url:             webhooks.PtrString(microsoftTeamsWorkflow.Url),
+				MsTeamsWorkflow: map[string]interface{}{},
 			},
 		}, nil
 	} else if jira := in.OutboundWebhookType.Jira; jira != nil {
