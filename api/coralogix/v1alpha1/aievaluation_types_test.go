@@ -370,6 +370,143 @@ func TestAIEvaluationExtractRequestsCoverTerraformSexismScenario(t *testing.T) {
 	assertSexism(t, updateRequest.GetConfig())
 }
 
+func TestAIEvaluationExtractRequestsCoverTerraformSQLAllowedTablesScenario(t *testing.T) {
+	aiEvaluation := AIEvaluation{
+		Spec: AIEvaluationSpec{
+			Application: "my-chatbot",
+			Subsystem:   "production",
+			Target:      AIEvaluationTargetResponse,
+			Threshold:   resource.MustParse("0.8"),
+			IsEnabled:   ptr.To(true),
+			Config: AIEvaluationConfig{SQLAllowedTables: &AIEvaluationSQLAllowedTablesConfig{
+				Tables: []string{"orders", "customers"},
+			}},
+		},
+	}
+
+	createRequest, err := aiEvaluation.ExtractCreateAIEvaluationRequest()
+	require.NoError(t, err)
+	require.Equal(t, "my-chatbot", createRequest.GetApplication())
+	require.Equal(t, "production", createRequest.GetSubsystem())
+	require.Equal(t, aievaluations.EVALUATIONTARGET_RESPONSE, createRequest.GetTarget())
+	require.InDelta(t, 0.8, createRequest.GetThreshold(), 0.000001)
+	require.True(t, createRequest.GetIsEnabled())
+	assertSQLAllowedTables(t, createRequest.GetConfig(), "orders", "customers")
+
+	aiEvaluation.Status = AIEvaluationStatus{
+		Id: ptr.To("evaluation-id"),
+	}
+	aiEvaluation.Spec.Threshold = resource.MustParse("0.9")
+	aiEvaluation.Spec.IsEnabled = ptr.To(false)
+	aiEvaluation.Spec.Config = AIEvaluationConfig{SQLAllowedTables: &AIEvaluationSQLAllowedTablesConfig{
+		Tables: []string{"invoices", "payments"},
+	}}
+
+	updateRequest, err := aiEvaluation.ExtractUpdateAIEvaluationRequest()
+	require.NoError(t, err)
+	require.InDelta(t, 0.9, updateRequest.GetThreshold(), 0.000001)
+	require.False(t, updateRequest.GetIsEnabled())
+	assertSQLAllowedTables(t, updateRequest.GetConfig(), "invoices", "payments")
+}
+
+func TestAIEvaluationExtractRequestsCoverTerraformSQLEmptyConfigScenarios(t *testing.T) {
+	tests := []struct {
+		name   string
+		config AIEvaluationConfig
+		assert func(*testing.T, aievaluations.EvaluationConfig)
+	}{
+		{
+			name: "SQL Hallucination",
+			config: AIEvaluationConfig{
+				SQLHallucination: NewAIEvaluationSQLHallucinationConfig(),
+			},
+			assert: assertSQLHallucination,
+		},
+		{
+			name: "SQL Read Only",
+			config: AIEvaluationConfig{
+				SQLReadOnly: NewAIEvaluationSQLReadOnlyConfig(),
+			},
+			assert: assertSQLReadOnly,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			aiEvaluation := AIEvaluation{
+				Spec: AIEvaluationSpec{
+					Application: "my-chatbot",
+					Subsystem:   "production",
+					Target:      AIEvaluationTargetResponse,
+					Threshold:   resource.MustParse("0.8"),
+					IsEnabled:   ptr.To(true),
+					Config:      tt.config,
+				},
+			}
+
+			createRequest, err := aiEvaluation.ExtractCreateAIEvaluationRequest()
+			require.NoError(t, err)
+			require.Equal(t, "my-chatbot", createRequest.GetApplication())
+			require.Equal(t, "production", createRequest.GetSubsystem())
+			require.Equal(t, aievaluations.EVALUATIONTARGET_RESPONSE, createRequest.GetTarget())
+			require.InDelta(t, 0.8, createRequest.GetThreshold(), 0.000001)
+			require.True(t, createRequest.GetIsEnabled())
+			tt.assert(t, createRequest.GetConfig())
+
+			aiEvaluation.Status = AIEvaluationStatus{
+				Id: ptr.To("evaluation-id"),
+			}
+			aiEvaluation.Spec.Threshold = resource.MustParse("0.9")
+			aiEvaluation.Spec.IsEnabled = ptr.To(false)
+
+			updateRequest, err := aiEvaluation.ExtractUpdateAIEvaluationRequest()
+			require.NoError(t, err)
+			require.InDelta(t, 0.9, updateRequest.GetThreshold(), 0.000001)
+			require.False(t, updateRequest.GetIsEnabled())
+			tt.assert(t, updateRequest.GetConfig())
+		})
+	}
+}
+
+func TestAIEvaluationExtractRequestsCoverTerraformSQLRestrictedTablesScenario(t *testing.T) {
+	aiEvaluation := AIEvaluation{
+		Spec: AIEvaluationSpec{
+			Application: "my-chatbot",
+			Subsystem:   "production",
+			Target:      AIEvaluationTargetResponse,
+			Threshold:   resource.MustParse("0.8"),
+			IsEnabled:   ptr.To(true),
+			Config: AIEvaluationConfig{SQLRestrictedTables: &AIEvaluationSQLRestrictedTablesConfig{
+				Tables: []string{"secrets", "audit_logs"},
+			}},
+		},
+	}
+
+	createRequest, err := aiEvaluation.ExtractCreateAIEvaluationRequest()
+	require.NoError(t, err)
+	require.Equal(t, "my-chatbot", createRequest.GetApplication())
+	require.Equal(t, "production", createRequest.GetSubsystem())
+	require.Equal(t, aievaluations.EVALUATIONTARGET_RESPONSE, createRequest.GetTarget())
+	require.InDelta(t, 0.8, createRequest.GetThreshold(), 0.000001)
+	require.True(t, createRequest.GetIsEnabled())
+	assertSQLRestrictedTables(t, createRequest.GetConfig(), "secrets", "audit_logs")
+
+	aiEvaluation.Status = AIEvaluationStatus{
+		Id: ptr.To("evaluation-id"),
+	}
+	aiEvaluation.Spec.Threshold = resource.MustParse("0.9")
+	aiEvaluation.Spec.IsEnabled = ptr.To(false)
+	aiEvaluation.Spec.Config = AIEvaluationConfig{SQLRestrictedTables: &AIEvaluationSQLRestrictedTablesConfig{
+		Tables: []string{"payroll", "pii_exports"},
+	}}
+
+	updateRequest, err := aiEvaluation.ExtractUpdateAIEvaluationRequest()
+	require.NoError(t, err)
+	require.InDelta(t, 0.9, updateRequest.GetThreshold(), 0.000001)
+	require.False(t, updateRequest.GetIsEnabled())
+	assertSQLRestrictedTables(t, updateRequest.GetConfig(), "payroll", "pii_exports")
+}
+
 func TestAIEvaluationExtractRequestsCoverTerraformToxicityScenario(t *testing.T) {
 	aiEvaluation := AIEvaluation{
 		Spec: AIEvaluationSpec{
@@ -521,6 +658,32 @@ func assertSexism(t *testing.T, config aievaluations.EvaluationConfig) {
 	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigSexism)
 	require.True(t, ok)
 	require.Empty(t, actual.GetSexism())
+}
+
+func assertSQLAllowedTables(t *testing.T, config aievaluations.EvaluationConfig, values ...string) {
+	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigSqlAllowedTables)
+	require.True(t, ok)
+	sqlAllowedTables := actual.GetSqlAllowedTables()
+	require.ElementsMatch(t, values, sqlAllowedTables.GetTables())
+}
+
+func assertSQLHallucination(t *testing.T, config aievaluations.EvaluationConfig) {
+	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigSqlHallucination)
+	require.True(t, ok)
+	require.Empty(t, actual.GetSqlHallucination())
+}
+
+func assertSQLReadOnly(t *testing.T, config aievaluations.EvaluationConfig) {
+	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigSqlReadOnly)
+	require.True(t, ok)
+	require.Empty(t, actual.GetSqlReadOnly())
+}
+
+func assertSQLRestrictedTables(t *testing.T, config aievaluations.EvaluationConfig, values ...string) {
+	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigSqlRestrictedTables)
+	require.True(t, ok)
+	sqlRestrictedTables := actual.GetSqlRestrictedTables()
+	require.ElementsMatch(t, values, sqlRestrictedTables.GetTables())
 }
 
 func assertToxicity(t *testing.T, config aievaluations.EvaluationConfig) {

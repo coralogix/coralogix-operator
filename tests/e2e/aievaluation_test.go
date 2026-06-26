@@ -382,55 +382,57 @@ var _ = Describe("AIEvaluation Competition", Ordered, func() {
 	})
 })
 
-var _ = describeEmptyConfigAIEvaluation(
-	"AIEvaluation Hallucination Completeness",
-	"ai-evaluation-hallucination-completeness",
-	aievaluations.EVALUATIONTYPE_HALLUCINATION_COMPLETENESS,
-	func(config *coralogixv1alpha1.AIEvaluationConfig) {
-		config.HallucinationCompleteness = coralogixv1alpha1.NewAIEvaluationHallucinationCompletenessConfig()
-	},
-	expectRemoteAIEvaluationHallucinationCompleteness,
-)
+func init() {
+	describeEmptyConfigAIEvaluation(
+		"AIEvaluation Hallucination Completeness",
+		"ai-evaluation-hallucination-completeness",
+		aievaluations.EVALUATIONTYPE_HALLUCINATION_COMPLETENESS,
+		func(config *coralogixv1alpha1.AIEvaluationConfig) {
+			config.HallucinationCompleteness = coralogixv1alpha1.NewAIEvaluationHallucinationCompletenessConfig()
+		},
+		expectRemoteAIEvaluationHallucinationCompleteness,
+	)
 
-var _ = describeEmptyConfigAIEvaluation(
-	"AIEvaluation Hallucination Context Adherence",
-	"ai-evaluation-hallucination-context-adherence",
-	aievaluations.EVALUATIONTYPE_HALLUCINATION_CONTEXT_ADHERENCE,
-	func(config *coralogixv1alpha1.AIEvaluationConfig) {
-		config.HallucinationContextAdherence = coralogixv1alpha1.NewAIEvaluationHallucinationContextAdherenceConfig()
-	},
-	expectRemoteAIEvaluationHallucinationContextAdherence,
-)
+	describeEmptyConfigAIEvaluation(
+		"AIEvaluation Hallucination Context Adherence",
+		"ai-evaluation-hallucination-context-adherence",
+		aievaluations.EVALUATIONTYPE_HALLUCINATION_CONTEXT_ADHERENCE,
+		func(config *coralogixv1alpha1.AIEvaluationConfig) {
+			config.HallucinationContextAdherence = coralogixv1alpha1.NewAIEvaluationHallucinationContextAdherenceConfig()
+		},
+		expectRemoteAIEvaluationHallucinationContextAdherence,
+	)
 
-var _ = describeEmptyConfigAIEvaluation(
-	"AIEvaluation Hallucination Context Relevance",
-	"ai-evaluation-hallucination-context-relevance",
-	aievaluations.EVALUATIONTYPE_HALLUCINATION_CONTEXT_RELEVANCE,
-	func(config *coralogixv1alpha1.AIEvaluationConfig) {
-		config.HallucinationContextRelevance = coralogixv1alpha1.NewAIEvaluationHallucinationContextRelevanceConfig()
-	},
-	expectRemoteAIEvaluationHallucinationContextRelevance,
-)
+	describeEmptyConfigAIEvaluation(
+		"AIEvaluation Hallucination Context Relevance",
+		"ai-evaluation-hallucination-context-relevance",
+		aievaluations.EVALUATIONTYPE_HALLUCINATION_CONTEXT_RELEVANCE,
+		func(config *coralogixv1alpha1.AIEvaluationConfig) {
+			config.HallucinationContextRelevance = coralogixv1alpha1.NewAIEvaluationHallucinationContextRelevanceConfig()
+		},
+		expectRemoteAIEvaluationHallucinationContextRelevance,
+	)
 
-var _ = describeEmptyConfigAIEvaluation(
-	"AIEvaluation Hallucination Correctness",
-	"ai-evaluation-hallucination-correctness",
-	aievaluations.EVALUATIONTYPE_HALLUCINATION_CORRECTNESS,
-	func(config *coralogixv1alpha1.AIEvaluationConfig) {
-		config.HallucinationCorrectness = coralogixv1alpha1.NewAIEvaluationHallucinationCorrectnessConfig()
-	},
-	expectRemoteAIEvaluationHallucinationCorrectness,
-)
+	describeEmptyConfigAIEvaluation(
+		"AIEvaluation Hallucination Correctness",
+		"ai-evaluation-hallucination-correctness",
+		aievaluations.EVALUATIONTYPE_HALLUCINATION_CORRECTNESS,
+		func(config *coralogixv1alpha1.AIEvaluationConfig) {
+			config.HallucinationCorrectness = coralogixv1alpha1.NewAIEvaluationHallucinationCorrectnessConfig()
+		},
+		expectRemoteAIEvaluationHallucinationCorrectness,
+	)
 
-var _ = describeEmptyConfigAIEvaluation(
-	"AIEvaluation Hallucination Task Adherence",
-	"ai-evaluation-hallucination-task-adherence",
-	aievaluations.EVALUATIONTYPE_HALLUCINATION_TASK_ADHERENCE,
-	func(config *coralogixv1alpha1.AIEvaluationConfig) {
-		config.HallucinationTaskAdherence = coralogixv1alpha1.NewAIEvaluationHallucinationTaskAdherenceConfig()
-	},
-	expectRemoteAIEvaluationHallucinationTaskAdherence,
-)
+	describeEmptyConfigAIEvaluation(
+		"AIEvaluation Hallucination Task Adherence",
+		"ai-evaluation-hallucination-task-adherence",
+		aievaluations.EVALUATIONTYPE_HALLUCINATION_TASK_ADHERENCE,
+		func(config *coralogixv1alpha1.AIEvaluationConfig) {
+			config.HallucinationTaskAdherence = coralogixv1alpha1.NewAIEvaluationHallucinationTaskAdherenceConfig()
+		},
+		expectRemoteAIEvaluationHallucinationTaskAdherence,
+	)
+}
 
 var _ = Describe("AIEvaluation Language Mismatch", Ordered, func() {
 	var (
@@ -872,6 +874,52 @@ var _ = Describe("AIEvaluation Sexism", Ordered, func() {
 	})
 })
 
+func init() {
+	describeStringSetConfigAIEvaluation(
+		"AIEvaluation SQL Allowed Tables",
+		"ai-evaluation-sql-allowed-tables",
+		aievaluations.EVALUATIONTYPE_SQL_ALLOWED_TABLES,
+		[]string{"orders", "customers"},
+		[]string{"invoices", "payments"},
+		func(config *coralogixv1alpha1.AIEvaluationConfig, values []string) {
+			config.SQLAllowedTables = &coralogixv1alpha1.AIEvaluationSQLAllowedTablesConfig{Tables: values}
+		},
+		expectRemoteAIEvaluationSQLAllowedTables,
+	)
+
+	describeEmptyConfigAIEvaluation(
+		"AIEvaluation SQL Hallucination",
+		"ai-evaluation-sql-hallucination",
+		aievaluations.EVALUATIONTYPE_SQL_HALLUCINATION,
+		func(config *coralogixv1alpha1.AIEvaluationConfig) {
+			config.SQLHallucination = coralogixv1alpha1.NewAIEvaluationSQLHallucinationConfig()
+		},
+		expectRemoteAIEvaluationSQLHallucination,
+	)
+
+	describeEmptyConfigAIEvaluation(
+		"AIEvaluation SQL Read Only",
+		"ai-evaluation-sql-read-only",
+		aievaluations.EVALUATIONTYPE_SQL_READ_ONLY,
+		func(config *coralogixv1alpha1.AIEvaluationConfig) {
+			config.SQLReadOnly = coralogixv1alpha1.NewAIEvaluationSQLReadOnlyConfig()
+		},
+		expectRemoteAIEvaluationSQLReadOnly,
+	)
+
+	describeStringSetConfigAIEvaluation(
+		"AIEvaluation SQL Restricted Tables",
+		"ai-evaluation-sql-restricted-tables",
+		aievaluations.EVALUATIONTYPE_SQL_RESTRICTED_TABLES,
+		[]string{"secrets", "audit_logs"},
+		[]string{"payroll", "pii_exports"},
+		func(config *coralogixv1alpha1.AIEvaluationConfig, values []string) {
+			config.SQLRestrictedTables = &coralogixv1alpha1.AIEvaluationSQLRestrictedTablesConfig{Tables: values}
+		},
+		expectRemoteAIEvaluationSQLRestrictedTables,
+	)
+}
+
 var _ = Describe("AIEvaluation Toxicity", Ordered, func() {
 	var (
 		crClient           client.Client
@@ -1074,8 +1122,8 @@ func describeEmptyConfigAIEvaluation(
 	evaluationType aievaluations.EvaluationType,
 	configure func(*coralogixv1alpha1.AIEvaluationConfig),
 	expectRemoteConfig func(Gomega, aievaluations.AiEvaluation),
-) bool {
-	return Describe(description, Ordered, func() {
+) {
+	Describe(description, Ordered, func() {
 		var (
 			crClient           client.Client
 			aiApplications     *aiapplications.AIApplicationsServiceAPIService
@@ -1185,6 +1233,127 @@ func describeEmptyConfigAIEvaluation(
 	})
 }
 
+func describeStringSetConfigAIEvaluation(
+	description string,
+	namePrefix string,
+	evaluationType aievaluations.EvaluationType,
+	createdValues []string,
+	updatedValues []string,
+	configure func(*coralogixv1alpha1.AIEvaluationConfig, []string),
+	expectRemoteConfig func(Gomega, aievaluations.AiEvaluation, []string),
+) {
+	Describe(description, Ordered, func() {
+		var (
+			crClient           client.Client
+			aiApplications     *aiapplications.AIApplicationsServiceAPIService
+			aiEvaluations      *aievaluations.AIEvaluationsServiceAPIService
+			aiEvaluationID     string
+			aiEvaluation       *coralogixv1alpha1.AIEvaluation
+			application        aiEvaluationApplicationRef
+			target             string
+			aiEvaluationCRName = fmt.Sprintf("%s-%d", namePrefix, time.Now().Unix())
+		)
+
+		BeforeAll(func(ctx context.Context) {
+			crClient = ClientsInstance.GetControllerRuntimeClient()
+			clientSet := newAIEvaluationOpenAPIClientSet()
+			aiApplications = clientSet.AIApplications()
+			aiEvaluations = clientSet.AIEvaluations()
+
+			var err error
+			application, target, err = firstAvailableAIEvaluationApplication(ctx, aiApplications, aiEvaluations, evaluationType)
+			Expect(err).ToNot(HaveOccurred())
+
+			aiEvaluation = newStringSetConfigAIEvaluation(
+				aiEvaluationCRName,
+				testNamespace,
+				application,
+				target,
+				resource.MustParse("0.8"),
+				true,
+				createdValues,
+				configure,
+			)
+		})
+
+		AfterAll(func(ctx context.Context) {
+			if aiEvaluation == nil {
+				return
+			}
+
+			err := crClient.Delete(ctx, aiEvaluation)
+			if err != nil && !apierrors.IsNotFound(err) {
+				Expect(err).ToNot(HaveOccurred())
+			}
+
+			Eventually(func() bool {
+				fetched := &coralogixv1alpha1.AIEvaluation{}
+				err := crClient.Get(ctx, client.ObjectKey{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)
+				return apierrors.IsNotFound(err)
+			}, time.Minute, time.Second).Should(BeTrue())
+		})
+
+		It("Should be created successfully", func(ctx context.Context) {
+			By("Creating AIEvaluation")
+			Expect(crClient.Create(ctx, aiEvaluation)).To(Succeed())
+
+			By("Fetching the AIEvaluation ID")
+			fetched := &coralogixv1alpha1.AIEvaluation{}
+			Eventually(func(g Gomega) error {
+				g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)).To(Succeed())
+				g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+				g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
+				if fetched.Status.Id != nil {
+					aiEvaluationID = *fetched.Status.Id
+					return nil
+				}
+				return fmt.Errorf("AI evaluation ID is not set")
+			}, time.Minute, time.Second).Should(Succeed())
+
+			By("Verifying AIEvaluation exists in Coralogix backend")
+			Eventually(func(g Gomega) {
+				evaluation := getRemoteAIEvaluation(ctx, g, aiEvaluations, aiEvaluationID)
+				g.Expect(evaluation.GetApplication()).To(Equal(application.application))
+				g.Expect(evaluation.GetSubsystem()).To(Equal(application.subsystem))
+				g.Expect(strings.ToLower(string(evaluation.GetTarget()))).To(Equal(target))
+				g.Expect(evaluation.GetThreshold()).To(BeNumerically("~", 0.8, 0.00001))
+				g.Expect(evaluation.GetIsEnabled()).To(BeTrue())
+				expectRemoteConfig(g, evaluation, createdValues)
+			}, time.Minute, time.Second).Should(Succeed())
+		})
+
+		It("Should be updated successfully", func(ctx context.Context) {
+			By("Patching the AIEvaluation")
+			modified := aiEvaluation.DeepCopy()
+			modified.Spec.Threshold = resource.MustParse("0.9")
+			modified.Spec.IsEnabled = ptr.To(false)
+			configure(&modified.Spec.Config, updatedValues)
+			Expect(crClient.Patch(ctx, modified, client.MergeFrom(aiEvaluation))).To(Succeed())
+
+			By("Verifying AIEvaluation is updated in Coralogix backend")
+			Eventually(func(g Gomega) {
+				evaluation := getRemoteAIEvaluation(ctx, g, aiEvaluations, aiEvaluationID)
+				g.Expect(evaluation.GetThreshold()).To(BeNumerically("~", 0.9, 0.00001))
+				g.Expect(evaluation.GetIsEnabled()).To(BeFalse())
+				expectRemoteConfig(g, evaluation, updatedValues)
+			}, time.Minute, time.Second).Should(Succeed())
+		})
+
+		It("Should be deleted successfully", func(ctx context.Context) {
+			By("Deleting the AIEvaluation")
+			Expect(crClient.Delete(ctx, aiEvaluation)).To(Succeed())
+
+			By("Verifying AIEvaluation is deleted from Coralogix backend")
+			Eventually(func() int {
+				_, httpResp, err := aiEvaluations.
+					AiEvaluationsServiceGetAiEvaluation(ctx, aiEvaluationID).
+					Execute()
+				return cxsdk.Code(cxsdk.NewAPIError(httpResp, err))
+			}, time.Minute, time.Second).Should(Equal(http.StatusNotFound))
+		})
+	})
+}
+
 func newEmptyConfigAIEvaluation(
 	name string,
 	namespace string,
@@ -1196,6 +1365,35 @@ func newEmptyConfigAIEvaluation(
 ) *coralogixv1alpha1.AIEvaluation {
 	config := coralogixv1alpha1.AIEvaluationConfig{}
 	configure(&config)
+
+	return &coralogixv1alpha1.AIEvaluation{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: coralogixv1alpha1.AIEvaluationSpec{
+			Application: application.application,
+			Subsystem:   application.subsystem,
+			Target:      target,
+			Threshold:   threshold,
+			IsEnabled:   ptr.To(isEnabled),
+			Config:      config,
+		},
+	}
+}
+
+func newStringSetConfigAIEvaluation(
+	name string,
+	namespace string,
+	application aiEvaluationApplicationRef,
+	target string,
+	threshold resource.Quantity,
+	isEnabled bool,
+	values []string,
+	configure func(*coralogixv1alpha1.AIEvaluationConfig, []string),
+) *coralogixv1alpha1.AIEvaluation {
+	config := coralogixv1alpha1.AIEvaluationConfig{}
+	configure(&config, values)
 
 	return &coralogixv1alpha1.AIEvaluation{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1565,6 +1763,46 @@ func expectRemoteAIEvaluationSexism(
 	config := evaluation.GetConfig()
 	g.Expect(config.EvaluationConfigSexism).ToNot(BeNil())
 	g.Expect(config.EvaluationConfigSexism.GetSexism()).To(BeEmpty())
+}
+
+func expectRemoteAIEvaluationSQLAllowedTables(
+	g Gomega,
+	evaluation aievaluations.AiEvaluation,
+	expected []string,
+) {
+	config := evaluation.GetConfig()
+	g.Expect(config.EvaluationConfigSqlAllowedTables).ToNot(BeNil())
+	sqlAllowedTablesConfig := config.EvaluationConfigSqlAllowedTables.GetSqlAllowedTables()
+	g.Expect(sqlAllowedTablesConfig.GetTables()).To(ConsistOf(expectedStrings(expected)...))
+}
+
+func expectRemoteAIEvaluationSQLHallucination(
+	g Gomega,
+	evaluation aievaluations.AiEvaluation,
+) {
+	config := evaluation.GetConfig()
+	g.Expect(config.EvaluationConfigSqlHallucination).ToNot(BeNil())
+	g.Expect(config.EvaluationConfigSqlHallucination.GetSqlHallucination()).To(BeEmpty())
+}
+
+func expectRemoteAIEvaluationSQLReadOnly(
+	g Gomega,
+	evaluation aievaluations.AiEvaluation,
+) {
+	config := evaluation.GetConfig()
+	g.Expect(config.EvaluationConfigSqlReadOnly).ToNot(BeNil())
+	g.Expect(config.EvaluationConfigSqlReadOnly.GetSqlReadOnly()).To(BeEmpty())
+}
+
+func expectRemoteAIEvaluationSQLRestrictedTables(
+	g Gomega,
+	evaluation aievaluations.AiEvaluation,
+	expected []string,
+) {
+	config := evaluation.GetConfig()
+	g.Expect(config.EvaluationConfigSqlRestrictedTables).ToNot(BeNil())
+	sqlRestrictedTablesConfig := config.EvaluationConfigSqlRestrictedTables.GetSqlRestrictedTables()
+	g.Expect(sqlRestrictedTablesConfig.GetTables()).To(ConsistOf(expectedStrings(expected)...))
 }
 
 func expectRemoteAIEvaluationToxicity(

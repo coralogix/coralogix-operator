@@ -151,7 +151,7 @@ AIEvaluationSpec defines the desired state of AIEvaluation.
         <td>
           AI evaluation configuration.<br/>
           <br/>
-            <i>Validations</i>:<li>(has(self.allowedTopics) ? 1 : 0) + (has(self.competition) ? 1 : 0) + (has(self.languageMismatch) ? 1 : 0) + (has(self.pii) ? 1 : 0) + (has(self.promptInjection) ? 1 : 0) + (has(self.restrictedTopics) ? 1 : 0) + (has(self.sexism) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1: Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, languageMismatch, pii, promptInjection, restrictedTopics, sexism, toxicity</li>
+            <i>Validations</i>:<li>(has(self.allowedTopics) ? 1 : 0) + (has(self.competition) ? 1 : 0) + (has(self.hallucinationCompleteness) ? 1 : 0) + (has(self.hallucinationContextAdherence) ? 1 : 0) + (has(self.hallucinationContextRelevance) ? 1 : 0) + (has(self.hallucinationCorrectness) ? 1 : 0) + (has(self.hallucinationTaskAdherence) ? 1 : 0) + (has(self.languageMismatch) ? 1 : 0) + (has(self.pii) ? 1 : 0) + (has(self.promptInjection) ? 1 : 0) + (has(self.restrictedTopics) ? 1 : 0) + (has(self.sexism) ? 1 : 0) + (has(self.sqlAllowedTables) ? 1 : 0) + (has(self.sqlHallucination) ? 1 : 0) + (has(self.sqlReadOnly) ? 1 : 0) + (has(self.sqlRestrictedTables) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1: Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, hallucinationCompleteness, hallucinationContextAdherence, hallucinationContextRelevance, hallucinationCorrectness, hallucinationTaskAdherence, languageMismatch, pii, promptInjection, restrictedTopics, sexism, sqlAllowedTables, sqlHallucination, sqlReadOnly, sqlRestrictedTables, toxicity</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -225,6 +225,41 @@ AI evaluation configuration.
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>hallucinationCompleteness</b></td>
+        <td>map[string]string</td>
+        <td>
+          Configuration for Hallucination Completeness evaluation. Hallucination Completeness has no nested fields and must be set to an empty object.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>hallucinationContextAdherence</b></td>
+        <td>map[string]string</td>
+        <td>
+          Configuration for Hallucination Context Adherence evaluation. Hallucination Context Adherence has no nested fields and must be set to an empty object.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>hallucinationContextRelevance</b></td>
+        <td>map[string]string</td>
+        <td>
+          Configuration for Hallucination Context Relevance evaluation. Hallucination Context Relevance has no nested fields and must be set to an empty object.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>hallucinationCorrectness</b></td>
+        <td>map[string]string</td>
+        <td>
+          Configuration for Hallucination Correctness evaluation. Hallucination Correctness has no nested fields and must be set to an empty object.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>hallucinationTaskAdherence</b></td>
+        <td>map[string]string</td>
+        <td>
+          Configuration for Hallucination Task Adherence evaluation. Hallucination Task Adherence has no nested fields and must be set to an empty object.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>languageMismatch</b></td>
         <td>map[string]string</td>
         <td>
@@ -257,6 +292,34 @@ AI evaluation configuration.
         <td>map[string]string</td>
         <td>
           Configuration for Sexism evaluation. Sexism has no nested fields and must be set to an empty object.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#aievaluationspecconfigsqlallowedtables">sqlAllowedTables</a></b></td>
+        <td>object</td>
+        <td>
+          Configuration for SQL Allowed Tables evaluation.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>sqlHallucination</b></td>
+        <td>map[string]string</td>
+        <td>
+          Configuration for SQL Hallucination evaluation. SQL Hallucination has no nested fields and must be set to an empty object.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>sqlReadOnly</b></td>
+        <td>map[string]string</td>
+        <td>
+          Configuration for SQL Read Only evaluation. SQL Read Only has no nested fields and must be set to an empty object.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#aievaluationspecconfigsqlrestrictedtables">sqlRestrictedTables</a></b></td>
+        <td>object</td>
+        <td>
+          Configuration for SQL Restricted Tables evaluation.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -403,6 +466,60 @@ Configuration for Restricted Topics evaluation.
         <td>[]string</td>
         <td>
           Topics that should not appear.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AIEvaluation.spec.config.sqlAllowedTables
+<sup><sup>[↩ Parent](#aievaluationspecconfig)</sup></sup>
+
+
+
+Configuration for SQL Allowed Tables evaluation.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>tables</b></td>
+        <td>[]string</td>
+        <td>
+          SQL table names that are allowed.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AIEvaluation.spec.config.sqlRestrictedTables
+<sup><sup>[↩ Parent](#aievaluationspecconfig)</sup></sup>
+
+
+
+Configuration for SQL Restricted Tables evaluation.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>tables</b></td>
+        <td>[]string</td>
+        <td>
+          SQL table names that are not allowed.<br/>
         </td>
         <td>true</td>
       </tr></tbody>

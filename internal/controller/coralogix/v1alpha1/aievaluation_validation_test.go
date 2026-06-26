@@ -153,6 +153,50 @@ var _ = Describe("AIEvaluation validation", func() {
 		Expect(k8sClient.Delete(ctx, aiEvaluation)).To(Succeed())
 	})
 
+	It("should accept valid SQL evaluations", func(ctx context.Context) {
+		tests := []struct {
+			name   string
+			config coralogixv1alpha1.AIEvaluationConfig
+		}{
+			{
+				name: "valid-sql-allowed-tables",
+				config: coralogixv1alpha1.AIEvaluationConfig{
+					SQLAllowedTables: &coralogixv1alpha1.AIEvaluationSQLAllowedTablesConfig{
+						Tables: []string{"orders", "customers"},
+					},
+				},
+			},
+			{
+				name: "valid-sql-hallucination",
+				config: coralogixv1alpha1.AIEvaluationConfig{
+					SQLHallucination: coralogixv1alpha1.NewAIEvaluationSQLHallucinationConfig(),
+				},
+			},
+			{
+				name: "valid-sql-read-only",
+				config: coralogixv1alpha1.AIEvaluationConfig{
+					SQLReadOnly: coralogixv1alpha1.NewAIEvaluationSQLReadOnlyConfig(),
+				},
+			},
+			{
+				name: "valid-sql-restricted-tables",
+				config: coralogixv1alpha1.AIEvaluationConfig{
+					SQLRestrictedTables: &coralogixv1alpha1.AIEvaluationSQLRestrictedTablesConfig{
+						Tables: []string{"secrets", "audit_logs"},
+					},
+				},
+			},
+		}
+
+		for _, tt := range tests {
+			aiEvaluation := validAIEvaluation(tt.name)
+			aiEvaluation.Spec.Config = tt.config
+
+			Expect(k8sClient.Create(ctx, aiEvaluation)).To(Succeed())
+			Expect(k8sClient.Delete(ctx, aiEvaluation)).To(Succeed())
+		}
+	})
+
 	It("should accept a valid Toxicity evaluation", func(ctx context.Context) {
 		aiEvaluation := validAIEvaluation("valid-toxicity")
 		aiEvaluation.Spec.Config = coralogixv1alpha1.AIEvaluationConfig{
@@ -205,6 +249,25 @@ var _ = Describe("AIEvaluation validation", func() {
 		err := k8sClient.Create(ctx, aiEvaluation)
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("Too many"))
+	})
+
+	It("should reject SQL empty config fields", func(ctx context.Context) {
+		for _, tt := range []struct {
+			name  string
+			field string
+		}{
+			{name: "sql-hallucination-with-fields", field: "sqlHallucination"},
+			{name: "sql-read-only-with-fields", field: "sqlReadOnly"},
+		} {
+			aiEvaluation := validUnstructuredAIEvaluation(tt.name)
+			config := aiEvaluation.Object["spec"].(map[string]interface{})["config"].(map[string]interface{})
+			config[tt.field] = map[string]interface{}{"unsupported": "value"}
+			delete(config, "pii")
+
+			err := k8sClient.Create(ctx, aiEvaluation)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("Too many"))
+		}
 	})
 
 	It("should reject Toxicity config fields", func(ctx context.Context) {
@@ -280,7 +343,7 @@ var _ = Describe("AIEvaluation validation", func() {
 
 		err := k8sClient.Create(ctx, aiEvaluation)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, hallucinationCompleteness, hallucinationContextAdherence, hallucinationContextRelevance, hallucinationCorrectness, hallucinationTaskAdherence, languageMismatch, pii, promptInjection, restrictedTopics, sexism, toxicity"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, hallucinationCompleteness, hallucinationContextAdherence, hallucinationContextRelevance, hallucinationCorrectness, hallucinationTaskAdherence, languageMismatch, pii, promptInjection, restrictedTopics, sexism, sqlAllowedTables, sqlHallucination, sqlReadOnly, sqlRestrictedTables, toxicity"))
 	})
 
 	It("should reject multiple config variants", func(ctx context.Context) {
@@ -290,7 +353,7 @@ var _ = Describe("AIEvaluation validation", func() {
 
 		err := k8sClient.Create(ctx, aiEvaluation)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, hallucinationCompleteness, hallucinationContextAdherence, hallucinationContextRelevance, hallucinationCorrectness, hallucinationTaskAdherence, languageMismatch, pii, promptInjection, restrictedTopics, sexism, toxicity"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, hallucinationCompleteness, hallucinationContextAdherence, hallucinationContextRelevance, hallucinationCorrectness, hallucinationTaskAdherence, languageMismatch, pii, promptInjection, restrictedTopics, sexism, sqlAllowedTables, sqlHallucination, sqlReadOnly, sqlRestrictedTables, toxicity"))
 	})
 
 	It("should reject empty and oversized Allowed Topics topic sets", func(ctx context.Context) {
@@ -417,6 +480,61 @@ var _ = Describe("AIEvaluation validation", func() {
 			aiEvaluation := validUnstructuredAIEvaluation(tt.name)
 			config := aiEvaluation.Object["spec"].(map[string]interface{})["config"].(map[string]interface{})
 			config["restrictedTopics"] = map[string]interface{}{"topics": []interface{}{tt.topic}}
+			delete(config, "pii")
+
+			err := k8sClient.Create(ctx, aiEvaluation)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring(tt.want))
+		}
+	})
+
+	It("should reject empty and oversized SQL table sets", func(ctx context.Context) {
+		for _, tt := range []struct {
+			name  string
+			field string
+		}{
+			{name: "sql-allowed-tables", field: "sqlAllowedTables"},
+			{name: "sql-restricted-tables", field: "sqlRestrictedTables"},
+		} {
+			aiEvaluation := validUnstructuredAIEvaluation(fmt.Sprintf("empty-%s", tt.name))
+			config := aiEvaluation.Object["spec"].(map[string]interface{})["config"].(map[string]interface{})
+			config[tt.field] = map[string]interface{}{"tables": []interface{}{}}
+			delete(config, "pii")
+
+			err := k8sClient.Create(ctx, aiEvaluation)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("at least 1 items"))
+
+			aiEvaluation = validUnstructuredAIEvaluation(fmt.Sprintf("too-many-%s", tt.name))
+			config = aiEvaluation.Object["spec"].(map[string]interface{})["config"].(map[string]interface{})
+			tables := make([]interface{}, 1025)
+			for i := range tables {
+				tables[i] = fmt.Sprintf("table_%d", i)
+			}
+			config[tt.field] = map[string]interface{}{"tables": tables}
+			delete(config, "pii")
+
+			err = k8sClient.Create(ctx, aiEvaluation)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("Too many"))
+		}
+	})
+
+	It("should reject SQL table values longer than 256 characters", func(ctx context.Context) {
+		for _, tt := range []struct {
+			name  string
+			field string
+			table string
+			want  string
+		}{
+			{name: "empty-sql-allowed-table", field: "sqlAllowedTables", table: "", want: "at least 1 chars"},
+			{name: "too-long-sql-allowed-table", field: "sqlAllowedTables", table: strings.Repeat("a", 257), want: "Too long"},
+			{name: "empty-sql-restricted-table", field: "sqlRestrictedTables", table: "", want: "at least 1 chars"},
+			{name: "too-long-sql-restricted-table", field: "sqlRestrictedTables", table: strings.Repeat("a", 257), want: "Too long"},
+		} {
+			aiEvaluation := validUnstructuredAIEvaluation(tt.name)
+			config := aiEvaluation.Object["spec"].(map[string]interface{})["config"].(map[string]interface{})
+			config[tt.field] = map[string]interface{}{"tables": []interface{}{tt.table}}
 			delete(config, "pii")
 
 			err := k8sClient.Create(ctx, aiEvaluation)

@@ -82,7 +82,7 @@ type AIEvaluationSpec struct {
 }
 
 // AIEvaluationConfig configures the AI evaluation type.
-// +kubebuilder:validation:XValidation:rule="(has(self.allowedTopics) ? 1 : 0) + (has(self.competition) ? 1 : 0) + (has(self.hallucinationCompleteness) ? 1 : 0) + (has(self.hallucinationContextAdherence) ? 1 : 0) + (has(self.hallucinationContextRelevance) ? 1 : 0) + (has(self.hallucinationCorrectness) ? 1 : 0) + (has(self.hallucinationTaskAdherence) ? 1 : 0) + (has(self.languageMismatch) ? 1 : 0) + (has(self.pii) ? 1 : 0) + (has(self.promptInjection) ? 1 : 0) + (has(self.restrictedTopics) ? 1 : 0) + (has(self.sexism) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1", message="Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, hallucinationCompleteness, hallucinationContextAdherence, hallucinationContextRelevance, hallucinationCorrectness, hallucinationTaskAdherence, languageMismatch, pii, promptInjection, restrictedTopics, sexism, toxicity"
+// +kubebuilder:validation:XValidation:rule="(has(self.allowedTopics) ? 1 : 0) + (has(self.competition) ? 1 : 0) + (has(self.hallucinationCompleteness) ? 1 : 0) + (has(self.hallucinationContextAdherence) ? 1 : 0) + (has(self.hallucinationContextRelevance) ? 1 : 0) + (has(self.hallucinationCorrectness) ? 1 : 0) + (has(self.hallucinationTaskAdherence) ? 1 : 0) + (has(self.languageMismatch) ? 1 : 0) + (has(self.pii) ? 1 : 0) + (has(self.promptInjection) ? 1 : 0) + (has(self.restrictedTopics) ? 1 : 0) + (has(self.sexism) ? 1 : 0) + (has(self.sqlAllowedTables) ? 1 : 0) + (has(self.sqlHallucination) ? 1 : 0) + (has(self.sqlReadOnly) ? 1 : 0) + (has(self.sqlRestrictedTables) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1", message="Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, hallucinationCompleteness, hallucinationContextAdherence, hallucinationContextRelevance, hallucinationCorrectness, hallucinationTaskAdherence, languageMismatch, pii, promptInjection, restrictedTopics, sexism, sqlAllowedTables, sqlHallucination, sqlReadOnly, sqlRestrictedTables, toxicity"
 type AIEvaluationConfig struct {
 	// Configuration for Allowed Topics evaluation.
 	// +optional
@@ -139,6 +139,24 @@ type AIEvaluationConfig struct {
 	// +kubebuilder:validation:MaxProperties=0
 	Sexism *map[string]string `json:"sexism,omitempty"`
 
+	// Configuration for SQL Allowed Tables evaluation.
+	// +optional
+	SQLAllowedTables *AIEvaluationSQLAllowedTablesConfig `json:"sqlAllowedTables,omitempty"`
+
+	// Configuration for SQL Hallucination evaluation. SQL Hallucination has no nested fields and must be set to an empty object.
+	// +optional
+	// +kubebuilder:validation:MaxProperties=0
+	SQLHallucination *map[string]string `json:"sqlHallucination,omitempty"`
+
+	// Configuration for SQL Read Only evaluation. SQL Read Only has no nested fields and must be set to an empty object.
+	// +optional
+	// +kubebuilder:validation:MaxProperties=0
+	SQLReadOnly *map[string]string `json:"sqlReadOnly,omitempty"`
+
+	// Configuration for SQL Restricted Tables evaluation.
+	// +optional
+	SQLRestrictedTables *AIEvaluationSQLRestrictedTablesConfig `json:"sqlRestrictedTables,omitempty"`
+
 	// Configuration for Toxicity evaluation. Toxicity has no nested fields and must be set to an empty object.
 	// +optional
 	// +kubebuilder:validation:MaxProperties=0
@@ -173,6 +191,26 @@ type AIEvaluationRestrictedTopicsConfig struct {
 	// +kubebuilder:validation:items:MaxLength=256
 	// +listType=set
 	Topics []string `json:"topics"`
+}
+
+type AIEvaluationSQLAllowedTablesConfig struct {
+	// SQL table names that are allowed.
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=1024
+	// +kubebuilder:validation:items:MinLength=1
+	// +kubebuilder:validation:items:MaxLength=256
+	// +listType=set
+	Tables []string `json:"tables"`
+}
+
+type AIEvaluationSQLRestrictedTablesConfig struct {
+	// SQL table names that are not allowed.
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=1024
+	// +kubebuilder:validation:items:MinLength=1
+	// +kubebuilder:validation:items:MaxLength=256
+	// +listType=set
+	Tables []string `json:"tables"`
 }
 
 // +kubebuilder:validation:Enum=PHONE_NUMBER;EMAIL_ADDRESS;CREDIT_CARD;IBAN_CODE;US_SSN
@@ -318,6 +356,18 @@ func (c AIEvaluationConfig) ExtractAIEvaluationConfig() (*aievaluations.Evaluati
 	if c.Sexism != nil {
 		extractors = append(extractors, newOpenAPIAIEvaluationSexismConfig)
 	}
+	if c.SQLAllowedTables != nil {
+		extractors = append(extractors, c.SQLAllowedTables.ExtractAIEvaluationConfig)
+	}
+	if c.SQLHallucination != nil {
+		extractors = append(extractors, newOpenAPIAIEvaluationSQLHallucinationConfig)
+	}
+	if c.SQLReadOnly != nil {
+		extractors = append(extractors, newOpenAPIAIEvaluationSQLReadOnlyConfig)
+	}
+	if c.SQLRestrictedTables != nil {
+		extractors = append(extractors, c.SQLRestrictedTables.ExtractAIEvaluationConfig)
+	}
 	if c.Toxicity != nil {
 		extractors = append(extractors, newOpenAPIAIEvaluationToxicityConfig)
 	}
@@ -351,6 +401,24 @@ func (c *AIEvaluationRestrictedTopicsConfig) ExtractAIEvaluationConfig() *aieval
 	config := aievaluations.EvaluationConfigRestrictedTopicsAsEvaluationConfig(
 		aievaluations.NewEvaluationConfigRestrictedTopics(aievaluations.RestrictedTopicsConfig{
 			Topics: append([]string(nil), c.Topics...),
+		}),
+	)
+	return &config
+}
+
+func (c *AIEvaluationSQLAllowedTablesConfig) ExtractAIEvaluationConfig() *aievaluations.EvaluationConfig {
+	config := aievaluations.EvaluationConfigSqlAllowedTablesAsEvaluationConfig(
+		aievaluations.NewEvaluationConfigSqlAllowedTables(aievaluations.SqlAllowedTablesConfig{
+			Tables: append([]string(nil), c.Tables...),
+		}),
+	)
+	return &config
+}
+
+func (c *AIEvaluationSQLRestrictedTablesConfig) ExtractAIEvaluationConfig() *aievaluations.EvaluationConfig {
+	config := aievaluations.EvaluationConfigSqlRestrictedTablesAsEvaluationConfig(
+		aievaluations.NewEvaluationConfigSqlRestrictedTables(aievaluations.SqlRestrictedTablesConfig{
+			Tables: append([]string(nil), c.Tables...),
 		}),
 	)
 	return &config
@@ -426,6 +494,20 @@ func newOpenAPIAIEvaluationSexismConfig() *aievaluations.EvaluationConfig {
 	return &config
 }
 
+func newOpenAPIAIEvaluationSQLHallucinationConfig() *aievaluations.EvaluationConfig {
+	config := aievaluations.EvaluationConfigSqlHallucinationAsEvaluationConfig(
+		aievaluations.NewEvaluationConfigSqlHallucination(map[string]interface{}{}),
+	)
+	return &config
+}
+
+func newOpenAPIAIEvaluationSQLReadOnlyConfig() *aievaluations.EvaluationConfig {
+	config := aievaluations.EvaluationConfigSqlReadOnlyAsEvaluationConfig(
+		aievaluations.NewEvaluationConfigSqlReadOnly(map[string]interface{}{}),
+	)
+	return &config
+}
+
 func newOpenAPIAIEvaluationToxicityConfig() *aievaluations.EvaluationConfig {
 	config := aievaluations.EvaluationConfigToxicityAsEvaluationConfig(
 		aievaluations.NewEvaluationConfigToxicity(map[string]interface{}{}),
@@ -465,6 +547,16 @@ func NewAIEvaluationLanguageMismatchConfig() *map[string]string {
 
 // NewAIEvaluationSexismConfig returns the empty object required to enable sexism evaluation.
 func NewAIEvaluationSexismConfig() *map[string]string {
+	return &map[string]string{}
+}
+
+// NewAIEvaluationSQLHallucinationConfig returns the empty object required to enable SQL hallucination evaluation.
+func NewAIEvaluationSQLHallucinationConfig() *map[string]string {
+	return &map[string]string{}
+}
+
+// NewAIEvaluationSQLReadOnlyConfig returns the empty object required to enable SQL read only evaluation.
+func NewAIEvaluationSQLReadOnlyConfig() *map[string]string {
 	return &map[string]string{}
 }
 

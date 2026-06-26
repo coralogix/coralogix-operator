@@ -189,6 +189,53 @@ spec:
                       nested fields and must be set to an empty object.
                     maxProperties: 0
                     type: object
+                  sqlAllowedTables:
+                    description: Configuration for SQL Allowed Tables evaluation.
+                    properties:
+                      tables:
+                        description: SQL table names that are allowed.
+                        items:
+                          maxLength: 256
+                          minLength: 1
+                          type: string
+                        maxItems: 1024
+                        minItems: 1
+                        type: array
+                        x-kubernetes-list-type: set
+                    required:
+                    - tables
+                    type: object
+                  sqlHallucination:
+                    additionalProperties:
+                      type: string
+                    description: Configuration for SQL Hallucination evaluation. SQL
+                      Hallucination has no nested fields and must be set to an empty
+                      object.
+                    maxProperties: 0
+                    type: object
+                  sqlReadOnly:
+                    additionalProperties:
+                      type: string
+                    description: Configuration for SQL Read Only evaluation. SQL Read
+                      Only has no nested fields and must be set to an empty object.
+                    maxProperties: 0
+                    type: object
+                  sqlRestrictedTables:
+                    description: Configuration for SQL Restricted Tables evaluation.
+                    properties:
+                      tables:
+                        description: SQL table names that are not allowed.
+                        items:
+                          maxLength: 256
+                          minLength: 1
+                          type: string
+                        maxItems: 1024
+                        minItems: 1
+                        type: array
+                        x-kubernetes-list-type: set
+                    required:
+                    - tables
+                    type: object
                   toxicity:
                     additionalProperties:
                       type: string
@@ -202,15 +249,18 @@ spec:
                     be set: allowedTopics, competition, hallucinationCompleteness,
                     hallucinationContextAdherence, hallucinationContextRelevance,
                     hallucinationCorrectness, hallucinationTaskAdherence, languageMismatch,
-                    pii, promptInjection, restrictedTopics, sexism, toxicity'
+                    pii, promptInjection, restrictedTopics, sexism, sqlAllowedTables,
+                    sqlHallucination, sqlReadOnly, sqlRestrictedTables, toxicity'
                   rule: '(has(self.allowedTopics) ? 1 : 0) + (has(self.competition)
                     ? 1 : 0) + (has(self.hallucinationCompleteness) ? 1 : 0) + (has(self.hallucinationContextAdherence)
                     ? 1 : 0) + (has(self.hallucinationContextRelevance) ? 1 : 0) +
                     (has(self.hallucinationCorrectness) ? 1 : 0) + (has(self.hallucinationTaskAdherence)
                     ? 1 : 0) + (has(self.languageMismatch) ? 1 : 0) + (has(self.pii)
                     ? 1 : 0) + (has(self.promptInjection) ? 1 : 0) + (has(self.restrictedTopics)
-                    ? 1 : 0) + (has(self.sexism) ? 1 : 0) + (has(self.toxicity) ?
-                    1 : 0) == 1'
+                    ? 1 : 0) + (has(self.sexism) ? 1 : 0) + (has(self.sqlAllowedTables)
+                    ? 1 : 0) + (has(self.sqlHallucination) ? 1 : 0) + (has(self.sqlReadOnly)
+                    ? 1 : 0) + (has(self.sqlRestrictedTables) ? 1 : 0) + (has(self.toxicity)
+                    ? 1 : 0) == 1'
               isEnabled:
                 default: true
                 description: Whether the evaluation is active.
