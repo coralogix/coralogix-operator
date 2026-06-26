@@ -117,6 +117,17 @@ func (in *AIEvaluationConfig) DeepCopyInto(out *AIEvaluationConfig) {
 		*out = new(AIEvaluationRestrictedTopicsConfig)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Sexism != nil {
+		in, out := &in.Sexism, &out.Sexism
+		*out = new(map[string]string)
+		if **in != nil {
+			in, out := *in, *out
+			*out = make(map[string]string, len(*in))
+			for key, val := range *in {
+				(*out)[key] = val
+			}
+		}
+	}
 	if in.Toxicity != nil {
 		in, out := &in.Toxicity, &out.Toxicity
 		*out = new(map[string]string)

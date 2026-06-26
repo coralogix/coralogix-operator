@@ -82,7 +82,7 @@ type AIEvaluationSpec struct {
 }
 
 // AIEvaluationConfig configures the AI evaluation type.
-// +kubebuilder:validation:XValidation:rule="(has(self.allowedTopics) ? 1 : 0) + (has(self.competition) ? 1 : 0) + (has(self.pii) ? 1 : 0) + (has(self.restrictedTopics) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1", message="Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, pii, restrictedTopics, toxicity"
+// +kubebuilder:validation:XValidation:rule="(has(self.allowedTopics) ? 1 : 0) + (has(self.competition) ? 1 : 0) + (has(self.pii) ? 1 : 0) + (has(self.restrictedTopics) ? 1 : 0) + (has(self.sexism) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1", message="Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, pii, restrictedTopics, sexism, toxicity"
 type AIEvaluationConfig struct {
 	// Configuration for Allowed Topics evaluation.
 	// +optional
@@ -99,6 +99,11 @@ type AIEvaluationConfig struct {
 	// Configuration for Restricted Topics evaluation.
 	// +optional
 	RestrictedTopics *AIEvaluationRestrictedTopicsConfig `json:"restrictedTopics,omitempty"`
+
+	// Configuration for Sexism evaluation. Sexism has no nested fields and must be set to an empty object.
+	// +optional
+	// +kubebuilder:validation:MaxProperties=0
+	Sexism *map[string]string `json:"sexism,omitempty"`
 
 	// Configuration for Toxicity evaluation. Toxicity has no nested fields and must be set to an empty object.
 	// +optional
@@ -247,6 +252,9 @@ func (c AIEvaluationConfig) ExtractAIEvaluationConfig() (*aievaluations.Evaluati
 	if c.RestrictedTopics != nil {
 		extractors = append(extractors, c.RestrictedTopics.ExtractAIEvaluationConfig)
 	}
+	if c.Sexism != nil {
+		extractors = append(extractors, newOpenAPIAIEvaluationSexismConfig)
+	}
 	if c.Toxicity != nil {
 		extractors = append(extractors, newOpenAPIAIEvaluationToxicityConfig)
 	}
@@ -297,11 +305,23 @@ func (c *AIEvaluationPIIConfig) ExtractAIEvaluationConfig() *aievaluations.Evalu
 	return &config
 }
 
+func newOpenAPIAIEvaluationSexismConfig() *aievaluations.EvaluationConfig {
+	config := aievaluations.EvaluationConfigSexismAsEvaluationConfig(
+		aievaluations.NewEvaluationConfigSexism(map[string]interface{}{}),
+	)
+	return &config
+}
+
 func newOpenAPIAIEvaluationToxicityConfig() *aievaluations.EvaluationConfig {
 	config := aievaluations.EvaluationConfigToxicityAsEvaluationConfig(
 		aievaluations.NewEvaluationConfigToxicity(map[string]interface{}{}),
 	)
 	return &config
+}
+
+// NewAIEvaluationSexismConfig returns the empty object required to enable sexism evaluation.
+func NewAIEvaluationSexismConfig() *map[string]string {
+	return &map[string]string{}
 }
 
 // NewAIEvaluationToxicityConfig returns the empty object required to enable toxicity evaluation.

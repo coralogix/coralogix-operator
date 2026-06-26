@@ -126,6 +126,13 @@ spec:
                     required:
                     - topics
                     type: object
+                  sexism:
+                    additionalProperties:
+                      type: string
+                    description: Configuration for Sexism evaluation. Sexism has no
+                      nested fields and must be set to an empty object.
+                    maxProperties: 0
+                    type: object
                   toxicity:
                     additionalProperties:
                       type: string
@@ -136,10 +143,12 @@ spec:
                 type: object
                 x-kubernetes-validations:
                 - message: 'Exactly one of the following AI evaluation configs must
-                    be set: allowedTopics, competition, pii, restrictedTopics, toxicity'
+                    be set: allowedTopics, competition, pii, restrictedTopics, sexism,
+                    toxicity'
                   rule: '(has(self.allowedTopics) ? 1 : 0) + (has(self.competition)
                     ? 1 : 0) + (has(self.pii) ? 1 : 0) + (has(self.restrictedTopics)
-                    ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1'
+                    ? 1 : 0) + (has(self.sexism) ? 1 : 0) + (has(self.toxicity) ?
+                    1 : 0) == 1'
               isEnabled:
                 default: true
                 description: Whether the evaluation is active.

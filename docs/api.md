@@ -151,7 +151,7 @@ AIEvaluationSpec defines the desired state of AIEvaluation.
         <td>
           AI evaluation configuration.<br/>
           <br/>
-            <i>Validations</i>:<li>(has(self.allowedTopics) ? 1 : 0) + (has(self.competition) ? 1 : 0) + (has(self.pii) ? 1 : 0) + (has(self.restrictedTopics) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1: Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, pii, restrictedTopics, toxicity</li>
+            <i>Validations</i>:<li>(has(self.allowedTopics) ? 1 : 0) + (has(self.competition) ? 1 : 0) + (has(self.pii) ? 1 : 0) + (has(self.restrictedTopics) ? 1 : 0) + (has(self.sexism) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1: Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, pii, restrictedTopics, sexism, toxicity</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -236,6 +236,13 @@ AI evaluation configuration.
         <td>object</td>
         <td>
           Configuration for Restricted Topics evaluation.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>sexism</b></td>
+        <td>map[string]string</td>
+        <td>
+          Configuration for Sexism evaluation. Sexism has no nested fields and must be set to an empty object.<br/>
         </td>
         <td>false</td>
       </tr><tr>

@@ -179,6 +179,42 @@ func TestAIEvaluationExtractRequestsCoverTerraformRestrictedTopicsScenario(t *te
 	assertRestrictedTopics(t, updateRequest.GetConfig(), "pricing promises", "legal advice")
 }
 
+func TestAIEvaluationExtractRequestsCoverTerraformSexismScenario(t *testing.T) {
+	aiEvaluation := AIEvaluation{
+		Spec: AIEvaluationSpec{
+			Application: "my-chatbot",
+			Subsystem:   "production",
+			Target:      AIEvaluationTargetResponse,
+			Threshold:   resource.MustParse("0.8"),
+			IsEnabled:   ptr.To(true),
+			Config: AIEvaluationConfig{
+				Sexism: NewAIEvaluationSexismConfig(),
+			},
+		},
+	}
+
+	createRequest, err := aiEvaluation.ExtractCreateAIEvaluationRequest()
+	require.NoError(t, err)
+	require.Equal(t, "my-chatbot", createRequest.GetApplication())
+	require.Equal(t, "production", createRequest.GetSubsystem())
+	require.Equal(t, aievaluations.EVALUATIONTARGET_RESPONSE, createRequest.GetTarget())
+	require.InDelta(t, 0.8, createRequest.GetThreshold(), 0.000001)
+	require.True(t, createRequest.GetIsEnabled())
+	assertSexism(t, createRequest.GetConfig())
+
+	aiEvaluation.Status = AIEvaluationStatus{
+		Id: ptr.To("evaluation-id"),
+	}
+	aiEvaluation.Spec.Threshold = resource.MustParse("0.9")
+	aiEvaluation.Spec.IsEnabled = ptr.To(false)
+
+	updateRequest, err := aiEvaluation.ExtractUpdateAIEvaluationRequest()
+	require.NoError(t, err)
+	require.InDelta(t, 0.9, updateRequest.GetThreshold(), 0.000001)
+	require.False(t, updateRequest.GetIsEnabled())
+	assertSexism(t, updateRequest.GetConfig())
+}
+
 func TestAIEvaluationExtractRequestsCoverTerraformToxicityScenario(t *testing.T) {
 	aiEvaluation := AIEvaluation{
 		Spec: AIEvaluationSpec{
@@ -281,6 +317,12 @@ func assertRestrictedTopics(t *testing.T, config aievaluations.EvaluationConfig,
 	require.True(t, ok)
 	restrictedTopics := actual.GetRestrictedTopics()
 	require.ElementsMatch(t, values, restrictedTopics.GetTopics())
+}
+
+func assertSexism(t *testing.T, config aievaluations.EvaluationConfig) {
+	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigSexism)
+	require.True(t, ok)
+	require.Empty(t, actual.GetSexism())
 }
 
 func assertToxicity(t *testing.T, config aievaluations.EvaluationConfig) {
