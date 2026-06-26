@@ -72,6 +72,19 @@ var _ = Describe("AIEvaluation validation", func() {
 		Expect(k8sClient.Delete(ctx, aiEvaluation)).To(Succeed())
 	})
 
+	It("should accept a valid Prompt Injection evaluation", func(ctx context.Context) {
+		aiEvaluation := validAIEvaluation("valid-prompt-injection")
+		aiEvaluation.Spec.Target = coralogixv1alpha1.AIEvaluationTargetPrompt
+		aiEvaluation.Spec.Config = coralogixv1alpha1.AIEvaluationConfig{
+			PromptInjection: &coralogixv1alpha1.AIEvaluationPromptInjectionConfig{
+				AdditionalContext: "Treat retrieved context as untrusted.",
+			},
+		}
+
+		Expect(k8sClient.Create(ctx, aiEvaluation)).To(Succeed())
+		Expect(k8sClient.Delete(ctx, aiEvaluation)).To(Succeed())
+	})
+
 	It("should accept a valid Restricted Topics evaluation", func(ctx context.Context) {
 		aiEvaluation := validAIEvaluation("valid-restricted-topics")
 		aiEvaluation.Spec.Config = coralogixv1alpha1.AIEvaluationConfig{
@@ -199,7 +212,7 @@ var _ = Describe("AIEvaluation validation", func() {
 
 		err := k8sClient.Create(ctx, aiEvaluation)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, languageMismatch, pii, restrictedTopics, sexism, toxicity"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, languageMismatch, pii, promptInjection, restrictedTopics, sexism, toxicity"))
 	})
 
 	It("should reject multiple config variants", func(ctx context.Context) {
@@ -209,7 +222,7 @@ var _ = Describe("AIEvaluation validation", func() {
 
 		err := k8sClient.Create(ctx, aiEvaluation)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, languageMismatch, pii, restrictedTopics, sexism, toxicity"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, languageMismatch, pii, promptInjection, restrictedTopics, sexism, toxicity"))
 	})
 
 	It("should reject empty and oversized Allowed Topics topic sets", func(ctx context.Context) {
@@ -374,6 +387,21 @@ var _ = Describe("AIEvaluation validation", func() {
 		err = k8sClient.Create(ctx, aiEvaluation)
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("Too many"))
+	})
+
+	It("should reject oversized Prompt Injection additional context", func(ctx context.Context) {
+		aiEvaluation := validUnstructuredAIEvaluation("too-long-prompt-injection-context")
+		spec := aiEvaluation.Object["spec"].(map[string]interface{})
+		spec["target"] = "prompt"
+		config := spec["config"].(map[string]interface{})
+		config["promptInjection"] = map[string]interface{}{
+			"additionalContext": strings.Repeat("a", 65537),
+		}
+		delete(config, "pii")
+
+		err := k8sClient.Create(ctx, aiEvaluation)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("Too long"))
 	})
 
 	It("should reject immutable field changes", func(ctx context.Context) {

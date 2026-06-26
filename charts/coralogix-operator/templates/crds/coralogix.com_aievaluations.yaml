@@ -117,6 +117,15 @@ spec:
                     required:
                     - categories
                     type: object
+                  promptInjection:
+                    description: Configuration for Prompt Injection evaluation.
+                    properties:
+                      additionalContext:
+                        default: ""
+                        description: Additional context passed to the LLM evaluator.
+                        maxLength: 65536
+                        type: string
+                    type: object
                   restrictedTopics:
                     description: Configuration for Restricted Topics evaluation.
                     properties:
@@ -150,12 +159,13 @@ spec:
                 type: object
                 x-kubernetes-validations:
                 - message: 'Exactly one of the following AI evaluation configs must
-                    be set: allowedTopics, competition, languageMismatch, pii, restrictedTopics,
-                    sexism, toxicity'
+                    be set: allowedTopics, competition, languageMismatch, pii, promptInjection,
+                    restrictedTopics, sexism, toxicity'
                   rule: '(has(self.allowedTopics) ? 1 : 0) + (has(self.competition)
                     ? 1 : 0) + (has(self.languageMismatch) ? 1 : 0) + (has(self.pii)
-                    ? 1 : 0) + (has(self.restrictedTopics) ? 1 : 0) + (has(self.sexism)
-                    ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1'
+                    ? 1 : 0) + (has(self.promptInjection) ? 1 : 0) + (has(self.restrictedTopics)
+                    ? 1 : 0) + (has(self.sexism) ? 1 : 0) + (has(self.toxicity) ?
+                    1 : 0) == 1'
               isEnabled:
                 default: true
                 description: Whether the evaluation is active.

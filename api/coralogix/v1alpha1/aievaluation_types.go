@@ -82,7 +82,7 @@ type AIEvaluationSpec struct {
 }
 
 // AIEvaluationConfig configures the AI evaluation type.
-// +kubebuilder:validation:XValidation:rule="(has(self.allowedTopics) ? 1 : 0) + (has(self.competition) ? 1 : 0) + (has(self.languageMismatch) ? 1 : 0) + (has(self.pii) ? 1 : 0) + (has(self.restrictedTopics) ? 1 : 0) + (has(self.sexism) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1", message="Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, languageMismatch, pii, restrictedTopics, sexism, toxicity"
+// +kubebuilder:validation:XValidation:rule="(has(self.allowedTopics) ? 1 : 0) + (has(self.competition) ? 1 : 0) + (has(self.languageMismatch) ? 1 : 0) + (has(self.pii) ? 1 : 0) + (has(self.promptInjection) ? 1 : 0) + (has(self.restrictedTopics) ? 1 : 0) + (has(self.sexism) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1", message="Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, languageMismatch, pii, promptInjection, restrictedTopics, sexism, toxicity"
 type AIEvaluationConfig struct {
 	// Configuration for Allowed Topics evaluation.
 	// +optional
@@ -100,6 +100,10 @@ type AIEvaluationConfig struct {
 	// Configuration for PII evaluation.
 	// +optional
 	PII *AIEvaluationPIIConfig `json:"pii,omitempty"`
+
+	// Configuration for Prompt Injection evaluation.
+	// +optional
+	PromptInjection *AIEvaluationPromptInjectionConfig `json:"promptInjection,omitempty"`
 
 	// Configuration for Restricted Topics evaluation.
 	// +optional
@@ -155,6 +159,14 @@ type AIEvaluationPIIConfig struct {
 	// +kubebuilder:validation:MaxItems=1024
 	// +listType=set
 	Categories []AIEvaluationPIICategory `json:"categories"`
+}
+
+type AIEvaluationPromptInjectionConfig struct {
+	// Additional context passed to the LLM evaluator.
+	// +optional
+	// +kubebuilder:default=""
+	// +kubebuilder:validation:MaxLength=65536
+	AdditionalContext string `json:"additionalContext,omitempty"`
 }
 
 // AIEvaluationStatus defines the observed state of AIEvaluation.
@@ -257,6 +269,9 @@ func (c AIEvaluationConfig) ExtractAIEvaluationConfig() (*aievaluations.Evaluati
 	if c.PII != nil {
 		extractors = append(extractors, c.PII.ExtractAIEvaluationConfig)
 	}
+	if c.PromptInjection != nil {
+		extractors = append(extractors, c.PromptInjection.ExtractAIEvaluationConfig)
+	}
 	if c.RestrictedTopics != nil {
 		extractors = append(extractors, c.RestrictedTopics.ExtractAIEvaluationConfig)
 	}
@@ -309,6 +324,15 @@ func (c *AIEvaluationPIIConfig) ExtractAIEvaluationConfig() *aievaluations.Evalu
 
 	config := aievaluations.EvaluationConfigPiiAsEvaluationConfig(
 		aievaluations.NewEvaluationConfigPii(aievaluations.PiiConfig{Categories: categories}),
+	)
+	return &config
+}
+
+func (c *AIEvaluationPromptInjectionConfig) ExtractAIEvaluationConfig() *aievaluations.EvaluationConfig {
+	config := aievaluations.EvaluationConfigPromptInjectionAsEvaluationConfig(
+		aievaluations.NewEvaluationConfigPromptInjection(aievaluations.PromptInjectionConfig{
+			AdditionalContext: aievaluations.PtrString(c.AdditionalContext),
+		}),
 	)
 	return &config
 }
