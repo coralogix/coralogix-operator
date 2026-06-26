@@ -1,0 +1,92 @@
+// Copyright 2026 Coralogix Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package v1alpha1
+
+import (
+	"testing"
+
+	aievaluations "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/ai_evaluations_service"
+	"github.com/stretchr/testify/require"
+	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/utils/ptr"
+)
+
+func TestAIEvaluationExtractRequestsCoverTerraformPIIScenario(t *testing.T) {
+	aiEvaluation := AIEvaluation{
+		Spec: AIEvaluationSpec{
+			Application: "my-chatbot",
+			Subsystem:   "production",
+			Target:      AIEvaluationTargetResponse,
+			Threshold:   resource.MustParse("0.8"),
+			IsEnabled:   ptr.To(true),
+			Config: AIEvaluationConfig{PII: &AIEvaluationPIIConfig{
+				Categories: []AIEvaluationPIICategory{AIEvaluationPIICategoryEmailAddress, AIEvaluationPIICategoryCreditCard},
+			}},
+		},
+	}
+
+	createRequest, err := aiEvaluation.ExtractCreateAIEvaluationRequest()
+	require.NoError(t, err)
+	require.Equal(t, "my-chatbot", createRequest.GetApplication())
+	require.Equal(t, "production", createRequest.GetSubsystem())
+	require.Equal(t, aievaluations.EVALUATIONTARGET_RESPONSE, createRequest.GetTarget())
+	require.InDelta(t, 0.8, createRequest.GetThreshold(), 0.000001)
+	require.True(t, createRequest.GetIsEnabled())
+	assertPII(t, createRequest.GetConfig(), aievaluations.PIICATEGORY_EMAIL_ADDRESS, aievaluations.PIICATEGORY_CREDIT_CARD)
+
+	aiEvaluation.Status = AIEvaluationStatus{
+		Id: ptr.To("evaluation-id"),
+	}
+	aiEvaluation.Spec.Threshold = resource.MustParse("0.9")
+	aiEvaluation.Spec.IsEnabled = ptr.To(false)
+	aiEvaluation.Spec.Config = AIEvaluationConfig{PII: &AIEvaluationPIIConfig{
+		Categories: []AIEvaluationPIICategory{AIEvaluationPIICategoryPhoneNumber, AIEvaluationPIICategoryUSSSN},
+	}}
+
+	updateRequest, err := aiEvaluation.ExtractUpdateAIEvaluationRequest()
+	require.NoError(t, err)
+	require.InDelta(t, 0.9, updateRequest.GetThreshold(), 0.000001)
+	require.False(t, updateRequest.GetIsEnabled())
+	assertPII(t, updateRequest.GetConfig(), aievaluations.PIICATEGORY_PHONE_NUMBER, aievaluations.PIICATEGORY_US_SSN)
+}
+
+func TestAIEvaluationExtractRequestsRejectThresholdOutsideSupportedRange(t *testing.T) {
+	for _, threshold := range []string{"-0.1", "1.1"} {
+		aiEvaluation := AIEvaluation{
+			Spec: AIEvaluationSpec{
+				Application: "my-chatbot",
+				Subsystem:   "production",
+				Target:      AIEvaluationTargetResponse,
+				Threshold:   resource.MustParse(threshold),
+				Config: AIEvaluationConfig{PII: &AIEvaluationPIIConfig{
+					Categories: []AIEvaluationPIICategory{AIEvaluationPIICategoryEmailAddress},
+				}},
+			},
+		}
+
+		_, err := aiEvaluation.ExtractCreateAIEvaluationRequest()
+		require.ErrorContains(t, err, "spec.threshold must be between 0 and 1 inclusive")
+
+		_, err = aiEvaluation.ExtractUpdateAIEvaluationRequest()
+		require.ErrorContains(t, err, "spec.threshold must be between 0 and 1 inclusive")
+	}
+}
+
+func assertPII(t *testing.T, config aievaluations.EvaluationConfig, values ...aievaluations.PiiCategory) {
+	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigPii)
+	require.True(t, ok)
+	pii := actual.GetPii()
+	require.ElementsMatch(t, values, (&pii).GetCategories())
+}
