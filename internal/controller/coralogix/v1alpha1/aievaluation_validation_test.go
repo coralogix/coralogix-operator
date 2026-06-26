@@ -62,6 +62,52 @@ var _ = Describe("AIEvaluation validation", func() {
 		Expect(k8sClient.Delete(ctx, aiEvaluation)).To(Succeed())
 	})
 
+	It("should accept valid Hallucination evaluations", func(ctx context.Context) {
+		tests := []struct {
+			name   string
+			config coralogixv1alpha1.AIEvaluationConfig
+		}{
+			{
+				name: "valid-hallucination-completeness",
+				config: coralogixv1alpha1.AIEvaluationConfig{
+					HallucinationCompleteness: coralogixv1alpha1.NewAIEvaluationHallucinationCompletenessConfig(),
+				},
+			},
+			{
+				name: "valid-hallucination-context-adherence",
+				config: coralogixv1alpha1.AIEvaluationConfig{
+					HallucinationContextAdherence: coralogixv1alpha1.NewAIEvaluationHallucinationContextAdherenceConfig(),
+				},
+			},
+			{
+				name: "valid-hallucination-context-relevance",
+				config: coralogixv1alpha1.AIEvaluationConfig{
+					HallucinationContextRelevance: coralogixv1alpha1.NewAIEvaluationHallucinationContextRelevanceConfig(),
+				},
+			},
+			{
+				name: "valid-hallucination-correctness",
+				config: coralogixv1alpha1.AIEvaluationConfig{
+					HallucinationCorrectness: coralogixv1alpha1.NewAIEvaluationHallucinationCorrectnessConfig(),
+				},
+			},
+			{
+				name: "valid-hallucination-task-adherence",
+				config: coralogixv1alpha1.AIEvaluationConfig{
+					HallucinationTaskAdherence: coralogixv1alpha1.NewAIEvaluationHallucinationTaskAdherenceConfig(),
+				},
+			},
+		}
+
+		for _, tt := range tests {
+			aiEvaluation := validAIEvaluation(tt.name)
+			aiEvaluation.Spec.Config = tt.config
+
+			Expect(k8sClient.Create(ctx, aiEvaluation)).To(Succeed())
+			Expect(k8sClient.Delete(ctx, aiEvaluation)).To(Succeed())
+		}
+	})
+
 	It("should accept a valid Language Mismatch evaluation", func(ctx context.Context) {
 		aiEvaluation := validAIEvaluation("valid-language-mismatch")
 		aiEvaluation.Spec.Config = coralogixv1alpha1.AIEvaluationConfig{
@@ -115,6 +161,28 @@ var _ = Describe("AIEvaluation validation", func() {
 
 		Expect(k8sClient.Create(ctx, aiEvaluation)).To(Succeed())
 		Expect(k8sClient.Delete(ctx, aiEvaluation)).To(Succeed())
+	})
+
+	It("should reject Hallucination config fields", func(ctx context.Context) {
+		for _, tt := range []struct {
+			name  string
+			field string
+		}{
+			{name: "hallucination-completeness-with-fields", field: "hallucinationCompleteness"},
+			{name: "hallucination-context-adherence-with-fields", field: "hallucinationContextAdherence"},
+			{name: "hallucination-context-relevance-with-fields", field: "hallucinationContextRelevance"},
+			{name: "hallucination-correctness-with-fields", field: "hallucinationCorrectness"},
+			{name: "hallucination-task-adherence-with-fields", field: "hallucinationTaskAdherence"},
+		} {
+			aiEvaluation := validUnstructuredAIEvaluation(tt.name)
+			config := aiEvaluation.Object["spec"].(map[string]interface{})["config"].(map[string]interface{})
+			config[tt.field] = map[string]interface{}{"unsupported": "value"}
+			delete(config, "pii")
+
+			err := k8sClient.Create(ctx, aiEvaluation)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("Too many"))
+		}
 	})
 
 	It("should reject Language Mismatch config fields", func(ctx context.Context) {
@@ -212,7 +280,7 @@ var _ = Describe("AIEvaluation validation", func() {
 
 		err := k8sClient.Create(ctx, aiEvaluation)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, languageMismatch, pii, promptInjection, restrictedTopics, sexism, toxicity"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, hallucinationCompleteness, hallucinationContextAdherence, hallucinationContextRelevance, hallucinationCorrectness, hallucinationTaskAdherence, languageMismatch, pii, promptInjection, restrictedTopics, sexism, toxicity"))
 	})
 
 	It("should reject multiple config variants", func(ctx context.Context) {
@@ -222,7 +290,7 @@ var _ = Describe("AIEvaluation validation", func() {
 
 		err := k8sClient.Create(ctx, aiEvaluation)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, languageMismatch, pii, promptInjection, restrictedTopics, sexism, toxicity"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, hallucinationCompleteness, hallucinationContextAdherence, hallucinationContextRelevance, hallucinationCorrectness, hallucinationTaskAdherence, languageMismatch, pii, promptInjection, restrictedTopics, sexism, toxicity"))
 	})
 
 	It("should reject empty and oversized Allowed Topics topic sets", func(ctx context.Context) {

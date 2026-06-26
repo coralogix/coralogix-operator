@@ -82,7 +82,7 @@ type AIEvaluationSpec struct {
 }
 
 // AIEvaluationConfig configures the AI evaluation type.
-// +kubebuilder:validation:XValidation:rule="(has(self.allowedTopics) ? 1 : 0) + (has(self.competition) ? 1 : 0) + (has(self.languageMismatch) ? 1 : 0) + (has(self.pii) ? 1 : 0) + (has(self.promptInjection) ? 1 : 0) + (has(self.restrictedTopics) ? 1 : 0) + (has(self.sexism) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1", message="Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, languageMismatch, pii, promptInjection, restrictedTopics, sexism, toxicity"
+// +kubebuilder:validation:XValidation:rule="(has(self.allowedTopics) ? 1 : 0) + (has(self.competition) ? 1 : 0) + (has(self.hallucinationCompleteness) ? 1 : 0) + (has(self.hallucinationContextAdherence) ? 1 : 0) + (has(self.hallucinationContextRelevance) ? 1 : 0) + (has(self.hallucinationCorrectness) ? 1 : 0) + (has(self.hallucinationTaskAdherence) ? 1 : 0) + (has(self.languageMismatch) ? 1 : 0) + (has(self.pii) ? 1 : 0) + (has(self.promptInjection) ? 1 : 0) + (has(self.restrictedTopics) ? 1 : 0) + (has(self.sexism) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1", message="Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, hallucinationCompleteness, hallucinationContextAdherence, hallucinationContextRelevance, hallucinationCorrectness, hallucinationTaskAdherence, languageMismatch, pii, promptInjection, restrictedTopics, sexism, toxicity"
 type AIEvaluationConfig struct {
 	// Configuration for Allowed Topics evaluation.
 	// +optional
@@ -91,6 +91,31 @@ type AIEvaluationConfig struct {
 	// Configuration for Competition evaluation.
 	// +optional
 	Competition *AIEvaluationCompetitionConfig `json:"competition,omitempty"`
+
+	// Configuration for Hallucination Completeness evaluation. Hallucination Completeness has no nested fields and must be set to an empty object.
+	// +optional
+	// +kubebuilder:validation:MaxProperties=0
+	HallucinationCompleteness *map[string]string `json:"hallucinationCompleteness,omitempty"`
+
+	// Configuration for Hallucination Context Adherence evaluation. Hallucination Context Adherence has no nested fields and must be set to an empty object.
+	// +optional
+	// +kubebuilder:validation:MaxProperties=0
+	HallucinationContextAdherence *map[string]string `json:"hallucinationContextAdherence,omitempty"`
+
+	// Configuration for Hallucination Context Relevance evaluation. Hallucination Context Relevance has no nested fields and must be set to an empty object.
+	// +optional
+	// +kubebuilder:validation:MaxProperties=0
+	HallucinationContextRelevance *map[string]string `json:"hallucinationContextRelevance,omitempty"`
+
+	// Configuration for Hallucination Correctness evaluation. Hallucination Correctness has no nested fields and must be set to an empty object.
+	// +optional
+	// +kubebuilder:validation:MaxProperties=0
+	HallucinationCorrectness *map[string]string `json:"hallucinationCorrectness,omitempty"`
+
+	// Configuration for Hallucination Task Adherence evaluation. Hallucination Task Adherence has no nested fields and must be set to an empty object.
+	// +optional
+	// +kubebuilder:validation:MaxProperties=0
+	HallucinationTaskAdherence *map[string]string `json:"hallucinationTaskAdherence,omitempty"`
 
 	// Configuration for Language Mismatch evaluation. Language Mismatch has no nested fields and must be set to an empty object.
 	// +optional
@@ -263,6 +288,21 @@ func (c AIEvaluationConfig) ExtractAIEvaluationConfig() (*aievaluations.Evaluati
 	if c.Competition != nil {
 		extractors = append(extractors, c.Competition.ExtractAIEvaluationConfig)
 	}
+	if c.HallucinationCompleteness != nil {
+		extractors = append(extractors, newOpenAPIAIEvaluationHallucinationCompletenessConfig)
+	}
+	if c.HallucinationContextAdherence != nil {
+		extractors = append(extractors, newOpenAPIAIEvaluationHallucinationContextAdherenceConfig)
+	}
+	if c.HallucinationContextRelevance != nil {
+		extractors = append(extractors, newOpenAPIAIEvaluationHallucinationContextRelevanceConfig)
+	}
+	if c.HallucinationCorrectness != nil {
+		extractors = append(extractors, newOpenAPIAIEvaluationHallucinationCorrectnessConfig)
+	}
+	if c.HallucinationTaskAdherence != nil {
+		extractors = append(extractors, newOpenAPIAIEvaluationHallucinationTaskAdherenceConfig)
+	}
 	if c.LanguageMismatch != nil {
 		extractors = append(extractors, newOpenAPIAIEvaluationLanguageMismatchConfig)
 	}
@@ -337,6 +377,41 @@ func (c *AIEvaluationPromptInjectionConfig) ExtractAIEvaluationConfig() *aievalu
 	return &config
 }
 
+func newOpenAPIAIEvaluationHallucinationCompletenessConfig() *aievaluations.EvaluationConfig {
+	config := aievaluations.EvaluationConfigHallucinationCompletenessAsEvaluationConfig(
+		aievaluations.NewEvaluationConfigHallucinationCompleteness(map[string]interface{}{}),
+	)
+	return &config
+}
+
+func newOpenAPIAIEvaluationHallucinationContextAdherenceConfig() *aievaluations.EvaluationConfig {
+	config := aievaluations.EvaluationConfigHallucinationContextAdherenceAsEvaluationConfig(
+		aievaluations.NewEvaluationConfigHallucinationContextAdherence(map[string]interface{}{}),
+	)
+	return &config
+}
+
+func newOpenAPIAIEvaluationHallucinationContextRelevanceConfig() *aievaluations.EvaluationConfig {
+	config := aievaluations.EvaluationConfigHallucinationContextRelevanceAsEvaluationConfig(
+		aievaluations.NewEvaluationConfigHallucinationContextRelevance(map[string]interface{}{}),
+	)
+	return &config
+}
+
+func newOpenAPIAIEvaluationHallucinationCorrectnessConfig() *aievaluations.EvaluationConfig {
+	config := aievaluations.EvaluationConfigHallucinationCorrectnessAsEvaluationConfig(
+		aievaluations.NewEvaluationConfigHallucinationCorrectness(map[string]interface{}{}),
+	)
+	return &config
+}
+
+func newOpenAPIAIEvaluationHallucinationTaskAdherenceConfig() *aievaluations.EvaluationConfig {
+	config := aievaluations.EvaluationConfigHallucinationTaskAdherenceAsEvaluationConfig(
+		aievaluations.NewEvaluationConfigHallucinationTaskAdherence(map[string]interface{}{}),
+	)
+	return &config
+}
+
 func newOpenAPIAIEvaluationLanguageMismatchConfig() *aievaluations.EvaluationConfig {
 	config := aievaluations.EvaluationConfigLanguageMismatchAsEvaluationConfig(
 		aievaluations.NewEvaluationConfigLanguageMismatch(map[string]interface{}{}),
@@ -356,6 +431,31 @@ func newOpenAPIAIEvaluationToxicityConfig() *aievaluations.EvaluationConfig {
 		aievaluations.NewEvaluationConfigToxicity(map[string]interface{}{}),
 	)
 	return &config
+}
+
+// NewAIEvaluationHallucinationCompletenessConfig returns the empty object required to enable hallucination completeness evaluation.
+func NewAIEvaluationHallucinationCompletenessConfig() *map[string]string {
+	return &map[string]string{}
+}
+
+// NewAIEvaluationHallucinationContextAdherenceConfig returns the empty object required to enable hallucination context adherence evaluation.
+func NewAIEvaluationHallucinationContextAdherenceConfig() *map[string]string {
+	return &map[string]string{}
+}
+
+// NewAIEvaluationHallucinationContextRelevanceConfig returns the empty object required to enable hallucination context relevance evaluation.
+func NewAIEvaluationHallucinationContextRelevanceConfig() *map[string]string {
+	return &map[string]string{}
+}
+
+// NewAIEvaluationHallucinationCorrectnessConfig returns the empty object required to enable hallucination correctness evaluation.
+func NewAIEvaluationHallucinationCorrectnessConfig() *map[string]string {
+	return &map[string]string{}
+}
+
+// NewAIEvaluationHallucinationTaskAdherenceConfig returns the empty object required to enable hallucination task adherence evaluation.
+func NewAIEvaluationHallucinationTaskAdherenceConfig() *map[string]string {
+	return &map[string]string{}
 }
 
 // NewAIEvaluationLanguageMismatchConfig returns the empty object required to enable language mismatch evaluation.

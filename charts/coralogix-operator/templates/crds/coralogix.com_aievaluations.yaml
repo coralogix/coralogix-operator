@@ -90,6 +90,46 @@ spec:
                     required:
                     - competitors
                     type: object
+                  hallucinationCompleteness:
+                    additionalProperties:
+                      type: string
+                    description: Configuration for Hallucination Completeness evaluation.
+                      Hallucination Completeness has no nested fields and must be
+                      set to an empty object.
+                    maxProperties: 0
+                    type: object
+                  hallucinationContextAdherence:
+                    additionalProperties:
+                      type: string
+                    description: Configuration for Hallucination Context Adherence
+                      evaluation. Hallucination Context Adherence has no nested fields
+                      and must be set to an empty object.
+                    maxProperties: 0
+                    type: object
+                  hallucinationContextRelevance:
+                    additionalProperties:
+                      type: string
+                    description: Configuration for Hallucination Context Relevance
+                      evaluation. Hallucination Context Relevance has no nested fields
+                      and must be set to an empty object.
+                    maxProperties: 0
+                    type: object
+                  hallucinationCorrectness:
+                    additionalProperties:
+                      type: string
+                    description: Configuration for Hallucination Correctness evaluation.
+                      Hallucination Correctness has no nested fields and must be set
+                      to an empty object.
+                    maxProperties: 0
+                    type: object
+                  hallucinationTaskAdherence:
+                    additionalProperties:
+                      type: string
+                    description: Configuration for Hallucination Task Adherence evaluation.
+                      Hallucination Task Adherence has no nested fields and must be
+                      set to an empty object.
+                    maxProperties: 0
+                    type: object
                   languageMismatch:
                     additionalProperties:
                       type: string
@@ -159,9 +199,14 @@ spec:
                 type: object
                 x-kubernetes-validations:
                 - message: 'Exactly one of the following AI evaluation configs must
-                    be set: allowedTopics, competition, languageMismatch, pii, promptInjection,
-                    restrictedTopics, sexism, toxicity'
+                    be set: allowedTopics, competition, hallucinationCompleteness,
+                    hallucinationContextAdherence, hallucinationContextRelevance,
+                    hallucinationCorrectness, hallucinationTaskAdherence, languageMismatch,
+                    pii, promptInjection, restrictedTopics, sexism, toxicity'
                   rule: '(has(self.allowedTopics) ? 1 : 0) + (has(self.competition)
+                    ? 1 : 0) + (has(self.hallucinationCompleteness) ? 1 : 0) + (has(self.hallucinationContextAdherence)
+                    ? 1 : 0) + (has(self.hallucinationContextRelevance) ? 1 : 0) +
+                    (has(self.hallucinationCorrectness) ? 1 : 0) + (has(self.hallucinationTaskAdherence)
                     ? 1 : 0) + (has(self.languageMismatch) ? 1 : 0) + (has(self.pii)
                     ? 1 : 0) + (has(self.promptInjection) ? 1 : 0) + (has(self.restrictedTopics)
                     ? 1 : 0) + (has(self.sexism) ? 1 : 0) + (has(self.toxicity) ?

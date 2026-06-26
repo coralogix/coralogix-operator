@@ -151,7 +151,7 @@ AIEvaluationSpec defines the desired state of AIEvaluation.
         <td>
           AI evaluation configuration.<br/>
           <br/>
-            <i>Validations</i>:<li>(has(self.allowedTopics) ? 1 : 0) + (has(self.competition) ? 1 : 0) + (has(self.languageMismatch) ? 1 : 0) + (has(self.pii) ? 1 : 0) + (has(self.restrictedTopics) ? 1 : 0) + (has(self.sexism) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1: Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, languageMismatch, pii, restrictedTopics, sexism, toxicity</li>
+            <i>Validations</i>:<li>(has(self.allowedTopics) ? 1 : 0) + (has(self.competition) ? 1 : 0) + (has(self.languageMismatch) ? 1 : 0) + (has(self.pii) ? 1 : 0) + (has(self.promptInjection) ? 1 : 0) + (has(self.restrictedTopics) ? 1 : 0) + (has(self.sexism) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1: Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, languageMismatch, pii, promptInjection, restrictedTopics, sexism, toxicity</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -236,6 +236,13 @@ AI evaluation configuration.
         <td>object</td>
         <td>
           Configuration for PII evaluation.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#aievaluationspecconfigpromptinjection">promptInjection</a></b></td>
+        <td>object</td>
+        <td>
+          Configuration for Prompt Injection evaluation.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -342,6 +349,35 @@ Configuration for PII evaluation.
             <i>Enum</i>: PHONE_NUMBER, EMAIL_ADDRESS, CREDIT_CARD, IBAN_CODE, US_SSN<br/>
         </td>
         <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AIEvaluation.spec.config.promptInjection
+<sup><sup>[↩ Parent](#aievaluationspecconfig)</sup></sup>
+
+
+
+Configuration for Prompt Injection evaluation.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>additionalContext</b></td>
+        <td>string</td>
+        <td>
+          Additional context passed to the LLM evaluator.<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 

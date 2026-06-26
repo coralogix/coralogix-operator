@@ -140,6 +140,86 @@ func TestAIEvaluationExtractRequestsCoverTerraformCompetitionScenario(t *testing
 	assertCompetition(t, updateRequest.GetConfig(), "CompetitorThree", "CompetitorFour")
 }
 
+func TestAIEvaluationExtractRequestsCoverTerraformHallucinationScenarios(t *testing.T) {
+	tests := []struct {
+		name   string
+		config AIEvaluationConfig
+		assert func(*testing.T, aievaluations.EvaluationConfig)
+	}{
+		{
+			name: "Hallucination Completeness",
+			config: AIEvaluationConfig{
+				HallucinationCompleteness: NewAIEvaluationHallucinationCompletenessConfig(),
+			},
+			assert: assertHallucinationCompleteness,
+		},
+		{
+			name: "Hallucination Context Adherence",
+			config: AIEvaluationConfig{
+				HallucinationContextAdherence: NewAIEvaluationHallucinationContextAdherenceConfig(),
+			},
+			assert: assertHallucinationContextAdherence,
+		},
+		{
+			name: "Hallucination Context Relevance",
+			config: AIEvaluationConfig{
+				HallucinationContextRelevance: NewAIEvaluationHallucinationContextRelevanceConfig(),
+			},
+			assert: assertHallucinationContextRelevance,
+		},
+		{
+			name: "Hallucination Correctness",
+			config: AIEvaluationConfig{
+				HallucinationCorrectness: NewAIEvaluationHallucinationCorrectnessConfig(),
+			},
+			assert: assertHallucinationCorrectness,
+		},
+		{
+			name: "Hallucination Task Adherence",
+			config: AIEvaluationConfig{
+				HallucinationTaskAdherence: NewAIEvaluationHallucinationTaskAdherenceConfig(),
+			},
+			assert: assertHallucinationTaskAdherence,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			aiEvaluation := AIEvaluation{
+				Spec: AIEvaluationSpec{
+					Application: "my-chatbot",
+					Subsystem:   "production",
+					Target:      AIEvaluationTargetResponse,
+					Threshold:   resource.MustParse("0.8"),
+					IsEnabled:   ptr.To(true),
+					Config:      tt.config,
+				},
+			}
+
+			createRequest, err := aiEvaluation.ExtractCreateAIEvaluationRequest()
+			require.NoError(t, err)
+			require.Equal(t, "my-chatbot", createRequest.GetApplication())
+			require.Equal(t, "production", createRequest.GetSubsystem())
+			require.Equal(t, aievaluations.EVALUATIONTARGET_RESPONSE, createRequest.GetTarget())
+			require.InDelta(t, 0.8, createRequest.GetThreshold(), 0.000001)
+			require.True(t, createRequest.GetIsEnabled())
+			tt.assert(t, createRequest.GetConfig())
+
+			aiEvaluation.Status = AIEvaluationStatus{
+				Id: ptr.To("evaluation-id"),
+			}
+			aiEvaluation.Spec.Threshold = resource.MustParse("0.9")
+			aiEvaluation.Spec.IsEnabled = ptr.To(false)
+
+			updateRequest, err := aiEvaluation.ExtractUpdateAIEvaluationRequest()
+			require.NoError(t, err)
+			require.InDelta(t, 0.9, updateRequest.GetThreshold(), 0.000001)
+			require.False(t, updateRequest.GetIsEnabled())
+			tt.assert(t, updateRequest.GetConfig())
+		})
+	}
+}
+
 func TestAIEvaluationExtractRequestsCoverTerraformLanguageMismatchScenario(t *testing.T) {
 	aiEvaluation := AIEvaluation{
 		Spec: AIEvaluationSpec{
@@ -385,6 +465,36 @@ func assertCompetition(t *testing.T, config aievaluations.EvaluationConfig, valu
 	require.True(t, ok)
 	competition := actual.GetCompetition()
 	require.ElementsMatch(t, values, competition.GetCompetitors())
+}
+
+func assertHallucinationCompleteness(t *testing.T, config aievaluations.EvaluationConfig) {
+	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigHallucinationCompleteness)
+	require.True(t, ok)
+	require.Empty(t, actual.GetHallucinationCompleteness())
+}
+
+func assertHallucinationContextAdherence(t *testing.T, config aievaluations.EvaluationConfig) {
+	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigHallucinationContextAdherence)
+	require.True(t, ok)
+	require.Empty(t, actual.GetHallucinationContextAdherence())
+}
+
+func assertHallucinationContextRelevance(t *testing.T, config aievaluations.EvaluationConfig) {
+	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigHallucinationContextRelevance)
+	require.True(t, ok)
+	require.Empty(t, actual.GetHallucinationContextRelevance())
+}
+
+func assertHallucinationCorrectness(t *testing.T, config aievaluations.EvaluationConfig) {
+	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigHallucinationCorrectness)
+	require.True(t, ok)
+	require.Empty(t, actual.GetHallucinationCorrectness())
+}
+
+func assertHallucinationTaskAdherence(t *testing.T, config aievaluations.EvaluationConfig) {
+	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigHallucinationTaskAdherence)
+	require.True(t, ok)
+	require.Empty(t, actual.GetHallucinationTaskAdherence())
 }
 
 func assertLanguageMismatch(t *testing.T, config aievaluations.EvaluationConfig) {

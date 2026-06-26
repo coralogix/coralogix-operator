@@ -107,6 +107,61 @@ func (in *AIEvaluationConfig) DeepCopyInto(out *AIEvaluationConfig) {
 		*out = new(AIEvaluationCompetitionConfig)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.HallucinationCompleteness != nil {
+		in, out := &in.HallucinationCompleteness, &out.HallucinationCompleteness
+		*out = new(map[string]string)
+		if **in != nil {
+			in, out := *in, *out
+			*out = make(map[string]string, len(*in))
+			for key, val := range *in {
+				(*out)[key] = val
+			}
+		}
+	}
+	if in.HallucinationContextAdherence != nil {
+		in, out := &in.HallucinationContextAdherence, &out.HallucinationContextAdherence
+		*out = new(map[string]string)
+		if **in != nil {
+			in, out := *in, *out
+			*out = make(map[string]string, len(*in))
+			for key, val := range *in {
+				(*out)[key] = val
+			}
+		}
+	}
+	if in.HallucinationContextRelevance != nil {
+		in, out := &in.HallucinationContextRelevance, &out.HallucinationContextRelevance
+		*out = new(map[string]string)
+		if **in != nil {
+			in, out := *in, *out
+			*out = make(map[string]string, len(*in))
+			for key, val := range *in {
+				(*out)[key] = val
+			}
+		}
+	}
+	if in.HallucinationCorrectness != nil {
+		in, out := &in.HallucinationCorrectness, &out.HallucinationCorrectness
+		*out = new(map[string]string)
+		if **in != nil {
+			in, out := *in, *out
+			*out = make(map[string]string, len(*in))
+			for key, val := range *in {
+				(*out)[key] = val
+			}
+		}
+	}
+	if in.HallucinationTaskAdherence != nil {
+		in, out := &in.HallucinationTaskAdherence, &out.HallucinationTaskAdherence
+		*out = new(map[string]string)
+		if **in != nil {
+			in, out := *in, *out
+			*out = make(map[string]string, len(*in))
+			for key, val := range *in {
+				(*out)[key] = val
+			}
+		}
+	}
 	if in.LanguageMismatch != nil {
 		in, out := &in.LanguageMismatch, &out.LanguageMismatch
 		*out = new(map[string]string)
