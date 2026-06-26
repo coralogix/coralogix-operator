@@ -82,11 +82,16 @@ type AIEvaluationSpec struct {
 }
 
 // AIEvaluationConfig configures the AI evaluation type.
-// +kubebuilder:validation:XValidation:rule="(has(self.pii) ? 1 : 0) == 1", message="Exactly one of the following AI evaluation configs must be set: pii"
+// +kubebuilder:validation:XValidation:rule="(has(self.pii) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1", message="Exactly one of the following AI evaluation configs must be set: pii, toxicity"
 type AIEvaluationConfig struct {
 	// Configuration for PII evaluation.
 	// +optional
 	PII *AIEvaluationPIIConfig `json:"pii,omitempty"`
+
+	// Configuration for Toxicity evaluation. Toxicity has no nested fields and must be set to an empty object.
+	// +optional
+	// +kubebuilder:validation:MaxProperties=0
+	Toxicity *map[string]string `json:"toxicity,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=PHONE_NUMBER;EMAIL_ADDRESS;CREDIT_CARD;IBAN_CODE;US_SSN
@@ -137,6 +142,11 @@ func (e *AIEvaluation) ExtractCreateAIEvaluationRequest() (*aievaluations.AiEval
 		return nil, err
 	}
 
+	config, err := e.Spec.Config.ExtractAIEvaluationConfig()
+	if err != nil {
+		return nil, err
+	}
+
 	isEnabled := true
 	if e.Spec.IsEnabled != nil {
 		isEnabled = *e.Spec.IsEnabled
@@ -144,7 +154,7 @@ func (e *AIEvaluation) ExtractCreateAIEvaluationRequest() (*aievaluations.AiEval
 
 	return &aievaluations.AiEvaluationsServiceCreateAiEvaluationRequest{
 		Application: aievaluations.PtrString(e.Spec.Application),
-		Config:      e.Spec.Config.ExtractAIEvaluationConfig(),
+		Config:      config,
 		IsEnabled:   aievaluations.PtrBool(isEnabled),
 		Subsystem:   aievaluations.PtrString(e.Spec.Subsystem),
 		Target:      schemaToOpenAPIAIEvaluationTarget[e.Spec.Target].Ptr(),
@@ -157,13 +167,18 @@ func (e *AIEvaluation) ExtractUpdateAIEvaluationRequest() (*aievaluations.AiEval
 		return nil, err
 	}
 
+	config, err := e.Spec.Config.ExtractAIEvaluationConfig()
+	if err != nil {
+		return nil, err
+	}
+
 	isEnabled := true
 	if e.Spec.IsEnabled != nil {
 		isEnabled = *e.Spec.IsEnabled
 	}
 
 	return &aievaluations.AiEvaluationsServiceUpdateAiEvaluationRequest{
-		Config:    e.Spec.Config.ExtractAIEvaluationConfig(),
+		Config:    config,
 		IsEnabled: aievaluations.PtrBool(isEnabled),
 		Threshold: aievaluations.PtrFloat64(e.Spec.Threshold.AsApproximateFloat64()),
 	}, nil
@@ -176,9 +191,25 @@ func (s *AIEvaluationSpec) ValidateAIEvaluationThreshold() error {
 	return nil
 }
 
-func (c AIEvaluationConfig) ExtractAIEvaluationConfig() *aievaluations.EvaluationConfig {
-	categories := make([]aievaluations.PiiCategory, 0, len(c.PII.Categories))
-	for _, category := range c.PII.Categories {
+func (c AIEvaluationConfig) ExtractAIEvaluationConfig() (*aievaluations.EvaluationConfig, error) {
+	extractors := []func() *aievaluations.EvaluationConfig{}
+	if c.PII != nil {
+		extractors = append(extractors, c.PII.ExtractAIEvaluationConfig)
+	}
+	if c.Toxicity != nil {
+		extractors = append(extractors, newOpenAPIAIEvaluationToxicityConfig)
+	}
+
+	if len(extractors) != 1 {
+		return nil, fmt.Errorf("exactly one AI evaluation config must be set")
+	}
+
+	return extractors[0](), nil
+}
+
+func (c *AIEvaluationPIIConfig) ExtractAIEvaluationConfig() *aievaluations.EvaluationConfig {
+	categories := make([]aievaluations.PiiCategory, 0, len(c.Categories))
+	for _, category := range c.Categories {
 		categories = append(categories, schemaToOpenAPIAIEvaluationPIICategory[category])
 	}
 
@@ -186,6 +217,18 @@ func (c AIEvaluationConfig) ExtractAIEvaluationConfig() *aievaluations.Evaluatio
 		aievaluations.NewEvaluationConfigPii(aievaluations.PiiConfig{Categories: categories}),
 	)
 	return &config
+}
+
+func newOpenAPIAIEvaluationToxicityConfig() *aievaluations.EvaluationConfig {
+	config := aievaluations.EvaluationConfigToxicityAsEvaluationConfig(
+		aievaluations.NewEvaluationConfigToxicity(map[string]interface{}{}),
+	)
+	return &config
+}
+
+// NewAIEvaluationToxicityConfig returns the empty object required to enable toxicity evaluation.
+func NewAIEvaluationToxicityConfig() *map[string]string {
+	return &map[string]string{}
 }
 
 // +kubebuilder:object:root=true

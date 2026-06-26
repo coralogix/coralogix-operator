@@ -62,6 +62,42 @@ func TestAIEvaluationExtractRequestsCoverTerraformPIIScenario(t *testing.T) {
 	assertPII(t, updateRequest.GetConfig(), aievaluations.PIICATEGORY_PHONE_NUMBER, aievaluations.PIICATEGORY_US_SSN)
 }
 
+func TestAIEvaluationExtractRequestsCoverTerraformToxicityScenario(t *testing.T) {
+	aiEvaluation := AIEvaluation{
+		Spec: AIEvaluationSpec{
+			Application: "my-chatbot",
+			Subsystem:   "production",
+			Target:      AIEvaluationTargetResponse,
+			Threshold:   resource.MustParse("0.8"),
+			IsEnabled:   ptr.To(true),
+			Config: AIEvaluationConfig{
+				Toxicity: NewAIEvaluationToxicityConfig(),
+			},
+		},
+	}
+
+	createRequest, err := aiEvaluation.ExtractCreateAIEvaluationRequest()
+	require.NoError(t, err)
+	require.Equal(t, "my-chatbot", createRequest.GetApplication())
+	require.Equal(t, "production", createRequest.GetSubsystem())
+	require.Equal(t, aievaluations.EVALUATIONTARGET_RESPONSE, createRequest.GetTarget())
+	require.InDelta(t, 0.8, createRequest.GetThreshold(), 0.000001)
+	require.True(t, createRequest.GetIsEnabled())
+	assertToxicity(t, createRequest.GetConfig())
+
+	aiEvaluation.Status = AIEvaluationStatus{
+		Id: ptr.To("evaluation-id"),
+	}
+	aiEvaluation.Spec.Threshold = resource.MustParse("0.9")
+	aiEvaluation.Spec.IsEnabled = ptr.To(false)
+
+	updateRequest, err := aiEvaluation.ExtractUpdateAIEvaluationRequest()
+	require.NoError(t, err)
+	require.InDelta(t, 0.9, updateRequest.GetThreshold(), 0.000001)
+	require.False(t, updateRequest.GetIsEnabled())
+	assertToxicity(t, updateRequest.GetConfig())
+}
+
 func TestAIEvaluationExtractRequestsRejectThresholdOutsideSupportedRange(t *testing.T) {
 	for _, threshold := range []string{"-0.1", "1.1"} {
 		aiEvaluation := AIEvaluation{
@@ -84,9 +120,33 @@ func TestAIEvaluationExtractRequestsRejectThresholdOutsideSupportedRange(t *test
 	}
 }
 
+func TestAIEvaluationExtractRequestsRejectEmptyConfig(t *testing.T) {
+	aiEvaluation := AIEvaluation{
+		Spec: AIEvaluationSpec{
+			Application: "my-chatbot",
+			Subsystem:   "production",
+			Target:      AIEvaluationTargetResponse,
+			Threshold:   resource.MustParse("0.8"),
+			Config:      AIEvaluationConfig{},
+		},
+	}
+
+	_, err := aiEvaluation.ExtractCreateAIEvaluationRequest()
+	require.ErrorContains(t, err, "exactly one AI evaluation config must be set")
+
+	_, err = aiEvaluation.ExtractUpdateAIEvaluationRequest()
+	require.ErrorContains(t, err, "exactly one AI evaluation config must be set")
+}
+
 func assertPII(t *testing.T, config aievaluations.EvaluationConfig, values ...aievaluations.PiiCategory) {
 	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigPii)
 	require.True(t, ok)
 	pii := actual.GetPii()
 	require.ElementsMatch(t, values, (&pii).GetCategories())
+}
+
+func assertToxicity(t *testing.T, config aievaluations.EvaluationConfig) {
+	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigToxicity)
+	require.True(t, ok)
+	require.Empty(t, actual.GetToxicity())
 }

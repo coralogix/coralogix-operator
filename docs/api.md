@@ -151,7 +151,7 @@ AIEvaluationSpec defines the desired state of AIEvaluation.
         <td>
           AI evaluation configuration.<br/>
           <br/>
-            <i>Validations</i>:<li>(has(self.pii) ? 1 : 0) == 1: Exactly one of the following AI evaluation configs must be set: pii</li>
+            <i>Validations</i>:<li>(has(self.pii) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1: Exactly one of the following AI evaluation configs must be set: pii, toxicity</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -215,6 +215,13 @@ AI evaluation configuration.
         <td>object</td>
         <td>
           Configuration for PII evaluation.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>toxicity</b></td>
+        <td>map[string]string</td>
+        <td>
+          Configuration for Toxicity evaluation. Toxicity has no nested fields and must be set to an empty object.<br/>
         </td>
         <td>false</td>
       </tr></tbody>

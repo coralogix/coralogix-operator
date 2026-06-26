@@ -78,11 +78,19 @@ spec:
                     required:
                     - categories
                     type: object
+                  toxicity:
+                    additionalProperties:
+                      type: string
+                    description: Configuration for Toxicity evaluation. Toxicity has
+                      no nested fields and must be set to an empty object.
+                    maxProperties: 0
+                    type: object
                 type: object
                 x-kubernetes-validations:
                 - message: 'Exactly one of the following AI evaluation configs must
-                    be set: pii'
-                  rule: '(has(self.pii) ? 1 : 0) == 1'
+                    be set: pii, toxicity'
+                  rule: '(has(self.pii) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) ==
+                    1'
               isEnabled:
                 default: true
                 description: Whether the evaluation is active.

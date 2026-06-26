@@ -38,6 +38,27 @@ var _ = Describe("AIEvaluation validation", func() {
 		Expect(k8sClient.Delete(ctx, aiEvaluation)).To(Succeed())
 	})
 
+	It("should accept a valid Toxicity evaluation", func(ctx context.Context) {
+		aiEvaluation := validAIEvaluation("valid-toxicity")
+		aiEvaluation.Spec.Config = coralogixv1alpha1.AIEvaluationConfig{
+			Toxicity: coralogixv1alpha1.NewAIEvaluationToxicityConfig(),
+		}
+
+		Expect(k8sClient.Create(ctx, aiEvaluation)).To(Succeed())
+		Expect(k8sClient.Delete(ctx, aiEvaluation)).To(Succeed())
+	})
+
+	It("should reject Toxicity config fields", func(ctx context.Context) {
+		aiEvaluation := validUnstructuredAIEvaluation("toxicity-with-fields")
+		config := aiEvaluation.Object["spec"].(map[string]interface{})["config"].(map[string]interface{})
+		config["toxicity"] = map[string]interface{}{"unsupported": "value"}
+		delete(config, "pii")
+
+		err := k8sClient.Create(ctx, aiEvaluation)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("Too many"))
+	})
+
 	It("should accept an integer threshold quantity", func(ctx context.Context) {
 		aiEvaluation := validUnstructuredAIEvaluation("integer-threshold")
 		spec := aiEvaluation.Object["spec"].(map[string]interface{})
@@ -93,14 +114,24 @@ var _ = Describe("AIEvaluation validation", func() {
 		}
 	})
 
-	It("should reject missing PII config", func(ctx context.Context) {
-		aiEvaluation := validUnstructuredAIEvaluation("missing-pii")
+	It("should reject missing config variant", func(ctx context.Context) {
+		aiEvaluation := validUnstructuredAIEvaluation("missing-config-variant")
 		spec := aiEvaluation.Object["spec"].(map[string]interface{})
 		spec["config"] = map[string]interface{}{}
 
 		err := k8sClient.Create(ctx, aiEvaluation)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("Exactly one of the following AI evaluation configs must be set: pii"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of the following AI evaluation configs must be set: pii, toxicity"))
+	})
+
+	It("should reject multiple config variants", func(ctx context.Context) {
+		aiEvaluation := validUnstructuredAIEvaluation("multiple-config-variants")
+		config := aiEvaluation.Object["spec"].(map[string]interface{})["config"].(map[string]interface{})
+		config["toxicity"] = map[string]interface{}{}
+
+		err := k8sClient.Create(ctx, aiEvaluation)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("Exactly one of the following AI evaluation configs must be set: pii, toxicity"))
 	})
 
 	It("should reject invalid PII categories", func(ctx context.Context) {
