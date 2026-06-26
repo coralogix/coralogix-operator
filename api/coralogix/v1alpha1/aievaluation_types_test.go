@@ -140,6 +140,42 @@ func TestAIEvaluationExtractRequestsCoverTerraformCompetitionScenario(t *testing
 	assertCompetition(t, updateRequest.GetConfig(), "CompetitorThree", "CompetitorFour")
 }
 
+func TestAIEvaluationExtractRequestsCoverTerraformLanguageMismatchScenario(t *testing.T) {
+	aiEvaluation := AIEvaluation{
+		Spec: AIEvaluationSpec{
+			Application: "my-chatbot",
+			Subsystem:   "production",
+			Target:      AIEvaluationTargetResponse,
+			Threshold:   resource.MustParse("0.8"),
+			IsEnabled:   ptr.To(true),
+			Config: AIEvaluationConfig{
+				LanguageMismatch: NewAIEvaluationLanguageMismatchConfig(),
+			},
+		},
+	}
+
+	createRequest, err := aiEvaluation.ExtractCreateAIEvaluationRequest()
+	require.NoError(t, err)
+	require.Equal(t, "my-chatbot", createRequest.GetApplication())
+	require.Equal(t, "production", createRequest.GetSubsystem())
+	require.Equal(t, aievaluations.EVALUATIONTARGET_RESPONSE, createRequest.GetTarget())
+	require.InDelta(t, 0.8, createRequest.GetThreshold(), 0.000001)
+	require.True(t, createRequest.GetIsEnabled())
+	assertLanguageMismatch(t, createRequest.GetConfig())
+
+	aiEvaluation.Status = AIEvaluationStatus{
+		Id: ptr.To("evaluation-id"),
+	}
+	aiEvaluation.Spec.Threshold = resource.MustParse("0.9")
+	aiEvaluation.Spec.IsEnabled = ptr.To(false)
+
+	updateRequest, err := aiEvaluation.ExtractUpdateAIEvaluationRequest()
+	require.NoError(t, err)
+	require.InDelta(t, 0.9, updateRequest.GetThreshold(), 0.000001)
+	require.False(t, updateRequest.GetIsEnabled())
+	assertLanguageMismatch(t, updateRequest.GetConfig())
+}
+
 func TestAIEvaluationExtractRequestsCoverTerraformRestrictedTopicsScenario(t *testing.T) {
 	aiEvaluation := AIEvaluation{
 		Spec: AIEvaluationSpec{
@@ -310,6 +346,12 @@ func assertCompetition(t *testing.T, config aievaluations.EvaluationConfig, valu
 	require.True(t, ok)
 	competition := actual.GetCompetition()
 	require.ElementsMatch(t, values, competition.GetCompetitors())
+}
+
+func assertLanguageMismatch(t *testing.T, config aievaluations.EvaluationConfig) {
+	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigLanguageMismatch)
+	require.True(t, ok)
+	require.Empty(t, actual.GetLanguageMismatch())
 }
 
 func assertRestrictedTopics(t *testing.T, config aievaluations.EvaluationConfig, values ...string) {

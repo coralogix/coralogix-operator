@@ -82,7 +82,7 @@ type AIEvaluationSpec struct {
 }
 
 // AIEvaluationConfig configures the AI evaluation type.
-// +kubebuilder:validation:XValidation:rule="(has(self.allowedTopics) ? 1 : 0) + (has(self.competition) ? 1 : 0) + (has(self.pii) ? 1 : 0) + (has(self.restrictedTopics) ? 1 : 0) + (has(self.sexism) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1", message="Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, pii, restrictedTopics, sexism, toxicity"
+// +kubebuilder:validation:XValidation:rule="(has(self.allowedTopics) ? 1 : 0) + (has(self.competition) ? 1 : 0) + (has(self.languageMismatch) ? 1 : 0) + (has(self.pii) ? 1 : 0) + (has(self.restrictedTopics) ? 1 : 0) + (has(self.sexism) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1", message="Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, languageMismatch, pii, restrictedTopics, sexism, toxicity"
 type AIEvaluationConfig struct {
 	// Configuration for Allowed Topics evaluation.
 	// +optional
@@ -91,6 +91,11 @@ type AIEvaluationConfig struct {
 	// Configuration for Competition evaluation.
 	// +optional
 	Competition *AIEvaluationCompetitionConfig `json:"competition,omitempty"`
+
+	// Configuration for Language Mismatch evaluation. Language Mismatch has no nested fields and must be set to an empty object.
+	// +optional
+	// +kubebuilder:validation:MaxProperties=0
+	LanguageMismatch *map[string]string `json:"languageMismatch,omitempty"`
 
 	// Configuration for PII evaluation.
 	// +optional
@@ -246,6 +251,9 @@ func (c AIEvaluationConfig) ExtractAIEvaluationConfig() (*aievaluations.Evaluati
 	if c.Competition != nil {
 		extractors = append(extractors, c.Competition.ExtractAIEvaluationConfig)
 	}
+	if c.LanguageMismatch != nil {
+		extractors = append(extractors, newOpenAPIAIEvaluationLanguageMismatchConfig)
+	}
 	if c.PII != nil {
 		extractors = append(extractors, c.PII.ExtractAIEvaluationConfig)
 	}
@@ -305,6 +313,13 @@ func (c *AIEvaluationPIIConfig) ExtractAIEvaluationConfig() *aievaluations.Evalu
 	return &config
 }
 
+func newOpenAPIAIEvaluationLanguageMismatchConfig() *aievaluations.EvaluationConfig {
+	config := aievaluations.EvaluationConfigLanguageMismatchAsEvaluationConfig(
+		aievaluations.NewEvaluationConfigLanguageMismatch(map[string]interface{}{}),
+	)
+	return &config
+}
+
 func newOpenAPIAIEvaluationSexismConfig() *aievaluations.EvaluationConfig {
 	config := aievaluations.EvaluationConfigSexismAsEvaluationConfig(
 		aievaluations.NewEvaluationConfigSexism(map[string]interface{}{}),
@@ -317,6 +332,11 @@ func newOpenAPIAIEvaluationToxicityConfig() *aievaluations.EvaluationConfig {
 		aievaluations.NewEvaluationConfigToxicity(map[string]interface{}{}),
 	)
 	return &config
+}
+
+// NewAIEvaluationLanguageMismatchConfig returns the empty object required to enable language mismatch evaluation.
+func NewAIEvaluationLanguageMismatchConfig() *map[string]string {
+	return &map[string]string{}
 }
 
 // NewAIEvaluationSexismConfig returns the empty object required to enable sexism evaluation.

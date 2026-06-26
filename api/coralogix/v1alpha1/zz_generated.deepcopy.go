@@ -107,6 +107,17 @@ func (in *AIEvaluationConfig) DeepCopyInto(out *AIEvaluationConfig) {
 		*out = new(AIEvaluationCompetitionConfig)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.LanguageMismatch != nil {
+		in, out := &in.LanguageMismatch, &out.LanguageMismatch
+		*out = new(map[string]string)
+		if **in != nil {
+			in, out := *in, *out
+			*out = make(map[string]string, len(*in))
+			for key, val := range *in {
+				(*out)[key] = val
+			}
+		}
+	}
 	if in.PII != nil {
 		in, out := &in.PII, &out.PII
 		*out = new(AIEvaluationPIIConfig)

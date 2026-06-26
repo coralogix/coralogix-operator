@@ -62,6 +62,16 @@ var _ = Describe("AIEvaluation validation", func() {
 		Expect(k8sClient.Delete(ctx, aiEvaluation)).To(Succeed())
 	})
 
+	It("should accept a valid Language Mismatch evaluation", func(ctx context.Context) {
+		aiEvaluation := validAIEvaluation("valid-language-mismatch")
+		aiEvaluation.Spec.Config = coralogixv1alpha1.AIEvaluationConfig{
+			LanguageMismatch: coralogixv1alpha1.NewAIEvaluationLanguageMismatchConfig(),
+		}
+
+		Expect(k8sClient.Create(ctx, aiEvaluation)).To(Succeed())
+		Expect(k8sClient.Delete(ctx, aiEvaluation)).To(Succeed())
+	})
+
 	It("should accept a valid Restricted Topics evaluation", func(ctx context.Context) {
 		aiEvaluation := validAIEvaluation("valid-restricted-topics")
 		aiEvaluation.Spec.Config = coralogixv1alpha1.AIEvaluationConfig{
@@ -92,6 +102,17 @@ var _ = Describe("AIEvaluation validation", func() {
 
 		Expect(k8sClient.Create(ctx, aiEvaluation)).To(Succeed())
 		Expect(k8sClient.Delete(ctx, aiEvaluation)).To(Succeed())
+	})
+
+	It("should reject Language Mismatch config fields", func(ctx context.Context) {
+		aiEvaluation := validUnstructuredAIEvaluation("language-mismatch-with-fields")
+		config := aiEvaluation.Object["spec"].(map[string]interface{})["config"].(map[string]interface{})
+		config["languageMismatch"] = map[string]interface{}{"unsupported": "value"}
+		delete(config, "pii")
+
+		err := k8sClient.Create(ctx, aiEvaluation)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("Too many"))
 	})
 
 	It("should reject Sexism config fields", func(ctx context.Context) {
@@ -178,7 +199,7 @@ var _ = Describe("AIEvaluation validation", func() {
 
 		err := k8sClient.Create(ctx, aiEvaluation)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, pii, restrictedTopics, sexism, toxicity"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, languageMismatch, pii, restrictedTopics, sexism, toxicity"))
 	})
 
 	It("should reject multiple config variants", func(ctx context.Context) {
@@ -188,7 +209,7 @@ var _ = Describe("AIEvaluation validation", func() {
 
 		err := k8sClient.Create(ctx, aiEvaluation)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, pii, restrictedTopics, sexism, toxicity"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, languageMismatch, pii, restrictedTopics, sexism, toxicity"))
 	})
 
 	It("should reject empty and oversized Allowed Topics topic sets", func(ctx context.Context) {
