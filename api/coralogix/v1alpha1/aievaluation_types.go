@@ -82,8 +82,12 @@ type AIEvaluationSpec struct {
 }
 
 // AIEvaluationConfig configures the AI evaluation type.
-// +kubebuilder:validation:XValidation:rule="(has(self.pii) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1", message="Exactly one of the following AI evaluation configs must be set: pii, toxicity"
+// +kubebuilder:validation:XValidation:rule="(has(self.allowedTopics) ? 1 : 0) + (has(self.pii) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1", message="Exactly one of the following AI evaluation configs must be set: allowedTopics, pii, toxicity"
 type AIEvaluationConfig struct {
+	// Configuration for Allowed Topics evaluation.
+	// +optional
+	AllowedTopics *AIEvaluationAllowedTopicsConfig `json:"allowedTopics,omitempty"`
+
 	// Configuration for PII evaluation.
 	// +optional
 	PII *AIEvaluationPIIConfig `json:"pii,omitempty"`
@@ -92,6 +96,16 @@ type AIEvaluationConfig struct {
 	// +optional
 	// +kubebuilder:validation:MaxProperties=0
 	Toxicity *map[string]string `json:"toxicity,omitempty"`
+}
+
+type AIEvaluationAllowedTopicsConfig struct {
+	// Topics considered allowed.
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=1024
+	// +kubebuilder:validation:items:MinLength=1
+	// +kubebuilder:validation:items:MaxLength=256
+	// +listType=set
+	Topics []string `json:"topics"`
 }
 
 // +kubebuilder:validation:Enum=PHONE_NUMBER;EMAIL_ADDRESS;CREDIT_CARD;IBAN_CODE;US_SSN
@@ -193,6 +207,9 @@ func (s *AIEvaluationSpec) ValidateAIEvaluationThreshold() error {
 
 func (c AIEvaluationConfig) ExtractAIEvaluationConfig() (*aievaluations.EvaluationConfig, error) {
 	extractors := []func() *aievaluations.EvaluationConfig{}
+	if c.AllowedTopics != nil {
+		extractors = append(extractors, c.AllowedTopics.ExtractAIEvaluationConfig)
+	}
 	if c.PII != nil {
 		extractors = append(extractors, c.PII.ExtractAIEvaluationConfig)
 	}
@@ -205,6 +222,15 @@ func (c AIEvaluationConfig) ExtractAIEvaluationConfig() (*aievaluations.Evaluati
 	}
 
 	return extractors[0](), nil
+}
+
+func (c *AIEvaluationAllowedTopicsConfig) ExtractAIEvaluationConfig() *aievaluations.EvaluationConfig {
+	config := aievaluations.EvaluationConfigAllowedTopicsAsEvaluationConfig(
+		aievaluations.NewEvaluationConfigAllowedTopics(aievaluations.AllowedTopicsConfig{
+			Topics: append([]string(nil), c.Topics...),
+		}),
+	)
+	return &config
 }
 
 func (c *AIEvaluationPIIConfig) ExtractAIEvaluationConfig() *aievaluations.EvaluationConfig {

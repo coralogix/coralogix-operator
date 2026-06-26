@@ -58,6 +58,22 @@ spec:
               config:
                 description: AI evaluation configuration.
                 properties:
+                  allowedTopics:
+                    description: Configuration for Allowed Topics evaluation.
+                    properties:
+                      topics:
+                        description: Topics considered allowed.
+                        items:
+                          maxLength: 256
+                          minLength: 1
+                          type: string
+                        maxItems: 1024
+                        minItems: 1
+                        type: array
+                        x-kubernetes-list-type: set
+                    required:
+                    - topics
+                    type: object
                   pii:
                     description: Configuration for PII evaluation.
                     properties:
@@ -88,9 +104,9 @@ spec:
                 type: object
                 x-kubernetes-validations:
                 - message: 'Exactly one of the following AI evaluation configs must
-                    be set: pii, toxicity'
-                  rule: '(has(self.pii) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) ==
-                    1'
+                    be set: allowedTopics, pii, toxicity'
+                  rule: '(has(self.allowedTopics) ? 1 : 0) + (has(self.pii) ? 1 :
+                    0) + (has(self.toxicity) ? 1 : 0) == 1'
               isEnabled:
                 default: true
                 description: Whether the evaluation is active.

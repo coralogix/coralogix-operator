@@ -151,7 +151,7 @@ AIEvaluationSpec defines the desired state of AIEvaluation.
         <td>
           AI evaluation configuration.<br/>
           <br/>
-            <i>Validations</i>:<li>(has(self.pii) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1: Exactly one of the following AI evaluation configs must be set: pii, toxicity</li>
+            <i>Validations</i>:<li>(has(self.allowedTopics) ? 1 : 0) + (has(self.pii) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1: Exactly one of the following AI evaluation configs must be set: allowedTopics, pii, toxicity</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -211,6 +211,13 @@ AI evaluation configuration.
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#aievaluationspecconfigallowedtopics">allowedTopics</a></b></td>
+        <td>object</td>
+        <td>
+          Configuration for Allowed Topics evaluation.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#aievaluationspecconfigpii">pii</a></b></td>
         <td>object</td>
         <td>
@@ -224,6 +231,33 @@ AI evaluation configuration.
           Configuration for Toxicity evaluation. Toxicity has no nested fields and must be set to an empty object.<br/>
         </td>
         <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AIEvaluation.spec.config.allowedTopics
+<sup><sup>[↩ Parent](#aievaluationspecconfig)</sup></sup>
+
+
+
+Configuration for Allowed Topics evaluation.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>topics</b></td>
+        <td>[]string</td>
+        <td>
+          Topics considered allowed.<br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
