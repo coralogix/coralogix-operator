@@ -50,6 +50,18 @@ var _ = Describe("AIEvaluation validation", func() {
 		Expect(k8sClient.Delete(ctx, aiEvaluation)).To(Succeed())
 	})
 
+	It("should accept a valid Restricted Topics evaluation", func(ctx context.Context) {
+		aiEvaluation := validAIEvaluation("valid-restricted-topics")
+		aiEvaluation.Spec.Config = coralogixv1alpha1.AIEvaluationConfig{
+			RestrictedTopics: &coralogixv1alpha1.AIEvaluationRestrictedTopicsConfig{
+				Topics: []string{"competitor mentions", "medical advice"},
+			},
+		}
+
+		Expect(k8sClient.Create(ctx, aiEvaluation)).To(Succeed())
+		Expect(k8sClient.Delete(ctx, aiEvaluation)).To(Succeed())
+	})
+
 	It("should accept a valid Toxicity evaluation", func(ctx context.Context) {
 		aiEvaluation := validAIEvaluation("valid-toxicity")
 		aiEvaluation.Spec.Config = coralogixv1alpha1.AIEvaluationConfig{
@@ -133,7 +145,7 @@ var _ = Describe("AIEvaluation validation", func() {
 
 		err := k8sClient.Create(ctx, aiEvaluation)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("Exactly one of the following AI evaluation configs must be set: allowedTopics, pii, toxicity"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of the following AI evaluation configs must be set: allowedTopics, pii, restrictedTopics, toxicity"))
 	})
 
 	It("should reject multiple config variants", func(ctx context.Context) {
@@ -143,7 +155,7 @@ var _ = Describe("AIEvaluation validation", func() {
 
 		err := k8sClient.Create(ctx, aiEvaluation)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("Exactly one of the following AI evaluation configs must be set: allowedTopics, pii, toxicity"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of the following AI evaluation configs must be set: allowedTopics, pii, restrictedTopics, toxicity"))
 	})
 
 	It("should reject empty and oversized Allowed Topics topic sets", func(ctx context.Context) {
@@ -182,6 +194,50 @@ var _ = Describe("AIEvaluation validation", func() {
 			aiEvaluation := validUnstructuredAIEvaluation(tt.name)
 			config := aiEvaluation.Object["spec"].(map[string]interface{})["config"].(map[string]interface{})
 			config["allowedTopics"] = map[string]interface{}{"topics": []interface{}{tt.topic}}
+			delete(config, "pii")
+
+			err := k8sClient.Create(ctx, aiEvaluation)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring(tt.want))
+		}
+	})
+
+	It("should reject empty and oversized Restricted Topics topic sets", func(ctx context.Context) {
+		aiEvaluation := validUnstructuredAIEvaluation("empty-restricted-topics")
+		config := aiEvaluation.Object["spec"].(map[string]interface{})["config"].(map[string]interface{})
+		config["restrictedTopics"] = map[string]interface{}{"topics": []interface{}{}}
+		delete(config, "pii")
+
+		err := k8sClient.Create(ctx, aiEvaluation)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("at least 1 items"))
+
+		aiEvaluation = validUnstructuredAIEvaluation("too-many-restricted-topics")
+		config = aiEvaluation.Object["spec"].(map[string]interface{})["config"].(map[string]interface{})
+		topics := make([]interface{}, 1025)
+		for i := range topics {
+			topics[i] = fmt.Sprintf("topic-%d", i)
+		}
+		config["restrictedTopics"] = map[string]interface{}{"topics": topics}
+		delete(config, "pii")
+
+		err = k8sClient.Create(ctx, aiEvaluation)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("Too many"))
+	})
+
+	It("should reject Restricted Topics values longer than 256 characters", func(ctx context.Context) {
+		for _, tt := range []struct {
+			name  string
+			topic string
+			want  string
+		}{
+			{name: "empty-restricted-topic", topic: "", want: "at least 1 chars"},
+			{name: "too-long-restricted-topic", topic: strings.Repeat("a", 257), want: "Too long"},
+		} {
+			aiEvaluation := validUnstructuredAIEvaluation(tt.name)
+			config := aiEvaluation.Object["spec"].(map[string]interface{})["config"].(map[string]interface{})
+			config["restrictedTopics"] = map[string]interface{}{"topics": []interface{}{tt.topic}}
 			delete(config, "pii")
 
 			err := k8sClient.Create(ctx, aiEvaluation)

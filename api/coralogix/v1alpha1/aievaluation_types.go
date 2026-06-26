@@ -82,7 +82,7 @@ type AIEvaluationSpec struct {
 }
 
 // AIEvaluationConfig configures the AI evaluation type.
-// +kubebuilder:validation:XValidation:rule="(has(self.allowedTopics) ? 1 : 0) + (has(self.pii) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1", message="Exactly one of the following AI evaluation configs must be set: allowedTopics, pii, toxicity"
+// +kubebuilder:validation:XValidation:rule="(has(self.allowedTopics) ? 1 : 0) + (has(self.pii) ? 1 : 0) + (has(self.restrictedTopics) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1", message="Exactly one of the following AI evaluation configs must be set: allowedTopics, pii, restrictedTopics, toxicity"
 type AIEvaluationConfig struct {
 	// Configuration for Allowed Topics evaluation.
 	// +optional
@@ -92,6 +92,10 @@ type AIEvaluationConfig struct {
 	// +optional
 	PII *AIEvaluationPIIConfig `json:"pii,omitempty"`
 
+	// Configuration for Restricted Topics evaluation.
+	// +optional
+	RestrictedTopics *AIEvaluationRestrictedTopicsConfig `json:"restrictedTopics,omitempty"`
+
 	// Configuration for Toxicity evaluation. Toxicity has no nested fields and must be set to an empty object.
 	// +optional
 	// +kubebuilder:validation:MaxProperties=0
@@ -100,6 +104,16 @@ type AIEvaluationConfig struct {
 
 type AIEvaluationAllowedTopicsConfig struct {
 	// Topics considered allowed.
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=1024
+	// +kubebuilder:validation:items:MinLength=1
+	// +kubebuilder:validation:items:MaxLength=256
+	// +listType=set
+	Topics []string `json:"topics"`
+}
+
+type AIEvaluationRestrictedTopicsConfig struct {
+	// Topics that should not appear.
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:MaxItems=1024
 	// +kubebuilder:validation:items:MinLength=1
@@ -213,6 +227,9 @@ func (c AIEvaluationConfig) ExtractAIEvaluationConfig() (*aievaluations.Evaluati
 	if c.PII != nil {
 		extractors = append(extractors, c.PII.ExtractAIEvaluationConfig)
 	}
+	if c.RestrictedTopics != nil {
+		extractors = append(extractors, c.RestrictedTopics.ExtractAIEvaluationConfig)
+	}
 	if c.Toxicity != nil {
 		extractors = append(extractors, newOpenAPIAIEvaluationToxicityConfig)
 	}
@@ -227,6 +244,15 @@ func (c AIEvaluationConfig) ExtractAIEvaluationConfig() (*aievaluations.Evaluati
 func (c *AIEvaluationAllowedTopicsConfig) ExtractAIEvaluationConfig() *aievaluations.EvaluationConfig {
 	config := aievaluations.EvaluationConfigAllowedTopicsAsEvaluationConfig(
 		aievaluations.NewEvaluationConfigAllowedTopics(aievaluations.AllowedTopicsConfig{
+			Topics: append([]string(nil), c.Topics...),
+		}),
+	)
+	return &config
+}
+
+func (c *AIEvaluationRestrictedTopicsConfig) ExtractAIEvaluationConfig() *aievaluations.EvaluationConfig {
+	config := aievaluations.EvaluationConfigRestrictedTopicsAsEvaluationConfig(
+		aievaluations.NewEvaluationConfigRestrictedTopics(aievaluations.RestrictedTopicsConfig{
 			Topics: append([]string(nil), c.Topics...),
 		}),
 	)

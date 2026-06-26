@@ -101,6 +101,45 @@ func TestAIEvaluationExtractRequestsCoverTerraformAllowedTopicsScenario(t *testi
 	assertAllowedTopics(t, updateRequest.GetConfig(), "observability", "incident response")
 }
 
+func TestAIEvaluationExtractRequestsCoverTerraformRestrictedTopicsScenario(t *testing.T) {
+	aiEvaluation := AIEvaluation{
+		Spec: AIEvaluationSpec{
+			Application: "my-chatbot",
+			Subsystem:   "production",
+			Target:      AIEvaluationTargetResponse,
+			Threshold:   resource.MustParse("0.8"),
+			IsEnabled:   ptr.To(true),
+			Config: AIEvaluationConfig{RestrictedTopics: &AIEvaluationRestrictedTopicsConfig{
+				Topics: []string{"competitor mentions", "medical advice"},
+			}},
+		},
+	}
+
+	createRequest, err := aiEvaluation.ExtractCreateAIEvaluationRequest()
+	require.NoError(t, err)
+	require.Equal(t, "my-chatbot", createRequest.GetApplication())
+	require.Equal(t, "production", createRequest.GetSubsystem())
+	require.Equal(t, aievaluations.EVALUATIONTARGET_RESPONSE, createRequest.GetTarget())
+	require.InDelta(t, 0.8, createRequest.GetThreshold(), 0.000001)
+	require.True(t, createRequest.GetIsEnabled())
+	assertRestrictedTopics(t, createRequest.GetConfig(), "competitor mentions", "medical advice")
+
+	aiEvaluation.Status = AIEvaluationStatus{
+		Id: ptr.To("evaluation-id"),
+	}
+	aiEvaluation.Spec.Threshold = resource.MustParse("0.9")
+	aiEvaluation.Spec.IsEnabled = ptr.To(false)
+	aiEvaluation.Spec.Config = AIEvaluationConfig{RestrictedTopics: &AIEvaluationRestrictedTopicsConfig{
+		Topics: []string{"pricing promises", "legal advice"},
+	}}
+
+	updateRequest, err := aiEvaluation.ExtractUpdateAIEvaluationRequest()
+	require.NoError(t, err)
+	require.InDelta(t, 0.9, updateRequest.GetThreshold(), 0.000001)
+	require.False(t, updateRequest.GetIsEnabled())
+	assertRestrictedTopics(t, updateRequest.GetConfig(), "pricing promises", "legal advice")
+}
+
 func TestAIEvaluationExtractRequestsCoverTerraformToxicityScenario(t *testing.T) {
 	aiEvaluation := AIEvaluation{
 		Spec: AIEvaluationSpec{
@@ -189,6 +228,13 @@ func assertAllowedTopics(t *testing.T, config aievaluations.EvaluationConfig, va
 	require.True(t, ok)
 	allowedTopics := actual.GetAllowedTopics()
 	require.ElementsMatch(t, values, allowedTopics.GetTopics())
+}
+
+func assertRestrictedTopics(t *testing.T, config aievaluations.EvaluationConfig, values ...string) {
+	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigRestrictedTopics)
+	require.True(t, ok)
+	restrictedTopics := actual.GetRestrictedTopics()
+	require.ElementsMatch(t, values, restrictedTopics.GetTopics())
 }
 
 func assertToxicity(t *testing.T, config aievaluations.EvaluationConfig) {

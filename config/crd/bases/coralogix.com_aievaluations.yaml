@@ -93,6 +93,22 @@ spec:
                     required:
                     - categories
                     type: object
+                  restrictedTopics:
+                    description: Configuration for Restricted Topics evaluation.
+                    properties:
+                      topics:
+                        description: Topics that should not appear.
+                        items:
+                          maxLength: 256
+                          minLength: 1
+                          type: string
+                        maxItems: 1024
+                        minItems: 1
+                        type: array
+                        x-kubernetes-list-type: set
+                    required:
+                    - topics
+                    type: object
                   toxicity:
                     additionalProperties:
                       type: string
@@ -103,9 +119,10 @@ spec:
                 type: object
                 x-kubernetes-validations:
                 - message: 'Exactly one of the following AI evaluation configs must
-                    be set: allowedTopics, pii, toxicity'
+                    be set: allowedTopics, pii, restrictedTopics, toxicity'
                   rule: '(has(self.allowedTopics) ? 1 : 0) + (has(self.pii) ? 1 :
-                    0) + (has(self.toxicity) ? 1 : 0) == 1'
+                    0) + (has(self.restrictedTopics) ? 1 : 0) + (has(self.toxicity)
+                    ? 1 : 0) == 1'
               isEnabled:
                 default: true
                 description: Whether the evaluation is active.
