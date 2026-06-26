@@ -101,6 +101,45 @@ func TestAIEvaluationExtractRequestsCoverTerraformAllowedTopicsScenario(t *testi
 	assertAllowedTopics(t, updateRequest.GetConfig(), "observability", "incident response")
 }
 
+func TestAIEvaluationExtractRequestsCoverTerraformCompetitionScenario(t *testing.T) {
+	aiEvaluation := AIEvaluation{
+		Spec: AIEvaluationSpec{
+			Application: "my-chatbot",
+			Subsystem:   "production",
+			Target:      AIEvaluationTargetResponse,
+			Threshold:   resource.MustParse("0.8"),
+			IsEnabled:   ptr.To(true),
+			Config: AIEvaluationConfig{Competition: &AIEvaluationCompetitionConfig{
+				Competitors: []string{"CompetitorOne", "CompetitorTwo"},
+			}},
+		},
+	}
+
+	createRequest, err := aiEvaluation.ExtractCreateAIEvaluationRequest()
+	require.NoError(t, err)
+	require.Equal(t, "my-chatbot", createRequest.GetApplication())
+	require.Equal(t, "production", createRequest.GetSubsystem())
+	require.Equal(t, aievaluations.EVALUATIONTARGET_RESPONSE, createRequest.GetTarget())
+	require.InDelta(t, 0.8, createRequest.GetThreshold(), 0.000001)
+	require.True(t, createRequest.GetIsEnabled())
+	assertCompetition(t, createRequest.GetConfig(), "CompetitorOne", "CompetitorTwo")
+
+	aiEvaluation.Status = AIEvaluationStatus{
+		Id: ptr.To("evaluation-id"),
+	}
+	aiEvaluation.Spec.Threshold = resource.MustParse("0.9")
+	aiEvaluation.Spec.IsEnabled = ptr.To(false)
+	aiEvaluation.Spec.Config = AIEvaluationConfig{Competition: &AIEvaluationCompetitionConfig{
+		Competitors: []string{"CompetitorThree", "CompetitorFour"},
+	}}
+
+	updateRequest, err := aiEvaluation.ExtractUpdateAIEvaluationRequest()
+	require.NoError(t, err)
+	require.InDelta(t, 0.9, updateRequest.GetThreshold(), 0.000001)
+	require.False(t, updateRequest.GetIsEnabled())
+	assertCompetition(t, updateRequest.GetConfig(), "CompetitorThree", "CompetitorFour")
+}
+
 func TestAIEvaluationExtractRequestsCoverTerraformRestrictedTopicsScenario(t *testing.T) {
 	aiEvaluation := AIEvaluation{
 		Spec: AIEvaluationSpec{
@@ -228,6 +267,13 @@ func assertAllowedTopics(t *testing.T, config aievaluations.EvaluationConfig, va
 	require.True(t, ok)
 	allowedTopics := actual.GetAllowedTopics()
 	require.ElementsMatch(t, values, allowedTopics.GetTopics())
+}
+
+func assertCompetition(t *testing.T, config aievaluations.EvaluationConfig, values ...string) {
+	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigCompetition)
+	require.True(t, ok)
+	competition := actual.GetCompetition()
+	require.ElementsMatch(t, values, competition.GetCompetitors())
 }
 
 func assertRestrictedTopics(t *testing.T, config aievaluations.EvaluationConfig, values ...string) {

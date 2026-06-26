@@ -82,11 +82,15 @@ type AIEvaluationSpec struct {
 }
 
 // AIEvaluationConfig configures the AI evaluation type.
-// +kubebuilder:validation:XValidation:rule="(has(self.allowedTopics) ? 1 : 0) + (has(self.pii) ? 1 : 0) + (has(self.restrictedTopics) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1", message="Exactly one of the following AI evaluation configs must be set: allowedTopics, pii, restrictedTopics, toxicity"
+// +kubebuilder:validation:XValidation:rule="(has(self.allowedTopics) ? 1 : 0) + (has(self.competition) ? 1 : 0) + (has(self.pii) ? 1 : 0) + (has(self.restrictedTopics) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1", message="Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, pii, restrictedTopics, toxicity"
 type AIEvaluationConfig struct {
 	// Configuration for Allowed Topics evaluation.
 	// +optional
 	AllowedTopics *AIEvaluationAllowedTopicsConfig `json:"allowedTopics,omitempty"`
+
+	// Configuration for Competition evaluation.
+	// +optional
+	Competition *AIEvaluationCompetitionConfig `json:"competition,omitempty"`
 
 	// Configuration for PII evaluation.
 	// +optional
@@ -110,6 +114,16 @@ type AIEvaluationAllowedTopicsConfig struct {
 	// +kubebuilder:validation:items:MaxLength=256
 	// +listType=set
 	Topics []string `json:"topics"`
+}
+
+type AIEvaluationCompetitionConfig struct {
+	// Competitor names to watch for.
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=1024
+	// +kubebuilder:validation:items:MinLength=1
+	// +kubebuilder:validation:items:MaxLength=256
+	// +listType=set
+	Competitors []string `json:"competitors"`
 }
 
 type AIEvaluationRestrictedTopicsConfig struct {
@@ -224,6 +238,9 @@ func (c AIEvaluationConfig) ExtractAIEvaluationConfig() (*aievaluations.Evaluati
 	if c.AllowedTopics != nil {
 		extractors = append(extractors, c.AllowedTopics.ExtractAIEvaluationConfig)
 	}
+	if c.Competition != nil {
+		extractors = append(extractors, c.Competition.ExtractAIEvaluationConfig)
+	}
 	if c.PII != nil {
 		extractors = append(extractors, c.PII.ExtractAIEvaluationConfig)
 	}
@@ -245,6 +262,15 @@ func (c *AIEvaluationAllowedTopicsConfig) ExtractAIEvaluationConfig() *aievaluat
 	config := aievaluations.EvaluationConfigAllowedTopicsAsEvaluationConfig(
 		aievaluations.NewEvaluationConfigAllowedTopics(aievaluations.AllowedTopicsConfig{
 			Topics: append([]string(nil), c.Topics...),
+		}),
+	)
+	return &config
+}
+
+func (c *AIEvaluationCompetitionConfig) ExtractAIEvaluationConfig() *aievaluations.EvaluationConfig {
+	config := aievaluations.EvaluationConfigCompetitionAsEvaluationConfig(
+		aievaluations.NewEvaluationConfigCompetition(aievaluations.CompetitionConfig{
+			Competitors: append([]string(nil), c.Competitors...),
 		}),
 	)
 	return &config
