@@ -9,6 +9,8 @@ Packages:
 
 Resource Types:
 
+- [AICustomEvaluation](#aicustomevaluation)
+
 - [AIEvaluation](#aievaluation)
 
 - [AlertScheduler](#alertscheduler)
@@ -65,6 +67,449 @@ Resource Types:
 
 
 
+
+## AICustomEvaluation
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+AICustomEvaluation is the Schema for the AI custom evaluations API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>AICustomEvaluation</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#aicustomevaluationspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          AICustomEvaluationSpec defines the desired state of AICustomEvaluation.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#aicustomevaluationstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          AICustomEvaluationStatus defines the observed state of AICustomEvaluation.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AICustomEvaluation.spec
+<sup><sup>[↩ Parent](#aicustomevaluation)</sup></sup>
+
+
+
+AICustomEvaluationSpec defines the desired state of AICustomEvaluation.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>instructions</b></td>
+        <td>string</td>
+        <td>
+          Instructions sent to the LLM evaluator. Must contain at least one of {prompt}, {response}, or {chat_history}.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Display name of the custom evaluation.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>policyType</b></td>
+        <td>enum</td>
+        <td>
+          Policy type identifier.<br/>
+          <br/>
+            <i>Enum</i>: quality, security<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#aicustomevaluationspecapplicationsindex">applications</a></b></td>
+        <td>[]object</td>
+        <td>
+          AI applications to link this custom evaluation to, selected by application and subsystem. Defaults to no linked applications.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#aicustomevaluationspeccriteria">criteria</a></b></td>
+        <td>object</td>
+        <td>
+          Acceptable and prohibited criteria for this custom evaluation. Defaults to empty criteria.<br/>
+          <br/>
+            <i>Validations</i>:<li>(!has(self.acceptable) || !has(self.acceptable.examples) || !has(self.prohibited) || !has(self.prohibited.examples)) || size(self.acceptable.examples) + size(self.prohibited.examples) <= 100: criteria can include at most 100 total examples across acceptable and prohibited criteria</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          Human-readable description. Defaults to an empty string.<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>shouldIncludeSystemPrompt</b></td>
+        <td>boolean</td>
+        <td>
+          Whether to include the system prompt in the LLM input. Defaults to false.<br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AICustomEvaluation.spec.applications[index]
+<sup><sup>[↩ Parent](#aicustomevaluationspec)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>application</b></td>
+        <td>string</td>
+        <td>
+          AI application name.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>subsystem</b></td>
+        <td>string</td>
+        <td>
+          AI application subsystem.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AICustomEvaluation.spec.criteria
+<sup><sup>[↩ Parent](#aicustomevaluationspec)</sup></sup>
+
+
+
+Acceptable and prohibited criteria for this custom evaluation. Defaults to empty criteria.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#aicustomevaluationspeccriteriaacceptable">acceptable</a></b></td>
+        <td>object</td>
+        <td>
+          Criteria and examples for acceptable responses.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#aicustomevaluationspeccriteriaprohibited">prohibited</a></b></td>
+        <td>object</td>
+        <td>
+          Criteria and examples for prohibited responses.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AICustomEvaluation.spec.criteria.acceptable
+<sup><sup>[↩ Parent](#aicustomevaluationspeccriteria)</sup></sup>
+
+
+
+Criteria and examples for acceptable responses.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>examples</b></td>
+        <td>[]string</td>
+        <td>
+          Example conversations for this criterion.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>flags</b></td>
+        <td>string</td>
+        <td>
+          Criterion flags.<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AICustomEvaluation.spec.criteria.prohibited
+<sup><sup>[↩ Parent](#aicustomevaluationspeccriteria)</sup></sup>
+
+
+
+Criteria and examples for prohibited responses.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>examples</b></td>
+        <td>[]string</td>
+        <td>
+          Example conversations for this criterion.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>flags</b></td>
+        <td>string</td>
+        <td>
+          Criterion flags.<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AICustomEvaluation.status
+<sup><sup>[↩ Parent](#aicustomevaluation)</sup></sup>
+
+
+
+AICustomEvaluationStatus defines the observed state of AICustomEvaluation.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>applicationIds</b></td>
+        <td>[]string</td>
+        <td>
+          Resolved AI application IDs linked to this custom evaluation.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#aicustomevaluationstatusapplicationsindex">applications</a></b></td>
+        <td>[]object</td>
+        <td>
+          Resolved AI application mappings linked to this custom evaluation.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#aicustomevaluationstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AICustomEvaluation.status.applications[index]
+<sup><sup>[↩ Parent](#aicustomevaluationstatus)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          Resolved AI application ID.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>application</b></td>
+        <td>string</td>
+        <td>
+          AI application name.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>subsystem</b></td>
+        <td>string</td>
+        <td>
+          AI application subsystem.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AICustomEvaluation.status.conditions[index]
+<sup><sup>[↩ Parent](#aicustomevaluationstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
 
 ## AIEvaluation
 <sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
