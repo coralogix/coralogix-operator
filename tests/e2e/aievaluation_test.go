@@ -1,0 +1,1839 @@
+// Copyright 2026 Coralogix Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package e2e
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"os"
+	"strings"
+	"time"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/ptr"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	aiapplications "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/ai_applications_service"
+	aievaluations "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/ai_evaluations_service"
+
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/v2/internal/utils"
+)
+
+var _ = Describe("AIEvaluation PII", Ordered, func() {
+	var (
+		crClient             client.Client
+		aiApplications       *aiapplications.AIApplicationsServiceAPIService
+		aiEvaluations        *aievaluations.AIEvaluationsServiceAPIService
+		aiEvaluationID       string
+		aiEvaluation         *coralogixv1alpha1.AIEvaluation
+		application          aiEvaluationApplicationRef
+		target               string
+		aiEvaluationCRName   = fmt.Sprintf("ai-evaluation-pii-%d", time.Now().Unix())
+		createdPIICategories = []coralogixv1alpha1.AIEvaluationPIICategory{
+			coralogixv1alpha1.AIEvaluationPIICategoryEmailAddress,
+			coralogixv1alpha1.AIEvaluationPIICategoryCreditCard,
+		}
+		updatedPIICategories = []coralogixv1alpha1.AIEvaluationPIICategory{
+			coralogixv1alpha1.AIEvaluationPIICategoryPhoneNumber,
+			coralogixv1alpha1.AIEvaluationPIICategoryUSSSN,
+		}
+	)
+
+	BeforeAll(func(ctx context.Context) {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		clientSet := newAIEvaluationOpenAPIClientSet()
+		aiApplications = clientSet.AIApplications()
+		aiEvaluations = clientSet.AIEvaluations()
+
+		var err error
+		application, target, err = firstAvailableAIEvaluationApplication(ctx, aiApplications, aiEvaluations, aievaluations.EVALUATIONTYPE_PII)
+		Expect(err).ToNot(HaveOccurred())
+
+		aiEvaluation = newPIIAIEvaluation(
+			aiEvaluationCRName,
+			testNamespace,
+			application,
+			target,
+			resource.MustParse("0.8"),
+			true,
+			createdPIICategories,
+		)
+	})
+
+	AfterAll(func(ctx context.Context) {
+		if aiEvaluation == nil {
+			return
+		}
+
+		err := crClient.Delete(ctx, aiEvaluation)
+		if err != nil && !apierrors.IsNotFound(err) {
+			Expect(err).ToNot(HaveOccurred())
+		}
+
+		Eventually(func() bool {
+			fetched := &coralogixv1alpha1.AIEvaluation{}
+			err := crClient.Get(ctx, client.ObjectKey{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)
+			return apierrors.IsNotFound(err)
+		}, time.Minute, time.Second).Should(BeTrue())
+	})
+
+	It("Should be created successfully", func(ctx context.Context) {
+		By("Creating AIEvaluation")
+		Expect(crClient.Create(ctx, aiEvaluation)).To(Succeed())
+
+		By("Fetching the AIEvaluation ID")
+		fetched := &coralogixv1alpha1.AIEvaluation{}
+		Eventually(func(g Gomega) error {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
+			if fetched.Status.Id != nil {
+				aiEvaluationID = *fetched.Status.Id
+				return nil
+			}
+			return fmt.Errorf("AI evaluation ID is not set")
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying AIEvaluation exists in Coralogix backend")
+		Eventually(func(g Gomega) {
+			evaluation := getRemoteAIEvaluation(ctx, g, aiEvaluations, aiEvaluationID)
+			g.Expect(evaluation.GetApplication()).To(Equal(application.application))
+			g.Expect(evaluation.GetSubsystem()).To(Equal(application.subsystem))
+			g.Expect(strings.ToLower(string(evaluation.GetTarget()))).To(Equal(target))
+			g.Expect(evaluation.GetThreshold()).To(BeNumerically("~", 0.8, 0.00001))
+			g.Expect(evaluation.GetIsEnabled()).To(BeTrue())
+			expectRemoteAIEvaluationPIICategories(g, evaluation, createdPIICategories)
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should be updated successfully", func(ctx context.Context) {
+		By("Patching the AIEvaluation")
+		modified := aiEvaluation.DeepCopy()
+		modified.Spec.Threshold = resource.MustParse("0.9")
+		modified.Spec.IsEnabled = ptr.To(false)
+		modified.Spec.Config.PII.Categories = updatedPIICategories
+		Expect(crClient.Patch(ctx, modified, client.MergeFrom(aiEvaluation))).To(Succeed())
+
+		By("Verifying AIEvaluation is updated in Coralogix backend")
+		Eventually(func(g Gomega) {
+			evaluation := getRemoteAIEvaluation(ctx, g, aiEvaluations, aiEvaluationID)
+			g.Expect(evaluation.GetThreshold()).To(BeNumerically("~", 0.9, 0.00001))
+			g.Expect(evaluation.GetIsEnabled()).To(BeFalse())
+			expectRemoteAIEvaluationPIICategories(g, evaluation, updatedPIICategories)
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should be deleted successfully", func(ctx context.Context) {
+		By("Deleting the AIEvaluation")
+		Expect(crClient.Delete(ctx, aiEvaluation)).To(Succeed())
+
+		By("Verifying AIEvaluation is deleted from Coralogix backend")
+		Eventually(func() int {
+			_, httpResp, err := aiEvaluations.
+				AiEvaluationsServiceGetAiEvaluation(ctx, aiEvaluationID).
+				Execute()
+			return cxsdk.Code(cxsdk.NewAPIError(httpResp, err))
+		}, time.Minute, time.Second).Should(Equal(http.StatusNotFound))
+	})
+})
+
+var _ = Describe("AIEvaluation Allowed Topics", Ordered, func() {
+	var (
+		crClient             client.Client
+		aiApplications       *aiapplications.AIApplicationsServiceAPIService
+		aiEvaluations        *aievaluations.AIEvaluationsServiceAPIService
+		aiEvaluationID       string
+		aiEvaluation         *coralogixv1alpha1.AIEvaluation
+		application          aiEvaluationApplicationRef
+		target               string
+		aiEvaluationCRName   = fmt.Sprintf("ai-evaluation-allowed-topics-%d", time.Now().Unix())
+		createdAllowedTopics = []string{"billing", "account settings"}
+		updatedAllowedTopics = []string{"observability", "incident response"}
+	)
+
+	BeforeAll(func(ctx context.Context) {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		clientSet := newAIEvaluationOpenAPIClientSet()
+		aiApplications = clientSet.AIApplications()
+		aiEvaluations = clientSet.AIEvaluations()
+
+		var err error
+		application, target, err = firstAvailableAIEvaluationApplication(ctx, aiApplications, aiEvaluations, aievaluations.EVALUATIONTYPE_ALLOWED_TOPICS)
+		Expect(err).ToNot(HaveOccurred())
+
+		aiEvaluation = newAllowedTopicsAIEvaluation(
+			aiEvaluationCRName,
+			testNamespace,
+			application,
+			target,
+			resource.MustParse("0.8"),
+			true,
+			createdAllowedTopics,
+		)
+	})
+
+	AfterAll(func(ctx context.Context) {
+		if aiEvaluation == nil {
+			return
+		}
+
+		err := crClient.Delete(ctx, aiEvaluation)
+		if err != nil && !apierrors.IsNotFound(err) {
+			Expect(err).ToNot(HaveOccurred())
+		}
+
+		Eventually(func() bool {
+			fetched := &coralogixv1alpha1.AIEvaluation{}
+			err := crClient.Get(ctx, client.ObjectKey{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)
+			return apierrors.IsNotFound(err)
+		}, time.Minute, time.Second).Should(BeTrue())
+	})
+
+	It("Should be created successfully", func(ctx context.Context) {
+		By("Creating AIEvaluation")
+		Expect(crClient.Create(ctx, aiEvaluation)).To(Succeed())
+
+		By("Fetching the AIEvaluation ID")
+		fetched := &coralogixv1alpha1.AIEvaluation{}
+		Eventually(func(g Gomega) error {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
+			if fetched.Status.Id != nil {
+				aiEvaluationID = *fetched.Status.Id
+				return nil
+			}
+			return fmt.Errorf("AI evaluation ID is not set")
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying AIEvaluation exists in Coralogix backend")
+		Eventually(func(g Gomega) {
+			evaluation := getRemoteAIEvaluation(ctx, g, aiEvaluations, aiEvaluationID)
+			g.Expect(evaluation.GetApplication()).To(Equal(application.application))
+			g.Expect(evaluation.GetSubsystem()).To(Equal(application.subsystem))
+			g.Expect(strings.ToLower(string(evaluation.GetTarget()))).To(Equal(target))
+			g.Expect(evaluation.GetThreshold()).To(BeNumerically("~", 0.8, 0.00001))
+			g.Expect(evaluation.GetIsEnabled()).To(BeTrue())
+			expectRemoteAIEvaluationAllowedTopics(g, evaluation, createdAllowedTopics)
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should be updated successfully", func(ctx context.Context) {
+		By("Patching the AIEvaluation")
+		modified := aiEvaluation.DeepCopy()
+		modified.Spec.Threshold = resource.MustParse("0.9")
+		modified.Spec.IsEnabled = ptr.To(false)
+		modified.Spec.Config.AllowedTopics.Topics = updatedAllowedTopics
+		Expect(crClient.Patch(ctx, modified, client.MergeFrom(aiEvaluation))).To(Succeed())
+
+		By("Verifying AIEvaluation is updated in Coralogix backend")
+		Eventually(func(g Gomega) {
+			evaluation := getRemoteAIEvaluation(ctx, g, aiEvaluations, aiEvaluationID)
+			g.Expect(evaluation.GetThreshold()).To(BeNumerically("~", 0.9, 0.00001))
+			g.Expect(evaluation.GetIsEnabled()).To(BeFalse())
+			expectRemoteAIEvaluationAllowedTopics(g, evaluation, updatedAllowedTopics)
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should be deleted successfully", func(ctx context.Context) {
+		By("Deleting the AIEvaluation")
+		Expect(crClient.Delete(ctx, aiEvaluation)).To(Succeed())
+
+		By("Verifying AIEvaluation is deleted from Coralogix backend")
+		Eventually(func() int {
+			_, httpResp, err := aiEvaluations.
+				AiEvaluationsServiceGetAiEvaluation(ctx, aiEvaluationID).
+				Execute()
+			return cxsdk.Code(cxsdk.NewAPIError(httpResp, err))
+		}, time.Minute, time.Second).Should(Equal(http.StatusNotFound))
+	})
+})
+
+var _ = Describe("AIEvaluation Competition", Ordered, func() {
+	var (
+		crClient           client.Client
+		aiApplications     *aiapplications.AIApplicationsServiceAPIService
+		aiEvaluations      *aievaluations.AIEvaluationsServiceAPIService
+		aiEvaluationID     string
+		aiEvaluation       *coralogixv1alpha1.AIEvaluation
+		application        aiEvaluationApplicationRef
+		target             string
+		aiEvaluationCRName = fmt.Sprintf("ai-evaluation-competition-%d", time.Now().Unix())
+		createdCompetitors = []string{"CompetitorOne", "CompetitorTwo"}
+		updatedCompetitors = []string{"CompetitorThree", "CompetitorFour"}
+	)
+
+	BeforeAll(func(ctx context.Context) {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		clientSet := newAIEvaluationOpenAPIClientSet()
+		aiApplications = clientSet.AIApplications()
+		aiEvaluations = clientSet.AIEvaluations()
+
+		var err error
+		application, target, err = firstAvailableAIEvaluationApplication(ctx, aiApplications, aiEvaluations, aievaluations.EVALUATIONTYPE_COMPETITION)
+		Expect(err).ToNot(HaveOccurred())
+
+		aiEvaluation = newCompetitionAIEvaluation(
+			aiEvaluationCRName,
+			testNamespace,
+			application,
+			target,
+			resource.MustParse("0.8"),
+			true,
+			createdCompetitors,
+		)
+	})
+
+	AfterAll(func(ctx context.Context) {
+		if aiEvaluation == nil {
+			return
+		}
+
+		err := crClient.Delete(ctx, aiEvaluation)
+		if err != nil && !apierrors.IsNotFound(err) {
+			Expect(err).ToNot(HaveOccurred())
+		}
+
+		Eventually(func() bool {
+			fetched := &coralogixv1alpha1.AIEvaluation{}
+			err := crClient.Get(ctx, client.ObjectKey{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)
+			return apierrors.IsNotFound(err)
+		}, time.Minute, time.Second).Should(BeTrue())
+	})
+
+	It("Should be created successfully", func(ctx context.Context) {
+		By("Creating AIEvaluation")
+		Expect(crClient.Create(ctx, aiEvaluation)).To(Succeed())
+
+		By("Fetching the AIEvaluation ID")
+		fetched := &coralogixv1alpha1.AIEvaluation{}
+		Eventually(func(g Gomega) error {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
+			if fetched.Status.Id != nil {
+				aiEvaluationID = *fetched.Status.Id
+				return nil
+			}
+			return fmt.Errorf("AI evaluation ID is not set")
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying AIEvaluation exists in Coralogix backend")
+		Eventually(func(g Gomega) {
+			evaluation := getRemoteAIEvaluation(ctx, g, aiEvaluations, aiEvaluationID)
+			g.Expect(evaluation.GetApplication()).To(Equal(application.application))
+			g.Expect(evaluation.GetSubsystem()).To(Equal(application.subsystem))
+			g.Expect(strings.ToLower(string(evaluation.GetTarget()))).To(Equal(target))
+			g.Expect(evaluation.GetThreshold()).To(BeNumerically("~", 0.8, 0.00001))
+			g.Expect(evaluation.GetIsEnabled()).To(BeTrue())
+			expectRemoteAIEvaluationCompetition(g, evaluation, createdCompetitors)
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should be updated successfully", func(ctx context.Context) {
+		By("Patching the AIEvaluation")
+		modified := aiEvaluation.DeepCopy()
+		modified.Spec.Threshold = resource.MustParse("0.9")
+		modified.Spec.IsEnabled = ptr.To(false)
+		modified.Spec.Config.Competition.Competitors = updatedCompetitors
+		Expect(crClient.Patch(ctx, modified, client.MergeFrom(aiEvaluation))).To(Succeed())
+
+		By("Verifying AIEvaluation is updated in Coralogix backend")
+		Eventually(func(g Gomega) {
+			evaluation := getRemoteAIEvaluation(ctx, g, aiEvaluations, aiEvaluationID)
+			g.Expect(evaluation.GetThreshold()).To(BeNumerically("~", 0.9, 0.00001))
+			g.Expect(evaluation.GetIsEnabled()).To(BeFalse())
+			expectRemoteAIEvaluationCompetition(g, evaluation, updatedCompetitors)
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should be deleted successfully", func(ctx context.Context) {
+		By("Deleting the AIEvaluation")
+		Expect(crClient.Delete(ctx, aiEvaluation)).To(Succeed())
+
+		By("Verifying AIEvaluation is deleted from Coralogix backend")
+		Eventually(func() int {
+			_, httpResp, err := aiEvaluations.
+				AiEvaluationsServiceGetAiEvaluation(ctx, aiEvaluationID).
+				Execute()
+			return cxsdk.Code(cxsdk.NewAPIError(httpResp, err))
+		}, time.Minute, time.Second).Should(Equal(http.StatusNotFound))
+	})
+})
+
+func init() {
+	describeEmptyConfigAIEvaluation(
+		"AIEvaluation Hallucination Completeness",
+		"ai-evaluation-hallucination-completeness",
+		aievaluations.EVALUATIONTYPE_HALLUCINATION_COMPLETENESS,
+		func(config *coralogixv1alpha1.AIEvaluationConfig) {
+			config.HallucinationCompleteness = coralogixv1alpha1.NewAIEvaluationHallucinationCompletenessConfig()
+		},
+		expectRemoteAIEvaluationHallucinationCompleteness,
+	)
+
+	describeEmptyConfigAIEvaluation(
+		"AIEvaluation Hallucination Context Adherence",
+		"ai-evaluation-hallucination-context-adherence",
+		aievaluations.EVALUATIONTYPE_HALLUCINATION_CONTEXT_ADHERENCE,
+		func(config *coralogixv1alpha1.AIEvaluationConfig) {
+			config.HallucinationContextAdherence = coralogixv1alpha1.NewAIEvaluationHallucinationContextAdherenceConfig()
+		},
+		expectRemoteAIEvaluationHallucinationContextAdherence,
+	)
+
+	describeEmptyConfigAIEvaluation(
+		"AIEvaluation Hallucination Context Relevance",
+		"ai-evaluation-hallucination-context-relevance",
+		aievaluations.EVALUATIONTYPE_HALLUCINATION_CONTEXT_RELEVANCE,
+		func(config *coralogixv1alpha1.AIEvaluationConfig) {
+			config.HallucinationContextRelevance = coralogixv1alpha1.NewAIEvaluationHallucinationContextRelevanceConfig()
+		},
+		expectRemoteAIEvaluationHallucinationContextRelevance,
+	)
+
+	describeEmptyConfigAIEvaluation(
+		"AIEvaluation Hallucination Correctness",
+		"ai-evaluation-hallucination-correctness",
+		aievaluations.EVALUATIONTYPE_HALLUCINATION_CORRECTNESS,
+		func(config *coralogixv1alpha1.AIEvaluationConfig) {
+			config.HallucinationCorrectness = coralogixv1alpha1.NewAIEvaluationHallucinationCorrectnessConfig()
+		},
+		expectRemoteAIEvaluationHallucinationCorrectness,
+	)
+
+	describeEmptyConfigAIEvaluation(
+		"AIEvaluation Hallucination Task Adherence",
+		"ai-evaluation-hallucination-task-adherence",
+		aievaluations.EVALUATIONTYPE_HALLUCINATION_TASK_ADHERENCE,
+		func(config *coralogixv1alpha1.AIEvaluationConfig) {
+			config.HallucinationTaskAdherence = coralogixv1alpha1.NewAIEvaluationHallucinationTaskAdherenceConfig()
+		},
+		expectRemoteAIEvaluationHallucinationTaskAdherence,
+	)
+}
+
+var _ = Describe("AIEvaluation Language Mismatch", Ordered, func() {
+	var (
+		crClient           client.Client
+		aiApplications     *aiapplications.AIApplicationsServiceAPIService
+		aiEvaluations      *aievaluations.AIEvaluationsServiceAPIService
+		aiEvaluationID     string
+		aiEvaluation       *coralogixv1alpha1.AIEvaluation
+		application        aiEvaluationApplicationRef
+		target             string
+		aiEvaluationCRName = fmt.Sprintf("ai-evaluation-language-mismatch-%d", time.Now().Unix())
+	)
+
+	BeforeAll(func(ctx context.Context) {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		clientSet := newAIEvaluationOpenAPIClientSet()
+		aiApplications = clientSet.AIApplications()
+		aiEvaluations = clientSet.AIEvaluations()
+
+		var err error
+		application, target, err = firstAvailableAIEvaluationApplication(ctx, aiApplications, aiEvaluations, aievaluations.EVALUATIONTYPE_LANGUAGE_MISMATCH)
+		Expect(err).ToNot(HaveOccurred())
+
+		aiEvaluation = newLanguageMismatchAIEvaluation(
+			aiEvaluationCRName,
+			testNamespace,
+			application,
+			target,
+			resource.MustParse("0.8"),
+			true,
+		)
+	})
+
+	AfterAll(func(ctx context.Context) {
+		if aiEvaluation == nil {
+			return
+		}
+
+		err := crClient.Delete(ctx, aiEvaluation)
+		if err != nil && !apierrors.IsNotFound(err) {
+			Expect(err).ToNot(HaveOccurred())
+		}
+
+		Eventually(func() bool {
+			fetched := &coralogixv1alpha1.AIEvaluation{}
+			err := crClient.Get(ctx, client.ObjectKey{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)
+			return apierrors.IsNotFound(err)
+		}, time.Minute, time.Second).Should(BeTrue())
+	})
+
+	It("Should be created successfully", func(ctx context.Context) {
+		By("Creating AIEvaluation")
+		Expect(crClient.Create(ctx, aiEvaluation)).To(Succeed())
+
+		By("Fetching the AIEvaluation ID")
+		fetched := &coralogixv1alpha1.AIEvaluation{}
+		Eventually(func(g Gomega) error {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
+			if fetched.Status.Id != nil {
+				aiEvaluationID = *fetched.Status.Id
+				return nil
+			}
+			return fmt.Errorf("AI evaluation ID is not set")
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying AIEvaluation exists in Coralogix backend")
+		Eventually(func(g Gomega) {
+			evaluation := getRemoteAIEvaluation(ctx, g, aiEvaluations, aiEvaluationID)
+			g.Expect(evaluation.GetApplication()).To(Equal(application.application))
+			g.Expect(evaluation.GetSubsystem()).To(Equal(application.subsystem))
+			g.Expect(strings.ToLower(string(evaluation.GetTarget()))).To(Equal(target))
+			g.Expect(evaluation.GetThreshold()).To(BeNumerically("~", 0.8, 0.00001))
+			g.Expect(evaluation.GetIsEnabled()).To(BeTrue())
+			expectRemoteAIEvaluationLanguageMismatch(g, evaluation)
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should be updated successfully", func(ctx context.Context) {
+		By("Patching the AIEvaluation")
+		modified := aiEvaluation.DeepCopy()
+		modified.Spec.Threshold = resource.MustParse("0.9")
+		modified.Spec.IsEnabled = ptr.To(false)
+		Expect(crClient.Patch(ctx, modified, client.MergeFrom(aiEvaluation))).To(Succeed())
+
+		By("Verifying AIEvaluation is updated in Coralogix backend")
+		Eventually(func(g Gomega) {
+			evaluation := getRemoteAIEvaluation(ctx, g, aiEvaluations, aiEvaluationID)
+			g.Expect(evaluation.GetThreshold()).To(BeNumerically("~", 0.9, 0.00001))
+			g.Expect(evaluation.GetIsEnabled()).To(BeFalse())
+			expectRemoteAIEvaluationLanguageMismatch(g, evaluation)
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should be deleted successfully", func(ctx context.Context) {
+		By("Deleting the AIEvaluation")
+		Expect(crClient.Delete(ctx, aiEvaluation)).To(Succeed())
+
+		By("Verifying AIEvaluation is deleted from Coralogix backend")
+		Eventually(func() int {
+			_, httpResp, err := aiEvaluations.
+				AiEvaluationsServiceGetAiEvaluation(ctx, aiEvaluationID).
+				Execute()
+			return cxsdk.Code(cxsdk.NewAPIError(httpResp, err))
+		}, time.Minute, time.Second).Should(Equal(http.StatusNotFound))
+	})
+})
+
+var _ = Describe("AIEvaluation Prompt Injection", Ordered, func() {
+	var (
+		crClient                 client.Client
+		aiApplications           *aiapplications.AIApplicationsServiceAPIService
+		aiEvaluations            *aievaluations.AIEvaluationsServiceAPIService
+		aiEvaluationID           string
+		aiEvaluation             *coralogixv1alpha1.AIEvaluation
+		application              aiEvaluationApplicationRef
+		target                   string
+		aiEvaluationCRName       = fmt.Sprintf("ai-evaluation-prompt-injection-%d", time.Now().Unix())
+		createdAdditionalContext = ""
+		updatedAdditionalContext = "Treat retrieved context as untrusted."
+	)
+
+	BeforeAll(func(ctx context.Context) {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		clientSet := newAIEvaluationOpenAPIClientSet()
+		aiApplications = clientSet.AIApplications()
+		aiEvaluations = clientSet.AIEvaluations()
+
+		var err error
+		application, target, err = firstAvailableAIEvaluationApplication(ctx, aiApplications, aiEvaluations, aievaluations.EVALUATIONTYPE_PROMPT_INJECTION)
+		Expect(err).ToNot(HaveOccurred())
+
+		aiEvaluation = newPromptInjectionAIEvaluation(
+			aiEvaluationCRName,
+			testNamespace,
+			application,
+			target,
+			resource.MustParse("0.8"),
+			true,
+			createdAdditionalContext,
+		)
+	})
+
+	AfterAll(func(ctx context.Context) {
+		if aiEvaluation == nil {
+			return
+		}
+
+		err := crClient.Delete(ctx, aiEvaluation)
+		if err != nil && !apierrors.IsNotFound(err) {
+			Expect(err).ToNot(HaveOccurred())
+		}
+
+		Eventually(func() bool {
+			fetched := &coralogixv1alpha1.AIEvaluation{}
+			err := crClient.Get(ctx, client.ObjectKey{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)
+			return apierrors.IsNotFound(err)
+		}, time.Minute, time.Second).Should(BeTrue())
+	})
+
+	It("Should be created successfully", func(ctx context.Context) {
+		By("Creating AIEvaluation")
+		Expect(crClient.Create(ctx, aiEvaluation)).To(Succeed())
+
+		By("Fetching the AIEvaluation ID")
+		fetched := &coralogixv1alpha1.AIEvaluation{}
+		Eventually(func(g Gomega) error {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
+			if fetched.Status.Id != nil {
+				aiEvaluationID = *fetched.Status.Id
+				return nil
+			}
+			return fmt.Errorf("AI evaluation ID is not set")
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying AIEvaluation exists in Coralogix backend")
+		Eventually(func(g Gomega) {
+			evaluation := getRemoteAIEvaluation(ctx, g, aiEvaluations, aiEvaluationID)
+			g.Expect(evaluation.GetApplication()).To(Equal(application.application))
+			g.Expect(evaluation.GetSubsystem()).To(Equal(application.subsystem))
+			g.Expect(strings.ToLower(string(evaluation.GetTarget()))).To(Equal(target))
+			g.Expect(evaluation.GetThreshold()).To(BeNumerically("~", 0.8, 0.00001))
+			g.Expect(evaluation.GetIsEnabled()).To(BeTrue())
+			expectRemoteAIEvaluationPromptInjection(g, evaluation, createdAdditionalContext)
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should be updated successfully", func(ctx context.Context) {
+		By("Patching the AIEvaluation")
+		modified := aiEvaluation.DeepCopy()
+		modified.Spec.Threshold = resource.MustParse("0.9")
+		modified.Spec.IsEnabled = ptr.To(false)
+		modified.Spec.Config.PromptInjection.AdditionalContext = updatedAdditionalContext
+		Expect(crClient.Patch(ctx, modified, client.MergeFrom(aiEvaluation))).To(Succeed())
+
+		By("Verifying AIEvaluation is updated in Coralogix backend")
+		Eventually(func(g Gomega) {
+			evaluation := getRemoteAIEvaluation(ctx, g, aiEvaluations, aiEvaluationID)
+			g.Expect(evaluation.GetThreshold()).To(BeNumerically("~", 0.9, 0.00001))
+			g.Expect(evaluation.GetIsEnabled()).To(BeFalse())
+			expectRemoteAIEvaluationPromptInjection(g, evaluation, updatedAdditionalContext)
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should be deleted successfully", func(ctx context.Context) {
+		By("Deleting the AIEvaluation")
+		Expect(crClient.Delete(ctx, aiEvaluation)).To(Succeed())
+
+		By("Verifying AIEvaluation is deleted from Coralogix backend")
+		Eventually(func() int {
+			_, httpResp, err := aiEvaluations.
+				AiEvaluationsServiceGetAiEvaluation(ctx, aiEvaluationID).
+				Execute()
+			return cxsdk.Code(cxsdk.NewAPIError(httpResp, err))
+		}, time.Minute, time.Second).Should(Equal(http.StatusNotFound))
+	})
+})
+
+var _ = Describe("AIEvaluation Restricted Topics", Ordered, func() {
+	var (
+		crClient                client.Client
+		aiApplications          *aiapplications.AIApplicationsServiceAPIService
+		aiEvaluations           *aievaluations.AIEvaluationsServiceAPIService
+		aiEvaluationID          string
+		aiEvaluation            *coralogixv1alpha1.AIEvaluation
+		application             aiEvaluationApplicationRef
+		target                  string
+		aiEvaluationCRName      = fmt.Sprintf("ai-evaluation-restricted-topics-%d", time.Now().Unix())
+		createdRestrictedTopics = []string{"competitor mentions", "medical advice"}
+		updatedRestrictedTopics = []string{"pricing promises", "legal advice"}
+	)
+
+	BeforeAll(func(ctx context.Context) {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		clientSet := newAIEvaluationOpenAPIClientSet()
+		aiApplications = clientSet.AIApplications()
+		aiEvaluations = clientSet.AIEvaluations()
+
+		var err error
+		application, target, err = firstAvailableAIEvaluationApplication(ctx, aiApplications, aiEvaluations, aievaluations.EVALUATIONTYPE_RESTRICTED_TOPICS)
+		Expect(err).ToNot(HaveOccurred())
+
+		aiEvaluation = newRestrictedTopicsAIEvaluation(
+			aiEvaluationCRName,
+			testNamespace,
+			application,
+			target,
+			resource.MustParse("0.8"),
+			true,
+			createdRestrictedTopics,
+		)
+	})
+
+	AfterAll(func(ctx context.Context) {
+		if aiEvaluation == nil {
+			return
+		}
+
+		err := crClient.Delete(ctx, aiEvaluation)
+		if err != nil && !apierrors.IsNotFound(err) {
+			Expect(err).ToNot(HaveOccurred())
+		}
+
+		Eventually(func() bool {
+			fetched := &coralogixv1alpha1.AIEvaluation{}
+			err := crClient.Get(ctx, client.ObjectKey{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)
+			return apierrors.IsNotFound(err)
+		}, time.Minute, time.Second).Should(BeTrue())
+	})
+
+	It("Should be created successfully", func(ctx context.Context) {
+		By("Creating AIEvaluation")
+		Expect(crClient.Create(ctx, aiEvaluation)).To(Succeed())
+
+		By("Fetching the AIEvaluation ID")
+		fetched := &coralogixv1alpha1.AIEvaluation{}
+		Eventually(func(g Gomega) error {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
+			if fetched.Status.Id != nil {
+				aiEvaluationID = *fetched.Status.Id
+				return nil
+			}
+			return fmt.Errorf("AI evaluation ID is not set")
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying AIEvaluation exists in Coralogix backend")
+		Eventually(func(g Gomega) {
+			evaluation := getRemoteAIEvaluation(ctx, g, aiEvaluations, aiEvaluationID)
+			g.Expect(evaluation.GetApplication()).To(Equal(application.application))
+			g.Expect(evaluation.GetSubsystem()).To(Equal(application.subsystem))
+			g.Expect(strings.ToLower(string(evaluation.GetTarget()))).To(Equal(target))
+			g.Expect(evaluation.GetThreshold()).To(BeNumerically("~", 0.8, 0.00001))
+			g.Expect(evaluation.GetIsEnabled()).To(BeTrue())
+			expectRemoteAIEvaluationRestrictedTopics(g, evaluation, createdRestrictedTopics)
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should be updated successfully", func(ctx context.Context) {
+		By("Patching the AIEvaluation")
+		modified := aiEvaluation.DeepCopy()
+		modified.Spec.Threshold = resource.MustParse("0.9")
+		modified.Spec.IsEnabled = ptr.To(false)
+		modified.Spec.Config.RestrictedTopics.Topics = updatedRestrictedTopics
+		Expect(crClient.Patch(ctx, modified, client.MergeFrom(aiEvaluation))).To(Succeed())
+
+		By("Verifying AIEvaluation is updated in Coralogix backend")
+		Eventually(func(g Gomega) {
+			evaluation := getRemoteAIEvaluation(ctx, g, aiEvaluations, aiEvaluationID)
+			g.Expect(evaluation.GetThreshold()).To(BeNumerically("~", 0.9, 0.00001))
+			g.Expect(evaluation.GetIsEnabled()).To(BeFalse())
+			expectRemoteAIEvaluationRestrictedTopics(g, evaluation, updatedRestrictedTopics)
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should be deleted successfully", func(ctx context.Context) {
+		By("Deleting the AIEvaluation")
+		Expect(crClient.Delete(ctx, aiEvaluation)).To(Succeed())
+
+		By("Verifying AIEvaluation is deleted from Coralogix backend")
+		Eventually(func() int {
+			_, httpResp, err := aiEvaluations.
+				AiEvaluationsServiceGetAiEvaluation(ctx, aiEvaluationID).
+				Execute()
+			return cxsdk.Code(cxsdk.NewAPIError(httpResp, err))
+		}, time.Minute, time.Second).Should(Equal(http.StatusNotFound))
+	})
+})
+
+var _ = Describe("AIEvaluation Sexism", Ordered, func() {
+	var (
+		crClient           client.Client
+		aiApplications     *aiapplications.AIApplicationsServiceAPIService
+		aiEvaluations      *aievaluations.AIEvaluationsServiceAPIService
+		aiEvaluationID     string
+		aiEvaluation       *coralogixv1alpha1.AIEvaluation
+		application        aiEvaluationApplicationRef
+		target             string
+		aiEvaluationCRName = fmt.Sprintf("ai-evaluation-sexism-%d", time.Now().Unix())
+	)
+
+	BeforeAll(func(ctx context.Context) {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		clientSet := newAIEvaluationOpenAPIClientSet()
+		aiApplications = clientSet.AIApplications()
+		aiEvaluations = clientSet.AIEvaluations()
+
+		var err error
+		application, target, err = firstAvailableAIEvaluationApplication(ctx, aiApplications, aiEvaluations, aievaluations.EVALUATIONTYPE_SEXISM)
+		Expect(err).ToNot(HaveOccurred())
+
+		aiEvaluation = newSexismAIEvaluation(
+			aiEvaluationCRName,
+			testNamespace,
+			application,
+			target,
+			resource.MustParse("0.8"),
+			true,
+		)
+	})
+
+	AfterAll(func(ctx context.Context) {
+		if aiEvaluation == nil {
+			return
+		}
+
+		err := crClient.Delete(ctx, aiEvaluation)
+		if err != nil && !apierrors.IsNotFound(err) {
+			Expect(err).ToNot(HaveOccurred())
+		}
+
+		Eventually(func() bool {
+			fetched := &coralogixv1alpha1.AIEvaluation{}
+			err := crClient.Get(ctx, client.ObjectKey{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)
+			return apierrors.IsNotFound(err)
+		}, time.Minute, time.Second).Should(BeTrue())
+	})
+
+	It("Should be created successfully", func(ctx context.Context) {
+		By("Creating AIEvaluation")
+		Expect(crClient.Create(ctx, aiEvaluation)).To(Succeed())
+
+		By("Fetching the AIEvaluation ID")
+		fetched := &coralogixv1alpha1.AIEvaluation{}
+		Eventually(func(g Gomega) error {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
+			if fetched.Status.Id != nil {
+				aiEvaluationID = *fetched.Status.Id
+				return nil
+			}
+			return fmt.Errorf("AI evaluation ID is not set")
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying AIEvaluation exists in Coralogix backend")
+		Eventually(func(g Gomega) {
+			evaluation := getRemoteAIEvaluation(ctx, g, aiEvaluations, aiEvaluationID)
+			g.Expect(evaluation.GetApplication()).To(Equal(application.application))
+			g.Expect(evaluation.GetSubsystem()).To(Equal(application.subsystem))
+			g.Expect(strings.ToLower(string(evaluation.GetTarget()))).To(Equal(target))
+			g.Expect(evaluation.GetThreshold()).To(BeNumerically("~", 0.8, 0.00001))
+			g.Expect(evaluation.GetIsEnabled()).To(BeTrue())
+			expectRemoteAIEvaluationSexism(g, evaluation)
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should be updated successfully", func(ctx context.Context) {
+		By("Patching the AIEvaluation")
+		modified := aiEvaluation.DeepCopy()
+		modified.Spec.Threshold = resource.MustParse("0.9")
+		modified.Spec.IsEnabled = ptr.To(false)
+		Expect(crClient.Patch(ctx, modified, client.MergeFrom(aiEvaluation))).To(Succeed())
+
+		By("Verifying AIEvaluation is updated in Coralogix backend")
+		Eventually(func(g Gomega) {
+			evaluation := getRemoteAIEvaluation(ctx, g, aiEvaluations, aiEvaluationID)
+			g.Expect(evaluation.GetThreshold()).To(BeNumerically("~", 0.9, 0.00001))
+			g.Expect(evaluation.GetIsEnabled()).To(BeFalse())
+			expectRemoteAIEvaluationSexism(g, evaluation)
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should be deleted successfully", func(ctx context.Context) {
+		By("Deleting the AIEvaluation")
+		Expect(crClient.Delete(ctx, aiEvaluation)).To(Succeed())
+
+		By("Verifying AIEvaluation is deleted from Coralogix backend")
+		Eventually(func() int {
+			_, httpResp, err := aiEvaluations.
+				AiEvaluationsServiceGetAiEvaluation(ctx, aiEvaluationID).
+				Execute()
+			return cxsdk.Code(cxsdk.NewAPIError(httpResp, err))
+		}, time.Minute, time.Second).Should(Equal(http.StatusNotFound))
+	})
+})
+
+func init() {
+	describeStringSetConfigAIEvaluation(
+		"AIEvaluation SQL Allowed Tables",
+		"ai-evaluation-sql-allowed-tables",
+		aievaluations.EVALUATIONTYPE_SQL_ALLOWED_TABLES,
+		[]string{"orders", "customers"},
+		[]string{"invoices", "payments"},
+		func(config *coralogixv1alpha1.AIEvaluationConfig, values []string) {
+			config.SQLAllowedTables = &coralogixv1alpha1.AIEvaluationSQLAllowedTablesConfig{Tables: values}
+		},
+		expectRemoteAIEvaluationSQLAllowedTables,
+	)
+
+	describeEmptyConfigAIEvaluation(
+		"AIEvaluation SQL Hallucination",
+		"ai-evaluation-sql-hallucination",
+		aievaluations.EVALUATIONTYPE_SQL_HALLUCINATION,
+		func(config *coralogixv1alpha1.AIEvaluationConfig) {
+			config.SQLHallucination = coralogixv1alpha1.NewAIEvaluationSQLHallucinationConfig()
+		},
+		expectRemoteAIEvaluationSQLHallucination,
+	)
+
+	describeEmptyConfigAIEvaluation(
+		"AIEvaluation SQL Read Only",
+		"ai-evaluation-sql-read-only",
+		aievaluations.EVALUATIONTYPE_SQL_READ_ONLY,
+		func(config *coralogixv1alpha1.AIEvaluationConfig) {
+			config.SQLReadOnly = coralogixv1alpha1.NewAIEvaluationSQLReadOnlyConfig()
+		},
+		expectRemoteAIEvaluationSQLReadOnly,
+	)
+
+	describeStringSetConfigAIEvaluation(
+		"AIEvaluation SQL Restricted Tables",
+		"ai-evaluation-sql-restricted-tables",
+		aievaluations.EVALUATIONTYPE_SQL_RESTRICTED_TABLES,
+		[]string{"secrets", "audit_logs"},
+		[]string{"payroll", "pii_exports"},
+		func(config *coralogixv1alpha1.AIEvaluationConfig, values []string) {
+			config.SQLRestrictedTables = &coralogixv1alpha1.AIEvaluationSQLRestrictedTablesConfig{Tables: values}
+		},
+		expectRemoteAIEvaluationSQLRestrictedTables,
+	)
+}
+
+var _ = Describe("AIEvaluation Toxicity", Ordered, func() {
+	var (
+		crClient           client.Client
+		aiApplications     *aiapplications.AIApplicationsServiceAPIService
+		aiEvaluations      *aievaluations.AIEvaluationsServiceAPIService
+		aiEvaluationID     string
+		aiEvaluation       *coralogixv1alpha1.AIEvaluation
+		application        aiEvaluationApplicationRef
+		target             string
+		aiEvaluationCRName = fmt.Sprintf("ai-evaluation-toxicity-%d", time.Now().Unix())
+	)
+
+	BeforeAll(func(ctx context.Context) {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		clientSet := newAIEvaluationOpenAPIClientSet()
+		aiApplications = clientSet.AIApplications()
+		aiEvaluations = clientSet.AIEvaluations()
+
+		var err error
+		application, target, err = firstAvailableAIEvaluationApplication(ctx, aiApplications, aiEvaluations, aievaluations.EVALUATIONTYPE_TOXICITY)
+		Expect(err).ToNot(HaveOccurred())
+
+		aiEvaluation = newToxicityAIEvaluation(
+			aiEvaluationCRName,
+			testNamespace,
+			application,
+			target,
+			resource.MustParse("0.8"),
+			true,
+		)
+	})
+
+	AfterAll(func(ctx context.Context) {
+		if aiEvaluation == nil {
+			return
+		}
+
+		err := crClient.Delete(ctx, aiEvaluation)
+		if err != nil && !apierrors.IsNotFound(err) {
+			Expect(err).ToNot(HaveOccurred())
+		}
+
+		Eventually(func() bool {
+			fetched := &coralogixv1alpha1.AIEvaluation{}
+			err := crClient.Get(ctx, client.ObjectKey{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)
+			return apierrors.IsNotFound(err)
+		}, time.Minute, time.Second).Should(BeTrue())
+	})
+
+	It("Should be created successfully", func(ctx context.Context) {
+		By("Creating AIEvaluation")
+		Expect(crClient.Create(ctx, aiEvaluation)).To(Succeed())
+
+		By("Fetching the AIEvaluation ID")
+		fetched := &coralogixv1alpha1.AIEvaluation{}
+		Eventually(func(g Gomega) error {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
+			if fetched.Status.Id != nil {
+				aiEvaluationID = *fetched.Status.Id
+				return nil
+			}
+			return fmt.Errorf("AI evaluation ID is not set")
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying AIEvaluation exists in Coralogix backend")
+		Eventually(func(g Gomega) {
+			evaluation := getRemoteAIEvaluation(ctx, g, aiEvaluations, aiEvaluationID)
+			g.Expect(evaluation.GetApplication()).To(Equal(application.application))
+			g.Expect(evaluation.GetSubsystem()).To(Equal(application.subsystem))
+			g.Expect(strings.ToLower(string(evaluation.GetTarget()))).To(Equal(target))
+			g.Expect(evaluation.GetThreshold()).To(BeNumerically("~", 0.8, 0.00001))
+			g.Expect(evaluation.GetIsEnabled()).To(BeTrue())
+			expectRemoteAIEvaluationToxicity(g, evaluation)
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should be updated successfully", func(ctx context.Context) {
+		By("Patching the AIEvaluation")
+		modified := aiEvaluation.DeepCopy()
+		modified.Spec.Threshold = resource.MustParse("0.9")
+		modified.Spec.IsEnabled = ptr.To(false)
+		Expect(crClient.Patch(ctx, modified, client.MergeFrom(aiEvaluation))).To(Succeed())
+
+		By("Verifying AIEvaluation is updated in Coralogix backend")
+		Eventually(func(g Gomega) {
+			evaluation := getRemoteAIEvaluation(ctx, g, aiEvaluations, aiEvaluationID)
+			g.Expect(evaluation.GetThreshold()).To(BeNumerically("~", 0.9, 0.00001))
+			g.Expect(evaluation.GetIsEnabled()).To(BeFalse())
+			expectRemoteAIEvaluationToxicity(g, evaluation)
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should be deleted successfully", func(ctx context.Context) {
+		By("Deleting the AIEvaluation")
+		Expect(crClient.Delete(ctx, aiEvaluation)).To(Succeed())
+
+		By("Verifying AIEvaluation is deleted from Coralogix backend")
+		Eventually(func() int {
+			_, httpResp, err := aiEvaluations.
+				AiEvaluationsServiceGetAiEvaluation(ctx, aiEvaluationID).
+				Execute()
+			return cxsdk.Code(cxsdk.NewAPIError(httpResp, err))
+		}, time.Minute, time.Second).Should(Equal(http.StatusNotFound))
+	})
+})
+
+type aiEvaluationApplicationRef struct {
+	application string
+	subsystem   string
+}
+
+func newAIEvaluationOpenAPIClientSet() *cxsdk.ClientSet {
+	builder := cxsdk.NewConfigBuilder().WithAPIKeyEnv()
+	if domain := os.Getenv("CORALOGIX_DOMAIN"); domain != "" {
+		builder = builder.WithDomain(domain)
+	} else {
+		builder = builder.WithRegionEnv()
+	}
+	return cxsdk.NewClientSet(builder.Build())
+}
+
+func firstAvailableAIEvaluationApplication(
+	ctx context.Context,
+	applicationsClient *aiapplications.AIApplicationsServiceAPIService,
+	evaluationsClient *aievaluations.AIEvaluationsServiceAPIService,
+	evaluationType aievaluations.EvaluationType,
+) (aiEvaluationApplicationRef, string, error) {
+	result, httpResp, err := applicationsClient.
+		AiApplicationsServiceListAiApplications(ctx).
+		PageSize(200).
+		PageOffset(0).
+		Execute()
+	if err != nil {
+		return aiEvaluationApplicationRef{}, "", cxsdk.NewAPIError(httpResp, err)
+	}
+
+	for _, application := range result.GetAiApplications() {
+		applicationName := application.GetApplication()
+		subsystem := application.GetSubsystem()
+		if applicationName == "" || subsystem == "" {
+			continue
+		}
+
+		target, available, err := availableAIEvaluationTarget(ctx, evaluationsClient, applicationName, subsystem, evaluationType)
+		if err != nil {
+			return aiEvaluationApplicationRef{}, "", err
+		}
+		if available {
+			return aiEvaluationApplicationRef{
+				application: applicationName,
+				subsystem:   subsystem,
+			}, target, nil
+		}
+	}
+
+	return aiEvaluationApplicationRef{}, "", fmt.Errorf("no AI application with a subsystem has an available %s evaluation target", evaluationType)
+}
+
+func availableAIEvaluationTarget(
+	ctx context.Context,
+	evaluationsClient *aievaluations.AIEvaluationsServiceAPIService,
+	application string,
+	subsystem string,
+	evaluationType aievaluations.EvaluationType,
+) (string, bool, error) {
+	result, httpResp, err := evaluationsClient.
+		AiEvaluationsServiceListAiEvaluations(ctx).
+		Application(application).
+		Subsystem(subsystem).
+		EvaluationType(evaluationType).
+		PageSize(200).
+		PageOffset(0).
+		Execute()
+	if err != nil {
+		return "", false, cxsdk.NewAPIError(httpResp, err)
+	}
+
+	usedTargets := make(map[string]struct{}, len(result.GetAiEvaluations()))
+	for _, evaluation := range result.GetAiEvaluations() {
+		target := strings.ToLower(string(evaluation.GetTarget()))
+		if target != "" {
+			usedTargets[target] = struct{}{}
+		}
+	}
+
+	for _, candidate := range []string{coralogixv1alpha1.AIEvaluationTargetResponse, coralogixv1alpha1.AIEvaluationTargetPrompt} {
+		if _, used := usedTargets[candidate]; !used {
+			return candidate, true, nil
+		}
+	}
+
+	return "", false, nil
+}
+
+func describeEmptyConfigAIEvaluation(
+	description string,
+	namePrefix string,
+	evaluationType aievaluations.EvaluationType,
+	configure func(*coralogixv1alpha1.AIEvaluationConfig),
+	expectRemoteConfig func(Gomega, aievaluations.AiEvaluation),
+) {
+	Describe(description, Ordered, func() {
+		var (
+			crClient           client.Client
+			aiApplications     *aiapplications.AIApplicationsServiceAPIService
+			aiEvaluations      *aievaluations.AIEvaluationsServiceAPIService
+			aiEvaluationID     string
+			aiEvaluation       *coralogixv1alpha1.AIEvaluation
+			application        aiEvaluationApplicationRef
+			target             string
+			aiEvaluationCRName = fmt.Sprintf("%s-%d", namePrefix, time.Now().Unix())
+		)
+
+		BeforeAll(func(ctx context.Context) {
+			crClient = ClientsInstance.GetControllerRuntimeClient()
+			clientSet := newAIEvaluationOpenAPIClientSet()
+			aiApplications = clientSet.AIApplications()
+			aiEvaluations = clientSet.AIEvaluations()
+
+			var err error
+			application, target, err = firstAvailableAIEvaluationApplication(ctx, aiApplications, aiEvaluations, evaluationType)
+			Expect(err).ToNot(HaveOccurred())
+
+			aiEvaluation = newEmptyConfigAIEvaluation(
+				aiEvaluationCRName,
+				testNamespace,
+				application,
+				target,
+				resource.MustParse("0.8"),
+				true,
+				configure,
+			)
+		})
+
+		AfterAll(func(ctx context.Context) {
+			if aiEvaluation == nil {
+				return
+			}
+
+			err := crClient.Delete(ctx, aiEvaluation)
+			if err != nil && !apierrors.IsNotFound(err) {
+				Expect(err).ToNot(HaveOccurred())
+			}
+
+			Eventually(func() bool {
+				fetched := &coralogixv1alpha1.AIEvaluation{}
+				err := crClient.Get(ctx, client.ObjectKey{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)
+				return apierrors.IsNotFound(err)
+			}, time.Minute, time.Second).Should(BeTrue())
+		})
+
+		It("Should be created successfully", func(ctx context.Context) {
+			By("Creating AIEvaluation")
+			Expect(crClient.Create(ctx, aiEvaluation)).To(Succeed())
+
+			By("Fetching the AIEvaluation ID")
+			fetched := &coralogixv1alpha1.AIEvaluation{}
+			Eventually(func(g Gomega) error {
+				g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)).To(Succeed())
+				g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+				g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
+				if fetched.Status.Id != nil {
+					aiEvaluationID = *fetched.Status.Id
+					return nil
+				}
+				return fmt.Errorf("AI evaluation ID is not set")
+			}, time.Minute, time.Second).Should(Succeed())
+
+			By("Verifying AIEvaluation exists in Coralogix backend")
+			Eventually(func(g Gomega) {
+				evaluation := getRemoteAIEvaluation(ctx, g, aiEvaluations, aiEvaluationID)
+				g.Expect(evaluation.GetApplication()).To(Equal(application.application))
+				g.Expect(evaluation.GetSubsystem()).To(Equal(application.subsystem))
+				g.Expect(strings.ToLower(string(evaluation.GetTarget()))).To(Equal(target))
+				g.Expect(evaluation.GetThreshold()).To(BeNumerically("~", 0.8, 0.00001))
+				g.Expect(evaluation.GetIsEnabled()).To(BeTrue())
+				expectRemoteConfig(g, evaluation)
+			}, time.Minute, time.Second).Should(Succeed())
+		})
+
+		It("Should be updated successfully", func(ctx context.Context) {
+			By("Patching the AIEvaluation")
+			modified := aiEvaluation.DeepCopy()
+			modified.Spec.Threshold = resource.MustParse("0.9")
+			modified.Spec.IsEnabled = ptr.To(false)
+			Expect(crClient.Patch(ctx, modified, client.MergeFrom(aiEvaluation))).To(Succeed())
+
+			By("Verifying AIEvaluation is updated in Coralogix backend")
+			Eventually(func(g Gomega) {
+				evaluation := getRemoteAIEvaluation(ctx, g, aiEvaluations, aiEvaluationID)
+				g.Expect(evaluation.GetThreshold()).To(BeNumerically("~", 0.9, 0.00001))
+				g.Expect(evaluation.GetIsEnabled()).To(BeFalse())
+				expectRemoteConfig(g, evaluation)
+			}, time.Minute, time.Second).Should(Succeed())
+		})
+
+		It("Should be deleted successfully", func(ctx context.Context) {
+			By("Deleting the AIEvaluation")
+			Expect(crClient.Delete(ctx, aiEvaluation)).To(Succeed())
+
+			By("Verifying AIEvaluation is deleted from Coralogix backend")
+			Eventually(func() int {
+				_, httpResp, err := aiEvaluations.
+					AiEvaluationsServiceGetAiEvaluation(ctx, aiEvaluationID).
+					Execute()
+				return cxsdk.Code(cxsdk.NewAPIError(httpResp, err))
+			}, time.Minute, time.Second).Should(Equal(http.StatusNotFound))
+		})
+	})
+}
+
+func describeStringSetConfigAIEvaluation(
+	description string,
+	namePrefix string,
+	evaluationType aievaluations.EvaluationType,
+	createdValues []string,
+	updatedValues []string,
+	configure func(*coralogixv1alpha1.AIEvaluationConfig, []string),
+	expectRemoteConfig func(Gomega, aievaluations.AiEvaluation, []string),
+) {
+	Describe(description, Ordered, func() {
+		var (
+			crClient           client.Client
+			aiApplications     *aiapplications.AIApplicationsServiceAPIService
+			aiEvaluations      *aievaluations.AIEvaluationsServiceAPIService
+			aiEvaluationID     string
+			aiEvaluation       *coralogixv1alpha1.AIEvaluation
+			application        aiEvaluationApplicationRef
+			target             string
+			aiEvaluationCRName = fmt.Sprintf("%s-%d", namePrefix, time.Now().Unix())
+		)
+
+		BeforeAll(func(ctx context.Context) {
+			crClient = ClientsInstance.GetControllerRuntimeClient()
+			clientSet := newAIEvaluationOpenAPIClientSet()
+			aiApplications = clientSet.AIApplications()
+			aiEvaluations = clientSet.AIEvaluations()
+
+			var err error
+			application, target, err = firstAvailableAIEvaluationApplication(ctx, aiApplications, aiEvaluations, evaluationType)
+			Expect(err).ToNot(HaveOccurred())
+
+			aiEvaluation = newStringSetConfigAIEvaluation(
+				aiEvaluationCRName,
+				testNamespace,
+				application,
+				target,
+				resource.MustParse("0.8"),
+				true,
+				createdValues,
+				configure,
+			)
+		})
+
+		AfterAll(func(ctx context.Context) {
+			if aiEvaluation == nil {
+				return
+			}
+
+			err := crClient.Delete(ctx, aiEvaluation)
+			if err != nil && !apierrors.IsNotFound(err) {
+				Expect(err).ToNot(HaveOccurred())
+			}
+
+			Eventually(func() bool {
+				fetched := &coralogixv1alpha1.AIEvaluation{}
+				err := crClient.Get(ctx, client.ObjectKey{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)
+				return apierrors.IsNotFound(err)
+			}, time.Minute, time.Second).Should(BeTrue())
+		})
+
+		It("Should be created successfully", func(ctx context.Context) {
+			By("Creating AIEvaluation")
+			Expect(crClient.Create(ctx, aiEvaluation)).To(Succeed())
+
+			By("Fetching the AIEvaluation ID")
+			fetched := &coralogixv1alpha1.AIEvaluation{}
+			Eventually(func(g Gomega) error {
+				g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)).To(Succeed())
+				g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+				g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
+				if fetched.Status.Id != nil {
+					aiEvaluationID = *fetched.Status.Id
+					return nil
+				}
+				return fmt.Errorf("AI evaluation ID is not set")
+			}, time.Minute, time.Second).Should(Succeed())
+
+			By("Verifying AIEvaluation exists in Coralogix backend")
+			Eventually(func(g Gomega) {
+				evaluation := getRemoteAIEvaluation(ctx, g, aiEvaluations, aiEvaluationID)
+				g.Expect(evaluation.GetApplication()).To(Equal(application.application))
+				g.Expect(evaluation.GetSubsystem()).To(Equal(application.subsystem))
+				g.Expect(strings.ToLower(string(evaluation.GetTarget()))).To(Equal(target))
+				g.Expect(evaluation.GetThreshold()).To(BeNumerically("~", 0.8, 0.00001))
+				g.Expect(evaluation.GetIsEnabled()).To(BeTrue())
+				expectRemoteConfig(g, evaluation, createdValues)
+			}, time.Minute, time.Second).Should(Succeed())
+		})
+
+		It("Should be updated successfully", func(ctx context.Context) {
+			By("Patching the AIEvaluation")
+			modified := aiEvaluation.DeepCopy()
+			modified.Spec.Threshold = resource.MustParse("0.9")
+			modified.Spec.IsEnabled = ptr.To(false)
+			configure(&modified.Spec.Config, updatedValues)
+			Expect(crClient.Patch(ctx, modified, client.MergeFrom(aiEvaluation))).To(Succeed())
+
+			By("Verifying AIEvaluation is updated in Coralogix backend")
+			Eventually(func(g Gomega) {
+				evaluation := getRemoteAIEvaluation(ctx, g, aiEvaluations, aiEvaluationID)
+				g.Expect(evaluation.GetThreshold()).To(BeNumerically("~", 0.9, 0.00001))
+				g.Expect(evaluation.GetIsEnabled()).To(BeFalse())
+				expectRemoteConfig(g, evaluation, updatedValues)
+			}, time.Minute, time.Second).Should(Succeed())
+		})
+
+		It("Should be deleted successfully", func(ctx context.Context) {
+			By("Deleting the AIEvaluation")
+			Expect(crClient.Delete(ctx, aiEvaluation)).To(Succeed())
+
+			By("Verifying AIEvaluation is deleted from Coralogix backend")
+			Eventually(func() int {
+				_, httpResp, err := aiEvaluations.
+					AiEvaluationsServiceGetAiEvaluation(ctx, aiEvaluationID).
+					Execute()
+				return cxsdk.Code(cxsdk.NewAPIError(httpResp, err))
+			}, time.Minute, time.Second).Should(Equal(http.StatusNotFound))
+		})
+	})
+}
+
+func newEmptyConfigAIEvaluation(
+	name string,
+	namespace string,
+	application aiEvaluationApplicationRef,
+	target string,
+	threshold resource.Quantity,
+	isEnabled bool,
+	configure func(*coralogixv1alpha1.AIEvaluationConfig),
+) *coralogixv1alpha1.AIEvaluation {
+	config := coralogixv1alpha1.AIEvaluationConfig{}
+	configure(&config)
+
+	return &coralogixv1alpha1.AIEvaluation{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: coralogixv1alpha1.AIEvaluationSpec{
+			Application: application.application,
+			Subsystem:   application.subsystem,
+			Target:      target,
+			Threshold:   threshold,
+			IsEnabled:   ptr.To(isEnabled),
+			Config:      config,
+		},
+	}
+}
+
+func newStringSetConfigAIEvaluation(
+	name string,
+	namespace string,
+	application aiEvaluationApplicationRef,
+	target string,
+	threshold resource.Quantity,
+	isEnabled bool,
+	values []string,
+	configure func(*coralogixv1alpha1.AIEvaluationConfig, []string),
+) *coralogixv1alpha1.AIEvaluation {
+	config := coralogixv1alpha1.AIEvaluationConfig{}
+	configure(&config, values)
+
+	return &coralogixv1alpha1.AIEvaluation{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: coralogixv1alpha1.AIEvaluationSpec{
+			Application: application.application,
+			Subsystem:   application.subsystem,
+			Target:      target,
+			Threshold:   threshold,
+			IsEnabled:   ptr.To(isEnabled),
+			Config:      config,
+		},
+	}
+}
+
+func newPIIAIEvaluation(
+	name string,
+	namespace string,
+	application aiEvaluationApplicationRef,
+	target string,
+	threshold resource.Quantity,
+	isEnabled bool,
+	categories []coralogixv1alpha1.AIEvaluationPIICategory,
+) *coralogixv1alpha1.AIEvaluation {
+	return &coralogixv1alpha1.AIEvaluation{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: coralogixv1alpha1.AIEvaluationSpec{
+			Application: application.application,
+			Subsystem:   application.subsystem,
+			Target:      target,
+			Threshold:   threshold,
+			IsEnabled:   ptr.To(isEnabled),
+			Config: coralogixv1alpha1.AIEvaluationConfig{
+				PII: &coralogixv1alpha1.AIEvaluationPIIConfig{
+					Categories: categories,
+				},
+			},
+		},
+	}
+}
+
+func newAllowedTopicsAIEvaluation(
+	name string,
+	namespace string,
+	application aiEvaluationApplicationRef,
+	target string,
+	threshold resource.Quantity,
+	isEnabled bool,
+	topics []string,
+) *coralogixv1alpha1.AIEvaluation {
+	return &coralogixv1alpha1.AIEvaluation{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: coralogixv1alpha1.AIEvaluationSpec{
+			Application: application.application,
+			Subsystem:   application.subsystem,
+			Target:      target,
+			Threshold:   threshold,
+			IsEnabled:   ptr.To(isEnabled),
+			Config: coralogixv1alpha1.AIEvaluationConfig{
+				AllowedTopics: &coralogixv1alpha1.AIEvaluationAllowedTopicsConfig{
+					Topics: topics,
+				},
+			},
+		},
+	}
+}
+
+func newCompetitionAIEvaluation(
+	name string,
+	namespace string,
+	application aiEvaluationApplicationRef,
+	target string,
+	threshold resource.Quantity,
+	isEnabled bool,
+	competitors []string,
+) *coralogixv1alpha1.AIEvaluation {
+	return &coralogixv1alpha1.AIEvaluation{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: coralogixv1alpha1.AIEvaluationSpec{
+			Application: application.application,
+			Subsystem:   application.subsystem,
+			Target:      target,
+			Threshold:   threshold,
+			IsEnabled:   ptr.To(isEnabled),
+			Config: coralogixv1alpha1.AIEvaluationConfig{
+				Competition: &coralogixv1alpha1.AIEvaluationCompetitionConfig{
+					Competitors: competitors,
+				},
+			},
+		},
+	}
+}
+
+func newLanguageMismatchAIEvaluation(
+	name string,
+	namespace string,
+	application aiEvaluationApplicationRef,
+	target string,
+	threshold resource.Quantity,
+	isEnabled bool,
+) *coralogixv1alpha1.AIEvaluation {
+	return &coralogixv1alpha1.AIEvaluation{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: coralogixv1alpha1.AIEvaluationSpec{
+			Application: application.application,
+			Subsystem:   application.subsystem,
+			Target:      target,
+			Threshold:   threshold,
+			IsEnabled:   ptr.To(isEnabled),
+			Config: coralogixv1alpha1.AIEvaluationConfig{
+				LanguageMismatch: coralogixv1alpha1.NewAIEvaluationLanguageMismatchConfig(),
+			},
+		},
+	}
+}
+
+func newPromptInjectionAIEvaluation(
+	name string,
+	namespace string,
+	application aiEvaluationApplicationRef,
+	target string,
+	threshold resource.Quantity,
+	isEnabled bool,
+	additionalContext string,
+) *coralogixv1alpha1.AIEvaluation {
+	return &coralogixv1alpha1.AIEvaluation{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: coralogixv1alpha1.AIEvaluationSpec{
+			Application: application.application,
+			Subsystem:   application.subsystem,
+			Target:      target,
+			Threshold:   threshold,
+			IsEnabled:   ptr.To(isEnabled),
+			Config: coralogixv1alpha1.AIEvaluationConfig{
+				PromptInjection: &coralogixv1alpha1.AIEvaluationPromptInjectionConfig{
+					AdditionalContext: additionalContext,
+				},
+			},
+		},
+	}
+}
+
+func newRestrictedTopicsAIEvaluation(
+	name string,
+	namespace string,
+	application aiEvaluationApplicationRef,
+	target string,
+	threshold resource.Quantity,
+	isEnabled bool,
+	topics []string,
+) *coralogixv1alpha1.AIEvaluation {
+	return &coralogixv1alpha1.AIEvaluation{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: coralogixv1alpha1.AIEvaluationSpec{
+			Application: application.application,
+			Subsystem:   application.subsystem,
+			Target:      target,
+			Threshold:   threshold,
+			IsEnabled:   ptr.To(isEnabled),
+			Config: coralogixv1alpha1.AIEvaluationConfig{
+				RestrictedTopics: &coralogixv1alpha1.AIEvaluationRestrictedTopicsConfig{
+					Topics: topics,
+				},
+			},
+		},
+	}
+}
+
+func newSexismAIEvaluation(
+	name string,
+	namespace string,
+	application aiEvaluationApplicationRef,
+	target string,
+	threshold resource.Quantity,
+	isEnabled bool,
+) *coralogixv1alpha1.AIEvaluation {
+	return &coralogixv1alpha1.AIEvaluation{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: coralogixv1alpha1.AIEvaluationSpec{
+			Application: application.application,
+			Subsystem:   application.subsystem,
+			Target:      target,
+			Threshold:   threshold,
+			IsEnabled:   ptr.To(isEnabled),
+			Config: coralogixv1alpha1.AIEvaluationConfig{
+				Sexism: coralogixv1alpha1.NewAIEvaluationSexismConfig(),
+			},
+		},
+	}
+}
+
+func newToxicityAIEvaluation(
+	name string,
+	namespace string,
+	application aiEvaluationApplicationRef,
+	target string,
+	threshold resource.Quantity,
+	isEnabled bool,
+) *coralogixv1alpha1.AIEvaluation {
+	return &coralogixv1alpha1.AIEvaluation{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: coralogixv1alpha1.AIEvaluationSpec{
+			Application: application.application,
+			Subsystem:   application.subsystem,
+			Target:      target,
+			Threshold:   threshold,
+			IsEnabled:   ptr.To(isEnabled),
+			Config: coralogixv1alpha1.AIEvaluationConfig{
+				Toxicity: coralogixv1alpha1.NewAIEvaluationToxicityConfig(),
+			},
+		},
+	}
+}
+
+func getRemoteAIEvaluation(
+	ctx context.Context,
+	g Gomega,
+	evaluationsClient *aievaluations.AIEvaluationsServiceAPIService,
+	id string,
+) aievaluations.AiEvaluation {
+	result, httpResp, err := evaluationsClient.
+		AiEvaluationsServiceGetAiEvaluation(ctx, id).
+		Execute()
+	g.Expect(cxsdk.NewAPIError(httpResp, err)).ToNot(HaveOccurred())
+	return result.GetAiEvaluation()
+}
+
+func expectRemoteAIEvaluationPIICategories(
+	g Gomega,
+	evaluation aievaluations.AiEvaluation,
+	expected []coralogixv1alpha1.AIEvaluationPIICategory,
+) {
+	config := evaluation.GetConfig()
+	g.Expect(config.EvaluationConfigPii).ToNot(BeNil())
+	piiConfig := config.EvaluationConfigPii.GetPii()
+	g.Expect(schemaPIICategories(piiConfig.GetCategories())).To(ConsistOf(expectedPIICategories(expected)...))
+}
+
+func expectRemoteAIEvaluationAllowedTopics(
+	g Gomega,
+	evaluation aievaluations.AiEvaluation,
+	expected []string,
+) {
+	config := evaluation.GetConfig()
+	g.Expect(config.EvaluationConfigAllowedTopics).ToNot(BeNil())
+	allowedTopicsConfig := config.EvaluationConfigAllowedTopics.GetAllowedTopics()
+	g.Expect(allowedTopicsConfig.GetTopics()).To(ConsistOf(expectedStrings(expected)...))
+}
+
+func expectRemoteAIEvaluationCompetition(
+	g Gomega,
+	evaluation aievaluations.AiEvaluation,
+	expected []string,
+) {
+	config := evaluation.GetConfig()
+	g.Expect(config.EvaluationConfigCompetition).ToNot(BeNil())
+	competitionConfig := config.EvaluationConfigCompetition.GetCompetition()
+	g.Expect(competitionConfig.GetCompetitors()).To(ConsistOf(expectedStrings(expected)...))
+}
+
+func expectRemoteAIEvaluationHallucinationCompleteness(
+	g Gomega,
+	evaluation aievaluations.AiEvaluation,
+) {
+	config := evaluation.GetConfig()
+	g.Expect(config.EvaluationConfigHallucinationCompleteness).ToNot(BeNil())
+	g.Expect(config.EvaluationConfigHallucinationCompleteness.GetHallucinationCompleteness()).To(BeEmpty())
+}
+
+func expectRemoteAIEvaluationHallucinationContextAdherence(
+	g Gomega,
+	evaluation aievaluations.AiEvaluation,
+) {
+	config := evaluation.GetConfig()
+	g.Expect(config.EvaluationConfigHallucinationContextAdherence).ToNot(BeNil())
+	g.Expect(config.EvaluationConfigHallucinationContextAdherence.GetHallucinationContextAdherence()).To(BeEmpty())
+}
+
+func expectRemoteAIEvaluationHallucinationContextRelevance(
+	g Gomega,
+	evaluation aievaluations.AiEvaluation,
+) {
+	config := evaluation.GetConfig()
+	g.Expect(config.EvaluationConfigHallucinationContextRelevance).ToNot(BeNil())
+	g.Expect(config.EvaluationConfigHallucinationContextRelevance.GetHallucinationContextRelevance()).To(BeEmpty())
+}
+
+func expectRemoteAIEvaluationHallucinationCorrectness(
+	g Gomega,
+	evaluation aievaluations.AiEvaluation,
+) {
+	config := evaluation.GetConfig()
+	g.Expect(config.EvaluationConfigHallucinationCorrectness).ToNot(BeNil())
+	g.Expect(config.EvaluationConfigHallucinationCorrectness.GetHallucinationCorrectness()).To(BeEmpty())
+}
+
+func expectRemoteAIEvaluationHallucinationTaskAdherence(
+	g Gomega,
+	evaluation aievaluations.AiEvaluation,
+) {
+	config := evaluation.GetConfig()
+	g.Expect(config.EvaluationConfigHallucinationTaskAdherence).ToNot(BeNil())
+	g.Expect(config.EvaluationConfigHallucinationTaskAdherence.GetHallucinationTaskAdherence()).To(BeEmpty())
+}
+
+func expectRemoteAIEvaluationLanguageMismatch(
+	g Gomega,
+	evaluation aievaluations.AiEvaluation,
+) {
+	config := evaluation.GetConfig()
+	g.Expect(config.EvaluationConfigLanguageMismatch).ToNot(BeNil())
+	g.Expect(config.EvaluationConfigLanguageMismatch.GetLanguageMismatch()).To(BeEmpty())
+}
+
+func expectRemoteAIEvaluationPromptInjection(
+	g Gomega,
+	evaluation aievaluations.AiEvaluation,
+	additionalContext string,
+) {
+	config := evaluation.GetConfig()
+	g.Expect(config.EvaluationConfigPromptInjection).ToNot(BeNil())
+	promptInjectionConfig := config.EvaluationConfigPromptInjection.GetPromptInjection()
+	g.Expect(promptInjectionConfig.GetAdditionalContext()).To(Equal(additionalContext))
+}
+
+func expectRemoteAIEvaluationRestrictedTopics(
+	g Gomega,
+	evaluation aievaluations.AiEvaluation,
+	expected []string,
+) {
+	config := evaluation.GetConfig()
+	g.Expect(config.EvaluationConfigRestrictedTopics).ToNot(BeNil())
+	restrictedTopicsConfig := config.EvaluationConfigRestrictedTopics.GetRestrictedTopics()
+	g.Expect(restrictedTopicsConfig.GetTopics()).To(ConsistOf(expectedStrings(expected)...))
+}
+
+func expectRemoteAIEvaluationSexism(
+	g Gomega,
+	evaluation aievaluations.AiEvaluation,
+) {
+	config := evaluation.GetConfig()
+	g.Expect(config.EvaluationConfigSexism).ToNot(BeNil())
+	g.Expect(config.EvaluationConfigSexism.GetSexism()).To(BeEmpty())
+}
+
+func expectRemoteAIEvaluationSQLAllowedTables(
+	g Gomega,
+	evaluation aievaluations.AiEvaluation,
+	expected []string,
+) {
+	config := evaluation.GetConfig()
+	g.Expect(config.EvaluationConfigSqlAllowedTables).ToNot(BeNil())
+	sqlAllowedTablesConfig := config.EvaluationConfigSqlAllowedTables.GetSqlAllowedTables()
+	g.Expect(sqlAllowedTablesConfig.GetTables()).To(ConsistOf(expectedStrings(expected)...))
+}
+
+func expectRemoteAIEvaluationSQLHallucination(
+	g Gomega,
+	evaluation aievaluations.AiEvaluation,
+) {
+	config := evaluation.GetConfig()
+	g.Expect(config.EvaluationConfigSqlHallucination).ToNot(BeNil())
+	g.Expect(config.EvaluationConfigSqlHallucination.GetSqlHallucination()).To(BeEmpty())
+}
+
+func expectRemoteAIEvaluationSQLReadOnly(
+	g Gomega,
+	evaluation aievaluations.AiEvaluation,
+) {
+	config := evaluation.GetConfig()
+	g.Expect(config.EvaluationConfigSqlReadOnly).ToNot(BeNil())
+	g.Expect(config.EvaluationConfigSqlReadOnly.GetSqlReadOnly()).To(BeEmpty())
+}
+
+func expectRemoteAIEvaluationSQLRestrictedTables(
+	g Gomega,
+	evaluation aievaluations.AiEvaluation,
+	expected []string,
+) {
+	config := evaluation.GetConfig()
+	g.Expect(config.EvaluationConfigSqlRestrictedTables).ToNot(BeNil())
+	sqlRestrictedTablesConfig := config.EvaluationConfigSqlRestrictedTables.GetSqlRestrictedTables()
+	g.Expect(sqlRestrictedTablesConfig.GetTables()).To(ConsistOf(expectedStrings(expected)...))
+}
+
+func expectRemoteAIEvaluationToxicity(
+	g Gomega,
+	evaluation aievaluations.AiEvaluation,
+) {
+	config := evaluation.GetConfig()
+	g.Expect(config.EvaluationConfigToxicity).ToNot(BeNil())
+	g.Expect(config.EvaluationConfigToxicity.GetToxicity()).To(BeEmpty())
+}
+
+func schemaPIICategories(categories []aievaluations.PiiCategory) []string {
+	result := make([]string, 0, len(categories))
+	for _, category := range categories {
+		result = append(result, string(category))
+	}
+	return result
+}
+
+func expectedPIICategories(categories []coralogixv1alpha1.AIEvaluationPIICategory) []interface{} {
+	result := make([]interface{}, 0, len(categories))
+	for _, category := range categories {
+		result = append(result, string(category))
+	}
+	return result
+}
+
+func expectedStrings(values []string) []interface{} {
+	result := make([]interface{}, 0, len(values))
+	for _, value := range values {
+		result = append(result, value)
+	}
+	return result
+}
