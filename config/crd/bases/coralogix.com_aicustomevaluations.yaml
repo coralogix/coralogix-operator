@@ -24,8 +24,9 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: AICustomEvaluation is the Schema for the AI custom evaluations
-          API.
+        description: |-
+          AICustomEvaluation is the Schema for the AI custom evaluations API.
+          See also https://coralogix.com/docs/user-guides/ai/
         properties:
           apiVersion:
             description: |-
@@ -118,8 +119,7 @@ spec:
                     !has(self.prohibited) || !has(self.prohibited.examples)) || size(self.acceptable.examples)
                     + size(self.prohibited.examples) <= 100
               description:
-                default: ""
-                description: Human-readable description. Defaults to an empty string.
+                description: Human-readable description.
                 maxLength: 65536
                 type: string
               instructions:
@@ -155,33 +155,6 @@ spec:
           status:
             description: AICustomEvaluationStatus defines the observed state of AICustomEvaluation.
             properties:
-              applicationIds:
-                description: Resolved AI application IDs linked to this custom evaluation.
-                items:
-                  type: string
-                type: array
-                x-kubernetes-list-type: set
-              applications:
-                description: Resolved AI application mappings linked to this custom
-                  evaluation.
-                items:
-                  properties:
-                    application:
-                      description: AI application name.
-                      type: string
-                    id:
-                      description: Resolved AI application ID.
-                      type: string
-                    subsystem:
-                      description: AI application subsystem.
-                      type: string
-                  required:
-                  - id
-                  type: object
-                type: array
-                x-kubernetes-list-map-keys:
-                - id
-                x-kubernetes-list-type: map
               conditions:
                 items:
                   description: Condition contains details for one aspect of the current

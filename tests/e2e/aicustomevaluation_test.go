@@ -82,12 +82,6 @@ var _ = Describe("AICustomEvaluation", Ordered, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiCustomEvaluationName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			g.Expect(fetched.Status.ApplicationIds).To(ConsistOf(application.id))
-			g.Expect(fetched.Status.Applications).To(ConsistOf(coralogixv1alpha1.AICustomEvaluationApplicationStatus{
-				Id:          application.id,
-				Application: application.application,
-				Subsystem:   application.subsystem,
-			}))
 			if fetched.Status.Id != nil {
 				aiCustomEvaluationID = *fetched.Status.Id
 				return nil
@@ -109,7 +103,7 @@ var _ = Describe("AICustomEvaluation", Ordered, func() {
 		modified := current.DeepCopy()
 		modified.Spec.Name = "competitor-policy-updated"
 		modified.Spec.PolicyType = coralogixv1alpha1.AICustomEvaluationPolicyTypeSecurity
-		modified.Spec.Description = "Flags responses that recommend competitor tools."
+		modified.Spec.Description = ptr.To("Flags responses that recommend competitor tools.")
 		modified.Spec.Instructions = "Score whether {response} recommends competitor products.\nOnly evaluate the final assistant response."
 		modified.Spec.ShouldIncludeSystemPrompt = ptr.To(true)
 		modified.Spec.Criteria = newAICustomEvaluationUpdateCriteria()
@@ -118,6 +112,37 @@ var _ = Describe("AICustomEvaluation", Ordered, func() {
 
 		By("Verifying AICustomEvaluation is updated in Coralogix backend")
 		Eventually(func(g Gomega) {
+			customEvaluation := getRemoteAICustomEvaluation(ctx, g, aiEvaluations, aiCustomEvaluationID)
+			expectRemoteAICustomEvaluation(g, customEvaluation, modified.Spec, []string{application.id})
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should restore application links removed outside the operator", func(ctx context.Context) {
+		By("Removing the AICustomEvaluation application link directly in Coralogix")
+		_, httpResp, err := aiEvaluations.
+			AiEvaluationsServiceUnlinkCustomEvaluationFromApp(ctx, aiCustomEvaluationID, application.id).
+			Execute()
+		Expect(cxsdk.NewAPIError(httpResp, err)).ToNot(HaveOccurred())
+
+		Eventually(func(g Gomega) {
+			customEvaluation := getRemoteAICustomEvaluation(ctx, g, aiEvaluations, aiCustomEvaluationID)
+			g.Expect(customEvaluation.GetApplicationIds()).To(BeEmpty())
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Patching the AICustomEvaluation to trigger reconciliation")
+		current := &coralogixv1alpha1.AICustomEvaluation{}
+		Expect(crClient.Get(ctx, types.NamespacedName{Name: aiCustomEvaluationName, Namespace: testNamespace}, current)).To(Succeed())
+		modified := current.DeepCopy()
+		modified.Spec.Description = ptr.To("Flags responses that recommend competitor tools and restores remote application links.")
+		Expect(crClient.Patch(ctx, modified, client.MergeFrom(current))).To(Succeed())
+		aiCustomEvaluation = modified
+
+		By("Verifying the AICustomEvaluation application link is restored")
+		Eventually(func(g Gomega) {
+			fetched := &coralogixv1alpha1.AICustomEvaluation{}
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiCustomEvaluationName, Namespace: testNamespace}, fetched)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+
 			customEvaluation := getRemoteAICustomEvaluation(ctx, g, aiEvaluations, aiCustomEvaluationID)
 			expectRemoteAICustomEvaluation(g, customEvaluation, modified.Spec, []string{application.id})
 		}, time.Minute, time.Second).Should(Succeed())
@@ -137,8 +162,6 @@ var _ = Describe("AICustomEvaluation", Ordered, func() {
 			fetched := &coralogixv1alpha1.AICustomEvaluation{}
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiCustomEvaluationName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
-			g.Expect(fetched.Status.ApplicationIds).To(BeEmpty())
-			g.Expect(fetched.Status.Applications).To(BeEmpty())
 
 			customEvaluation := getRemoteAICustomEvaluation(ctx, g, aiEvaluations, aiCustomEvaluationID)
 			g.Expect(customEvaluation.GetApplicationIds()).To(BeEmpty())
@@ -193,7 +216,6 @@ var _ = Describe("AICustomEvaluation minimal", Ordered, func() {
 			fetched := &coralogixv1alpha1.AICustomEvaluation{}
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: resourceName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
-			g.Expect(fetched.Status.ApplicationIds).To(BeEmpty())
 			if fetched.Status.Id != nil {
 				aiCustomEvaluationID = *fetched.Status.Id
 				return nil
@@ -415,7 +437,7 @@ func newAICustomEvaluation(
 		Spec: coralogixv1alpha1.AICustomEvaluationSpec{
 			Name:                      name,
 			PolicyType:                policyType,
-			Description:               description,
+			Description:               ptr.To(description),
 			Instructions:              instructions,
 			ShouldIncludeSystemPrompt: ptr.To(false),
 			Applications:              selectors,
@@ -492,7 +514,7 @@ func expectRemoteAICustomEvaluation(
 	expectedApplicationIDs []string,
 ) {
 	g.Expect(customEvaluation.GetName()).To(Equal(spec.Name))
-	g.Expect(customEvaluation.GetDescription()).To(Equal(spec.Description))
+	g.Expect(customEvaluation.GetDescription()).To(Equal(spec.DescriptionValue()))
 	g.Expect(customEvaluation.GetApplicationIds()).To(ConsistOf(expectedStrings(expectedApplicationIDs)...))
 
 	config := customEvaluation.GetConfig()

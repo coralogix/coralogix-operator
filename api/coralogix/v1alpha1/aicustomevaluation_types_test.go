@@ -18,9 +18,10 @@ import (
 	"fmt"
 	"testing"
 
-	aievaluations "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/ai_evaluations_service"
 	"github.com/stretchr/testify/require"
 	"k8s.io/utils/ptr"
+
+	aievaluations "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/ai_evaluations_service"
 )
 
 func TestAICustomEvaluationExtractRequestsCoverTerraformScenario(t *testing.T) {
@@ -31,7 +32,7 @@ func TestAICustomEvaluationExtractRequestsCoverTerraformScenario(t *testing.T) {
 		Spec: AICustomEvaluationSpec{
 			Name:                      "competitor-policy",
 			PolicyType:                AICustomEvaluationPolicyTypeQuality,
-			Description:               "Flags competitor references in assistant responses.",
+			Description:               ptr.To("Flags competitor references in assistant responses."),
 			Instructions:              "Score whether {response} mentions competitor products.\nTreat each assistant answer independently.",
 			ShouldIncludeSystemPrompt: ptr.To(false),
 			Applications: []AICustomEvaluationApplicationSelector{
@@ -80,7 +81,7 @@ func TestAICustomEvaluationExtractRequestsCoverTerraformScenario(t *testing.T) {
 
 	aiCustomEvaluation.Spec.Name = "competitor-policy-updated"
 	aiCustomEvaluation.Spec.PolicyType = AICustomEvaluationPolicyTypeSecurity
-	aiCustomEvaluation.Spec.Description = "Flags responses that recommend competitor tools."
+	aiCustomEvaluation.Spec.Description = ptr.To("Flags responses that recommend competitor tools.")
 	aiCustomEvaluation.Spec.Instructions = "Score whether {response} recommends competitor products.\nOnly evaluate the final assistant response."
 	aiCustomEvaluation.Spec.ShouldIncludeSystemPrompt = ptr.To(true)
 	aiCustomEvaluation.Spec.Criteria = &AICustomEvaluationCriteria{
@@ -216,7 +217,7 @@ func TestAICustomEvaluationExtractUpdateRequestReplacesExamplesWhenOneCriterionI
 				Spec: AICustomEvaluationSpec{
 					Name:         "one-sided-examples-policy",
 					PolicyType:   AICustomEvaluationPolicyTypeSecurity,
-					Description:  "Flags responses that mention or recommend competitor products.",
+					Description:  ptr.To("Flags responses that mention or recommend competitor products."),
 					Instructions: "Evaluate whether {response} mentions or recommends competitor products.",
 					Criteria:     tt.criteria,
 				},
@@ -241,7 +242,7 @@ func TestAICustomEvaluationExtractUpdateExamplesRequestClearsEmptyExamples(t *te
 		Spec: AICustomEvaluationSpec{
 			Name:         "empty-examples-policy",
 			PolicyType:   AICustomEvaluationPolicyTypeSecurity,
-			Description:  "Flags responses that mention or recommend competitor products.",
+			Description:  ptr.To("Flags responses that mention or recommend competitor products."),
 			Instructions: "Evaluate whether {response} mentions or recommends competitor products.",
 			Criteria: &AICustomEvaluationCriteria{
 				Acceptable: &AICustomEvaluationCriterion{
