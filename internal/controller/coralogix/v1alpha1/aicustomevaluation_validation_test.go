@@ -31,7 +31,7 @@ var _ = Describe("AICustomEvaluation validation", func() {
 		aiCustomEvaluation := validAICustomEvaluation("valid-ai-custom-evaluation")
 
 		Expect(k8sClient.Create(ctx, aiCustomEvaluation)).To(Succeed())
-		Expect(aiCustomEvaluation.Spec.Description).To(Equal(""))
+		Expect(aiCustomEvaluation.Spec.Description).To(BeNil())
 		Expect(aiCustomEvaluation.Spec.ShouldIncludeSystemPrompt).To(Equal(ptr.To(false)))
 		Expect(k8sClient.Delete(ctx, aiCustomEvaluation)).To(Succeed())
 	})

@@ -17,8 +17,10 @@ package v1alpha1
 import (
 	"fmt"
 
-	aievaluations "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/ai_evaluations_service"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
+
+	aievaluations "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/ai_evaluations_service"
 )
 
 const (
@@ -43,11 +45,10 @@ type AICustomEvaluationSpec struct {
 	// +kubebuilder:validation:Enum=quality;security
 	PolicyType string `json:"policyType"`
 
-	// Human-readable description. Defaults to an empty string.
+	// Human-readable description.
 	// +optional
-	// +kubebuilder:default=""
 	// +kubebuilder:validation:MaxLength=65536
-	Description string `json:"description,omitempty"`
+	Description *string `json:"description,omitempty"`
 
 	// Instructions sent to the LLM evaluator. Must contain at least one of {prompt}, {response}, or {chat_history}.
 	// +kubebuilder:validation:MinLength=1
@@ -116,33 +117,11 @@ type AICustomEvaluationStatus struct {
 	// +optional
 	Id *string `json:"id,omitempty"`
 
-	// Resolved AI application IDs linked to this custom evaluation.
-	// +optional
-	// +listType=set
-	ApplicationIds []string `json:"applicationIds,omitempty"`
-
-	// Resolved AI application mappings linked to this custom evaluation.
-	// +optional
-	// +listType=map
-	// +listMapKey=id
-	Applications []AICustomEvaluationApplicationStatus `json:"applications,omitempty"`
-
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
 	// +optional
 	PrintableStatus string `json:"printableStatus,omitempty"`
-}
-
-type AICustomEvaluationApplicationStatus struct {
-	// Resolved AI application ID.
-	Id string `json:"id"`
-
-	// AI application name.
-	Application string `json:"application,omitempty"`
-
-	// AI application subsystem.
-	Subsystem string `json:"subsystem,omitempty"`
 }
 
 func (e *AICustomEvaluation) GetConditions() []metav1.Condition {
@@ -173,7 +152,7 @@ func (e *AICustomEvaluation) ExtractCreateAICustomEvaluationRequest(applicationI
 
 	return &aievaluations.AiEvaluationsServiceCreateCustomEvaluationRequest{
 		ApplicationIds:            append([]string(nil), applicationIDs...),
-		Description:               aievaluations.PtrString(e.Spec.Description),
+		Description:               aievaluations.PtrString(e.Spec.DescriptionValue()),
 		Examples:                  examples,
 		Instructions:              aievaluations.PtrString(e.Spec.Instructions),
 		Name:                      aievaluations.PtrString(e.Spec.Name),
@@ -191,7 +170,7 @@ func (e *AICustomEvaluation) ExtractUpdateAICustomEvaluationRequest() (*aievalua
 	}
 
 	return &aievaluations.AiEvaluationsServiceUpdateCustomEvaluationRequest{
-		Description:               aievaluations.PtrString(e.Spec.Description),
+		Description:               aievaluations.PtrString(e.Spec.DescriptionValue()),
 		Examples:                  examples,
 		Instructions:              aievaluations.PtrString(e.Spec.Instructions),
 		Name:                      aievaluations.PtrString(e.Spec.Name),
@@ -222,6 +201,10 @@ func (s *AICustomEvaluationSpec) ShouldIncludeSystemPromptValue() bool {
 		return false
 	}
 	return *s.ShouldIncludeSystemPrompt
+}
+
+func (s *AICustomEvaluationSpec) DescriptionValue() string {
+	return ptr.Deref(s.Description, "")
 }
 
 func (s *AICustomEvaluationSpec) ExtractAICustomEvaluationCriteria() ([]aievaluations.CustomEvaluationExample, string, string, error) {
@@ -263,6 +246,7 @@ func (s *AICustomEvaluationSpec) ExtractAICustomEvaluationCriteria() ([]aievalua
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // AICustomEvaluation is the Schema for the AI custom evaluations API.
+// See also https://coralogix.com/docs/user-guides/ai/
 type AICustomEvaluation struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

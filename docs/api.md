@@ -77,6 +77,7 @@ Resource Types:
 
 
 AICustomEvaluation is the Schema for the AI custom evaluations API.
+See also https://coralogix.com/docs/user-guides/ai/
 
 <table>
     <thead>
@@ -181,9 +182,7 @@ AICustomEvaluationSpec defines the desired state of AICustomEvaluation.
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          Human-readable description. Defaults to an empty string.<br/>
-          <br/>
-            <i>Default</i>: <br/>
+          Human-readable description.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -356,20 +355,6 @@ AICustomEvaluationStatus defines the observed state of AICustomEvaluation.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>applicationIds</b></td>
-        <td>[]string</td>
-        <td>
-          Resolved AI application IDs linked to this custom evaluation.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#aicustomevaluationstatusapplicationsindex">applications</a></b></td>
-        <td>[]object</td>
-        <td>
-          Resolved AI application mappings linked to this custom evaluation.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b><a href="#aicustomevaluationstatusconditionsindex">conditions</a></b></td>
         <td>[]object</td>
         <td>
@@ -388,47 +373,6 @@ AICustomEvaluationStatus defines the observed state of AICustomEvaluation.
         <td>string</td>
         <td>
           <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### AICustomEvaluation.status.applications[index]
-<sup><sup>[↩ Parent](#aicustomevaluationstatus)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>id</b></td>
-        <td>string</td>
-        <td>
-          Resolved AI application ID.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>application</b></td>
-        <td>string</td>
-        <td>
-          AI application name.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>subsystem</b></td>
-        <td>string</td>
-        <td>
-          AI application subsystem.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -520,6 +464,7 @@ with respect to the current state of the instance.<br/>
 
 
 AIEvaluation is the Schema for the AI evaluations API.
+See also https://coralogix.com/docs/user-guides/ai/
 
 <table>
     <thead>

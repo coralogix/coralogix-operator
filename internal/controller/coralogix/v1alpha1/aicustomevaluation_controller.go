@@ -47,6 +47,12 @@ type aiCustomEvaluationApplicationKey struct {
 	Subsystem   string
 }
 
+type aiCustomEvaluationApplication struct {
+	Id          string
+	Application string
+	Subsystem   string
+}
+
 // +kubebuilder:rbac:groups=coralogix.com,resources=aicustomevaluations,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=coralogix.com,resources=aicustomevaluations/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=coralogix.com,resources=aicustomevaluations/finalizers,verbs=update
@@ -92,9 +98,7 @@ func (r *AICustomEvaluationReconciler) HandleCreation(ctx context.Context, log l
 	}
 
 	aiCustomEvaluation.Status = coralogixv1alpha1.AICustomEvaluationStatus{
-		Id:             ptr.To(id),
-		ApplicationIds: aiCustomEvaluationApplicationIDs(applications),
-		Applications:   applications,
+		Id: ptr.To(id),
 	}
 
 	return nil
@@ -140,14 +144,13 @@ func (r *AICustomEvaluationReconciler) HandleUpdate(ctx context.Context, log log
 		log.Info("Remote AICustomEvaluation examples cleared", "response", utils.FormatJSON(examplesUpdateResponse))
 	}
 
-	if err := r.reconcileApplicationLinks(ctx, id, currentAICustomEvaluationApplicationIDs(aiCustomEvaluation.Status), aiCustomEvaluationApplicationIDs(applications)); err != nil {
+	remoteApplicationIDs, err := r.getRemoteAICustomEvaluationApplicationIDs(ctx, id)
+	if err != nil {
 		return err
 	}
 
-	aiCustomEvaluation.Status.ApplicationIds = aiCustomEvaluationApplicationIDs(applications)
-	aiCustomEvaluation.Status.Applications = applications
-
-	return nil
+	desiredApplicationIDs := aiCustomEvaluationApplicationIDs(applications)
+	return r.reconcileApplicationLinks(ctx, id, remoteApplicationIDs, desiredApplicationIDs)
 }
 
 func (r *AICustomEvaluationReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
@@ -169,9 +172,9 @@ func (r *AICustomEvaluationReconciler) HandleDeletion(ctx context.Context, log l
 func (r *AICustomEvaluationReconciler) resolveApplications(
 	ctx context.Context,
 	selectors []coralogixv1alpha1.AICustomEvaluationApplicationSelector,
-) ([]coralogixv1alpha1.AICustomEvaluationApplicationStatus, error) {
+) ([]aiCustomEvaluationApplication, error) {
 	if len(selectors) == 0 {
-		return []coralogixv1alpha1.AICustomEvaluationApplicationStatus{}, nil
+		return []aiCustomEvaluationApplication{}, nil
 	}
 
 	allApplications, err := r.listAIApplications(ctx)
@@ -179,7 +182,7 @@ func (r *AICustomEvaluationReconciler) resolveApplications(
 		return nil, err
 	}
 
-	applicationsBySelector := make(map[aiCustomEvaluationApplicationKey][]coralogixv1alpha1.AICustomEvaluationApplicationStatus, len(allApplications))
+	applicationsBySelector := make(map[aiCustomEvaluationApplicationKey][]aiCustomEvaluationApplication, len(allApplications))
 	for _, application := range allApplications {
 		if application.Id == "" || application.Application == "" {
 			continue
@@ -191,7 +194,7 @@ func (r *AICustomEvaluationReconciler) resolveApplications(
 		applicationsBySelector[key] = append(applicationsBySelector[key], application)
 	}
 
-	resolved := make([]coralogixv1alpha1.AICustomEvaluationApplicationStatus, 0, len(selectors))
+	resolved := make([]aiCustomEvaluationApplication, 0, len(selectors))
 	for _, selector := range selectors {
 		matches := applicationsBySelector[aiCustomEvaluationApplicationKey{
 			Application: selector.Application,
@@ -210,9 +213,9 @@ func (r *AICustomEvaluationReconciler) resolveApplications(
 	return resolved, nil
 }
 
-func (r *AICustomEvaluationReconciler) listAIApplications(ctx context.Context) ([]coralogixv1alpha1.AICustomEvaluationApplicationStatus, error) {
+func (r *AICustomEvaluationReconciler) listAIApplications(ctx context.Context) ([]aiCustomEvaluationApplication, error) {
 	const pageSize = int32(200)
-	var applications []coralogixv1alpha1.AICustomEvaluationApplicationStatus
+	var applications []aiCustomEvaluationApplication
 	for pageOffset := int64(0); ; pageOffset++ {
 		resp, httpResp, err := r.AIApplicationsClient.
 			AiApplicationsServiceListAiApplications(ctx).
@@ -225,7 +228,7 @@ func (r *AICustomEvaluationReconciler) listAIApplications(ctx context.Context) (
 
 		page := resp.GetAiApplications()
 		for _, application := range page {
-			applications = append(applications, coralogixv1alpha1.AICustomEvaluationApplicationStatus{
+			applications = append(applications, aiCustomEvaluationApplication{
 				Id:          application.GetId(),
 				Application: application.GetApplication(),
 				Subsystem:   application.GetSubsystem(),
@@ -237,6 +240,25 @@ func (r *AICustomEvaluationReconciler) listAIApplications(ctx context.Context) (
 	}
 
 	return applications, nil
+}
+
+func (r *AICustomEvaluationReconciler) getRemoteAICustomEvaluationApplicationIDs(ctx context.Context, customEvaluationID string) ([]string, error) {
+	resp, httpResp, err := r.AIEvaluationsClient.
+		AiEvaluationsServiceGetCustomEvaluations(ctx).
+		Execute()
+	if err != nil {
+		return nil, fmt.Errorf("error on listing remote AICustomEvaluations: %w", cxsdk.NewAPIError(httpResp, err))
+	}
+
+	for _, customEvaluation := range resp.GetItems() {
+		if customEvaluation.GetId() == customEvaluationID {
+			ids := append([]string(nil), customEvaluation.GetApplicationIds()...)
+			sort.Strings(ids)
+			return ids, nil
+		}
+	}
+
+	return nil, fmt.Errorf("remote AICustomEvaluation %q not found", customEvaluationID)
 }
 
 func (r *AICustomEvaluationReconciler) reconcileApplicationLinks(ctx context.Context, customEvaluationID string, currentApplicationIDs []string, desiredApplicationIDs []string) error {
@@ -280,7 +302,7 @@ func (r *AICustomEvaluationReconciler) reconcileApplicationLinks(ctx context.Con
 	return nil
 }
 
-func aiCustomEvaluationApplicationIDs(applications []coralogixv1alpha1.AICustomEvaluationApplicationStatus) []string {
+func aiCustomEvaluationApplicationIDs(applications []aiCustomEvaluationApplication) []string {
 	ids := make([]string, 0, len(applications))
 	for _, application := range applications {
 		ids = append(ids, application.Id)
@@ -289,17 +311,7 @@ func aiCustomEvaluationApplicationIDs(applications []coralogixv1alpha1.AICustomE
 	return ids
 }
 
-func currentAICustomEvaluationApplicationIDs(status coralogixv1alpha1.AICustomEvaluationStatus) []string {
-	if len(status.ApplicationIds) > 0 {
-		ids := append([]string(nil), status.ApplicationIds...)
-		sort.Strings(ids)
-		return ids
-	}
-
-	return aiCustomEvaluationApplicationIDs(status.Applications)
-}
-
-func sortAICustomEvaluationApplications(applications []coralogixv1alpha1.AICustomEvaluationApplicationStatus) {
+func sortAICustomEvaluationApplications(applications []aiCustomEvaluationApplication) {
 	sort.Slice(applications, func(i, j int) bool {
 		if applications[i].Id == applications[j].Id {
 			if applications[i].Application == applications[j].Application {
