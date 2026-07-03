@@ -62,6 +62,23 @@ When creating or updating CRDs remember to run:
 make manifests generate
 ````
 
+Commit hooks
+---------------------
+This repository uses [pre-commit](https://pre-commit.com/) for local commit hooks, including Gitleaks secret scanning.
+To enable the hooks locally, run from the repo root:
+
+```sh
+$ pre-commit install
+```
+
+To test the Gitleaks hook manually:
+
+```sh
+$ pre-commit run gitleaks --all-files
+```
+
+If needed, bypass with `SKIP=gitleaks git commit ...` or `git commit --no-verify`.
+
 Running E2E Tests
 ---------------------
 The test files are located at [./tests/e2e/](./tests/e2e).
