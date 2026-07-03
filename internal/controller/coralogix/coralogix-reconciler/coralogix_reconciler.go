@@ -17,7 +17,9 @@ package coralogixreconciler
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -68,6 +70,41 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 	log = log.V(logVerbosity(obj))
 
 	if !obj.HasIDInStatus() {
+		if !obj.GetDeletionTimestamp().IsZero() {
+			log.Info("Resource is being deleted; removing finalizer")
+			if err := RemoveFinalizer(ctx, log, obj, r); err != nil {
+				log.Error(err, "Error removing finalizer")
+				return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
+			}
+
+			monitoring.DeleteResourceInfoMetric(
+				obj.GetObjectKind().GroupVersionKind().Kind,
+				obj.GetName(),
+				obj.GetNamespace(),
+			)
+			return ctrl.Result{}, nil
+		}
+
+		if !config.GetConfig().Selector.Matches(obj.GetLabels(), obj.GetNamespace()) {
+			log.Info("Resource doesn't match selector; removing finalizer and status")
+			if err := RemoveFinalizer(ctx, log, obj, r); err != nil {
+				log.Error(err, "Error removing finalizer")
+				return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
+			}
+
+			if _, err := removeField(ctx, obj, "status"); err != nil {
+				log.Error(err, "Error removing status")
+				return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
+			}
+
+			monitoring.DeleteResourceInfoMetric(
+				obj.GetObjectKind().GroupVersionKind().Kind,
+				obj.GetName(),
+				obj.GetNamespace(),
+			)
+			return ctrl.Result{}, nil
+		}
+
 		log.Info("Resource ID is missing; handling creation for resource")
 		if err := r.HandleCreation(ctx, log, obj); err != nil {
 			if oapisdk.IsDeserializationError(err) {
@@ -125,7 +162,7 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 		}
 
-		if err := removeField(ctx, obj, "status"); err != nil {
+		if _, err := removeField(ctx, obj, "status"); err != nil {
 			log.Error(err, "Error removing id from status")
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 		}
@@ -141,14 +178,18 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 	log.Info("Handling update")
 	if err := r.HandleUpdate(ctx, log, obj); err != nil {
 		log.Error(err, "Error handling update")
-		if cxsdk.Code(err) == codes.NotFound || oapisdk.IsNotFound(err) {
+		if isRemoteNotFound(err) {
 			log.Info("resource not found on remote")
-			if err := removeField(ctx, obj, "status", "id"); err != nil {
-				log.Error(err, "Error removing id from status")
-				return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
+			removed, removeErr := removeField(ctx, obj, "status", "id")
+			if removeErr != nil {
+				log.Error(removeErr, "Error removing id from status")
+				return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, removeErr)
+			}
+			if !removed {
+				return ManageErrorWithRequeue(ctx, obj, utils.ReasonRemoteResourceNotFound, fmt.Errorf("%s not found on remote: %w", gvk, err))
 			}
 
-			return ManageErrorWithRequeue(ctx, obj, utils.ReasonRemoteResourceNotFound, fmt.Errorf("%s not found on remote: %w", gvk, err))
+			return ctrl.Result{RequeueAfter: time.Second}, nil
 		} else if oapisdk.IsDeserializationError(err) {
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonDeserializationError, err)
 		}
@@ -158,15 +199,32 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 	return ManageSuccessWithRequeue(ctx, obj, r.RequeueInterval())
 }
 
-func removeField(ctx context.Context, obj client.Object, fields ...string) error {
+func isRemoteNotFound(err error) bool {
+	if cxsdk.Code(err) == codes.NotFound || oapisdk.IsNotFound(err) {
+		return true
+	}
+
+	return oapisdk.Code(err) == http.StatusNotFound &&
+		strings.TrimSpace(string(oapisdk.Body(err))) == ""
+}
+
+func removeField(ctx context.Context, obj client.Object, fields ...string) (bool, error) {
 	u := &unstructured.Unstructured{}
 	if err := config.GetScheme().Convert(obj, u, nil); err != nil {
-		return fmt.Errorf("failed to convert object to unstructured: %w", err)
+		return false, fmt.Errorf("failed to convert object to unstructured: %w", err)
+	}
+
+	_, found, err := unstructured.NestedFieldNoCopy(u.Object, fields...)
+	if err != nil {
+		return false, fmt.Errorf("failed to inspect field: %w", err)
+	}
+	if !found {
+		return false, nil
 	}
 
 	unstructured.RemoveNestedField(u.Object, fields...)
 
-	return config.GetClient().Status().Update(ctx, u)
+	return true, config.GetClient().Status().Update(ctx, u)
 }
 
 func AddFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r CoralogixReconciler) error {
