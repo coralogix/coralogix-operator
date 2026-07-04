@@ -17,6 +17,7 @@ package coralogixreconciler
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -141,13 +142,12 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 	log.Info("Handling update")
 	if err := r.HandleUpdate(ctx, log, obj); err != nil {
 		log.Error(err, "Error handling update")
-		if cxsdk.Code(err) == codes.NotFound || oapisdk.IsNotFound(err) {
+		if isRemoteNotFound(err) {
 			log.Info("resource not found on remote")
 			if err := removeField(ctx, obj, "status", "id"); err != nil {
 				log.Error(err, "Error removing id from status")
 				return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 			}
-
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonRemoteResourceNotFound, fmt.Errorf("%s not found on remote: %w", gvk, err))
 		} else if oapisdk.IsDeserializationError(err) {
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonDeserializationError, err)
@@ -218,6 +218,18 @@ func ManageErrorWithRequeue(ctx context.Context, obj coralogix.Object, reason st
 	)
 
 	return reconcile.Result{}, err
+}
+
+func isRemoteNotFound(err error) bool {
+	// gRPC-backed SDK clients expose NotFound through cxsdk.Code.
+	if cxsdk.Code(err) == codes.NotFound {
+		return true
+	}
+
+	// This branch runs after updating an object that already has status.id.
+	// Some OpenAPI update calls return HTTP 404 in a body shape that
+	// oapisdk.IsNotFound does not classify as resource-not-found.
+	return oapisdk.IsNotFound(err) || oapisdk.Code(err) == http.StatusNotFound
 }
 
 func ManageSuccessWithRequeue(ctx context.Context, obj coralogix.Object, interval time.Duration) (reconcile.Result, error) {
