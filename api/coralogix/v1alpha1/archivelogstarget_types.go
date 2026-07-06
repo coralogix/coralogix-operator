@@ -67,7 +67,7 @@ func (s *ArchiveLogsTargetSpec) ExtractSetTargetRequest(isTargetActive bool) (*t
 	if s.S3Target != nil {
 		return &targets.SetTargetResponse{
 			IsActive: isTargetActive,
-			S3: &targets.S3TargetSpec{
+			S3: targets.S3TargetSpec{
 				Region: &s.S3Target.Region,
 				Bucket: s.S3Target.BucketName,
 			},

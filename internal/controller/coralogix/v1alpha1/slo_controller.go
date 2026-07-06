@@ -59,7 +59,7 @@ func (r *SLOReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj
 	log.Info("Creating remote slo", "slo", utils.FormatJSON(createRequest))
 	createResponse, httpResp, err := r.SLOsClient.
 		SlosServiceCreateSlo(ctx).
-		SlosServiceReplaceSloRequest(*createRequest).
+		Slo1(*createRequest).
 		Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote slo: %w", cxsdk.NewAPIError(httpResp, err))
@@ -67,18 +67,8 @@ func (r *SLOReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj
 	log.Info("Remote slo created", "response", utils.FormatJSON(createResponse))
 	receivedSLO := createResponse.GetSlo()
 
-	var sloID string
-	var revision int32
-	switch {
-	case receivedSLO.SloRequestBasedMetricSli != nil:
-		sloID = receivedSLO.SloRequestBasedMetricSli.GetId()
-		revision = ptr.To(receivedSLO.SloRequestBasedMetricSli.GetRevision()).GetRevision()
-	case receivedSLO.SloWindowBasedMetricSli != nil:
-		sloID = receivedSLO.SloWindowBasedMetricSli.GetId()
-		revision = ptr.To(receivedSLO.SloWindowBasedMetricSli.GetRevision()).GetRevision()
-	default:
-		return fmt.Errorf("unknown slo type")
-	}
+	sloID := receivedSLO.GetId()
+	revision := ptr.To(receivedSLO.GetRevision()).GetRevision()
 
 	slo.Status = coralogixv1alpha1.SLOStatus{
 		ID:       ptr.To(sloID),
@@ -101,7 +91,7 @@ func (r *SLOReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj c
 	log.Info("Updating remote slo", "slo", utils.FormatJSON(updateRequest))
 	updateResponse, httpResp, err := r.SLOsClient.
 		SlosServiceReplaceSlo(ctx).
-		SlosServiceReplaceSloRequest(*updateRequest).
+		Slo1(*updateRequest).
 		Execute()
 	if err != nil {
 		return cxsdk.NewAPIError(httpResp, err)

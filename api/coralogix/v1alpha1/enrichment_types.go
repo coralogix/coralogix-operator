@@ -186,10 +186,8 @@ func (e *Enrichment) ExtractAtomicOverwriteRequest(ctx context.Context) (
 			model := enrichments.EnrichmentRequestModel{
 				FieldName: enrichment.GeoIp.FieldName,
 				EnrichmentType: enrichments.EnrichmentType{
-					EnrichmentTypeGeoIp: &enrichments.EnrichmentTypeGeoIp{
-						GeoIp: enrichments.GeoIpType{
-							WithAsn: enrichment.GeoIp.WithAsn,
-						},
+					GeoIp: &enrichments.GeoIpType{
+						WithAsn: enrichment.GeoIp.WithAsn,
 					},
 				},
 			}
@@ -199,9 +197,7 @@ func (e *Enrichment) ExtractAtomicOverwriteRequest(ctx context.Context) (
 			model := enrichments.EnrichmentRequestModel{
 				FieldName: enrichment.SuspiciousIp.FieldName,
 				EnrichmentType: enrichments.EnrichmentType{
-					EnrichmentTypeSuspiciousIp: &enrichments.EnrichmentTypeSuspiciousIp{
-						SuspiciousIp: map[string]any{},
-					},
+					SuspiciousIp: map[string]any{},
 				},
 			}
 			applyEnrichmentFieldOptions(
@@ -214,10 +210,8 @@ func (e *Enrichment) ExtractAtomicOverwriteRequest(ctx context.Context) (
 			model := enrichments.EnrichmentRequestModel{
 				FieldName: enrichment.Aws.FieldName,
 				EnrichmentType: enrichments.EnrichmentType{
-					EnrichmentTypeAws: &enrichments.EnrichmentTypeAws{
-						Aws: enrichments.AwsType{
-							ResourceType: enrichments.PtrString(enrichment.Aws.ResourceType),
-						},
+					Aws: &enrichments.AwsType{
+						ResourceType: enrichments.PtrString(enrichment.Aws.ResourceType),
 					},
 				},
 			}
@@ -232,10 +226,8 @@ func (e *Enrichment) ExtractAtomicOverwriteRequest(ctx context.Context) (
 			model := enrichments.EnrichmentRequestModel{
 				FieldName: enrichment.Custom.FieldName,
 				EnrichmentType: enrichments.EnrichmentType{
-					EnrichmentTypeCustomEnrichment: &enrichments.EnrichmentTypeCustomEnrichment{
-						CustomEnrichment: enrichments.CustomEnrichmentType{
-							Id: &customEnrichmentID,
-						},
+					CustomEnrichment: &enrichments.CustomEnrichmentType{
+						Id: &customEnrichmentID,
 					},
 				},
 			}

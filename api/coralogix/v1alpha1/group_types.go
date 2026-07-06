@@ -155,28 +155,25 @@ func (g *Group) ExtractUpdateGroupRequest(
 		GroupType:   groupType,
 		UserUpdates: &groups.UserUpdates{
 			Operation: &groups.UserUpdatesOperation{
-				UserUpdatesOperationSet: &groups.UserUpdatesOperationSet{
-					Set: groups.UserIdList{
-						UserIds: usersIds,
-					},
+				OperationType: "set",
+				Set: &groups.UserIdList{
+					UserIds: usersIds,
 				},
 			},
 		},
 		RoleUpdate: &groups.RoleUpdate{
 			Action: &groups.RoleUpdateAction{
-				RoleUpdateActionSetRoleId: &groups.RoleUpdateActionSetRoleId{
-					SetRoleId: groups.SetRoleId{
-						Value: &roleId,
-					},
+				ActionType: "set_role_id",
+				SetRoleId: &groups.SetRoleId{
+					Value: &roleId,
 				},
 			},
 		},
 		ScopeUpdate: &groups.ScopeUpdate{
 			Action: &groups.ScopeUpdateAction{
-				ScopeUpdateActionSetScopeId: &groups.ScopeUpdateActionSetScopeId{
-					SetScopeId: groups.SetScopeId{
-						Value: scopeId,
-					},
+				ActionType: "set_scope_id",
+				SetScopeId: &groups.SetScopeId{
+					Value: scopeId,
 				},
 			},
 		},

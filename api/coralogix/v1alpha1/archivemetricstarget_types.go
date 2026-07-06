@@ -55,19 +55,17 @@ type ArchiveMetricsTargetStatus struct {
 	PrintableStatus string `json:"printableStatus,omitempty"`
 }
 
-func (s *ArchiveMetricsTargetSpec) ExtractConfigureTenantRequest() (*archivemetrics.MetricsConfiguratorPublicServiceConfigureTenantRequest, error) {
+func (s *ArchiveMetricsTargetSpec) ExtractConfigureTenantRequest() (*archivemetrics.ConfigureTenantRequest, error) {
 	if s.S3Target != nil {
-		return &archivemetrics.MetricsConfiguratorPublicServiceConfigureTenantRequest{
-			ConfigureTenantRequestS3: &archivemetrics.ConfigureTenantRequestS3{
-				RetentionPolicy: &archivemetrics.RetentionPolicyRequest{
-					RawResolution:         s.ResolutionPolicy.RawResolution,
-					FiveMinutesResolution: s.ResolutionPolicy.FiveMinutesResolution,
-					OneHourResolution:     s.ResolutionPolicy.OneHourResolution,
-				},
-				S3: archivemetrics.S3Config{
-					Region: s.S3Target.Region,
-					Bucket: s.S3Target.BucketName,
-				},
+		return &archivemetrics.ConfigureTenantRequest{
+			RetentionPolicy: &archivemetrics.RetentionPolicyRequest{
+				RawResolution:         s.ResolutionPolicy.RawResolution,
+				FiveMinutesResolution: s.ResolutionPolicy.FiveMinutesResolution,
+				OneHourResolution:     s.ResolutionPolicy.OneHourResolution,
+			},
+			S3: &archivemetrics.S3Config{
+				Region: s.S3Target.Region,
+				Bucket: s.S3Target.BucketName,
 			},
 		}, nil
 	}
@@ -75,15 +73,13 @@ func (s *ArchiveMetricsTargetSpec) ExtractConfigureTenantRequest() (*archivemetr
 	return nil, fmt.Errorf("archive metrics target does not have a S3Target")
 }
 
-func (s *ArchiveMetricsTargetSpec) ExtractUpdateRequest() (*archivemetrics.MetricsConfiguratorPublicServiceUpdateRequest, error) {
+func (s *ArchiveMetricsTargetSpec) ExtractUpdateRequest() (*archivemetrics.UpdateTenantRequest, error) {
 	if s.S3Target != nil {
-		return &archivemetrics.MetricsConfiguratorPublicServiceUpdateRequest{
-			UpdateRequestS3: &archivemetrics.UpdateRequestS3{
-				RetentionDays: s.RetentionDays,
-				S3: archivemetrics.S3Config{
-					Region: s.S3Target.Region,
-					Bucket: s.S3Target.BucketName,
-				},
+		return &archivemetrics.UpdateTenantRequest{
+			RetentionDays: s.RetentionDays,
+			S3: &archivemetrics.S3Config{
+				Region: s.S3Target.Region,
+				Bucket: s.S3Target.BucketName,
 			},
 		}, nil
 	}

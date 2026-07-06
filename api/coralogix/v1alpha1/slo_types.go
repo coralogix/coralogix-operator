@@ -158,30 +158,26 @@ type SLO struct {
 	Status SLOStatus `json:"status,omitempty"`
 }
 
-func (s *SLO) ExtractSLOCreateRequest() (*slos.SlosServiceReplaceSloRequest, error) {
+func (s *SLO) ExtractSLOCreateRequest() (*slos.Slo1, error) {
 	if requestBasedMetricSli := s.Spec.SliType.RequestBasedMetricSli; requestBasedMetricSli != nil {
 		requestBased, err := s.Spec.ExtractRequestBasedMetricSli()
 		if err != nil {
 			return nil, fmt.Errorf("error extracting request based metric SLI: %w", err)
 		}
 
-		return &slos.SlosServiceReplaceSloRequest{
-			SloRequestBasedMetricSli: requestBased,
-		}, nil
+		return requestBased, nil
 	} else if windowBasedMetricSli := s.Spec.SliType.WindowBasedMetricSli; windowBasedMetricSli != nil {
 		windowBased, err := s.Spec.ExtractWindowBasedMetricSli()
 		if err != nil {
 			return nil, fmt.Errorf("error extracting window based metric SLI: %w", err)
 		}
-		return &slos.SlosServiceReplaceSloRequest{
-			SloWindowBasedMetricSli: windowBased,
-		}, nil
+		return windowBased, nil
 	}
 
 	return nil, fmt.Errorf("sliType must be set to either requestBasedMetricSli or windowBasedMetricSli")
 }
 
-func (s *SLO) ExtractSLOUpdateRequest() (*slos.SlosServiceReplaceSloRequest, error) {
+func (s *SLO) ExtractSLOUpdateRequest() (*slos.Slo1, error) {
 	if requestBasedMetricSli := s.Spec.SliType.RequestBasedMetricSli; requestBasedMetricSli != nil {
 		requestBased, err := s.Spec.ExtractRequestBasedMetricSli()
 		if err != nil {
@@ -189,9 +185,7 @@ func (s *SLO) ExtractSLOUpdateRequest() (*slos.SlosServiceReplaceSloRequest, err
 		}
 
 		requestBased.Id = s.Status.ID
-		return &slos.SlosServiceReplaceSloRequest{
-			SloRequestBasedMetricSli: requestBased,
-		}, nil
+		return requestBased, nil
 	} else if windowBasedMetricSli := s.Spec.SliType.WindowBasedMetricSli; windowBasedMetricSli != nil {
 		windowBased, err := s.Spec.ExtractWindowBasedMetricSli()
 		if err != nil {
@@ -199,27 +193,25 @@ func (s *SLO) ExtractSLOUpdateRequest() (*slos.SlosServiceReplaceSloRequest, err
 		}
 
 		windowBased.Id = s.Status.ID
-		return &slos.SlosServiceReplaceSloRequest{
-			SloWindowBasedMetricSli: windowBased,
-		}, nil
+		return windowBased, nil
 	}
 
 	return nil, fmt.Errorf("sliType must be set to either requestBasedMetricSli or windowBasedMetricSli")
 }
 
-func (s *SLOSpec) ExtractRequestBasedMetricSli() (*slos.SloRequestBasedMetricSli, error) {
+func (s *SLOSpec) ExtractRequestBasedMetricSli() (*slos.Slo1, error) {
 	timeFrame, err := s.Window.ExpandTimeFrame()
 	if err != nil {
 		return nil, fmt.Errorf("error expanding time frame: %w", err)
 	}
 
-	return &slos.SloRequestBasedMetricSli{
+	return &slos.Slo1{
 		Name:                      slos.PtrString(s.Name),
 		Description:               s.Description,
 		Labels:                    s.Labels,
 		SloTimeFrame:              timeFrame,
 		TargetThresholdPercentage: slos.PtrFloat32(float32(s.TargetThresholdPercentage.AsApproximateFloat64())),
-		RequestBasedMetricSli: slos.RequestBasedMetricSli{
+		RequestBasedMetricSli: &slos.RequestBasedMetricSli{
 			GoodEvents: &slos.Metric{
 				Query: slos.PtrString(s.SliType.RequestBasedMetricSli.GoodEvents.Query),
 			},
@@ -230,19 +222,19 @@ func (s *SLOSpec) ExtractRequestBasedMetricSli() (*slos.SloRequestBasedMetricSli
 	}, nil
 }
 
-func (s *SLOSpec) ExtractWindowBasedMetricSli() (*slos.SloWindowBasedMetricSli, error) {
+func (s *SLOSpec) ExtractWindowBasedMetricSli() (*slos.Slo1, error) {
 	timeFrame, err := s.Window.ExpandTimeFrame()
 	if err != nil {
 		return nil, fmt.Errorf("error expanding time frame: %w", err)
 	}
 
-	return &slos.SloWindowBasedMetricSli{
+	return &slos.Slo1{
 		Name:                      slos.PtrString(s.Name),
 		Description:               s.Description,
 		Labels:                    s.Labels,
 		SloTimeFrame:              timeFrame,
 		TargetThresholdPercentage: slos.PtrFloat32(float32(s.TargetThresholdPercentage.AsApproximateFloat64())),
-		WindowBasedMetricSli: slos.WindowBasedMetricSli{
+		WindowBasedMetricSli: &slos.WindowBasedMetricSli{
 			Query: &slos.Metric{
 				Query: slos.PtrString(s.SliType.WindowBasedMetricSli.Query.Query),
 			},

@@ -128,46 +128,15 @@ func getOutboundWebhookStatus(webhook *webhooks.OutgoingWebhook) (*v1alpha1.Outb
 		return nil, fmt.Errorf("outbound-webhook is nil")
 	}
 
-	status := &v1alpha1.OutboundWebhookStatus{}
-
-	extract := func(id *string, externalID *int64) (*string, *string) {
-		if id == nil {
-			return nil, nil
-		}
-		var ext *string
-		if externalID != nil {
-			ext = ptr.To(strconv.Itoa(int(*externalID)))
-		}
-		return id, ext
+	if webhook.Id == nil {
+		return nil, fmt.Errorf("outbound-webhook id is not set")
 	}
 
-	switch {
-	case webhook.OutgoingWebhookAwsEventBridge != nil:
-		status.ID, status.ExternalID = extract(webhook.OutgoingWebhookAwsEventBridge.Id, webhook.OutgoingWebhookAwsEventBridge.ExternalId)
-	case webhook.OutgoingWebhookDemisto != nil:
-		status.ID, status.ExternalID = extract(webhook.OutgoingWebhookDemisto.Id, webhook.OutgoingWebhookDemisto.ExternalId)
-	case webhook.OutgoingWebhookEmailGroup != nil:
-		status.ID, status.ExternalID = extract(webhook.OutgoingWebhookEmailGroup.Id, webhook.OutgoingWebhookEmailGroup.ExternalId)
-	case webhook.OutgoingWebhookGenericWebhook != nil:
-		status.ID, status.ExternalID = extract(webhook.OutgoingWebhookGenericWebhook.Id, webhook.OutgoingWebhookGenericWebhook.ExternalId)
-	case webhook.OutgoingWebhookIbmEventNotifications != nil:
-		status.ID, status.ExternalID = extract(webhook.OutgoingWebhookIbmEventNotifications.Id, webhook.OutgoingWebhookIbmEventNotifications.ExternalId)
-	case webhook.OutgoingWebhookJira != nil:
-		status.ID, status.ExternalID = extract(webhook.OutgoingWebhookJira.Id, webhook.OutgoingWebhookJira.ExternalId)
-	case webhook.OutgoingWebhookMicrosoftTeams != nil:
-		status.ID, status.ExternalID = extract(webhook.OutgoingWebhookMicrosoftTeams.Id, webhook.OutgoingWebhookMicrosoftTeams.ExternalId)
-	case webhook.OutgoingWebhookMsTeamsWorkflow != nil:
-		status.ID, status.ExternalID = extract(webhook.OutgoingWebhookMsTeamsWorkflow.Id, webhook.OutgoingWebhookMsTeamsWorkflow.ExternalId)
-	case webhook.OutgoingWebhookOpsgenie != nil:
-		status.ID, status.ExternalID = extract(webhook.OutgoingWebhookOpsgenie.Id, webhook.OutgoingWebhookOpsgenie.ExternalId)
-	case webhook.OutgoingWebhookPagerDuty != nil:
-		status.ID, status.ExternalID = extract(webhook.OutgoingWebhookPagerDuty.Id, webhook.OutgoingWebhookPagerDuty.ExternalId)
-	case webhook.OutgoingWebhookSendLog != nil:
-		status.ID, status.ExternalID = extract(webhook.OutgoingWebhookSendLog.Id, webhook.OutgoingWebhookSendLog.ExternalId)
-	case webhook.OutgoingWebhookSlack != nil:
-		status.ID, status.ExternalID = extract(webhook.OutgoingWebhookSlack.Id, webhook.OutgoingWebhookSlack.ExternalId)
-	default:
-		return nil, fmt.Errorf("unsupported or unknown outbound-webhook type")
+	status := &v1alpha1.OutboundWebhookStatus{
+		ID: webhook.Id,
+	}
+	if webhook.ExternalId != nil {
+		status.ExternalID = ptr.To(strconv.Itoa(int(*webhook.ExternalId)))
 	}
 
 	return status, nil

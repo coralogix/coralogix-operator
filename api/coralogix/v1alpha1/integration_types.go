@@ -150,24 +150,18 @@ func (s *IntegrationSpec) ExtractParameters(ctx context.Context, namespace strin
 		switch v := value.(type) {
 		case string:
 			parameters = append(parameters, integrations.Parameter{
-				ParameterStringValue: &integrations.ParameterStringValue{
-					Key:         integrations.PtrString(key),
-					StringValue: v,
-				},
+				Key:         integrations.PtrString(key),
+				StringValue: integrations.PtrString(v),
 			})
 		case float64:
 			parameters = append(parameters, integrations.Parameter{
-				ParameterNumericValue: &integrations.ParameterNumericValue{
-					Key:          integrations.PtrString(key),
-					NumericValue: v,
-				},
+				Key:          integrations.PtrString(key),
+				NumericValue: integrations.PtrFloat64(v),
 			})
 		case bool:
 			parameters = append(parameters, integrations.Parameter{
-				ParameterBooleanValue: &integrations.ParameterBooleanValue{
-					Key:          integrations.PtrString(key),
-					BooleanValue: v,
-				},
+				Key:          integrations.PtrString(key),
+				BooleanValue: integrations.PtrBool(v),
 			})
 		case []interface{}:
 			var stringList integrations.StringList
@@ -177,10 +171,8 @@ func (s *IntegrationSpec) ExtractParameters(ctx context.Context, namespace strin
 				}
 			}
 			parameters = append(parameters, integrations.Parameter{
-				ParameterStringList: &integrations.ParameterStringList{
-					Key:        integrations.PtrString(key),
-					StringList: stringList,
-				},
+				Key:        integrations.PtrString(key),
+				StringList: &stringList,
 			})
 		default:
 			return nil, fmt.Errorf("unsupported value type for parameter %s", key)

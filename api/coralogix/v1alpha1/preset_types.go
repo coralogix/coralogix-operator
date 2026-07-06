@@ -170,16 +170,12 @@ func ExtractConfigOverrides(overrides []ConfigOverride) []presets.ConfigOverride
 
 		if override.ConditionType.MatchEntityType != nil {
 			configOverride.ConditionType = &presets.NotificationCenterConditionType{
-				NotificationCenterConditionTypeMatchEntityType: &presets.NotificationCenterConditionTypeMatchEntityType{
-					MatchEntityType: map[string]interface{}{},
-				},
+				MatchEntityType: map[string]interface{}{},
 			}
 		} else if override.ConditionType.MatchEntityTypeAndSubType != nil {
 			configOverride.ConditionType = &presets.NotificationCenterConditionType{
-				NotificationCenterConditionTypeMatchEntityTypeAndSubType: &presets.NotificationCenterConditionTypeMatchEntityTypeAndSubType{
-					MatchEntityTypeAndSubType: presets.MatchEntityTypeAndSubTypeCondition{
-						EntitySubType: presets.PtrString(override.ConditionType.MatchEntityTypeAndSubType.EntitySubType),
-					},
+				MatchEntityTypeAndSubType: &presets.MatchEntityTypeAndSubTypeCondition{
+					EntitySubType: presets.PtrString(override.ConditionType.MatchEntityTypeAndSubType.EntitySubType),
 				},
 			}
 		}

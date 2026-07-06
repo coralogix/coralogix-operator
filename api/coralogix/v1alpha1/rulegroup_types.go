@@ -387,33 +387,27 @@ func expandSourceFiledAndParameters(rule Rule) (sourceField string, parameters *
 	if parse := rule.Parse; parse != nil {
 		sourceField = parse.SourceField
 		parameters = &rulegroups.RuleParameters{
-			RuleParametersParseParameters: &rulegroups.RuleParametersParseParameters{
-				ParseParameters: rulegroups.ParseParameters{
-					DestinationField: rulegroups.PtrString(parse.DestinationField),
-					Rule:             rulegroups.PtrString(parse.Regex),
-				},
+			ParseParameters: &rulegroups.ParseParameters{
+				DestinationField: rulegroups.PtrString(parse.DestinationField),
+				Rule:             rulegroups.PtrString(parse.Regex),
 			},
 		}
 	} else if parseJsonField := rule.ParseJsonField; parseJsonField != nil {
 		sourceField = parseJsonField.SourceField
 		parameters = &rulegroups.RuleParameters{
-			RuleParametersJsonParseParameters: &rulegroups.RuleParametersJsonParseParameters{
-				JsonParseParameters: rulegroups.JsonParseParameters{
-					DestinationField: rulegroups.PtrString(parseJsonField.DestinationField),
-					DeleteSource:     rulegroups.PtrBool(!parseJsonField.KeepSourceField),
-					OverrideDest:     rulegroups.PtrBool(!parseJsonField.KeepDestinationField),
-					EscapedValue:     rulegroups.PtrBool(true),
-				},
+			JsonParseParameters: &rulegroups.JsonParseParameters{
+				DestinationField: rulegroups.PtrString(parseJsonField.DestinationField),
+				DeleteSource:     rulegroups.PtrBool(!parseJsonField.KeepSourceField),
+				OverrideDest:     rulegroups.PtrBool(!parseJsonField.KeepDestinationField),
+				EscapedValue:     rulegroups.PtrBool(true),
 			},
 		}
 	} else if jsonStringify := rule.JsonStringify; jsonStringify != nil {
 		sourceField = jsonStringify.SourceField
 		parameters = &rulegroups.RuleParameters{
-			RuleParametersJsonStringifyParameters: &rulegroups.RuleParametersJsonStringifyParameters{
-				JsonStringifyParameters: rulegroups.JsonStringifyParameters{
-					DestinationField: rulegroups.PtrString(jsonStringify.DestinationField),
-					DeleteSource:     rulegroups.PtrBool(!jsonStringify.KeepSourceField),
-				},
+			JsonStringifyParameters: &rulegroups.JsonStringifyParameters{
+				DestinationField: rulegroups.PtrString(jsonStringify.DestinationField),
+				DeleteSource:     rulegroups.PtrBool(!jsonStringify.KeepSourceField),
 			},
 		}
 	} else if jsonExtract := rule.JsonExtract; jsonExtract != nil {
@@ -421,20 +415,16 @@ func expandSourceFiledAndParameters(rule Rule) (sourceField string, parameters *
 		destinationField := RulesSchemaDestinationFieldToOpenAPISeverityDestinationField[jsonExtract.DestinationField]
 		jsonKey := rulegroups.PtrString(jsonExtract.JsonKey)
 		parameters = &rulegroups.RuleParameters{
-			RuleParametersJsonExtractParameters: &rulegroups.RuleParametersJsonExtractParameters{
-				JsonExtractParameters: rulegroups.JsonExtractParameters{
-					DestinationFieldType: destinationField.Ptr(),
-					Rule:                 jsonKey,
-				},
+			JsonExtractParameters: &rulegroups.JsonExtractParameters{
+				DestinationFieldType: destinationField.Ptr(),
+				Rule:                 jsonKey,
 			},
 		}
 	} else if removeFields := rule.RemoveFields; removeFields != nil {
 		sourceField = "text"
 		parameters = &rulegroups.RuleParameters{
-			RuleParametersRemoveFieldsParameters: &rulegroups.RuleParametersRemoveFieldsParameters{
-				RemoveFieldsParameters: rulegroups.RemoveFieldsParameters{
-					Fields: removeFields.ExcludedFields,
-				},
+			RemoveFieldsParameters: &rulegroups.RemoveFieldsParameters{
+				Fields: removeFields.ExcludedFields,
 			},
 		}
 	} else if extractTimestamp := rule.ExtractTimestamp; extractTimestamp != nil {
@@ -442,52 +432,42 @@ func expandSourceFiledAndParameters(rule Rule) (sourceField string, parameters *
 		standard := RulesSchemaFormatStandardToOpenAPIFormatStandard[extractTimestamp.FieldFormatStandard]
 		format := rulegroups.PtrString(extractTimestamp.TimeFormat)
 		parameters = &rulegroups.RuleParameters{
-			RuleParametersExtractTimestampParameters: &rulegroups.RuleParametersExtractTimestampParameters{
-				ExtractTimestampParameters: rulegroups.ExtractTimestampParameters{
-					Standard: standard.Ptr(),
-					Format:   format,
-				},
+			ExtractTimestampParameters: &rulegroups.ExtractTimestampParameters{
+				Standard: standard.Ptr(),
+				Format:   format,
 			},
 		}
 	} else if block := rule.Block; block != nil {
 		sourceField = block.SourceField
 		if block.BlockingAllMatchingBlocks {
 			parameters = &rulegroups.RuleParameters{
-				RuleParametersBlockParameters: &rulegroups.RuleParametersBlockParameters{
-					BlockParameters: rulegroups.BlockParameters{
-						KeepBlockedLogs: rulegroups.PtrBool(block.KeepBlockedLogs),
-						Rule:            rulegroups.PtrString(block.Regex),
-					},
+				BlockParameters: &rulegroups.BlockParameters{
+					KeepBlockedLogs: rulegroups.PtrBool(block.KeepBlockedLogs),
+					Rule:            rulegroups.PtrString(block.Regex),
 				},
 			}
 		} else {
 			parameters = &rulegroups.RuleParameters{
-				RuleParametersAllowParameters: &rulegroups.RuleParametersAllowParameters{
-					AllowParameters: rulegroups.AllowParameters{
-						KeepBlockedLogs: rulegroups.PtrBool(block.KeepBlockedLogs),
-						Rule:            rulegroups.PtrString(block.Regex),
-					},
+				AllowParameters: &rulegroups.AllowParameters{
+					KeepBlockedLogs: rulegroups.PtrBool(block.KeepBlockedLogs),
+					Rule:            rulegroups.PtrString(block.Regex),
 				},
 			}
 		}
 	} else if replace := rule.Replace; replace != nil {
 		sourceField = replace.SourceField
 		parameters = &rulegroups.RuleParameters{
-			RuleParametersReplaceParameters: &rulegroups.RuleParametersReplaceParameters{
-				ReplaceParameters: rulegroups.ReplaceParameters{
-					DestinationField: rulegroups.PtrString(replace.DestinationField),
-					ReplaceNewVal:    rulegroups.PtrString(replace.ReplacementString),
-					Rule:             rulegroups.PtrString(replace.Regex),
-				},
+			ReplaceParameters: &rulegroups.ReplaceParameters{
+				DestinationField: rulegroups.PtrString(replace.DestinationField),
+				ReplaceNewVal:    rulegroups.PtrString(replace.ReplacementString),
+				Rule:             rulegroups.PtrString(replace.Regex),
 			},
 		}
 	} else if extract := rule.Extract; extract != nil {
 		sourceField = extract.SourceField
 		parameters = &rulegroups.RuleParameters{
-			RuleParametersExtractParameters: &rulegroups.RuleParametersExtractParameters{
-				ExtractParameters: rulegroups.ExtractParameters{
-					Rule: rulegroups.PtrString(extract.Regex),
-				},
+			ExtractParameters: &rulegroups.ExtractParameters{
+				Rule: rulegroups.PtrString(extract.Regex),
 			},
 		}
 	}
@@ -501,22 +481,19 @@ func expandRuleMatchers(applications, subsystems []string, severities []RuleSeve
 	for _, app := range applications {
 		constraintStr := rulegroups.PtrString(app)
 		applicationNameConstraint := rulegroups.ApplicationNameConstraint{Value: constraintStr}
-		ruleMatcherApplicationName := rulegroups.RuleMatcherApplicationName{ApplicationName: applicationNameConstraint}
-		ruleMatchers = append(ruleMatchers, rulegroups.RuleMatcher{RuleMatcherApplicationName: &ruleMatcherApplicationName})
+		ruleMatchers = append(ruleMatchers, rulegroups.RuleMatcher{ApplicationName: &applicationNameConstraint})
 	}
 
 	for _, subSys := range subsystems {
 		constraintStr := rulegroups.PtrString(subSys)
 		subsystemNameConstraint := rulegroups.SubsystemNameConstraint{Value: constraintStr}
-		ruleMatcherApplicationName := rulegroups.RuleMatcherSubsystemName{SubsystemName: subsystemNameConstraint}
-		ruleMatchers = append(ruleMatchers, rulegroups.RuleMatcher{RuleMatcherSubsystemName: &ruleMatcherApplicationName})
+		ruleMatchers = append(ruleMatchers, rulegroups.RuleMatcher{SubsystemName: &subsystemNameConstraint})
 	}
 
 	for _, sev := range severities {
 		constraintEnum := RulesSchemaSeverityToOpenAPISeverity[sev]
 		severityConstraint := rulegroups.SeverityConstraint{Value: constraintEnum.Ptr()}
-		ruleMatcherSeverity := rulegroups.RuleMatcherSeverity{Severity: severityConstraint}
-		ruleMatchers = append(ruleMatchers, rulegroups.RuleMatcher{RuleMatcherSeverity: &ruleMatcherSeverity})
+		ruleMatchers = append(ruleMatchers, rulegroups.RuleMatcher{Severity: &severityConstraint})
 	}
 
 	return ruleMatchers

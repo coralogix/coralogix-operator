@@ -380,48 +380,43 @@ func (c AIEvaluationConfig) ExtractAIEvaluationConfig() (*aievaluations.Evaluati
 }
 
 func (c *AIEvaluationAllowedTopicsConfig) ExtractAIEvaluationConfig() *aievaluations.EvaluationConfig {
-	config := aievaluations.EvaluationConfigAllowedTopicsAsEvaluationConfig(
-		aievaluations.NewEvaluationConfigAllowedTopics(aievaluations.AllowedTopicsConfig{
+	return &aievaluations.EvaluationConfig{
+		AllowedTopics: &aievaluations.AllowedTopicsConfig{
 			Topics: append([]string(nil), c.Topics...),
-		}),
-	)
-	return &config
+		},
+	}
 }
 
 func (c *AIEvaluationCompetitionConfig) ExtractAIEvaluationConfig() *aievaluations.EvaluationConfig {
-	config := aievaluations.EvaluationConfigCompetitionAsEvaluationConfig(
-		aievaluations.NewEvaluationConfigCompetition(aievaluations.CompetitionConfig{
+	return &aievaluations.EvaluationConfig{
+		Competition: &aievaluations.CompetitionConfig{
 			Competitors: append([]string(nil), c.Competitors...),
-		}),
-	)
-	return &config
+		},
+	}
 }
 
 func (c *AIEvaluationRestrictedTopicsConfig) ExtractAIEvaluationConfig() *aievaluations.EvaluationConfig {
-	config := aievaluations.EvaluationConfigRestrictedTopicsAsEvaluationConfig(
-		aievaluations.NewEvaluationConfigRestrictedTopics(aievaluations.RestrictedTopicsConfig{
+	return &aievaluations.EvaluationConfig{
+		RestrictedTopics: &aievaluations.RestrictedTopicsConfig{
 			Topics: append([]string(nil), c.Topics...),
-		}),
-	)
-	return &config
+		},
+	}
 }
 
 func (c *AIEvaluationSQLAllowedTablesConfig) ExtractAIEvaluationConfig() *aievaluations.EvaluationConfig {
-	config := aievaluations.EvaluationConfigSqlAllowedTablesAsEvaluationConfig(
-		aievaluations.NewEvaluationConfigSqlAllowedTables(aievaluations.SqlAllowedTablesConfig{
+	return &aievaluations.EvaluationConfig{
+		SqlAllowedTables: &aievaluations.SqlAllowedTablesConfig{
 			Tables: append([]string(nil), c.Tables...),
-		}),
-	)
-	return &config
+		},
+	}
 }
 
 func (c *AIEvaluationSQLRestrictedTablesConfig) ExtractAIEvaluationConfig() *aievaluations.EvaluationConfig {
-	config := aievaluations.EvaluationConfigSqlRestrictedTablesAsEvaluationConfig(
-		aievaluations.NewEvaluationConfigSqlRestrictedTables(aievaluations.SqlRestrictedTablesConfig{
+	return &aievaluations.EvaluationConfig{
+		SqlRestrictedTables: &aievaluations.SqlRestrictedTablesConfig{
 			Tables: append([]string(nil), c.Tables...),
-		}),
-	)
-	return &config
+		},
+	}
 }
 
 func (c *AIEvaluationPIIConfig) ExtractAIEvaluationConfig() *aievaluations.EvaluationConfig {
@@ -430,89 +425,77 @@ func (c *AIEvaluationPIIConfig) ExtractAIEvaluationConfig() *aievaluations.Evalu
 		categories = append(categories, schemaToOpenAPIAIEvaluationPIICategory[category])
 	}
 
-	config := aievaluations.EvaluationConfigPiiAsEvaluationConfig(
-		aievaluations.NewEvaluationConfigPii(aievaluations.PiiConfig{Categories: categories}),
-	)
-	return &config
+	return &aievaluations.EvaluationConfig{
+		Pii: &aievaluations.PiiConfig{Categories: categories},
+	}
 }
 
 func (c *AIEvaluationPromptInjectionConfig) ExtractAIEvaluationConfig() *aievaluations.EvaluationConfig {
-	config := aievaluations.EvaluationConfigPromptInjectionAsEvaluationConfig(
-		aievaluations.NewEvaluationConfigPromptInjection(aievaluations.PromptInjectionConfig{
+	return &aievaluations.EvaluationConfig{
+		PromptInjection: &aievaluations.PromptInjectionConfig{
 			AdditionalContext: aievaluations.PtrString(c.AdditionalContext),
-		}),
-	)
-	return &config
+		},
+	}
 }
 
 func newOpenAPIAIEvaluationHallucinationCompletenessConfig() *aievaluations.EvaluationConfig {
-	config := aievaluations.EvaluationConfigHallucinationCompletenessAsEvaluationConfig(
-		aievaluations.NewEvaluationConfigHallucinationCompleteness(map[string]interface{}{}),
-	)
-	return &config
+	return &aievaluations.EvaluationConfig{
+		HallucinationCompleteness: map[string]interface{}{},
+	}
 }
 
 func newOpenAPIAIEvaluationHallucinationContextAdherenceConfig() *aievaluations.EvaluationConfig {
-	config := aievaluations.EvaluationConfigHallucinationContextAdherenceAsEvaluationConfig(
-		aievaluations.NewEvaluationConfigHallucinationContextAdherence(map[string]interface{}{}),
-	)
-	return &config
+	return &aievaluations.EvaluationConfig{
+		HallucinationContextAdherence: map[string]interface{}{},
+	}
 }
 
 func newOpenAPIAIEvaluationHallucinationContextRelevanceConfig() *aievaluations.EvaluationConfig {
-	config := aievaluations.EvaluationConfigHallucinationContextRelevanceAsEvaluationConfig(
-		aievaluations.NewEvaluationConfigHallucinationContextRelevance(map[string]interface{}{}),
-	)
-	return &config
+	return &aievaluations.EvaluationConfig{
+		HallucinationContextRelevance: map[string]interface{}{},
+	}
 }
 
 func newOpenAPIAIEvaluationHallucinationCorrectnessConfig() *aievaluations.EvaluationConfig {
-	config := aievaluations.EvaluationConfigHallucinationCorrectnessAsEvaluationConfig(
-		aievaluations.NewEvaluationConfigHallucinationCorrectness(map[string]interface{}{}),
-	)
-	return &config
+	return &aievaluations.EvaluationConfig{
+		HallucinationCorrectness: map[string]interface{}{},
+	}
 }
 
 func newOpenAPIAIEvaluationHallucinationTaskAdherenceConfig() *aievaluations.EvaluationConfig {
-	config := aievaluations.EvaluationConfigHallucinationTaskAdherenceAsEvaluationConfig(
-		aievaluations.NewEvaluationConfigHallucinationTaskAdherence(map[string]interface{}{}),
-	)
-	return &config
+	return &aievaluations.EvaluationConfig{
+		HallucinationTaskAdherence: map[string]interface{}{},
+	}
 }
 
 func newOpenAPIAIEvaluationLanguageMismatchConfig() *aievaluations.EvaluationConfig {
-	config := aievaluations.EvaluationConfigLanguageMismatchAsEvaluationConfig(
-		aievaluations.NewEvaluationConfigLanguageMismatch(map[string]interface{}{}),
-	)
-	return &config
+	return &aievaluations.EvaluationConfig{
+		LanguageMismatch: map[string]interface{}{},
+	}
 }
 
 func newOpenAPIAIEvaluationSexismConfig() *aievaluations.EvaluationConfig {
-	config := aievaluations.EvaluationConfigSexismAsEvaluationConfig(
-		aievaluations.NewEvaluationConfigSexism(map[string]interface{}{}),
-	)
-	return &config
+	return &aievaluations.EvaluationConfig{
+		Sexism: map[string]interface{}{},
+	}
 }
 
 func newOpenAPIAIEvaluationSQLHallucinationConfig() *aievaluations.EvaluationConfig {
-	config := aievaluations.EvaluationConfigSqlHallucinationAsEvaluationConfig(
-		aievaluations.NewEvaluationConfigSqlHallucination(map[string]interface{}{}),
-	)
-	return &config
+	return &aievaluations.EvaluationConfig{
+		SqlHallucination: map[string]interface{}{},
+	}
 }
 
 func newOpenAPIAIEvaluationSQLReadOnlyConfig() *aievaluations.EvaluationConfig {
-	config := aievaluations.EvaluationConfigSqlReadOnlyAsEvaluationConfig(
-		aievaluations.NewEvaluationConfigSqlReadOnly(map[string]interface{}{}),
-	)
-	return &config
+	return &aievaluations.EvaluationConfig{
+		SqlReadOnly: map[string]interface{}{},
+	}
 }
 
 func newOpenAPIAIEvaluationToxicityConfig() *aievaluations.EvaluationConfig {
-	config := aievaluations.EvaluationConfigToxicityAsEvaluationConfig(
-		aievaluations.NewEvaluationConfigToxicity(map[string]interface{}{}),
-	)
-	return &config
+	return &aievaluations.EvaluationConfig{
+		Toxicity: map[string]interface{}{},
+	}
 }
 
 // NewAIEvaluationHallucinationCompletenessConfig returns the empty object required to enable hallucination completeness evaluation.
