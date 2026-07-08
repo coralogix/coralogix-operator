@@ -137,3 +137,78 @@ func getSampleSlackPreset(name, namespace string) *coralogixv1alpha1.Preset {
 		},
 	}
 }
+
+// CX-47025: Preset attachmentConfig.
+var _ = Describe("Preset attachmentConfig (CX-47025)", func() {
+	var (
+		crClient            client.Client
+		notificationsClient *cxsdk.NotificationsClient
+	)
+
+	BeforeEach(func() {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		notificationsClient = ClientsInstance.GetCoralogixClientSet().Notifications()
+	})
+
+	It("Should create a generic-https preset with attachmentConfig", func(ctx context.Context) {
+		name := fmt.Sprintf("attachment-config-preset-%d", time.Now().Unix())
+		preset := getSampleGenericHttpsPresetWithAttachmentConfig(name, testNamespace)
+		Expect(crClient.Create(ctx, preset)).To(Succeed())
+		DeferCleanup(func(ctx context.Context) {
+			_ = crClient.Delete(ctx, preset)
+		})
+
+		var presetID string
+		Eventually(func(g Gomega) error {
+			fetched := &coralogixv1alpha1.Preset{}
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: name, Namespace: testNamespace}, fetched)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
+			if fetched.Status.Id != nil {
+				presetID = *fetched.Status.Id
+				return nil
+			}
+			return fmt.Errorf("preset ID is not set")
+		}, time.Minute, time.Second).Should(Succeed())
+
+		Eventually(func() error {
+			_, err := notificationsClient.GetPreset(ctx, &cxsdk.GetPresetRequest{Id: presetID})
+			return err
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+})
+
+func getSampleGenericHttpsPresetWithAttachmentConfig(name, namespace string) *coralogixv1alpha1.Preset {
+	parentID := "preset_system_generic_https_alerts_empty"
+	attachmentConfig := "ENABLED"
+
+	return &coralogixv1alpha1.Preset{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: coralogixv1alpha1.PresetSpec{
+			Name:             name,
+			Description:      "This is a sample generic https preset with attachment config",
+			ConnectorType:    "genericHttps",
+			EntityType:       "alerts",
+			ParentId:         &parentID,
+			AttachmentConfig: &attachmentConfig,
+			ConfigOverrides: []coralogixv1alpha1.ConfigOverride{
+				{
+					ConditionType: coralogixv1alpha1.ConditionType{
+						MatchEntityType: &coralogixv1alpha1.MatchEntityType{},
+					},
+					MessageConfig: coralogixv1alpha1.MessageConfig{
+						Fields: []coralogixv1alpha1.MessageConfigField{
+							{
+								FieldName: "body",
+								Template:  `{"alias": "{{alert.groupingKey}}"}`,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}

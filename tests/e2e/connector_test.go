@@ -257,6 +257,103 @@ func getSamplePagerDutyConnectorWithSecret(name, namespace, secretName, secretKe
 	}
 }
 
+// CX-47025: PAGERDUTY_INCIDENTS connector type and CASES config-override entity type.
+var _ = Describe("Connector NC gap fields (CX-47025)", func() {
+	var (
+		crClient            client.Client
+		notificationsClient *cxsdk.NotificationsClient
+	)
+
+	BeforeEach(func() {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		notificationsClient = ClientsInstance.GetCoralogixClientSet().Notifications()
+	})
+
+	verifyConnectorSynced := func(ctx context.Context, name string) {
+		var connectorID string
+		Eventually(func(g Gomega) error {
+			fetched := &coralogixv1alpha1.Connector{}
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: name, Namespace: testNamespace}, fetched)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
+			if fetched.Status.Id != nil {
+				connectorID = *fetched.Status.Id
+				return nil
+			}
+			return fmt.Errorf("connector ID is not set")
+		}, time.Minute, time.Second).Should(Succeed())
+
+		Eventually(func() error {
+			_, err := notificationsClient.GetConnector(ctx, &cxsdk.GetConnectorRequest{Id: connectorID})
+			return err
+		}, time.Minute, time.Second).Should(Succeed())
+	}
+
+	It("Should create a pagerDutyIncidents connector", func(ctx context.Context) {
+		name := fmt.Sprintf("pd-incidents-connector-%d", time.Now().Unix())
+		connector := getSamplePagerDutyIncidentsConnector(name, testNamespace)
+		Expect(crClient.Create(ctx, connector)).To(Succeed())
+		DeferCleanup(func(ctx context.Context) {
+			_ = crClient.Delete(ctx, connector)
+		})
+
+		verifyConnectorSynced(ctx, name)
+	})
+
+	It("Should create a connector with a CASES config override", func(ctx context.Context) {
+		name := fmt.Sprintf("cases-connector-%d", time.Now().Unix())
+		connector := getSampleGenericHttpsConnectorWithCasesOverride(name, testNamespace)
+		Expect(crClient.Create(ctx, connector)).To(Succeed())
+		DeferCleanup(func(ctx context.Context) {
+			_ = crClient.Delete(ctx, connector)
+		})
+
+		verifyConnectorSynced(ctx, name)
+	})
+})
+
+func getSamplePagerDutyIncidentsConnector(name, namespace string) *coralogixv1alpha1.Connector {
+	return &coralogixv1alpha1.Connector{
+		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
+		Spec: coralogixv1alpha1.ConnectorSpec{
+			Name:        name,
+			Description: "PagerDuty Incidents connector",
+			Type:        "pagerDutyIncidents",
+			ConnectorConfig: coralogixv1alpha1.ConnectorConfig{
+				Fields: []coralogixv1alpha1.ConnectorConfigField{
+					{FieldName: "integrationId", Value: ptr.To("some-integration-id")},
+					{FieldName: "service", Value: ptr.To("PXXXXXX")},
+				},
+			},
+		},
+	}
+}
+
+func getSampleGenericHttpsConnectorWithCasesOverride(name, namespace string) *coralogixv1alpha1.Connector {
+	return &coralogixv1alpha1.Connector{
+		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
+		Spec: coralogixv1alpha1.ConnectorSpec{
+			Name:        name,
+			Description: "generic https connector with a CASES config override",
+			Type:        "genericHttps",
+			ConnectorConfig: coralogixv1alpha1.ConnectorConfig{
+				Fields: []coralogixv1alpha1.ConnectorConfigField{
+					{FieldName: "url", Value: ptr.To("https://httpbun.org/post")},
+					{FieldName: "method", Value: ptr.To("post")},
+				},
+			},
+			ConfigOverrides: []coralogixv1alpha1.EntityTypeConfigOverrides{
+				{
+					EntityType: "cases",
+					Fields: []coralogixv1alpha1.TemplatedConnectorConfigField{
+						{FieldName: "additionalBodyFields", Template: `{"source": "cases"}`},
+					},
+				},
+			},
+		},
+	}
+}
+
 func createTestSecret(name, namespace, key, value string) *corev1.Secret {
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{

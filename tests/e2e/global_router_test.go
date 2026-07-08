@@ -150,3 +150,123 @@ func getSampleGlobalRouter(globalRouterName, testNamespace, slackConnectorName, 
 		},
 	}
 }
+
+// CX-47025: GlobalRouter disabled flag and per-entity-type fallbackTargets.
+var _ = Describe("GlobalRouter disabled + fallbackTargets (CX-47025)", func() {
+	var (
+		crClient            client.Client
+		notificationsClient *cxsdk.NotificationsClient
+	)
+
+	BeforeEach(func() {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		notificationsClient = ClientsInstance.GetCoralogixClientSet().Notifications()
+	})
+
+	It("Should create a router with disabled and fallbackTargets", func(ctx context.Context) {
+		By("Creating a connector referenced by the router")
+		connectorName := fmt.Sprintf("connector-for-gaps-%s", gouuid.NewString())
+		connector := getSampleGenericHttpsConnectorForRouterGaps(connectorName, testNamespace)
+		Expect(crClient.Create(ctx, connector)).To(Succeed())
+		DeferCleanup(func(ctx context.Context) {
+			_ = crClient.Delete(ctx, connector)
+		})
+
+		By("Waiting for the Connector to be synced so its ID can be resolved")
+		Eventually(func(g Gomega) bool {
+			fetched := &coralogixv1alpha1.Connector{}
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: connectorName, Namespace: testNamespace}, fetched)).To(Succeed())
+			return fetched.Status.Id != nil
+		}, time.Minute, time.Second).Should(BeTrue())
+
+		By("Creating the GlobalRouter with disabled + fallbackTargets")
+		routerName := "global-router-gaps-" + gouuid.NewString()
+		router := getSampleGlobalRouterWithGapFields(routerName, testNamespace, connectorName)
+		Expect(crClient.Create(ctx, router)).To(Succeed())
+		DeferCleanup(func(ctx context.Context) {
+			_ = crClient.Delete(ctx, router)
+		})
+
+		var routerID string
+		Eventually(func(g Gomega) error {
+			fetched := &coralogixv1alpha1.GlobalRouter{}
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: routerName, Namespace: testNamespace}, fetched)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
+			if fetched.Status.Id != nil {
+				routerID = *fetched.Status.Id
+				return nil
+			}
+			return fmt.Errorf("GlobalRouter ID is not set")
+		}, 2*time.Minute, time.Second).Should(Succeed())
+
+		Eventually(func() error {
+			_, err := notificationsClient.GetGlobalRouter(ctx, &cxsdk.GetGlobalRouterRequest{Id: routerID})
+			return err
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+})
+
+func getSampleGlobalRouterWithGapFields(name, namespace, connectorName string) *coralogixv1alpha1.GlobalRouter {
+	return &coralogixv1alpha1.GlobalRouter{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: coralogixv1alpha1.GlobalRouterSpec{
+			Name:        name,
+			Description: "global router with disabled + fallbackTargets",
+			Disabled:    ptr.To(true),
+			RoutingLabels: &coralogixv1alpha1.RoutingLabels{
+				Environment: ptr.To(gouuid.NewString()),
+				Service:     ptr.To(gouuid.NewString()),
+				Team:        ptr.To(gouuid.NewString()),
+			},
+			Rules: []coralogixv1alpha1.RoutingRule{
+				{
+					Name:       "first-rule",
+					EntityType: ptr.To("alerts"),
+					Condition:  `alertDef.priority == "P1"`,
+					Targets: []coralogixv1alpha1.RoutingTarget{
+						{
+							Connector: coralogixv1alpha1.NCRef{
+								ResourceRef: &coralogixv1alpha1.ResourceRef{Name: connectorName},
+							},
+							Preset: &coralogixv1alpha1.NCRef{
+								BackendRef: &coralogixv1alpha1.NCBackendRef{ID: "preset_system_generic_https_alerts_empty"},
+							},
+						},
+					},
+				},
+			},
+			// Per-entity-type fallback. On a non-default router the target references a connector only.
+			FallbackTargets: []coralogixv1alpha1.FallbackTarget{
+				{
+					EntityType: "alerts",
+					Target: coralogixv1alpha1.RoutingTarget{
+						Connector: coralogixv1alpha1.NCRef{
+							ResourceRef: &coralogixv1alpha1.ResourceRef{Name: connectorName},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func getSampleGenericHttpsConnectorForRouterGaps(name, namespace string) *coralogixv1alpha1.Connector {
+	return &coralogixv1alpha1.Connector{
+		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
+		Spec: coralogixv1alpha1.ConnectorSpec{
+			Name:        name,
+			Description: "generic https connector for global router gap-fields test",
+			Type:        "genericHttps",
+			ConnectorConfig: coralogixv1alpha1.ConnectorConfig{
+				Fields: []coralogixv1alpha1.ConnectorConfigField{
+					{FieldName: "url", Value: ptr.To("https://httpbun.org/post")},
+					{FieldName: "method", Value: ptr.To("post")},
+				},
+			},
+		},
+	}
+}
