@@ -181,6 +181,7 @@ var _ = Describe("Preset attachmentConfig (CX-47025)", func() {
 func getSampleGenericHttpsPresetWithAttachmentConfig(name, namespace string) *coralogixv1alpha1.Preset {
 	parentID := "preset_system_generic_https_alerts_empty"
 	attachmentConfig := "ENABLED"
+	payloadType := "generic_https_default"
 
 	return &coralogixv1alpha1.Preset{
 		ObjectMeta: metav1.ObjectMeta{
@@ -196,14 +197,21 @@ func getSampleGenericHttpsPresetWithAttachmentConfig(name, namespace string) *co
 			AttachmentConfig: &attachmentConfig,
 			ConfigOverrides: []coralogixv1alpha1.ConfigOverride{
 				{
+					PayloadType: &payloadType,
 					ConditionType: coralogixv1alpha1.ConditionType{
-						MatchEntityType: &coralogixv1alpha1.MatchEntityType{},
+						MatchEntityTypeAndSubType: &coralogixv1alpha1.MatchEntityTypeAndSubType{
+							EntitySubType: "logsImmediateResolved",
+						},
 					},
 					MessageConfig: coralogixv1alpha1.MessageConfig{
 						Fields: []coralogixv1alpha1.MessageConfigField{
 							{
+								FieldName: "headers",
+								Template:  "{}",
+							},
+							{
 								FieldName: "body",
-								Template:  `{"alias": "{{alert.groupingKey}}"}`,
+								Template:  `{ "groupingKey": "{{alert.groupingKey}}", "status": "{{alert.status}}", "groups": "{{alert.groups}}" }`,
 							},
 						},
 					},
