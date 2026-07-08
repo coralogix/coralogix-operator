@@ -8884,9 +8884,9 @@ See also https://coralogix.com/docs/user-guides/notification-center/introduction
         <td><b>type</b></td>
         <td>enum</td>
         <td>
-          Type is the type of the connector. Can be one of slack, genericHttps, pagerDuty, email, or serviceNow.<br/>
+          Type is the type of the connector. Can be one of slack, genericHttps, pagerDuty, pagerDutyIncidents, email, or serviceNow.<br/>
           <br/>
-            <i>Enum</i>: slack, genericHttps, pagerDuty, email, serviceNow<br/>
+            <i>Enum</i>: slack, genericHttps, pagerDuty, pagerDutyIncidents, email, serviceNow<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -9039,9 +9039,9 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
         <td><b>entityType</b></td>
         <td>enum</td>
         <td>
-          EntityType is the entity type for the config override. Should equal "alerts".<br/>
+          EntityType is the entity type for the config override. Can be one of alerts or cases.<br/>
           <br/>
-            <i>Enum</i>: alerts<br/>
+            <i>Enum</i>: alerts, cases<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -11576,6 +11576,13 @@ GlobalRouterSpec defines the desired state of the Global Router.
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>disabled</b></td>
+        <td>boolean</td>
+        <td>
+          Disabled disables the global router without deleting it. Defaults to false.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>entityLabels</b></td>
         <td>map[string]string</td>
         <td>
@@ -11586,7 +11593,16 @@ GlobalRouterSpec defines the desired state of the Global Router.
         <td><b><a href="#globalrouterspecfallbackindex">fallback</a></b></td>
         <td>[]object</td>
         <td>
-          Fallback is the fallback routing target for the global router.<br/>
+          Fallback is the fallback routing target for the global router.
+Deprecated: use FallbackTargets, which supports per-entity-type fallback.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspecfallbacktargetsindex">fallbackTargets</a></b></td>
+        <td>[]object</td>
+        <td>
+          FallbackTargets are the per-entity-type fallback targets used when no routing rule matches.
+Replaces the deprecated Fallback field.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -11850,6 +11866,277 @@ ResourceRef is a reference to a Kubernetes resource.
 </table>
 
 
+### GlobalRouter.spec.fallbackTargets[index]
+<sup><sup>[↩ Parent](#globalrouterspec)</sup></sup>
+
+
+
+FallbackTarget defines a fallback routing target scoped to an entity type.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>entityType</b></td>
+        <td>enum</td>
+        <td>
+          EntityType is the entity type this fallback applies to. Can be one of alerts or cases.<br/>
+          <br/>
+            <i>Enum</i>: alerts, cases<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspecfallbacktargetsindextarget">target</a></b></td>
+        <td>object</td>
+        <td>
+          Target is the fallback routing target.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.fallbackTargets[index].target
+<sup><sup>[↩ Parent](#globalrouterspecfallbacktargetsindex)</sup></sup>
+
+
+
+Target is the fallback routing target.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#globalrouterspecfallbacktargetsindextargetconnector">connector</a></b></td>
+        <td>object</td>
+        <td>
+          Connector is the connector for the routing target. Should be one of backendRef or resourceRef.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>customDetails</b></td>
+        <td>map[string]string</td>
+        <td>
+          CustomDetails are optional custom details to attach to the routing target.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspecfallbacktargetsindextargetpreset">preset</a></b></td>
+        <td>object</td>
+        <td>
+          Preset is the preset for the routing target. Should be one of backendRef or resourceRef.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.fallbackTargets[index].target.connector
+<sup><sup>[↩ Parent](#globalrouterspecfallbacktargetsindextarget)</sup></sup>
+
+
+
+Connector is the connector for the routing target. Should be one of backendRef or resourceRef.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#globalrouterspecfallbacktargetsindextargetconnectorbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          BackendRef is a reference to a backend resource.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspecfallbacktargetsindextargetconnectorresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          ResourceRef is a reference to a Kubernetes resource.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.fallbackTargets[index].target.connector.backendRef
+<sup><sup>[↩ Parent](#globalrouterspecfallbacktargetsindextargetconnector)</sup></sup>
+
+
+
+BackendRef is a reference to a backend resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.fallbackTargets[index].target.connector.resourceRef
+<sup><sup>[↩ Parent](#globalrouterspecfallbacktargetsindextargetconnector)</sup></sup>
+
+
+
+ResourceRef is a reference to a Kubernetes resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource (not id).<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.fallbackTargets[index].target.preset
+<sup><sup>[↩ Parent](#globalrouterspecfallbacktargetsindextarget)</sup></sup>
+
+
+
+Preset is the preset for the routing target. Should be one of backendRef or resourceRef.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#globalrouterspecfallbacktargetsindextargetpresetbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          BackendRef is a reference to a backend resource.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#globalrouterspecfallbacktargetsindextargetpresetresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          ResourceRef is a reference to a Kubernetes resource.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.fallbackTargets[index].target.preset.backendRef
+<sup><sup>[↩ Parent](#globalrouterspecfallbacktargetsindextargetpreset)</sup></sup>
+
+
+
+BackendRef is a reference to a backend resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### GlobalRouter.spec.fallbackTargets[index].target.preset.resourceRef
+<sup><sup>[↩ Parent](#globalrouterspecfallbacktargetsindextargetpreset)</sup></sup>
+
+
+
+ResourceRef is a reference to a Kubernetes resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource (not id).<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
 ### GlobalRouter.spec.routingLabels
 <sup><sup>[↩ Parent](#globalrouterspec)</sup></sup>
 
@@ -11940,9 +12227,9 @@ Should be used only if ID is not set to `router_default`.
         <td><b>entityType</b></td>
         <td>enum</td>
         <td>
-          EntityType is the entity type for the global router.<br/>
+          EntityType is the entity type for the global router. Can be one of alerts or cases.<br/>
           <br/>
-            <i>Enum</i>: alerts<br/>
+            <i>Enum</i>: alerts, cases<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -14080,6 +14367,15 @@ PresetSpec defines the desired state of Preset.
           Name is the name of the preset.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>attachmentConfig</b></td>
+        <td>enum</td>
+        <td>
+          AttachmentConfig controls whether notification payloads include attachments. Defaults to AUTO.<br/>
+          <br/>
+            <i>Enum</i>: AUTO, ENABLED, DISABLED<br/>
+        </td>
+        <td>false</td>
       </tr><tr>
         <td><b><a href="#presetspecconfigoverridesindex">configOverrides</a></b></td>
         <td>[]object</td>

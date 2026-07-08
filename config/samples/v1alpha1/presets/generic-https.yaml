@@ -14,6 +14,7 @@ spec:
   connectorType: genericHttps
   entityType: alerts
   parentId: preset_system_generic_https_alerts_empty
+  attachmentConfig: ENABLED
   configOverrides:
     - conditionType:
         matchEntityType: {}

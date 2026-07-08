@@ -11,8 +11,15 @@ metadata:
 spec:
   name: global router
   description: global router example
+  disabled: false
   routingLabels:
     team: iac
+  fallbackTargets:
+    - entityType: alerts
+      target:
+        connector:
+          resourceRef:
+            name: generic-https-sample
   rules:
     - name: first-rule
       condition: "alertDef.priority == \"P1\""

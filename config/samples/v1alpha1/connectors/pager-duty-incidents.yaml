@@ -1,0 +1,20 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Connector
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: connector-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: pager-duty-incidents-sample
+spec:
+  name: pager-duty-incidents-sample
+  description: This is a sample pager duty incidents connector
+  type: pagerDutyIncidents
+  connectorConfig:
+    fields:
+      - fieldName: integrationId
+        value: some-integration-id
+      - fieldName: service
+        value: PXXXXXX

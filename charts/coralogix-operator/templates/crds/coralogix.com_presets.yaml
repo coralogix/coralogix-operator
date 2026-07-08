@@ -52,6 +52,14 @@ spec:
           spec:
             description: PresetSpec defines the desired state of Preset.
             properties:
+              attachmentConfig:
+                description: AttachmentConfig controls whether notification payloads
+                  include attachments. Defaults to AUTO.
+                enum:
+                - AUTO
+                - ENABLED
+                - DISABLED
+                type: string
               configOverrides:
                 description: ConfigOverrides are the entity type configs, allowing
                   entity type templating.

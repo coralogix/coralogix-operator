@@ -49,13 +49,33 @@ type GlobalRouterSpec struct {
 	// +optional
 	RoutingLabels *RoutingLabels `json:"routingLabels,omitempty"`
 
+	// Disabled disables the global router without deleting it. Defaults to false.
+	// +optional
+	Disabled *bool `json:"disabled,omitempty"`
+
 	// Fallback is the fallback routing target for the global router.
+	// Deprecated: use FallbackTargets, which supports per-entity-type fallback.
 	// +optional
 	Fallback []RoutingTarget `json:"fallback,omitempty"`
+
+	// FallbackTargets are the per-entity-type fallback targets used when no routing rule matches.
+	// Replaces the deprecated Fallback field.
+	// +optional
+	FallbackTargets []FallbackTarget `json:"fallbackTargets,omitempty"`
 
 	// Rules are the routing rules for the global router.
 	// +optional
 	Rules []RoutingRule `json:"rules,omitempty"`
+}
+
+// FallbackTarget defines a fallback routing target scoped to an entity type.
+type FallbackTarget struct {
+	// EntityType is the entity type this fallback applies to. Can be one of alerts or cases.
+	// +kubebuilder:validation:Enum=alerts;cases
+	EntityType string `json:"entityType"`
+
+	// Target is the fallback routing target.
+	Target RoutingTarget `json:"target"`
 }
 
 // RoutingLabels defines the routing labels for the Global Router.
@@ -78,8 +98,8 @@ type RoutingRule struct {
 	// Name is the name of the routing rule.
 	Name string `json:"name"`
 
-	// EntityType is the entity type for the global router.
-	// +kubebuilder:validation:Enum=alerts
+	// EntityType is the entity type for the global router. Can be one of alerts or cases.
+	// +kubebuilder:validation:Enum=alerts;cases
 	// +optional
 	EntityType *string `json:"entityType,omitempty"`
 
@@ -121,6 +141,7 @@ type NCRef struct {
 var (
 	EntityTypeSchemaToOpenAPI = map[string]globalrouters.NotificationCenterEntityType{
 		"alerts": globalrouters.NOTIFICATIONCENTERENTITYTYPE_ALERTS,
+		"cases":  globalrouters.NOTIFICATIONCENTERENTITYTYPE_CASES,
 	}
 )
 
@@ -135,15 +156,51 @@ func (g *GlobalRouter) ExtractGlobalRouter(ctx context.Context) (*globalrouters.
 		return nil, err
 	}
 
+	fallbackTargets, err := extractFallbackTargets(ctx, g.Namespace, g.Spec.FallbackTargets)
+	if err != nil {
+		return nil, err
+	}
+
 	return &globalrouters.GlobalRouter{
-		Name:          globalrouters.PtrString(g.Spec.Name),
-		Description:   globalrouters.PtrString(g.Spec.Description),
-		Id:            g.Spec.ID,
-		EntityLabels:  g.Spec.EntityLabels,
-		RoutingLabels: extractRoutingLabels(g.Spec.RoutingLabels),
-		Fallback:      fallback,
-		Rules:         rules,
+		Name:            globalrouters.PtrString(g.Spec.Name),
+		Description:     globalrouters.PtrString(g.Spec.Description),
+		Id:              g.Spec.ID,
+		EntityLabels:    g.Spec.EntityLabels,
+		RoutingLabels:   extractRoutingLabels(g.Spec.RoutingLabels),
+		Disabled:        g.Spec.Disabled,
+		Fallback:        fallback,
+		FallbackTargets: fallbackTargets,
+		Rules:           rules,
 	}, nil
+}
+
+func extractFallbackTargets(ctx context.Context, namespace string, fallbackTargets []FallbackTarget) ([]globalrouters.FallbackTarget, error) {
+	var result []globalrouters.FallbackTarget
+	var errs error
+	for _, fallbackTarget := range fallbackTargets {
+		entityType, ok := EntityTypeSchemaToOpenAPI[fallbackTarget.EntityType]
+		if !ok {
+			errs = errors.Join(errs, fmt.Errorf("invalid entity type: %s", fallbackTarget.EntityType))
+			continue
+		}
+
+		target, err := extractRoutingTarget(ctx, namespace, fallbackTarget.Target)
+		if err != nil {
+			errs = errors.Join(errs, err)
+			continue
+		}
+
+		result = append(result, globalrouters.FallbackTarget{
+			EntityType: entityType.Ptr(),
+			Target:     target,
+		})
+	}
+
+	if errs != nil {
+		return nil, errs
+	}
+
+	return result, nil
 }
 
 func extractRoutingLabels(routingLabels *RoutingLabels) *globalrouters.RoutingLabels {

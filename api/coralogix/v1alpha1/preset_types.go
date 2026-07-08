@@ -44,6 +44,11 @@ type PresetSpec struct {
 	// +kubebuilder:validation:Enum=alerts
 	EntityType string `json:"entityType"`
 
+	// AttachmentConfig controls whether notification payloads include attachments. Defaults to AUTO.
+	// +kubebuilder:validation:Enum=AUTO;ENABLED;DISABLED
+	// +optional
+	AttachmentConfig *string `json:"attachmentConfig,omitempty"`
+
 	// ConfigOverrides are the entity type configs, allowing entity type templating.
 	ConfigOverrides []ConfigOverride `json:"configOverrides,omitempty"`
 }
@@ -155,6 +160,12 @@ func (p *Preset) ExtractPreset() (*presets.Preset, error) {
 	}
 
 	preset.EntityType = entityType.Ptr()
+
+	if p.Spec.AttachmentConfig != nil {
+		policy := presets.AttachmentConfigPolicy(*p.Spec.AttachmentConfig)
+		preset.AttachmentConfig = &presets.AttachmentConfig{Policy: &policy}
+	}
+
 	preset.ConfigOverrides = ExtractConfigOverrides(p.Spec.ConfigOverrides)
 	return preset, nil
 }

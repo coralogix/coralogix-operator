@@ -36,8 +36,8 @@ type ConnectorSpec struct {
 	// Description is the description of the connector.
 	Description string `json:"description"`
 
-	// Type is the type of the connector. Can be one of slack, genericHttps, pagerDuty, email, or serviceNow.
-	// +kubebuilder:validation:Enum=slack;genericHttps;pagerDuty;email;serviceNow
+	// Type is the type of the connector. Can be one of slack, genericHttps, pagerDuty, pagerDutyIncidents, email, or serviceNow.
+	// +kubebuilder:validation:Enum=slack;genericHttps;pagerDuty;pagerDutyIncidents;email;serviceNow
 	Type string `json:"type"`
 
 	// ConnectorConfig is the configuration of the connector.
@@ -71,8 +71,8 @@ type ConnectorConfigField struct {
 }
 
 type EntityTypeConfigOverrides struct {
-	// EntityType is the entity type for the config override. Should equal "alerts".
-	// +kubebuilder:validation:Enum=alerts
+	// EntityType is the entity type for the config override. Can be one of alerts or cases.
+	// +kubebuilder:validation:Enum=alerts;cases
 	EntityType string `json:"entityType"`
 
 	// Fields are the templated fields for the config override.
@@ -120,14 +120,16 @@ func (c *Connector) HasIDInStatus() bool {
 
 var (
 	schemaToOpenApiConnectorType = map[string]connectors.NotificationCenterConnectorType{
-		"slack":        connectors.NOTIFICATIONCENTERCONNECTORTYPE_SLACK,
-		"genericHttps": connectors.NOTIFICATIONCENTERCONNECTORTYPE_GENERIC_HTTPS,
-		"pagerDuty":    connectors.NOTIFICATIONCENTERCONNECTORTYPE_PAGERDUTY,
-		"email":        connectors.NOTIFICATIONCENTERCONNECTORTYPE_EMAIL,
-		"serviceNow":   connectors.NOTIFICATIONCENTERCONNECTORTYPE_SERVICE_NOW,
+		"slack":              connectors.NOTIFICATIONCENTERCONNECTORTYPE_SLACK,
+		"genericHttps":       connectors.NOTIFICATIONCENTERCONNECTORTYPE_GENERIC_HTTPS,
+		"pagerDuty":          connectors.NOTIFICATIONCENTERCONNECTORTYPE_PAGERDUTY,
+		"pagerDutyIncidents": connectors.NOTIFICATIONCENTERCONNECTORTYPE_PAGERDUTY_INCIDENTS,
+		"email":              connectors.NOTIFICATIONCENTERCONNECTORTYPE_EMAIL,
+		"serviceNow":         connectors.NOTIFICATIONCENTERCONNECTORTYPE_SERVICE_NOW,
 	}
 	schemaToOpenApiEntityType = map[string]connectors.NotificationCenterEntityType{
 		"alerts": connectors.NOTIFICATIONCENTERENTITYTYPE_ALERTS,
+		"cases":  connectors.NOTIFICATIONCENTERENTITYTYPE_CASES,
 	}
 )
 
