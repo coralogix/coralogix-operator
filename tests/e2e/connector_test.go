@@ -257,23 +257,29 @@ func getSamplePagerDutyConnectorWithSecret(name, namespace, secretName, secretKe
 	}
 }
 
-// CX-47025: PAGERDUTY_INCIDENTS connector type and CASES config-override entity type.
-var _ = Describe("Connector NC gap fields (CX-47025)", func() {
+// NC gap field: PAGERDUTY_INCIDENTS connector type.
+var _ = Describe("Connector PagerDutyIncidents", Ordered, func() {
 	var (
 		crClient            client.Client
 		notificationsClient *cxsdk.NotificationsClient
+		connectorID         string
+		connector           *coralogixv1alpha1.Connector
+		connectorName       string
 	)
 
-	BeforeEach(func() {
+	BeforeAll(func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		notificationsClient = ClientsInstance.GetCoralogixClientSet().Notifications()
 	})
 
-	verifyConnectorSynced := func(ctx context.Context, name string) {
-		var connectorID string
+	It("Should be created successfully", func(ctx context.Context) {
+		connectorName = fmt.Sprintf("pd-incidents-connector-%d", time.Now().Unix())
+		connector = getSamplePagerDutyIncidentsConnector(connectorName, testNamespace)
+		Expect(crClient.Create(ctx, connector)).To(Succeed())
+
 		Eventually(func(g Gomega) error {
 			fetched := &coralogixv1alpha1.Connector{}
-			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: name, Namespace: testNamespace}, fetched)).To(Succeed())
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: connectorName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
 			if fetched.Status.Id != nil {
@@ -287,28 +293,61 @@ var _ = Describe("Connector NC gap fields (CX-47025)", func() {
 			_, err := notificationsClient.GetConnector(ctx, &cxsdk.GetConnectorRequest{Id: connectorID})
 			return err
 		}, time.Minute, time.Second).Should(Succeed())
-	}
-
-	It("Should create a pagerDutyIncidents connector", func(ctx context.Context) {
-		name := fmt.Sprintf("pd-incidents-connector-%d", time.Now().Unix())
-		connector := getSamplePagerDutyIncidentsConnector(name, testNamespace)
-		Expect(crClient.Create(ctx, connector)).To(Succeed())
-		DeferCleanup(func(ctx context.Context) {
-			_ = crClient.Delete(ctx, connector)
-		})
-
-		verifyConnectorSynced(ctx, name)
 	})
 
-	It("Should create a connector with a CASES config override", func(ctx context.Context) {
-		name := fmt.Sprintf("cases-connector-%d", time.Now().Unix())
-		connector := getSampleGenericHttpsConnectorWithCasesOverride(name, testNamespace)
-		Expect(crClient.Create(ctx, connector)).To(Succeed())
-		DeferCleanup(func(ctx context.Context) {
-			_ = crClient.Delete(ctx, connector)
-		})
+	It("Should be deleted successfully", func(ctx context.Context) {
+		Expect(crClient.Delete(ctx, connector)).To(Succeed())
+		Eventually(func() codes.Code {
+			_, err := notificationsClient.GetConnector(ctx, &cxsdk.GetConnectorRequest{Id: connectorID})
+			return cxsdk.Code(err)
+		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
+	})
+})
 
-		verifyConnectorSynced(ctx, name)
+// NC gap field: CASES config-override entity type.
+var _ = Describe("Connector with CASES config override", Ordered, func() {
+	var (
+		crClient            client.Client
+		notificationsClient *cxsdk.NotificationsClient
+		connectorID         string
+		connector           *coralogixv1alpha1.Connector
+		connectorName       string
+	)
+
+	BeforeAll(func() {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		notificationsClient = ClientsInstance.GetCoralogixClientSet().Notifications()
+	})
+
+	It("Should be created successfully", func(ctx context.Context) {
+		connectorName = fmt.Sprintf("cases-connector-%d", time.Now().Unix())
+		connector = getSampleGenericHttpsConnectorWithCasesOverride(connectorName, testNamespace)
+		Expect(crClient.Create(ctx, connector)).To(Succeed())
+
+		Eventually(func(g Gomega) error {
+			fetched := &coralogixv1alpha1.Connector{}
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: connectorName, Namespace: testNamespace}, fetched)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
+			if fetched.Status.Id != nil {
+				connectorID = *fetched.Status.Id
+				return nil
+			}
+			return fmt.Errorf("connector ID is not set")
+		}, time.Minute, time.Second).Should(Succeed())
+
+		Eventually(func() error {
+			_, err := notificationsClient.GetConnector(ctx, &cxsdk.GetConnectorRequest{Id: connectorID})
+			return err
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should be deleted successfully", func(ctx context.Context) {
+		Expect(crClient.Delete(ctx, connector)).To(Succeed())
+		Eventually(func() codes.Code {
+			_, err := notificationsClient.GetConnector(ctx, &cxsdk.GetConnectorRequest{Id: connectorID})
+			return cxsdk.Code(err)
+		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
 	})
 })
 

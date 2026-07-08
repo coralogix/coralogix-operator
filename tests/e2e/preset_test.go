@@ -138,30 +138,29 @@ func getSampleSlackPreset(name, namespace string) *coralogixv1alpha1.Preset {
 	}
 }
 
-// CX-47025: Preset attachmentConfig.
-var _ = Describe("Preset attachmentConfig (CX-47025)", func() {
+// NC gap field: Preset attachmentConfig.
+var _ = Describe("Preset with attachmentConfig", Ordered, func() {
 	var (
 		crClient            client.Client
 		notificationsClient *cxsdk.NotificationsClient
+		presetID            string
+		preset              *coralogixv1alpha1.Preset
+		presetName          string
 	)
 
-	BeforeEach(func() {
+	BeforeAll(func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		notificationsClient = ClientsInstance.GetCoralogixClientSet().Notifications()
 	})
 
-	It("Should create a generic-https preset with attachmentConfig", func(ctx context.Context) {
-		name := fmt.Sprintf("attachment-config-preset-%d", time.Now().Unix())
-		preset := getSampleGenericHttpsPresetWithAttachmentConfig(name, testNamespace)
+	It("Should be created successfully", func(ctx context.Context) {
+		presetName = fmt.Sprintf("attachment-config-preset-%d", time.Now().Unix())
+		preset = getSampleGenericHttpsPresetWithAttachmentConfig(presetName, testNamespace)
 		Expect(crClient.Create(ctx, preset)).To(Succeed())
-		DeferCleanup(func(ctx context.Context) {
-			_ = crClient.Delete(ctx, preset)
-		})
 
-		var presetID string
 		Eventually(func(g Gomega) error {
 			fetched := &coralogixv1alpha1.Preset{}
-			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: name, Namespace: testNamespace}, fetched)).To(Succeed())
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: presetName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
 			if fetched.Status.Id != nil {
@@ -175,6 +174,14 @@ var _ = Describe("Preset attachmentConfig (CX-47025)", func() {
 			_, err := notificationsClient.GetPreset(ctx, &cxsdk.GetPresetRequest{Id: presetID})
 			return err
 		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should be deleted successfully", func(ctx context.Context) {
+		Expect(crClient.Delete(ctx, preset)).To(Succeed())
+		Eventually(func() codes.Code {
+			_, err := notificationsClient.GetPreset(ctx, &cxsdk.GetPresetRequest{Id: presetID})
+			return cxsdk.Code(err)
+		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
 	})
 })
 

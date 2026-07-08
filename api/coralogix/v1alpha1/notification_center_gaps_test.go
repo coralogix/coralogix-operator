@@ -22,7 +22,7 @@ import (
 	presets "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/presets_service"
 )
 
-// CX-47025: Preset attachmentConfig maps to the AttachmentConfig policy.
+// Preset attachmentConfig maps to the AttachmentConfig policy.
 func TestPresetExtractAttachmentConfig(t *testing.T) {
 	policy := "ENABLED"
 	preset := &Preset{
@@ -57,7 +57,7 @@ func TestPresetExtractAttachmentConfig(t *testing.T) {
 	}
 }
 
-// CX-47025: Connector supports the PAGERDUTY_INCIDENTS type and CASES config overrides.
+// Connector supports the PAGERDUTY_INCIDENTS type and CASES config overrides.
 func TestConnectorExtractPagerdutyIncidentsAndCases(t *testing.T) {
 	value := "v"
 	connector := &Connector{
@@ -87,7 +87,7 @@ func TestConnectorExtractPagerdutyIncidentsAndCases(t *testing.T) {
 	}
 }
 
-// CX-47025: GlobalRouter supports disabled, fallbackTargets, and CASES routing-rule entity type.
+// GlobalRouter supports disabled, fallbackTargets, and CASES routing-rule entity type.
 func TestGlobalRouterExtractDisabledFallbackTargetsAndCases(t *testing.T) {
 	disabled := true
 	entityType := "cases"

@@ -151,26 +151,28 @@ func getSampleGlobalRouter(globalRouterName, testNamespace, slackConnectorName, 
 	}
 }
 
-// CX-47025: GlobalRouter disabled flag and per-entity-type fallbackTargets.
-var _ = Describe("GlobalRouter disabled + fallbackTargets (CX-47025)", func() {
+// NC gap fields: GlobalRouter disabled flag and per-entity-type fallbackTargets.
+var _ = Describe("GlobalRouter with disabled and fallbackTargets", Ordered, func() {
 	var (
 		crClient            client.Client
 		notificationsClient *cxsdk.NotificationsClient
+		routerID            string
+		router              *coralogixv1alpha1.GlobalRouter
+		routerName          string
+		connector           *coralogixv1alpha1.Connector
+		connectorName       string
 	)
 
-	BeforeEach(func() {
+	BeforeAll(func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		notificationsClient = ClientsInstance.GetCoralogixClientSet().Notifications()
 	})
 
-	It("Should create a router with disabled and fallbackTargets", func(ctx context.Context) {
+	It("Should be created successfully", func(ctx context.Context) {
 		By("Creating a connector referenced by the router")
-		connectorName := fmt.Sprintf("connector-for-gaps-%s", gouuid.NewString())
-		connector := getSampleGenericHttpsConnectorForRouterGaps(connectorName, testNamespace)
+		connectorName = fmt.Sprintf("connector-for-gaps-%s", gouuid.NewString())
+		connector = getSampleGenericHttpsConnectorForRouterGaps(connectorName, testNamespace)
 		Expect(crClient.Create(ctx, connector)).To(Succeed())
-		DeferCleanup(func(ctx context.Context) {
-			_ = crClient.Delete(ctx, connector)
-		})
 
 		By("Waiting for the Connector to be synced so its ID can be resolved")
 		Eventually(func(g Gomega) bool {
@@ -180,14 +182,10 @@ var _ = Describe("GlobalRouter disabled + fallbackTargets (CX-47025)", func() {
 		}, time.Minute, time.Second).Should(BeTrue())
 
 		By("Creating the GlobalRouter with disabled + fallbackTargets")
-		routerName := "global-router-gaps-" + gouuid.NewString()
-		router := getSampleGlobalRouterWithGapFields(routerName, testNamespace, connectorName)
+		routerName = "global-router-gaps-" + gouuid.NewString()
+		router = getSampleGlobalRouterWithGapFields(routerName, testNamespace, connectorName)
 		Expect(crClient.Create(ctx, router)).To(Succeed())
-		DeferCleanup(func(ctx context.Context) {
-			_ = crClient.Delete(ctx, router)
-		})
 
-		var routerID string
 		Eventually(func(g Gomega) error {
 			fetched := &coralogixv1alpha1.GlobalRouter{}
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: routerName, Namespace: testNamespace}, fetched)).To(Succeed())
@@ -204,6 +202,18 @@ var _ = Describe("GlobalRouter disabled + fallbackTargets (CX-47025)", func() {
 			_, err := notificationsClient.GetGlobalRouter(ctx, &cxsdk.GetGlobalRouterRequest{Id: routerID})
 			return err
 		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should be deleted successfully", func(ctx context.Context) {
+		By("Deleting the GlobalRouter and verifying it is removed from the backend")
+		Expect(crClient.Delete(ctx, router)).To(Succeed())
+		Eventually(func() codes.Code {
+			_, err := notificationsClient.GetGlobalRouter(ctx, &cxsdk.GetGlobalRouterRequest{Id: routerID})
+			return cxsdk.Code(err)
+		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
+
+		By("Deleting the referenced connector")
+		Expect(crClient.Delete(ctx, connector)).To(Succeed())
 	})
 })
 
