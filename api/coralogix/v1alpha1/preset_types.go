@@ -36,12 +36,12 @@ type PresetSpec struct {
 	// +optional
 	ParentId *string `json:"parentId,omitempty"`
 
-	// ConnectorType is the type of the connector. Can be one of slack, genericHttps, pagerDuty, or email.
-	// +kubebuilder:validation:Enum=slack;genericHttps;pagerDuty;email
+	// ConnectorType is the type of the connector. Can be one of slack, genericHttps, pagerDuty, pagerDutyIncidents, or email.
+	// +kubebuilder:validation:Enum=slack;genericHttps;pagerDuty;pagerDutyIncidents;email
 	ConnectorType string `json:"connectorType"`
 
-	// EntityType is the entity type for the preset. Should equal "alerts".
-	// +kubebuilder:validation:Enum=alerts
+	// EntityType is the entity type for the preset. Can be one of alerts or cases.
+	// +kubebuilder:validation:Enum=alerts;cases
 	EntityType string `json:"entityType"`
 
 	// AttachmentConfig controls whether notification payloads include attachments. Defaults to AUTO.
@@ -131,13 +131,15 @@ func (p *Preset) HasIDInStatus() bool {
 
 var (
 	schemaToOpenApiPresetConnectorType = map[string]presets.NotificationCenterConnectorType{
-		"slack":        presets.NOTIFICATIONCENTERCONNECTORTYPE_SLACK,
-		"genericHttps": presets.NOTIFICATIONCENTERCONNECTORTYPE_GENERIC_HTTPS,
-		"pagerDuty":    presets.NOTIFICATIONCENTERCONNECTORTYPE_PAGERDUTY,
-		"email":        presets.NOTIFICATIONCENTERCONNECTORTYPE_EMAIL,
+		"slack":              presets.NOTIFICATIONCENTERCONNECTORTYPE_SLACK,
+		"genericHttps":       presets.NOTIFICATIONCENTERCONNECTORTYPE_GENERIC_HTTPS,
+		"pagerDuty":          presets.NOTIFICATIONCENTERCONNECTORTYPE_PAGERDUTY,
+		"pagerDutyIncidents": presets.NOTIFICATIONCENTERCONNECTORTYPE_PAGERDUTY_INCIDENTS,
+		"email":              presets.NOTIFICATIONCENTERCONNECTORTYPE_EMAIL,
 	}
 	schemaToOpenApiPresetsEntityType = map[string]presets.NotificationCenterEntityType{
 		"alerts": presets.NOTIFICATIONCENTERENTITYTYPE_ALERTS,
+		"cases":  presets.NOTIFICATIONCENTERENTITYTYPE_CASES,
 	}
 )
 

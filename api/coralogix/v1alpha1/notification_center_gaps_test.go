@@ -57,6 +57,30 @@ func TestPresetExtractAttachmentConfig(t *testing.T) {
 	}
 }
 
+// Preset supports the pagerDutyIncidents connector type and the cases entity type,
+// so PagerDuty-Incidents case presets can be managed as code.
+func TestPresetExtractPagerdutyIncidentsAndCases(t *testing.T) {
+	preset := &Preset{
+		Spec: PresetSpec{
+			Name:          "p",
+			Description:   "d",
+			ConnectorType: "pagerDutyIncidents",
+			EntityType:    "cases",
+		},
+	}
+
+	got, err := preset.ExtractPreset()
+	if err != nil {
+		t.Fatalf("ExtractPreset returned error: %v", err)
+	}
+	if got.ConnectorType == nil || *got.ConnectorType != presets.NOTIFICATIONCENTERCONNECTORTYPE_PAGERDUTY_INCIDENTS {
+		t.Fatalf("ConnectorType = %v, want PAGERDUTY_INCIDENTS", got.ConnectorType)
+	}
+	if got.EntityType == nil || *got.EntityType != presets.NOTIFICATIONCENTERENTITYTYPE_CASES {
+		t.Fatalf("EntityType = %v, want CASES", got.EntityType)
+	}
+}
+
 // Connector supports the PAGERDUTY_INCIDENTS type and CASES config overrides.
 func TestConnectorExtractPagerdutyIncidentsAndCases(t *testing.T) {
 	value := "v"
