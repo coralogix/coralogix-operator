@@ -246,6 +246,11 @@ func extractRoutingRule(ctx context.Context, namespace string, rule RoutingRule)
 		Targets:   targets,
 	}
 
+	if len(rule.CustomDetails) > 0 {
+		customDetails := rule.CustomDetails
+		routingRule.CustomDetails = &customDetails
+	}
+
 	if rule.EntityType != nil {
 		entityType, ok := EntityTypeSchemaToOpenAPI[*rule.EntityType]
 		if !ok {
@@ -290,10 +295,15 @@ func extractRoutingTarget(ctx context.Context, namespace string, target RoutingT
 		}
 	}
 
-	return &globalrouters.RoutingTarget{
+	routingTarget := &globalrouters.RoutingTarget{
 		ConnectorId: globalrouters.PtrString(connectorID),
 		PresetId:    presetID,
-	}, nil
+	}
+	if len(target.CustomDetails) > 0 {
+		customDetails := target.CustomDetails
+		routingTarget.CustomDetails = &customDetails
+	}
+	return routingTarget, nil
 }
 
 func extractConnectorID(ctx context.Context, namespace string, connector NCRef) (string, error) {

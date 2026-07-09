@@ -122,11 +122,15 @@ func TestGlobalRouterExtractDisabledFallbackTargetsAndCases(t *testing.T) {
 			Disabled:    &disabled,
 			Rules: []RoutingRule{
 				{
-					Name:       "rule",
-					EntityType: &entityType,
-					Condition:  "true",
+					Name:          "rule",
+					EntityType:    &entityType,
+					Condition:     "true",
+					CustomDetails: map[string]string{"ruleKey": "ruleVal"},
 					Targets: []RoutingTarget{
-						{Connector: NCRef{BackendRef: &NCBackendRef{ID: "conn-1"}}},
+						{
+							Connector:     NCRef{BackendRef: &NCBackendRef{ID: "conn-1"}},
+							CustomDetails: map[string]string{"targetKey": "targetVal"},
+						},
 					},
 				},
 			},
@@ -157,5 +161,12 @@ func TestGlobalRouterExtractDisabledFallbackTargetsAndCases(t *testing.T) {
 	if got.FallbackTargets[0].Target == nil || got.FallbackTargets[0].Target.ConnectorId == nil ||
 		*got.FallbackTargets[0].Target.ConnectorId != "conn-1" {
 		t.Fatalf("fallbackTargets[0].Target connector = %v, want conn-1", got.FallbackTargets[0].Target)
+	}
+	if got.Rules[0].CustomDetails == nil || (*got.Rules[0].CustomDetails)["ruleKey"] != "ruleVal" {
+		t.Fatalf("rule custom details = %v, want ruleKey=ruleVal", got.Rules[0].CustomDetails)
+	}
+	if len(got.Rules[0].Targets) != 1 || got.Rules[0].Targets[0].CustomDetails == nil ||
+		(*got.Rules[0].Targets[0].CustomDetails)["targetKey"] != "targetVal" {
+		t.Fatalf("target custom details = %v, want targetKey=targetVal", got.Rules[0].Targets)
 	}
 }
