@@ -51,6 +51,14 @@ spec:
           spec:
             description: PresetSpec defines the desired state of Preset.
             properties:
+              attachmentConfig:
+                description: AttachmentConfig controls whether notification payloads
+                  include attachments. Defaults to AUTO.
+                enum:
+                - AUTO
+                - ENABLED
+                - DISABLED
+                type: string
               configOverrides:
                 description: ConfigOverrides are the entity type configs, allowing
                   entity type templating.
@@ -114,21 +122,23 @@ spec:
                 type: array
               connectorType:
                 description: ConnectorType is the type of the connector. Can be one
-                  of slack, genericHttps, pagerDuty, or email.
+                  of slack, genericHttps, pagerDuty, pagerDutyIncidents, or email.
                 enum:
                 - slack
                 - genericHttps
                 - pagerDuty
+                - pagerDutyIncidents
                 - email
                 type: string
               description:
                 description: Description is the description of the preset.
                 type: string
               entityType:
-                description: EntityType is the entity type for the preset. Should
-                  equal "alerts".
+                description: EntityType is the entity type for the preset. Can be
+                  one of alerts or cases.
                 enum:
                 - alerts
+                - cases
                 type: string
               name:
                 description: Name is the name of the preset.

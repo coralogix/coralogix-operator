@@ -59,9 +59,10 @@ spec:
                   properties:
                     entityType:
                       description: EntityType is the entity type for the config override.
-                        Should equal "alerts".
+                        Can be one of alerts or cases.
                       enum:
                       - alerts
+                      - cases
                       type: string
                     fields:
                       description: Fields are the templated fields for the config
@@ -147,11 +148,12 @@ spec:
                 type: string
               type:
                 description: Type is the type of the connector. Can be one of slack,
-                  genericHttps, pagerDuty, email, or serviceNow.
+                  genericHttps, pagerDuty, pagerDutyIncidents, email, or serviceNow.
                 enum:
                 - slack
                 - genericHttps
                 - pagerDuty
+                - pagerDutyIncidents
                 - email
                 - serviceNow
                 type: string

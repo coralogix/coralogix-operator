@@ -56,6 +56,10 @@ spec:
               description:
                 description: Description is the description of the global router.
                 type: string
+              disabled:
+                description: Disabled disables the global router without deleting
+                  it. Defaults to false.
+                type: boolean
               entityLabels:
                 additionalProperties:
                   type: string
@@ -63,8 +67,9 @@ spec:
                   router.
                 type: object
               fallback:
-                description: Fallback is the fallback routing target for the global
-                  router.
+                description: |-
+                  Fallback is the fallback routing target for the global router.
+                  Deprecated: use FallbackTargets, which supports per-entity-type fallback.
                 items:
                   properties:
                     connector:
@@ -137,6 +142,100 @@ spec:
                   - connector
                   type: object
                 type: array
+              fallbackTargets:
+                description: |-
+                  FallbackTargets are the per-entity-type fallback targets used when no routing rule matches.
+                  Replaces the deprecated Fallback field.
+                items:
+                  description: FallbackTarget defines a fallback routing target scoped
+                    to an entity type.
+                  properties:
+                    entityType:
+                      description: EntityType is the entity type this fallback applies
+                        to. Can be one of alerts or cases.
+                      enum:
+                      - alerts
+                      - cases
+                      type: string
+                    target:
+                      description: Target is the fallback routing target.
+                      properties:
+                        connector:
+                          description: Connector is the connector for the routing
+                            target. Should be one of backendRef or resourceRef.
+                          properties:
+                            backendRef:
+                              description: BackendRef is a reference to a backend
+                                resource.
+                              properties:
+                                id:
+                                  type: string
+                              required:
+                              - id
+                              type: object
+                            resourceRef:
+                              description: ResourceRef is a reference to a Kubernetes
+                                resource.
+                              properties:
+                                name:
+                                  description: Name of the resource (not id).
+                                  type: string
+                                namespace:
+                                  description: Kubernetes namespace.
+                                  type: string
+                              required:
+                              - name
+                              type: object
+                          type: object
+                          x-kubernetes-validations:
+                          - message: Exactly one of backendRef or resourceRef must
+                              be set
+                            rule: has(self.backendRef) != has(self.resourceRef)
+                        customDetails:
+                          additionalProperties:
+                            type: string
+                          description: CustomDetails are optional custom details to
+                            attach to the routing target.
+                          type: object
+                        preset:
+                          description: Preset is the preset for the routing target.
+                            Should be one of backendRef or resourceRef.
+                          properties:
+                            backendRef:
+                              description: BackendRef is a reference to a backend
+                                resource.
+                              properties:
+                                id:
+                                  type: string
+                              required:
+                              - id
+                              type: object
+                            resourceRef:
+                              description: ResourceRef is a reference to a Kubernetes
+                                resource.
+                              properties:
+                                name:
+                                  description: Name of the resource (not id).
+                                  type: string
+                                namespace:
+                                  description: Kubernetes namespace.
+                                  type: string
+                              required:
+                              - name
+                              type: object
+                          type: object
+                          x-kubernetes-validations:
+                          - message: Exactly one of backendRef or resourceRef must
+                              be set
+                            rule: has(self.backendRef) != has(self.resourceRef)
+                      required:
+                      - connector
+                      type: object
+                  required:
+                  - entityType
+                  - target
+                  type: object
+                type: array
               id:
                 description: ID of the global router.
                 type: string
@@ -173,8 +272,10 @@ spec:
                       type: object
                     entityType:
                       description: EntityType is the entity type for the global router.
+                        Can be one of alerts or cases.
                       enum:
                       - alerts
+                      - cases
                       type: string
                     name:
                       description: Name is the name of the routing rule.
