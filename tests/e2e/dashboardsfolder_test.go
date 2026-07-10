@@ -51,7 +51,7 @@ var _ = Describe("DashboardsFolder", Ordered, func() {
 
 	It("Should be created successfully", func(ctx context.Context) {
 		By("Creating DashboardsFolder")
-		dashboardsFolder = getSampleDashboardsFolder("Test Dashboard Folder")
+		dashboardsFolder = getSampleDashboardsFolder(fmt.Sprintf("Test Dashboard Folder %d", time.Now().UnixNano()))
 
 		Expect(crClient.Create(ctx, dashboardsFolder)).To(Succeed())
 
@@ -77,7 +77,7 @@ var _ = Describe("DashboardsFolder", Ordered, func() {
 
 	It("Should be updated successfully", func(ctx context.Context) {
 		By("Patching the DashboardsFolder")
-		newName := "Test Updated Dashboard"
+		newName := fmt.Sprintf("Test Updated Dashboard %d", time.Now().UnixNano())
 		modifiedDashboardsFolder := dashboardsFolder.DeepCopy()
 		modifiedDashboardsFolder.Spec.Name = newName
 		Expect(crClient.Patch(ctx, modifiedDashboardsFolder, client.MergeFrom(dashboardsFolder))).To(Succeed())
