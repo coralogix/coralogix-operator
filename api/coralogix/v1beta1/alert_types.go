@@ -2255,7 +2255,7 @@ func convertSloBackendNameToId(listingSloProperties *GetResourceRefProperties, n
 			},
 			Predicate: &slos.SloFilterPredicate{
 				Is: &slos.IsFilterPredicate{
-					StringValues: slos.MultipleValues{
+					StringValues: &slos.StringValues{
 						Values: []string{*name},
 					},
 				},
