@@ -17,6 +17,7 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -34,6 +35,10 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
+
+var slackIntegrationId = os.Getenv("SLACK_INTEGRATION_ID")
+var slackIntegrationChannel = os.Getenv("SLACK_INTEGRATION_CHANNEL")
+var pagerDutyIntegrationId = os.Getenv("PD_INTEGRATION_ID")
 
 var _ = Describe("Connector", Ordered, func() {
 	var (
@@ -157,7 +162,7 @@ var _ = Describe("Connector with SecretKeyRef", Ordered, func() {
 	It("Should create connector with secret reference successfully", func(ctx context.Context) {
 		By("Creating a Secret with the integration key")
 		secretName = fmt.Sprintf("pagerduty-secret-%d", time.Now().Unix())
-		secret = createTestSecret(secretName, testNamespace, "integration-key", "test-integration-key-value")
+		secret = createTestSecret(secretName, testNamespace, "integration-key", pagerDutyIntegrationId)
 		Expect(crClient.Create(ctx, secret)).To(Succeed())
 
 		By("Creating Connector with SecretKeyRef")
@@ -214,8 +219,8 @@ func getSampleSlackConnector(name, namespace string) *coralogixv1alpha1.Connecto
 			Type:        "slack",
 			ConnectorConfig: coralogixv1alpha1.ConnectorConfig{
 				Fields: []coralogixv1alpha1.ConnectorConfigField{
-					{FieldName: "channel", Value: ptr.To("general")},
-					{FieldName: "integrationId", Value: ptr.To("Slack")},
+					{FieldName: "channel", Value: ptr.To(slackIntegrationChannel)},
+					{FieldName: "integrationId", Value: ptr.To(slackIntegrationId)},
 					{FieldName: "fallbackChannel", Value: ptr.To("fallback_general")},
 				},
 			},

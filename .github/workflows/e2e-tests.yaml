@@ -27,6 +27,9 @@ jobs:
       AWS_REGION: ${{ secrets.AWS_REGION }}
       LOGS_BUCKET: ${{ secrets.LOGS_BUCKET }}
       METRICS_BUCKET: ${{ secrets.METRICS_BUCKET }}
+      SLACK_INTEGRATION_ID: ${{ secrets.SLACK_INTEGRATION_ID }}
+      SLACK_INTEGRATION_CHANNEL: ${{ secrets.SLACK_INTEGRATION_CHANNEL }}
+      PD_INTEGRATION_ID: ${{ secrets.PD_INTEGRATION_ID }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
