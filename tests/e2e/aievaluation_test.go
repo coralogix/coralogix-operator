@@ -1653,9 +1653,8 @@ func expectRemoteAIEvaluationPIICategories(
 	expected []coralogixv1alpha1.AIEvaluationPIICategory,
 ) {
 	config := evaluation.GetConfig()
-	g.Expect(config.EvaluationConfigPii).ToNot(BeNil())
-	piiConfig := config.EvaluationConfigPii.GetPii()
-	g.Expect(schemaPIICategories(piiConfig.GetCategories())).To(ConsistOf(expectedPIICategories(expected)...))
+	g.Expect(config.Pii).ToNot(BeNil())
+	g.Expect(schemaPIICategories(config.Pii.GetCategories())).To(ConsistOf(expectedPIICategories(expected)...))
 }
 
 func expectRemoteAIEvaluationAllowedTopics(
@@ -1664,9 +1663,8 @@ func expectRemoteAIEvaluationAllowedTopics(
 	expected []string,
 ) {
 	config := evaluation.GetConfig()
-	g.Expect(config.EvaluationConfigAllowedTopics).ToNot(BeNil())
-	allowedTopicsConfig := config.EvaluationConfigAllowedTopics.GetAllowedTopics()
-	g.Expect(allowedTopicsConfig.GetTopics()).To(ConsistOf(expectedStrings(expected)...))
+	g.Expect(config.AllowedTopics).ToNot(BeNil())
+	g.Expect(config.AllowedTopics.GetTopics()).To(ConsistOf(expectedStrings(expected)...))
 }
 
 func expectRemoteAIEvaluationCompetition(
@@ -1675,9 +1673,8 @@ func expectRemoteAIEvaluationCompetition(
 	expected []string,
 ) {
 	config := evaluation.GetConfig()
-	g.Expect(config.EvaluationConfigCompetition).ToNot(BeNil())
-	competitionConfig := config.EvaluationConfigCompetition.GetCompetition()
-	g.Expect(competitionConfig.GetCompetitors()).To(ConsistOf(expectedStrings(expected)...))
+	g.Expect(config.Competition).ToNot(BeNil())
+	g.Expect(config.Competition.GetCompetitors()).To(ConsistOf(expectedStrings(expected)...))
 }
 
 func expectRemoteAIEvaluationHallucinationCompleteness(
@@ -1685,8 +1682,8 @@ func expectRemoteAIEvaluationHallucinationCompleteness(
 	evaluation aievaluations.AiEvaluation,
 ) {
 	config := evaluation.GetConfig()
-	g.Expect(config.EvaluationConfigHallucinationCompleteness).ToNot(BeNil())
-	g.Expect(config.EvaluationConfigHallucinationCompleteness.GetHallucinationCompleteness()).To(BeEmpty())
+	g.Expect(config.HallucinationCompleteness).ToNot(BeNil())
+	g.Expect(config.HallucinationCompleteness).To(BeEmpty())
 }
 
 func expectRemoteAIEvaluationHallucinationContextAdherence(
@@ -1694,8 +1691,8 @@ func expectRemoteAIEvaluationHallucinationContextAdherence(
 	evaluation aievaluations.AiEvaluation,
 ) {
 	config := evaluation.GetConfig()
-	g.Expect(config.EvaluationConfigHallucinationContextAdherence).ToNot(BeNil())
-	g.Expect(config.EvaluationConfigHallucinationContextAdherence.GetHallucinationContextAdherence()).To(BeEmpty())
+	g.Expect(config.HallucinationContextAdherence).ToNot(BeNil())
+	g.Expect(config.HallucinationContextAdherence).To(BeEmpty())
 }
 
 func expectRemoteAIEvaluationHallucinationContextRelevance(
@@ -1703,8 +1700,8 @@ func expectRemoteAIEvaluationHallucinationContextRelevance(
 	evaluation aievaluations.AiEvaluation,
 ) {
 	config := evaluation.GetConfig()
-	g.Expect(config.EvaluationConfigHallucinationContextRelevance).ToNot(BeNil())
-	g.Expect(config.EvaluationConfigHallucinationContextRelevance.GetHallucinationContextRelevance()).To(BeEmpty())
+	g.Expect(config.HallucinationContextRelevance).ToNot(BeNil())
+	g.Expect(config.HallucinationContextRelevance).To(BeEmpty())
 }
 
 func expectRemoteAIEvaluationHallucinationCorrectness(
@@ -1712,8 +1709,8 @@ func expectRemoteAIEvaluationHallucinationCorrectness(
 	evaluation aievaluations.AiEvaluation,
 ) {
 	config := evaluation.GetConfig()
-	g.Expect(config.EvaluationConfigHallucinationCorrectness).ToNot(BeNil())
-	g.Expect(config.EvaluationConfigHallucinationCorrectness.GetHallucinationCorrectness()).To(BeEmpty())
+	g.Expect(config.HallucinationCorrectness).ToNot(BeNil())
+	g.Expect(config.HallucinationCorrectness).To(BeEmpty())
 }
 
 func expectRemoteAIEvaluationHallucinationTaskAdherence(
@@ -1721,8 +1718,8 @@ func expectRemoteAIEvaluationHallucinationTaskAdherence(
 	evaluation aievaluations.AiEvaluation,
 ) {
 	config := evaluation.GetConfig()
-	g.Expect(config.EvaluationConfigHallucinationTaskAdherence).ToNot(BeNil())
-	g.Expect(config.EvaluationConfigHallucinationTaskAdherence.GetHallucinationTaskAdherence()).To(BeEmpty())
+	g.Expect(config.HallucinationTaskAdherence).ToNot(BeNil())
+	g.Expect(config.HallucinationTaskAdherence).To(BeEmpty())
 }
 
 func expectRemoteAIEvaluationLanguageMismatch(
@@ -1730,8 +1727,8 @@ func expectRemoteAIEvaluationLanguageMismatch(
 	evaluation aievaluations.AiEvaluation,
 ) {
 	config := evaluation.GetConfig()
-	g.Expect(config.EvaluationConfigLanguageMismatch).ToNot(BeNil())
-	g.Expect(config.EvaluationConfigLanguageMismatch.GetLanguageMismatch()).To(BeEmpty())
+	g.Expect(config.LanguageMismatch).ToNot(BeNil())
+	g.Expect(config.LanguageMismatch).To(BeEmpty())
 }
 
 func expectRemoteAIEvaluationPromptInjection(
@@ -1740,9 +1737,8 @@ func expectRemoteAIEvaluationPromptInjection(
 	additionalContext string,
 ) {
 	config := evaluation.GetConfig()
-	g.Expect(config.EvaluationConfigPromptInjection).ToNot(BeNil())
-	promptInjectionConfig := config.EvaluationConfigPromptInjection.GetPromptInjection()
-	g.Expect(promptInjectionConfig.GetAdditionalContext()).To(Equal(additionalContext))
+	g.Expect(config.PromptInjection).ToNot(BeNil())
+	g.Expect(config.PromptInjection.GetAdditionalContext()).To(Equal(additionalContext))
 }
 
 func expectRemoteAIEvaluationRestrictedTopics(
@@ -1751,9 +1747,8 @@ func expectRemoteAIEvaluationRestrictedTopics(
 	expected []string,
 ) {
 	config := evaluation.GetConfig()
-	g.Expect(config.EvaluationConfigRestrictedTopics).ToNot(BeNil())
-	restrictedTopicsConfig := config.EvaluationConfigRestrictedTopics.GetRestrictedTopics()
-	g.Expect(restrictedTopicsConfig.GetTopics()).To(ConsistOf(expectedStrings(expected)...))
+	g.Expect(config.RestrictedTopics).ToNot(BeNil())
+	g.Expect(config.RestrictedTopics.GetTopics()).To(ConsistOf(expectedStrings(expected)...))
 }
 
 func expectRemoteAIEvaluationSexism(
@@ -1761,8 +1756,8 @@ func expectRemoteAIEvaluationSexism(
 	evaluation aievaluations.AiEvaluation,
 ) {
 	config := evaluation.GetConfig()
-	g.Expect(config.EvaluationConfigSexism).ToNot(BeNil())
-	g.Expect(config.EvaluationConfigSexism.GetSexism()).To(BeEmpty())
+	g.Expect(config.Sexism).ToNot(BeNil())
+	g.Expect(config.Sexism).To(BeEmpty())
 }
 
 func expectRemoteAIEvaluationSQLAllowedTables(
@@ -1771,9 +1766,8 @@ func expectRemoteAIEvaluationSQLAllowedTables(
 	expected []string,
 ) {
 	config := evaluation.GetConfig()
-	g.Expect(config.EvaluationConfigSqlAllowedTables).ToNot(BeNil())
-	sqlAllowedTablesConfig := config.EvaluationConfigSqlAllowedTables.GetSqlAllowedTables()
-	g.Expect(sqlAllowedTablesConfig.GetTables()).To(ConsistOf(expectedStrings(expected)...))
+	g.Expect(config.SqlAllowedTables).ToNot(BeNil())
+	g.Expect(config.SqlAllowedTables.GetTables()).To(ConsistOf(expectedStrings(expected)...))
 }
 
 func expectRemoteAIEvaluationSQLHallucination(
@@ -1781,8 +1775,8 @@ func expectRemoteAIEvaluationSQLHallucination(
 	evaluation aievaluations.AiEvaluation,
 ) {
 	config := evaluation.GetConfig()
-	g.Expect(config.EvaluationConfigSqlHallucination).ToNot(BeNil())
-	g.Expect(config.EvaluationConfigSqlHallucination.GetSqlHallucination()).To(BeEmpty())
+	g.Expect(config.SqlHallucination).ToNot(BeNil())
+	g.Expect(config.SqlHallucination).To(BeEmpty())
 }
 
 func expectRemoteAIEvaluationSQLReadOnly(
@@ -1790,8 +1784,8 @@ func expectRemoteAIEvaluationSQLReadOnly(
 	evaluation aievaluations.AiEvaluation,
 ) {
 	config := evaluation.GetConfig()
-	g.Expect(config.EvaluationConfigSqlReadOnly).ToNot(BeNil())
-	g.Expect(config.EvaluationConfigSqlReadOnly.GetSqlReadOnly()).To(BeEmpty())
+	g.Expect(config.SqlReadOnly).ToNot(BeNil())
+	g.Expect(config.SqlReadOnly).To(BeEmpty())
 }
 
 func expectRemoteAIEvaluationSQLRestrictedTables(
@@ -1800,9 +1794,8 @@ func expectRemoteAIEvaluationSQLRestrictedTables(
 	expected []string,
 ) {
 	config := evaluation.GetConfig()
-	g.Expect(config.EvaluationConfigSqlRestrictedTables).ToNot(BeNil())
-	sqlRestrictedTablesConfig := config.EvaluationConfigSqlRestrictedTables.GetSqlRestrictedTables()
-	g.Expect(sqlRestrictedTablesConfig.GetTables()).To(ConsistOf(expectedStrings(expected)...))
+	g.Expect(config.SqlRestrictedTables).ToNot(BeNil())
+	g.Expect(config.SqlRestrictedTables.GetTables()).To(ConsistOf(expectedStrings(expected)...))
 }
 
 func expectRemoteAIEvaluationToxicity(
@@ -1810,8 +1803,8 @@ func expectRemoteAIEvaluationToxicity(
 	evaluation aievaluations.AiEvaluation,
 ) {
 	config := evaluation.GetConfig()
-	g.Expect(config.EvaluationConfigToxicity).ToNot(BeNil())
-	g.Expect(config.EvaluationConfigToxicity.GetToxicity()).To(BeEmpty())
+	g.Expect(config.Toxicity).ToNot(BeNil())
+	g.Expect(config.Toxicity).To(BeEmpty())
 }
 
 func schemaPIICategories(categories []aievaluations.PiiCategory) []string {

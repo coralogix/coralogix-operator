@@ -165,13 +165,13 @@ func assertBackendEnrichmentFieldOptions(
 func backendEnrichmentHasType(backendEnrichment enrichments.Enrichment, enrichmentType string) bool {
 	switch enrichmentType {
 	case "suspiciousIp":
-		return backendEnrichment.EnrichmentType.EnrichmentTypeSuspiciousIp != nil
+		return backendEnrichment.EnrichmentType.SuspiciousIp != nil
 	case "geoIp":
-		return backendEnrichment.EnrichmentType.EnrichmentTypeGeoIp != nil
+		return backendEnrichment.EnrichmentType.GeoIp != nil
 	case "customEnrichment":
-		return backendEnrichment.EnrichmentType.EnrichmentTypeCustomEnrichment != nil
+		return backendEnrichment.EnrichmentType.CustomEnrichment != nil
 	case "aws":
-		return backendEnrichment.EnrichmentType.EnrichmentTypeAws != nil
+		return backendEnrichment.EnrichmentType.Aws != nil
 	default:
 		return false
 	}

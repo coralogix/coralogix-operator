@@ -68,7 +68,7 @@ func (r *ArchiveMetricsTargetReconciler) HandleCreation(ctx context.Context, log
 	log.Info("Creating remote archivemetricstarget", "archivemetricstarget", utils.FormatJSON(configureTenantRequest))
 	createResponse, httpResp, err := r.ArchiveMetricsTargetsClient.
 		MetricsConfiguratorPublicServiceConfigureTenant(ctx).
-		MetricsConfiguratorPublicServiceConfigureTenantRequest(*configureTenantRequest).
+		ConfigureTenantRequest(*configureTenantRequest).
 		Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote archivemetricstarget: %w", cxsdk.NewAPIError(httpResp, err))
@@ -79,7 +79,7 @@ func (r *ArchiveMetricsTargetReconciler) HandleCreation(ctx context.Context, log
 	}
 	_, httpResp, err = r.ArchiveMetricsTargetsClient.
 		MetricsConfiguratorPublicServiceUpdate(ctx).
-		MetricsConfiguratorPublicServiceUpdateRequest(*updateRequest).
+		UpdateTenantRequest(*updateRequest).
 		Execute()
 	if err != nil {
 		return cxsdk.NewAPIError(httpResp, err)
@@ -103,7 +103,7 @@ func (r *ArchiveMetricsTargetReconciler) HandleUpdate(ctx context.Context, log l
 	log.Info("Updating remote archivemetricstarget", "archivemetricstarget", utils.FormatJSON(updateRequest))
 	_, httpResp, err := r.ArchiveMetricsTargetsClient.
 		MetricsConfiguratorPublicServiceUpdate(ctx).
-		MetricsConfiguratorPublicServiceUpdateRequest(*updateRequest).
+		UpdateTenantRequest(*updateRequest).
 		Execute()
 	if err != nil {
 		return cxsdk.NewAPIError(httpResp, err)

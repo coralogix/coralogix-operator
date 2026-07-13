@@ -49,7 +49,7 @@ func expandRecordingRuleGroup(group RecordingRuleGroup) *recordingrules.InRuleGr
 	rules := expandRecordingRules(group.Rules)
 
 	return &recordingrules.InRuleGroup{
-		Name:     recordingrules.PtrString(group.Name),
+		Name:     group.Name,
 		Interval: interval,
 		Limit:    limit,
 		Rules:    rules,
@@ -67,8 +67,8 @@ func expandRecordingRules(rules []RecordingRule) []recordingrules.InRule {
 
 func extractRecordingRule(rule RecordingRule) *recordingrules.InRule {
 	return &recordingrules.InRule{
-		Record: recordingrules.PtrString(rule.Record),
-		Expr:   recordingrules.PtrString(rule.Expr),
+		Record: rule.Record,
+		Expr:   rule.Expr,
 		Labels: ptr.To(rule.Labels),
 	}
 }

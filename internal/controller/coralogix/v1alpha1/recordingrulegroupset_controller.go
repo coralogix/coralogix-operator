@@ -72,7 +72,7 @@ func (r *RecordingRuleGroupSetReconciler) HandleCreation(ctx context.Context, lo
 	}
 	log.Info("Remote recordingRuleGroupSet created", "response", utils.FormatJSON(createResponse))
 	recordingRuleGroupSet.Status = coralogixv1alpha1.RecordingRuleGroupSetStatus{
-		ID: createResponse.Id,
+		ID: ptr.To(createResponse.Id),
 	}
 
 	return nil

@@ -39,12 +39,10 @@ type CustomRoleSpec struct {
 
 func (s *CustomRoleSpec) ExtractCreateCustomRoleRequest() *customroles.RoleManagementServiceCreateRoleRequest {
 	return &customroles.RoleManagementServiceCreateRoleRequest{
-		CreateRoleRequestParentRoleName: &customroles.CreateRoleRequestParentRoleName{
-			Name:           customroles.PtrString(s.Name),
-			Description:    customroles.PtrString(s.Description),
-			ParentRoleName: s.ParentRoleName,
-			Permissions:    s.Permissions,
-		},
+		Name:           customroles.PtrString(s.Name),
+		Description:    customroles.PtrString(s.Description),
+		ParentRoleName: customroles.PtrString(s.ParentRoleName),
+		Permissions:    s.Permissions,
 	}
 }
 

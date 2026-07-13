@@ -584,110 +584,86 @@ func TestAIEvaluationExtractRequestsRejectEmptyConfig(t *testing.T) {
 }
 
 func assertPII(t *testing.T, config aievaluations.EvaluationConfig, values ...aievaluations.PiiCategory) {
-	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigPii)
-	require.True(t, ok)
-	pii := actual.GetPii()
-	require.ElementsMatch(t, values, (&pii).GetCategories())
+	require.NotNil(t, config.Pii)
+	require.ElementsMatch(t, values, config.Pii.GetCategories())
 }
 
 func assertAllowedTopics(t *testing.T, config aievaluations.EvaluationConfig, values ...string) {
-	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigAllowedTopics)
-	require.True(t, ok)
-	allowedTopics := actual.GetAllowedTopics()
-	require.ElementsMatch(t, values, allowedTopics.GetTopics())
+	require.NotNil(t, config.AllowedTopics)
+	require.ElementsMatch(t, values, config.AllowedTopics.GetTopics())
 }
 
 func assertCompetition(t *testing.T, config aievaluations.EvaluationConfig, values ...string) {
-	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigCompetition)
-	require.True(t, ok)
-	competition := actual.GetCompetition()
-	require.ElementsMatch(t, values, competition.GetCompetitors())
+	require.NotNil(t, config.Competition)
+	require.ElementsMatch(t, values, config.Competition.GetCompetitors())
 }
 
 func assertHallucinationCompleteness(t *testing.T, config aievaluations.EvaluationConfig) {
-	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigHallucinationCompleteness)
-	require.True(t, ok)
-	require.Empty(t, actual.GetHallucinationCompleteness())
+	require.NotNil(t, config.HallucinationCompleteness)
+	require.Empty(t, config.HallucinationCompleteness)
 }
 
 func assertHallucinationContextAdherence(t *testing.T, config aievaluations.EvaluationConfig) {
-	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigHallucinationContextAdherence)
-	require.True(t, ok)
-	require.Empty(t, actual.GetHallucinationContextAdherence())
+	require.NotNil(t, config.HallucinationContextAdherence)
+	require.Empty(t, config.HallucinationContextAdherence)
 }
 
 func assertHallucinationContextRelevance(t *testing.T, config aievaluations.EvaluationConfig) {
-	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigHallucinationContextRelevance)
-	require.True(t, ok)
-	require.Empty(t, actual.GetHallucinationContextRelevance())
+	require.NotNil(t, config.HallucinationContextRelevance)
+	require.Empty(t, config.HallucinationContextRelevance)
 }
 
 func assertHallucinationCorrectness(t *testing.T, config aievaluations.EvaluationConfig) {
-	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigHallucinationCorrectness)
-	require.True(t, ok)
-	require.Empty(t, actual.GetHallucinationCorrectness())
+	require.NotNil(t, config.HallucinationCorrectness)
+	require.Empty(t, config.HallucinationCorrectness)
 }
 
 func assertHallucinationTaskAdherence(t *testing.T, config aievaluations.EvaluationConfig) {
-	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigHallucinationTaskAdherence)
-	require.True(t, ok)
-	require.Empty(t, actual.GetHallucinationTaskAdherence())
+	require.NotNil(t, config.HallucinationTaskAdherence)
+	require.Empty(t, config.HallucinationTaskAdherence)
 }
 
 func assertLanguageMismatch(t *testing.T, config aievaluations.EvaluationConfig) {
-	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigLanguageMismatch)
-	require.True(t, ok)
-	require.Empty(t, actual.GetLanguageMismatch())
+	require.NotNil(t, config.LanguageMismatch)
+	require.Empty(t, config.LanguageMismatch)
 }
 
 func assertPromptInjection(t *testing.T, config aievaluations.EvaluationConfig, additionalContext string) {
-	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigPromptInjection)
-	require.True(t, ok)
-	promptInjection := actual.GetPromptInjection()
-	require.Equal(t, additionalContext, promptInjection.GetAdditionalContext())
+	require.NotNil(t, config.PromptInjection)
+	require.Equal(t, additionalContext, config.PromptInjection.GetAdditionalContext())
 }
 
 func assertRestrictedTopics(t *testing.T, config aievaluations.EvaluationConfig, values ...string) {
-	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigRestrictedTopics)
-	require.True(t, ok)
-	restrictedTopics := actual.GetRestrictedTopics()
-	require.ElementsMatch(t, values, restrictedTopics.GetTopics())
+	require.NotNil(t, config.RestrictedTopics)
+	require.ElementsMatch(t, values, config.RestrictedTopics.GetTopics())
 }
 
 func assertSexism(t *testing.T, config aievaluations.EvaluationConfig) {
-	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigSexism)
-	require.True(t, ok)
-	require.Empty(t, actual.GetSexism())
+	require.NotNil(t, config.Sexism)
+	require.Empty(t, config.Sexism)
 }
 
 func assertSQLAllowedTables(t *testing.T, config aievaluations.EvaluationConfig, values ...string) {
-	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigSqlAllowedTables)
-	require.True(t, ok)
-	sqlAllowedTables := actual.GetSqlAllowedTables()
-	require.ElementsMatch(t, values, sqlAllowedTables.GetTables())
+	require.NotNil(t, config.SqlAllowedTables)
+	require.ElementsMatch(t, values, config.SqlAllowedTables.GetTables())
 }
 
 func assertSQLHallucination(t *testing.T, config aievaluations.EvaluationConfig) {
-	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigSqlHallucination)
-	require.True(t, ok)
-	require.Empty(t, actual.GetSqlHallucination())
+	require.NotNil(t, config.SqlHallucination)
+	require.Empty(t, config.SqlHallucination)
 }
 
 func assertSQLReadOnly(t *testing.T, config aievaluations.EvaluationConfig) {
-	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigSqlReadOnly)
-	require.True(t, ok)
-	require.Empty(t, actual.GetSqlReadOnly())
+	require.NotNil(t, config.SqlReadOnly)
+	require.Empty(t, config.SqlReadOnly)
 }
 
 func assertSQLRestrictedTables(t *testing.T, config aievaluations.EvaluationConfig, values ...string) {
-	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigSqlRestrictedTables)
-	require.True(t, ok)
-	sqlRestrictedTables := actual.GetSqlRestrictedTables()
-	require.ElementsMatch(t, values, sqlRestrictedTables.GetTables())
+	require.NotNil(t, config.SqlRestrictedTables)
+	require.ElementsMatch(t, values, config.SqlRestrictedTables.GetTables())
 }
 
 func assertToxicity(t *testing.T, config aievaluations.EvaluationConfig) {
-	actual, ok := config.GetActualInstance().(*aievaluations.EvaluationConfigToxicity)
-	require.True(t, ok)
-	require.Empty(t, actual.GetToxicity())
+	require.NotNil(t, config.Toxicity)
+	require.Empty(t, config.Toxicity)
 }

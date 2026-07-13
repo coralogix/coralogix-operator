@@ -61,10 +61,10 @@ func TestEnrichmentExtractAtomicOverwriteRequestIncludesNonCustomFieldOptions(t 
 	}
 
 	assertRequestFieldOptions(t, &req.RequestEnrichments[0], "attributes.client_ip", "client_geo", []string{"city", "country"})
-	if req.RequestEnrichments[0].EnrichmentType.EnrichmentTypeGeoIp == nil {
+	if req.RequestEnrichments[0].EnrichmentType.GeoIp == nil {
 		t.Fatal("geo_ip enrichment type was not set")
 	}
-	if got := req.RequestEnrichments[0].EnrichmentType.EnrichmentTypeGeoIp.GeoIp.WithAsn; got == nil || !*got {
+	if got := req.RequestEnrichments[0].EnrichmentType.GeoIp.WithAsn; got == nil || !*got {
 		t.Fatalf("geo_ip WithAsn = %v, want true", got)
 	}
 
@@ -75,7 +75,7 @@ func TestEnrichmentExtractAtomicOverwriteRequestIncludesNonCustomFieldOptions(t 
 		"source_threat",
 		[]string{"classification", "threat_score"},
 	)
-	if req.RequestEnrichments[1].EnrichmentType.EnrichmentTypeSuspiciousIp == nil {
+	if req.RequestEnrichments[1].EnrichmentType.SuspiciousIp == nil {
 		t.Fatal("suspicious_ip enrichment type was not set")
 	}
 
@@ -86,11 +86,11 @@ func TestEnrichmentExtractAtomicOverwriteRequestIncludesNonCustomFieldOptions(t 
 		"aws_resource",
 		[]string{"resourceId", "accountId"},
 	)
-	awsType := req.RequestEnrichments[2].EnrichmentType.EnrichmentTypeAws
+	awsType := req.RequestEnrichments[2].EnrichmentType.Aws
 	if awsType == nil {
 		t.Fatal("aws enrichment type was not set")
 	}
-	if got := awsType.Aws.ResourceType; got == nil || *got != "AWS::EC2::Instance" {
+	if got := awsType.ResourceType; got == nil || *got != "AWS::EC2::Instance" {
 		t.Fatalf("aws ResourceType = %v, want AWS::EC2::Instance", got)
 	}
 }

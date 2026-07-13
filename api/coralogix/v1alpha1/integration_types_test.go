@@ -178,8 +178,8 @@ func TestExtractParameters(t *testing.T) {
 func stringParamsByKey(params []integrations.Parameter) map[string]string {
 	out := map[string]string{}
 	for _, p := range params {
-		if p.ParameterStringValue != nil && p.ParameterStringValue.Key != nil {
-			out[*p.ParameterStringValue.Key] = p.ParameterStringValue.StringValue
+		if p.StringValue != nil && p.Key != nil {
+			out[*p.Key] = *p.StringValue
 		}
 	}
 	return out
