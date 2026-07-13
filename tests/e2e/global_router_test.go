@@ -30,6 +30,8 @@ var _ = Describe("GlobalRouter", Ordered, func() {
 	)
 
 	BeforeAll(func() {
+		Skip("Skipping test due to a breaking change in BE")
+
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		notificationsClient = ClientsInstance.GetCoralogixClientSet().Notifications()
 	})
