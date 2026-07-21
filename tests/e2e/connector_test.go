@@ -366,7 +366,7 @@ func getSamplePagerDutyIncidentsConnector(name, namespace string) *coralogixv1al
 			Type:        "pagerDutyIncidents",
 			ConnectorConfig: coralogixv1alpha1.ConnectorConfig{
 				Fields: []coralogixv1alpha1.ConnectorConfigField{
-					{FieldName: "integrationId", Value: ptr.To("some-integration-id")},
+					{FieldName: "integrationId", Value: ptr.To(pagerDutyIntegrationId)},
 					{FieldName: "service", Value: ptr.To("PXXXXXX")},
 				},
 			},
