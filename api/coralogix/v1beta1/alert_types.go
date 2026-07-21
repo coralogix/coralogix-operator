@@ -316,15 +316,14 @@ type AlertSpec struct {
 }
 
 // Data source to run the alert on.
-// +kubebuilder:validation:XValidation:rule="has(self.dataSpace) || has(self.dataSet)",message="At least one of dataSpace or dataSet is required"
 type AlertDataSource struct {
+	//+kubebuilder:validation:MinLength=1
 	// Data space of the data source.
-	// +optional
-	DataSpace *string `json:"dataSpace,omitempty"`
+	DataSpace string `json:"dataSpace"`
 
+	//+kubebuilder:validation:MinLength=1
 	// Dataset of the data source.
-	// +optional
-	DataSet *string `json:"dataSet,omitempty"`
+	DataSet string `json:"dataSet"`
 }
 
 // AlertStatus defines the observed state of Alert
@@ -2111,8 +2110,8 @@ func expandAlertDataSources(dataSources []AlertDataSource) []alerts.AlertDefData
 	result := make([]alerts.AlertDefDataSource, len(dataSources))
 	for i, dataSource := range dataSources {
 		result[i] = alerts.AlertDefDataSource{
-			DataSpace: dataSource.DataSpace,
-			DataSet:   dataSource.DataSet,
+			DataSpace: alerts.PtrString(dataSource.DataSpace),
+			DataSet:   alerts.PtrString(dataSource.DataSet),
 		}
 	}
 

@@ -2100,14 +2100,16 @@ spec:
                   properties:
                     dataSet:
                       description: Dataset of the data source.
+                      minLength: 1
                       type: string
                     dataSpace:
                       description: Data space of the data source.
+                      minLength: 1
                       type: string
+                  required:
+                  - dataSet
+                  - dataSpace
                   type: object
-                  x-kubernetes-validations:
-                  - message: At least one of dataSpace or dataSet is required
-                    rule: has(self.dataSpace) || has(self.dataSet)
                 type: array
               description:
                 description: Description of the alert

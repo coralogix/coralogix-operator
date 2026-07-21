@@ -16,7 +16,7 @@ spec:
     security_severity: high
   dataSources:
     - dataSpace: default
-      dataSet: my-dataset
+      dataSet: logs
   alertType:
     logsThreshold:
       logsFilter:

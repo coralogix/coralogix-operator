@@ -511,7 +511,7 @@ var _ = Describe("Alert", Ordered, func() {
 				Description: "alert from k8s operator",
 				Priority:    coralogixv1beta1.AlertPriorityP3,
 				DataSources: []coralogixv1beta1.AlertDataSource{
-					{DataSpace: ptr.To("default")},
+					{DataSpace: "default", DataSet: "logs"},
 				},
 				NotificationGroup: &coralogixv1beta1.NotificationGroup{
 					Destinations: []coralogixv1beta1.NotificationDestination{
