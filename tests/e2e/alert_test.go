@@ -54,7 +54,7 @@ var _ = Describe("Alert", Ordered, func() {
 	It("Should be created successfully", func(ctx context.Context) {
 		By("Creating Slack Connector")
 		connectorName := fmt.Sprintf("slack-connector-for-alert-%d", time.Now().Unix())
-		Expect(crClient.Create(ctx, getSampleSlackConnector(connectorName, testNamespace))).To(Succeed())
+		Expect(crClient.Create(ctx, getSampleSlackConnector(connectorName))).To(Succeed())
 
 		By("Creating Slack Preset")
 		presetName := fmt.Sprintf("slack-preset-for-alert-%d", time.Now().Unix())
@@ -497,7 +497,7 @@ var _ = Describe("Alert", Ordered, func() {
 	It("Should create an alert with dataSources and a destination retriggeringPeriodMinutes", func(ctx context.Context) {
 		By("Creating Slack Connector for the destination")
 		connectorName := fmt.Sprintf("slack-connector-for-alert-gaps-%d", time.Now().Unix())
-		Expect(crClient.Create(ctx, getSampleSlackConnector(connectorName, testNamespace))).To(Succeed())
+		Expect(crClient.Create(ctx, getSampleSlackConnector(connectorName))).To(Succeed())
 
 		By("Creating Alert")
 		alertName := "data-sources-alert-gaps"

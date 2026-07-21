@@ -58,7 +58,7 @@ var _ = Describe("Connector", Ordered, func() {
 
 		By("Creating Connector")
 		connectorName = fmt.Sprintf("slack-connector-%d", time.Now().Unix())
-		connector = getSampleSlackConnector(connectorName, testNamespace)
+		connector = getSampleSlackConnector(connectorName)
 		Expect(crClient.Create(ctx, connector)).To(Succeed())
 
 		By("Fetching the Connector ID")
@@ -210,10 +210,9 @@ var _ = Describe("Connector with SecretKeyRef", Ordered, func() {
 	})
 })
 
-//nolint:unparam // namespace is kept for consistency with the other sample helpers.
-func getSampleSlackConnector(name, namespace string) *coralogixv1alpha1.Connector {
+func getSampleSlackConnector(name string) *coralogixv1alpha1.Connector {
 	return &coralogixv1alpha1.Connector{
-		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
+		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: testNamespace},
 		Spec: coralogixv1alpha1.ConnectorSpec{
 			Name:        name,
 			Description: "Slack connector",
