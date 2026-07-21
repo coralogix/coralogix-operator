@@ -33,7 +33,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	internalutils "github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // DashboardReconciler reconciles a Dashboard object
@@ -65,10 +64,6 @@ func (r *DashboardReconciler) HandleCreation(ctx context.Context, log logr.Logge
 	if err != nil {
 		return fmt.Errorf("error on extracting dashboard from spec: %w", err)
 	}
-	if err = validateNoEmbeddedID(dashboardToCreate); err != nil {
-		return err
-	}
-
 	// The import annotation only adopts the remote dashboard once. Once adopted,
 	// status.imported gates it, and that marker persists across status.id being cleared on a
 	// remote NotFound (see coralogix_reconciler.go), so a subsequent recreation goes through the
@@ -76,8 +71,13 @@ func (r *DashboardReconciler) HandleCreation(ctx context.Context, log logr.Logge
 	// longer exist. The annotation itself is left in place, matching adoption annotations in
 	// tools like Crossplane/ACK. Once true, imported is preserved on every future creation so
 	// that a second (and later) remote deletion also recreates instead of retrying the import.
+	importID := importDashboardID(dashboard)
+	if err = validateNoEmbeddedIDWithImport(importID, dashboardToCreate); err != nil {
+		return err
+	}
+
 	imported := dashboard.Status.Imported
-	if importID := dashboard.GetAnnotations()[internalutils.ImportDashboardIDAnnotationKey]; importID != "" && !imported {
+	if importID != "" && !imported {
 		log.Info("Import annotation present, adopting existing remote dashboard", "id", importID)
 		getResponse, err := r.DashboardsClient.Get(ctx, &cxsdk.GetDashboardRequest{DashboardId: wrapperspb.String(importID)})
 		if err != nil {
@@ -108,12 +108,19 @@ func (r *DashboardReconciler) HandleCreation(ctx context.Context, log logr.Logge
 	return nil
 }
 
-// validateNoEmbeddedID rejects dashboard spec content that carries its own id field.
-// Once a dashboard is imported via ImportDashboardIDAnnotationKey, HandleUpdate always
-// sets Id from status.id, so an embedded id in spec content has no legitimate use.
-func validateNoEmbeddedID(dashboard *cxsdk.Dashboard) error {
+func importDashboardID(dashboard *coralogixv1alpha1.Dashboard) string {
+	return dashboard.GetAnnotations()[coralogixv1alpha1.ImportDashboardIDAnnotationKey]
+}
+
+// Only rejected alongside the import annotation, since the two would name conflicting ids;
+// otherwise it's harmless (overwritten on update, passed through as-is on create), and
+// rejecting it unconditionally would break existing CRs that carry one in spec content.
+func validateNoEmbeddedIDWithImport(importID string, dashboard *cxsdk.Dashboard) error {
+	if importID == "" {
+		return nil
+	}
 	if id := dashboard.GetId().GetValue(); id != "" {
-		return fmt.Errorf("spec content must not contain an %q field; use the %q annotation to import an existing dashboard", "id", internalutils.ImportDashboardIDAnnotationKey)
+		return fmt.Errorf("spec content must not contain an %q field; use the %q annotation to import an existing dashboard", "id", coralogixv1alpha1.ImportDashboardIDAnnotationKey)
 	}
 	return nil
 }
@@ -124,7 +131,7 @@ func (r *DashboardReconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 	if err != nil {
 		return fmt.Errorf("error on extracting dashboard from spec: %w", err)
 	}
-	if err = validateNoEmbeddedID(dashboardToUpdate); err != nil {
+	if err = validateNoEmbeddedIDWithImport(importDashboardID(dashboard), dashboardToUpdate); err != nil {
 		return err
 	}
 	dashboardToUpdate.Id = utils.StringPointerToWrapperspbString(dashboard.Status.ID)

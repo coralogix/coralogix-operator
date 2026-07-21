@@ -140,7 +140,7 @@ var _ = Describe("Dashboard import", Ordered, func() {
 				Name:      dashboardName,
 				Namespace: testNamespace,
 				Annotations: map[string]string{
-					utils.ImportDashboardIDAnnotationKey: dashboardID,
+					coralogixv1alpha1.ImportDashboardIDAnnotationKey: dashboardID,
 				},
 			},
 			Spec: coralogixv1alpha1.DashboardSpec{
@@ -160,6 +160,7 @@ var _ = Describe("Dashboard import", Ordered, func() {
 			return fmt.Errorf("Dashboard ID is not set")
 		}, time.Minute, time.Second).Should(Succeed())
 		Expect(*fetchedDashboard.Status.ID).To(Equal(dashboardID))
+		Expect(fetchedDashboard.Status.Imported).To(BeTrue())
 	})
 
 	It("Should be deleted successfully", func(ctx context.Context) {

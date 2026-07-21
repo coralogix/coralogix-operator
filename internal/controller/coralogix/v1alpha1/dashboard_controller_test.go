@@ -23,15 +23,21 @@ import (
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 )
 
-func TestValidateNoEmbeddedIDRejectsNonEmptyID(t *testing.T) {
+func TestValidateNoEmbeddedIDWithImportRejectsNonEmptyIDWithImportAnnotation(t *testing.T) {
 	dashboard := &cxsdk.Dashboard{Id: wrapperspb.String("3d7f1c2a-9e4b-4a11-8f2d-1a2b3c4d5e6f")}
 
-	err := validateNoEmbeddedID(dashboard)
+	err := validateNoEmbeddedIDWithImport("some-import-id", dashboard)
 
 	require.ErrorContains(t, err, "app.coralogix.com/import-id")
 }
 
-func TestValidateNoEmbeddedIDAllowsMissingID(t *testing.T) {
-	require.NoError(t, validateNoEmbeddedID(&cxsdk.Dashboard{}))
-	require.NoError(t, validateNoEmbeddedID(&cxsdk.Dashboard{Id: wrapperspb.String("")}))
+func TestValidateNoEmbeddedIDWithImportAllowsMissingID(t *testing.T) {
+	require.NoError(t, validateNoEmbeddedIDWithImport("some-import-id", &cxsdk.Dashboard{}))
+	require.NoError(t, validateNoEmbeddedIDWithImport("some-import-id", &cxsdk.Dashboard{Id: wrapperspb.String("")}))
+}
+
+func TestValidateNoEmbeddedIDWithImportAllowsNonEmptyIDWithoutImportAnnotation(t *testing.T) {
+	dashboard := &cxsdk.Dashboard{Id: wrapperspb.String("3d7f1c2a-9e4b-4a11-8f2d-1a2b3c4d5e6f")}
+
+	require.NoError(t, validateNoEmbeddedIDWithImport("", dashboard))
 }
