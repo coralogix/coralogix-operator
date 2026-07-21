@@ -1,0 +1,99 @@
+# Adopts a pre-existing remote dashboard into this CR, identified by the
+# app.coralogix.com/import-id annotation (raw dashboard ID, no "id" field in spec).
+#
+# This is a one-time adoption: the annotation is only consulted while status.id is
+# unset. Once adopted, spec.json becomes the source of truth and will OVERWRITE the
+# remote dashboard's existing content on the very next reconcile, so make sure
+# spec.json matches (or is an intentional update to) the dashboard you're importing.
+apiVersion: coralogix.com/v1alpha1
+kind: Dashboard
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: dashboard-import
+  annotations:
+    app.coralogix.com/import-id: "2GJ9dYBnA1DOEPtsnYH03"
+spec:
+  json: >
+    {
+      "id": "2GJ9dYBnA1DOEPtsnYH03",
+      "name": "minimal-gauge-with-arcs-from-import2",
+      "layout": {
+        "sections": [
+          {
+            "id": {
+              "value": "9dbd9f8c-2a2d-4a26-9b9d-8d8d6f70cc01"
+            },
+            "rows": [
+              {
+                "id": {
+                  "value": "9dbd9f8c-2a2d-4a26-9b9d-8d8d6f70cc02"
+                },
+                "appearance": {
+                  "height": 16
+                },
+                "widgets": [
+                  {
+                    "id": {
+                      "value": "56ef23be-e4cb-492d-a535-5156f75226fd"
+                    },
+                    "title": "Gauge with arcs",
+                    "definition": {
+                      "gauge": {
+                        "query": {
+                          "metrics": {
+                            "promqlQuery": {
+                              "value": "vector(2)"
+                            },
+                            "aggregation": "AGGREGATION_UNSPECIFIED",
+                            "filters": [],
+                            "editorMode": "METRICS_QUERY_EDITOR_MODE_TEXT",
+                            "promqlQueryType": "PROM_QL_QUERY_TYPE_INSTANT"
+                          }
+                        },
+                        "min": 0,
+                        "max": 100,
+                        "showInnerArc": true,
+                        "showOuterArc": true,
+                        "unit": "UNIT_NUMBER",
+                        "thresholds": [],
+                        "dataModeType": "DATA_MODE_TYPE_HIGH_UNSPECIFIED",
+                        "thresholdBy": "THRESHOLD_BY_UNSPECIFIED",
+                        "thresholdType": "THRESHOLD_TYPE_RELATIVE",
+                        "legend": {
+                          "isVisible": true,
+                          "columns": [
+                            "LEGEND_COLUMN_NAME"
+                          ],
+                          "groupByQuery": false,
+                          "placement": "LEGEND_PLACEMENT_AUTO"
+                        },
+                        "legendBy": "LEGEND_BY_GROUPS",
+                        "displaySeriesName": true,
+                        "arcDisplay": {
+                          "valueArc": true,
+                          "thresholdArc": true
+                        },
+                        "showMinMax": false
+                      }
+                    },
+                    "layoutColumns": 12
+                  }
+                ]
+              }
+            ],
+            "options": {
+              "internal": {}
+            }
+          }
+        ]
+      },
+      "variables": [],
+      "variablesV2": [],
+      "filters": [],
+      "relativeTimeFrame": "900s",
+      "annotations": [],
+      "off": {},
+      "actions": []
+    }

@@ -33,6 +33,7 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
+	internalutils "github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // DashboardReconciler reconciles a Dashboard object
@@ -64,6 +65,22 @@ func (r *DashboardReconciler) HandleCreation(ctx context.Context, log logr.Logge
 	if err != nil {
 		return fmt.Errorf("error on extracting dashboard from spec: %w", err)
 	}
+	if err = validateNoEmbeddedID(dashboardToCreate); err != nil {
+		return err
+	}
+
+	if importID := dashboard.GetAnnotations()[internalutils.ImportDashboardIDAnnotationKey]; importID != "" {
+		log.Info("Import annotation present, adopting existing remote dashboard", "id", importID)
+		getResponse, err := r.DashboardsClient.Get(ctx, &cxsdk.GetDashboardRequest{DashboardId: wrapperspb.String(importID)})
+		if err != nil {
+			return fmt.Errorf("error on getting remote dashboard %q for import: %w", importID, err)
+		}
+		dashboard.Status = coralogixv1alpha1.DashboardStatus{
+			ID: ptr.To(getResponse.Dashboard.GetId().GetValue()),
+		}
+		return nil
+	}
+
 	createRequest := &cxsdk.CreateDashboardRequest{
 		Dashboard: dashboardToCreate,
 	}
@@ -81,11 +98,24 @@ func (r *DashboardReconciler) HandleCreation(ctx context.Context, log logr.Logge
 	return nil
 }
 
+// validateNoEmbeddedID rejects dashboard spec content that carries its own id field.
+// Once a dashboard is imported via ImportDashboardIDAnnotationKey, HandleUpdate always
+// sets Id from status.id, so an embedded id in spec content has no legitimate use.
+func validateNoEmbeddedID(dashboard *cxsdk.Dashboard) error {
+	if id := dashboard.GetId().GetValue(); id != "" {
+		return fmt.Errorf("spec content must not contain an %q field; use the %q annotation to import an existing dashboard", "id", internalutils.ImportDashboardIDAnnotationKey)
+	}
+	return nil
+}
+
 func (r *DashboardReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	dashboard := obj.(*coralogixv1alpha1.Dashboard)
 	dashboardToUpdate, err := dashboard.Spec.ExtractDashboardFromSpec(ctx, dashboard.Namespace)
 	if err != nil {
 		return fmt.Errorf("error on extracting dashboard from spec: %w", err)
+	}
+	if err = validateNoEmbeddedID(dashboardToUpdate); err != nil {
+		return err
 	}
 	dashboardToUpdate.Id = utils.StringPointerToWrapperspbString(dashboard.Status.ID)
 	updateRequest := &cxsdk.ReplaceDashboardRequest{

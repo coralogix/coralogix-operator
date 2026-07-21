@@ -56,4 +56,11 @@ const (
 	TrackPrometheusRuleRecordingRulesLabelKey = "app.coralogix.com/track-recording-rules"
 
 	LogVerbosityAnnotationKey = "app.coralogix.com/log-verbosity"
+
+	// ImportDashboardIDAnnotationKey adopts a pre-existing remote Dashboard into a Dashboard CR by ID.
+	// It is only consulted on the first reconcile, while status.id is still unset; once the
+	// dashboard is adopted it is treated exactly like a normally-created Dashboard CR, and the
+	// CR's spec becomes the source of truth and overwrites the remote dashboard's content on the
+	// next reconcile. The annotation is not removed after adoption.
+	ImportDashboardIDAnnotationKey = "app.coralogix.com/import-id"
 )

@@ -22,6 +22,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -95,6 +96,70 @@ var _ = Describe("Dashboard", Ordered, func() {
 			Expect(err).ToNot(HaveOccurred())
 			return getDashboardRes.Dashboard.Name.GetValue()
 		}, time.Minute, time.Second).Should(Equal("Test Updated Dashboard"))
+	})
+
+	It("Should be deleted successfully", func(ctx context.Context) {
+		By("Deleting the Dashboard")
+		Expect(crClient.Delete(ctx, dashboard)).To(Succeed())
+
+		By("Verifying Dashboard is deleted from Coralogix backend")
+		Eventually(func() codes.Code {
+			_, err := dashboardsClient.Get(ctx, &cxsdk.GetDashboardRequest{DashboardId: wrapperspb.String(dashboardID)})
+			return cxsdk.Code(err)
+		}).Should(Equal(codes.NotFound))
+	})
+})
+
+var _ = Describe("Dashboard import", Ordered, func() {
+	var (
+		crClient         client.Client
+		dashboardsClient *cxsdk.DashboardsClient
+		dashboard        *coralogixv1alpha1.Dashboard
+		dashboardName    = "dashboard-import-sample"
+		dashboardID      string
+	)
+
+	BeforeEach(func() {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		dashboardsClient = ClientsInstance.GetCoralogixClientSet().Dashboards()
+	})
+
+	It("Should adopt a pre-existing remote dashboard", func(ctx context.Context) {
+		By("Creating a remote dashboard directly, outside of the operator")
+		remoteJson := getDashboardJson("Pre-existing Dashboard")
+		remoteDashboard := new(cxsdk.Dashboard)
+		Expect(protojson.Unmarshal([]byte(remoteJson), remoteDashboard)).To(Succeed())
+		createResponse, err := dashboardsClient.Create(ctx, &cxsdk.CreateDashboardRequest{Dashboard: remoteDashboard})
+		Expect(err).ToNot(HaveOccurred())
+		dashboardID = createResponse.DashboardId.Value
+
+		By("Creating a Dashboard CR with the import annotation")
+		json := getDashboardJson("Pre-existing Dashboard")
+		dashboard = &coralogixv1alpha1.Dashboard{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      dashboardName,
+				Namespace: testNamespace,
+				Annotations: map[string]string{
+					utils.ImportDashboardIDAnnotationKey: dashboardID,
+				},
+			},
+			Spec: coralogixv1alpha1.DashboardSpec{
+				Json: &json,
+			},
+		}
+		Expect(crClient.Create(ctx, dashboard)).To(Succeed())
+
+		By("Verifying the CR adopts the existing remote dashboard ID")
+		fetchedDashboard := &coralogixv1alpha1.Dashboard{}
+		Eventually(func(g Gomega) error {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: dashboardName, Namespace: testNamespace}, fetchedDashboard)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedDashboard.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			if fetchedDashboard.Status.ID != nil {
+				return nil
+			}
+			return fmt.Errorf("Dashboard ID is not set")
+		}, time.Minute, time.Second).Should(Succeed())
+		Expect(*fetchedDashboard.Status.ID).To(Equal(dashboardID))
 	})
 
 	It("Should be deleted successfully", func(ctx context.Context) {
