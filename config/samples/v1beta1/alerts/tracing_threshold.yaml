@@ -35,6 +35,7 @@ spec:
             spanAmount: 100
             timeWindow:
               specificValue: 5m
+            conditionType: moreThan
   notificationGroup:
     router:
       notifyOn: triggeredAndResolved

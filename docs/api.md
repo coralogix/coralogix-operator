@@ -12056,6 +12056,13 @@ AlertSpec defines the desired state of a Coralogix Alert. For more info check - 
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b><a href="#alertspecdatasourcesindex">dataSources</a></b></td>
+        <td>[]object</td>
+        <td>
+          Data sources to run the alert on.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
@@ -12178,6 +12185,8 @@ Type of alert.
         <td>object</td>
         <td>
           Alerts for when a log exceeds a defined ratio.<br/>
+          <br/>
+            <i>Validations</i>:<li>!has(self.undetectedValuesManagement) || self.rules.exists(r, r.condition.conditionType == 'lessThan'): undetectedValuesManagement requires at least one rule with a lessThan condition</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -12561,6 +12570,13 @@ Anomaly alerts for logs.
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b><a href="#alertspecalerttypelogsanomalyanomalyalertsettings">anomalyAlertSettings</a></b></td>
+        <td>object</td>
+        <td>
+          Settings for anomaly alerts.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>evaluationDelayMs</b></td>
         <td>integer</td>
         <td>
@@ -12646,6 +12662,16 @@ Condition to match to.
           Time window to evaluate.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>conditionType</b></td>
+        <td>enum</td>
+        <td>
+          Condition type.<br/>
+          <br/>
+            <i>Enum</i>: moreThanUsual<br/>
+            <i>Default</i>: moreThanUsual<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -12675,6 +12701,33 @@ Time window to evaluate.
             <i>Enum</i>: 5m, 10m, 15m, 20m, 30m, 1h, 2h, 4h, 6h, 12h, 24h, 36h<br/>
         </td>
         <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.logsAnomaly.anomalyAlertSettings
+<sup><sup>[↩ Parent](#alertspecalerttypelogsanomaly)</sup></sup>
+
+
+
+Settings for anomaly alerts.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>percentageOfDeviation</b></td>
+        <td>int or string</td>
+        <td>
+          The percentage of deviation from the baseline for triggering the alert.<br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
@@ -13438,6 +13491,38 @@ Alerts for when a log exceeds a defined ratio.
             <i>Format</i>: int32<br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>groupByFor</b></td>
+        <td>enum</td>
+        <td>
+          Which side of the ratio the group-by keys are applied to.<br/>
+          <br/>
+            <i>Enum</i>: both, numeratorOnly, denominatorOnly<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>ignoreInfinity</b></td>
+        <td>boolean</td>
+        <td>
+          Ignore infinity on the threshold value.<br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>notificationPayloadFilter</b></td>
+        <td>[]string</td>
+        <td>
+          Filter for the notification payload.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypelogsratiothresholdundetectedvaluesmanagement">undetectedValuesManagement</a></b></td>
+        <td>object</td>
+        <td>
+          How to work with undetected values.<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -13927,6 +14012,45 @@ Override alert properties
           Priority to override it<br/>
           <br/>
             <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.logsRatioThreshold.undetectedValuesManagement
+<sup><sup>[↩ Parent](#alertspecalerttypelogsratiothreshold)</sup></sup>
+
+
+
+How to work with undetected values.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>autoRetireTimeframe</b></td>
+        <td>enum</td>
+        <td>
+          Automatically retire the alerts after this time.<br/>
+          <br/>
+            <i>Enum</i>: never, 5m, 10m, 1h, 2h, 6h, 12h, 24h<br/>
+            <i>Default</i>: never<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>triggerUndetectedValues</b></td>
+        <td>boolean</td>
+        <td>
+          Deactivate triggering the alert on undetected values.<br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -15137,6 +15261,13 @@ Anomaly alerts for metrics.
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b><a href="#alertspecalerttypemetricanomalyanomalyalertsettings">anomalyAlertSettings</a></b></td>
+        <td>object</td>
+        <td>
+          Settings for anomaly alerts.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>evaluationDelayMs</b></td>
         <td>integer</td>
         <td>
@@ -15289,6 +15420,33 @@ Time window to match within
           Time window type.<br/>
           <br/>
             <i>Enum</i>: 1m, 5m, 10m, 15m, 20m, 30m, 1h, 2h, 4h, 6h, 12h, 24h, 36h<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.metricAnomaly.anomalyAlertSettings
+<sup><sup>[↩ Parent](#alertspecalerttypemetricanomaly)</sup></sup>
+
+
+
+Settings for anomaly alerts.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>percentageOfDeviation</b></td>
+        <td>int or string</td>
+        <td>
+          The percentage of deviation from the baseline for triggering the alert.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -16698,6 +16856,16 @@ The condition to match to.
           Time window to evaluate.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>conditionType</b></td>
+        <td>enum</td>
+        <td>
+          Condition type.<br/>
+          <br/>
+            <i>Enum</i>: moreThan<br/>
+            <i>Default</i>: moreThan<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -17063,6 +17231,40 @@ Filter - values and operation.
 </table>
 
 
+### Alert.spec.dataSources[index]
+<sup><sup>[↩ Parent](#alertspec)</sup></sup>
+
+
+
+Data source to run the alert on.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>dataSet</b></td>
+        <td>string</td>
+        <td>
+          Dataset of the data source.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>dataSpace</b></td>
+        <td>string</td>
+        <td>
+          Data space of the data source.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
 ### Alert.spec.incidentsSettings
 <sup><sup>[↩ Parent](#alertspec)</sup></sup>
 
@@ -17234,6 +17436,16 @@ Deprecated: This field is deprecated and will be removed in a future version.<br
         <td>object</td>
         <td>
           Optional routing configuration to override from the connector/preset for resolved notifications.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>retriggeringPeriodMinutes</b></td>
+        <td>integer</td>
+        <td>
+          The time in minutes before a new notification is sent for this destination.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -18054,6 +18266,16 @@ Deprecated: This field is deprecated and will be removed in a future version.<br
         <td>object</td>
         <td>
           Optional routing configuration to override from the connector/preset for resolved notifications.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>retriggeringPeriodMinutes</b></td>
+        <td>integer</td>
+        <td>
+          The time in minutes before a new notification is sent for this destination.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
         </td>
         <td>false</td>
       </tr></tbody>

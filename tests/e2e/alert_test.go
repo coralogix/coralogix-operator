@@ -54,7 +54,7 @@ var _ = Describe("Alert", Ordered, func() {
 	It("Should be created successfully", func(ctx context.Context) {
 		By("Creating Slack Connector")
 		connectorName := fmt.Sprintf("slack-connector-for-alert-%d", time.Now().Unix())
-		Expect(crClient.Create(ctx, getSampleSlackConnector(connectorName, testNamespace))).To(Succeed())
+		Expect(crClient.Create(ctx, getSampleSlackConnector(connectorName))).To(Succeed())
 
 		By("Creating Slack Preset")
 		presetName := fmt.Sprintf("slack-preset-for-alert-%d", time.Now().Unix())
@@ -355,5 +355,205 @@ var _ = Describe("Alert", Ordered, func() {
 		}
 		err := crClient.Create(ctx, alert)
 		Expect(err.Error()).To(ContainSubstring("Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue, logsUniqueCount, sloThreshold must be set"))
+	})
+
+	It("Should create a logs-ratio alert with groupByFor, ignoreInfinity, notificationPayloadFilter and undetectedValuesManagement", func(ctx context.Context) {
+		By("Creating Alert")
+		alertName := "logs-ratio-alert-gaps"
+		ratioAlert := &coralogixv1beta1.Alert{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      alertName,
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1beta1.AlertSpec{
+				Name:        alertName,
+				Description: "alert from k8s operator",
+				Priority:    coralogixv1beta1.AlertPriorityP3,
+				GroupByKeys: []string{"coralogix.metadata.applicationName"},
+				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
+					LogsRatioThreshold: &coralogixv1beta1.LogsRatioThreshold{
+						Numerator: coralogixv1beta1.LogsFilter{
+							SimpleFilter: coralogixv1beta1.LogsSimpleFilter{LuceneQuery: ptr.To("numerator-query")},
+						},
+						NumeratorAlias: "Query 1",
+						Denominator: coralogixv1beta1.LogsFilter{
+							SimpleFilter: coralogixv1beta1.LogsSimpleFilter{LuceneQuery: ptr.To("denominator-query")},
+						},
+						DenominatorAlias:          "Query 2",
+						GroupByFor:                ptr.To(coralogixv1beta1.LogsRatioGroupByForNumeratorOnly),
+						IgnoreInfinity:            true,
+						NotificationPayloadFilter: []string{"obj.field"},
+						// undetectedValuesManagement requires at least one rule with a lessThan condition.
+						UndetectedValuesManagement: &coralogixv1beta1.UndetectedValuesManagement{
+							TriggerUndetectedValues: true,
+							AutoRetireTimeframe:     coralogixv1beta1.AutoRetireTimeframe5M,
+						},
+						Rules: []coralogixv1beta1.LogsRatioThresholdRule{
+							{
+								Condition: coralogixv1beta1.LogsRatioCondition{
+									Threshold:     coralogix.FloatToQuantity(1),
+									TimeWindow:    coralogixv1beta1.LogsRatioTimeWindow{SpecificValue: coralogixv1beta1.LogsRatioTimeWindowMinutes5},
+									ConditionType: coralogixv1beta1.LogsRatioConditionTypeLessThan,
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		Expect(crClient.Create(ctx, ratioAlert)).To(Succeed())
+
+		By("Fetching the Alert ID")
+		var ratioAlertID string
+		fetchedAlert := &coralogixv1beta1.Alert{}
+		Eventually(func(g Gomega) {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, fetchedAlert)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedAlert.Status.ID).ToNot(BeNil())
+			ratioAlertID = *fetchedAlert.Status.ID
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying the new fields in Coralogix backend")
+		Eventually(func(g Gomega) {
+			alertDef, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(ratioAlertID)})
+			g.Expect(err).ToNot(HaveOccurred())
+			ratioThreshold := alertDef.GetAlertDef().GetAlertDefProperties().GetLogsRatioThreshold()
+			g.Expect(ratioThreshold.GetGroupByFor()).To(Equal(cxsdk.LogsRatioGroupByForNumeratorOnly))
+			g.Expect(ratioThreshold.GetIgnoreInfinity().GetValue()).To(BeTrue())
+			g.Expect(ratioThreshold.GetNotificationPayloadFilter()).To(HaveLen(1))
+			g.Expect(ratioThreshold.GetNotificationPayloadFilter()[0].GetValue()).To(Equal("obj.field"))
+			g.Expect(ratioThreshold.GetUndetectedValuesManagement().GetTriggerUndetectedValues().GetValue()).To(BeTrue())
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Deleting the Alert")
+		Expect(crClient.Delete(ctx, ratioAlert)).To(Succeed())
+		Eventually(func() codes.Code {
+			_, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(ratioAlertID)})
+			return cxsdk.Code(err)
+		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
+	})
+
+	It("Should create a logs-anomaly alert with anomalyAlertSettings and conditionType", func(ctx context.Context) {
+		By("Creating Alert")
+		alertName := "logs-anomaly-alert-gaps"
+		anomalyAlert := &coralogixv1beta1.Alert{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      alertName,
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1beta1.AlertSpec{
+				Name:        alertName,
+				Description: "alert from k8s operator",
+				Priority:    coralogixv1beta1.AlertPriorityP3,
+				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
+					LogsAnomaly: &coralogixv1beta1.LogsAnomaly{
+						LogsFilter: &coralogixv1beta1.LogsFilter{
+							SimpleFilter: coralogixv1beta1.LogsSimpleFilter{LuceneQuery: ptr.To("anomaly-query")},
+						},
+						AnomalyAlertSettings: &coralogixv1beta1.AnomalyAlertSettings{
+							PercentageOfDeviation: coralogix.FloatToQuantity(15),
+						},
+						Rules: []coralogixv1beta1.LogsAnomalyRule{
+							{
+								Condition: coralogixv1beta1.LogsAnomalyCondition{
+									MinimumThreshold: coralogix.FloatToQuantity(10),
+									TimeWindow:       coralogixv1beta1.LogsTimeWindow{SpecificValue: coralogixv1beta1.LogsTimeWindow5Minutes},
+									ConditionType:    coralogixv1beta1.LogsAnomalyConditionTypeMoreThanUsual,
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		Expect(crClient.Create(ctx, anomalyAlert)).To(Succeed())
+
+		By("Fetching the Alert ID")
+		var anomalyAlertID string
+		fetchedAlert := &coralogixv1beta1.Alert{}
+		Eventually(func(g Gomega) {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, fetchedAlert)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedAlert.Status.ID).ToNot(BeNil())
+			anomalyAlertID = *fetchedAlert.Status.ID
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying anomalyAlertSettings in Coralogix backend")
+		Eventually(func(g Gomega) {
+			alertDef, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(anomalyAlertID)})
+			g.Expect(err).ToNot(HaveOccurred())
+			logsAnomaly := alertDef.GetAlertDef().GetAlertDefProperties().GetLogsAnomaly()
+			g.Expect(logsAnomaly.GetAnomalyAlertSettings().GetPercentageOfDeviation().GetValue()).To(Equal(float32(15)))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Deleting the Alert")
+		Expect(crClient.Delete(ctx, anomalyAlert)).To(Succeed())
+		Eventually(func() codes.Code {
+			_, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(anomalyAlertID)})
+			return cxsdk.Code(err)
+		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
+	})
+
+	It("Should create an alert with dataSources and a destination retriggeringPeriodMinutes", func(ctx context.Context) {
+		By("Creating Slack Connector for the destination")
+		connectorName := fmt.Sprintf("slack-connector-for-alert-gaps-%d", time.Now().Unix())
+		Expect(crClient.Create(ctx, getSampleSlackConnector(connectorName))).To(Succeed())
+
+		By("Creating Alert")
+		alertName := "data-sources-alert-gaps"
+		dataSourcesAlert := &coralogixv1beta1.Alert{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      alertName,
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1beta1.AlertSpec{
+				Name:        alertName,
+				Description: "alert from k8s operator",
+				Priority:    coralogixv1beta1.AlertPriorityP3,
+				DataSources: []coralogixv1beta1.AlertDataSource{
+					{DataSpace: "default", DataSet: "logs"},
+				},
+				NotificationGroup: &coralogixv1beta1.NotificationGroup{
+					Destinations: []coralogixv1beta1.NotificationDestination{
+						{
+							Connector: coralogixv1beta1.NCRef{
+								ResourceRef: &coralogixv1beta1.ResourceRef{Name: connectorName},
+							},
+							NotifyOn:                  coralogixv1beta1.NotifyOnTriggeredOnly,
+							RetriggeringPeriodMinutes: ptr.To(int64(10)),
+							TriggeredRoutingOverrides: coralogixv1beta1.NotificationRouting{},
+						},
+					},
+				},
+				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
+					LogsImmediate: &coralogixv1beta1.LogsImmediate{
+						LogsFilter: &coralogixv1beta1.LogsFilter{
+							SimpleFilter: coralogixv1beta1.LogsSimpleFilter{LuceneQuery: ptr.To("data-sources-query")},
+						},
+					},
+				},
+			},
+		}
+		Expect(crClient.Create(ctx, dataSourcesAlert)).To(Succeed())
+
+		// The pinned gRPC SDK used for backend assertions has no getters for
+		// dataSources and retriggeringPeriodMinutes, so this spec only verifies
+		// the backend accepted the payload (RemoteSynced).
+		By("Verifying the Alert is synced with the backend")
+		var dataSourcesAlertID string
+		fetchedAlert := &coralogixv1beta1.Alert{}
+		Eventually(func(g Gomega) {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, fetchedAlert)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedAlert.Status.ID).ToNot(BeNil())
+			dataSourcesAlertID = *fetchedAlert.Status.ID
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Deleting the Alert")
+		Expect(crClient.Delete(ctx, dataSourcesAlert)).To(Succeed())
+		Eventually(func() codes.Code {
+			_, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(dataSourcesAlertID)})
+			return cxsdk.Code(err)
+		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
 	})
 })

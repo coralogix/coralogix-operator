@@ -147,6 +147,11 @@ var (
 		LogsRatioConditionTypeMoreThan: alerts.LOGSRATIOCONDITIONTYPE_LOGS_RATIO_CONDITION_TYPE_MORE_THAN_OR_UNSPECIFIED,
 		LogsRatioConditionTypeLessThan: alerts.LOGSRATIOCONDITIONTYPE_LOGS_RATIO_CONDITION_TYPE_LESS_THAN,
 	}
+	LogsRatioGroupByForToOpenAPI = map[LogsRatioGroupByFor]alerts.LogsRatioGroupByFor{
+		LogsRatioGroupByForBoth:            alerts.LOGSRATIOGROUPBYFOR_LOGS_RATIO_GROUP_BY_FOR_BOTH_OR_UNSPECIFIED,
+		LogsRatioGroupByForNumeratorOnly:   alerts.LOGSRATIOGROUPBYFOR_LOGS_RATIO_GROUP_BY_FOR_NUMERATOR_ONLY,
+		LogsRatioGroupByForDenominatorOnly: alerts.LOGSRATIOGROUPBYFOR_LOGS_RATIO_GROUP_BY_FOR_DENUMERATOR_ONLY,
+	}
 	LogsTimeRelativeComparedToOpenAPI = map[LogsTimeRelativeComparedTo]alerts.LogsTimeRelativeComparedTo{
 		LogsTimeRelativeComparedToPreviousHour:      alerts.LOGSTIMERELATIVECOMPAREDTO_LOGS_TIME_RELATIVE_COMPARED_TO_PREVIOUS_HOUR_OR_UNSPECIFIED,
 		LogsTimeRelativeComparedToSameHourYesterday: alerts.LOGSTIMERELATIVECOMPAREDTO_LOGS_TIME_RELATIVE_COMPARED_TO_SAME_HOUR_YESTERDAY,
@@ -217,6 +222,12 @@ var (
 		MetricAnomalyConditionTypeMoreThanUsual: alerts.METRICANOMALYCONDITIONTYPE_METRIC_ANOMALY_CONDITION_TYPE_MORE_THAN_USUAL_OR_UNSPECIFIED,
 		MetricAnomalyConditionTypeLessThanUsual: alerts.METRICANOMALYCONDITIONTYPE_METRIC_ANOMALY_CONDITION_TYPE_LESS_THAN_USUAL,
 	}
+	LogsAnomalyConditionTypeToOpenAPI = map[LogsAnomalyConditionType]alerts.LogsAnomalyConditionType{
+		LogsAnomalyConditionTypeMoreThanUsual: alerts.LOGSANOMALYCONDITIONTYPE_LOGS_ANOMALY_CONDITION_TYPE_MORE_THAN_USUAL_OR_UNSPECIFIED,
+	}
+	TracingThresholdConditionTypeToOpenAPI = map[TracingThresholdConditionType]alerts.TracingThresholdConditionType{
+		TracingThresholdConditionTypeMoreThan: alerts.TRACINGTHRESHOLDCONDITIONTYPE_TRACING_THRESHOLD_CONDITION_TYPE_MORE_THAN_OR_UNSPECIFIED,
+	}
 	LogsNewValueTimeWindowValueToOpenAPI = map[LogsNewValueTimeWindowSpecificValue]alerts.LogsNewValueTimeWindowValue{
 		LogsNewValueTimeWindowValue12Hours: alerts.LOGSNEWVALUETIMEWINDOWVALUE_LOGS_NEW_VALUE_TIME_WINDOW_VALUE_HOURS_12_OR_UNSPECIFIED,
 		LogsNewValueTimeWindowValue24Hours: alerts.LOGSNEWVALUETIMEWINDOWVALUE_LOGS_NEW_VALUE_TIME_WINDOW_VALUE_HOURS_24,
@@ -273,6 +284,10 @@ type AlertSpec struct {
 	// +optional
 	GroupByKeys []string `json:"groupByKeys"`
 
+	// Data sources to run the alert on.
+	// +optional
+	DataSources []AlertDataSource `json:"dataSources,omitempty"`
+
 	// Settings for the attached incidents.
 	// +optional
 	IncidentsSettings *IncidentsSettings `json:"incidentsSettings,omitempty"`
@@ -298,6 +313,17 @@ type AlertSpec struct {
 
 	// Type of alert.
 	TypeDefinition AlertTypeDefinition `json:"alertType"`
+}
+
+// Data source to run the alert on.
+type AlertDataSource struct {
+	//+kubebuilder:validation:MinLength=1
+	// Data space of the data source.
+	DataSpace string `json:"dataSpace"`
+
+	//+kubebuilder:validation:MinLength=1
+	// Dataset of the data source.
+	DataSet string `json:"dataSet"`
 }
 
 // AlertStatus defines the observed state of Alert
@@ -519,6 +545,11 @@ type NotificationDestination struct {
 	// +kubebuilder:default=triggeredOnly
 	// When to notify.
 	NotifyOn NotifyOn `json:"notifyOn"`
+
+	//+kubebuilder:validation:Minimum=0
+	// The time in minutes before a new notification is sent for this destination.
+	// +optional
+	RetriggeringPeriodMinutes *int64 `json:"retriggeringPeriodMinutes,omitempty"`
 
 	// The routing configuration to override from the connector/preset for triggered notifications.
 	TriggeredRoutingOverrides NotificationRouting `json:"triggeredRoutingOverrides"`
@@ -762,6 +793,7 @@ type AlertOverride struct {
 
 // Logs ratio alerts.
 // Read more at https://coralogix.com/docs/user-guides/alerting/create-an-alert/logs/ratio-alerts/
+// +kubebuilder:validation:XValidation:rule="!has(self.undetectedValuesManagement) || self.rules.exists(r, r.condition.conditionType == 'lessThan')",message="undetectedValuesManagement requires at least one rule with a lessThan condition"
 type LogsRatioThreshold struct {
 	Numerator        LogsFilter `json:"numerator"`
 	NumeratorAlias   string     `json:"numeratorAlias"`
@@ -775,7 +807,35 @@ type LogsRatioThreshold struct {
 	// +kubebuilder:validation:MinItems=1
 	// Rules that match the alert to the data.
 	Rules []LogsRatioThresholdRule `json:"rules"`
+
+	// Which side of the ratio the group-by keys are applied to.
+	// +optional
+	GroupByFor *LogsRatioGroupByFor `json:"groupByFor,omitempty"`
+
+	//+kubebuilder:default=false
+	// Ignore infinity on the threshold value.
+	// +optional
+	IgnoreInfinity bool `json:"ignoreInfinity,omitempty"`
+
+	// Filter for the notification payload.
+	// +optional
+	NotificationPayloadFilter []string `json:"notificationPayloadFilter,omitempty"`
+
+	// How to work with undetected values.
+	// +optional
+	UndetectedValuesManagement *UndetectedValuesManagement `json:"undetectedValuesManagement,omitempty"`
 }
+
+// +kubebuilder:validation:Enum=both;numeratorOnly;denominatorOnly
+// Which side of the ratio the group-by keys are applied to.
+type LogsRatioGroupByFor string
+
+// Group-by-for values.
+const (
+	LogsRatioGroupByForBoth            LogsRatioGroupByFor = "both"
+	LogsRatioGroupByForNumeratorOnly   LogsRatioGroupByFor = "numeratorOnly"
+	LogsRatioGroupByForDenominatorOnly LogsRatioGroupByFor = "denominatorOnly"
+)
 
 // The rule to match the alert's conditions.
 type LogsRatioThresholdRule struct {
@@ -1096,7 +1156,21 @@ type TracingThresholdRuleCondition struct {
 
 	// Time window to evaluate.
 	TimeWindow TracingTimeWindow `json:"timeWindow"`
+
+	//+kubebuilder:default=moreThan
+	// Condition type.
+	// +optional
+	ConditionType TracingThresholdConditionType `json:"conditionType,omitempty"`
 }
+
+// +kubebuilder:validation:Enum=moreThan
+// ConditionType type.
+type TracingThresholdConditionType string
+
+// Condition type values.
+const (
+	TracingThresholdConditionTypeMoreThan TracingThresholdConditionType = "moreThan"
+)
 
 // Tracing time window.
 type TracingTimeWindow struct {
@@ -1216,6 +1290,10 @@ type LogsAnomaly struct {
 	// Evaluation delay in milliseconds.
 	// +optional
 	EvaluationDelayMs *int32 `json:"evaluationDelayMs,omitempty"`
+
+	// Settings for anomaly alerts.
+	// +optional
+	AnomalyAlertSettings *AnomalyAlertSettings `json:"anomalyAlertSettings,omitempty"`
 }
 
 // The rule to match the alert's conditions.
@@ -1231,6 +1309,25 @@ type LogsAnomalyCondition struct {
 	MinimumThreshold resource.Quantity `json:"minimumThreshold"`
 	// Time window to evaluate.
 	TimeWindow LogsTimeWindow `json:"timeWindow"`
+	//+kubebuilder:default=moreThanUsual
+	// Condition type.
+	// +optional
+	ConditionType LogsAnomalyConditionType `json:"conditionType,omitempty"`
+}
+
+// +kubebuilder:validation:Enum=moreThanUsual
+// ConditionType type.
+type LogsAnomalyConditionType string
+
+// Condition type values.
+const (
+	LogsAnomalyConditionTypeMoreThanUsual LogsAnomalyConditionType = "moreThanUsual"
+)
+
+// Settings for anomaly alerts.
+type AnomalyAlertSettings struct {
+	// The percentage of deviation from the baseline for triggering the alert.
+	PercentageOfDeviation resource.Quantity `json:"percentageOfDeviation"`
 }
 
 // Metric anomaly alert
@@ -1246,6 +1343,10 @@ type MetricAnomaly struct {
 	// Evaluation delay in milliseconds.
 	// +optional
 	EvaluationDelayMs *int32 `json:"evaluationDelayMs,omitempty"`
+
+	// Settings for anomaly alerts.
+	// +optional
+	AnomalyAlertSettings *AnomalyAlertSettings `json:"anomalyAlertSettings,omitempty"`
 }
 
 // Condition to match to.
@@ -1597,6 +1698,8 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 
 	priority := AlertPriorityToOpenAPIPriority[in.Priority]
 
+	dataSources := expandAlertDataSources(in.DataSources)
+
 	if logsImmediate := in.TypeDefinition.LogsImmediate; logsImmediate != nil {
 		return &alerts.AlertDefProperties{
 			Name:                    alerts.PtrString(in.Name),
@@ -1604,6 +1707,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			Enabled:                 in.Enabled,
 			Priority:                priority.Ptr(),
 			GroupByKeys:             in.GroupByKeys,
+			DataSources:             dataSources,
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
@@ -1620,6 +1724,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			Enabled:                 in.Enabled,
 			Priority:                priority.Ptr(),
 			GroupByKeys:             in.GroupByKeys,
+			DataSources:             dataSources,
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
@@ -1636,6 +1741,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			Enabled:                 in.Enabled,
 			Priority:                priority.Ptr(),
 			GroupByKeys:             in.GroupByKeys,
+			DataSources:             dataSources,
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
@@ -1652,6 +1758,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			Enabled:                   in.Enabled,
 			Priority:                  priority.Ptr(),
 			GroupByKeys:               in.GroupByKeys,
+			DataSources:               dataSources,
 			IncidentsSettings:         expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:         notificationGroup,
 			NotificationGroupExcess:   notificationGroupExcess,
@@ -1668,6 +1775,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			Enabled:                 in.Enabled,
 			Priority:                priority.Ptr(),
 			GroupByKeys:             in.GroupByKeys,
+			DataSources:             dataSources,
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
@@ -1684,6 +1792,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			Enabled:                 in.Enabled,
 			Priority:                priority.Ptr(),
 			GroupByKeys:             in.GroupByKeys,
+			DataSources:             dataSources,
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
@@ -1700,6 +1809,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			Enabled:                 in.Enabled,
 			Priority:                priority.Ptr(),
 			GroupByKeys:             in.GroupByKeys,
+			DataSources:             dataSources,
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
@@ -1716,6 +1826,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			Enabled:                 in.Enabled,
 			Priority:                priority.Ptr(),
 			GroupByKeys:             in.GroupByKeys,
+			DataSources:             dataSources,
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
@@ -1732,6 +1843,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			Enabled:                 in.Enabled,
 			Priority:                priority.Ptr(),
 			GroupByKeys:             in.GroupByKeys,
+			DataSources:             dataSources,
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
@@ -1748,6 +1860,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			Enabled:                 in.Enabled,
 			Priority:                priority.Ptr(),
 			GroupByKeys:             in.GroupByKeys,
+			DataSources:             dataSources,
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
@@ -1764,6 +1877,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			Enabled:                 in.Enabled,
 			Priority:                priority.Ptr(),
 			GroupByKeys:             in.GroupByKeys,
+			DataSources:             dataSources,
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
@@ -1780,6 +1894,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			Enabled:                 in.Enabled,
 			Priority:                priority.Ptr(),
 			GroupByKeys:             in.GroupByKeys,
+			DataSources:             dataSources,
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
@@ -1800,6 +1915,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			Enabled:                 in.Enabled,
 			Priority:                priority.Ptr(),
 			GroupByKeys:             in.GroupByKeys,
+			DataSources:             dataSources,
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
@@ -1987,6 +2103,22 @@ func fillWebhookNameToId(properties *GetResourceRefProperties) error {
 	return nil
 }
 
+func expandAlertDataSources(dataSources []AlertDataSource) []alerts.AlertDefDataSource {
+	if len(dataSources) == 0 {
+		return nil
+	}
+
+	result := make([]alerts.AlertDefDataSource, len(dataSources))
+	for i, dataSource := range dataSources {
+		result[i] = alerts.AlertDefDataSource{
+			DataSpace: alerts.PtrString(dataSource.DataSpace),
+			DataSet:   alerts.PtrString(dataSource.DataSet),
+		}
+	}
+
+	return result
+}
+
 func expandNotificationDestinations(destinations []NotificationDestination, properties *GetResourceRefProperties) ([]alerts.NotificationDestination, error) {
 	var result []alerts.NotificationDestination
 	for _, destination := range destinations {
@@ -2012,9 +2144,10 @@ func expandNotificationDestinations(destinations []NotificationDestination, prop
 		}
 
 		notificationDestination := alerts.NotificationDestination{
-			ConnectorId: alerts.PtrString(connectorId),
-			PresetId:    presetId,
-			NotifyOn:    NotifyOnToOpenAPINotifyOn[destination.NotifyOn].Ptr(),
+			ConnectorId:               alerts.PtrString(connectorId),
+			PresetId:                  presetId,
+			NotifyOn:                  NotifyOnToOpenAPINotifyOn[destination.NotifyOn].Ptr(),
+			RetriggeringPeriodMinutes: destination.RetriggeringPeriodMinutes,
 			TriggeredRoutingOverrides: &alerts.NotificationRouting{
 				ConfigOverrides: triggeredRoutingOverrides,
 			},
@@ -2480,8 +2613,9 @@ func expandMetricAnomaly(metricAnomaly *MetricAnomaly) *alerts.MetricAnomalyType
 		MetricFilter: &alerts.MetricFilter{
 			Promql: alerts.PtrString(metricAnomaly.MetricFilter.Promql),
 		},
-		Rules:             expandMetricAnomalyRules(metricAnomaly.Rules),
-		EvaluationDelayMs: metricAnomaly.EvaluationDelayMs,
+		Rules:                expandMetricAnomalyRules(metricAnomaly.Rules),
+		EvaluationDelayMs:    metricAnomaly.EvaluationDelayMs,
+		AnomalyAlertSettings: expandAnomalyAlertSettings(metricAnomaly.AnomalyAlertSettings),
 	}
 }
 
@@ -2515,6 +2649,17 @@ func expandLogsAnomaly(anomaly *LogsAnomaly) *alerts.LogsAnomalyType {
 		Rules:                     expandLogsAnomalyRules(anomaly.Rules),
 		NotificationPayloadFilter: anomaly.NotificationPayloadFilter,
 		EvaluationDelayMs:         anomaly.EvaluationDelayMs,
+		AnomalyAlertSettings:      expandAnomalyAlertSettings(anomaly.AnomalyAlertSettings),
+	}
+}
+
+func expandAnomalyAlertSettings(settings *AnomalyAlertSettings) *alerts.AnomalyAlertSettings {
+	if settings == nil {
+		return nil
+	}
+
+	return &alerts.AnomalyAlertSettings{
+		PercentageOfDeviation: alerts.PtrFloat32(float32(settings.PercentageOfDeviation.AsApproximateFloat64())),
 	}
 }
 
@@ -2534,10 +2679,15 @@ func expandLogsAnomalyRule(rule LogsAnomalyRule) *alerts.LogsAnomalyRule {
 }
 
 func expandLogsAnomalyRuleCondition(condition LogsAnomalyCondition) *alerts.LogsAnomalyCondition {
+	conditionType := alerts.LOGSANOMALYCONDITIONTYPE_LOGS_ANOMALY_CONDITION_TYPE_MORE_THAN_USUAL_OR_UNSPECIFIED
+	if ct, ok := LogsAnomalyConditionTypeToOpenAPI[condition.ConditionType]; ok {
+		conditionType = ct
+	}
+
 	return &alerts.LogsAnomalyCondition{
 		MinimumThreshold: alerts.PtrFloat64(condition.MinimumThreshold.AsApproximateFloat64()),
 		TimeWindow:       expandLogsTimeWindow(condition.TimeWindow),
-		ConditionType:    alerts.LOGSANOMALYCONDITIONTYPE_LOGS_ANOMALY_CONDITION_TYPE_MORE_THAN_USUAL_OR_UNSPECIFIED.Ptr(),
+		ConditionType:    conditionType.Ptr(),
 	}
 }
 
@@ -2785,10 +2935,15 @@ func expandTracingThresholdRule(rule TracingThresholdRule) *alerts.TracingThresh
 }
 
 func expandTracingThresholdCondition(condition TracingThresholdRuleCondition) *alerts.TracingThresholdCondition {
+	conditionType := alerts.TRACINGTHRESHOLDCONDITIONTYPE_TRACING_THRESHOLD_CONDITION_TYPE_MORE_THAN_OR_UNSPECIFIED
+	if ct, ok := TracingThresholdConditionTypeToOpenAPI[condition.ConditionType]; ok {
+		conditionType = ct
+	}
+
 	return &alerts.TracingThresholdCondition{
 		SpanAmount:    alerts.PtrFloat64(condition.SpanAmount.AsApproximateFloat64()),
 		TimeWindow:    expandTracingTimeWindow(condition.TimeWindow),
-		ConditionType: alerts.TRACINGTHRESHOLDCONDITIONTYPE_TRACING_THRESHOLD_CONDITION_TYPE_MORE_THAN_OR_UNSPECIFIED.Ptr(),
+		ConditionType: conditionType.Ptr(),
 	}
 }
 
@@ -2912,10 +3067,17 @@ func expandLogsRatioThreshold(logsRatioThreshold *LogsRatioThreshold, priority a
 	}
 
 	thresholdType := &alerts.LogsRatioThresholdType{
-		NumeratorAlias:    alerts.PtrString(logsRatioThreshold.NumeratorAlias),
-		DenominatorAlias:  alerts.PtrString(logsRatioThreshold.DenominatorAlias),
-		EvaluationDelayMs: logsRatioThreshold.EvaluationDelayMs,
-		Rules:             expandLogsRatioThresholdRules(logsRatioThreshold.Rules, priority),
+		NumeratorAlias:             alerts.PtrString(logsRatioThreshold.NumeratorAlias),
+		DenominatorAlias:           alerts.PtrString(logsRatioThreshold.DenominatorAlias),
+		EvaluationDelayMs:          logsRatioThreshold.EvaluationDelayMs,
+		Rules:                      expandLogsRatioThresholdRules(logsRatioThreshold.Rules, priority),
+		IgnoreInfinity:             alerts.PtrBool(logsRatioThreshold.IgnoreInfinity),
+		NotificationPayloadFilter:  logsRatioThreshold.NotificationPayloadFilter,
+		UndetectedValuesManagement: expandUndetectedValuesManagement(logsRatioThreshold.UndetectedValuesManagement),
+	}
+
+	if logsRatioThreshold.GroupByFor != nil {
+		thresholdType.GroupByFor = LogsRatioGroupByForToOpenAPI[*logsRatioThreshold.GroupByFor].Ptr()
 	}
 
 	Numerator := expandLogsFilter(&logsRatioThreshold.Numerator)
@@ -3025,6 +3187,10 @@ func expandSimpleFilter(filter LogsSimpleFilter) *alerts.LogsSimpleFilter {
 }
 
 func expandLabelFilters(filters *LabelFilters) *alerts.LabelFilters {
+	if filters == nil {
+		return nil
+	}
+
 	return &alerts.LabelFilters{
 		ApplicationName: expandLabelFilterTypes(filters.ApplicationName),
 		SubsystemName:   expandLabelFilterTypes(filters.SubsystemName),
