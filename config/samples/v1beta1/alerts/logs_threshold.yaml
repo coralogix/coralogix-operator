@@ -14,6 +14,9 @@ spec:
   entityLabels:
     alert_type: security
     security_severity: high
+  dataSources:
+    - dataSpace: default
+      dataSet: my-dataset
   alertType:
     logsThreshold:
       logsFilter:

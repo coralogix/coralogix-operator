@@ -33,11 +33,14 @@ spec:
                 operation: endsWith
             severity: [ "warning", "info" ]
       evaluationDelayMs: 30000
+      anomalyAlertSettings:
+        percentageOfDeviation: "10"
       rules:
         - condition:
             minimumThreshold: 100
             timeWindow:
               specificValue: 5m
+            conditionType: moreThanUsual
   notificationGroup:
     router:
       notifyOn: triggeredAndResolved

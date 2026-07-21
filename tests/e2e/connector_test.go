@@ -210,6 +210,7 @@ var _ = Describe("Connector with SecretKeyRef", Ordered, func() {
 	})
 })
 
+//nolint:unparam // namespace is kept for consistency with the other sample helpers.
 func getSampleSlackConnector(name, namespace string) *coralogixv1alpha1.Connector {
 	return &coralogixv1alpha1.Connector{
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},

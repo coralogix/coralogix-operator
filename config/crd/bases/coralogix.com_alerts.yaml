@@ -165,6 +165,20 @@ spec:
                   logsAnomaly:
                     description: Anomaly alerts for logs.
                     properties:
+                      anomalyAlertSettings:
+                        description: Settings for anomaly alerts.
+                        properties:
+                          percentageOfDeviation:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            description: The percentage of deviation from the baseline
+                              for triggering the alert.
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                        required:
+                        - percentageOfDeviation
+                        type: object
                       evaluationDelayMs:
                         description: Evaluation delay in milliseconds.
                         format: int32
@@ -256,6 +270,12 @@ spec:
                             condition:
                               description: Condition to match to.
                               properties:
+                                conditionType:
+                                  default: moreThanUsual
+                                  description: Condition type.
+                                  enum:
+                                  - moreThanUsual
+                                  type: string
                                 minimumThreshold:
                                   anyOf:
                                   - type: integer
@@ -584,6 +604,23 @@ spec:
                         description: Evaluation delay in milliseconds.
                         format: int32
                         type: integer
+                      groupByFor:
+                        description: Which side of the ratio the group-by keys are
+                          applied to.
+                        enum:
+                        - both
+                        - numeratorOnly
+                        - denominatorOnly
+                        type: string
+                      ignoreInfinity:
+                        default: false
+                        description: Ignore infinity on the threshold value.
+                        type: boolean
+                      notificationPayloadFilter:
+                        description: Filter for the notification payload.
+                        items:
+                          type: string
+                        type: array
                       numerator:
                         description: A filter for logs.
                         properties:
@@ -725,6 +762,32 @@ spec:
                           type: object
                         minItems: 1
                         type: array
+                      undetectedValuesManagement:
+                        description: How to work with undetected values.
+                        properties:
+                          autoRetireTimeframe:
+                            default: never
+                            description: Automatically retire the alerts after this
+                              time.
+                            enum:
+                            - never
+                            - 5m
+                            - 10m
+                            - 1h
+                            - 2h
+                            - 6h
+                            - 12h
+                            - 24h
+                            type: string
+                          triggerUndetectedValues:
+                            default: false
+                            description: Deactivate triggering the alert on undetected
+                              values.
+                            type: boolean
+                        required:
+                        - autoRetireTimeframe
+                        - triggerUndetectedValues
+                        type: object
                     required:
                     - denominator
                     - denominatorAlias
@@ -732,6 +795,11 @@ spec:
                     - numeratorAlias
                     - rules
                     type: object
+                    x-kubernetes-validations:
+                    - message: undetectedValuesManagement requires at least one rule
+                        with a lessThan condition
+                      rule: '!has(self.undetectedValuesManagement) || self.rules.exists(r,
+                        r.condition.conditionType == ''lessThan'')'
                   logsThreshold:
                     description: Alerts for when a log crosses a threshold.
                     properties:
@@ -1252,6 +1320,20 @@ spec:
                   metricAnomaly:
                     description: Anomaly alerts for metrics.
                     properties:
+                      anomalyAlertSettings:
+                        description: Settings for anomaly alerts.
+                        properties:
+                          percentageOfDeviation:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            description: The percentage of deviation from the baseline
+                              for triggering the alert.
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                        required:
+                        - percentageOfDeviation
+                        type: object
                       evaluationDelayMs:
                         description: Evaluation delay in milliseconds.
                         format: int32
@@ -1819,6 +1901,12 @@ spec:
                             condition:
                               description: The condition to match to.
                               properties:
+                                conditionType:
+                                  default: moreThan
+                                  description: Condition type.
+                                  enum:
+                                  - moreThan
+                                  type: string
                                 spanAmount:
                                   anyOf:
                                   - type: integer
@@ -2005,6 +2093,22 @@ spec:
                     ? 1 : 0) + (has(self.logsAnomaly) ? 1 : 0) + (has(self.metricAnomaly)
                     ? 1 : 0) + (has(self.logsNewValue) ? 1 : 0) + (has(self.logsUniqueCount)
                     ? 1 : 0) + (has(self.sloThreshold) ? 1 : 0) == 1'
+              dataSources:
+                description: Data sources to run the alert on.
+                items:
+                  description: Data source to run the alert on.
+                  properties:
+                    dataSet:
+                      description: Dataset of the data source.
+                      type: string
+                    dataSpace:
+                      description: Data space of the data source.
+                      type: string
+                  type: object
+                  x-kubernetes-validations:
+                  - message: At least one of dataSpace or dataSet is required
+                    rule: has(self.dataSpace) || has(self.dataSet)
+                type: array
               description:
                 description: Description of the alert
                 type: string
@@ -2172,6 +2276,11 @@ spec:
                               - payloadType
                               type: object
                           type: object
+                        retriggeringPeriodMinutes:
+                          description: The time in minutes before a new notification
+                            is sent for this destination.
+                          format: int64
+                          type: integer
                         triggeredRoutingOverrides:
                           description: The routing configuration to override from
                             the connector/preset for triggered notifications.
@@ -2456,6 +2565,11 @@ spec:
                                 - payloadType
                                 type: object
                             type: object
+                          retriggeringPeriodMinutes:
+                            description: The time in minutes before a new notification
+                              is sent for this destination.
+                            format: int64
+                            type: integer
                           triggeredRoutingOverrides:
                             description: The routing configuration to override from
                               the connector/preset for triggered notifications.

@@ -45,14 +45,23 @@ spec:
             severity: [ "warning", "info" ]
       denominatorAlias: "denominator"
       evaluationDelayMs: 30000
+      groupByFor: numeratorOnly
+      ignoreInfinity: true
+      notificationPayloadFilter:
+        - obj.field
+      undetectedValuesManagement:
+        triggerUndetectedValues: true
+        autoRetireTimeframe: 5m
       rules:
         - condition:
             timeWindow:
               specificValue: 5m
             threshold: "100.4"
-            conditionType: moreThan
+            conditionType: lessThan
           override:
             priority: p2
+  groupByKeys:
+    - coralogix.metadata.applicationName
   notificationGroup:
     router:
       notifyOn: triggeredAndResolved
