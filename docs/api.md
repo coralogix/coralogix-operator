@@ -17445,6 +17445,7 @@ Deprecated: This field is deprecated and will be removed in a future version.<br
           The time in minutes before a new notification is sent for this destination.<br/>
           <br/>
             <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -18274,6 +18275,7 @@ Deprecated: This field is deprecated and will be removed in a future version.<br
           The time in minutes before a new notification is sent for this destination.<br/>
           <br/>
             <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
         </td>
         <td>false</td>
       </tr></tbody>

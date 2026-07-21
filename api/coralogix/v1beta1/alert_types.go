@@ -546,6 +546,7 @@ type NotificationDestination struct {
 	// When to notify.
 	NotifyOn NotifyOn `json:"notifyOn"`
 
+	//+kubebuilder:validation:Minimum=0
 	// The time in minutes before a new notification is sent for this destination.
 	// +optional
 	RetriggeringPeriodMinutes *int64 `json:"retriggeringPeriodMinutes,omitempty"`

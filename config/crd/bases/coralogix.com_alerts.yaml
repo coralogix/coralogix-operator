@@ -2282,6 +2282,7 @@ spec:
                           description: The time in minutes before a new notification
                             is sent for this destination.
                           format: int64
+                          minimum: 0
                           type: integer
                         triggeredRoutingOverrides:
                           description: The routing configuration to override from
@@ -2571,6 +2572,7 @@ spec:
                             description: The time in minutes before a new notification
                               is sent for this destination.
                             format: int64
+                            minimum: 0
                             type: integer
                           triggeredRoutingOverrides:
                             description: The routing configuration to override from
