@@ -13,7 +13,7 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: dashboard-import
   annotations:
-    app.coralogix.com/import-id: "2GJ9dYBnA1DOEPtsnYH03"
+    app.coralogix.com/import-id: "sJsqKJpkGTlXKDpxFZAuC"
 spec:
   json: >
     {

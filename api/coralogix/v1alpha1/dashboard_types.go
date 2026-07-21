@@ -155,6 +155,13 @@ type DashboardStatus struct {
 
 	// +optional
 	PrintableStatus string `json:"printableStatus,omitempty"`
+
+	// Imported records that this Dashboard was already adopted via the import annotation once.
+	// It is set the first time adoption succeeds and, unlike status.id, is not cleared if the
+	// remote dashboard is later deleted outside the operator - so a subsequent reconcile
+	// recreates it from spec instead of retrying the import Get for an id that no longer exists.
+	// +optional
+	Imported bool `json:"imported,omitempty"`
 }
 
 func (d *Dashboard) GetConditions() []metav1.Condition {

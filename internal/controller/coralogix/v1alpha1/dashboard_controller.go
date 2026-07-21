@@ -69,14 +69,23 @@ func (r *DashboardReconciler) HandleCreation(ctx context.Context, log logr.Logge
 		return err
 	}
 
-	if importID := dashboard.GetAnnotations()[internalutils.ImportDashboardIDAnnotationKey]; importID != "" {
+	// The import annotation only adopts the remote dashboard once. Once adopted,
+	// status.imported gates it, and that marker persists across status.id being cleared on a
+	// remote NotFound (see coralogix_reconciler.go), so a subsequent recreation goes through the
+	// normal Create path below instead of re-attempting the import Get for an id that may no
+	// longer exist. The annotation itself is left in place, matching adoption annotations in
+	// tools like Crossplane/ACK. Once true, imported is preserved on every future creation so
+	// that a second (and later) remote deletion also recreates instead of retrying the import.
+	imported := dashboard.Status.Imported
+	if importID := dashboard.GetAnnotations()[internalutils.ImportDashboardIDAnnotationKey]; importID != "" && !imported {
 		log.Info("Import annotation present, adopting existing remote dashboard", "id", importID)
 		getResponse, err := r.DashboardsClient.Get(ctx, &cxsdk.GetDashboardRequest{DashboardId: wrapperspb.String(importID)})
 		if err != nil {
 			return fmt.Errorf("error on getting remote dashboard %q for import: %w", importID, err)
 		}
 		dashboard.Status = coralogixv1alpha1.DashboardStatus{
-			ID: ptr.To(getResponse.Dashboard.GetId().GetValue()),
+			ID:       ptr.To(getResponse.Dashboard.GetId().GetValue()),
+			Imported: true,
 		}
 		return nil
 	}
@@ -92,7 +101,8 @@ func (r *DashboardReconciler) HandleCreation(ctx context.Context, log logr.Logge
 	log.Info("Remote dashboard created", "dashboard", protojson.Format(createResponse))
 
 	dashboard.Status = coralogixv1alpha1.DashboardStatus{
-		ID: ptr.To(createResponse.DashboardId.Value),
+		ID:       ptr.To(createResponse.DashboardId.Value),
+		Imported: imported,
 	}
 
 	return nil

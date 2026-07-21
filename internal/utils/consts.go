@@ -58,9 +58,12 @@ const (
 	LogVerbosityAnnotationKey = "app.coralogix.com/log-verbosity"
 
 	// ImportDashboardIDAnnotationKey adopts a pre-existing remote Dashboard into a Dashboard CR by ID.
-	// It is only consulted on the first reconcile, while status.id is still unset; once the
-	// dashboard is adopted it is treated exactly like a normally-created Dashboard CR, and the
-	// CR's spec becomes the source of truth and overwrites the remote dashboard's content on the
-	// next reconcile. The annotation is not removed after adoption.
+	// Once the dashboard is adopted it is treated exactly like a normally-created Dashboard CR,
+	// and the CR's spec becomes the source of truth and overwrites the remote dashboard's content
+	// on the next reconcile. The annotation itself is not removed after adoption (mirroring
+	// adoption annotations in tools like Crossplane and AWS ACK); instead status.imported on the
+	// Dashboard tracks that adoption already happened, so that if the remote dashboard is later
+	// deleted outside the operator, it is recreated from spec instead of the import path
+	// retrying a Get for an ID that no longer exists.
 	ImportDashboardIDAnnotationKey = "app.coralogix.com/import-id"
 )
