@@ -17,8 +17,7 @@ metadata:
 spec:
   json: >
     {
-      "id": "2GJ9dYBnA1DOEPtsnYH03",
-      "name": "minimal-gauge-with-arcs-from-import2",
+      "name": "minimal-gauge-with-arcs-from-import",
       "layout": {
         "sections": [
           {
