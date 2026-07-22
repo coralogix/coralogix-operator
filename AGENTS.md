@@ -42,6 +42,8 @@ When changing a CRD field, update the full path:
 - Relevant KUTTL/e2e fixtures.
 - Generated DeepCopy, CRDs/RBAC, API docs, and Helm chart CRDs.
 
+When adding a new top-level status field to a kind, decide whether `clearRemoteStatus` in the shared reconciler should remove it during selector-mismatch cleanup, or whether it must survive the reset (like Dashboard's `status.imported`).
+
 ## Reconciliation
 
 Create, update, delete, and selector-mismatch cleanup must be idempotent.

@@ -190,14 +190,6 @@ func (d *Dashboard) SetPrintableStatus(printableStatus string) {
 	d.Status.PrintableStatus = printableStatus
 }
 
-// PreservedStatusFields reports which status fields must survive a status reset when
-// the Dashboard falls out of the operator's selector scope. status.imported must persist
-// so a subsequent adoption recreates the dashboard instead of re-attempting the import
-// Get against a remote id that was just deleted.
-func (d *Dashboard) PreservedStatusFields() []string {
-	return []string{"imported"}
-}
-
 func (d *Dashboard) HasIDInStatus() bool {
 	return d.Status.ID != nil && *d.Status.ID != ""
 }

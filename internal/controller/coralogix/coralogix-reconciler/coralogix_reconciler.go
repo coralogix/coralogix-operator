@@ -125,11 +125,7 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 		}
 
-		var preserve []string
-		if p, ok := obj.(statusFieldPreserver); ok {
-			preserve = p.PreservedStatusFields()
-		}
-		if err := clearStatusExcept(ctx, obj, preserve...); err != nil {
+		if err := clearRemoteStatus(ctx, obj); err != nil {
 			log.Error(err, "Error clearing status")
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 		}
@@ -173,42 +169,27 @@ func removeField(ctx context.Context, obj client.Object, fields ...string) error
 	return config.GetClient().Status().Update(ctx, u)
 }
 
-// statusFieldPreserver is implemented by resource types that need one or more of their
-// status fields to survive clearStatusExcept, e.g. Dashboard's status.imported, which
-// must persist across a remote deletion so a subsequent adoption recreates instead of
-// re-attempting an import against an id that no longer exists.
-type statusFieldPreserver interface {
-	PreservedStatusFields() []string
-}
-
-// clearStatusExcept resets obj's status to only the named top-level fields, discarding
-// everything else (id, conditions, printableStatus, etc.).
-func clearStatusExcept(ctx context.Context, obj client.Object, keep ...string) error {
+func removeMultipleFields(ctx context.Context, obj client.Object, fieldsList [][]string) error {
 	u := &unstructured.Unstructured{}
 	if err := config.GetScheme().Convert(obj, u, nil); err != nil {
 		return fmt.Errorf("failed to convert object to unstructured: %w", err)
 	}
 
-	status, found, err := unstructured.NestedMap(u.Object, "status")
-	if err != nil {
-		return fmt.Errorf("failed to read status: %w", err)
-	}
-	if !found {
-		return nil
-	}
-
-	keepSet := make(map[string]bool, len(keep))
-	for _, field := range keep {
-		keepSet[field] = true
-	}
-
-	for field := range status {
-		if !keepSet[field] {
-			unstructured.RemoveNestedField(u.Object, "status", field)
-		}
+	for _, fields := range fieldsList {
+		unstructured.RemoveNestedField(u.Object, fields...)
 	}
 
 	return config.GetClient().Status().Update(ctx, u)
+}
+
+func clearRemoteStatus(ctx context.Context, obj client.Object) error {
+	return removeMultipleFields(ctx, obj, [][]string{
+		{"status", "id"},
+		{"status", "conditions"},
+		{"status", "printableStatus"},
+		{"status", "externalId"}, // OutboundWebhook
+		{"status", "revision"},   // SLO
+	})
 }
 
 func AddFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r CoralogixReconciler) error {
