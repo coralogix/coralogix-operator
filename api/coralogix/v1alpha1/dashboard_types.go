@@ -146,6 +146,16 @@ func Unzip(compressed []byte) ([]byte, error) {
 	return io.ReadAll(gz)
 }
 
+// ImportDashboardIDAnnotationKey adopts a pre-existing remote Dashboard into a Dashboard CR by ID.
+// Once the dashboard is adopted it is treated exactly like a normally-created Dashboard CR,
+// and the CR's spec becomes the source of truth and overwrites the remote dashboard's content
+// on the next reconcile. The annotation itself is not removed after adoption (mirroring
+// adoption annotations in tools like Crossplane and AWS ACK); instead status.imported on the
+// Dashboard tracks that adoption already happened, so that if the remote dashboard is later
+// deleted outside the operator, it is recreated from spec instead of the import path
+// retrying a Get for an ID that no longer exists.
+const ImportDashboardIDAnnotationKey = "app.coralogix.com/import-id"
+
 // DashboardStatus defines the observed state of Dashboard.
 type DashboardStatus struct {
 	// +optional
@@ -155,6 +165,13 @@ type DashboardStatus struct {
 
 	// +optional
 	PrintableStatus string `json:"printableStatus,omitempty"`
+
+	// Imported records that this Dashboard was already adopted via the import annotation once.
+	// It is set the first time adoption succeeds and, unlike status.id, is not cleared if the
+	// remote dashboard is later deleted outside the operator - so a subsequent reconcile
+	// recreates it from spec instead of retrying the import Get for an id that no longer exists.
+	// +optional
+	Imported bool `json:"imported,omitempty"`
 }
 
 func (d *Dashboard) GetConditions() []metav1.Condition {

@@ -3545,6 +3545,16 @@ DashboardStatus defines the observed state of Dashboard.
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>imported</b></td>
+        <td>boolean</td>
+        <td>
+          Imported records that this Dashboard was already adopted via the import annotation once.
+It is set the first time adoption succeeds and, unlike status.id, is not cleared if the
+remote dashboard is later deleted outside the operator - so a subsequent reconcile
+recreates it from spec instead of retrying the import Get for an id that no longer exists.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>printableStatus</b></td>
         <td>string</td>
         <td>

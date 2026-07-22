@@ -125,8 +125,8 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 		}
 
-		if err := removeField(ctx, obj, "status"); err != nil {
-			log.Error(err, "Error removing id from status")
+		if err := clearRemoteStatus(ctx, obj); err != nil {
+			log.Error(err, "Error clearing status")
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 		}
 
@@ -167,6 +167,29 @@ func removeField(ctx context.Context, obj client.Object, fields ...string) error
 	unstructured.RemoveNestedField(u.Object, fields...)
 
 	return config.GetClient().Status().Update(ctx, u)
+}
+
+func removeMultipleFields(ctx context.Context, obj client.Object, fieldsList [][]string) error {
+	u := &unstructured.Unstructured{}
+	if err := config.GetScheme().Convert(obj, u, nil); err != nil {
+		return fmt.Errorf("failed to convert object to unstructured: %w", err)
+	}
+
+	for _, fields := range fieldsList {
+		unstructured.RemoveNestedField(u.Object, fields...)
+	}
+
+	return config.GetClient().Status().Update(ctx, u)
+}
+
+func clearRemoteStatus(ctx context.Context, obj client.Object) error {
+	return removeMultipleFields(ctx, obj, [][]string{
+		{"status", "id"},
+		{"status", "conditions"},
+		{"status", "printableStatus"},
+		{"status", "externalId"}, // OutboundWebhook
+		{"status", "revision"},   // SLO
+	})
 }
 
 func AddFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r CoralogixReconciler) error {
