@@ -51,6 +51,10 @@ spec:
           spec:
             description: Events2MetricSpec defines the desired state of Events2Metric.
             properties:
+              dataSource:
+                description: Data source in <namespace>/<dataset_name> format. If
+                  not set, defaults to the standard logs/spans stream.
+                type: string
               description:
                 description: Description of the E2M
                 type: string

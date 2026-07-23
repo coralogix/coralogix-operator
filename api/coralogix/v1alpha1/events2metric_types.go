@@ -31,6 +31,9 @@ type Events2MetricSpec struct {
 	// Description of the E2M
 	// +optional
 	Description *string `json:"description,omitempty"`
+	// Data source in <namespace>/<dataset_name> format. If not set, defaults to the standard logs/spans stream.
+	// +optional
+	DataSource *string `json:"dataSource,omitempty"`
 	// Represents the limit of the permutations
 	// +optional
 	PermutationsLimit *int32 `json:"permutationsLimit,omitempty"`
@@ -282,6 +285,7 @@ func (spec *Events2MetricSpec) ExtractCreateE2MRequest() *cxsdk.CreateE2MRequest
 	e2m := &cxsdk.E2MCreateParams{
 		Name:              wrapperspb.String(spec.Name),
 		Description:       utils.StringPointerToWrapperspbString(spec.Description),
+		DataSource:        utils.StringPointerToWrapperspbString(spec.DataSource),
 		PermutationsLimit: utils.Int32PointerToWrapperspbInt32(spec.PermutationsLimit),
 		MetricLabels:      extractE2mMetricLabels(spec.MetricLabels),
 		MetricFields:      extractE2mMetricFields(spec.MetricFields),
@@ -297,6 +301,7 @@ func (spec *Events2MetricSpec) ExtractReplaceE2MRequest() *cxsdk.ReplaceE2MReque
 		E2M: &cxsdk.E2M{
 			Name:         wrapperspb.String(spec.Name),
 			Description:  utils.StringPointerToWrapperspbString(spec.Description),
+			DataSource:   utils.StringPointerToWrapperspbString(spec.DataSource),
 			Permutations: extractE2mPermutations(spec.PermutationsLimit),
 			MetricLabels: extractE2mMetricLabels(spec.MetricLabels),
 			MetricFields: extractE2mMetricFields(spec.MetricFields),

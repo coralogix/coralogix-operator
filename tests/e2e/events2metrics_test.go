@@ -58,6 +58,7 @@ var _ = Describe("Events2Metric", Ordered, func() {
 			Spec: coralogixv1alpha1.Events2MetricSpec{
 				Name:              e2mName,
 				Description:       ptr.To("e2m from k8s operator"),
+				DataSource:        ptr.To("system/poc.error_tracking"),
 				PermutationsLimit: ptr.To(int32(100)),
 				MetricLabels: []coralogixv1alpha1.MetricLabel{
 					{

@@ -4533,6 +4533,13 @@ Events2MetricSpec defines the desired state of Events2Metric.
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>dataSource</b></td>
+        <td>string</td>
+        <td>
+          Data source in <namespace>/<dataset_name> format. If not set, defaults to the standard logs/spans stream.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
