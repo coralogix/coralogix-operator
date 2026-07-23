@@ -72,8 +72,8 @@ type MetricFieldAggregation struct {
 	AggType AggregationType `json:"aggType"`
 	// Target metric field alias name
 	TargetMetricName string `json:"targetMetricName"`
-	// Aggregate metadata, samples or histogram type
-	// Types that are valid to be assigned to AggMetadata: AggregationTypeSamples, AggregationTypeHistogram
+	// Aggregate metadata, samples or histogram type. Only relevant for the samples and histogram
+	// aggregation types; leave both samples and histogram unset for min/max/count/avg/sum.
 	AggMetadata AggregationMetadata `json:"aggMetadata"`
 }
 
@@ -109,7 +109,7 @@ var AggregationTypeSchemaToProto = map[AggregationType]cxsdk.E2MAggregationType{
 }
 
 // AggregationMetadata defines the metadata for aggregation.
-// +kubebuilder:validation:XValidation:rule="has(self.samples) != has(self.histogram)",message="Exactly one of samples or histogram must be set"
+// +kubebuilder:validation:XValidation:rule="!(has(self.samples) && has(self.histogram))",message="At most one of samples or histogram may be set"
 type AggregationMetadata struct {
 	// E2M sample type metadata
 	// +optional

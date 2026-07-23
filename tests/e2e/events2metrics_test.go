@@ -74,11 +74,6 @@ var _ = Describe("Events2Metric", Ordered, func() {
 							{
 								AggType:          coralogixv1alpha1.AggregationTypeMin,
 								TargetMetricName: "min_request_count",
-								AggMetadata: coralogixv1alpha1.AggregationMetadata{
-									Samples: &coralogixv1alpha1.SamplesMetadata{
-										SampleType: coralogixv1alpha1.E2MAggSamplesSampleTypeMin,
-									},
-								},
 							},
 						},
 					},
