@@ -554,6 +554,7 @@ func NewAIEvaluationToxicityConfig() *map[string]string {
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // AIEvaluation is the Schema for the AI evaluations API.
+// See also https://coralogix.com/docs/user-guides/ai/
 type AIEvaluation struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
