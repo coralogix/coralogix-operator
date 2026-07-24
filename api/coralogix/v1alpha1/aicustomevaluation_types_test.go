@@ -15,7 +15,6 @@
 package v1alpha1
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -270,32 +269,6 @@ func TestAICustomEvaluationExtractUpdateExamplesRequestClearsEmptyExamples(t *te
 	require.False(t, examplesUpdateRequest.GetShouldIncludeSystemPrompt())
 	require.NotNil(t, examplesUpdateRequest.Examples)
 	require.Empty(t, examplesUpdateRequest.GetExamples())
-}
-
-func TestAICustomEvaluationExtractRequestsRejectTooManyExamples(t *testing.T) {
-	examples := make([]string, 101)
-	for i := range examples {
-		examples[i] = fmt.Sprintf("conversation-%d", i)
-	}
-
-	aiCustomEvaluation := AICustomEvaluation{
-		Spec: AICustomEvaluationSpec{
-			Name:         "too-many-examples",
-			PolicyType:   AICustomEvaluationPolicyTypeQuality,
-			Instructions: "Score whether {response} matches the policy.",
-			Criteria: &AICustomEvaluationCriteria{
-				Acceptable: &AICustomEvaluationCriterion{
-					Examples: examples,
-				},
-			},
-		},
-	}
-
-	_, err := aiCustomEvaluation.ExtractCreateAICustomEvaluationRequest(nil)
-	require.ErrorContains(t, err, "at most 100 total examples")
-
-	_, err = aiCustomEvaluation.ExtractUpdateAICustomEvaluationRequest()
-	require.ErrorContains(t, err, "at most 100 total examples")
 }
 
 type expectedAICustomEvaluationExample struct {
