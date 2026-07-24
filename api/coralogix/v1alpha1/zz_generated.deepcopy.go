@@ -2275,6 +2275,11 @@ func (in *Events2MetricSpec) DeepCopyInto(out *Events2MetricSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.DataSource != nil {
+		in, out := &in.DataSource, &out.DataSource
+		*out = new(string)
+		**out = **in
+	}
 	if in.PermutationsLimit != nil {
 		in, out := &in.PermutationsLimit, &out.PermutationsLimit
 		*out = new(int32)

@@ -8,6 +8,7 @@ metadata:
 spec:
   name: "logs2metric-sample"
   description: "Sample logs2metric"
+  dataSource: "system/poc.error_tracking"
   permutationsLimit: 10000
   metricLabels:
     - targetLabel: "Status"
@@ -28,6 +29,4 @@ spec:
       aggregations:
         - aggType: "min"
           targetMetricName: "Timestamp"
-          aggMetadata:
-            samples:
-              sampleType: "min"
+          aggMetadata: {}

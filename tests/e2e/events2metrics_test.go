@@ -58,6 +58,7 @@ var _ = Describe("Events2Metric", Ordered, func() {
 			Spec: coralogixv1alpha1.Events2MetricSpec{
 				Name:              e2mName,
 				Description:       ptr.To("e2m from k8s operator"),
+				DataSource:        ptr.To("default/logs"),
 				PermutationsLimit: ptr.To(int32(100)),
 				MetricLabels: []coralogixv1alpha1.MetricLabel{
 					{
@@ -73,11 +74,6 @@ var _ = Describe("Events2Metric", Ordered, func() {
 							{
 								AggType:          coralogixv1alpha1.AggregationTypeMin,
 								TargetMetricName: "min_request_count",
-								AggMetadata: coralogixv1alpha1.AggregationMetadata{
-									Samples: &coralogixv1alpha1.SamplesMetadata{
-										SampleType: coralogixv1alpha1.E2MAggSamplesSampleTypeMin,
-									},
-								},
 							},
 						},
 					},
