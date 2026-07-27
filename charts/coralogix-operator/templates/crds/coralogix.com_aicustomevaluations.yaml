@@ -90,7 +90,6 @@ spec:
                         maxItems: 100
                         type: array
                       flags:
-                        default: ""
                         description: Criterion flags.
                         maxLength: 65536
                         type: string
@@ -107,7 +106,6 @@ spec:
                         maxItems: 100
                         type: array
                       flags:
-                        default: ""
                         description: Criterion flags.
                         maxLength: 65536
                         type: string

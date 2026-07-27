@@ -294,8 +294,6 @@ Criteria and examples for acceptable responses.
         <td>string</td>
         <td>
           Criterion flags.<br/>
-          <br/>
-            <i>Default</i>: <br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -330,8 +328,6 @@ Criteria and examples for prohibited responses.
         <td>string</td>
         <td>
           Criterion flags.<br/>
-          <br/>
-            <i>Default</i>: <br/>
         </td>
         <td>false</td>
       </tr></tbody>

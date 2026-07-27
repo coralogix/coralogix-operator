@@ -99,7 +99,6 @@ type AICustomEvaluationCriteria struct {
 type AICustomEvaluationCriterion struct {
 	// Criterion flags.
 	// +optional
-	// +kubebuilder:default=""
 	// +kubebuilder:validation:MaxLength=65536
 	Flags string `json:"flags,omitempty"`
 
