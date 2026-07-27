@@ -263,6 +263,7 @@ var (
 
 // AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
 // +kubebuilder:validation:XValidation:rule="!has(self.alertType.logsImmediate) || !has(self.groupByKeys)",message="groupByKeys is not supported for this alert type"
+// +kubebuilder:validation:XValidation:rule="!(self.phantomMode && has(self.notificationGroup))",message="Phantom alerts must not have a notification group set"
 type AlertSpec struct {
 	// Name of the alert
 	//+kubebuilder:validation:MinLength=0

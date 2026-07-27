@@ -12016,7 +12016,7 @@ Note that this is only for the latest version of the Alerts API. If your account
         <td>
           AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.<br/>
           <br/>
-            <i>Validations</i>:<li>!has(self.alertType.logsImmediate) || !has(self.groupByKeys): groupByKeys is not supported for this alert type</li>
+            <i>Validations</i>:<li>!has(self.alertType.logsImmediate) || !has(self.groupByKeys): groupByKeys is not supported for this alert type</li><li>!(self.phantomMode && has(self.notificationGroup)): Phantom alerts must not have a notification group set</li>
         </td>
         <td>false</td>
       </tr><tr>
