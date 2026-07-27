@@ -4533,6 +4533,13 @@ Events2MetricSpec defines the desired state of Events2Metric.
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>dataSource</b></td>
+        <td>string</td>
+        <td>
+          Data source in <namespace>/<dataset_name> format. If not set, defaults to the standard logs/spans stream.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
@@ -4773,10 +4780,10 @@ Spans query for spans2metrics E2M
         <td><b><a href="#events2metricspecmetricfieldsindexaggregationsindexaggmetadata">aggMetadata</a></b></td>
         <td>object</td>
         <td>
-          Aggregate metadata, samples or histogram type
-Types that are valid to be assigned to AggMetadata: AggregationTypeSamples, AggregationTypeHistogram<br/>
+          Aggregate metadata, samples or histogram type. Only relevant for the samples and histogram
+aggregation types; leave both samples and histogram unset for min/max/count/avg/sum.<br/>
           <br/>
-            <i>Validations</i>:<li>has(self.samples) != has(self.histogram): Exactly one of samples or histogram must be set</li>
+            <i>Validations</i>:<li>!(has(self.samples) && has(self.histogram)): At most one of samples or histogram may be set</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -4813,8 +4820,8 @@ Types that are valid to be assigned to AggMetadata: AggregationTypeSamples, Aggr
 
 
 
-Aggregate metadata, samples or histogram type
-Types that are valid to be assigned to AggMetadata: AggregationTypeSamples, AggregationTypeHistogram
+Aggregate metadata, samples or histogram type. Only relevant for the samples and histogram
+aggregation types; leave both samples and histogram unset for min/max/count/avg/sum.
 
 <table>
     <thead>

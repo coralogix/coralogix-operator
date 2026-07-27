@@ -50,6 +50,10 @@ spec:
           spec:
             description: Events2MetricSpec defines the desired state of Events2Metric.
             properties:
+              dataSource:
+                description: Data source in <namespace>/<dataset_name> format. If
+                  not set, defaults to the standard logs/spans stream.
+                type: string
               description:
                 description: Description of the E2M
                 type: string
@@ -63,8 +67,8 @@ spec:
                         properties:
                           aggMetadata:
                             description: |-
-                              Aggregate metadata, samples or histogram type
-                              Types that are valid to be assigned to AggMetadata: AggregationTypeSamples, AggregationTypeHistogram
+                              Aggregate metadata, samples or histogram type. Only relevant for the samples and histogram
+                              aggregation types; leave both samples and histogram unset for min/max/count/avg/sum.
                             properties:
                               histogram:
                                 description: E2M aggregate histogram type metadata
@@ -96,9 +100,9 @@ spec:
                                 type: object
                             type: object
                             x-kubernetes-validations:
-                            - message: Exactly one of samples or histogram must be
+                            - message: At most one of samples or histogram may be
                                 set
-                              rule: has(self.samples) != has(self.histogram)
+                              rule: '!(has(self.samples) && has(self.histogram))'
                           aggType:
                             description: Aggregation type
                             enum:

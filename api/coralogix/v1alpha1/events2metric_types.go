@@ -31,6 +31,9 @@ type Events2MetricSpec struct {
 	// Description of the E2M
 	// +optional
 	Description *string `json:"description,omitempty"`
+	// Data source in <namespace>/<dataset_name> format. If not set, defaults to the standard logs/spans stream.
+	// +optional
+	DataSource *string `json:"dataSource,omitempty"`
 	// Represents the limit of the permutations
 	// +optional
 	PermutationsLimit *int32 `json:"permutationsLimit,omitempty"`
@@ -69,8 +72,8 @@ type MetricFieldAggregation struct {
 	AggType AggregationType `json:"aggType"`
 	// Target metric field alias name
 	TargetMetricName string `json:"targetMetricName"`
-	// Aggregate metadata, samples or histogram type
-	// Types that are valid to be assigned to AggMetadata: AggregationTypeSamples, AggregationTypeHistogram
+	// Aggregate metadata, samples or histogram type. Only relevant for the samples and histogram
+	// aggregation types; leave both samples and histogram unset for min/max/count/avg/sum.
 	AggMetadata AggregationMetadata `json:"aggMetadata"`
 }
 
@@ -106,7 +109,7 @@ var AggregationTypeSchemaToProto = map[AggregationType]cxsdk.E2MAggregationType{
 }
 
 // AggregationMetadata defines the metadata for aggregation.
-// +kubebuilder:validation:XValidation:rule="has(self.samples) != has(self.histogram)",message="Exactly one of samples or histogram must be set"
+// +kubebuilder:validation:XValidation:rule="!(has(self.samples) && has(self.histogram))",message="At most one of samples or histogram may be set"
 type AggregationMetadata struct {
 	// E2M sample type metadata
 	// +optional
@@ -282,6 +285,7 @@ func (spec *Events2MetricSpec) ExtractCreateE2MRequest() *cxsdk.CreateE2MRequest
 	e2m := &cxsdk.E2MCreateParams{
 		Name:              wrapperspb.String(spec.Name),
 		Description:       utils.StringPointerToWrapperspbString(spec.Description),
+		DataSource:        utils.StringPointerToWrapperspbString(spec.DataSource),
 		PermutationsLimit: utils.Int32PointerToWrapperspbInt32(spec.PermutationsLimit),
 		MetricLabels:      extractE2mMetricLabels(spec.MetricLabels),
 		MetricFields:      extractE2mMetricFields(spec.MetricFields),
@@ -297,6 +301,7 @@ func (spec *Events2MetricSpec) ExtractReplaceE2MRequest() *cxsdk.ReplaceE2MReque
 		E2M: &cxsdk.E2M{
 			Name:         wrapperspb.String(spec.Name),
 			Description:  utils.StringPointerToWrapperspbString(spec.Description),
+			DataSource:   utils.StringPointerToWrapperspbString(spec.DataSource),
 			Permutations: extractE2mPermutations(spec.PermutationsLimit),
 			MetricLabels: extractE2mMetricLabels(spec.MetricLabels),
 			MetricFields: extractE2mMetricFields(spec.MetricFields),
