@@ -2790,6 +2790,8 @@ spec:
             x-kubernetes-validations:
             - message: groupByKeys is not supported for this alert type
               rule: '!has(self.alertType.logsImmediate) || !has(self.groupByKeys)'
+            - message: Phantom alerts must not have a notification group set
+              rule: '!(self.phantomMode && has(self.notificationGroup))'
           status:
             description: AlertStatus defines the observed state of Alert
             properties:
