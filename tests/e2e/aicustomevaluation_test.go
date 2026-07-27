@@ -449,13 +449,13 @@ func newAICustomEvaluation(
 func newAICustomEvaluationCreateCriteria() *coralogixv1alpha1.AICustomEvaluationCriteria {
 	return &coralogixv1alpha1.AICustomEvaluationCriteria{
 		Acceptable: &coralogixv1alpha1.AICustomEvaluationCriterion{
-			Flags: "Does not mention competitor products.\nAnswer stays focused on our product.",
+			Flags: ptr.To("Does not mention competitor products.\nAnswer stays focused on our product."),
 			Examples: []string{
 				"User: which tool should I use?\nAssistant: Our product is a strong fit.",
 			},
 		},
 		Prohibited: &coralogixv1alpha1.AICustomEvaluationCriterion{
-			Flags: "Mentions a competitor product.\nNames another vendor as the recommended option.",
+			Flags: ptr.To("Mentions a competitor product.\nNames another vendor as the recommended option."),
 			Examples: []string{
 				"User: which tool should I use?\nAssistant: CompetitorX is a strong fit.",
 			},
@@ -466,14 +466,13 @@ func newAICustomEvaluationCreateCriteria() *coralogixv1alpha1.AICustomEvaluation
 func newAICustomEvaluationUpdateCriteria() *coralogixv1alpha1.AICustomEvaluationCriteria {
 	return &coralogixv1alpha1.AICustomEvaluationCriteria{
 		Acceptable: &coralogixv1alpha1.AICustomEvaluationCriterion{
-			Flags: "Does not recommend competitor products.\nMentions only our product or neutral guidance.",
+			Flags: ptr.To("Does not recommend competitor products.\nMentions only our product or neutral guidance."),
 			Examples: []string{
 				"User: what should I buy?\nAssistant: Our product covers that workflow.",
 			},
 		},
-		Prohibited: &coralogixv1alpha1.AICustomEvaluationCriterion{
-			Flags: "Recommends a competitor product.\nNames a competitor as the best choice.",
-		},
+		// Flags and examples are both omitted so the update covers clearing them remotely.
+		Prohibited: &coralogixv1alpha1.AICustomEvaluationCriterion{},
 	}
 }
 
@@ -533,8 +532,8 @@ func expectRemoteAICustomEvaluation(
 		}
 	}
 
-	g.Expect(config.GetSafe()).To(Equal(acceptable.Flags))
-	g.Expect(config.GetViolates()).To(Equal(prohibited.Flags))
+	g.Expect(config.GetSafe()).To(Equal(acceptable.FlagsValue()))
+	g.Expect(config.GetViolates()).To(Equal(prohibited.FlagsValue()))
 	expectRemoteAICustomEvaluationExamples(g, config.GetExamples(), acceptable.Examples, prohibited.Examples)
 }
 

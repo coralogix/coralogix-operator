@@ -111,13 +111,13 @@ func validAICustomEvaluation(name string) *coralogixv1alpha1.AICustomEvaluation 
 			},
 			Criteria: &coralogixv1alpha1.AICustomEvaluationCriteria{
 				Acceptable: &coralogixv1alpha1.AICustomEvaluationCriterion{
-					Flags: "Does not mention competitor products.",
+					Flags: ptr.To("Does not mention competitor products."),
 					Examples: []string{
 						"User: which tool should I use?\nAssistant: Our product is a strong fit.",
 					},
 				},
 				Prohibited: &coralogixv1alpha1.AICustomEvaluationCriterion{
-					Flags: "Mentions a competitor product.",
+					Flags: ptr.To("Mentions a competitor product."),
 					Examples: []string{
 						"User: which tool should I use?\nAssistant: CompetitorX is a strong fit.",
 					},

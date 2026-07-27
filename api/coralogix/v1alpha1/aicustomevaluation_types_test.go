@@ -42,13 +42,13 @@ func TestAICustomEvaluationExtractRequestsCoverTerraformScenario(t *testing.T) {
 			},
 			Criteria: &AICustomEvaluationCriteria{
 				Acceptable: &AICustomEvaluationCriterion{
-					Flags: "Does not mention competitor products.\nAnswer stays focused on our product.",
+					Flags: ptr.To("Does not mention competitor products.\nAnswer stays focused on our product."),
 					Examples: []string{
 						"User: which tool should I use?\nAssistant: Our product is a strong fit.",
 					},
 				},
 				Prohibited: &AICustomEvaluationCriterion{
-					Flags: "Mentions a competitor product.\nNames another vendor as the recommended option.",
+					Flags: ptr.To("Mentions a competitor product.\nNames another vendor as the recommended option."),
 					Examples: []string{
 						"User: which tool should I use?\nAssistant: CompetitorX is a strong fit.",
 					},
@@ -85,13 +85,13 @@ func TestAICustomEvaluationExtractRequestsCoverTerraformScenario(t *testing.T) {
 	aiCustomEvaluation.Spec.ShouldIncludeSystemPrompt = ptr.To(true)
 	aiCustomEvaluation.Spec.Criteria = &AICustomEvaluationCriteria{
 		Acceptable: &AICustomEvaluationCriterion{
-			Flags: "Does not recommend competitor products.\nMentions only our product or neutral guidance.",
+			Flags: ptr.To("Does not recommend competitor products.\nMentions only our product or neutral guidance."),
 			Examples: []string{
 				"User: what should I buy?\nAssistant: Our product covers that workflow.",
 			},
 		},
 		Prohibited: &AICustomEvaluationCriterion{
-			Flags: "Recommends a competitor product.\nNames a competitor as the best choice.",
+			Flags: ptr.To("Recommends a competitor product.\nNames a competitor as the best choice."),
 			Examples: []string{
 				"User: what should I buy?\nAssistant: You should buy CompetitorY.",
 			},
@@ -166,13 +166,13 @@ func TestAICustomEvaluationExtractUpdateRequestReplacesExamplesWhenOneCriterionI
 			name: "acceptable has examples and prohibited is empty",
 			criteria: &AICustomEvaluationCriteria{
 				Acceptable: &AICustomEvaluationCriterion{
-					Flags: "Does not mention competitor products.",
+					Flags: ptr.To("Does not mention competitor products."),
 					Examples: []string{
 						"User: which tool should I use?\nAssistant: Our product is a strong fit for that workflow.",
 					},
 				},
 				Prohibited: &AICustomEvaluationCriterion{
-					Flags:    "Mentions a competitor product.",
+					Flags:    ptr.To("Mentions a competitor product."),
 					Examples: nil,
 				},
 			},
@@ -189,11 +189,11 @@ func TestAICustomEvaluationExtractUpdateRequestReplacesExamplesWhenOneCriterionI
 			name: "prohibited has examples and acceptable is empty",
 			criteria: &AICustomEvaluationCriteria{
 				Acceptable: &AICustomEvaluationCriterion{
-					Flags:    "Does not mention competitor products.",
+					Flags:    ptr.To("Does not mention competitor products."),
 					Examples: nil,
 				},
 				Prohibited: &AICustomEvaluationCriterion{
-					Flags: "Mentions a competitor product.",
+					Flags: ptr.To("Mentions a competitor product."),
 					Examples: []string{
 						"User: which tool should I use?\nAssistant: CompetitorX is a strong fit.",
 					},
@@ -245,11 +245,11 @@ func TestAICustomEvaluationExtractUpdateExamplesRequestClearsEmptyExamples(t *te
 			Instructions: "Evaluate whether {response} mentions or recommends competitor products.",
 			Criteria: &AICustomEvaluationCriteria{
 				Acceptable: &AICustomEvaluationCriterion{
-					Flags:    "Does not mention competitor products.",
+					Flags:    ptr.To("Does not mention competitor products."),
 					Examples: nil,
 				},
 				Prohibited: &AICustomEvaluationCriterion{
-					Flags:    "Mentions a competitor product.",
+					Flags:    ptr.To("Mentions a competitor product."),
 					Examples: nil,
 				},
 			},
@@ -269,6 +269,39 @@ func TestAICustomEvaluationExtractUpdateExamplesRequestClearsEmptyExamples(t *te
 	require.False(t, examplesUpdateRequest.GetShouldIncludeSystemPrompt())
 	require.NotNil(t, examplesUpdateRequest.Examples)
 	require.Empty(t, examplesUpdateRequest.GetExamples())
+}
+
+func TestAICustomEvaluationExtractRequestsSendEmptyFlagsWhenUnset(t *testing.T) {
+	aiCustomEvaluation := AICustomEvaluation{
+		Spec: AICustomEvaluationSpec{
+			Name:         "unset-flags-policy",
+			PolicyType:   AICustomEvaluationPolicyTypeQuality,
+			Instructions: "Score whether {response} matches the policy.",
+			Criteria: &AICustomEvaluationCriteria{
+				Acceptable: &AICustomEvaluationCriterion{
+					Examples: []string{"User: which tool should I use?\nAssistant: Our product is a strong fit."},
+				},
+				Prohibited: &AICustomEvaluationCriterion{},
+			},
+		},
+	}
+
+	require.Nil(t, aiCustomEvaluation.Spec.Criteria.Acceptable.Flags)
+	require.Empty(t, aiCustomEvaluation.Spec.AcceptableCriterionValue().FlagsValue())
+
+	createRequest, err := aiCustomEvaluation.ExtractCreateAICustomEvaluationRequest(nil)
+	require.NoError(t, err)
+	require.NotNil(t, createRequest.Safe)
+	require.NotNil(t, createRequest.Violates)
+	require.Empty(t, createRequest.GetSafe())
+	require.Empty(t, createRequest.GetViolates())
+
+	updateRequest, err := aiCustomEvaluation.ExtractUpdateAICustomEvaluationRequest()
+	require.NoError(t, err)
+	require.NotNil(t, updateRequest.Safe)
+	require.NotNil(t, updateRequest.Violates)
+	require.Empty(t, updateRequest.GetSafe())
+	require.Empty(t, updateRequest.GetViolates())
 }
 
 type expectedAICustomEvaluationExample struct {

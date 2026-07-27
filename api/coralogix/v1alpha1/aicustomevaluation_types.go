@@ -100,7 +100,7 @@ type AICustomEvaluationCriterion struct {
 	// Criterion flags.
 	// +optional
 	// +kubebuilder:validation:MaxLength=65536
-	Flags string `json:"flags,omitempty"`
+	Flags *string `json:"flags,omitempty"`
 
 	// Example conversations for this criterion.
 	// +optional
@@ -150,9 +150,9 @@ func (e *AICustomEvaluation) ExtractCreateAICustomEvaluationRequest(applicationI
 		Instructions:              aievaluations.PtrString(e.Spec.Instructions),
 		Name:                      aievaluations.PtrString(e.Spec.Name),
 		PolicyType:                aievaluations.PtrString(e.Spec.PolicyType),
-		Safe:                      aievaluations.PtrString(e.Spec.AcceptableCriterionValue().Flags),
+		Safe:                      aievaluations.PtrString(e.Spec.AcceptableCriterionValue().FlagsValue()),
 		ShouldIncludeSystemPrompt: aievaluations.PtrBool(e.Spec.ShouldIncludeSystemPromptValue()),
-		Violates:                  aievaluations.PtrString(e.Spec.ProhibitedCriterionValue().Flags),
+		Violates:                  aievaluations.PtrString(e.Spec.ProhibitedCriterionValue().FlagsValue()),
 	}, nil
 }
 
@@ -163,9 +163,9 @@ func (e *AICustomEvaluation) ExtractUpdateAICustomEvaluationRequest() (*aievalua
 		Instructions:              aievaluations.PtrString(e.Spec.Instructions),
 		Name:                      aievaluations.PtrString(e.Spec.Name),
 		PolicyType:                aievaluations.PtrString(e.Spec.PolicyType),
-		Safe:                      aievaluations.PtrString(e.Spec.AcceptableCriterionValue().Flags),
+		Safe:                      aievaluations.PtrString(e.Spec.AcceptableCriterionValue().FlagsValue()),
 		ShouldIncludeSystemPrompt: aievaluations.PtrBool(e.Spec.ShouldIncludeSystemPromptValue()),
-		Violates:                  aievaluations.PtrString(e.Spec.ProhibitedCriterionValue().Flags),
+		Violates:                  aievaluations.PtrString(e.Spec.ProhibitedCriterionValue().FlagsValue()),
 	}, nil
 }
 
@@ -204,6 +204,10 @@ func (s *AICustomEvaluationSpec) ProhibitedCriterionValue() AICustomEvaluationCr
 		return AICustomEvaluationCriterion{}
 	}
 	return *s.Criteria.Prohibited
+}
+
+func (c AICustomEvaluationCriterion) FlagsValue() string {
+	return ptr.Deref(c.Flags, "")
 }
 
 func (s *AICustomEvaluationSpec) ExtractCustomEvaluationExamples() []aievaluations.CustomEvaluationExample {
