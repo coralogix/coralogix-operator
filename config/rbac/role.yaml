@@ -34,6 +34,7 @@ rules:
 - apiGroups:
   - coralogix.com
   resources:
+  - aicustomevaluations
   - aievaluations
   - alerts
   - alertschedulers
@@ -73,6 +74,7 @@ rules:
 - apiGroups:
   - coralogix.com
   resources:
+  - aicustomevaluations/finalizers
   - aievaluations/finalizers
   - alerts/finalizers
   - alertschedulers/finalizers
@@ -106,6 +108,7 @@ rules:
 - apiGroups:
   - coralogix.com
   resources:
+  - aicustomevaluations/status
   - aievaluations/status
   - alerts/status
   - alertschedulers/status

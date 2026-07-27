@@ -51,6 +51,7 @@ const (
 	CustomEnrichmentKind       = "CustomEnrichment"
 	EnrichmentKind             = "Enrichment"
 	AIEvaluationKind           = "AIEvaluation"
+	AICustomEvaluationKind     = "AICustomEvaluation"
 
 	TrackPrometheusRuleAlertsLabelKey         = "app.coralogix.com/track-alerting-rules"
 	TrackPrometheusRuleRecordingRulesLabelKey = "app.coralogix.com/track-recording-rules"

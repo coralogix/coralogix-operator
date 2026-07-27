@@ -65,6 +65,7 @@ When a remote resource is missing during update, the shared reconciler removes `
 ## Review Checklist
 
 - Check CRD compatibility: field names, JSON tags, enum strings, defaulting, validation markers, required/optional behavior, and status shape.
+- Check `+kubebuilder:default` against presence semantics: a zero-value default on a non-pointer `omitempty` field is a no-op, and a non-zero default needs a pointer field.
 - Trace touched fields end to end: CR spec -> controller conversion -> Coralogix API request -> remote response -> status/conditions -> samples/docs.
 - Check null, empty, pointer, wrapper, and zero-value drift between Kubernetes objects, Go structs, SDK models, protobufs, and remote API defaults.
 - Check finalizer/status ordering for partial failures, retries, conflicts, remote not-found responses, and selector mismatch cleanup.

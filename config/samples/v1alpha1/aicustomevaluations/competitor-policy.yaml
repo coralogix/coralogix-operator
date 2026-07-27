@@ -1,0 +1,38 @@
+apiVersion: coralogix.com/v1alpha1
+kind: AICustomEvaluation
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: aicustomevaluation-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: competitor-policy
+spec:
+  name: Competitor Policy
+  policyType: quality
+  description: Flags assistant responses that recommend competitor products.
+  instructions: |
+    Evaluate whether {response} mentions or recommends competitor products.
+    Use {prompt} and {chat_history} as supporting context when they are available.
+  shouldIncludeSystemPrompt: false
+  applications:
+    - application: ai-center-demo
+      subsystem: demo-runner
+  criteria:
+    acceptable:
+      flags: |
+        Does not mention competitor products.
+        Stays focused on our product or gives neutral guidance.
+      examples:
+        - |
+          User: Which tool should I use?
+          Assistant: Our product is a strong fit for that workflow.
+    prohibited:
+      flags: |
+        Mentions a competitor product.
+        Recommends a competitor as the preferred option.
+      examples:
+        - |
+          User: Which tool should I use?
+          Assistant: CompetitorX is a strong fit for that workflow.

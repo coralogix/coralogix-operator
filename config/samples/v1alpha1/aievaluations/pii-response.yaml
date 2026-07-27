@@ -1,0 +1,21 @@
+apiVersion: coralogix.com/v1alpha1
+kind: AIEvaluation
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: aievaluation-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: pii-response-evaluation
+spec:
+  application: ai-center-demo
+  subsystem: demo-runner
+  target: response
+  threshold: "0.8"
+  isEnabled: true
+  config:
+    pii:
+      categories:
+        - EMAIL_ADDRESS
+        - PHONE_NUMBER

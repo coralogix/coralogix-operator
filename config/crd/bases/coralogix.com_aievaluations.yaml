@@ -24,7 +24,9 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: AIEvaluation is the Schema for the AI evaluations API.
+        description: |-
+          AIEvaluation is the Schema for the AI evaluations API.
+          See also https://coralogix.com/docs/user-guides/ai/
         properties:
           apiVersion:
             description: |-
