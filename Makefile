@@ -103,9 +103,12 @@ docker-buildx: ## Build and push docker image for the manager for cross-platform
 	# The Dockerfile now pins its builder stage to --platform=${BUILDPLATFORM} itself, so the
 	# Dockerfile.cross copy this target used to generate is no longer needed. The `test`
 	# prerequisite is also gone: no such target exists, so this recipe could never run.
+	# `-` on create and rm only: create fails when the builder already exists, and rm is
+	# best-effort cleanup. The build itself must propagate its exit code, or this target can
+	# report success without having published anything.
 	- docker buildx create --name project-v3-builder
 	docker buildx use project-v3-builder
-	- docker buildx build --push --platform=$(PLATFORMS) --tag ${IMG} -f Dockerfile .
+	docker buildx build --push --platform=$(PLATFORMS) --tag ${IMG} -f Dockerfile .
 	- docker buildx rm project-v3-builder
 
 ##@ Deployment
