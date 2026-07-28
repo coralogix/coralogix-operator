@@ -33,6 +33,10 @@ import (
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
+// These cases exercise admission only. Every create is a server-side dry run:
+// reconciling a TCOLogsPolicies atomically overwrites every TCO logs policy in the
+// tenant, so persisting one here would clobber the shared test account, and an
+// accepted object could be reconciled before its finalizer is stored.
 var _ = Describe("TCOLogsPolicies schema validation", func() {
 	It("should reject a policy with more than 50 subsystem names", func(ctx context.Context) {
 		names := make([]string, 51)
@@ -56,7 +60,7 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 				}},
 			},
 		}
-		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)
+		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy, client.DryRunAll)
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("Too many"))
 	})
@@ -95,8 +99,7 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 				}},
 			},
 		}
-		Expect(ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)).To(Succeed())
-		Expect(ClientsInstance.GetControllerRuntimeClient().Delete(ctx, policy)).To(Succeed())
+		Expect(ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy, client.DryRunAll)).To(Succeed())
 	})
 
 	It("should reject a high/block priority on a target other than default/logs", func(ctx context.Context) {
@@ -118,7 +121,7 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 				}},
 			},
 		}
-		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)
+		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy, client.DryRunAll)
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("cannot use, inherit, or override to, 'high' or 'block' priority"))
 	})
@@ -141,7 +144,7 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 				}},
 			},
 		}
-		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)
+		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy, client.DryRunAll)
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("cannot use, inherit, or override to, 'high' or 'block' priority"))
 	})
@@ -173,7 +176,7 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 				}},
 			},
 		}
-		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)
+		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy, client.DryRunAll)
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("cannot use, inherit, or override to, 'high' or 'block' priority"))
 	})
@@ -196,7 +199,7 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 				}},
 			},
 		}
-		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)
+		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy, client.DryRunAll)
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("should match"))
 	})
@@ -220,7 +223,7 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 				}},
 			},
 		}
-		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)
+		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy, client.DryRunAll)
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("Unsupported value"))
 	})
