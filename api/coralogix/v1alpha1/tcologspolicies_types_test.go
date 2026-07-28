@@ -41,13 +41,15 @@ func TestTCOLogsPolicyExtractTargets(t *testing.T) {
 			{
 				Dataspace: "default",
 				Dataset:   "audit_logs",
-				Priority:  ptr.To("block"),
+				// A dataset other than default/logs cannot use high or block, and
+				// this fallback has to be at least as restrictive as the tier below.
+				Priority: ptr.To("low"),
 				PriorityOverride: &TCOPriorityOverride{
 					QuotaBased: &TCOQuotaBased{
 						UsageTiers: []TCOUsageTier{
 							{
 								DailyQuotaPercentage: resource.MustParse("80"),
-								Priority:             "low",
+								Priority:             "medium",
 							},
 						},
 					},
@@ -80,8 +82,8 @@ func TestTCOLogsPolicyExtractTargets(t *testing.T) {
 		t.Fatalf("Targets[1] dataspace/dataset = %q/%q, want default/audit_logs",
 			ptr.Deref(targets[1].Dataspace, ""), ptr.Deref(targets[1].Dataset, ""))
 	}
-	if targets[1].Priority == nil || *targets[1].Priority != tcopolicies.QUOTAV1PRIORITY_PRIORITY_TYPE_BLOCK {
-		t.Fatalf("Targets[1].Priority = %v, want PRIORITY_TYPE_BLOCK", targets[1].Priority)
+	if targets[1].Priority == nil || *targets[1].Priority != tcopolicies.QUOTAV1PRIORITY_PRIORITY_TYPE_LOW {
+		t.Fatalf("Targets[1].Priority = %v, want PRIORITY_TYPE_LOW", targets[1].Priority)
 	}
 
 	if targets[1].PriorityOverride == nil || targets[1].PriorityOverride.QuotaBased == nil {
@@ -94,8 +96,8 @@ func TestTCOLogsPolicyExtractTargets(t *testing.T) {
 	if ptr.Deref(tiers[0].DailyQuotaPercentage, 0) != 80 {
 		t.Fatalf("UsageTiers[0].DailyQuotaPercentage = %v, want 80", tiers[0].DailyQuotaPercentage)
 	}
-	if tiers[0].Priority == nil || *tiers[0].Priority != tcopolicies.QUOTAV1PRIORITY_PRIORITY_TYPE_LOW {
-		t.Fatalf("UsageTiers[0].Priority = %v, want PRIORITY_TYPE_LOW", tiers[0].Priority)
+	if tiers[0].Priority == nil || *tiers[0].Priority != tcopolicies.QUOTAV1PRIORITY_PRIORITY_TYPE_MEDIUM {
+		t.Fatalf("UsageTiers[0].Priority = %v, want PRIORITY_TYPE_MEDIUM", tiers[0].Priority)
 	}
 }
 
@@ -103,8 +105,9 @@ func TestTCOLogsPolicyExtractTargets(t *testing.T) {
 // and a policy without targets leaves the Targets list unset (backward compatible).
 func TestTCOLogsPolicyExtractPolicyPriorityOverrideAndNoTargets(t *testing.T) {
 	policy := &TCOLogsPolicy{
-		Name:       "policy-override-no-targets",
-		Priority:   "high",
+		Name: "policy-override-no-targets",
+		// Least restrictive priority the "medium" tier below is allowed to fall back to.
+		Priority:   "low",
 		Severities: []TCOPolicySeverity{"info"},
 		PriorityOverride: &TCOPriorityOverride{
 			QuotaBased: &TCOQuotaBased{
@@ -162,6 +165,100 @@ func TestTCOLogsPolicyExtractRejectsOutOfRangeQuotaPercentage(t *testing.T) {
 		t.Fatal("ExtractCreateLogPolicyRequest should have returned an error for a dailyQuotaPercentage of 120")
 	}
 	if !strings.Contains(err.Error(), "dailyQuotaPercentage must be between 0 and 100") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+// Coralogix requires the priority a quota-based override falls back to, once every
+// tier is consumed, to be at least as restrictive as the last tier. A policy whose
+// own priority is less restrictive than its last tier is rejected during extraction.
+func TestTCOLogsPolicyExtractRejectsLessRestrictiveQuotaFallback(t *testing.T) {
+	policy := &TCOLogsPolicy{
+		Name:       "policy-lenient-fallback",
+		Priority:   "medium",
+		Severities: []TCOPolicySeverity{"info"},
+		PriorityOverride: &TCOPriorityOverride{
+			QuotaBased: &TCOQuotaBased{
+				UsageTiers: []TCOUsageTier{
+					{
+						DailyQuotaPercentage: resource.MustParse("80"),
+						Priority:             "low",
+					},
+				},
+			},
+		},
+	}
+
+	_, err := policy.ExtractCreateLogPolicyRequest(context.Background(), nil)
+	if err == nil {
+		t.Fatal("ExtractCreateLogPolicyRequest should have returned an error for a medium fallback behind a low tier")
+	}
+	if !strings.Contains(err.Error(), "must be at least as restrictive as the last usage tier priority") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+// A target without its own priority inherits the policy's, so the inherited value is
+// what its quota-based override's fallback is measured against.
+func TestTCOLogsPolicyExtractRejectsLessRestrictiveInheritedQuotaFallback(t *testing.T) {
+	policy := &TCOLogsPolicy{
+		Name:       "policy-lenient-inherited-fallback",
+		Priority:   "medium",
+		Severities: []TCOPolicySeverity{"info"},
+		Targets: []TCOPolicyTarget{
+			{
+				Dataspace: "default",
+				Dataset:   "audit_logs",
+				PriorityOverride: &TCOPriorityOverride{
+					QuotaBased: &TCOQuotaBased{
+						UsageTiers: []TCOUsageTier{
+							{
+								DailyQuotaPercentage: resource.MustParse("80"),
+								Priority:             "low",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	_, err := policy.ExtractCreateLogPolicyRequest(context.Background(), nil)
+	if err == nil {
+		t.Fatal("ExtractCreateLogPolicyRequest should have returned an error for an inherited medium fallback behind a low tier")
+	}
+	if !strings.Contains(err.Error(), "must be at least as restrictive as the last usage tier priority") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+// Usage tiers are consumed in order, so a descending dailyQuotaPercentage is rejected.
+func TestTCOLogsPolicyExtractRejectsUnorderedUsageTiers(t *testing.T) {
+	policy := &TCOLogsPolicy{
+		Name:       "policy-unordered-tiers",
+		Priority:   "block",
+		Severities: []TCOPolicySeverity{"info"},
+		PriorityOverride: &TCOPriorityOverride{
+			QuotaBased: &TCOQuotaBased{
+				UsageTiers: []TCOUsageTier{
+					{
+						DailyQuotaPercentage: resource.MustParse("80"),
+						Priority:             "medium",
+					},
+					{
+						DailyQuotaPercentage: resource.MustParse("50"),
+						Priority:             "low",
+					},
+				},
+			},
+		},
+	}
+
+	_, err := policy.ExtractCreateLogPolicyRequest(context.Background(), nil)
+	if err == nil {
+		t.Fatal("ExtractCreateLogPolicyRequest should have returned an error for descending usage tiers")
+	}
+	if !strings.Contains(err.Error(), "must be ordered by ascending dailyQuotaPercentage") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

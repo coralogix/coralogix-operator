@@ -81,12 +81,12 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 						{
 							Dataspace: "default",
 							Dataset:   "audit_logs",
-							Priority:  ptr.To("medium"),
+							Priority:  ptr.To("low"),
 							PriorityOverride: &coralogixv1alpha1.TCOPriorityOverride{
 								QuotaBased: &coralogixv1alpha1.TCOQuotaBased{
 									UsageTiers: []coralogixv1alpha1.TCOUsageTier{{
 										DailyQuotaPercentage: resource.MustParse("80"),
-										Priority:             "low",
+										Priority:             "medium",
 									}},
 								},
 							},
@@ -176,6 +176,29 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("cannot use, inherit, or override to, 'high' or 'block' priority"))
+	})
+
+	It("should reject a target with a malformed dataspace", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCOLogsPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "policy-with-invalid-target-dataspace",
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
+					Name:       "invalid-target-dataspace",
+					Priority:   "medium",
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					Targets: []coralogixv1alpha1.TCOPolicyTarget{{
+						Dataspace: "prod-east",
+						Dataset:   "logs",
+					}},
+				}},
+			},
+		}
+		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("should match"))
 	})
 
 	It("should reject a target with an invalid priority", func(ctx context.Context) {

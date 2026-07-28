@@ -84,7 +84,8 @@ type TCOPolicyTarget struct {
 	// The dataset to route matching logs to.
 	Dataset string `json:"dataset"`
 
-	// The dataspace to route matching logs to.
+	// +kubebuilder:validation:Pattern=`^[A-Za-z](?:[A-Za-z0-9_]|\.[A-Za-z0-9_])*$`
+	// The dataspace to route matching logs to. Currently always "default".
 	Dataspace string `json:"dataspace"`
 
 	// +kubebuilder:validation:Enum=block;high;medium;low
@@ -159,6 +160,14 @@ var (
 		"start_with": tcopolicies.RULETYPEID_RULE_TYPE_ID_START_WITH,
 		"includes":   tcopolicies.RULETYPEID_RULE_TYPE_ID_INCLUDES,
 	}
+	// Priorities ordered from least to most restrictive, for comparing a
+	// quota-based override's fallback priority against its last usage tier.
+	priorityRestrictiveness = map[string]int{
+		"high":   0,
+		"medium": 1,
+		"low":    2,
+		"block":  3,
+	}
 )
 
 // +kubebuilder:validation:Enum=info;warning;critical;error;debug;verbose
@@ -207,12 +216,12 @@ func (p *TCOLogsPolicy) ExtractCreateLogPolicyRequest(
 		return nil, err
 	}
 
-	targets, err := expandTCOPolicyTargets(ctx, archiveRetentionsClient, p.Targets)
+	targets, err := expandTCOPolicyTargets(ctx, archiveRetentionsClient, p.Targets, p.Priority)
 	if err != nil {
 		return nil, err
 	}
 
-	priorityOverride, err := expandPriorityOverride(p.PriorityOverride)
+	priorityOverride, err := expandPriorityOverride(p.PriorityOverride, p.Priority)
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +249,8 @@ func (p *TCOLogsPolicy) ExtractCreateLogPolicyRequest(
 func expandTCOPolicyTargets(
 	ctx context.Context,
 	archiveRetentionsClient *archiveretentions.RetentionsServiceAPIService,
-	targets []TCOPolicyTarget) ([]tcopolicies.V1Target, error) {
+	targets []TCOPolicyTarget,
+	policyPriority string) ([]tcopolicies.V1Target, error) {
 	if len(targets) == 0 {
 		return nil, nil
 	}
@@ -252,7 +262,9 @@ func expandTCOPolicyTargets(
 			return nil, err
 		}
 
-		priorityOverride, err := expandPriorityOverride(target.PriorityOverride)
+		// A target without its own priority inherits the policy's, so that is
+		// the fallback its quota-based override has to be measured against.
+		priorityOverride, err := expandPriorityOverride(target.PriorityOverride, ptr.Deref(target.Priority, policyPriority))
 		if err != nil {
 			return nil, err
 		}
@@ -273,12 +285,12 @@ func expandTCOPolicyTargets(
 	return result, nil
 }
 
-func expandPriorityOverride(override *TCOPriorityOverride) (*tcopolicies.PriorityOverride, error) {
+func expandPriorityOverride(override *TCOPriorityOverride, fallbackPriority string) (*tcopolicies.PriorityOverride, error) {
 	if override == nil {
 		return nil, nil
 	}
 
-	quotaBased, err := expandQuotaBased(override.QuotaBased)
+	quotaBased, err := expandQuotaBased(override.QuotaBased, fallbackPriority)
 	if err != nil {
 		return nil, err
 	}
@@ -288,22 +300,45 @@ func expandPriorityOverride(override *TCOPriorityOverride) (*tcopolicies.Priorit
 	}, nil
 }
 
-func expandQuotaBased(quotaBased *TCOQuotaBased) (*tcopolicies.QuotaBased, error) {
+// expandQuotaBased maps the usage tiers and enforces the invariants Coralogix
+// documents for them: percentages stay within 0-100 and ascend, and the priority
+// they fall back to once every tier is consumed is at least as restrictive as the
+// last tier. These are enforced here rather than as CRD validation rules because
+// bounding a resource.Quantity needs the CEL quantity library, which is
+// unavailable on the oldest Kubernetes version this operator supports, and
+// ranking priorities in CEL would push the schema past its rule cost budget.
+func expandQuotaBased(quotaBased *TCOQuotaBased, fallbackPriority string) (*tcopolicies.QuotaBased, error) {
 	if quotaBased == nil {
 		return nil, nil
 	}
 
 	var usageTiers []tcopolicies.UsageTier
-	for _, tier := range quotaBased.UsageTiers {
+	for i, tier := range quotaBased.UsageTiers {
 		percentage := tier.DailyQuotaPercentage.AsApproximateFloat64()
 		if percentage < 0 || percentage > 100 {
 			return nil, fmt.Errorf("dailyQuotaPercentage must be between 0 and 100, got %s", tier.DailyQuotaPercentage.String())
+		}
+
+		if i > 0 {
+			previous := quotaBased.UsageTiers[i-1].DailyQuotaPercentage
+			if percentage <= previous.AsApproximateFloat64() {
+				return nil, fmt.Errorf("usageTiers must be ordered by ascending dailyQuotaPercentage, got %s after %s",
+					tier.DailyQuotaPercentage.String(), previous.String())
+			}
 		}
 
 		usageTiers = append(usageTiers, tcopolicies.UsageTier{
 			DailyQuotaPercentage: tcopolicies.PtrFloat64(percentage),
 			Priority:             PrioritySchemaToOpenAPI[tier.Priority].Ptr(),
 		})
+	}
+
+	if len(quotaBased.UsageTiers) > 0 {
+		lastPriority := quotaBased.UsageTiers[len(quotaBased.UsageTiers)-1].Priority
+		if priorityRestrictiveness[fallbackPriority] < priorityRestrictiveness[lastPriority] {
+			return nil, fmt.Errorf("priority %q must be at least as restrictive as the last usage tier priority %q, since it is the fallback once all tiers are consumed",
+				fallbackPriority, lastPriority)
+		}
 	}
 
 	return &tcopolicies.QuotaBased{

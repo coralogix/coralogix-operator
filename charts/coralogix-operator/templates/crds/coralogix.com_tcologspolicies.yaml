@@ -221,6 +221,8 @@ spec:
                             type: string
                           dataspace:
                             description: The dataspace to route matching logs to.
+                              Currently always "default".
+                            pattern: ^[A-Za-z](?:[A-Za-z0-9_]|\.[A-Za-z0-9_])*$
                             type: string
                           priority:
                             description: The priority for logs routed to this target.

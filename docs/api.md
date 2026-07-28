@@ -11158,7 +11158,7 @@ A dataset-routing target for a TCO logs policy. Routes matching logs to a datase
         <td><b>dataspace</b></td>
         <td>string</td>
         <td>
-          The dataspace to route matching logs to.<br/>
+          The dataspace to route matching logs to. Currently always "default".<br/>
         </td>
         <td>true</td>
       </tr><tr>
