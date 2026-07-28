@@ -147,8 +147,14 @@ func generateValue(t reflect.Type, useSnake, injectUnknown bool) any {
 	}
 	if kind == reflect.Map {
 		if t.Elem().Kind() == reflect.Interface {
-			// An empty-message oneOf arm, e.g. {"count": {}}.
-			return map[string]any{}
+			// An empty-message oneOf arm, e.g. {"count": {}}. It has no fields, so any
+			// key authored inside it is an unknown one and belongs in the injection.
+			object := map[string]any{}
+			if injectUnknown {
+				object[unknownCamelKey] = unknownValue
+				object[unknownSnakeKey] = unknownValue
+			}
+			return object
 		}
 		return map[string]any{"key": generateValue(t.Elem(), useSnake, injectUnknown)}
 	}

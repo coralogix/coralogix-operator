@@ -59,8 +59,24 @@ func discardAdditionalPropertiesValue(value reflect.Value) {
 		return
 	}
 	if kind == reflect.Map {
+		if value.Type().Elem().Kind() == reflect.Interface {
+			discardFreeFormObjectKeys(value)
+			return
+		}
 		for _, key := range value.MapKeys() {
 			discardAdditionalPropertiesValue(value.MapIndex(key))
 		}
+	}
+}
+
+// discardFreeFormObjectKeys empties a map[string]interface{} field. The generator emits
+// that type for a message with no fields - the marker arms of a oneOf, such as
+// {"off": {}} or {"count": {}} - so it has no AdditionalProperties to clear and every key
+// it holds is unknown. The keys are deleted in place rather than the map being replaced:
+// the map need not be settable, and a nil map is omitted by the generated MarshalJSON,
+// which would silently drop the arm from the request instead of just its unknown keys.
+func discardFreeFormObjectKeys(value reflect.Value) {
+	for _, key := range value.MapKeys() {
+		value.SetMapIndex(key, reflect.Value{})
 	}
 }

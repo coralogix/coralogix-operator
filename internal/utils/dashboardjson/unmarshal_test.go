@@ -244,3 +244,39 @@ func TestDiscardAdditionalPropertiesAfterUnmarshal(t *testing.T) {
 	require.Equal(t, int32(20), *dataTable.ResultsPerPage)
 	require.Empty(t, dataTable.AdditionalProperties)
 }
+
+// A message with no fields is modeled as a free-form map, not a struct, so unknown keys
+// authored inside one have no AdditionalProperties to land in and have to be deleted from
+// the map itself. The emptied arm still has to be sent - it is what selects the oneOf case.
+func TestDiscardAdditionalPropertiesEmptiesUnknownKeysInFieldlessMessages(t *testing.T) {
+	json := `{
+  "name": "test dashboard",
+  "layout": {"sections": []},
+  "off": {"unknownKey": "should be ignored"},
+  "variables": [
+    {
+      "name": "v",
+      "definition": {"multiSelect": {"selection": {"all": {"unknownNestedKey": "should be ignored"}}}}
+    }
+  ]
+}`
+
+	dashboard := new(dashboards.Dashboard)
+	require.NoError(t, Unmarshal([]byte(json), dashboard))
+	require.Equal(t, "should be ignored", dashboard.Off["unknownKey"])
+
+	DiscardAdditionalProperties(dashboard)
+
+	require.NotNil(t, dashboard.Off)
+	require.Empty(t, dashboard.Off)
+	require.Len(t, dashboard.Variables, 1)
+	allSelection := dashboard.Variables[0].Definition.MultiSelect.Selection.All
+	require.NotNil(t, allSelection)
+	require.Empty(t, allSelection)
+
+	// The generated marshaler omits a nil map, so emptying the arm must not nil it out:
+	// that would drop the whole arm from the request rather than just its unknown keys.
+	serialized, err := dashboard.ToMap()
+	require.NoError(t, err)
+	require.Equal(t, map[string]interface{}{}, serialized["off"])
+}
