@@ -7,10 +7,18 @@ on:
     branches:
       - main
       - release-*
+  # This job only installs the Helm chart - it never builds or runs the operator, and never
+  # reads config/. So on pull requests it only needs to run when the chart itself changes.
+  # Drift between config/crd/bases and the chart's copies is caught by helm-sync-check.
+  # Pushes to main and release-* stay unfiltered as a safety net.
   pull_request:
     branches:
       - main
       - release-*
+    paths:
+      - "charts/coralogix-operator/**"
+      - "Makefile"
+      - ".github/workflows/crd-validation.yaml"
 permissions:
   contents: read
 

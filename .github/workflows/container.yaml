@@ -3,6 +3,8 @@ on:
   pull_request:
     paths-ignore:
       - "charts/**"
+      - "docs/**"
+      - "**.md"
   push:
     branches:
       - "main"

@@ -11,6 +11,11 @@ on:
     branches:
       - main
       - release-*
+    # No charts/** here on purpose: this job upgrades into the PR's chart, so chart changes are
+    # exactly what it needs to cover.
+    paths-ignore:
+      - "docs/**"
+      - "**.md"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
