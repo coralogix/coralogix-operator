@@ -24,6 +24,7 @@ import (
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/wrapperspb"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -214,6 +215,15 @@ var _ = Describe("Alert", Ordered, func() {
 			_, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(alertID)})
 			return cxsdk.Code(err)
 		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
+
+		// The remote alert disappears before the operator drops the finalizer, so
+		// the object can still be terminating here. A later spec reuses this name,
+		// and creating it while the old one lingers fails with AlreadyExists.
+		By("Verifying the Alert resource is gone from the cluster")
+		Eventually(func() bool {
+			err := crClient.Get(ctx, types.NamespacedName{Name: alert.Name, Namespace: alert.Namespace}, &coralogixv1beta1.Alert{})
+			return apierrors.IsNotFound(err)
+		}, time.Minute, time.Second).Should(BeTrue())
 	})
 
 	It("Should store an err condition in status", func(ctx context.Context) {
