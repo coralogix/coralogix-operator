@@ -33,7 +33,9 @@ import (
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
-var _ = Describe("IPAccess", func() {
+// Ordered: the create/update/delete specs below share ipAccessCR and ipAccessID, so they must
+// stay on one process and in sequence when the suite runs with -procs > 1.
+var _ = Describe("IPAccess", Ordered, func() {
 	var (
 		crClient       client.Client
 		ipAccessClient *ipaccess.IPAccessServiceAPIService
