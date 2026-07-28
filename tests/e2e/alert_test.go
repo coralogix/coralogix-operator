@@ -499,6 +499,16 @@ var _ = Describe("Alert", Ordered, func() {
 		connectorName := fmt.Sprintf("slack-connector-for-alert-gaps-%d", time.Now().Unix())
 		Expect(crClient.Create(ctx, getSampleSlackConnector(connectorName))).To(Succeed())
 
+		// The Alert below cannot reach RemoteSynced until the Connector it references has an ID
+		// to resolve, so wait for that first rather than relying on the Connector winning the
+		// race - under load it does not. Same pattern as the GlobalRouter specs.
+		By("Waiting for the Connector to be synced so its ID can be resolved")
+		Eventually(func(g Gomega) *string {
+			fetchedConnector := &coralogixv1alpha1.Connector{}
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: connectorName, Namespace: testNamespace}, fetchedConnector)).To(Succeed())
+			return fetchedConnector.Status.Id
+		}, time.Minute, time.Second).ShouldNot(BeNil())
+
 		By("Creating Alert")
 		alertName := "data-sources-alert-gaps"
 		dataSourcesAlert := &coralogixv1beta1.Alert{
