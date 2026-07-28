@@ -22,6 +22,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -58,6 +59,68 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("Too many"))
+	})
+
+	It("should accept a policy with dataset-routing targets and a quota-based priority override", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCOLogsPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "policy-with-targets",
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
+					Name:       "dataset-routing",
+					Priority:   "medium",
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					Targets: []coralogixv1alpha1.TCOPolicyTarget{
+						{
+							Dataspace: "default",
+							Dataset:   "logs",
+							Priority:  ptr.To("high"),
+						},
+						{
+							Dataspace: "default",
+							Dataset:   "audit_logs",
+							Priority:  ptr.To("block"),
+							PriorityOverride: &coralogixv1alpha1.TCOPriorityOverride{
+								QuotaBased: &coralogixv1alpha1.TCOQuotaBased{
+									UsageTiers: []coralogixv1alpha1.TCOUsageTier{{
+										DailyQuotaPercentage: resource.MustParse("80"),
+										Priority:             "low",
+									}},
+								},
+							},
+						},
+					},
+				}},
+			},
+		}
+		Expect(ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)).To(Succeed())
+		Expect(ClientsInstance.GetControllerRuntimeClient().Delete(ctx, policy)).To(Succeed())
+	})
+
+	It("should reject a target with an invalid priority", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCOLogsPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "policy-with-invalid-target-priority",
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
+					Name:       "invalid-target-priority",
+					Priority:   "medium",
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					Targets: []coralogixv1alpha1.TCOPolicyTarget{{
+						Dataspace: "default",
+						Dataset:   "logs",
+						Priority:  ptr.To("urgent"),
+					}},
+				}},
+			},
+		}
+		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("Unsupported value"))
 	})
 })
 

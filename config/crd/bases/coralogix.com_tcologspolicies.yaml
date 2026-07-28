@@ -115,6 +115,44 @@ spec:
                       - medium
                       - low
                       type: string
+                    priorityOverride:
+                      description: Overrides the policy priority based on quota consumption.
+                      properties:
+                        quotaBased:
+                          description: Overrides the priority based on daily quota
+                            consumption.
+                          properties:
+                            usageTiers:
+                              description: Ordered list of usage tiers mapping daily
+                                quota consumption percentages to priorities.
+                              items:
+                                description: A usage tier mapping a daily quota consumption
+                                  percentage to a priority.
+                                properties:
+                                  dailyQuotaPercentage:
+                                    anyOf:
+                                    - type: integer
+                                    - type: string
+                                    description: The daily quota consumption percentage
+                                      threshold for this tier.
+                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                    x-kubernetes-int-or-string: true
+                                  priority:
+                                    description: The priority to apply for this usage
+                                      tier.
+                                    enum:
+                                    - block
+                                    - high
+                                    - medium
+                                    - low
+                                    type: string
+                                required:
+                                - dailyQuotaPercentage
+                                - priority
+                                type: object
+                              type: array
+                          type: object
+                      type: object
                     severities:
                       description: The severities to apply the policy on.
                       items:
@@ -151,6 +189,89 @@ spec:
                       - names
                       - ruleType
                       type: object
+                    targets:
+                      description: Routes matching logs to one or more datasets, each
+                        with its own priority and quota configuration. Policies without
+                        targets keep their single-priority behavior.
+                      items:
+                        description: A dataset-routing target for a TCO logs policy.
+                          Routes matching logs to a dataset within a dataspace, with
+                          its own priority and quota configuration.
+                        properties:
+                          archiveRetention:
+                            description: Matches the specified retention for logs
+                              routed to this target.
+                            properties:
+                              backendRef:
+                                description: Reference to the retention policy
+                                properties:
+                                  name:
+                                    description: Name of the policy.
+                                    type: string
+                                required:
+                                - name
+                                type: object
+                            required:
+                            - backendRef
+                            type: object
+                          dataset:
+                            description: The dataset to route matching logs to.
+                            type: string
+                          dataspace:
+                            description: The dataspace to route matching logs to.
+                            type: string
+                          priority:
+                            description: The priority for logs routed to this target.
+                            enum:
+                            - block
+                            - high
+                            - medium
+                            - low
+                            type: string
+                          priorityOverride:
+                            description: Overrides this target's priority based on
+                              quota consumption.
+                            properties:
+                              quotaBased:
+                                description: Overrides the priority based on daily
+                                  quota consumption.
+                                properties:
+                                  usageTiers:
+                                    description: Ordered list of usage tiers mapping
+                                      daily quota consumption percentages to priorities.
+                                    items:
+                                      description: A usage tier mapping a daily quota
+                                        consumption percentage to a priority.
+                                      properties:
+                                        dailyQuotaPercentage:
+                                          anyOf:
+                                          - type: integer
+                                          - type: string
+                                          description: The daily quota consumption
+                                            percentage threshold for this tier.
+                                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                          x-kubernetes-int-or-string: true
+                                        priority:
+                                          description: The priority to apply for this
+                                            usage tier.
+                                          enum:
+                                          - block
+                                          - high
+                                          - medium
+                                          - low
+                                          type: string
+                                      required:
+                                      - dailyQuotaPercentage
+                                      - priority
+                                      type: object
+                                    type: array
+                                type: object
+                            type: object
+                        required:
+                        - dataset
+                        - dataspace
+                        type: object
+                      type: array
                   required:
                   - name
                   - priority

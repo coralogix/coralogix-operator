@@ -10891,10 +10891,24 @@ A TCO policy for logs.
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b><a href="#tcologspoliciesspecpoliciesindexpriorityoverride">priorityOverride</a></b></td>
+        <td>object</td>
+        <td>
+          Overrides the policy priority based on quota consumption.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#tcologspoliciesspecpoliciesindexsubsystems">subsystems</a></b></td>
         <td>object</td>
         <td>
           The subsystems to apply the policy on. Applies the policy on all the subsystems by default.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#tcologspoliciesspecpoliciesindextargetsindex">targets</a></b></td>
+        <td>[]object</td>
+        <td>
+          Routes matching logs to one or more datasets, each with its own priority and quota configuration. Policies without targets keep their single-priority behavior.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10991,6 +11005,96 @@ Reference to the retention policy
 </table>
 
 
+### TCOLogsPolicies.spec.policies[index].priorityOverride
+<sup><sup>[↩ Parent](#tcologspoliciesspecpoliciesindex)</sup></sup>
+
+
+
+Overrides the policy priority based on quota consumption.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#tcologspoliciesspecpoliciesindexpriorityoverridequotabased">quotaBased</a></b></td>
+        <td>object</td>
+        <td>
+          Overrides the priority based on daily quota consumption.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### TCOLogsPolicies.spec.policies[index].priorityOverride.quotaBased
+<sup><sup>[↩ Parent](#tcologspoliciesspecpoliciesindexpriorityoverride)</sup></sup>
+
+
+
+Overrides the priority based on daily quota consumption.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#tcologspoliciesspecpoliciesindexpriorityoverridequotabasedusagetiersindex">usageTiers</a></b></td>
+        <td>[]object</td>
+        <td>
+          Ordered list of usage tiers mapping daily quota consumption percentages to priorities.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### TCOLogsPolicies.spec.policies[index].priorityOverride.quotaBased.usageTiers[index]
+<sup><sup>[↩ Parent](#tcologspoliciesspecpoliciesindexpriorityoverridequotabased)</sup></sup>
+
+
+
+A usage tier mapping a daily quota consumption percentage to a priority.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>dailyQuotaPercentage</b></td>
+        <td>int or string</td>
+        <td>
+          The daily quota consumption percentage threshold for this tier.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          The priority to apply for this usage tier.<br/>
+          <br/>
+            <i>Enum</i>: block, high, medium, low<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
 ### TCOLogsPolicies.spec.policies[index].subsystems
 <sup><sup>[↩ Parent](#tcologspoliciesspecpoliciesindex)</sup></sup>
 
@@ -11021,6 +11125,207 @@ The subsystems to apply the policy on. Applies the policy on all the subsystems 
           Type of matching for the name.<br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### TCOLogsPolicies.spec.policies[index].targets[index]
+<sup><sup>[↩ Parent](#tcologspoliciesspecpoliciesindex)</sup></sup>
+
+
+
+A dataset-routing target for a TCO logs policy. Routes matching logs to a dataset within a dataspace, with its own priority and quota configuration.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>dataset</b></td>
+        <td>string</td>
+        <td>
+          The dataset to route matching logs to.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>dataspace</b></td>
+        <td>string</td>
+        <td>
+          The dataspace to route matching logs to.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#tcologspoliciesspecpoliciesindextargetsindexarchiveretention">archiveRetention</a></b></td>
+        <td>object</td>
+        <td>
+          Matches the specified retention for logs routed to this target.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          The priority for logs routed to this target.<br/>
+          <br/>
+            <i>Enum</i>: block, high, medium, low<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#tcologspoliciesspecpoliciesindextargetsindexpriorityoverride">priorityOverride</a></b></td>
+        <td>object</td>
+        <td>
+          Overrides this target's priority based on quota consumption.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### TCOLogsPolicies.spec.policies[index].targets[index].archiveRetention
+<sup><sup>[↩ Parent](#tcologspoliciesspecpoliciesindextargetsindex)</sup></sup>
+
+
+
+Matches the specified retention for logs routed to this target.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#tcologspoliciesspecpoliciesindextargetsindexarchiveretentionbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          Reference to the retention policy<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### TCOLogsPolicies.spec.policies[index].targets[index].archiveRetention.backendRef
+<sup><sup>[↩ Parent](#tcologspoliciesspecpoliciesindextargetsindexarchiveretention)</sup></sup>
+
+
+
+Reference to the retention policy
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the policy.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### TCOLogsPolicies.spec.policies[index].targets[index].priorityOverride
+<sup><sup>[↩ Parent](#tcologspoliciesspecpoliciesindextargetsindex)</sup></sup>
+
+
+
+Overrides this target's priority based on quota consumption.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#tcologspoliciesspecpoliciesindextargetsindexpriorityoverridequotabased">quotaBased</a></b></td>
+        <td>object</td>
+        <td>
+          Overrides the priority based on daily quota consumption.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### TCOLogsPolicies.spec.policies[index].targets[index].priorityOverride.quotaBased
+<sup><sup>[↩ Parent](#tcologspoliciesspecpoliciesindextargetsindexpriorityoverride)</sup></sup>
+
+
+
+Overrides the priority based on daily quota consumption.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#tcologspoliciesspecpoliciesindextargetsindexpriorityoverridequotabasedusagetiersindex">usageTiers</a></b></td>
+        <td>[]object</td>
+        <td>
+          Ordered list of usage tiers mapping daily quota consumption percentages to priorities.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### TCOLogsPolicies.spec.policies[index].targets[index].priorityOverride.quotaBased.usageTiers[index]
+<sup><sup>[↩ Parent](#tcologspoliciesspecpoliciesindextargetsindexpriorityoverridequotabased)</sup></sup>
+
+
+
+A usage tier mapping a daily quota consumption percentage to a priority.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>dailyQuotaPercentage</b></td>
+        <td>int or string</td>
+        <td>
+          The daily quota consumption percentage threshold for this tier.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          The priority to apply for this usage tier.<br/>
+          <br/>
+            <i>Enum</i>: block, high, medium, low<br/>
         </td>
         <td>true</td>
       </tr></tbody>

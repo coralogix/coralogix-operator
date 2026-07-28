@@ -51,3 +51,19 @@ spec:
         names:
           - mobile
         ruleType: start_with
+    - name: dataset routing policy
+      priority: medium
+      severities:
+      - info
+      targets:
+        - dataspace: default
+          dataset: logs
+          priority: high
+        - dataspace: default
+          dataset: audit_logs
+          priority: block
+          priorityOverride:
+            quotaBased:
+              usageTiers:
+                - dailyQuotaPercentage: "80"
+                  priority: low
