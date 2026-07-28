@@ -88,6 +88,7 @@ type TCOPolicyTarget struct {
 	Dataset string `json:"dataset"`
 
 	// +kubebuilder:validation:Pattern=`^[A-Za-z](?:[A-Za-z0-9_]|\.[A-Za-z0-9_])*$`
+	// +kubebuilder:validation:MaxLength=50
 	// The dataspace to route matching logs to. Currently always "default".
 	Dataspace string `json:"dataspace"`
 

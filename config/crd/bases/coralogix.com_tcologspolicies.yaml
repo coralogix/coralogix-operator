@@ -222,6 +222,7 @@ spec:
                           dataspace:
                             description: The dataspace to route matching logs to.
                               Currently always "default".
+                            maxLength: 50
                             pattern: ^[A-Za-z](?:[A-Za-z0-9_]|\.[A-Za-z0-9_])*$
                             type: string
                           priority:
