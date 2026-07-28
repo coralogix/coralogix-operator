@@ -60,6 +60,21 @@ var _ = Describe("Alert", Ordered, func() {
 		presetName := fmt.Sprintf("slack-preset-for-alert-%d", time.Now().Unix())
 		Expect(crClient.Create(ctx, getSampleSlackPreset(presetName, testNamespace))).To(Succeed())
 
+		// Same reason as in the GlobalRouter specs: the router below references both by name and
+		// needs their IDs resolved, so do not assume they sync before it is created.
+		By("Waiting for the Connector and Preset to be synced so their IDs can be resolved")
+		Eventually(func(g Gomega) *string {
+			fetchedConnector := &coralogixv1alpha1.Connector{}
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: connectorName, Namespace: testNamespace}, fetchedConnector)).To(Succeed())
+			return fetchedConnector.Status.Id
+		}, time.Minute, time.Second).ShouldNot(BeNil())
+
+		Eventually(func(g Gomega) *string {
+			fetchedPreset := &coralogixv1alpha1.Preset{}
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: presetName, Namespace: testNamespace}, fetchedPreset)).To(Succeed())
+			return fetchedPreset.Status.Id
+		}, time.Minute, time.Second).ShouldNot(BeNil())
+
 		By("Creating GlobalRouter")
 		globalRouterName := "global-router-for-alert" + gouuid.NewString()
 		globalRouter := getSampleGlobalRouter(globalRouterName, testNamespace, connectorName, presetName)
