@@ -71,6 +71,9 @@ type TCOLogsPolicy struct {
 
 	// Routes matching logs to one or more datasets, each with its own priority and quota configuration. Policies without targets keep their single-priority behavior.
 	// +kubebuilder:validation:MaxItems=20
+	// +listType=map
+	// +listMapKey=dataspace
+	// +listMapKey=dataset
 	// +optional
 	Targets []TCOPolicyTarget `json:"targets,omitempty"`
 

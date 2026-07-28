@@ -181,6 +181,29 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 		Expect(err.Error()).To(ContainSubstring("cannot use, inherit, or override to, 'high' or 'block' priority"))
 	})
 
+	It("should reject two targets routing to the same dataspace and dataset", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCOLogsPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "policy-with-duplicate-targets",
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
+					Name:       "duplicate-targets",
+					Priority:   "medium",
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					Targets: []coralogixv1alpha1.TCOPolicyTarget{
+						{Dataspace: "default", Dataset: "logs", Priority: ptr.To("high")},
+						{Dataspace: "default", Dataset: "logs", Priority: ptr.To("low")},
+					},
+				}},
+			},
+		}
+		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy, client.DryRunAll)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("Duplicate value"))
+	})
+
 	It("should reject a quota-based override with more than three usage tiers", func(ctx context.Context) {
 		policy := &coralogixv1alpha1.TCOLogsPolicies{
 			ObjectMeta: metav1.ObjectMeta{

@@ -280,6 +280,10 @@ spec:
                         type: object
                       maxItems: 20
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - dataspace
+                      - dataset
+                      x-kubernetes-list-type: map
                   required:
                   - name
                   - priority
