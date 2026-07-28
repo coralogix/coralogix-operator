@@ -1,5 +1,10 @@
-# Build the manager binary
-FROM golang:1.24 as builder
+# Build the manager binary.
+#
+# --platform=${BUILDPLATFORM} pins this stage to the machine running the build, so that a
+# multi-platform build cross-compiles via GOARCH instead of running the whole Go toolchain
+# under QEMU emulation for each non-native target. The final stage only copies a file, so no
+# emulation is needed there either.
+FROM --platform=${BUILDPLATFORM} golang:1.24 AS builder
 ARG TARGETOS
 ARG TARGETARCH
 
