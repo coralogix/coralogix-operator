@@ -92,6 +92,8 @@ $ export CORALOGIX_REGION="<region>"
 ```sh
 $ make e2e-tests
 ````
+The specs run across 4 processes by default. Set `E2E_PROCS=1` to run them serially, which is
+easier to follow when debugging a single spec.
 
 Running Integration Tests
 ---------------------

@@ -21,7 +21,9 @@ import (
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
-var _ = Describe("GlobalRouter", Ordered, func() {
+// Serial: both GlobalRouter containers route notifications for the whole account, so they must
+// not run at the same time as each other when the suite runs with -procs > 1.
+var _ = Describe("GlobalRouter", Ordered, Serial, func() {
 	var (
 		crClient            client.Client
 		notificationsClient *cxsdk.NotificationsClient
@@ -152,7 +154,7 @@ func getSampleGlobalRouter(globalRouterName, testNamespace, slackConnectorName, 
 }
 
 // NC gap fields: GlobalRouter disabled flag and per-entity-type fallbackTargets.
-var _ = Describe("GlobalRouter with disabled and fallbackTargets", Ordered, func() {
+var _ = Describe("GlobalRouter with disabled and fallbackTargets", Ordered, Serial, func() {
 	var (
 		crClient            client.Client
 		notificationsClient *cxsdk.NotificationsClient

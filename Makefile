@@ -51,8 +51,10 @@ lint: golangci-lint
 	$(GOLANGCI_LINT) run
 
 .PHONY: unit-tests
-unit-tests: manifests generate envtest ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./internal/controller/... -coverprofile cover.out
+unit-tests: manifests generate envtest prometheus-crds ## Run tests.
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" \
+	PROMETHEUS_CRDS_DIR="$(PROMETHEUS_CRDS_DIR)" \
+	go test ./internal/controller/... -coverprofile cover.out
 
 ##@ Documentation
 .PHONY: generate-api-docs
@@ -64,6 +66,15 @@ generate-api-docs: crdoc ## Generate API documentation.
 .PHONY: build
 build: generate ## Build manager binary.
 	go build -o bin/manager cmd/main.go
+
+GOARCH ?= amd64
+# Used by CI to build the binary on the runner instead of inside the Dockerfile builder
+# stage, so that the Go build cache can be reused between workflow runs. The image is then
+# assembled from Dockerfile.ci. Deliberately does not depend on `generate`: the generated
+# files are committed and verified by the sanity workflow.
+.PHONY: build-linux
+build-linux: ## Build the manager binary for linux, for packaging into the container image.
+	CGO_ENABLED=0 GOOS=linux GOARCH=$(GOARCH) go build -o dist/manager cmd/main.go
 
 .PHONY: run
 run: manifests generate ## Run a controller from your host.
@@ -139,12 +150,15 @@ ENVTEST ?= $(LOCALBIN)/setup-envtest
 CRDOC ?= $(LOCALBIN)/crdoc
 HELM_DOCS ?= $(LOCALBIN)/helm-docs
 GOLANGCI_LINT ?= $(LOCALBIN)/golangci-lint
+GINKGO ?= $(LOCALBIN)/ginkgo
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.3.0
 CONTROLLER_TOOLS_VERSION ?= v0.17.2
 HELM_DOCS_VERSION ?= v1.14.2
 GOLANGCI_LINT_VERSION ?= v2.1.6
+# Keep the ginkgo CLI on the same version as the library in go.mod.
+GINKGO_VERSION ?= $(shell go list -m -f '{{.Version}}' github.com/onsi/ginkgo/v2)
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize
@@ -161,6 +175,20 @@ $(CONTROLLER_GEN): $(LOCALBIN)
 envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
 	test -s $(LOCALBIN)/setup-envtest || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+
+.PHONY: ginkgo
+ginkgo: $(GINKGO) ## Download the ginkgo CLI locally if necessary.
+$(GINKGO): $(LOCALBIN)
+	test -s $(LOCALBIN)/ginkgo || GOBIN=$(LOCALBIN) go install github.com/onsi/ginkgo/v2/ginkgo@$(GINKGO_VERSION)
+
+# The unit tests run against envtest, which needs the Prometheus Operator CRDs on disk.
+PROMETHEUS_CRDS_DIR ?= $(LOCALBIN)/prometheus-crds
+PROMETHEUS_CRDS_URL ?= https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/master/example/prometheus-operator-crd-full
+.PHONY: prometheus-crds
+prometheus-crds: ## Download the Prometheus Operator CRDs locally if necessary.
+	@mkdir -p $(PROMETHEUS_CRDS_DIR)
+	test -s $(PROMETHEUS_CRDS_DIR)/prometheusrules.yaml || curl -sSfLo $(PROMETHEUS_CRDS_DIR)/prometheusrules.yaml $(PROMETHEUS_CRDS_URL)/monitoring.coreos.com_prometheusrules.yaml
+	test -s $(PROMETHEUS_CRDS_DIR)/servicemonitors.yaml || curl -sSfLo $(PROMETHEUS_CRDS_DIR)/servicemonitors.yaml $(PROMETHEUS_CRDS_URL)/monitoring.coreos.com_servicemonitors.yaml
 
 .PHONY: crdoc
 crdoc: $(CRDOC) ## Download crdoc locally if necessary.
@@ -181,9 +209,14 @@ $(GOLANGCI_LINT): $(LOCALBIN)
 integration-tests:
 	kubectl kuttl test
 
+# The e2e specs spend nearly all of their time polling the operator and the Coralogix API, so
+# running them across several processes cuts the wall-clock time a long way. Every Describe is
+# Ordered, so the specs inside a container still run in sequence on a single process.
+E2E_PROCS ?= 4
+E2E_TIMEOUT ?= 30m
 .PHONY: e2e-tests
-e2e-tests:
-	go test ./tests/e2e/ -ginkgo.v -v
+e2e-tests: ginkgo
+	$(GINKGO) --procs=$(E2E_PROCS) --timeout=$(E2E_TIMEOUT) -v ./tests/e2e/
 
 .PHONY: helm-sync-check
 helm-sync-check:

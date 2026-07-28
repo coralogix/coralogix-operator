@@ -98,10 +98,10 @@ Cluster/API tests:
 
 ```bash
 make integration-tests  # kubectl kuttl test
-make e2e-tests          # go test ./tests/e2e/ -ginkgo.v -v
+make e2e-tests          # ginkgo --procs=4 -v ./tests/e2e/ (override with E2E_PROCS)
 ```
 
-`make unit-tests` uses envtest assets for Kubernetes `1.30.3` and writes `cover.out`. Integration and e2e tests require a Kubernetes cluster and real Coralogix access.
+`make unit-tests` uses envtest assets for Kubernetes `1.30.3` and writes `cover.out`; it no longer needs a running cluster. Integration and e2e tests require a Kubernetes cluster and real Coralogix access.
 
 ## Validation
 

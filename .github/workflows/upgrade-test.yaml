@@ -12,6 +12,10 @@ on:
       - main
       - release-*
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   upgrade-test:
     name: Upgrade Test
@@ -32,9 +36,13 @@ jobs:
       PD_INTEGRATION_ID: ${{ secrets.PD_INTEGRATION_ID }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: actions/checkout@v4
+      - name: Cache Makefile tool binaries
+        uses: actions/cache@v4
+        with:
+          path: bin
+          key: ${{ runner.os }}-tools-${{ github.workflow }}-${{ hashFiles('Makefile', 'go.sum') }}
+          restore-keys: ${{ runner.os }}-tools-${{ github.workflow }}-
       - name: Create Kind cluster
         uses: helm/kind-action@v1.4.0
       - name: Install Prometheus Operator CRDs
@@ -56,8 +64,9 @@ jobs:
             --set secret.data.apiKey="${{ secrets.CORALOGIX_API_KEY }}" \
             --set coralogixOperator.region="${{ secrets.CORALOGIX_REGION }}"
       - name: Build PR image
-        run: |
-          make docker-build IMG=${{ env.IMG_REPO }}:v${{ env.IMG_TAG }}
+        uses: ./.github/actions/build-operator-image
+        with:
+          image: ${{ env.IMG_REPO }}:v${{ env.IMG_TAG }}
       - name: Load PR image into Kind
         run: |
           kind load docker-image ${{ env.IMG_REPO }}:v${{ env.IMG_TAG }} --name chart-testing

@@ -47,7 +47,7 @@ func setupReconciler(ctx context.Context, t *testing.T) (PrometheusRuleReconcile
 	utilruntime.Must(coralogixv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(coralogixv1beta1.AddToScheme(scheme))
 
-	mgr, _ := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	mgr, _ := ctrl.NewManager(testCfg, ctrl.Options{
 		Scheme:  scheme,
 		Metrics: metricsserver.Options{BindAddress: "0"},
 		Controller: crconfig.Controller{

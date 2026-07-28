@@ -36,7 +36,9 @@ func TestE2E(t *testing.T) {
 	RunSpecs(t, "Coralogix operator E2E test suite")
 }
 
-var _ = BeforeSuite(func(ctx context.Context) {
+// initClients has to run on every Ginkgo process, since each one is a separate OS process
+// with its own copy of ClientsInstance.
+func initClients() {
 	region := strings.ToLower(os.Getenv("CORALOGIX_REGION"))
 	apiKey := os.Getenv("CORALOGIX_API_KEY")
 
@@ -44,7 +46,10 @@ var _ = BeforeSuite(func(ctx context.Context) {
 	ClientsInstance.InitCoralogixClientSet(region, apiKey, apiKey)
 	Expect(ClientsInstance.InitControllerRuntimeClient()).To(Succeed())
 	Expect(ClientsInstance.InitK8sClient()).To(Succeed())
+}
 
+var _ = SynchronizedBeforeSuite(func(ctx context.Context) []byte {
+	initClients()
 	k8sClient := ClientsInstance.GetK8sClient()
 
 	By("Creating test namespace")
@@ -70,17 +75,22 @@ var _ = BeforeSuite(func(ctx context.Context) {
 		}
 		return false
 	}, time.Minute, time.Second).Should(BeTrue())
+
+	return nil
+}, func(_ context.Context, _ []byte) {
+	initClients()
 })
 
-var _ = AfterSuite(func(ctx context.Context) {
+var _ = SynchronizedAfterSuite(func() {}, func(ctx context.Context) {
 	By("Deleting test namespace")
 	k8sClient := ClientsInstance.GetK8sClient()
 	Expect(k8sClient.CoreV1().Namespaces().Delete(ctx, testNamespace, metav1.DeleteOptions{})).To(Succeed())
+
+	// The namespace only disappears once the operator has removed the finalizer from every
+	// resource in it, which means the remote Coralogix resources are already cleaned up by
+	// the time this returns.
 	Eventually(func() bool {
 		_, err := k8sClient.CoreV1().Namespaces().Get(ctx, testNamespace, metav1.GetOptions{})
 		return errors.IsNotFound(err)
-	}, time.Minute, time.Second).Should(BeTrue())
-
-	By("Giving the operator some time to clean up")
-	time.Sleep(30 * time.Second)
+	}, 3*time.Minute, time.Second).Should(BeTrue())
 })

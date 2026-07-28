@@ -13,6 +13,11 @@ on:
       - release-*
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate-crds:
     name: Validate CRDs (K8s ${{ matrix.k8s-version }})
