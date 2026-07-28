@@ -102,6 +102,37 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 		Expect(ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy, client.DryRunAll)).To(Succeed())
 	})
 
+	It("should reject a target inheriting a high/block policy-level priorityOverride tier", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCOLogsPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "policy-with-inherited-override-tier",
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
+					Name:       "inherited-override-tier",
+					Priority:   "medium",
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					PriorityOverride: &coralogixv1alpha1.TCOPriorityOverride{
+						QuotaBased: &coralogixv1alpha1.TCOQuotaBased{
+							UsageTiers: []coralogixv1alpha1.TCOUsageTier{
+								{DailyQuotaPercentage: resource.MustParse("80"), Priority: "block"},
+							},
+						},
+					},
+					// No priority or priorityOverride of its own: inherits both
+					// from the policy, including the block tier above.
+					Targets: []coralogixv1alpha1.TCOPolicyTarget{
+						{Dataspace: "default", Dataset: "audit_logs"},
+					},
+				}},
+			},
+		}
+		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy, client.DryRunAll)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("cannot use, inherit, or override to, 'high' or 'block' priority"))
+	})
+
 	It("should reject a high/block priority on a target other than default/logs", func(ctx context.Context) {
 		policy := &coralogixv1alpha1.TCOLogsPolicies{
 			ObjectMeta: metav1.ObjectMeta{

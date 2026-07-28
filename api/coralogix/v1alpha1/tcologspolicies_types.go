@@ -37,7 +37,7 @@ type TCOLogsPoliciesSpec struct {
 }
 
 // A TCO policy for logs.
-// +kubebuilder:validation:XValidation:rule="!has(self.targets) || self.targets.all(t, (t.dataspace == 'default' && t.dataset == 'logs') || ((has(t.priority) ? !(t.priority in ['high','block']) : !(self.priority in ['high','block'])) && (!has(t.priorityOverride) || !has(t.priorityOverride.quotaBased) || !has(t.priorityOverride.quotaBased.usageTiers) || t.priorityOverride.quotaBased.usageTiers.all(u, !(u.priority in ['high','block'])))))",message="targets other than default/logs cannot use, inherit, or override to, 'high' or 'block' priority"
+// +kubebuilder:validation:XValidation:rule="!has(self.targets) || self.targets.all(t, (t.dataspace == 'default' && t.dataset == 'logs') || ((has(t.priority) ? !(t.priority in ['high','block']) : !(self.priority in ['high','block'])) && (has(t.priorityOverride) ? (!has(t.priorityOverride.quotaBased) || !has(t.priorityOverride.quotaBased.usageTiers) || t.priorityOverride.quotaBased.usageTiers.all(u, !(u.priority in ['high','block']))) : (!has(self.priorityOverride) || !has(self.priorityOverride.quotaBased) || !has(self.priorityOverride.quotaBased.usageTiers) || self.priorityOverride.quotaBased.usageTiers.all(u, !(u.priority in ['high','block']))))))",message="targets other than default/logs cannot use, inherit, or override to, 'high' or 'block' priority"
 type TCOLogsPolicy struct {
 	// Name of the policy.
 	Name string `json:"name"`
