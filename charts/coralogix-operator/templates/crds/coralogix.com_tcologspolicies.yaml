@@ -300,7 +300,7 @@ spec:
                       [''high'',''block''])) && (!has(t.priorityOverride) || !has(t.priorityOverride.quotaBased)
                       || !has(t.priorityOverride.quotaBased.usageTiers) || t.priorityOverride.quotaBased.usageTiers.all(u,
                       !(u.priority in [''high'',''block''])))))'
-                maxItems: 100
+                maxItems: 1000
                 type: array
             required:
             - policies
