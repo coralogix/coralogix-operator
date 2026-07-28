@@ -18,13 +18,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/wrapperspb"
+	"k8s.io/utils/ptr"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	dashboards "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/dashboard_service"
 )
 
 func TestValidateNoEmbeddedIDWithImportRejectsNonEmptyIDWithImportAnnotation(t *testing.T) {
-	dashboard := &cxsdk.Dashboard{Id: wrapperspb.String("3d7f1c2a-9e4b-4a11-8f2d-1a2b3c4d5e6f")}
+	dashboard := &dashboards.Dashboard{Id: ptr.To("3d7f1c2a-9e4b-4a11-8f2d-1a2b3c4d5e6f")}
 
 	err := validateNoEmbeddedIDWithImport("some-import-id", dashboard)
 
@@ -32,12 +32,12 @@ func TestValidateNoEmbeddedIDWithImportRejectsNonEmptyIDWithImportAnnotation(t *
 }
 
 func TestValidateNoEmbeddedIDWithImportAllowsMissingID(t *testing.T) {
-	require.NoError(t, validateNoEmbeddedIDWithImport("some-import-id", &cxsdk.Dashboard{}))
-	require.NoError(t, validateNoEmbeddedIDWithImport("some-import-id", &cxsdk.Dashboard{Id: wrapperspb.String("")}))
+	require.NoError(t, validateNoEmbeddedIDWithImport("some-import-id", &dashboards.Dashboard{}))
+	require.NoError(t, validateNoEmbeddedIDWithImport("some-import-id", &dashboards.Dashboard{Id: ptr.To("")}))
 }
 
 func TestValidateNoEmbeddedIDWithImportAllowsNonEmptyIDWithoutImportAnnotation(t *testing.T) {
-	dashboard := &cxsdk.Dashboard{Id: wrapperspb.String("3d7f1c2a-9e4b-4a11-8f2d-1a2b3c4d5e6f")}
+	dashboard := &dashboards.Dashboard{Id: ptr.To("3d7f1c2a-9e4b-4a11-8f2d-1a2b3c4d5e6f")}
 
 	require.NoError(t, validateNoEmbeddedIDWithImport("", dashboard))
 }
