@@ -210,6 +210,8 @@ func newDashboardOpenAPIClientSet() *cxsdk.ClientSet {
 // getDashboardJson carries arcDisplay, showMinMax and layoutColumns deliberately: those
 // three fields are missing from the proto the gRPC client used, so they double as the
 // round-trip assertion that this migration delivers them to the API.
+// The deprecated showInnerArc/showOuterArc are set because the backend rejects a gauge
+// that omits them, even when arcDisplay supersedes them.
 func getDashboardJson(name string) string {
 	return fmt.Sprintf(`{
   "name": "%s",
@@ -248,6 +250,8 @@ func getDashboardJson(name string) string {
                     },
                     "min": 0,
                     "max": 100,
+                    "showInnerArc": true,
+                    "showOuterArc": true,
                     "unit": "UNIT_NUMBER",
                     "thresholds": [],
                     "thresholdBy": "THRESHOLD_BY_UNSPECIFIED",
