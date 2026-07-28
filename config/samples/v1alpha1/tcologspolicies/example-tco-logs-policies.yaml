@@ -55,15 +55,16 @@ spec:
       priority: medium
       severities:
       - info
+      # Routes matching logs to the built-in default/logs dataset, which every
+      # account has. Add further entries here to route to other datasets that
+      # already exist in the account — note that `high`/`block` priority is
+      # only available for the default/logs target.
       targets:
         - dataspace: default
           dataset: logs
-          priority: high
-        # Routes 80% of this dataset's daily quota at medium, and everything
-        # past that at low. The target priority is the fallback once the tiers
-        # are consumed, so it must be at least as restrictive as the last tier.
-        - dataspace: default
-          dataset: audit_logs
+          # Routes 80% of this dataset's daily quota at medium, and everything
+          # past that at low. The target priority is the fallback once the tiers
+          # are consumed, so it must be at least as restrictive as the last tier.
           priority: low
           priorityOverride:
             quotaBased:
