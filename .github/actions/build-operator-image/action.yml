@@ -17,7 +17,24 @@ runs:
       uses: actions/setup-go@v5
       with:
         go-version-file: go.mod
-        cache-dependency-path: go.sum
+        # The cache is managed below instead. setup-go keys its cache on go.sum alone, so this
+        # job and the unit-tests job shared one entry: whichever saved it first owned the
+        # contents, and since the key never changed it was never refreshed. When unit-tests won
+        # that race the entry held test-binary objects rather than the CGO_ENABLED=0 GOOS=linux
+        # ones needed here, so `go build` recompiled every dependency anyway (~74s).
+        cache: false
+
+    - name: Cache the Go build and module caches
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        # Namespaced so only build-linux writes it, and keyed on go.sum because that is what
+        # decides whether the dependency objects are still valid. Our own packages recompile
+        # incrementally on top, which is fast.
+        key: ${{ runner.os }}-go-image-build-${{ hashFiles('go.sum') }}
+        restore-keys: ${{ runner.os }}-go-image-build-
 
     - name: Build the manager binary
       shell: bash
