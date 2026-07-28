@@ -178,33 +178,6 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 		Expect(err.Error()).To(ContainSubstring("cannot use, inherit, or override to, 'high' or 'block' priority"))
 	})
 
-	It("should reject a usage tier with a dailyQuotaPercentage outside 0-100", func(ctx context.Context) {
-		policy := &coralogixv1alpha1.TCOLogsPolicies{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "policy-with-invalid-quota-percentage",
-				Namespace: testNamespace,
-			},
-			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
-				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
-					Name:       "invalid-quota-percentage",
-					Priority:   "medium",
-					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
-					PriorityOverride: &coralogixv1alpha1.TCOPriorityOverride{
-						QuotaBased: &coralogixv1alpha1.TCOQuotaBased{
-							UsageTiers: []coralogixv1alpha1.TCOUsageTier{{
-								DailyQuotaPercentage: resource.MustParse("120"),
-								Priority:             "low",
-							}},
-						},
-					},
-				}},
-			},
-		}
-		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)
-		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("dailyQuotaPercentage must be between 0 and 100"))
-	})
-
 	It("should reject a target with an invalid priority", func(ctx context.Context) {
 		policy := &coralogixv1alpha1.TCOLogsPolicies{
 			ObjectMeta: metav1.ObjectMeta{

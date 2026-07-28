@@ -16,6 +16,7 @@ package v1alpha1
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	tcopolicies "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/policies_service"
@@ -132,5 +133,35 @@ func TestTCOLogsPolicyExtractPolicyPriorityOverrideAndNoTargets(t *testing.T) {
 	if len(tiers) != 1 || tiers[0].Priority == nil ||
 		*tiers[0].Priority != tcopolicies.QUOTAV1PRIORITY_PRIORITY_TYPE_MEDIUM {
 		t.Fatalf("policy usage tier not mapped correctly: %+v", tiers)
+	}
+}
+
+// dailyQuotaPercentage outside 0-100 is rejected during extraction. This can't be
+// caught by CRD admission: the Kubernetes CEL "quantity" library needed to bound a
+// resource.Quantity field isn't available before Kubernetes 1.29, and this repo's
+// CRDs must install cleanly on 1.28.
+func TestTCOLogsPolicyExtractRejectsOutOfRangeQuotaPercentage(t *testing.T) {
+	policy := &TCOLogsPolicy{
+		Name:       "policy-invalid-quota-percentage",
+		Priority:   "medium",
+		Severities: []TCOPolicySeverity{"info"},
+		PriorityOverride: &TCOPriorityOverride{
+			QuotaBased: &TCOQuotaBased{
+				UsageTiers: []TCOUsageTier{
+					{
+						DailyQuotaPercentage: resource.MustParse("120"),
+						Priority:             "low",
+					},
+				},
+			},
+		},
+	}
+
+	_, err := policy.ExtractCreateLogPolicyRequest(context.Background(), nil)
+	if err == nil {
+		t.Fatal("ExtractCreateLogPolicyRequest should have returned an error for a dailyQuotaPercentage of 120")
+	}
+	if !strings.Contains(err.Error(), "dailyQuotaPercentage must be between 0 and 100") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }

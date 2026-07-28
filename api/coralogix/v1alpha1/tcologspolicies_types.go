@@ -117,7 +117,6 @@ type TCOQuotaBased struct {
 }
 
 // A usage tier mapping a daily quota consumption percentage to a priority.
-// +kubebuilder:validation:XValidation:rule="!self.dailyQuotaPercentage.isLessThan(quantity('0')) && !self.dailyQuotaPercentage.isGreaterThan(quantity('100'))",message="dailyQuotaPercentage must be between 0 and 100"
 type TCOUsageTier struct {
 	// The daily quota consumption percentage threshold for this tier.
 	DailyQuotaPercentage resource.Quantity `json:"dailyQuotaPercentage"`
@@ -213,6 +212,11 @@ func (p *TCOLogsPolicy) ExtractCreateLogPolicyRequest(
 		return nil, err
 	}
 
+	priorityOverride, err := expandPriorityOverride(p.PriorityOverride)
+	if err != nil {
+		return nil, err
+	}
+
 	req := &tcopolicies.CreateLogPolicyRequest{
 		Policy: tcopolicies.CreateGenericPolicyRequest{
 			Name:             p.Name,
@@ -223,7 +227,7 @@ func (p *TCOLogsPolicy) ExtractCreateLogPolicyRequest(
 			SubsystemRule:    expandTCOPolicyRule(p.Subsystems),
 			ArchiveRetention: archiveRetention,
 			Targets:          targets,
-			PriorityOverride: expandPriorityOverride(p.PriorityOverride),
+			PriorityOverride: priorityOverride,
 		},
 		LogRules: tcopolicies.LogRules{
 			Severities: expandTCOPolicySeverities(p.Severities),
@@ -248,11 +252,16 @@ func expandTCOPolicyTargets(
 			return nil, err
 		}
 
+		priorityOverride, err := expandPriorityOverride(target.PriorityOverride)
+		if err != nil {
+			return nil, err
+		}
+
 		v1Target := tcopolicies.V1Target{
 			Dataset:          tcopolicies.PtrString(target.Dataset),
 			Dataspace:        tcopolicies.PtrString(target.Dataspace),
 			ArchiveRetention: archiveRetention,
-			PriorityOverride: expandPriorityOverride(target.PriorityOverride),
+			PriorityOverride: priorityOverride,
 		}
 		if target.Priority != nil {
 			v1Target.Priority = PrioritySchemaToOpenAPI[*target.Priority].Ptr()
@@ -264,32 +273,42 @@ func expandTCOPolicyTargets(
 	return result, nil
 }
 
-func expandPriorityOverride(override *TCOPriorityOverride) *tcopolicies.PriorityOverride {
+func expandPriorityOverride(override *TCOPriorityOverride) (*tcopolicies.PriorityOverride, error) {
 	if override == nil {
-		return nil
+		return nil, nil
+	}
+
+	quotaBased, err := expandQuotaBased(override.QuotaBased)
+	if err != nil {
+		return nil, err
 	}
 
 	return &tcopolicies.PriorityOverride{
-		QuotaBased: expandQuotaBased(override.QuotaBased),
-	}
+		QuotaBased: quotaBased,
+	}, nil
 }
 
-func expandQuotaBased(quotaBased *TCOQuotaBased) *tcopolicies.QuotaBased {
+func expandQuotaBased(quotaBased *TCOQuotaBased) (*tcopolicies.QuotaBased, error) {
 	if quotaBased == nil {
-		return nil
+		return nil, nil
 	}
 
 	var usageTiers []tcopolicies.UsageTier
 	for _, tier := range quotaBased.UsageTiers {
+		percentage := tier.DailyQuotaPercentage.AsApproximateFloat64()
+		if percentage < 0 || percentage > 100 {
+			return nil, fmt.Errorf("dailyQuotaPercentage must be between 0 and 100, got %s", tier.DailyQuotaPercentage.String())
+		}
+
 		usageTiers = append(usageTiers, tcopolicies.UsageTier{
-			DailyQuotaPercentage: tcopolicies.PtrFloat64(tier.DailyQuotaPercentage.AsApproximateFloat64()),
+			DailyQuotaPercentage: tcopolicies.PtrFloat64(percentage),
 			Priority:             PrioritySchemaToOpenAPI[tier.Priority].Ptr(),
 		})
 	}
 
 	return &tcopolicies.QuotaBased{
 		UsageTiers: usageTiers,
-	}
+	}, nil
 }
 
 func expandTCOPolicyRule(rule *TCOPolicyRule) *tcopolicies.QuotaV1Rule {

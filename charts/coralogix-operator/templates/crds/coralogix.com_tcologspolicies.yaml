@@ -151,11 +151,6 @@ spec:
                                 - dailyQuotaPercentage
                                 - priority
                                 type: object
-                                x-kubernetes-validations:
-                                - message: dailyQuotaPercentage must be between 0
-                                    and 100
-                                  rule: '!self.dailyQuotaPercentage.isLessThan(quantity(''0''))
-                                    && !self.dailyQuotaPercentage.isGreaterThan(quantity(''100''))'
                               maxItems: 10
                               type: array
                           type: object
@@ -271,11 +266,6 @@ spec:
                                       - dailyQuotaPercentage
                                       - priority
                                       type: object
-                                      x-kubernetes-validations:
-                                      - message: dailyQuotaPercentage must be between
-                                          0 and 100
-                                        rule: '!self.dailyQuotaPercentage.isLessThan(quantity(''0''))
-                                          && !self.dailyQuotaPercentage.isGreaterThan(quantity(''100''))'
                                     maxItems: 10
                                     type: array
                                 type: object
