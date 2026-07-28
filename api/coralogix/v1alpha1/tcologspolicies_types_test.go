@@ -262,3 +262,104 @@ func TestTCOLogsPolicyExtractRejectsUnorderedUsageTiers(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
+
+// Tiers are monotonic: a priority may repeat or tighten as quota fills, never relax.
+// Ascending percentages alone do not catch this, and comparing only the fallback to
+// the final tier misses a relaxation that happens earlier in the ladder.
+func TestTCOLogsPolicyExtractRejectsRelaxingUsageTiers(t *testing.T) {
+	policy := &TCOLogsPolicy{
+		Name:       "policy-relaxing-tiers",
+		Priority:   "block",
+		Severities: []TCOPolicySeverity{"info"},
+		PriorityOverride: &TCOPriorityOverride{
+			QuotaBased: &TCOQuotaBased{
+				UsageTiers: []TCOUsageTier{
+					{
+						DailyQuotaPercentage: resource.MustParse("50"),
+						Priority:             "low",
+					},
+					{
+						DailyQuotaPercentage: resource.MustParse("80"),
+						Priority:             "medium",
+					},
+				},
+			},
+		},
+	}
+
+	_, err := policy.ExtractCreateLogPolicyRequest(context.Background(), nil)
+	if err == nil {
+		t.Fatal("ExtractCreateLogPolicyRequest should have returned an error for a low tier followed by a medium tier")
+	}
+	if !strings.Contains(err.Error(), "cannot become less restrictive as quota fills") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+// Block is terminal, so nothing may follow it. Monotonicity alone would allow a
+// second block tier.
+func TestTCOLogsPolicyExtractRejectsTierAfterBlock(t *testing.T) {
+	policy := &TCOLogsPolicy{
+		Name:       "policy-tier-after-block",
+		Priority:   "block",
+		Severities: []TCOPolicySeverity{"info"},
+		PriorityOverride: &TCOPriorityOverride{
+			QuotaBased: &TCOQuotaBased{
+				UsageTiers: []TCOUsageTier{
+					{
+						DailyQuotaPercentage: resource.MustParse("50"),
+						Priority:             "block",
+					},
+					{
+						DailyQuotaPercentage: resource.MustParse("80"),
+						Priority:             "block",
+					},
+				},
+			},
+		},
+	}
+
+	_, err := policy.ExtractCreateLogPolicyRequest(context.Background(), nil)
+	if err == nil {
+		t.Fatal("ExtractCreateLogPolicyRequest should have returned an error for a tier following a block tier")
+	}
+	if !strings.Contains(err.Error(), "which is terminal") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+// A ladder that tightens, repeats a priority, and ends at a fallback at least as
+// restrictive as the last tier is accepted.
+func TestTCOLogsPolicyExtractAcceptsMonotonicUsageTiers(t *testing.T) {
+	policy := &TCOLogsPolicy{
+		Name:       "policy-monotonic-tiers",
+		Priority:   "block",
+		Severities: []TCOPolicySeverity{"info"},
+		PriorityOverride: &TCOPriorityOverride{
+			QuotaBased: &TCOQuotaBased{
+				UsageTiers: []TCOUsageTier{
+					{
+						DailyQuotaPercentage: resource.MustParse("25"),
+						Priority:             "medium",
+					},
+					{
+						DailyQuotaPercentage: resource.MustParse("50"),
+						Priority:             "medium",
+					},
+					{
+						DailyQuotaPercentage: resource.MustParse("80"),
+						Priority:             "low",
+					},
+				},
+			},
+		},
+	}
+
+	req, err := policy.ExtractCreateLogPolicyRequest(context.Background(), nil)
+	if err != nil {
+		t.Fatalf("ExtractCreateLogPolicyRequest returned error: %v", err)
+	}
+	if tiers := req.Policy.PriorityOverride.QuotaBased.UsageTiers; len(tiers) != 3 {
+		t.Fatalf("usage tiers = %d, want 3", len(tiers))
+	}
+}

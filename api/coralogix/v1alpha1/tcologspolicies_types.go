@@ -301,12 +301,14 @@ func expandPriorityOverride(override *TCOPriorityOverride, fallbackPriority stri
 }
 
 // expandQuotaBased maps the usage tiers and enforces the invariants Coralogix
-// documents for them: percentages stay within 0-100 and ascend, and the priority
-// they fall back to once every tier is consumed is at least as restrictive as the
-// last tier. These are enforced here rather than as CRD validation rules because
-// bounding a resource.Quantity needs the CEL quantity library, which is
-// unavailable on the oldest Kubernetes version this operator supports, and
-// ranking priorities in CEL would push the schema past its rule cost budget.
+// documents for them: percentages stay within 0-100, and the tiers are monotonic —
+// thresholds ascend, priorities never relax as quota fills, nothing follows a
+// terminal block tier, and the priority the override falls back to once every tier
+// is consumed is at least as restrictive as the last one. These are enforced here
+// rather than as CRD validation rules because bounding a resource.Quantity needs
+// the CEL quantity library, which is unavailable on the oldest Kubernetes version
+// this operator supports, and ranking priorities in CEL would push the schema past
+// its rule cost budget.
 func expandQuotaBased(quotaBased *TCOQuotaBased, fallbackPriority string) (*tcopolicies.QuotaBased, error) {
 	if quotaBased == nil {
 		return nil, nil
@@ -320,10 +322,18 @@ func expandQuotaBased(quotaBased *TCOQuotaBased, fallbackPriority string) (*tcop
 		}
 
 		if i > 0 {
-			previous := quotaBased.UsageTiers[i-1].DailyQuotaPercentage
-			if percentage <= previous.AsApproximateFloat64() {
+			previous := quotaBased.UsageTiers[i-1]
+			if percentage <= previous.DailyQuotaPercentage.AsApproximateFloat64() {
 				return nil, fmt.Errorf("usageTiers must be ordered by ascending dailyQuotaPercentage, got %s after %s",
-					tier.DailyQuotaPercentage.String(), previous.String())
+					tier.DailyQuotaPercentage.String(), previous.DailyQuotaPercentage.String())
+			}
+			if previous.Priority == "block" {
+				return nil, fmt.Errorf("no usage tier can follow a %q tier, which is terminal, but %q follows one",
+					"block", tier.Priority)
+			}
+			if priorityRestrictiveness[tier.Priority] < priorityRestrictiveness[previous.Priority] {
+				return nil, fmt.Errorf("usage tier priorities cannot become less restrictive as quota fills, got %q after %q",
+					tier.Priority, previous.Priority)
 			}
 		}
 
