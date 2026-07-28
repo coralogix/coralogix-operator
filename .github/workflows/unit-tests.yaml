@@ -31,7 +31,6 @@ jobs:
       with:
         path: bin
         key: ${{ runner.os }}-tools-${{ github.workflow }}-${{ hashFiles('Makefile', 'go.sum') }}
-        restore-keys: ${{ runner.os }}-tools-${{ github.workflow }}-
     - run: make unit-tests
     - name: Patch Coverage
       uses: seriousben/go-patch-cover-action@v1

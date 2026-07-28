@@ -85,7 +85,7 @@ var _ = Describe("ArchiveLogsTarget", Ordered, func() {
 			g.Expect(archiveLogsTarget.Target.GetArchiveSpec().IsActive).To(BeTrue())
 			g.Expect(archiveLogsTarget.Target.GetS3().Bucket).To(Equal(logsBucket))
 			g.Expect(archiveLogsTarget.Target.GetS3().Region).To(Equal(&awsRegion))
-		}, time.Minute, time.Second).Should(Succeed())
+		}, accountWideBackendTimeout, time.Second).Should(Succeed())
 	})
 
 	It("Should be deactivated successfully", func(ctx context.Context) {
@@ -97,7 +97,7 @@ var _ = Describe("ArchiveLogsTarget", Ordered, func() {
 			storageTarget, err := archiveLogsClient.Get(ctx)
 			g.Expect(err).ToNot(HaveOccurred())
 			g.Expect(storageTarget.Target.GetArchiveSpec().IsActive).To(BeFalse())
-		}, time.Minute, time.Second).Should(Succeed(), "Storage target should be deactivated in Coralogix backend")
+		}, accountWideBackendTimeout, time.Second).Should(Succeed(), "Storage target should be deactivated in Coralogix backend")
 	})
 
 })

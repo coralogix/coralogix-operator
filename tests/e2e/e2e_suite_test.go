@@ -31,6 +31,14 @@ import (
 
 const testNamespace = "coralogix-e2e-test"
 
+// accountWideBackendTimeout is for assertions on Coralogix objects that belong to the whole
+// account or tenant rather than to this cluster - company IP access settings, archive targets and
+// the like. Several e2e jobs run this suite against one account at a time, so another job can
+// overwrite or clear such an object while a spec is asserting on it. The owning operator pushes
+// its desired state back on its next reconcile (the specs that need this have a
+// <KIND>_RECONCILE_INTERVAL_SECONDS set in CI), so allow enough time for that to land.
+const accountWideBackendTimeout = 3 * time.Minute
+
 func TestE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Coralogix operator E2E test suite")

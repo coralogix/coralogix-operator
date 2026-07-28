@@ -81,6 +81,8 @@ spec:
         - --scope-reconcile-interval-seconds=${SCOPE_RECONCILE_INTERVAL_SECONDS}
         - --connector-reconcile-interval-seconds=${CONNECTOR_RECONCILE_INTERVAL_SECONDS}
         - --ipaccess-reconcile-interval-seconds=${IPACCESS_RECONCILE_INTERVAL_SECONDS}
+        - --archivelogstarget-reconcile-interval-seconds=${ARCHIVELOGSTARGET_RECONCILE_INTERVAL_SECONDS}
+        - --archivemetricstarget-reconcile-interval-seconds=${ARCHIVEMETRICSTARGET_RECONCILE_INTERVAL_SECONDS}
         name: manager
         image: controller
         imagePullPolicy: IfNotPresent
