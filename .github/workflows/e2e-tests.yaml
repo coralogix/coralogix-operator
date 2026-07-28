@@ -31,6 +31,10 @@ jobs:
       CORALOGIX_API_KEY: ${{ secrets.CORALOGIX_API_KEY }}
       SCOPE_RECONCILE_INTERVAL_SECONDS: 30
       CONNECTOR_RECONCILE_INTERVAL_SECONDS: 30
+      # IPAccess is a company-wide singleton, so a concurrently running e2e job can wipe the
+      # settings this job's specs are asserting on. A periodic reconcile lets the operator push
+      # its desired state back, the same self-healing the Scope specs rely on.
+      IPACCESS_RECONCILE_INTERVAL_SECONDS: 30
       AWS_REGION: ${{ secrets.AWS_REGION }}
       LOGS_BUCKET: ${{ secrets.LOGS_BUCKET }}
       METRICS_BUCKET: ${{ secrets.METRICS_BUCKET }}

@@ -16,6 +16,7 @@ package e2e
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -1043,7 +1044,45 @@ func newAIEvaluationOpenAPIClientSet() *cxsdk.ClientSet {
 	return cxsdk.NewClientSet(builder.Build())
 }
 
+// Every e2e job running against the same Coralogix account draws from one pool of
+// (application, subsystem, target) slots, and a slot stays taken for as long as some evaluation
+// occupies it. So the pool can be empty simply because a concurrent job is holding the last slot
+// for a few seconds. Retry before giving up, otherwise a whole container's BeforeAll fails.
+var errNoAvailableAIEvaluationTarget = errors.New("no AI application with a subsystem has an available evaluation target")
+
+const (
+	aiEvaluationTargetAttempts = 30
+	aiEvaluationTargetInterval = 4 * time.Second
+)
+
 func firstAvailableAIEvaluationApplication(
+	ctx context.Context,
+	applicationsClient *aiapplications.AIApplicationsServiceAPIService,
+	evaluationsClient *aievaluations.AIEvaluationsServiceAPIService,
+	evaluationType aievaluations.EvaluationType,
+) (aiEvaluationApplicationRef, string, error) {
+	var (
+		ref    aiEvaluationApplicationRef
+		target string
+		err    error
+	)
+
+	for attempt := 0; attempt < aiEvaluationTargetAttempts; attempt++ {
+		if attempt > 0 {
+			time.Sleep(aiEvaluationTargetInterval)
+		}
+
+		ref, target, err = findAvailableAIEvaluationApplication(ctx, applicationsClient, evaluationsClient, evaluationType)
+		// Only an exhausted pool is worth retrying; a real API error will not fix itself.
+		if !errors.Is(err, errNoAvailableAIEvaluationTarget) {
+			return ref, target, err
+		}
+	}
+
+	return aiEvaluationApplicationRef{}, "", err
+}
+
+func findAvailableAIEvaluationApplication(
 	ctx context.Context,
 	applicationsClient *aiapplications.AIApplicationsServiceAPIService,
 	evaluationsClient *aievaluations.AIEvaluationsServiceAPIService,
@@ -1077,7 +1116,7 @@ func firstAvailableAIEvaluationApplication(
 		}
 	}
 
-	return aiEvaluationApplicationRef{}, "", fmt.Errorf("no AI application with a subsystem has an available %s evaluation target", evaluationType)
+	return aiEvaluationApplicationRef{}, "", fmt.Errorf("%w: %s", errNoAvailableAIEvaluationTarget, evaluationType)
 }
 
 func availableAIEvaluationTarget(

@@ -57,8 +57,10 @@ jobs:
           # Keep the published manifest shape as it was before the action was upgraded;
           # build-push-action v6 would otherwise attach provenance attestations.
           provenance: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # No gha layer cache here on purpose: measured at 4.5 minutes of cache export per
+          # run (mode=max has to push the whole multi-GB builder stage), while the only layer
+          # it could ever restore is `go mod download` - the build layer is invalidated by any
+          # source change. Cross-compiling instead of emulating is where the win actually is.
           tags: |
             ${{ steps.meta.outputs.tags }}
             ${{ env.DOCKERHUB_REGISTRY }}:${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}

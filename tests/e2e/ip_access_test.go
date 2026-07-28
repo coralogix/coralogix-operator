@@ -33,6 +33,13 @@ import (
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
+// The company IP access settings are a single account-wide object, so any other e2e job running
+// against the same Coralogix account can overwrite or clear them mid-spec - the create step here
+// starts by deleting them outright. Allow enough time for the operator's periodic reconcile
+// (IPACCESS_RECONCILE_INTERVAL_SECONDS, 30s in CI) to push this job's desired state back before
+// giving up on a backend assertion.
+const ipAccessBackendTimeout = 3 * time.Minute
+
 // Ordered: the create/update/delete specs below share ipAccessCR and ipAccessID, so they must
 // stay on one process and in sequence when the suite runs with -procs > 1.
 var _ = Describe("IPAccess", Ordered, func() {
@@ -109,7 +116,7 @@ var _ = Describe("IPAccess", Ordered, func() {
 				}
 			}
 			g.Expect(found).To(BeTrue(), "VPN rule should be present in backend")
-		}, time.Minute, time.Second).Should(Succeed())
+		}, ipAccessBackendTimeout, time.Second).Should(Succeed())
 	})
 
 	It("Should be updated successfully", func(ctx context.Context) {
@@ -134,7 +141,7 @@ var _ = Describe("IPAccess", Ordered, func() {
 				}
 			}
 			g.Expect(found).To(BeTrue(), "Updated Office Network rule should be present in backend")
-		}, time.Minute, time.Second).Should(Succeed())
+		}, ipAccessBackendTimeout, time.Second).Should(Succeed())
 	})
 
 	It("Should be deleted successfully", func(ctx context.Context) {
@@ -147,6 +154,6 @@ var _ = Describe("IPAccess", Ordered, func() {
 			g.Expect(err).ToNot(HaveOccurred())
 			g.Expect(res.Settings.IpAccess).ToNot(BeNil())
 			g.Expect(*res.Settings.IpAccess).To(BeEmpty())
-		}, time.Minute, time.Second).Should(Succeed())
+		}, ipAccessBackendTimeout, time.Second).Should(Succeed())
 	})
 })
