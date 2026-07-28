@@ -120,7 +120,7 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 		}
 		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("cannot use, or inherit from the policy priority, 'high' or 'block' priority"))
+		Expect(err.Error()).To(ContainSubstring("cannot use, inherit, or override to, 'high' or 'block' priority"))
 	})
 
 	It("should reject a target other than default/logs that inherits a high/block policy priority", func(ctx context.Context) {
@@ -143,7 +143,66 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 		}
 		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("cannot use, or inherit from the policy priority, 'high' or 'block' priority"))
+		Expect(err.Error()).To(ContainSubstring("cannot use, inherit, or override to, 'high' or 'block' priority"))
+	})
+
+	It("should reject a high/block priorityOverride usage tier on a target other than default/logs", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCOLogsPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "policy-with-invalid-target-override-tier",
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
+					Name:       "invalid-target-override-tier",
+					Priority:   "medium",
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					Targets: []coralogixv1alpha1.TCOPolicyTarget{{
+						Dataspace: "default",
+						Dataset:   "audit_logs",
+						Priority:  ptr.To("medium"),
+						PriorityOverride: &coralogixv1alpha1.TCOPriorityOverride{
+							QuotaBased: &coralogixv1alpha1.TCOQuotaBased{
+								UsageTiers: []coralogixv1alpha1.TCOUsageTier{{
+									DailyQuotaPercentage: resource.MustParse("80"),
+									Priority:             "block",
+								}},
+							},
+						},
+					}},
+				}},
+			},
+		}
+		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("cannot use, inherit, or override to, 'high' or 'block' priority"))
+	})
+
+	It("should reject a usage tier with a dailyQuotaPercentage outside 0-100", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCOLogsPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "policy-with-invalid-quota-percentage",
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
+					Name:       "invalid-quota-percentage",
+					Priority:   "medium",
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					PriorityOverride: &coralogixv1alpha1.TCOPriorityOverride{
+						QuotaBased: &coralogixv1alpha1.TCOQuotaBased{
+							UsageTiers: []coralogixv1alpha1.TCOUsageTier{{
+								DailyQuotaPercentage: resource.MustParse("120"),
+								Priority:             "low",
+							}},
+						},
+					},
+				}},
+			},
+		}
+		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("dailyQuotaPercentage must be between 0 and 100"))
 	})
 
 	It("should reject a target with an invalid priority", func(ctx context.Context) {

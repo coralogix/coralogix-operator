@@ -37,7 +37,7 @@ type TCOLogsPoliciesSpec struct {
 }
 
 // A TCO policy for logs.
-// +kubebuilder:validation:XValidation:rule="!has(self.targets) || self.targets.all(t, (t.dataspace == 'default' && t.dataset == 'logs') || (has(t.priority) ? !(t.priority in ['high','block']) : !(self.priority in ['high','block'])))",message="targets other than default/logs cannot use, or inherit from the policy priority, 'high' or 'block' priority"
+// +kubebuilder:validation:XValidation:rule="!has(self.targets) || self.targets.all(t, (t.dataspace == 'default' && t.dataset == 'logs') || ((has(t.priority) ? !(t.priority in ['high','block']) : !(self.priority in ['high','block'])) && (!has(t.priorityOverride) || !has(t.priorityOverride.quotaBased) || !has(t.priorityOverride.quotaBased.usageTiers) || t.priorityOverride.quotaBased.usageTiers.all(u, !(u.priority in ['high','block'])))))",message="targets other than default/logs cannot use, inherit, or override to, 'high' or 'block' priority"
 type TCOLogsPolicy struct {
 	// Name of the policy.
 	Name string `json:"name"`
@@ -117,6 +117,7 @@ type TCOQuotaBased struct {
 }
 
 // A usage tier mapping a daily quota consumption percentage to a priority.
+// +kubebuilder:validation:XValidation:rule="!self.dailyQuotaPercentage.isLessThan(quantity('0')) && !self.dailyQuotaPercentage.isGreaterThan(quantity('100'))",message="dailyQuotaPercentage must be between 0 and 100"
 type TCOUsageTier struct {
 	// The daily quota consumption percentage threshold for this tier.
 	DailyQuotaPercentage resource.Quantity `json:"dailyQuotaPercentage"`
