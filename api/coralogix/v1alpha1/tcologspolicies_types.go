@@ -111,8 +111,8 @@ type TCOPriorityOverride struct {
 
 // A quota-based priority override.
 type TCOQuotaBased struct {
-	// Ordered list of usage tiers mapping daily quota consumption percentages to priorities.
-	// +kubebuilder:validation:MaxItems=10
+	// Ordered list of usage tiers mapping daily quota consumption percentages to priorities. At most three per policy.
+	// +kubebuilder:validation:MaxItems=3
 	// +optional
 	UsageTiers []TCOUsageTier `json:"usageTiers,omitempty"`
 }

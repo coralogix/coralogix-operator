@@ -11052,7 +11052,7 @@ Overrides the priority based on daily quota consumption.
         <td><b><a href="#tcologspoliciesspecpoliciesindexpriorityoverridequotabasedusagetiersindex">usageTiers</a></b></td>
         <td>[]object</td>
         <td>
-          Ordered list of usage tiers mapping daily quota consumption percentages to priorities.<br/>
+          Ordered list of usage tiers mapping daily quota consumption percentages to priorities. At most three per policy.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11289,7 +11289,7 @@ Overrides the priority based on daily quota consumption.
         <td><b><a href="#tcologspoliciesspecpoliciesindextargetsindexpriorityoverridequotabasedusagetiersindex">usageTiers</a></b></td>
         <td>[]object</td>
         <td>
-          Ordered list of usage tiers mapping daily quota consumption percentages to priorities.<br/>
+          Ordered list of usage tiers mapping daily quota consumption percentages to priorities. At most three per policy.<br/>
         </td>
         <td>false</td>
       </tr></tbody>

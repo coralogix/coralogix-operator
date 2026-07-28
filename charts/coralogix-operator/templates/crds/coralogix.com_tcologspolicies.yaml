@@ -125,7 +125,8 @@ spec:
                           properties:
                             usageTiers:
                               description: Ordered list of usage tiers mapping daily
-                                quota consumption percentages to priorities.
+                                quota consumption percentages to priorities. At most
+                                three per policy.
                               items:
                                 description: A usage tier mapping a daily quota consumption
                                   percentage to a priority.
@@ -151,7 +152,7 @@ spec:
                                 - dailyQuotaPercentage
                                 - priority
                                 type: object
-                              maxItems: 10
+                              maxItems: 3
                               type: array
                           type: object
                       type: object
@@ -243,6 +244,7 @@ spec:
                                   usageTiers:
                                     description: Ordered list of usage tiers mapping
                                       daily quota consumption percentages to priorities.
+                                      At most three per policy.
                                     items:
                                       description: A usage tier mapping a daily quota
                                         consumption percentage to a priority.
@@ -268,7 +270,7 @@ spec:
                                       - dailyQuotaPercentage
                                       - priority
                                       type: object
-                                    maxItems: 10
+                                    maxItems: 3
                                     type: array
                                 type: object
                             type: object

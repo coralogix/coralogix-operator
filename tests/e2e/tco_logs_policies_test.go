@@ -181,6 +181,35 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 		Expect(err.Error()).To(ContainSubstring("cannot use, inherit, or override to, 'high' or 'block' priority"))
 	})
 
+	It("should reject a quota-based override with more than three usage tiers", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCOLogsPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "policy-with-too-many-usage-tiers",
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
+					Name:       "too-many-usage-tiers",
+					Priority:   "block",
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					PriorityOverride: &coralogixv1alpha1.TCOPriorityOverride{
+						QuotaBased: &coralogixv1alpha1.TCOQuotaBased{
+							UsageTiers: []coralogixv1alpha1.TCOUsageTier{
+								{DailyQuotaPercentage: resource.MustParse("20"), Priority: "medium"},
+								{DailyQuotaPercentage: resource.MustParse("40"), Priority: "medium"},
+								{DailyQuotaPercentage: resource.MustParse("60"), Priority: "low"},
+								{DailyQuotaPercentage: resource.MustParse("80"), Priority: "low"},
+							},
+						},
+					},
+				}},
+			},
+		}
+		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy, client.DryRunAll)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("Too many"))
+	})
+
 	It("should reject a target with a malformed dataspace", func(ctx context.Context) {
 		policy := &coralogixv1alpha1.TCOLogsPolicies{
 			ObjectMeta: metav1.ObjectMeta{
