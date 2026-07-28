@@ -14,6 +14,8 @@ on:
       - release-*
     paths-ignore:
       - "charts/**"
+      - "docs/**"
+      - "**.md"
 jobs:
   tests:
     name: Tests
