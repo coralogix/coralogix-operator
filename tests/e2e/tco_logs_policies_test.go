@@ -81,7 +81,7 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 						{
 							Dataspace: "default",
 							Dataset:   "audit_logs",
-							Priority:  ptr.To("block"),
+							Priority:  ptr.To("medium"),
 							PriorityOverride: &coralogixv1alpha1.TCOPriorityOverride{
 								QuotaBased: &coralogixv1alpha1.TCOQuotaBased{
 									UsageTiers: []coralogixv1alpha1.TCOUsageTier{{
@@ -97,6 +97,30 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 		}
 		Expect(ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)).To(Succeed())
 		Expect(ClientsInstance.GetControllerRuntimeClient().Delete(ctx, policy)).To(Succeed())
+	})
+
+	It("should reject a high/block priority on a target other than default/logs", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCOLogsPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "policy-with-invalid-target-dataset-priority",
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
+					Name:       "invalid-target-dataset-priority",
+					Priority:   "medium",
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					Targets: []coralogixv1alpha1.TCOPolicyTarget{{
+						Dataspace: "default",
+						Dataset:   "audit_logs",
+						Priority:  ptr.To("block"),
+					}},
+				}},
+			},
+		}
+		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("high' or 'block' when dataspace is 'default' and dataset is 'logs'"))
 	})
 
 	It("should reject a target with an invalid priority", func(ctx context.Context) {

@@ -272,6 +272,19 @@ spec:
                         - dataset
                         - dataspace
                         type: object
+                        x-kubernetes-validations:
+                        - message: priority can only be 'high' or 'block' when dataspace
+                            is 'default' and dataset is 'logs'
+                          rule: (self.dataspace == 'default' && self.dataset == 'logs')
+                            || !has(self.priority) || !(self.priority in ['high','block'])
+                        - message: priorityOverride usage tiers can only use 'high'
+                            or 'block' priority when dataspace is 'default' and dataset
+                            is 'logs'
+                          rule: (self.dataspace == 'default' && self.dataset == 'logs')
+                            || !has(self.priorityOverride) || !has(self.priorityOverride.quotaBased)
+                            || !has(self.priorityOverride.quotaBased.usageTiers) ||
+                            self.priorityOverride.quotaBased.usageTiers.all(t, !(t.priority
+                            in ['high','block']))
                       type: array
                   required:
                   - name

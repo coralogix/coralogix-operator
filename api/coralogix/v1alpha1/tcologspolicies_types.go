@@ -77,6 +77,8 @@ type TCOLogsPolicy struct {
 }
 
 // A dataset-routing target for a TCO logs policy. Routes matching logs to a dataset within a dataspace, with its own priority and quota configuration.
+// +kubebuilder:validation:XValidation:rule="(self.dataspace == 'default' && self.dataset == 'logs') || !has(self.priority) || !(self.priority in ['high','block'])",message="priority can only be 'high' or 'block' when dataspace is 'default' and dataset is 'logs'"
+// +kubebuilder:validation:XValidation:rule="(self.dataspace == 'default' && self.dataset == 'logs') || !has(self.priorityOverride) || !has(self.priorityOverride.quotaBased) || !has(self.priorityOverride.quotaBased.usageTiers) || self.priorityOverride.quotaBased.usageTiers.all(t, !(t.priority in ['high','block']))",message="priorityOverride usage tiers can only use 'high' or 'block' priority when dataspace is 'default' and dataset is 'logs'"
 type TCOPolicyTarget struct {
 	// The dataset to route matching logs to.
 	Dataset string `json:"dataset"`

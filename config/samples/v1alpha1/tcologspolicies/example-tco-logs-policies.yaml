@@ -61,7 +61,7 @@ spec:
           priority: high
         - dataspace: default
           dataset: audit_logs
-          priority: block
+          priority: medium
           priorityOverride:
             quotaBased:
               usageTiers:
