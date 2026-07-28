@@ -151,6 +151,7 @@ spec:
                                 - dailyQuotaPercentage
                                 - priority
                                 type: object
+                              maxItems: 10
                               type: array
                           type: object
                       type: object
@@ -265,6 +266,7 @@ spec:
                                       - dailyQuotaPercentage
                                       - priority
                                       type: object
+                                    maxItems: 10
                                     type: array
                                 type: object
                             type: object
@@ -272,25 +274,21 @@ spec:
                         - dataset
                         - dataspace
                         type: object
-                        x-kubernetes-validations:
-                        - message: priority can only be 'high' or 'block' when dataspace
-                            is 'default' and dataset is 'logs'
-                          rule: (self.dataspace == 'default' && self.dataset == 'logs')
-                            || !has(self.priority) || !(self.priority in ['high','block'])
-                        - message: priorityOverride usage tiers can only use 'high'
-                            or 'block' priority when dataspace is 'default' and dataset
-                            is 'logs'
-                          rule: (self.dataspace == 'default' && self.dataset == 'logs')
-                            || !has(self.priorityOverride) || !has(self.priorityOverride.quotaBased)
-                            || !has(self.priorityOverride.quotaBased.usageTiers) ||
-                            self.priorityOverride.quotaBased.usageTiers.all(t, !(t.priority
-                            in ['high','block']))
+                      maxItems: 20
                       type: array
                   required:
                   - name
                   - priority
                   - severities
                   type: object
+                  x-kubernetes-validations:
+                  - message: targets other than default/logs cannot use, or inherit
+                      from the policy priority, 'high' or 'block' priority
+                    rule: '!has(self.targets) || self.targets.all(t, (t.dataspace
+                      == ''default'' && t.dataset == ''logs'') || (has(t.priority)
+                      ? !(t.priority in [''high'',''block'']) : !(self.priority in
+                      [''high'',''block''])))'
+                maxItems: 100
                 type: array
             required:
             - policies

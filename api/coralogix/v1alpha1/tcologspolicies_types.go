@@ -32,10 +32,12 @@ import (
 // TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.
 type TCOLogsPoliciesSpec struct {
 	// Coralogix TCO-Policies-List.
+	// +kubebuilder:validation:MaxItems=100
 	Policies []TCOLogsPolicy `json:"policies"`
 }
 
 // A TCO policy for logs.
+// +kubebuilder:validation:XValidation:rule="!has(self.targets) || self.targets.all(t, (t.dataspace == 'default' && t.dataset == 'logs') || (has(t.priority) ? !(t.priority in ['high','block']) : !(self.priority in ['high','block'])))",message="targets other than default/logs cannot use, or inherit from the policy priority, 'high' or 'block' priority"
 type TCOLogsPolicy struct {
 	// Name of the policy.
 	Name string `json:"name"`
@@ -68,6 +70,7 @@ type TCOLogsPolicy struct {
 	Subsystems *TCOPolicyRule `json:"subsystems,omitempty"`
 
 	// Routes matching logs to one or more datasets, each with its own priority and quota configuration. Policies without targets keep their single-priority behavior.
+	// +kubebuilder:validation:MaxItems=20
 	// +optional
 	Targets []TCOPolicyTarget `json:"targets,omitempty"`
 
@@ -77,8 +80,6 @@ type TCOLogsPolicy struct {
 }
 
 // A dataset-routing target for a TCO logs policy. Routes matching logs to a dataset within a dataspace, with its own priority and quota configuration.
-// +kubebuilder:validation:XValidation:rule="(self.dataspace == 'default' && self.dataset == 'logs') || !has(self.priority) || !(self.priority in ['high','block'])",message="priority can only be 'high' or 'block' when dataspace is 'default' and dataset is 'logs'"
-// +kubebuilder:validation:XValidation:rule="(self.dataspace == 'default' && self.dataset == 'logs') || !has(self.priorityOverride) || !has(self.priorityOverride.quotaBased) || !has(self.priorityOverride.quotaBased.usageTiers) || self.priorityOverride.quotaBased.usageTiers.all(t, !(t.priority in ['high','block']))",message="priorityOverride usage tiers can only use 'high' or 'block' priority when dataspace is 'default' and dataset is 'logs'"
 type TCOPolicyTarget struct {
 	// The dataset to route matching logs to.
 	Dataset string `json:"dataset"`
@@ -110,6 +111,7 @@ type TCOPriorityOverride struct {
 // A quota-based priority override.
 type TCOQuotaBased struct {
 	// Ordered list of usage tiers mapping daily quota consumption percentages to priorities.
+	// +kubebuilder:validation:MaxItems=10
 	// +optional
 	UsageTiers []TCOUsageTier `json:"usageTiers,omitempty"`
 }

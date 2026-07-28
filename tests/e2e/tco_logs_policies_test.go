@@ -120,7 +120,30 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 		}
 		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("high' or 'block' when dataspace is 'default' and dataset is 'logs'"))
+		Expect(err.Error()).To(ContainSubstring("cannot use, or inherit from the policy priority, 'high' or 'block' priority"))
+	})
+
+	It("should reject a target other than default/logs that inherits a high/block policy priority", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCOLogsPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "policy-with-inherited-target-dataset-priority",
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
+					Name:       "inherited-target-dataset-priority",
+					Priority:   "high",
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					Targets: []coralogixv1alpha1.TCOPolicyTarget{{
+						Dataspace: "default",
+						Dataset:   "audit_logs",
+					}},
+				}},
+			},
+		}
+		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("cannot use, or inherit from the policy priority, 'high' or 'block' priority"))
 	})
 
 	It("should reject a target with an invalid priority", func(ctx context.Context) {
