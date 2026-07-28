@@ -21,7 +21,9 @@ import (
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
-var _ = Describe("GlobalRouter", Ordered, func() {
+// Serial: both GlobalRouter containers route notifications for the whole account, so they must
+// not run at the same time as each other when the suite runs with -procs > 1.
+var _ = Describe("GlobalRouter", Ordered, Serial, func() {
 	var (
 		crClient            client.Client
 		notificationsClient *cxsdk.NotificationsClient
@@ -42,6 +44,22 @@ var _ = Describe("GlobalRouter", Ordered, func() {
 		By("Creating Slack Preset")
 		presetName := fmt.Sprintf("slack-preset-for-global-router-%d", time.Now().Unix())
 		Expect(crClient.Create(ctx, getSampleSlackPreset(presetName, testNamespace))).To(Succeed())
+
+		// The GlobalRouter's rules reference both by name, and it cannot reach RemoteSynced until
+		// each has an ID to resolve. Wait for them rather than relying on them winning that race -
+		// under load they do not. The fallbackTargets spec below already does this.
+		By("Waiting for the Connector and Preset to be synced so their IDs can be resolved")
+		Eventually(func(g Gomega) *string {
+			fetchedConnector := &coralogixv1alpha1.Connector{}
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: connectorName, Namespace: testNamespace}, fetchedConnector)).To(Succeed())
+			return fetchedConnector.Status.Id
+		}, time.Minute, time.Second).ShouldNot(BeNil())
+
+		Eventually(func(g Gomega) *string {
+			fetchedPreset := &coralogixv1alpha1.Preset{}
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: presetName, Namespace: testNamespace}, fetchedPreset)).To(Succeed())
+			return fetchedPreset.Status.Id
+		}, time.Minute, time.Second).ShouldNot(BeNil())
 
 		By("Creating GlobalRouter")
 		globalRouterName := "global-router-sample" + gouuid.NewString()
@@ -152,7 +170,7 @@ func getSampleGlobalRouter(globalRouterName, testNamespace, slackConnectorName, 
 }
 
 // NC gap fields: GlobalRouter disabled flag and per-entity-type fallbackTargets.
-var _ = Describe("GlobalRouter with disabled and fallbackTargets", Ordered, func() {
+var _ = Describe("GlobalRouter with disabled and fallbackTargets", Ordered, Serial, func() {
 	var (
 		crClient            client.Client
 		notificationsClient *cxsdk.NotificationsClient

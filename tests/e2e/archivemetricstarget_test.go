@@ -93,7 +93,7 @@ var _ = Describe("ArchiveMetricsTarget", Ordered, func() {
 			g.Expect(archiveMetricsTarget.TenantConfig.Disabled).To(BeFalse())
 			g.Expect(archiveMetricsTarget.TenantConfig.GetS3().Bucket).To(Equal(metricsBucket))
 			g.Expect(archiveMetricsTarget.TenantConfig.GetS3().Region).To(Equal(awsRegion))
-		}, time.Minute, time.Second).Should(Succeed())
+		}, accountWideBackendTimeout, time.Second).Should(Succeed())
 	})
 
 	It("Should be deactivated successfully", func(ctx context.Context) {
@@ -105,7 +105,7 @@ var _ = Describe("ArchiveMetricsTarget", Ordered, func() {
 			getTenantConfigResponse, err := archiveMetricsClient.Get(ctx)
 			g.Expect(err).ToNot(HaveOccurred())
 			g.Expect(getTenantConfigResponse.TenantConfig.Disabled).To(BeTrue())
-		}, time.Minute, time.Second).Should(Succeed(), "Storage target should be deactivated in Coralogix backend")
+		}, accountWideBackendTimeout, time.Second).Should(Succeed(), "Storage target should be deactivated in Coralogix backend")
 	})
 
 })

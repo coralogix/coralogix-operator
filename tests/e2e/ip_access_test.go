@@ -33,7 +33,9 @@ import (
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
-var _ = Describe("IPAccess", func() {
+// Ordered: the create/update/delete specs below share ipAccessCR and ipAccessID, so they must
+// stay on one process and in sequence when the suite runs with -procs > 1.
+var _ = Describe("IPAccess", Ordered, func() {
 	var (
 		crClient       client.Client
 		ipAccessClient *ipaccess.IPAccessServiceAPIService
@@ -107,7 +109,7 @@ var _ = Describe("IPAccess", func() {
 				}
 			}
 			g.Expect(found).To(BeTrue(), "VPN rule should be present in backend")
-		}, time.Minute, time.Second).Should(Succeed())
+		}, accountWideBackendTimeout, time.Second).Should(Succeed())
 	})
 
 	It("Should be updated successfully", func(ctx context.Context) {
@@ -132,7 +134,7 @@ var _ = Describe("IPAccess", func() {
 				}
 			}
 			g.Expect(found).To(BeTrue(), "Updated Office Network rule should be present in backend")
-		}, time.Minute, time.Second).Should(Succeed())
+		}, accountWideBackendTimeout, time.Second).Should(Succeed())
 	})
 
 	It("Should be deleted successfully", func(ctx context.Context) {
@@ -145,6 +147,6 @@ var _ = Describe("IPAccess", func() {
 			g.Expect(err).ToNot(HaveOccurred())
 			g.Expect(res.Settings.IpAccess).ToNot(BeNil())
 			g.Expect(*res.Settings.IpAccess).To(BeEmpty())
-		}, time.Minute, time.Second).Should(Succeed())
+		}, accountWideBackendTimeout, time.Second).Should(Succeed())
 	})
 })

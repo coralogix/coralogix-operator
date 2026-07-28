@@ -14,6 +14,17 @@ on:
       - release-*
     paths-ignore:
       - "charts/**"
+      - "docs/**"
+      - "**.md"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
+  # Not cancel-in-progress: these specs create real Coralogix resources, and cleanup happens in
+  # the suite's own teardown. Cancelling kills the Kind cluster before finalizers run, so the
+  # remote resources leak and pollute the shared account. Let the old run finish and queue behind
+  # it instead.
+  cancel-in-progress: false
+
 jobs:
   tests:
     name: Tests
@@ -24,6 +35,12 @@ jobs:
       CORALOGIX_API_KEY: ${{ secrets.CORALOGIX_API_KEY }}
       SCOPE_RECONCILE_INTERVAL_SECONDS: 30
       CONNECTOR_RECONCILE_INTERVAL_SECONDS: 30
+      # IPAccess is a company-wide singleton, so a concurrently running e2e job can wipe the
+      # settings this job's specs are asserting on. A periodic reconcile lets the operator push
+      # its desired state back, the same self-healing the Scope specs rely on.
+      IPACCESS_RECONCILE_INTERVAL_SECONDS: 30
+      ARCHIVELOGSTARGET_RECONCILE_INTERVAL_SECONDS: 30
+      ARCHIVEMETRICSTARGET_RECONCILE_INTERVAL_SECONDS: 30
       AWS_REGION: ${{ secrets.AWS_REGION }}
       LOGS_BUCKET: ${{ secrets.LOGS_BUCKET }}
       METRICS_BUCKET: ${{ secrets.METRICS_BUCKET }}
@@ -32,12 +49,16 @@ jobs:
       PD_INTEGRATION_ID: ${{ secrets.PD_INTEGRATION_ID }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Build the controller-manager Docker image
-        run: |
-          make docker-build
+        uses: actions/checkout@v4
+      - name: Cache Makefile tool binaries
+        uses: actions/cache@v4
+        with:
+          path: bin
+          key: ${{ runner.os }}-tools-${{ github.workflow }}-${{ hashFiles('Makefile', 'go.sum') }}
+      - name: Build the controller-manager image
+        uses: ./.github/actions/build-operator-image
+        with:
+          image: ${{ env.IMG }}
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1.4.0
       - name: Load the controller-manager image into Kind

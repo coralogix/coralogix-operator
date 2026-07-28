@@ -1,0 +1,66 @@
+name: Build operator image
+description: >
+  Builds the controller-manager image for use in the test workflows. The binary is compiled on
+  the runner so that the Go build and module caches are reused across workflow runs, then
+  packaged with Dockerfile.ci. This replaces `make docker-build`, which recompiled every
+  dependency on every run because the Go cache inside the Docker builder stage is discarded.
+
+inputs:
+  image:
+    description: Image reference to tag, e.g. coralogix-operator-image:latest
+    required: true
+
+runs:
+  using: composite
+  steps:
+    # The released image builds inside the `golang:` tag in Dockerfile, so read the version from
+    # there rather than from go.mod. go.mod's `go` directive is the module's *minimum* (1.24.0),
+    # which is not what ships: `golang:1.24` resolves to the newest 1.24.x. Taking go.mod at face
+    # value would have CI compile the tested binary with an older patch release than the one the
+    # released binary is built with.
+    - name: Resolve the Go version the released image is built with
+      id: go-version
+      shell: bash
+      run: |
+        version="$(sed -n 's|^FROM .*golang:\([0-9][0-9.]*\).*|\1|p' Dockerfile | head -1)"
+        if [ -z "${version}" ]; then
+          echo "could not read the golang version from Dockerfile" >&2
+          exit 1
+        fi
+        echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+    - name: Set up Go
+      id: setup-go
+      uses: actions/setup-go@v5
+      with:
+        # Only the minor is pinned in Dockerfile, so check-latest keeps this on the newest patch
+        # of it - the same thing the golang: tag does.
+        go-version: ${{ steps.go-version.outputs.version }}
+        check-latest: true
+        # The cache is managed below instead. setup-go keys its cache on go.sum alone, so this
+        # job and the unit-tests job shared one entry: whichever saved it first owned the
+        # contents, and since the key never changed it was never refreshed. When unit-tests won
+        # that race the entry held test-binary objects rather than the CGO_ENABLED=0 GOOS=linux
+        # ones needed here, so `go build` recompiled every dependency anyway (~74s).
+        cache: false
+
+    - name: Cache the Go build and module caches
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        # Namespaced so only build-linux writes it, and keyed on the toolchain plus go.sum, which
+        # together decide whether the cached dependency objects are still usable - Go's own cache
+        # keys on compiler version, so a patch bump would otherwise leave dead entries behind.
+        # Our own packages recompile incrementally on top, which is fast.
+        key: ${{ runner.os }}-go-image-build-${{ steps.setup-go.outputs.go-version }}-${{ hashFiles('go.sum') }}
+        restore-keys: ${{ runner.os }}-go-image-build-${{ steps.setup-go.outputs.go-version }}-
+
+    - name: Build the manager binary
+      shell: bash
+      run: make build-linux
+
+    - name: Build the controller-manager image
+      shell: bash
+      run: docker build -f Dockerfile.ci -t "${{ inputs.image }}" .

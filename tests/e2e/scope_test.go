@@ -95,8 +95,17 @@ var _ = Describe("Scope", Ordered, func() {
 	It("After deleted from Coralogix backend directly, it should be recreated based on configured interval",
 		func(ctx context.Context) {
 			By("Deleting the Scope from Coralogix backend")
-			_, err := scopesClient.Delete(ctx, &cxsdk.DeleteScopeRequest{Id: scopeID})
-			Expect(err).ToNot(HaveOccurred())
+			// Scopes are team-wide, so another e2e job running against the same Coralogix
+			// account can have this call rejected with InvalidArgument ("Some of the requested
+			// value are in conflict") while it is mutating the team's scopes. That is transient,
+			// so retry; a NotFound means an earlier attempt already took effect.
+			Eventually(func(g Gomega) {
+				_, err := scopesClient.Delete(ctx, &cxsdk.DeleteScopeRequest{Id: scopeID})
+				if err != nil && cxsdk.Code(err) == codes.NotFound {
+					return
+				}
+				g.Expect(err).ToNot(HaveOccurred())
+			}, time.Minute, 2*time.Second).Should(Succeed())
 
 			By("Verifying Scope is populated with a new ID after configured interval")
 			var newScopeID string
