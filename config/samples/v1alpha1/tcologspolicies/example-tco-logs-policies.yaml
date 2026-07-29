@@ -57,8 +57,10 @@ spec:
       - info
       targets:
         - dataset: myDataset
+          dataspace: default
           priority: low
         - dataset: archiveDataset
+          dataspace: default
           priority: low
           priorityOverride:
             quotaBased:
