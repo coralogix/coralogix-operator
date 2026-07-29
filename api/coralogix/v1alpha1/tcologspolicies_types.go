@@ -32,7 +32,6 @@ import (
 // TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.
 type TCOLogsPoliciesSpec struct {
 	// Coralogix TCO-Policies-List.
-	// +kubebuilder:validation:MaxItems=100
 	Policies []TCOLogsPolicy `json:"policies"`
 }
 
