@@ -176,9 +176,13 @@ type TCOPolicyRule struct {
 func (s *TCOLogsPoliciesSpec) ExtractOverwriteLogPoliciesRequest(
 	ctx context.Context,
 	archiveRetentionsClient *archiveretentions.RetentionsServiceAPIService) (*tcopolicies.AtomicOverwriteLogPoliciesRequest, error) {
-	retentionsByName, err := fetchRetentionsByName(ctx, archiveRetentionsClient)
-	if err != nil {
-		return nil, err
+	var retentionsByName map[string]string
+	if s.referencesArchiveRetention() {
+		var err error
+		retentionsByName, err = fetchRetentionsByName(ctx, archiveRetentionsClient)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var policies []tcopolicies.CreateLogPolicyRequest
@@ -198,6 +202,20 @@ func (s *TCOLogsPoliciesSpec) ExtractOverwriteLogPoliciesRequest(
 	}
 
 	return &tcopolicies.AtomicOverwriteLogPoliciesRequest{Policies: policies}, nil
+}
+
+func (s *TCOLogsPoliciesSpec) referencesArchiveRetention() bool {
+	for _, p := range s.Policies {
+		if p.ArchiveRetention != nil {
+			return true
+		}
+		for _, t := range p.Targets {
+			if t.ArchiveRetention != nil {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func fetchRetentionsByName(ctx context.Context, client *archiveretentions.RetentionsServiceAPIService) (map[string]string, error) {
