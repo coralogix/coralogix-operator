@@ -20,24 +20,23 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/types/known/wrapperspb"
+	gouuid "github.com/google/uuid"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	dashboards "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/dashboard_service"
 
-	utils "github.com/coralogix/coralogix-operator/v2/api/coralogix"
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
+	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // DashboardReconciler reconciles a Dashboard object
 type DashboardReconciler struct {
-	DashboardsClient *cxsdk.DashboardsClient
+	DashboardsClient *dashboards.DashboardServiceAPIService
 	Interval         time.Duration
 }
 
@@ -79,33 +78,44 @@ func (r *DashboardReconciler) HandleCreation(ctx context.Context, log logr.Logge
 	imported := dashboard.Status.Imported
 	if importID != "" && !imported {
 		log.Info("Import annotation present, adopting existing remote dashboard", "id", importID)
-		getResponse, err := r.DashboardsClient.Get(ctx, &cxsdk.GetDashboardRequest{DashboardId: wrapperspb.String(importID)})
+		_, httpResp, err := r.DashboardsClient.DashboardsServiceGetDashboard(ctx, importID).Execute()
 		if err != nil {
-			return fmt.Errorf("error on getting remote dashboard %q for import: %w", importID, err)
+			return fmt.Errorf("error on getting remote dashboard %q for import: %w", importID, cxsdk.NewAPIError(httpResp, err))
 		}
 		dashboard.Status = coralogixv1alpha1.DashboardStatus{
-			ID:       ptr.To(getResponse.Dashboard.GetId().GetValue()),
+			ID:       ptr.To(importID),
 			Imported: true,
 		}
 		return nil
 	}
 
-	createRequest := &cxsdk.CreateDashboardRequest{
-		Dashboard: dashboardToCreate,
+	createRequest := dashboards.CreateDashboardRequestDataStructure{
+		Dashboard: *dashboardToCreate,
+		RequestId: newDashboardRequestID("create"),
 	}
-	log.Info("Creating remote dashboard", "dashboard", protojson.Format(createRequest))
-	createResponse, err := r.DashboardsClient.Create(ctx, createRequest)
+	log.Info("Creating remote dashboard", "dashboard", utils.FormatJSON(createRequest))
+	createResponse, httpResp, err := r.DashboardsClient.
+		DashboardsServiceCreateDashboard(ctx).
+		CreateDashboardRequestDataStructure(createRequest).
+		Execute()
 	if err != nil {
-		return fmt.Errorf("error on creating remote dashboard: %w", err)
+		return fmt.Errorf("error on creating remote dashboard: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote dashboard created", "dashboard", protojson.Format(createResponse))
+	log.Info("Remote dashboard created", "dashboard", utils.FormatJSON(createResponse))
 
 	dashboard.Status = coralogixv1alpha1.DashboardStatus{
-		ID:       ptr.To(createResponse.DashboardId.Value),
+		ID:       createResponse.DashboardId,
 		Imported: imported,
 	}
 
 	return nil
+}
+
+// newDashboardRequestID builds the idempotency key the REST create/replace endpoints
+// require. It is random per call rather than constant, so unrelated dashboards cannot
+// collide on it under whatever dedup window the backend applies.
+func newDashboardRequestID(operation string) string {
+	return fmt.Sprintf("cx-operator-%s-%s", operation, gouuid.NewString())
 }
 
 func importDashboardID(dashboard *coralogixv1alpha1.Dashboard) string {
@@ -115,11 +125,11 @@ func importDashboardID(dashboard *coralogixv1alpha1.Dashboard) string {
 // Only rejected alongside the import annotation, since the two would name conflicting ids;
 // otherwise it's harmless (overwritten on update, passed through as-is on create), and
 // rejecting it unconditionally would break existing CRs that carry one in spec content.
-func validateNoEmbeddedIDWithImport(importID string, dashboard *cxsdk.Dashboard) error {
+func validateNoEmbeddedIDWithImport(importID string, dashboard *dashboards.Dashboard) error {
 	if importID == "" {
 		return nil
 	}
-	if id := dashboard.GetId().GetValue(); id != "" {
+	if id := ptr.Deref(dashboard.Id, ""); id != "" {
 		return fmt.Errorf("spec content must not contain an %q field; use the %q annotation to import an existing dashboard", "id", coralogixv1alpha1.ImportDashboardIDAnnotationKey)
 	}
 	return nil
@@ -134,16 +144,20 @@ func (r *DashboardReconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 	if err = validateNoEmbeddedIDWithImport(importDashboardID(dashboard), dashboardToUpdate); err != nil {
 		return err
 	}
-	dashboardToUpdate.Id = utils.StringPointerToWrapperspbString(dashboard.Status.ID)
-	updateRequest := &cxsdk.ReplaceDashboardRequest{
-		Dashboard: dashboardToUpdate,
+	dashboardToUpdate.Id = dashboard.Status.ID
+	updateRequest := dashboards.ReplaceDashboardRequestDataStructure{
+		Dashboard: *dashboardToUpdate,
+		RequestId: newDashboardRequestID("replace"),
 	}
-	log.Info("Updating remote dashboard", "dashboard", protojson.Format(updateRequest))
-	updateResponse, err := r.DashboardsClient.Replace(ctx, updateRequest)
+	log.Info("Updating remote dashboard", "dashboard", utils.FormatJSON(updateRequest))
+	updateResponse, httpResp, err := r.DashboardsClient.
+		DashboardsServiceReplaceDashboard(ctx).
+		ReplaceDashboardRequestDataStructure(updateRequest).
+		Execute()
 	if err != nil {
-		return fmt.Errorf("error on updating remote dashboard: %w", err)
+		return fmt.Errorf("error on updating remote dashboard: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote dashboard updated", "dashboard", protojson.Format(updateResponse))
+	log.Info("Remote dashboard updated", "dashboard", utils.FormatJSON(updateResponse))
 
 	return nil
 }
@@ -152,10 +166,11 @@ func (r *DashboardReconciler) HandleDeletion(ctx context.Context, log logr.Logge
 	dashboard := obj.(*coralogixv1alpha1.Dashboard)
 	id := *dashboard.Status.ID
 	log.Info("Deleting dashboard from remote system", "id", id)
-	_, err := r.DashboardsClient.Delete(ctx, &cxsdk.DeleteDashboardRequest{DashboardId: wrapperspb.String(id)})
-	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.Error(err, "Error deleting remote dashboard", "id", id)
-		return fmt.Errorf("error deleting remote dashboard %s: %w", id, err)
+	_, httpResp, err := r.DashboardsClient.DashboardsServiceDeleteDashboard(ctx, id).Execute()
+	if err != nil {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+			return fmt.Errorf("error deleting remote dashboard %s: %w", id, apiErr)
+		}
 	}
 	log.Info("Dashboard deleted from remote system", "id", id)
 	return nil

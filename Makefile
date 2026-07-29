@@ -54,7 +54,7 @@ lint: golangci-lint
 unit-tests: manifests generate envtest prometheus-crds ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" \
 	PROMETHEUS_CRDS_DIR="$(PROMETHEUS_CRDS_DIR)" \
-	go test ./internal/controller/... -coverprofile cover.out
+	go test ./internal/controller/... ./api/... ./internal/utils/... -coverprofile cover.out
 
 ##@ Documentation
 .PHONY: generate-api-docs

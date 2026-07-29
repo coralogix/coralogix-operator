@@ -21,12 +21,13 @@ import (
 	"io"
 	"strings"
 
-	"google.golang.org/protobuf/encoding/protojson"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	"github.com/coralogix/coralogix-management-sdk/go/openapi/dashboardjson"
+	dashboards "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/dashboard_service"
 
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 )
@@ -58,19 +59,14 @@ type DashboardFolderRef struct {
 	ResourceRef *ResourceRef `json:"resourceRef,omitempty"`
 }
 
-func (in *DashboardSpec) ExtractDashboardFromSpec(ctx context.Context, namespace string) (*cxsdk.Dashboard, error) {
+func (in *DashboardSpec) ExtractDashboardFromSpec(ctx context.Context, namespace string) (*dashboards.Dashboard, error) {
 	contentJson, err := ExtractJsonContentFromSpec(ctx, namespace, in)
 	if err != nil {
 		return nil, err
 	}
 
-	dashboard := new(cxsdk.Dashboard)
-	JSONUnmarshal := protojson.UnmarshalOptions{
-		DiscardUnknown: true,
-		AllowPartial:   true,
-	}
-
-	if err = JSONUnmarshal.Unmarshal([]byte(contentJson), dashboard); err != nil {
+	dashboard := new(dashboards.Dashboard)
+	if err = dashboardjson.Unmarshal([]byte(contentJson), dashboard); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal contentJson: %w", err)
 	}
 
@@ -82,18 +78,17 @@ func (in *DashboardSpec) ExtractDashboardFromSpec(ctx context.Context, namespace
 	return dashboard, nil
 }
 
-func expandDashboardFolder(ctx context.Context, namespace string, in *DashboardSpec, dashboard *cxsdk.Dashboard) (*cxsdk.Dashboard, error) {
+func expandDashboardFolder(ctx context.Context, namespace string, in *DashboardSpec, dashboard *dashboards.Dashboard) (*dashboards.Dashboard, error) {
 	if folderRef := in.FolderRef; folderRef != nil {
+		// folder_id and folder_path are not a protobuf oneof, so setting one has to clear
+		// the other or a folder declared in the spec content would be sent alongside it.
 		if backendRef := folderRef.BackendRef; backendRef != nil {
 			if id := backendRef.ID; id != nil {
-				dashboard.FolderId = &cxsdk.UUID{
-					Value: *id,
-				}
+				dashboard.FolderId = &dashboards.UUID{Value: ptr.To(*id)}
+				dashboard.FolderPath = nil
 			} else if path := backendRef.Path; path != nil {
-				segments := strings.Split(*path, "/")
-				dashboard.FolderPath = &cxsdk.FolderPath{
-					Segments: segments,
-				}
+				dashboard.FolderPath = &dashboards.FolderPath{Segments: strings.Split(*path, "/")}
+				dashboard.FolderId = nil
 			}
 		} else if resourceRef := folderRef.ResourceRef; resourceRef != nil {
 			folderId, err := GetFolderIdFromFolderCR(ctx, namespace, *resourceRef)
@@ -101,9 +96,8 @@ func expandDashboardFolder(ctx context.Context, namespace string, in *DashboardS
 				return nil, err
 			}
 			if folderId != nil {
-				dashboard.FolderId = &cxsdk.UUID{
-					Value: *folderId,
-				}
+				dashboard.FolderId = &dashboards.UUID{Value: ptr.To(*folderId)}
+				dashboard.FolderPath = nil
 			}
 		} else {
 			return nil, fmt.Errorf("folderRef.BackendRef or folderRef.ResourceRef is required")
