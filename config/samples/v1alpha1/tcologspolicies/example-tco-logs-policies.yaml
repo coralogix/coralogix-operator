@@ -64,7 +64,7 @@ spec:
             quotaBased:
               usageTiers:
                 - dailyQuotaPercentage: 60
-                  priority: medium
+                  priority: high
           archiveRetention:
             backendRef:
               name: Default
