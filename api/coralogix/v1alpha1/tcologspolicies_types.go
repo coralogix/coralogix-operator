@@ -82,7 +82,6 @@ type ArchiveRetention struct {
 
 // Backend reference to the policy.
 type ArchiveRetentionBackendRef struct {
-	// +kubebuilder:validation:MaxLength=256
 	// Name of the policy.
 	Name string `json:"name"`
 }
