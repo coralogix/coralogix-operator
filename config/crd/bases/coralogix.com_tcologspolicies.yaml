@@ -236,17 +236,11 @@ spec:
                         required:
                         - dataset
                         type: object
-                      maxItems: 10
                       type: array
                   required:
                   - name
                   - severities
                   type: object
-                  x-kubernetes-validations:
-                  - message: 'priority is required: set a policy-level priority or
-                      set priority on every target'
-                    rule: has(self.priority) || (has(self.targets) && size(self.targets)
-                      > 0 && self.targets.all(t, has(t.priority)))
                 type: array
             required:
             - policies

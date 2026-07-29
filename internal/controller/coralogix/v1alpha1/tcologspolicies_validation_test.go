@@ -124,47 +124,6 @@ var _ = Describe("TCOLogsPolicies validation", func() {
 		Expect(k8sClient.Delete(ctx, policy)).To(Succeed())
 	})
 
-	// CEL cross-field: priority must be present somewhere
-	It("should reject a policy with no priority and no targets", func(ctx context.Context) {
-		policy := &coralogixv1alpha1.TCOLogsPolicies{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "no-priority-no-targets",
-				Namespace: "default",
-			},
-			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
-				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
-					Name:       "missing-priority",
-					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
-				}},
-			},
-		}
-		err := k8sClient.Create(ctx, policy)
-		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("priority is required"))
-	})
-
-	It("should reject a policy with no priority and a target that lacks its own priority", func(ctx context.Context) {
-		policy := &coralogixv1alpha1.TCOLogsPolicies{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "no-priority-target-no-priority",
-				Namespace: "default",
-			},
-			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
-				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
-					Name:       "missing-target-priority",
-					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
-					Targets: []coralogixv1alpha1.TCOPolicyTarget{{
-						Dataset: "myDataset",
-						// no Priority set
-					}},
-				}},
-			},
-		}
-		err := k8sClient.Create(ctx, policy)
-		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("priority is required"))
-	})
-
 	It("should accept a policy with no top-level priority when all targets have their own priority", func(ctx context.Context) {
 		policy := &coralogixv1alpha1.TCOLogsPolicies{
 			ObjectMeta: metav1.ObjectMeta{

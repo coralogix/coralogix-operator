@@ -36,7 +36,6 @@ type TCOLogsPoliciesSpec struct {
 }
 
 // A TCO policy for logs.
-// +kubebuilder:validation:XValidation:rule="has(self.priority) || (has(self.targets) && size(self.targets) > 0 && self.targets.all(t, has(t.priority)))",message="priority is required: set a policy-level priority or set priority on every target"
 type TCOLogsPolicy struct {
 	// Name of the policy.
 	Name string `json:"name"`
@@ -72,7 +71,6 @@ type TCOLogsPolicy struct {
 	// Targets defines the datasets to route matched data to, each with its own priority.
 	// When set, overrides or supplements the policy-level priority.
 	// +optional
-	// +kubebuilder:validation:MaxItems=10
 	Targets []TCOPolicyTarget `json:"targets,omitempty"`
 }
 
