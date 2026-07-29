@@ -121,6 +121,7 @@ type TCOPolicyTarget struct {
 	Dataset string `json:"dataset"`
 
 	// +optional
+	// +kubebuilder:validation:MaxLength=50
 	// The dataspace within the dataset.
 	Dataspace *string `json:"dataspace,omitempty"`
 

@@ -182,6 +182,7 @@ spec:
                             type: string
                           dataspace:
                             description: The dataspace within the dataset.
+                            maxLength: 50
                             type: string
                           priority:
                             description: Per-target priority. Mutually exclusive with
