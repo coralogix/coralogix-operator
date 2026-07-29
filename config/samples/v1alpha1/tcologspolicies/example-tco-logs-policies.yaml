@@ -59,12 +59,12 @@ spec:
         - dataset: myDataset
           priority: low
         - dataset: archiveDataset
-          priority: medium
+          priority: low
           priorityOverride:
             quotaBased:
               usageTiers:
                 - dailyQuotaPercentage: 60
-                  priority: high
+                  priority: medium
           archiveRetention:
             backendRef:
               name: Default
