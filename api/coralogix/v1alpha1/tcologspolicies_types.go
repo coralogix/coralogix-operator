@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strings"
 
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
@@ -31,10 +32,12 @@ import (
 // TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.
 type TCOLogsPoliciesSpec struct {
 	// Coralogix TCO-Policies-List.
+	// +kubebuilder:validation:MaxItems=100
 	Policies []TCOLogsPolicy `json:"policies"`
 }
 
 // A TCO policy for logs.
+// +kubebuilder:validation:XValidation:rule="has(self.priority) || (has(self.targets) && size(self.targets) > 0 && self.targets.all(t, has(t.priority)))",message="priority is required: set a policy-level priority or set priority on every target"
 type TCOLogsPolicy struct {
 	// Name of the policy.
 	Name string `json:"name"`
@@ -44,8 +47,9 @@ type TCOLogsPolicy struct {
 	Description *string `json:"description,omitempty"`
 
 	// +kubebuilder:validation:Enum=block;high;medium;low
-	// The policy priority.
-	Priority string `json:"priority"`
+	// The policy priority. Required when targets is not set, or when targets do not specify their own priorities.
+	// +optional
+	Priority *string `json:"priority,omitempty"`
 
 	// +optional
 	// Whether the policy is disabled.
@@ -65,6 +69,12 @@ type TCOLogsPolicy struct {
 	// The subsystems to apply the policy on. Applies the policy on all the subsystems by default.
 	// +optional
 	Subsystems *TCOPolicyRule `json:"subsystems,omitempty"`
+
+	// Targets defines the datasets to route matched data to, each with its own priority.
+	// When set, overrides or supplements the policy-level priority.
+	// +optional
+	// +kubebuilder:validation:MaxItems=20
+	Targets []TCOPolicyTarget `json:"targets,omitempty"`
 }
 
 // Matches the specified retention.
@@ -75,6 +85,7 @@ type ArchiveRetention struct {
 
 // Backend reference to the policy.
 type ArchiveRetentionBackendRef struct {
+	// +kubebuilder:validation:MaxLength=256
 	// Name of the policy.
 	Name string `json:"name"`
 }
@@ -89,6 +100,7 @@ var (
 		"verbose":  tcopolicies.QUOTAV1SEVERITY_SEVERITY_VERBOSE,
 	}
 	PrioritySchemaToOpenAPI = map[string]tcopolicies.QuotaV1Priority{
+		"":       tcopolicies.QUOTAV1PRIORITY_PRIORITY_TYPE_UNSPECIFIED,
 		"block":  tcopolicies.QUOTAV1PRIORITY_PRIORITY_TYPE_BLOCK,
 		"high":   tcopolicies.QUOTAV1PRIORITY_PRIORITY_TYPE_HIGH,
 		"medium": tcopolicies.QUOTAV1PRIORITY_PRIORITY_TYPE_MEDIUM,
@@ -105,6 +117,53 @@ var (
 // +kubebuilder:validation:Enum=info;warning;critical;error;debug;verbose
 // The severities to apply the policy on.
 type TCOPolicySeverity string
+
+// TCOPolicyTarget defines a dataset destination with its own priority for matched log data.
+type TCOPolicyTarget struct {
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=256
+	// The dataset to route data to.
+	Dataset string `json:"dataset"`
+
+	// +optional
+	// +kubebuilder:validation:MaxLength=256
+	// The dataspace within the dataset.
+	Dataspace *string `json:"dataspace,omitempty"`
+
+	// +kubebuilder:validation:Enum=block;high;low;medium
+	// +optional
+	// Per-target priority. Mutually exclusive with a policy-level priority.
+	Priority *string `json:"priority,omitempty"`
+
+	// +optional
+	// Dynamic quota-based priority override for this target.
+	PriorityOverride *TCOPolicyPriorityOverride `json:"priorityOverride,omitempty"`
+
+	// +optional
+	// Matches the specified archive retention for this target.
+	ArchiveRetention *ArchiveRetention `json:"archiveRetention,omitempty"`
+}
+
+// TCOPolicyPriorityOverride configures dynamic quota-based priority tiers for a target.
+type TCOPolicyPriorityOverride struct {
+	// +optional
+	QuotaBased *TCOPolicyQuotaBased `json:"quotaBased,omitempty"`
+}
+
+// TCOPolicyQuotaBased maps daily quota consumption percentages to priority levels.
+type TCOPolicyQuotaBased struct {
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=10
+	UsageTiers []TCOPolicyUsageTier `json:"usageTiers"`
+}
+
+// TCOPolicyUsageTier maps a daily quota threshold percentage to a priority.
+type TCOPolicyUsageTier struct {
+	DailyQuotaPercentage resource.Quantity `json:"dailyQuotaPercentage"`
+
+	// +kubebuilder:validation:Enum=block;high;low;medium
+	Priority string `json:"priority"`
+}
 
 // A sincle TCO policy rule.
 type TCOPolicyRule struct {
@@ -148,15 +207,21 @@ func (p *TCOLogsPolicy) ExtractCreateLogPolicyRequest(
 		return nil, err
 	}
 
+	targets, err := expandTCOPolicyTargets(ctx, archiveRetentionsClient, p.Targets)
+	if err != nil {
+		return nil, err
+	}
+
 	req := &tcopolicies.CreateLogPolicyRequest{
 		Policy: tcopolicies.CreateGenericPolicyRequest{
 			Name:             p.Name,
 			Description:      ptr.Deref(p.Description, ""),
-			Priority:         PrioritySchemaToOpenAPI[p.Priority],
+			Priority:         PrioritySchemaToOpenAPI[ptr.Deref(p.Priority, "")],
 			Disabled:         p.Disabled,
 			ApplicationRule:  expandTCOPolicyRule(p.Applications),
 			SubsystemRule:    expandTCOPolicyRule(p.Subsystems),
 			ArchiveRetention: archiveRetention,
+			Targets:          targets,
 		},
 		LogRules: tcopolicies.LogRules{
 			Severities: expandTCOPolicySeverities(p.Severities),
@@ -208,6 +273,59 @@ func expandArchiveRetention(
 	}
 
 	return nil, fmt.Errorf("archive retention with name %s not found", archiveRetention.BackendRef.Name)
+}
+
+func expandTCOPolicyTargets(
+	ctx context.Context,
+	archiveRetentionsClient *archiveretentions.RetentionsServiceAPIService,
+	targets []TCOPolicyTarget,
+) ([]tcopolicies.V1Target, error) {
+	if len(targets) == 0 {
+		return nil, nil
+	}
+	var result []tcopolicies.V1Target
+	var errs error
+	for _, target := range targets {
+		archiveRetention, err := expandArchiveRetention(ctx, archiveRetentionsClient, target.ArchiveRetention)
+		if err != nil {
+			errs = errors.Join(errs, err)
+			continue
+		}
+		t := tcopolicies.V1Target{
+			Dataset:          &target.Dataset,
+			Dataspace:        target.Dataspace,
+			ArchiveRetention: archiveRetention,
+		}
+		if target.Priority != nil {
+			priority := PrioritySchemaToOpenAPI[*target.Priority]
+			t.Priority = &priority
+		}
+		if target.PriorityOverride != nil {
+			t.PriorityOverride = expandTCOPolicyPriorityOverride(target.PriorityOverride)
+		}
+		result = append(result, t)
+	}
+	return result, errs
+}
+
+func expandTCOPolicyPriorityOverride(o *TCOPolicyPriorityOverride) *tcopolicies.PriorityOverride {
+	if o == nil {
+		return nil
+	}
+	result := &tcopolicies.PriorityOverride{}
+	if o.QuotaBased != nil {
+		qb := &tcopolicies.QuotaBased{}
+		for _, tier := range o.QuotaBased.UsageTiers {
+			p := PrioritySchemaToOpenAPI[tier.Priority]
+			pct := tier.DailyQuotaPercentage.AsApproximateFloat64()
+			qb.UsageTiers = append(qb.UsageTiers, tcopolicies.UsageTier{
+				DailyQuotaPercentage: &pct,
+				Priority:             &p,
+			})
+		}
+		result.QuotaBased = qb
+	}
+	return result
 }
 
 // TCOLogsPoliciesStatus defines the observed state of TCOLogsPolicies.

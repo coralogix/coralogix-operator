@@ -27,6 +27,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	openapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	tcopolicies "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/policies_service"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
@@ -46,7 +48,7 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
 				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
 					Name:       "over-limit",
-					Priority:   "low",
+					Priority:   ptr.To("low"),
 					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
 					Subsystems: &coralogixv1alpha1.TCOPolicyRule{
 						Names:    names,
@@ -61,7 +63,7 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 	})
 })
 
-var _ = Describe("TCOLogsPolicies", func() {
+var _ = Describe("TCOLogsPolicies", Serial, func() {
 	var (
 		crClient        client.Client
 		tcoClient       *cxsdk.TCOPoliciesClient
@@ -82,7 +84,7 @@ var _ = Describe("TCOLogsPolicies", func() {
 				Policies: []coralogixv1alpha1.TCOLogsPolicy{
 					{
 						Name:       "sample policy",
-						Priority:   "high",
+						Priority:   ptr.To("high"),
 						Severities: []coralogixv1alpha1.TCOPolicySeverity{"critical", "error"},
 						Applications: &coralogixv1alpha1.TCOPolicyRule{
 							Names:    []string{"prod"},
@@ -100,7 +102,7 @@ var _ = Describe("TCOLogsPolicies", func() {
 					},
 					{
 						Name:       "sample policy 2",
-						Priority:   "high",
+						Priority:   ptr.To("high"),
 						Disabled:   ptr.To(true),
 						Severities: []coralogixv1alpha1.TCOPolicySeverity{"critical", "error"},
 						Applications: &coralogixv1alpha1.TCOPolicyRule{
@@ -151,5 +153,83 @@ var _ = Describe("TCOLogsPolicies", func() {
 			Expect(err).ToNot(HaveOccurred())
 			return listRes.Policies
 		}, time.Minute, time.Second).Should(BeEmpty())
+	})
+})
+
+var _ = Describe("TCOLogsPolicies with targets", Serial, func() {
+	var (
+		crClient       client.Client
+		policiesClient *tcopolicies.PoliciesServiceAPIService
+		policyName     = "tco-logs-policies-targets-sample"
+		cr             *coralogixv1alpha1.TCOLogsPolicies
+	)
+
+	BeforeEach(func() {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		cfg := openapicxsdk.NewConfigBuilder().WithAPIKeyEnv().WithRegionEnv().Build()
+		policiesClient = openapicxsdk.NewClientSet(cfg).TCOPolicies()
+		cr = &coralogixv1alpha1.TCOLogsPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      policyName,
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCOLogsPolicy{
+					{
+						Name:       "targets-policy",
+						Severities: []coralogixv1alpha1.TCOPolicySeverity{"info", "debug"},
+						Targets: []coralogixv1alpha1.TCOPolicyTarget{
+							{
+								Dataset:  "myDataset",
+								Priority: ptr.To("low"),
+							},
+							{
+								Dataset:  "myDataset2",
+								Priority: ptr.To("medium"),
+							},
+						},
+					},
+				},
+			},
+		}
+	})
+
+	It("should create a policy with targets and verify targets in the backend", func(ctx context.Context) {
+		By("Creating TCOLogsPolicies with targets")
+		Expect(crClient.Create(ctx, cr)).To(Succeed())
+
+		By("Verifying the CR is synced")
+		Eventually(func(g Gomega) {
+			fetched := &coralogixv1alpha1.TCOLogsPolicies{}
+			g.Expect(crClient.Get(ctx, client.ObjectKey{Name: policyName, Namespace: testNamespace}, fetched)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying targets exist in the backend via REST API")
+		Eventually(func(g Gomega) {
+			resp, _, err := policiesClient.PoliciesServiceGetCompanyPolicies(ctx).
+				SourceType(tcopolicies.V1SOURCETYPE_SOURCE_TYPE_LOGS).
+				Execute()
+			g.Expect(err).NotTo(HaveOccurred())
+			g.Expect(resp.Policies).NotTo(BeEmpty())
+			found := false
+			for _, p := range resp.Policies {
+				if p.Name == "targets-policy" {
+					g.Expect(p.Targets).To(HaveLen(2))
+					found = true
+				}
+			}
+			g.Expect(found).To(BeTrue(), "policy 'targets-policy' not found in backend")
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Deleting the CR")
+		Expect(crClient.Delete(ctx, cr)).To(Succeed())
+		Eventually(func(g Gomega) {
+			resp, _, err := policiesClient.PoliciesServiceGetCompanyPolicies(ctx).
+				SourceType(tcopolicies.V1SOURCETYPE_SOURCE_TYPE_LOGS).
+				Execute()
+			g.Expect(err).NotTo(HaveOccurred())
+			g.Expect(resp.Policies).To(BeEmpty())
+		}, time.Minute, time.Second).Should(Succeed())
 	})
 })
