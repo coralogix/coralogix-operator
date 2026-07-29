@@ -72,7 +72,7 @@ type TCOLogsPolicy struct {
 	// Targets defines the datasets to route matched data to, each with its own priority.
 	// When set, overrides or supplements the policy-level priority.
 	// +optional
-	// +kubebuilder:validation:MaxItems=20
+	// +kubebuilder:validation:MaxItems=10
 	Targets []TCOPolicyTarget `json:"targets,omitempty"`
 }
 

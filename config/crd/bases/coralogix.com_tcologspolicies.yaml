@@ -236,7 +236,7 @@ spec:
                         required:
                         - dataset
                         type: object
-                      maxItems: 20
+                      maxItems: 10
                       type: array
                   required:
                   - name
