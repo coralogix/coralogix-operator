@@ -26,10 +26,10 @@ import (
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/coralogix/coralogix-management-sdk/go/openapi/dashboardjson"
 	dashboards "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/dashboard_service"
 
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils/dashboardjson"
 )
 
 // DashboardSpec defines the desired state of Dashboard.
@@ -74,11 +74,6 @@ func (in *DashboardSpec) ExtractDashboardFromSpec(ctx context.Context, namespace
 	if err != nil {
 		return nil, err
 	}
-
-	// Unknown keys are tolerated while decoding but must not be re-emitted on the wire.
-	// Stripping them here, once the typed fields are populated, keeps the ordering
-	// requirement in one place instead of at every call site building a request.
-	dashboardjson.DiscardAdditionalProperties(dashboard)
 
 	return dashboard, nil
 }
