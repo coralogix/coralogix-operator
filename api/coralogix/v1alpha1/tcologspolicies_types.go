@@ -117,12 +117,10 @@ type TCOPolicySeverity string
 // TCOPolicyTarget defines a dataset destination with its own priority for matched log data.
 type TCOPolicyTarget struct {
 	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=256
 	// The dataset to route data to.
 	Dataset string `json:"dataset"`
 
 	// +optional
-	// +kubebuilder:validation:MaxLength=256
 	// The dataspace within the dataset.
 	Dataspace *string `json:"dataspace,omitempty"`
 
@@ -149,7 +147,6 @@ type TCOPolicyPriorityOverride struct {
 // TCOPolicyQuotaBased maps daily quota consumption percentages to priority levels.
 type TCOPolicyQuotaBased struct {
 	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:MaxItems=10
 	UsageTiers []TCOPolicyUsageTier `json:"usageTiers"`
 }
 

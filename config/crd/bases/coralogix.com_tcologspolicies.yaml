@@ -178,12 +178,10 @@ spec:
                             type: object
                           dataset:
                             description: The dataset to route data to.
-                            maxLength: 256
                             minLength: 1
                             type: string
                           dataspace:
                             description: The dataspace within the dataset.
-                            maxLength: 256
                             type: string
                           priority:
                             description: Per-target priority. Mutually exclusive with
@@ -224,7 +222,6 @@ spec:
                                       - dailyQuotaPercentage
                                       - priority
                                       type: object
-                                    maxItems: 10
                                     minItems: 1
                                     type: array
                                 required:
