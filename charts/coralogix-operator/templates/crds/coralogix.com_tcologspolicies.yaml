@@ -248,6 +248,7 @@ spec:
                       set priority on every target'
                     rule: has(self.priority) || (has(self.targets) && size(self.targets)
                       > 0 && self.targets.all(t, has(t.priority)))
+                maxItems: 100
                 type: array
             required:
             - policies
