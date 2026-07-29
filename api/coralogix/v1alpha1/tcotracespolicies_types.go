@@ -93,11 +93,16 @@ type TCOPolicyTag struct {
 func (s *TCOTracesPoliciesSpec) ExtractOverwriteTracesPoliciesRequest(
 	ctx context.Context,
 	archiveRetentionsClient *archiveretentions.RetentionsServiceAPIService) (*tcopolicies.AtomicOverwriteSpanPoliciesRequest, error) {
+	retentionsByName, err := fetchRetentionsByName(ctx, archiveRetentionsClient)
+	if err != nil {
+		return nil, err
+	}
+
 	var policies []tcopolicies.CreateSpanPolicyRequest
 	var errs error
 
 	for _, policy := range s.Policies {
-		policyReq, err := policy.ExtractCreateSpanPolicyRequest(ctx, archiveRetentionsClient)
+		policyReq, err := policy.extractCreateSpanPolicyRequest(retentionsByName)
 		if err != nil {
 			errs = errors.Join(errs, err)
 		} else {
@@ -112,10 +117,8 @@ func (s *TCOTracesPoliciesSpec) ExtractOverwriteTracesPoliciesRequest(
 	return &tcopolicies.AtomicOverwriteSpanPoliciesRequest{Policies: policies}, nil
 }
 
-func (p *TCOTracesPolicy) ExtractCreateSpanPolicyRequest(
-	ctx context.Context,
-	archiveRetentionsClient *archiveretentions.RetentionsServiceAPIService) (*tcopolicies.CreateSpanPolicyRequest, error) {
-	archiveRetention, err := expandArchiveRetention(ctx, archiveRetentionsClient, p.ArchiveRetention)
+func (p *TCOTracesPolicy) extractCreateSpanPolicyRequest(retentionsByName map[string]string) (*tcopolicies.CreateSpanPolicyRequest, error) {
+	archiveRetention, err := expandArchiveRetention(retentionsByName, p.ArchiveRetention)
 	if err != nil {
 		return nil, err
 	}

@@ -176,11 +176,16 @@ type TCOPolicyRule struct {
 func (s *TCOLogsPoliciesSpec) ExtractOverwriteLogPoliciesRequest(
 	ctx context.Context,
 	archiveRetentionsClient *archiveretentions.RetentionsServiceAPIService) (*tcopolicies.AtomicOverwriteLogPoliciesRequest, error) {
+	retentionsByName, err := fetchRetentionsByName(ctx, archiveRetentionsClient)
+	if err != nil {
+		return nil, err
+	}
+
 	var policies []tcopolicies.CreateLogPolicyRequest
 	var errs error
 
 	for _, policy := range s.Policies {
-		policyReq, err := policy.ExtractCreateLogPolicyRequest(ctx, archiveRetentionsClient)
+		policyReq, err := policy.extractCreateLogPolicyRequest(retentionsByName)
 		if err != nil {
 			errs = errors.Join(errs, err)
 		} else {
@@ -195,15 +200,27 @@ func (s *TCOLogsPoliciesSpec) ExtractOverwriteLogPoliciesRequest(
 	return &tcopolicies.AtomicOverwriteLogPoliciesRequest{Policies: policies}, nil
 }
 
-func (p *TCOLogsPolicy) ExtractCreateLogPolicyRequest(
-	ctx context.Context,
-	archiveRetentionsClient *archiveretentions.RetentionsServiceAPIService) (*tcopolicies.CreateLogPolicyRequest, error) {
-	archiveRetention, err := expandArchiveRetention(ctx, archiveRetentionsClient, p.ArchiveRetention)
+func fetchRetentionsByName(ctx context.Context, client *archiveretentions.RetentionsServiceAPIService) (map[string]string, error) {
+	resp, httpResp, err := client.RetentionsServiceGetRetentions(ctx).Execute()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get archive retentions: %w", cxsdk.NewAPIError(httpResp, err))
+	}
+	m := make(map[string]string, len(resp.Retentions))
+	for _, r := range resp.Retentions {
+		if r.Name != nil && r.Id != nil {
+			m[*r.Name] = *r.Id
+		}
+	}
+	return m, nil
+}
+
+func (p *TCOLogsPolicy) extractCreateLogPolicyRequest(retentionsByName map[string]string) (*tcopolicies.CreateLogPolicyRequest, error) {
+	archiveRetention, err := expandArchiveRetention(retentionsByName, p.ArchiveRetention)
 	if err != nil {
 		return nil, err
 	}
 
-	targets, err := expandTCOPolicyTargets(ctx, archiveRetentionsClient, p.Targets)
+	targets, err := expandTCOPolicyTargets(retentionsByName, p.Targets)
 	if err != nil {
 		return nil, err
 	}
@@ -247,42 +264,25 @@ func expandTCOPolicySeverities(severities []TCOPolicySeverity) []tcopolicies.Quo
 	return result
 }
 
-func expandArchiveRetention(
-	ctx context.Context,
-	archiveRetentionsClient *archiveretentions.RetentionsServiceAPIService,
-	archiveRetention *ArchiveRetention) (*tcopolicies.ArchiveRetention, error) {
+func expandArchiveRetention(retentionsByName map[string]string, archiveRetention *ArchiveRetention) (*tcopolicies.ArchiveRetention, error) {
 	if archiveRetention == nil {
 		return nil, nil
 	}
-
-	resp, httpResp, err := archiveRetentionsClient.
-		RetentionsServiceGetRetentions(ctx).
-		Execute()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get archive retentions: %w", cxsdk.NewAPIError(httpResp, err))
+	id, ok := retentionsByName[archiveRetention.BackendRef.Name]
+	if !ok {
+		return nil, fmt.Errorf("archive retention with name %s not found", archiveRetention.BackendRef.Name)
 	}
-
-	for _, retention := range resp.Retentions {
-		if retention.Name != nil && *retention.Name == archiveRetention.BackendRef.Name {
-			return &tcopolicies.ArchiveRetention{Id: retention.Id}, nil
-		}
-	}
-
-	return nil, fmt.Errorf("archive retention with name %s not found", archiveRetention.BackendRef.Name)
+	return &tcopolicies.ArchiveRetention{Id: &id}, nil
 }
 
-func expandTCOPolicyTargets(
-	ctx context.Context,
-	archiveRetentionsClient *archiveretentions.RetentionsServiceAPIService,
-	targets []TCOPolicyTarget,
-) ([]tcopolicies.V1Target, error) {
+func expandTCOPolicyTargets(retentionsByName map[string]string, targets []TCOPolicyTarget) ([]tcopolicies.V1Target, error) {
 	if len(targets) == 0 {
 		return nil, nil
 	}
 	var result []tcopolicies.V1Target
 	var errs error
 	for _, target := range targets {
-		archiveRetention, err := expandArchiveRetention(ctx, archiveRetentionsClient, target.ArchiveRetention)
+		archiveRetention, err := expandArchiveRetention(retentionsByName, target.ArchiveRetention)
 		if err != nil {
 			errs = errors.Join(errs, err)
 			continue

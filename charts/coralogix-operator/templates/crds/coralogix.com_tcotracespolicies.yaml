@@ -115,7 +115,6 @@ spec:
                           properties:
                             name:
                               description: Name of the policy.
-                              maxLength: 256
                               type: string
                           required:
                           - name
