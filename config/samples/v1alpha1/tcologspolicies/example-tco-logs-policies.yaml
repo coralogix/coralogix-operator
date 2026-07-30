@@ -51,3 +51,22 @@ spec:
         names:
           - mobile
         ruleType: start_with
+    - name: fourth policy with targets
+      severities:
+      - debug
+      - info
+      targets:
+        - dataset: myDataset
+          dataspace: default
+          priority: low
+        - dataset: archiveDataset
+          dataspace: default
+          priority: low
+          priorityOverride:
+            quotaBased:
+              usageTiers:
+                - dailyQuotaPercentage: 60
+                  priority: medium
+          archiveRetention:
+            backendRef:
+              name: Default

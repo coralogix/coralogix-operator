@@ -109,7 +109,8 @@ spec:
                       description: Name of the policy.
                       type: string
                     priority:
-                      description: The policy priority.
+                      description: The policy priority. Required when targets is not
+                        set, or when targets do not specify their own priorities.
                       enum:
                       - block
                       - high
@@ -152,9 +153,89 @@ spec:
                       - names
                       - ruleType
                       type: object
+                    targets:
+                      description: |-
+                        Targets defines the datasets to route matched data to, each with its own priority.
+                        When set, overrides or supplements the policy-level priority.
+                      items:
+                        description: TCOPolicyTarget defines a dataset destination
+                          with its own priority for matched log data.
+                        properties:
+                          archiveRetention:
+                            description: Matches the specified archive retention for
+                              this target.
+                            properties:
+                              backendRef:
+                                description: Reference to the retention policy
+                                properties:
+                                  name:
+                                    description: Name of the policy.
+                                    type: string
+                                required:
+                                - name
+                                type: object
+                            required:
+                            - backendRef
+                            type: object
+                          dataset:
+                            description: The dataset to route data to.
+                            minLength: 1
+                            type: string
+                          dataspace:
+                            description: The dataspace within the dataset.
+                            maxLength: 50
+                            type: string
+                          priority:
+                            description: Per-target priority. Mutually exclusive with
+                              a policy-level priority.
+                            enum:
+                            - block
+                            - high
+                            - low
+                            - medium
+                            type: string
+                          priorityOverride:
+                            description: Dynamic quota-based priority override for
+                              this target.
+                            properties:
+                              quotaBased:
+                                description: TCOPolicyQuotaBased maps daily quota
+                                  consumption percentages to priority levels.
+                                properties:
+                                  usageTiers:
+                                    items:
+                                      description: TCOPolicyUsageTier maps a daily
+                                        quota threshold percentage to a priority.
+                                      properties:
+                                        dailyQuotaPercentage:
+                                          anyOf:
+                                          - type: integer
+                                          - type: string
+                                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                          x-kubernetes-int-or-string: true
+                                        priority:
+                                          enum:
+                                          - block
+                                          - high
+                                          - low
+                                          - medium
+                                          type: string
+                                      required:
+                                      - dailyQuotaPercentage
+                                      - priority
+                                      type: object
+                                    minItems: 1
+                                    type: array
+                                required:
+                                - usageTiers
+                                type: object
+                            type: object
+                        required:
+                        - dataset
+                        type: object
+                      type: array
                   required:
                   - name
-                  - priority
                   - severities
                   type: object
                 type: array

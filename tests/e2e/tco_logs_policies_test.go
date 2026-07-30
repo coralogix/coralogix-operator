@@ -27,6 +27,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	openapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	tcopolicies "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/policies_service"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
@@ -46,7 +48,7 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
 				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
 					Name:       "over-limit",
-					Priority:   "low",
+					Priority:   ptr.To("low"),
 					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
 					Subsystems: &coralogixv1alpha1.TCOPolicyRule{
 						Names:    names,
@@ -61,10 +63,11 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 	})
 })
 
-var _ = Describe("TCOLogsPolicies", func() {
+var _ = Describe("TCOLogsPolicies", Serial, func() {
 	var (
 		crClient        client.Client
 		tcoClient       *cxsdk.TCOPoliciesClient
+		policiesClient  *tcopolicies.PoliciesServiceAPIService
 		logsPolicyName  = "tco-logs-policies-sample"
 		TCOLogsPolicies *coralogixv1alpha1.TCOLogsPolicies
 		policies        []*cxsdk.TCOPolicy
@@ -73,6 +76,8 @@ var _ = Describe("TCOLogsPolicies", func() {
 	BeforeEach(func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		tcoClient = ClientsInstance.GetCoralogixClientSet().TCOPolicies()
+		cfg := openapicxsdk.NewConfigBuilder().WithAPIKeyEnv().WithRegionEnv().Build()
+		policiesClient = openapicxsdk.NewClientSet(cfg).TCOPolicies()
 		TCOLogsPolicies = &coralogixv1alpha1.TCOLogsPolicies{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      logsPolicyName,
@@ -82,7 +87,7 @@ var _ = Describe("TCOLogsPolicies", func() {
 				Policies: []coralogixv1alpha1.TCOLogsPolicy{
 					{
 						Name:       "sample policy",
-						Priority:   "high",
+						Priority:   ptr.To("high"),
 						Severities: []coralogixv1alpha1.TCOPolicySeverity{"critical", "error"},
 						Applications: &coralogixv1alpha1.TCOPolicyRule{
 							Names:    []string{"prod"},
@@ -100,7 +105,7 @@ var _ = Describe("TCOLogsPolicies", func() {
 					},
 					{
 						Name:       "sample policy 2",
-						Priority:   "high",
+						Priority:   ptr.To("high"),
 						Disabled:   ptr.To(true),
 						Severities: []coralogixv1alpha1.TCOPolicySeverity{"critical", "error"},
 						Applications: &coralogixv1alpha1.TCOPolicyRule{
@@ -114,6 +119,22 @@ var _ = Describe("TCOLogsPolicies", func() {
 						ArchiveRetention: &coralogixv1alpha1.ArchiveRetention{
 							BackendRef: coralogixv1alpha1.ArchiveRetentionBackendRef{
 								Name: "Default",
+							},
+						},
+					},
+					{
+						Name:       "targets policy",
+						Severities: []coralogixv1alpha1.TCOPolicySeverity{"info", "debug"},
+						Targets: []coralogixv1alpha1.TCOPolicyTarget{
+							{
+								Dataset:   "myDataset",
+								Dataspace: ptr.To("default"),
+								Priority:  ptr.To("low"),
+							},
+							{
+								Dataset:   "myDataset2",
+								Dataspace: ptr.To("default"),
+								Priority:  ptr.To("medium"),
 							},
 						},
 					},
@@ -140,9 +161,25 @@ var _ = Describe("TCOLogsPolicies", func() {
 			Expect(err).ToNot(HaveOccurred())
 			policies = listRes.Policies
 			return policies
-		}, time.Minute, time.Second).Should(HaveLen(2))
+		}, time.Minute, time.Second).Should(HaveLen(3))
 
 		Expect(policies[0].Name.Value).To(Equal(TCOLogsPolicies.Spec.Policies[0].Name))
+
+		By("Verifying targets policy has targets in the backend")
+		Eventually(func(g Gomega) {
+			resp, _, err := policiesClient.PoliciesServiceGetCompanyPolicies(ctx).
+				SourceType(tcopolicies.V1SOURCETYPE_SOURCE_TYPE_LOGS).
+				Execute()
+			g.Expect(err).NotTo(HaveOccurred())
+			found := false
+			for _, p := range resp.Policies {
+				if p.Name == "targets policy" {
+					g.Expect(p.Targets).To(HaveLen(2))
+					found = true
+				}
+			}
+			g.Expect(found).To(BeTrue(), "policy 'targets policy' not found in backend")
+		}, time.Minute, time.Second).Should(Succeed())
 
 		By("Deleting the TCOLogsPolicies")
 		Expect(crClient.Delete(ctx, TCOLogsPolicies)).To(Succeed())
