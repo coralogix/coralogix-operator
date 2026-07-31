@@ -25,3 +25,10 @@ spec:
         - "filter:equals:GET"
       serviceFilters:
         - "filter:equals:nginx"
+  metricFields:
+    - targetBaseMetricName: "duration"
+      sourceField: "duration"
+      aggregations:
+        - aggType: "min"
+          targetMetricName: "min_duration"
+          aggMetadata: {}

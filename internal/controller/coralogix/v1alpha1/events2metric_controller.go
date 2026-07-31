@@ -19,24 +19,23 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	"github.com/go-logr/logr"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/protobuf/encoding/protojson"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	events2metrics "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/events2metrics_service"
 
-	utils "github.com/coralogix/coralogix-operator/v2/api/coralogix"
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
+	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // Events2MetricReconciler reconciles a Events2Metric object
 type Events2MetricReconciler struct {
+	E2MClient *events2metrics.Events2MetricsServiceAPIService
 	Interval  time.Duration
-	E2MClient *cxsdk.Events2MetricsClient
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=events2metrics,verbs=get;list;watch;create;update;patch;delete
@@ -57,17 +56,27 @@ func (r *Events2MetricReconciler) FinalizerName() string {
 
 func (r *Events2MetricReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	e2m := obj.(*coralogixv1alpha1.Events2Metric)
-	createRequest := e2m.Spec.ExtractCreateE2MRequest()
-
-	log.Info("Creating remote E2M", "E2M", protojson.Format(createRequest))
-	createResponse, err := r.E2MClient.Create(ctx, createRequest)
+	createRequest, err := e2m.Spec.ExtractCreateE2MRequest()
 	if err != nil {
-		return fmt.Errorf("error on creating remote E2M: %w", err)
+		return fmt.Errorf("error on extracting create request: %w", err)
 	}
-	log.Info("Remote E2M created", "response", protojson.Format(createResponse))
+
+	log.Info("Creating remote E2M", "E2M", utils.FormatJSON(createRequest))
+	createResponse, httpResp, err := r.E2MClient.
+		Events2MetricServiceCreateE2M(ctx).
+		E2MCreateParams(*createRequest).
+		Execute()
+	if err != nil {
+		return fmt.Errorf("error on creating remote E2M: %w", cxsdk.NewAPIError(httpResp, err))
+	}
+	log.Info("Remote E2M created", "response", utils.FormatJSON(createResponse))
+
+	if createResponse == nil || createResponse.E2m == nil || createResponse.E2m.Id == nil || *createResponse.E2m.Id == "" {
+		return fmt.Errorf("error on creating remote E2M: empty id in response")
+	}
 
 	e2m.Status = coralogixv1alpha1.Events2MetricStatus{
-		Id: utils.WrapperspbStringToStringPointer(createResponse.E2M.Id),
+		Id: createResponse.E2m.Id,
 	}
 
 	return nil
@@ -75,31 +84,42 @@ func (r *Events2MetricReconciler) HandleCreation(ctx context.Context, log logr.L
 
 func (r *Events2MetricReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	e2m := obj.(*coralogixv1alpha1.Events2Metric)
-	updateRequest := e2m.Spec.ExtractReplaceE2MRequest()
-	updateRequest.E2M.Id = utils.StringPointerToWrapperspbString(e2m.Status.Id)
-
-	log.Info("Updating remote E2M", "E2M", protojson.Format(updateRequest))
-	updateResponse, err := r.E2MClient.Replace(ctx, updateRequest)
+	updateRequest, err := e2m.Spec.ExtractReplaceE2MRequest(*e2m.Status.Id)
 	if err != nil {
-		return err
+		return fmt.Errorf("error on extracting replace request: %w", err)
 	}
-	log.Info("Remote E2M updated", "E2M", protojson.Format(updateResponse))
+
+	log.Info("Updating remote E2M", "E2M", utils.FormatJSON(updateRequest))
+	updateResponse, httpResp, err := r.E2MClient.
+		Events2MetricServiceReplaceE2M(ctx).
+		E2M1(*updateRequest).
+		Execute()
+	if err != nil {
+		return fmt.Errorf("error on updating remote E2M: %w", cxsdk.NewAPIError(httpResp, err))
+	}
+	log.Info("Remote E2M updated", "E2M", utils.FormatJSON(updateResponse))
 
 	return nil
 }
 
 func (r *Events2MetricReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
 	e2m := obj.(*coralogixv1alpha1.Events2Metric)
-	log.Info("Deleting E2M from remote system", "id", *e2m.Status.Id)
-	_, err := r.E2MClient.Delete(ctx,
-		&cxsdk.DeleteE2MRequest{
-			Id: utils.StringPointerToWrapperspbString(e2m.Status.Id),
-		})
-	if err != nil && cxsdk.Code(err) != codes.NotFound {
-		log.Error(err, "Error deleting remote E2M", "id", *e2m.Status.Id)
-		return fmt.Errorf("error deleting remote E2M %s: %w", *e2m.Status.Id, err)
+	if e2m.Status.Id == nil || *e2m.Status.Id == "" {
+		log.Info("No ID in status, nothing to delete remotely")
+		return nil
 	}
-	log.Info("E2M deleted from remote system", "id", *e2m.Status.Id)
+	id := *e2m.Status.Id
+	log.Info("Deleting E2M from remote system", "id", id)
+	_, httpResp, err := r.E2MClient.
+		Events2MetricServiceDeleteE2M(ctx, id).
+		Execute()
+	if err != nil {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+			log.Error(err, "Error deleting remote E2M", "id", id)
+			return fmt.Errorf("error deleting remote E2M %s: %w", id, apiErr)
+		}
+	}
+	log.Info("E2M deleted from remote system", "id", id)
 	return nil
 }
 

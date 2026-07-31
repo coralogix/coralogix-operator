@@ -15,6 +15,8 @@
 package e2e
 
 import (
+	"os"
+
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	prometheusv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"k8s.io/client-go/kubernetes"
@@ -22,6 +24,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	openapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1beta1"
@@ -90,4 +93,16 @@ func (c *Clients) GetControllerRuntimeClient() client.Client {
 
 func (c *Clients) GetK8sClient() *kubernetes.Clientset {
 	return c.K8sClient
+}
+
+// newOpenAPIClientSet builds an OpenAPI SDK client from CORALOGIX_API_KEY and
+// either CORALOGIX_DOMAIN or CORALOGIX_REGION.
+func newOpenAPIClientSet() *openapicxsdk.ClientSet {
+	builder := openapicxsdk.NewConfigBuilder().WithAPIKeyEnv()
+	if domain := os.Getenv("CORALOGIX_DOMAIN"); domain != "" {
+		builder = builder.WithDomain(domain)
+	} else {
+		builder = builder.WithRegionEnv()
+	}
+	return openapicxsdk.NewClientSet(builder.Build())
 }
