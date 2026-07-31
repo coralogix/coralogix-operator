@@ -19,7 +19,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -63,7 +62,7 @@ var _ = Describe("AIEvaluation PII", Ordered, func() {
 
 	BeforeAll(func(ctx context.Context) {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
-		clientSet := newAIEvaluationOpenAPIClientSet()
+		clientSet := newOpenAPIClientSet()
 		aiApplications = clientSet.AIApplications()
 		aiEvaluations = clientSet.AIEvaluations()
 
@@ -175,7 +174,7 @@ var _ = Describe("AIEvaluation Allowed Topics", Ordered, func() {
 
 	BeforeAll(func(ctx context.Context) {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
-		clientSet := newAIEvaluationOpenAPIClientSet()
+		clientSet := newOpenAPIClientSet()
 		aiApplications = clientSet.AIApplications()
 		aiEvaluations = clientSet.AIEvaluations()
 
@@ -287,7 +286,7 @@ var _ = Describe("AIEvaluation Competition", Ordered, func() {
 
 	BeforeAll(func(ctx context.Context) {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
-		clientSet := newAIEvaluationOpenAPIClientSet()
+		clientSet := newOpenAPIClientSet()
 		aiApplications = clientSet.AIApplications()
 		aiEvaluations = clientSet.AIEvaluations()
 
@@ -449,7 +448,7 @@ var _ = Describe("AIEvaluation Language Mismatch", Ordered, func() {
 
 	BeforeAll(func(ctx context.Context) {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
-		clientSet := newAIEvaluationOpenAPIClientSet()
+		clientSet := newOpenAPIClientSet()
 		aiApplications = clientSet.AIApplications()
 		aiEvaluations = clientSet.AIEvaluations()
 
@@ -559,7 +558,7 @@ var _ = Describe("AIEvaluation Prompt Injection", Ordered, func() {
 
 	BeforeAll(func(ctx context.Context) {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
-		clientSet := newAIEvaluationOpenAPIClientSet()
+		clientSet := newOpenAPIClientSet()
 		aiApplications = clientSet.AIApplications()
 		aiEvaluations = clientSet.AIEvaluations()
 
@@ -671,7 +670,7 @@ var _ = Describe("AIEvaluation Restricted Topics", Ordered, func() {
 
 	BeforeAll(func(ctx context.Context) {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
-		clientSet := newAIEvaluationOpenAPIClientSet()
+		clientSet := newOpenAPIClientSet()
 		aiApplications = clientSet.AIApplications()
 		aiEvaluations = clientSet.AIEvaluations()
 
@@ -781,7 +780,7 @@ var _ = Describe("AIEvaluation Sexism", Ordered, func() {
 
 	BeforeAll(func(ctx context.Context) {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
-		clientSet := newAIEvaluationOpenAPIClientSet()
+		clientSet := newOpenAPIClientSet()
 		aiApplications = clientSet.AIApplications()
 		aiEvaluations = clientSet.AIEvaluations()
 
@@ -935,7 +934,7 @@ var _ = Describe("AIEvaluation Toxicity", Ordered, func() {
 
 	BeforeAll(func(ctx context.Context) {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
-		clientSet := newAIEvaluationOpenAPIClientSet()
+		clientSet := newOpenAPIClientSet()
 		aiApplications = clientSet.AIApplications()
 		aiEvaluations = clientSet.AIEvaluations()
 
@@ -1032,16 +1031,6 @@ var _ = Describe("AIEvaluation Toxicity", Ordered, func() {
 type aiEvaluationApplicationRef struct {
 	application string
 	subsystem   string
-}
-
-func newAIEvaluationOpenAPIClientSet() *cxsdk.ClientSet {
-	builder := cxsdk.NewConfigBuilder().WithAPIKeyEnv()
-	if domain := os.Getenv("CORALOGIX_DOMAIN"); domain != "" {
-		builder = builder.WithDomain(domain)
-	} else {
-		builder = builder.WithRegionEnv()
-	}
-	return cxsdk.NewClientSet(builder.Build())
 }
 
 // Every e2e job running against the same Coralogix account draws from one pool of
@@ -1176,7 +1165,7 @@ func describeEmptyConfigAIEvaluation(
 
 		BeforeAll(func(ctx context.Context) {
 			crClient = ClientsInstance.GetControllerRuntimeClient()
-			clientSet := newAIEvaluationOpenAPIClientSet()
+			clientSet := newOpenAPIClientSet()
 			aiApplications = clientSet.AIApplications()
 			aiEvaluations = clientSet.AIEvaluations()
 
@@ -1295,7 +1284,7 @@ func describeStringSetConfigAIEvaluation(
 
 		BeforeAll(func(ctx context.Context) {
 			crClient = ClientsInstance.GetControllerRuntimeClient()
-			clientSet := newAIEvaluationOpenAPIClientSet()
+			clientSet := newOpenAPIClientSet()
 			aiApplications = clientSet.AIApplications()
 			aiEvaluations = clientSet.AIEvaluations()
 

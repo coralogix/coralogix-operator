@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -48,7 +47,7 @@ var _ = Describe("Dashboard", Ordered, func() {
 
 	BeforeEach(func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
-		dashboardsClient = newDashboardOpenAPIClientSet().Dashboards()
+		dashboardsClient = newOpenAPIClientSet().Dashboards()
 	})
 
 	It("Should be created successfully", func(ctx context.Context) {
@@ -135,7 +134,7 @@ var _ = Describe("Dashboard import", Ordered, func() {
 
 	BeforeEach(func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
-		dashboardsClient = newDashboardOpenAPIClientSet().Dashboards()
+		dashboardsClient = newOpenAPIClientSet().Dashboards()
 	})
 
 	It("Should adopt a pre-existing remote dashboard", func(ctx context.Context) {
@@ -196,16 +195,6 @@ var _ = Describe("Dashboard import", Ordered, func() {
 		}, time.Minute, time.Second).Should(Equal(http.StatusNotFound))
 	})
 })
-
-func newDashboardOpenAPIClientSet() *cxsdk.ClientSet {
-	builder := cxsdk.NewConfigBuilder().WithAPIKeyEnv()
-	if domain := os.Getenv("CORALOGIX_DOMAIN"); domain != "" {
-		builder = builder.WithDomain(domain)
-	} else {
-		builder = builder.WithRegionEnv()
-	}
-	return cxsdk.NewClientSet(builder.Build())
-}
 
 // getDashboardJson carries arcDisplay, showMinMax and layoutColumns deliberately: those
 // three fields are missing from the proto the gRPC client used, so they double as the

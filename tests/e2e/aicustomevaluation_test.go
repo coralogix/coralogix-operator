@@ -49,7 +49,7 @@ var _ = Describe("AICustomEvaluation", Ordered, func() {
 
 	BeforeAll(func(ctx context.Context) {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
-		clientSet := newAIEvaluationOpenAPIClientSet()
+		clientSet := newOpenAPIClientSet()
 		aiApplications = clientSet.AIApplications()
 		aiEvaluations = clientSet.AIEvaluations()
 
@@ -191,7 +191,7 @@ var _ = Describe("AICustomEvaluation minimal", Ordered, func() {
 
 	BeforeAll(func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
-		aiEvaluations = newAIEvaluationOpenAPIClientSet().AIEvaluations()
+		aiEvaluations = newOpenAPIClientSet().AIEvaluations()
 		aiCustomEvaluation = newAICustomEvaluation(
 			resourceName,
 			"minimal-policy",
@@ -248,7 +248,7 @@ var _ = Describe("AICustomEvaluation application resolution", Ordered, func() {
 
 	BeforeAll(func(ctx context.Context) {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
-		clientSet := newAIEvaluationOpenAPIClientSet()
+		clientSet := newOpenAPIClientSet()
 		aiApplications = clientSet.AIApplications()
 
 		var err error

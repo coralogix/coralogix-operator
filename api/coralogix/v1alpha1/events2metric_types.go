@@ -15,11 +15,13 @@
 package v1alpha1
 
 import (
-	"google.golang.org/protobuf/types/known/wrapperspb"
+	"fmt"
+
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	events2metrics "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/events2metrics_service"
 
 	utils "github.com/coralogix/coralogix-operator/v2/api/coralogix"
 )
@@ -98,14 +100,14 @@ const (
 	AggregationTypeSamples AggregationType = "samples"
 )
 
-var AggregationTypeSchemaToProto = map[AggregationType]cxsdk.E2MAggregationType{
-	AggregationTypeMin:       cxsdk.E2MAggregationTypeMin,
-	AggregationTypeMax:       cxsdk.E2MAggregationTypeMax,
-	AggregationTypeCount:     cxsdk.E2MAggregationTypeCount,
-	AggregationTypeAvg:       cxsdk.E2MAggregationTypeAvg,
-	AggregationTypeSum:       cxsdk.E2MAggregationTypeSum,
-	AggregationTypeHistogram: cxsdk.E2MAggregationTypeHistogram,
-	AggregationTypeSamples:   cxsdk.E2MAggregationTypeSamples,
+var AggregationTypeSchemaToOpenAPI = map[AggregationType]events2metrics.AggType{
+	AggregationTypeMin:       events2metrics.AGGTYPE_AGG_TYPE_MIN,
+	AggregationTypeMax:       events2metrics.AGGTYPE_AGG_TYPE_MAX,
+	AggregationTypeCount:     events2metrics.AGGTYPE_AGG_TYPE_COUNT,
+	AggregationTypeAvg:       events2metrics.AGGTYPE_AGG_TYPE_AVG,
+	AggregationTypeSum:       events2metrics.AGGTYPE_AGG_TYPE_SUM,
+	AggregationTypeHistogram: events2metrics.AGGTYPE_AGG_TYPE_HISTOGRAM,
+	AggregationTypeSamples:   events2metrics.AGGTYPE_AGG_TYPE_SAMPLES,
 }
 
 // AggregationMetadata defines the metadata for aggregation.
@@ -133,9 +135,9 @@ const (
 	E2MAggSamplesSampleTypeMax E2MAggSampleType = "max"
 )
 
-var E2MAggSamplesSampleTypeSchemaToProto = map[E2MAggSampleType]cxsdk.E2MAggSampleType{
-	E2MAggSamplesSampleTypeMin: cxsdk.E2MAggSampleTypeMin,
-	E2MAggSamplesSampleTypeMax: cxsdk.E2MAggSampleTypeMax,
+var E2MAggSamplesSampleTypeSchemaToOpenAPI = map[E2MAggSampleType]events2metrics.SampleType{
+	E2MAggSamplesSampleTypeMin: events2metrics.SAMPLETYPE_SAMPLE_TYPE_MIN,
+	E2MAggSamplesSampleTypeMax: events2metrics.SAMPLETYPE_SAMPLE_TYPE_MAX,
 }
 
 // HistogramMetadata defines the metadata for histogram aggregation.
@@ -212,13 +214,13 @@ const (
 	L2MSeverityCritical L2MSeverity = "critical"
 )
 
-var L2MSeveritySchemaToProto = map[L2MSeverity]cxsdk.L2MSeverity{
-	L2MSeverityDebug:    cxsdk.L2MSeverityDebug,
-	L2MSeverityVerbose:  cxsdk.L2MSeverityVerbose,
-	L2MSeverityInfo:     cxsdk.L2MSeverityInfo,
-	L2MSeverityWarning:  cxsdk.L2MSeverityWarning,
-	L2MSeverityError:    cxsdk.L2MSeverityError,
-	L2MSeverityCritical: cxsdk.L2MSeverityCritical,
+var L2MSeveritySchemaToOpenAPI = map[L2MSeverity]events2metrics.Logs2metricsV2Severity{
+	L2MSeverityDebug:    events2metrics.LOGS2METRICSV2SEVERITY_SEVERITY_DEBUG,
+	L2MSeverityVerbose:  events2metrics.LOGS2METRICSV2SEVERITY_SEVERITY_VERBOSE,
+	L2MSeverityInfo:     events2metrics.LOGS2METRICSV2SEVERITY_SEVERITY_INFO,
+	L2MSeverityWarning:  events2metrics.LOGS2METRICSV2SEVERITY_SEVERITY_WARNING,
+	L2MSeverityError:    events2metrics.LOGS2METRICSV2SEVERITY_SEVERITY_ERROR,
+	L2MSeverityCritical: events2metrics.LOGS2METRICSV2SEVERITY_SEVERITY_CRITICAL,
 }
 
 // Events2MetricStatus defines the observed state of Events2Metric.
@@ -281,166 +283,197 @@ func init() {
 	SchemeBuilder.Register(&Events2Metric{}, &Events2MetricList{})
 }
 
-func (spec *Events2MetricSpec) ExtractCreateE2MRequest() *cxsdk.CreateE2MRequest {
-	e2m := &cxsdk.E2MCreateParams{
-		Name:              wrapperspb.String(spec.Name),
-		Description:       utils.StringPointerToWrapperspbString(spec.Description),
-		DataSource:        utils.StringPointerToWrapperspbString(spec.DataSource),
-		PermutationsLimit: utils.Int32PointerToWrapperspbInt32(spec.PermutationsLimit),
+func (spec *Events2MetricSpec) ExtractCreateE2MRequest() (*events2metrics.E2MCreateParams, error) {
+	metricFields, err := extractE2mMetricFields(spec.MetricFields)
+	if err != nil {
+		return nil, err
+	}
+
+	e2m := &events2metrics.E2MCreateParams{
+		Name:              spec.Name,
+		Description:       spec.Description,
+		DataSource:        spec.DataSource,
+		PermutationsLimit: spec.PermutationsLimit,
 		MetricLabels:      extractE2mMetricLabels(spec.MetricLabels),
-		MetricFields:      extractE2mMetricFields(spec.MetricFields),
+		MetricFields:      metricFields,
 	}
-	e2m = expandE2MQuery(e2m, spec.Query)
-	return &cxsdk.CreateE2MRequest{
-		E2M: e2m,
+	if err := expandCreateE2MQuery(e2m, spec.Query); err != nil {
+		return nil, err
 	}
+	return e2m, nil
 }
 
-func (spec *Events2MetricSpec) ExtractReplaceE2MRequest() *cxsdk.ReplaceE2MRequest {
-	e2m := &cxsdk.ReplaceE2MRequest{
-		E2M: &cxsdk.E2M{
-			Name:         wrapperspb.String(spec.Name),
-			Description:  utils.StringPointerToWrapperspbString(spec.Description),
-			DataSource:   utils.StringPointerToWrapperspbString(spec.DataSource),
-			Permutations: extractE2mPermutations(spec.PermutationsLimit),
-			MetricLabels: extractE2mMetricLabels(spec.MetricLabels),
-			MetricFields: extractE2mMetricFields(spec.MetricFields),
-		},
+func (spec *Events2MetricSpec) ExtractReplaceE2MRequest(id string) (*events2metrics.E2M1, error) {
+	metricFields, err := extractE2mMetricFields(spec.MetricFields)
+	if err != nil {
+		return nil, err
 	}
-	e2m.E2M = expandUpdateE2MQuery(e2m.E2M, spec.Query)
-	return e2m
+
+	e2m := &events2metrics.E2M1{
+		Id:           &id,
+		Name:         spec.Name,
+		Description:  emptyStringIfNil(spec.Description),
+		DataSource:   spec.DataSource,
+		Permutations: extractE2mPermutations(spec.PermutationsLimit),
+		MetricLabels: extractE2mMetricLabels(spec.MetricLabels),
+		MetricFields: metricFields,
+	}
+	if err := expandReplaceE2MQuery(e2m, spec.Query); err != nil {
+		return nil, err
+	}
+	return e2m, nil
 }
 
-func extractE2mPermutations(permutations *int32) *cxsdk.E2MPermutations {
+// emptyStringIfNil coerces a nil *string to "". Used only on replace for
+// description: omit keeps the previous value, and min_length: 0 allows "".
+// Create leaves description nil. lucene, dataSource, and alias clear on omit
+// (dataSource/alias also have min_length: 1, so "" is invalid for them).
+func emptyStringIfNil(s *string) *string {
+	if s != nil {
+		return s
+	}
+	return ptr.To("")
+}
+
+func extractE2mPermutations(permutations *int32) *events2metrics.E2MPermutations {
 	if permutations == nil {
 		return nil
 	}
-	return &cxsdk.E2MPermutations{
+	return &events2metrics.E2MPermutations{
 		Limit: *permutations,
 	}
 }
 
-func expandE2MQuery(e2m *cxsdk.E2MCreateParams, query E2MQuery) *cxsdk.E2MCreateParams {
+func expandCreateE2MQuery(e2m *events2metrics.E2MCreateParams, query E2MQuery) error {
 	if spans := query.Spans; spans != nil {
-		e2m.Query = &cxsdk.E2MCreateParamsSpansQuery{
-			SpansQuery: &cxsdk.S2MSpansQuery{
-				Lucene:                 utils.StringPointerToWrapperspbString(spans.Lucene),
-				ApplicationnameFilters: utils.StringSliceToWrappedStringSlice(spans.ApplicationNameFilters),
-				SubsystemnameFilters:   utils.StringSliceToWrappedStringSlice(spans.SubsystemNameFilters),
-				ActionFilters:          utils.StringSliceToWrappedStringSlice(spans.ActionFilters),
-				ServiceFilters:         utils.StringSliceToWrappedStringSlice(spans.ServiceFilters),
-			},
+		e2m.Type = events2metrics.E2MTYPE_E2_M_TYPE_SPANS2_METRICS.Ptr()
+		e2m.SpansQuery = &events2metrics.V2SpansQuery{
+			Lucene:                 spans.Lucene,
+			ApplicationnameFilters: spans.ApplicationNameFilters,
+			SubsystemnameFilters:   spans.SubsystemNameFilters,
+			ActionFilters:          spans.ActionFilters,
+			ServiceFilters:         spans.ServiceFilters,
 		}
-		e2m.Type = cxsdk.E2MTypeSpans2Metrics
-	} else if logs := query.Logs; logs != nil {
-		e2m.Query = &cxsdk.E2MCreateParamsLogsQuery{
-			LogsQuery: &cxsdk.L2MLogsQuery{
-				Lucene:                 utils.StringPointerToWrapperspbString(logs.Lucene),
-				Alias:                  utils.StringPointerToWrapperspbString(logs.Alias),
-				ApplicationnameFilters: utils.StringSliceToWrappedStringSlice(logs.ApplicationNameFilters),
-				SubsystemnameFilters:   utils.StringSliceToWrappedStringSlice(logs.SubsystemNameFilters),
-				SeverityFilters:        expandL2MSeverityFilters(logs.SeverityFilters),
-			},
-		}
-		e2m.Type = cxsdk.E2MTypeLogs2Metrics
+		return nil
 	}
-
-	return e2m
+	if logs := query.Logs; logs != nil {
+		e2m.Type = events2metrics.E2MTYPE_E2_M_TYPE_LOGS2_METRICS.Ptr()
+		e2m.LogsQuery = &events2metrics.V2LogsQuery{
+			Lucene:                 logs.Lucene,
+			Alias:                  logs.Alias,
+			ApplicationnameFilters: logs.ApplicationNameFilters,
+			SubsystemnameFilters:   logs.SubsystemNameFilters,
+			SeverityFilters:        expandL2MSeverityFilters(logs.SeverityFilters),
+		}
+		return nil
+	}
+	return fmt.Errorf("exactly one of query.spans or query.logs must be set")
 }
 
-func expandUpdateE2MQuery(e2m *cxsdk.E2M, query E2MQuery) *cxsdk.E2M {
+func expandReplaceE2MQuery(e2m *events2metrics.E2M1, query E2MQuery) error {
 	if spans := query.Spans; spans != nil {
-		e2m.Query = &cxsdk.E2MSpansQuery{
-			SpansQuery: &cxsdk.S2MSpansQuery{
-				Lucene:                 utils.StringPointerToWrapperspbString(spans.Lucene),
-				ApplicationnameFilters: utils.StringSliceToWrappedStringSlice(spans.ApplicationNameFilters),
-				SubsystemnameFilters:   utils.StringSliceToWrappedStringSlice(spans.SubsystemNameFilters),
-				ActionFilters:          utils.StringSliceToWrappedStringSlice(spans.ActionFilters),
-				ServiceFilters:         utils.StringSliceToWrappedStringSlice(spans.ServiceFilters),
-			},
+		e2m.Type = events2metrics.E2MTYPE_E2_M_TYPE_SPANS2_METRICS
+		e2m.SpansQuery = &events2metrics.V2SpansQuery{
+			Lucene:                 spans.Lucene,
+			ApplicationnameFilters: spans.ApplicationNameFilters,
+			SubsystemnameFilters:   spans.SubsystemNameFilters,
+			ActionFilters:          spans.ActionFilters,
+			ServiceFilters:         spans.ServiceFilters,
 		}
-		e2m.Type = cxsdk.E2MTypeSpans2Metrics
-	} else if logs := query.Logs; logs != nil {
-		e2m.Query = &cxsdk.E2MLogsQuery{
-			LogsQuery: &cxsdk.L2MLogsQuery{
-				Lucene:                 utils.StringPointerToWrapperspbString(logs.Lucene),
-				Alias:                  utils.StringPointerToWrapperspbString(logs.Alias),
-				ApplicationnameFilters: utils.StringSliceToWrappedStringSlice(logs.ApplicationNameFilters),
-				SubsystemnameFilters:   utils.StringSliceToWrappedStringSlice(logs.SubsystemNameFilters),
-				SeverityFilters:        expandL2MSeverityFilters(logs.SeverityFilters),
-			},
-		}
-		e2m.Type = cxsdk.E2MTypeLogs2Metrics
+		return nil
 	}
-
-	return e2m
+	if logs := query.Logs; logs != nil {
+		e2m.Type = events2metrics.E2MTYPE_E2_M_TYPE_LOGS2_METRICS
+		e2m.LogsQuery = &events2metrics.V2LogsQuery{
+			Lucene:                 logs.Lucene,
+			Alias:                  logs.Alias,
+			ApplicationnameFilters: logs.ApplicationNameFilters,
+			SubsystemnameFilters:   logs.SubsystemNameFilters,
+			SeverityFilters:        expandL2MSeverityFilters(logs.SeverityFilters),
+		}
+		return nil
+	}
+	return fmt.Errorf("exactly one of query.spans or query.logs must be set")
 }
 
-func expandL2MSeverityFilters(severityFilters []L2MSeverity) []cxsdk.L2MSeverity {
+func expandL2MSeverityFilters(severityFilters []L2MSeverity) []events2metrics.Logs2metricsV2Severity {
 	if severityFilters == nil {
 		return nil
 	}
-	expanded := make([]cxsdk.L2MSeverity, 0, len(severityFilters))
+	expanded := make([]events2metrics.Logs2metricsV2Severity, 0, len(severityFilters))
 	for _, severity := range severityFilters {
-		if protoSeverity, ok := L2MSeveritySchemaToProto[severity]; ok {
-			expanded = append(expanded, protoSeverity)
+		if apiSeverity, ok := L2MSeveritySchemaToOpenAPI[severity]; ok {
+			expanded = append(expanded, apiSeverity)
 		}
 	}
 	return expanded
 }
 
-func extractE2mMetricLabels(labels []MetricLabel) []*cxsdk.MetricLabel {
-	metricLabels := make([]*cxsdk.MetricLabel, 0, len(labels))
+func extractE2mMetricLabels(labels []MetricLabel) []events2metrics.MetricLabel {
+	metricLabels := make([]events2metrics.MetricLabel, 0, len(labels))
 	for _, label := range labels {
-		metricLabels = append(metricLabels, &cxsdk.MetricLabel{
-			TargetLabel: wrapperspb.String(label.TargetLabel),
-			SourceField: wrapperspb.String(label.SourceField),
+		metricLabels = append(metricLabels, events2metrics.MetricLabel{
+			TargetLabel: label.TargetLabel,
+			SourceField: label.SourceField,
 		})
 	}
 	return metricLabels
 }
 
-func extractE2mMetricFields(fields []MetricField) []*cxsdk.MetricField {
-	metricFields := make([]*cxsdk.MetricField, 0, len(fields))
+func extractE2mMetricFields(fields []MetricField) ([]events2metrics.V2MetricField, error) {
+	metricFields := make([]events2metrics.V2MetricField, 0, len(fields))
 	for _, field := range fields {
-		metricField := &cxsdk.MetricField{
-			TargetBaseMetricName: wrapperspb.String(field.TargetBaseMetricName),
-			SourceField:          wrapperspb.String(field.SourceField),
-			Aggregations:         extractE2mAggregations(field.Aggregations),
+		aggregations, err := extractE2mAggregations(field.Aggregations)
+		if err != nil {
+			return nil, err
 		}
-		metricFields = append(metricFields, metricField)
+		metricFields = append(metricFields, events2metrics.V2MetricField{
+			TargetBaseMetricName: field.TargetBaseMetricName,
+			SourceField:          field.SourceField,
+			Aggregations:         aggregations,
+		})
 	}
-	return metricFields
+	return metricFields, nil
 }
 
-func extractE2mAggregations(aggregations []MetricFieldAggregation) []*cxsdk.E2MAggregation {
-	metricAggregations := make([]*cxsdk.E2MAggregation, 0, len(aggregations))
+func extractE2mAggregations(aggregations []MetricFieldAggregation) ([]events2metrics.V2Aggregation, error) {
+	// Always emit a non-nil slice so OpenAPI required "aggregations" serializes as [] not null.
+	metricAggregations := make([]events2metrics.V2Aggregation, 0, len(aggregations))
 	for _, aggregation := range aggregations {
-		metricAggregation := &cxsdk.E2MAggregation{
-			Enabled:          aggregation.Enabled,
-			AggType:          AggregationTypeSchemaToProto[aggregation.AggType],
-			TargetMetricName: aggregation.TargetMetricName,
+		aggType, ok := AggregationTypeSchemaToOpenAPI[aggregation.AggType]
+		if !ok {
+			return nil, fmt.Errorf("unsupported aggregation type %q", aggregation.AggType)
 		}
-		metricAggregation = expandE2MAggMetadata(metricAggregation, aggregation.AggMetadata)
+		enabled := aggregation.Enabled
+		targetMetricName := aggregation.TargetMetricName
+		metricAggregation := events2metrics.V2Aggregation{
+			Enabled:          &enabled,
+			AggType:          aggType.Ptr(),
+			TargetMetricName: &targetMetricName,
+		}
+		if err := expandE2MAggMetadata(&metricAggregation, aggregation.AggMetadata); err != nil {
+			return nil, err
+		}
 		metricAggregations = append(metricAggregations, metricAggregation)
 	}
-	return metricAggregations
+	return metricAggregations, nil
 }
 
-func expandE2MAggMetadata(metricAggregation *cxsdk.E2MAggregation, metadata AggregationMetadata) *cxsdk.E2MAggregation {
+func expandE2MAggMetadata(metricAggregation *events2metrics.V2Aggregation, metadata AggregationMetadata) error {
 	if metadata.Samples != nil {
-		metricAggregation.AggMetadata = &cxsdk.E2MAggregationSamples{
-			Samples: &cxsdk.E2MAggSamples{
-				SampleType: E2MAggSamplesSampleTypeSchemaToProto[metadata.Samples.SampleType],
-			},
+		sampleType, ok := E2MAggSamplesSampleTypeSchemaToOpenAPI[metadata.Samples.SampleType]
+		if !ok {
+			return fmt.Errorf("unsupported sample type %q", metadata.Samples.SampleType)
 		}
-	} else if metadata.Histogram != nil {
-		metricAggregation.AggMetadata = &cxsdk.E2MAggregationHistogram{
-			Histogram: &cxsdk.E2MAggHistogram{
-				Buckets: utils.QuantitiesToFloats32(metadata.Histogram.Buckets),
-			},
+		metricAggregation.Samples = &events2metrics.E2MAggSamples{
+			SampleType: sampleType.Ptr(),
+		}
+		return nil
+	}
+	if metadata.Histogram != nil {
+		metricAggregation.Histogram = &events2metrics.E2MAggHistogram{
+			Buckets: utils.QuantitiesToFloats32(metadata.Histogram.Buckets),
 		}
 	}
-
-	return metricAggregation
+	return nil
 }
