@@ -159,7 +159,7 @@ GINKGO ?= $(LOCALBIN)/ginkgo
 KUSTOMIZE_VERSION ?= v5.3.0
 CONTROLLER_TOOLS_VERSION ?= v0.17.2
 HELM_DOCS_VERSION ?= v1.14.2
-GOLANGCI_LINT_VERSION ?= v2.1.6
+GOLANGCI_LINT_VERSION ?= v2.12.2
 # Keep the ginkgo CLI on the same version as the library in go.mod.
 GINKGO_VERSION ?= $(shell go list -m -f '{{.Version}}' github.com/onsi/ginkgo/v2)
 
