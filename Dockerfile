@@ -4,7 +4,7 @@
 # multi-platform build cross-compiles via GOARCH instead of running the whole Go toolchain
 # under QEMU emulation for each non-native target. The final stage only copies a file, so no
 # emulation is needed there either.
-FROM --platform=${BUILDPLATFORM} golang:1.24 AS builder
+FROM --platform=${BUILDPLATFORM} golang:1.25 AS builder
 ARG TARGETOS
 ARG TARGETARCH
 
