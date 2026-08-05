@@ -23,8 +23,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	oapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	archiveretentions "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/retentions_service"
 	targets "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/target_service"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
@@ -36,7 +36,7 @@ import (
 // ArchiveLogsTargetReconciler reconciles a ArchiveLogsTarget object
 type ArchiveLogsTargetReconciler struct {
 	ArchiveLogsTargetsClient *targets.TargetServiceAPIService
-	ArchiveRetentionsClient  *cxsdk.ArchiveRetentionsClient
+	ArchiveRetentionsClient  *archiveretentions.RetentionsServiceAPIService
 	Interval                 time.Duration
 }
 
@@ -74,9 +74,9 @@ func (r *ArchiveLogsTargetReconciler) HandleCreation(ctx context.Context, log lo
 	if err != nil {
 		return fmt.Errorf("error on creating remote archivelogstarget: %w", oapicxsdk.NewAPIError(httpResp, err))
 	}
-	_, err = r.ArchiveRetentionsClient.Activate(ctx, &cxsdk.ActivateRetentionsRequest{})
+	_, httpResp, err = r.ArchiveRetentionsClient.RetentionsServiceActivateRetentions(ctx).Execute()
 	if err != nil {
-		return fmt.Errorf("error activating archive retentions: %w", err)
+		return fmt.Errorf("error activating archive retentions: %w", oapicxsdk.NewAPIError(httpResp, err))
 	}
 	log.Info("Remote archivelogstarget created", "response", utils.FormatJSON(createResponse))
 
