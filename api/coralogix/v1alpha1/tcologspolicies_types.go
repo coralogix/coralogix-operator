@@ -45,7 +45,7 @@ type TCOLogsPolicy struct {
 	Description *string `json:"description,omitempty"`
 
 	// +kubebuilder:validation:Enum=block;high;medium;low
-	// The policy priority. Required when targets is not set, or when targets do not specify their own priorities.
+	// The policy priority. Required when targets is not set. Mutually exclusive with targets, which carry their own per-target priorities.
 	// +optional
 	Priority *string `json:"priority,omitempty"`
 
@@ -68,8 +68,8 @@ type TCOLogsPolicy struct {
 	// +optional
 	Subsystems *TCOPolicyRule `json:"subsystems,omitempty"`
 
-	// Targets defines the datasets to route matched data to, each with its own priority.
-	// When set, overrides or supplements the policy-level priority.
+	// Targets defines the datasets to route matched data to, each with its own required priority.
+	// Setting targets requires omitting the policy-level priority; the two are mutually exclusive.
 	// +optional
 	Targets []TCOPolicyTarget `json:"targets,omitempty"`
 }
@@ -126,9 +126,8 @@ type TCOPolicyTarget struct {
 	Dataspace *string `json:"dataspace,omitempty"`
 
 	// +kubebuilder:validation:Enum=block;high;low;medium
-	// +optional
-	// Per-target priority. Mutually exclusive with a policy-level priority.
-	Priority *string `json:"priority,omitempty"`
+	// Per-target priority. Required on every target. Mutually exclusive with the policy-level priority.
+	Priority string `json:"priority"`
 
 	// +optional
 	// Dynamic quota-based priority override for this target.
@@ -303,14 +302,12 @@ func expandTCOPolicyTargets(retentionsByName map[string]string, targets []TCOPol
 			errs = errors.Join(errs, err)
 			continue
 		}
+		priority := PrioritySchemaToOpenAPI[target.Priority]
 		t := tcopolicies.V1Target{
 			Dataset:          &target.Dataset,
 			Dataspace:        target.Dataspace,
+			Priority:         &priority,
 			ArchiveRetention: archiveRetention,
-		}
-		if target.Priority != nil {
-			priority := PrioritySchemaToOpenAPI[*target.Priority]
-			t.Priority = &priority
 		}
 		if target.PriorityOverride != nil {
 			t.PriorityOverride = expandTCOPolicyPriorityOverride(target.PriorityOverride)

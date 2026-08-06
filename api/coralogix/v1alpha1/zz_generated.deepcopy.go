@@ -5466,11 +5466,6 @@ func (in *TCOPolicyTarget) DeepCopyInto(out *TCOPolicyTarget) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.Priority != nil {
-		in, out := &in.Priority, &out.Priority
-		*out = new(string)
-		**out = **in
-	}
 	if in.PriorityOverride != nil {
 		in, out := &in.PriorityOverride, &out.PriorityOverride
 		*out = new(TCOPolicyPriorityOverride)

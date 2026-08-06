@@ -109,7 +109,8 @@ spec:
                       type: string
                     priority:
                       description: The policy priority. Required when targets is not
-                        set, or when targets do not specify their own priorities.
+                        set. Mutually exclusive with targets, which carry their own
+                        per-target priorities.
                       enum:
                       - block
                       - high
@@ -154,8 +155,8 @@ spec:
                       type: object
                     targets:
                       description: |-
-                        Targets defines the datasets to route matched data to, each with its own priority.
-                        When set, overrides or supplements the policy-level priority.
+                        Targets defines the datasets to route matched data to, each with its own required priority.
+                        Setting targets requires omitting the policy-level priority; the two are mutually exclusive.
                       items:
                         description: TCOPolicyTarget defines a dataset destination
                           with its own priority for matched log data.
@@ -185,8 +186,8 @@ spec:
                             maxLength: 50
                             type: string
                           priority:
-                            description: Per-target priority. Mutually exclusive with
-                              a policy-level priority.
+                            description: Per-target priority. Required on every target.
+                              Mutually exclusive with the policy-level priority.
                             enum:
                             - block
                             - high
@@ -231,6 +232,7 @@ spec:
                             type: object
                         required:
                         - dataset
+                        - priority
                         type: object
                       type: array
                   required:

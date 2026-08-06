@@ -10885,7 +10885,7 @@ A TCO policy for logs.
         <td><b>priority</b></td>
         <td>enum</td>
         <td>
-          The policy priority. Required when targets is not set, or when targets do not specify their own priorities.<br/>
+          The policy priority. Required when targets is not set. Mutually exclusive with targets, which carry their own per-target priorities.<br/>
           <br/>
             <i>Enum</i>: block, high, medium, low<br/>
         </td>
@@ -10901,8 +10901,8 @@ A TCO policy for logs.
         <td><b><a href="#tcologspoliciesspecpoliciesindextargetsindex">targets</a></b></td>
         <td>[]object</td>
         <td>
-          Targets defines the datasets to route matched data to, each with its own priority.
-When set, overrides or supplements the policy-level priority.<br/>
+          Targets defines the datasets to route matched data to, each with its own required priority.
+Setting targets requires omitting the policy-level priority; the two are mutually exclusive.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11059,6 +11059,15 @@ TCOPolicyTarget defines a dataset destination with its own priority for matched 
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          Per-target priority. Required on every target. Mutually exclusive with the policy-level priority.<br/>
+          <br/>
+            <i>Enum</i>: block, high, low, medium<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
         <td><b><a href="#tcologspoliciesspecpoliciesindextargetsindexarchiveretention">archiveRetention</a></b></td>
         <td>object</td>
         <td>
@@ -11070,15 +11079,6 @@ TCOPolicyTarget defines a dataset destination with its own priority for matched 
         <td>string</td>
         <td>
           The dataspace within the dataset.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>priority</b></td>
-        <td>enum</td>
-        <td>
-          Per-target priority. Mutually exclusive with a policy-level priority.<br/>
-          <br/>
-            <i>Enum</i>: block, high, low, medium<br/>
         </td>
         <td>false</td>
       </tr><tr>

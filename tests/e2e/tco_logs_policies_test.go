@@ -129,12 +129,12 @@ var _ = Describe("TCOLogsPolicies", Serial, func() {
 							{
 								Dataset:   "myDataset",
 								Dataspace: ptr.To("default"),
-								Priority:  ptr.To("low"),
+								Priority:  "low",
 							},
 							{
 								Dataset:   "myDataset2",
 								Dataspace: ptr.To("default"),
-								Priority:  ptr.To("medium"),
+								Priority:  "medium",
 							},
 						},
 					},
