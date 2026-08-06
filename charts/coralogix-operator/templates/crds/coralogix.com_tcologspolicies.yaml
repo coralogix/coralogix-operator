@@ -110,7 +110,8 @@ spec:
                       type: string
                     priority:
                       description: The policy priority. Required when targets is not
-                        set, or when targets do not specify their own priorities.
+                        set. Mutually exclusive with targets, which carry their own
+                        per-target priorities.
                       enum:
                       - block
                       - high
@@ -186,8 +187,8 @@ spec:
                             maxLength: 50
                             type: string
                           priority:
-                            description: Per-target priority. Mutually exclusive with
-                              a policy-level priority.
+                            description: Per-target priority. Required on every target.
+                              Mutually exclusive with the policy-level priority.
                             enum:
                             - block
                             - high
@@ -232,6 +233,7 @@ spec:
                             type: object
                         required:
                         - dataset
+                        - priority
                         type: object
                       type: array
                   required:

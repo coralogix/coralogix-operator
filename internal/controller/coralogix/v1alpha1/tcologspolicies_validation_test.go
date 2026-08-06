@@ -93,7 +93,7 @@ var _ = Describe("TCOLogsPolicies validation", func() {
 					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
 					Targets: []coralogixv1alpha1.TCOPolicyTarget{{
 						Dataset:  "",
-						Priority: ptr.To("low"),
+						Priority: "low",
 					}},
 				}},
 			},
@@ -115,7 +115,7 @@ var _ = Describe("TCOLogsPolicies validation", func() {
 					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
 					Targets: []coralogixv1alpha1.TCOPolicyTarget{{
 						Dataset:  "myDataset",
-						Priority: ptr.To("low"),
+						Priority: "low",
 					}},
 				}},
 			},
@@ -135,8 +135,8 @@ var _ = Describe("TCOLogsPolicies validation", func() {
 					Name:       "targets-own-priority",
 					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
 					Targets: []coralogixv1alpha1.TCOPolicyTarget{
-						{Dataset: "ds1", Priority: ptr.To("low")},
-						{Dataset: "ds2", Priority: ptr.To("medium")},
+						{Dataset: "ds1", Priority: "low"},
+						{Dataset: "ds2", Priority: "medium"},
 					},
 				}},
 			},
@@ -145,16 +145,15 @@ var _ = Describe("TCOLogsPolicies validation", func() {
 		Expect(k8sClient.Delete(ctx, policy)).To(Succeed())
 	})
 
-	It("should accept a policy with a top-level priority and targets that have no per-target priority", func(ctx context.Context) {
+	It("should reject a target with no priority", func(ctx context.Context) {
 		policy := &coralogixv1alpha1.TCOLogsPolicies{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "top-level-priority-with-targets",
+				Name:      "target-without-priority",
 				Namespace: "default",
 			},
 			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
 				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
-					Name:       "inherited-priority",
-					Priority:   ptr.To("low"),
+					Name:       "missing-target-priority",
 					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
 					Targets: []coralogixv1alpha1.TCOPolicyTarget{{
 						Dataset: "myDataset",
@@ -162,8 +161,9 @@ var _ = Describe("TCOLogsPolicies validation", func() {
 				}},
 			},
 		}
-		Expect(k8sClient.Create(ctx, policy)).To(Succeed())
-		Expect(k8sClient.Delete(ctx, policy)).To(Succeed())
+		err := k8sClient.Create(ctx, policy)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("spec.policies[0].targets[0].priority"))
 	})
 
 	// resource.Quantity for DailyQuotaPercentage (supports fractional values)
@@ -179,7 +179,7 @@ var _ = Describe("TCOLogsPolicies validation", func() {
 					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
 					Targets: []coralogixv1alpha1.TCOPolicyTarget{{
 						Dataset:  "myDataset",
-						Priority: ptr.To("low"),
+						Priority: "low",
 						PriorityOverride: &coralogixv1alpha1.TCOPolicyPriorityOverride{
 							QuotaBased: &coralogixv1alpha1.TCOPolicyQuotaBased{
 								UsageTiers: []coralogixv1alpha1.TCOPolicyUsageTier{{
