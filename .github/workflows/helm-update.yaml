@@ -4,6 +4,12 @@ on:
     tags:
       - "v*"
 
+# peter-evans/create-pull-request pushes the version-bump branch and opens the PR with
+# secrets.GITHUB_TOKEN.
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   update-chart-version:
     runs-on: ubuntu-latest
