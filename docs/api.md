@@ -10901,8 +10901,8 @@ A TCO policy for logs.
         <td><b><a href="#tcologspoliciesspecpoliciesindextargetsindex">targets</a></b></td>
         <td>[]object</td>
         <td>
-          Targets defines the datasets to route matched data to, each with its own priority.
-When set, overrides or supplements the policy-level priority.<br/>
+          Targets defines the datasets to route matched data to, each with its own required priority.
+Setting targets requires omitting the policy-level priority; the two are mutually exclusive.<br/>
         </td>
         <td>false</td>
       </tr></tbody>

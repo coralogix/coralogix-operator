@@ -68,8 +68,8 @@ type TCOLogsPolicy struct {
 	// +optional
 	Subsystems *TCOPolicyRule `json:"subsystems,omitempty"`
 
-	// Targets defines the datasets to route matched data to, each with its own priority.
-	// When set, overrides or supplements the policy-level priority.
+	// Targets defines the datasets to route matched data to, each with its own required priority.
+	// Setting targets requires omitting the policy-level priority; the two are mutually exclusive.
 	// +optional
 	Targets []TCOPolicyTarget `json:"targets,omitempty"`
 }

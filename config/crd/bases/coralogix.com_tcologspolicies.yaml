@@ -155,8 +155,8 @@ spec:
                       type: object
                     targets:
                       description: |-
-                        Targets defines the datasets to route matched data to, each with its own priority.
-                        When set, overrides or supplements the policy-level priority.
+                        Targets defines the datasets to route matched data to, each with its own required priority.
+                        Setting targets requires omitting the policy-level priority; the two are mutually exclusive.
                       items:
                         description: TCOPolicyTarget defines a dataset destination
                           with its own priority for matched log data.
