@@ -55,7 +55,7 @@ import (
 	//+kubebuilder:scaffold:imports
 )
 
-const OperatorVersion = "2.4.0"
+const OperatorVersion = "2.5.0"
 
 var (
 	scheme   = k8sruntime.NewScheme()
@@ -131,8 +131,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	clientSet := cxsdk.NewClientSet(cxsdk.NewSDKCallPropertiesCreatorOperator(
-		strings.ToLower(cfg.CoralogixGrpcUrl),
+	// The SCIM users client is the operator's only remaining consumer of the legacy SDK.
+	// It speaks HTTP (api.<domain>/scim/Users), not gRPC, so no gRPC ClientSet is
+	// constructed and the operator only ever resolves api.<domain>.
+	usersClient := cxsdk.NewUsersClient(cxsdk.NewSDKCallPropertiesCreatorOperator(
+		strings.ToLower(cfg.CoralogixRegionOrDomain),
 		cxsdk.NewAuthContext(cfg.CoralogixApiKey, cfg.CoralogixApiKey),
 		OperatorVersion))
 
@@ -198,7 +201,7 @@ func main() {
 	}
 	if err = (&v1alpha1controllers.GroupReconciler{
 		GroupsClient: oapiClientSet.Groups(),
-		CXClientSet:  clientSet,
+		UsersClient:  usersClient,
 		Interval:     cfg.ReconcileIntervals[utils.GroupKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Group")
@@ -293,7 +296,7 @@ func main() {
 
 	if err = (&v1alpha1controllers.ArchiveLogsTargetReconciler{
 		ArchiveLogsTargetsClient: oapiClientSet.ArchiveLogs(),
-		ArchiveRetentionsClient:  clientSet.ArchiveRetentions(),
+		ArchiveRetentionsClient:  oapiClientSet.ArchiveRetentions(),
 		Interval:                 cfg.ReconcileIntervals[utils.ArchiveLogsTargetKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ArchiveLogsTarget")
@@ -396,7 +399,7 @@ func main() {
 	monitoring.SetOperatorInfoMetric(
 		runtime.Version(),
 		OperatorVersion,
-		cxsdk.CoralogixGrpcEndpointFromRegion(strings.ToLower(cfg.CoralogixGrpcUrl)),
+		cfg.CoralogixOpenApiUrl,
 	)
 
 	setupLog.Info("starting manager")

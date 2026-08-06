@@ -94,13 +94,13 @@ type ResourceRef struct {
 
 func (g *Group) ExtractCreateGroupRequest(
 	ctx context.Context,
-	cxClient *cxsdk.ClientSet) (*groups.CreateTeamGroupRequest, error) {
+	usersClient *cxsdk.UsersClient) (*groups.CreateTeamGroupRequest, error) {
 	var groupType *groups.GroupType
 	if g.Spec.GroupType != nil {
 		groupType = groupTypeSchemaToOpenAPI[*g.Spec.GroupType].Ptr()
 	}
 
-	usersIds, err := g.ExtractUsersIDs(ctx, cxClient)
+	usersIds, err := g.ExtractUsersIDs(ctx, usersClient)
 	if err != nil {
 		return nil, err
 	}
@@ -128,13 +128,13 @@ func (g *Group) ExtractCreateGroupRequest(
 }
 
 func (g *Group) ExtractUpdateGroupRequest(
-	ctx context.Context, cxClient *cxsdk.ClientSet) (*groups.UpdateTeamGroupRequest, error) {
+	ctx context.Context, usersClient *cxsdk.UsersClient) (*groups.UpdateTeamGroupRequest, error) {
 	var groupType *groups.GroupType
 	if g.Spec.GroupType != nil {
 		groupType = groupTypeSchemaToOpenAPI[*g.Spec.GroupType].Ptr()
 	}
 
-	usersIds, err := g.ExtractUsersIDs(ctx, cxClient)
+	usersIds, err := g.ExtractUsersIDs(ctx, usersClient)
 	if err != nil {
 		return nil, err
 	}
@@ -180,12 +180,12 @@ func (g *Group) ExtractUpdateGroupRequest(
 	}, nil
 }
 
-func (g *Group) ExtractUsersIDs(ctx context.Context, cxClient *cxsdk.ClientSet) ([]string, error) {
+func (g *Group) ExtractUsersIDs(ctx context.Context, usersClient *cxsdk.UsersClient) ([]string, error) {
 	if g.Spec.Members == nil {
 		return nil, nil
 	}
 
-	users, err := cxClient.Users().List(ctx)
+	users, err := usersClient.List(ctx)
 	if err != nil {
 		return nil, err
 	}

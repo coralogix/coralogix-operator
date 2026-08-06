@@ -38,7 +38,7 @@ import (
 // GroupReconciler reconciles a Group object
 type GroupReconciler struct {
 	GroupsClient *groups.TeamGroupsManagementServiceAPIService
-	CXClientSet  *cxsdk.ClientSet
+	UsersClient  *cxsdk.UsersClient
 	Interval     time.Duration
 }
 
@@ -60,7 +60,7 @@ func (r *GroupReconciler) RequeueInterval() time.Duration {
 
 func (r *GroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	group := obj.(*coralogixv1alpha1.Group)
-	createRequest, err := group.ExtractCreateGroupRequest(ctx, r.CXClientSet)
+	createRequest, err := group.ExtractCreateGroupRequest(ctx, r.UsersClient)
 	if err != nil {
 		return fmt.Errorf("error on extracting create request: %w", err)
 	}
@@ -83,7 +83,7 @@ func (r *GroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 
 func (r *GroupReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	group := obj.(*coralogixv1alpha1.Group)
-	updateRequest, err := group.ExtractUpdateGroupRequest(ctx, r.CXClientSet)
+	updateRequest, err := group.ExtractUpdateGroupRequest(ctx, r.UsersClient)
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
 	}
