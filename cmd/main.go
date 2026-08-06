@@ -55,7 +55,7 @@ import (
 	//+kubebuilder:scaffold:imports
 )
 
-const OperatorVersion = "2.4.0"
+const OperatorVersion = "2.5.0"
 
 var (
 	scheme   = k8sruntime.NewScheme()
@@ -132,8 +132,8 @@ func main() {
 	}
 
 	// The SCIM users client is the operator's only remaining consumer of the legacy SDK.
-	// It speaks HTTP (ng-api-http.<domain>/scim/Users), not gRPC, so no gRPC ClientSet
-	// is constructed and the operator never resolves ng-api-grpc.<domain>.
+	// It speaks HTTP (api.<domain>/scim/Users), not gRPC, so no gRPC ClientSet is
+	// constructed and the operator only ever resolves api.<domain>.
 	usersClient := cxsdk.NewUsersClient(cxsdk.NewSDKCallPropertiesCreatorOperator(
 		strings.ToLower(cfg.CoralogixRegionOrDomain),
 		cxsdk.NewAuthContext(cfg.CoralogixApiKey, cfg.CoralogixApiKey),
