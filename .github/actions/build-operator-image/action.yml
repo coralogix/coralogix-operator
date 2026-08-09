@@ -14,8 +14,8 @@ runs:
   using: composite
   steps:
     # The released image builds inside the `golang:` tag in Dockerfile, so read the version from
-    # there rather than from go.mod. go.mod's `go` directive is the module's *minimum* (1.24.0),
-    # which is not what ships: `golang:1.24` resolves to the newest 1.24.x. Taking go.mod at face
+    # there rather than from go.mod. go.mod's `go` directive is the module's *minimum* (1.26.0),
+    # which is not what ships: `golang:1.26` resolves to the newest 1.26.x. Taking go.mod at face
     # value would have CI compile the tested binary with an older patch release than the one the
     # released binary is built with.
     - name: Resolve the Go version the released image is built with
