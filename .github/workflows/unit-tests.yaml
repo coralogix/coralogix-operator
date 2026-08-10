@@ -12,6 +12,14 @@ on:
     paths-ignore:
       - "charts/**"
 
+permissions:
+  # seriousben/go-patch-cover-action needs both, one per event type:
+  #   push: its "Save Coverage" step runs `git push origin refs/notes/coverage` to persist the
+  #         coverage baseline that PR runs later diff against.
+  #   pull_request: it creates/updates the patch-coverage comment via the GraphQL API.
+  contents: write
+  pull-requests: write
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
   cancel-in-progress: true

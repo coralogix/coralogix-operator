@@ -8,6 +8,11 @@ on:
     paths:
       - charts/coralogix-operator/Chart.yaml
 
+# The chart is uploaded to Artifactory with credentials from secrets.*, so the workflow token
+# only ever needs to read the repo.
+permissions:
+  contents: read
+
 env:
   CHART_VERSION: $(yq eval '.version' charts/coralogix-operator/Chart.yaml)
   CHART_NAME: coralogix-operator
