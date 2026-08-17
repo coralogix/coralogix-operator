@@ -111,6 +111,34 @@ func TestConnectorExtractPagerdutyIncidentsAndCases(t *testing.T) {
 	}
 }
 
+func TestConnectorExtractMicrosoftTeams(t *testing.T) {
+	value := "integration-id"
+	teamID := "team-id"
+	channelID := "19:channel-id@thread.tacv2"
+	connector := &Connector{
+		Spec: ConnectorSpec{
+			Name:        "c",
+			Description: "d",
+			Type:        "microsoftTeams",
+			ConnectorConfig: ConnectorConfig{
+				Fields: []ConnectorConfigField{
+					{FieldName: "integrationId", Value: &value},
+					{FieldName: "teamId", Value: &teamID},
+					{FieldName: "channelId", Value: &channelID},
+				},
+			},
+		},
+	}
+
+	got, err := connector.ExtractConnector(context.Background())
+	if err != nil {
+		t.Fatalf("ExtractConnector returned error: %v", err)
+	}
+	if got.Type == nil || *got.Type != connectors.NOTIFICATIONCENTERCONNECTORTYPE_MICROSOFT_TEAMS {
+		t.Fatalf("Type = %v, want MICROSOFT_TEAMS", got.Type)
+	}
+}
+
 // GlobalRouter supports disabled, fallbackTargets, and CASES routing-rule entity type.
 func TestGlobalRouterExtractDisabledFallbackTargetsAndCases(t *testing.T) {
 	disabled := true

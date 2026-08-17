@@ -122,13 +122,15 @@ spec:
                 type: array
               connectorType:
                 description: ConnectorType is the type of the connector. Can be one
-                  of slack, genericHttps, pagerDuty, pagerDutyIncidents, or email.
+                  of slack, genericHttps, pagerDuty, pagerDutyIncidents, email, or
+                  microsoftTeams.
                 enum:
                 - slack
                 - genericHttps
                 - pagerDuty
                 - pagerDutyIncidents
                 - email
+                - microsoftTeams
                 type: string
               description:
                 description: Description is the description of the preset.
