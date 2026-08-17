@@ -99,6 +99,94 @@ var _ = Describe("Preset", Ordered, func() {
 	})
 })
 
+var _ = Describe("Preset MicrosoftTeams", Ordered, func() {
+	var (
+		crClient            client.Client
+		notificationsClient *cxsdk.NotificationsClient
+		presetID            string
+		preset              *coralogixv1alpha1.Preset
+		presetName          string
+	)
+
+	BeforeAll(func() {
+		if msTeamsIntegrationId == "" || msTeamsTeamId == "" || msTeamsChannelId == "" {
+			Skip("MS_TEAMS_INTEGRATION_ID, MS_TEAMS_TEAM_ID, and MS_TEAMS_CHANNEL_ID must be set")
+		}
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		notificationsClient = ClientsInstance.GetCoralogixClientSet().Notifications()
+	})
+
+	It("Should be created successfully", func(ctx context.Context) {
+		presetName = fmt.Sprintf("ms-teams-preset-%d", time.Now().Unix())
+		preset = getSampleMicrosoftTeamsPreset(presetName, testNamespace)
+		Expect(crClient.Create(ctx, preset)).To(Succeed())
+
+		Eventually(func(g Gomega) error {
+			fetched := &coralogixv1alpha1.Preset{}
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: presetName, Namespace: testNamespace}, fetched)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
+			if fetched.Status.Id != nil {
+				presetID = *fetched.Status.Id
+				return nil
+			}
+			return fmt.Errorf("preset ID is not set")
+		}, time.Minute, time.Second).Should(Succeed())
+
+		Eventually(func() error {
+			_, err := notificationsClient.GetPreset(ctx, &cxsdk.GetPresetRequest{Id: presetID})
+			return err
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should be deleted successfully", func(ctx context.Context) {
+		Expect(crClient.Delete(ctx, preset)).To(Succeed())
+		Eventually(func() codes.Code {
+			_, err := notificationsClient.GetPreset(ctx, &cxsdk.GetPresetRequest{Id: presetID})
+			return cxsdk.Code(err)
+		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
+	})
+})
+
+func getSampleMicrosoftTeamsPreset(name, namespace string) *coralogixv1alpha1.Preset {
+	parentID := "preset_system_microsoft_teams_alerts_basic"
+
+	return &coralogixv1alpha1.Preset{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: coralogixv1alpha1.PresetSpec{
+			Name:          name,
+			Description:   "This is a sample Microsoft Teams preset",
+			ConnectorType: "microsoftTeams",
+			EntityType:    "alerts",
+			ParentId:      &parentID,
+			ConfigOverrides: []coralogixv1alpha1.ConfigOverride{
+				{
+					ConditionType: coralogixv1alpha1.ConditionType{
+						MatchEntityTypeAndSubType: &coralogixv1alpha1.MatchEntityTypeAndSubType{
+							EntitySubType: "logsImmediateTriggered",
+						},
+					},
+					MessageConfig: coralogixv1alpha1.MessageConfig{
+						Fields: []coralogixv1alpha1.MessageConfigField{
+							{
+								FieldName: "title",
+								Template:  "CUSTOM PRESET OVERRIDE: {{alert.status}} {{alertDef.priority}} - {{alertDef.name}}",
+							},
+							{
+								FieldName: "description",
+								Template:  "{{alertDef.description}}",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func getSampleSlackPreset(name, namespace string) *coralogixv1alpha1.Preset {
 	parentID := "preset_system_slack_alerts_basic"
 

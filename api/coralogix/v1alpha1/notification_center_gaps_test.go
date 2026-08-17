@@ -111,6 +111,28 @@ func TestConnectorExtractPagerdutyIncidentsAndCases(t *testing.T) {
 	}
 }
 
+func TestPresetExtractMicrosoftTeams(t *testing.T) {
+	preset := &Preset{
+		Spec: PresetSpec{
+			Name:          "p",
+			Description:   "d",
+			ConnectorType: "microsoftTeams",
+			EntityType:    "alerts",
+		},
+	}
+
+	got, err := preset.ExtractPreset()
+	if err != nil {
+		t.Fatalf("ExtractPreset returned error: %v", err)
+	}
+	if got.ConnectorType == nil || *got.ConnectorType != presets.NOTIFICATIONCENTERCONNECTORTYPE_MICROSOFT_TEAMS {
+		t.Fatalf("ConnectorType = %v, want MICROSOFT_TEAMS", got.ConnectorType)
+	}
+	if got.EntityType == nil || *got.EntityType != presets.NOTIFICATIONCENTERENTITYTYPE_ALERTS {
+		t.Fatalf("EntityType = %v, want ALERTS", got.EntityType)
+	}
+}
+
 func TestConnectorExtractMicrosoftTeams(t *testing.T) {
 	value := "integration-id"
 	teamID := "team-id"
