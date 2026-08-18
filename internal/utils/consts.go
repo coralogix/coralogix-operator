@@ -24,6 +24,7 @@ const (
 
 	RuleGroupKind              = "RuleGroup"
 	AlertKind                  = "Alert"
+	AlertSetKind               = "AlertSet"
 	RecordingRuleGroupSetKind  = "RecordingRuleGroupSet"
 	OutboundWebhookKind        = "OutboundWebhook"
 	ApiKeyKind                 = "ApiKey"

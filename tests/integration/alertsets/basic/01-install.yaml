@@ -1,0 +1,24 @@
+apiVersion: coralogix.com/v1beta1
+kind: AlertSet
+metadata:
+  name: alert-set-integration
+spec:
+  alerts:
+    - key: third-alert
+      spec:
+        name: AlertSet integration third alert
+        priority: p5
+        alertType:
+          logsImmediate:
+            logsFilter:
+              simpleFilter:
+                luceneQuery: applicationName:alert-set-integration-third
+    - key: first-alert
+      spec:
+        name: AlertSet integration first alert updated
+        priority: p4
+        alertType:
+          logsImmediate:
+            logsFilter:
+              simpleFilter:
+                luceneQuery: applicationName:alert-set-integration-first

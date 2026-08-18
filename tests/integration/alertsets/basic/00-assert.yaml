@@ -1,0 +1,14 @@
+apiVersion: coralogix.com/v1beta1
+kind: AlertSet
+metadata:
+  name: alert-set-integration
+status:
+  alerts:
+    - key: first-alert
+      state: Synced
+    - key: second-alert
+      state: Synced
+  conditions:
+    - type: RemoteSynced
+      status: "True"
+  printableStatus: RemoteSynced

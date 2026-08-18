@@ -38,6 +38,7 @@ rules:
   - aievaluations
   - alerts
   - alertschedulers
+  - alertsets
   - apikeys
   - archivelogstargets
   - archivemetricstargets
@@ -78,6 +79,7 @@ rules:
   - aievaluations/finalizers
   - alerts/finalizers
   - alertschedulers/finalizers
+  - alertsets/finalizers
   - apikeys/finalizers
   - archivelogstargets/finalizers
   - archivemetricstargets/finalizers
@@ -112,6 +114,7 @@ rules:
   - aievaluations/status
   - alerts/status
   - alertschedulers/status
+  - alertsets/status
   - apikeys/status
   - archivelogstargets/status
   - archivemetricstargets/status
