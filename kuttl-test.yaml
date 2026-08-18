@@ -2,5 +2,6 @@ apiVersion: kuttl.dev/v1beta1
 kind: TestSuite
 testDirs:
   - tests/integration/prometheusrules
+  - tests/integration/alertsets
 namespace: default
 timeout: 360

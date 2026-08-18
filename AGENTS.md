@@ -62,10 +62,13 @@ Preserve `observedGeneration` behavior and `RemoteSynced` reasons from `internal
 
 When a remote resource is missing during update, the shared reconciler removes `status.id` so the next reconciliation can recreate it.
 
+Deep-copy status values that contain slices or maps before change detection. A shallow copy can hide in-place condition changes.
+
 ## Review Checklist
 
 - Check CRD compatibility: field names, JSON tags, enum strings, defaulting, validation markers, required/optional behavior, and status shape.
 - Check `+kubebuilder:default` against presence semantics: a zero-value default on a non-pointer `omitempty` field is a no-op, and a non-zero default needs a pointer field.
+- Bound lists used by CEL rules with the API limit. An unbounded list can make a nested CRD exceed the Kubernetes CEL cost budget.
 - Trace touched fields end to end: CR spec -> controller conversion -> Coralogix API request -> remote response -> status/conditions -> samples/docs.
 - Check null, empty, pointer, wrapper, and zero-value drift between Kubernetes objects, Go structs, SDK models, protobufs, and remote API defaults.
 - Check finalizer/status ordering for partial failures, retries, conflicts, remote not-found responses, and selector mismatch cleanup.

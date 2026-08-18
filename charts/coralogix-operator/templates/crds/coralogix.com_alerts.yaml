@@ -761,6 +761,7 @@ spec:
                           required:
                           - condition
                           type: object
+                        maxItems: 5
                         minItems: 1
                         type: array
                       undetectedValuesManagement:
