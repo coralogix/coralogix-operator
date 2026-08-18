@@ -56,21 +56,24 @@ type ArchiveMetricsTargetStatus struct {
 }
 
 func (s *ArchiveMetricsTargetSpec) ExtractConfigureTenantRequest() (*archivemetrics.ConfigureTenantRequest, error) {
-	if s.S3Target != nil {
-		return &archivemetrics.ConfigureTenantRequest{
-			RetentionPolicy: &archivemetrics.RetentionPolicyRequest{
-				RawResolution:         s.ResolutionPolicy.RawResolution,
-				FiveMinutesResolution: s.ResolutionPolicy.FiveMinutesResolution,
-				OneHourResolution:     s.ResolutionPolicy.OneHourResolution,
-			},
-			S3: &archivemetrics.S3Config{
-				Region: s.S3Target.Region,
-				Bucket: s.S3Target.BucketName,
-			},
-		}, nil
+	if s.S3Target == nil {
+		return nil, fmt.Errorf("archive metrics target does not have a S3Target")
 	}
 
-	return nil, fmt.Errorf("archive metrics target does not have a S3Target")
+	req := &archivemetrics.ConfigureTenantRequest{
+		S3: &archivemetrics.S3Config{
+			Region: s.S3Target.Region,
+			Bucket: s.S3Target.BucketName,
+		},
+	}
+	if s.ResolutionPolicy != nil {
+		req.RetentionPolicy = &archivemetrics.RetentionPolicyRequest{
+			RawResolution:         s.ResolutionPolicy.RawResolution,
+			FiveMinutesResolution: s.ResolutionPolicy.FiveMinutesResolution,
+			OneHourResolution:     s.ResolutionPolicy.OneHourResolution,
+		}
+	}
+	return req, nil
 }
 
 func (s *ArchiveMetricsTargetSpec) ExtractUpdateRequest() (*archivemetrics.UpdateTenantRequest, error) {
