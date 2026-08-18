@@ -395,7 +395,7 @@ func (r *AlertSetReconciler) persistCreatedAlertSetStatus(
 		return nil
 	})
 	if err != nil {
-		return true, fmt.Errorf("persist created AlertSet IDs after status update error (%v): %w", statusUpdateErr, err)
+		return true, fmt.Errorf("persist created AlertSet IDs after status update error: %w", errors.Join(statusUpdateErr, err))
 	}
 	*alertSet = *persistedAlertSet
 	return true, nil
