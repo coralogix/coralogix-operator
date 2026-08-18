@@ -323,9 +323,9 @@ var _ = Describe("Connector MicrosoftTeams", Ordered, func() {
 	)
 
 	BeforeAll(func() {
-		if msTeamsIntegrationId == "" || msTeamsTeamId == "" || msTeamsChannelId == "" {
-			Skip("MS_TEAMS_INTEGRATION_ID, MS_TEAMS_TEAM_ID, and MS_TEAMS_CHANNEL_ID must be set")
-		}
+		Expect(msTeamsIntegrationId).NotTo(BeEmpty(), "MS_TEAMS_INTEGRATION_ID must be set")
+		Expect(msTeamsTeamId).NotTo(BeEmpty(), "MS_TEAMS_TEAM_ID must be set")
+		Expect(msTeamsChannelId).NotTo(BeEmpty(), "MS_TEAMS_CHANNEL_ID must be set")
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		notificationsClient = ClientsInstance.GetCoralogixClientSet().Notifications()
 	})
