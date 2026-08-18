@@ -151,7 +151,7 @@ Use this map to choose the smallest useful reading set before opening broad dire
 Primary resource kinds:
 
 - `v1beta1`: `Alert`.
-- `v1alpha1`: `AIEvaluation`, `AlertScheduler`, `ApiKey`, `ArchiveLogsTarget`, `ArchiveMetricsTarget`, `Connector`, `CustomEnrichment`, `CustomRole`, `Dashboard`, `DashboardsFolder`, `Enrichment`, `Events2Metric`, `GlobalRouter`, `Group`, `Integration`, `IPAccess`, `OutboundWebhook`, `Preset`, `QuotaAllocationRuleSet`, `RecordingRuleGroupSet`, `RuleGroup`, `Scope`, `SLO`, `TCOLogsPolicies`, `TCOTracesPolicies`, `View`, `ViewFolder`.
+- `v1alpha1`: `AIEvaluation`, `AlertScheduler`, `ApiKey`, `ArchiveLogsTarget`, `ArchiveMetricsTarget`, `Connector`, `CustomEnrichment`, `CustomRole`, `Dashboard`, `DashboardsFolder`, `Enrichment`, `Events2Metric`, `GlobalRouter`, `Group`, `Integration`, `IPAccess`, `OutboundWebhook`, `Preset`, `QuotaAllocationRuleSet`, `RecordingRuleGroupSet`, `RuleGroup`, `Scope`, `SLO`, `TCOLogsPolicies`, `TCORumPolicies`, `TCOTracesPolicies`, `View`, `ViewFolder`.
 
 Quick navigation:
 
