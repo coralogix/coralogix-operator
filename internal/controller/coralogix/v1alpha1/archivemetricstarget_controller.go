@@ -58,21 +58,42 @@ func (r *ArchiveMetricsTargetReconciler) RequeueInterval() time.Duration {
 	return r.Interval
 }
 
-// We first configure the tenant and then update because we cannot specify the retention days in the configure request.
 func (r *ArchiveMetricsTargetReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	archiveMetricsTarget := obj.(*coralogixv1alpha1.ArchiveMetricsTarget)
+	if err := r.applyRemote(ctx, log, archiveMetricsTarget); err != nil {
+		return err
+	}
+
+	id := "archiveMetricsTarget"
+	archiveMetricsTarget.Status = coralogixv1alpha1.ArchiveMetricsTargetStatus{
+		ID: &id,
+	}
+
+	return nil
+}
+
+func (r *ArchiveMetricsTargetReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
+	return r.applyRemote(ctx, log, obj.(*coralogixv1alpha1.ArchiveMetricsTarget))
+}
+
+// applyRemote enables the tenant archive and then sets retention days.
+// ConfigureTenant is required on update as well as create: Update alone does
+// not re-enable a tenant that another client has disabled, and this target is
+// account-wide so a concurrent operator can disable it between reconciles.
+func (r *ArchiveMetricsTargetReconciler) applyRemote(ctx context.Context, log logr.Logger, archiveMetricsTarget *coralogixv1alpha1.ArchiveMetricsTarget) error {
 	configureTenantRequest, err := archiveMetricsTarget.Spec.ExtractConfigureTenantRequest()
 	if err != nil {
-		return fmt.Errorf("error on extracting create archivemetricstarget request: %w", err)
+		return fmt.Errorf("error on extracting configure archivemetricstarget request: %w", err)
 	}
-	log.Info("Creating remote archivemetricstarget", "archivemetricstarget", utils.FormatJSON(configureTenantRequest))
-	createResponse, httpResp, err := r.ArchiveMetricsTargetsClient.
+	log.Info("Configuring remote archivemetricstarget", "archivemetricstarget", utils.FormatJSON(configureTenantRequest))
+	configureResponse, httpResp, err := r.ArchiveMetricsTargetsClient.
 		MetricsConfiguratorPublicServiceConfigureTenant(ctx).
 		ConfigureTenantRequest(*configureTenantRequest).
 		Execute()
 	if err != nil {
-		return fmt.Errorf("error on creating remote archivemetricstarget: %w", cxsdk.NewAPIError(httpResp, err))
+		return fmt.Errorf("error on configuring remote archivemetricstarget: %w", cxsdk.NewAPIError(httpResp, err))
 	}
+
 	updateRequest, err := archiveMetricsTarget.Spec.ExtractUpdateRequest()
 	if err != nil {
 		return fmt.Errorf("error on extracting update archivemetricstarget request: %w", err)
@@ -84,31 +105,7 @@ func (r *ArchiveMetricsTargetReconciler) HandleCreation(ctx context.Context, log
 	if err != nil {
 		return cxsdk.NewAPIError(httpResp, err)
 	}
-	log.Info("Remote archivemetricstarget created", "response", utils.FormatJSON(createResponse))
-
-	id := "archiveMetricsTarget"
-	archiveMetricsTarget.Status = coralogixv1alpha1.ArchiveMetricsTargetStatus{
-		ID: &id,
-	}
-
-	return nil
-}
-
-func (r *ArchiveMetricsTargetReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
-	archiveMetricsTarget := obj.(*coralogixv1alpha1.ArchiveMetricsTarget)
-	updateRequest, err := archiveMetricsTarget.Spec.ExtractUpdateRequest()
-	if err != nil {
-		return fmt.Errorf("error on extracting update archivemetricstarget request: %w", err)
-	}
-	log.Info("Updating remote archivemetricstarget", "archivemetricstarget", utils.FormatJSON(updateRequest))
-	_, httpResp, err := r.ArchiveMetricsTargetsClient.
-		MetricsConfiguratorPublicServiceUpdate(ctx).
-		UpdateTenantRequest(*updateRequest).
-		Execute()
-	if err != nil {
-		return cxsdk.NewAPIError(httpResp, err)
-	}
-	log.Info("Remote archivemetricstarget updated")
+	log.Info("Remote archivemetricstarget applied", "response", utils.FormatJSON(configureResponse))
 
 	return nil
 }
