@@ -83,8 +83,6 @@ spec:
         - --ipaccess-reconcile-interval-seconds=${IPACCESS_RECONCILE_INTERVAL_SECONDS}
         - --archivelogstarget-reconcile-interval-seconds=${ARCHIVELOGSTARGET_RECONCILE_INTERVAL_SECONDS}
         - --archivemetricstarget-reconcile-interval-seconds=${ARCHIVEMETRICSTARGET_RECONCILE_INTERVAL_SECONDS}
-        - --globalrouter-reconcile-interval-seconds=${GLOBALROUTER_RECONCILE_INTERVAL_SECONDS}
-        - --preset-reconcile-interval-seconds=${PRESET_RECONCILE_INTERVAL_SECONDS}
         name: manager
         image: controller
         imagePullPolicy: IfNotPresent

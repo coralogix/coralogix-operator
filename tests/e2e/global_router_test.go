@@ -98,7 +98,7 @@ var _ = Describe("GlobalRouter", Ordered, Serial, func() {
 			getRes, err := notificationsClient.GetGlobalRouter(ctx, &cxsdk.GetGlobalRouterRequest{Id: globalRouterID})
 			Expect(err).ToNot(HaveOccurred())
 			return *getRes.GetRouter().Rules[0].Name
-		}, accountWideBackendTimeout, time.Second).Should(Equal(newRuleName))
+		}, time.Minute, time.Second).Should(Equal(newRuleName))
 	})
 
 	It("Should be deleted successfully", func(ctx context.Context) {
