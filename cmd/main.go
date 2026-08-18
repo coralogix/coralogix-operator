@@ -161,7 +161,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Alert")
 		os.Exit(1)
 	}
-	if err = (&v1beta1controllers.AlertSetReconciler{
+	if err = (&v1alpha1controllers.AlertSetReconciler{
 		ClientSet: oapiClientSet,
 		Interval:  cfg.ReconcileIntervals[utils.AlertSetKind],
 	}).SetupWithManager(mgr); err != nil {

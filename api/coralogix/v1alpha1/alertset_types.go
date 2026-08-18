@@ -12,9 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1beta1
+package v1alpha1
 
-import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	v1beta1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1beta1"
+)
 
 // AlertSetSpec defines a set of Coralogix alerts.
 type AlertSetSpec struct {
@@ -35,7 +39,7 @@ type AlertSetItem struct {
 	Key string `json:"key"`
 
 	// Spec defines the alert.
-	Spec AlertSpec `json:"spec"`
+	Spec v1beta1.AlertSpec `json:"spec"`
 }
 
 // AlertSetItemState is the synchronization state of one alert.

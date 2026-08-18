@@ -31,6 +31,7 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
@@ -39,7 +40,7 @@ var _ = Describe("AlertSet", Ordered, func() {
 	var (
 		crClient       client.Client
 		alertsClient   *cxsdk.AlertsClient
-		alertSet       *coralogixv1beta1.AlertSet
+		alertSet       *coralogixv1alpha1.AlertSet
 		firstID        string
 		secondID       string
 		replacementID  string
@@ -50,12 +51,12 @@ var _ = Describe("AlertSet", Ordered, func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		alertsClient = ClientsInstance.GetCoralogixClientSet().Alerts()
 		alertSetSuffix = uuid.NewString()[:8]
-		alertSet = &coralogixv1beta1.AlertSet{
+		alertSet = &coralogixv1alpha1.AlertSet{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "alert-set-" + alertSetSuffix,
 				Namespace: testNamespace,
 			},
-			Spec: coralogixv1beta1.AlertSetSpec{Alerts: []coralogixv1beta1.AlertSetItem{
+			Spec: coralogixv1alpha1.AlertSetSpec{Alerts: []coralogixv1alpha1.AlertSetItem{
 				newE2EAlertSetItem("first-alert", "AlertSet first "+alertSetSuffix),
 				newE2EAlertSetItem("second-alert", "AlertSet second "+alertSetSuffix),
 			}},
@@ -66,7 +67,7 @@ var _ = Describe("AlertSet", Ordered, func() {
 		Expect(crClient.Create(ctx, alertSet)).To(Succeed())
 
 		Eventually(func(g Gomega) {
-			fetched := &coralogixv1beta1.AlertSet{}
+			fetched := &coralogixv1alpha1.AlertSet{}
 			g.Expect(crClient.Get(ctx, client.ObjectKeyFromObject(alertSet), fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetched.Status.Alerts).To(HaveLen(2))
@@ -89,7 +90,7 @@ var _ = Describe("AlertSet", Ordered, func() {
 		Expect(crClient.Patch(ctx, updated, client.MergeFrom(alertSet))).To(Succeed())
 
 		Eventually(func(g Gomega) {
-			fetched := &coralogixv1beta1.AlertSet{}
+			fetched := &coralogixv1alpha1.AlertSet{}
 			g.Expect(crClient.Get(ctx, client.ObjectKeyFromObject(alertSet), fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			statuses := alertSetStatusesByKey(fetched.Status.Alerts)
@@ -112,7 +113,7 @@ var _ = Describe("AlertSet", Ordered, func() {
 		Expect(crClient.Patch(ctx, updated, client.MergeFrom(alertSet))).To(Succeed())
 
 		Eventually(func(g Gomega) {
-			fetched := &coralogixv1beta1.AlertSet{}
+			fetched := &coralogixv1alpha1.AlertSet{}
 			g.Expect(crClient.Get(ctx, client.ObjectKeyFromObject(alertSet), fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			statuses := alertSetStatusesByKey(fetched.Status.Alerts)
@@ -138,7 +139,7 @@ var _ = Describe("AlertSet", Ordered, func() {
 		Expect(crClient.Patch(ctx, updated, client.MergeFrom(alertSet))).To(Succeed())
 
 		Eventually(func(g Gomega) {
-			fetched := &coralogixv1beta1.AlertSet{}
+			fetched := &coralogixv1alpha1.AlertSet{}
 			g.Expect(crClient.Get(ctx, client.ObjectKeyFromObject(alertSet), fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetched.Status.Alerts).To(HaveLen(1))
@@ -149,7 +150,7 @@ var _ = Describe("AlertSet", Ordered, func() {
 
 		Expect(crClient.Delete(ctx, alertSet)).To(Succeed())
 		Eventually(func() bool {
-			fetched := &coralogixv1beta1.AlertSet{}
+			fetched := &coralogixv1alpha1.AlertSet{}
 			err := crClient.Get(ctx, types.NamespacedName{Name: alertSet.Name, Namespace: alertSet.Namespace}, fetched)
 			return client.IgnoreNotFound(err) == nil && err != nil
 		}, time.Minute, time.Second).Should(BeTrue())
@@ -157,9 +158,9 @@ var _ = Describe("AlertSet", Ordered, func() {
 	})
 })
 
-func newE2EAlertSetItem(key, name string) coralogixv1beta1.AlertSetItem {
+func newE2EAlertSetItem(key, name string) coralogixv1alpha1.AlertSetItem {
 	query := fmt.Sprintf("applicationName:%s", key)
-	return coralogixv1beta1.AlertSetItem{
+	return coralogixv1alpha1.AlertSetItem{
 		Key: key,
 		Spec: coralogixv1beta1.AlertSpec{
 			Name:     name,
@@ -175,8 +176,8 @@ func newE2EAlertSetItem(key, name string) coralogixv1beta1.AlertSetItem {
 	}
 }
 
-func alertSetStatusesByKey(statuses []coralogixv1beta1.AlertSetItemStatus) map[string]coralogixv1beta1.AlertSetItemStatus {
-	result := make(map[string]coralogixv1beta1.AlertSetItemStatus, len(statuses))
+func alertSetStatusesByKey(statuses []coralogixv1alpha1.AlertSetItemStatus) map[string]coralogixv1alpha1.AlertSetItemStatus {
+	result := make(map[string]coralogixv1alpha1.AlertSetItemStatus, len(statuses))
 	for _, status := range statuses {
 		result[status.Key] = status
 	}

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1beta1
+package v1alpha1
 
 import (
 	"context"
@@ -32,6 +32,7 @@ import (
 
 	alerts "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/alert_definitions_service"
 
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 )
@@ -82,7 +83,7 @@ func (w conflictOnceStatusWriter) Update(
 	if w.parent.conflicts > 0 {
 		w.parent.conflicts--
 		return k8serrors.NewConflict(schema.GroupResource{
-			Group:    coralogixv1beta1.GroupVersion.Group,
+			Group:    coralogixv1alpha1.GroupVersion.Group,
 			Resource: "alertsets",
 		}, obj.GetName(), nil)
 	}
@@ -115,7 +116,7 @@ func (c notFoundUpdateClient) Update(
 	_ ...client.UpdateOption,
 ) error {
 	return k8serrors.NewNotFound(schema.GroupResource{
-		Group:    coralogixv1beta1.GroupVersion.Group,
+		Group:    coralogixv1alpha1.GroupVersion.Group,
 		Resource: "alertsets",
 	}, obj.GetName())
 }
@@ -146,10 +147,10 @@ func (f fakeAlertSetAPI) Delete(ctx context.Context, id string) (*http.Response,
 }
 
 func TestApplyBulkCreateResponseMapsFailuresByRequestIndex(t *testing.T) {
-	statuses := map[string]coralogixv1beta1.AlertSetItemStatus{
-		"alpha":   {Key: "alpha", State: coralogixv1beta1.AlertSetItemStatePending},
-		"bravo":   {Key: "bravo", State: coralogixv1beta1.AlertSetItemStatePending},
-		"charlie": {Key: "charlie", State: coralogixv1beta1.AlertSetItemStatePending},
+	statuses := map[string]coralogixv1alpha1.AlertSetItemStatus{
+		"alpha":   {Key: "alpha", State: coralogixv1alpha1.AlertSetItemStatePending},
+		"bravo":   {Key: "bravo", State: coralogixv1alpha1.AlertSetItemStatePending},
+		"charlie": {Key: "charlie", State: coralogixv1alpha1.AlertSetItemStatePending},
 	}
 	createdKeys := map[string]struct{}{}
 	firstID, thirdID := "first-id", "third-id"
@@ -169,7 +170,7 @@ func TestApplyBulkCreateResponseMapsFailuresByRequestIndex(t *testing.T) {
 
 	require.Len(t, resultErrs, 1)
 	require.Equal(t, firstID, *statuses["alpha"].ID)
-	require.Equal(t, coralogixv1beta1.AlertSetItemStateFailed, statuses["bravo"].State)
+	require.Equal(t, coralogixv1alpha1.AlertSetItemStateFailed, statuses["bravo"].State)
 	require.Contains(t, statuses["bravo"].Message, "invalid alert")
 	require.Equal(t, thirdID, *statuses["charlie"].ID)
 	require.Contains(t, createdKeys, "alpha")
@@ -178,8 +179,8 @@ func TestApplyBulkCreateResponseMapsFailuresByRequestIndex(t *testing.T) {
 }
 
 func TestAlertSetStatusSnapshotDoesNotChangeWithLiveStatus(t *testing.T) {
-	alertSet := &coralogixv1beta1.AlertSet{
-		Status: coralogixv1beta1.AlertSetStatus{
+	alertSet := &coralogixv1alpha1.AlertSet{
+		Status: coralogixv1alpha1.AlertSetStatus{
 			Conditions: []metav1.Condition{{
 				Type:               "RemoteSynced",
 				Status:             metav1.ConditionTrue,
@@ -197,16 +198,16 @@ func TestAlertSetStatusSnapshotDoesNotChangeWithLiveStatus(t *testing.T) {
 
 func TestPersistCreatedAlertSetStatusRecoversFromStatusConflict(t *testing.T) {
 	scheme := runtime.NewScheme()
-	require.NoError(t, coralogixv1beta1.AddToScheme(scheme))
+	require.NoError(t, coralogixv1alpha1.AddToScheme(scheme))
 
 	existingID := "existing-id"
-	alertSet := &coralogixv1beta1.AlertSet{
+	alertSet := &coralogixv1alpha1.AlertSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-alert-set",
 			Namespace: "default",
 		},
-		Status: coralogixv1beta1.AlertSetStatus{
-			Alerts: []coralogixv1beta1.AlertSetItemStatus{{
+		Status: coralogixv1alpha1.AlertSetStatus{
+			Alerts: []coralogixv1alpha1.AlertSetItemStatus{{
 				Key: "existing",
 				ID:  &existingID,
 			}},
@@ -214,7 +215,7 @@ func TestPersistCreatedAlertSetStatusRecoversFromStatusConflict(t *testing.T) {
 	}
 	baseClient := fake.NewClientBuilder().
 		WithScheme(scheme).
-		WithStatusSubresource(&coralogixv1beta1.AlertSet{}).
+		WithStatusSubresource(&coralogixv1alpha1.AlertSet{}).
 		WithObjects(alertSet.DeepCopy()).
 		Build()
 	conflictClient := &conflictOnceStatusClient{Client: baseClient, conflicts: 1}
@@ -224,11 +225,11 @@ func TestPersistCreatedAlertSetStatusRecoversFromStatusConflict(t *testing.T) {
 	config.InitClient(conflictClient)
 
 	createdID := "created-id"
-	statusByKey := map[string]coralogixv1beta1.AlertSetItemStatus{
+	statusByKey := map[string]coralogixv1alpha1.AlertSetItemStatus{
 		"created": {
 			Key:   "created",
 			ID:    &createdID,
-			State: coralogixv1beta1.AlertSetItemStateSynced,
+			State: coralogixv1alpha1.AlertSetItemStateSynced,
 		},
 	}
 
@@ -243,7 +244,7 @@ func TestPersistCreatedAlertSetStatusRecoversFromStatusConflict(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, recovered)
 
-	stored := &coralogixv1beta1.AlertSet{}
+	stored := &coralogixv1alpha1.AlertSet{}
 	require.NoError(t, baseClient.Get(context.Background(), client.ObjectKeyFromObject(alertSet), stored))
 	require.Len(t, stored.Status.Alerts, 2)
 	require.Equal(t, "created", stored.Status.Alerts[0].Key)
@@ -254,9 +255,9 @@ func TestPersistCreatedAlertSetStatusRecoversFromStatusConflict(t *testing.T) {
 
 func TestPersistCreatedAlertSetStatusRecoversFromStatusUpdateError(t *testing.T) {
 	scheme := runtime.NewScheme()
-	require.NoError(t, coralogixv1beta1.AddToScheme(scheme))
+	require.NoError(t, coralogixv1alpha1.AddToScheme(scheme))
 
-	alertSet := &coralogixv1beta1.AlertSet{
+	alertSet := &coralogixv1alpha1.AlertSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-alert-set",
 			Namespace: "default",
@@ -264,7 +265,7 @@ func TestPersistCreatedAlertSetStatusRecoversFromStatusUpdateError(t *testing.T)
 	}
 	baseClient := fake.NewClientBuilder().
 		WithScheme(scheme).
-		WithStatusSubresource(&coralogixv1beta1.AlertSet{}).
+		WithStatusSubresource(&coralogixv1alpha1.AlertSet{}).
 		WithObjects(alertSet.DeepCopy()).
 		Build()
 	statusClient := &errorOnceStatusClient{
@@ -277,11 +278,11 @@ func TestPersistCreatedAlertSetStatusRecoversFromStatusUpdateError(t *testing.T)
 	config.InitClient(statusClient)
 
 	createdID := "created-id"
-	statusByKey := map[string]coralogixv1beta1.AlertSetItemStatus{
+	statusByKey := map[string]coralogixv1alpha1.AlertSetItemStatus{
 		"created": {
 			Key:   "created",
 			ID:    &createdID,
-			State: coralogixv1beta1.AlertSetItemStateSynced,
+			State: coralogixv1alpha1.AlertSetItemStateSynced,
 		},
 	}
 
@@ -296,7 +297,7 @@ func TestPersistCreatedAlertSetStatusRecoversFromStatusUpdateError(t *testing.T)
 	require.NoError(t, err)
 	require.True(t, recovered)
 
-	stored := &coralogixv1beta1.AlertSet{}
+	stored := &coralogixv1alpha1.AlertSet{}
 	require.NoError(t, baseClient.Get(context.Background(), client.ObjectKeyFromObject(alertSet), stored))
 	require.Len(t, stored.Status.Alerts, 1)
 	require.Equal(t, "created", stored.Status.Alerts[0].Key)
@@ -305,9 +306,9 @@ func TestPersistCreatedAlertSetStatusRecoversFromStatusUpdateError(t *testing.T)
 
 func TestPersistCreatedAlertSetStatusRetriesRecoveryConflicts(t *testing.T) {
 	scheme := runtime.NewScheme()
-	require.NoError(t, coralogixv1beta1.AddToScheme(scheme))
+	require.NoError(t, coralogixv1alpha1.AddToScheme(scheme))
 
-	alertSet := &coralogixv1beta1.AlertSet{
+	alertSet := &coralogixv1alpha1.AlertSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-alert-set",
 			Namespace: "default",
@@ -315,7 +316,7 @@ func TestPersistCreatedAlertSetStatusRetriesRecoveryConflicts(t *testing.T) {
 	}
 	baseClient := fake.NewClientBuilder().
 		WithScheme(scheme).
-		WithStatusSubresource(&coralogixv1beta1.AlertSet{}).
+		WithStatusSubresource(&coralogixv1alpha1.AlertSet{}).
 		WithObjects(alertSet.DeepCopy()).
 		Build()
 	conflictClient := &conflictOnceStatusClient{Client: baseClient, conflicts: 2}
@@ -325,11 +326,11 @@ func TestPersistCreatedAlertSetStatusRetriesRecoveryConflicts(t *testing.T) {
 	config.InitClient(conflictClient)
 
 	createdID := "created-id"
-	statusByKey := map[string]coralogixv1beta1.AlertSetItemStatus{
+	statusByKey := map[string]coralogixv1alpha1.AlertSetItemStatus{
 		"created": {
 			Key:   "created",
 			ID:    &createdID,
-			State: coralogixv1beta1.AlertSetItemStateSynced,
+			State: coralogixv1alpha1.AlertSetItemStateSynced,
 		},
 	}
 
@@ -344,7 +345,7 @@ func TestPersistCreatedAlertSetStatusRetriesRecoveryConflicts(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, recovered)
 
-	stored := &coralogixv1beta1.AlertSet{}
+	stored := &coralogixv1alpha1.AlertSet{}
 	require.NoError(t, baseClient.Get(context.Background(), client.ObjectKeyFromObject(alertSet), stored))
 	require.Len(t, stored.Status.Alerts, 1)
 	require.Equal(t, "created", stored.Status.Alerts[0].Key)
@@ -358,13 +359,13 @@ func TestApplyBulkReplaceResponseHandlesAllResultTypes(t *testing.T) {
 		"failed-id":  "charlie",
 		"missing-id": "delta",
 	}
-	statuses := make(map[string]coralogixv1beta1.AlertSetItemStatus, len(ids))
+	statuses := make(map[string]coralogixv1alpha1.AlertSetItemStatus, len(ids))
 	for id, key := range ids {
 		itemID := id
-		statuses[key] = coralogixv1beta1.AlertSetItemStatus{
+		statuses[key] = coralogixv1alpha1.AlertSetItemStatus{
 			Key:   key,
 			ID:    &itemID,
-			State: coralogixv1beta1.AlertSetItemStateSynced,
+			State: coralogixv1alpha1.AlertSetItemStateSynced,
 		}
 	}
 	failureReason := "invalid replacement"
@@ -382,12 +383,12 @@ func TestApplyBulkReplaceResponseHandlesAllResultTypes(t *testing.T) {
 	resultErrs := applyBulkReplaceResponse(ids, response, statuses)
 
 	require.Len(t, resultErrs, 2)
-	require.Equal(t, coralogixv1beta1.AlertSetItemStateSynced, statuses["alpha"].State)
-	require.Equal(t, coralogixv1beta1.AlertSetItemStateSynced, statuses["bravo"].State)
-	require.Equal(t, coralogixv1beta1.AlertSetItemStateFailed, statuses["charlie"].State)
+	require.Equal(t, coralogixv1alpha1.AlertSetItemStateSynced, statuses["alpha"].State)
+	require.Equal(t, coralogixv1alpha1.AlertSetItemStateSynced, statuses["bravo"].State)
+	require.Equal(t, coralogixv1alpha1.AlertSetItemStateFailed, statuses["charlie"].State)
 	require.Equal(t, failedID, *statuses["charlie"].ID)
 	require.Nil(t, statuses["delta"].ID)
-	require.Equal(t, coralogixv1beta1.AlertSetItemStatePending, statuses["delta"].State)
+	require.Equal(t, coralogixv1alpha1.AlertSetItemStatePending, statuses["delta"].State)
 }
 
 func TestCreateAlertsContinuesAfterLocalConversionFailure(t *testing.T) {
@@ -423,12 +424,12 @@ func TestCreateAlertsContinuesAfterLocalConversionFailure(t *testing.T) {
 			}, nil, nil
 		},
 	}}
-	alertSet := &coralogixv1beta1.AlertSet{}
+	alertSet := &coralogixv1alpha1.AlertSet{}
 	alertSet.Namespace = "default"
-	desired := desiredAlertSetItemsByKey([]coralogixv1beta1.AlertSetItem{valid, invalid})
-	statuses := map[string]coralogixv1beta1.AlertSetItemStatus{
-		"valid":   {Key: "valid", State: coralogixv1beta1.AlertSetItemStatePending},
-		"invalid": {Key: "invalid", State: coralogixv1beta1.AlertSetItemStatePending},
+	desired := desiredAlertSetItemsByKey([]coralogixv1alpha1.AlertSetItem{valid, invalid})
+	statuses := map[string]coralogixv1alpha1.AlertSetItemStatus{
+		"valid":   {Key: "valid", State: coralogixv1alpha1.AlertSetItemStatePending},
+		"invalid": {Key: "invalid", State: coralogixv1alpha1.AlertSetItemStatePending},
 	}
 
 	created, itemErrs, requestErr := reconciler.createAlerts(
@@ -444,19 +445,19 @@ func TestCreateAlertsContinuesAfterLocalConversionFailure(t *testing.T) {
 	require.Equal(t, 1, requestCount)
 	require.Contains(t, created, "valid")
 	require.Equal(t, createdID, *statuses["valid"].ID)
-	require.Equal(t, coralogixv1beta1.AlertSetItemStateFailed, statuses["invalid"].State)
+	require.Equal(t, coralogixv1alpha1.AlertSetItemStateFailed, statuses["invalid"].State)
 	require.Contains(t, statuses["invalid"].Message, "missing-webhook")
 }
 
 func TestCreateAlertsUsesOneRequestForOneHundredItems(t *testing.T) {
-	items := make([]coralogixv1beta1.AlertSetItem, 100)
-	statuses := make(map[string]coralogixv1beta1.AlertSetItemStatus, len(items))
+	items := make([]coralogixv1alpha1.AlertSetItem, 100)
+	statuses := make(map[string]coralogixv1alpha1.AlertSetItemStatus, len(items))
 	for i := range items {
 		key := fmt.Sprintf("alert-%03d", i)
 		items[i] = minimalAlertSetItem(key)
-		statuses[key] = coralogixv1beta1.AlertSetItemStatus{
+		statuses[key] = coralogixv1alpha1.AlertSetItemStatus{
 			Key:   key,
-			State: coralogixv1beta1.AlertSetItemStatePending,
+			State: coralogixv1alpha1.AlertSetItemStatePending,
 		}
 	}
 
@@ -480,7 +481,7 @@ func TestCreateAlertsUsesOneRequestForOneHundredItems(t *testing.T) {
 	created, itemErrs, requestErr := reconciler.createAlerts(
 		context.Background(),
 		logr.Discard(),
-		&coralogixv1beta1.AlertSet{},
+		&coralogixv1alpha1.AlertSet{},
 		desiredAlertSetItemsByKey(items),
 		statuses,
 	)
@@ -491,7 +492,7 @@ func TestCreateAlertsUsesOneRequestForOneHundredItems(t *testing.T) {
 	require.Len(t, created, 100)
 	for key, status := range statuses {
 		require.NotNil(t, status.ID, key)
-		require.Equal(t, coralogixv1beta1.AlertSetItemStateSynced, status.State, key)
+		require.Equal(t, coralogixv1alpha1.AlertSetItemStateSynced, status.State, key)
 	}
 }
 
@@ -529,16 +530,16 @@ func TestReplaceAlertsContinuesAfterLocalConversionFailure(t *testing.T) {
 			}, nil, nil
 		},
 	}}
-	statuses := map[string]coralogixv1beta1.AlertSetItemStatus{
-		"valid":   {Key: "valid", ID: &validID, State: coralogixv1beta1.AlertSetItemStateSynced},
-		"invalid": {Key: "invalid", ID: &invalidID, State: coralogixv1beta1.AlertSetItemStateSynced},
+	statuses := map[string]coralogixv1alpha1.AlertSetItemStatus{
+		"valid":   {Key: "valid", ID: &validID, State: coralogixv1alpha1.AlertSetItemStateSynced},
+		"invalid": {Key: "invalid", ID: &invalidID, State: coralogixv1alpha1.AlertSetItemStateSynced},
 	}
 
 	itemErrs, requestErr := reconciler.replaceAlerts(
 		context.Background(),
 		logr.Discard(),
-		&coralogixv1beta1.AlertSet{ObjectMeta: metav1.ObjectMeta{Namespace: "default"}},
-		desiredAlertSetItemsByKey([]coralogixv1beta1.AlertSetItem{valid, invalid}),
+		&coralogixv1alpha1.AlertSet{ObjectMeta: metav1.ObjectMeta{Namespace: "default"}},
+		desiredAlertSetItemsByKey([]coralogixv1alpha1.AlertSetItem{valid, invalid}),
 		statuses,
 		map[string]struct{}{},
 	)
@@ -546,23 +547,23 @@ func TestReplaceAlertsContinuesAfterLocalConversionFailure(t *testing.T) {
 	require.NoError(t, requestErr)
 	require.Len(t, itemErrs, 1)
 	require.Equal(t, 1, requestCount)
-	require.Equal(t, coralogixv1beta1.AlertSetItemStateSynced, statuses["valid"].State)
-	require.Equal(t, coralogixv1beta1.AlertSetItemStateFailed, statuses["invalid"].State)
+	require.Equal(t, coralogixv1alpha1.AlertSetItemStateSynced, statuses["valid"].State)
+	require.Equal(t, coralogixv1alpha1.AlertSetItemStateFailed, statuses["invalid"].State)
 	require.Equal(t, invalidID, *statuses["invalid"].ID)
 	require.Contains(t, statuses["invalid"].Message, "missing-webhook")
 }
 
 func TestReplaceAlertsUsesOneRequestForOneHundredItems(t *testing.T) {
-	items := make([]coralogixv1beta1.AlertSetItem, 100)
-	statuses := make(map[string]coralogixv1beta1.AlertSetItemStatus, len(items))
+	items := make([]coralogixv1alpha1.AlertSetItem, 100)
+	statuses := make(map[string]coralogixv1alpha1.AlertSetItemStatus, len(items))
 	for i := range items {
 		key := fmt.Sprintf("alert-%03d", i)
 		id := fmt.Sprintf("id-%03d", i)
 		items[i] = minimalAlertSetItem(key)
-		statuses[key] = coralogixv1beta1.AlertSetItemStatus{
+		statuses[key] = coralogixv1alpha1.AlertSetItemStatus{
 			Key:   key,
 			ID:    &id,
-			State: coralogixv1beta1.AlertSetItemStateSynced,
+			State: coralogixv1alpha1.AlertSetItemStateSynced,
 		}
 	}
 
@@ -585,7 +586,7 @@ func TestReplaceAlertsUsesOneRequestForOneHundredItems(t *testing.T) {
 	itemErrs, requestErr := reconciler.replaceAlerts(
 		context.Background(),
 		logr.Discard(),
-		&coralogixv1beta1.AlertSet{},
+		&coralogixv1alpha1.AlertSet{},
 		desiredAlertSetItemsByKey(items),
 		statuses,
 		map[string]struct{}{},
@@ -596,15 +597,15 @@ func TestReplaceAlertsUsesOneRequestForOneHundredItems(t *testing.T) {
 	require.Equal(t, 1, requestCount)
 	for key, status := range statuses {
 		require.NotNil(t, status.ID, key)
-		require.Equal(t, coralogixv1beta1.AlertSetItemStateSynced, status.State, key)
+		require.Equal(t, coralogixv1alpha1.AlertSetItemStateSynced, status.State, key)
 	}
 }
 
 func TestDeleteAlertsFallsBackAndPersistsPartialProgress(t *testing.T) {
-	statuses := map[string]coralogixv1beta1.AlertSetItemStatus{}
+	statuses := map[string]coralogixv1alpha1.AlertSetItemStatus{}
 	for key, id := range map[string]string{"alpha": "one", "bravo": "two", "charlie": "three"} {
 		itemID := id
-		statuses[key] = coralogixv1beta1.AlertSetItemStatus{Key: key, ID: &itemID}
+		statuses[key] = coralogixv1alpha1.AlertSetItemStatus{Key: key, ID: &itemID}
 	}
 	deleteCalls := make(map[string]int)
 	reconciler := &AlertSetReconciler{api: fakeAlertSetAPI{
@@ -638,7 +639,7 @@ func TestDeleteAlertsFallsBackAndPersistsPartialProgress(t *testing.T) {
 	require.NotContains(t, statuses, "alpha")
 	require.NotContains(t, statuses, "bravo")
 	require.Contains(t, statuses, "charlie")
-	require.Equal(t, coralogixv1beta1.AlertSetItemStateDeleting, statuses["charlie"].State)
+	require.Equal(t, coralogixv1alpha1.AlertSetItemStateDeleting, statuses["charlie"].State)
 	require.Equal(t, map[string]int{"one": 1, "two": 1, "three": 1}, deleteCalls)
 }
 
@@ -657,7 +658,7 @@ func TestDeleteAlertsDoesNotFallBackForOtherErrors(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			id := "one"
-			statuses := map[string]coralogixv1beta1.AlertSetItemStatus{
+			statuses := map[string]coralogixv1alpha1.AlertSetItemStatus{
 				"alpha": {Key: "alpha", ID: &id},
 			}
 			fallbackCalls := 0
@@ -687,7 +688,7 @@ func TestDeleteAlertsDoesNotFallBackForOtherErrors(t *testing.T) {
 			require.Len(t, resultErrs, 1)
 			require.Zero(t, fallbackCalls)
 			require.Contains(t, statuses, "alpha")
-			require.Equal(t, coralogixv1beta1.AlertSetItemStateDeleting, statuses["alpha"].State)
+			require.Equal(t, coralogixv1alpha1.AlertSetItemStateDeleting, statuses["alpha"].State)
 		})
 	}
 }
@@ -697,31 +698,31 @@ func TestReconcileDeletionTreatsMissingResourceAsComplete(t *testing.T) {
 	t.Cleanup(func() { config.InitClient(originalClient) })
 
 	scheme := runtime.NewScheme()
-	require.NoError(t, coralogixv1beta1.AddToScheme(scheme))
+	require.NoError(t, coralogixv1alpha1.AddToScheme(scheme))
 	now := metav1.Now()
 	id := "remote-id"
-	alertSet := &coralogixv1beta1.AlertSet{
+	alertSet := &coralogixv1alpha1.AlertSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:              "test-alert-set",
 			Namespace:         "default",
 			Finalizers:        []string{alertSetFinalizer},
 			DeletionTimestamp: &now,
 		},
-		Status: coralogixv1beta1.AlertSetStatus{
-			Alerts: []coralogixv1beta1.AlertSetItemStatus{{
+		Status: coralogixv1alpha1.AlertSetStatus{
+			Alerts: []coralogixv1alpha1.AlertSetItemStatus{{
 				Key:   "alpha",
 				ID:    &id,
-				State: coralogixv1beta1.AlertSetItemStateSynced,
+				State: coralogixv1alpha1.AlertSetItemStateSynced,
 			}},
 		},
 	}
 	baseClient := fake.NewClientBuilder().
 		WithScheme(scheme).
-		WithStatusSubresource(&coralogixv1beta1.AlertSet{}).
+		WithStatusSubresource(&coralogixv1alpha1.AlertSet{}).
 		WithObjects(alertSet.DeepCopy()).
 		Build()
 	config.InitClient(notFoundUpdateClient{Client: baseClient})
-	storedAlertSet := &coralogixv1beta1.AlertSet{}
+	storedAlertSet := &coralogixv1alpha1.AlertSet{}
 	require.NoError(t, baseClient.Get(context.Background(), client.ObjectKeyFromObject(alertSet), storedAlertSet))
 
 	reconciler := &AlertSetReconciler{api: fakeAlertSetAPI{
@@ -745,8 +746,8 @@ func TestReconcileDeletionTreatsMissingResourceAsComplete(t *testing.T) {
 	require.Zero(t, result)
 }
 
-func minimalAlertSetItem(key string) coralogixv1beta1.AlertSetItem {
-	return coralogixv1beta1.AlertSetItem{
+func minimalAlertSetItem(key string) coralogixv1alpha1.AlertSetItem {
+	return coralogixv1alpha1.AlertSetItem{
 		Key: key,
 		Spec: coralogixv1beta1.AlertSpec{
 			Name:     key,

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1beta1
+package v1alpha1
 
 import (
 	"context"
@@ -36,6 +36,7 @@ import (
 	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 	alerts "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/alert_definitions_service"
 
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	"github.com/coralogix/coralogix-operator/v2/internal/monitoring"
@@ -106,7 +107,7 @@ func (r *AlertSetReconciler) alertsAPI() alertSetAPI {
 // +kubebuilder:rbac:groups=coralogix.com,resources=alertsets/finalizers,verbs=update
 
 func (r *AlertSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	alertSet := &coralogixv1beta1.AlertSet{}
+	alertSet := &coralogixv1alpha1.AlertSet{}
 	if err := config.GetClient().Get(ctx, req.NamespacedName, alertSet); err != nil {
 		if k8serrors.IsNotFound(err) {
 			return ctrl.Result{}, nil
@@ -115,7 +116,7 @@ func (r *AlertSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	}
 
 	reconcileLog := log.FromContext(ctx).WithValues(
-		"gvk", coralogixv1beta1.GroupVersion.WithKind(utils.AlertSetKind).String(),
+		"gvk", coralogixv1alpha1.GroupVersion.WithKind(utils.AlertSetKind).String(),
 		"name", req.Name,
 		"namespace", req.Namespace,
 	)
@@ -151,9 +152,9 @@ func (r *AlertSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	desiredByKey := desiredAlertSetItemsByKey(alertSet.Spec.Alerts)
 	for key := range desiredByKey {
 		if _, found := statusByKey[key]; !found {
-			statusByKey[key] = coralogixv1beta1.AlertSetItemStatus{
+			statusByKey[key] = coralogixv1alpha1.AlertSetItemStatus{
 				Key:   key,
-				State: coralogixv1beta1.AlertSetItemStatePending,
+				State: coralogixv1alpha1.AlertSetItemStatePending,
 			}
 		}
 	}
@@ -232,8 +233,8 @@ func (r *AlertSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 func (r *AlertSetReconciler) reconcileDeletion(
 	ctx context.Context,
 	reconcileLog logr.Logger,
-	alertSet *coralogixv1beta1.AlertSet,
-	originalStatus coralogixv1beta1.AlertSetStatus,
+	alertSet *coralogixv1alpha1.AlertSet,
+	originalStatus coralogixv1alpha1.AlertSetStatus,
 ) (ctrl.Result, error) {
 	statusByKey, err := alertSetStatusByKey(alertSet.Status.Alerts)
 	if err != nil {
@@ -276,8 +277,8 @@ func (r *AlertSetReconciler) reconcileDeletion(
 func (r *AlertSetReconciler) reconcileSelectorMismatch(
 	ctx context.Context,
 	reconcileLog logr.Logger,
-	alertSet *coralogixv1beta1.AlertSet,
-	originalStatus coralogixv1beta1.AlertSetStatus,
+	alertSet *coralogixv1alpha1.AlertSet,
+	originalStatus coralogixv1alpha1.AlertSetStatus,
 ) (ctrl.Result, error) {
 	statusByKey, err := alertSetStatusByKey(alertSet.Status.Alerts)
 	if err != nil {
@@ -288,7 +289,7 @@ func (r *AlertSetReconciler) reconcileSelectorMismatch(
 		return r.finish(ctx, alertSet, originalStatus, utils.ReasonRemoteDeletionFailed, cleanupErrs)
 	}
 
-	alertSet.Status = coralogixv1beta1.AlertSetStatus{}
+	alertSet.Status = coralogixv1alpha1.AlertSetStatus{}
 	if err := updateAlertSetStatusIfChanged(ctx, alertSet, originalStatus); err != nil {
 		if k8serrors.IsConflict(err) {
 			return ctrl.Result{Requeue: true}, nil
@@ -311,9 +312,9 @@ func (r *AlertSetReconciler) reconcileSelectorMismatch(
 func (r *AlertSetReconciler) createAlerts(
 	ctx context.Context,
 	reconcileLog logr.Logger,
-	alertSet *coralogixv1beta1.AlertSet,
-	desiredByKey map[string]coralogixv1beta1.AlertSetItem,
-	statusByKey map[string]coralogixv1beta1.AlertSetItemStatus,
+	alertSet *coralogixv1alpha1.AlertSet,
+	desiredByKey map[string]coralogixv1alpha1.AlertSetItem,
+	statusByKey map[string]coralogixv1alpha1.AlertSetItemStatus,
 ) (map[string]struct{}, []error, error) {
 	keys := sortedDesiredAlertSetKeys(desiredByKey)
 	requestItems := make([]alerts.AlertDefToCreate, 0, len(keys))
@@ -361,8 +362,8 @@ func (r *AlertSetReconciler) createAlerts(
 // stable keys. A failed write does not prove that the API server did not persist the IDs.
 func (r *AlertSetReconciler) persistCreatedAlertSetStatus(
 	ctx context.Context,
-	alertSet *coralogixv1beta1.AlertSet,
-	statusByKey map[string]coralogixv1beta1.AlertSetItemStatus,
+	alertSet *coralogixv1alpha1.AlertSet,
+	statusByKey map[string]coralogixv1alpha1.AlertSetItemStatus,
 	createdKeys map[string]struct{},
 ) (bool, error) {
 	alertSet.Status.Alerts = sortedAlertSetStatuses(statusByKey)
@@ -371,9 +372,9 @@ func (r *AlertSetReconciler) persistCreatedAlertSetStatus(
 		return false, nil
 	}
 
-	var persistedAlertSet *coralogixv1beta1.AlertSet
+	var persistedAlertSet *coralogixv1alpha1.AlertSet
 	err := retry.OnError(retry.DefaultBackoff, k8serrors.IsConflict, func() error {
-		latest := &coralogixv1beta1.AlertSet{}
+		latest := &coralogixv1alpha1.AlertSet{}
 		if err := config.GetClient().Get(ctx, client.ObjectKeyFromObject(alertSet), latest); err != nil {
 			return err
 		}
@@ -404,9 +405,9 @@ func (r *AlertSetReconciler) persistCreatedAlertSetStatus(
 func (r *AlertSetReconciler) replaceAlerts(
 	ctx context.Context,
 	reconcileLog logr.Logger,
-	alertSet *coralogixv1beta1.AlertSet,
-	desiredByKey map[string]coralogixv1beta1.AlertSetItem,
-	statusByKey map[string]coralogixv1beta1.AlertSetItemStatus,
+	alertSet *coralogixv1alpha1.AlertSet,
+	desiredByKey map[string]coralogixv1alpha1.AlertSetItem,
+	statusByKey map[string]coralogixv1alpha1.AlertSetItemStatus,
 	createdKeys map[string]struct{},
 ) ([]error, error) {
 	keys := sortedDesiredAlertSetKeys(desiredByKey)
@@ -456,7 +457,7 @@ func (r *AlertSetReconciler) replaceAlerts(
 func (r *AlertSetReconciler) deleteAlerts(
 	ctx context.Context,
 	reconcileLog logr.Logger,
-	statusByKey map[string]coralogixv1beta1.AlertSetItemStatus,
+	statusByKey map[string]coralogixv1alpha1.AlertSetItemStatus,
 	keys []string,
 ) []error {
 	if len(keys) == 0 {
@@ -471,7 +472,7 @@ func (r *AlertSetReconciler) deleteAlerts(
 			delete(statusByKey, key)
 			continue
 		}
-		status.State = coralogixv1beta1.AlertSetItemStateDeleting
+		status.State = coralogixv1alpha1.AlertSetItemStateDeleting
 		status.Message = ""
 		statusByKey[key] = status
 		id := *status.ID
@@ -532,7 +533,7 @@ func (r *AlertSetReconciler) deleteAlerts(
 
 func (r *AlertSetReconciler) deleteAlertsIndividually(
 	ctx context.Context,
-	statusByKey map[string]coralogixv1beta1.AlertSetItemStatus,
+	statusByKey map[string]coralogixv1alpha1.AlertSetItemStatus,
 	ids []string,
 	idToKey map[string]string,
 ) []error {
@@ -560,8 +561,8 @@ func (r *AlertSetReconciler) deleteAlertsIndividually(
 
 func (r *AlertSetReconciler) finish(
 	ctx context.Context,
-	alertSet *coralogixv1beta1.AlertSet,
-	originalStatus coralogixv1beta1.AlertSetStatus,
+	alertSet *coralogixv1alpha1.AlertSet,
+	originalStatus coralogixv1alpha1.AlertSetStatus,
 	reason string,
 	reconcileErrs []error,
 ) (ctrl.Result, error) {
@@ -598,7 +599,7 @@ func (r *AlertSetReconciler) finish(
 func applyBulkCreateResponse(
 	requestKeys []string,
 	response *alerts.BulkCreateAlertDefsResponse,
-	statusByKey map[string]coralogixv1beta1.AlertSetItemStatus,
+	statusByKey map[string]coralogixv1alpha1.AlertSetItemStatus,
 	createdKeys map[string]struct{},
 ) []error {
 	if response == nil {
@@ -642,10 +643,10 @@ func applyBulkCreateResponse(
 			continue
 		}
 		id := *created.Id
-		statusByKey[key] = coralogixv1beta1.AlertSetItemStatus{
+		statusByKey[key] = coralogixv1alpha1.AlertSetItemStatus{
 			Key:   key,
 			ID:    &id,
-			State: coralogixv1beta1.AlertSetItemStateSynced,
+			State: coralogixv1alpha1.AlertSetItemStateSynced,
 		}
 		createdKeys[key] = struct{}{}
 	}
@@ -661,7 +662,7 @@ func applyBulkCreateResponse(
 func applyBulkReplaceResponse(
 	requestIDs map[string]string,
 	response *alerts.BulkReplaceAlertDefsResponse,
-	statusByKey map[string]coralogixv1beta1.AlertSetItemStatus,
+	statusByKey map[string]coralogixv1alpha1.AlertSetItemStatus,
 ) []error {
 	if response == nil {
 		return []error{errors.New("bulk replace response is empty")}
@@ -680,7 +681,7 @@ func applyBulkReplaceResponse(
 		}
 		seen[id] = struct{}{}
 		status := statusByKey[key]
-		status.State = coralogixv1beta1.AlertSetItemStateSynced
+		status.State = coralogixv1alpha1.AlertSetItemStateSynced
 		status.Message = ""
 		statusByKey[key] = status
 	}
@@ -730,9 +731,9 @@ func applyBulkReplaceResponse(
 		}
 		seen[id] = struct{}{}
 		message := fmt.Sprintf("remote alert %q with ID %q was not found", key, id)
-		statusByKey[key] = coralogixv1beta1.AlertSetItemStatus{
+		statusByKey[key] = coralogixv1alpha1.AlertSetItemStatus{
 			Key:     key,
-			State:   coralogixv1beta1.AlertSetItemStatePending,
+			State:   coralogixv1alpha1.AlertSetItemStatePending,
 			Message: message,
 		}
 		resultErrs = append(resultErrs, errors.New(message))
@@ -748,7 +749,7 @@ func applyBulkReplaceResponse(
 	return resultErrs
 }
 
-func validateAlertSetItems(items []coralogixv1beta1.AlertSetItem) error {
+func validateAlertSetItems(items []coralogixv1alpha1.AlertSetItem) error {
 	if len(items) < 1 || len(items) > 100 {
 		return fmt.Errorf("AlertSet must contain between 1 and 100 alerts, got %d", len(items))
 	}
@@ -766,8 +767,8 @@ func validateAlertSetItems(items []coralogixv1beta1.AlertSetItem) error {
 	return errors.Join(validationErrs...)
 }
 
-func alertSetStatusByKey(statuses []coralogixv1beta1.AlertSetItemStatus) (map[string]coralogixv1beta1.AlertSetItemStatus, error) {
-	result := make(map[string]coralogixv1beta1.AlertSetItemStatus, len(statuses))
+func alertSetStatusByKey(statuses []coralogixv1alpha1.AlertSetItemStatus) (map[string]coralogixv1alpha1.AlertSetItemStatus, error) {
+	result := make(map[string]coralogixv1alpha1.AlertSetItemStatus, len(statuses))
 	var resultErrs []error
 	for _, status := range statuses {
 		if _, duplicate := result[status.Key]; duplicate {
@@ -782,15 +783,15 @@ func alertSetStatusByKey(statuses []coralogixv1beta1.AlertSetItemStatus) (map[st
 	return result, errors.Join(resultErrs...)
 }
 
-func desiredAlertSetItemsByKey(items []coralogixv1beta1.AlertSetItem) map[string]coralogixv1beta1.AlertSetItem {
-	result := make(map[string]coralogixv1beta1.AlertSetItem, len(items))
+func desiredAlertSetItemsByKey(items []coralogixv1alpha1.AlertSetItem) map[string]coralogixv1alpha1.AlertSetItem {
+	result := make(map[string]coralogixv1alpha1.AlertSetItem, len(items))
 	for _, item := range items {
 		result[item.Key] = item
 	}
 	return result
 }
 
-func sortedDesiredAlertSetKeys(items map[string]coralogixv1beta1.AlertSetItem) []string {
+func sortedDesiredAlertSetKeys(items map[string]coralogixv1alpha1.AlertSetItem) []string {
 	keys := make([]string, 0, len(items))
 	for key := range items {
 		keys = append(keys, key)
@@ -799,20 +800,20 @@ func sortedDesiredAlertSetKeys(items map[string]coralogixv1beta1.AlertSetItem) [
 	return keys
 }
 
-func sortedAlertSetStatuses(statuses map[string]coralogixv1beta1.AlertSetItemStatus) []coralogixv1beta1.AlertSetItemStatus {
+func sortedAlertSetStatuses(statuses map[string]coralogixv1alpha1.AlertSetItemStatus) []coralogixv1alpha1.AlertSetItemStatus {
 	keys := make([]string, 0, len(statuses))
 	for key := range statuses {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
-	result := make([]coralogixv1beta1.AlertSetItemStatus, 0, len(keys))
+	result := make([]coralogixv1alpha1.AlertSetItemStatus, 0, len(keys))
 	for _, key := range keys {
 		result = append(result, statuses[key])
 	}
 	return result
 }
 
-func alertSetStatusKeysWithIDs(statuses map[string]coralogixv1beta1.AlertSetItemStatus) []string {
+func alertSetStatusKeysWithIDs(statuses map[string]coralogixv1alpha1.AlertSetItemStatus) []string {
 	keys := make([]string, 0, len(statuses))
 	for key, status := range statuses {
 		if hasAlertSetStatusID(status) {
@@ -825,36 +826,36 @@ func alertSetStatusKeysWithIDs(statuses map[string]coralogixv1beta1.AlertSetItem
 	return keys
 }
 
-func hasAlertSetStatusID(status coralogixv1beta1.AlertSetItemStatus) bool {
+func hasAlertSetStatusID(status coralogixv1alpha1.AlertSetItemStatus) bool {
 	return status.ID != nil && *status.ID != ""
 }
 
-func deepCopyAlertSetStatus(alertSet *coralogixv1beta1.AlertSet) coralogixv1beta1.AlertSetStatus {
+func deepCopyAlertSetStatus(alertSet *coralogixv1alpha1.AlertSet) coralogixv1alpha1.AlertSetStatus {
 	return alertSet.DeepCopy().Status
 }
 
 func setAlertSetStatusFailure(
-	statuses map[string]coralogixv1beta1.AlertSetItemStatus,
+	statuses map[string]coralogixv1alpha1.AlertSetItemStatus,
 	key string,
 	message string,
 ) {
 	status := statuses[key]
 	status.Key = key
-	status.State = coralogixv1beta1.AlertSetItemStateFailed
+	status.State = coralogixv1alpha1.AlertSetItemStateFailed
 	status.Message = message
 	statuses[key] = status
 }
 
 func validateSynchronizedAlertSet(
-	desired map[string]coralogixv1beta1.AlertSetItem,
-	statuses map[string]coralogixv1beta1.AlertSetItemStatus,
+	desired map[string]coralogixv1alpha1.AlertSetItem,
+	statuses map[string]coralogixv1alpha1.AlertSetItemStatus,
 ) error {
 	if len(desired) != len(statuses) {
 		return fmt.Errorf("AlertSet has %d desired alerts and %d status entries", len(desired), len(statuses))
 	}
 	for key := range desired {
 		status, found := statuses[key]
-		if !found || !hasAlertSetStatusID(status) || status.State != coralogixv1beta1.AlertSetItemStateSynced {
+		if !found || !hasAlertSetStatusID(status) || status.State != coralogixv1alpha1.AlertSetItemStateSynced {
 			return fmt.Errorf("alert %q is not synchronized", key)
 		}
 	}
@@ -863,8 +864,8 @@ func validateSynchronizedAlertSet(
 
 func updateAlertSetStatusIfChanged(
 	ctx context.Context,
-	alertSet *coralogixv1beta1.AlertSet,
-	originalStatus coralogixv1beta1.AlertSetStatus,
+	alertSet *coralogixv1alpha1.AlertSet,
+	originalStatus coralogixv1alpha1.AlertSetStatus,
 ) error {
 	if reflect.DeepEqual(originalStatus, alertSet.Status) {
 		return nil
@@ -875,7 +876,7 @@ func updateAlertSetStatusIfChanged(
 // SetupWithManager sets up the controller with the Manager.
 func (r *AlertSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&coralogixv1beta1.AlertSet{}).
+		For(&coralogixv1alpha1.AlertSet{}).
 		WithEventFilter(config.GetConfig().Selector.Predicate()).
 		Complete(r)
 }
