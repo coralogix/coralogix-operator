@@ -16,6 +16,7 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -30,6 +31,14 @@ import (
 )
 
 const testNamespace = "coralogix-e2e-test"
+
+// uniqueName returns a DNS-1123 name that is unique across parallel CI jobs that
+// share one Coralogix account. Second-granularity Unix timestamps collide when
+// upgrade-test matrix jobs and other e2e workflows start together; a reused
+// backend name lets one job delete the other's Scope, CustomRole, or Group.
+func uniqueName(prefix string) string {
+	return fmt.Sprintf("%s-%d", prefix, time.Now().UnixNano())
+}
 
 // accountWideBackendTimeout is for assertions on Coralogix objects that belong to the whole
 // account or tenant rather than to this cluster - company IP access settings, archive targets and
