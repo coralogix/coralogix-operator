@@ -43,8 +43,8 @@ var _ = Describe("View", Ordered, func() {
 		viewFolder  *coralogixv1alpha1.ViewFolder
 		viewID      int32
 
-		viewName       = fmt.Sprintf("e2e-view-%d", time.Now().Unix())
-		viewFolderName = fmt.Sprintf("e2e-view-folder-%d", time.Now().Unix())
+		viewName       = uniqueName("e2e-view")
+		viewFolderName = uniqueName("e2e-view-folder")
 	)
 
 	BeforeEach(func() {
@@ -94,7 +94,7 @@ var _ = Describe("View", Ordered, func() {
 
 	It("Should update the View successfully", func(ctx context.Context) {
 		By("Patching the View")
-		newViewName := fmt.Sprintf("e2e-view-updated-%d", time.Now().Unix())
+		newViewName := uniqueName("e2e-view-updated")
 		modifiedView := view.DeepCopy()
 		modifiedView.Spec.Name = newViewName
 		Expect(k8sClient.Patch(ctx, modifiedView, client.MergeFrom(view))).To(Succeed())

@@ -40,7 +40,7 @@ var _ = Describe("CustomRole", Ordered, func() {
 		rolesClient    *cxsdk.RolesClient
 		customRoleID   uint32
 		customRole     *coralogixv1alpha1.CustomRole
-		customRoleName = fmt.Sprintf("custom-role-sample-%d", time.Now().Unix())
+		customRoleName = uniqueName("custom-role-sample")
 	)
 
 	BeforeEach(func() {
@@ -77,7 +77,7 @@ var _ = Describe("CustomRole", Ordered, func() {
 
 	It("Should be updated successfully", func(ctx context.Context) {
 		By("Patching the CustomRole")
-		newCustomRoleName := "custom-role-updated"
+		newCustomRoleName := uniqueName("custom-role-updated")
 		modifiedCustomRole := customRole.DeepCopy()
 		modifiedCustomRole.Spec.Name = newCustomRoleName
 		Expect(crClient.Patch(ctx, modifiedCustomRole, client.MergeFrom(customRole))).To(Succeed())

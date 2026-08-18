@@ -48,7 +48,7 @@ var _ = Describe("Preset", Ordered, func() {
 
 	It("Should be created successfully", func(ctx context.Context) {
 		By("Creating Preset")
-		presetName := fmt.Sprintf("slack-preset-%d", time.Now().Unix())
+		presetName := uniqueName("slack-preset")
 		preset = getSampleSlackPreset(presetName, testNamespace)
 		Expect(crClient.Create(ctx, preset)).To(Succeed())
 
@@ -74,7 +74,7 @@ var _ = Describe("Preset", Ordered, func() {
 
 	It("Should be updated successfully", func(ctx context.Context) {
 		By("Patching the Preset")
-		newPresetName := "slack-preset-updated"
+		newPresetName := uniqueName("slack-preset-updated")
 		modifiedPreset := preset.DeepCopy()
 		modifiedPreset.Spec.Name = newPresetName
 		Expect(crClient.Patch(ctx, modifiedPreset, client.MergeFrom(preset))).To(Succeed())
@@ -154,7 +154,7 @@ var _ = Describe("Preset with attachmentConfig", Ordered, func() {
 	})
 
 	It("Should be created successfully", func(ctx context.Context) {
-		presetName = fmt.Sprintf("attachment-config-preset-%d", time.Now().Unix())
+		presetName = uniqueName("attachment-config-preset")
 		preset = getSampleGenericHttpsPresetWithAttachmentConfig(presetName, testNamespace)
 		Expect(crClient.Create(ctx, preset)).To(Succeed())
 

@@ -75,7 +75,7 @@ var _ = Describe("OutboundWebhook", Ordered, func() {
 
 	It("Should be updated successfully", func(ctx context.Context) {
 		By("Patching the OutboundWebhook")
-		newOutboundWebhookName := "slack-outbound-webhook-updated"
+		newOutboundWebhookName := uniqueName("slack-outbound-webhook-updated")
 		modifiedOutboundWebhook := outBoundWebhook.DeepCopy()
 		modifiedOutboundWebhook.Spec.Name = newOutboundWebhookName
 		Expect(crClient.Patch(ctx, modifiedOutboundWebhook, client.MergeFrom(outBoundWebhook))).To(Succeed())

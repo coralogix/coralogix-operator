@@ -75,7 +75,7 @@ var _ = Describe("SLO", Ordered, func() {
 
 	It("Should be updated successfully", func(ctx context.Context) {
 		By("Patching the slo")
-		newSloName := "slo-sample-updated"
+		newSloName := uniqueName("slo-sample-updated")
 		modifiedSlo := slo.DeepCopy()
 		modifiedSlo.Spec.Name = newSloName
 		Expect(crClient.Patch(ctx, modifiedSlo, client.MergeFrom(slo))).To(Succeed())
