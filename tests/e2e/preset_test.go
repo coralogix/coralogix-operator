@@ -110,7 +110,7 @@ var _ = Describe("Preset MicrosoftTeams", Ordered, func() {
 
 	BeforeAll(func() {
 		if msTeamsIntegrationId == "" || msTeamsTeamId == "" || msTeamsChannelId == "" {
-			Skip("MS_TEAMS_INTEGRATION_ID, MS_TEAMS_TEAM_ID, and MS_TEAMS_CHANNEL_ID must be set")
+			Skip("set MS_TEAMS_INTEGRATION_ID, MS_TEAMS_TEAM_ID, and MS_TEAMS_CHANNEL_ID to run this spec locally")
 		}
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		notificationsClient = ClientsInstance.GetCoralogixClientSet().Notifications()
