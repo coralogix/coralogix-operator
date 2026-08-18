@@ -27,6 +27,7 @@ import (
 	"github.com/go-logr/logr"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/validation"
+	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -180,18 +181,21 @@ func (r *AlertSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	createdKeys, createErrs, createRequestErr := r.createAlerts(ctx, reconcileLog, alertSet, desiredByKey, statusByKey)
 	reconcileErrs = append(reconcileErrs, createErrs...)
 	if len(createdKeys) > 0 {
-		statusPersistedAfterConflict, err := r.persistCreatedAlertSetStatus(
+		statusConflictRecoveryAttempted, err := r.persistCreatedAlertSetStatus(
 			ctx,
 			alertSet,
 			statusByKey,
 			createdKeys,
 		)
 		if err != nil {
+			if statusConflictRecoveryAttempted {
+				return ctrl.Result{}, err
+			}
 			reconcileErrs = append(reconcileErrs, err)
 			alertSet.Status.Alerts = sortedAlertSetStatuses(statusByKey)
 			return r.finish(ctx, alertSet, originalStatus, utils.ReasonRemoteCreationFailed, reconcileErrs)
 		}
-		if statusPersistedAfterConflict {
+		if statusConflictRecoveryAttempted {
 			return ctrl.Result{Requeue: true}, nil
 		}
 	}
@@ -368,25 +372,33 @@ func (r *AlertSetReconciler) persistCreatedAlertSetStatus(
 		return false, fmt.Errorf("persist created AlertSet IDs: %w", err)
 	}
 
-	latest := &coralogixv1beta1.AlertSet{}
-	if err := config.GetClient().Get(ctx, client.ObjectKeyFromObject(alertSet), latest); err != nil {
-		return true, fmt.Errorf("get latest AlertSet after status conflict: %w", err)
-	}
-	latestStatuses, err := alertSetStatusByKey(latest.Status.Alerts)
-	if err != nil {
-		return true, fmt.Errorf("read latest AlertSet status after conflict: %w", err)
-	}
-	for key := range createdKeys {
-		status, found := statusByKey[key]
-		if found && hasAlertSetStatusID(status) {
-			latestStatuses[key] = status
+	var persistedAlertSet *coralogixv1beta1.AlertSet
+	err := retry.OnError(retry.DefaultBackoff, k8serrors.IsConflict, func() error {
+		latest := &coralogixv1beta1.AlertSet{}
+		if err := config.GetClient().Get(ctx, client.ObjectKeyFromObject(alertSet), latest); err != nil {
+			return err
 		}
-	}
-	latest.Status.Alerts = sortedAlertSetStatuses(latestStatuses)
-	if err := config.GetClient().Status().Update(ctx, latest); err != nil {
+		latestStatuses, err := alertSetStatusByKey(latest.Status.Alerts)
+		if err != nil {
+			return fmt.Errorf("read latest AlertSet status after conflict: %w", err)
+		}
+		for key := range createdKeys {
+			status, found := statusByKey[key]
+			if found && hasAlertSetStatusID(status) {
+				latestStatuses[key] = status
+			}
+		}
+		latest.Status.Alerts = sortedAlertSetStatuses(latestStatuses)
+		if err := config.GetClient().Status().Update(ctx, latest); err != nil {
+			return err
+		}
+		persistedAlertSet = latest
+		return nil
+	})
+	if err != nil {
 		return true, fmt.Errorf("persist created AlertSet IDs after conflict: %w", err)
 	}
-	*alertSet = *latest
+	*alertSet = *persistedAlertSet
 	return true, nil
 }
 
