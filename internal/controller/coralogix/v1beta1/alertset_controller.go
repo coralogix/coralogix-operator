@@ -181,21 +181,21 @@ func (r *AlertSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	createdKeys, createErrs, createRequestErr := r.createAlerts(ctx, reconcileLog, alertSet, desiredByKey, statusByKey)
 	reconcileErrs = append(reconcileErrs, createErrs...)
 	if len(createdKeys) > 0 {
-		statusConflictRecoveryAttempted, err := r.persistCreatedAlertSetStatus(
+		statusRecoveryAttempted, err := r.persistCreatedAlertSetStatus(
 			ctx,
 			alertSet,
 			statusByKey,
 			createdKeys,
 		)
 		if err != nil {
-			if statusConflictRecoveryAttempted {
+			if statusRecoveryAttempted {
 				return ctrl.Result{}, err
 			}
 			reconcileErrs = append(reconcileErrs, err)
 			alertSet.Status.Alerts = sortedAlertSetStatuses(statusByKey)
 			return r.finish(ctx, alertSet, originalStatus, utils.ReasonRemoteCreationFailed, reconcileErrs)
 		}
-		if statusConflictRecoveryAttempted {
+		if statusRecoveryAttempted {
 			return ctrl.Result{Requeue: true}, nil
 		}
 	}
@@ -357,8 +357,8 @@ func (r *AlertSetReconciler) createAlerts(
 }
 
 // persistCreatedAlertSetStatus writes remote IDs before the reconcile continues. If the
-// resource changed while the remote request was in flight, retry against the latest object
-// and keep the returned IDs under their stable keys.
+// status write fails, retry against the latest object and keep the returned IDs under their
+// stable keys. A failed write does not prove that the API server did not persist the IDs.
 func (r *AlertSetReconciler) persistCreatedAlertSetStatus(
 	ctx context.Context,
 	alertSet *coralogixv1beta1.AlertSet,
@@ -366,10 +366,9 @@ func (r *AlertSetReconciler) persistCreatedAlertSetStatus(
 	createdKeys map[string]struct{},
 ) (bool, error) {
 	alertSet.Status.Alerts = sortedAlertSetStatuses(statusByKey)
-	if err := config.GetClient().Status().Update(ctx, alertSet); err == nil {
+	statusUpdateErr := config.GetClient().Status().Update(ctx, alertSet)
+	if statusUpdateErr == nil {
 		return false, nil
-	} else if !k8serrors.IsConflict(err) {
-		return false, fmt.Errorf("persist created AlertSet IDs: %w", err)
 	}
 
 	var persistedAlertSet *coralogixv1beta1.AlertSet
@@ -396,7 +395,7 @@ func (r *AlertSetReconciler) persistCreatedAlertSetStatus(
 		return nil
 	})
 	if err != nil {
-		return true, fmt.Errorf("persist created AlertSet IDs after conflict: %w", err)
+		return true, fmt.Errorf("persist created AlertSet IDs after status update error (%v): %w", statusUpdateErr, err)
 	}
 	*alertSet = *persistedAlertSet
 	return true, nil

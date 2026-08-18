@@ -57,6 +57,16 @@ type conflictOnceStatusWriter struct {
 	parent *conflictOnceStatusClient
 }
 
+type errorOnceStatusClient struct {
+	client.Client
+	err error
+}
+
+type errorOnceStatusWriter struct {
+	client.SubResourceWriter
+	parent *errorOnceStatusClient
+}
+
 func (c *conflictOnceStatusClient) Status() client.SubResourceWriter {
 	return conflictOnceStatusWriter{
 		SubResourceWriter: c.Client.Status(),
@@ -75,6 +85,26 @@ func (w conflictOnceStatusWriter) Update(
 			Group:    coralogixv1beta1.GroupVersion.Group,
 			Resource: "alertsets",
 		}, obj.GetName(), nil)
+	}
+	return w.SubResourceWriter.Update(ctx, obj, opts...)
+}
+
+func (c *errorOnceStatusClient) Status() client.SubResourceWriter {
+	return errorOnceStatusWriter{
+		SubResourceWriter: c.Client.Status(),
+		parent:            c,
+	}
+}
+
+func (w errorOnceStatusWriter) Update(
+	ctx context.Context,
+	obj client.Object,
+	opts ...client.SubResourceUpdateOption,
+) error {
+	if w.parent.err != nil {
+		err := w.parent.err
+		w.parent.err = nil
+		return err
 	}
 	return w.SubResourceWriter.Update(ctx, obj, opts...)
 }
@@ -220,6 +250,57 @@ func TestPersistCreatedAlertSetStatusRecoversFromStatusConflict(t *testing.T) {
 	require.Equal(t, createdID, *stored.Status.Alerts[0].ID)
 	require.Equal(t, "existing", stored.Status.Alerts[1].Key)
 	require.Equal(t, existingID, *stored.Status.Alerts[1].ID)
+}
+
+func TestPersistCreatedAlertSetStatusRecoversFromStatusUpdateError(t *testing.T) {
+	scheme := runtime.NewScheme()
+	require.NoError(t, coralogixv1beta1.AddToScheme(scheme))
+
+	alertSet := &coralogixv1beta1.AlertSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-alert-set",
+			Namespace: "default",
+		},
+	}
+	baseClient := fake.NewClientBuilder().
+		WithScheme(scheme).
+		WithStatusSubresource(&coralogixv1beta1.AlertSet{}).
+		WithObjects(alertSet.DeepCopy()).
+		Build()
+	statusClient := &errorOnceStatusClient{
+		Client: baseClient,
+		err:    errors.New("apiserver timeout"),
+	}
+
+	originalClient := config.GetClient()
+	t.Cleanup(func() { config.InitClient(originalClient) })
+	config.InitClient(statusClient)
+
+	createdID := "created-id"
+	statusByKey := map[string]coralogixv1beta1.AlertSetItemStatus{
+		"created": {
+			Key:   "created",
+			ID:    &createdID,
+			State: coralogixv1beta1.AlertSetItemStateSynced,
+		},
+	}
+
+	reconciler := &AlertSetReconciler{}
+	recovered, err := reconciler.persistCreatedAlertSetStatus(
+		context.Background(),
+		alertSet,
+		statusByKey,
+		map[string]struct{}{"created": {}},
+	)
+
+	require.NoError(t, err)
+	require.True(t, recovered)
+
+	stored := &coralogixv1beta1.AlertSet{}
+	require.NoError(t, baseClient.Get(context.Background(), client.ObjectKeyFromObject(alertSet), stored))
+	require.Len(t, stored.Status.Alerts, 1)
+	require.Equal(t, "created", stored.Status.Alerts[0].Key)
+	require.Equal(t, createdID, *stored.Status.Alerts[0].ID)
 }
 
 func TestPersistCreatedAlertSetStatusRetriesRecoveryConflicts(t *testing.T) {
