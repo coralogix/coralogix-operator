@@ -39,7 +39,7 @@ var _ = Describe("RuleGroup", Ordered, func() {
 		ruleGroupsClient *cxsdk.RuleGroupsClient
 		ruleGroupID      string
 		ruleGroup        *coralogixv1alpha1.RuleGroup
-		ruleGroupName    = fmt.Sprintf("json-extract-rule-%d", time.Now().Unix())
+		ruleGroupName    = uniqueName("json-extract-rule")
 	)
 
 	BeforeEach(func() {
@@ -98,7 +98,7 @@ var _ = Describe("RuleGroup", Ordered, func() {
 
 	It("Should be updated successfully", func(ctx context.Context) {
 		By("Patching the RuleGroup")
-		newRuleGroupName := "json-extract-rule-updated"
+		newRuleGroupName := uniqueName("json-extract-rule-updated")
 		modifiedRuleGroup := ruleGroup.DeepCopy()
 		modifiedRuleGroup.Spec.Name = newRuleGroupName
 		Expect(crClient.Patch(ctx, modifiedRuleGroup, client.MergeFrom(ruleGroup))).To(Succeed())

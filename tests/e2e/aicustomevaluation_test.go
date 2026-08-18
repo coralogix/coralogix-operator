@@ -44,7 +44,7 @@ var _ = Describe("AICustomEvaluation", Ordered, func() {
 		aiCustomEvaluationID   string
 		aiCustomEvaluation     *coralogixv1alpha1.AICustomEvaluation
 		application            aiCustomEvaluationApplicationRef
-		aiCustomEvaluationName = fmt.Sprintf("ai-custom-evaluation-%d", time.Now().Unix())
+		aiCustomEvaluationName = uniqueName("ai-custom-evaluation")
 	)
 
 	BeforeAll(func(ctx context.Context) {
@@ -101,7 +101,7 @@ var _ = Describe("AICustomEvaluation", Ordered, func() {
 		current := &coralogixv1alpha1.AICustomEvaluation{}
 		Expect(crClient.Get(ctx, types.NamespacedName{Name: aiCustomEvaluationName, Namespace: testNamespace}, current)).To(Succeed())
 		modified := current.DeepCopy()
-		modified.Spec.Name = "competitor-policy-updated"
+		modified.Spec.Name = uniqueName("competitor-policy-updated")
 		modified.Spec.PolicyType = coralogixv1alpha1.AICustomEvaluationPolicyTypeSecurity
 		modified.Spec.Description = ptr.To("Flags responses that recommend competitor tools.")
 		modified.Spec.Instructions = "Score whether {response} recommends competitor products.\nOnly evaluate the final assistant response."
@@ -186,7 +186,7 @@ var _ = Describe("AICustomEvaluation minimal", Ordered, func() {
 		aiEvaluations        *aievaluations.AIEvaluationsServiceAPIService
 		aiCustomEvaluationID string
 		aiCustomEvaluation   *coralogixv1alpha1.AICustomEvaluation
-		resourceName         = fmt.Sprintf("ai-custom-evaluation-minimal-%d", time.Now().Unix())
+		resourceName         = uniqueName("ai-custom-evaluation-minimal")
 	)
 
 	BeforeAll(func() {
@@ -243,7 +243,7 @@ var _ = Describe("AICustomEvaluation application resolution", Ordered, func() {
 		crClient       client.Client
 		aiApplications *aiapplications.AIApplicationsServiceAPIService
 		application    aiCustomEvaluationApplicationRef
-		resourceName   = fmt.Sprintf("ai-custom-evaluation-missing-app-update-%d", time.Now().Unix())
+		resourceName   = uniqueName("ai-custom-evaluation-missing-app-update")
 	)
 
 	BeforeAll(func(ctx context.Context) {
@@ -265,7 +265,7 @@ var _ = Describe("AICustomEvaluation application resolution", Ordered, func() {
 			application: fmt.Sprintf("missing-ai-application-%d", time.Now().UnixNano()),
 			subsystem:   fmt.Sprintf("missing-ai-subsystem-%d", time.Now().UnixNano()),
 		}
-		resourceName := fmt.Sprintf("ai-custom-evaluation-missing-app-create-%d", time.Now().Unix())
+		resourceName := uniqueName("ai-custom-evaluation-missing-app-create")
 		aiCustomEvaluation := newAICustomEvaluation(
 			resourceName,
 			"missing-application-policy",
@@ -340,7 +340,7 @@ var _ = Describe("AICustomEvaluation schema validation", func() {
 
 	It("Should reject invalid instructions", func(ctx context.Context) {
 		aiCustomEvaluation := newAICustomEvaluation(
-			fmt.Sprintf("ai-custom-evaluation-invalid-instructions-%d", time.Now().Unix()),
+			uniqueName("ai-custom-evaluation-invalid-instructions"),
 			"invalid-instructions-policy",
 			coralogixv1alpha1.AICustomEvaluationPolicyTypeQuality,
 			"",
@@ -354,7 +354,7 @@ var _ = Describe("AICustomEvaluation schema validation", func() {
 
 	It("Should reject invalid policy type", func(ctx context.Context) {
 		aiCustomEvaluation := newAICustomEvaluation(
-			fmt.Sprintf("ai-custom-evaluation-invalid-policy-%d", time.Now().Unix()),
+			uniqueName("ai-custom-evaluation-invalid-policy"),
 			"invalid-policy",
 			"other",
 			"",

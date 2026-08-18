@@ -73,7 +73,7 @@ var _ = Describe("AlertScheduler", Ordered, func() {
 
 	It("Should be updated successfully", func(ctx context.Context) {
 		By("Patching the AlertScheduler")
-		newSchedulerName := "alert-scheduler-updated"
+		newSchedulerName := uniqueName("alert-scheduler-updated")
 		modifiedScheduler := alertScheduler.DeepCopy()
 		modifiedScheduler.Spec.Name = newSchedulerName
 		Expect(crClient.Patch(ctx, modifiedScheduler, client.MergeFrom(alertScheduler))).To(Succeed())
