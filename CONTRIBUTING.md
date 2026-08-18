@@ -95,6 +95,21 @@ $ make e2e-tests
 The specs run across 4 processes by default. Set `E2E_PROCS=1` to run them serially, which is
 easier to follow when debugging a single spec.
 
+To create a local Kind cluster, build and load the operator image, install the Helm chart, and
+run one focused spec, use:
+```sh
+$ ./scripts/run-e2e.sh AlertSet
+```
+Pass the desired Ginkgo focus as the first argument.
+The script prompts for `CORALOGIX_API_KEY` if it is not already set. Set `CORALOGIX_REGION` to
+override the default region (`EU2`). Set `IMAGE_TAG` to override the local image tag.
+
+To install the same local environment and apply a manifest, pass the manifest path:
+```sh
+$ ./scripts/run-manifest-e2e.sh config/samples/v1alpha1/dashboards/dashboard-import.yaml
+```
+The script prints the applied resource state. Set `WATCH=true` to keep watching the resource.
+
 Running Integration Tests
 ---------------------
 We use [kuttl](https://kuttl.dev/) for integration tests.

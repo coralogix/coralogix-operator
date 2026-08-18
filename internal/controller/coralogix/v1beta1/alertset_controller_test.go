@@ -47,6 +47,38 @@ type notFoundUpdateClient struct {
 	client.Client
 }
 
+type conflictOnceStatusClient struct {
+	client.Client
+	conflict bool
+}
+
+type conflictOnceStatusWriter struct {
+	client.SubResourceWriter
+	parent *conflictOnceStatusClient
+}
+
+func (c *conflictOnceStatusClient) Status() client.SubResourceWriter {
+	return conflictOnceStatusWriter{
+		SubResourceWriter: c.Client.Status(),
+		parent:            c,
+	}
+}
+
+func (w conflictOnceStatusWriter) Update(
+	ctx context.Context,
+	obj client.Object,
+	opts ...client.SubResourceUpdateOption,
+) error {
+	if w.parent.conflict {
+		w.parent.conflict = false
+		return k8serrors.NewConflict(schema.GroupResource{
+			Group:    coralogixv1beta1.GroupVersion.Group,
+			Resource: "alertsets",
+		}, obj.GetName(), nil)
+	}
+	return w.SubResourceWriter.Update(ctx, obj, opts...)
+}
+
 func (c notFoundUpdateClient) Update(
 	_ context.Context,
 	obj client.Object,
@@ -131,6 +163,63 @@ func TestAlertSetStatusSnapshotDoesNotChangeWithLiveStatus(t *testing.T) {
 
 	require.Equal(t, int64(1), originalStatus.Conditions[0].ObservedGeneration)
 	require.Equal(t, int64(2), alertSet.Status.Conditions[0].ObservedGeneration)
+}
+
+func TestPersistCreatedAlertSetStatusRecoversFromStatusConflict(t *testing.T) {
+	scheme := runtime.NewScheme()
+	require.NoError(t, coralogixv1beta1.AddToScheme(scheme))
+
+	existingID := "existing-id"
+	alertSet := &coralogixv1beta1.AlertSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-alert-set",
+			Namespace: "default",
+		},
+		Status: coralogixv1beta1.AlertSetStatus{
+			Alerts: []coralogixv1beta1.AlertSetItemStatus{{
+				Key: "existing",
+				ID:  &existingID,
+			}},
+		},
+	}
+	baseClient := fake.NewClientBuilder().
+		WithScheme(scheme).
+		WithStatusSubresource(&coralogixv1beta1.AlertSet{}).
+		WithObjects(alertSet.DeepCopy()).
+		Build()
+	conflictClient := &conflictOnceStatusClient{Client: baseClient, conflict: true}
+
+	originalClient := config.GetClient()
+	t.Cleanup(func() { config.InitClient(originalClient) })
+	config.InitClient(conflictClient)
+
+	createdID := "created-id"
+	statusByKey := map[string]coralogixv1beta1.AlertSetItemStatus{
+		"created": {
+			Key:   "created",
+			ID:    &createdID,
+			State: coralogixv1beta1.AlertSetItemStateSynced,
+		},
+	}
+
+	reconciler := &AlertSetReconciler{}
+	recovered, err := reconciler.persistCreatedAlertSetStatus(
+		context.Background(),
+		alertSet,
+		statusByKey,
+		map[string]struct{}{"created": {}},
+	)
+
+	require.NoError(t, err)
+	require.True(t, recovered)
+
+	stored := &coralogixv1beta1.AlertSet{}
+	require.NoError(t, baseClient.Get(context.Background(), client.ObjectKeyFromObject(alertSet), stored))
+	require.Len(t, stored.Status.Alerts, 2)
+	require.Equal(t, "created", stored.Status.Alerts[0].Key)
+	require.Equal(t, createdID, *stored.Status.Alerts[0].ID)
+	require.Equal(t, "existing", stored.Status.Alerts[1].Key)
+	require.Equal(t, existingID, *stored.Status.Alerts[1].ID)
 }
 
 func TestApplyBulkReplaceResponseHandlesAllResultTypes(t *testing.T) {

@@ -19,6 +19,8 @@ spec:
           metricThreshold:
             metricFilter:
               promql: rate(http_errors_total[5m])
+            missingValues:
+              minNonNullValuesPct: 60
             rules:
               - condition:
                   threshold: "10"
@@ -35,6 +37,8 @@ spec:
           metricThreshold:
             metricFilter:
               promql: http_request_duration_seconds
+            missingValues:
+              minNonNullValuesPct: 60
             rules:
               - condition:
                   threshold: "2"
