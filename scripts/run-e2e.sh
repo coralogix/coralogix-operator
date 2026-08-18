@@ -21,7 +21,6 @@ IMAGE="${IMAGE_REPOSITORY}:v${IMAGE_TAG}"
 if [[ -z "${CORALOGIX_API_KEY:-}" ]]; then
   read -r -s -p "Coralogix API key: " CORALOGIX_API_KEY
   printf '\n'
-  export CORALOGIX_API_KEY
 fi
 
 if [[ -z "$CORALOGIX_API_KEY" ]]; then
@@ -29,6 +28,13 @@ if [[ -z "$CORALOGIX_API_KEY" ]]; then
   exit 1
 fi
 
+umask 077
+API_KEY_FILE=$(mktemp)
+trap 'rm -f "$API_KEY_FILE"' EXIT
+printf '%s' "$CORALOGIX_API_KEY" > "$API_KEY_FILE"
+export -n CORALOGIX_API_KEY
+
+unset CORALOGIX_DOMAIN
 export CORALOGIX_REGION
 
 kind delete cluster --name "$CLUSTER_NAME" >/dev/null 2>&1 || true
@@ -46,12 +52,13 @@ helm upgrade --install cx ./charts/coralogix-operator \
   --set coralogixOperator.image.tag="$IMAGE_TAG" \
   --set coralogixOperator.image.pullPolicy=IfNotPresent \
   --set coralogixOperator.prometheusRules.enabled=false \
-  --set-string secret.data.apiKey="$CORALOGIX_API_KEY" \
+  --set-file secret.data.apiKey="$API_KEY_FILE" \
   --set coralogixOperator.region="$CORALOGIX_REGION"
 
 kubectl -n coralogix-operator-system rollout status \
   deployment/cx-coralogix-operator
 
+export CORALOGIX_API_KEY
 go test ./tests/e2e \
   -run '^TestE2E$' \
   -v \
