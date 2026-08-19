@@ -5761,11 +5761,6 @@ func (in *TCORumPolicy) DeepCopyInto(out *TCORumPolicy) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.Priority != nil {
-		in, out := &in.Priority, &out.Priority
-		*out = new(string)
-		**out = **in
-	}
 	if in.Disabled != nil {
 		in, out := &in.Disabled, &out.Disabled
 		*out = new(bool)

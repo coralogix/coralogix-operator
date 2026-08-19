@@ -45,6 +45,8 @@ spec:
       # (NOT $d.cx_rum.*). severities and dpxlExpression are mutually exclusive.
       dpxlExpression: "<v1>$d.applicationname == 'prod'"
     - name: fourth policy with quota-based priority override
+      # Base priority must be lower than every usage-tier priority.
+      priority: low
       severities:
         - info
       priorityOverride:

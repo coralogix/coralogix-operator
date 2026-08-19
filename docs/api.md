@@ -18807,6 +18807,15 @@ A TCO policy for RUM (browser/mobile) events.
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          The policy priority.<br/>
+          <br/>
+            <i>Enum</i>: block, high, medium, low<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
         <td><b><a href="#tcorumpoliciesspecpoliciesindexapplications">applications</a></b></td>
         <td>object</td>
         <td>
@@ -18841,16 +18850,6 @@ A TCO policy for RUM (browser/mobile) events.
           A DPXL expression to match RUM events on. Mutually exclusive with severities; exactly one of the two is required.
 The expression must carry a <v1> version prefix and use the canonical $d.* schema (NOT $d.cx_rum.*),
 otherwise it fails to compile.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>priority</b></td>
-        <td>enum</td>
-        <td>
-          The policy priority. If omitted with no quota-based priority override, the API rejects the policy;
-if omitted together with a quota-based priority override, the API defaults it to block.<br/>
-          <br/>
-            <i>Enum</i>: block, high, medium, low<br/>
         </td>
         <td>false</td>
       </tr><tr>

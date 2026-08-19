@@ -109,14 +109,13 @@ spec:
                         A DPXL expression to match RUM events on. Mutually exclusive with severities; exactly one of the two is required.
                         The expression must carry a <v1> version prefix and use the canonical $d.* schema (NOT $d.cx_rum.*),
                         otherwise it fails to compile.
+                      minLength: 1
                       type: string
                     name:
                       description: Name of the policy.
                       type: string
                     priority:
-                      description: |-
-                        The policy priority. If omitted with no quota-based priority override, the API rejects the policy;
-                        if omitted together with a quota-based priority override, the API defaults it to block.
+                      description: The policy priority.
                       enum:
                       - block
                       - high
@@ -172,6 +171,7 @@ spec:
                         - verbose
                         type: string
                       maxItems: 6
+                      minItems: 1
                       type: array
                     subsystems:
                       description: The subsystems to apply the policy on. Applies
@@ -198,6 +198,7 @@ spec:
                       type: object
                   required:
                   - name
+                  - priority
                   type: object
                   x-kubernetes-validations:
                   - message: severities and dpxlExpression are mutually exclusive

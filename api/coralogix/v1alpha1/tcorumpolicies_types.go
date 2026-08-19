@@ -43,10 +43,8 @@ type TCORumPolicy struct {
 	Description *string `json:"description,omitempty"`
 
 	// +kubebuilder:validation:Enum=block;high;medium;low
-	// The policy priority. If omitted with no quota-based priority override, the API rejects the policy;
-	// if omitted together with a quota-based priority override, the API defaults it to block.
-	// +optional
-	Priority *string `json:"priority,omitempty"`
+	// The policy priority.
+	Priority string `json:"priority"`
 
 	// +optional
 	// Whether the policy is disabled.
@@ -54,6 +52,7 @@ type TCORumPolicy struct {
 
 	// The severities to apply the policy on. Mutually exclusive with dpxlExpression; exactly one of the two is required.
 	// +optional
+	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:MaxItems=6
 	Severities []TCOPolicySeverity `json:"severities,omitempty"`
 
@@ -61,6 +60,7 @@ type TCORumPolicy struct {
 	// The expression must carry a <v1> version prefix and use the canonical $d.* schema (NOT $d.cx_rum.*),
 	// otherwise it fails to compile.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	DpxlExpression *string `json:"dpxlExpression,omitempty"`
 
 	// Dynamic quota-based priority override for the policy.
@@ -130,7 +130,7 @@ func (p *TCORumPolicy) extractCreateRumPolicyRequest(retentionsByName map[string
 		Policy: tcopolicies.CreateGenericPolicyRequest{
 			Name:             p.Name,
 			Description:      ptr.Deref(p.Description, ""),
-			Priority:         PrioritySchemaToOpenAPI[ptr.Deref(p.Priority, "")],
+			Priority:         PrioritySchemaToOpenAPI[p.Priority],
 			Disabled:         p.Disabled,
 			ApplicationRule:  expandTCOPolicyRule(p.Applications),
 			SubsystemRule:    expandTCOPolicyRule(p.Subsystems),

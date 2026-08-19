@@ -41,7 +41,7 @@ var _ = Describe("TCORumPolicies validation", func() {
 			Spec: coralogixv1alpha1.TCORumPoliciesSpec{
 				Policies: []coralogixv1alpha1.TCORumPolicy{{
 					Name:       "over-limit",
-					Priority:   ptr.To("low"),
+					Priority:   "low",
 					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
 					Subsystems: &coralogixv1alpha1.TCOPolicyRule{
 						Names:    names,
@@ -64,7 +64,7 @@ var _ = Describe("TCORumPolicies validation", func() {
 			Spec: coralogixv1alpha1.TCORumPoliciesSpec{
 				Policies: []coralogixv1alpha1.TCORumPolicy{{
 					Name:       "by-severities",
-					Priority:   ptr.To("high"),
+					Priority:   "high",
 					Severities: []coralogixv1alpha1.TCOPolicySeverity{"critical", "error"},
 					Applications: &coralogixv1alpha1.TCOPolicyRule{
 						Names:    []string{"prod"},
@@ -86,7 +86,7 @@ var _ = Describe("TCORumPolicies validation", func() {
 			Spec: coralogixv1alpha1.TCORumPoliciesSpec{
 				Policies: []coralogixv1alpha1.TCORumPolicy{{
 					Name:           "by-dpxl",
-					Priority:       ptr.To("medium"),
+					Priority:       "medium",
 					DpxlExpression: ptr.To("<v1>$d.applicationname == 'prod'"),
 				}},
 			},
@@ -104,7 +104,7 @@ var _ = Describe("TCORumPolicies validation", func() {
 			Spec: coralogixv1alpha1.TCORumPoliciesSpec{
 				Policies: []coralogixv1alpha1.TCORumPolicy{{
 					Name:           "conflicting-rules",
-					Priority:       ptr.To("low"),
+					Priority:       "low",
 					Severities:     []coralogixv1alpha1.TCOPolicySeverity{"info"},
 					DpxlExpression: ptr.To("<v1>$d.applicationname == 'prod'"),
 				}},
@@ -113,6 +113,24 @@ var _ = Describe("TCORumPolicies validation", func() {
 		err := k8sClient.Create(ctx, policy)
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("mutually exclusive"))
+	})
+
+	It("should reject a policy without a priority", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCORumPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "rum-missing-priority",
+				Namespace: "default",
+			},
+			Spec: coralogixv1alpha1.TCORumPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCORumPolicy{{
+					Name:       "no-priority",
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+				}},
+			},
+		}
+		err := k8sClient.Create(ctx, policy)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("spec.policies[0].priority"))
 	})
 
 	It("should accept a policy with a quota-based priority override", func(ctx context.Context) {
@@ -124,6 +142,7 @@ var _ = Describe("TCORumPolicies validation", func() {
 			Spec: coralogixv1alpha1.TCORumPoliciesSpec{
 				Policies: []coralogixv1alpha1.TCORumPolicy{{
 					Name:       "quota-override",
+					Priority:   "low",
 					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
 					PriorityOverride: &coralogixv1alpha1.TCOPolicyPriorityOverride{
 						QuotaBased: &coralogixv1alpha1.TCOPolicyQuotaBased{

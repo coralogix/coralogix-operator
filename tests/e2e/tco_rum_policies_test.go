@@ -47,7 +47,7 @@ var _ = Describe("TCORumPolicies schema validation", func() {
 			Spec: coralogixv1alpha1.TCORumPoliciesSpec{
 				Policies: []coralogixv1alpha1.TCORumPolicy{{
 					Name:       "over-limit",
-					Priority:   ptr.To("low"),
+					Priority:   "low",
 					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
 					Subsystems: &coralogixv1alpha1.TCOPolicyRule{
 						Names:    names,
@@ -70,7 +70,7 @@ var _ = Describe("TCORumPolicies schema validation", func() {
 			Spec: coralogixv1alpha1.TCORumPoliciesSpec{
 				Policies: []coralogixv1alpha1.TCORumPolicy{{
 					Name:           "conflicting-rules",
-					Priority:       ptr.To("low"),
+					Priority:       "low",
 					Severities:     []coralogixv1alpha1.TCOPolicySeverity{"info"},
 					DpxlExpression: ptr.To("<v1>$d.applicationname == 'prod'"),
 				}},
@@ -112,7 +112,7 @@ var _ = Describe("TCORumPolicies", Serial, func() {
 				Policies: []coralogixv1alpha1.TCORumPolicy{
 					{
 						Name:       "sample policy",
-						Priority:   ptr.To("high"),
+						Priority:   "high",
 						Severities: []coralogixv1alpha1.TCOPolicySeverity{"critical", "error"},
 						Applications: &coralogixv1alpha1.TCOPolicyRule{
 							Names:    []string{"prod"},
@@ -125,7 +125,7 @@ var _ = Describe("TCORumPolicies", Serial, func() {
 					},
 					{
 						Name:           "dpxl policy",
-						Priority:       ptr.To("medium"),
+						Priority:       "medium",
 						DpxlExpression: ptr.To("<v1>$d.applicationname == 'prod'"),
 					},
 				},
