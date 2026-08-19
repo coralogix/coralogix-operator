@@ -1,0 +1,22 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Connector
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: connector-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: microsoft-teams-sample
+spec:
+  name: microsoft-teams-sample
+  description: This is a sample Microsoft Teams connector
+  type: microsoftTeams
+  connectorConfig:
+    fields:
+      - fieldName: integrationId
+        value: some-integration-id
+      - fieldName: teamId
+        value: some-team-id
+      - fieldName: channelId
+        value: "19:channel-id@thread.tacv2"

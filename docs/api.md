@@ -10173,9 +10173,9 @@ See also https://coralogix.com/docs/user-guides/notification-center/introduction
         <td><b>type</b></td>
         <td>enum</td>
         <td>
-          Type is the type of the connector. Can be one of slack, genericHttps, pagerDuty, pagerDutyIncidents, email, or serviceNow.<br/>
+          Type is the type of the connector. Can be one of slack, genericHttps, pagerDuty, pagerDutyIncidents, email, serviceNow, or microsoftTeams.<br/>
           <br/>
-            <i>Enum</i>: slack, genericHttps, pagerDuty, pagerDutyIncidents, email, serviceNow<br/>
+            <i>Enum</i>: slack, genericHttps, pagerDuty, pagerDutyIncidents, email, serviceNow, microsoftTeams<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -15645,9 +15645,9 @@ PresetSpec defines the desired state of Preset.
         <td><b>connectorType</b></td>
         <td>enum</td>
         <td>
-          ConnectorType is the type of the connector. Can be one of slack, genericHttps, pagerDuty, pagerDutyIncidents, or email.<br/>
+          ConnectorType is the type of the connector. Can be one of slack, genericHttps, pagerDuty, pagerDutyIncidents, email, or microsoftTeams.<br/>
           <br/>
-            <i>Enum</i>: slack, genericHttps, pagerDuty, pagerDutyIncidents, email<br/>
+            <i>Enum</i>: slack, genericHttps, pagerDuty, pagerDutyIncidents, email, microsoftTeams<br/>
         </td>
         <td>true</td>
       </tr><tr>
