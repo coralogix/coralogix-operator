@@ -79,13 +79,15 @@ var _ = Describe("AlertScheduler", Ordered, func() {
 		Expect(crClient.Patch(ctx, modifiedScheduler, client.MergeFrom(alertScheduler))).To(Succeed())
 
 		By("Verifying AlertScheduler is updated in Coralogix backend")
-		Eventually(func() string {
+		Eventually(func() (string, error) {
 			getSchedulerRes, err := alertSchedulerClient.Get(ctx, &cxsdk.GetAlertSchedulerRuleRequest{AlertSchedulerRuleId: alertSchedulerID})
-			Expect(err).ToNot(HaveOccurred())
-			if getSchedulerRes.AlertSchedulerRule == nil {
-				return ""
+			if err != nil {
+				return "", err
 			}
-			return getSchedulerRes.AlertSchedulerRule.Name
+			if getSchedulerRes == nil || getSchedulerRes.AlertSchedulerRule == nil {
+				return "", nil
+			}
+			return getSchedulerRes.AlertSchedulerRule.Name, nil
 		}, time.Minute, time.Second).Should(Equal(newSchedulerName))
 	})
 
