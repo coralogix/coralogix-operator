@@ -1,0 +1,48 @@
+apiVersion: coralogix.com/v1alpha1
+kind: AlertSet
+metadata:
+  labels:
+    app.kubernetes.io/name: alertset
+    app.kubernetes.io/instance: alertset-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: metric-threshold-alerts
+spec:
+  alerts:
+    - key: high-error-rate
+      spec:
+        name: High error rate
+        description: Alerts when the HTTP error rate is high.
+        priority: p2
+        alertType:
+          metricThreshold:
+            metricFilter:
+              promql: rate(http_errors_total[5m])
+            missingValues:
+              minNonNullValuesPct: 60
+            rules:
+              - condition:
+                  threshold: "10"
+                  conditionType: moreThan
+                  forOverPct: 20
+                  ofTheLast:
+                    dynamicDuration: 5m
+    - key: high-latency
+      spec:
+        name: High latency
+        description: Alerts when HTTP request latency is high.
+        priority: p3
+        alertType:
+          metricThreshold:
+            metricFilter:
+              promql: http_request_duration_seconds
+            missingValues:
+              minNonNullValuesPct: 60
+            rules:
+              - condition:
+                  threshold: "2"
+                  conditionType: moreThan
+                  forOverPct: 20
+                  ofTheLast:
+                    dynamicDuration: 5m

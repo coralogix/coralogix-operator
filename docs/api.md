@@ -15,6 +15,8 @@ Resource Types:
 
 - [AlertScheduler](#alertscheduler)
 
+- [AlertSet](#alertset)
+
 - [ApiKey](#apikey)
 
 - [ArchiveLogsTarget](#archivelogstarget)
@@ -1780,6 +1782,7351 @@ AlertSchedulerStatus defines the observed state of AlertScheduler.
 
 ### AlertScheduler.status.conditions[index]
 <sup><sup>[↩ Parent](#alertschedulerstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## AlertSet
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+AlertSet is the Schema for the AlertSets API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>AlertSet</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          AlertSetSpec defines a set of Coralogix alerts.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          AlertSetStatus defines the observed state of an AlertSet.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec
+<sup><sup>[↩ Parent](#alertset)</sup></sup>
+
+
+
+AlertSetSpec defines a set of Coralogix alerts.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindex">alerts</a></b></td>
+        <td>[]object</td>
+        <td>
+          Alerts contains the alerts that this resource manages.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index]
+<sup><sup>[↩ Parent](#alertsetspec)</sup></sup>
+
+
+
+AlertSetItem defines one alert in an AlertSet.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          Key is the stable identity of the alert in this AlertSet.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          Spec defines the alert.<br/>
+          <br/>
+            <i>Validations</i>:<li>!has(self.alertType.logsImmediate) || !has(self.groupByKeys): groupByKeys is not supported for this alert type</li><li>!(self.phantomMode && has(self.notificationGroup)): Phantom alerts must not have a notification group set</li>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec
+<sup><sup>[↩ Parent](#alertsetspecalertsindex)</sup></sup>
+
+
+
+Spec defines the alert.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttype">alertType</a></b></td>
+        <td>object</td>
+        <td>
+          Type of alert.<br/>
+          <br/>
+            <i>Validations</i>:<li>(has(self.logsImmediate) ? 1 : 0) + (has(self.logsThreshold) ? 1 : 0) + (has(self.logsRatioThreshold) ? 1 : 0) + (has(self.logsTimeRelativeThreshold) ? 1 : 0) + (has(self.metricThreshold) ? 1 : 0) + (has(self.tracingThreshold) ? 1 : 0) + (has(self.tracingImmediate) ? 1 : 0) + (has(self.flow) ? 1 : 0) + (has(self.logsAnomaly) ? 1 : 0) + (has(self.metricAnomaly) ? 1 : 0) + (has(self.logsNewValue) ? 1 : 0) + (has(self.logsUniqueCount) ? 1 : 0) + (has(self.sloThreshold) ? 1 : 0) == 1: Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue, logsUniqueCount, sloThreshold must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the alert<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          Priority of the alert.<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+            <i>Default</i>: p5<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecdatasourcesindex">dataSources</a></b></td>
+        <td>[]object</td>
+        <td>
+          Data sources to run the alert on.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          Description of the alert<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Enable/disable the alert.<br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>entityLabels</b></td>
+        <td>map[string]string</td>
+        <td>
+          Labels attached to the alert.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>groupByKeys</b></td>
+        <td>[]string</td>
+        <td>
+          Grouping fields for multiple alerts.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecincidentssettings">incidentsSettings</a></b></td>
+        <td>object</td>
+        <td>
+          Settings for the attached incidents.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroup">notificationGroup</a></b></td>
+        <td>object</td>
+        <td>
+          Where notifications should be sent to.<br/>
+          <br/>
+            <i>Validations</i>:<li>!(has(self.destinations) && has(self.router)): At most one of Destinations or Router can be set.</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupexcessindex">notificationGroupExcess</a></b></td>
+        <td>[]object</td>
+        <td>
+          Do not use.
+Deprecated: Legacy field for when multiple notification groups were attached.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>phantomMode</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecschedule">schedule</a></b></td>
+        <td>object</td>
+        <td>
+          Alert activity schedule. Will be activated all the time if not specified.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspec)</sup></sup>
+
+
+
+Type of alert.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeflow">flow</a></b></td>
+        <td>object</td>
+        <td>
+          Flow alerts chaining multiple alerts together.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsanomaly">logsAnomaly</a></b></td>
+        <td>object</td>
+        <td>
+          Anomaly alerts for logs.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsimmediate">logsImmediate</a></b></td>
+        <td>object</td>
+        <td>
+          Immediate alerts for logs.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsnewvalue">logsNewValue</a></b></td>
+        <td>object</td>
+        <td>
+          Alerts when a new log value appears.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsratiothreshold">logsRatioThreshold</a></b></td>
+        <td>object</td>
+        <td>
+          Alerts for when a log exceeds a defined ratio.<br/>
+          <br/>
+            <i>Validations</i>:<li>!has(self.undetectedValuesManagement) || self.rules.exists(r, r.condition.conditionType == 'lessThan'): undetectedValuesManagement requires at least one rule with a lessThan condition</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsthreshold">logsThreshold</a></b></td>
+        <td>object</td>
+        <td>
+          Alerts for when a log crosses a threshold.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogstimerelativethreshold">logsTimeRelativeThreshold</a></b></td>
+        <td>object</td>
+        <td>
+          Alerts are sent when the number of logs matching a filter is more than or less than a threshold over a specific time window.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsuniquecount">logsUniqueCount</a></b></td>
+        <td>object</td>
+        <td>
+          Alerts for unique count changes.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypemetricanomaly">metricAnomaly</a></b></td>
+        <td>object</td>
+        <td>
+          Anomaly alerts for metrics.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypemetricthreshold">metricThreshold</a></b></td>
+        <td>object</td>
+        <td>
+          Alerts for when a metric crosses a threshold.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeslothreshold">sloThreshold</a></b></td>
+        <td>object</td>
+        <td>
+          Alerts for SLO thresholds.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.errorBudget) != has(self.burnRate): Exactly one of errorBudget or burnRate is required</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypetracingimmediate">tracingImmediate</a></b></td>
+        <td>object</td>
+        <td>
+          Immediate alerts for traces.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypetracingthreshold">tracingThreshold</a></b></td>
+        <td>object</td>
+        <td>
+          Alerts for when traces crosses a threshold.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.flow
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttype)</sup></sup>
+
+
+
+Flow alerts chaining multiple alerts together.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enforceSuppression</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeflowstagesindex">stages</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.flow.stages[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeflow)</sup></sup>
+
+
+
+Stages to go through.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeflowstagesindexflowstagestype">flowStagesType</a></b></td>
+        <td>object</td>
+        <td>
+          Type of stage.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>timeframeMs</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>timeframeType</b></td>
+        <td>enum</td>
+        <td>
+          Type of timeframe.<br/>
+          <br/>
+            <i>Enum</i>: unspecified, upTo<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.flow.stages[index].flowStagesType
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeflowstagesindex)</sup></sup>
+
+
+
+Type of stage.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeflowstagesindexflowstagestypegroupsindex">groups</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.flow.stages[index].flowStagesType.groups[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeflowstagesindexflowstagestype)</sup></sup>
+
+
+
+Flow stage grouping.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeflowstagesindexflowstagestypegroupsindexalertdefsindex">alertDefs</a></b></td>
+        <td>[]object</td>
+        <td>
+          Alerts to group.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>alertsOp</b></td>
+        <td>enum</td>
+        <td>
+          Operation for the alert.<br/>
+          <br/>
+            <i>Enum</i>: and, or<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>nextOp</b></td>
+        <td>enum</td>
+        <td>
+          Link to the next alert.<br/>
+          <br/>
+            <i>Enum</i>: and, or<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.flow.stages[index].flowStagesType.groups[index].alertDefs[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeflowstagesindexflowstagestypegroupsindex)</sup></sup>
+
+
+
+Alert references.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeflowstagesindexflowstagestypegroupsindexalertdefsindexalertref">alertRef</a></b></td>
+        <td>object</td>
+        <td>
+          Reference for an alert, backend or Kubernetes resource<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>not</b></td>
+        <td>boolean</td>
+        <td>
+          Inversion.<br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.flow.stages[index].flowStagesType.groups[index].alertDefs[index].alertRef
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeflowstagesindexflowstagestypegroupsindexalertdefsindex)</sup></sup>
+
+
+
+Reference for an alert, backend or Kubernetes resource
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeflowstagesindexflowstagestypegroupsindexalertdefsindexalertrefbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          Coralogix id reference.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.id) != has(self.name): One of id or name is required</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeflowstagesindexflowstagestypegroupsindexalertdefsindexalertrefresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          Kubernetes resource reference.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.flow.stages[index].flowStagesType.groups[index].alertDefs[index].alertRef.backendRef
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeflowstagesindexflowstagestypegroupsindexalertdefsindexalertref)</sup></sup>
+
+
+
+Coralogix id reference.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          Alert ID.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the alert.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.flow.stages[index].flowStagesType.groups[index].alertDefs[index].alertRef.resourceRef
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeflowstagesindexflowstagestypegroupsindexalertdefsindexalertref)</sup></sup>
+
+
+
+Kubernetes resource reference.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsAnomaly
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttype)</sup></sup>
+
+
+
+Anomaly alerts for logs.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsanomalyrulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          Rules that match the alert to the data.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsanomalyanomalyalertsettings">anomalyAlertSettings</a></b></td>
+        <td>object</td>
+        <td>
+          Settings for anomaly alerts.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>evaluationDelayMs</b></td>
+        <td>integer</td>
+        <td>
+          Evaluation delay in milliseconds.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsanomalylogsfilter">logsFilter</a></b></td>
+        <td>object</td>
+        <td>
+          Filter to filter the logs with.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>notificationPayloadFilter</b></td>
+        <td>[]string</td>
+        <td>
+          Filter for the notification payload.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsAnomaly.rules[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsanomaly)</sup></sup>
+
+
+
+The rule to match the alert's conditions.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsanomalyrulesindexcondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Condition to match to.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsAnomaly.rules[index].condition
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsanomalyrulesindex)</sup></sup>
+
+
+
+Condition to match to.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>minimumThreshold</b></td>
+        <td>int or string</td>
+        <td>
+          Minimum value<br/>
+          <br/>
+            <i>Default</i>: 0<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsanomalyrulesindexconditiontimewindow">timeWindow</a></b></td>
+        <td>object</td>
+        <td>
+          Time window to evaluate.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>conditionType</b></td>
+        <td>enum</td>
+        <td>
+          Condition type.<br/>
+          <br/>
+            <i>Enum</i>: moreThanUsual<br/>
+            <i>Default</i>: moreThanUsual<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsAnomaly.rules[index].condition.timeWindow
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsanomalyrulesindexcondition)</sup></sup>
+
+
+
+Time window to evaluate.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>specificValue</b></td>
+        <td>enum</td>
+        <td>
+          Logs time window type<br/>
+          <br/>
+            <i>Enum</i>: 5m, 10m, 15m, 20m, 30m, 1h, 2h, 4h, 6h, 12h, 24h, 36h<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsAnomaly.anomalyAlertSettings
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsanomaly)</sup></sup>
+
+
+
+Settings for anomaly alerts.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>percentageOfDeviation</b></td>
+        <td>int or string</td>
+        <td>
+          The percentage of deviation from the baseline for triggering the alert.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsAnomaly.logsFilter
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsanomaly)</sup></sup>
+
+
+
+Filter to filter the logs with.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsanomalylogsfiltersimplefilter">simpleFilter</a></b></td>
+        <td>object</td>
+        <td>
+          Simple lucene filter.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsAnomaly.logsFilter.simpleFilter
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsanomalylogsfilter)</sup></sup>
+
+
+
+Simple lucene filter.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsanomalylogsfiltersimplefilterlabelfilters">labelFilters</a></b></td>
+        <td>object</td>
+        <td>
+          Filter for labels.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>luceneQuery</b></td>
+        <td>string</td>
+        <td>
+          The query.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsAnomaly.logsFilter.simpleFilter.labelFilters
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsanomalylogsfiltersimplefilter)</sup></sup>
+
+
+
+Filter for labels.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsanomalylogsfiltersimplefilterlabelfiltersapplicationnameindex">applicationName</a></b></td>
+        <td>[]object</td>
+        <td>
+          Application name to filter for.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>severity</b></td>
+        <td>[]enum</td>
+        <td>
+          Severity to filter for.<br/>
+          <br/>
+            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsanomalylogsfiltersimplefilterlabelfilterssubsystemnameindex">subsystemName</a></b></td>
+        <td>[]object</td>
+        <td>
+          Subsystem name to filter for.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsAnomaly.logsFilter.simpleFilter.labelFilters.applicationName[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsanomalylogsfiltersimplefilterlabelfilters)</sup></sup>
+
+
+
+Label filter specifications
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Operation to apply.<br/>
+          <br/>
+            <i>Enum</i>: is, includes, endsWith, startsWith<br/>
+            <i>Default</i>: is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          The value<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsAnomaly.logsFilter.simpleFilter.labelFilters.subsystemName[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsanomalylogsfiltersimplefilterlabelfilters)</sup></sup>
+
+
+
+Label filter specifications
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Operation to apply.<br/>
+          <br/>
+            <i>Enum</i>: is, includes, endsWith, startsWith<br/>
+            <i>Default</i>: is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          The value<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsImmediate
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttype)</sup></sup>
+
+
+
+Immediate alerts for logs.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsimmediatelogsfilter">logsFilter</a></b></td>
+        <td>object</td>
+        <td>
+          Filter to filter the logs with.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>notificationPayloadFilter</b></td>
+        <td>[]string</td>
+        <td>
+          Filter for the notification payload.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsImmediate.logsFilter
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsimmediate)</sup></sup>
+
+
+
+Filter to filter the logs with.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsimmediatelogsfiltersimplefilter">simpleFilter</a></b></td>
+        <td>object</td>
+        <td>
+          Simple lucene filter.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsImmediate.logsFilter.simpleFilter
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsimmediatelogsfilter)</sup></sup>
+
+
+
+Simple lucene filter.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsimmediatelogsfiltersimplefilterlabelfilters">labelFilters</a></b></td>
+        <td>object</td>
+        <td>
+          Filter for labels.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>luceneQuery</b></td>
+        <td>string</td>
+        <td>
+          The query.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsImmediate.logsFilter.simpleFilter.labelFilters
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsimmediatelogsfiltersimplefilter)</sup></sup>
+
+
+
+Filter for labels.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsimmediatelogsfiltersimplefilterlabelfiltersapplicationnameindex">applicationName</a></b></td>
+        <td>[]object</td>
+        <td>
+          Application name to filter for.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>severity</b></td>
+        <td>[]enum</td>
+        <td>
+          Severity to filter for.<br/>
+          <br/>
+            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsimmediatelogsfiltersimplefilterlabelfilterssubsystemnameindex">subsystemName</a></b></td>
+        <td>[]object</td>
+        <td>
+          Subsystem name to filter for.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsImmediate.logsFilter.simpleFilter.labelFilters.applicationName[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsimmediatelogsfiltersimplefilterlabelfilters)</sup></sup>
+
+
+
+Label filter specifications
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Operation to apply.<br/>
+          <br/>
+            <i>Enum</i>: is, includes, endsWith, startsWith<br/>
+            <i>Default</i>: is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          The value<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsImmediate.logsFilter.simpleFilter.labelFilters.subsystemName[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsimmediatelogsfiltersimplefilterlabelfilters)</sup></sup>
+
+
+
+Label filter specifications
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Operation to apply.<br/>
+          <br/>
+            <i>Enum</i>: is, includes, endsWith, startsWith<br/>
+            <i>Default</i>: is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          The value<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsNewValue
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttype)</sup></sup>
+
+
+
+Alerts when a new log value appears.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsnewvaluelogsfilter">logsFilter</a></b></td>
+        <td>object</td>
+        <td>
+          Filter to filter the logs with.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsnewvaluerulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          Rules that match the alert to the data.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>notificationPayloadFilter</b></td>
+        <td>[]string</td>
+        <td>
+          Filter for the notification payload.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsNewValue.logsFilter
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsnewvalue)</sup></sup>
+
+
+
+Filter to filter the logs with.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsnewvaluelogsfiltersimplefilter">simpleFilter</a></b></td>
+        <td>object</td>
+        <td>
+          Simple lucene filter.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsNewValue.logsFilter.simpleFilter
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsnewvaluelogsfilter)</sup></sup>
+
+
+
+Simple lucene filter.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsnewvaluelogsfiltersimplefilterlabelfilters">labelFilters</a></b></td>
+        <td>object</td>
+        <td>
+          Filter for labels.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>luceneQuery</b></td>
+        <td>string</td>
+        <td>
+          The query.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsNewValue.logsFilter.simpleFilter.labelFilters
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsnewvaluelogsfiltersimplefilter)</sup></sup>
+
+
+
+Filter for labels.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsnewvaluelogsfiltersimplefilterlabelfiltersapplicationnameindex">applicationName</a></b></td>
+        <td>[]object</td>
+        <td>
+          Application name to filter for.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>severity</b></td>
+        <td>[]enum</td>
+        <td>
+          Severity to filter for.<br/>
+          <br/>
+            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsnewvaluelogsfiltersimplefilterlabelfilterssubsystemnameindex">subsystemName</a></b></td>
+        <td>[]object</td>
+        <td>
+          Subsystem name to filter for.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsNewValue.logsFilter.simpleFilter.labelFilters.applicationName[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsnewvaluelogsfiltersimplefilterlabelfilters)</sup></sup>
+
+
+
+Label filter specifications
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Operation to apply.<br/>
+          <br/>
+            <i>Enum</i>: is, includes, endsWith, startsWith<br/>
+            <i>Default</i>: is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          The value<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsNewValue.logsFilter.simpleFilter.labelFilters.subsystemName[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsnewvaluelogsfiltersimplefilterlabelfilters)</sup></sup>
+
+
+
+Label filter specifications
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Operation to apply.<br/>
+          <br/>
+            <i>Enum</i>: is, includes, endsWith, startsWith<br/>
+            <i>Default</i>: is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          The value<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsNewValue.rules[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsnewvalue)</sup></sup>
+
+
+
+The rule to match the alert's conditions.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsnewvaluerulesindexcondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Condition to match to<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsNewValue.rules[index].condition
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsnewvaluerulesindex)</sup></sup>
+
+
+
+Condition to match to
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>keypathToTrack</b></td>
+        <td>string</td>
+        <td>
+          Where to look<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsnewvaluerulesindexconditiontimewindow">timeWindow</a></b></td>
+        <td>object</td>
+        <td>
+          Which time window.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsNewValue.rules[index].condition.timeWindow
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsnewvaluerulesindexcondition)</sup></sup>
+
+
+
+Which time window.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>specificValue</b></td>
+        <td>enum</td>
+        <td>
+          Time windows.<br/>
+          <br/>
+            <i>Enum</i>: 12h, 24h, 48h, 72h, 1w, 1mo, 2mo, 3mo<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsRatioThreshold
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttype)</sup></sup>
+
+
+
+Alerts for when a log exceeds a defined ratio.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsratiothresholddenominator">denominator</a></b></td>
+        <td>object</td>
+        <td>
+          A filter for logs.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>denominatorAlias</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsratiothresholdnumerator">numerator</a></b></td>
+        <td>object</td>
+        <td>
+          A filter for logs.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>numeratorAlias</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsratiothresholdrulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          Rules that match the alert to the data.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>evaluationDelayMs</b></td>
+        <td>integer</td>
+        <td>
+          Evaluation delay in milliseconds.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>groupByFor</b></td>
+        <td>enum</td>
+        <td>
+          Which side of the ratio the group-by keys are applied to.<br/>
+          <br/>
+            <i>Enum</i>: both, numeratorOnly, denominatorOnly<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>ignoreInfinity</b></td>
+        <td>boolean</td>
+        <td>
+          Ignore infinity on the threshold value.<br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>notificationPayloadFilter</b></td>
+        <td>[]string</td>
+        <td>
+          Filter for the notification payload.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsratiothresholdundetectedvaluesmanagement">undetectedValuesManagement</a></b></td>
+        <td>object</td>
+        <td>
+          How to work with undetected values.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsRatioThreshold.denominator
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsratiothreshold)</sup></sup>
+
+
+
+A filter for logs.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsratiothresholddenominatorsimplefilter">simpleFilter</a></b></td>
+        <td>object</td>
+        <td>
+          Simple lucene filter.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsRatioThreshold.denominator.simpleFilter
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsratiothresholddenominator)</sup></sup>
+
+
+
+Simple lucene filter.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsratiothresholddenominatorsimplefilterlabelfilters">labelFilters</a></b></td>
+        <td>object</td>
+        <td>
+          Filter for labels.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>luceneQuery</b></td>
+        <td>string</td>
+        <td>
+          The query.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsRatioThreshold.denominator.simpleFilter.labelFilters
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsratiothresholddenominatorsimplefilter)</sup></sup>
+
+
+
+Filter for labels.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsratiothresholddenominatorsimplefilterlabelfiltersapplicationnameindex">applicationName</a></b></td>
+        <td>[]object</td>
+        <td>
+          Application name to filter for.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>severity</b></td>
+        <td>[]enum</td>
+        <td>
+          Severity to filter for.<br/>
+          <br/>
+            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsratiothresholddenominatorsimplefilterlabelfilterssubsystemnameindex">subsystemName</a></b></td>
+        <td>[]object</td>
+        <td>
+          Subsystem name to filter for.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsRatioThreshold.denominator.simpleFilter.labelFilters.applicationName[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsratiothresholddenominatorsimplefilterlabelfilters)</sup></sup>
+
+
+
+Label filter specifications
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Operation to apply.<br/>
+          <br/>
+            <i>Enum</i>: is, includes, endsWith, startsWith<br/>
+            <i>Default</i>: is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          The value<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsRatioThreshold.denominator.simpleFilter.labelFilters.subsystemName[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsratiothresholddenominatorsimplefilterlabelfilters)</sup></sup>
+
+
+
+Label filter specifications
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Operation to apply.<br/>
+          <br/>
+            <i>Enum</i>: is, includes, endsWith, startsWith<br/>
+            <i>Default</i>: is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          The value<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsRatioThreshold.numerator
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsratiothreshold)</sup></sup>
+
+
+
+A filter for logs.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsratiothresholdnumeratorsimplefilter">simpleFilter</a></b></td>
+        <td>object</td>
+        <td>
+          Simple lucene filter.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsRatioThreshold.numerator.simpleFilter
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsratiothresholdnumerator)</sup></sup>
+
+
+
+Simple lucene filter.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsratiothresholdnumeratorsimplefilterlabelfilters">labelFilters</a></b></td>
+        <td>object</td>
+        <td>
+          Filter for labels.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>luceneQuery</b></td>
+        <td>string</td>
+        <td>
+          The query.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsRatioThreshold.numerator.simpleFilter.labelFilters
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsratiothresholdnumeratorsimplefilter)</sup></sup>
+
+
+
+Filter for labels.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsratiothresholdnumeratorsimplefilterlabelfiltersapplicationnameindex">applicationName</a></b></td>
+        <td>[]object</td>
+        <td>
+          Application name to filter for.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>severity</b></td>
+        <td>[]enum</td>
+        <td>
+          Severity to filter for.<br/>
+          <br/>
+            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsratiothresholdnumeratorsimplefilterlabelfilterssubsystemnameindex">subsystemName</a></b></td>
+        <td>[]object</td>
+        <td>
+          Subsystem name to filter for.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsRatioThreshold.numerator.simpleFilter.labelFilters.applicationName[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsratiothresholdnumeratorsimplefilterlabelfilters)</sup></sup>
+
+
+
+Label filter specifications
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Operation to apply.<br/>
+          <br/>
+            <i>Enum</i>: is, includes, endsWith, startsWith<br/>
+            <i>Default</i>: is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          The value<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsRatioThreshold.numerator.simpleFilter.labelFilters.subsystemName[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsratiothresholdnumeratorsimplefilterlabelfilters)</sup></sup>
+
+
+
+Label filter specifications
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Operation to apply.<br/>
+          <br/>
+            <i>Enum</i>: is, includes, endsWith, startsWith<br/>
+            <i>Default</i>: is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          The value<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsRatioThreshold.rules[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsratiothreshold)</sup></sup>
+
+
+
+The rule to match the alert's conditions.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsratiothresholdrulesindexcondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Condition to match<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsratiothresholdrulesindexoverride">override</a></b></td>
+        <td>object</td>
+        <td>
+          Override alert properties<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsRatioThreshold.rules[index].condition
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsratiothresholdrulesindex)</sup></sup>
+
+
+
+Condition to match
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>conditionType</b></td>
+        <td>enum</td>
+        <td>
+          Condition to evaluate with.<br/>
+          <br/>
+            <i>Enum</i>: moreThan, lessThan<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>threshold</b></td>
+        <td>int or string</td>
+        <td>
+          Threshold to pass.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsratiothresholdrulesindexconditiontimewindow">timeWindow</a></b></td>
+        <td>object</td>
+        <td>
+          Time window to evaluate.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsRatioThreshold.rules[index].condition.timeWindow
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsratiothresholdrulesindexcondition)</sup></sup>
+
+
+
+Time window to evaluate.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>specificValue</b></td>
+        <td>enum</td>
+        <td>
+          Time window type.<br/>
+          <br/>
+            <i>Enum</i>: 5m, 10m, 15m, 30m, 1h, 2h, 4h, 6h, 12h, 24h, 36h<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsRatioThreshold.rules[index].override
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsratiothresholdrulesindex)</sup></sup>
+
+
+
+Override alert properties
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          Priority to override it<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsRatioThreshold.undetectedValuesManagement
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsratiothreshold)</sup></sup>
+
+
+
+How to work with undetected values.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>autoRetireTimeframe</b></td>
+        <td>enum</td>
+        <td>
+          Automatically retire the alerts after this time.<br/>
+          <br/>
+            <i>Enum</i>: never, 5m, 10m, 1h, 2h, 6h, 12h, 24h<br/>
+            <i>Default</i>: never<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>triggerUndetectedValues</b></td>
+        <td>boolean</td>
+        <td>
+          Deactivate triggering the alert on undetected values.<br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsThreshold
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttype)</sup></sup>
+
+
+
+Alerts for when a log crosses a threshold.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsthresholdrulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          Rules that match the alert to the data.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>evaluationDelayMs</b></td>
+        <td>integer</td>
+        <td>
+          Evaluation delay in milliseconds.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsthresholdlogsfilter">logsFilter</a></b></td>
+        <td>object</td>
+        <td>
+          Filter to filter the logs with.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsthresholdnodatapolicy">noDataPolicy</a></b></td>
+        <td>object</td>
+        <td>
+          Policy for handling missing data.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>notificationPayloadFilter</b></td>
+        <td>[]string</td>
+        <td>
+          Filter for the notification payload.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsthresholdundetectedvaluesmanagement">undetectedValuesManagement</a></b></td>
+        <td>object</td>
+        <td>
+          How to work with undetected values.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsThreshold.rules[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsthreshold)</sup></sup>
+
+
+
+The rule to match the alert's conditions.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsthresholdrulesindexcondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Condition to match<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsthresholdrulesindexoverride">override</a></b></td>
+        <td>object</td>
+        <td>
+          Alert overrides.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsThreshold.rules[index].condition
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsthresholdrulesindex)</sup></sup>
+
+
+
+Condition to match
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>logsThresholdConditionType</b></td>
+        <td>enum</td>
+        <td>
+          Condition type.<br/>
+          <br/>
+            <i>Enum</i>: moreThan, lessThan<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>threshold</b></td>
+        <td>int or string</td>
+        <td>
+          Threshold to match to.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsthresholdrulesindexconditiontimewindow">timeWindow</a></b></td>
+        <td>object</td>
+        <td>
+          Time window in which the condition is checked.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsThreshold.rules[index].condition.timeWindow
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsthresholdrulesindexcondition)</sup></sup>
+
+
+
+Time window in which the condition is checked.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>specificValue</b></td>
+        <td>enum</td>
+        <td>
+          Logs time window type<br/>
+          <br/>
+            <i>Enum</i>: 5m, 10m, 15m, 20m, 30m, 1h, 2h, 4h, 6h, 12h, 24h, 36h<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsThreshold.rules[index].override
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsthresholdrulesindex)</sup></sup>
+
+
+
+Alert overrides.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          Priority to override it<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsThreshold.logsFilter
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsthreshold)</sup></sup>
+
+
+
+Filter to filter the logs with.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsthresholdlogsfiltersimplefilter">simpleFilter</a></b></td>
+        <td>object</td>
+        <td>
+          Simple lucene filter.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsThreshold.logsFilter.simpleFilter
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsthresholdlogsfilter)</sup></sup>
+
+
+
+Simple lucene filter.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsthresholdlogsfiltersimplefilterlabelfilters">labelFilters</a></b></td>
+        <td>object</td>
+        <td>
+          Filter for labels.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>luceneQuery</b></td>
+        <td>string</td>
+        <td>
+          The query.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsThreshold.logsFilter.simpleFilter.labelFilters
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsthresholdlogsfiltersimplefilter)</sup></sup>
+
+
+
+Filter for labels.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsthresholdlogsfiltersimplefilterlabelfiltersapplicationnameindex">applicationName</a></b></td>
+        <td>[]object</td>
+        <td>
+          Application name to filter for.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>severity</b></td>
+        <td>[]enum</td>
+        <td>
+          Severity to filter for.<br/>
+          <br/>
+            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsthresholdlogsfiltersimplefilterlabelfilterssubsystemnameindex">subsystemName</a></b></td>
+        <td>[]object</td>
+        <td>
+          Subsystem name to filter for.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsThreshold.logsFilter.simpleFilter.labelFilters.applicationName[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsthresholdlogsfiltersimplefilterlabelfilters)</sup></sup>
+
+
+
+Label filter specifications
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Operation to apply.<br/>
+          <br/>
+            <i>Enum</i>: is, includes, endsWith, startsWith<br/>
+            <i>Default</i>: is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          The value<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsThreshold.logsFilter.simpleFilter.labelFilters.subsystemName[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsthresholdlogsfiltersimplefilterlabelfilters)</sup></sup>
+
+
+
+Label filter specifications
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Operation to apply.<br/>
+          <br/>
+            <i>Enum</i>: is, includes, endsWith, startsWith<br/>
+            <i>Default</i>: is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          The value<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsThreshold.noDataPolicy
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsthreshold)</sup></sup>
+
+
+
+Policy for handling missing data.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>state</b></td>
+        <td>enum</td>
+        <td>
+          State to use when no data is present.<br/>
+          <br/>
+            <i>Enum</i>: ok, alerting, keepLast, noData<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>autoRetireSeconds</b></td>
+        <td>integer</td>
+        <td>
+          The timeframe in seconds for auto retiring values that were detected as no-data.
+Must be a multiple of 60 seconds.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsThreshold.undetectedValuesManagement
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsthreshold)</sup></sup>
+
+
+
+How to work with undetected values.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>autoRetireTimeframe</b></td>
+        <td>enum</td>
+        <td>
+          Automatically retire the alerts after this time.<br/>
+          <br/>
+            <i>Enum</i>: never, 5m, 10m, 1h, 2h, 6h, 12h, 24h<br/>
+            <i>Default</i>: never<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>triggerUndetectedValues</b></td>
+        <td>boolean</td>
+        <td>
+          Deactivate triggering the alert on undetected values.<br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsTimeRelativeThreshold
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttype)</sup></sup>
+
+
+
+Alerts are sent when the number of logs matching a filter is more than or less than a threshold over a specific time window.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>ignoreInfinity</b></td>
+        <td>boolean</td>
+        <td>
+          Ignore infinity on the threshold value.<br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogstimerelativethresholdlogsfilter">logsFilter</a></b></td>
+        <td>object</td>
+        <td>
+          A filter for logs.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogstimerelativethresholdrulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          Rules that match the alert to the data.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>evaluationDelayMs</b></td>
+        <td>integer</td>
+        <td>
+          Evaluation delay in milliseconds.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>notificationPayloadFilter</b></td>
+        <td>[]string</td>
+        <td>
+          Filter for the notification payload.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogstimerelativethresholdundetectedvaluesmanagement">undetectedValuesManagement</a></b></td>
+        <td>object</td>
+        <td>
+          How to work with undetected values.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsTimeRelativeThreshold.logsFilter
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogstimerelativethreshold)</sup></sup>
+
+
+
+A filter for logs.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogstimerelativethresholdlogsfiltersimplefilter">simpleFilter</a></b></td>
+        <td>object</td>
+        <td>
+          Simple lucene filter.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsTimeRelativeThreshold.logsFilter.simpleFilter
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogstimerelativethresholdlogsfilter)</sup></sup>
+
+
+
+Simple lucene filter.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogstimerelativethresholdlogsfiltersimplefilterlabelfilters">labelFilters</a></b></td>
+        <td>object</td>
+        <td>
+          Filter for labels.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>luceneQuery</b></td>
+        <td>string</td>
+        <td>
+          The query.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsTimeRelativeThreshold.logsFilter.simpleFilter.labelFilters
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogstimerelativethresholdlogsfiltersimplefilter)</sup></sup>
+
+
+
+Filter for labels.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogstimerelativethresholdlogsfiltersimplefilterlabelfiltersapplicationnameindex">applicationName</a></b></td>
+        <td>[]object</td>
+        <td>
+          Application name to filter for.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>severity</b></td>
+        <td>[]enum</td>
+        <td>
+          Severity to filter for.<br/>
+          <br/>
+            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogstimerelativethresholdlogsfiltersimplefilterlabelfilterssubsystemnameindex">subsystemName</a></b></td>
+        <td>[]object</td>
+        <td>
+          Subsystem name to filter for.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsTimeRelativeThreshold.logsFilter.simpleFilter.labelFilters.applicationName[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogstimerelativethresholdlogsfiltersimplefilterlabelfilters)</sup></sup>
+
+
+
+Label filter specifications
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Operation to apply.<br/>
+          <br/>
+            <i>Enum</i>: is, includes, endsWith, startsWith<br/>
+            <i>Default</i>: is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          The value<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsTimeRelativeThreshold.logsFilter.simpleFilter.labelFilters.subsystemName[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogstimerelativethresholdlogsfiltersimplefilterlabelfilters)</sup></sup>
+
+
+
+Label filter specifications
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Operation to apply.<br/>
+          <br/>
+            <i>Enum</i>: is, includes, endsWith, startsWith<br/>
+            <i>Default</i>: is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          The value<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsTimeRelativeThreshold.rules[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogstimerelativethreshold)</sup></sup>
+
+
+
+The rule to match the alert's conditions.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogstimerelativethresholdrulesindexcondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          The condition to match to.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogstimerelativethresholdrulesindexoverride">override</a></b></td>
+        <td>object</td>
+        <td>
+          Override alert properties<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsTimeRelativeThreshold.rules[index].condition
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogstimerelativethresholdrulesindex)</sup></sup>
+
+
+
+The condition to match to.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>comparedTo</b></td>
+        <td>enum</td>
+        <td>
+          Comparison window.<br/>
+          <br/>
+            <i>Enum</i>: previousHour, sameHourYesterday, sameHourLastWeek, yesterday, sameDayLastWeek, sameDayLastMonth<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>conditionType</b></td>
+        <td>enum</td>
+        <td>
+          How to compare.<br/>
+          <br/>
+            <i>Enum</i>: moreThan, lessThan<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>threshold</b></td>
+        <td>int or string</td>
+        <td>
+          Threshold to match.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsTimeRelativeThreshold.rules[index].override
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogstimerelativethresholdrulesindex)</sup></sup>
+
+
+
+Override alert properties
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          Priority to override it<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsTimeRelativeThreshold.undetectedValuesManagement
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogstimerelativethreshold)</sup></sup>
+
+
+
+How to work with undetected values.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>autoRetireTimeframe</b></td>
+        <td>enum</td>
+        <td>
+          Automatically retire the alerts after this time.<br/>
+          <br/>
+            <i>Enum</i>: never, 5m, 10m, 1h, 2h, 6h, 12h, 24h<br/>
+            <i>Default</i>: never<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>triggerUndetectedValues</b></td>
+        <td>boolean</td>
+        <td>
+          Deactivate triggering the alert on undetected values.<br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsUniqueCount
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttype)</sup></sup>
+
+
+
+Alerts for unique count changes.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsuniquecountlogsfilter">logsFilter</a></b></td>
+        <td>object</td>
+        <td>
+          Filter to filter the logs with.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsuniquecountrulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          Rules that match the alert to the data.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>uniqueCountKeypath</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>maxUniqueCountPerGroupByKey</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>notificationPayloadFilter</b></td>
+        <td>[]string</td>
+        <td>
+          Filter for the notification payload.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsUniqueCount.logsFilter
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsuniquecount)</sup></sup>
+
+
+
+Filter to filter the logs with.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsuniquecountlogsfiltersimplefilter">simpleFilter</a></b></td>
+        <td>object</td>
+        <td>
+          Simple lucene filter.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsUniqueCount.logsFilter.simpleFilter
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsuniquecountlogsfilter)</sup></sup>
+
+
+
+Simple lucene filter.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsuniquecountlogsfiltersimplefilterlabelfilters">labelFilters</a></b></td>
+        <td>object</td>
+        <td>
+          Filter for labels.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>luceneQuery</b></td>
+        <td>string</td>
+        <td>
+          The query.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsUniqueCount.logsFilter.simpleFilter.labelFilters
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsuniquecountlogsfiltersimplefilter)</sup></sup>
+
+
+
+Filter for labels.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsuniquecountlogsfiltersimplefilterlabelfiltersapplicationnameindex">applicationName</a></b></td>
+        <td>[]object</td>
+        <td>
+          Application name to filter for.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>severity</b></td>
+        <td>[]enum</td>
+        <td>
+          Severity to filter for.<br/>
+          <br/>
+            <i>Enum</i>: debug, info, warning, error, critical, verbose<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsuniquecountlogsfiltersimplefilterlabelfilterssubsystemnameindex">subsystemName</a></b></td>
+        <td>[]object</td>
+        <td>
+          Subsystem name to filter for.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsUniqueCount.logsFilter.simpleFilter.labelFilters.applicationName[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsuniquecountlogsfiltersimplefilterlabelfilters)</sup></sup>
+
+
+
+Label filter specifications
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Operation to apply.<br/>
+          <br/>
+            <i>Enum</i>: is, includes, endsWith, startsWith<br/>
+            <i>Default</i>: is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          The value<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsUniqueCount.logsFilter.simpleFilter.labelFilters.subsystemName[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsuniquecountlogsfiltersimplefilterlabelfilters)</sup></sup>
+
+
+
+Label filter specifications
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Operation to apply.<br/>
+          <br/>
+            <i>Enum</i>: is, includes, endsWith, startsWith<br/>
+            <i>Default</i>: is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          The value<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsUniqueCount.rules[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsuniquecount)</sup></sup>
+
+
+
+The rule to match the alert's conditions.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsuniquecountrulesindexcondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Condition to match to.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsUniqueCount.rules[index].condition
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsuniquecountrulesindex)</sup></sup>
+
+
+
+Condition to match to.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>threshold</b></td>
+        <td>integer</td>
+        <td>
+          Threshold to cross<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypelogsuniquecountrulesindexconditiontimewindow">timeWindow</a></b></td>
+        <td>object</td>
+        <td>
+          Time window to evaluate.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.logsUniqueCount.rules[index].condition.timeWindow
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypelogsuniquecountrulesindexcondition)</sup></sup>
+
+
+
+Time window to evaluate.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>specificValue</b></td>
+        <td>enum</td>
+        <td>
+          Time windows for Logs Unique Count<br/>
+          <br/>
+            <i>Enum</i>: 1m, 5m, 10m, 15m, 20m, 30m, 1h, 2h, 4h, 6h, 12h, 24h, 36h<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.metricAnomaly
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttype)</sup></sup>
+
+
+
+Anomaly alerts for metrics.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypemetricanomalymetricfilter">metricFilter</a></b></td>
+        <td>object</td>
+        <td>
+          PromQL filter for metrics<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypemetricanomalyrulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          Rules that match the alert to the data.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypemetricanomalyanomalyalertsettings">anomalyAlertSettings</a></b></td>
+        <td>object</td>
+        <td>
+          Settings for anomaly alerts.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>evaluationDelayMs</b></td>
+        <td>integer</td>
+        <td>
+          Evaluation delay in milliseconds.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.metricAnomaly.metricFilter
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypemetricanomaly)</sup></sup>
+
+
+
+PromQL filter for metrics
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>promql</b></td>
+        <td>string</td>
+        <td>
+          PromQL query: https://coralogix.com/academy/mastering-metrics-in-coralogix/promql-fundamentals/<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.metricAnomaly.rules[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypemetricanomaly)</sup></sup>
+
+
+
+The rule to match the alert's conditions.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypemetricanomalyrulesindexcondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Condition to match to.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.metricAnomaly.rules[index].condition
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypemetricanomalyrulesindex)</sup></sup>
+
+
+
+Condition to match to.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>conditionType</b></td>
+        <td>enum</td>
+        <td>
+          Condition type.<br/>
+          <br/>
+            <i>Enum</i>: moreThanUsual, lessThanUsual<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>forOverPct</b></td>
+        <td>integer</td>
+        <td>
+          Percentage for the threshold<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Maximum</i>: 100<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>minNonNullValuesPct</b></td>
+        <td>integer</td>
+        <td>
+          Replace with a number<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Maximum</i>: 100<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypemetricanomalyrulesindexconditionofthelast">ofTheLast</a></b></td>
+        <td>object</td>
+        <td>
+          Time window to match within<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>threshold</b></td>
+        <td>int or string</td>
+        <td>
+          Threshold to clear.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.metricAnomaly.rules[index].condition.ofTheLast
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypemetricanomalyrulesindexcondition)</sup></sup>
+
+
+
+Time window to match within
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>specificValue</b></td>
+        <td>enum</td>
+        <td>
+          Time window type.<br/>
+          <br/>
+            <i>Enum</i>: 1m, 5m, 10m, 15m, 20m, 30m, 1h, 2h, 4h, 6h, 12h, 24h, 36h<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.metricAnomaly.anomalyAlertSettings
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypemetricanomaly)</sup></sup>
+
+
+
+Settings for anomaly alerts.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>percentageOfDeviation</b></td>
+        <td>int or string</td>
+        <td>
+          The percentage of deviation from the baseline for triggering the alert.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.metricThreshold
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttype)</sup></sup>
+
+
+
+Alerts for when a metric crosses a threshold.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypemetricthresholdmetricfilter">metricFilter</a></b></td>
+        <td>object</td>
+        <td>
+          Filter for metrics<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypemetricthresholdmissingvalues">missingValues</a></b></td>
+        <td>object</td>
+        <td>
+          Missing values strategies.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypemetricthresholdrulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          Rules that match the alert to the data.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>evaluationDelayMs</b></td>
+        <td>integer</td>
+        <td>
+          Evaluation delay in milliseconds.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypemetricthresholdnodatapolicy">noDataPolicy</a></b></td>
+        <td>object</td>
+        <td>
+          Policy for handling missing data.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypemetricthresholdundetectedvaluesmanagement">undetectedValuesManagement</a></b></td>
+        <td>object</td>
+        <td>
+          How to work with undetected values.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.metricThreshold.metricFilter
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypemetricthreshold)</sup></sup>
+
+
+
+Filter for metrics
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>promql</b></td>
+        <td>string</td>
+        <td>
+          PromQL query: https://coralogix.com/academy/mastering-metrics-in-coralogix/promql-fundamentals/<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.metricThreshold.missingValues
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypemetricthreshold)</sup></sup>
+
+
+
+Missing values strategies.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>minNonNullValuesPct</b></td>
+        <td>integer</td>
+        <td>
+          Replace with a number<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Maximum</i>: 100<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>replaceWithZero</b></td>
+        <td>boolean</td>
+        <td>
+          Replace missing values with 0s<br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.metricThreshold.rules[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypemetricthreshold)</sup></sup>
+
+
+
+Rules that match the alert to the data.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypemetricthresholdrulesindexcondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Conditions to match for the rule.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypemetricthresholdrulesindexoverride">override</a></b></td>
+        <td>object</td>
+        <td>
+          Alert property overrides<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.metricThreshold.rules[index].condition
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypemetricthresholdrulesindex)</sup></sup>
+
+
+
+Conditions to match for the rule.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>conditionType</b></td>
+        <td>enum</td>
+        <td>
+          ConditionType type.<br/>
+          <br/>
+            <i>Enum</i>: moreThan, lessThan, moreThanOrEquals, lessThanOrEquals<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>forOverPct</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+            <i>Maximum</i>: 100<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypemetricthresholdrulesindexconditionofthelast">ofTheLast</a></b></td>
+        <td>object</td>
+        <td>
+          Time window type.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.specificValue) != has(self.dynamicDuration): Exactly one of specificValue or dynamicDuration is required</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>threshold</b></td>
+        <td>int or string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.metricThreshold.rules[index].condition.ofTheLast
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypemetricthresholdrulesindexcondition)</sup></sup>
+
+
+
+Time window type.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>dynamicDuration</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>specificValue</b></td>
+        <td>enum</td>
+        <td>
+          Time window type.<br/>
+          <br/>
+            <i>Enum</i>: 1m, 5m, 10m, 15m, 20m, 30m, 1h, 2h, 4h, 6h, 12h, 24h, 36h<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.metricThreshold.rules[index].override
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypemetricthresholdrulesindex)</sup></sup>
+
+
+
+Alert property overrides
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          Priority to override it<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.metricThreshold.noDataPolicy
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypemetricthreshold)</sup></sup>
+
+
+
+Policy for handling missing data.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>state</b></td>
+        <td>enum</td>
+        <td>
+          State to use when no data is present.<br/>
+          <br/>
+            <i>Enum</i>: ok, alerting, keepLast, noData<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>autoRetireSeconds</b></td>
+        <td>integer</td>
+        <td>
+          The timeframe in seconds for auto retiring values that were detected as no-data.
+Must be a multiple of 60 seconds.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.metricThreshold.undetectedValuesManagement
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypemetricthreshold)</sup></sup>
+
+
+
+How to work with undetected values.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>autoRetireTimeframe</b></td>
+        <td>enum</td>
+        <td>
+          Automatically retire the alerts after this time.<br/>
+          <br/>
+            <i>Enum</i>: never, 5m, 10m, 1h, 2h, 6h, 12h, 24h<br/>
+            <i>Default</i>: never<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>triggerUndetectedValues</b></td>
+        <td>boolean</td>
+        <td>
+          Deactivate triggering the alert on undetected values.<br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.sloThreshold
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttype)</sup></sup>
+
+
+
+Alerts for SLO thresholds.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeslothresholdslodefinition">sloDefinition</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeslothresholdburnrate">burnRate</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeslothresholderrorbudget">errorBudget</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.sloThreshold.sloDefinition
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeslothreshold)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeslothresholdslodefinitionsloref">sloRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.sloThreshold.sloDefinition.sloRef
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeslothresholdslodefinition)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeslothresholdslodefinitionslorefbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.id) != has(self.name): Exactly one of id or name must be set</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeslothresholdslodefinitionslorefresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          Reference to a resource within the cluster.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.sloThreshold.sloDefinition.sloRef.backendRef
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeslothresholdslodefinitionsloref)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.sloThreshold.sloDefinition.sloRef.resourceRef
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeslothresholdslodefinitionsloref)</sup></sup>
+
+
+
+Reference to a resource within the cluster.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.sloThreshold.burnRate
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeslothreshold)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeslothresholdburnraterulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeslothresholdburnratetype">type</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.single) != has(self.dual): Exactly one of single or dual must be set</li>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.sloThreshold.burnRate.rules[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeslothresholdburnrate)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeslothresholdburnraterulesindexcondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Condition to match<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeslothresholdburnraterulesindexoverride">override</a></b></td>
+        <td>object</td>
+        <td>
+          Alert overrides.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.sloThreshold.burnRate.rules[index].condition
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeslothresholdburnraterulesindex)</sup></sup>
+
+
+
+Condition to match
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>threshold</b></td>
+        <td>int or string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.sloThreshold.burnRate.rules[index].override
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeslothresholdburnraterulesindex)</sup></sup>
+
+
+
+Alert overrides.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          Priority to override it<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.sloThreshold.burnRate.type
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeslothresholdburnrate)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeslothresholdburnratetypedual">dual</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeslothresholdburnratetypesingle">single</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.sloThreshold.burnRate.type.dual
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeslothresholdburnratetype)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeslothresholdburnratetypedualtimeduration">timeDuration</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.sloThreshold.burnRate.type.dual.timeDuration
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeslothresholdburnratetypedual)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>duration</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>unit</b></td>
+        <td>enum</td>
+        <td>
+          Time duration unit for a Burn Rate Slo.<br/>
+          <br/>
+            <i>Enum</i>: unspecified, hours<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.sloThreshold.burnRate.type.single
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeslothresholdburnratetype)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeslothresholdburnratetypesingletimeduration">timeDuration</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.sloThreshold.burnRate.type.single.timeDuration
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeslothresholdburnratetypesingle)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>duration</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>unit</b></td>
+        <td>enum</td>
+        <td>
+          Time duration unit for a Burn Rate Slo.<br/>
+          <br/>
+            <i>Enum</i>: unspecified, hours<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.sloThreshold.errorBudget
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeslothreshold)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeslothresholderrorbudgetrulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.sloThreshold.errorBudget.rules[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeslothresholderrorbudget)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeslothresholderrorbudgetrulesindexcondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Condition to match<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeslothresholderrorbudgetrulesindexoverride">override</a></b></td>
+        <td>object</td>
+        <td>
+          Alert overrides.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.sloThreshold.errorBudget.rules[index].condition
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeslothresholderrorbudgetrulesindex)</sup></sup>
+
+
+
+Condition to match
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>threshold</b></td>
+        <td>int or string</td>
+        <td>
+          Threshold to match to.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.sloThreshold.errorBudget.rules[index].override
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeslothresholderrorbudgetrulesindex)</sup></sup>
+
+
+
+Alert overrides.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          Priority to override it<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.tracingImmediate
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttype)</sup></sup>
+
+
+
+Immediate alerts for traces.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>notificationPayloadFilter</b></td>
+        <td>[]string</td>
+        <td>
+          Filter for the notification payload.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypetracingimmediatetracingfilter">tracingFilter</a></b></td>
+        <td>object</td>
+        <td>
+          A simple tracing filter.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.tracingImmediate.tracingFilter
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypetracingimmediate)</sup></sup>
+
+
+
+A simple tracing filter.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypetracingimmediatetracingfiltersimple">simple</a></b></td>
+        <td>object</td>
+        <td>
+          Simple tracing filter paired with a latency.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.tracingImmediate.tracingFilter.simple
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypetracingimmediatetracingfilter)</sup></sup>
+
+
+
+Simple tracing filter paired with a latency.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>latencyThresholdMs</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypetracingimmediatetracingfiltersimpletracinglabelfilters">tracingLabelFilters</a></b></td>
+        <td>object</td>
+        <td>
+          Filter for traces.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.tracingImmediate.tracingFilter.simple.tracingLabelFilters
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypetracingimmediatetracingfiltersimple)</sup></sup>
+
+
+
+Filter for traces.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypetracingimmediatetracingfiltersimpletracinglabelfiltersapplicationnameindex">applicationName</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypetracingimmediatetracingfiltersimpletracinglabelfiltersoperationnameindex">operationName</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypetracingimmediatetracingfiltersimpletracinglabelfiltersservicenameindex">serviceName</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypetracingimmediatetracingfiltersimpletracinglabelfiltersspanfieldsindex">spanFields</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypetracingimmediatetracingfiltersimpletracinglabelfilterssubsystemnameindex">subsystemName</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.tracingImmediate.tracingFilter.simple.tracingLabelFilters.applicationName[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypetracingimmediatetracingfiltersimpletracinglabelfilters)</sup></sup>
+
+
+
+Filter - values and operation.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Tracing filter operations.<br/>
+          <br/>
+            <i>Enum</i>: includes, endsWith, startsWith, isNot, is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.tracingImmediate.tracingFilter.simple.tracingLabelFilters.operationName[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypetracingimmediatetracingfiltersimpletracinglabelfilters)</sup></sup>
+
+
+
+Filter - values and operation.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Tracing filter operations.<br/>
+          <br/>
+            <i>Enum</i>: includes, endsWith, startsWith, isNot, is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.tracingImmediate.tracingFilter.simple.tracingLabelFilters.serviceName[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypetracingimmediatetracingfiltersimpletracinglabelfilters)</sup></sup>
+
+
+
+Filter - values and operation.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Tracing filter operations.<br/>
+          <br/>
+            <i>Enum</i>: includes, endsWith, startsWith, isNot, is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.tracingImmediate.tracingFilter.simple.tracingLabelFilters.spanFields[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypetracingimmediatetracingfiltersimpletracinglabelfilters)</sup></sup>
+
+
+
+Filter for spans
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypetracingimmediatetracingfiltersimpletracinglabelfiltersspanfieldsindexfiltertype">filterType</a></b></td>
+        <td>object</td>
+        <td>
+          Filter - values and operation.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.tracingImmediate.tracingFilter.simple.tracingLabelFilters.spanFields[index].filterType
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypetracingimmediatetracingfiltersimpletracinglabelfiltersspanfieldsindex)</sup></sup>
+
+
+
+Filter - values and operation.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Tracing filter operations.<br/>
+          <br/>
+            <i>Enum</i>: includes, endsWith, startsWith, isNot, is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.tracingImmediate.tracingFilter.simple.tracingLabelFilters.subsystemName[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypetracingimmediatetracingfiltersimpletracinglabelfilters)</sup></sup>
+
+
+
+Filter - values and operation.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Tracing filter operations.<br/>
+          <br/>
+            <i>Enum</i>: includes, endsWith, startsWith, isNot, is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.tracingThreshold
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttype)</sup></sup>
+
+
+
+Alerts for when traces crosses a threshold.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypetracingthresholdrulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          Rules that match the alert to the data.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>notificationPayloadFilter</b></td>
+        <td>[]string</td>
+        <td>
+          Filter for the notification payload.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypetracingthresholdtracingfilter">tracingFilter</a></b></td>
+        <td>object</td>
+        <td>
+          Filter the base collection.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.tracingThreshold.rules[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypetracingthreshold)</sup></sup>
+
+
+
+The rule to match the alert's conditions.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypetracingthresholdrulesindexcondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          The condition to match to.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.tracingThreshold.rules[index].condition
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypetracingthresholdrulesindex)</sup></sup>
+
+
+
+The condition to match to.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>spanAmount</b></td>
+        <td>int or string</td>
+        <td>
+          Threshold amount.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypetracingthresholdrulesindexconditiontimewindow">timeWindow</a></b></td>
+        <td>object</td>
+        <td>
+          Time window to evaluate.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>conditionType</b></td>
+        <td>enum</td>
+        <td>
+          Condition type.<br/>
+          <br/>
+            <i>Enum</i>: moreThan<br/>
+            <i>Default</i>: moreThan<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.tracingThreshold.rules[index].condition.timeWindow
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypetracingthresholdrulesindexcondition)</sup></sup>
+
+
+
+Time window to evaluate.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>specificValue</b></td>
+        <td>enum</td>
+        <td>
+          Time window type for tracing.<br/>
+          <br/>
+            <i>Enum</i>: 5m, 10m, 15m, 20m, 30m, 1h, 2h, 4h, 6h, 12h, 24h, 36h<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.tracingThreshold.tracingFilter
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypetracingthreshold)</sup></sup>
+
+
+
+Filter the base collection.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypetracingthresholdtracingfiltersimple">simple</a></b></td>
+        <td>object</td>
+        <td>
+          Simple tracing filter paired with a latency.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.tracingThreshold.tracingFilter.simple
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypetracingthresholdtracingfilter)</sup></sup>
+
+
+
+Simple tracing filter paired with a latency.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>latencyThresholdMs</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypetracingthresholdtracingfiltersimpletracinglabelfilters">tracingLabelFilters</a></b></td>
+        <td>object</td>
+        <td>
+          Filter for traces.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.tracingThreshold.tracingFilter.simple.tracingLabelFilters
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypetracingthresholdtracingfiltersimple)</sup></sup>
+
+
+
+Filter for traces.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypetracingthresholdtracingfiltersimpletracinglabelfiltersapplicationnameindex">applicationName</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypetracingthresholdtracingfiltersimpletracinglabelfiltersoperationnameindex">operationName</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypetracingthresholdtracingfiltersimpletracinglabelfiltersservicenameindex">serviceName</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypetracingthresholdtracingfiltersimpletracinglabelfiltersspanfieldsindex">spanFields</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypetracingthresholdtracingfiltersimpletracinglabelfilterssubsystemnameindex">subsystemName</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.tracingThreshold.tracingFilter.simple.tracingLabelFilters.applicationName[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypetracingthresholdtracingfiltersimpletracinglabelfilters)</sup></sup>
+
+
+
+Filter - values and operation.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Tracing filter operations.<br/>
+          <br/>
+            <i>Enum</i>: includes, endsWith, startsWith, isNot, is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.tracingThreshold.tracingFilter.simple.tracingLabelFilters.operationName[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypetracingthresholdtracingfiltersimpletracinglabelfilters)</sup></sup>
+
+
+
+Filter - values and operation.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Tracing filter operations.<br/>
+          <br/>
+            <i>Enum</i>: includes, endsWith, startsWith, isNot, is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.tracingThreshold.tracingFilter.simple.tracingLabelFilters.serviceName[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypetracingthresholdtracingfiltersimpletracinglabelfilters)</sup></sup>
+
+
+
+Filter - values and operation.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Tracing filter operations.<br/>
+          <br/>
+            <i>Enum</i>: includes, endsWith, startsWith, isNot, is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.tracingThreshold.tracingFilter.simple.tracingLabelFilters.spanFields[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypetracingthresholdtracingfiltersimpletracinglabelfilters)</sup></sup>
+
+
+
+Filter for spans
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypetracingthresholdtracingfiltersimpletracinglabelfiltersspanfieldsindexfiltertype">filterType</a></b></td>
+        <td>object</td>
+        <td>
+          Filter - values and operation.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.tracingThreshold.tracingFilter.simple.tracingLabelFilters.spanFields[index].filterType
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypetracingthresholdtracingfiltersimpletracinglabelfiltersspanfieldsindex)</sup></sup>
+
+
+
+Filter - values and operation.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Tracing filter operations.<br/>
+          <br/>
+            <i>Enum</i>: includes, endsWith, startsWith, isNot, is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.tracingThreshold.tracingFilter.simple.tracingLabelFilters.subsystemName[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypetracingthresholdtracingfiltersimpletracinglabelfilters)</sup></sup>
+
+
+
+Filter - values and operation.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operation</b></td>
+        <td>enum</td>
+        <td>
+          Tracing filter operations.<br/>
+          <br/>
+            <i>Enum</i>: includes, endsWith, startsWith, isNot, is<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.dataSources[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspec)</sup></sup>
+
+
+
+Data source to run the alert on.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>dataSet</b></td>
+        <td>string</td>
+        <td>
+          Dataset of the data source.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>dataSpace</b></td>
+        <td>string</td>
+        <td>
+          Data space of the data source.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.incidentsSettings
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspec)</sup></sup>
+
+
+
+Settings for the attached incidents.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>notifyOn</b></td>
+        <td>enum</td>
+        <td>
+          When to notify.<br/>
+          <br/>
+            <i>Enum</i>: triggeredOnly, triggeredAndResolved<br/>
+            <i>Default</i>: triggeredOnly<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecincidentssettingsretriggeringperiod">retriggeringPeriod</a></b></td>
+        <td>object</td>
+        <td>
+          When to re-notify.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.incidentsSettings.retriggeringPeriod
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecincidentssettings)</sup></sup>
+
+
+
+When to re-notify.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>minutes</b></td>
+        <td>integer</td>
+        <td>
+          Delay between re-triggered alerts.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroup
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspec)</sup></sup>
+
+
+
+Where notifications should be sent to.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupdestinationsindex">destinations</a></b></td>
+        <td>[]object</td>
+        <td>
+          Do not use.
+Deprecated: This field is deprecated and will be removed in a future version.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>groupByKeys</b></td>
+        <td>[]string</td>
+        <td>
+          Group notification by these keys.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgrouprouter">router</a></b></td>
+        <td>object</td>
+        <td>
+          The router for notifications (Notification Center feature) where to route notifications to.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupwebhooksindex">webhooks</a></b></td>
+        <td>[]object</td>
+        <td>
+          Webhooks to trigger for notifications.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroup.destinations[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroup)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupdestinationsindexconnector">connector</a></b></td>
+        <td>object</td>
+        <td>
+          Connector is the connector for the destination. Should be one of backendRef or resourceRef.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>notifyOn</b></td>
+        <td>enum</td>
+        <td>
+          When to notify.<br/>
+          <br/>
+            <i>Enum</i>: triggeredOnly, triggeredAndResolved<br/>
+            <i>Default</i>: triggeredOnly<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupdestinationsindextriggeredroutingoverrides">triggeredRoutingOverrides</a></b></td>
+        <td>object</td>
+        <td>
+          The routing configuration to override from the connector/preset for triggered notifications.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupdestinationsindexpreset">preset</a></b></td>
+        <td>object</td>
+        <td>
+          Preset is the preset for the destination. Should be one of backendRef or resourceRef.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupdestinationsindexresolvedroutingoverrides">resolvedRoutingOverrides</a></b></td>
+        <td>object</td>
+        <td>
+          Optional routing configuration to override from the connector/preset for resolved notifications.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>retriggeringPeriodMinutes</b></td>
+        <td>integer</td>
+        <td>
+          The time in minutes before a new notification is sent for this destination.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroup.destinations[index].connector
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupdestinationsindex)</sup></sup>
+
+
+
+Connector is the connector for the destination. Should be one of backendRef or resourceRef.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupdestinationsindexconnectorbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          BackendRef is a reference to a backend resource.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupdestinationsindexconnectorresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          ResourceRef is a reference to a Kubernetes resource.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroup.destinations[index].connector.backendRef
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupdestinationsindexconnector)</sup></sup>
+
+
+
+BackendRef is a reference to a backend resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroup.destinations[index].connector.resourceRef
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupdestinationsindexconnector)</sup></sup>
+
+
+
+ResourceRef is a reference to a Kubernetes resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroup.destinations[index].triggeredRoutingOverrides
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupdestinationsindex)</sup></sup>
+
+
+
+The routing configuration to override from the connector/preset for triggered notifications.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupdestinationsindextriggeredroutingoverridesconfigoverrides">configOverrides</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroup.destinations[index].triggeredRoutingOverrides.configOverrides
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupdestinationsindextriggeredroutingoverrides)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>payloadType</b></td>
+        <td>string</td>
+        <td>
+          The ID of the output schema to use for routing notifications<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupdestinationsindextriggeredroutingoverridesconfigoverridesconnectorconfigfieldsindex">connectorConfigFields</a></b></td>
+        <td>[]object</td>
+        <td>
+          Connector configuration fields.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupdestinationsindextriggeredroutingoverridesconfigoverridesmessageconfigfieldsindex">messageConfigFields</a></b></td>
+        <td>[]object</td>
+        <td>
+          Notification message configuration fields.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroup.destinations[index].triggeredRoutingOverrides.configOverrides.connectorConfigFields[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupdestinationsindextriggeredroutingoverridesconfigoverrides)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          The name of the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>template</b></td>
+        <td>string</td>
+        <td>
+          The template for the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroup.destinations[index].triggeredRoutingOverrides.configOverrides.messageConfigFields[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupdestinationsindextriggeredroutingoverridesconfigoverrides)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          The name of the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>template</b></td>
+        <td>string</td>
+        <td>
+          The template for the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroup.destinations[index].preset
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupdestinationsindex)</sup></sup>
+
+
+
+Preset is the preset for the destination. Should be one of backendRef or resourceRef.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupdestinationsindexpresetbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          BackendRef is a reference to a backend resource.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupdestinationsindexpresetresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          ResourceRef is a reference to a Kubernetes resource.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroup.destinations[index].preset.backendRef
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupdestinationsindexpreset)</sup></sup>
+
+
+
+BackendRef is a reference to a backend resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroup.destinations[index].preset.resourceRef
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupdestinationsindexpreset)</sup></sup>
+
+
+
+ResourceRef is a reference to a Kubernetes resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroup.destinations[index].resolvedRoutingOverrides
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupdestinationsindex)</sup></sup>
+
+
+
+Optional routing configuration to override from the connector/preset for resolved notifications.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupdestinationsindexresolvedroutingoverridesconfigoverrides">configOverrides</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroup.destinations[index].resolvedRoutingOverrides.configOverrides
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupdestinationsindexresolvedroutingoverrides)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>payloadType</b></td>
+        <td>string</td>
+        <td>
+          The ID of the output schema to use for routing notifications<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupdestinationsindexresolvedroutingoverridesconfigoverridesconnectorconfigfieldsindex">connectorConfigFields</a></b></td>
+        <td>[]object</td>
+        <td>
+          Connector configuration fields.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupdestinationsindexresolvedroutingoverridesconfigoverridesmessageconfigfieldsindex">messageConfigFields</a></b></td>
+        <td>[]object</td>
+        <td>
+          Notification message configuration fields.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroup.destinations[index].resolvedRoutingOverrides.configOverrides.connectorConfigFields[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupdestinationsindexresolvedroutingoverridesconfigoverrides)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          The name of the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>template</b></td>
+        <td>string</td>
+        <td>
+          The template for the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroup.destinations[index].resolvedRoutingOverrides.configOverrides.messageConfigFields[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupdestinationsindexresolvedroutingoverridesconfigoverrides)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          The name of the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>template</b></td>
+        <td>string</td>
+        <td>
+          The template for the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroup.router
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroup)</sup></sup>
+
+
+
+The router for notifications (Notification Center feature) where to route notifications to.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>notifyOn</b></td>
+        <td>enum</td>
+        <td>
+          When to notify.<br/>
+          <br/>
+            <i>Enum</i>: triggeredOnly, triggeredAndResolved<br/>
+            <i>Default</i>: triggeredOnly<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroup.webhooks[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroup)</sup></sup>
+
+
+
+Settings for a notification webhook.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupwebhooksindexintegration">integration</a></b></td>
+        <td>object</td>
+        <td>
+          Type and spec of webhook.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.integrationRef) || has(self.recipients): Exactly one of integrationRef or recipients is required</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>notifyOn</b></td>
+        <td>enum</td>
+        <td>
+          When to notify.<br/>
+          <br/>
+            <i>Enum</i>: triggeredOnly, triggeredAndResolved<br/>
+            <i>Default</i>: triggeredOnly<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupwebhooksindexretriggeringperiod">retriggeringPeriod</a></b></td>
+        <td>object</td>
+        <td>
+          When to re-trigger.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroup.webhooks[index].integration
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupwebhooksindex)</sup></sup>
+
+
+
+Type and spec of webhook.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupwebhooksindexintegrationintegrationref">integrationRef</a></b></td>
+        <td>object</td>
+        <td>
+          Reference to the webhook.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) || has(self.resourceRef): Exactly one of backendRef or resourceRef is required</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>recipients</b></td>
+        <td>[]string</td>
+        <td>
+          Recipients for the notification.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroup.webhooks[index].integration.integrationRef
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupwebhooksindexintegration)</sup></sup>
+
+
+
+Reference to the webhook.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupwebhooksindexintegrationintegrationrefbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          Backend reference for the outbound webhook.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.id) != has(self.name): One of id or name is required</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupwebhooksindexintegrationintegrationrefresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          Resource reference for use with the alert notification.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroup.webhooks[index].integration.integrationRef.backendRef
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupwebhooksindexintegrationintegrationref)</sup></sup>
+
+
+
+Backend reference for the outbound webhook.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>integer</td>
+        <td>
+          Webhook ID.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the webhook.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroup.webhooks[index].integration.integrationRef.resourceRef
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupwebhooksindexintegrationintegrationref)</sup></sup>
+
+
+
+Resource reference for use with the alert notification.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroup.webhooks[index].retriggeringPeriod
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupwebhooksindex)</sup></sup>
+
+
+
+When to re-trigger.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>minutes</b></td>
+        <td>integer</td>
+        <td>
+          Delay between re-triggered alerts.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroupExcess[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspec)</sup></sup>
+
+
+
+Notification group to use for alert notifications.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindex">destinations</a></b></td>
+        <td>[]object</td>
+        <td>
+          Do not use.
+Deprecated: This field is deprecated and will be removed in a future version.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>groupByKeys</b></td>
+        <td>[]string</td>
+        <td>
+          Group notification by these keys.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupexcessindexrouter">router</a></b></td>
+        <td>object</td>
+        <td>
+          The router for notifications (Notification Center feature) where to route notifications to.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupexcessindexwebhooksindex">webhooks</a></b></td>
+        <td>[]object</td>
+        <td>
+          Webhooks to trigger for notifications.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroupExcess[index].destinations[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupexcessindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindexconnector">connector</a></b></td>
+        <td>object</td>
+        <td>
+          Connector is the connector for the destination. Should be one of backendRef or resourceRef.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>notifyOn</b></td>
+        <td>enum</td>
+        <td>
+          When to notify.<br/>
+          <br/>
+            <i>Enum</i>: triggeredOnly, triggeredAndResolved<br/>
+            <i>Default</i>: triggeredOnly<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindextriggeredroutingoverrides">triggeredRoutingOverrides</a></b></td>
+        <td>object</td>
+        <td>
+          The routing configuration to override from the connector/preset for triggered notifications.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindexpreset">preset</a></b></td>
+        <td>object</td>
+        <td>
+          Preset is the preset for the destination. Should be one of backendRef or resourceRef.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindexresolvedroutingoverrides">resolvedRoutingOverrides</a></b></td>
+        <td>object</td>
+        <td>
+          Optional routing configuration to override from the connector/preset for resolved notifications.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>retriggeringPeriodMinutes</b></td>
+        <td>integer</td>
+        <td>
+          The time in minutes before a new notification is sent for this destination.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroupExcess[index].destinations[index].connector
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindex)</sup></sup>
+
+
+
+Connector is the connector for the destination. Should be one of backendRef or resourceRef.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindexconnectorbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          BackendRef is a reference to a backend resource.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindexconnectorresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          ResourceRef is a reference to a Kubernetes resource.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroupExcess[index].destinations[index].connector.backendRef
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindexconnector)</sup></sup>
+
+
+
+BackendRef is a reference to a backend resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroupExcess[index].destinations[index].connector.resourceRef
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindexconnector)</sup></sup>
+
+
+
+ResourceRef is a reference to a Kubernetes resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroupExcess[index].destinations[index].triggeredRoutingOverrides
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindex)</sup></sup>
+
+
+
+The routing configuration to override from the connector/preset for triggered notifications.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindextriggeredroutingoverridesconfigoverrides">configOverrides</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroupExcess[index].destinations[index].triggeredRoutingOverrides.configOverrides
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindextriggeredroutingoverrides)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>payloadType</b></td>
+        <td>string</td>
+        <td>
+          The ID of the output schema to use for routing notifications<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindextriggeredroutingoverridesconfigoverridesconnectorconfigfieldsindex">connectorConfigFields</a></b></td>
+        <td>[]object</td>
+        <td>
+          Connector configuration fields.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindextriggeredroutingoverridesconfigoverridesmessageconfigfieldsindex">messageConfigFields</a></b></td>
+        <td>[]object</td>
+        <td>
+          Notification message configuration fields.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroupExcess[index].destinations[index].triggeredRoutingOverrides.configOverrides.connectorConfigFields[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindextriggeredroutingoverridesconfigoverrides)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          The name of the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>template</b></td>
+        <td>string</td>
+        <td>
+          The template for the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroupExcess[index].destinations[index].triggeredRoutingOverrides.configOverrides.messageConfigFields[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindextriggeredroutingoverridesconfigoverrides)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          The name of the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>template</b></td>
+        <td>string</td>
+        <td>
+          The template for the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroupExcess[index].destinations[index].preset
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindex)</sup></sup>
+
+
+
+Preset is the preset for the destination. Should be one of backendRef or resourceRef.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindexpresetbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          BackendRef is a reference to a backend resource.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindexpresetresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          ResourceRef is a reference to a Kubernetes resource.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroupExcess[index].destinations[index].preset.backendRef
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindexpreset)</sup></sup>
+
+
+
+BackendRef is a reference to a backend resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroupExcess[index].destinations[index].preset.resourceRef
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindexpreset)</sup></sup>
+
+
+
+ResourceRef is a reference to a Kubernetes resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroupExcess[index].destinations[index].resolvedRoutingOverrides
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindex)</sup></sup>
+
+
+
+Optional routing configuration to override from the connector/preset for resolved notifications.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindexresolvedroutingoverridesconfigoverrides">configOverrides</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroupExcess[index].destinations[index].resolvedRoutingOverrides.configOverrides
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindexresolvedroutingoverrides)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>payloadType</b></td>
+        <td>string</td>
+        <td>
+          The ID of the output schema to use for routing notifications<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindexresolvedroutingoverridesconfigoverridesconnectorconfigfieldsindex">connectorConfigFields</a></b></td>
+        <td>[]object</td>
+        <td>
+          Connector configuration fields.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindexresolvedroutingoverridesconfigoverridesmessageconfigfieldsindex">messageConfigFields</a></b></td>
+        <td>[]object</td>
+        <td>
+          Notification message configuration fields.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroupExcess[index].destinations[index].resolvedRoutingOverrides.configOverrides.connectorConfigFields[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindexresolvedroutingoverridesconfigoverrides)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          The name of the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>template</b></td>
+        <td>string</td>
+        <td>
+          The template for the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroupExcess[index].destinations[index].resolvedRoutingOverrides.configOverrides.messageConfigFields[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupexcessindexdestinationsindexresolvedroutingoverridesconfigoverrides)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          The name of the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>template</b></td>
+        <td>string</td>
+        <td>
+          The template for the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroupExcess[index].router
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupexcessindex)</sup></sup>
+
+
+
+The router for notifications (Notification Center feature) where to route notifications to.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>notifyOn</b></td>
+        <td>enum</td>
+        <td>
+          When to notify.<br/>
+          <br/>
+            <i>Enum</i>: triggeredOnly, triggeredAndResolved<br/>
+            <i>Default</i>: triggeredOnly<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroupExcess[index].webhooks[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupexcessindex)</sup></sup>
+
+
+
+Settings for a notification webhook.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupexcessindexwebhooksindexintegration">integration</a></b></td>
+        <td>object</td>
+        <td>
+          Type and spec of webhook.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.integrationRef) || has(self.recipients): Exactly one of integrationRef or recipients is required</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>notifyOn</b></td>
+        <td>enum</td>
+        <td>
+          When to notify.<br/>
+          <br/>
+            <i>Enum</i>: triggeredOnly, triggeredAndResolved<br/>
+            <i>Default</i>: triggeredOnly<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupexcessindexwebhooksindexretriggeringperiod">retriggeringPeriod</a></b></td>
+        <td>object</td>
+        <td>
+          When to re-trigger.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroupExcess[index].webhooks[index].integration
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupexcessindexwebhooksindex)</sup></sup>
+
+
+
+Type and spec of webhook.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupexcessindexwebhooksindexintegrationintegrationref">integrationRef</a></b></td>
+        <td>object</td>
+        <td>
+          Reference to the webhook.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) || has(self.resourceRef): Exactly one of backendRef or resourceRef is required</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>recipients</b></td>
+        <td>[]string</td>
+        <td>
+          Recipients for the notification.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroupExcess[index].webhooks[index].integration.integrationRef
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupexcessindexwebhooksindexintegration)</sup></sup>
+
+
+
+Reference to the webhook.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupexcessindexwebhooksindexintegrationintegrationrefbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          Backend reference for the outbound webhook.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.id) != has(self.name): One of id or name is required</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecnotificationgroupexcessindexwebhooksindexintegrationintegrationrefresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          Resource reference for use with the alert notification.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroupExcess[index].webhooks[index].integration.integrationRef.backendRef
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupexcessindexwebhooksindexintegrationintegrationref)</sup></sup>
+
+
+
+Backend reference for the outbound webhook.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>integer</td>
+        <td>
+          Webhook ID.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the webhook.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroupExcess[index].webhooks[index].integration.integrationRef.resourceRef
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupexcessindexwebhooksindexintegrationintegrationref)</sup></sup>
+
+
+
+Resource reference for use with the alert notification.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.notificationGroupExcess[index].webhooks[index].retriggeringPeriod
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecnotificationgroupexcessindexwebhooksindex)</sup></sup>
+
+
+
+When to re-trigger.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>minutes</b></td>
+        <td>integer</td>
+        <td>
+          Delay between re-triggered alerts.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.schedule
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspec)</sup></sup>
+
+
+
+Alert activity schedule. Will be activated all the time if not specified.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>timeZone</b></td>
+        <td>string</td>
+        <td>
+          Time zone.<br/>
+          <br/>
+            <i>Default</i>: UTC+00<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecscheduleactiveon">activeOn</a></b></td>
+        <td>object</td>
+        <td>
+          Schedule to have the alert active.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.schedule.activeOn
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecschedule)</sup></sup>
+
+
+
+Schedule to have the alert active.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>dayOfWeek</b></td>
+        <td>[]enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: sunday, monday, tuesday, wednesday, thursday, friday, saturday<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>endTime</b></td>
+        <td>string</td>
+        <td>
+          Time of day.<br/>
+          <br/>
+            <i>Default</i>: 23:59<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>startTime</b></td>
+        <td>string</td>
+        <td>
+          Time of day.<br/>
+          <br/>
+            <i>Default</i>: 00:00<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.status
+<sup><sup>[↩ Parent](#alertset)</sup></sup>
+
+
+
+AlertSetStatus defines the observed state of an AlertSet.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetstatusalertsindex">alerts</a></b></td>
+        <td>[]object</td>
+        <td>
+          Alerts contains the observed state of each managed alert.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.status.alerts[index]
+<sup><sup>[↩ Parent](#alertsetstatus)</sup></sup>
+
+
+
+AlertSetItemStatus defines the observed state of one alert.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          Key is the stable identity of the alert in this AlertSet.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          ID is the remote Coralogix alert ID.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          Message describes the latest synchronization failure.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>state</b></td>
+        <td>enum</td>
+        <td>
+          State is the latest synchronization state.<br/>
+          <br/>
+            <i>Enum</i>: Pending, Synced, Failed, Deleting<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.status.conditions[index]
+<sup><sup>[↩ Parent](#alertsetstatus)</sup></sup>
 
 
 

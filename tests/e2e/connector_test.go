@@ -60,7 +60,7 @@ var _ = Describe("Connector", Ordered, func() {
 	It("Should be created successfully", func(ctx context.Context) {
 
 		By("Creating Connector")
-		connectorName = fmt.Sprintf("slack-connector-%d", time.Now().Unix())
+		connectorName = uniqueName("slack-connector")
 		connector = getSampleSlackConnector(connectorName)
 		Expect(crClient.Create(ctx, connector)).To(Succeed())
 
@@ -89,7 +89,7 @@ var _ = Describe("Connector", Ordered, func() {
 
 	It("Should be updated successfully", func(ctx context.Context) {
 		By("Patching the Connector")
-		newConnectorName := "slack-connector-updated"
+		newConnectorName := uniqueName("slack-connector-updated")
 		modifiedConnector := connector.DeepCopy()
 		modifiedConnector.Spec.Name = newConnectorName
 		Expect(crClient.Patch(ctx, modifiedConnector, client.MergeFrom(connector))).To(Succeed())
@@ -164,12 +164,12 @@ var _ = Describe("Connector with SecretKeyRef", Ordered, func() {
 
 	It("Should create connector with secret reference successfully", func(ctx context.Context) {
 		By("Creating a Secret with the integration key")
-		secretName = fmt.Sprintf("pagerduty-secret-%d", time.Now().Unix())
+		secretName = uniqueName("pagerduty-secret")
 		secret = createTestSecret(secretName, testNamespace, "integration-key", pagerDutyIntegrationId)
 		Expect(crClient.Create(ctx, secret)).To(Succeed())
 
 		By("Creating Connector with SecretKeyRef")
-		connectorName = fmt.Sprintf("pagerduty-connector-%d", time.Now().Unix())
+		connectorName = uniqueName("pagerduty-connector")
 		connector = getSamplePagerDutyConnectorWithSecret(connectorName, testNamespace, secretName, "integration-key")
 		Expect(crClient.Create(ctx, connector)).To(Succeed())
 
@@ -282,7 +282,7 @@ var _ = Describe("Connector PagerDutyIncidents", Ordered, func() {
 	})
 
 	It("Should be created successfully", func(ctx context.Context) {
-		connectorName = fmt.Sprintf("pd-incidents-connector-%d", time.Now().Unix())
+		connectorName = uniqueName("pd-incidents-connector")
 		connector = getSamplePagerDutyIncidentsConnector(connectorName, testNamespace)
 		Expect(crClient.Create(ctx, connector)).To(Succeed())
 
@@ -378,7 +378,7 @@ var _ = Describe("Connector with CASES config override", Ordered, func() {
 	})
 
 	It("Should be created successfully", func(ctx context.Context) {
-		connectorName = fmt.Sprintf("cases-connector-%d", time.Now().Unix())
+		connectorName = uniqueName("cases-connector")
 		connector = getSampleGenericHttpsConnectorWithCasesOverride(connectorName, testNamespace)
 		Expect(crClient.Create(ctx, connector)).To(Succeed())
 

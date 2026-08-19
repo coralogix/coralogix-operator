@@ -152,12 +152,12 @@ var _ = Describe("Integration with ParametersFromSecret", Ordered, func() {
 
 	It("Should create integration with secret-sourced parameter", func(ctx context.Context) {
 		By("Creating a Secret with the AwsRoleArn")
-		secretName = fmt.Sprintf("aws-metrics-collector-secret-%d", time.Now().Unix())
+		secretName = uniqueName("aws-metrics-collector-secret")
 		secret = createTestSecret(secretName, testNamespace, "role-arn", "arn:aws:iam::123456789012:role/example-role")
 		Expect(crClient.Create(ctx, secret)).To(Succeed())
 
 		By("Creating Integration with parametersFromSecret")
-		integrationName = fmt.Sprintf("aws-metrics-collector-with-secret-%d", time.Now().Unix())
+		integrationName = uniqueName("aws-metrics-collector-with-secret")
 		integration = &coralogixv1alpha1.Integration{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      integrationName,

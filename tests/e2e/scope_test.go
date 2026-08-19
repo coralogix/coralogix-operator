@@ -40,7 +40,7 @@ var _ = Describe("Scope", Ordered, func() {
 		scopesClient *cxsdk.ScopesClient
 		scopeID      string
 		scope        *coralogixv1alpha1.Scope
-		scopeName    = "scope-sample"
+		scopeName    = uniqueName("scope-sample")
 	)
 
 	BeforeEach(func() {
@@ -77,7 +77,7 @@ var _ = Describe("Scope", Ordered, func() {
 
 	It("Should be updated successfully", func(ctx context.Context) {
 		By("Patching the Scope")
-		newScopeName := "scope-sample-updated"
+		newScopeName := uniqueName("scope-sample-updated")
 		modifiedScope := scope.DeepCopy()
 		modifiedScope.Spec.Name = newScopeName
 		Expect(crClient.Patch(ctx, modifiedScope, client.MergeFrom(scope))).To(Succeed())

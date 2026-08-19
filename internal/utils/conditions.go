@@ -27,6 +27,7 @@ const (
 	ReasonRemoteResourceNotFound   = "RemoteResourceNotFound"
 	ReasonInternalK8sError         = "InternalK8sError"
 	ReasonDeserializationError     = "DeserializationError"
+	ReasonPartialFailure           = "PartialFailure"
 
 	ConditionTypeRemoteSynced = "RemoteSynced"
 )

@@ -16,7 +16,6 @@ package e2e
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	gouuid "github.com/google/uuid"
@@ -53,11 +52,11 @@ var _ = Describe("Alert", Ordered, func() {
 
 	It("Should be created successfully", func(ctx context.Context) {
 		By("Creating Slack Connector")
-		connectorName := fmt.Sprintf("slack-connector-for-alert-%d", time.Now().Unix())
+		connectorName := uniqueName("slack-connector-for-alert")
 		Expect(crClient.Create(ctx, getSampleSlackConnector(connectorName))).To(Succeed())
 
 		By("Creating Slack Preset")
-		presetName := fmt.Sprintf("slack-preset-for-alert-%d", time.Now().Unix())
+		presetName := uniqueName("slack-preset-for-alert")
 		Expect(crClient.Create(ctx, getSampleSlackPreset(presetName, testNamespace))).To(Succeed())
 
 		// Same reason as in the GlobalRouter specs: the router below references both by name and
@@ -81,13 +80,13 @@ var _ = Describe("Alert", Ordered, func() {
 		Expect(crClient.Create(ctx, globalRouter)).To(Succeed())
 
 		By("Creating OutboundWebhooks")
-		firstWebhookName := "first-webhook-for-alert"
+		firstWebhookName := uniqueName("first-webhook-for-alert")
 		Expect(crClient.Create(ctx, getSampleWebhook(firstWebhookName, testNamespace))).To(Succeed())
-		secondWebhookName := "second-webhook-for-alert"
+		secondWebhookName := uniqueName("second-webhook-for-alert")
 		Expect(crClient.Create(ctx, getSampleWebhook(secondWebhookName, testNamespace))).To(Succeed())
 
 		By("Creating Alert")
-		alertName := "promql-alert"
+		alertName := uniqueName("promql-alert")
 		alert = &coralogixv1beta1.Alert{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      alertName,
@@ -207,7 +206,7 @@ var _ = Describe("Alert", Ordered, func() {
 
 	It("Should be updated successfully", func(ctx context.Context) {
 		By("Patching the Alert")
-		newAlertName := "promql-alert-updated"
+		newAlertName := uniqueName("promql-alert-updated")
 		modifiedAlert := alert.DeepCopy()
 		modifiedAlert.Spec.Name = newAlertName
 		Expect(crClient.Patch(ctx, modifiedAlert, client.MergeFrom(alert))).To(Succeed())
@@ -233,7 +232,7 @@ var _ = Describe("Alert", Ordered, func() {
 
 	It("Should store an err condition in status", func(ctx context.Context) {
 		By("Creating Alert with a non-existing webhook")
-		alertName := "promql-alert"
+		alertName := uniqueName("promql-alert")
 		newAlert := &coralogixv1beta1.Alert{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      alertName,
@@ -511,7 +510,7 @@ var _ = Describe("Alert", Ordered, func() {
 
 	It("Should create an alert with dataSources and a destination retriggeringPeriodMinutes", func(ctx context.Context) {
 		By("Creating Slack Connector for the destination")
-		connectorName := fmt.Sprintf("slack-connector-for-alert-gaps-%d", time.Now().Unix())
+		connectorName := uniqueName("slack-connector-for-alert-gaps")
 		Expect(crClient.Create(ctx, getSampleSlackConnector(connectorName))).To(Succeed())
 
 		// The Alert below cannot reach RemoteSynced until the Connector it references has an ID

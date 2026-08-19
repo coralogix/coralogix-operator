@@ -161,6 +161,13 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Alert")
 		os.Exit(1)
 	}
+	if err = (&v1alpha1controllers.AlertSetReconciler{
+		ClientSet: oapiClientSet,
+		Interval:  cfg.ReconcileIntervals[utils.AlertSetKind],
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AlertSet")
+		os.Exit(1)
+	}
 	if err = (&v1alpha1controllers.RecordingRuleGroupSetReconciler{
 		RecordingRulesClient:        oapiClientSet.RecordingRules(),
 		Interval:                    cfg.ReconcileIntervals[utils.RecordingRuleGroupSetKind],

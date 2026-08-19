@@ -106,7 +106,7 @@ var _ = Describe("ApiKey", Ordered, func() {
 
 	It("Should be updated successfully", func(ctx context.Context) {
 		By("Patching the ApiKey")
-		newApiKeyName := "team-key-sample-updated"
+		newApiKeyName := uniqueName("team-key-sample-updated")
 		modifiedApiKey := apiKey.DeepCopy()
 		modifiedApiKey.Spec.Name = newApiKeyName
 		Expect(crClient.Patch(ctx, modifiedApiKey, client.MergeFrom(apiKey))).To(Succeed())

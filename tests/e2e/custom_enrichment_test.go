@@ -87,7 +87,7 @@ var _ = Describe("CustomEnrichment", Ordered, func() {
 
 	It("Should be updated successfully", func(ctx context.Context) {
 		By("Patching the CustomEnrichment")
-		newName := "custom-enrichment-e2e-updated"
+		newName := uniqueName("custom-enrichment-e2e-updated")
 		newDescription := "Updated description for e2e test"
 		modified := customEnrichment.DeepCopy()
 		modified.Spec.Name = newName

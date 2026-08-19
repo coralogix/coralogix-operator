@@ -43,9 +43,9 @@ var _ = Describe("Group", Ordered, func() {
 		customRole     *coralogixv1alpha1.CustomRole
 		group          *coralogixv1alpha1.Group
 		groupID        uint32
-		groupName      = fmt.Sprintf("group-sample-%d", time.Now().Unix())
-		scopeName      = "scope-for-group"
-		customRoleName = fmt.Sprintf("custom-role-for-group-%d", time.Now().Unix())
+		groupName      = uniqueName("group-sample")
+		scopeName      = uniqueName("scope-for-group")
+		customRoleName = uniqueName("custom-role-for-group")
 	)
 
 	BeforeEach(func() {
@@ -84,6 +84,22 @@ var _ = Describe("Group", Ordered, func() {
 		By("Creating Scope and CustomRole")
 		Expect(crClient.Create(ctx, scope)).To(Succeed())
 		Expect(crClient.Create(ctx, customRole)).To(Succeed())
+
+		By("Waiting for Scope to be RemoteSynced")
+		Eventually(func(g Gomega) {
+			fetchedScope := &coralogixv1alpha1.Scope{}
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: scopeName, Namespace: testNamespace}, fetchedScope)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedScope.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedScope.Status.ID).ToNot(BeNil())
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Waiting for CustomRole to be RemoteSynced")
+		Eventually(func(g Gomega) {
+			fetchedRole := &coralogixv1alpha1.CustomRole{}
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: customRoleName, Namespace: testNamespace}, fetchedRole)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedRole.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedRole.Status.ID).ToNot(BeNil())
+		}, time.Minute, time.Second).Should(Succeed())
 	})
 
 	It("Should create Group successfully", func(ctx context.Context) {
@@ -116,7 +132,7 @@ var _ = Describe("Group", Ordered, func() {
 
 	It("Should be updated successfully", func(ctx context.Context) {
 		By("Updating the Group")
-		newGroupName := "group-sample-updated"
+		newGroupName := uniqueName("group-sample-updated")
 		modifiedGroup := group.DeepCopy()
 		modifiedGroup.Spec.Name = newGroupName
 		Expect(crClient.Patch(ctx, modifiedGroup, client.MergeFrom(group))).To(Succeed())

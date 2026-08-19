@@ -38,11 +38,11 @@ var _ = Describe("GlobalRouter", Ordered, Serial, func() {
 
 	It("Should be created successfully", func(ctx context.Context) {
 		By("Creating Slack Connector")
-		connectorName := fmt.Sprintf("slack-connector-for-global-router-%d", time.Now().Unix())
+		connectorName := uniqueName("slack-connector-for-global-router")
 		Expect(crClient.Create(ctx, getSampleSlackConnector(connectorName))).To(Succeed())
 
 		By("Creating Slack Preset")
-		presetName := fmt.Sprintf("slack-preset-for-global-router-%d", time.Now().Unix())
+		presetName := uniqueName("slack-preset-for-global-router")
 		Expect(crClient.Create(ctx, getSampleSlackPreset(presetName, testNamespace))).To(Succeed())
 
 		// The GlobalRouter's rules reference both by name, and it cannot reach RemoteSynced until
@@ -88,7 +88,7 @@ var _ = Describe("GlobalRouter", Ordered, Serial, func() {
 
 	It("Should be updated successfully", func(ctx context.Context) {
 		By("Patching the GlobalRouter")
-		newRuleName := "Updated Rule Name"
+		newRuleName := uniqueName("updated-rule")
 		modifiedRouter := globalRouter.DeepCopy()
 		modifiedRouter.Spec.Rules[0].Name = newRuleName
 		Expect(crClient.Patch(ctx, modifiedRouter, client.MergeFrom(globalRouter))).To(Succeed())

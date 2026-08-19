@@ -4,6 +4,7 @@
 resources:
   - bases/coralogix.com_rulegroups.yaml
   - bases/coralogix.com_alerts.yaml
+  - bases/coralogix.com_alertsets.yaml
   - bases/coralogix.com_recordingrulegroupsets.yaml
   - bases/coralogix.com_outboundwebhooks.yaml
   - bases/coralogix.com_apikeys.yaml

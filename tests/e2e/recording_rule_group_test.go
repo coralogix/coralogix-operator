@@ -48,7 +48,7 @@ var _ = Describe("RecordingRuleGroupSet", Ordered, func() {
 
 	It("Should be created successfully", func(ctx context.Context) {
 		By("Creating RecordingRuleGroupSet")
-		recordingRuleGroupSetName := fmt.Sprintf("recording-rule-group-set-%d", time.Now().Unix())
+		recordingRuleGroupSetName := uniqueName("recording-rule-group-set")
 		recordingRuleGroupSet = &coralogixv1alpha1.RecordingRuleGroupSet{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      recordingRuleGroupSetName,
@@ -95,7 +95,7 @@ var _ = Describe("RecordingRuleGroupSet", Ordered, func() {
 
 	It("Should be updated successfully", func(ctx context.Context) {
 		By("Patching the RecordingRuleGroupSet")
-		newRuleName := "rules-updated"
+		newRuleName := uniqueName("rules-updated")
 		modifiedRecordingRuleGroupSet := recordingRuleGroupSet.DeepCopy()
 		modifiedRecordingRuleGroupSet.Spec.Groups[0].Name = newRuleName
 		Expect(crClient.Patch(ctx, modifiedRecordingRuleGroupSet, client.MergeFrom(recordingRuleGroupSet))).To(Succeed())

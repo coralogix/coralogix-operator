@@ -806,6 +806,7 @@ type LogsRatioThreshold struct {
 	EvaluationDelayMs *int32 `json:"evaluationDelayMs,omitempty"`
 
 	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=5
 	// Rules that match the alert to the data.
 	Rules []LogsRatioThresholdRule `json:"rules"`
 
