@@ -28,6 +28,7 @@ import (
 // TCORumPoliciesSpec defines the desired state of Coralogix TCO RUM policies.
 type TCORumPoliciesSpec struct {
 	// Coralogix TCO-Policies-List.
+	// +kubebuilder:validation:MaxItems=10000
 	Policies []TCORumPolicy `json:"policies"`
 }
 
