@@ -172,6 +172,7 @@ spec:
                         - debug
                         - verbose
                         type: string
+                      maxItems: 6
                       type: array
                     subsystems:
                       description: The subsystems to apply the policy on. Applies

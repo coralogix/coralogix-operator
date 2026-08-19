@@ -98,8 +98,7 @@ func (r *TCORumPoliciesReconciler) HandleDeletion(ctx context.Context, log logr.
 		Execute()
 	if err != nil {
 		if apiErr := oapicxsdk.NewAPIError(httpResp, err); !oapicxsdk.IsNotFound(apiErr) {
-			log.Error(err, "Received an error while Deleting a TCORumPolicies")
-			return apiErr
+			return fmt.Errorf("error on deleting remote tco-rum-policies: %w", apiErr)
 		}
 	}
 

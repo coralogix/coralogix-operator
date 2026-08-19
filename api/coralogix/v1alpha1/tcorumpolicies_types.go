@@ -54,6 +54,7 @@ type TCORumPolicy struct {
 
 	// The severities to apply the policy on. Mutually exclusive with dpxlExpression; exactly one of the two is required.
 	// +optional
+	// +kubebuilder:validation:MaxItems=6
 	Severities []TCOPolicySeverity `json:"severities,omitempty"`
 
 	// A DPXL expression to match RUM events on. Mutually exclusive with severities; exactly one of the two is required.
