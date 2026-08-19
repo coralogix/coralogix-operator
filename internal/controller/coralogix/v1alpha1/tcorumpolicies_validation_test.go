@@ -1,0 +1,161 @@
+// Copyright 2024 Coralogix Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package v1alpha1
+
+import (
+	"context"
+	"fmt"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
+
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
+)
+
+var _ = Describe("TCORumPolicies validation", func() {
+	It("should reject a policy with more than 50 subsystem names", func(ctx context.Context) {
+		names := make([]string, 51)
+		for i := range names {
+			names[i] = fmt.Sprintf("subsystem-%d", i)
+		}
+		policy := &coralogixv1alpha1.TCORumPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "rum-too-many-subsystems",
+				Namespace: "default",
+			},
+			Spec: coralogixv1alpha1.TCORumPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCORumPolicy{{
+					Name:       "over-limit",
+					Priority:   "low",
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					Subsystems: &coralogixv1alpha1.TCOPolicyRule{
+						Names:    names,
+						RuleType: "is",
+					},
+				}},
+			},
+		}
+		err := k8sClient.Create(ctx, policy)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("Too many"))
+	})
+
+	It("should accept a policy matched by severities", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCORumPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "rum-severities",
+				Namespace: "default",
+			},
+			Spec: coralogixv1alpha1.TCORumPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCORumPolicy{{
+					Name:       "by-severities",
+					Priority:   "high",
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"critical", "error"},
+					Applications: &coralogixv1alpha1.TCOPolicyRule{
+						Names:    []string{"prod"},
+						RuleType: "is",
+					},
+				}},
+			},
+		}
+		Expect(k8sClient.Create(ctx, policy)).To(Succeed())
+		Expect(k8sClient.Delete(ctx, policy)).To(Succeed())
+	})
+
+	It("should accept a policy matched by a dpxlExpression", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCORumPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "rum-dpxl",
+				Namespace: "default",
+			},
+			Spec: coralogixv1alpha1.TCORumPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCORumPolicy{{
+					Name:           "by-dpxl",
+					Priority:       "medium",
+					DpxlExpression: ptr.To("<v1>$d.applicationname == 'prod'"),
+				}},
+			},
+		}
+		Expect(k8sClient.Create(ctx, policy)).To(Succeed())
+		Expect(k8sClient.Delete(ctx, policy)).To(Succeed())
+	})
+
+	It("should reject a policy that sets both severities and dpxlExpression", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCORumPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "rum-both-rules",
+				Namespace: "default",
+			},
+			Spec: coralogixv1alpha1.TCORumPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCORumPolicy{{
+					Name:           "conflicting-rules",
+					Priority:       "low",
+					Severities:     []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					DpxlExpression: ptr.To("<v1>$d.applicationname == 'prod'"),
+				}},
+			},
+		}
+		err := k8sClient.Create(ctx, policy)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("mutually exclusive"))
+	})
+
+	It("should reject a policy without a priority", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCORumPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "rum-missing-priority",
+				Namespace: "default",
+			},
+			Spec: coralogixv1alpha1.TCORumPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCORumPolicy{{
+					Name:       "no-priority",
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+				}},
+			},
+		}
+		err := k8sClient.Create(ctx, policy)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("spec.policies[0].priority"))
+	})
+
+	It("should accept a policy with a quota-based priority override", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCORumPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "rum-quota-override",
+				Namespace: "default",
+			},
+			Spec: coralogixv1alpha1.TCORumPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCORumPolicy{{
+					Name:       "quota-override",
+					Priority:   "low",
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					PriorityOverride: &coralogixv1alpha1.TCOPolicyPriorityOverride{
+						QuotaBased: &coralogixv1alpha1.TCOPolicyQuotaBased{
+							UsageTiers: []coralogixv1alpha1.TCOPolicyUsageTier{{
+								DailyQuotaPercentage: resource.MustParse("60.5"),
+								Priority:             "medium",
+							}},
+						},
+					},
+				}},
+			},
+		}
+		Expect(k8sClient.Create(ctx, policy)).To(Succeed())
+		Expect(k8sClient.Delete(ctx, policy)).To(Succeed())
+	})
+})

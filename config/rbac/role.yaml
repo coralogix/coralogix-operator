@@ -61,6 +61,7 @@ rules:
   - scopes
   - slos
   - tcologspolicies
+  - tcorumpolicies
   - tcotracespolicies
   - viewfolders
   - views
@@ -102,6 +103,7 @@ rules:
   - scopes/finalizers
   - slos/finalizers
   - tcologspolicies/finalizers
+  - tcorumpolicies/finalizers
   - tcotracespolicies/finalizers
   - viewfolders/finalizers
   - views/finalizers
@@ -137,6 +139,7 @@ rules:
   - scopes/status
   - slos/status
   - tcologspolicies/status
+  - tcorumpolicies/status
   - tcotracespolicies/status
   - viewfolders/status
   - views/status

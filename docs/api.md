@@ -61,6 +61,8 @@ Resource Types:
 
 - [TCOLogsPolicies](#tcologspolicies)
 
+- [TCORumPolicies](#tcorumpolicies)
+
 - [TCOTracesPolicies](#tcotracespolicies)
 
 - [ViewFolder](#viewfolder)
@@ -18619,6 +18621,516 @@ TCOLogsPoliciesStatus defines the observed state of TCOLogsPolicies.
 
 ### TCOLogsPolicies.status.conditions[index]
 <sup><sup>[↩ Parent](#tcologspoliciesstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## TCORumPolicies
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+TCORumPolicies is the Schema for the TCORumPolicies API.
+NOTE: This resource performs an atomic overwrite of all existing TCO RUM policies
+in the backend. Any existing policies not defined in this resource will be
+removed. Use with caution as this operation is destructive.
+
+See also https://coralogix.com/docs/tco-optimizer-api
+
+**Added in v0.5.0**
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>TCORumPolicies</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#tcorumpoliciesspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          TCORumPoliciesSpec defines the desired state of Coralogix TCO RUM policies.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#tcorumpoliciesstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          TCORumPoliciesStatus defines the observed state of TCORumPolicies.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### TCORumPolicies.spec
+<sup><sup>[↩ Parent](#tcorumpolicies)</sup></sup>
+
+
+
+TCORumPoliciesSpec defines the desired state of Coralogix TCO RUM policies.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#tcorumpoliciesspecpoliciesindex">policies</a></b></td>
+        <td>[]object</td>
+        <td>
+          Coralogix TCO-Policies-List.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### TCORumPolicies.spec.policies[index]
+<sup><sup>[↩ Parent](#tcorumpoliciesspec)</sup></sup>
+
+
+
+A TCO policy for RUM (browser/mobile) events.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the policy.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          The policy priority.<br/>
+          <br/>
+            <i>Enum</i>: block, high, medium, low<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#tcorumpoliciesspecpoliciesindexapplications">applications</a></b></td>
+        <td>object</td>
+        <td>
+          The applications to apply the policy on. Applies the policy on all the applications by default.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#tcorumpoliciesspecpoliciesindexarchiveretention">archiveRetention</a></b></td>
+        <td>object</td>
+        <td>
+          Matches the specified retention.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          Description of the policy.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>disabled</b></td>
+        <td>boolean</td>
+        <td>
+          Whether the policy is disabled.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>dpxlExpression</b></td>
+        <td>string</td>
+        <td>
+          A DPXL expression to match RUM events on. Mutually exclusive with severities; exactly one of the two is required.
+The expression must carry a <v1> version prefix and use the canonical $d.* schema (NOT $d.cx_rum.*),
+otherwise it fails to compile.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#tcorumpoliciesspecpoliciesindexpriorityoverride">priorityOverride</a></b></td>
+        <td>object</td>
+        <td>
+          Dynamic quota-based priority override for the policy.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>severities</b></td>
+        <td>[]enum</td>
+        <td>
+          The severities to apply the policy on. Mutually exclusive with dpxlExpression; exactly one of the two is required.<br/>
+          <br/>
+            <i>Enum</i>: info, warning, critical, error, debug, verbose<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#tcorumpoliciesspecpoliciesindexsubsystems">subsystems</a></b></td>
+        <td>object</td>
+        <td>
+          The subsystems to apply the policy on. Applies the policy on all the subsystems by default.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### TCORumPolicies.spec.policies[index].applications
+<sup><sup>[↩ Parent](#tcorumpoliciesspecpoliciesindex)</sup></sup>
+
+
+
+The applications to apply the policy on. Applies the policy on all the applications by default.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>names</b></td>
+        <td>[]string</td>
+        <td>
+          Names to match.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>ruleType</b></td>
+        <td>enum</td>
+        <td>
+          Type of matching for the name.<br/>
+          <br/>
+            <i>Enum</i>: is, is_not, start_with, includes<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### TCORumPolicies.spec.policies[index].archiveRetention
+<sup><sup>[↩ Parent](#tcorumpoliciesspecpoliciesindex)</sup></sup>
+
+
+
+Matches the specified retention.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#tcorumpoliciesspecpoliciesindexarchiveretentionbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          Reference to the retention policy<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### TCORumPolicies.spec.policies[index].archiveRetention.backendRef
+<sup><sup>[↩ Parent](#tcorumpoliciesspecpoliciesindexarchiveretention)</sup></sup>
+
+
+
+Reference to the retention policy
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the policy.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### TCORumPolicies.spec.policies[index].priorityOverride
+<sup><sup>[↩ Parent](#tcorumpoliciesspecpoliciesindex)</sup></sup>
+
+
+
+Dynamic quota-based priority override for the policy.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#tcorumpoliciesspecpoliciesindexpriorityoverridequotabased">quotaBased</a></b></td>
+        <td>object</td>
+        <td>
+          TCOPolicyQuotaBased maps daily quota consumption percentages to priority levels.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### TCORumPolicies.spec.policies[index].priorityOverride.quotaBased
+<sup><sup>[↩ Parent](#tcorumpoliciesspecpoliciesindexpriorityoverride)</sup></sup>
+
+
+
+TCOPolicyQuotaBased maps daily quota consumption percentages to priority levels.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#tcorumpoliciesspecpoliciesindexpriorityoverridequotabasedusagetiersindex">usageTiers</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### TCORumPolicies.spec.policies[index].priorityOverride.quotaBased.usageTiers[index]
+<sup><sup>[↩ Parent](#tcorumpoliciesspecpoliciesindexpriorityoverridequotabased)</sup></sup>
+
+
+
+TCOPolicyUsageTier maps a daily quota threshold percentage to a priority.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>dailyQuotaPercentage</b></td>
+        <td>int or string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: block, high, low, medium<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### TCORumPolicies.spec.policies[index].subsystems
+<sup><sup>[↩ Parent](#tcorumpoliciesspecpoliciesindex)</sup></sup>
+
+
+
+The subsystems to apply the policy on. Applies the policy on all the subsystems by default.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>names</b></td>
+        <td>[]string</td>
+        <td>
+          Names to match.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>ruleType</b></td>
+        <td>enum</td>
+        <td>
+          Type of matching for the name.<br/>
+          <br/>
+            <i>Enum</i>: is, is_not, start_with, includes<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### TCORumPolicies.status
+<sup><sup>[↩ Parent](#tcorumpolicies)</sup></sup>
+
+
+
+TCORumPoliciesStatus defines the observed state of TCORumPolicies.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#tcorumpoliciesstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### TCORumPolicies.status.conditions[index]
+<sup><sup>[↩ Parent](#tcorumpoliciesstatus)</sup></sup>
 
 
 

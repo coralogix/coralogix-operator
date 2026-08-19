@@ -1,0 +1,56 @@
+apiVersion: coralogix.com/v1alpha1
+kind: TCORumPolicies
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: tco-rum-policies-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: tco-rum-policies-sample
+spec:
+  policies:
+    - name: first policy
+      priority: high
+      severities:
+        - critical
+        - error
+      applications:
+        names:
+          - prod
+        ruleType: is
+      subsystems:
+        names:
+          - mobile
+        ruleType: is
+      archiveRetention:
+        backendRef:
+          name: Default
+    - name: second policy
+      priority: low
+      severities:
+        - warning
+      applications:
+        names:
+          - dev
+        ruleType: start_with
+      subsystems:
+        names:
+          - test
+        ruleType: is_not
+    - name: third policy with dpxl expression
+      priority: medium
+      disabled: true
+      # DPXL must carry a <v1> version prefix and use the canonical $d.* schema
+      # (NOT $d.cx_rum.*). severities and dpxlExpression are mutually exclusive.
+      dpxlExpression: "<v1>$d.applicationname == 'prod'"
+    - name: fourth policy with quota-based priority override
+      # Base priority must be lower than every usage-tier priority.
+      priority: low
+      severities:
+        - info
+      priorityOverride:
+        quotaBased:
+          usageTiers:
+            - dailyQuotaPercentage: 60
+              priority: medium

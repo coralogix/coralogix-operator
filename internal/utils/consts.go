@@ -33,6 +33,7 @@ const (
 	GroupKind                  = "Group"
 	TCOLogsPoliciesKind        = "TCOLogsPolicies"
 	TCOTracesPoliciesKind      = "TCOTracesPolicies"
+	TCORumPoliciesKind         = "TCORumPolicies"
 	QuotaAllocationRuleSetKind = "QuotaAllocationRuleSet"
 	IntegrationKind            = "Integration"
 	AlertSchedulerKind         = "AlertScheduler"
