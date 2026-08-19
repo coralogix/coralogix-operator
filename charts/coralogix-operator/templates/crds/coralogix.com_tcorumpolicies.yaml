@@ -114,6 +114,8 @@ spec:
                       type: string
                     name:
                       description: Name of the policy.
+                      maxLength: 255
+                      minLength: 1
                       type: string
                     priority:
                       description: The policy priority.

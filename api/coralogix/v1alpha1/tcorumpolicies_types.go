@@ -36,6 +36,8 @@ type TCORumPoliciesSpec struct {
 // +kubebuilder:validation:XValidation:rule="!(has(self.severities) && has(self.dpxlExpression))",message="severities and dpxlExpression are mutually exclusive"
 type TCORumPolicy struct {
 	// Name of the policy.
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=255
 	Name string `json:"name"`
 
 	// Description of the policy.
