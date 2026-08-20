@@ -94,11 +94,28 @@ var _ = Describe("GlobalRouter", Ordered, Serial, func() {
 		Expect(crClient.Patch(ctx, modifiedRouter, client.MergeFrom(globalRouter))).To(Succeed())
 
 		By("Verifying GlobalRouter is updated in Coralogix backend")
-		Eventually(func() string {
+		// The backend does not promise to return the rules in spec order, so collect the names and
+		// compare them as a set instead of reading Rules[0]. The expected set comes from the patched
+		// spec, so it also proves the other rules are kept.
+		expectedRuleNames := make([]string, 0, len(modifiedRouter.Spec.Rules))
+		for _, rule := range modifiedRouter.Spec.Rules {
+			expectedRuleNames = append(expectedRuleNames, rule.Name)
+		}
+
+		Eventually(func() ([]string, error) {
 			getRes, err := notificationsClient.GetGlobalRouter(ctx, &cxsdk.GetGlobalRouterRequest{Id: globalRouterID})
-			Expect(err).ToNot(HaveOccurred())
-			return *getRes.GetRouter().Rules[0].Name
-		}, time.Minute, time.Second).Should(Equal(newRuleName))
+			if err != nil {
+				return nil, err
+			}
+			if getRes.GetRouter() == nil {
+				return nil, nil
+			}
+			var ruleNames []string
+			for _, rule := range getRes.GetRouter().Rules {
+				ruleNames = append(ruleNames, ptr.Deref(rule.Name, ""))
+			}
+			return ruleNames, nil
+		}, time.Minute, time.Second).Should(ConsistOf(expectedRuleNames))
 	})
 
 	It("Should be deleted successfully", func(ctx context.Context) {
