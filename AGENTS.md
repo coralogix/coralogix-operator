@@ -112,6 +112,10 @@ Use focused unit/envtest coverage for controller behavior, validation, status tr
 
 Use KUTTL or e2e coverage when Kubernetes wiring, CRDs, Helm packaging, or real API behavior is part of the risk.
 
+When a test reads a remote resource, do not depend on the order of items inside a returned list. The API can return
+list elements in any order. Assert on a set or find the element by an identifying field, instead of indexing a fixed
+position.
+
 Before finishing code changes, prefer:
 
 ```bash
