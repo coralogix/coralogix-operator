@@ -36,8 +36,8 @@ type PresetSpec struct {
 	// +optional
 	ParentId *string `json:"parentId,omitempty"`
 
-	// ConnectorType is the type of the connector. Can be one of slack, genericHttps, pagerDuty, pagerDutyIncidents, email, or microsoftTeams.
-	// +kubebuilder:validation:Enum=slack;genericHttps;pagerDuty;pagerDutyIncidents;email;microsoftTeams
+	// ConnectorType is the type of the connector. Can be one of slack, genericHttps, pagerDuty, pagerDutyIncidents, email, microsoftTeams, or eventBridge.
+	// +kubebuilder:validation:Enum=slack;genericHttps;pagerDuty;pagerDutyIncidents;email;microsoftTeams;eventBridge
 	ConnectorType string `json:"connectorType"`
 
 	// EntityType is the entity type for the preset. Can be one of alerts or cases.
@@ -137,6 +137,7 @@ var (
 		"pagerDutyIncidents": presets.NOTIFICATIONCENTERCONNECTORTYPE_PAGERDUTY_INCIDENTS,
 		"email":              presets.NOTIFICATIONCENTERCONNECTORTYPE_EMAIL,
 		"microsoftTeams":     presets.NOTIFICATIONCENTERCONNECTORTYPE_MICROSOFT_TEAMS,
+		"eventBridge":        presets.NOTIFICATIONCENTERCONNECTORTYPE_EVENTBRIDGE,
 	}
 	schemaToOpenApiPresetsEntityType = map[string]presets.NotificationCenterEntityType{
 		"alerts": presets.NOTIFICATIONCENTERENTITYTYPE_ALERTS,

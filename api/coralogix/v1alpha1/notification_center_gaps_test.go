@@ -161,6 +161,52 @@ func TestConnectorExtractMicrosoftTeams(t *testing.T) {
 	}
 }
 
+func TestConnectorExtractEventBridge(t *testing.T) {
+	value := "integration-id"
+	connector := &Connector{
+		Spec: ConnectorSpec{
+			Name:        "c",
+			Description: "d",
+			Type:        "eventBridge",
+			ConnectorConfig: ConnectorConfig{
+				Fields: []ConnectorConfigField{
+					{FieldName: "integrationId", Value: &value},
+				},
+			},
+		},
+	}
+
+	got, err := connector.ExtractConnector(context.Background())
+	if err != nil {
+		t.Fatalf("ExtractConnector returned error: %v", err)
+	}
+	if got.Type == nil || *got.Type != connectors.NOTIFICATIONCENTERCONNECTORTYPE_EVENTBRIDGE {
+		t.Fatalf("Type = %v, want EVENTBRIDGE", got.Type)
+	}
+}
+
+func TestPresetExtractEventBridge(t *testing.T) {
+	preset := &Preset{
+		Spec: PresetSpec{
+			Name:          "p",
+			Description:   "d",
+			ConnectorType: "eventBridge",
+			EntityType:    "cases",
+		},
+	}
+
+	got, err := preset.ExtractPreset()
+	if err != nil {
+		t.Fatalf("ExtractPreset returned error: %v", err)
+	}
+	if got.ConnectorType == nil || *got.ConnectorType != presets.NOTIFICATIONCENTERCONNECTORTYPE_EVENTBRIDGE {
+		t.Fatalf("ConnectorType = %v, want EVENTBRIDGE", got.ConnectorType)
+	}
+	if got.EntityType == nil || *got.EntityType != presets.NOTIFICATIONCENTERENTITYTYPE_CASES {
+		t.Fatalf("EntityType = %v, want CASES", got.EntityType)
+	}
+}
+
 // GlobalRouter supports disabled, fallbackTargets, and CASES routing-rule entity type.
 func TestGlobalRouterExtractDisabledFallbackTargetsAndCases(t *testing.T) {
 	disabled := true
