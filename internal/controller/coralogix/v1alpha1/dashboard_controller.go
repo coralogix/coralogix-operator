@@ -89,10 +89,7 @@ func (r *DashboardReconciler) HandleCreation(ctx context.Context, log logr.Logge
 		return nil
 	}
 
-	createRequest := dashboards.CreateDashboardRequestDataStructure{
-		Dashboard: *dashboardToCreate,
-		RequestId: newDashboardRequestID("create"),
-	}
+	createRequest := newCreateDashboardRequest(dashboard, *dashboardToCreate)
 	log.Info("Creating remote dashboard", "dashboard", utils.FormatJSON(createRequest))
 	createResponse, httpResp, err := r.DashboardsClient.
 		DashboardsServiceCreateDashboard(ctx).
@@ -116,6 +113,14 @@ func (r *DashboardReconciler) HandleCreation(ctx context.Context, log logr.Logge
 // collide on it under whatever dedup window the backend applies.
 func newDashboardRequestID(operation string) string {
 	return fmt.Sprintf("cx-operator-%s-%s", operation, gouuid.NewString())
+}
+
+func newCreateDashboardRequest(dashboard *coralogixv1alpha1.Dashboard, dashboardToCreate dashboards.Dashboard) dashboards.CreateDashboardRequestDataStructure {
+	return dashboards.CreateDashboardRequestDataStructure{
+		AccessPolicy: dashboard.Spec.AccessPolicy,
+		Dashboard:    dashboardToCreate,
+		RequestId:    newDashboardRequestID("create"),
+	}
 }
 
 func importDashboardID(dashboard *coralogixv1alpha1.Dashboard) string {
@@ -145,10 +150,7 @@ func (r *DashboardReconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 		return err
 	}
 	dashboardToUpdate.Id = dashboard.Status.ID
-	updateRequest := dashboards.ReplaceDashboardRequestDataStructure{
-		Dashboard: *dashboardToUpdate,
-		RequestId: newDashboardRequestID("replace"),
-	}
+	updateRequest := newReplaceDashboardRequest(dashboard, *dashboardToUpdate)
 	log.Info("Updating remote dashboard", "dashboard", utils.FormatJSON(updateRequest))
 	updateResponse, httpResp, err := r.DashboardsClient.
 		DashboardsServiceReplaceDashboard(ctx).
@@ -160,6 +162,14 @@ func (r *DashboardReconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 	log.Info("Remote dashboard updated", "dashboard", utils.FormatJSON(updateResponse))
 
 	return nil
+}
+
+func newReplaceDashboardRequest(dashboard *coralogixv1alpha1.Dashboard, dashboardToUpdate dashboards.Dashboard) dashboards.ReplaceDashboardRequestDataStructure {
+	return dashboards.ReplaceDashboardRequestDataStructure{
+		AccessPolicy: dashboard.Spec.AccessPolicy,
+		Dashboard:    dashboardToUpdate,
+		RequestId:    newDashboardRequestID("replace"),
+	}
 }
 
 func (r *DashboardReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
