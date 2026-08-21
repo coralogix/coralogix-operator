@@ -149,7 +149,7 @@ spec:
               type:
                 description: Type is the type of the connector. Can be one of slack,
                   genericHttps, pagerDuty, pagerDutyIncidents, email, serviceNow,
-                  or microsoftTeams.
+                  microsoftTeams, or eventBridge.
                 enum:
                 - slack
                 - genericHttps
@@ -158,6 +158,7 @@ spec:
                 - email
                 - serviceNow
                 - microsoftTeams
+                - eventBridge
                 type: string
             required:
             - connectorConfig
