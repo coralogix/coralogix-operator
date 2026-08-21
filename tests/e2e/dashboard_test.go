@@ -38,11 +38,13 @@ import (
 
 var _ = Describe("Dashboard", Ordered, func() {
 	var (
-		crClient         client.Client
-		dashboardsClient *dashboards.DashboardServiceAPIService
-		dashboard        *coralogixv1alpha1.Dashboard
-		dashboardName    = "dashboard-sample"
-		dashboardID      string
+		crClient            client.Client
+		dashboardsClient    *dashboards.DashboardServiceAPIService
+		dashboard           *coralogixv1alpha1.Dashboard
+		dashboardName       = "dashboard-sample"
+		dashboardID         string
+		accessPolicy        = `{"version":"2025-01-01","default":{"permissions":{"team-dashboards:Read":"grant","team-dashboards:ReadAccessPolicy":"grant","team-dashboards:Update":"grant","team-dashboards:UpdateAccessPolicy":"grant"}},"rules":[]}`
+		updatedAccessPolicy = `{"version":"2025-01-01","default":{"permissions":{"team-dashboards:Read":"grant","team-dashboards:ReadAccessPolicy":"grant","team-dashboards:Update":"deny","team-dashboards:UpdateAccessPolicy":"deny"}},"rules":[]}`
 	)
 
 	BeforeEach(func() {
@@ -59,7 +61,8 @@ var _ = Describe("Dashboard", Ordered, func() {
 				Namespace: testNamespace,
 			},
 			Spec: coralogixv1alpha1.DashboardSpec{
-				Json: &dashboardJson,
+				Json:         &dashboardJson,
+				AccessPolicy: &accessPolicy,
 			},
 		}
 		Expect(crClient.Create(ctx, dashboard)).To(Succeed())
@@ -95,6 +98,8 @@ var _ = Describe("Dashboard", Ordered, func() {
 		Expect(remoteWidget.Definition.Gauge.ArcDisplay).ToNot(BeNil())
 		Expect(remoteWidget.Definition.Gauge.ArcDisplay.ValueArc).To(HaveValue(BeTrue()))
 		Expect(remoteWidget.Definition.Gauge.ShowMinMax).To(HaveValue(BeTrue()))
+		Expect(getResponse.AccessPolicy).ToNot(BeNil())
+		Expect(*getResponse.AccessPolicy).To(MatchJSON(accessPolicy))
 	})
 
 	It("Should be updated successfully", func(ctx context.Context) {
@@ -104,11 +109,29 @@ var _ = Describe("Dashboard", Ordered, func() {
 		Expect(crClient.Patch(ctx, modifiedDashboard, client.MergeFrom(dashboard))).To(Succeed())
 
 		By("Verifying Dashboard is updated in Coralogix backend")
-		Eventually(func() string {
+		Eventually(func(g Gomega) string {
 			getResponse, httpResp, err := dashboardsClient.DashboardsServiceGetDashboard(ctx, dashboardID).Execute()
-			Expect(cxsdk.NewAPIError(httpResp, err)).ToNot(HaveOccurred())
+			g.Expect(cxsdk.NewAPIError(httpResp, err)).ToNot(HaveOccurred())
+			g.Expect(getResponse.AccessPolicy).ToNot(BeNil())
+			g.Expect(*getResponse.AccessPolicy).To(MatchJSON(accessPolicy))
 			return getResponse.Dashboard.Name
 		}, time.Minute, time.Second).Should(Equal("Test Updated Dashboard"))
+
+		By("Updating the Dashboard access policy")
+		modifiedDashboard = dashboard.DeepCopy()
+		modifiedDashboard.Spec.AccessPolicy = &updatedAccessPolicy
+		Expect(crClient.Patch(ctx, modifiedDashboard, client.MergeFrom(dashboard))).To(Succeed())
+
+		By("Verifying the Dashboard access policy is updated in Coralogix backend")
+		Eventually(func(g Gomega) error {
+			getResponse, httpResp, err := dashboardsClient.DashboardsServiceGetDashboard(ctx, dashboardID).Execute()
+			if apiErr := cxsdk.NewAPIError(httpResp, err); apiErr != nil {
+				return apiErr
+			}
+			g.Expect(getResponse.AccessPolicy).ToNot(BeNil())
+			g.Expect(*getResponse.AccessPolicy).To(MatchJSON(updatedAccessPolicy))
+			return nil
+		}, time.Minute, time.Second).Should(Succeed())
 	})
 
 	It("Should be deleted successfully", func(ctx context.Context) {
@@ -130,6 +153,7 @@ var _ = Describe("Dashboard import", Ordered, func() {
 		dashboard        *coralogixv1alpha1.Dashboard
 		dashboardName    = "dashboard-import-sample"
 		dashboardID      string
+		accessPolicy     = `{"version":"2025-01-01","default":{"permissions":{"team-dashboards:Read":"grant","team-dashboards:ReadAccessPolicy":"grant","team-dashboards:Update":"deny","team-dashboards:UpdateAccessPolicy":"deny"}},"rules":[]}`
 	)
 
 	BeforeEach(func() {
@@ -146,8 +170,9 @@ var _ = Describe("Dashboard import", Ordered, func() {
 		createResponse, httpResp, err := dashboardsClient.
 			DashboardsServiceCreateDashboard(ctx).
 			CreateDashboardRequestDataStructure(dashboards.CreateDashboardRequestDataStructure{
-				Dashboard: *remoteDashboard,
-				RequestId: "cx-operator-e2e-import-seed",
+				Dashboard:    *remoteDashboard,
+				AccessPolicy: &accessPolicy,
+				RequestId:    "cx-operator-e2e-import-seed",
 			}).
 			Execute()
 		Expect(cxsdk.NewAPIError(httpResp, err)).ToNot(HaveOccurred())
@@ -182,6 +207,17 @@ var _ = Describe("Dashboard import", Ordered, func() {
 		}, time.Minute, time.Second).Should(Succeed())
 		Expect(*fetchedDashboard.Status.ID).To(Equal(dashboardID))
 		Expect(fetchedDashboard.Status.Imported).To(BeTrue())
+
+		By("Verifying an omitted CR policy does not change the imported remote policy")
+		Eventually(func(g Gomega) error {
+			getResponse, httpResp, err := dashboardsClient.DashboardsServiceGetDashboard(ctx, dashboardID).Execute()
+			if apiErr := cxsdk.NewAPIError(httpResp, err); apiErr != nil {
+				return apiErr
+			}
+			g.Expect(getResponse.AccessPolicy).ToNot(BeNil())
+			g.Expect(*getResponse.AccessPolicy).To(MatchJSON(accessPolicy))
+			return nil
+		}, time.Minute, time.Second).Should(Succeed())
 	})
 
 	It("Should be deleted successfully", func(ctx context.Context) {

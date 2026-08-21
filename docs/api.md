@@ -11063,6 +11063,13 @@ See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-starte
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>accessPolicy</b></td>
+        <td>string</td>
+        <td>
+          JSON string representing the access policy for this dashboard. Defines granular permissions for users and groups.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#dashboardspecconfigmapref">configMapRef</a></b></td>
         <td>object</td>
         <td>

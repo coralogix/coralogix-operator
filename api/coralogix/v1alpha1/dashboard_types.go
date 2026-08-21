@@ -36,6 +36,9 @@ import (
 // See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-started/
 // +kubebuilder:validation:XValidation:rule="!(has(self.json) && has(self.configMapRef))", message="Only one of json or configMapRef can be declared at the same time"
 type DashboardSpec struct {
+	// JSON string representing the access policy for this dashboard. Defines granular permissions for users and groups.
+	// +optional
+	AccessPolicy *string `json:"accessPolicy,omitempty"`
 	// +optional
 	Json *string `json:"json,omitempty"`
 	// GzipJson the model's JSON compressed with Gzip. Base64-encoded when in YAML.
