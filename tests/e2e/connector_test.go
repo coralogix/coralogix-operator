@@ -43,6 +43,9 @@ var msTeamsIntegrationId = os.Getenv("MS_TEAMS_INTEGRATION_ID")
 var msTeamsTeamId = os.Getenv("MS_TEAMS_TEAM_ID")
 var msTeamsChannelId = os.Getenv("MS_TEAMS_CHANNEL_ID")
 var eventbridgeIntegrationId = os.Getenv("EVENTBRIDGE_INTEGRATION_ID")
+var incidentIOAPIKey = os.Getenv("INCIDENT_IO_API_KEY")
+var incidentIOAlertEventsURL = os.Getenv("INCIDENT_IO_ALERT_EVENTS_URL")
+var incidentIOAlertSourceToken = os.Getenv("INCIDENT_IO_ALERT_SOURCE_TOKEN")
 
 var _ = Describe("Connector", Ordered, func() {
 	var (
@@ -412,6 +415,55 @@ var _ = Describe("Connector EventBridge", Ordered, func() {
 	})
 })
 
+var _ = Describe("Connector IncidentIO", Ordered, func() {
+	var (
+		crClient            client.Client
+		notificationsClient *cxsdk.NotificationsClient
+		connectorID         string
+		connector           *coralogixv1alpha1.Connector
+		connectorName       string
+	)
+
+	BeforeAll(func() {
+		if incidentIOAPIKey == "" || incidentIOAlertEventsURL == "" || incidentIOAlertSourceToken == "" {
+			Skip("set INCIDENT_IO_API_KEY, INCIDENT_IO_ALERT_EVENTS_URL, and INCIDENT_IO_ALERT_SOURCE_TOKEN to run this spec locally")
+		}
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		notificationsClient = ClientsInstance.GetCoralogixClientSet().Notifications()
+	})
+
+	It("Should be created successfully", func(ctx context.Context) {
+		connectorName = fmt.Sprintf("incidentio-connector-%d", time.Now().Unix())
+		connector = getSampleIncidentIOConnector(connectorName, testNamespace)
+		Expect(crClient.Create(ctx, connector)).To(Succeed())
+
+		Eventually(func(g Gomega) error {
+			fetched := &coralogixv1alpha1.Connector{}
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: connectorName, Namespace: testNamespace}, fetched)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
+			if fetched.Status.Id != nil {
+				connectorID = *fetched.Status.Id
+				return nil
+			}
+			return fmt.Errorf("connector ID is not set")
+		}, time.Minute, time.Second).Should(Succeed())
+
+		Eventually(func() error {
+			_, err := notificationsClient.GetConnector(ctx, &cxsdk.GetConnectorRequest{Id: connectorID})
+			return err
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should be deleted successfully", func(ctx context.Context) {
+		Expect(crClient.Delete(ctx, connector)).To(Succeed())
+		Eventually(func() codes.Code {
+			_, err := notificationsClient.GetConnector(ctx, &cxsdk.GetConnectorRequest{Id: connectorID})
+			return cxsdk.Code(err)
+		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
+	})
+})
+
 // NC gap field: CASES config-override entity type.
 var _ = Describe("Connector with CASES config override", Ordered, func() {
 	var (
@@ -504,6 +556,24 @@ func getSampleEventBridgeConnector(name, namespace string) *coralogixv1alpha1.Co
 			ConnectorConfig: coralogixv1alpha1.ConnectorConfig{
 				Fields: []coralogixv1alpha1.ConnectorConfigField{
 					{FieldName: "integrationId", Value: ptr.To(eventbridgeIntegrationId)},
+				},
+			},
+		},
+	}
+}
+
+func getSampleIncidentIOConnector(name, namespace string) *coralogixv1alpha1.Connector {
+	return &coralogixv1alpha1.Connector{
+		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
+		Spec: coralogixv1alpha1.ConnectorSpec{
+			Name:        name,
+			Description: "incident.io connector",
+			Type:        "incidentIo",
+			ConnectorConfig: coralogixv1alpha1.ConnectorConfig{
+				Fields: []coralogixv1alpha1.ConnectorConfigField{
+					{FieldName: "apiKey", Value: ptr.To(incidentIOAPIKey)},
+					{FieldName: "alertEventsUrl", Value: ptr.To(incidentIOAlertEventsURL)},
+					{FieldName: "alertSourceToken", Value: ptr.To(incidentIOAlertSourceToken)},
 				},
 			},
 		},

@@ -1,0 +1,29 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Preset
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: preset-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: incident-io-sample
+spec:
+  name: incident-io-sample
+  description: This is a sample incident.io preset
+  connectorType: incidentIo
+  entityType: cases
+  parentId: preset_system_incident_io_cases_basic
+  configOverrides:
+    - conditionType:
+        matchEntityType: {}
+      messageConfig:
+        fields:
+          - fieldName: incidentKey
+            template: "{{case.id}}"
+          - fieldName: title
+            template: "{{case.title}}"
+          - fieldName: severity
+            template: "{{case.severity}}"
+          - fieldName: status
+            template: "{{case.status}}"

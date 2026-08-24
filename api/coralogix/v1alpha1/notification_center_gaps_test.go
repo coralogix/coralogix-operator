@@ -207,6 +207,56 @@ func TestPresetExtractEventBridge(t *testing.T) {
 	}
 }
 
+func TestConnectorExtractIncidentIO(t *testing.T) {
+	apiKey := "api-key"
+	alertEventsURL := "https://api.incident.io/v2/alert_events/http/source-id"
+	alertSourceToken := "alert-source-token"
+	connector := &Connector{
+		Spec: ConnectorSpec{
+			Name:        "c",
+			Description: "d",
+			Type:        "incidentIo",
+			ConnectorConfig: ConnectorConfig{
+				Fields: []ConnectorConfigField{
+					{FieldName: "apiKey", Value: &apiKey},
+					{FieldName: "alertEventsUrl", Value: &alertEventsURL},
+					{FieldName: "alertSourceToken", Value: &alertSourceToken},
+				},
+			},
+		},
+	}
+
+	got, err := connector.ExtractConnector(context.Background())
+	if err != nil {
+		t.Fatalf("ExtractConnector returned error: %v", err)
+	}
+	if got.Type == nil || *got.Type != connectors.NotificationCenterConnectorType("INCIDENT_IO") {
+		t.Fatalf("Type = %v, want INCIDENT_IO", got.Type)
+	}
+}
+
+func TestPresetExtractIncidentIO(t *testing.T) {
+	preset := &Preset{
+		Spec: PresetSpec{
+			Name:          "p",
+			Description:   "d",
+			ConnectorType: "incidentIo",
+			EntityType:    "cases",
+		},
+	}
+
+	got, err := preset.ExtractPreset()
+	if err != nil {
+		t.Fatalf("ExtractPreset returned error: %v", err)
+	}
+	if got.ConnectorType == nil || *got.ConnectorType != presets.NotificationCenterConnectorType("INCIDENT_IO") {
+		t.Fatalf("ConnectorType = %v, want INCIDENT_IO", got.ConnectorType)
+	}
+	if got.EntityType == nil || *got.EntityType != presets.NOTIFICATIONCENTERENTITYTYPE_CASES {
+		t.Fatalf("EntityType = %v, want CASES", got.EntityType)
+	}
+}
+
 // GlobalRouter supports disabled, fallbackTargets, and CASES routing-rule entity type.
 func TestGlobalRouterExtractDisabledFallbackTargetsAndCases(t *testing.T) {
 	disabled := true
