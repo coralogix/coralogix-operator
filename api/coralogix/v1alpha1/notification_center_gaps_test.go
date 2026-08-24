@@ -230,7 +230,7 @@ func TestConnectorExtractIncidentIO(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ExtractConnector returned error: %v", err)
 	}
-	if got.Type == nil || *got.Type != connectors.NotificationCenterConnectorType("INCIDENT_IO") {
+	if got.Type == nil || *got.Type != connectors.NOTIFICATIONCENTERCONNECTORTYPE_INCIDENT_IO {
 		t.Fatalf("Type = %v, want INCIDENT_IO", got.Type)
 	}
 }
@@ -249,7 +249,7 @@ func TestPresetExtractIncidentIO(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ExtractPreset returned error: %v", err)
 	}
-	if got.ConnectorType == nil || *got.ConnectorType != presets.NotificationCenterConnectorType("INCIDENT_IO") {
+	if got.ConnectorType == nil || *got.ConnectorType != presets.NOTIFICATIONCENTERCONNECTORTYPE_INCIDENT_IO {
 		t.Fatalf("ConnectorType = %v, want INCIDENT_IO", got.ConnectorType)
 	}
 	if got.EntityType == nil || *got.EntityType != presets.NOTIFICATIONCENTERENTITYTYPE_CASES {

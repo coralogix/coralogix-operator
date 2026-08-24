@@ -138,7 +138,7 @@ var (
 		"email":              presets.NOTIFICATIONCENTERCONNECTORTYPE_EMAIL,
 		"microsoftTeams":     presets.NOTIFICATIONCENTERCONNECTORTYPE_MICROSOFT_TEAMS,
 		"eventBridge":        presets.NOTIFICATIONCENTERCONNECTORTYPE_EVENTBRIDGE,
-		"incidentIo":         presets.NotificationCenterConnectorType("INCIDENT_IO"),
+		"incidentIo":         presets.NOTIFICATIONCENTERCONNECTORTYPE_INCIDENT_IO,
 	}
 	schemaToOpenApiPresetsEntityType = map[string]presets.NotificationCenterEntityType{
 		"alerts": presets.NOTIFICATIONCENTERENTITYTYPE_ALERTS,

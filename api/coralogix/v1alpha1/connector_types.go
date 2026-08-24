@@ -128,7 +128,7 @@ var (
 		"serviceNow":         connectors.NOTIFICATIONCENTERCONNECTORTYPE_SERVICE_NOW,
 		"microsoftTeams":     connectors.NOTIFICATIONCENTERCONNECTORTYPE_MICROSOFT_TEAMS,
 		"eventBridge":        connectors.NOTIFICATIONCENTERCONNECTORTYPE_EVENTBRIDGE,
-		"incidentIo":         connectors.NotificationCenterConnectorType("INCIDENT_IO"),
+		"incidentIo":         connectors.NOTIFICATIONCENTERCONNECTORTYPE_INCIDENT_IO,
 	}
 	schemaToOpenApiEntityType = map[string]connectors.NotificationCenterEntityType{
 		"alerts": connectors.NOTIFICATIONCENTERENTITYTYPE_ALERTS,
