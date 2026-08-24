@@ -20,10 +20,20 @@ spec:
       messageConfig:
         fields:
           - fieldName: incidentKey
-            template: "{{case.id}}"
+            template: "{{ case.id }}"
           - fieldName: title
-            template: "{{case.title}}"
+            template: "{{ case.title }}"
           - fieldName: severity
-            template: "{{case.severity}}"
+            template: "{% if case.priority == 'P1' %}Critical{% elif case.priority == 'P2' %}Major{% else %}Minor{% endif %}"
+          - fieldName: summary
+            template: |
+              {{ case.url }}
+              {{ case.description | default(value='') }}
           - fieldName: status
-            template: "{{case.status}}"
+            template: "{% if case.status == 'RESOLVED' or case.status == 'CLOSED' %}resolved{% else %}active{% endif %}"
+          - fieldName: assigneeEmail
+            template: "{% if case.assignee.coralogixUser.userEmail %}{{ case.assignee.coralogixUser.userEmail }}{% endif %}"
+          - fieldName: caseUrl
+            template: "{{ case.url }}"
+          - fieldName: alertMetadata
+            template: '{"priority": "{{ case.priority }}"}'
