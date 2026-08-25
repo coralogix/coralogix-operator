@@ -127,8 +127,10 @@ var (
 		LogsTimeWindow36Hours:   alerts.LOGSTIMEWINDOWVALUE_LOGS_TIME_WINDOW_VALUE_HOURS_36,
 	}
 	LogsThresholdConditionTypeToOpenAPI = map[LogsThresholdConditionType]alerts.LogsThresholdConditionType{
-		LogsThresholdConditionTypeMoreThan: alerts.LOGSTHRESHOLDCONDITIONTYPE_LOGS_THRESHOLD_CONDITION_TYPE_MORE_THAN_OR_UNSPECIFIED,
-		LogsThresholdConditionTypeLessThan: alerts.LOGSTHRESHOLDCONDITIONTYPE_LOGS_THRESHOLD_CONDITION_TYPE_LESS_THAN,
+		LogsThresholdConditionTypeMoreThan:  alerts.LOGSTHRESHOLDCONDITIONTYPE_LOGS_THRESHOLD_CONDITION_TYPE_MORE_THAN_OR_UNSPECIFIED,
+		LogsThresholdConditionTypeLessThan:  alerts.LOGSTHRESHOLDCONDITIONTYPE_LOGS_THRESHOLD_CONDITION_TYPE_LESS_THAN,
+		LogsThresholdConditionTypeEquals:    alerts.LOGSTHRESHOLDCONDITIONTYPE_LOGS_THRESHOLD_CONDITION_TYPE_EQUALS,
+		LogsThresholdConditionTypeNotEquals: alerts.LOGSTHRESHOLDCONDITIONTYPE_LOGS_THRESHOLD_CONDITION_TYPE_NOT_EQUALS,
 	}
 	LogsRatioTimeWindowToOpenAPI = map[LogsRatioTimeWindowValue]alerts.LogsRatioTimeWindowValue{
 		LogsRatioTimeWindowMinutes5:  alerts.LOGSRATIOTIMEWINDOWVALUE_LOGS_RATIO_TIME_WINDOW_VALUE_MINUTES_5_OR_UNSPECIFIED,
@@ -169,6 +171,8 @@ var (
 		MetricThresholdConditionTypeLessThan:         alerts.METRICTHRESHOLDCONDITIONTYPE_METRIC_THRESHOLD_CONDITION_TYPE_LESS_THAN,
 		MetricThresholdConditionTypeMoreThanOrEquals: alerts.METRICTHRESHOLDCONDITIONTYPE_METRIC_THRESHOLD_CONDITION_TYPE_MORE_THAN_OR_EQUALS,
 		MetricThresholdConditionTypeLessThanOrEquals: alerts.METRICTHRESHOLDCONDITIONTYPE_METRIC_THRESHOLD_CONDITION_TYPE_LESS_THAN_OR_EQUALS,
+		MetricThresholdConditionTypeEquals:           alerts.METRICTHRESHOLDCONDITIONTYPE_METRIC_THRESHOLD_CONDITION_TYPE_EQUALS,
+		MetricThresholdConditionTypeNotEquals:        alerts.METRICTHRESHOLDCONDITIONTYPE_METRIC_THRESHOLD_CONDITION_TYPE_NOT_EQUALS,
 	}
 	MetricTimeWindowToOpenAPI = map[MetricTimeWindowSpecificValue]alerts.MetricTimeWindowValue{
 		MetricTimeWindowValue1Minute:   alerts.METRICTIMEWINDOWVALUE_METRIC_TIME_WINDOW_VALUE_MINUTES_1_OR_UNSPECIFIED,
@@ -776,14 +780,16 @@ const (
 	LogsTimeWindow36Hours   LogsTimeWindowValue = "36h"
 )
 
-// +kubebuilder:validation:Enum=moreThan;lessThan
+// +kubebuilder:validation:Enum=moreThan;lessThan;equals;notEquals
 // ConditionType type.
 type LogsThresholdConditionType string
 
 // Condition type values.
 const (
-	LogsThresholdConditionTypeMoreThan LogsThresholdConditionType = "moreThan"
-	LogsThresholdConditionTypeLessThan LogsThresholdConditionType = "lessThan"
+	LogsThresholdConditionTypeMoreThan  LogsThresholdConditionType = "moreThan"
+	LogsThresholdConditionTypeLessThan  LogsThresholdConditionType = "lessThan"
+	LogsThresholdConditionTypeEquals    LogsThresholdConditionType = "equals"
+	LogsThresholdConditionTypeNotEquals LogsThresholdConditionType = "notEquals"
 )
 
 // Override alert properties
@@ -1045,7 +1051,7 @@ const (
 	MetricTimeWindowValue36Hours   MetricTimeWindowSpecificValue = "36h"
 )
 
-// +kubebuilder:validation:Enum=moreThan;lessThan;moreThanOrEquals;lessThanOrEquals
+// +kubebuilder:validation:Enum=moreThan;lessThan;moreThanOrEquals;lessThanOrEquals;equals;notEquals
 // ConditionType type.
 type MetricThresholdConditionType string
 
@@ -1055,6 +1061,8 @@ const (
 	MetricThresholdConditionTypeLessThan         MetricThresholdConditionType = "lessThan"
 	MetricThresholdConditionTypeMoreThanOrEquals MetricThresholdConditionType = "moreThanOrEquals"
 	MetricThresholdConditionTypeLessThanOrEquals MetricThresholdConditionType = "lessThanOrEquals"
+	MetricThresholdConditionTypeEquals           MetricThresholdConditionType = "equals"
+	MetricThresholdConditionTypeNotEquals        MetricThresholdConditionType = "notEquals"
 )
 
 // Missing values strategies.
