@@ -10173,9 +10173,9 @@ See also https://coralogix.com/docs/user-guides/notification-center/introduction
         <td><b>type</b></td>
         <td>enum</td>
         <td>
-          Type is the type of the connector. Can be one of slack, genericHttps, pagerDuty, pagerDutyIncidents, email, serviceNow, microsoftTeams, or eventBridge.<br/>
+          Type is the type of the connector. Can be one of slack, genericHttps, pagerDuty, pagerDutyIncidents, email, serviceNow, microsoftTeams, eventBridge, or incidentIo (preview).<br/>
           <br/>
-            <i>Enum</i>: slack, genericHttps, pagerDuty, pagerDutyIncidents, email, serviceNow, microsoftTeams, eventBridge<br/>
+            <i>Enum</i>: slack, genericHttps, pagerDuty, pagerDutyIncidents, email, serviceNow, microsoftTeams, eventBridge, incidentIo<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -15652,9 +15652,9 @@ PresetSpec defines the desired state of Preset.
         <td><b>connectorType</b></td>
         <td>enum</td>
         <td>
-          ConnectorType is the type of the connector. Can be one of slack, genericHttps, pagerDuty, pagerDutyIncidents, email, microsoftTeams, or eventBridge.<br/>
+          ConnectorType is the type of the connector. Can be one of slack, genericHttps, pagerDuty, pagerDutyIncidents, email, microsoftTeams, eventBridge, or incidentIo (preview).<br/>
           <br/>
-            <i>Enum</i>: slack, genericHttps, pagerDuty, pagerDutyIncidents, email, microsoftTeams, eventBridge<br/>
+            <i>Enum</i>: slack, genericHttps, pagerDuty, pagerDutyIncidents, email, microsoftTeams, eventBridge, incidentIo<br/>
         </td>
         <td>true</td>
       </tr><tr>
