@@ -433,7 +433,7 @@ var _ = Describe("Connector IncidentIO", Ordered, func() {
 	})
 
 	It("Should be created successfully", func(ctx context.Context) {
-		connectorName = fmt.Sprintf("incidentio-connector-%d", time.Now().Unix())
+		connectorName = uniqueName("incidentio-connector")
 		connector = getSampleIncidentIOConnector(connectorName, testNamespace)
 		Expect(crClient.Create(ctx, connector)).To(Succeed())
 

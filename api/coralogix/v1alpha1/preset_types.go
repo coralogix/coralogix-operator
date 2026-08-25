@@ -36,7 +36,7 @@ type PresetSpec struct {
 	// +optional
 	ParentId *string `json:"parentId,omitempty"`
 
-	// ConnectorType is the type of the connector. Can be one of slack, genericHttps, pagerDuty, pagerDutyIncidents, email, microsoftTeams, or eventBridge.
+	// ConnectorType is the type of the connector. Can be one of slack, genericHttps, pagerDuty, pagerDutyIncidents, email, microsoftTeams, eventBridge, or incidentIo (preview).
 	// +kubebuilder:validation:Enum=slack;genericHttps;pagerDuty;pagerDutyIncidents;email;microsoftTeams;eventBridge;incidentIo
 	ConnectorType string `json:"connectorType"`
 
