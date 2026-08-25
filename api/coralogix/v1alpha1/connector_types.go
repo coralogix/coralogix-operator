@@ -36,7 +36,7 @@ type ConnectorSpec struct {
 	// Description is the description of the connector.
 	Description string `json:"description"`
 
-	// Type is the type of the connector. Can be one of slack, genericHttps, pagerDuty, pagerDutyIncidents, email, serviceNow, microsoftTeams, or eventBridge.
+	// Type is the type of the connector. Can be one of slack, genericHttps, pagerDuty, pagerDutyIncidents, email, serviceNow, microsoftTeams, eventBridge, or incidentIo.
 	// +kubebuilder:validation:Enum=slack;genericHttps;pagerDuty;pagerDutyIncidents;email;serviceNow;microsoftTeams;eventBridge;incidentIo
 	Type string `json:"type"`
 
