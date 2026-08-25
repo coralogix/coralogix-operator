@@ -89,8 +89,8 @@ jobs:
 
   notify-failure:
     name: Notify Slack on failure
-    # Scheduled (nightly) and main/release push runs alert. Pull request runs stay quiet.
-    if: ${{ always() && (github.event_name == 'schedule' || github.event_name == 'push') }}
+    # Only scheduled (nightly) runs alert. Pull request and main/release push runs stay quiet.
+    if: ${{ always() && github.event_name == 'schedule' }}
     needs:
       - tests
     permissions:
