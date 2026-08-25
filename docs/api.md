@@ -4139,7 +4139,7 @@ Condition to match
         <td>
           Condition type.<br/>
           <br/>
-            <i>Enum</i>: moreThan, lessThan<br/>
+            <i>Enum</i>: moreThan, lessThan, equals, notEquals<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -5601,7 +5601,7 @@ Conditions to match for the rule.
         <td>
           ConditionType type.<br/>
           <br/>
-            <i>Enum</i>: moreThan, lessThan, moreThanOrEquals, lessThanOrEquals<br/>
+            <i>Enum</i>: moreThan, lessThan, moreThanOrEquals, lessThanOrEquals, equals, notEquals<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -22655,7 +22655,7 @@ Condition to match
         <td>
           Condition type.<br/>
           <br/>
-            <i>Enum</i>: moreThan, lessThan<br/>
+            <i>Enum</i>: moreThan, lessThan, equals, notEquals<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -24117,7 +24117,7 @@ Conditions to match for the rule.
         <td>
           ConditionType type.<br/>
           <br/>
-            <i>Enum</i>: moreThan, lessThan, moreThanOrEquals, lessThanOrEquals<br/>
+            <i>Enum</i>: moreThan, lessThan, moreThanOrEquals, lessThanOrEquals, equals, notEquals<br/>
         </td>
         <td>true</td>
       </tr><tr>
