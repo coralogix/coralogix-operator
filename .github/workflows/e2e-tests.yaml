@@ -21,10 +21,13 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
+  # Shared across e2e, helm-e2e, upgrade-test, and integration-tests so those
+  # live suites cannot overlap on the same Coralogix team (archive metrics,
+  # TCO, quota, IP access).
+  group: coralogix-operator-live-cx
   # Not cancel-in-progress: these specs create real Coralogix resources, and cleanup happens in
   # the suite's own teardown. Cancelling kills the Kind cluster before finalizers run, so the
-  # remote resources leak and pollute the shared account. Let the old run finish and queue behind
+  # remote resources leak and pollute the shared team. Let the old run finish and queue behind
   # it instead.
   cancel-in-progress: false
 
@@ -80,8 +83,8 @@ jobs:
 
   notify-failure:
     name: Notify Slack on failure
-    # Only scheduled (nightly) runs alert. Pull request and main/release push runs stay quiet.
-    if: ${{ always() && github.event_name == 'schedule' }}
+    # Scheduled (nightly) and main/release push runs alert. Pull request runs stay quiet.
+    if: ${{ always() && (github.event_name == 'schedule' || github.event_name == 'push') }}
     needs:
       - tests
     permissions:
