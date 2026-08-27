@@ -49,6 +49,7 @@ jobs:
       SLACK_INTEGRATION_ID: ${{ secrets.SLACK_INTEGRATION_ID }}
       SLACK_INTEGRATION_CHANNEL: ${{ secrets.SLACK_INTEGRATION_CHANNEL }}
       PD_INTEGRATION_ID: ${{ secrets.PD_INTEGRATION_ID }}
+      TEST_TEAM_ID: ${{ secrets.TEST_TEAM_ID }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

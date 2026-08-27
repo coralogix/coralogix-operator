@@ -17,6 +17,9 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -35,6 +38,15 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
+
+func teamIDFromEnv() uint32 {
+	raw := strings.TrimSpace(os.Getenv("TEST_TEAM_ID"))
+	Expect(raw).ToNot(BeEmpty(), "TEST_TEAM_ID is required so ApiKey e2e owns the key on this team's ID")
+	id, err := strconv.ParseUint(raw, 10, 32)
+	Expect(err).ToNot(HaveOccurred(), "TEST_TEAM_ID must be a uint32")
+	Expect(id).ToNot(BeZero(), "TEST_TEAM_ID must be a positive team id")
+	return uint32(id)
+}
 
 var _ = Describe("ApiKey", Ordered, func() {
 	var (
@@ -57,7 +69,7 @@ var _ = Describe("ApiKey", Ordered, func() {
 				Name:   apiKeyName,
 				Active: true,
 				Owner: coralogixv1alpha1.ApiKeyOwner{
-					TeamId: ptr.To(uint32(4013254)),
+					TeamId: ptr.To(teamIDFromEnv()),
 				},
 				Presets:     []string{"APM"},
 				Permissions: []string{"ALERTS-MAP:READ"},
