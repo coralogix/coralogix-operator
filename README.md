@@ -30,12 +30,12 @@ helm install <my-release> coralogix/coralogix-operator \
   --set secret.data.apiKey="<api-key>" \
   --set coralogixOperator.region="<region>"
 ```
-For a complete list of configuration options, refer to the [Helm Chart Docs](./charts/coralogix-operator/README.md).
+Replace `<region>` with one of: `EU1`, `EU2`, `AP1`, `AP2`, `AP3`, `US1`, `US2`. For a complete list of configuration options, refer to the [Helm Chart Docs](./charts/coralogix-operator/README.md).
 
 3. Upgrade the operator:
-```sh  
+```sh
 helm upgrade <my-release> coralogix/coralogix-operator \
-  --set secret.data.api
+  --set secret.data.apiKey="<api-key>" \
   --set coralogixOperator.region="<region>"
 ```
 
