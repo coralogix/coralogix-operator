@@ -112,7 +112,7 @@ var _ = Describe("TCORumPolicies", Serial, func() {
 				Policies: []coralogixv1alpha1.TCORumPolicy{
 					{
 						Name:       "sample policy",
-						Priority:   "high",
+						Priority:   "medium",
 						Severities: []coralogixv1alpha1.TCOPolicySeverity{"critical", "error"},
 						Applications: &coralogixv1alpha1.TCOPolicyRule{
 							Names:    []string{"prod"},

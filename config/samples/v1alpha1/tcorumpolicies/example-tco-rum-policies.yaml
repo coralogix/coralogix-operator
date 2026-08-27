@@ -11,7 +11,7 @@ metadata:
 spec:
   policies:
     - name: first policy
-      priority: high
+      priority: medium
       severities:
         - critical
         - error
