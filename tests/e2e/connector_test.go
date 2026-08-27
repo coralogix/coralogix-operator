@@ -228,7 +228,7 @@ func getSampleSlackConnector(name string) *coralogixv1alpha1.Connector {
 				Fields: []coralogixv1alpha1.ConnectorConfigField{
 					{FieldName: "channel", Value: ptr.To(slackIntegrationChannel)},
 					{FieldName: "integrationId", Value: ptr.To(slackIntegrationId)},
-					{FieldName: "fallbackChannel", Value: ptr.To("fallback_general")},
+					{FieldName: "fallbackChannel", Value: ptr.To(slackIntegrationChannel)},
 				},
 			},
 			ConfigOverrides: []coralogixv1alpha1.EntityTypeConfigOverrides{
