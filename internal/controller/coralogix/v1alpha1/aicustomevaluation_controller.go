@@ -283,7 +283,7 @@ func (r *AICustomEvaluationReconciler) reconcileApplicationLinks(ctx context.Con
 
 	for _, id := range toLink {
 		_, httpResp, err := r.AIEvaluationsClient.
-			AiEvaluationsServiceLinkCustomEvaluation(ctx, customEvaluationID, id).
+			AiEvaluationsServiceLinkCustomEvaluation(ctx, id, customEvaluationID).
 			Execute()
 		if err != nil {
 			return fmt.Errorf("error linking AI application %q to AICustomEvaluation %q: %w", id, customEvaluationID, cxsdk.NewAPIError(httpResp, err))
@@ -292,7 +292,7 @@ func (r *AICustomEvaluationReconciler) reconcileApplicationLinks(ctx context.Con
 
 	for _, id := range toUnlink {
 		_, httpResp, err := r.AIEvaluationsClient.
-			AiEvaluationsServiceUnlinkCustomEvaluationFromApp(ctx, customEvaluationID, id).
+			AiEvaluationsServiceUnlinkCustomEvaluationFromApp(ctx, id, customEvaluationID).
 			Execute()
 		if err != nil {
 			return fmt.Errorf("error unlinking AI application %q from AICustomEvaluation %q: %w", id, customEvaluationID, cxsdk.NewAPIError(httpResp, err))

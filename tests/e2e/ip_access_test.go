@@ -102,7 +102,7 @@ var _ = Describe("IPAccess", Ordered, func() {
 
 			g.Expect(getRes.Settings.IpAccess).ToNot(BeNil())
 			found := false
-			for _, rule := range *getRes.Settings.IpAccess {
+			for _, rule := range getRes.Settings.IpAccess {
 				if rule.Name != nil && *rule.Name == "VPN" {
 					found = true
 					g.Expect(*rule.IpRange).To(Equal("198.51.100.0/24"))
@@ -128,7 +128,7 @@ var _ = Describe("IPAccess", Ordered, func() {
 
 			// Ensure updated entry exists
 			found := false
-			for _, rule := range *getRes.Settings.IpAccess {
+			for _, rule := range getRes.Settings.IpAccess {
 				if rule.Name != nil && *rule.Name == newName {
 					found = true
 				}
@@ -146,7 +146,7 @@ var _ = Describe("IPAccess", Ordered, func() {
 			res, _, err := ipAccessClient.IpAccessServiceGetCompanyIpAccessSettings(ctx).Id(ipAccessID).Execute()
 			g.Expect(err).ToNot(HaveOccurred())
 			g.Expect(res.Settings.IpAccess).ToNot(BeNil())
-			g.Expect(*res.Settings.IpAccess).To(BeEmpty())
+			g.Expect(res.Settings.IpAccess).To(BeEmpty())
 		}, accountWideBackendTimeout, time.Second).Should(Succeed())
 	})
 })

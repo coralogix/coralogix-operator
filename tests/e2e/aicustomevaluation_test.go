@@ -120,7 +120,7 @@ var _ = Describe("AICustomEvaluation", Ordered, func() {
 	It("Should restore application links removed outside the operator", func(ctx context.Context) {
 		By("Removing the AICustomEvaluation application link directly in Coralogix")
 		_, httpResp, err := aiEvaluations.
-			AiEvaluationsServiceUnlinkCustomEvaluationFromApp(ctx, aiCustomEvaluationID, application.id).
+			AiEvaluationsServiceUnlinkCustomEvaluationFromApp(ctx, application.id, aiCustomEvaluationID).
 			Execute()
 		Expect(cxsdk.NewAPIError(httpResp, err)).ToNot(HaveOccurred())
 

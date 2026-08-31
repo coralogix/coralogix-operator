@@ -19,7 +19,6 @@ import (
 
 	gouuid "github.com/google/uuid"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 
 	webhooks "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/outgoing_webhooks_service"
 )
@@ -100,7 +99,7 @@ func (in *GenericWebhook) extractGenericWebhookConfig() *webhooks.GenericWebhook
 	return &webhooks.GenericWebhookConfig{
 		Uuid:    webhooks.PtrString(gouuid.NewString()),
 		Method:  GenericWebhookMethodTypeToOpenAPI[in.Method].Ptr(),
-		Headers: ptr.To(in.Headers),
+		Headers: in.Headers,
 		Payload: in.Payload,
 	}
 }

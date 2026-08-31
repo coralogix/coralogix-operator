@@ -21,6 +21,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 
 	slos "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/slos_service"
 )
@@ -208,7 +209,7 @@ func (s *SLOSpec) ExtractRequestBasedMetricSli() (*slos.Slo1, error) {
 	return &slos.Slo1{
 		Name:                      slos.PtrString(s.Name),
 		Description:               s.Description,
-		Labels:                    s.Labels,
+		Labels:                    ptr.Deref(s.Labels, nil),
 		SloTimeFrame:              timeFrame,
 		TargetThresholdPercentage: slos.PtrFloat32(float32(s.TargetThresholdPercentage.AsApproximateFloat64())),
 		RequestBasedMetricSli: &slos.RequestBasedMetricSli{
@@ -231,7 +232,7 @@ func (s *SLOSpec) ExtractWindowBasedMetricSli() (*slos.Slo1, error) {
 	return &slos.Slo1{
 		Name:                      slos.PtrString(s.Name),
 		Description:               s.Description,
-		Labels:                    s.Labels,
+		Labels:                    ptr.Deref(s.Labels, nil),
 		SloTimeFrame:              timeFrame,
 		TargetThresholdPercentage: slos.PtrFloat32(float32(s.TargetThresholdPercentage.AsApproximateFloat64())),
 		WindowBasedMetricSli: &slos.WindowBasedMetricSli{
