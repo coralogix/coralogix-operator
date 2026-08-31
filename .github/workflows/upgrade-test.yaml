@@ -46,6 +46,11 @@ jobs:
       SLACK_INTEGRATION_ID: ${{ secrets.SLACK_INTEGRATION_ID }}
       SLACK_INTEGRATION_CHANNEL: ${{ secrets.SLACK_INTEGRATION_CHANNEL }}
       PD_INTEGRATION_ID: ${{ secrets.PD_INTEGRATION_ID }}
+      # Org-scoped key that may create/delete teams. When set, each matrix job provisions a
+      # disposable team and runs fully inside it (see the "Provision an ephemeral Coralogix
+      # team" step) — this also stops the two matrix jobs from clobbering each other. When
+      # unset, the job keeps using the shared team from CORALOGIX_API_KEY as before.
+      CORALOGIX_ORG_API_KEY: ${{ secrets.CORALOGIX_ORG_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -66,13 +71,35 @@ jobs:
         run: |
           helm repo add coralogix https://cgx.jfrog.io/artifactory/coralogix-charts-virtual
           helm repo update
+      # Ephemeral-team isolation (opt-in): the e2e workflows all target one shared Coralogix
+      # team, so concurrent runs clobber each other's team-wide singleton state (TCO policies,
+      # archive targets, IP access, quota allocation rules, global router). When the
+      # CORALOGIX_ORG_API_KEY secret is configured, provision a disposable team plus a
+      # team-scoped API key and run this whole job against it. Without the secret this step is
+      # skipped and the job keeps using the shared CORALOGIX_API_KEY secret exactly as before.
+      - name: Provision an ephemeral Coralogix team
+        if: env.CORALOGIX_ORG_API_KEY != ''
+        run: |
+          go run ./tests/ephemeralteam create > ephemeral-team.env
+          # Mask the minted key BEFORE it is written to $GITHUB_ENV or any log.
+          key="$(sed -n 's/^CORALOGIX_API_KEY=//p' ephemeral-team.env)"
+          echo "::add-mask::$key"
+          # Workflow-file env would shadow a GITHUB_ENV variable of the same name, so expose
+          # the key under a distinct name; the steps that need it override CORALOGIX_API_KEY
+          # at step level.
+          echo "EPHEMERAL_CORALOGIX_API_KEY=$key" >> "$GITHUB_ENV"
+          grep '^EPHEMERAL_TEAM_' ephemeral-team.env >> "$GITHUB_ENV"
+          rm ephemeral-team.env
       - name: Install Coralogix Operator from remote Helm repository, version ${{ matrix.operator_version }}.latest
+        env:
+          # Prefer the ephemeral team's key; fall back to the shared team's secret.
+          CORALOGIX_API_KEY: ${{ env.EPHEMERAL_CORALOGIX_API_KEY || secrets.CORALOGIX_API_KEY }}
         run: |
           helm install coralogix-operator coralogix/coralogix-operator \
             --version=${{ matrix.operator_version }} \
             --namespace coralogix-operator-system \
             --create-namespace \
-            --set secret.data.apiKey="${{ secrets.CORALOGIX_API_KEY }}" \
+            --set secret.data.apiKey="$CORALOGIX_API_KEY" \
             --set coralogixOperator.region="${{ secrets.CORALOGIX_REGION }}"
       - name: Build PR image
         uses: ./.github/actions/build-operator-image
@@ -82,10 +109,13 @@ jobs:
         run: |
           kind load docker-image ${{ env.IMG_REPO }}:v${{ env.IMG_TAG }} --name chart-testing
       - name: Upgrade to PR version
+        env:
+          # Prefer the ephemeral team's key; fall back to the shared team's secret.
+          CORALOGIX_API_KEY: ${{ env.EPHEMERAL_CORALOGIX_API_KEY || secrets.CORALOGIX_API_KEY }}
         run: |
           helm upgrade coralogix-operator ./charts/coralogix-operator \
             --namespace coralogix-operator-system \
-            --set secret.data.apiKey="${{ secrets.CORALOGIX_API_KEY }}" \
+            --set secret.data.apiKey="$CORALOGIX_API_KEY" \
             --set coralogixOperator.image.repository="${{ env.IMG_REPO }}" \
             --set coralogixOperator.image.tag="${{ env.IMG_TAG }}" \
             --set coralogixOperator.region="${{ secrets.CORALOGIX_REGION }}" \
@@ -95,8 +125,18 @@ jobs:
             --set coralogixOperator.reconcileIntervalSeconds.archiveLogsTarget=30 \
             --set coralogixOperator.reconcileIntervalSeconds.archiveMetricsTarget=30
       - name: Run e2e Tests
+        env:
+          # Prefer the ephemeral team's key; fall back to the shared team's secret.
+          CORALOGIX_API_KEY: ${{ env.EPHEMERAL_CORALOGIX_API_KEY || secrets.CORALOGIX_API_KEY }}
         run: |
           make e2e-tests
+      # Delete the ephemeral team only when everything passed. A failed run keeps the team so
+      # its state can be inspected; leaked teams carry the cx-operator-e2e-ephemeral- name
+      # prefix and can be swept by a scheduled cleanup.
+      - name: Delete the ephemeral Coralogix team
+        if: success() && env.EPHEMERAL_TEAM_ID != ''
+        run: |
+          go run ./tests/ephemeralteam delete "$EPHEMERAL_TEAM_ID"
       - name: Collect Operator Logs
         if: always()
         run: |
