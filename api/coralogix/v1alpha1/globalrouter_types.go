@@ -165,7 +165,7 @@ func (g *GlobalRouter) ExtractGlobalRouter(ctx context.Context) (*globalrouters.
 		Name:            globalrouters.PtrString(g.Spec.Name),
 		Description:     globalrouters.PtrString(g.Spec.Description),
 		Id:              g.Spec.ID,
-		EntityLabels:    g.Spec.EntityLabels,
+		EntityLabels:    ptr.Deref(g.Spec.EntityLabels, nil),
 		RoutingLabels:   extractRoutingLabels(g.Spec.RoutingLabels),
 		Disabled:        g.Spec.Disabled,
 		Fallback:        fallback,
@@ -247,8 +247,7 @@ func extractRoutingRule(ctx context.Context, namespace string, rule RoutingRule)
 	}
 
 	if len(rule.CustomDetails) > 0 {
-		customDetails := rule.CustomDetails
-		routingRule.CustomDetails = &customDetails
+		routingRule.CustomDetails = rule.CustomDetails
 	}
 
 	if rule.EntityType != nil {
@@ -300,8 +299,7 @@ func extractRoutingTarget(ctx context.Context, namespace string, target RoutingT
 		PresetId:    presetID,
 	}
 	if len(target.CustomDetails) > 0 {
-		customDetails := target.CustomDetails
-		routingTarget.CustomDetails = &customDetails
+		routingTarget.CustomDetails = target.CustomDetails
 	}
 	return routingTarget, nil
 }

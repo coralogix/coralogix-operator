@@ -18,7 +18,6 @@ import (
 	"strconv"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 
 	recordingrules "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/recording_rules_service"
 )
@@ -69,7 +68,7 @@ func extractRecordingRule(rule RecordingRule) *recordingrules.InRule {
 	return &recordingrules.InRule{
 		Record: rule.Record,
 		Expr:   rule.Expr,
-		Labels: ptr.To(rule.Labels),
+		Labels: rule.Labels,
 	}
 }
 
