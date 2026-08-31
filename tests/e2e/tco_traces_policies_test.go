@@ -31,7 +31,7 @@ import (
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
-var _ = Describe("TCOTracesPolicies", func() {
+var _ = Describe("TCOTracesPolicies", Serial, func() {
 	var (
 		crClient          client.Client
 		tcoClient         *cxsdk.TCOPoliciesClient
