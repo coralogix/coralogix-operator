@@ -72,7 +72,6 @@ var _ = Describe("Events2Metric", Ordered, func() {
 			Spec: coralogixv1alpha1.Events2MetricSpec{
 				Name:              e2mName,
 				Description:       ptr.To("e2m from k8s operator"),
-				DataSource:        ptr.To("default/logs"),
 				PermutationsLimit: ptr.To(int32(100)),
 				MetricLabels: []coralogixv1alpha1.MetricLabel{
 					{
@@ -123,8 +122,12 @@ var _ = Describe("Events2Metric", Ordered, func() {
 			g.Expect(getE2mRes.E2m).ToNot(BeNil())
 			g.Expect(getE2mRes.E2m.Description).ToNot(BeNil())
 			g.Expect(*getE2mRes.E2m.Description).To(Equal("e2m from k8s operator"))
-			g.Expect(getE2mRes.E2m.DataSource).ToNot(BeNil())
-			g.Expect(*getE2mRes.E2m.DataSource).To(Equal("default/logs"))
+			// Named "default/logs" is rejected on accounts that have not
+			// provisioned that catalog entry. Omit the field so the backend
+			// uses the implicit logs stream.
+			if getE2mRes.E2m.DataSource != nil {
+				g.Expect(*getE2mRes.E2m.DataSource).To(BeEmpty())
+			}
 			g.Expect(getE2mRes.E2m.Permutations).ToNot(BeNil())
 			g.Expect(getE2mRes.E2m.Permutations.Limit).To(Equal(int32(100)))
 			g.Expect(getE2mRes.E2m.LogsQuery).ToNot(BeNil())
