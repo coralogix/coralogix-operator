@@ -15999,8 +15999,10 @@ with respect to the current state of the instance.<br/>
 
 QuotaAllocationRuleSet is the Schema for the QuotaAllocationRuleSet API.
 NOTE: This account-level singleton resource replaces all user-managed backend
-quota allocation rules. Coralogix-managed rules returned by the backend are
-preserved by the controller.
+quota allocation rules. An empty rules list clears customer-managed rules.
+Delete clears customer-managed rules only. Coralogix-managed (cx_managed)
+rules returned by the backend are preserved by the controller and are never
+taken from the CR.
 
 **Added in v0.4.0**
 
@@ -16068,7 +16070,12 @@ QuotaAllocationRuleSetSpec defines the desired state of Coralogix quota allocati
         <td><b><a href="#quotaallocationrulesetspecrulesindex">rules</a></b></td>
         <td>[]object</td>
         <td>
-          Coralogix quota allocation rules.<br/>
+          Complete set of customer-managed quota allocation rules.
+Because the backend stores a single account-level rule set, the controller
+replaces the full customer-managed set during reconcile.
+Set rules to an empty list to clear all customer-managed rules.
+Coralogix-managed (cx_managed) rules are never taken from this list; the
+controller preserves them from the backend.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -16095,7 +16102,11 @@ QuotaAllocationRule defines quota allocation for a single entity type.
         <td><b>allocation</b></td>
         <td>int or string</td>
         <td>
-          Allocation value. Percent allocations are 0-100; locked unit allocations are absolute units.
+          Quota allocation value for this entity type.
+For percentage, this is a share of the pool left after lockedUnits (0-100).
+For lockedUnits, this is a fixed reservation from the team daily quota.
+The sum of enabled locked units plus any Coralogix bundle units must fit
+within the team daily quota.
 Fractional values must be supplied as quoted quantities, for example "12.5".<br/>
         </td>
         <td>true</td>
@@ -16103,7 +16114,7 @@ Fractional values must be supplied as quoted quantities, for example "12.5".<br/
         <td><b>canOverflow</b></td>
         <td>boolean</td>
         <td>
-          Whether this quota allocation rule can overflow.<br/>
+          Whether this entity type can overflow beyond its allocation.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -16117,15 +16128,25 @@ Fractional values must be supplied as quoted quantities, for example "12.5".<br/
         <td><b>entityType</b></td>
         <td>string</td>
         <td>
-          Entity type to allocate quota for.<br/>
+          Entity type covered by the rule.
+Known values include logs, spans, metrics, cpuProfiles, memoryProfiles,
+browserLogs, browserLogs/v2, sessionRecordings, olly, auditEvents, alerts,
+quotaEvents, engineQueries, engineSchemaFields, labsLimitViolations, and
+notificationDeliveries. The list is additive; the API may accept more
+values over time.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>allocationType</b></td>
         <td>enum</td>
         <td>
-          Interprets allocation as a percentage, locked units, or unspecified.
-Defaults to percentage when omitted.<br/>
+          How the allocation value is interpreted.
+Valid values are percentage (default) and lockedUnits.
+unspecified is accepted as a compatible alias of percentage and is
+normalized to percentage before the API call.
+Locked units are reserved first from the team daily quota; percentage
+rules share the remaining pool and their enabled allocations must sum to
+at most 100.<br/>
           <br/>
             <i>Enum</i>: percentage, lockedUnits, unspecified<br/>
         </td>

@@ -24,8 +24,12 @@ import (
 
 // QuotaAllocationRuleSetSpec defines the desired state of Coralogix quota allocation rules.
 type QuotaAllocationRuleSetSpec struct {
-	// Coralogix quota allocation rules.
-	// +kubebuilder:validation:MinItems=1
+	// Complete set of customer-managed quota allocation rules.
+	// Because the backend stores a single account-level rule set, the controller
+	// replaces the full customer-managed set during reconcile.
+	// Set rules to an empty list to clear all customer-managed rules.
+	// Coralogix-managed (cx_managed) rules are never taken from this list; the
+	// controller preserves them from the backend.
 	// +listType=map
 	// +listMapKey=entityType
 	Rules []QuotaAllocationRule `json:"rules"`
@@ -33,23 +37,37 @@ type QuotaAllocationRuleSetSpec struct {
 
 // QuotaAllocationRule defines quota allocation for a single entity type.
 type QuotaAllocationRule struct {
-	// Entity type to allocate quota for.
+	// Entity type covered by the rule.
+	// Known values include logs, spans, metrics, cpuProfiles, memoryProfiles,
+	// browserLogs, browserLogs/v2, sessionRecordings, olly, auditEvents, alerts,
+	// quotaEvents, engineQueries, engineSchemaFields, labsLimitViolations, and
+	// notificationDeliveries. The list is additive; the API may accept more
+	// values over time.
 	// +kubebuilder:validation:MinLength=1
 	EntityType string `json:"entityType"`
 
-	// Allocation value. Percent allocations are 0-100; locked unit allocations are absolute units.
+	// Quota allocation value for this entity type.
+	// For percentage, this is a share of the pool left after lockedUnits (0-100).
+	// For lockedUnits, this is a fixed reservation from the team daily quota.
+	// The sum of enabled locked units plus any Coralogix bundle units must fit
+	// within the team daily quota.
 	// Fractional values must be supplied as quoted quantities, for example "12.5".
 	Allocation resource.Quantity `json:"allocation"`
 
-	// Interprets allocation as a percentage, locked units, or unspecified.
-	// Defaults to percentage when omitted.
+	// How the allocation value is interpreted.
+	// Valid values are percentage (default) and lockedUnits.
+	// unspecified is accepted as a compatible alias of percentage and is
+	// normalized to percentage before the API call.
+	// Locked units are reserved first from the team daily quota; percentage
+	// rules share the remaining pool and their enabled allocations must sum to
+	// at most 100.
 	// +optional
 	AllocationType *QuotaAllocationType `json:"allocationType,omitempty"`
 
 	// Whether this quota allocation rule is enabled.
 	Enabled bool `json:"enabled"`
 
-	// Whether this quota allocation rule can overflow.
+	// Whether this entity type can overflow beyond its allocation.
 	CanOverflow bool `json:"canOverflow"`
 }
 
@@ -66,7 +84,6 @@ const (
 var quotaAllocationTypeSchemaToOpenAPI = map[QuotaAllocationType]quotas.QuotaAllocationType{
 	QuotaAllocationTypePercentage:  quotas.QUOTAALLOCATIONTYPE_QUOTA_ALLOCATION_TYPE_PERCENTAGE,
 	QuotaAllocationTypeLockedUnits: quotas.QUOTAALLOCATIONTYPE_QUOTA_ALLOCATION_TYPE_LOCKED_UNITS,
-	QuotaAllocationTypeUnspecified: quotas.QUOTAALLOCATIONTYPE_QUOTA_ALLOCATION_TYPE_UNSPECIFIED,
 }
 
 var maxQuotaAllocationPercentage = resource.MustParse("100")
@@ -109,6 +126,9 @@ func (r *QuotaAllocationRule) ExtractQuotaAllocationEntityTypeRule() quotas.Quot
 	allocationType := QuotaAllocationTypePercentage
 	if r.AllocationType != nil {
 		allocationType = *r.AllocationType
+	}
+	if allocationType == QuotaAllocationTypeUnspecified {
+		allocationType = QuotaAllocationTypePercentage
 	}
 	openAPIAllocationType := quotaAllocationTypeSchemaToOpenAPI[allocationType]
 
@@ -157,8 +177,10 @@ func (q *QuotaAllocationRuleSet) HasIDInStatus() bool {
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // QuotaAllocationRuleSet is the Schema for the QuotaAllocationRuleSet API.
 // NOTE: This account-level singleton resource replaces all user-managed backend
-// quota allocation rules. Coralogix-managed rules returned by the backend are
-// preserved by the controller.
+// quota allocation rules. An empty rules list clears customer-managed rules.
+// Delete clears customer-managed rules only. Coralogix-managed (cx_managed)
+// rules returned by the backend are preserved by the controller and are never
+// taken from the CR.
 //
 // **Added in v0.4.0**
 type QuotaAllocationRuleSet struct {
