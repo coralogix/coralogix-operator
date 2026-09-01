@@ -36,6 +36,8 @@ jobs:
     name: Upgrade Test
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
+      max-parallel: 1
       matrix:
         operator_version: [ "0.5", "1.0" ]
     env:
