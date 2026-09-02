@@ -40,6 +40,34 @@ func TestExtractQuotaAllocationRuleSetRequestDefaultsAllocationType(t *testing.T
 	require.Nil(t, ruleSet.Rules[0].CxManaged)
 }
 
+func TestExtractQuotaAllocationRuleSetRequestAllowsEmptyRules(t *testing.T) {
+	spec := &QuotaAllocationRuleSetSpec{
+		Rules: []QuotaAllocationRule{},
+	}
+
+	ruleSet, err := spec.ExtractQuotaAllocationRuleSetRequest()
+	require.NoError(t, err)
+	require.Empty(t, ruleSet.Rules)
+}
+
+func TestExtractQuotaAllocationRuleSetRequestNormalizesUnspecifiedToPercentage(t *testing.T) {
+	allocationType := QuotaAllocationTypeUnspecified
+	spec := &QuotaAllocationRuleSetSpec{
+		Rules: []QuotaAllocationRule{{
+			EntityType:     "logs",
+			Allocation:     resource.MustParse("60"),
+			AllocationType: &allocationType,
+			Enabled:        true,
+			CanOverflow:    true,
+		}},
+	}
+
+	ruleSet, err := spec.ExtractQuotaAllocationRuleSetRequest()
+	require.NoError(t, err)
+	require.Len(t, ruleSet.Rules, 1)
+	require.Equal(t, quotas.QUOTAALLOCATIONTYPE_QUOTA_ALLOCATION_TYPE_PERCENTAGE, ruleSet.Rules[0].GetAllocationType())
+}
+
 func TestExtractQuotaAllocationRuleSetRequestMapsLockedUnits(t *testing.T) {
 	allocationType := QuotaAllocationTypeLockedUnits
 	spec := &QuotaAllocationRuleSetSpec{

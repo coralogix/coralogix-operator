@@ -21,10 +21,13 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
+  # Shared across e2e, helm-e2e, upgrade-test, and integration-tests so those
+  # live suites cannot overlap on the same Coralogix team (archive metrics,
+  # TCO, quota, IP access).
+  group: coralogix-operator-live-cx
   # Not cancel-in-progress: these specs create real Coralogix resources, and cleanup happens in
   # the suite's own teardown. Cancelling kills the Kind cluster before finalizers run, so the
-  # remote resources leak and pollute the shared account. Let the old run finish and queue behind
+  # remote resources leak and pollute the shared team. Let the old run finish and queue behind
   # it instead.
   cancel-in-progress: false
 
@@ -33,6 +36,8 @@ jobs:
     name: Upgrade Test
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
+      max-parallel: 1
       matrix:
         operator_version: [ "0.5", "1.0" ]
     env:
@@ -46,10 +51,11 @@ jobs:
       SLACK_INTEGRATION_ID: ${{ secrets.SLACK_INTEGRATION_ID }}
       SLACK_INTEGRATION_CHANNEL: ${{ secrets.SLACK_INTEGRATION_CHANNEL }}
       PD_INTEGRATION_ID: ${{ secrets.PD_INTEGRATION_ID }}
+      TEST_TEAM_ID: ${{ secrets.TEST_TEAM_ID }}
       # Org-scoped key that may create/delete teams. When set, each matrix job provisions a
       # disposable team and runs fully inside it (see the "Provision an ephemeral Coralogix
-      # team" step) — this also stops the two matrix jobs from clobbering each other. When
-      # unset, the job keeps using the shared team from CORALOGIX_API_KEY as before.
+      # team" step) — once this is the norm, the max-parallel: 1 serialization of the matrix
+      # can go too. When unset, the job keeps using the shared team from CORALOGIX_API_KEY.
       CORALOGIX_ORG_API_KEY: ${{ secrets.CORALOGIX_ORG_API_KEY }}
     steps:
       - name: Checkout
@@ -71,12 +77,14 @@ jobs:
         run: |
           helm repo add coralogix https://cgx.jfrog.io/artifactory/coralogix-charts-virtual
           helm repo update
-      # Ephemeral-team isolation (opt-in): the e2e workflows all target one shared Coralogix
-      # team, so concurrent runs clobber each other's team-wide singleton state (TCO policies,
-      # archive targets, IP access, quota allocation rules, global router). When the
+      # Ephemeral-team isolation (opt-in): the live e2e suites all target one shared Coralogix
+      # team, whose team-wide singleton state (TCO policies, archive targets, IP access, quota
+      # allocation rules, global router) is currently protected only by serializing every run
+      # through the coralogix-operator-live-cx concurrency group. When the
       # CORALOGIX_ORG_API_KEY secret is configured, provision a disposable team plus a
-      # team-scoped API key and run this whole job against it. Without the secret this step is
-      # skipped and the job keeps using the shared CORALOGIX_API_KEY secret exactly as before.
+      # team-scoped API key and run this whole job against it, so overlapping runs are truly
+      # isolated and the serialization queue can eventually be dropped. Without the secret this
+      # step is skipped and the job keeps using the shared CORALOGIX_API_KEY secret as before.
       - name: Provision an ephemeral Coralogix team
         if: env.CORALOGIX_ORG_API_KEY != ''
         run: |
@@ -144,7 +152,7 @@ jobs:
 
   notify-failure:
     name: Notify Slack on failure
-    # Only scheduled (nightly) runs alert. Pull request and main/release push runs stay quiet.
+    # Scheduled (nightly) runs alert. Pull request and push runs stay quiet.
     if: ${{ always() && github.event_name == 'schedule' }}
     needs:
       - upgrade-test

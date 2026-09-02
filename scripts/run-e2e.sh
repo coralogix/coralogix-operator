@@ -8,6 +8,7 @@ cd "$REPO_ROOT"
 
 if [[ $# -lt 1 ]]; then
   echo "Usage: $0 <ginkgo-focus>" >&2
+  echo "Requires CORALOGIX_API_KEY and TEST_TEAM_ID (prompted if unset)." >&2
   exit 2
 fi
 
@@ -27,6 +28,16 @@ if [[ -z "$CORALOGIX_API_KEY" ]]; then
   echo "CORALOGIX_API_KEY cannot be empty" >&2
   exit 1
 fi
+
+if [[ -z "${TEST_TEAM_ID:-}" ]]; then
+  read -r -p "Coralogix team ID (TEST_TEAM_ID): " TEST_TEAM_ID
+fi
+
+if [[ -z "$TEST_TEAM_ID" ]]; then
+  echo "TEST_TEAM_ID cannot be empty" >&2
+  exit 1
+fi
+export TEST_TEAM_ID
 
 umask 077
 API_KEY_FILE=$(mktemp)
