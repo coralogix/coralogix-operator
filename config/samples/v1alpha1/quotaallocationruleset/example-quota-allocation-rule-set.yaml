@@ -5,12 +5,22 @@ metadata:
 spec:
   rules:
     - entityType: logs
-      allocation: 60
+      allocation: 50
       allocationType: percentage
       enabled: true
       canOverflow: true
-    - entityType: metrics
-      allocation: 40
+    - entityType: spans
+      allocation: 1
+      allocationType: lockedUnits
+      enabled: true
+      canOverflow: false
+    - entityType: browserLogs
+      allocation: 10
+      allocationType: percentage
+      enabled: true
+      canOverflow: false
+    - entityType: browserLogs/v2
+      allocation: 10
       allocationType: percentage
       enabled: true
       canOverflow: false

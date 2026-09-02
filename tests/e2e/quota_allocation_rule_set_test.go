@@ -72,10 +72,17 @@ var _ = Describe("QuotaAllocationRuleSet", Ordered, func() {
 				Rules: []coralogixv1alpha1.QuotaAllocationRule{
 					{
 						EntityType:     "logs",
-						Allocation:     resource.MustParse("60"),
+						Allocation:     resource.MustParse("50"),
 						AllocationType: quotaAllocationTypePtr(coralogixv1alpha1.QuotaAllocationTypePercentage),
 						Enabled:        true,
 						CanOverflow:    true,
+					},
+					{
+						EntityType:     "spans",
+						Allocation:     resource.MustParse("1"),
+						AllocationType: quotaAllocationTypePtr(coralogixv1alpha1.QuotaAllocationTypeLockedUnits),
+						Enabled:        true,
+						CanOverflow:    false,
 					},
 					{
 						EntityType:     "metrics",
@@ -106,7 +113,7 @@ var _ = Describe("QuotaAllocationRuleSet", Ordered, func() {
 		}, time.Minute, time.Second).Should(BeTrue())
 	})
 
-	It("Should create and delete QuotaAllocationRuleSet successfully", func(ctx context.Context) {
+	It("Should create, clear with empty rules, and delete QuotaAllocationRuleSet successfully", func(ctx context.Context) {
 		By("Creating QuotaAllocationRuleSet")
 		Expect(crClient.Create(ctx, ruleSet)).To(Succeed())
 
@@ -123,13 +130,20 @@ var _ = Describe("QuotaAllocationRuleSet", Ordered, func() {
 			backendRuleSet, err := getQuotaAllocationRuleSet(ctx, quotasClient)
 			g.Expect(err).ToNot(HaveOccurred())
 			g.Expect(findUserQuotaAllocationRule(backendRuleSet.Rules, "logs")).ToNot(BeNil())
+			g.Expect(findUserQuotaAllocationRule(backendRuleSet.Rules, "spans")).ToNot(BeNil())
 			g.Expect(findUserQuotaAllocationRule(backendRuleSet.Rules, "metrics")).ToNot(BeNil())
 
 			logsRule := findUserQuotaAllocationRule(backendRuleSet.Rules, "logs")
-			g.Expect(logsRule.Allocation).To(Equal(float32(60)))
+			g.Expect(logsRule.Allocation).To(Equal(float32(50)))
 			g.Expect(logsRule.GetAllocationType()).To(Equal(quotas.QUOTAALLOCATIONTYPE_QUOTA_ALLOCATION_TYPE_PERCENTAGE))
 			g.Expect(logsRule.Enabled).To(BeTrue())
 			g.Expect(logsRule.CanOverflow).To(BeTrue())
+
+			spansRule := findUserQuotaAllocationRule(backendRuleSet.Rules, "spans")
+			g.Expect(spansRule.Allocation).To(Equal(float32(1)))
+			g.Expect(spansRule.GetAllocationType()).To(Equal(quotas.QUOTAALLOCATIONTYPE_QUOTA_ALLOCATION_TYPE_LOCKED_UNITS))
+			g.Expect(spansRule.Enabled).To(BeTrue())
+			g.Expect(spansRule.CanOverflow).To(BeFalse())
 
 			metricsRule := findUserQuotaAllocationRule(backendRuleSet.Rules, "metrics")
 			g.Expect(metricsRule.Allocation).To(Equal(float32(40)))
@@ -138,14 +152,42 @@ var _ = Describe("QuotaAllocationRuleSet", Ordered, func() {
 			g.Expect(metricsRule.CanOverflow).To(BeFalse())
 		}, time.Minute, time.Second).Should(Succeed())
 
-		By("Deleting the QuotaAllocationRuleSet")
-		Expect(crClient.Delete(ctx, ruleSet)).To(Succeed())
+		By("Updating QuotaAllocationRuleSet to clear customer-managed rules")
+		Eventually(func(g Gomega) {
+			fetched := &coralogixv1alpha1.QuotaAllocationRuleSet{}
+			g.Expect(crClient.Get(ctx, client.ObjectKey{Name: crName, Namespace: testNamespace}, fetched)).To(Succeed())
+			fetched.Spec.Rules = []coralogixv1alpha1.QuotaAllocationRule{}
+			g.Expect(crClient.Update(ctx, fetched)).To(Succeed())
+			*ruleSet = *fetched
+		}, time.Minute, time.Second).Should(Succeed())
 
-		By("Verifying user-managed quota allocation rules were deleted in Coralogix backend")
+		By("Verifying QuotaAllocationRuleSet stays synced with empty rules")
+		Eventually(func(g Gomega) {
+			fetched := &coralogixv1alpha1.QuotaAllocationRuleSet{}
+			g.Expect(crClient.Get(ctx, client.ObjectKey{Name: crName, Namespace: testNamespace}, fetched)).To(Succeed())
+			g.Expect(fetched.Spec.Rules).To(BeEmpty())
+			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying customer-managed quota allocation rules were cleared in Coralogix backend")
 		Eventually(func(g Gomega) {
 			backendRuleSet, err := getQuotaAllocationRuleSet(ctx, quotasClient)
 			g.Expect(err).ToNot(HaveOccurred())
 			g.Expect(findUserQuotaAllocationRule(backendRuleSet.Rules, "logs")).To(BeNil())
+			g.Expect(findUserQuotaAllocationRule(backendRuleSet.Rules, "spans")).To(BeNil())
+			g.Expect(findUserQuotaAllocationRule(backendRuleSet.Rules, "metrics")).To(BeNil())
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Deleting the QuotaAllocationRuleSet")
+		Expect(crClient.Delete(ctx, ruleSet)).To(Succeed())
+
+		By("Verifying user-managed quota allocation rules remain cleared in Coralogix backend")
+		Eventually(func(g Gomega) {
+			backendRuleSet, err := getQuotaAllocationRuleSet(ctx, quotasClient)
+			g.Expect(err).ToNot(HaveOccurred())
+			g.Expect(findUserQuotaAllocationRule(backendRuleSet.Rules, "logs")).To(BeNil())
+			g.Expect(findUserQuotaAllocationRule(backendRuleSet.Rules, "spans")).To(BeNil())
 			g.Expect(findUserQuotaAllocationRule(backendRuleSet.Rules, "metrics")).To(BeNil())
 		}, time.Minute, time.Second).Should(Succeed())
 	})
