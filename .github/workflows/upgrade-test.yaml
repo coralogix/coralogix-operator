@@ -136,6 +136,9 @@ jobs:
         env:
           # Prefer the ephemeral team's key; fall back to the shared team's secret.
           CORALOGIX_API_KEY: ${{ env.EPHEMERAL_CORALOGIX_API_KEY || secrets.CORALOGIX_API_KEY }}
+          # The ApiKey specs mint keys owned by this team id; inside an ephemeral team it must
+          # be the ephemeral team itself (a team key cannot create keys for another team).
+          TEST_TEAM_ID: ${{ env.EPHEMERAL_TEAM_ID || secrets.TEST_TEAM_ID }}
         run: |
           make e2e-tests
       # Delete the ephemeral team only when everything passed. A failed run keeps the team so
