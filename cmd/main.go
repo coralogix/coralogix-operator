@@ -461,3 +461,4 @@ func prometheusRuleCRDExists(ctx context.Context, c client.Reader) (bool, error)
 
 	return true, nil
 }
+// ci: draft PR to verify rotated Actions secrets; safe to close
