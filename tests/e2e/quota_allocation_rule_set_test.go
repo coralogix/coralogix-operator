@@ -69,6 +69,7 @@ var _ = Describe("QuotaAllocationRuleSet", Ordered, func() {
 				Namespace: testNamespace,
 			},
 			Spec: coralogixv1alpha1.QuotaAllocationRuleSetSpec{
+				// Percentage only. Locked units are bounded by the team daily quota, which can be below 1 in CI.
 				Rules: []coralogixv1alpha1.QuotaAllocationRule{
 					{
 						EntityType:     "logs",
@@ -79,8 +80,8 @@ var _ = Describe("QuotaAllocationRuleSet", Ordered, func() {
 					},
 					{
 						EntityType:     "spans",
-						Allocation:     resource.MustParse("1"),
-						AllocationType: quotaAllocationTypePtr(coralogixv1alpha1.QuotaAllocationTypeLockedUnits),
+						Allocation:     resource.MustParse("10"),
+						AllocationType: quotaAllocationTypePtr(coralogixv1alpha1.QuotaAllocationTypePercentage),
 						Enabled:        true,
 						CanOverflow:    false,
 					},
@@ -140,8 +141,8 @@ var _ = Describe("QuotaAllocationRuleSet", Ordered, func() {
 			g.Expect(logsRule.CanOverflow).To(BeTrue())
 
 			spansRule := findUserQuotaAllocationRule(backendRuleSet.Rules, "spans")
-			g.Expect(spansRule.Allocation).To(Equal(float32(1)))
-			g.Expect(spansRule.GetAllocationType()).To(Equal(quotas.QUOTAALLOCATIONTYPE_QUOTA_ALLOCATION_TYPE_LOCKED_UNITS))
+			g.Expect(spansRule.Allocation).To(Equal(float32(10)))
+			g.Expect(spansRule.GetAllocationType()).To(Equal(quotas.QUOTAALLOCATIONTYPE_QUOTA_ALLOCATION_TYPE_PERCENTAGE))
 			g.Expect(spansRule.Enabled).To(BeTrue())
 			g.Expect(spansRule.CanOverflow).To(BeFalse())
 
