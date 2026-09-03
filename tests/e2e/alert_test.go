@@ -46,6 +46,7 @@ var _ = Describe("Alert", Ordered, func() {
 	)
 
 	BeforeAll(func() {
+		skipIfEphemeralTeam("the alert's Slack destination references the shared team's Slack integration (SLACK_INTEGRATION_ID)")
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		alertsClient = ClientsInstance.GetCoralogixClientSet().Alerts()
 	})

@@ -377,6 +377,9 @@ func firstAvailableAICustomEvaluationApplication(
 	ctx context.Context,
 	applicationsClient *aiapplications.AIApplicationsServiceAPIService,
 ) (aiCustomEvaluationApplicationRef, error) {
+	// A fresh team has no AI applications; they only exist where AI-app
+	// telemetry has been ingested (the shared team).
+	skipIfEphemeralTeam("AI custom evaluations need an AI application with ingested telemetry")
 	const pageSize = int32(200)
 	for pageOffset := int64(0); ; pageOffset++ {
 		result, httpResp, err := applicationsClient.

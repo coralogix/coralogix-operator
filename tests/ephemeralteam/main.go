@@ -178,6 +178,8 @@ var defaultTeamKeyPermissions = []string{
 	"team-ip-access:ReadConfig",
 	"team-members:Manage",
 	"team-members:ReadConfig",
+	"team-quota-rules:Manage",
+	"team-quota-rules:Read",
 	"team-quota:Manage",
 	"team-quota:Read",
 	"team-roles:Manage",

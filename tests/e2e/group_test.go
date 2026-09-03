@@ -49,6 +49,7 @@ var _ = Describe("Group", Ordered, func() {
 	)
 
 	BeforeEach(func() {
+		skipIfEphemeralTeam("the group's members are users that only exist in the shared team")
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		groupsClient = ClientsInstance.GetCoralogixClientSet().Groups()
 		scope = getSampleScope(scopeName, testNamespace)

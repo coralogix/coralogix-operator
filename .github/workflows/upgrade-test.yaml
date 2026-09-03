@@ -52,11 +52,6 @@ jobs:
       SLACK_INTEGRATION_CHANNEL: ${{ secrets.SLACK_INTEGRATION_CHANNEL }}
       PD_INTEGRATION_ID: ${{ secrets.PD_INTEGRATION_ID }}
       TEST_TEAM_ID: ${{ secrets.TEST_TEAM_ID }}
-      # Org-scoped key that may create/delete teams. When set, each matrix job provisions a
-      # disposable team and runs fully inside it (see the "Provision an ephemeral Coralogix
-      # team" step) — once this is the norm, the max-parallel: 1 serialization of the matrix
-      # can go too. When unset, the job keeps using the shared team from CORALOGIX_API_KEY.
-      CORALOGIX_ORG_API_KEY: ${{ secrets.CORALOGIX_ORG_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -86,7 +81,11 @@ jobs:
       # isolated and the serialization queue can eventually be dropped. Without the secret this
       # step is skipped and the job keeps using the shared CORALOGIX_API_KEY secret as before.
       - name: Provision an ephemeral Coralogix team
-        if: env.CORALOGIX_ORG_API_KEY != ''
+        if: ${{ secrets.CORALOGIX_ORG_API_KEY != '' }}
+        env:
+          # The org-scoped key that may create/delete teams is deliberately step-scoped: only
+          # this step and the delete step see it, never the build/test steps that run PR code.
+          CORALOGIX_ORG_API_KEY: ${{ secrets.CORALOGIX_ORG_API_KEY }}
         run: |
           go run ./tests/ephemeralteam create > ephemeral-team.env
           # Mask the minted key BEFORE it is written to $GITHUB_ENV or any log.
@@ -146,6 +145,9 @@ jobs:
       # prefix and can be swept by a scheduled cleanup.
       - name: Delete the ephemeral Coralogix team
         if: success() && env.EPHEMERAL_TEAM_ID != ''
+        env:
+          # Step-scoped for the same reason as in the provision step.
+          CORALOGIX_ORG_API_KEY: ${{ secrets.CORALOGIX_ORG_API_KEY }}
         run: |
           go run ./tests/ephemeralteam delete "$EPHEMERAL_TEAM_ID"
       - name: Collect Operator Logs

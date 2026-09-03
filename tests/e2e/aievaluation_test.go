@@ -1050,6 +1050,9 @@ func firstAvailableAIEvaluationApplication(
 	evaluationsClient *aievaluations.AIEvaluationsServiceAPIService,
 	evaluationType aievaluations.EvaluationType,
 ) (aiEvaluationApplicationRef, string, error) {
+	// A fresh team has no AI applications; they only exist where AI-app
+	// telemetry has been ingested (the shared team).
+	skipIfEphemeralTeam("AI evaluations need an AI application with ingested telemetry")
 	var (
 		ref    aiEvaluationApplicationRef
 		target string
