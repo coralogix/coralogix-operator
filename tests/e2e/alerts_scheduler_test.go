@@ -21,6 +21,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"google.golang.org/grpc/codes"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -134,10 +135,14 @@ var _ = Describe("AlertScheduler", Ordered, func() {
 		Expect(crClient.Delete(ctx, alertScheduler)).To(Succeed())
 
 		By("Verifying AlertScheduler is deleted from Coralogix backend")
-		Eventually(func() *cxsdk.AlertSchedulerRule {
-			getRes, _ := alertSchedulerClient.Get(ctx, &cxsdk.GetAlertSchedulerRuleRequest{AlertSchedulerRuleId: alertSchedulerID})
-			return getRes.AlertSchedulerRule
-		}, time.Minute, time.Second).Should(BeNil())
+		// Assert on the returned code instead of dereferencing the response:
+		// once the backend deletes the rule, Get errors with NotFound and
+		// returns a nil response, which the old response-based poll
+		// dereferenced and panicked on.
+		Eventually(func() codes.Code {
+			_, err := alertSchedulerClient.Get(ctx, &cxsdk.GetAlertSchedulerRuleRequest{AlertSchedulerRuleId: alertSchedulerID})
+			return cxsdk.Code(err)
+		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
 	})
 })
 
