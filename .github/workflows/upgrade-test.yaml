@@ -90,7 +90,24 @@ jobs:
           # this step and the delete step see it, never the build/test steps that run PR code.
           CORALOGIX_ORG_API_KEY: ${{ secrets.CORALOGIX_ORG_API_KEY }}
         run: |
-          go run ./tests/ephemeralteam create > ephemeral-team.env
+          # Run the harness from the trusted base branch (origin/main), never from the PR
+          # checkout, so pull-request code cannot execute with the org-wide key in its
+          # environment. Until the harness has landed on origin/main, fall back to the PR
+          # checkout with a loud warning; after the first merge the fallback is dead code.
+          # Residual risk: the minted TEAM-scoped key is still handed to PR code afterwards —
+          # the same trust class as today's CORALOGIX_API_KEY secret; only the ORG key is
+          # confined to trusted code.
+          git fetch --depth=1 origin main
+          harness_dir="$PWD"
+          if git cat-file -e origin/main:tests/ephemeralteam/main.go 2>/dev/null; then
+            harness_dir="$RUNNER_TEMP/ephemeralteam-trusted"
+            rm -rf "$harness_dir" && mkdir -p "$harness_dir"
+            git archive origin/main go.mod go.sum tests/ephemeralteam | tar -x -C "$harness_dir"
+          else
+            echo "::warning::tests/ephemeralteam is not on origin/main yet; running the harness from the PR checkout"
+          fi
+          echo "EPHEMERAL_HARNESS_DIR=$harness_dir" >> "$GITHUB_ENV"
+          (cd "$harness_dir" && go run ./tests/ephemeralteam create) > ephemeral-team.env
           # Mask the minted key BEFORE it is written to $GITHUB_ENV or any log.
           key="$(sed -n 's/^CORALOGIX_API_KEY=//p' ephemeral-team.env)"
           echo "::add-mask::$key"
@@ -152,7 +169,9 @@ jobs:
           # Step-scoped for the same reason as in the provision step.
           CORALOGIX_ORG_API_KEY: ${{ secrets.CORALOGIX_ORG_API_KEY }}
         run: |
-          go run ./tests/ephemeralteam delete "$EPHEMERAL_TEAM_ID"
+          # Same trusted-revision rule as the provision step: run the harness from the
+          # directory that step prepared (origin/main when available).
+          (cd "$EPHEMERAL_HARNESS_DIR" && go run ./tests/ephemeralteam delete "$EPHEMERAL_TEAM_ID")
       - name: Collect Operator Logs
         if: always()
         run: |

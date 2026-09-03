@@ -46,6 +46,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"strconv"
 	"time"
@@ -244,14 +245,26 @@ func create() error {
 	ctx := context.Background()
 
 	name := fmt.Sprintf("%s-%d", teamNamePrefix, time.Now().UnixNano())
-	createResp, httpResp, err := cs.Teams().
-		TeamServiceCreateTeamInOrg(ctx).
-		TeamServiceCreateTeamInOrgRequest(teams.TeamServiceCreateTeamInOrgRequest{
-			TeamName: name,
-		}).
-		Execute()
+	var createResp *teams.CreateTeamInOrgResponse
+	// Retry dropped connections and other transient failures. If a lost
+	// response means an attempt actually landed, the extra team still carries
+	// the name prefix and is picked up by the stale-team sweep.
+	err = withRetries(3, 10*time.Second, "team creation", func() error {
+		var httpResp *http.Response
+		var err error
+		createResp, httpResp, err = cs.Teams().
+			TeamServiceCreateTeamInOrg(ctx).
+			TeamServiceCreateTeamInOrgRequest(teams.TeamServiceCreateTeamInOrgRequest{
+				TeamName: name,
+			}).
+			Execute()
+		if err != nil {
+			return fmt.Errorf("creating team %q: %w", name, openapicxsdk.NewAPIError(httpResp, err))
+		}
+		return nil
+	})
 	if err != nil {
-		return fmt.Errorf("creating team %q: %w", name, openapicxsdk.NewAPIError(httpResp, err))
+		return err
 	}
 	teamID := createResp.TeamId.GetId()
 	if teamID == 0 {
@@ -297,12 +310,40 @@ func deleteTeam(teamID int64) error {
 	if err != nil {
 		return err
 	}
-	_, httpResp, err := cs.Teams().TeamServiceDeleteTeam(context.Background(), teamID).Execute()
+	// A team's plan/quota record is provisioned asynchronously after creation,
+	// and deleting the team before it exists fails with a 404 ("No plan found
+	// for team_id"). Short suites hit that window, so retry with backoff; the
+	// same loop also covers dropped connections and other transient failures.
+	err = withRetries(6, 20*time.Second, fmt.Sprintf("deletion of team %d", teamID), func() error {
+		_, httpResp, err := cs.Teams().TeamServiceDeleteTeam(context.Background(), teamID).Execute()
+		if err != nil {
+			return fmt.Errorf("deleting team %d: %w", teamID, openapicxsdk.NewAPIError(httpResp, err))
+		}
+		return nil
+	})
 	if err != nil {
-		return fmt.Errorf("deleting team %d: %w", teamID, openapicxsdk.NewAPIError(httpResp, err))
+		return err
 	}
 	fmt.Fprintf(os.Stderr, "ephemeralteam: deleted team %d\n", teamID)
 	return nil
+}
+
+// withRetries runs fn up to attempts times, waiting delay between attempts,
+// and logs each retry to stderr. It returns the last error when every attempt
+// failed.
+func withRetries(attempts int, delay time.Duration, what string, fn func() error) error {
+	var err error
+	for attempt := 1; attempt <= attempts; attempt++ {
+		if attempt > 1 {
+			fmt.Fprintf(os.Stderr, "ephemeralteam: %s failed (attempt %d/%d), retrying in %s: %v\n",
+				what, attempt-1, attempts, delay, err)
+			time.Sleep(delay)
+		}
+		if err = fn(); err == nil {
+			return nil
+		}
+	}
+	return err
 }
 
 // newOrgClientSet builds an OpenAPI SDK client authenticated with the
