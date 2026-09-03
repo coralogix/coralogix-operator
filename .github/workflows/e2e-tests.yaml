@@ -53,6 +53,9 @@ jobs:
       SLACK_INTEGRATION_ID: ${{ secrets.SLACK_INTEGRATION_ID }}
       SLACK_INTEGRATION_CHANNEL: ${{ secrets.SLACK_INTEGRATION_CHANNEL }}
       PD_INTEGRATION_ID: ${{ secrets.PD_INTEGRATION_ID }}
+      # Whether the org-scoped team-management key is configured. Only this boolean is
+      # job-level; the key itself is step-scoped to the provision/delete steps below.
+      HAS_CORALOGIX_ORG_API_KEY: ${{ secrets.CORALOGIX_ORG_API_KEY != '' }}
       TEST_TEAM_ID: ${{ secrets.TEST_TEAM_ID }}
     steps:
       - name: Checkout
@@ -80,7 +83,7 @@ jobs:
       # isolated and the serialization queue can eventually be dropped. Without the secret this
       # step is skipped and the job keeps using the shared CORALOGIX_API_KEY secret as before.
       - name: Provision an ephemeral Coralogix team
-        if: ${{ secrets.CORALOGIX_ORG_API_KEY != '' }}
+        if: env.HAS_CORALOGIX_ORG_API_KEY == 'true'
         env:
           # The org-scoped key that may create/delete teams is deliberately step-scoped: only
           # this step and the delete step see it, never the build/test steps that run PR code.
