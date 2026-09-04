@@ -42,6 +42,7 @@ rules:
   - apikeys
   - archivelogstargets
   - archivemetricstargets
+  - configurationgroups
   - connectors
   - customenrichments
   - customroles
@@ -84,6 +85,7 @@ rules:
   - apikeys/finalizers
   - archivelogstargets/finalizers
   - archivemetricstargets/finalizers
+  - configurationgroups/finalizers
   - connectors/finalizers
   - customenrichments/finalizers
   - customroles/finalizers
@@ -120,6 +122,7 @@ rules:
   - apikeys/status
   - archivelogstargets/status
   - archivemetricstargets/status
+  - configurationgroups/status
   - connectors/status
   - customenrichments/status
   - customroles/status

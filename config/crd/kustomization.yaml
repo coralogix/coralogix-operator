@@ -33,6 +33,7 @@ resources:
   - bases/coralogix.com_enrichments.yaml
   - bases/coralogix.com_aievaluations.yaml
   - bases/coralogix.com_aicustomevaluations.yaml
+  - bases/coralogix.com_configurationgroups.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 #patchesStrategicMerge:

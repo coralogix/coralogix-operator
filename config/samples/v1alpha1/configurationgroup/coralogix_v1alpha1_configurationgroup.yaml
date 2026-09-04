@@ -1,0 +1,35 @@
+apiVersion: coralogix.com/v1alpha1
+kind: ConfigurationGroup
+metadata:
+  name: configuration-group-sample
+spec:
+  name: production-collectors
+  description: Collector configuration group for production.
+  tags:
+    - production
+  priorityOrder: 100
+  family:
+    active: true
+    collectorVersion: "0.114.0"
+    description: Default production family
+    metadata:
+      team: observability
+    remoteConfigurations:
+      - name: default
+        rawConfiguration: |
+          receivers:
+            otlp:
+              protocols:
+                grpc: {}
+          processors:
+            batch: {}
+          exporters:
+            nop: {}
+          service:
+            pipelines:
+              traces:
+                receivers: [otlp]
+                processors: [batch]
+                exporters: [nop]
+        agentSelector:
+          cx.agent.type: agent
