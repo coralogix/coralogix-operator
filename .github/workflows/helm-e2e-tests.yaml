@@ -89,20 +89,14 @@ jobs:
         run: |
           # Run the harness from the trusted base branch (origin/main), never from the PR
           # checkout, so pull-request code cannot execute with the org-wide key in its
-          # environment. Until the harness has landed on origin/main, fall back to the PR
-          # checkout with a loud warning; after the first merge the fallback is dead code.
+          # environment. The extraction fails hard if the harness is missing on origin/main.
           # Residual risk: the minted TEAM-scoped key is still handed to PR code afterwards —
           # the same trust class as today's CORALOGIX_API_KEY secret; only the ORG key is
           # confined to trusted code.
           git fetch --depth=1 origin main
-          harness_dir="$PWD"
-          if git cat-file -e origin/main:tests/ephemeralteam/main.go 2>/dev/null; then
-            harness_dir="$RUNNER_TEMP/ephemeralteam-trusted"
-            rm -rf "$harness_dir" && mkdir -p "$harness_dir"
-            git archive origin/main go.mod go.sum tests/ephemeralteam | tar -x -C "$harness_dir"
-          else
-            echo "::warning::tests/ephemeralteam is not on origin/main yet; running the harness from the PR checkout"
-          fi
+          harness_dir="$RUNNER_TEMP/ephemeralteam-trusted"
+          rm -rf "$harness_dir" && mkdir -p "$harness_dir"
+          git archive origin/main go.mod go.sum tests/ephemeralteam | tar -x -C "$harness_dir"
           echo "EPHEMERAL_HARNESS_DIR=$harness_dir" >> "$GITHUB_ENV"
           (cd "$harness_dir" && go run ./tests/ephemeralteam create) > ephemeral-team.env
           # Mask the minted key BEFORE it is written to $GITHUB_ENV or any log.
