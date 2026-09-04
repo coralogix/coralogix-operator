@@ -32,6 +32,7 @@ var _ = Describe("GlobalRouter", Ordered, Serial, func() {
 	)
 
 	BeforeAll(func() {
+		skipIfEphemeralTeam("the router's Slack connector references the shared team's Slack integration (SLACK_INTEGRATION_ID)")
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		notificationsClient = ClientsInstance.GetCoralogixClientSet().Notifications()
 	})

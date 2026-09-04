@@ -134,8 +134,15 @@ var _ = Describe("AlertScheduler", Ordered, func() {
 		Expect(crClient.Delete(ctx, alertScheduler)).To(Succeed())
 
 		By("Verifying AlertScheduler is deleted from Coralogix backend")
+		// Once the backend deletes the rule, Get errors and returns a nil
+		// response (with a non-canonical code, so asserting NotFound does not
+		// work here). Guard the nil response instead of dereferencing it —
+		// the unguarded version panicked with a nil pointer dereference.
 		Eventually(func() *cxsdk.AlertSchedulerRule {
 			getRes, _ := alertSchedulerClient.Get(ctx, &cxsdk.GetAlertSchedulerRuleRequest{AlertSchedulerRuleId: alertSchedulerID})
+			if getRes == nil {
+				return nil
+			}
 			return getRes.AlertSchedulerRule
 		}, time.Minute, time.Second).Should(BeNil())
 	})

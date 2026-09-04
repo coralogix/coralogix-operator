@@ -53,6 +53,9 @@ jobs:
       SLACK_INTEGRATION_ID: ${{ secrets.SLACK_INTEGRATION_ID }}
       SLACK_INTEGRATION_CHANNEL: ${{ secrets.SLACK_INTEGRATION_CHANNEL }}
       PD_INTEGRATION_ID: ${{ secrets.PD_INTEGRATION_ID }}
+      # Whether the org-scoped team-management key is configured. Only this boolean is
+      # job-level; the key itself is step-scoped to the provision/delete steps below.
+      HAS_CORALOGIX_ORG_API_KEY: ${{ secrets.CORALOGIX_ORG_API_KEY != '' }}
       TEST_TEAM_ID: ${{ secrets.TEST_TEAM_ID }}
     steps:
       - name: Checkout
@@ -71,12 +74,75 @@ jobs:
       - name: Load the controller-manager image into Kind
         run: |
           kind load docker-image ${{ env.IMG }} --name chart-testing
+      # Ephemeral-team isolation (opt-in): the live e2e suites all target one shared Coralogix
+      # team, whose team-wide singleton state (TCO policies, archive targets, IP access, quota
+      # allocation rules, global router) is currently protected only by serializing every run
+      # through the coralogix-operator-live-cx concurrency group. When the
+      # CORALOGIX_ORG_API_KEY secret is configured, provision a disposable team plus a
+      # team-scoped API key and run this whole job against it, so overlapping runs are truly
+      # isolated and the serialization queue can eventually be dropped. Without the secret this
+      # step is skipped and the job keeps using the shared CORALOGIX_API_KEY secret as before.
+      - name: Provision an ephemeral Coralogix team
+        if: env.HAS_CORALOGIX_ORG_API_KEY == 'true'
+        env:
+          # The org-scoped key that may create/delete teams is deliberately step-scoped: only
+          # this step and the delete step see it, never the build/test steps that run PR code.
+          CORALOGIX_ORG_API_KEY: ${{ secrets.CORALOGIX_ORG_API_KEY }}
+        run: |
+          # Run the harness from the trusted base branch (origin/main), never from the PR
+          # checkout, so pull-request code cannot execute with the org-wide key in its
+          # environment. Until the harness has landed on origin/main, fall back to the PR
+          # checkout with a loud warning; after the first merge the fallback is dead code.
+          # Residual risk: the minted TEAM-scoped key is still handed to PR code afterwards —
+          # the same trust class as today's CORALOGIX_API_KEY secret; only the ORG key is
+          # confined to trusted code.
+          git fetch --depth=1 origin main
+          harness_dir="$PWD"
+          if git cat-file -e origin/main:tests/ephemeralteam/main.go 2>/dev/null; then
+            harness_dir="$RUNNER_TEMP/ephemeralteam-trusted"
+            rm -rf "$harness_dir" && mkdir -p "$harness_dir"
+            git archive origin/main go.mod go.sum tests/ephemeralteam | tar -x -C "$harness_dir"
+          else
+            echo "::warning::tests/ephemeralteam is not on origin/main yet; running the harness from the PR checkout"
+          fi
+          echo "EPHEMERAL_HARNESS_DIR=$harness_dir" >> "$GITHUB_ENV"
+          (cd "$harness_dir" && go run ./tests/ephemeralteam create) > ephemeral-team.env
+          # Mask the minted key BEFORE it is written to $GITHUB_ENV or any log.
+          key="$(sed -n 's/^CORALOGIX_API_KEY=//p' ephemeral-team.env)"
+          echo "::add-mask::$key"
+          # Workflow-file env would shadow a GITHUB_ENV variable of the same name, so expose
+          # the key under a distinct name; the steps that need it override CORALOGIX_API_KEY
+          # at step level.
+          echo "EPHEMERAL_CORALOGIX_API_KEY=$key" >> "$GITHUB_ENV"
+          grep '^EPHEMERAL_TEAM_' ephemeral-team.env >> "$GITHUB_ENV"
+          rm ephemeral-team.env
       - name: Deploy the controller-manager
+        env:
+          # Prefer the ephemeral team's key; fall back to the shared team's secret.
+          CORALOGIX_API_KEY: ${{ env.EPHEMERAL_CORALOGIX_API_KEY || secrets.CORALOGIX_API_KEY }}
         run: |
           make deploy
       - name: Run e2e Tests
+        env:
+          # Prefer the ephemeral team's key; fall back to the shared team's secret.
+          CORALOGIX_API_KEY: ${{ env.EPHEMERAL_CORALOGIX_API_KEY || secrets.CORALOGIX_API_KEY }}
+          # The ApiKey specs mint keys owned by this team id; inside an ephemeral team it must
+          # be the ephemeral team itself (a team key cannot create keys for another team).
+          TEST_TEAM_ID: ${{ env.EPHEMERAL_TEAM_ID || secrets.TEST_TEAM_ID }}
         run: |
           make e2e-tests
+      # Delete the ephemeral team only when everything passed. A failed run keeps the team so
+      # its state can be inspected; leaked teams carry the cx-operator-e2e-ephemeral- name
+      # prefix and can be swept by a scheduled cleanup.
+      - name: Delete the ephemeral Coralogix team
+        if: success() && env.EPHEMERAL_TEAM_ID != ''
+        env:
+          # Step-scoped for the same reason as in the provision step.
+          CORALOGIX_ORG_API_KEY: ${{ secrets.CORALOGIX_ORG_API_KEY }}
+        run: |
+          # Same trusted-revision rule as the provision step: run the harness from the
+          # directory that step prepared (origin/main when available).
+          (cd "$EPHEMERAL_HARNESS_DIR" && go run ./tests/ephemeralteam delete "$EPHEMERAL_TEAM_ID")
       - name: Collect Operator Logs
         if: always()
         run: |

@@ -50,6 +50,18 @@ func uniqueName(prefix string) string {
 	return prefix[:keep] + "-" + suffix
 }
 
+// skipIfEphemeralTeam skips the current spec when the suite runs inside a
+// disposable per-job Coralogix team (the CI provisioning step exports
+// EPHEMERAL_TEAM_ID; see tests/ephemeralteam). Use it for specs that depend on
+// fixtures that only exist in the long-lived shared team — provisioned
+// integration ids, team members, or ingested telemetry — and cannot be created
+// on the fly. Shared-team runs are unaffected.
+func skipIfEphemeralTeam(reason string) {
+	if os.Getenv("EPHEMERAL_TEAM_ID") != "" {
+		Skip("running in an ephemeral team: " + reason)
+	}
+}
+
 // accountWideBackendTimeout is for assertions on Coralogix objects that belong to the whole
 // account or tenant rather than to this cluster - company IP access settings, archive targets and
 // the like. Several e2e jobs run this suite against one account at a time, so another job can
