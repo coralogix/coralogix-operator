@@ -49,8 +49,10 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	apikeys "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/api_keys_service"
 	teams "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/teams_service"
 
@@ -188,6 +190,8 @@ var defaultTeamKeyPermissions = []string{
 	"team-roles:ReadSummary",
 	"team-saved-views:Read",
 	"team-saved-views:Update",
+	"team-scim:Manage",
+	"team-scim:ReadConfig",
 	"team-scopes:Manage",
 	"team-scopes:ReadConfig",
 	"user-actions:ReadConfig",
@@ -293,12 +297,55 @@ func create() error {
 	}
 	fmt.Fprintf(os.Stderr, "ephemeralteam: minted API key %q for team %d\n", keyName, teamID)
 
+	seedFixtureUsers(keyResp.GetValue())
+
 	// Machine-readable output for the workflow. The caller must
 	// ::add-mask:: the key before appending these lines to $GITHUB_ENV.
 	fmt.Printf("CORALOGIX_API_KEY=%s\n", keyResp.GetValue())
 	fmt.Printf("EPHEMERAL_TEAM_ID=%d\n", teamID)
 	fmt.Printf("EPHEMERAL_TEAM_NAME=%s\n", name)
 	return nil
+}
+
+// fixtureUserEmails are the users the Group e2e spec references by name. The
+// shared team has them pre-provisioned; an ephemeral team starts empty, so
+// create() seeds them via SCIM.
+var fixtureUserEmails = []string{"example@coralogix.com", "example2@coralogix.com"}
+
+// seedFixtureUsers creates the Group spec's fixture users in the ephemeral
+// team, authenticating with the minted team key. Seeding is best-effort: on
+// persistent failure it warns loudly and lets the Group spec fail visibly
+// instead of aborting the whole provisioning.
+func seedFixtureUsers(teamKey string) {
+	regionOrDomain := os.Getenv("CORALOGIX_DOMAIN")
+	if regionOrDomain == "" {
+		regionOrDomain = os.Getenv("CORALOGIX_REGION")
+	}
+	// The SCIM users API speaks HTTP through the legacy SDK flavor; mirror the
+	// operator's own client construction in cmd/main.go.
+	usersClient := cxsdk.NewUsersClient(cxsdk.NewSDKCallPropertiesCreatorOperator(
+		strings.ToLower(regionOrDomain),
+		cxsdk.NewAuthContext(teamKey, teamKey),
+		"cxo-ephemeralteam"))
+	ctx := context.Background()
+	for _, email := range fixtureUserEmails {
+		err := withRetries(3, 5*time.Second, fmt.Sprintf("seeding user %s", email), func() error {
+			_, err := usersClient.Create(ctx, &cxsdk.SCIMUser{
+				Schemas:  []string{},
+				UserName: email,
+				Active:   true,
+				Name:     &cxsdk.SCIMUserName{GivenName: "example", FamilyName: "example"},
+			})
+			return err
+		})
+		if err != nil {
+			fmt.Fprintf(os.Stderr,
+				"ephemeralteam: WARNING: could not seed user %s; the Group e2e spec will fail on this team: %v\n",
+				email, err)
+			continue
+		}
+		fmt.Fprintf(os.Stderr, "ephemeralteam: seeded user %s\n", email)
+	}
 }
 
 func deleteTeam(teamID int64) error {
@@ -310,19 +357,34 @@ func deleteTeam(teamID int64) error {
 	if err != nil {
 		return err
 	}
+	ctx := context.Background()
 	// A team's plan/quota record is provisioned asynchronously after creation,
 	// and deleting the team before it exists fails with a 404 ("No plan found
 	// for team_id"). Short suites hit that window, so retry with backoff; the
 	// same loop also covers dropped connections and other transient failures.
+	// Delete errors do not always say whether the team still exists, so
+	// disambiguate with a Get: a NotFound team is already gone.
 	err = withRetries(6, 20*time.Second, fmt.Sprintf("deletion of team %d", teamID), func() error {
-		_, httpResp, err := cs.Teams().TeamServiceDeleteTeam(context.Background(), teamID).Execute()
-		if err != nil {
-			return fmt.Errorf("deleting team %d: %w", teamID, openapicxsdk.NewAPIError(httpResp, err))
+		_, httpResp, err := cs.Teams().TeamServiceDeleteTeam(ctx, teamID).Execute()
+		if err == nil {
+			return nil
 		}
-		return nil
+		deleteErr := fmt.Errorf("deleting team %d: %w", teamID, openapicxsdk.NewAPIError(httpResp, err))
+		if _, getResp, getErr := cs.Teams().TeamServiceGetTeam(ctx, teamID).Execute(); getErr != nil &&
+			openapicxsdk.IsNotFound(openapicxsdk.NewAPIError(getResp, getErr)) {
+			return nil
+		}
+		return deleteErr
 	})
 	if err != nil {
-		return err
+		// Best-effort: leaked teams carry the name prefix and are removed by the
+		// scheduled stale-team sweeper. Deletion hiccups (seen live: the org
+		// quota ledger rejecting the release with a 400) must not fail an
+		// otherwise-green job.
+		fmt.Fprintf(os.Stderr,
+			"ephemeralteam: WARNING: could not delete team %d; leaving it for the stale-team sweeper: %v\n",
+			teamID, err)
+		return nil
 	}
 	fmt.Fprintf(os.Stderr, "ephemeralteam: deleted team %d\n", teamID)
 	return nil
