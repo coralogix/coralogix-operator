@@ -51,6 +51,7 @@ import (
 	v1alpha1controllers "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/v1alpha1"
 	v1beta1controllers "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/v2/internal/monitoring"
+	cfggroups "github.com/coralogix/coralogix-operator/v2/internal/openapi/configuration_group_service"
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 	//+kubebuilder:scaffold:imports
 )
@@ -375,6 +376,13 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "AICustomEvaluation")
 		os.Exit(1)
 	}
+	if err = (&v1alpha1controllers.ConfigurationGroupReconciler{
+		ConfigurationGroupsClient: newConfigurationGroupsClient(cfg.CoralogixOpenApiUrl, cfg.CoralogixApiKey, OperatorVersion),
+		Interval:                  cfg.ReconcileIntervals[utils.ConfigurationGroupKind],
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ConfigurationGroup")
+		os.Exit(1)
+	}
 
 	enablePromRuleController, err := shouldEnablePromRuleController(
 		context.Background(),
@@ -460,4 +468,12 @@ func prometheusRuleCRDExists(ctx context.Context, c client.Reader) (bool, error)
 	}
 
 	return true, nil
+}
+
+func newConfigurationGroupsClient(url, apiKey, version string) *cfggroups.FleetManagerConfigurationGroupsAPIService {
+	cfg := cfggroups.NewConfiguration()
+	cfg.Servers = cfggroups.ServerConfigurations{{URL: url}}
+	cfg.AddDefaultHeader("Authorization", "Bearer "+apiKey)
+	cfg.AddDefaultHeader("x-cx-sdk-version", "operator-"+version)
+	return cfggroups.NewAPIClient(cfg).FleetManagerConfigurationGroupsAPI
 }
