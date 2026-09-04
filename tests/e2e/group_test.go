@@ -48,7 +48,8 @@ var _ = Describe("Group", Ordered, func() {
 		customRoleName = uniqueName("custom-role-for-group")
 	)
 
-	BeforeEach(func() {
+	BeforeEach(func(ctx context.Context) {
+		skipUnlessFixtureUsers(ctx, "example@coralogix.com", "example2@coralogix.com")
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		groupsClient = ClientsInstance.GetCoralogixClientSet().Groups()
 		scope = getSampleScope(scopeName, testNamespace)
@@ -160,3 +161,25 @@ var _ = Describe("Group", Ordered, func() {
 		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
 	})
 })
+
+// skipUnlessFixtureUsers skips the spec unless every user the Group spec
+// references as a member exists in the target team. The shared team has them
+// pre-provisioned, and ephemeral teams get them seeded during provisioning
+// (tests/ephemeralteam) — this gate only skips when the provisioning harness
+// predates the seeding or the seeding failed (the provision step's log then
+// carries a warning explaining why).
+func skipUnlessFixtureUsers(ctx context.Context, emails ...string) {
+	users, err := ClientsInstance.GetCoralogixClientSet().Users().List(ctx)
+	if err != nil {
+		Skip(fmt.Sprintf("cannot list team users to resolve group members: %v", err))
+	}
+	present := make(map[string]bool, len(users))
+	for _, user := range users {
+		present[user.UserName] = true
+	}
+	for _, email := range emails {
+		if !present[email] {
+			Skip(fmt.Sprintf("group member fixture user %s does not exist in this team", email))
+		}
+	}
+}
