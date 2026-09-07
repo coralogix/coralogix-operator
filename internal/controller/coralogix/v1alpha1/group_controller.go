@@ -138,6 +138,9 @@ func (r *GroupReconciler) HandleDeletion(ctx context.Context, log logr.Logger, o
 }
 
 func (r *GroupReconciler) memberUserIDs(ctx context.Context, group *coralogixv1alpha1.Group) ([]string, error) {
+	if len(group.Spec.Members) == 0 {
+		return nil, nil
+	}
 	teamID, err := r.teamID.get(ctx, r.IdentityClient)
 	if err != nil {
 		return nil, err
