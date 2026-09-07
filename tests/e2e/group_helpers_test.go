@@ -87,6 +87,24 @@ func expectRemoteGroupName(ctx context.Context, groupID int64, want string) {
 	}, time.Minute, time.Second).Should(Succeed())
 }
 
+func expectRemoteGroupRole(ctx context.Context, groupID int64, want int64) {
+	Eventually(func(g Gomega) {
+		g.Expect(remoteGroupRoleID(ctx, g, groupID)).To(Equal(want))
+	}, time.Minute, time.Second).Should(Succeed())
+}
+
+func remoteGroupRoleID(ctx context.Context, g Gomega, groupID int64) int64 {
+	resp, httpResp, err := newOpenAPIClientSet().Groups().
+		GroupsMgmtServiceGetTeamGroup(ctx, groupID).
+		Execute()
+	g.Expect(oapicxsdk.NewAPIError(httpResp, err)).ToNot(HaveOccurred())
+	g.Expect(resp.Group).ToNot(BeNil())
+	role, ok := resp.Group.GetRoleOk()
+	g.Expect(ok).To(BeTrue())
+	g.Expect(role).ToNot(BeNil())
+	return role.GetRoleId()
+}
+
 func expectRemoteGroupGone(ctx context.Context, groupID int64) {
 	Eventually(func(g Gomega) {
 		_, httpResp, err := newOpenAPIClientSet().Groups().
