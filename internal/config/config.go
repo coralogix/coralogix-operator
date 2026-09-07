@@ -45,7 +45,6 @@ var (
 
 type Config struct {
 	CoralogixApiKey             string
-	CoralogixRegionOrDomain     string
 	CoralogixOpenApiUrl         string
 	Selector                    Selector
 	ReconcileIntervals          map[string]time.Duration
@@ -101,12 +100,6 @@ func InitConfig(setupLog logr.Logger) *Config {
 		ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 		var err error
-		cfg.CoralogixRegionOrDomain, err = getCoralogixRegionOrDomain(strings.ToUpper(region), domain)
-		if err != nil {
-			setupLog.Error(err, "invalid arguments for running operator")
-			os.Exit(1)
-		}
-
 		cfg.CoralogixOpenApiUrl, err = getCoralogixOpenApiUrl(strings.ToUpper(region), domain)
 		if err != nil {
 			setupLog.Error(err, "invalid arguments for running operator")
@@ -180,24 +173,6 @@ func parseReconcileIntervals(intervals map[string]*string) (map[string]time.Dura
 		result[crd] = time.Second * time.Duration(numericInterval)
 	}
 	return result, nil
-}
-
-// getCoralogixRegionOrDomain returns the raw region identifier or custom domain, as
-// provided. The SCIM users client derives its own endpoint from this value; every other
-// client is built from CoralogixOpenApiUrl.
-func getCoralogixRegionOrDomain(region, domain string) (string, error) {
-	if err := validateRegionAndDomain(region, domain); err != nil {
-		return "", err
-	}
-
-	if region != "" {
-		if !slices.Contains(validRegions, region) {
-			return "", fmt.Errorf("region value is '%s', but can be one of %q", region, validRegions)
-		}
-		return region, nil
-	}
-
-	return domain, nil
 }
 
 func getCoralogixOpenApiUrl(region, domain string) (string, error) {

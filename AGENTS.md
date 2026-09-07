@@ -24,6 +24,8 @@ Most resource controllers delegate lifecycle flow to `internal/controller/coralo
 
 `internal/utils/` holds kind constants, labels/annotations, condition reasons, and small shared helpers. `internal/monitoring/` owns operator/resource metrics.
 
+`Group` has no User CRD. Member emails are resolved with Identity WhoAmI and Users Search OpenAPI, then written on Team Groups OpenAPI.
+
 ## API and Codegen
 
 Treat Go API types and Kubebuilder markers as the public CRD contract. Preserve backward compatibility unless a breaking change is explicitly requested.
