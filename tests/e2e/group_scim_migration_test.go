@@ -16,10 +16,13 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
+	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -30,7 +33,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
@@ -46,6 +48,7 @@ var _ = Describe("Group SCIM to OpenAPI migration", Serial, Ordered, Label("scim
 		customRole     *coralogixv1alpha1.CustomRole
 		group          *coralogixv1alpha1.Group
 		groupID        int64
+		roleIDBefore   int64
 		groupName      = uniqueName("group-scim-migration")
 		scopeName      = uniqueName("scope-for-group-migration")
 		customRoleName = uniqueName("custom-role-for-group-migration")
@@ -81,11 +84,15 @@ var _ = Describe("Group SCIM to OpenAPI migration", Serial, Ordered, Label("scim
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: scopeName, Namespace: testNamespace}, fetchedScope)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedScope.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 		}, time.Minute, time.Second).Should(Succeed())
+		fetchedRole := &coralogixv1alpha1.CustomRole{}
 		Eventually(func(g Gomega) {
-			fetchedRole := &coralogixv1alpha1.CustomRole{}
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: customRoleName, Namespace: testNamespace}, fetchedRole)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedRole.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedRole.Status.ID).ToNot(BeNil())
 		}, time.Minute, time.Second).Should(Succeed())
+		parsedRoleID, err := strconv.ParseInt(*fetchedRole.Status.ID, 10, 64)
+		Expect(err).ToNot(HaveOccurred())
+		roleIDBefore = parsedRoleID
 
 		// Helm chart 1.0 still requires spec.customRoles. The current typed Group
 		// sends spec.customRole and is rejected by that CRD.
@@ -94,10 +101,11 @@ var _ = Describe("Group SCIM to OpenAPI migration", Serial, Ordered, Label("scim
 		remoteIDBefore = *fetched.Status.ID
 		groupID = parseGroupID(remoteIDBefore)
 		expectGroupMembers(ctx, groupID, groupFixtureUserA, groupFixtureUserB)
+		expectRemoteGroupRole(ctx, groupID, roleIDBefore)
 	})
 
-	It("keeps the Group synced after upgrade to the OpenAPI operator", func(ctx context.Context) {
-		upgradeToOpenAPIOperator(ctx, crClient, groupKey, customRoleName, os.Getenv("E2E_UPGRADE_IMAGE"))
+	It("keeps the Group synced after helm upgrade to the OpenAPI operator", func(ctx context.Context) {
+		helmUpgradeToOpenAPIOperator(ctx, os.Getenv("E2E_UPGRADE_IMAGE"))
 
 		Consistently(func(g Gomega) {
 			fetched := &coralogixv1alpha1.Group{}
@@ -108,6 +116,7 @@ var _ = Describe("Group SCIM to OpenAPI migration", Serial, Ordered, Label("scim
 		}, 20*time.Second, time.Second).Should(Succeed())
 
 		expectGroupMembers(ctx, groupID, groupFixtureUserA, groupFixtureUserB)
+		expectRemoteGroupRole(ctx, groupID, roleIDBefore)
 	})
 
 	It("updates the Group with the OpenAPI operator", func(ctx context.Context) {
@@ -131,6 +140,7 @@ var _ = Describe("Group SCIM to OpenAPI migration", Serial, Ordered, Label("scim
 
 		expectRemoteGroupName(ctx, groupID, newGroupName)
 		expectGroupMembers(ctx, groupID, groupFixtureUserA, groupFixtureUserB)
+		expectRemoteGroupRole(ctx, groupID, roleIDBefore)
 	})
 
 	It("deletes the Group after the upgrade", func(ctx context.Context) {
@@ -140,7 +150,7 @@ var _ = Describe("Group SCIM to OpenAPI migration", Serial, Ordered, Label("scim
 })
 
 func legacyHelmGroup(name, scopeName, customRoleName string) *unstructured.Unstructured {
-	u := &unstructured.Unstructured{Object: map[string]interface{}{
+	return &unstructured.Unstructured{Object: map[string]interface{}{
 		"apiVersion": "coralogix.com/v1alpha1",
 		"kind":       "Group",
 		"metadata": map[string]interface{}{
@@ -164,45 +174,47 @@ func legacyHelmGroup(name, scopeName, customRoleName string) *unstructured.Unstr
 			},
 		},
 	}}
-	return u
 }
 
-func upgradeToOpenAPIOperator(
-	ctx context.Context,
-	crClient client.Client,
-	groupKey types.NamespacedName,
-	customRoleName string,
-	image string,
-) {
-	depName := operatorDeploymentName(ctx)
+func helmUpgradeToOpenAPIOperator(ctx context.Context, image string) {
+	repo, tag := helmImageRepoAndTag(image)
+	apiKey := os.Getenv("CORALOGIX_API_KEY")
+	region := os.Getenv("CORALOGIX_REGION")
+	Expect(apiKey).ToNot(BeEmpty())
+	Expect(region).ToNot(BeEmpty())
 
-	// Stop the SCIM operator before the Group CRD rename. Otherwise it can
-	// reconcile a Group that no longer has spec.customRoles and clear the role.
-	By("Scaling the operator to 0")
-	scaleOperator(ctx, depName, 0)
-	waitForOperatorPods(ctx, depName, 0, "")
+	// Helm upgrade updates CRDs and RBAC with the image. Patching only the
+	// image leaves Helm 1.0 RBAC, and this build exits on startup because it
+	// cannot get prometheusrules.monitoring.coreos.com.
+	By("Helm upgrading the operator to " + image)
+	cmd := exec.CommandContext(ctx, "helm", "upgrade", "coralogix-operator", operatorChartPath(),
+		"--namespace", operatorNamespace,
+		"--wait",
+		"--timeout", "3m",
+		"--set", "secret.data.apiKey="+apiKey,
+		"--set", "coralogixOperator.image.repository="+repo,
+		"--set", "coralogixOperator.image.tag="+tag,
+		"--set", "coralogixOperator.image.pullPolicy=IfNotPresent",
+		"--set", "coralogixOperator.region="+region,
+	)
+	out, err := cmd.CombinedOutput()
+	Expect(err).ToNot(HaveOccurred(), string(out))
 
-	By("Applying the current Group CRD")
-	applyCurrentGroupCRD(ctx)
-	rewriteGroupCustomRole(ctx, crClient, groupKey, customRoleName)
+	waitForOperatorRollout(ctx, operatorDeploymentName(ctx), image)
+}
 
-	By("Rolling the operator to " + image)
-	Eventually(func(g Gomega) {
-		dep, err := ClientsInstance.GetK8sClient().AppsV1().
-			Deployments(operatorNamespace).
-			Get(ctx, depName, metav1.GetOptions{})
-		g.Expect(err).ToNot(HaveOccurred())
-		g.Expect(dep.Spec.Template.Spec.Containers).ToNot(BeEmpty())
-		dep.Spec.Replicas = ptr.To(int32(1))
-		dep.Spec.Template.Spec.Containers[0].Image = image
-		dep.Spec.Template.Spec.Containers[0].ImagePullPolicy = corev1.PullIfNotPresent
-		_, err = ClientsInstance.GetK8sClient().AppsV1().
-			Deployments(operatorNamespace).
-			Update(ctx, dep, metav1.UpdateOptions{})
-		g.Expect(err).ToNot(HaveOccurred())
-	}, time.Minute, time.Second).Should(Succeed())
+func helmImageRepoAndTag(image string) (string, string) {
+	repo, tag, found := strings.Cut(image, ":")
+	Expect(found).To(BeTrue(), "E2E_UPGRADE_IMAGE must be repository:tag")
+	Expect(repo).ToNot(BeEmpty())
+	Expect(tag).ToNot(BeEmpty())
+	return repo, strings.TrimPrefix(tag, "v")
+}
 
-	waitForOperatorRollout(ctx, depName, image)
+func operatorChartPath() string {
+	_, thisFile, _, ok := runtime.Caller(0)
+	Expect(ok).To(BeTrue())
+	return filepath.Join(filepath.Dir(thisFile), "..", "..", "charts", "coralogix-operator")
 }
 
 func operatorDeploymentName(ctx context.Context) string {
@@ -218,51 +230,6 @@ func operatorDeploymentName(ctx context.Context) string {
 	return depName
 }
 
-func scaleOperator(ctx context.Context, depName string, replicas int32) {
-	Eventually(func(g Gomega) {
-		dep, err := ClientsInstance.GetK8sClient().AppsV1().
-			Deployments(operatorNamespace).
-			Get(ctx, depName, metav1.GetOptions{})
-		g.Expect(err).ToNot(HaveOccurred())
-		dep.Spec.Replicas = ptr.To(replicas)
-		_, err = ClientsInstance.GetK8sClient().AppsV1().
-			Deployments(operatorNamespace).
-			Update(ctx, dep, metav1.UpdateOptions{})
-		g.Expect(err).ToNot(HaveOccurred())
-	}, time.Minute, time.Second).Should(Succeed())
-}
-
-func applyCurrentGroupCRD(ctx context.Context) {
-	_, thisFile, _, ok := runtime.Caller(0)
-	Expect(ok).To(BeTrue())
-	crdPath := filepath.Join(filepath.Dir(thisFile), "..", "..", "config", "crd", "bases", "coralogix.com_groups.yaml")
-	cmd := exec.CommandContext(ctx, "kubectl", "apply", "-f", crdPath)
-	out, err := cmd.CombinedOutput()
-	Expect(err).ToNot(HaveOccurred(), string(out))
-}
-
-func rewriteGroupCustomRole(
-	ctx context.Context,
-	crClient client.Client,
-	groupKey types.NamespacedName,
-	customRoleName string,
-) {
-	By("Rewriting the Group to spec.customRole")
-	Eventually(func(g Gomega) {
-		current := &coralogixv1alpha1.Group{}
-		g.Expect(crClient.Get(ctx, groupKey, current)).To(Succeed())
-		modified := current.DeepCopy()
-		modified.Spec.CustomRole = &coralogixv1alpha1.GroupCustomRole{
-			ResourceRef: coralogixv1alpha1.ResourceRef{Name: customRoleName},
-		}
-		g.Expect(crClient.Patch(ctx, modified, client.MergeFrom(current))).To(Succeed())
-		fetched := &coralogixv1alpha1.Group{}
-		g.Expect(crClient.Get(ctx, groupKey, fetched)).To(Succeed())
-		g.Expect(fetched.Spec.CustomRole).ToNot(BeNil())
-		g.Expect(fetched.Spec.CustomRole.ResourceRef.Name).To(Equal(customRoleName))
-	}, time.Minute, time.Second).Should(Succeed())
-}
-
 func waitForOperatorRollout(ctx context.Context, depName, image string) {
 	Eventually(func(g Gomega) {
 		updated, err := ClientsInstance.GetK8sClient().AppsV1().
@@ -272,7 +239,7 @@ func waitForOperatorRollout(ctx context.Context, depName, image string) {
 		g.Expect(updated.Spec.Template.Spec.Containers[0].Image).To(Equal(image))
 		g.Expect(updated.Spec.Replicas).ToNot(BeNil())
 		want := *updated.Spec.Replicas
-		g.Expect(updated.Status.UpdatedReplicas).To(Equal(want))
+		g.Expect(updated.Status.UpdatedReplicas).To(Equal(want), describeOperatorPods(ctx, updated))
 		g.Expect(updated.Status.Replicas).To(Equal(updated.Status.UpdatedReplicas))
 		g.Expect(updated.Status.AvailableReplicas).To(Equal(updated.Status.UpdatedReplicas))
 		g.Expect(updated.Status.ReadyReplicas).To(Equal(want))
@@ -285,25 +252,6 @@ func waitForOperatorRollout(ctx context.Context, depName, image string) {
 		}
 		g.Expect(available).To(BeTrue())
 		assertOperatorPodsAndReplicaSets(ctx, g, updated, image)
-	}, 2*time.Minute, time.Second).Should(Succeed())
-}
-
-func waitForOperatorPods(ctx context.Context, depName string, want int, image string) {
-	Eventually(func(g Gomega) {
-		dep, err := ClientsInstance.GetK8sClient().AppsV1().
-			Deployments(operatorNamespace).
-			Get(ctx, depName, metav1.GetOptions{})
-		g.Expect(err).ToNot(HaveOccurred())
-		g.Expect(dep.Spec.Replicas).ToNot(BeNil())
-		g.Expect(*dep.Spec.Replicas).To(Equal(int32(want)))
-		g.Expect(dep.Status.Replicas).To(Equal(int32(want)))
-		if want == 0 {
-			assertOperatorPodsAndReplicaSets(ctx, g, dep, "")
-			return
-		}
-		g.Expect(dep.Status.UpdatedReplicas).To(Equal(int32(want)))
-		g.Expect(dep.Status.ReadyReplicas).To(Equal(int32(want)))
-		assertOperatorPodsAndReplicaSets(ctx, g, dep, image)
 	}, 2*time.Minute, time.Second).Should(Succeed())
 }
 
@@ -359,6 +307,45 @@ func assertOperatorPodsAndReplicaSets(ctx context.Context, g Gomega, dep *appsv1
 		return
 	}
 	g.Expect(active).To(Equal(1))
+}
+
+func describeOperatorPods(ctx context.Context, dep *appsv1.Deployment) string {
+	selector, err := metav1.LabelSelectorAsSelector(dep.Spec.Selector)
+	if err != nil {
+		return err.Error()
+	}
+	pods, err := ClientsInstance.GetK8sClient().CoreV1().
+		Pods(operatorNamespace).
+		List(ctx, metav1.ListOptions{LabelSelector: selector.String()})
+	if err != nil {
+		return err.Error()
+	}
+	lines := []string{
+		fmt.Sprintf("replicas ready=%d updated=%d available=%d unavailable=%d",
+			dep.Status.ReadyReplicas, dep.Status.UpdatedReplicas,
+			dep.Status.AvailableReplicas, dep.Status.UnavailableReplicas),
+	}
+	for _, pod := range pods.Items {
+		reason := string(pod.Status.Phase)
+		if pod.Status.Reason != "" {
+			reason = pod.Status.Reason
+		}
+		image := ""
+		if len(pod.Spec.Containers) > 0 {
+			image = pod.Spec.Containers[0].Image
+		}
+		lines = append(lines, fmt.Sprintf("pod %s phase=%s reason=%s image=%s",
+			pod.Name, pod.Status.Phase, reason, image))
+		for _, cs := range pod.Status.ContainerStatuses {
+			if cs.State.Waiting != nil {
+				lines = append(lines, fmt.Sprintf("  waiting %s: %s", cs.State.Waiting.Reason, cs.State.Waiting.Message))
+			}
+			if cs.State.Terminated != nil {
+				lines = append(lines, fmt.Sprintf("  terminated %s: %s", cs.State.Terminated.Reason, cs.State.Terminated.Message))
+			}
+		}
+	}
+	return strings.Join(lines, "\n")
 }
 
 func rsReplicas(rs appsv1.ReplicaSet) int32 {

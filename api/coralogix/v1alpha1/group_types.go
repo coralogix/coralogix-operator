@@ -53,9 +53,15 @@ type GroupSpec struct {
 	// +optional
 	Members []Member `json:"members,omitempty"`
 
-	// Custom roles applied to the group.
+	// Custom role applied to the group.
 	// +optional
 	CustomRole *GroupCustomRole `json:"customRole,omitempty"`
+
+	// Deprecated: use customRole. Kept so Groups created against Helm chart 1.0
+	// (spec.customRoles) keep their role after CRD upgrade. The operator uses
+	// customRole when set, otherwise the first customRoles entry.
+	// +optional
+	CustomRoles []GroupCustomRole `json:"customRoles,omitempty"`
 
 	// Scope attached to the group.
 	// +optional
@@ -165,19 +171,30 @@ func (g *Group) ExtractUpdateGroupRequest(userIDs []string) (*groups.UpdateTeamG
 	}, nil
 }
 
+func (g *Group) customRoleRef() *GroupCustomRole {
+	if g.Spec.CustomRole != nil {
+		return g.Spec.CustomRole
+	}
+	if len(g.Spec.CustomRoles) > 0 {
+		return &g.Spec.CustomRoles[0]
+	}
+	return nil
+}
+
 func (g *Group) ExtractRoleId() (int64, error) {
-	if g.Spec.CustomRole == nil {
+	ref := g.customRoleRef()
+	if ref == nil {
 		return 0, nil
 	}
 	var namespace string
-	if ns := g.Spec.CustomRole.ResourceRef.Namespace; ns != nil {
+	if ns := ref.ResourceRef.Namespace; ns != nil {
 		namespace = *ns
 	} else {
 		namespace = g.Namespace
 	}
 
 	cr := &CustomRole{}
-	if err := config.GetClient().Get(context.Background(), client.ObjectKey{Name: g.Spec.CustomRole.ResourceRef.Name, Namespace: namespace}, cr); err != nil {
+	if err := config.GetClient().Get(context.Background(), client.ObjectKey{Name: ref.ResourceRef.Name, Namespace: namespace}, cr); err != nil {
 		return 0, err
 	}
 
@@ -186,7 +203,7 @@ func (g *Group) ExtractRoleId() (int64, error) {
 	}
 
 	if cr.Status.ID == nil {
-		return 0, fmt.Errorf("ID is not populated for CustomRole %s", g.Spec.CustomRole.ResourceRef.Name)
+		return 0, fmt.Errorf("ID is not populated for CustomRole %s", ref.ResourceRef.Name)
 	}
 
 	roleID, err := strconv.Atoi(*cr.Status.ID)

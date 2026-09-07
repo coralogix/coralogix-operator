@@ -24,7 +24,7 @@ Most resource controllers delegate lifecycle flow to `internal/controller/coralo
 
 `internal/utils/` holds kind constants, labels/annotations, condition reasons, and small shared helpers. `internal/monitoring/` owns operator/resource metrics.
 
-`Group` has no User CRD. Member emails are resolved with Identity WhoAmI and Users Search OpenAPI, then written on Team Groups OpenAPI.
+`Group` has no User CRD. Member emails are resolved with Identity WhoAmI and Users Search OpenAPI, then written on Team Groups OpenAPI. `spec.customRoles` is a read fallback for Groups created against Helm chart 1.0; prefer `spec.customRole`.
 
 ## API and Codegen
 
