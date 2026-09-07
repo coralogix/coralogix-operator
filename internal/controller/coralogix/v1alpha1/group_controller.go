@@ -26,9 +26,10 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	oapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	identity "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/identity_service"
 	groups "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/team_groups_management_service"
+	users "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/users_management_service"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
@@ -37,9 +38,11 @@ import (
 
 // GroupReconciler reconciles a Group object
 type GroupReconciler struct {
-	GroupsClient *groups.TeamGroupsManagementServiceAPIService
-	UsersClient  *cxsdk.UsersClient
-	Interval     time.Duration
+	GroupsClient   *groups.TeamGroupsManagementServiceAPIService
+	UsersClient    *users.UsersManagementServiceAPIService
+	IdentityClient *identity.IdentityServiceAPIService
+	teamID         teamIDCache
+	Interval       time.Duration
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=groups,verbs=get;list;watch;create;update;patch;delete
@@ -60,7 +63,11 @@ func (r *GroupReconciler) RequeueInterval() time.Duration {
 
 func (r *GroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	group := obj.(*coralogixv1alpha1.Group)
-	createRequest, err := group.ExtractCreateGroupRequest(ctx, r.UsersClient)
+	userIDs, err := r.memberUserIDs(ctx, group)
+	if err != nil {
+		return fmt.Errorf("error on extracting create request: %w", err)
+	}
+	createRequest, err := group.ExtractCreateGroupRequest(userIDs)
 	if err != nil {
 		return fmt.Errorf("error on extracting create request: %w", err)
 	}
@@ -83,7 +90,11 @@ func (r *GroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 
 func (r *GroupReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	group := obj.(*coralogixv1alpha1.Group)
-	updateRequest, err := group.ExtractUpdateGroupRequest(ctx, r.UsersClient)
+	userIDs, err := r.memberUserIDs(ctx, group)
+	if err != nil {
+		return fmt.Errorf("error on extracting update request: %w", err)
+	}
+	updateRequest, err := group.ExtractUpdateGroupRequest(userIDs)
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
 	}
@@ -124,6 +135,17 @@ func (r *GroupReconciler) HandleDeletion(ctx context.Context, log logr.Logger, o
 	}
 	log.Info("Group deleted from remote system", "id", *group.Status.ID)
 	return nil
+}
+
+func (r *GroupReconciler) memberUserIDs(ctx context.Context, group *coralogixv1alpha1.Group) ([]string, error) {
+	if len(group.Spec.Members) == 0 {
+		return nil, nil
+	}
+	teamID, err := r.teamID.get(ctx, r.IdentityClient)
+	if err != nil {
+		return nil, err
+	}
+	return resolveMemberUserIDs(ctx, r.UsersClient, teamID, group.Spec.Members)
 }
 
 // SetupWithManager sets up the controller with the Manager.

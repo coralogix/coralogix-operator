@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"os"
 	"runtime"
-	"strings"
 
 	"github.com/go-logr/logr"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -41,7 +40,6 @@ import (
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	openapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 
 	"github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
@@ -131,14 +129,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// The SCIM users client is the operator's only remaining consumer of the legacy SDK.
-	// It speaks HTTP (api.<domain>/scim/Users), not gRPC, so no gRPC ClientSet is
-	// constructed and the operator only ever resolves api.<domain>.
-	usersClient := cxsdk.NewUsersClient(cxsdk.NewSDKCallPropertiesCreatorOperator(
-		strings.ToLower(cfg.CoralogixRegionOrDomain),
-		cxsdk.NewAuthContext(cfg.CoralogixApiKey, cfg.CoralogixApiKey),
-		OperatorVersion))
-
 	oapiClientSet := openapicxsdk.NewClientSet(openapicxsdk.NewConfigBuilder().
 		WithURL(cfg.CoralogixOpenApiUrl).
 		WithAPIKey(cfg.CoralogixApiKey).
@@ -207,9 +197,10 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.GroupReconciler{
-		GroupsClient: oapiClientSet.Groups(),
-		UsersClient:  usersClient,
-		Interval:     cfg.ReconcileIntervals[utils.GroupKind],
+		GroupsClient:   oapiClientSet.Groups(),
+		UsersClient:    oapiClientSet.Users(),
+		IdentityClient: oapiClientSet.Identity(),
+		Interval:       cfg.ReconcileIntervals[utils.GroupKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Group")
 		os.Exit(1)

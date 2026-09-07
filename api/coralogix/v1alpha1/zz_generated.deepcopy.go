@@ -3118,6 +3118,13 @@ func (in *GroupSpec) DeepCopyInto(out *GroupSpec) {
 		*out = new(GroupCustomRole)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.CustomRoles != nil {
+		in, out := &in.CustomRoles, &out.CustomRoles
+		*out = make([]GroupCustomRole, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	if in.Scope != nil {
 		in, out := &in.Scope, &out.Scope
 		*out = new(GroupScope)

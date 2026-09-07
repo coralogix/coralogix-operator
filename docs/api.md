@@ -13985,7 +13985,16 @@ GroupSpec defines the desired state of Coralogix Group.
         <td><b><a href="#groupspeccustomrole">customRole</a></b></td>
         <td>object</td>
         <td>
-          Custom roles applied to the group.<br/>
+          Custom role applied to the group.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#groupspeccustomrolesindex">customRoles</a></b></td>
+        <td>[]object</td>
+        <td>
+          Deprecated: use customRole. Kept so Groups created against Helm chart 1.0
+(spec.customRoles) keep their role after CRD upgrade. The operator uses
+customRole when set, otherwise the first customRoles entry.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -14027,7 +14036,7 @@ GroupSpec defines the desired state of Coralogix Group.
 
 
 
-Custom roles applied to the group.
+Custom role applied to the group.
 
 <table>
     <thead>
@@ -14051,6 +14060,67 @@ Custom roles applied to the group.
 
 ### Group.spec.customRole.resourceRef
 <sup><sup>[↩ Parent](#groupspeccustomrole)</sup></sup>
+
+
+
+Reference to the custom role within the cluster.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource (not id).<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Group.spec.customRoles[index]
+<sup><sup>[↩ Parent](#groupspec)</sup></sup>
+
+
+
+Custom role reference.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#groupspeccustomrolesindexresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          Reference to the custom role within the cluster.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Group.spec.customRoles[index].resourceRef
+<sup><sup>[↩ Parent](#groupspeccustomrolesindex)</sup></sup>
 
 
 
