@@ -39,11 +39,31 @@ const (
 )
 
 func waitForGroupRemoteSynced(ctx context.Context, crClient client.Client, name types.NamespacedName) *coralogixv1alpha1.Group {
+	return waitForGroupRemoteSyncedWithPrintableStatus(ctx, crClient, name, true)
+}
+
+// waitForReleasedGroupRemoteSynced does not require status.printableStatus.
+// Helm chart 1.0 can set RemoteSynced and status.id without that print column.
+func waitForReleasedGroupRemoteSynced(ctx context.Context, crClient client.Client, name types.NamespacedName) *coralogixv1alpha1.Group {
+	return waitForGroupRemoteSyncedWithPrintableStatus(ctx, crClient, name, false)
+}
+
+func waitForGroupRemoteSyncedWithPrintableStatus(
+	ctx context.Context,
+	crClient client.Client,
+	name types.NamespacedName,
+	requirePrintableStatus bool,
+) *coralogixv1alpha1.Group {
 	fetched := &coralogixv1alpha1.Group{}
 	Eventually(func(g Gomega) {
 		g.Expect(crClient.Get(ctx, name, fetched)).To(Succeed())
-		g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
-		g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
+		g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(
+			BeTrue(),
+			fmt.Sprintf("status=%+v", fetched.Status),
+		)
+		if requirePrintableStatus {
+			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
+		}
 		g.Expect(fetched.Status.ID).ToNot(BeNil())
 		g.Expect(*fetched.Status.ID).ToNot(BeEmpty())
 	}, time.Minute, time.Second).Should(Succeed())

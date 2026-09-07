@@ -18,6 +18,8 @@ import (
 	"context"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"runtime"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -88,7 +90,7 @@ var _ = Describe("Group SCIM to OpenAPI migration", Serial, Ordered, Label("scim
 		// Helm chart 1.0 still requires spec.customRoles. The current typed Group
 		// sends spec.customRole and is rejected by that CRD.
 		Expect(crClient.Create(ctx, legacyHelmGroup(groupName, scopeName, customRoleName))).To(Succeed())
-		fetched := waitForGroupRemoteSynced(ctx, crClient, groupKey)
+		fetched := waitForReleasedGroupRemoteSynced(ctx, crClient, groupKey)
 		remoteIDBefore = *fetched.Status.ID
 		groupID = parseGroupID(remoteIDBefore)
 		expectGroupMembers(ctx, groupID, groupFixtureUserA, groupFixtureUserB)
@@ -231,7 +233,10 @@ func scaleOperator(ctx context.Context, depName string, replicas int32) {
 }
 
 func applyCurrentGroupCRD(ctx context.Context) {
-	cmd := exec.CommandContext(ctx, "kubectl", "apply", "-f", "config/crd/bases/coralogix.com_groups.yaml")
+	_, thisFile, _, ok := runtime.Caller(0)
+	Expect(ok).To(BeTrue())
+	crdPath := filepath.Join(filepath.Dir(thisFile), "..", "..", "config", "crd", "bases", "coralogix.com_groups.yaml")
+	cmd := exec.CommandContext(ctx, "kubectl", "apply", "-f", crdPath)
 	out, err := cmd.CombinedOutput()
 	Expect(err).ToNot(HaveOccurred(), string(out))
 }
