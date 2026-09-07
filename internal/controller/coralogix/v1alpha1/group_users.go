@@ -67,15 +67,34 @@ func resolveMemberUserIDs(
 		return nil, nil
 	}
 
+	candidates, err := searchUsers(ctx, usersClient, teamID)
+	if err != nil {
+		return nil, err
+	}
+
+	firstID := make(map[string]string, len(candidates))
+	for _, candidate := range candidates {
+		key := strings.ToLower(candidate.GetUsername())
+		if key == "" {
+			continue
+		}
+		if _, exists := firstID[key]; exists {
+			continue
+		}
+		if id := candidate.GetUserId(); id != "" {
+			firstID[key] = id
+		}
+	}
+
 	var userIDs []string
 	var errs error
 	for _, member := range members {
-		userID, err := resolveUserIDByUsername(ctx, usersClient, teamID, member.UserName)
-		if err != nil {
-			errs = errors.Join(errs, err)
+		id, ok := firstID[strings.ToLower(member.UserName)]
+		if !ok {
+			errs = errors.Join(errs, fmt.Errorf("user %s not found", member.UserName))
 			continue
 		}
-		userIDs = append(userIDs, userID)
+		userIDs = append(userIDs, id)
 	}
 	if errs != nil {
 		return nil, errs
@@ -83,45 +102,18 @@ func resolveMemberUserIDs(
 	return userIDs, nil
 }
 
-func resolveUserIDByUsername(
-	ctx context.Context,
-	usersClient *users.UsersManagementServiceAPIService,
-	teamID int64,
-	username string,
-) (string, error) {
-	candidates, err := searchUsers(ctx, usersClient, teamID, username)
-	if err != nil {
-		return "", err
-	}
-	for _, candidate := range candidates {
-		if !strings.EqualFold(candidate.GetUsername(), username) {
-			continue
-		}
-		if id := candidate.GetUserId(); id != "" {
-			return id, nil
-		}
-	}
-	return "", fmt.Errorf("user %s not found", username)
-}
-
-// searchUsers pages SearchUsers. An empty username lists the whole team. The
-// server-side username filter can match partially, so callers still compare
-// usernames themselves. A missing next token, or one that does not move
-// forward, ends the loop.
+// searchUsers pages SearchUsers for the whole team. A missing next token, or
+// one that does not move forward, ends the loop.
 func searchUsers(
 	ctx context.Context,
 	usersClient *users.UsersManagementServiceAPIService,
 	teamID int64,
-	username string,
 ) ([]users.RbacV2User, error) {
 	var found []users.RbacV2User
 	var pageToken int64
 
 	for {
 		req := usersClient.UsersMgmtServiceSearchUsers(ctx, teamID).PageSize(userSearchPageSize)
-		if username != "" {
-			req = req.Username(username)
-		}
 		if pageToken != 0 {
 			req = req.PageToken(pageToken)
 		}

@@ -36,17 +36,21 @@ func TestResolveMemberUserIDsEmptyMembers(t *testing.T) {
 }
 
 func TestResolveMemberUserIDsSinglePage(t *testing.T) {
+	calls := 0
 	client := usersClientForSearch(t, func(w http.ResponseWriter, r *http.Request) {
+		calls++
 		require.Equal(t, "/aaa/teams/v2/7/search", r.URL.Path)
-		require.Equal(t, "alice@example.com", r.URL.Query().Get("username"))
-		writeSearchUsers(t, w, 0, userJSON("id-1", "alice@example.com"))
+		require.Empty(t, r.URL.Query().Get("username"))
+		writeSearchUsers(t, w, 0, userJSON("id-1", "alice@example.com"), userJSON("id-2", "bob@example.com"))
 	})
 
 	ids, err := resolveMemberUserIDs(context.Background(), client, 7, []coralogixv1alpha1.Member{
 		{UserName: "alice@example.com"},
+		{UserName: "bob@example.com"},
 	})
 	require.NoError(t, err)
-	require.Equal(t, []string{"id-1"}, ids)
+	require.Equal(t, []string{"id-1", "id-2"}, ids)
+	require.Equal(t, 1, calls)
 }
 
 func TestResolveMemberUserIDsPaginates(t *testing.T) {
