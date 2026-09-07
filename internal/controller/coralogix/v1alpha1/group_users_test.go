@@ -141,6 +141,26 @@ func TestTeamIDCacheResolvesOnce(t *testing.T) {
 	require.Equal(t, 1, whoamiCalls)
 }
 
+func TestMemberUserIDsSkipsWhoAmIWhenNoMembers(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+		t.Fatal("WhoAmI must not run when the Group has no members")
+	}))
+	t.Cleanup(server.Close)
+
+	clientSet := openapicxsdk.NewClientSet(openapicxsdk.NewConfigBuilder().
+		WithURL(server.URL).
+		WithAPIKey("test").
+		Build())
+	r := &GroupReconciler{
+		IdentityClient: clientSet.Identity(),
+		UsersClient:    clientSet.Users(),
+	}
+
+	ids, err := r.memberUserIDs(context.Background(), &coralogixv1alpha1.Group{})
+	require.NoError(t, err)
+	require.Nil(t, ids)
+}
+
 func usersClientForSearch(t *testing.T, handler http.HandlerFunc) *users.UsersManagementServiceAPIService {
 	t.Helper()
 	server := httptest.NewServer(handler)
