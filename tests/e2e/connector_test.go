@@ -57,7 +57,6 @@ var _ = Describe("Connector", Ordered, func() {
 	)
 
 	BeforeAll(func() {
-		skipIfEphemeralTeam("the Slack connector references the shared team's Slack integration (SLACK_INTEGRATION_ID)")
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		notificationsClient = ClientsInstance.GetCoralogixClientSet().Notifications()
 	})
@@ -282,7 +281,6 @@ var _ = Describe("Connector PagerDutyIncidents", Ordered, func() {
 	)
 
 	BeforeAll(func() {
-		skipIfEphemeralTeam("the PagerDuty connector references the shared team's PagerDuty integration (PD_INTEGRATION_ID)")
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		notificationsClient = ClientsInstance.GetCoralogixClientSet().Notifications()
 	})
