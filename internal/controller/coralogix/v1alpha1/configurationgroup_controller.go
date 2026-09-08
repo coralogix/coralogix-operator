@@ -30,7 +30,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // ConfigurationGroupReconciler reconciles a ConfigurationGroup object.
@@ -58,7 +57,7 @@ func (r *ConfigurationGroupReconciler) RequeueInterval() time.Duration {
 func (r *ConfigurationGroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	group := obj.(*coralogixv1alpha1.ConfigurationGroup)
 	createReq := expandCreateRequest(group)
-	log.Info("Creating remote configuration group", "configurationGroup", utils.FormatJSON(createReq))
+	log.Info("Creating remote configuration group", "name", group.Spec.Name)
 	createResp, httpResp, err := r.ConfigurationGroupsClient.
 		ConfigurationGroupServiceCreateConfigurationGroup(ctx).
 		ConfigurationGroupServiceCreateConfigurationGroupRequest(createReq).
@@ -69,7 +68,7 @@ func (r *ConfigurationGroupReconciler) HandleCreation(ctx context.Context, log l
 	if createResp == nil || createResp.Group == nil || createResp.Group.Id == nil {
 		return fmt.Errorf("error on creating remote configuration group: empty response")
 	}
-	log.Info("Remote configuration group created", "response", utils.FormatJSON(createResp))
+	log.Info("Remote configuration group created", "id", createResp.Group.GetId(), "name", group.Spec.Name)
 	group.Status = coralogixv1alpha1.ConfigurationGroupStatus{
 		ID: ptr.To(createResp.Group.GetId()),
 	}
@@ -79,7 +78,7 @@ func (r *ConfigurationGroupReconciler) HandleCreation(ctx context.Context, log l
 func (r *ConfigurationGroupReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	group := obj.(*coralogixv1alpha1.ConfigurationGroup)
 	replaceReq := expandReplaceRequest(group)
-	log.Info("Updating remote configuration group", "configurationGroup", utils.FormatJSON(replaceReq))
+	log.Info("Updating remote configuration group", "id", *group.Status.ID, "name", group.Spec.Name)
 	_, httpResp, err := r.ConfigurationGroupsClient.
 		ConfigurationGroupServiceReplaceConfigurationGroup(ctx, *group.Status.ID).
 		ConfigurationGroupServiceReplaceConfigurationGroupRequest(replaceReq).
@@ -113,9 +112,6 @@ func (r *ConfigurationGroupReconciler) HandleDeletion(ctx context.Context, log l
 }
 
 func (r *ConfigurationGroupReconciler) deactivateFamilyIfActive(ctx context.Context, group *coralogixv1alpha1.ConfigurationGroup) error {
-	if group.Spec.Family.Active != nil && !*group.Spec.Family.Active {
-		return nil
-	}
 	inactive := group.DeepCopy()
 	inactive.Spec.Family.Active = ptr.To(false)
 	replaceReq := expandReplaceRequest(inactive)

@@ -30,6 +30,8 @@ type ConfigurationGroupSpec struct {
 
 	// Tags attached to the configuration group.
 	// +optional
+	// +kubebuilder:validation:MaxItems=64
+	// +kubebuilder:validation:items:MaxLength=256
 	Tags []string `json:"tags,omitempty"`
 
 	// Selection precedence. Higher values win on ties and 0 is the default.
@@ -54,6 +56,9 @@ type ConfigurationFamilySpec struct {
 	// Collector semantic version this family targets, without a leading v prefix.
 	// The replace API keeps the existing value when this field is omitted.
 	// +optional
+	// +kubebuilder:validation:MinLength=5
+	// +kubebuilder:validation:MaxLength=256
+	// +kubebuilder:validation:Pattern=`^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$`
 	CollectorVersion *string `json:"collectorVersion,omitempty"`
 
 	// Metadata stored with this configuration family.

@@ -104,7 +104,12 @@ var _ = Describe("ConfigurationGroup", Ordered, func() {
 			g.Expect(crClient.Get(ctx,
 				types.NamespacedName{Name: configurationGroup.Name, Namespace: testNamespace},
 				fetched)).To(Succeed())
-			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			condition := meta.FindStatusCondition(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)
+			g.Expect(condition).ToNot(BeNil())
+			g.Expect(condition.Status).To(Equal(metav1.ConditionTrue))
+			g.Expect(condition.ObservedGeneration).To(Equal(fetched.GetGeneration()))
+			g.Expect(fetched.Spec.Description).ToNot(BeNil())
+			g.Expect(*fetched.Spec.Description).To(Equal(updatedDescription))
 			g.Expect(fetched.Status.ID).ToNot(BeNil())
 			g.Expect(*fetched.Status.ID).To(Equal(configurationGroupID))
 		}, time.Minute, time.Second).Should(Succeed())

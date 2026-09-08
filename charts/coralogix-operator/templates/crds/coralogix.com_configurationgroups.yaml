@@ -65,6 +65,9 @@ spec:
                     description: |-
                       Collector semantic version this family targets, without a leading v prefix.
                       The replace API keeps the existing value when this field is omitted.
+                    maxLength: 256
+                    minLength: 5
+                    pattern: ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$
                     type: string
                   description:
                     description: Human-readable description.
@@ -116,7 +119,9 @@ spec:
               tags:
                 description: Tags attached to the configuration group.
                 items:
+                  maxLength: 256
                   type: string
+                maxItems: 64
                 type: array
             required:
             - family
