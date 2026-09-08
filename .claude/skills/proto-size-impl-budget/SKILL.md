@@ -7,7 +7,7 @@ description: "Use when reviewing or adding an operator CRD. Estimate types+contr
 
 **Trigger:** A new or large `*_types.go` plus controller for one management API.
 
-**Fix:** Count exported JSON-tagged fields on generated model structs in the **pinned** `coralogix-management-sdk` from `go.mod` (`go/openapi/gen/<service>`). Skip duplicated OpenAPI filter/error types. Do not use live proto HEAD. If the SDK has no types for that API, skip the ratio.
+**Fix:** Count exported JSON-tagged fields on generated model structs in the **pinned** `coralogix-management-sdk` from `go.mod` (`go/openapi/gen/<service>`). Count **this kind only**. If one gen package backs several kinds (for example `policies_service` for three TCO CRDs), do not use the whole package. Use this kind’s types (name prefixes, or models reachable from its create/get/replace requests). Skip duplicated OpenAPI filter/error types. Do not use live proto HEAD. If the SDK has no types for that API, skip the ratio.
 
 Count **all non-test, non-example `.go` lines** for that CRD: Spec/Status types, controller, helpers, and any generated client copied into this repo. Skip tests, examples, docs, and generated deepcopy. Compare:
 
