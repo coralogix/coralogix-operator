@@ -112,12 +112,17 @@ func (r *ConfigurationGroupReconciler) HandleDeletion(ctx context.Context, log l
 }
 
 func (r *ConfigurationGroupReconciler) deactivateFamilyIfActive(ctx context.Context, group *coralogixv1alpha1.ConfigurationGroup) error {
-	inactive := group.DeepCopy()
-	inactive.Spec.Family.Active = ptr.To(false)
-	replaceReq := expandReplaceRequest(inactive)
+	// Send only family.active=false so a rejected desired spec (for example
+	// forbidden collector YAML) cannot block archive by failing this replace.
+	family := cfggroups.NewConfigurationGroupServiceReplaceConfigurationGroupRequestGroupFamily()
+	family.SetActive(false)
+	replace := cfggroups.NewConfigurationGroupServiceReplaceConfigurationGroupRequestGroup()
+	replace.SetFamily(*family)
+	replaceReq := cfggroups.NewConfigurationGroupServiceReplaceConfigurationGroupRequest()
+	replaceReq.SetGroup(*replace)
 	_, httpResp, err := r.ConfigurationGroupsClient.
 		ConfigurationGroupServiceReplaceConfigurationGroup(ctx, *group.Status.ID).
-		ConfigurationGroupServiceReplaceConfigurationGroupRequest(replaceReq).
+		ConfigurationGroupServiceReplaceConfigurationGroupRequest(*replaceReq).
 		Execute()
 	if err != nil {
 		if apiErr := cxsdk.NewAPIError(httpResp, err); cxsdk.IsNotFound(apiErr) {

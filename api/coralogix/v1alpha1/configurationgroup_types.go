@@ -78,6 +78,7 @@ type RemoteConfigurationSpec struct {
 
 	// OpenTelemetry Collector configuration YAML. The supervisor-managed OpAMP extension must not be configured.
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=1048576
 	RawConfiguration string `json:"rawConfiguration"`
 
 	// Flat agent attributes that match agents for this configuration.

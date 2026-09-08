@@ -96,6 +96,7 @@ spec:
                         rawConfiguration:
                           description: OpenTelemetry Collector configuration YAML.
                             The supervisor-managed OpAMP extension must not be configured.
+                          maxLength: 1048576
                           minLength: 1
                           type: string
                       required:
