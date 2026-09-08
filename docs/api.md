@@ -10225,7 +10225,8 @@ Latest configuration family for this group.
         <td><b>collectorVersion</b></td>
         <td>string</td>
         <td>
-          Collector semantic version this family targets, without a leading v prefix.<br/>
+          Collector semantic version this family targets, without a leading v prefix.
+The replace API keeps the existing value when this field is omitted.<br/>
         </td>
         <td>false</td>
       </tr><tr>

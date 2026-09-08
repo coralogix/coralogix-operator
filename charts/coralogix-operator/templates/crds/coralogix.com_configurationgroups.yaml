@@ -62,8 +62,9 @@ spec:
                     description: Whether this family is active.
                     type: boolean
                   collectorVersion:
-                    description: Collector semantic version this family targets, without
-                      a leading v prefix.
+                    description: |-
+                      Collector semantic version this family targets, without a leading v prefix.
+                      The replace API keeps the existing value when this field is omitted.
                     type: string
                   description:
                     description: Human-readable description.
@@ -92,11 +93,13 @@ spec:
                         rawConfiguration:
                           description: OpenTelemetry Collector configuration YAML.
                             The supervisor-managed OpAMP extension must not be configured.
+                          minLength: 1
                           type: string
                       required:
                       - name
                       - rawConfiguration
                       type: object
+                    maxItems: 128
                     minItems: 1
                     type: array
                 required:

@@ -25,11 +25,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	cfggroups "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/fleet_manager_configuration_groups"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	cfggroups "github.com/coralogix/coralogix-operator/v2/internal/openapi/configuration_group_service"
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
@@ -105,7 +105,6 @@ func (r *ConfigurationGroupReconciler) HandleDeletion(ctx context.Context, log l
 		Execute()
 	if err != nil {
 		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
-			log.Error(err, "Error archiving remote configuration group", "id", id)
 			return fmt.Errorf("error archiving remote configuration group %s: %w", id, apiErr)
 		}
 	}
@@ -171,9 +170,11 @@ func expandReplaceRequest(group *coralogixv1alpha1.ConfigurationGroup) cfggroups
 		tags = []string{}
 	}
 	replace.SetTags(tags)
+	priorityOrder := int32(0)
 	if group.Spec.PriorityOrder != nil {
-		replace.SetPriorityOrder(*group.Spec.PriorityOrder)
+		priorityOrder = *group.Spec.PriorityOrder
 	}
+	replace.SetPriorityOrder(priorityOrder)
 	replace.SetFamily(*expandFamilyReplace(group.Spec.Family))
 	req := cfggroups.NewConfigurationGroupServiceReplaceConfigurationGroupRequest()
 	req.SetGroup(*replace)

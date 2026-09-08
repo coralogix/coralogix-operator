@@ -68,4 +68,3 @@ linters:
     generated: strict
     paths:
       - zz_generated.*\.go$
-      - internal/openapi/.*

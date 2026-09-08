@@ -52,6 +52,7 @@ type ConfigurationFamilySpec struct {
 	Description *string `json:"description,omitempty"`
 
 	// Collector semantic version this family targets, without a leading v prefix.
+	// The replace API keeps the existing value when this field is omitted.
 	// +optional
 	CollectorVersion *string `json:"collectorVersion,omitempty"`
 
@@ -61,6 +62,7 @@ type ConfigurationFamilySpec struct {
 
 	// Remote OpenTelemetry Collector configurations in this family.
 	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=128
 	RemoteConfigurations []RemoteConfigurationSpec `json:"remoteConfigurations"`
 }
 
@@ -70,6 +72,7 @@ type RemoteConfigurationSpec struct {
 	Name string `json:"name"`
 
 	// OpenTelemetry Collector configuration YAML. The supervisor-managed OpAMP extension must not be configured.
+	// +kubebuilder:validation:MinLength=1
 	RawConfiguration string `json:"rawConfiguration"`
 
 	// Flat agent attributes that match agents for this configuration.

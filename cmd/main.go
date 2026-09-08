@@ -43,6 +43,7 @@ import (
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	openapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	cfggroups "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/fleet_manager_configuration_groups"
 
 	"github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/api/coralogix/v1beta1"
@@ -51,7 +52,6 @@ import (
 	v1alpha1controllers "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/v1alpha1"
 	v1beta1controllers "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/v2/internal/monitoring"
-	cfggroups "github.com/coralogix/coralogix-operator/v2/internal/openapi/configuration_group_service"
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 	//+kubebuilder:scaffold:imports
 )
