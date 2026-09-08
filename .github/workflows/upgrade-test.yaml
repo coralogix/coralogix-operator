@@ -144,7 +144,7 @@ jobs:
         run: |
           helm repo add coralogix https://cgx.jfrog.io/artifactory/coralogix-charts-virtual
           helm repo update
-      - name: Install the last released operator
+      - name: Install Helm chart 1.0
         run: |
           helm install coralogix-operator coralogix/coralogix-operator \
             --version=1.0 \
