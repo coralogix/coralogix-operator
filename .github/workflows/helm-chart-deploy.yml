@@ -31,7 +31,7 @@ jobs:
         id: jfrog
         uses: jfrog/setup-jfrog-cli@v4
         env:
-          JF_URL: https://cgx.jfrog.io
+          JF_URL: ${{ secrets.JFROG_URL }}
         with:
           oidc-provider-name: github
           oidc-audience: jfrog-github
