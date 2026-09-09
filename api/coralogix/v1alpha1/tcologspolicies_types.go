@@ -85,17 +85,19 @@ type ArchiveRetention struct {
 type ArchiveRetentionBackendRef struct {
 	// Name of the policy.
 	// +optional
-	Name string `json:"name,omitempty"`
+	// +kubebuilder:validation:MinLength=1
+	Name *string `json:"name,omitempty"`
 
 	// ID of the policy.
 	// +optional
-	Id string `json:"id,omitempty"`
+	// +kubebuilder:validation:MinLength=1
+	Id *string `json:"id,omitempty"`
 }
 
 // referencesRetentionByName reports whether the archive retention resolves via a
 // name lookup (rather than a directly provided ID).
 func referencesRetentionByName(ar *ArchiveRetention) bool {
-	return ar != nil && ar.BackendRef.Name != ""
+	return ar != nil && ar.BackendRef.Name != nil
 }
 
 var (
@@ -296,13 +298,13 @@ func expandArchiveRetention(retentionsByName map[string]string, archiveRetention
 		return nil, nil
 	}
 	ref := archiveRetention.BackendRef
-	if ref.Id != "" {
-		id := ref.Id
+	if ref.Id != nil {
+		id := *ref.Id
 		return &tcopolicies.ArchiveRetention{Id: &id}, nil
 	}
-	id, ok := retentionsByName[ref.Name]
+	id, ok := retentionsByName[*ref.Name]
 	if !ok {
-		return nil, fmt.Errorf("archive retention with name %s not found", ref.Name)
+		return nil, fmt.Errorf("archive retention with name %s not found", *ref.Name)
 	}
 	return &tcopolicies.ArchiveRetention{Id: &id}, nil
 }

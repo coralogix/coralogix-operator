@@ -92,9 +92,11 @@ spec:
                           properties:
                             id:
                               description: ID of the policy.
+                              minLength: 1
                               type: string
                             name:
                               description: Name of the policy.
+                              minLength: 1
                               type: string
                           type: object
                           x-kubernetes-validations:
@@ -175,9 +177,11 @@ spec:
                                 properties:
                                   id:
                                     description: ID of the policy.
+                                    minLength: 1
                                     type: string
                                   name:
                                     description: Name of the policy.
+                                    minLength: 1
                                     type: string
                                 type: object
                                 x-kubernetes-validations:
