@@ -151,6 +151,7 @@ Use this map to choose the smallest useful reading set before opening broad dire
 - `docs/api.md` is generated from CRDs. `docs/prometheus-integration.md` and `docs/metrics.md` are hand-written.
 - `tests/e2e/` contains Go/Ginkgo tests that hit real Coralogix APIs. `tests/integration/` contains KUTTL scenarios.
 - `tools/cxo-observer/` is a supporting observer tool.
+- `.claude/skills/<skill-name>/SKILL.md` stores short agent lessons. `.cursor/skills` is a symlink to that directory.
 
 Primary resource kinds:
 
