@@ -8,16 +8,15 @@ on:
     paths:
       - charts/coralogix-operator/Chart.yaml
 
-# The chart is uploaded to Artifactory with credentials from secrets.*, so the workflow token
-# only ever needs to read the repo.
+# The chart is uploaded to Artifactory using a short-lived token obtained via GitHub OIDC
+# (id-token: write). contents: read is all the workflow token itself needs.
 permissions:
   contents: read
+  id-token: write # OIDC token for the JFrog exchange
 
 env:
   CHART_VERSION: $(yq eval '.version' charts/coralogix-operator/Chart.yaml)
   CHART_NAME: coralogix-operator
-  ARTIFACTORY_URL: https://cgx.jfrog.io/artifactory/
-  ARTIFACTORY_USERNAME: integrations-actions
 
 jobs:
   build:
@@ -25,15 +24,22 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2.4.0
+      - name: Set up JFrog CLI
+        # Exchanges this job's GitHub OIDC JWT for a short-lived Artifactory token,
+        # replacing the rotated JFROG_USER / JFROG_PASSWORD secret pair. The action
+        # calls core.setSecret() on its outputs, so the token stays masked in the log.
+        id: jfrog
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          JF_URL: https://cgx.jfrog.io
+        with:
+          oidc-provider-name: github
+          oidc-audience: jfrog-github
       - name: Setup Helm Repo
         run: |
           cd charts/coralogix-operator
           helm package .
-      - name: Setup JFrog CLI
-        uses: jfrog/setup-jfrog-cli@v2.1.0
-        with:
-          version: 2.12.1
       - name: use-jfrog-cli
         run: |
           cd charts/coralogix-operator
-          jfrog rt upload --user "${{ secrets.JFROG_USER }}" --password "${{ secrets.JFROG_PASSWORD }}" "${{ env.CHART_NAME }}-*.tgz" coralogix-charts --url ${{ env.ARTIFACTORY_URL }}
+          jf rt upload "${{ env.CHART_NAME }}-*.tgz" coralogix-charts
