@@ -99,7 +99,7 @@ var _ = Describe("TCOLogsPolicies", Serial, func() {
 						},
 						ArchiveRetention: &coralogixv1alpha1.ArchiveRetention{
 							BackendRef: coralogixv1alpha1.ArchiveRetentionBackendRef{
-								Name: "Default",
+								Name: ptr.To("Default"),
 							},
 						},
 					},
@@ -118,7 +118,7 @@ var _ = Describe("TCOLogsPolicies", Serial, func() {
 						},
 						ArchiveRetention: &coralogixv1alpha1.ArchiveRetention{
 							BackendRef: coralogixv1alpha1.ArchiveRetentionBackendRef{
-								Name: "Default",
+								Name: ptr.To("Default"),
 							},
 						},
 					},

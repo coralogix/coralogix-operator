@@ -86,7 +86,7 @@ func (s *TCORumPoliciesSpec) ExtractOverwriteRumPoliciesRequest(
 	ctx context.Context,
 	archiveRetentionsClient *archiveretentions.RetentionsServiceAPIService) (*tcopolicies.AtomicOverwriteRumPoliciesRequest, error) {
 	var retentionsByName map[string]string
-	if s.referencesArchiveRetention() {
+	if s.referencesArchiveRetentionByName() {
 		var err error
 		retentionsByName, err = fetchRetentionsByName(ctx, archiveRetentionsClient)
 		if err != nil {
@@ -113,9 +113,9 @@ func (s *TCORumPoliciesSpec) ExtractOverwriteRumPoliciesRequest(
 	return &tcopolicies.AtomicOverwriteRumPoliciesRequest{Policies: policies}, nil
 }
 
-func (s *TCORumPoliciesSpec) referencesArchiveRetention() bool {
+func (s *TCORumPoliciesSpec) referencesArchiveRetentionByName() bool {
 	for _, p := range s.Policies {
-		if p.ArchiveRetention != nil {
+		if referencesRetentionByName(p.ArchiveRetention) {
 			return true
 		}
 	}

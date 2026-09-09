@@ -26,6 +26,9 @@ spec:
       archiveRetention:
         backendRef:
           name: Default
+          # Alternatively, reference the retention directly by its ID
+          # (exactly one of name or id must be set):
+          # id: 12345678-1234-4234-8234-123456789abc
     - name: second policy
       priority: low
       severities:
