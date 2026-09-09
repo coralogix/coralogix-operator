@@ -230,7 +230,7 @@ var _ = Describe("TCOLogsPolicies validation", func() {
 					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
 					ArchiveRetention: &coralogixv1alpha1.ArchiveRetention{
 						BackendRef: coralogixv1alpha1.ArchiveRetentionBackendRef{
-							Id: ptr.To("00000000-0000-0000-0000-000000000000"),
+							Id: ptr.To("12345678-1234-4234-8234-123456789abc"),
 						},
 					},
 				}},
@@ -254,7 +254,7 @@ var _ = Describe("TCOLogsPolicies validation", func() {
 					ArchiveRetention: &coralogixv1alpha1.ArchiveRetention{
 						BackendRef: coralogixv1alpha1.ArchiveRetentionBackendRef{
 							Name: ptr.To("Default"),
-							Id:   ptr.To("00000000-0000-0000-0000-000000000000"),
+							Id:   ptr.To("12345678-1234-4234-8234-123456789abc"),
 						},
 					},
 				}},

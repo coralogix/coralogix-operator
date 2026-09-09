@@ -1,0 +1,308 @@
+apiVersion: coralogix.com/v1alpha1
+kind: RuleGroup
+metadata:
+  creationTimestamp: null
+  name: vac-manual-parse
+spec:
+  active: true
+  applications:
+  - nginx
+  description: 'Manual VAC test: parse'
+  name: vac-manual-parse
+  order: 1
+  subgroups:
+  - active: true
+    order: 1
+    rules:
+    - active: true
+      name: parse-rule
+      parse:
+        destinationField: text
+        regex: (?P<status>\d{3})
+        sourceField: text
+status: {}
+
+
+---
+apiVersion: coralogix.com/v1alpha1
+kind: RuleGroup
+metadata:
+  creationTimestamp: null
+  name: vac-manual-extract
+spec:
+  active: true
+  applications:
+  - nginx
+  description: 'Manual VAC test: extract'
+  name: vac-manual-extract
+  order: 1
+  subgroups:
+  - active: true
+    order: 1
+    rules:
+    - active: true
+      extract:
+        regex: (?P<x>\w+)
+        sourceField: text
+      name: extract-rule
+status: {}
+
+
+---
+apiVersion: coralogix.com/v1alpha1
+kind: RuleGroup
+metadata:
+  creationTimestamp: null
+  name: vac-manual-json-extract
+spec:
+  active: true
+  applications:
+  - nginx
+  description: 'Manual VAC test: json_extract'
+  name: vac-manual-json_extract
+  order: 1
+  subgroups:
+  - active: true
+    order: 1
+    rules:
+    - active: true
+      jsonExtract:
+        destinationField: Category
+        jsonKey: worker
+      name: json_extract-rule
+status: {}
+
+
+---
+apiVersion: coralogix.com/v1alpha1
+kind: RuleGroup
+metadata:
+  creationTimestamp: null
+  name: vac-manual-replace
+spec:
+  active: true
+  applications:
+  - nginx
+  description: 'Manual VAC test: replace'
+  name: vac-manual-replace
+  order: 1
+  subgroups:
+  - active: true
+    order: 1
+    rules:
+    - active: true
+      name: replace-rule
+      replace:
+        destinationField: text
+        regex: .*{
+        replacementString: '{'
+        sourceField: text
+status: {}
+
+
+---
+apiVersion: coralogix.com/v1alpha1
+kind: RuleGroup
+metadata:
+  creationTimestamp: null
+  name: vac-manual-block
+spec:
+  active: true
+  applications:
+  - nginx
+  description: 'Manual VAC test: block'
+  name: vac-manual-block
+  order: 1
+  subgroups:
+  - active: true
+    order: 1
+    rules:
+    - active: true
+      block:
+        blockingAllMatchingBlocks: true
+        regex: health
+        sourceField: text
+      name: block-rule
+status: {}
+
+
+---
+apiVersion: coralogix.com/v1alpha1
+kind: RuleGroup
+metadata:
+  creationTimestamp: null
+  name: vac-manual-allow
+spec:
+  active: true
+  applications:
+  - nginx
+  description: 'Manual VAC test: allow'
+  name: vac-manual-allow
+  order: 1
+  subgroups:
+  - active: true
+    order: 1
+    rules:
+    - active: true
+      block:
+        keepBlockedLogs: true
+        regex: keepme
+        sourceField: text
+      name: allow-rule
+status: {}
+
+
+---
+apiVersion: coralogix.com/v1alpha1
+kind: RuleGroup
+metadata:
+  creationTimestamp: null
+  name: vac-manual-extract-timestamp
+spec:
+  active: true
+  applications:
+  - nginx
+  description: 'Manual VAC test: extract_timestamp'
+  name: vac-manual-extract_timestamp
+  order: 1
+  subgroups:
+  - active: true
+    order: 1
+    rules:
+    - active: true
+      extractTimestamp:
+        fieldFormatStandard: Strftime
+        sourceField: text
+        timeFormat: '%Y-%m-%dT%H:%M:%S.%f%z'
+      name: extract_timestamp-rule
+status: {}
+
+
+---
+apiVersion: coralogix.com/v1alpha1
+kind: RuleGroup
+metadata:
+  creationTimestamp: null
+  name: vac-manual-remove-fields
+spec:
+  active: true
+  applications:
+  - nginx
+  description: 'Manual VAC test: remove_fields'
+  name: vac-manual-remove_fields
+  order: 1
+  subgroups:
+  - active: true
+    order: 1
+    rules:
+    - active: true
+      name: remove_fields-rule
+      removeFields:
+        excludedFields:
+        - coralogix.metadata.applicationName
+status: {}
+
+
+---
+apiVersion: coralogix.com/v1alpha1
+kind: RuleGroup
+metadata:
+  creationTimestamp: null
+  name: vac-manual-json-stringify
+spec:
+  active: true
+  applications:
+  - nginx
+  description: 'Manual VAC test: json_stringify'
+  name: vac-manual-json_stringify
+  order: 1
+  subgroups:
+  - active: true
+    order: 1
+    rules:
+    - active: true
+      jsonStringify:
+        destinationField: text
+        keepSourceField: true
+        sourceField: text
+      name: json_stringify-rule
+status: {}
+
+
+---
+apiVersion: coralogix.com/v1alpha1
+kind: RuleGroup
+metadata:
+  creationTimestamp: null
+  name: vac-manual-parse-json-field
+spec:
+  active: true
+  applications:
+  - nginx
+  description: 'Manual VAC test: parse_json_field'
+  name: vac-manual-parse_json_field
+  order: 1
+  subgroups:
+  - active: true
+    order: 1
+    rules:
+    - active: true
+      name: parse_json_field-rule
+      parseJsonField:
+        destinationField: text
+        keepDestinationField: true
+        keepSourceField: true
+        sourceField: text
+status: {}
+
+
+---
+apiVersion: coralogix.com/v1alpha1
+kind: RuleGroup
+metadata:
+  creationTimestamp: null
+  name: vac-manual-parsing-demo
+spec:
+  active: true
+  applications:
+  - nginx
+  description: 'Manual VAC test: parsing rules demo'
+  name: vac-manual-parsing-demo
+  order: 1
+  severities:
+  - Warning
+  subgroups:
+  - active: true
+    order: 1
+    rules:
+    - active: true
+      description: Extract HTTP status
+      name: parse-status
+      parse:
+        destinationField: text
+        regex: (?P<status>\d{3})
+        sourceField: text
+    - active: true
+      jsonExtract:
+        destinationField: Category
+        jsonKey: worker
+      name: worker-to-category
+    - active: true
+      block:
+        blockingAllMatchingBlocks: true
+        regex: health
+        sourceField: text
+      name: block-health
+  - active: true
+    order: 2
+    rules:
+    - active: true
+      extractTimestamp:
+        fieldFormatStandard: Strftime
+        sourceField: text
+        timeFormat: '%Y-%m-%dT%H:%M:%S.%f%z'
+      name: extract-ts
+  subsystems:
+  - api
+status: {}
+
