@@ -18343,6 +18343,8 @@ Matches the specified retention.
         <td>object</td>
         <td>
           Reference to the retention policy<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.name) != has(self.id): exactly one of name or id must be set</li>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -18366,12 +18368,19 @@ Reference to the retention policy
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          ID of the policy.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
           Name of the policy.<br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -18490,6 +18499,8 @@ Matches the specified archive retention for this target.
         <td>object</td>
         <td>
           Reference to the retention policy<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.name) != has(self.id): exactly one of name or id must be set</li>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -18513,12 +18524,19 @@ Reference to the retention policy
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          ID of the policy.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
           Name of the policy.<br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -18964,6 +18982,8 @@ Matches the specified retention.
         <td>object</td>
         <td>
           Reference to the retention policy<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.name) != has(self.id): exactly one of name or id must be set</li>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -18987,12 +19007,19 @@ Reference to the retention policy
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          ID of the policy.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
           Name of the policy.<br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -19506,6 +19533,8 @@ Matches the specified retention.
         <td>object</td>
         <td>
           Reference to the retention policy<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.name) != has(self.id): exactly one of name or id must be set</li>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -19529,12 +19558,19 @@ Reference to the retention policy
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          ID of the policy.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
           Name of the policy.<br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr></tbody>
 </table>
 

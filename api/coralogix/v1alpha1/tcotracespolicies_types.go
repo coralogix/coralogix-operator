@@ -90,9 +90,9 @@ type TCOPolicyTag struct {
 	RuleType string `json:"ruleType"`
 }
 
-func (s *TCOTracesPoliciesSpec) referencesArchiveRetention() bool {
+func (s *TCOTracesPoliciesSpec) referencesArchiveRetentionByName() bool {
 	for _, p := range s.Policies {
-		if p.ArchiveRetention != nil {
+		if referencesRetentionByName(p.ArchiveRetention) {
 			return true
 		}
 	}
@@ -103,7 +103,7 @@ func (s *TCOTracesPoliciesSpec) ExtractOverwriteTracesPoliciesRequest(
 	ctx context.Context,
 	archiveRetentionsClient *archiveretentions.RetentionsServiceAPIService) (*tcopolicies.AtomicOverwriteSpanPoliciesRequest, error) {
 	var retentionsByName map[string]string
-	if s.referencesArchiveRetention() {
+	if s.referencesArchiveRetentionByName() {
 		var err error
 		retentionsByName, err = fetchRetentionsByName(ctx, archiveRetentionsClient)
 		if err != nil {

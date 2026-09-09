@@ -195,4 +195,95 @@ var _ = Describe("TCOLogsPolicies validation", func() {
 		Expect(k8sClient.Create(ctx, policy)).To(Succeed())
 		Expect(k8sClient.Delete(ctx, policy)).To(Succeed())
 	})
+
+	It("should accept an archiveRetention referenced by name", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCOLogsPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "retention-by-name",
+				Namespace: "default",
+			},
+			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
+					Name:       "by-name",
+					Priority:   ptr.To("low"),
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					ArchiveRetention: &coralogixv1alpha1.ArchiveRetention{
+						BackendRef: coralogixv1alpha1.ArchiveRetentionBackendRef{Name: "Default"},
+					},
+				}},
+			},
+		}
+		Expect(k8sClient.Create(ctx, policy)).To(Succeed())
+		Expect(k8sClient.Delete(ctx, policy)).To(Succeed())
+	})
+
+	It("should accept an archiveRetention referenced by id", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCOLogsPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "retention-by-id",
+				Namespace: "default",
+			},
+			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
+					Name:       "by-id",
+					Priority:   ptr.To("low"),
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					ArchiveRetention: &coralogixv1alpha1.ArchiveRetention{
+						BackendRef: coralogixv1alpha1.ArchiveRetentionBackendRef{
+							Id: "00000000-0000-0000-0000-000000000000",
+						},
+					},
+				}},
+			},
+		}
+		Expect(k8sClient.Create(ctx, policy)).To(Succeed())
+		Expect(k8sClient.Delete(ctx, policy)).To(Succeed())
+	})
+
+	It("should reject an archiveRetention with both name and id set", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCOLogsPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "retention-both",
+				Namespace: "default",
+			},
+			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
+					Name:       "both",
+					Priority:   ptr.To("low"),
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					ArchiveRetention: &coralogixv1alpha1.ArchiveRetention{
+						BackendRef: coralogixv1alpha1.ArchiveRetentionBackendRef{
+							Name: "Default",
+							Id:   "00000000-0000-0000-0000-000000000000",
+						},
+					},
+				}},
+			},
+		}
+		err := k8sClient.Create(ctx, policy)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("exactly one of name or id must be set"))
+	})
+
+	It("should reject an archiveRetention with neither name nor id set", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCOLogsPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "retention-neither",
+				Namespace: "default",
+			},
+			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
+					Name:       "neither",
+					Priority:   ptr.To("low"),
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					ArchiveRetention: &coralogixv1alpha1.ArchiveRetention{
+						BackendRef: coralogixv1alpha1.ArchiveRetentionBackendRef{},
+					},
+				}},
+			},
+		}
+		err := k8sClient.Create(ctx, policy)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("exactly one of name or id must be set"))
+	})
 })

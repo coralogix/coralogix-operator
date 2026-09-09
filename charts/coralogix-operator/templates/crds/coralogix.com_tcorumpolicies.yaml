@@ -90,12 +90,16 @@ spec:
                         backendRef:
                           description: Reference to the retention policy
                           properties:
+                            id:
+                              description: ID of the policy.
+                              type: string
                             name:
                               description: Name of the policy.
                               type: string
-                          required:
-                          - name
                           type: object
+                          x-kubernetes-validations:
+                          - message: exactly one of name or id must be set
+                            rule: has(self.name) != has(self.id)
                       required:
                       - backendRef
                       type: object

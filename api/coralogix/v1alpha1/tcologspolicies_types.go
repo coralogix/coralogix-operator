@@ -80,10 +80,22 @@ type ArchiveRetention struct {
 	BackendRef ArchiveRetentionBackendRef `json:"backendRef"`
 }
 
-// Backend reference to the policy.
+// Backend reference to the policy. Exactly one of name or id must be set.
+// +kubebuilder:validation:XValidation:rule="has(self.name) != has(self.id)",message="exactly one of name or id must be set"
 type ArchiveRetentionBackendRef struct {
 	// Name of the policy.
-	Name string `json:"name"`
+	// +optional
+	Name string `json:"name,omitempty"`
+
+	// ID of the policy.
+	// +optional
+	Id string `json:"id,omitempty"`
+}
+
+// referencesRetentionByName reports whether the archive retention resolves via a
+// name lookup (rather than a directly provided ID).
+func referencesRetentionByName(ar *ArchiveRetention) bool {
+	return ar != nil && ar.BackendRef.Name != ""
 }
 
 var (
@@ -174,7 +186,7 @@ func (s *TCOLogsPoliciesSpec) ExtractOverwriteLogPoliciesRequest(
 	ctx context.Context,
 	archiveRetentionsClient *archiveretentions.RetentionsServiceAPIService) (*tcopolicies.AtomicOverwriteLogPoliciesRequest, error) {
 	var retentionsByName map[string]string
-	if s.referencesArchiveRetention() {
+	if s.referencesArchiveRetentionByName() {
 		var err error
 		retentionsByName, err = fetchRetentionsByName(ctx, archiveRetentionsClient)
 		if err != nil {
@@ -201,13 +213,13 @@ func (s *TCOLogsPoliciesSpec) ExtractOverwriteLogPoliciesRequest(
 	return &tcopolicies.AtomicOverwriteLogPoliciesRequest{Policies: policies}, nil
 }
 
-func (s *TCOLogsPoliciesSpec) referencesArchiveRetention() bool {
+func (s *TCOLogsPoliciesSpec) referencesArchiveRetentionByName() bool {
 	for _, p := range s.Policies {
-		if p.ArchiveRetention != nil {
+		if referencesRetentionByName(p.ArchiveRetention) {
 			return true
 		}
 		for _, t := range p.Targets {
-			if t.ArchiveRetention != nil {
+			if referencesRetentionByName(t.ArchiveRetention) {
 				return true
 			}
 		}
@@ -283,9 +295,14 @@ func expandArchiveRetention(retentionsByName map[string]string, archiveRetention
 	if archiveRetention == nil {
 		return nil, nil
 	}
-	id, ok := retentionsByName[archiveRetention.BackendRef.Name]
+	ref := archiveRetention.BackendRef
+	if ref.Id != "" {
+		id := ref.Id
+		return &tcopolicies.ArchiveRetention{Id: &id}, nil
+	}
+	id, ok := retentionsByName[ref.Name]
 	if !ok {
-		return nil, fmt.Errorf("archive retention with name %s not found", archiveRetention.BackendRef.Name)
+		return nil, fmt.Errorf("archive retention with name %s not found", ref.Name)
 	}
 	return &tcopolicies.ArchiveRetention{Id: &id}, nil
 }
