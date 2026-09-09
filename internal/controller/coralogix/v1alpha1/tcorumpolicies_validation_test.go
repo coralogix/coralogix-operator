@@ -158,4 +158,117 @@ var _ = Describe("TCORumPolicies validation", func() {
 		Expect(k8sClient.Create(ctx, policy)).To(Succeed())
 		Expect(k8sClient.Delete(ctx, policy)).To(Succeed())
 	})
+
+	It("should accept an archiveRetention referenced by name", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCORumPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "rum-retention-by-name",
+				Namespace: "default",
+			},
+			Spec: coralogixv1alpha1.TCORumPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCORumPolicy{{
+					Name:       "by-name",
+					Priority:   "low",
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					ArchiveRetention: &coralogixv1alpha1.ArchiveRetention{
+						BackendRef: coralogixv1alpha1.ArchiveRetentionBackendRef{Name: ptr.To("Default")},
+					},
+				}},
+			},
+		}
+		Expect(k8sClient.Create(ctx, policy)).To(Succeed())
+		Expect(k8sClient.Delete(ctx, policy)).To(Succeed())
+	})
+
+	It("should accept an archiveRetention referenced by id", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCORumPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "rum-retention-by-id",
+				Namespace: "default",
+			},
+			Spec: coralogixv1alpha1.TCORumPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCORumPolicy{{
+					Name:       "by-id",
+					Priority:   "low",
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					ArchiveRetention: &coralogixv1alpha1.ArchiveRetention{
+						BackendRef: coralogixv1alpha1.ArchiveRetentionBackendRef{
+							Id: ptr.To("00000000-0000-0000-0000-000000000000"),
+						},
+					},
+				}},
+			},
+		}
+		Expect(k8sClient.Create(ctx, policy)).To(Succeed())
+		Expect(k8sClient.Delete(ctx, policy)).To(Succeed())
+	})
+
+	It("should reject an archiveRetention with both name and id set", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCORumPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "rum-retention-both",
+				Namespace: "default",
+			},
+			Spec: coralogixv1alpha1.TCORumPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCORumPolicy{{
+					Name:       "both",
+					Priority:   "low",
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					ArchiveRetention: &coralogixv1alpha1.ArchiveRetention{
+						BackendRef: coralogixv1alpha1.ArchiveRetentionBackendRef{
+							Name: ptr.To("Default"),
+							Id:   ptr.To("00000000-0000-0000-0000-000000000000"),
+						},
+					},
+				}},
+			},
+		}
+		err := k8sClient.Create(ctx, policy)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("exactly one of name or id must be set"))
+	})
+
+	It("should reject an archiveRetention with an empty name", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCORumPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "rum-retention-empty-name",
+				Namespace: "default",
+			},
+			Spec: coralogixv1alpha1.TCORumPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCORumPolicy{{
+					Name:       "empty-name",
+					Priority:   "low",
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					ArchiveRetention: &coralogixv1alpha1.ArchiveRetention{
+						BackendRef: coralogixv1alpha1.ArchiveRetentionBackendRef{Name: ptr.To("")},
+					},
+				}},
+			},
+		}
+		err := k8sClient.Create(ctx, policy)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("should be at least 1 chars long"))
+	})
+
+	It("should reject an archiveRetention with neither name nor id set", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCORumPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "rum-retention-neither",
+				Namespace: "default",
+			},
+			Spec: coralogixv1alpha1.TCORumPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCORumPolicy{{
+					Name:       "neither",
+					Priority:   "low",
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					ArchiveRetention: &coralogixv1alpha1.ArchiveRetention{
+						BackendRef: coralogixv1alpha1.ArchiveRetentionBackendRef{},
+					},
+				}},
+			},
+		}
+		err := k8sClient.Create(ctx, policy)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("exactly one of name or id must be set"))
+	})
 })
