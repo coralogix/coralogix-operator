@@ -57,8 +57,6 @@ type TCOLogsPolicy struct {
 
 	// The severities to apply the policy on. Mutually exclusive with dpxlExpression.
 	// +optional
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:MaxItems=6
 	Severities []TCOPolicySeverity `json:"severities,omitempty"`
 
 	// A DPXL expression to match logs on. Mutually exclusive with severities.
