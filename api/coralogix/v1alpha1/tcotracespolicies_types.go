@@ -29,6 +29,7 @@ import (
 // TCOTracesPoliciesSpec defines the desired state of Coralogix TCO policies for traces.
 type TCOTracesPoliciesSpec struct {
 	// Coralogix TCO-Policies-List.
+	// +kubebuilder:validation:MaxItems=10000
 	Policies []TCOTracesPolicy `json:"policies"`
 }
 
