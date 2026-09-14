@@ -18554,15 +18554,6 @@ A TCO policy for logs.
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>severities</b></td>
-        <td>[]enum</td>
-        <td>
-          The severities to apply the policy on.<br/>
-          <br/>
-            <i>Enum</i>: info, warning, critical, error, debug, verbose<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b><a href="#tcologspoliciesspecpoliciesindexapplications">applications</a></b></td>
         <td>object</td>
         <td>
@@ -18591,12 +18582,36 @@ A TCO policy for logs.
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>dpxlExpression</b></td>
+        <td>string</td>
+        <td>
+          A DPXL expression to match logs on. Mutually exclusive with severities.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>priority</b></td>
         <td>enum</td>
         <td>
           The policy priority. Required when targets is not set. Mutually exclusive with targets, which carry their own per-target priorities.<br/>
           <br/>
             <i>Enum</i>: block, high, medium, low<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#tcologspoliciesspecpoliciesindexpriorityoverride">priorityOverride</a></b></td>
+        <td>object</td>
+        <td>
+          Dynamic quota-based priority override for the policy. Use with the policy-level priority;
+mutually exclusive with per-target priority overrides (enforced by the backend).<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>severities</b></td>
+        <td>[]enum</td>
+        <td>
+          The severities to apply the policy on. Mutually exclusive with dpxlExpression.<br/>
+          <br/>
+            <i>Enum</i>: info, warning, critical, error, debug, verbose<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -18713,6 +18728,97 @@ Reference to the retention policy
           Name of the policy.<br/>
         </td>
         <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### TCOLogsPolicies.spec.policies[index].priorityOverride
+<sup><sup>[↩ Parent](#tcologspoliciesspecpoliciesindex)</sup></sup>
+
+
+
+Dynamic quota-based priority override for the policy. Use with the policy-level priority;
+mutually exclusive with per-target priority overrides (enforced by the backend).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#tcologspoliciesspecpoliciesindexpriorityoverridequotabased">quotaBased</a></b></td>
+        <td>object</td>
+        <td>
+          TCOPolicyQuotaBased maps daily quota consumption percentages to priority levels.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### TCOLogsPolicies.spec.policies[index].priorityOverride.quotaBased
+<sup><sup>[↩ Parent](#tcologspoliciesspecpoliciesindexpriorityoverride)</sup></sup>
+
+
+
+TCOPolicyQuotaBased maps daily quota consumption percentages to priority levels.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#tcologspoliciesspecpoliciesindexpriorityoverridequotabasedusagetiersindex">usageTiers</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### TCOLogsPolicies.spec.policies[index].priorityOverride.quotaBased.usageTiers[index]
+<sup><sup>[↩ Parent](#tcologspoliciesspecpoliciesindexpriorityoverridequotabased)</sup></sup>
+
+
+
+TCOPolicyUsageTier maps a daily quota threshold percentage to a priority.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>dailyQuotaPercentage</b></td>
+        <td>int or string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: block, high, low, medium<br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
@@ -19748,6 +19854,20 @@ Coralogix TCO policy for traces.
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>dpxlExpression</b></td>
+        <td>string</td>
+        <td>
+          A DPXL expression to match spans on. Mutually exclusive with services, actions and tags.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#tcotracespoliciesspecpoliciesindexpriorityoverride">priorityOverride</a></b></td>
+        <td>object</td>
+        <td>
+          Dynamic quota-based priority override for the policy.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#tcotracespoliciesspecpoliciesindexservices">services</a></b></td>
         <td>object</td>
         <td>
@@ -19903,6 +20023,96 @@ Reference to the retention policy
           Name of the policy.<br/>
         </td>
         <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### TCOTracesPolicies.spec.policies[index].priorityOverride
+<sup><sup>[↩ Parent](#tcotracespoliciesspecpoliciesindex)</sup></sup>
+
+
+
+Dynamic quota-based priority override for the policy.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#tcotracespoliciesspecpoliciesindexpriorityoverridequotabased">quotaBased</a></b></td>
+        <td>object</td>
+        <td>
+          TCOPolicyQuotaBased maps daily quota consumption percentages to priority levels.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### TCOTracesPolicies.spec.policies[index].priorityOverride.quotaBased
+<sup><sup>[↩ Parent](#tcotracespoliciesspecpoliciesindexpriorityoverride)</sup></sup>
+
+
+
+TCOPolicyQuotaBased maps daily quota consumption percentages to priority levels.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#tcotracespoliciesspecpoliciesindexpriorityoverridequotabasedusagetiersindex">usageTiers</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### TCOTracesPolicies.spec.policies[index].priorityOverride.quotaBased.usageTiers[index]
+<sup><sup>[↩ Parent](#tcotracespoliciesspecpoliciesindexpriorityoverridequotabased)</sup></sup>
+
+
+
+TCOPolicyUsageTier maps a daily quota threshold percentage to a priority.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>dailyQuotaPercentage</b></td>
+        <td>int or string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: block, high, low, medium<br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 

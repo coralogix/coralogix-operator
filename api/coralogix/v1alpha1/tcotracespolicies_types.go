@@ -33,6 +33,7 @@ type TCOTracesPoliciesSpec struct {
 }
 
 // Coralogix TCO policy for traces.
+// +kubebuilder:validation:XValidation:rule="!(has(self.dpxlExpression) && (has(self.services) || has(self.actions) || has(self.tags)))",message="dpxlExpression is mutually exclusive with services, actions and tags"
 type TCOTracesPolicy struct {
 	// Name of the policy.
 	Name string `json:"name"`
@@ -48,6 +49,10 @@ type TCOTracesPolicy struct {
 	// +optional
 	// Whether the policy is disabled.
 	Disabled *bool `json:"disabled,omitempty"`
+
+	// Dynamic quota-based priority override for the policy.
+	// +optional
+	PriorityOverride *TCOPolicyPriorityOverride `json:"priorityOverride,omitempty"`
 
 	// Matches the specified retention.
 	// +optional
@@ -72,6 +77,11 @@ type TCOTracesPolicy struct {
 	// The tags to apply the policy on. Applies the policy on all the tags by default.
 	// +optional
 	Tags []TCOPolicyTag `json:"tags,omitempty"`
+
+	// A DPXL expression to match spans on. Mutually exclusive with services, actions and tags.
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	DpxlExpression *string `json:"dpxlExpression,omitempty"`
 }
 
 // TCO Policy tag matching rule.
@@ -145,11 +155,13 @@ func (p *TCOTracesPolicy) extractCreateSpanPolicyRequest(retentionsByName map[st
 			ApplicationRule:  expandTCOPolicyRule(p.Applications),
 			SubsystemRule:    expandTCOPolicyRule(p.Subsystems),
 			ArchiveRetention: archiveRetention,
+			PriorityOverride: expandTCOPolicyPriorityOverride(p.PriorityOverride),
 		},
 		SpanRules: tcopolicies.SpanRules{
-			ServiceRule: expandTCOPolicyRule(p.Services),
-			ActionRule:  expandTCOPolicyRule(p.Actions),
-			TagRules:    expandTCOPolicyTagRules(p.Tags),
+			ServiceRule:    expandTCOPolicyRule(p.Services),
+			ActionRule:     expandTCOPolicyRule(p.Actions),
+			TagRules:       expandTCOPolicyTagRules(p.Tags),
+			DpxlExpression: p.DpxlExpression,
 		},
 	}
 

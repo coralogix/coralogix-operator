@@ -308,4 +308,69 @@ var _ = Describe("TCOLogsPolicies validation", func() {
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("exactly one of name or id must be set"))
 	})
+
+	It("should accept a policy matched by a dpxlExpression", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCOLogsPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "logs-dpxl",
+				Namespace: "default",
+			},
+			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
+					Name:           "by-dpxl",
+					Priority:       ptr.To("medium"),
+					DpxlExpression: ptr.To("<v1>$d.applicationname == 'prod'"),
+				}},
+			},
+		}
+		Expect(k8sClient.Create(ctx, policy)).To(Succeed())
+		Expect(k8sClient.Delete(ctx, policy)).To(Succeed())
+	})
+
+	It("should reject a policy that sets both severities and dpxlExpression", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCOLogsPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "logs-both-rules",
+				Namespace: "default",
+			},
+			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
+					Name:           "conflicting-rules",
+					Priority:       ptr.To("low"),
+					Severities:     []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					DpxlExpression: ptr.To("<v1>$d.applicationname == 'prod'"),
+				}},
+			},
+		}
+		err := k8sClient.Create(ctx, policy)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("mutually exclusive"))
+	})
+
+	It("should accept a policy with a policy-level quota-based priority override", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCOLogsPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "logs-quota-override",
+				Namespace: "default",
+			},
+			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
+					Name:       "quota-override",
+					Priority:   ptr.To("low"),
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					PriorityOverride: &coralogixv1alpha1.TCOPolicyPriorityOverride{
+						QuotaBased: &coralogixv1alpha1.TCOPolicyQuotaBased{
+							UsageTiers: []coralogixv1alpha1.TCOPolicyUsageTier{{
+								DailyQuotaPercentage: resource.MustParse("60"),
+								Priority:             "medium",
+							}},
+						},
+					},
+				}},
+			},
+		}
+		Expect(k8sClient.Create(ctx, policy)).To(Succeed())
+		Expect(k8sClient.Delete(ctx, policy)).To(Succeed())
+	})
+
 })

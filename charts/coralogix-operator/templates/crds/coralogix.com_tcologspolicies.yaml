@@ -111,6 +111,11 @@ spec:
                     disabled:
                       description: Whether the policy is disabled.
                       type: boolean
+                    dpxlExpression:
+                      description: A DPXL expression to match logs on. Mutually exclusive
+                        with severities.
+                      minLength: 1
+                      type: string
                     name:
                       description: Name of the policy.
                       type: string
@@ -124,8 +129,46 @@ spec:
                       - medium
                       - low
                       type: string
+                    priorityOverride:
+                      description: |-
+                        Dynamic quota-based priority override for the policy. Use with the policy-level priority;
+                        mutually exclusive with per-target priority overrides (enforced by the backend).
+                      properties:
+                        quotaBased:
+                          description: TCOPolicyQuotaBased maps daily quota consumption
+                            percentages to priority levels.
+                          properties:
+                            usageTiers:
+                              items:
+                                description: TCOPolicyUsageTier maps a daily quota
+                                  threshold percentage to a priority.
+                                properties:
+                                  dailyQuotaPercentage:
+                                    anyOf:
+                                    - type: integer
+                                    - type: string
+                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                    x-kubernetes-int-or-string: true
+                                  priority:
+                                    enum:
+                                    - block
+                                    - high
+                                    - low
+                                    - medium
+                                    type: string
+                                required:
+                                - dailyQuotaPercentage
+                                - priority
+                                type: object
+                              minItems: 1
+                              type: array
+                          required:
+                          - usageTiers
+                          type: object
+                      type: object
                     severities:
-                      description: The severities to apply the policy on.
+                      description: The severities to apply the policy on. Mutually
+                        exclusive with dpxlExpression.
                       items:
                         description: The severities to apply the policy on.
                         enum:
@@ -136,6 +179,8 @@ spec:
                         - debug
                         - verbose
                         type: string
+                      maxItems: 6
+                      minItems: 1
                       type: array
                     subsystems:
                       description: The subsystems to apply the policy on. Applies
@@ -250,8 +295,10 @@ spec:
                       type: array
                   required:
                   - name
-                  - severities
                   type: object
+                  x-kubernetes-validations:
+                  - message: severities and dpxlExpression are mutually exclusive
+                    rule: '!(has(self.severities) && has(self.dpxlExpression))'
                 type: array
             required:
             - policies
