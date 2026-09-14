@@ -22,6 +22,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -60,6 +61,26 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("Too many"))
+	})
+
+	It("should reject a policy that sets both severities and dpxlExpression", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCOLogsPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "logs-both-rules",
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
+					Name:           "conflicting-rules",
+					Priority:       ptr.To("low"),
+					Severities:     []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					DpxlExpression: ptr.To("<v1>$d.applicationname == 'prod'"),
+				}},
+			},
+		}
+		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("mutually exclusive"))
 	})
 })
 
@@ -138,6 +159,24 @@ var _ = Describe("TCOLogsPolicies", Serial, func() {
 							},
 						},
 					},
+					{
+						Name:           "dpxl policy",
+						Priority:       ptr.To("medium"),
+						DpxlExpression: ptr.To("<v1>$d.applicationname == 'prod'"),
+					},
+					{
+						Name:       "priority override policy",
+						Priority:   ptr.To("low"),
+						Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+						PriorityOverride: &coralogixv1alpha1.TCOPolicyPriorityOverride{
+							QuotaBased: &coralogixv1alpha1.TCOPolicyQuotaBased{
+								UsageTiers: []coralogixv1alpha1.TCOPolicyUsageTier{
+									{DailyQuotaPercentage: resource.MustParse("30"), Priority: "high"},
+									{DailyQuotaPercentage: resource.MustParse("60"), Priority: "medium"},
+								},
+							},
+						},
+					},
 				},
 			},
 		}
@@ -161,24 +200,33 @@ var _ = Describe("TCOLogsPolicies", Serial, func() {
 			Expect(err).ToNot(HaveOccurred())
 			policies = listRes.Policies
 			return policies
-		}, time.Minute, time.Second).Should(HaveLen(3))
+		}, time.Minute, time.Second).Should(HaveLen(5))
 
 		Expect(policies[0].Name.Value).To(Equal(TCOLogsPolicies.Spec.Policies[0].Name))
 
-		By("Verifying targets policy has targets in the backend")
+		By("Verifying targets, dpxlExpression and priorityOverride are set in the backend")
 		Eventually(func(g Gomega) {
 			resp, _, err := policiesClient.PoliciesServiceGetCompanyPolicies(ctx).
 				SourceType(tcopolicies.V1SOURCETYPE_SOURCE_TYPE_LOGS).
 				Execute()
 			g.Expect(err).NotTo(HaveOccurred())
-			found := false
+			byName := make(map[string]tcopolicies.Policy, len(resp.Policies))
 			for _, p := range resp.Policies {
-				if p.Name == "targets policy" {
-					g.Expect(p.Targets).To(HaveLen(2))
-					found = true
-				}
+				byName[p.Name] = p
 			}
-			g.Expect(found).To(BeTrue(), "policy 'targets policy' not found in backend")
+
+			g.Expect(byName).To(HaveKey("targets policy"))
+			g.Expect(byName["targets policy"].Targets).To(HaveLen(2))
+
+			g.Expect(byName).To(HaveKey("dpxl policy"))
+			g.Expect(byName["dpxl policy"].LogRules).NotTo(BeNil())
+			g.Expect(byName["dpxl policy"].LogRules.GetDpxlExpression()).To(Equal("<v1>$d.applicationname == 'prod'"))
+
+			g.Expect(byName).To(HaveKey("priority override policy"))
+			po := byName["priority override policy"].PriorityOverride
+			g.Expect(po).NotTo(BeNil())
+			g.Expect(po.QuotaBased).NotTo(BeNil())
+			g.Expect(po.QuotaBased.UsageTiers).To(HaveLen(2))
 		}, time.Minute, time.Second).Should(Succeed())
 
 		By("Deleting the TCOLogsPolicies")
