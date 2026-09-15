@@ -18585,7 +18585,7 @@ A TCO policy for logs.
         <td><b>dpxlExpression</b></td>
         <td>string</td>
         <td>
-          A DPXL expression to match logs on. Mutually exclusive with severities.<br/>
+          A DPXL expression to match logs on. Mutually exclusive with severities, applications and subsystems.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -19857,7 +19857,7 @@ Coralogix TCO policy for traces.
         <td><b>dpxlExpression</b></td>
         <td>string</td>
         <td>
-          A DPXL expression to match spans on. Mutually exclusive with services, actions and tags.<br/>
+          A DPXL expression to match spans on. Mutually exclusive with services, actions, tags, applications and subsystems.<br/>
         </td>
         <td>false</td>
       </tr><tr>

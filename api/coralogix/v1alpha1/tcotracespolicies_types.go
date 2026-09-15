@@ -79,7 +79,7 @@ type TCOTracesPolicy struct {
 	// +optional
 	Tags []TCOPolicyTag `json:"tags,omitempty"`
 
-	// A DPXL expression to match spans on. Mutually exclusive with services, actions and tags.
+	// A DPXL expression to match spans on. Mutually exclusive with services, actions, tags, applications and subsystems.
 	// +optional
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:MaxLength=65535

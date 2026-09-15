@@ -112,7 +112,7 @@ spec:
                       type: boolean
                     dpxlExpression:
                       description: A DPXL expression to match logs on. Mutually exclusive
-                        with severities.
+                        with severities, applications and subsystems.
                       maxLength: 65535
                       minLength: 1
                       type: string

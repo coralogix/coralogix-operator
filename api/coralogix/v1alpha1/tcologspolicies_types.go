@@ -59,7 +59,7 @@ type TCOLogsPolicy struct {
 	// +optional
 	Severities []TCOPolicySeverity `json:"severities,omitempty"`
 
-	// A DPXL expression to match logs on. Mutually exclusive with severities.
+	// A DPXL expression to match logs on. Mutually exclusive with severities, applications and subsystems.
 	// +optional
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:MaxLength=65535

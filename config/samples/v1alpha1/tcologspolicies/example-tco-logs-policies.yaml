@@ -75,7 +75,7 @@ spec:
               name: Default
     - name: fifth policy with dpxl expression
       priority: medium
-      # severities and dpxlExpression are mutually exclusive.
+      # dpxlExpression is mutually exclusive with severities, applications and subsystems.
       dpxlExpression: "<v1>$d.applicationname == 'prod'"
     - name: sixth policy with policy-level quota-based priority override
       # Base priority must be lower than every usage-tier priority.

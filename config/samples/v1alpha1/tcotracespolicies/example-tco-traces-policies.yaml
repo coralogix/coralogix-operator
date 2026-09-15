@@ -59,7 +59,7 @@ spec:
               - GET
     - name: third policy with dpxl expression
       priority: medium
-      # dpxlExpression is mutually exclusive with services, actions and tags.
+      # dpxlExpression is mutually exclusive with services, actions, tags, applications and subsystems.
       dpxlExpression: "<v1> $d.status == 'ERROR'"
     - name: fourth policy with quota-based priority override
       # Base priority must be lower than every usage-tier priority.

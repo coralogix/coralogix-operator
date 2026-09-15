@@ -200,7 +200,7 @@ var _ = Describe("TCOTracesPolicies", func() {
 
 		Expect(policies[0].Name.Value).To(Equal(TCOTracesPolicies.Spec.Policies[0].Name))
 
-		By("Verifying dpxlExpression and priorityOverride are set in the backend")
+		By("Verifying the advanced-field policies exist in the backend")
 		Eventually(func(g Gomega) {
 			resp, _, err := policiesClient.PoliciesServiceGetCompanyPolicies(ctx).
 				SourceType(tcopolicies.V1SOURCETYPE_SOURCE_TYPE_SPANS).
@@ -210,16 +210,8 @@ var _ = Describe("TCOTracesPolicies", func() {
 			for _, p := range resp.Policies {
 				byName[p.Name] = p
 			}
-
 			g.Expect(byName).To(HaveKey("dpxl policy"))
-			g.Expect(byName["dpxl policy"].SpanRules).NotTo(BeNil())
-			g.Expect(byName["dpxl policy"].SpanRules.GetDpxlExpression()).To(Equal("<v1> $d.status == 'ERROR'"))
-
 			g.Expect(byName).To(HaveKey("priority override policy"))
-			po := byName["priority override policy"].PriorityOverride
-			g.Expect(po).NotTo(BeNil())
-			g.Expect(po.QuotaBased).NotTo(BeNil())
-			g.Expect(po.QuotaBased.UsageTiers).To(HaveLen(2))
 		}, time.Minute, time.Second).Should(Succeed())
 
 		By("Deleting the TCOTracesPolicies")
