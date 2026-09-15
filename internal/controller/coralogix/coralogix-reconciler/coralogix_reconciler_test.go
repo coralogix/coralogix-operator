@@ -75,6 +75,15 @@ func (n *noopReconciler) RequeueInterval() time.Duration {
 	return time.Minute
 }
 
+// skippingReconciler is a noopReconciler that opts out of the creation rollback,
+// mirroring reconcilers like the imported Dashboard or the archive-target
+// singletons.
+type skippingReconciler struct {
+	*noopReconciler
+}
+
+func (s *skippingReconciler) SkipCreationRollback(client.Object) bool { return true }
+
 func TestReconcileResourceSelectorMismatchPreservesDashboardImported(t *testing.T) {
 	scheme := runtime.NewScheme()
 	require.NoError(t, coralogixv1alpha1.AddToScheme(scheme))
@@ -221,6 +230,44 @@ func TestReconcileResourceStatusUpdateFailureRollsBackRemoteResource(t *testing.
 	fetched := &coralogixv1alpha1.Dashboard{}
 	require.NoError(t, fakeClient.Get(context.Background(), req.NamespacedName, fetched))
 	require.Nil(t, fetched.Status.ID)
+}
+
+// TestReconcileResourceStatusUpdateFailureSkipsRollbackWhenOptedOut covers the
+// per-object opt-out: a reconciler that implements CreationRollbackSkipper (e.g.
+// an imported Dashboard or an archive-target singleton) must NOT have its remote
+// resource deleted when the post-creation status write fails.
+func TestReconcileResourceStatusUpdateFailureSkipsRollbackWhenOptedOut(t *testing.T) {
+	scheme := runtime.NewScheme()
+	require.NoError(t, coralogixv1alpha1.AddToScheme(scheme))
+
+	dashboard := &coralogixv1alpha1.Dashboard{
+		ObjectMeta: metav1.ObjectMeta{Name: "dashboard-skip-rollback", Namespace: "default"},
+	}
+
+	fakeClient := fake.NewClientBuilder().
+		WithScheme(scheme).
+		WithObjects(dashboard).
+		WithStatusSubresource(dashboard).
+		WithInterceptorFuncs(interceptor.Funcs{
+			SubResourceUpdate: func(_ context.Context, _ client.Client, subResourceName string, _ client.Object, _ ...client.SubResourceUpdateOption) error {
+				if subResourceName == "status" {
+					return apierrors.NewInternalError(fmt.Errorf("simulated status update failure"))
+				}
+				return nil
+			},
+		}).
+		Build()
+
+	restore := swapConfig(t, fakeClient, scheme)
+	defer restore()
+
+	reconciler := &skippingReconciler{noopReconciler: &noopReconciler{createID: "adopted-remote-id"}}
+	req := ctrl.Request{NamespacedName: types.NamespacedName{Name: dashboard.Name, Namespace: dashboard.Namespace}}
+
+	_, err := ReconcileResource(context.Background(), req, &coralogixv1alpha1.Dashboard{}, reconciler)
+	require.Error(t, err)
+	require.Equal(t, 1, reconciler.creationCalls)
+	require.Equal(t, 0, reconciler.deletionCalls, "opted-out resource must not be rolled back on status persist failure")
 }
 
 // swapConfig points the package-level config at the given fake client/scheme for

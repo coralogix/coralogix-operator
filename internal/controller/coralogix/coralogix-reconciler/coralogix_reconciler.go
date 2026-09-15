@@ -50,6 +50,21 @@ type CoralogixReconciler interface {
 	RequeueInterval() time.Duration
 }
 
+// CreationRollbackSkipper is an optional interface a CoralogixReconciler can
+// implement to veto the delete-on-status-failure rollback for a specific object.
+// It is consulted per object, so a reconciler can roll back a genuine creation
+// while skipping one it must not delete - e.g. an adopted (imported) Dashboard
+// that HandleCreation only looked up, or an idempotent tenant-level singleton
+// whose retry cannot create a duplicate.
+type CreationRollbackSkipper interface {
+	SkipCreationRollback(obj client.Object) bool
+}
+
+func skipCreationRollback(r CoralogixReconciler, obj client.Object) bool {
+	s, ok := r.(CreationRollbackSkipper)
+	return ok && s.SkipCreationRollback(obj)
+}
+
 // +kubebuilder:rbac:groups="",resources=namespaces,verbs=get;list;watch
 
 func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Object, r CoralogixReconciler) (ctrl.Result, error) {
@@ -81,7 +96,14 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 			// The remote resource was created but we couldn't persist its ID.
 			// Leaving it as-is would make the next reconcile create a duplicate
 			// (HasIDInStatus is still false), so roll back by deleting the remote
-			// resource and let the next reconcile start cleanly.
+			// resource and let the next reconcile start cleanly - unless the
+			// reconciler opts this object out (e.g. an adopted/imported resource
+			// that wasn't actually created, or an idempotent singleton where a
+			// retry can't create a duplicate).
+			if skipCreationRollback(r, obj) {
+				log.Error(err, "Error updating status after creation; skipping rollback for this resource")
+				return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
+			}
 			log.Error(err, "Error updating status after creation; deleting remote resource to avoid duplication")
 			if delErr := r.HandleDeletion(ctx, log, obj); delErr != nil {
 				log.Error(delErr, "Error deleting remote resource after status update failure")
