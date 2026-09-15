@@ -78,7 +78,15 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 		}
 
 		if err := config.GetClient().Status().Update(ctx, obj); err != nil {
-			log.Error(err, "Error updating status after creation")
+			// The remote resource was created but we couldn't persist its ID.
+			// Leaving it as-is would make the next reconcile create a duplicate
+			// (HasIDInStatus is still false), so roll back by deleting the remote
+			// resource and let the next reconcile start cleanly.
+			log.Error(err, "Error updating status after creation; deleting remote resource to avoid duplication")
+			if delErr := r.HandleDeletion(ctx, log, obj); delErr != nil {
+				log.Error(delErr, "Error deleting remote resource after status update failure")
+				return ManageErrorWithRequeue(ctx, obj, utils.ReasonRemoteDeletionFailed, delErr)
+			}
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 		}
 
