@@ -32,10 +32,12 @@ import (
 // TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.
 type TCOLogsPoliciesSpec struct {
 	// Coralogix TCO-Policies-List.
+	// +kubebuilder:validation:MaxItems=200
 	Policies []TCOLogsPolicy `json:"policies"`
 }
 
 // A TCO policy for logs.
+// +kubebuilder:validation:XValidation:rule="!(has(self.dpxlExpression) && (has(self.applications) || has(self.subsystems) || (has(self.severities) && size(self.severities) > 0)))",message="dpxlExpression is mutually exclusive with severities, applications and subsystems"
 type TCOLogsPolicy struct {
 	// Name of the policy.
 	Name string `json:"name"`
@@ -53,8 +55,20 @@ type TCOLogsPolicy struct {
 	// Whether the policy is disabled.
 	Disabled *bool `json:"disabled,omitempty"`
 
-	// The severities to apply the policy on.
-	Severities []TCOPolicySeverity `json:"severities"`
+	// The severities to apply the policy on. Mutually exclusive with dpxlExpression.
+	// +optional
+	Severities []TCOPolicySeverity `json:"severities,omitempty"`
+
+	// A DPXL expression to match logs on. Mutually exclusive with severities, applications and subsystems.
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=65535
+	DpxlExpression *string `json:"dpxlExpression,omitempty"`
+
+	// Dynamic quota-based priority override for the policy. Use with the policy-level priority;
+	// mutually exclusive with per-target priority overrides.
+	// +optional
+	PriorityOverride *TCOPolicyPriorityOverride `json:"priorityOverride,omitempty"`
 
 	// Matches the specified retention.
 	// +optional
@@ -263,10 +277,12 @@ func (p *TCOLogsPolicy) extractCreateLogPolicyRequest(retentionsByName map[strin
 			ApplicationRule:  expandTCOPolicyRule(p.Applications),
 			SubsystemRule:    expandTCOPolicyRule(p.Subsystems),
 			ArchiveRetention: archiveRetention,
+			PriorityOverride: expandTCOPolicyPriorityOverride(p.PriorityOverride),
 			Targets:          targets,
 		},
 		LogRules: tcopolicies.LogRules{
-			Severities: expandTCOPolicySeverities(p.Severities),
+			Severities:     expandTCOPolicySeverities(p.Severities),
+			DpxlExpression: p.DpxlExpression,
 		},
 	}
 

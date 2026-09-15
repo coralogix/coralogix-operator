@@ -5686,6 +5686,16 @@ func (in *TCOLogsPolicy) DeepCopyInto(out *TCOLogsPolicy) {
 		*out = make([]TCOPolicySeverity, len(*in))
 		copy(*out, *in)
 	}
+	if in.DpxlExpression != nil {
+		in, out := &in.DpxlExpression, &out.DpxlExpression
+		*out = new(string)
+		**out = **in
+	}
+	if in.PriorityOverride != nil {
+		in, out := &in.PriorityOverride, &out.PriorityOverride
+		*out = new(TCOPolicyPriorityOverride)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.ArchiveRetention != nil {
 		in, out := &in.ArchiveRetention, &out.ArchiveRetention
 		*out = new(ArchiveRetention)
@@ -6122,6 +6132,11 @@ func (in *TCOTracesPolicy) DeepCopyInto(out *TCOTracesPolicy) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.PriorityOverride != nil {
+		in, out := &in.PriorityOverride, &out.PriorityOverride
+		*out = new(TCOPolicyPriorityOverride)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.ArchiveRetention != nil {
 		in, out := &in.ArchiveRetention, &out.ArchiveRetention
 		*out = new(ArchiveRetention)
@@ -6153,6 +6168,11 @@ func (in *TCOTracesPolicy) DeepCopyInto(out *TCOTracesPolicy) {
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
+	}
+	if in.DpxlExpression != nil {
+		in, out := &in.DpxlExpression, &out.DpxlExpression
+		*out = new(string)
+		**out = **in
 	}
 }
 
