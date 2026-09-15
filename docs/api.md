@@ -18602,7 +18602,7 @@ A TCO policy for logs.
         <td>object</td>
         <td>
           Dynamic quota-based priority override for the policy. Use with the policy-level priority;
-mutually exclusive with per-target priority overrides (enforced by the backend).<br/>
+mutually exclusive with per-target priority overrides.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -18738,7 +18738,7 @@ Reference to the retention policy
 
 
 Dynamic quota-based priority override for the policy. Use with the policy-level priority;
-mutually exclusive with per-target priority overrides (enforced by the backend).
+mutually exclusive with per-target priority overrides.
 
 <table>
     <thead>

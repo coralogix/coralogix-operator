@@ -159,7 +159,6 @@ spec:
                                 - dailyQuotaPercentage
                                 - priority
                                 type: object
-                              maxItems: 3
                               minItems: 1
                               type: array
                           required:

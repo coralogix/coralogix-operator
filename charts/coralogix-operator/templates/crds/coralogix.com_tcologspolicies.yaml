@@ -133,7 +133,7 @@ spec:
                     priorityOverride:
                       description: |-
                         Dynamic quota-based priority override for the policy. Use with the policy-level priority;
-                        mutually exclusive with per-target priority overrides (enforced by the backend).
+                        mutually exclusive with per-target priority overrides.
                       properties:
                         quotaBased:
                           description: TCOPolicyQuotaBased maps daily quota consumption
@@ -161,7 +161,6 @@ spec:
                                 - dailyQuotaPercentage
                                 - priority
                                 type: object
-                              maxItems: 3
                               minItems: 1
                               type: array
                           required:
@@ -181,7 +180,6 @@ spec:
                         - debug
                         - verbose
                         type: string
-                      maxItems: 6
                       type: array
                     subsystems:
                       description: The subsystems to apply the policy on. Applies
@@ -283,7 +281,6 @@ spec:
                                       - dailyQuotaPercentage
                                       - priority
                                       type: object
-                                    maxItems: 3
                                     minItems: 1
                                     type: array
                                 required:
