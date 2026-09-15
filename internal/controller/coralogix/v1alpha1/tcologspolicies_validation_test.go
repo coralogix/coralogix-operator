@@ -347,6 +347,29 @@ var _ = Describe("TCOLogsPolicies validation", func() {
 		Expect(err.Error()).To(ContainSubstring("mutually exclusive"))
 	})
 
+	It("should reject a policy that sets both dpxlExpression and applications", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCOLogsPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "logs-dpxl-apps",
+				Namespace: "default",
+			},
+			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
+					Name:           "conflicting-rules",
+					Priority:       ptr.To("low"),
+					DpxlExpression: ptr.To("<v1>$d.applicationname == 'prod'"),
+					Applications: &coralogixv1alpha1.TCOPolicyRule{
+						Names:    []string{"prod"},
+						RuleType: "is",
+					},
+				}},
+			},
+		}
+		err := k8sClient.Create(ctx, policy)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("mutually exclusive"))
+	})
+
 	It("should accept a policy with a policy-level quota-based priority override", func(ctx context.Context) {
 		policy := &coralogixv1alpha1.TCOLogsPolicies{
 			ObjectMeta: metav1.ObjectMeta{

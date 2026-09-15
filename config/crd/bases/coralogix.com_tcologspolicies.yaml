@@ -295,10 +295,12 @@ spec:
                   - name
                   type: object
                   x-kubernetes-validations:
-                  - message: severities and dpxlExpression are mutually exclusive
-                    rule: '!(has(self.severities) && size(self.severities) > 0 &&
-                      has(self.dpxlExpression))'
-                maxItems: 10000
+                  - message: dpxlExpression is mutually exclusive with severities,
+                      applications and subsystems
+                    rule: '!(has(self.dpxlExpression) && (has(self.applications) ||
+                      has(self.subsystems) || (has(self.severities) && size(self.severities)
+                      > 0)))'
+                maxItems: 200
                 type: array
             required:
             - policies

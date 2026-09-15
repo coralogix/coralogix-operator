@@ -29,12 +29,12 @@ import (
 // TCOTracesPoliciesSpec defines the desired state of Coralogix TCO policies for traces.
 type TCOTracesPoliciesSpec struct {
 	// Coralogix TCO-Policies-List.
-	// +kubebuilder:validation:MaxItems=10000
+	// +kubebuilder:validation:MaxItems=200
 	Policies []TCOTracesPolicy `json:"policies"`
 }
 
 // Coralogix TCO policy for traces.
-// +kubebuilder:validation:XValidation:rule="!(has(self.dpxlExpression) && (has(self.services) || has(self.actions) || (has(self.tags) && size(self.tags) > 0)))",message="dpxlExpression is mutually exclusive with services, actions and tags"
+// +kubebuilder:validation:XValidation:rule="!(has(self.dpxlExpression) && (has(self.services) || has(self.actions) || has(self.applications) || has(self.subsystems) || (has(self.tags) && size(self.tags) > 0)))",message="dpxlExpression is mutually exclusive with services, actions, tags, applications and subsystems"
 type TCOTracesPolicy struct {
 	// Name of the policy.
 	Name string `json:"name"`

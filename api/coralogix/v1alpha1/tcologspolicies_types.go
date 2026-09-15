@@ -32,12 +32,12 @@ import (
 // TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.
 type TCOLogsPoliciesSpec struct {
 	// Coralogix TCO-Policies-List.
-	// +kubebuilder:validation:MaxItems=10000
+	// +kubebuilder:validation:MaxItems=200
 	Policies []TCOLogsPolicy `json:"policies"`
 }
 
 // A TCO policy for logs.
-// +kubebuilder:validation:XValidation:rule="!(has(self.severities) && size(self.severities) > 0 && has(self.dpxlExpression))",message="severities and dpxlExpression are mutually exclusive"
+// +kubebuilder:validation:XValidation:rule="!(has(self.dpxlExpression) && (has(self.applications) || has(self.subsystems) || (has(self.severities) && size(self.severities) > 0)))",message="dpxlExpression is mutually exclusive with severities, applications and subsystems"
 type TCOLogsPolicy struct {
 	// Name of the policy.
 	Name string `json:"name"`

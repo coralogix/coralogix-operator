@@ -268,11 +268,12 @@ spec:
                   - priority
                   type: object
                   x-kubernetes-validations:
-                  - message: dpxlExpression is mutually exclusive with services, actions
-                      and tags
+                  - message: dpxlExpression is mutually exclusive with services, actions,
+                      tags, applications and subsystems
                     rule: '!(has(self.dpxlExpression) && (has(self.services) || has(self.actions)
-                      || (has(self.tags) && size(self.tags) > 0)))'
-                maxItems: 10000
+                      || has(self.applications) || has(self.subsystems) || (has(self.tags)
+                      && size(self.tags) > 0)))'
+                maxItems: 200
                 type: array
             required:
             - policies
