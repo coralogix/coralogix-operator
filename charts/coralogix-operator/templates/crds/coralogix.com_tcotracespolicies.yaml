@@ -137,6 +137,7 @@ spec:
                     dpxlExpression:
                       description: A DPXL expression to match spans on. Mutually exclusive
                         with services, actions and tags.
+                      maxLength: 65535
                       minLength: 1
                       type: string
                     name:
@@ -179,6 +180,7 @@ spec:
                                 - dailyQuotaPercentage
                                 - priority
                                 type: object
+                              maxItems: 3
                               minItems: 1
                               type: array
                           required:
@@ -270,7 +272,7 @@ spec:
                   - message: dpxlExpression is mutually exclusive with services, actions
                       and tags
                     rule: '!(has(self.dpxlExpression) && (has(self.services) || has(self.actions)
-                      || has(self.tags)))'
+                      || (has(self.tags) && size(self.tags) > 0)))'
                 maxItems: 10000
                 type: array
             required:

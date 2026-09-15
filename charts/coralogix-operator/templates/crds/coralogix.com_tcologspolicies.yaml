@@ -114,6 +114,7 @@ spec:
                     dpxlExpression:
                       description: A DPXL expression to match logs on. Mutually exclusive
                         with severities.
+                      maxLength: 65535
                       minLength: 1
                       type: string
                     name:
@@ -160,6 +161,7 @@ spec:
                                 - dailyQuotaPercentage
                                 - priority
                                 type: object
+                              maxItems: 3
                               minItems: 1
                               type: array
                           required:
@@ -179,6 +181,7 @@ spec:
                         - debug
                         - verbose
                         type: string
+                      maxItems: 6
                       type: array
                     subsystems:
                       description: The subsystems to apply the policy on. Applies
@@ -280,6 +283,7 @@ spec:
                                       - dailyQuotaPercentage
                                       - priority
                                       type: object
+                                    maxItems: 3
                                     minItems: 1
                                     type: array
                                 required:
@@ -296,7 +300,8 @@ spec:
                   type: object
                   x-kubernetes-validations:
                   - message: severities and dpxlExpression are mutually exclusive
-                    rule: '!(has(self.severities) && has(self.dpxlExpression))'
+                    rule: '!(has(self.severities) && size(self.severities) > 0 &&
+                      has(self.dpxlExpression))'
                 maxItems: 10000
                 type: array
             required:

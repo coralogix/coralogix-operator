@@ -37,7 +37,7 @@ type TCOLogsPoliciesSpec struct {
 }
 
 // A TCO policy for logs.
-// +kubebuilder:validation:XValidation:rule="!(has(self.severities) && has(self.dpxlExpression))",message="severities and dpxlExpression are mutually exclusive"
+// +kubebuilder:validation:XValidation:rule="!(has(self.severities) && size(self.severities) > 0 && has(self.dpxlExpression))",message="severities and dpxlExpression are mutually exclusive"
 type TCOLogsPolicy struct {
 	// Name of the policy.
 	Name string `json:"name"`
@@ -57,11 +57,13 @@ type TCOLogsPolicy struct {
 
 	// The severities to apply the policy on. Mutually exclusive with dpxlExpression.
 	// +optional
+	// +kubebuilder:validation:MaxItems=6
 	Severities []TCOPolicySeverity `json:"severities,omitempty"`
 
 	// A DPXL expression to match logs on. Mutually exclusive with severities.
 	// +optional
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=65535
 	DpxlExpression *string `json:"dpxlExpression,omitempty"`
 
 	// Dynamic quota-based priority override for the policy. Use with the policy-level priority;
@@ -174,6 +176,7 @@ type TCOPolicyPriorityOverride struct {
 // TCOPolicyQuotaBased maps daily quota consumption percentages to priority levels.
 type TCOPolicyQuotaBased struct {
 	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=3
 	UsageTiers []TCOPolicyUsageTier `json:"usageTiers"`
 }
 

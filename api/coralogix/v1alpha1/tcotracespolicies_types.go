@@ -34,7 +34,7 @@ type TCOTracesPoliciesSpec struct {
 }
 
 // Coralogix TCO policy for traces.
-// +kubebuilder:validation:XValidation:rule="!(has(self.dpxlExpression) && (has(self.services) || has(self.actions) || has(self.tags)))",message="dpxlExpression is mutually exclusive with services, actions and tags"
+// +kubebuilder:validation:XValidation:rule="!(has(self.dpxlExpression) && (has(self.services) || has(self.actions) || (has(self.tags) && size(self.tags) > 0)))",message="dpxlExpression is mutually exclusive with services, actions and tags"
 type TCOTracesPolicy struct {
 	// Name of the policy.
 	Name string `json:"name"`
@@ -82,6 +82,7 @@ type TCOTracesPolicy struct {
 	// A DPXL expression to match spans on. Mutually exclusive with services, actions and tags.
 	// +optional
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=65535
 	DpxlExpression *string `json:"dpxlExpression,omitempty"`
 }
 
