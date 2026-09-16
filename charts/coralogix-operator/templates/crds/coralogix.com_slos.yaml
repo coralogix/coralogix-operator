@@ -215,8 +215,9 @@ spec:
                             anyOf:
                             - type: integer
                             - type: string
-                            description: Threshold is the latency threshold in seconds.
-                              The API stores 0 when omitted.
+                            description: |-
+                              Threshold is the latency threshold in milliseconds, so 500 means 500ms. Latency at
+                              or below the threshold is good. The API stores 0 when omitted.
                             pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                             x-kubernetes-int-or-string: true
                           timeWindow:
@@ -263,8 +264,11 @@ spec:
                         - query
                         type: object
                       groupByLabels:
-                        description: GroupByLabels defines the labels to group the
-                          SLI by.
+                        description: |-
+                          GroupByLabels has no effect. The Coralogix API derives the SLO grouping itself and
+                          the value is never sent. The field is kept because removing it would break existing
+                          resources.
+                          Deprecated: ignored by the operator and by the API.
                         items:
                           type: string
                         type: array
@@ -316,7 +320,10 @@ spec:
                         anyOf:
                         - type: integer
                         - type: string
-                        description: Threshold defines the threshold for the SLO.
+                        description: |-
+                          Threshold defines the threshold the comparisonOperator applies to.
+                          The protobuf field is a bare float with no presence tracking, so the API cannot tell
+                          an omitted threshold from a threshold of 0. Omitting it here sends 0.
                         pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                         x-kubernetes-int-or-string: true
                       window:
@@ -341,8 +348,10 @@ spec:
                 anyOf:
                 - type: integer
                 - type: string
-                description: TargetThresholdPercentage is the target threshold percentage
-                  for the SLO.
+                description: |-
+                  TargetThresholdPercentage is the target compliance percentage for the SLO, so 99.9
+                  means three nines. There is deliberately no 0-100 range validator: the protobuf
+                  declares no bound and the API accepts values outside that range.
                 pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                 x-kubernetes-int-or-string: true
               window:

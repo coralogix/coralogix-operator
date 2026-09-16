@@ -90,13 +90,10 @@ type SLOSpec struct {
 	ProductType *SloProductType `json:"productType,omitempty"`
 	// Window defines the time window for the SLO.
 	Window SloWindow `json:"window"`
-	// TargetThresholdPercentage is the target threshold percentage for the SLO.
+	// TargetThresholdPercentage is the target compliance percentage for the SLO, so 99.9
+	// means three nines. There is deliberately no 0-100 range validator: the protobuf
+	// declares no bound and the API accepts values outside that range.
 	TargetThresholdPercentage resource.Quantity `json:"targetThresholdPercentage"`
-}
-
-type SloGrouping struct {
-	// Labels defines the labels to group the SLO by.
-	Labels []string `json:"labels,omitempty"`
 }
 
 // +kubebuilder:validation:XValidation:rule="[has(self.requestBasedMetric),has(self.windowBasedMetric),has(self.apmSli)].filter(x, x).size() == 1",message="Exactly one of requestBasedMetric, windowBasedMetric or apmSli must be set"
@@ -117,7 +114,10 @@ type RequestBasedMetricSli struct {
 	// TotalEvents defines the total events metric.
 	TotalEvents SloMetricEvent `json:"totalEvents"`
 	// +optional
-	// GroupByLabels defines the labels to group the SLI by.
+	// GroupByLabels has no effect. The Coralogix API derives the SLO grouping itself and
+	// the value is never sent. The field is kept because removing it would break existing
+	// resources.
+	// Deprecated: ignored by the operator and by the API.
 	GroupByLabels []string `json:"groupByLabels,omitempty"`
 }
 
@@ -129,7 +129,9 @@ type WindowBasedMetricSli struct {
 	// ComparisonOperator defines the comparison operator for the SLO. Valid values are
 	// "greaterThan", "lessThan", "greaterThanOrEquals" and "lessThanOrEquals".
 	ComparisonOperator ComparisonOperator `json:"comparisonOperator"`
-	// Threshold defines the threshold for the SLO.
+	// Threshold defines the threshold the comparisonOperator applies to.
+	// The protobuf field is a bare float with no presence tracking, so the API cannot tell
+	// an omitted threshold from a threshold of 0. Omitting it here sends 0.
 	Threshold resource.Quantity `json:"threshold,omitempty"`
 	// +optional
 	// MissingDataStrategy decides how a window with no data counts. Valid values are
@@ -172,7 +174,8 @@ type ApmLatencySli struct {
 	// omitted windowBasedMetric.window, so it is required.
 	TimeWindow SloWindowEnum `json:"timeWindow"`
 	// +optional
-	// Threshold is the latency threshold in seconds. The API stores 0 when omitted.
+	// Threshold is the latency threshold in milliseconds, so 500 means 500ms. Latency at
+	// or below the threshold is good. The API stores 0 when omitted.
 	Threshold *resource.Quantity `json:"threshold,omitempty"`
 	// +optional
 	// Quantile measures a latency quantile.

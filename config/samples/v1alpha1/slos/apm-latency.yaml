@@ -20,8 +20,8 @@ spec:
         - checkout-service
       latencyConfig:
         timeWindow: 5m
-        # threshold is in seconds.
-        threshold: "0.5"
+        # threshold is in milliseconds, so this is 500ms.
+        threshold: "500"
         quantile:
           # percentile is a fraction, so 0.95 means P95.
           percentile: "0.95"

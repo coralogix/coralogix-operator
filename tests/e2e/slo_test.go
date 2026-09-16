@@ -550,7 +550,8 @@ func getSampleAPMLatencySlo(name, service string) *coralogixv1alpha1.SLO {
 	slo := getSampleAPMSlo(name, service)
 	slo.Spec.SliType.ApmSli.LatencyConfig = &coralogixv1alpha1.ApmLatencySli{
 		TimeWindow: "5m",
-		Threshold:  ptr.To(resource.MustParse("0.5")),
+		// milliseconds, so 500ms
+		Threshold: ptr.To(resource.MustParse("500")),
 		Quantile: &coralogixv1alpha1.ApmLatencyQuantile{
 			Percentile: ptr.To(resource.MustParse("0.95")),
 		},

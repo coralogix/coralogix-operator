@@ -18053,7 +18053,9 @@ Exactly one of requestBasedMetric, windowBasedMetric or apmSli must be set.<br/>
         <td><b>targetThresholdPercentage</b></td>
         <td>int or string</td>
         <td>
-          TargetThresholdPercentage is the target threshold percentage for the SLO.<br/>
+          TargetThresholdPercentage is the target compliance percentage for the SLO, so 99.9
+means three nines. There is deliberately no 0-100 range validator: the protobuf
+declares no bound and the API accepts values outside that range.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -18298,7 +18300,8 @@ omitted windowBasedMetric.window, so it is required.<br/>
         <td><b>threshold</b></td>
         <td>int or string</td>
         <td>
-          Threshold is the latency threshold in seconds. The API stores 0 when omitted.<br/>
+          Threshold is the latency threshold in milliseconds, so 500 means 500ms. Latency at
+or below the threshold is good. The API stores 0 when omitted.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -18368,7 +18371,10 @@ including 5 and -1, so rejecting them here would be stricter than the API.<br/>
         <td><b>groupByLabels</b></td>
         <td>[]string</td>
         <td>
-          GroupByLabels defines the labels to group the SLI by.<br/>
+          GroupByLabels has no effect. The Coralogix API derives the SLO grouping itself and
+the value is never sent. The field is kept because removing it would break existing
+resources.
+Deprecated: ignored by the operator and by the API.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -18486,7 +18492,9 @@ MISSING_DATA_STRATEGY_UNCOUNTED.<br/>
         <td><b>threshold</b></td>
         <td>int or string</td>
         <td>
-          Threshold defines the threshold for the SLO.<br/>
+          Threshold defines the threshold the comparisonOperator applies to.
+The protobuf field is a bare float with no presence tracking, so the API cannot tell
+an omitted threshold from a threshold of 0. Omitting it here sends 0.<br/>
         </td>
         <td>false</td>
       </tr></tbody>

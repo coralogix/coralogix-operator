@@ -97,6 +97,12 @@ func (r *SLOReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj c
 		return cxsdk.NewAPIError(httpResp, err)
 	}
 	log.Info("Remote slo updated", "response", utils.FormatJSON(updateResponse))
+
+	// The replace bumps the remote revision. Without this the status keeps the revision
+	// from creation and goes stale after the first update.
+	receivedSLO := updateResponse.GetSlo()
+	slo.Status.Revision = ptr.To(ptr.To(receivedSLO.GetRevision()).GetRevision())
+
 	return nil
 }
 
