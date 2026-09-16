@@ -42,7 +42,7 @@ import (
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
-var _ = Describe("AIEvaluation PII", Ordered, func() {
+var _ = Describe("AIEvaluation PII", Ordered, Serial, func() {
 	var (
 		crClient             client.Client
 		aiApplications       *aiapplications.AIApplicationsServiceAPIService
@@ -160,7 +160,7 @@ var _ = Describe("AIEvaluation PII", Ordered, func() {
 	})
 })
 
-var _ = Describe("AIEvaluation Allowed Topics", Ordered, func() {
+var _ = Describe("AIEvaluation Allowed Topics", Ordered, Serial, func() {
 	var (
 		crClient             client.Client
 		aiApplications       *aiapplications.AIApplicationsServiceAPIService
@@ -272,7 +272,7 @@ var _ = Describe("AIEvaluation Allowed Topics", Ordered, func() {
 	})
 })
 
-var _ = Describe("AIEvaluation Competition", Ordered, func() {
+var _ = Describe("AIEvaluation Competition", Ordered, Serial, func() {
 	var (
 		crClient           client.Client
 		aiApplications     *aiapplications.AIApplicationsServiceAPIService
@@ -436,7 +436,7 @@ func init() {
 	)
 }
 
-var _ = Describe("AIEvaluation Language Mismatch", Ordered, func() {
+var _ = Describe("AIEvaluation Language Mismatch", Ordered, Serial, func() {
 	var (
 		crClient           client.Client
 		aiApplications     *aiapplications.AIApplicationsServiceAPIService
@@ -544,7 +544,7 @@ var _ = Describe("AIEvaluation Language Mismatch", Ordered, func() {
 	})
 })
 
-var _ = Describe("AIEvaluation Prompt Injection", Ordered, func() {
+var _ = Describe("AIEvaluation Prompt Injection", Ordered, Serial, func() {
 	var (
 		crClient                 client.Client
 		aiApplications           *aiapplications.AIApplicationsServiceAPIService
@@ -656,7 +656,7 @@ var _ = Describe("AIEvaluation Prompt Injection", Ordered, func() {
 	})
 })
 
-var _ = Describe("AIEvaluation Restricted Topics", Ordered, func() {
+var _ = Describe("AIEvaluation Restricted Topics", Ordered, Serial, func() {
 	var (
 		crClient                client.Client
 		aiApplications          *aiapplications.AIApplicationsServiceAPIService
@@ -768,7 +768,7 @@ var _ = Describe("AIEvaluation Restricted Topics", Ordered, func() {
 	})
 })
 
-var _ = Describe("AIEvaluation Sexism", Ordered, func() {
+var _ = Describe("AIEvaluation Sexism", Ordered, Serial, func() {
 	var (
 		crClient           client.Client
 		aiApplications     *aiapplications.AIApplicationsServiceAPIService
@@ -922,7 +922,7 @@ func init() {
 	)
 }
 
-var _ = Describe("AIEvaluation Toxicity", Ordered, func() {
+var _ = Describe("AIEvaluation Toxicity", Ordered, Serial, func() {
 	var (
 		crClient           client.Client
 		aiApplications     *aiapplications.AIApplicationsServiceAPIService
@@ -1176,7 +1176,7 @@ func describeEmptyConfigAIEvaluation(
 	configure func(*coralogixv1alpha1.AIEvaluationConfig),
 	expectRemoteConfig func(Gomega, aievaluations.AiEvaluation),
 ) {
-	Describe(description, Ordered, func() {
+	Describe(description, Ordered, Serial, func() {
 		var (
 			crClient           client.Client
 			aiApplications     *aiapplications.AIApplicationsServiceAPIService
@@ -1295,7 +1295,7 @@ func describeStringSetConfigAIEvaluation(
 	configure func(*coralogixv1alpha1.AIEvaluationConfig, []string),
 	expectRemoteConfig func(Gomega, aievaluations.AiEvaluation, []string),
 ) {
-	Describe(description, Ordered, func() {
+	Describe(description, Ordered, Serial, func() {
 		var (
 			crClient           client.Client
 			aiApplications     *aiapplications.AIApplicationsServiceAPIService
