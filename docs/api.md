@@ -18001,6 +18001,8 @@ See also https://coralogix.com/platform/apm/slo-management/
         <td>object</td>
         <td>
           SLOSpec defines the desired state of SLO. For more information, see: https://coralogix.com/platform/apm/slo-management/<br/>
+          <br/>
+            <i>Validations</i>:<li>!(has(self.productType) && self.productType == 'apm') || has(self.sliType.apmSli): productType 'apm' requires sliType.apmSli</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -18041,9 +18043,10 @@ SLOSpec defines the desired state of SLO. For more information, see: https://cor
         <td><b><a href="#slospecslitype">sliType</a></b></td>
         <td>object</td>
         <td>
-          SliType defines the type of SLI used for the SLO. Exactly one of metric or windowBasedMetric must be set.<br/>
+          SliType defines the type of SLI used for the SLO.
+Exactly one of requestBasedMetric, windowBasedMetric or apmSli must be set.<br/>
           <br/>
-            <i>Validations</i>:<li>has(self.requestBasedMetric) != has(self.windowBasedMetric): Exactly one of requestBasedMetricSli or windowBasedMetric must be set</li>
+            <i>Validations</i>:<li>[has(self.requestBasedMetric),has(self.windowBasedMetric),has(self.apmSli)].filter(x, x).size() == 1: Exactly one of requestBasedMetric, windowBasedMetric or apmSli must be set</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -18074,6 +18077,17 @@ SLOSpec defines the desired state of SLO. For more information, see: https://cor
           Labels are additional labels to be added to the SLO.<br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>productType</b></td>
+        <td>enum</td>
+        <td>
+          ProductType selects the Coralogix product the SLO is built from. Valid values are
+"unspecified" and "apm". An apmSli requires "apm". When omitted, the API stores
+SLO_PRODUCT_TYPE_UNSPECIFIED.<br/>
+          <br/>
+            <i>Enum</i>: unspecified, apm<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -18083,7 +18097,8 @@ SLOSpec defines the desired state of SLO. For more information, see: https://cor
 
 
 
-SliType defines the type of SLI used for the SLO. Exactly one of metric or windowBasedMetric must be set.
+SliType defines the type of SLI used for the SLO.
+Exactly one of requestBasedMetric, windowBasedMetric or apmSli must be set.
 
 <table>
     <thead>
@@ -18095,6 +18110,16 @@ SliType defines the type of SLI used for the SLO. Exactly one of metric or windo
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#slospecslitypeapmsli">apmSli</a></b></td>
+        <td>object</td>
+        <td>
+          ApmSli builds the SLO from an APM Service Catalog service instead of a PromQL query.
+It requires spec.productType "apm".<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.errorConfig) != has(self.latencyConfig): Exactly one of errorConfig or latencyConfig must be set</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#slospecslityperequestbasedmetric">requestBasedMetric</a></b></td>
         <td>object</td>
         <td>
@@ -18106,6 +18131,179 @@ SliType defines the type of SLI used for the SLO. Exactly one of metric or windo
         <td>object</td>
         <td>
           <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliType.apmSli
+<sup><sup>[↩ Parent](#slospecslitype)</sup></sup>
+
+
+
+ApmSli builds the SLO from an APM Service Catalog service instead of a PromQL query.
+It requires spec.productType "apm".
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>services</b></td>
+        <td>[]string</td>
+        <td>
+          Services lists the APM Service Catalog services the SLO covers. The Coralogix API
+accepts exactly one service today and rejects names that are not in the catalog.
+The count is deliberately not capped here, so a server-side relaxation needs no
+operator release.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>errorConfig</b></td>
+        <td>object</td>
+        <td>
+          ErrorConfig makes this an APM error-rate SLI. It carries no settings.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#slospecslitypeapmslifiltersindex">filters</a></b></td>
+        <td>[]object</td>
+        <td>
+          Filters narrows the SLI to spans matching every filter.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>groupingKeys</b></td>
+        <td>[]string</td>
+        <td>
+          GroupingKeys splits the SLI by the given span attributes.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#slospecslitypeapmslilatencyconfig">latencyConfig</a></b></td>
+        <td>object</td>
+        <td>
+          LatencyConfig makes this an APM latency SLI.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.quantile) != has(self.average): Exactly one of quantile or average must be set</li>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliType.apmSli.filters[index]
+<sup><sup>[↩ Parent](#slospecslitypeapmsli)</sup></sup>
+
+
+
+ApmFilter matches a span attribute against a set of values.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          Key is the span attribute name.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          Values are the accepted values for Key.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliType.apmSli.latencyConfig
+<sup><sup>[↩ Parent](#slospecslitypeapmsli)</sup></sup>
+
+
+
+LatencyConfig makes this an APM latency SLI.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>timeWindow</b></td>
+        <td>enum</td>
+        <td>
+          TimeWindow defines the evaluation window. Valid values are "1m" and "5m".<br/>
+          <br/>
+            <i>Enum</i>: 1m, 5m<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>average</b></td>
+        <td>object</td>
+        <td>
+          Average measures average latency. It carries no settings.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#slospecslitypeapmslilatencyconfigquantile">quantile</a></b></td>
+        <td>object</td>
+        <td>
+          Quantile measures a latency quantile.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>threshold</b></td>
+        <td>int or string</td>
+        <td>
+          Threshold is the latency threshold in seconds. The API stores 0 when omitted.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliType.apmSli.latencyConfig.quantile
+<sup><sup>[↩ Parent](#slospecslitypeapmslilatencyconfig)</sup></sup>
+
+
+
+Quantile measures a latency quantile.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>percentile</b></td>
+        <td>int or string</td>
+        <td>
+          Percentile is a fraction, so 0.95 means P95. The API stores 0 when omitted.
+The accepted range is not validated here because the API's own bounds are unverified.<br/>
         </td>
         <td>false</td>
       </tr></tbody>

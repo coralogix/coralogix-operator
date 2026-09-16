@@ -60,10 +60,114 @@ spec:
               name:
                 description: SLO name
                 type: string
+              productType:
+                description: |-
+                  ProductType selects the Coralogix product the SLO is built from. Valid values are
+                  "unspecified" and "apm". An apmSli requires "apm". When omitted, the API stores
+                  SLO_PRODUCT_TYPE_UNSPECIFIED.
+                enum:
+                - unspecified
+                - apm
+                type: string
               sliType:
-                description: SliType defines the type of SLI used for the SLO. Exactly
-                  one of metric or windowBasedMetric must be set.
+                description: |-
+                  SliType defines the type of SLI used for the SLO.
+                  Exactly one of requestBasedMetric, windowBasedMetric or apmSli must be set.
                 properties:
+                  apmSli:
+                    description: |-
+                      ApmSli builds the SLO from an APM Service Catalog service instead of a PromQL query.
+                      It requires spec.productType "apm".
+                    properties:
+                      errorConfig:
+                        description: ErrorConfig makes this an APM error-rate SLI.
+                          It carries no settings.
+                        type: object
+                      filters:
+                        description: Filters narrows the SLI to spans matching every
+                          filter.
+                        items:
+                          description: ApmFilter matches a span attribute against
+                            a set of values.
+                          properties:
+                            key:
+                              description: Key is the span attribute name.
+                              type: string
+                            values:
+                              description: Values are the accepted values for Key.
+                              items:
+                                type: string
+                              minItems: 1
+                              type: array
+                          required:
+                          - key
+                          - values
+                          type: object
+                        type: array
+                      groupingKeys:
+                        description: GroupingKeys splits the SLI by the given span
+                          attributes.
+                        items:
+                          type: string
+                        type: array
+                      latencyConfig:
+                        description: LatencyConfig makes this an APM latency SLI.
+                        properties:
+                          average:
+                            description: Average measures average latency. It carries
+                              no settings.
+                            type: object
+                          quantile:
+                            description: Quantile measures a latency quantile.
+                            properties:
+                              percentile:
+                                anyOf:
+                                - type: integer
+                                - type: string
+                                description: |-
+                                  Percentile is a fraction, so 0.95 means P95. The API stores 0 when omitted.
+                                  The accepted range is not validated here because the API's own bounds are unverified.
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                            type: object
+                          threshold:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            description: Threshold is the latency threshold in seconds.
+                              The API stores 0 when omitted.
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                          timeWindow:
+                            description: TimeWindow defines the evaluation window.
+                              Valid values are "1m" and "5m".
+                            enum:
+                            - 1m
+                            - 5m
+                            type: string
+                        required:
+                        - timeWindow
+                        type: object
+                        x-kubernetes-validations:
+                        - message: Exactly one of quantile or average must be set
+                          rule: has(self.quantile) != has(self.average)
+                      services:
+                        description: |-
+                          Services lists the APM Service Catalog services the SLO covers. The Coralogix API
+                          accepts exactly one service today and rejects names that are not in the catalog.
+                          The count is deliberately not capped here, so a server-side relaxation needs no
+                          operator release.
+                        items:
+                          type: string
+                        minItems: 1
+                        type: array
+                    required:
+                    - services
+                    type: object
+                    x-kubernetes-validations:
+                    - message: Exactly one of errorConfig or latencyConfig must be
+                        set
+                      rule: has(self.errorConfig) != has(self.latencyConfig)
                   requestBasedMetric:
                     properties:
                       goodEvents:
@@ -135,9 +239,10 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-validations:
-                - message: Exactly one of requestBasedMetricSli or windowBasedMetric
-                    must be set
-                  rule: has(self.requestBasedMetric) != has(self.windowBasedMetric)
+                - message: Exactly one of requestBasedMetric, windowBasedMetric or
+                    apmSli must be set
+                  rule: '[has(self.requestBasedMetric),has(self.windowBasedMetric),has(self.apmSli)].filter(x,
+                    x).size() == 1'
               targetThresholdPercentage:
                 anyOf:
                 - type: integer
@@ -168,6 +273,9 @@ spec:
             - targetThresholdPercentage
             - window
             type: object
+            x-kubernetes-validations:
+            - message: productType 'apm' requires sliType.apmSli
+              rule: '!(has(self.productType) && self.productType == ''apm'') || has(self.sliType.apmSli)'
           status:
             description: SLOStatus defines the observed state of SLO.
             properties:
