@@ -103,7 +103,7 @@ var _ = Describe("OutboundWebhook", Ordered, func() {
 		outBoundWebhook.Spec.OutboundWebhookType = coralogixv1alpha1.OutboundWebhookType{}
 		err := crClient.Create(ctx, outBoundWebhook)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, microsoftTeamsWorkflow, jira, opsgenie, demisto, awsEventBridge"))
 	})
 
 	It("should deny creation of OutboundWebhook with two types", func(ctx context.Context) {
@@ -112,7 +112,80 @@ var _ = Describe("OutboundWebhook", Ordered, func() {
 			Url:     "https://example.com",
 		}
 		err := crClient.Create(ctx, outBoundWebhook)
-		Expect(err.Error()).To(ContainSubstring("Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, microsoftTeamsWorkflow, jira, opsgenie, demisto, awsEventBridge"))
+	})
+})
+
+var _ = Describe("OutboundWebhook Microsoft Teams Workflow", Ordered, func() {
+	var (
+		crClient               client.Client
+		OutboundWebhooksClient *cxsdk.WebhooksClient
+		outboundWebhookID      string
+		outboundWebhookName    = "microsoft-teams-workflow-outbound-webhook"
+		outBoundWebhook        *coralogixv1alpha1.OutboundWebhook
+	)
+
+	BeforeEach(func() {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		OutboundWebhooksClient = ClientsInstance.GetCoralogixClientSet().Webhooks()
+		outBoundWebhook = getSampleMicrosoftTeamsWorkflowWebhook(outboundWebhookName, testNamespace)
+	})
+
+	It("Should be created successfully", func(ctx context.Context) {
+		By("Creating OutboundWebhook")
+		Expect(crClient.Create(ctx, outBoundWebhook)).To(Succeed())
+
+		By("Fetching the OutboundWebhook ID")
+		fetchedOutboundWebhook := &coralogixv1alpha1.OutboundWebhook{}
+		Eventually(func(g Gomega) error {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: outboundWebhookName, Namespace: testNamespace}, fetchedOutboundWebhook)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedOutboundWebhook.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedOutboundWebhook.Status.PrintableStatus).To(Equal("RemoteSynced"))
+			if fetchedOutboundWebhook.Status.ID != nil {
+				outboundWebhookID = *fetchedOutboundWebhook.Status.ID
+				return nil
+			}
+			return fmt.Errorf("OutboundWebhook ID is not set")
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying the Teams Workflow variant exists in Coralogix backend")
+		Eventually(func(g Gomega) error {
+			getOutboundWebhookRes, err := OutboundWebhooksClient.Get(ctx, &cxsdk.GetOutgoingWebhookRequest{Id: wrapperspb.String(outboundWebhookID)})
+			if err != nil {
+				return err
+			}
+			webhook := getOutboundWebhookRes.GetWebhook()
+			g.Expect(webhook.GetType()).To(Equal(cxsdk.WebhookTypeMicrosoftTeamsWorkflow))
+			g.Expect(webhook.GetMsTeamsWorkflow()).ToNot(BeNil())
+			g.Expect(webhook.GetUrl().GetValue()).To(Equal(outBoundWebhook.Spec.OutboundWebhookType.MicrosoftTeamsWorkflow.Url))
+			return nil
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should be updated successfully", func(ctx context.Context) {
+		By("Patching the OutboundWebhook")
+		newOutboundWebhookName := "microsoft-teams-workflow-outbound-webhook-updated"
+		modifiedOutboundWebhook := outBoundWebhook.DeepCopy()
+		modifiedOutboundWebhook.Spec.Name = newOutboundWebhookName
+		Expect(crClient.Patch(ctx, modifiedOutboundWebhook, client.MergeFrom(outBoundWebhook))).To(Succeed())
+
+		By("Verifying OutboundWebhook is updated in Coralogix backend")
+		Eventually(func() string {
+			getOutboundWebhookRes, err := OutboundWebhooksClient.Get(ctx, &cxsdk.GetOutgoingWebhookRequest{Id: wrapperspb.String(outboundWebhookID)})
+			Expect(err).ToNot(HaveOccurred())
+			return getOutboundWebhookRes.GetWebhook().GetName().GetValue()
+		}, time.Minute, time.Second).Should(Equal(newOutboundWebhookName))
+	})
+
+	It("Should be deleted successfully", func(ctx context.Context) {
+		By("Deleting the OutboundWebhook")
+		Expect(crClient.Delete(ctx, outBoundWebhook)).To(Succeed())
+
+		By("Verifying OutboundWebhook is deleted from Coralogix backend")
+		Eventually(func() codes.Code {
+			_, err := OutboundWebhooksClient.Get(ctx, &cxsdk.GetOutgoingWebhookRequest{Id: wrapperspb.String(outboundWebhookID)})
+			return cxsdk.Code(err)
+		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
 	})
 })
 
@@ -127,6 +200,23 @@ func getSampleWebhook(name, namespace string) *coralogixv1alpha1.OutboundWebhook
 			OutboundWebhookType: coralogixv1alpha1.OutboundWebhookType{
 				PagerDuty: &coralogixv1alpha1.PagerDuty{
 					ServiceKey: "12345678-1234-1234-1234-123456789012",
+				},
+			},
+		},
+	}
+}
+
+func getSampleMicrosoftTeamsWorkflowWebhook(name, namespace string) *coralogixv1alpha1.OutboundWebhook {
+	return &coralogixv1alpha1.OutboundWebhook{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: coralogixv1alpha1.OutboundWebhookSpec{
+			Name: name,
+			OutboundWebhookType: coralogixv1alpha1.OutboundWebhookType{
+				MicrosoftTeamsWorkflow: &coralogixv1alpha1.MicrosoftTeamsWorkflow{
+					Url: "https://xyxz.webhook.office.com/?q=operator-e2e",
 				},
 			},
 		},
