@@ -250,14 +250,27 @@ var _ = Describe("SLO validation", func() {
 		Expect(err.Error()).To(ContainSubstring("spec.sliType.apmSli.services"))
 	})
 
-	It("Should be rejected when productType is apm without an apmSli", func(ctx context.Context) {
-		By("Creating a window-based SLO with productType apm")
-		slo := getSampleWindowBasedSlo(uniqueName("slo-apm-product-no-sli"))
-		slo.Spec.ProductType = ptr.To(coralogixv1alpha1.SloProductType("apm"))
+	It("Should fail the reconcile when windowBasedMetric has no query", func(ctx context.Context) {
+		By("Creating a window-based SLO with no query")
+		name := uniqueName("slo-no-query")
+		slo := getSampleWindowBasedSlo(name)
+		slo.Spec.SliType.WindowBasedMetricSli.Query = nil
 
-		err := crClient.Create(ctx, slo)
-		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("productType 'apm' requires sliType.apmSli"))
+		// query is optional in the CRD, so admission accepts this. The reconcile must
+		// report a clear error rather than panic on the nil dereference.
+		Expect(crClient.Create(ctx, slo)).To(Succeed())
+		DeferCleanup(func(ctx context.Context) {
+			Expect(client.IgnoreNotFound(crClient.Delete(ctx, slo))).To(Succeed())
+		})
+
+		By("Waiting for the RemoteSynced condition to report the error")
+		fetched := &coralogixv1alpha1.SLO{}
+		Eventually(func(g Gomega) string {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: name, Namespace: testNamespace}, fetched)).To(Succeed())
+			condition := meta.FindStatusCondition(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)
+			g.Expect(condition).ToNot(BeNil())
+			return condition.Message
+		}, time.Minute, time.Second).Should(ContainSubstring("windowBasedMetric.query is required"))
 	})
 })
 

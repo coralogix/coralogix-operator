@@ -18001,8 +18001,6 @@ See also https://coralogix.com/platform/apm/slo-management/
         <td>object</td>
         <td>
           SLOSpec defines the desired state of SLO. For more information, see: https://coralogix.com/platform/apm/slo-management/<br/>
-          <br/>
-            <i>Validations</i>:<li>!(has(self.productType) && self.productType == 'apm') || has(self.sliType.apmSli): productType 'apm' requires sliType.apmSli</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -18091,8 +18089,14 @@ or a dimension whose lists are both empty, is discarded by the API and has no ef
         <td>enum</td>
         <td>
           ProductType selects the Coralogix product the SLO is built from. Valid values are
-"unspecified" and "apm". An apmSli requires "apm". When omitted, the API stores
-SLO_PRODUCT_TYPE_UNSPECIFIED.<br/>
+"unspecified" and "apm".
+
+Setting it is never necessary. The API infers "apm" from the presence of
+sliType.apmSli and stores SLO_PRODUCT_TYPE_APM even when this field is omitted or
+set to "unspecified". For a metric SLI the API stores
+SLO_PRODUCT_TYPE_UNSPECIFIED. There is no rule coupling the two fields, because
+whether the API rejects "apm" without an apmSli is not verified, and a rule that
+rejects a config the API accepts cannot be loosened without a breaking change.<br/>
           <br/>
             <i>Enum</i>: unspecified, apm<br/>
         </td>
@@ -18312,7 +18316,8 @@ Quantile measures a latency quantile.
         <td>int or string</td>
         <td>
           Percentile is a fraction, so 0.95 means P95. The API stores 0 when omitted.
-The accepted range is not validated here because the API's own bounds are unverified.<br/>
+There is deliberately no range validator: the API accepts and stores any float,
+including 5 and -1, so rejecting them here would be stricter than the API.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -18431,6 +18436,23 @@ TotalEvents defines the total events metric.
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>comparisonOperator</b></td>
+        <td>enum</td>
+        <td>
+          ComparisonOperator defines the comparison operator for the SLO. Valid values are
+"greaterThan", "lessThan", "greaterThanOrEquals" and "lessThanOrEquals".<br/>
+          <br/>
+            <i>Enum</i>: greaterThan, lessThan, greaterThanOrEquals, lessThanOrEquals<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#slospecslitypewindowbasedmetricquery">query</a></b></td>
+        <td>object</td>
+        <td>
+          Query defines the metric query for the SLO.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
         <td><b>window</b></td>
         <td>enum</td>
         <td>
@@ -18440,15 +18462,6 @@ TotalEvents defines the total events metric.
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>comparisonOperator</b></td>
-        <td>enum</td>
-        <td>
-          ComparisonOperator defines the comparison operator for the SLO. Valid values are "unspecified", "greaterThan", "lessThan", "greaterThanOrEquals", and "lessThanOrEquals".<br/>
-          <br/>
-            <i>Enum</i>: unspecified, greaterThan, lessThan, greaterThanOrEquals, lessThanOrEquals<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>missingDataStrategy</b></td>
         <td>enum</td>
         <td>
@@ -18457,13 +18470,6 @@ TotalEvents defines the total events metric.
 MISSING_DATA_STRATEGY_UNCOUNTED.<br/>
           <br/>
             <i>Enum</i>: uncounted, good, bad<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#slospecslitypewindowbasedmetricquery">query</a></b></td>
-        <td>object</td>
-        <td>
-          Optional query for the metric.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -18482,7 +18488,7 @@ MISSING_DATA_STRATEGY_UNCOUNTED.<br/>
 
 
 
-Optional query for the metric.
+Query defines the metric query for the SLO.
 
 <table>
     <thead>
@@ -18557,6 +18563,8 @@ or a dimension whose lists are both empty, is discarded by the API and has no ef
         <td>object</td>
         <td>
           Environment tags the SLO with a free-form environment name.<br/>
+          <br/>
+            <i>Validations</i>:<li>!(has(self.staticValues) && has(self.labelKeys)): Use either staticValues or labelKeys, not both</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -18565,6 +18573,8 @@ or a dimension whose lists are both empty, is discarded by the API and has no ef
         <td>
           Service tags the SLO with an APM service. The API validates static values against
 the APM Service Catalog, so the operator does not.<br/>
+          <br/>
+            <i>Validations</i>:<li>!(has(self.staticValues) && has(self.labelKeys)): Use either staticValues or labelKeys, not both</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -18572,6 +18582,8 @@ the APM Service Catalog, so the operator does not.<br/>
         <td>object</td>
         <td>
           Team tags the SLO with a free-form team name.<br/>
+          <br/>
+            <i>Validations</i>:<li>!(has(self.staticValues) && has(self.labelKeys)): Use either staticValues or labelKeys, not both</li>
         </td>
         <td>false</td>
       </tr></tbody>

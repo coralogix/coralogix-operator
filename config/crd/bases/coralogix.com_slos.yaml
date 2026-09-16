@@ -83,6 +83,9 @@ spec:
                           type: string
                         type: array
                     type: object
+                    x-kubernetes-validations:
+                    - message: Use either staticValues or labelKeys, not both
+                      rule: '!(has(self.staticValues) && has(self.labelKeys))'
                   service:
                     description: |-
                       Service tags the SLO with an APM service. The API validates static values against
@@ -101,6 +104,9 @@ spec:
                           type: string
                         type: array
                     type: object
+                    x-kubernetes-validations:
+                    - message: Use either staticValues or labelKeys, not both
+                      rule: '!(has(self.staticValues) && has(self.labelKeys))'
                   team:
                     description: Team tags the SLO with a free-form team name.
                     properties:
@@ -117,12 +123,21 @@ spec:
                           type: string
                         type: array
                     type: object
+                    x-kubernetes-validations:
+                    - message: Use either staticValues or labelKeys, not both
+                      rule: '!(has(self.staticValues) && has(self.labelKeys))'
                 type: object
               productType:
                 description: |-
                   ProductType selects the Coralogix product the SLO is built from. Valid values are
-                  "unspecified" and "apm". An apmSli requires "apm". When omitted, the API stores
-                  SLO_PRODUCT_TYPE_UNSPECIFIED.
+                  "unspecified" and "apm".
+
+                  Setting it is never necessary. The API infers "apm" from the presence of
+                  sliType.apmSli and stores SLO_PRODUCT_TYPE_APM even when this field is omitted or
+                  set to "unspecified". For a metric SLI the API stores
+                  SLO_PRODUCT_TYPE_UNSPECIFIED. There is no rule coupling the two fields, because
+                  whether the API rejects "apm" without an apmSli is not verified, and a rule that
+                  rejects a config the API accepts cannot be loosened without a breaking change.
                 enum:
                 - unspecified
                 - apm
@@ -184,7 +199,8 @@ spec:
                                 - type: string
                                 description: |-
                                   Percentile is a fraction, so 0.95 means P95. The API stores 0 when omitted.
-                                  The accepted range is not validated here because the API's own bounds are unverified.
+                                  There is deliberately no range validator: the API accepts and stores any float,
+                                  including 5 and -1, so rejecting them here would be stricter than the API.
                                 pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                 x-kubernetes-int-or-string: true
                             type: object
@@ -259,11 +275,10 @@ spec:
                   windowBasedMetric:
                     properties:
                       comparisonOperator:
-                        description: ComparisonOperator defines the comparison operator
-                          for the SLO. Valid values are "unspecified", "greaterThan",
-                          "lessThan", "greaterThanOrEquals", and "lessThanOrEquals".
+                        description: |-
+                          ComparisonOperator defines the comparison operator for the SLO. Valid values are
+                          "greaterThan", "lessThan", "greaterThanOrEquals" and "lessThanOrEquals".
                         enum:
-                        - unspecified
                         - greaterThan
                         - lessThan
                         - greaterThanOrEquals
@@ -280,7 +295,7 @@ spec:
                         - bad
                         type: string
                       query:
-                        description: Optional query for the metric.
+                        description: Query defines the metric query for the SLO.
                         properties:
                           query:
                             description: Query is the metric query string.
@@ -303,6 +318,8 @@ spec:
                         - 5m
                         type: string
                     required:
+                    - comparisonOperator
+                    - query
                     - window
                     type: object
                 type: object
@@ -341,9 +358,6 @@ spec:
             - targetThresholdPercentage
             - window
             type: object
-            x-kubernetes-validations:
-            - message: productType 'apm' requires sliType.apmSli
-              rule: '!(has(self.productType) && self.productType == ''apm'') || has(self.sliType.apmSli)'
           status:
             description: SLOStatus defines the observed state of SLO.
             properties:

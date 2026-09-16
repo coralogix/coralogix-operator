@@ -44,8 +44,11 @@ var (
 		"good":      slos.MISSINGDATASTRATEGY_MISSING_DATA_STRATEGY_GOOD,
 		"bad":       slos.MISSINGDATASTRATEGY_MISSING_DATA_STRATEGY_BAD,
 	}
+	// ComparisonOperatorSchemaToOpenAPI has no "unspecified" entry, for the same reason as
+	// WindowSloWindowSchemaToOpenAPI. The API answers
+	// `400 Invalid comparison operator: 0` both when the field is omitted and when
+	// COMPARISON_OPERATOR_UNSPECIFIED is sent explicitly.
 	ComparisonOperatorSchemaToOpenAPI = map[ComparisonOperator]slos.ComparisonOperator{
-		"unspecified":         slos.COMPARISONOPERATOR_COMPARISON_OPERATOR_UNSPECIFIED,
 		"greaterThan":         slos.COMPARISONOPERATOR_COMPARISON_OPERATOR_GREATER_THAN,
 		"lessThan":            slos.COMPARISONOPERATOR_COMPARISON_OPERATOR_LESS_THAN,
 		"greaterThanOrEquals": slos.COMPARISONOPERATOR_COMPARISON_OPERATOR_GREATER_THAN_OR_EQUALS,
@@ -54,7 +57,6 @@ var (
 )
 
 // SLOSpec defines the desired state of SLO. For more information, see: https://coralogix.com/platform/apm/slo-management/
-// +kubebuilder:validation:XValidation:rule="!(has(self.productType) && self.productType == 'apm') || has(self.sliType.apmSli)",message="productType 'apm' requires sliType.apmSli"
 type SLOSpec struct {
 	// SLO name
 	Name string `json:"name"`
@@ -74,8 +76,14 @@ type SLOSpec struct {
 	OwnershipTags *SloOwnershipTags `json:"ownershipTags,omitempty"`
 	// +optional
 	// ProductType selects the Coralogix product the SLO is built from. Valid values are
-	// "unspecified" and "apm". An apmSli requires "apm". When omitted, the API stores
-	// SLO_PRODUCT_TYPE_UNSPECIFIED.
+	// "unspecified" and "apm".
+	//
+	// Setting it is never necessary. The API infers "apm" from the presence of
+	// sliType.apmSli and stores SLO_PRODUCT_TYPE_APM even when this field is omitted or
+	// set to "unspecified". For a metric SLI the API stores
+	// SLO_PRODUCT_TYPE_UNSPECIFIED. There is no rule coupling the two fields, because
+	// whether the API rejects "apm" without an apmSli is not verified, and a rule that
+	// rejects a config the API accepts cannot be loosened without a breaking change.
 	ProductType *SloProductType `json:"productType,omitempty"`
 	// Window defines the time window for the SLO.
 	Window SloWindow `json:"window"`
@@ -111,13 +119,13 @@ type RequestBasedMetricSli struct {
 }
 
 type WindowBasedMetricSli struct {
-	// +optional
-	// Optional query for the metric.
-	Query *SloMetricEvent `json:"query,omitempty"`
+	// Query defines the metric query for the SLO.
+	Query *SloMetricEvent `json:"query"`
 	// Window defines the time window for the SLO. Valid values are "1m" and "5m".
 	Window SloWindowEnum `json:"window"`
-	// ComparisonOperator defines the comparison operator for the SLO. Valid values are "unspecified", "greaterThan", "lessThan", "greaterThanOrEquals", and "lessThanOrEquals".
-	ComparisonOperator ComparisonOperator `json:"comparisonOperator,omitempty"`
+	// ComparisonOperator defines the comparison operator for the SLO. Valid values are
+	// "greaterThan", "lessThan", "greaterThanOrEquals" and "lessThanOrEquals".
+	ComparisonOperator ComparisonOperator `json:"comparisonOperator"`
 	// Threshold defines the threshold for the SLO.
 	Threshold resource.Quantity `json:"threshold,omitempty"`
 	// +optional
@@ -173,7 +181,8 @@ type ApmLatencySli struct {
 type ApmLatencyQuantile struct {
 	// +optional
 	// Percentile is a fraction, so 0.95 means P95. The API stores 0 when omitted.
-	// The accepted range is not validated here because the API's own bounds are unverified.
+	// There is deliberately no range validator: the API accepts and stores any float,
+	// including 5 and -1, so rejecting them here would be stricter than the API.
 	Percentile *resource.Quantity `json:"percentile,omitempty"`
 }
 
@@ -205,6 +214,11 @@ type SloOwnershipTags struct {
 
 // SloOwnershipTag names one ownership dimension, either by fixed values or by metric
 // label. Both lists are ordered and round-trip in the order given.
+//
+// Setting both lists is rejected by the API with
+// `400 use either staticValues or labelKeys, not both`, so the rule below mirrors it.
+// Leaving both empty is accepted and discarded, so there is no at-least-one rule.
+// +kubebuilder:validation:XValidation:rule="!(has(self.staticValues) && has(self.labelKeys))",message="Use either staticValues or labelKeys, not both"
 type SloOwnershipTag struct {
 	// +optional
 	// StaticValues assigns the dimension group-wide, with fixed values.
@@ -223,7 +237,7 @@ type SloProductType string
 // +kubebuilder:validation:Enum={"1m","5m"}
 type SloWindowEnum string
 
-// +kubebuilder:validation:Enum={"unspecified","greaterThan","lessThan","greaterThanOrEquals","lessThanOrEquals"}
+// +kubebuilder:validation:Enum={"greaterThan","lessThan","greaterThanOrEquals","lessThanOrEquals"}
 type ComparisonOperator string
 
 type SloMetricEvent struct {
@@ -407,9 +421,9 @@ func (s *SLOSpec) ExtractWindowBasedMetricSli() (*slos.Slo1, error) {
 		return nil, fmt.Errorf("invalid SLO window: %s", sli.Window)
 	}
 
-	comparisonOperator, err := sli.ExpandComparisonOperator()
-	if err != nil {
-		return nil, fmt.Errorf("error expanding comparison operator: %w", err)
+	comparisonOperator, ok := ComparisonOperatorSchemaToOpenAPI[sli.ComparisonOperator]
+	if !ok {
+		return nil, fmt.Errorf("invalid SLO comparison operator: %s", sli.ComparisonOperator)
 	}
 
 	missingDataStrategy, err := sli.ExpandMissingDataStrategy()
@@ -417,12 +431,19 @@ func (s *SLOSpec) ExtractWindowBasedMetricSli() (*slos.Slo1, error) {
 		return nil, fmt.Errorf("error expanding missing data strategy: %w", err)
 	}
 
+	// query is required, so this only guards a CR stored before that marker existed. The
+	// guard keeps the failure a clear reconcile error rather than a nil dereference.
+	query := sli.Query
+	if query == nil {
+		return nil, fmt.Errorf("windowBasedMetric.query is required")
+	}
+
 	slo.WindowBasedMetricSli = &slos.WindowBasedMetricSli{
 		Query: &slos.Metric{
-			Query: slos.PtrString(sli.Query.Query),
+			Query: slos.PtrString(query.Query),
 		},
 		Window:              window.Ptr(),
-		ComparisonOperator:  comparisonOperator,
+		ComparisonOperator:  comparisonOperator.Ptr(),
 		MissingDataStrategy: missingDataStrategy,
 		Threshold:           slos.PtrFloat32(float32(sli.Threshold.AsApproximateFloat64())),
 	}
@@ -530,21 +551,6 @@ func expandApmFilters(filters []ApmFilter) []slos.ApmFilter {
 		})
 	}
 	return expanded
-}
-
-// ExpandComparisonOperator maps the spec value to the SDK enum. comparisonOperator is
-// optional in the CRD, so an empty value leaves the field out of the request instead of
-// sending an empty enum string, which the API rejects.
-func (w *WindowBasedMetricSli) ExpandComparisonOperator() (*slos.ComparisonOperator, error) {
-	if w.ComparisonOperator == "" {
-		return nil, nil
-	}
-
-	op, ok := ComparisonOperatorSchemaToOpenAPI[w.ComparisonOperator]
-	if !ok {
-		return nil, fmt.Errorf("invalid SLO comparison operator: %s", w.ComparisonOperator)
-	}
-	return op.Ptr(), nil
 }
 
 func (w *SloWindow) ExpandTimeFrame() (*slos.SloTimeFrame, error) {
