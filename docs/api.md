@@ -18001,6 +18001,8 @@ See also https://coralogix.com/platform/apm/slo-management/
         <td>object</td>
         <td>
           SLOSpec defines the desired state of SLO. For more information, see: https://coralogix.com/platform/apm/slo-management/<br/>
+          <br/>
+            <i>Validations</i>:<li>!(has(self.productType) && self.productType == 'apm') || has(self.sliType.apmSli): productType 'apm' requires sliType.apmSli</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -18089,14 +18091,16 @@ or a dimension whose lists are both empty, is discarded by the API and has no ef
         <td>enum</td>
         <td>
           ProductType selects the Coralogix product the SLO is built from. Valid values are
-"unspecified" and "apm".
+"unspecified" and "apm". Setting "apm" requires sliType.apmSli.
 
 Setting it is never necessary. The API infers "apm" from the presence of
 sliType.apmSli and stores SLO_PRODUCT_TYPE_APM even when this field is omitted or
-set to "unspecified". For a metric SLI the API stores
-SLO_PRODUCT_TYPE_UNSPECIFIED. There is no rule coupling the two fields, because
-whether the API rejects "apm" without an apmSli is not verified, and a rule that
-rejects a config the API accepts cannot be loosened without a breaking change.<br/>
+set to "unspecified". For a metric SLI the API stores SLO_PRODUCT_TYPE_UNSPECIFIED.
+
+The coupling only runs one way. "apm" without an apmSli answers
+`400 slo.apm_sli is required when slo.product_type is SLO_PRODUCT_TYPE_APM`, so the
+rule on this struct mirrors that. An apmSli without "apm" is accepted, so there is
+no rule in the other direction.<br/>
           <br/>
             <i>Enum</i>: unspecified, apm<br/>
         </td>
@@ -18231,16 +18235,20 @@ ApmFilter matches a span attribute against a set of values.
         <td><b>key</b></td>
         <td>string</td>
         <td>
-          Key is the span attribute name.<br/>
+          Key is the span attribute name. Omitting it makes the API build a malformed query
+and answer HTTP 400, so it is required.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>values</b></td>
         <td>[]string</td>
         <td>
-          Values are the accepted values for Key.<br/>
+          Values are the accepted values for Key. There is deliberately no MinItems: the API
+accepts and stores an empty list, so rejecting one here would be stricter than the
+API. An absent list is sent as an empty list, which is the form the API is known to
+accept.<br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -18265,7 +18273,9 @@ LatencyConfig makes this an APM latency SLI.
         <td><b>timeWindow</b></td>
         <td>enum</td>
         <td>
-          TimeWindow defines the evaluation window. Valid values are "1m" and "5m".<br/>
+          TimeWindow defines the evaluation window. Valid values are "1m" and "5m".
+Omitting it answers HTTP 500 with the same "Not implemented yet" error as an
+omitted windowBasedMetric.window, so it is required.<br/>
           <br/>
             <i>Enum</i>: 1m, 5m<br/>
         </td>

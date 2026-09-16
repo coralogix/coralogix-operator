@@ -57,6 +57,7 @@ var (
 )
 
 // SLOSpec defines the desired state of SLO. For more information, see: https://coralogix.com/platform/apm/slo-management/
+// +kubebuilder:validation:XValidation:rule="!(has(self.productType) && self.productType == 'apm') || has(self.sliType.apmSli)",message="productType 'apm' requires sliType.apmSli"
 type SLOSpec struct {
 	// SLO name
 	Name string `json:"name"`
@@ -76,14 +77,16 @@ type SLOSpec struct {
 	OwnershipTags *SloOwnershipTags `json:"ownershipTags,omitempty"`
 	// +optional
 	// ProductType selects the Coralogix product the SLO is built from. Valid values are
-	// "unspecified" and "apm".
+	// "unspecified" and "apm". Setting "apm" requires sliType.apmSli.
 	//
 	// Setting it is never necessary. The API infers "apm" from the presence of
 	// sliType.apmSli and stores SLO_PRODUCT_TYPE_APM even when this field is omitted or
-	// set to "unspecified". For a metric SLI the API stores
-	// SLO_PRODUCT_TYPE_UNSPECIFIED. There is no rule coupling the two fields, because
-	// whether the API rejects "apm" without an apmSli is not verified, and a rule that
-	// rejects a config the API accepts cannot be loosened without a breaking change.
+	// set to "unspecified". For a metric SLI the API stores SLO_PRODUCT_TYPE_UNSPECIFIED.
+	//
+	// The coupling only runs one way. "apm" without an apmSli answers
+	// `400 slo.apm_sli is required when slo.product_type is SLO_PRODUCT_TYPE_APM`, so the
+	// rule on this struct mirrors that. An apmSli without "apm" is accepted, so there is
+	// no rule in the other direction.
 	ProductType *SloProductType `json:"productType,omitempty"`
 	// Window defines the time window for the SLO.
 	Window SloWindow `json:"window"`
@@ -165,6 +168,8 @@ type ApmErrorSli struct{}
 // +kubebuilder:validation:XValidation:rule="has(self.quantile) != has(self.average)",message="Exactly one of quantile or average must be set"
 type ApmLatencySli struct {
 	// TimeWindow defines the evaluation window. Valid values are "1m" and "5m".
+	// Omitting it answers HTTP 500 with the same "Not implemented yet" error as an
+	// omitted windowBasedMetric.window, so it is required.
 	TimeWindow SloWindowEnum `json:"timeWindow"`
 	// +optional
 	// Threshold is the latency threshold in seconds. The API stores 0 when omitted.
@@ -191,11 +196,15 @@ type ApmLatencyAverage struct{}
 
 // ApmFilter matches a span attribute against a set of values.
 type ApmFilter struct {
-	// Key is the span attribute name.
+	// Key is the span attribute name. Omitting it makes the API build a malformed query
+	// and answer HTTP 400, so it is required.
 	Key string `json:"key"`
-	// Values are the accepted values for Key.
-	// +kubebuilder:validation:MinItems=1
-	Values []string `json:"values"`
+	// +optional
+	// Values are the accepted values for Key. There is deliberately no MinItems: the API
+	// accepts and stores an empty list, so rejecting one here would be stricter than the
+	// API. An absent list is sent as an empty list, which is the form the API is known to
+	// accept.
+	Values []string `json:"values,omitempty"`
 }
 
 // SloOwnershipTags assign an SLO to a service, environment and team.
@@ -545,9 +554,16 @@ func expandApmFilters(filters []ApmFilter) []slos.ApmFilter {
 
 	expanded := make([]slos.ApmFilter, 0, len(filters))
 	for _, filter := range filters {
+		// The SDK drops a nil slice, and a filter with no values field is an unprobed
+		// shape. Send the empty list instead, which the API is known to accept.
+		values := filter.Values
+		if values == nil {
+			values = []string{}
+		}
+
 		expanded = append(expanded, slos.ApmFilter{
 			Key:    slos.PtrString(filter.Key),
-			Values: filter.Values,
+			Values: values,
 		})
 	}
 	return expanded

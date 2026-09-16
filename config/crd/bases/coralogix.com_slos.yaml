@@ -130,14 +130,16 @@ spec:
               productType:
                 description: |-
                   ProductType selects the Coralogix product the SLO is built from. Valid values are
-                  "unspecified" and "apm".
+                  "unspecified" and "apm". Setting "apm" requires sliType.apmSli.
 
                   Setting it is never necessary. The API infers "apm" from the presence of
                   sliType.apmSli and stores SLO_PRODUCT_TYPE_APM even when this field is omitted or
-                  set to "unspecified". For a metric SLI the API stores
-                  SLO_PRODUCT_TYPE_UNSPECIFIED. There is no rule coupling the two fields, because
-                  whether the API rejects "apm" without an apmSli is not verified, and a rule that
-                  rejects a config the API accepts cannot be loosened without a breaking change.
+                  set to "unspecified". For a metric SLI the API stores SLO_PRODUCT_TYPE_UNSPECIFIED.
+
+                  The coupling only runs one way. "apm" without an apmSli answers
+                  `400 slo.apm_sli is required when slo.product_type is SLO_PRODUCT_TYPE_APM`, so the
+                  rule on this struct mirrors that. An apmSli without "apm" is accepted, so there is
+                  no rule in the other direction.
                 enum:
                 - unspecified
                 - apm
@@ -164,17 +166,21 @@ spec:
                             a set of values.
                           properties:
                             key:
-                              description: Key is the span attribute name.
+                              description: |-
+                                Key is the span attribute name. Omitting it makes the API build a malformed query
+                                and answer HTTP 400, so it is required.
                               type: string
                             values:
-                              description: Values are the accepted values for Key.
+                              description: |-
+                                Values are the accepted values for Key. There is deliberately no MinItems: the API
+                                accepts and stores an empty list, so rejecting one here would be stricter than the
+                                API. An absent list is sent as an empty list, which is the form the API is known to
+                                accept.
                               items:
                                 type: string
-                              minItems: 1
                               type: array
                           required:
                           - key
-                          - values
                           type: object
                         type: array
                       groupingKeys:
@@ -213,8 +219,10 @@ spec:
                             pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                             x-kubernetes-int-or-string: true
                           timeWindow:
-                            description: TimeWindow defines the evaluation window.
-                              Valid values are "1m" and "5m".
+                            description: |-
+                              TimeWindow defines the evaluation window. Valid values are "1m" and "5m".
+                              Omitting it answers HTTP 500 with the same "Not implemented yet" error as an
+                              omitted windowBasedMetric.window, so it is required.
                             enum:
                             - 1m
                             - 5m
@@ -358,6 +366,9 @@ spec:
             - targetThresholdPercentage
             - window
             type: object
+            x-kubernetes-validations:
+            - message: productType 'apm' requires sliType.apmSli
+              rule: '!(has(self.productType) && self.productType == ''apm'') || has(self.sliType.apmSli)'
           status:
             description: SLOStatus defines the observed state of SLO.
             properties:

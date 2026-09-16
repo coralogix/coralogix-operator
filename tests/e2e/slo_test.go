@@ -240,6 +240,29 @@ var _ = Describe("SLO validation", func() {
 		Expect(err.Error()).To(ContainSubstring("Exactly one of quantile or average must be set"))
 	})
 
+	It("Should be rejected when productType is apm without an apmSli", func(ctx context.Context) {
+		By("Creating a window-based SLO with productType apm")
+		slo := getSampleWindowBasedSlo(uniqueName("slo-apm-product-no-sli"))
+		slo.Spec.ProductType = ptr.To(coralogixv1alpha1.SloProductType("apm"))
+
+		err := crClient.Create(ctx, slo)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("productType 'apm' requires sliType.apmSli"))
+	})
+
+	It("Should accept an apmSli filter with an empty values list", func(ctx context.Context) {
+		By("Creating an APM SLO with a filter that has no values")
+		slo := getSampleAPMErrorSlo(uniqueName("slo-apm-empty-filter-values"), "any-service")
+		slo.Spec.SliType.ApmSli.Filters = []coralogixv1alpha1.ApmFilter{
+			{Key: "http.method"},
+		}
+
+		// The API accepts and stores an empty values list, so admission must not reject
+		// it. The reconcile then fails on the unknown service name, which is expected.
+		Expect(crClient.Create(ctx, slo)).To(Succeed())
+		Expect(crClient.Delete(ctx, slo)).To(Succeed())
+	})
+
 	It("Should be rejected when apmSli has no services", func(ctx context.Context) {
 		By("Creating an APM SLO with an empty services list")
 		slo := getSampleAPMErrorSlo(uniqueName("slo-apm-no-services"), "any-service")
@@ -393,6 +416,63 @@ var _ = Describe("SLO APM", Ordered, func() {
 				getRes.Slo.ApmSli.LatencyConfig.Quantile == nil
 		}, time.Minute, time.Second).Should(BeTrue())
 		slo = modified
+	})
+
+	It("Should be deleted successfully", func(ctx context.Context) {
+		By("Deleting the SLO")
+		Expect(crClient.Delete(ctx, slo)).To(Succeed())
+
+		By("Verifying the SLO is gone from the backend")
+		Eventually(func() int {
+			_, httpResp, _ := slosClient.SlosServiceGetSlo(ctx, sloID).Execute()
+			if httpResp == nil {
+				return 0
+			}
+			return httpResp.StatusCode
+		}, time.Minute, time.Second).Should(Equal(404))
+	})
+})
+
+var _ = Describe("SLO APM error", Ordered, func() {
+	var (
+		crClient   client.Client
+		slosClient *slos.SlosServiceAPIService
+		sloID      string
+		slo        *coralogixv1alpha1.SLO
+		sloName    string
+	)
+
+	BeforeAll(func() {
+		requireSLOAPMService()
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		slosClient = newOpenAPIClientSet().SLOs()
+		sloName = uniqueName("slo-apm-error")
+		slo = getSampleAPMErrorSlo(sloName, sloAPMService)
+		slo.Spec.SliType.ApmSli.Filters = []coralogixv1alpha1.ApmFilter{
+			{Key: "http.method", Values: []string{"POST"}},
+		}
+		slo.Spec.SliType.ApmSli.GroupingKeys = []string{"http.route"}
+	})
+
+	It("Should reconcile an APM error SLO", func(ctx context.Context) {
+		By("Creating the SLO")
+		Expect(crClient.Create(ctx, slo)).To(Succeed())
+
+		By("Waiting for the SLO to be synced")
+		sloID = waitForSyncedSLOID(ctx, crClient, sloName)
+
+		By("Verifying errorConfig round-trips as an empty object")
+		getRes, _, err := slosClient.SlosServiceGetSlo(ctx, sloID).Execute()
+		Expect(err).ToNot(HaveOccurred())
+		Expect(getRes.Slo.ApmSli).ToNot(BeNil())
+		// A nil map would have been dropped from the request, which the API rejects as
+		// "Unsupported APM SLI type". Seeing it come back proves the empty map was sent.
+		Expect(getRes.Slo.ApmSli.ErrorConfig).ToNot(BeNil())
+		Expect(getRes.Slo.ApmSli.LatencyConfig).To(BeNil())
+		Expect(getRes.Slo.ApmSli.GetGroupingKeys()).To(Equal([]string{"http.route"}))
+		Expect(getRes.Slo.ApmSli.GetFilters()).To(HaveLen(1))
+		Expect(getRes.Slo.ApmSli.GetFilters()[0].GetKey()).To(Equal("http.method"))
+		Expect(getRes.Slo.ApmSli.GetFilters()[0].GetValues()).To(Equal([]string{"POST"}))
 	})
 
 	It("Should be deleted successfully", func(ctx context.Context) {
