@@ -18,8 +18,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -40,7 +42,7 @@ import (
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
-var _ = Describe("AIEvaluation PII", Ordered, func() {
+var _ = Describe("AIEvaluation PII", Ordered, Serial, func() {
 	var (
 		crClient             client.Client
 		aiApplications       *aiapplications.AIApplicationsServiceAPIService
@@ -158,7 +160,7 @@ var _ = Describe("AIEvaluation PII", Ordered, func() {
 	})
 })
 
-var _ = Describe("AIEvaluation Allowed Topics", Ordered, func() {
+var _ = Describe("AIEvaluation Allowed Topics", Ordered, Serial, func() {
 	var (
 		crClient             client.Client
 		aiApplications       *aiapplications.AIApplicationsServiceAPIService
@@ -270,7 +272,7 @@ var _ = Describe("AIEvaluation Allowed Topics", Ordered, func() {
 	})
 })
 
-var _ = Describe("AIEvaluation Competition", Ordered, func() {
+var _ = Describe("AIEvaluation Competition", Ordered, Serial, func() {
 	var (
 		crClient           client.Client
 		aiApplications     *aiapplications.AIApplicationsServiceAPIService
@@ -434,7 +436,7 @@ func init() {
 	)
 }
 
-var _ = Describe("AIEvaluation Language Mismatch", Ordered, func() {
+var _ = Describe("AIEvaluation Language Mismatch", Ordered, Serial, func() {
 	var (
 		crClient           client.Client
 		aiApplications     *aiapplications.AIApplicationsServiceAPIService
@@ -542,7 +544,7 @@ var _ = Describe("AIEvaluation Language Mismatch", Ordered, func() {
 	})
 })
 
-var _ = Describe("AIEvaluation Prompt Injection", Ordered, func() {
+var _ = Describe("AIEvaluation Prompt Injection", Ordered, Serial, func() {
 	var (
 		crClient                 client.Client
 		aiApplications           *aiapplications.AIApplicationsServiceAPIService
@@ -654,7 +656,7 @@ var _ = Describe("AIEvaluation Prompt Injection", Ordered, func() {
 	})
 })
 
-var _ = Describe("AIEvaluation Restricted Topics", Ordered, func() {
+var _ = Describe("AIEvaluation Restricted Topics", Ordered, Serial, func() {
 	var (
 		crClient                client.Client
 		aiApplications          *aiapplications.AIApplicationsServiceAPIService
@@ -766,7 +768,7 @@ var _ = Describe("AIEvaluation Restricted Topics", Ordered, func() {
 	})
 })
 
-var _ = Describe("AIEvaluation Sexism", Ordered, func() {
+var _ = Describe("AIEvaluation Sexism", Ordered, Serial, func() {
 	var (
 		crClient           client.Client
 		aiApplications     *aiapplications.AIApplicationsServiceAPIService
@@ -920,7 +922,7 @@ func init() {
 	)
 }
 
-var _ = Describe("AIEvaluation Toxicity", Ordered, func() {
+var _ = Describe("AIEvaluation Toxicity", Ordered, Serial, func() {
 	var (
 		crClient           client.Client
 		aiApplications     *aiapplications.AIApplicationsServiceAPIService
@@ -1039,6 +1041,11 @@ type aiEvaluationApplicationRef struct {
 // for a few seconds. Retry before giving up, otherwise a whole container's BeforeAll fails.
 var errNoAvailableAIEvaluationTarget = errors.New("no AI application with a subsystem has an available evaluation target")
 
+var (
+	aiEvaluationApplicationSelectionMu  sync.Mutex
+	aiEvaluationApplicationReservations = map[string]struct{}{}
+)
+
 const (
 	aiEvaluationTargetAttempts = 30
 	aiEvaluationTargetInterval = 4 * time.Second
@@ -1086,18 +1093,38 @@ func findAvailableAIEvaluationApplication(
 		return aiEvaluationApplicationRef{}, "", cxsdk.NewAPIError(httpResp, err)
 	}
 
-	for _, application := range result.GetAiApplications() {
+	applications := result.GetAiApplications()
+	rand.Shuffle(len(applications), func(i, j int) {
+		applications[i], applications[j] = applications[j], applications[i]
+	})
+
+	for _, application := range applications {
 		applicationName := application.GetApplication()
 		subsystem := application.GetSubsystem()
 		if applicationName == "" || subsystem == "" {
 			continue
 		}
 
-		target, available, err := availableAIEvaluationTarget(ctx, evaluationsClient, applicationName, subsystem, evaluationType)
+		target, available, err := availableAIEvaluationTarget(ctx, evaluationsClient, applicationName, subsystem)
 		if err != nil {
 			return aiEvaluationApplicationRef{}, "", err
 		}
 		if available {
+			reservationKey := fmt.Sprintf("%s\x00%s\x00%s", applicationName, subsystem, target)
+			aiEvaluationApplicationSelectionMu.Lock()
+			if _, reserved := aiEvaluationApplicationReservations[reservationKey]; reserved {
+				aiEvaluationApplicationSelectionMu.Unlock()
+				continue
+			}
+			aiEvaluationApplicationReservations[reservationKey] = struct{}{}
+			aiEvaluationApplicationSelectionMu.Unlock()
+
+			DeferCleanup(func() {
+				aiEvaluationApplicationSelectionMu.Lock()
+				delete(aiEvaluationApplicationReservations, reservationKey)
+				aiEvaluationApplicationSelectionMu.Unlock()
+			})
+
 			return aiEvaluationApplicationRef{
 				application: applicationName,
 				subsystem:   subsystem,
@@ -1113,13 +1140,11 @@ func availableAIEvaluationTarget(
 	evaluationsClient *aievaluations.AIEvaluationsServiceAPIService,
 	application string,
 	subsystem string,
-	evaluationType aievaluations.EvaluationType,
 ) (string, bool, error) {
 	result, httpResp, err := evaluationsClient.
 		AiEvaluationsServiceListAiEvaluations(ctx).
 		Application(application).
 		Subsystem(subsystem).
-		EvaluationType(evaluationType).
 		PageSize(200).
 		PageOffset(0).
 		Execute()
@@ -1151,7 +1176,7 @@ func describeEmptyConfigAIEvaluation(
 	configure func(*coralogixv1alpha1.AIEvaluationConfig),
 	expectRemoteConfig func(Gomega, aievaluations.AiEvaluation),
 ) {
-	Describe(description, Ordered, func() {
+	Describe(description, Ordered, Serial, func() {
 		var (
 			crClient           client.Client
 			aiApplications     *aiapplications.AIApplicationsServiceAPIService
@@ -1270,7 +1295,7 @@ func describeStringSetConfigAIEvaluation(
 	configure func(*coralogixv1alpha1.AIEvaluationConfig, []string),
 	expectRemoteConfig func(Gomega, aievaluations.AiEvaluation, []string),
 ) {
-	Describe(description, Ordered, func() {
+	Describe(description, Ordered, Serial, func() {
 		var (
 			crClient           client.Client
 			aiApplications     *aiapplications.AIApplicationsServiceAPIService
