@@ -219,9 +219,9 @@ var _ = Describe("SLO validation", func() {
 		}
 
 		// The API accepts and stores an empty values list, so admission must not reject
-		// it. The reconcile then fails on the unknown service name, which is expected.
-		Expect(crClient.Create(ctx, slo)).To(Succeed())
-		Expect(crClient.Delete(ctx, slo)).To(Succeed())
+		// it. A dry run exercises admission without persisting the object, so no
+		// reconciliation starts and there is nothing to clean up.
+		Expect(crClient.Create(ctx, slo, client.DryRunAll)).To(Succeed())
 	})
 
 	It("Should be rejected when apmSli has no services", func(ctx context.Context) {
@@ -265,9 +265,11 @@ var _ = Describe("SLO validation", func() {
 			LabelKeys:    []string{},
 		}
 
-		// The API accepts this and discards the dimension, so admission must not reject it.
-		Expect(crClient.Create(ctx, slo)).To(Succeed())
-		Expect(crClient.Delete(ctx, slo)).To(Succeed())
+		// The API accepts this and discards the dimension, so admission must not reject
+		// it. Dry run, so a valid SLO is never persisted: a reconcile could otherwise
+		// create the remote SLO before its finalizer is stored, and an immediate delete
+		// would then orphan it.
+		Expect(crClient.Create(ctx, slo, client.DryRunAll)).To(Succeed())
 	})
 })
 
