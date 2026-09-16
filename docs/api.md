@@ -18440,6 +18440,17 @@ TotalEvents defines the total events metric.
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>missingDataStrategy</b></td>
+        <td>enum</td>
+        <td>
+          MissingDataStrategy decides how a window with no data counts. Valid values are
+"uncounted", "good" and "bad". When omitted, the API stores
+MISSING_DATA_STRATEGY_UNCOUNTED.<br/>
+          <br/>
+            <i>Enum</i>: uncounted, good, bad<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#slospecslitypewindowbasedmetricquery">query</a></b></td>
         <td>object</td>
         <td>

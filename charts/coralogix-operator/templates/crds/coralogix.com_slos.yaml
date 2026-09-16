@@ -212,6 +212,16 @@ spec:
                         - greaterThanOrEquals
                         - lessThanOrEquals
                         type: string
+                      missingDataStrategy:
+                        description: |-
+                          MissingDataStrategy decides how a window with no data counts. Valid values are
+                          "uncounted", "good" and "bad". When omitted, the API stores
+                          MISSING_DATA_STRATEGY_UNCOUNTED.
+                        enum:
+                        - uncounted
+                        - good
+                        - bad
+                        type: string
                       query:
                         description: Optional query for the metric.
                         properties:

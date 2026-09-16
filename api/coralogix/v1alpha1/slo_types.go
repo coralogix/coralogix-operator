@@ -39,6 +39,11 @@ var (
 		"unspecified": slos.SLOPRODUCTTYPE_SLO_PRODUCT_TYPE_UNSPECIFIED,
 		"apm":         slos.SLOPRODUCTTYPE_SLO_PRODUCT_TYPE_APM,
 	}
+	MissingDataStrategySchemaToOpenAPI = map[MissingDataStrategy]slos.MissingDataStrategy{
+		"uncounted": slos.MISSINGDATASTRATEGY_MISSING_DATA_STRATEGY_UNCOUNTED,
+		"good":      slos.MISSINGDATASTRATEGY_MISSING_DATA_STRATEGY_GOOD,
+		"bad":       slos.MISSINGDATASTRATEGY_MISSING_DATA_STRATEGY_BAD,
+	}
 	ComparisonOperatorSchemaToOpenAPI = map[ComparisonOperator]slos.ComparisonOperator{
 		"unspecified":         slos.COMPARISONOPERATOR_COMPARISON_OPERATOR_UNSPECIFIED,
 		"greaterThan":         slos.COMPARISONOPERATOR_COMPARISON_OPERATOR_GREATER_THAN,
@@ -110,6 +115,11 @@ type WindowBasedMetricSli struct {
 	ComparisonOperator ComparisonOperator `json:"comparisonOperator,omitempty"`
 	// Threshold defines the threshold for the SLO.
 	Threshold resource.Quantity `json:"threshold,omitempty"`
+	// +optional
+	// MissingDataStrategy decides how a window with no data counts. Valid values are
+	// "uncounted", "good" and "bad". When omitted, the API stores
+	// MISSING_DATA_STRATEGY_UNCOUNTED.
+	MissingDataStrategy *MissingDataStrategy `json:"missingDataStrategy,omitempty"`
 }
 
 // ApmSli defines an SLI over an APM Service Catalog service.
@@ -173,6 +183,9 @@ type ApmFilter struct {
 	// +kubebuilder:validation:MinItems=1
 	Values []string `json:"values"`
 }
+
+// +kubebuilder:validation:Enum={"uncounted","good","bad"}
+type MissingDataStrategy string
 
 // +kubebuilder:validation:Enum={"unspecified","apm"}
 type SloProductType string
@@ -343,15 +356,37 @@ func (s *SLOSpec) ExtractWindowBasedMetricSli() (*slos.Slo1, error) {
 		return nil, fmt.Errorf("error expanding comparison operator: %w", err)
 	}
 
+	missingDataStrategy, err := sli.ExpandMissingDataStrategy()
+	if err != nil {
+		return nil, fmt.Errorf("error expanding missing data strategy: %w", err)
+	}
+
 	slo.WindowBasedMetricSli = &slos.WindowBasedMetricSli{
 		Query: &slos.Metric{
 			Query: slos.PtrString(sli.Query.Query),
 		},
-		Window:             window.Ptr(),
-		ComparisonOperator: comparisonOperator,
-		Threshold:          slos.PtrFloat32(float32(sli.Threshold.AsApproximateFloat64())),
+		Window:              window.Ptr(),
+		ComparisonOperator:  comparisonOperator,
+		MissingDataStrategy: missingDataStrategy,
+		Threshold:           slos.PtrFloat32(float32(sli.Threshold.AsApproximateFloat64())),
 	}
 	return slo, nil
+}
+
+// ExpandMissingDataStrategy maps the spec value to the SDK enum. The field is optional,
+// so an absent value leaves it out of the request. The controller rebuilds the whole
+// request from spec on every reconcile and never reads the remote SLO, so an omission
+// means the same thing on create and on replace.
+func (w *WindowBasedMetricSli) ExpandMissingDataStrategy() (*slos.MissingDataStrategy, error) {
+	if w.MissingDataStrategy == nil {
+		return nil, nil
+	}
+
+	strategy, ok := MissingDataStrategySchemaToOpenAPI[*w.MissingDataStrategy]
+	if !ok {
+		return nil, fmt.Errorf("invalid SLO missing data strategy: %s", *w.MissingDataStrategy)
+	}
+	return strategy.Ptr(), nil
 }
 
 func (s *SLOSpec) ExtractApmSli() (*slos.Slo1, error) {
