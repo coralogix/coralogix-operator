@@ -18054,8 +18054,11 @@ Exactly one of requestBasedMetric, windowBasedMetric or apmSli must be set.<br/>
         <td>int or string</td>
         <td>
           TargetThresholdPercentage is the target compliance percentage for the SLO, so 99.9
-means three nines. There is deliberately no 0-100 range validator: the protobuf
-declares no bound and the API accepts values outside that range.<br/>
+means three nines. The API rejects a value above 100 with
+`400 "slo.targetThresholdPercentage" must be less than or equal to 100`. The bound
+is not declared in the protobuf and is not enforced here either: the field is a
+resource.Quantity, which renders as int-or-string in the CRD, so the numeric
+Minimum and Maximum markers do not apply to it. The lower bound is unverified.<br/>
         </td>
         <td>true</td>
       </tr><tr>
