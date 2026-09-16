@@ -126,12 +126,13 @@ spec:
                         x-kubernetes-int-or-string: true
                       window:
                         description: Window defines the time window for the SLO. Valid
-                          values are "unspecified", "1m", and "5m".
+                          values are "1m" and "5m".
                         enum:
-                        - unspecified
                         - 1m
                         - 5m
                         type: string
+                    required:
+                    - window
                     type: object
                 type: object
                 x-kubernetes-validations:

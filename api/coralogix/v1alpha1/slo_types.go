@@ -27,10 +27,13 @@ import (
 )
 
 var (
+	// WindowSloWindowSchemaToOpenAPI has no "unspecified" entry on purpose. The Coralogix
+	// API has no implementation for WINDOW_SLO_WINDOW_UNSPECIFIED and answers HTTP 500 for
+	// it, so a CR that still carries the value is rejected in the extract path with a clear
+	// message. This mirrors how "90d" is kept out of sloTimeFrameSchemaToOpenAPI.
 	WindowSloWindowSchemaToOpenAPI = map[SloWindowEnum]slos.WindowSloWindow{
-		"unspecified": slos.WINDOWSLOWINDOW_WINDOW_SLO_WINDOW_UNSPECIFIED,
-		"1m":          slos.WINDOWSLOWINDOW_WINDOW_SLO_WINDOW_1_MINUTE,
-		"5m":          slos.WINDOWSLOWINDOW_WINDOW_SLO_WINDOW_5_MINUTES,
+		"1m": slos.WINDOWSLOWINDOW_WINDOW_SLO_WINDOW_1_MINUTE,
+		"5m": slos.WINDOWSLOWINDOW_WINDOW_SLO_WINDOW_5_MINUTES,
 	}
 	ComparisonOperatorSchemaToOpenAPI = map[ComparisonOperator]slos.ComparisonOperator{
 		"unspecified":         slos.COMPARISONOPERATOR_COMPARISON_OPERATOR_UNSPECIFIED,
@@ -86,15 +89,15 @@ type WindowBasedMetricSli struct {
 	// +optional
 	// Optional query for the metric.
 	Query *SloMetricEvent `json:"query,omitempty"`
-	// Window defines the time window for the SLO. Valid values are "unspecified", "1m", and "5m".
-	Window SloWindowEnum `json:"window,omitempty"`
+	// Window defines the time window for the SLO. Valid values are "1m" and "5m".
+	Window SloWindowEnum `json:"window"`
 	// ComparisonOperator defines the comparison operator for the SLO. Valid values are "unspecified", "greaterThan", "lessThan", "greaterThanOrEquals", and "lessThanOrEquals".
 	ComparisonOperator ComparisonOperator `json:"comparisonOperator,omitempty"`
 	// Threshold defines the threshold for the SLO.
 	Threshold resource.Quantity `json:"threshold,omitempty"`
 }
 
-// +kubebuilder:validation:Enum={"unspecified","1m","5m"}
+// +kubebuilder:validation:Enum={"1m","5m"}
 type SloWindowEnum string
 
 // +kubebuilder:validation:Enum={"unspecified","greaterThan","lessThan","greaterThanOrEquals","lessThanOrEquals"}
@@ -229,6 +232,17 @@ func (s *SLOSpec) ExtractWindowBasedMetricSli() (*slos.Slo1, error) {
 		return nil, fmt.Errorf("error expanding time frame: %w", err)
 	}
 
+	sli := s.SliType.WindowBasedMetricSli
+	window, ok := WindowSloWindowSchemaToOpenAPI[sli.Window]
+	if !ok {
+		return nil, fmt.Errorf("invalid SLO window: %s", sli.Window)
+	}
+
+	comparisonOperator, err := sli.ExpandComparisonOperator()
+	if err != nil {
+		return nil, fmt.Errorf("error expanding comparison operator: %w", err)
+	}
+
 	return &slos.Slo1{
 		Name:                      slos.PtrString(s.Name),
 		Description:               s.Description,
@@ -237,13 +251,28 @@ func (s *SLOSpec) ExtractWindowBasedMetricSli() (*slos.Slo1, error) {
 		TargetThresholdPercentage: slos.PtrFloat32(float32(s.TargetThresholdPercentage.AsApproximateFloat64())),
 		WindowBasedMetricSli: &slos.WindowBasedMetricSli{
 			Query: &slos.Metric{
-				Query: slos.PtrString(s.SliType.WindowBasedMetricSli.Query.Query),
+				Query: slos.PtrString(sli.Query.Query),
 			},
-			Window:             WindowSloWindowSchemaToOpenAPI[s.SliType.WindowBasedMetricSli.Window].Ptr(),
-			ComparisonOperator: ComparisonOperatorSchemaToOpenAPI[s.SliType.WindowBasedMetricSli.ComparisonOperator].Ptr(),
-			Threshold:          slos.PtrFloat32(float32(s.SliType.WindowBasedMetricSli.Threshold.AsApproximateFloat64())),
+			Window:             window.Ptr(),
+			ComparisonOperator: comparisonOperator,
+			Threshold:          slos.PtrFloat32(float32(sli.Threshold.AsApproximateFloat64())),
 		},
 	}, nil
+}
+
+// ExpandComparisonOperator maps the spec value to the SDK enum. comparisonOperator is
+// optional in the CRD, so an empty value leaves the field out of the request instead of
+// sending an empty enum string, which the API rejects.
+func (w *WindowBasedMetricSli) ExpandComparisonOperator() (*slos.ComparisonOperator, error) {
+	if w.ComparisonOperator == "" {
+		return nil, nil
+	}
+
+	op, ok := ComparisonOperatorSchemaToOpenAPI[w.ComparisonOperator]
+	if !ok {
+		return nil, fmt.Errorf("invalid SLO comparison operator: %s", w.ComparisonOperator)
+	}
+	return op.Ptr(), nil
 }
 
 func (w *SloWindow) ExpandTimeFrame() (*slos.SloTimeFrame, error) {

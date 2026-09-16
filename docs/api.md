@@ -18224,6 +18224,15 @@ TotalEvents defines the total events metric.
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>window</b></td>
+        <td>enum</td>
+        <td>
+          Window defines the time window for the SLO. Valid values are "1m" and "5m".<br/>
+          <br/>
+            <i>Enum</i>: 1m, 5m<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
         <td><b>comparisonOperator</b></td>
         <td>enum</td>
         <td>
@@ -18244,15 +18253,6 @@ TotalEvents defines the total events metric.
         <td>int or string</td>
         <td>
           Threshold defines the threshold for the SLO.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>window</b></td>
-        <td>enum</td>
-        <td>
-          Window defines the time window for the SLO. Valid values are "unspecified", "1m", and "5m".<br/>
-          <br/>
-            <i>Enum</i>: unspecified, 1m, 5m<br/>
         </td>
         <td>false</td>
       </tr></tbody>
