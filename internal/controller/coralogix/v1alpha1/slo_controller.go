@@ -97,6 +97,12 @@ func (r *SLOReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj c
 		return cxsdk.NewAPIError(httpResp, err)
 	}
 	log.Info("Remote slo updated", "response", utils.FormatJSON(updateResponse))
+
+	// status.revision is deliberately not refreshed here. A status write retriggers
+	// reconciliation, which replaces again and bumps the remote revision, but that pass
+	// writes no status because the condition is already current. The field would stay one
+	// revision behind and cost an extra replace per update. Keeping it accurate needs the
+	// shared reconciler to stop replacing on status-only events.
 	return nil
 }
 

@@ -68,6 +68,7 @@ Deep-copy status values that contain slices or maps before change detection. A s
 
 - Check CRD compatibility: field names, JSON tags, enum strings, defaulting, validation markers, required/optional behavior, and status shape.
 - Check `+kubebuilder:default` against presence semantics: a zero-value default on a non-pointer `omitempty` field is a no-op, and a non-zero default needs a pointer field.
+- Keep CRD validation no stricter than the remote API. A validation marker or CEL rule may move a remote error earlier, from a failed reconcile to admission. It must not reject a value the API accepts. Loosening a rule later is safe; tightening one is a breaking change, so an unverified rule has to be settled before it ships.
 - Bound lists used by CEL rules with the API limit. An unbounded list can make a nested CRD exceed the Kubernetes CEL cost budget.
 - Trace touched fields end to end: CR spec -> controller conversion -> Coralogix API request -> remote response -> status/conditions -> samples/docs.
 - Check null, empty, pointer, wrapper, and zero-value drift between Kubernetes objects, Go structs, SDK models, protobufs, and remote API defaults.

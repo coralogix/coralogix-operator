@@ -1,0 +1,33 @@
+# An APM error-rate SLO. The SLI is built from an APM Service Catalog service
+# instead of a PromQL query, so spec.productType must be "apm".
+# Replace `checkout-service` with a real service name from your APM Service Catalog.
+# The Coralogix API accepts exactly one service and rejects unknown names.
+apiVersion: coralogix.com/v1alpha1
+kind: SLO
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: slo-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: apm-error-slo-example
+spec:
+  name: apm-error-slo-example
+  description: Coralogix APM error-rate SLO example
+  productType: apm
+  sliType:
+    apmSli:
+      services:
+        - checkout-service
+      # errorConfig carries no settings. Its presence selects the error-rate SLI.
+      errorConfig: {}
+      filters:
+        - key: http.method
+          values:
+            - POST
+      groupingKeys:
+        - http.route
+  window:
+    timeFrame: 7d
+  targetThresholdPercentage: 99
