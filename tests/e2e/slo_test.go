@@ -197,48 +197,9 @@ var _ = Describe("SLO validation", func() {
 		Expect(err.Error()).To(ContainSubstring("Exactly one of requestBasedMetric, windowBasedMetric or apmSli must be set"))
 	})
 
-	It("Should be rejected when apmSli has neither errorConfig nor latencyConfig", func(ctx context.Context) {
-		By("Creating an APM SLO with no SLI branch")
-		slo := getSampleAPMErrorSlo(uniqueName("slo-apm-no-branch"), "any-service")
-		slo.Spec.SliType.ApmSli.ErrorConfig = nil
 
-		err := crClient.Create(ctx, slo)
-		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("Exactly one of errorConfig or latencyConfig must be set"))
-	})
 
-	It("Should be rejected when apmSli has both errorConfig and latencyConfig", func(ctx context.Context) {
-		By("Creating an APM SLO with both SLI branches")
-		slo := getSampleAPMErrorSlo(uniqueName("slo-apm-both-branches"), "any-service")
-		slo.Spec.SliType.ApmSli.LatencyConfig = &coralogixv1alpha1.ApmLatencySli{
-			TimeWindow: "5m",
-			Average:    &coralogixv1alpha1.ApmLatencyAverage{},
-		}
 
-		err := crClient.Create(ctx, slo)
-		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("Exactly one of errorConfig or latencyConfig must be set"))
-	})
-
-	It("Should be rejected when latencyConfig has neither quantile nor average", func(ctx context.Context) {
-		By("Creating an APM latency SLO with no query type")
-		slo := getSampleAPMLatencySlo(uniqueName("slo-apm-no-query-type"), "any-service")
-		slo.Spec.SliType.ApmSli.LatencyConfig.Quantile = nil
-
-		err := crClient.Create(ctx, slo)
-		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("Exactly one of quantile or average must be set"))
-	})
-
-	It("Should be rejected when latencyConfig has both quantile and average", func(ctx context.Context) {
-		By("Creating an APM latency SLO with both query types")
-		slo := getSampleAPMLatencySlo(uniqueName("slo-apm-both-query-types"), "any-service")
-		slo.Spec.SliType.ApmSli.LatencyConfig.Average = &coralogixv1alpha1.ApmLatencyAverage{}
-
-		err := crClient.Create(ctx, slo)
-		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("Exactly one of quantile or average must be set"))
-	})
 
 	It("Should be rejected when productType is apm without an apmSli", func(ctx context.Context) {
 		By("Creating a window-based SLO with productType apm")
@@ -273,27 +234,40 @@ var _ = Describe("SLO validation", func() {
 		Expect(err.Error()).To(ContainSubstring("spec.sliType.apmSli.services"))
 	})
 
-	It("Should fail the reconcile when windowBasedMetric has no query", func(ctx context.Context) {
+	It("Should be rejected when windowBasedMetric has no query", func(ctx context.Context) {
 		By("Creating a window-based SLO with no query")
-		name := uniqueName("slo-no-query")
-		slo := getSampleWindowBasedSlo(name)
+		slo := getSampleWindowBasedSlo(uniqueName("slo-no-query"))
 		slo.Spec.SliType.WindowBasedMetricSli.Query = nil
 
-		// query is optional in the CRD, so admission accepts this. The reconcile must
-		// report a clear error rather than panic on the nil dereference.
-		Expect(crClient.Create(ctx, slo)).To(Succeed())
-		DeferCleanup(func(ctx context.Context) {
-			Expect(client.IgnoreNotFound(crClient.Delete(ctx, slo))).To(Succeed())
-		})
+		err := crClient.Create(ctx, slo)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("spec.sliType.windowBasedMetric.query"))
+	})
 
-		By("Waiting for the RemoteSynced condition to report the error")
-		fetched := &coralogixv1alpha1.SLO{}
-		Eventually(func(g Gomega) string {
-			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: name, Namespace: testNamespace}, fetched)).To(Succeed())
-			condition := meta.FindStatusCondition(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)
-			g.Expect(condition).ToNot(BeNil())
-			return condition.Message
-		}, time.Minute, time.Second).Should(ContainSubstring("windowBasedMetric.query is required"))
+	It("Should be rejected when one ownership dimension sets both lists", func(ctx context.Context) {
+		By("Creating an SLO whose team dimension sets staticValues and labelKeys")
+		slo := getSampleWindowBasedSlo(uniqueName("slo-tags-both"))
+		slo.Spec.OwnershipTags.Team = &coralogixv1alpha1.SloOwnershipTag{
+			StaticValues: []string{"platform"},
+			LabelKeys:    []string{"team"},
+		}
+
+		err := crClient.Create(ctx, slo)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("Use either staticValues or labelKeys, not both"))
+	})
+
+	It("Should accept an ownership dimension whose lists are both empty", func(ctx context.Context) {
+		By("Creating an SLO whose team dimension has two empty lists")
+		slo := getSampleWindowBasedSlo(uniqueName("slo-tags-empty"))
+		slo.Spec.OwnershipTags.Team = &coralogixv1alpha1.SloOwnershipTag{
+			StaticValues: []string{},
+			LabelKeys:    []string{},
+		}
+
+		// The API accepts this and discards the dimension, so admission must not reject it.
+		Expect(crClient.Create(ctx, slo)).To(Succeed())
+		Expect(crClient.Delete(ctx, slo)).To(Succeed())
 	})
 })
 
@@ -333,10 +307,12 @@ var _ = Describe("SLO window-based", Ordered, func() {
 
 	It("Should apply a changed missingDataStrategy on the replace path", func(ctx context.Context) {
 		By("Patching missingDataStrategy to bad")
-		modified := slo.DeepCopy()
+		current := &coralogixv1alpha1.SLO{}
+		Expect(crClient.Get(ctx, types.NamespacedName{Name: sloName, Namespace: testNamespace}, current)).To(Succeed())
+		modified := current.DeepCopy()
 		modified.Spec.SliType.WindowBasedMetricSli.MissingDataStrategy =
 			ptr.To(coralogixv1alpha1.MissingDataStrategy("bad"))
-		Expect(crClient.Patch(ctx, modified, client.MergeFrom(slo))).To(Succeed())
+		Expect(crClient.Patch(ctx, modified, client.MergeFrom(current))).To(Succeed())
 
 		By("Verifying the replace reached the backend")
 		Eventually(func(g Gomega) slos.MissingDataStrategy {
@@ -400,10 +376,14 @@ var _ = Describe("SLO APM", Ordered, func() {
 
 	It("Should switch the latency query type from quantile to average", func(ctx context.Context) {
 		By("Patching latencyConfig from quantile to average")
-		modified := slo.DeepCopy()
+		// Re-read first. The controller has written status and a finalizer since Create,
+		// so the copy held by this spec has a stale resourceVersion and Update would
+		// conflict. A merge patch cannot remove the quantile key, so this has to be an
+		// Update on the current object.
+		modified := &coralogixv1alpha1.SLO{}
+		Expect(crClient.Get(ctx, types.NamespacedName{Name: sloName, Namespace: testNamespace}, modified)).To(Succeed())
 		modified.Spec.SliType.ApmSli.LatencyConfig.Quantile = nil
 		modified.Spec.SliType.ApmSli.LatencyConfig.Average = &coralogixv1alpha1.ApmLatencyAverage{}
-		// A merge patch cannot remove a key, so replace the object outright.
 		Expect(crClient.Update(ctx, modified)).To(Succeed())
 
 		By("Verifying the replace reached the backend")

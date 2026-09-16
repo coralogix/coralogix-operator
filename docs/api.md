@@ -18137,8 +18137,6 @@ Exactly one of requestBasedMetric, windowBasedMetric or apmSli must be set.
         <td>
           ApmSli builds the SLO from an APM Service Catalog service instead of a PromQL query.
 It requires spec.productType "apm".<br/>
-          <br/>
-            <i>Validations</i>:<li>has(self.errorConfig) != has(self.latencyConfig): Exactly one of errorConfig or latencyConfig must be set</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -18212,8 +18210,6 @@ operator release.<br/>
         <td>object</td>
         <td>
           LatencyConfig makes this an APM latency SLI.<br/>
-          <br/>
-            <i>Validations</i>:<li>has(self.quantile) != has(self.average): Exactly one of quantile or average must be set</li>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -18585,7 +18581,7 @@ or a dimension whose lists are both empty, is discarded by the API and has no ef
         <td>
           Environment tags the SLO with a free-form environment name.<br/>
           <br/>
-            <i>Validations</i>:<li>!(has(self.staticValues) && has(self.labelKeys)): Use either staticValues or labelKeys, not both</li>
+            <i>Validations</i>:<li>!(has(self.staticValues) && self.staticValues.size() > 0 && has(self.labelKeys) && self.labelKeys.size() > 0): Use either staticValues or labelKeys, not both</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -18595,7 +18591,7 @@ or a dimension whose lists are both empty, is discarded by the API and has no ef
           Service tags the SLO with an APM service. The API validates static values against
 the APM Service Catalog, so the operator does not.<br/>
           <br/>
-            <i>Validations</i>:<li>!(has(self.staticValues) && has(self.labelKeys)): Use either staticValues or labelKeys, not both</li>
+            <i>Validations</i>:<li>!(has(self.staticValues) && self.staticValues.size() > 0 && has(self.labelKeys) && self.labelKeys.size() > 0): Use either staticValues or labelKeys, not both</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -18604,7 +18600,7 @@ the APM Service Catalog, so the operator does not.<br/>
         <td>
           Team tags the SLO with a free-form team name.<br/>
           <br/>
-            <i>Validations</i>:<li>!(has(self.staticValues) && has(self.labelKeys)): Use either staticValues or labelKeys, not both</li>
+            <i>Validations</i>:<li>!(has(self.staticValues) && self.staticValues.size() > 0 && has(self.labelKeys) && self.labelKeys.size() > 0): Use either staticValues or labelKeys, not both</li>
         </td>
         <td>false</td>
       </tr></tbody>

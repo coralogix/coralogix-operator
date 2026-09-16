@@ -98,11 +98,11 @@ func (r *SLOReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj c
 	}
 	log.Info("Remote slo updated", "response", utils.FormatJSON(updateResponse))
 
-	// The replace bumps the remote revision. Without this the status keeps the revision
-	// from creation and goes stale after the first update.
-	receivedSLO := updateResponse.GetSlo()
-	slo.Status.Revision = ptr.To(ptr.To(receivedSLO.GetRevision()).GetRevision())
-
+	// status.revision is deliberately not refreshed here. A status write retriggers
+	// reconciliation, which replaces again and bumps the remote revision, but that pass
+	// writes no status because the condition is already current. The field would stay one
+	// revision behind and cost an extra replace per update. Keeping it accurate needs the
+	// shared reconciler to stop replacing on status-only events.
 	return nil
 }
 

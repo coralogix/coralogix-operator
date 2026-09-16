@@ -86,7 +86,8 @@ spec:
                     type: object
                     x-kubernetes-validations:
                     - message: Use either staticValues or labelKeys, not both
-                      rule: '!(has(self.staticValues) && has(self.labelKeys))'
+                      rule: '!(has(self.staticValues) && self.staticValues.size()
+                        > 0 && has(self.labelKeys) && self.labelKeys.size() > 0)'
                   service:
                     description: |-
                       Service tags the SLO with an APM service. The API validates static values against
@@ -107,7 +108,8 @@ spec:
                     type: object
                     x-kubernetes-validations:
                     - message: Use either staticValues or labelKeys, not both
-                      rule: '!(has(self.staticValues) && has(self.labelKeys))'
+                      rule: '!(has(self.staticValues) && self.staticValues.size()
+                        > 0 && has(self.labelKeys) && self.labelKeys.size() > 0)'
                   team:
                     description: Team tags the SLO with a free-form team name.
                     properties:
@@ -126,7 +128,8 @@ spec:
                     type: object
                     x-kubernetes-validations:
                     - message: Use either staticValues or labelKeys, not both
-                      rule: '!(has(self.staticValues) && has(self.labelKeys))'
+                      rule: '!(has(self.staticValues) && self.staticValues.size()
+                        > 0 && has(self.labelKeys) && self.labelKeys.size() > 0)'
                 type: object
               productType:
                 description: |-
@@ -232,9 +235,6 @@ spec:
                         required:
                         - timeWindow
                         type: object
-                        x-kubernetes-validations:
-                        - message: Exactly one of quantile or average must be set
-                          rule: has(self.quantile) != has(self.average)
                       services:
                         description: |-
                           Services lists the APM Service Catalog services the SLO covers. The Coralogix API
@@ -248,10 +248,6 @@ spec:
                     required:
                     - services
                     type: object
-                    x-kubernetes-validations:
-                    - message: Exactly one of errorConfig or latencyConfig must be
-                        set
-                      rule: has(self.errorConfig) != has(self.latencyConfig)
                   requestBasedMetric:
                     properties:
                       goodEvents:

@@ -144,7 +144,12 @@ type WindowBasedMetricSli struct {
 }
 
 // ApmSli defines an SLI over an APM Service Catalog service.
-// +kubebuilder:validation:XValidation:rule="has(self.errorConfig) != has(self.latencyConfig)",message="Exactly one of errorConfig or latencyConfig must be set"
+//
+// Exactly one of errorConfig or latencyConfig must be set. That is enforced in
+// ExpandApmSli, not by a CEL rule. errorConfig is an empty object, so its schema has no
+// properties, and Kubernetes 1.29 and earlier cannot evaluate a CEL rule that touches
+// such a field: it fails with "invalid object type, expected either Properties or
+// AdditionalProperties". The chart supports those versions, so the check lives in Go.
 type ApmSli struct {
 	// Services lists the APM Service Catalog services the SLO covers. The Coralogix API
 	// accepts exactly one service today and rejects names that are not in the catalog.
@@ -170,7 +175,9 @@ type ApmSli struct {
 type ApmErrorSli struct{}
 
 // ApmLatencySli defines an APM latency SLI.
-// +kubebuilder:validation:XValidation:rule="has(self.quantile) != has(self.average)",message="Exactly one of quantile or average must be set"
+//
+// Exactly one of quantile or average must be set. Enforced in ExpandApmLatencySli rather
+// than by a CEL rule, because average is an empty object. See the note on ApmSli.
 type ApmLatencySli struct {
 	// TimeWindow defines the evaluation window. Valid values are "1m" and "5m".
 	// Omitting it answers HTTP 500 with the same "Not implemented yet" error as an
@@ -230,10 +237,12 @@ type SloOwnershipTags struct {
 // SloOwnershipTag names one ownership dimension, either by fixed values or by metric
 // label. Both lists are ordered and round-trip in the order given.
 //
-// Setting both lists is rejected by the API with
+// Setting both lists to a non-empty value is rejected by the API with
 // `400 use either staticValues or labelKeys, not both`, so the rule below mirrors it.
-// Leaving both empty is accepted and discarded, so there is no at-least-one rule.
-// +kubebuilder:validation:XValidation:rule="!(has(self.staticValues) && has(self.labelKeys))",message="Use either staticValues or labelKeys, not both"
+// The rule compares list length rather than field presence: `staticValues: []` is
+// present but empty, and the API accepts a dimension whose lists are both empty and
+// simply discards it. There is no at-least-one rule for the same reason.
+// +kubebuilder:validation:XValidation:rule="!(has(self.staticValues) && self.staticValues.size() > 0 && has(self.labelKeys) && self.labelKeys.size() > 0)",message="Use either staticValues or labelKeys, not both"
 type SloOwnershipTag struct {
 	// +optional
 	// StaticValues assigns the dimension group-wide, with fixed values.
@@ -499,6 +508,10 @@ func (s *SLOSpec) ExtractApmSli() (*slos.Slo1, error) {
 }
 
 func (a *ApmSli) ExpandApmSli() (*slos.ApmSli, error) {
+	if (a.ErrorConfig == nil) == (a.LatencyConfig == nil) {
+		return nil, fmt.Errorf("exactly one of errorConfig or latencyConfig must be set")
+	}
+
 	apmSli := &slos.ApmSli{
 		Services:     a.Services,
 		GroupingKeys: a.GroupingKeys,
@@ -523,6 +536,10 @@ func (a *ApmSli) ExpandApmSli() (*slos.ApmSli, error) {
 }
 
 func (l *ApmLatencySli) ExpandApmLatencySli() (*slos.ApmLatencySli, error) {
+	if (l.Quantile == nil) == (l.Average == nil) {
+		return nil, fmt.Errorf("exactly one of quantile or average must be set")
+	}
+
 	timeWindow, ok := WindowSloWindowSchemaToOpenAPI[l.TimeWindow]
 	if !ok {
 		return nil, fmt.Errorf("invalid APM latency time window: %s", l.TimeWindow)
