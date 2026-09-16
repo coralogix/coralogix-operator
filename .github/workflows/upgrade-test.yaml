@@ -52,6 +52,9 @@ jobs:
       SLACK_INTEGRATION_CHANNEL: ${{ secrets.SLACK_INTEGRATION_CHANNEL }}
       PD_INTEGRATION_ID: ${{ secrets.PD_INTEGRATION_ID }}
       TEST_TEAM_ID: ${{ secrets.TEST_TEAM_ID }}
+      # A service name from the tenant's APM Service Catalog. The APM SLO specs fail
+      # loudly in CI without it, instead of skipping silently.
+      CORALOGIX_SLO_APM_SERVICE: ${{ secrets.CORALOGIX_SLO_APM_SERVICE }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

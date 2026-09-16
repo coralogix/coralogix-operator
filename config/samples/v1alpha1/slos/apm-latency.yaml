@@ -1,0 +1,30 @@
+# An APM latency SLO. Exactly one of quantile or average must be set.
+# Replace `checkout-service` with a real service name from your APM Service Catalog.
+apiVersion: coralogix.com/v1alpha1
+kind: SLO
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: slo-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: apm-latency-slo-example
+spec:
+  name: apm-latency-slo-example
+  description: Coralogix APM latency SLO example
+  productType: apm
+  sliType:
+    apmSli:
+      services:
+        - checkout-service
+      latencyConfig:
+        timeWindow: 5m
+        # threshold is in seconds.
+        threshold: "0.5"
+        quantile:
+          # percentile is a fraction, so 0.95 means P95.
+          percentile: "0.95"
+  window:
+    timeFrame: 7d
+  targetThresholdPercentage: 99

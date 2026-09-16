@@ -18,6 +18,19 @@ spec:
       window: 1m
       comparisonOperator: greaterThan
       threshold: "0.232"
+      # How a window with no data counts. One of uncounted, good or bad.
+      # When omitted, the API counts it as uncounted.
+      missingDataStrategy: good
+  # Ownership tags assign the SLO to a service, environment and team.
+  # Omitting this block clears the tags on the remote SLO.
+  # Each dimension takes staticValues, labelKeys, or both.
+  ownershipTags:
+    environment:
+      staticValues:
+        - production
+    team:
+      labelKeys:
+        - team
   window:
     timeFrame: 7d
   targetThresholdPercentage: 10
