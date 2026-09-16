@@ -61,6 +61,64 @@ spec:
               name:
                 description: SLO name
                 type: string
+              ownershipTags:
+                description: |-
+                  OwnershipTags assign the SLO to a service, environment and team. Omitting the block
+                  clears the tags on the remote SLO, which is the declarative contract. An empty block,
+                  or a dimension whose lists are both empty, is discarded by the API and has no effect.
+                properties:
+                  environment:
+                    description: Environment tags the SLO with a free-form environment
+                      name.
+                    properties:
+                      labelKeys:
+                        description: LabelKeys assigns the dimension from metric label
+                          names, resolved per series.
+                        items:
+                          type: string
+                        type: array
+                      staticValues:
+                        description: StaticValues assigns the dimension group-wide,
+                          with fixed values.
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                  service:
+                    description: |-
+                      Service tags the SLO with an APM service. The API validates static values against
+                      the APM Service Catalog, so the operator does not.
+                    properties:
+                      labelKeys:
+                        description: LabelKeys assigns the dimension from metric label
+                          names, resolved per series.
+                        items:
+                          type: string
+                        type: array
+                      staticValues:
+                        description: StaticValues assigns the dimension group-wide,
+                          with fixed values.
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                  team:
+                    description: Team tags the SLO with a free-form team name.
+                    properties:
+                      labelKeys:
+                        description: LabelKeys assigns the dimension from metric label
+                          names, resolved per series.
+                        items:
+                          type: string
+                        type: array
+                      staticValues:
+                        description: StaticValues assigns the dimension group-wide,
+                          with fixed values.
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                type: object
               productType:
                 description: |-
                   ProductType selects the Coralogix product the SLO is built from. Valid values are

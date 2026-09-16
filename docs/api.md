@@ -18078,6 +18078,15 @@ Exactly one of requestBasedMetric, windowBasedMetric or apmSli must be set.<br/>
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b><a href="#slospecownershiptags">ownershipTags</a></b></td>
+        <td>object</td>
+        <td>
+          OwnershipTags assign the SLO to a service, environment and team. Omitting the block
+clears the tags on the remote SLO, which is the declarative contract. An empty block,
+or a dimension whose lists are both empty, is discarded by the API and has no effect.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>productType</b></td>
         <td>enum</td>
         <td>
@@ -18519,6 +18528,153 @@ Window defines the time window for the SLO.
 Deprecated: "90d" is no longer supported by the Coralogix API and will be rejected by the operator.<br/>
           <br/>
             <i>Enum</i>: unspecified, 7d, 14d, 21d, 28d, 90d<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.ownershipTags
+<sup><sup>[↩ Parent](#slospec)</sup></sup>
+
+
+
+OwnershipTags assign the SLO to a service, environment and team. Omitting the block
+clears the tags on the remote SLO, which is the declarative contract. An empty block,
+or a dimension whose lists are both empty, is discarded by the API and has no effect.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#slospecownershiptagsenvironment">environment</a></b></td>
+        <td>object</td>
+        <td>
+          Environment tags the SLO with a free-form environment name.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#slospecownershiptagsservice">service</a></b></td>
+        <td>object</td>
+        <td>
+          Service tags the SLO with an APM service. The API validates static values against
+the APM Service Catalog, so the operator does not.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#slospecownershiptagsteam">team</a></b></td>
+        <td>object</td>
+        <td>
+          Team tags the SLO with a free-form team name.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.ownershipTags.environment
+<sup><sup>[↩ Parent](#slospecownershiptags)</sup></sup>
+
+
+
+Environment tags the SLO with a free-form environment name.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>labelKeys</b></td>
+        <td>[]string</td>
+        <td>
+          LabelKeys assigns the dimension from metric label names, resolved per series.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>staticValues</b></td>
+        <td>[]string</td>
+        <td>
+          StaticValues assigns the dimension group-wide, with fixed values.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.ownershipTags.service
+<sup><sup>[↩ Parent](#slospecownershiptags)</sup></sup>
+
+
+
+Service tags the SLO with an APM service. The API validates static values against
+the APM Service Catalog, so the operator does not.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>labelKeys</b></td>
+        <td>[]string</td>
+        <td>
+          LabelKeys assigns the dimension from metric label names, resolved per series.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>staticValues</b></td>
+        <td>[]string</td>
+        <td>
+          StaticValues assigns the dimension group-wide, with fixed values.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.ownershipTags.team
+<sup><sup>[↩ Parent](#slospecownershiptags)</sup></sup>
+
+
+
+Team tags the SLO with a free-form team name.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>labelKeys</b></td>
+        <td>[]string</td>
+        <td>
+          LabelKeys assigns the dimension from metric label names, resolved per series.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>staticValues</b></td>
+        <td>[]string</td>
+        <td>
+          StaticValues assigns the dimension group-wide, with fixed values.<br/>
         </td>
         <td>false</td>
       </tr></tbody>

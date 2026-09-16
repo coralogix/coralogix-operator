@@ -68,6 +68,11 @@ type SLOSpec struct {
 	// Exactly one of requestBasedMetric, windowBasedMetric or apmSli must be set.
 	SliType SliType `json:"sliType"`
 	// +optional
+	// OwnershipTags assign the SLO to a service, environment and team. Omitting the block
+	// clears the tags on the remote SLO, which is the declarative contract. An empty block,
+	// or a dimension whose lists are both empty, is discarded by the API and has no effect.
+	OwnershipTags *SloOwnershipTags `json:"ownershipTags,omitempty"`
+	// +optional
 	// ProductType selects the Coralogix product the SLO is built from. Valid values are
 	// "unspecified" and "apm". An apmSli requires "apm". When omitted, the API stores
 	// SLO_PRODUCT_TYPE_UNSPECIFIED.
@@ -182,6 +187,31 @@ type ApmFilter struct {
 	// Values are the accepted values for Key.
 	// +kubebuilder:validation:MinItems=1
 	Values []string `json:"values"`
+}
+
+// SloOwnershipTags assign an SLO to a service, environment and team.
+type SloOwnershipTags struct {
+	// +optional
+	// Service tags the SLO with an APM service. The API validates static values against
+	// the APM Service Catalog, so the operator does not.
+	Service *SloOwnershipTag `json:"service,omitempty"`
+	// +optional
+	// Environment tags the SLO with a free-form environment name.
+	Environment *SloOwnershipTag `json:"environment,omitempty"`
+	// +optional
+	// Team tags the SLO with a free-form team name.
+	Team *SloOwnershipTag `json:"team,omitempty"`
+}
+
+// SloOwnershipTag names one ownership dimension, either by fixed values or by metric
+// label. Both lists are ordered and round-trip in the order given.
+type SloOwnershipTag struct {
+	// +optional
+	// StaticValues assigns the dimension group-wide, with fixed values.
+	StaticValues []string `json:"staticValues,omitempty"`
+	// +optional
+	// LabelKeys assigns the dimension from metric label names, resolved per series.
+	LabelKeys []string `json:"labelKeys,omitempty"`
 }
 
 // +kubebuilder:validation:Enum={"uncounted","good","bad"}
@@ -303,8 +333,34 @@ func (s *SLOSpec) extractCommon() (*slos.Slo1, error) {
 		Labels:                    ptr.Deref(s.Labels, nil),
 		SloTimeFrame:              timeFrame,
 		ProductType:               productType,
+		OwnershipTags:             s.OwnershipTags.ExpandOwnershipTags(),
 		TargetThresholdPercentage: slos.PtrFloat32(float32(s.TargetThresholdPercentage.AsApproximateFloat64())),
 	}, nil
+}
+
+// ExpandOwnershipTags builds the ownership tags block. resolvedValues is server-computed
+// and is never written.
+func (t *SloOwnershipTags) ExpandOwnershipTags() *slos.SloOwnershipTags {
+	if t == nil {
+		return nil
+	}
+
+	return &slos.SloOwnershipTags{
+		Service:     t.Service.ExpandOwnershipTag(),
+		Environment: t.Environment.ExpandOwnershipTag(),
+		Team:        t.Team.ExpandOwnershipTag(),
+	}
+}
+
+func (t *SloOwnershipTag) ExpandOwnershipTag() *slos.SloOwnershipTag {
+	if t == nil {
+		return nil
+	}
+
+	return &slos.SloOwnershipTag{
+		StaticValues: t.StaticValues,
+		LabelKeys:    t.LabelKeys,
+	}
 }
 
 // ExpandProductType maps the spec value to the SDK enum. The field is optional, so an
