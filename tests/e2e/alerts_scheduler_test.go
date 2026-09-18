@@ -134,8 +134,13 @@ var _ = Describe("AlertScheduler", Ordered, func() {
 		Expect(crClient.Delete(ctx, alertScheduler)).To(Succeed())
 
 		By("Verifying AlertScheduler is deleted from Coralogix backend")
+		// The backend returns an error and a nil response after deletion.
+		// Guard the response before accessing the rule.
 		Eventually(func() *cxsdk.AlertSchedulerRule {
 			getRes, _ := alertSchedulerClient.Get(ctx, &cxsdk.GetAlertSchedulerRuleRequest{AlertSchedulerRuleId: alertSchedulerID})
+			if getRes == nil {
+				return nil
+			}
 			return getRes.AlertSchedulerRule
 		}, time.Minute, time.Second).Should(BeNil())
 	})
