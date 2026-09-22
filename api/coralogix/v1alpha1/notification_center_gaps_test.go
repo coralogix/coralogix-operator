@@ -163,6 +163,7 @@ func TestConnectorExtractMicrosoftTeams(t *testing.T) {
 
 func TestConnectorExtractEventBridge(t *testing.T) {
 	value := "integration-id"
+	additionalDetail := `{"pipeline_id":"p123"}`
 	connector := &Connector{
 		Spec: ConnectorSpec{
 			Name:        "c",
@@ -171,6 +172,7 @@ func TestConnectorExtractEventBridge(t *testing.T) {
 			ConnectorConfig: ConnectorConfig{
 				Fields: []ConnectorConfigField{
 					{FieldName: "integrationId", Value: &value},
+					{FieldName: "additionalDetail", Value: &additionalDetail},
 				},
 			},
 		},
@@ -182,6 +184,22 @@ func TestConnectorExtractEventBridge(t *testing.T) {
 	}
 	if got.Type == nil || *got.Type != connectors.NOTIFICATIONCENTERCONNECTORTYPE_EVENTBRIDGE {
 		t.Fatalf("Type = %v, want EVENTBRIDGE", got.Type)
+	}
+
+	// additionalDetail is an opaque connector-config field and must pass through unchanged.
+	gotFields := map[string]string{}
+	if got.ConnectorConfig != nil {
+		for _, f := range got.ConnectorConfig.Fields {
+			if f.FieldName != nil && f.Value != nil {
+				gotFields[*f.FieldName] = *f.Value
+			}
+		}
+	}
+	if gotFields["integrationId"] != value {
+		t.Fatalf("integrationId field = %q, want %q", gotFields["integrationId"], value)
+	}
+	if gotFields["additionalDetail"] != additionalDetail {
+		t.Fatalf("additionalDetail field = %q, want %q", gotFields["additionalDetail"], additionalDetail)
 	}
 }
 
