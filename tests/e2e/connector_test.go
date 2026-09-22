@@ -556,6 +556,7 @@ func getSampleEventBridgeConnector(name, namespace string) *coralogixv1alpha1.Co
 			ConnectorConfig: coralogixv1alpha1.ConnectorConfig{
 				Fields: []coralogixv1alpha1.ConnectorConfigField{
 					{FieldName: "integrationId", Value: ptr.To(eventbridgeIntegrationId)},
+					{FieldName: "additionalDetail", Value: ptr.To(`{"pipeline_id":"p123"}`)},
 				},
 			},
 		},

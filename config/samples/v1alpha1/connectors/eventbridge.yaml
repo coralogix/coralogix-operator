@@ -16,3 +16,5 @@ spec:
     fields:
       - fieldName: integrationId
         value: some-integration-id
+      - fieldName: additionalDetail
+        value: '{"pipeline_id": "p123"}'
