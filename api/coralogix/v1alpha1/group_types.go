@@ -16,14 +16,12 @@ package v1alpha1
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strconv"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	groups "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/team_groups_management_service"
 
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
@@ -55,9 +53,15 @@ type GroupSpec struct {
 	// +optional
 	Members []Member `json:"members,omitempty"`
 
-	// Custom roles applied to the group.
+	// Custom role applied to the group.
 	// +optional
 	CustomRole *GroupCustomRole `json:"customRole,omitempty"`
+
+	// Deprecated: use customRole. Kept so Groups created against Helm chart 1.0
+	// (spec.customRoles) keep their role after CRD upgrade. The operator uses
+	// customRole when set, otherwise the first customRoles entry.
+	// +optional
+	CustomRoles []GroupCustomRole `json:"customRoles,omitempty"`
 
 	// Scope attached to the group.
 	// +optional
@@ -92,17 +96,10 @@ type ResourceRef struct {
 	Namespace *string `json:"namespace,omitempty"`
 }
 
-func (g *Group) ExtractCreateGroupRequest(
-	ctx context.Context,
-	usersClient *cxsdk.UsersClient) (*groups.CreateTeamGroupRequest, error) {
+func (g *Group) ExtractCreateGroupRequest(userIDs []string) (*groups.CreateTeamGroupRequest, error) {
 	var groupType *groups.GroupType
 	if g.Spec.GroupType != nil {
 		groupType = groupTypeSchemaToOpenAPI[*g.Spec.GroupType].Ptr()
-	}
-
-	usersIds, err := g.ExtractUsersIDs(ctx, usersClient)
-	if err != nil {
-		return nil, err
 	}
 
 	roleId, err := g.ExtractRoleId()
@@ -119,7 +116,7 @@ func (g *Group) ExtractCreateGroupRequest(
 		Name:        groups.PtrString(g.Spec.Name),
 		Description: g.Spec.Description,
 		GroupType:   groupType,
-		UserIds:     usersIds,
+		UserIds:     userIDs,
 		RoleId:      &roleId,
 		Scope: &groups.V2Scope{
 			ScopeId: scopeId,
@@ -127,16 +124,10 @@ func (g *Group) ExtractCreateGroupRequest(
 	}, nil
 }
 
-func (g *Group) ExtractUpdateGroupRequest(
-	ctx context.Context, usersClient *cxsdk.UsersClient) (*groups.UpdateTeamGroupRequest, error) {
+func (g *Group) ExtractUpdateGroupRequest(userIDs []string) (*groups.UpdateTeamGroupRequest, error) {
 	var groupType *groups.GroupType
 	if g.Spec.GroupType != nil {
 		groupType = groupTypeSchemaToOpenAPI[*g.Spec.GroupType].Ptr()
-	}
-
-	usersIds, err := g.ExtractUsersIDs(ctx, usersClient)
-	if err != nil {
-		return nil, err
 	}
 
 	roleId, err := g.ExtractRoleId()
@@ -157,7 +148,7 @@ func (g *Group) ExtractUpdateGroupRequest(
 			Operation: &groups.UserUpdatesOperation{
 				OperationType: "set",
 				Set: &groups.UserIdList{
-					UserIds: usersIds,
+					UserIds: userIDs,
 				},
 			},
 		},
@@ -180,52 +171,30 @@ func (g *Group) ExtractUpdateGroupRequest(
 	}, nil
 }
 
-func (g *Group) ExtractUsersIDs(ctx context.Context, usersClient *cxsdk.UsersClient) ([]string, error) {
-	if g.Spec.Members == nil {
-		return nil, nil
+func (g *Group) customRoleRef() *GroupCustomRole {
+	if g.Spec.CustomRole != nil {
+		return g.Spec.CustomRole
 	}
-
-	users, err := usersClient.List(ctx)
-	if err != nil {
-		return nil, err
+	if len(g.Spec.CustomRoles) > 0 {
+		return &g.Spec.CustomRoles[0]
 	}
-
-	var usersIDs []string
-	var errs error
-	for _, member := range g.Spec.Members {
-		found := false
-		for _, user := range users {
-			if user.UserName == member.UserName {
-				found = true
-				usersIDs = append(usersIDs, *user.ID)
-				break
-			}
-		}
-		if !found {
-			errs = errors.Join(errs, fmt.Errorf("user %s not found", member.UserName))
-		}
-	}
-
-	if errs != nil {
-		return nil, errs
-	}
-
-	return usersIDs, nil
+	return nil
 }
 
 func (g *Group) ExtractRoleId() (int64, error) {
-	if g.Spec.CustomRole == nil {
+	ref := g.customRoleRef()
+	if ref == nil {
 		return 0, nil
 	}
 	var namespace string
-	if ns := g.Spec.CustomRole.ResourceRef.Namespace; ns != nil {
+	if ns := ref.ResourceRef.Namespace; ns != nil {
 		namespace = *ns
 	} else {
 		namespace = g.Namespace
 	}
 
 	cr := &CustomRole{}
-	if err := config.GetClient().Get(context.Background(), client.ObjectKey{Name: g.Spec.CustomRole.ResourceRef.Name, Namespace: namespace}, cr); err != nil {
+	if err := config.GetClient().Get(context.Background(), client.ObjectKey{Name: ref.ResourceRef.Name, Namespace: namespace}, cr); err != nil {
 		return 0, err
 	}
 
@@ -234,7 +203,7 @@ func (g *Group) ExtractRoleId() (int64, error) {
 	}
 
 	if cr.Status.ID == nil {
-		return 0, fmt.Errorf("ID is not populated for CustomRole %s", g.Spec.CustomRole.ResourceRef.Name)
+		return 0, fmt.Errorf("ID is not populated for CustomRole %s", ref.ResourceRef.Name)
 	}
 
 	roleID, err := strconv.Atoi(*cr.Status.ID)

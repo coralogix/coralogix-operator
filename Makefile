@@ -215,11 +215,14 @@ integration-tests:
 # The e2e specs spend nearly all of their time polling the operator and the Coralogix API, so
 # running them across several processes cuts the wall-clock time a long way. Every Describe is
 # Ordered, so the specs inside a container still run in sequence on a single process.
+# scim-migration is the old-operator-then-PR-image Group upgrade spec; it is not safe to run
+# next to the rest of the suite.
 E2E_PROCS ?= 4
 E2E_TIMEOUT ?= 30m
+E2E_GINKGO_LABEL_FILTER ?= !scim-migration
 .PHONY: e2e-tests
 e2e-tests: ginkgo
-	$(GINKGO) --procs=$(E2E_PROCS) --timeout=$(E2E_TIMEOUT) -v ./tests/e2e/
+	$(GINKGO) --procs=$(E2E_PROCS) --timeout=$(E2E_TIMEOUT) --label-filter="$(E2E_GINKGO_LABEL_FILTER)" -v ./tests/e2e/
 
 .PHONY: helm-sync-check
 helm-sync-check:

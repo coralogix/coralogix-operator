@@ -26,9 +26,9 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
 	oapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 	groups "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/team_groups_management_service"
+	users "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/users_management_service"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
@@ -38,7 +38,7 @@ import (
 // GroupReconciler reconciles a Group object
 type GroupReconciler struct {
 	GroupsClient *groups.TeamGroupsManagementServiceAPIService
-	UsersClient  *cxsdk.UsersClient
+	UsersClient  *users.UsersManagementServiceAPIService
 	Interval     time.Duration
 }
 
@@ -60,7 +60,11 @@ func (r *GroupReconciler) RequeueInterval() time.Duration {
 
 func (r *GroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	group := obj.(*coralogixv1alpha1.Group)
-	createRequest, err := group.ExtractCreateGroupRequest(ctx, r.UsersClient)
+	userIDs, err := resolveMemberUserIDs(ctx, r.UsersClient, group.Spec.Members)
+	if err != nil {
+		return fmt.Errorf("error on extracting create request: %w", err)
+	}
+	createRequest, err := group.ExtractCreateGroupRequest(userIDs)
 	if err != nil {
 		return fmt.Errorf("error on extracting create request: %w", err)
 	}
@@ -83,7 +87,11 @@ func (r *GroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 
 func (r *GroupReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	group := obj.(*coralogixv1alpha1.Group)
-	updateRequest, err := group.ExtractUpdateGroupRequest(ctx, r.UsersClient)
+	userIDs, err := resolveMemberUserIDs(ctx, r.UsersClient, group.Spec.Members)
+	if err != nil {
+		return fmt.Errorf("error on extracting update request: %w", err)
+	}
+	updateRequest, err := group.ExtractUpdateGroupRequest(userIDs)
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
 	}
