@@ -128,9 +128,8 @@ func expectGroupMembers(ctx context.Context, groupID int64, usernames ...string)
 }
 
 func userIDByUsername(ctx context.Context, g Gomega, username string) string {
-	teamID := whoAmITeamID(ctx, g)
 	resp, httpResp, err := newOpenAPIClientSet().Users().
-		UsersMgmtServiceSearchUsers(ctx, teamID).
+		UsersMgmtServiceSearchUsers(ctx).
 		Username(username).
 		PageSize(100).
 		Execute()
@@ -147,36 +146,13 @@ func userIDByUsername(ctx context.Context, g Gomega, username string) string {
 	return matches[0].GetUserId()
 }
 
+// remoteGroupUserIDs reads the members straight off the group. TeamGroup.userIds
+// is published, so no separate group-users listing is needed.
 func remoteGroupUserIDs(ctx context.Context, g Gomega, groupID int64) []string {
-	var ids []string
-	var pageToken string
-	for {
-		req := newOpenAPIClientSet().Groups().
-			GroupsMgmtServiceGetGroupUsers(ctx, groupID).
-			PageSize(100)
-		if pageToken != "" {
-			req = req.PageToken(pageToken)
-		}
-		resp, httpResp, err := req.Execute()
-		g.Expect(oapicxsdk.NewAPIError(httpResp, err)).ToNot(HaveOccurred())
-		g.Expect(resp).ToNot(BeNil())
-		for _, member := range resp.GetUsers() {
-			if id := member.GetUserId(); id != "" {
-				ids = append(ids, id)
-			}
-		}
-		next := resp.GetNextPageToken()
-		if next == "" || next == pageToken {
-			return ids
-		}
-		pageToken = next
-	}
-}
-
-func whoAmITeamID(ctx context.Context, g Gomega) int64 {
-	resp, httpResp, err := newOpenAPIClientSet().Identity().IdentityServiceWhoAmI(ctx).Execute()
+	resp, httpResp, err := newOpenAPIClientSet().Groups().
+		GroupsMgmtServiceGetTeamGroup(ctx, groupID).
+		Execute()
 	g.Expect(oapicxsdk.NewAPIError(httpResp, err)).ToNot(HaveOccurred())
-	g.Expect(resp).ToNot(BeNil())
-	g.Expect(resp.GetTeamId()).ToNot(BeZero())
-	return resp.GetTeamId()
+	g.Expect(resp.Group).ToNot(BeNil())
+	return resp.Group.GetUserIds()
 }

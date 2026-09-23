@@ -17,7 +17,6 @@ package v1alpha1
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -30,7 +29,7 @@ import (
 )
 
 func TestResolveMemberUserIDsEmptyMembers(t *testing.T) {
-	ids, err := resolveMemberUserIDs(context.Background(), nil, 1, nil)
+	ids, err := resolveMemberUserIDs(context.Background(), nil, nil)
 	require.NoError(t, err)
 	require.Nil(t, ids)
 }
@@ -39,12 +38,12 @@ func TestResolveMemberUserIDsSinglePage(t *testing.T) {
 	calls := 0
 	client := usersClientForSearch(t, func(w http.ResponseWriter, r *http.Request) {
 		calls++
-		require.Equal(t, "/aaa/teams/v2/7/search", r.URL.Path)
-		require.Empty(t, r.URL.Query().Get("username"))
+		require.Equal(t, "/aaa/users/v2", r.URL.Path)
+		require.Empty(t, r.URL.Query().Get("team_id"))
 		writeSearchUsers(t, w, 0, userJSON("id-1", "alice@example.com"), userJSON("id-2", "bob@example.com"))
 	})
 
-	ids, err := resolveMemberUserIDs(context.Background(), client, 7, []coralogixv1alpha1.Member{
+	ids, err := resolveMemberUserIDs(context.Background(), client, []coralogixv1alpha1.Member{
 		{UserName: "alice@example.com"},
 		{UserName: "bob@example.com"},
 	})
@@ -68,7 +67,7 @@ func TestResolveMemberUserIDsPaginates(t *testing.T) {
 		}
 	})
 
-	ids, err := resolveMemberUserIDs(context.Background(), client, 7, []coralogixv1alpha1.Member{
+	ids, err := resolveMemberUserIDs(context.Background(), client, []coralogixv1alpha1.Member{
 		{UserName: "alice@example.com"},
 	})
 	require.NoError(t, err)
@@ -83,7 +82,7 @@ func TestResolveMemberUserIDsStuckPageToken(t *testing.T) {
 		writeSearchUsers(t, w, 1, userJSON("id-1", "alice@example.com"))
 	})
 
-	ids, err := resolveMemberUserIDs(context.Background(), client, 7, []coralogixv1alpha1.Member{
+	ids, err := resolveMemberUserIDs(context.Background(), client, []coralogixv1alpha1.Member{
 		{UserName: "alice@example.com"},
 	})
 	require.NoError(t, err)
@@ -96,7 +95,7 @@ func TestResolveMemberUserIDsMissingUser(t *testing.T) {
 		writeSearchUsers(t, w, 0, userJSON("id-1", "bob@example.com"))
 	})
 
-	_, err := resolveMemberUserIDs(context.Background(), client, 7, []coralogixv1alpha1.Member{
+	_, err := resolveMemberUserIDs(context.Background(), client, []coralogixv1alpha1.Member{
 		{UserName: "alice@example.com"},
 	})
 	require.ErrorContains(t, err, "user alice@example.com not found")
@@ -112,57 +111,11 @@ func TestResolveMemberUserIDsTakesFirstCaseInsensitiveMatch(t *testing.T) {
 		)
 	})
 
-	ids, err := resolveMemberUserIDs(context.Background(), client, 7, []coralogixv1alpha1.Member{
+	ids, err := resolveMemberUserIDs(context.Background(), client, []coralogixv1alpha1.Member{
 		{UserName: "alice@example.com"},
 	})
 	require.NoError(t, err)
 	require.Equal(t, []string{"id-first"}, ids)
-}
-
-func TestTeamIDCacheResolvesOnce(t *testing.T) {
-	whoamiCalls := 0
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		require.Equal(t, "/aaa/identity/v1/whoami", r.URL.Path)
-		whoamiCalls++
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = fmt.Fprint(w, `{"teamId":42,"teamName":"test"}`)
-	}))
-	t.Cleanup(server.Close)
-
-	clientSet := openapicxsdk.NewClientSet(openapicxsdk.NewConfigBuilder().
-		WithURL(server.URL).
-		WithAPIKey("test").
-		Build())
-	cache := &teamIDCache{}
-
-	id, err := cache.get(context.Background(), clientSet.Identity())
-	require.NoError(t, err)
-	require.Equal(t, int64(42), id)
-
-	id, err = cache.get(context.Background(), clientSet.Identity())
-	require.NoError(t, err)
-	require.Equal(t, int64(42), id)
-	require.Equal(t, 1, whoamiCalls)
-}
-
-func TestMemberUserIDsSkipsWhoAmIWhenNoMembers(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
-		t.Fatal("WhoAmI must not run when the Group has no members")
-	}))
-	t.Cleanup(server.Close)
-
-	clientSet := openapicxsdk.NewClientSet(openapicxsdk.NewConfigBuilder().
-		WithURL(server.URL).
-		WithAPIKey("test").
-		Build())
-	r := &GroupReconciler{
-		IdentityClient: clientSet.Identity(),
-		UsersClient:    clientSet.Users(),
-	}
-
-	ids, err := r.memberUserIDs(context.Background(), &coralogixv1alpha1.Group{})
-	require.NoError(t, err)
-	require.Nil(t, ids)
 }
 
 func usersClientForSearch(t *testing.T, handler http.HandlerFunc) *users.UsersManagementServiceAPIService {
