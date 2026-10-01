@@ -1999,7 +1999,7 @@ Spec defines the alert.
         <td>
           Type of alert.<br/>
           <br/>
-            <i>Validations</i>:<li>(has(self.logsImmediate) ? 1 : 0) + (has(self.logsThreshold) ? 1 : 0) + (has(self.logsRatioThreshold) ? 1 : 0) + (has(self.logsTimeRelativeThreshold) ? 1 : 0) + (has(self.metricThreshold) ? 1 : 0) + (has(self.tracingThreshold) ? 1 : 0) + (has(self.tracingImmediate) ? 1 : 0) + (has(self.flow) ? 1 : 0) + (has(self.logsAnomaly) ? 1 : 0) + (has(self.metricAnomaly) ? 1 : 0) + (has(self.logsNewValue) ? 1 : 0) + (has(self.logsUniqueCount) ? 1 : 0) + (has(self.sloThreshold) ? 1 : 0) == 1: Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue, logsUniqueCount, sloThreshold must be set</li>
+            <i>Validations</i>:<li>(has(self.logsImmediate) ? 1 : 0) + (has(self.logsThreshold) ? 1 : 0) + (has(self.logsRatioThreshold) ? 1 : 0) + (has(self.logsTimeRelativeThreshold) ? 1 : 0) + (has(self.metricThreshold) ? 1 : 0) + (has(self.tracingThreshold) ? 1 : 0) + (has(self.tracingImmediate) ? 1 : 0) + (has(self.flow) ? 1 : 0) + (has(self.logsAnomaly) ? 1 : 0) + (has(self.metricAnomaly) ? 1 : 0) + (has(self.logsNewValue) ? 1 : 0) + (has(self.logsUniqueCount) ? 1 : 0) + (has(self.sloThreshold) ? 1 : 0) + (has(self.analyticsImmediate) ? 1 : 0) + (has(self.analyticsThreshold) ? 1 : 0) == 1: Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue, logsUniqueCount, sloThreshold, analyticsImmediate, analyticsThreshold must be set</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -2117,6 +2117,20 @@ Type of alert.
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeanalyticsimmediate">analyticsImmediate</a></b></td>
+        <td>object</td>
+        <td>
+          Immediate alerts for DataPrime query results (preview).<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeanalyticsthreshold">analyticsThreshold</a></b></td>
+        <td>object</td>
+        <td>
+          Alerts for when a DataPrime query result column crosses a threshold (preview).<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#alertsetspecalertsindexspecalerttypeflow">flow</a></b></td>
         <td>object</td>
         <td>
@@ -2209,6 +2223,375 @@ Type of alert.
         <td>object</td>
         <td>
           Alerts for when traces crosses a threshold.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.analyticsImmediate
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttype)</sup></sup>
+
+
+
+Immediate alerts for DataPrime query results (preview).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeanalyticsimmediatedataprimequery">dataprimeQuery</a></b></td>
+        <td>object</td>
+        <td>
+          DataPrime query that triggers the alert when it returns results.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>timeframeMinutes</b></td>
+        <td>integer</td>
+        <td>
+          Time frame in minutes the query is evaluated over.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+            <i>Minimum</i>: 1<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>evaluationDelayMs</b></td>
+        <td>integer</td>
+        <td>
+          Evaluation delay in milliseconds.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+            <i>Minimum</i>: 0<br/>
+            <i>Maximum</i>: 1.08e+07<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeanalyticsimmediatenodatapolicy">noDataPolicy</a></b></td>
+        <td>object</td>
+        <td>
+          Policy for handling missing data.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>useRowsAsPermutations</b></td>
+        <td>boolean</td>
+        <td>
+          Whether each result row is treated as a separate permutation.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.analyticsImmediate.dataprimeQuery
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeanalyticsimmediate)</sup></sup>
+
+
+
+DataPrime query that triggers the alert when it returns results.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>query</b></td>
+        <td>string</td>
+        <td>
+          DataPrime query text, e.g. `source logs | filter $m.severity == Severity.ERROR | count`.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.analyticsImmediate.noDataPolicy
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeanalyticsimmediate)</sup></sup>
+
+
+
+Policy for handling missing data.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>state</b></td>
+        <td>enum</td>
+        <td>
+          State to use when no data is present.<br/>
+          <br/>
+            <i>Enum</i>: ok, alerting, keepLast, noData<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>autoRetireSeconds</b></td>
+        <td>integer</td>
+        <td>
+          The timeframe in seconds for auto retiring values that were detected as no-data.
+Must be a multiple of 60 seconds.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.analyticsThreshold
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttype)</sup></sup>
+
+
+
+Alerts for when a DataPrime query result column crosses a threshold (preview).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeanalyticsthresholddataprimequery">dataprimeQuery</a></b></td>
+        <td>object</td>
+        <td>
+          DataPrime query whose results are evaluated against the rules.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeanalyticsthresholdrulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          Rules that match the alert to the data. Each rule must have a different priority.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>timeframeMinutes</b></td>
+        <td>integer</td>
+        <td>
+          Time frame in minutes the query is evaluated over.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+            <i>Minimum</i>: 1<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>evaluationDelayMs</b></td>
+        <td>integer</td>
+        <td>
+          Evaluation delay in milliseconds.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+            <i>Minimum</i>: 0<br/>
+            <i>Maximum</i>: 1.08e+07<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeanalyticsthresholdnodatapolicy">noDataPolicy</a></b></td>
+        <td>object</td>
+        <td>
+          Policy for handling missing data.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>operator</b></td>
+        <td>enum</td>
+        <td>
+          Comparison operator applied to the rule thresholds. Defaults to moreThan when unset.<br/>
+          <br/>
+            <i>Enum</i>: moreThan, lessThan, moreThanOrEquals, lessThanOrEquals, equals, notEquals<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>targetColumn</b></td>
+        <td>string</td>
+        <td>
+          Numeric column of the query result to compare against the thresholds.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>useRowsAsPermutations</b></td>
+        <td>boolean</td>
+        <td>
+          Whether each result row is treated as a separate permutation.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.analyticsThreshold.dataprimeQuery
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeanalyticsthreshold)</sup></sup>
+
+
+
+DataPrime query whose results are evaluated against the rules.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>query</b></td>
+        <td>string</td>
+        <td>
+          DataPrime query text, e.g. `source logs | filter $m.severity == Severity.ERROR | count`.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.analyticsThreshold.rules[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeanalyticsthreshold)</sup></sup>
+
+
+
+Rules that match the alert to the data.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeanalyticsthresholdrulesindexcondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Conditions to match for the rule.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeanalyticsthresholdrulesindexoverride">override</a></b></td>
+        <td>object</td>
+        <td>
+          Alert property overrides. Defaults to the alert priority when unset.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.analyticsThreshold.rules[index].condition
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeanalyticsthresholdrulesindex)</sup></sup>
+
+
+
+Conditions to match for the rule.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>threshold</b></td>
+        <td>int or string</td>
+        <td>
+          Threshold to compare the target column against.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.analyticsThreshold.rules[index].override
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeanalyticsthresholdrulesindex)</sup></sup>
+
+
+
+Alert property overrides. Defaults to the alert priority when unset.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          Priority to override it<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.analyticsThreshold.noDataPolicy
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeanalyticsthreshold)</sup></sup>
+
+
+
+Policy for handling missing data.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>state</b></td>
+        <td>enum</td>
+        <td>
+          State to use when no data is present.<br/>
+          <br/>
+            <i>Enum</i>: ok, alerting, keepLast, noData<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>autoRetireSeconds</b></td>
+        <td>integer</td>
+        <td>
+          The timeframe in seconds for auto retiring values that were detected as no-data.
+Must be a multiple of 60 seconds.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -21576,7 +21959,7 @@ AlertSpec defines the desired state of a Coralogix Alert. For more info check - 
         <td>
           Type of alert.<br/>
           <br/>
-            <i>Validations</i>:<li>(has(self.logsImmediate) ? 1 : 0) + (has(self.logsThreshold) ? 1 : 0) + (has(self.logsRatioThreshold) ? 1 : 0) + (has(self.logsTimeRelativeThreshold) ? 1 : 0) + (has(self.metricThreshold) ? 1 : 0) + (has(self.tracingThreshold) ? 1 : 0) + (has(self.tracingImmediate) ? 1 : 0) + (has(self.flow) ? 1 : 0) + (has(self.logsAnomaly) ? 1 : 0) + (has(self.metricAnomaly) ? 1 : 0) + (has(self.logsNewValue) ? 1 : 0) + (has(self.logsUniqueCount) ? 1 : 0) + (has(self.sloThreshold) ? 1 : 0) == 1: Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue, logsUniqueCount, sloThreshold must be set</li>
+            <i>Validations</i>:<li>(has(self.logsImmediate) ? 1 : 0) + (has(self.logsThreshold) ? 1 : 0) + (has(self.logsRatioThreshold) ? 1 : 0) + (has(self.logsTimeRelativeThreshold) ? 1 : 0) + (has(self.metricThreshold) ? 1 : 0) + (has(self.tracingThreshold) ? 1 : 0) + (has(self.tracingImmediate) ? 1 : 0) + (has(self.flow) ? 1 : 0) + (has(self.logsAnomaly) ? 1 : 0) + (has(self.metricAnomaly) ? 1 : 0) + (has(self.logsNewValue) ? 1 : 0) + (has(self.logsUniqueCount) ? 1 : 0) + (has(self.sloThreshold) ? 1 : 0) + (has(self.analyticsImmediate) ? 1 : 0) + (has(self.analyticsThreshold) ? 1 : 0) == 1: Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue, logsUniqueCount, sloThreshold, analyticsImmediate, analyticsThreshold must be set</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -21694,6 +22077,20 @@ Type of alert.
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#alertspecalerttypeanalyticsimmediate">analyticsImmediate</a></b></td>
+        <td>object</td>
+        <td>
+          Immediate alerts for DataPrime query results (preview).<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypeanalyticsthreshold">analyticsThreshold</a></b></td>
+        <td>object</td>
+        <td>
+          Alerts for when a DataPrime query result column crosses a threshold (preview).<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#alertspecalerttypeflow">flow</a></b></td>
         <td>object</td>
         <td>
@@ -21786,6 +22183,375 @@ Type of alert.
         <td>object</td>
         <td>
           Alerts for when traces crosses a threshold.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.analyticsImmediate
+<sup><sup>[↩ Parent](#alertspecalerttype)</sup></sup>
+
+
+
+Immediate alerts for DataPrime query results (preview).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecalerttypeanalyticsimmediatedataprimequery">dataprimeQuery</a></b></td>
+        <td>object</td>
+        <td>
+          DataPrime query that triggers the alert when it returns results.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>timeframeMinutes</b></td>
+        <td>integer</td>
+        <td>
+          Time frame in minutes the query is evaluated over.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+            <i>Minimum</i>: 1<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>evaluationDelayMs</b></td>
+        <td>integer</td>
+        <td>
+          Evaluation delay in milliseconds.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+            <i>Minimum</i>: 0<br/>
+            <i>Maximum</i>: 1.08e+07<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypeanalyticsimmediatenodatapolicy">noDataPolicy</a></b></td>
+        <td>object</td>
+        <td>
+          Policy for handling missing data.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>useRowsAsPermutations</b></td>
+        <td>boolean</td>
+        <td>
+          Whether each result row is treated as a separate permutation.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.analyticsImmediate.dataprimeQuery
+<sup><sup>[↩ Parent](#alertspecalerttypeanalyticsimmediate)</sup></sup>
+
+
+
+DataPrime query that triggers the alert when it returns results.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>query</b></td>
+        <td>string</td>
+        <td>
+          DataPrime query text, e.g. `source logs | filter $m.severity == Severity.ERROR | count`.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.analyticsImmediate.noDataPolicy
+<sup><sup>[↩ Parent](#alertspecalerttypeanalyticsimmediate)</sup></sup>
+
+
+
+Policy for handling missing data.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>state</b></td>
+        <td>enum</td>
+        <td>
+          State to use when no data is present.<br/>
+          <br/>
+            <i>Enum</i>: ok, alerting, keepLast, noData<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>autoRetireSeconds</b></td>
+        <td>integer</td>
+        <td>
+          The timeframe in seconds for auto retiring values that were detected as no-data.
+Must be a multiple of 60 seconds.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.analyticsThreshold
+<sup><sup>[↩ Parent](#alertspecalerttype)</sup></sup>
+
+
+
+Alerts for when a DataPrime query result column crosses a threshold (preview).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecalerttypeanalyticsthresholddataprimequery">dataprimeQuery</a></b></td>
+        <td>object</td>
+        <td>
+          DataPrime query whose results are evaluated against the rules.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypeanalyticsthresholdrulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          Rules that match the alert to the data. Each rule must have a different priority.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>timeframeMinutes</b></td>
+        <td>integer</td>
+        <td>
+          Time frame in minutes the query is evaluated over.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+            <i>Minimum</i>: 1<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>evaluationDelayMs</b></td>
+        <td>integer</td>
+        <td>
+          Evaluation delay in milliseconds.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+            <i>Minimum</i>: 0<br/>
+            <i>Maximum</i>: 1.08e+07<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypeanalyticsthresholdnodatapolicy">noDataPolicy</a></b></td>
+        <td>object</td>
+        <td>
+          Policy for handling missing data.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>operator</b></td>
+        <td>enum</td>
+        <td>
+          Comparison operator applied to the rule thresholds. Defaults to moreThan when unset.<br/>
+          <br/>
+            <i>Enum</i>: moreThan, lessThan, moreThanOrEquals, lessThanOrEquals, equals, notEquals<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>targetColumn</b></td>
+        <td>string</td>
+        <td>
+          Numeric column of the query result to compare against the thresholds.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>useRowsAsPermutations</b></td>
+        <td>boolean</td>
+        <td>
+          Whether each result row is treated as a separate permutation.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.analyticsThreshold.dataprimeQuery
+<sup><sup>[↩ Parent](#alertspecalerttypeanalyticsthreshold)</sup></sup>
+
+
+
+DataPrime query whose results are evaluated against the rules.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>query</b></td>
+        <td>string</td>
+        <td>
+          DataPrime query text, e.g. `source logs | filter $m.severity == Severity.ERROR | count`.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.analyticsThreshold.rules[index]
+<sup><sup>[↩ Parent](#alertspecalerttypeanalyticsthreshold)</sup></sup>
+
+
+
+Rules that match the alert to the data.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecalerttypeanalyticsthresholdrulesindexcondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Conditions to match for the rule.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypeanalyticsthresholdrulesindexoverride">override</a></b></td>
+        <td>object</td>
+        <td>
+          Alert property overrides. Defaults to the alert priority when unset.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.analyticsThreshold.rules[index].condition
+<sup><sup>[↩ Parent](#alertspecalerttypeanalyticsthresholdrulesindex)</sup></sup>
+
+
+
+Conditions to match for the rule.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>threshold</b></td>
+        <td>int or string</td>
+        <td>
+          Threshold to compare the target column against.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.analyticsThreshold.rules[index].override
+<sup><sup>[↩ Parent](#alertspecalerttypeanalyticsthresholdrulesindex)</sup></sup>
+
+
+
+Alert property overrides. Defaults to the alert priority when unset.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          Priority to override it<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.analyticsThreshold.noDataPolicy
+<sup><sup>[↩ Parent](#alertspecalerttypeanalyticsthreshold)</sup></sup>
+
+
+
+Policy for handling missing data.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>state</b></td>
+        <td>enum</td>
+        <td>
+          State to use when no data is present.<br/>
+          <br/>
+            <i>Enum</i>: ok, alerting, keepLast, noData<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>autoRetireSeconds</b></td>
+        <td>integer</td>
+        <td>
+          The timeframe in seconds for auto retiring values that were detected as no-data.
+Must be a multiple of 60 seconds.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
         </td>
         <td>false</td>
       </tr></tbody>

@@ -24,12 +24,15 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	oapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	alerts "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/alert_definitions_service"
 
 	"github.com/coralogix/coralogix-operator/v2/api/coralogix"
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
@@ -368,7 +371,7 @@ var _ = Describe("Alert", Ordered, func() {
 			},
 		}
 		err := crClient.Create(ctx, alert)
-		Expect(err.Error()).To(ContainSubstring("Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue, logsUniqueCount, sloThreshold must be set"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue, logsUniqueCount, sloThreshold, analyticsImmediate, analyticsThreshold must be set"))
 	})
 
 	It("Should create a logs-ratio alert with groupByFor, ignoreInfinity, notificationPayloadFilter and undetectedValuesManagement", func(ctx context.Context) {
@@ -579,5 +582,217 @@ var _ = Describe("Alert", Ordered, func() {
 			_, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(dataSourcesAlertID)})
 			return cxsdk.Code(err)
 		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
+	})
+
+	It("Should create, update and clear an analytics immediate alert", func(ctx context.Context) {
+		openAPIAlerts := newOpenAPIClientSet().Alerts()
+
+		By("Creating Alert")
+		alertName := uniqueName("analytics-immediate-alert")
+		analyticsAlert := &coralogixv1beta1.Alert{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      alertName,
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1beta1.AlertSpec{
+				Name:        alertName,
+				Description: "alert from k8s operator",
+				Priority:    coralogixv1beta1.AlertPriorityP3,
+				// The backend requires groupByKeys to be columns returned by the query.
+				GroupByKeys: []string{"applicationname"},
+				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
+					AnalyticsImmediate: &coralogixv1beta1.AnalyticsImmediate{
+						DataprimeQuery: coralogixv1beta1.DataprimeQuery{
+							Query: "source logs | groupby $l.applicationname aggregate count() as cnt",
+						},
+						TimeframeMinutes:      45,
+						UseRowsAsPermutations: ptr.To(true),
+						EvaluationDelayMs:     ptr.To(int32(120000)),
+						NoDataPolicy: &coralogixv1beta1.NoDataPolicy{
+							State:             coralogixv1beta1.NoDataPolicyStateAlerting,
+							AutoRetireSeconds: ptr.To(int32(3600)),
+						},
+					},
+				},
+			},
+		}
+		Expect(crClient.Create(ctx, analyticsAlert)).To(Succeed())
+
+		By("Fetching the Alert ID")
+		var analyticsAlertID string
+		fetchedAlert := &coralogixv1beta1.Alert{}
+		Eventually(func(g Gomega) {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, fetchedAlert)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedAlert.Status.ID).ToNot(BeNil())
+			analyticsAlertID = *fetchedAlert.Status.ID
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying the Alert in Coralogix backend")
+		Eventually(func(g Gomega) {
+			resp, _, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, analyticsAlertID).Execute()
+			g.Expect(err).ToNot(HaveOccurred())
+			props := resp.GetAlertDef().AlertDefProperties
+			g.Expect(props.GetType()).To(Equal(alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_ANALYTICS_IMMEDIATE))
+			g.Expect(props.GetGroupByKeys()).To(Equal([]string{"applicationname"}))
+			immediate := props.AnalyticsImmediate
+			g.Expect(immediate).ToNot(BeNil())
+			g.Expect(immediate.DataprimeQuery.GetQuery()).To(Equal("source logs | groupby $l.applicationname aggregate count() as cnt"))
+			g.Expect(immediate.GetTimeframeMinutes()).To(Equal(int32(45)))
+			g.Expect(immediate.UseRowsAsPermutations).To(Equal(ptr.To(true)))
+			g.Expect(immediate.EvaluationDelayMs).To(Equal(ptr.To(int32(120000))))
+			g.Expect(immediate.NoDataPolicy.GetState()).To(Equal(alerts.NODATAPOLICYSTATE_NO_DATA_POLICY_STATE_ALERTING))
+			g.Expect(immediate.NoDataPolicy.GetAutoRetireSeconds()).To(Equal(int32(3600)))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Clearing the optional fields")
+		modifiedAlert := fetchedAlert.DeepCopy()
+		modifiedAlert.Spec.GroupByKeys = nil
+		modifiedAlert.Spec.TypeDefinition.AnalyticsImmediate = &coralogixv1beta1.AnalyticsImmediate{
+			DataprimeQuery:   coralogixv1beta1.DataprimeQuery{Query: "source logs | count"},
+			TimeframeMinutes: 15,
+		}
+		Expect(crClient.Patch(ctx, modifiedAlert, client.MergeFrom(fetchedAlert))).To(Succeed())
+
+		By("Verifying the optional fields are cleared in Coralogix backend")
+		Eventually(func(g Gomega) {
+			resp, _, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, analyticsAlertID).Execute()
+			g.Expect(err).ToNot(HaveOccurred())
+			props := resp.GetAlertDef().AlertDefProperties
+			g.Expect(props.GetGroupByKeys()).To(BeEmpty())
+			immediate := props.AnalyticsImmediate
+			g.Expect(immediate).ToNot(BeNil())
+			g.Expect(immediate.DataprimeQuery.GetQuery()).To(Equal("source logs | count"))
+			g.Expect(immediate.GetTimeframeMinutes()).To(Equal(int32(15)))
+			g.Expect(immediate.UseRowsAsPermutations).To(BeNil())
+			g.Expect(immediate.EvaluationDelayMs).To(BeNil())
+			g.Expect(immediate.NoDataPolicy).To(BeNil())
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Deleting the Alert")
+		Expect(crClient.Delete(ctx, analyticsAlert)).To(Succeed())
+		Eventually(func() bool {
+			_, httpResp, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, analyticsAlertID).Execute()
+			return oapicxsdk.IsNotFound(oapicxsdk.NewAPIError(httpResp, err))
+		}, time.Minute, time.Second).Should(BeTrue())
+	})
+
+	It("Should create, update and clear an analytics threshold alert", func(ctx context.Context) {
+		openAPIAlerts := newOpenAPIClientSet().Alerts()
+
+		By("Creating Alert")
+		alertName := uniqueName("analytics-threshold-alert")
+		analyticsAlert := &coralogixv1beta1.Alert{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      alertName,
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1beta1.AlertSpec{
+				Name:        alertName,
+				Description: "alert from k8s operator",
+				Priority:    coralogixv1beta1.AlertPriorityP3,
+				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
+					AnalyticsThreshold: &coralogixv1beta1.AnalyticsThreshold{
+						DataprimeQuery: coralogixv1beta1.DataprimeQuery{
+							Query: "source logs | count as error_count",
+						},
+						Rules: []coralogixv1beta1.AnalyticsThresholdRule{
+							{
+								Condition: coralogixv1beta1.AnalyticsThresholdRuleCondition{Threshold: resource.MustParse("30")},
+								Override:  &coralogixv1beta1.AlertOverride{Priority: coralogixv1beta1.AlertPriorityP1},
+							},
+							{
+								Condition: coralogixv1beta1.AnalyticsThresholdRuleCondition{Threshold: resource.MustParse("20.5")},
+								Override:  &coralogixv1beta1.AlertOverride{Priority: coralogixv1beta1.AlertPriorityP2},
+							},
+							{
+								Condition: coralogixv1beta1.AnalyticsThresholdRuleCondition{Threshold: resource.MustParse("10")},
+							},
+						},
+						Operator:              ptr.To(coralogixv1beta1.AnalyticsThresholdOperatorLessThan),
+						TargetColumn:          ptr.To("error_count"),
+						TimeframeMinutes:      30,
+						UseRowsAsPermutations: ptr.To(false),
+						EvaluationDelayMs:     ptr.To(int32(60000)),
+						NoDataPolicy: &coralogixv1beta1.NoDataPolicy{
+							State: coralogixv1beta1.NoDataPolicyStateKeepLast,
+						},
+					},
+				},
+			},
+		}
+		Expect(crClient.Create(ctx, analyticsAlert)).To(Succeed())
+
+		By("Fetching the Alert ID")
+		var analyticsAlertID string
+		fetchedAlert := &coralogixv1beta1.Alert{}
+		Eventually(func(g Gomega) {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, fetchedAlert)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedAlert.Status.ID).ToNot(BeNil())
+			analyticsAlertID = *fetchedAlert.Status.ID
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying the Alert in Coralogix backend")
+		Eventually(func(g Gomega) {
+			resp, _, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, analyticsAlertID).Execute()
+			g.Expect(err).ToNot(HaveOccurred())
+			props := resp.GetAlertDef().AlertDefProperties
+			g.Expect(props.GetType()).To(Equal(alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_ANALYTICS_THRESHOLD))
+			threshold := props.AnalyticsThreshold
+			g.Expect(threshold).ToNot(BeNil())
+			g.Expect(threshold.DataprimeQuery.GetQuery()).To(Equal("source logs | count as error_count"))
+			g.Expect(threshold.GetOperator()).To(Equal(alerts.ANALYTICSTHRESHOLDOPERATOR_ANALYTICS_THRESHOLD_OPERATOR_LESS_THAN))
+			g.Expect(threshold.GetTargetColumn()).To(Equal("error_count"))
+			g.Expect(threshold.GetTimeframeMinutes()).To(Equal(int32(30)))
+			g.Expect(threshold.UseRowsAsPermutations).To(Equal(ptr.To(false)))
+			g.Expect(threshold.EvaluationDelayMs).To(Equal(ptr.To(int32(60000))))
+			g.Expect(threshold.NoDataPolicy.GetState()).To(Equal(alerts.NODATAPOLICYSTATE_NO_DATA_POLICY_STATE_KEEP_LAST))
+			// Match rules by threshold rather than position, the API does not guarantee list order.
+			g.Expect(threshold.GetRules()).To(HaveLen(3))
+			priorityByThreshold := map[float64]alerts.AlertDefPriority{}
+			for _, rule := range threshold.GetRules() {
+				priorityByThreshold[rule.Condition.GetThreshold()] = rule.Override.GetPriority()
+			}
+			g.Expect(priorityByThreshold).To(Equal(map[float64]alerts.AlertDefPriority{
+				30:   alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P1,
+				20.5: alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P2,
+				// A rule without an override falls back to the alert priority.
+				10: alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P3,
+			}))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Clearing the optional fields")
+		modifiedAlert := fetchedAlert.DeepCopy()
+		modifiedThreshold := modifiedAlert.Spec.TypeDefinition.AnalyticsThreshold
+		modifiedThreshold.Rules = modifiedThreshold.Rules[:1]
+		modifiedThreshold.Operator = nil
+		modifiedThreshold.TargetColumn = nil
+		modifiedThreshold.UseRowsAsPermutations = nil
+		modifiedThreshold.EvaluationDelayMs = nil
+		modifiedThreshold.NoDataPolicy = nil
+		Expect(crClient.Patch(ctx, modifiedAlert, client.MergeFrom(fetchedAlert))).To(Succeed())
+
+		By("Verifying the optional fields are cleared in Coralogix backend")
+		Eventually(func(g Gomega) {
+			resp, _, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, analyticsAlertID).Execute()
+			g.Expect(err).ToNot(HaveOccurred())
+			threshold := resp.GetAlertDef().AlertDefProperties.AnalyticsThreshold
+			g.Expect(threshold).ToNot(BeNil())
+			g.Expect(threshold.GetRules()).To(HaveLen(1))
+			// The backend reports the default operator once it is unset.
+			g.Expect(threshold.GetOperator()).To(Equal(alerts.ANALYTICSTHRESHOLDOPERATOR_ANALYTICS_THRESHOLD_OPERATOR_MORE_THAN_OR_UNSPECIFIED))
+			g.Expect(threshold.TargetColumn).To(BeNil())
+			g.Expect(threshold.UseRowsAsPermutations).To(BeNil())
+			g.Expect(threshold.EvaluationDelayMs).To(BeNil())
+			g.Expect(threshold.NoDataPolicy).To(BeNil())
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Deleting the Alert")
+		Expect(crClient.Delete(ctx, analyticsAlert)).To(Succeed())
+		Eventually(func() bool {
+			_, httpResp, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, analyticsAlertID).Execute()
+			return oapicxsdk.IsNotFound(oapicxsdk.NewAPIError(httpResp, err))
+		}, time.Minute, time.Second).Should(BeTrue())
 	})
 })

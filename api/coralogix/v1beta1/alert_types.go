@@ -174,6 +174,14 @@ var (
 		MetricThresholdConditionTypeEquals:           alerts.METRICTHRESHOLDCONDITIONTYPE_METRIC_THRESHOLD_CONDITION_TYPE_EQUALS,
 		MetricThresholdConditionTypeNotEquals:        alerts.METRICTHRESHOLDCONDITIONTYPE_METRIC_THRESHOLD_CONDITION_TYPE_NOT_EQUALS,
 	}
+	AnalyticsThresholdOperatorToOpenAPI = map[AnalyticsThresholdOperator]alerts.AnalyticsThresholdOperator{
+		AnalyticsThresholdOperatorMoreThan:         alerts.ANALYTICSTHRESHOLDOPERATOR_ANALYTICS_THRESHOLD_OPERATOR_MORE_THAN_OR_UNSPECIFIED,
+		AnalyticsThresholdOperatorLessThan:         alerts.ANALYTICSTHRESHOLDOPERATOR_ANALYTICS_THRESHOLD_OPERATOR_LESS_THAN,
+		AnalyticsThresholdOperatorMoreThanOrEquals: alerts.ANALYTICSTHRESHOLDOPERATOR_ANALYTICS_THRESHOLD_OPERATOR_MORE_THAN_OR_EQUALS,
+		AnalyticsThresholdOperatorLessThanOrEquals: alerts.ANALYTICSTHRESHOLDOPERATOR_ANALYTICS_THRESHOLD_OPERATOR_LESS_THAN_OR_EQUALS,
+		AnalyticsThresholdOperatorEquals:           alerts.ANALYTICSTHRESHOLDOPERATOR_ANALYTICS_THRESHOLD_OPERATOR_EQUALS,
+		AnalyticsThresholdOperatorNotEquals:        alerts.ANALYTICSTHRESHOLDOPERATOR_ANALYTICS_THRESHOLD_OPERATOR_NOT_EQUALS,
+	}
 	MetricTimeWindowToOpenAPI = map[MetricTimeWindowSpecificValue]alerts.MetricTimeWindowValue{
 		MetricTimeWindowValue1Minute:   alerts.METRICTIMEWINDOWVALUE_METRIC_TIME_WINDOW_VALUE_MINUTES_1_OR_UNSPECIFIED,
 		MetricTimeWindowValue5Minutes:  alerts.METRICTIMEWINDOWVALUE_METRIC_TIME_WINDOW_VALUE_MINUTES_5,
@@ -639,7 +647,7 @@ const (
 )
 
 // Alert type definitions.
-// +kubebuilder:validation:XValidation:rule="(has(self.logsImmediate) ? 1 : 0) + (has(self.logsThreshold) ? 1 : 0) + (has(self.logsRatioThreshold) ? 1 : 0) + (has(self.logsTimeRelativeThreshold) ? 1 : 0) + (has(self.metricThreshold) ? 1 : 0) + (has(self.tracingThreshold) ? 1 : 0) + (has(self.tracingImmediate) ? 1 : 0) + (has(self.flow) ? 1 : 0) + (has(self.logsAnomaly) ? 1 : 0) + (has(self.metricAnomaly) ? 1 : 0) + (has(self.logsNewValue) ? 1 : 0) + (has(self.logsUniqueCount) ? 1 : 0) + (has(self.sloThreshold) ? 1 : 0) == 1", message="Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue, logsUniqueCount, sloThreshold must be set"
+// +kubebuilder:validation:XValidation:rule="(has(self.logsImmediate) ? 1 : 0) + (has(self.logsThreshold) ? 1 : 0) + (has(self.logsRatioThreshold) ? 1 : 0) + (has(self.logsTimeRelativeThreshold) ? 1 : 0) + (has(self.metricThreshold) ? 1 : 0) + (has(self.tracingThreshold) ? 1 : 0) + (has(self.tracingImmediate) ? 1 : 0) + (has(self.flow) ? 1 : 0) + (has(self.logsAnomaly) ? 1 : 0) + (has(self.metricAnomaly) ? 1 : 0) + (has(self.logsNewValue) ? 1 : 0) + (has(self.logsUniqueCount) ? 1 : 0) + (has(self.sloThreshold) ? 1 : 0) + (has(self.analyticsImmediate) ? 1 : 0) + (has(self.analyticsThreshold) ? 1 : 0) == 1", message="Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue, logsUniqueCount, sloThreshold, analyticsImmediate, analyticsThreshold must be set"
 type AlertTypeDefinition struct {
 
 	// Immediate alerts for logs.
@@ -693,7 +701,115 @@ type AlertTypeDefinition struct {
 	// Alerts for SLO thresholds.
 	// +optional
 	SloThreshold *SloThreshold `json:"sloThreshold,omitempty"`
+
+	// Immediate alerts for DataPrime query results (preview).
+	// +optional
+	AnalyticsImmediate *AnalyticsImmediate `json:"analyticsImmediate,omitempty"`
+
+	// Alerts for when a DataPrime query result column crosses a threshold (preview).
+	// +optional
+	AnalyticsThreshold *AnalyticsThreshold `json:"analyticsThreshold,omitempty"`
 }
+
+// DataPrime query for analytics alerts.
+type DataprimeQuery struct {
+	// DataPrime query text, e.g. `source logs | filter $m.severity == Severity.ERROR | count`.
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=65535
+	Query string `json:"query"`
+}
+
+// Immediate alerts for DataPrime query results (preview).
+type AnalyticsImmediate struct {
+	// DataPrime query that triggers the alert when it returns results.
+	DataprimeQuery DataprimeQuery `json:"dataprimeQuery"`
+
+	// Time frame in minutes the query is evaluated over.
+	// +kubebuilder:validation:Minimum=1
+	TimeframeMinutes int32 `json:"timeframeMinutes"`
+
+	// Whether each result row is treated as a separate permutation.
+	// +optional
+	UseRowsAsPermutations *bool `json:"useRowsAsPermutations,omitempty"`
+
+	// Evaluation delay in milliseconds.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=10800000
+	// +optional
+	EvaluationDelayMs *int32 `json:"evaluationDelayMs,omitempty"`
+
+	// Policy for handling missing data.
+	// +optional
+	NoDataPolicy *NoDataPolicy `json:"noDataPolicy,omitempty"`
+}
+
+// Alerts for when a DataPrime query result column crosses a threshold (preview).
+type AnalyticsThreshold struct {
+	// DataPrime query whose results are evaluated against the rules.
+	DataprimeQuery DataprimeQuery `json:"dataprimeQuery"`
+
+	// Rules that match the alert to the data. Each rule must have a different priority.
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=5
+	Rules []AnalyticsThresholdRule `json:"rules"`
+
+	// Comparison operator applied to the rule thresholds. Defaults to moreThan when unset.
+	// +optional
+	Operator *AnalyticsThresholdOperator `json:"operator,omitempty"`
+
+	// Numeric column of the query result to compare against the thresholds.
+	// +kubebuilder:validation:MaxLength=255
+	// +optional
+	TargetColumn *string `json:"targetColumn,omitempty"`
+
+	// Time frame in minutes the query is evaluated over.
+	// +kubebuilder:validation:Minimum=1
+	TimeframeMinutes int32 `json:"timeframeMinutes"`
+
+	// Whether each result row is treated as a separate permutation.
+	// +optional
+	UseRowsAsPermutations *bool `json:"useRowsAsPermutations,omitempty"`
+
+	// Evaluation delay in milliseconds.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=10800000
+	// +optional
+	EvaluationDelayMs *int32 `json:"evaluationDelayMs,omitempty"`
+
+	// Policy for handling missing data.
+	// +optional
+	NoDataPolicy *NoDataPolicy `json:"noDataPolicy,omitempty"`
+}
+
+// Rules that match the alert to the data.
+type AnalyticsThresholdRule struct {
+	// Conditions to match for the rule.
+	Condition AnalyticsThresholdRuleCondition `json:"condition"`
+
+	// Alert property overrides. Defaults to the alert priority when unset.
+	// +optional
+	Override *AlertOverride `json:"override,omitempty"`
+}
+
+// Conditions to match for the rule.
+type AnalyticsThresholdRuleCondition struct {
+	// Threshold to compare the target column against.
+	Threshold resource.Quantity `json:"threshold"`
+}
+
+// +kubebuilder:validation:Enum=moreThan;lessThan;moreThanOrEquals;lessThanOrEquals;equals;notEquals
+// Analytics threshold operator.
+type AnalyticsThresholdOperator string
+
+// Analytics threshold operator values.
+const (
+	AnalyticsThresholdOperatorMoreThan         AnalyticsThresholdOperator = "moreThan"
+	AnalyticsThresholdOperatorLessThan         AnalyticsThresholdOperator = "lessThan"
+	AnalyticsThresholdOperatorMoreThanOrEquals AnalyticsThresholdOperator = "moreThanOrEquals"
+	AnalyticsThresholdOperatorLessThanOrEquals AnalyticsThresholdOperator = "lessThanOrEquals"
+	AnalyticsThresholdOperatorEquals           AnalyticsThresholdOperator = "equals"
+	AnalyticsThresholdOperatorNotEquals        AnalyticsThresholdOperator = "notEquals"
+)
 
 // Immediate alerts for logs.
 // Read more at https://coralogix.com/docs/user-guides/alerting/create-an-alert/logs/immediate-notifications/
@@ -1935,6 +2051,40 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_SLO_THRESHOLD.Ptr(),
 			SloThreshold:            sloThresholdType,
 		}, nil
+	} else if analyticsImmediate := in.TypeDefinition.AnalyticsImmediate; analyticsImmediate != nil {
+		return &alerts.AlertDefProperties{
+			Name:                    alerts.PtrString(in.Name),
+			Description:             alerts.PtrString(in.Description),
+			Enabled:                 in.Enabled,
+			Priority:                priority.Ptr(),
+			GroupByKeys:             in.GroupByKeys,
+			DataSources:             dataSources,
+			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+			NotificationGroup:       notificationGroup,
+			NotificationGroupExcess: notificationGroupExcess,
+			EntityLabels:            in.EntityLabels,
+			PhantomMode:             alerts.PtrBool(in.PhantomMode),
+			ActiveOn:                expandAlertSchedule(in.Schedule),
+			Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_ANALYTICS_IMMEDIATE.Ptr(),
+			AnalyticsImmediate:      expandAnalyticsImmediate(analyticsImmediate),
+		}, nil
+	} else if analyticsThreshold := in.TypeDefinition.AnalyticsThreshold; analyticsThreshold != nil {
+		return &alerts.AlertDefProperties{
+			Name:                    alerts.PtrString(in.Name),
+			Description:             alerts.PtrString(in.Description),
+			Enabled:                 in.Enabled,
+			Priority:                priority.Ptr(),
+			GroupByKeys:             in.GroupByKeys,
+			DataSources:             dataSources,
+			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
+			NotificationGroup:       notificationGroup,
+			NotificationGroupExcess: notificationGroupExcess,
+			EntityLabels:            in.EntityLabels,
+			PhantomMode:             alerts.PtrBool(in.PhantomMode),
+			ActiveOn:                expandAlertSchedule(in.Schedule),
+			Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_ANALYTICS_THRESHOLD.Ptr(),
+			AnalyticsThreshold:      expandAnalyticsThreshold(analyticsThreshold, priority),
+		}, nil
 	}
 
 	return nil, fmt.Errorf("unsupported alert type definition")
@@ -2978,6 +3128,54 @@ func expandMetricThreshold(threshold *MetricThreshold, priority alerts.AlertDefP
 	}
 
 	return thresholdType
+}
+
+func expandAnalyticsImmediate(immediate *AnalyticsImmediate) *alerts.AnalyticsImmediateType {
+	return &alerts.AnalyticsImmediateType{
+		DataprimeQuery:        expandDataprimeQuery(immediate.DataprimeQuery),
+		TimeframeMinutes:      alerts.PtrInt32(immediate.TimeframeMinutes),
+		UseRowsAsPermutations: immediate.UseRowsAsPermutations,
+		EvaluationDelayMs:     immediate.EvaluationDelayMs,
+		NoDataPolicy:          expandNoDataPolicy(immediate.NoDataPolicy),
+	}
+}
+
+func expandAnalyticsThreshold(threshold *AnalyticsThreshold, priority alerts.AlertDefPriority) *alerts.AnalyticsThresholdType {
+	thresholdType := &alerts.AnalyticsThresholdType{
+		DataprimeQuery:        expandDataprimeQuery(threshold.DataprimeQuery),
+		Rules:                 expandAnalyticsThresholdRules(threshold.Rules, priority),
+		TargetColumn:          threshold.TargetColumn,
+		TimeframeMinutes:      alerts.PtrInt32(threshold.TimeframeMinutes),
+		UseRowsAsPermutations: threshold.UseRowsAsPermutations,
+		EvaluationDelayMs:     threshold.EvaluationDelayMs,
+		NoDataPolicy:          expandNoDataPolicy(threshold.NoDataPolicy),
+	}
+
+	if threshold.Operator != nil {
+		thresholdType.Operator = AnalyticsThresholdOperatorToOpenAPI[*threshold.Operator].Ptr()
+	}
+
+	return thresholdType
+}
+
+func expandDataprimeQuery(query DataprimeQuery) *alerts.DataprimeAlertQuery {
+	return &alerts.DataprimeAlertQuery{
+		Query: alerts.PtrString(query.Query),
+	}
+}
+
+func expandAnalyticsThresholdRules(rules []AnalyticsThresholdRule, priority alerts.AlertDefPriority) []alerts.AnalyticsThresholdRule {
+	result := make([]alerts.AnalyticsThresholdRule, len(rules))
+	for i := range rules {
+		result[i] = alerts.AnalyticsThresholdRule{
+			Condition: &alerts.AnalyticsThresholdRuleCondition{
+				Threshold: alerts.PtrFloat64(rules[i].Condition.Threshold.AsApproximateFloat64()),
+			},
+			Override: expandAlertOverride(rules[i].Override, priority),
+		}
+	}
+
+	return result
 }
 
 func expandMetricFilter(metricFilter MetricFilter) *alerts.MetricFilter {
