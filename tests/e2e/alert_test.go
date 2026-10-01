@@ -748,15 +748,18 @@ var _ = Describe("Alert", Ordered, func() {
 			g.Expect(threshold.UseRowsAsPermutations).To(Equal(ptr.To(false)))
 			g.Expect(threshold.EvaluationDelayMs).To(Equal(ptr.To(int32(60000))))
 			g.Expect(threshold.NoDataPolicy.GetState()).To(Equal(alerts.NODATAPOLICYSTATE_NO_DATA_POLICY_STATE_KEEP_LAST))
-			rules := threshold.GetRules()
-			g.Expect(rules).To(HaveLen(3))
-			g.Expect(rules[0].Condition.GetThreshold()).To(Equal(30.0))
-			g.Expect(rules[0].Override.GetPriority()).To(Equal(alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P1))
-			g.Expect(rules[1].Condition.GetThreshold()).To(Equal(20.5))
-			g.Expect(rules[1].Override.GetPriority()).To(Equal(alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P2))
-			g.Expect(rules[2].Condition.GetThreshold()).To(Equal(10.0))
-			// A rule without an override falls back to the alert priority.
-			g.Expect(rules[2].Override.GetPriority()).To(Equal(alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P3))
+			// Match rules by threshold rather than position, the API does not guarantee list order.
+			g.Expect(threshold.GetRules()).To(HaveLen(3))
+			priorityByThreshold := map[float64]alerts.AlertDefPriority{}
+			for _, rule := range threshold.GetRules() {
+				priorityByThreshold[rule.Condition.GetThreshold()] = rule.Override.GetPriority()
+			}
+			g.Expect(priorityByThreshold).To(Equal(map[float64]alerts.AlertDefPriority{
+				30:   alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P1,
+				20.5: alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P2,
+				// A rule without an override falls back to the alert priority.
+				10: alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P3,
+			}))
 		}, time.Minute, time.Second).Should(Succeed())
 
 		By("Clearing the optional fields")
