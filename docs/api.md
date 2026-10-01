@@ -2270,6 +2270,7 @@ Immediate alerts for DataPrime query results (preview).
           <br/>
             <i>Format</i>: int32<br/>
             <i>Minimum</i>: 0<br/>
+            <i>Maximum</i>: 1.08e+07<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2404,6 +2405,7 @@ Alerts for when a DataPrime query result column crosses a threshold (preview).
           <br/>
             <i>Format</i>: int32<br/>
             <i>Minimum</i>: 0<br/>
+            <i>Maximum</i>: 1.08e+07<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -22228,6 +22230,7 @@ Immediate alerts for DataPrime query results (preview).
           <br/>
             <i>Format</i>: int32<br/>
             <i>Minimum</i>: 0<br/>
+            <i>Maximum</i>: 1.08e+07<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -22362,6 +22365,7 @@ Alerts for when a DataPrime query result column crosses a threshold (preview).
           <br/>
             <i>Format</i>: int32<br/>
             <i>Minimum</i>: 0<br/>
+            <i>Maximum</i>: 1.08e+07<br/>
         </td>
         <td>false</td>
       </tr><tr>

@@ -734,6 +734,7 @@ type AnalyticsImmediate struct {
 
 	// Evaluation delay in milliseconds.
 	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=10800000
 	// +optional
 	EvaluationDelayMs *int32 `json:"evaluationDelayMs,omitempty"`
 
@@ -771,6 +772,7 @@ type AnalyticsThreshold struct {
 
 	// Evaluation delay in milliseconds.
 	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=10800000
 	// +optional
 	EvaluationDelayMs *int32 `json:"evaluationDelayMs,omitempty"`
 

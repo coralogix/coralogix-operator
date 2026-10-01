@@ -144,6 +144,15 @@ var _ = Describe("Alert validation", func() {
 		Expect(err.Error()).To(ContainSubstring("timeframeMinutes"))
 	})
 
+	It("should reject an analytics alert with an evaluation delay above three hours", func(ctx context.Context) {
+		alert := analyticsImmediateAlert("analytics-evaluation-delay-too-big")
+		alert.Spec.TypeDefinition.AnalyticsImmediate.EvaluationDelayMs = ptr.To(int32(10800001))
+
+		err := k8sClient.Create(ctx, alert)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("evaluationDelayMs"))
+	})
+
 	It("should reject an analytics alert with an empty query", func(ctx context.Context) {
 		alert := analyticsImmediateAlert("analytics-empty-query")
 		alert.Spec.TypeDefinition.AnalyticsImmediate.DataprimeQuery.Query = ""

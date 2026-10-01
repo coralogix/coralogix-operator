@@ -75,6 +75,7 @@ spec:
                       evaluationDelayMs:
                         description: Evaluation delay in milliseconds.
                         format: int32
+                        maximum: 10800000
                         minimum: 0
                         type: integer
                       noDataPolicy:
@@ -131,6 +132,7 @@ spec:
                       evaluationDelayMs:
                         description: Evaluation delay in milliseconds.
                         format: int32
+                        maximum: 10800000
                         minimum: 0
                         type: integer
                       noDataPolicy:
