@@ -371,7 +371,7 @@ var _ = Describe("Alert", Ordered, func() {
 			},
 		}
 		err := crClient.Create(ctx, alert)
-		Expect(err.Error()).To(ContainSubstring("Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue, logsUniqueCount, sloThreshold must be set"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue, logsUniqueCount, sloThreshold, analyticsImmediate, analyticsThreshold must be set"))
 	})
 
 	It("Should create a logs-ratio alert with groupByFor, ignoreInfinity, notificationPayloadFilter and undetectedValuesManagement", func(ctx context.Context) {
