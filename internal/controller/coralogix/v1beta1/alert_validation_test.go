@@ -16,6 +16,7 @@ package v1beta1
 
 import (
 	"context"
+	"fmt"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -186,4 +187,104 @@ var _ = Describe("Alert validation", func() {
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("operator"))
 	})
+
+	It("should accept an alert with full case settings", func(ctx context.Context) {
+		alert := caseSettingsAlert("case-settings-full", &coralogixv1beta1.AlertCaseSettings{
+			AutoResolveMode: ptr.To(coralogixv1beta1.CaseAutoResolveModeDisabled),
+			EnrichmentQueries: []coralogixv1beta1.CaseEnrichmentQuery{
+				{Query: "source logs | limit 1", Type: ptr.To(coralogixv1beta1.CaseEnrichmentQueryTypeDataprime)},
+			},
+			Destinations: []coralogixv1beta1.CaseDestination{
+				{
+					Connector: coralogixv1beta1.NCRef{ResourceRef: &coralogixv1beta1.ResourceRef{Name: "cases-connector"}},
+					Preset:    &coralogixv1beta1.NCRef{BackendRef: &coralogixv1beta1.NCBackendRef{ID: "preset_system_generic_https_cases_empty"}},
+					Condition: "case.priority == 'P1'",
+				},
+				caseDestination("true"),
+			},
+		})
+
+		Expect(k8sClient.Create(ctx, alert)).To(Succeed())
+		Expect(k8sClient.Delete(ctx, alert)).To(Succeed())
+	})
+
+	It("should accept an alert with empty case settings", func(ctx context.Context) {
+		alert := caseSettingsAlert("case-settings-empty", &coralogixv1beta1.AlertCaseSettings{})
+
+		Expect(k8sClient.Create(ctx, alert)).To(Succeed())
+		Expect(k8sClient.Delete(ctx, alert)).To(Succeed())
+	})
+
+	It("should accept an alert with 100 case destinations", func(ctx context.Context) {
+		destinations := make([]coralogixv1beta1.CaseDestination, 100)
+		for i := range destinations {
+			destinations[i] = caseDestination(fmt.Sprintf("case.priority == 'P%d'", i))
+		}
+		alert := caseSettingsAlert("case-settings-max-destinations", &coralogixv1beta1.AlertCaseSettings{Destinations: destinations})
+
+		Expect(k8sClient.Create(ctx, alert)).To(Succeed())
+		Expect(k8sClient.Delete(ctx, alert)).To(Succeed())
+	})
+
+	DescribeTable("should reject invalid case settings",
+		func(ctx context.Context, caseSettings *coralogixv1beta1.AlertCaseSettings, wantErr string) {
+			err := k8sClient.Create(ctx, caseSettingsAlert("case-settings-invalid", caseSettings))
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring(wantErr))
+		},
+		Entry("unknown auto-resolve mode",
+			&coralogixv1beta1.AlertCaseSettings{AutoResolveMode: ptr.To(coralogixv1beta1.CaseAutoResolveMode("unspecified"))},
+			"spec.caseSettings.autoResolveMode: Unsupported value"),
+		Entry("unknown enrichment query type",
+			&coralogixv1beta1.AlertCaseSettings{EnrichmentQueries: []coralogixv1beta1.CaseEnrichmentQuery{
+				{Query: "source logs", Type: ptr.To(coralogixv1beta1.CaseEnrichmentQueryType("lucene"))},
+			}},
+			"spec.caseSettings.enrichmentQueries[0].type: Unsupported value"),
+		Entry("more than one enrichment query",
+			&coralogixv1beta1.AlertCaseSettings{EnrichmentQueries: []coralogixv1beta1.CaseEnrichmentQuery{
+				{Query: "source logs"}, {Query: "source spans"},
+			}},
+			"spec.caseSettings.enrichmentQueries: Too many: 2: must have at most 1 items"),
+		Entry("empty enrichment query",
+			&coralogixv1beta1.AlertCaseSettings{EnrichmentQueries: []coralogixv1beta1.CaseEnrichmentQuery{{Query: ""}}},
+			"spec.caseSettings.enrichmentQueries[0].query: Invalid value"),
+		Entry("empty destination condition",
+			&coralogixv1beta1.AlertCaseSettings{Destinations: []coralogixv1beta1.CaseDestination{caseDestination("")}},
+			"spec.caseSettings.destinations[0].condition: Invalid value"),
+		Entry("destination connector without a reference",
+			&coralogixv1beta1.AlertCaseSettings{Destinations: []coralogixv1beta1.CaseDestination{{Condition: "true"}}},
+			"Exactly one of backendRef or resourceRef must be set"),
+		Entry("destination connector with both references",
+			&coralogixv1beta1.AlertCaseSettings{Destinations: []coralogixv1beta1.CaseDestination{{
+				Connector: coralogixv1beta1.NCRef{
+					BackendRef:  &coralogixv1beta1.NCBackendRef{ID: "connector-id"},
+					ResourceRef: &coralogixv1beta1.ResourceRef{Name: "cases-connector"},
+				},
+				Condition: "true",
+			}}},
+			"Exactly one of backendRef or resourceRef must be set"),
+		Entry("destination preset without a reference",
+			&coralogixv1beta1.AlertCaseSettings{Destinations: []coralogixv1beta1.CaseDestination{{
+				Connector: coralogixv1beta1.NCRef{BackendRef: &coralogixv1beta1.NCBackendRef{ID: "connector-id"}},
+				Preset:    &coralogixv1beta1.NCRef{},
+				Condition: "true",
+			}}},
+			"Exactly one of backendRef or resourceRef must be set"),
+		Entry("more than 100 destinations",
+			&coralogixv1beta1.AlertCaseSettings{Destinations: make([]coralogixv1beta1.CaseDestination, 101)},
+			"spec.caseSettings.destinations: Too many: 101: must have at most 100 items"),
+	)
 })
+
+func caseDestination(condition string) coralogixv1beta1.CaseDestination {
+	return coralogixv1beta1.CaseDestination{
+		Connector: coralogixv1beta1.NCRef{BackendRef: &coralogixv1beta1.NCBackendRef{ID: "connector-id"}},
+		Condition: condition,
+	}
+}
+
+func caseSettingsAlert(name string, caseSettings *coralogixv1beta1.AlertCaseSettings) *coralogixv1beta1.Alert {
+	alert := minimalAlert(name)
+	alert.Spec.CaseSettings = caseSettings
+	return alert
+}

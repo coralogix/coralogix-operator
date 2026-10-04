@@ -2020,6 +2020,14 @@ Spec defines the alert.
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspeccasesettings">caseSettings</a></b></td>
+        <td>object</td>
+        <td>
+          Settings for the cases opened by the alert (preview).
+When omitted, case settings are reset to the defaults: auto-resolve enabled, no enrichment query and no case destinations.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#alertsetspecalertsindexspecdatasourcesindex">dataSources</a></b></td>
         <td>[]object</td>
         <td>
@@ -7574,6 +7582,323 @@ Filter - values and operation.
           <br/>
         </td>
         <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.caseSettings
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspec)</sup></sup>
+
+
+
+Settings for the cases opened by the alert (preview).
+When omitted, case settings are reset to the defaults: auto-resolve enabled, no enrichment query and no case destinations.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>autoResolveMode</b></td>
+        <td>enum</td>
+        <td>
+          Whether cases are resolved automatically when the alert resolves (preview). Enabled when omitted.<br/>
+          <br/>
+            <i>Enum</i>: enabled, disabled<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspeccasesettingsdestinationsindex">destinations</a></b></td>
+        <td>[]object</td>
+        <td>
+          Where case notifications are sent (preview).<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspeccasesettingsenrichmentqueriesindex">enrichmentQueries</a></b></td>
+        <td>[]object</td>
+        <td>
+          Queries that enrich the cases opened by the alert (preview).<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.caseSettings.destinations[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspeccasesettings)</sup></sup>
+
+
+
+Destination for case notifications (preview).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          Routing condition evaluated against the case, for example "true" or "case.priority == 'P1'".<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspeccasesettingsdestinationsindexconnector">connector</a></b></td>
+        <td>object</td>
+        <td>
+          Connector to send case notifications to. The connector must support the cases entity type.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspeccasesettingsdestinationsindexpreset">preset</a></b></td>
+        <td>object</td>
+        <td>
+          Preset for the case notifications. Must be a cases preset for the connector type.
+The default preset of the connector type is used when omitted.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.caseSettings.destinations[index].connector
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspeccasesettingsdestinationsindex)</sup></sup>
+
+
+
+Connector to send case notifications to. The connector must support the cases entity type.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspeccasesettingsdestinationsindexconnectorbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          BackendRef is a reference to a backend resource.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspeccasesettingsdestinationsindexconnectorresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          ResourceRef is a reference to a Kubernetes resource.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.caseSettings.destinations[index].connector.backendRef
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspeccasesettingsdestinationsindexconnector)</sup></sup>
+
+
+
+BackendRef is a reference to a backend resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.caseSettings.destinations[index].connector.resourceRef
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspeccasesettingsdestinationsindexconnector)</sup></sup>
+
+
+
+ResourceRef is a reference to a Kubernetes resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.caseSettings.destinations[index].preset
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspeccasesettingsdestinationsindex)</sup></sup>
+
+
+
+Preset for the case notifications. Must be a cases preset for the connector type.
+The default preset of the connector type is used when omitted.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspeccasesettingsdestinationsindexpresetbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          BackendRef is a reference to a backend resource.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspeccasesettingsdestinationsindexpresetresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          ResourceRef is a reference to a Kubernetes resource.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.caseSettings.destinations[index].preset.backendRef
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspeccasesettingsdestinationsindexpreset)</sup></sup>
+
+
+
+BackendRef is a reference to a backend resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.caseSettings.destinations[index].preset.resourceRef
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspeccasesettingsdestinationsindexpreset)</sup></sup>
+
+
+
+ResourceRef is a reference to a Kubernetes resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.caseSettings.enrichmentQueries[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspeccasesettings)</sup></sup>
+
+
+
+Query that enriches the cases opened by the alert (preview).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>query</b></td>
+        <td>string</td>
+        <td>
+          The enrichment query.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>enum</td>
+        <td>
+          The query language. DataPrime when omitted.<br/>
+          <br/>
+            <i>Enum</i>: dataprime<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -21980,6 +22305,14 @@ AlertSpec defines the desired state of a Coralogix Alert. For more info check - 
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b><a href="#alertspeccasesettings">caseSettings</a></b></td>
+        <td>object</td>
+        <td>
+          Settings for the cases opened by the alert (preview).
+When omitted, case settings are reset to the defaults: auto-resolve enabled, no enrichment query and no case destinations.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#alertspecdatasourcesindex">dataSources</a></b></td>
         <td>[]object</td>
         <td>
@@ -27534,6 +27867,323 @@ Filter - values and operation.
           <br/>
         </td>
         <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.caseSettings
+<sup><sup>[↩ Parent](#alertspec)</sup></sup>
+
+
+
+Settings for the cases opened by the alert (preview).
+When omitted, case settings are reset to the defaults: auto-resolve enabled, no enrichment query and no case destinations.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>autoResolveMode</b></td>
+        <td>enum</td>
+        <td>
+          Whether cases are resolved automatically when the alert resolves (preview). Enabled when omitted.<br/>
+          <br/>
+            <i>Enum</i>: enabled, disabled<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspeccasesettingsdestinationsindex">destinations</a></b></td>
+        <td>[]object</td>
+        <td>
+          Where case notifications are sent (preview).<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspeccasesettingsenrichmentqueriesindex">enrichmentQueries</a></b></td>
+        <td>[]object</td>
+        <td>
+          Queries that enrich the cases opened by the alert (preview).<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.caseSettings.destinations[index]
+<sup><sup>[↩ Parent](#alertspeccasesettings)</sup></sup>
+
+
+
+Destination for case notifications (preview).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          Routing condition evaluated against the case, for example "true" or "case.priority == 'P1'".<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspeccasesettingsdestinationsindexconnector">connector</a></b></td>
+        <td>object</td>
+        <td>
+          Connector to send case notifications to. The connector must support the cases entity type.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspeccasesettingsdestinationsindexpreset">preset</a></b></td>
+        <td>object</td>
+        <td>
+          Preset for the case notifications. Must be a cases preset for the connector type.
+The default preset of the connector type is used when omitted.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.caseSettings.destinations[index].connector
+<sup><sup>[↩ Parent](#alertspeccasesettingsdestinationsindex)</sup></sup>
+
+
+
+Connector to send case notifications to. The connector must support the cases entity type.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspeccasesettingsdestinationsindexconnectorbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          BackendRef is a reference to a backend resource.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspeccasesettingsdestinationsindexconnectorresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          ResourceRef is a reference to a Kubernetes resource.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.caseSettings.destinations[index].connector.backendRef
+<sup><sup>[↩ Parent](#alertspeccasesettingsdestinationsindexconnector)</sup></sup>
+
+
+
+BackendRef is a reference to a backend resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.caseSettings.destinations[index].connector.resourceRef
+<sup><sup>[↩ Parent](#alertspeccasesettingsdestinationsindexconnector)</sup></sup>
+
+
+
+ResourceRef is a reference to a Kubernetes resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.caseSettings.destinations[index].preset
+<sup><sup>[↩ Parent](#alertspeccasesettingsdestinationsindex)</sup></sup>
+
+
+
+Preset for the case notifications. Must be a cases preset for the connector type.
+The default preset of the connector type is used when omitted.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspeccasesettingsdestinationsindexpresetbackendref">backendRef</a></b></td>
+        <td>object</td>
+        <td>
+          BackendRef is a reference to a backend resource.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspeccasesettingsdestinationsindexpresetresourceref">resourceRef</a></b></td>
+        <td>object</td>
+        <td>
+          ResourceRef is a reference to a Kubernetes resource.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.caseSettings.destinations[index].preset.backendRef
+<sup><sup>[↩ Parent](#alertspeccasesettingsdestinationsindexpreset)</sup></sup>
+
+
+
+BackendRef is a reference to a backend resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.caseSettings.destinations[index].preset.resourceRef
+<sup><sup>[↩ Parent](#alertspeccasesettingsdestinationsindexpreset)</sup></sup>
+
+
+
+ResourceRef is a reference to a Kubernetes resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Kubernetes namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.caseSettings.enrichmentQueries[index]
+<sup><sup>[↩ Parent](#alertspeccasesettings)</sup></sup>
+
+
+
+Query that enriches the cases opened by the alert (preview).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>query</b></td>
+        <td>string</td>
+        <td>
+          The enrichment query.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>enum</td>
+        <td>
+          The query language. DataPrime when omitted.<br/>
+          <br/>
+            <i>Enum</i>: dataprime<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 

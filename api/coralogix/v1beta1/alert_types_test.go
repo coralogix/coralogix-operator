@@ -15,13 +15,20 @@
 package v1beta1
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/utils/ptr"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	alerts "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/alert_definitions_service"
+
+	"github.com/coralogix/coralogix-operator/v2/internal/config"
+	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 func analyticsAlertSpec(typeDefinition AlertTypeDefinition) *AlertSpec {
@@ -167,6 +174,178 @@ func TestExtractAlertDefPropertiesAnalyticsThreshold(t *testing.T) {
 			}}).ExtractAlertDefProperties(&GetResourceRefProperties{})
 			require.NoError(t, err)
 			require.Equal(t, want, props.AnalyticsThreshold.GetOperator())
+		})
+	}
+}
+
+func newRefResource(kind, name, id string) *unstructured.Unstructured {
+	u := &unstructured.Unstructured{}
+	u.SetGroupVersionKind(schema.GroupVersionKind{Group: utils.CoralogixAPIGroup, Version: utils.V1alpha1APIVersion, Kind: kind})
+	u.SetName(name)
+	u.SetNamespace("default")
+	if id != "" {
+		_ = unstructured.SetNestedField(u.Object, id, "status", "id")
+	}
+	return u
+}
+
+func TestExtractAlertDefPropertiesCaseSettings(t *testing.T) {
+	config.InitClient(fake.NewClientBuilder().WithObjects(
+		newRefResource(utils.ConnectorKind, "cases-connector", "connector-from-ref"),
+		newRefResource(utils.PresetKind, "cases-preset", "preset-from-ref"),
+		newRefResource(utils.ConnectorKind, "unsynced-connector", ""),
+	).Build())
+	refProperties := &GetResourceRefProperties{Ctx: context.Background(), Namespace: "default"}
+	backendRef := func(id string) NCRef { return NCRef{BackendRef: &NCBackendRef{ID: id}} }
+	resourceRef := func(name string) NCRef { return NCRef{ResourceRef: &ResourceRef{Name: name}} }
+
+	for _, tc := range []struct {
+		name         string
+		caseSettings *AlertCaseSettings
+		want         *alerts.AlertDefCaseSettings
+		wantErr      string
+	}{
+		{
+			name: "omitted is not sent",
+		},
+		{
+			name:         "empty object is sent empty",
+			caseSettings: &AlertCaseSettings{},
+			want:         &alerts.AlertDefCaseSettings{},
+		},
+		{
+			name: "explicit empty lists are kept",
+			caseSettings: &AlertCaseSettings{
+				EnrichmentQueries: []CaseEnrichmentQuery{},
+				Destinations:      []CaseDestination{},
+			},
+			want: &alerts.AlertDefCaseSettings{
+				EnrichmentQueries: []alerts.AlertDefCaseEnrichmentQuery{},
+				Destinations:      []alerts.AlertDefCaseDestination{},
+			},
+		},
+		{
+			name:         "auto-resolve enabled",
+			caseSettings: &AlertCaseSettings{AutoResolveMode: ptr.To(CaseAutoResolveModeEnabled)},
+			want: &alerts.AlertDefCaseSettings{
+				AutoResolveMode: alerts.ALERTDEFCASEAUTORESOLVEMODE_ALERT_DEF_CASE_AUTO_RESOLVE_MODE_ENABLED.Ptr(),
+			},
+		},
+		{
+			name: "full with backend refs",
+			caseSettings: &AlertCaseSettings{
+				AutoResolveMode: ptr.To(CaseAutoResolveModeDisabled),
+				EnrichmentQueries: []CaseEnrichmentQuery{
+					{Query: "source logs | limit 1", Type: ptr.To(CaseEnrichmentQueryTypeDataprime)},
+				},
+				Destinations: []CaseDestination{
+					{Connector: backendRef("connector-1"), Preset: ptr.To(backendRef("preset-1")), Condition: "true"},
+					{Connector: backendRef("connector-2"), Condition: "case.priority == 'P1'"},
+				},
+			},
+			want: &alerts.AlertDefCaseSettings{
+				AutoResolveMode: alerts.ALERTDEFCASEAUTORESOLVEMODE_ALERT_DEF_CASE_AUTO_RESOLVE_MODE_DISABLED.Ptr(),
+				EnrichmentQueries: []alerts.AlertDefCaseEnrichmentQuery{
+					{Query: "source logs | limit 1", Type: alerts.ALERTDEFCASEENRICHMENTQUERYTYPE_ALERT_DEF_CASE_ENRICHMENT_QUERY_TYPE_DATAPRIME.Ptr()},
+				},
+				Destinations: []alerts.AlertDefCaseDestination{
+					{ConnectorId: "connector-1", PresetId: ptr.To("preset-1"), Condition: "true"},
+					{ConnectorId: "connector-2", Condition: "case.priority == 'P1'"},
+				},
+			},
+		},
+		{
+			name: "query type is left unset when omitted",
+			caseSettings: &AlertCaseSettings{
+				EnrichmentQueries: []CaseEnrichmentQuery{{Query: "source logs | limit 1"}},
+			},
+			want: &alerts.AlertDefCaseSettings{
+				EnrichmentQueries: []alerts.AlertDefCaseEnrichmentQuery{{Query: "source logs | limit 1"}},
+			},
+		},
+		{
+			name: "resource refs are resolved to IDs",
+			caseSettings: &AlertCaseSettings{
+				Destinations: []CaseDestination{
+					{Connector: resourceRef("cases-connector"), Preset: ptr.To(resourceRef("cases-preset")), Condition: "true"},
+				},
+			},
+			want: &alerts.AlertDefCaseSettings{
+				Destinations: []alerts.AlertDefCaseDestination{
+					{ConnectorId: "connector-from-ref", PresetId: ptr.To("preset-from-ref"), Condition: "true"},
+				},
+			},
+		},
+		{
+			name: "missing connector resource fails",
+			caseSettings: &AlertCaseSettings{
+				Destinations: []CaseDestination{{Connector: resourceRef("missing-connector"), Condition: "true"}},
+			},
+			wantErr: "failed to expand case settings: failed to expand case destination connector ID",
+		},
+		{
+			name: "connector without an ID fails",
+			caseSettings: &AlertCaseSettings{
+				Destinations: []CaseDestination{{Connector: resourceRef("unsynced-connector"), Condition: "true"}},
+			},
+			wantErr: "does not have an ID populated",
+		},
+		{
+			name: "missing preset resource fails",
+			caseSettings: &AlertCaseSettings{
+				Destinations: []CaseDestination{
+					{Connector: backendRef("connector-1"), Preset: ptr.To(resourceRef("missing-preset")), Condition: "true"},
+				},
+			},
+			wantErr: "failed to expand case destination preset ID",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			spec := analyticsAlertSpec(AlertTypeDefinition{LogsImmediate: &LogsImmediate{}})
+			spec.GroupByKeys = nil
+			spec.CaseSettings = tc.caseSettings
+			props, err := spec.ExtractAlertDefProperties(refProperties)
+			if tc.wantErr != "" {
+				require.ErrorContains(t, err, tc.wantErr)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, tc.want, props.CaseSettings)
+		})
+	}
+}
+
+func TestExtractAlertDefPropertiesCaseSettingsForEveryAlertType(t *testing.T) {
+	want := &alerts.AlertDefCaseSettings{
+		AutoResolveMode: alerts.ALERTDEFCASEAUTORESOLVEMODE_ALERT_DEF_CASE_AUTO_RESOLVE_MODE_DISABLED.Ptr(),
+	}
+
+	for name, typeDefinition := range map[string]AlertTypeDefinition{
+		"logsImmediate":             {LogsImmediate: &LogsImmediate{}},
+		"logsThreshold":             {LogsThreshold: &LogsThreshold{}},
+		"logsRatioThreshold":        {LogsRatioThreshold: &LogsRatioThreshold{}},
+		"logsTimeRelativeThreshold": {LogsTimeRelativeThreshold: &LogsTimeRelativeThreshold{}},
+		"metricThreshold":           {MetricThreshold: &MetricThreshold{}},
+		"tracingThreshold":          {TracingThreshold: &TracingThreshold{}},
+		"tracingImmediate":          {TracingImmediate: &TracingImmediate{}},
+		"flow":                      {Flow: &Flow{}},
+		"logsAnomaly":               {LogsAnomaly: &LogsAnomaly{}},
+		"metricAnomaly":             {MetricAnomaly: &MetricAnomaly{}},
+		"logsNewValue":              {LogsNewValue: &LogsNewValue{}},
+		"logsUniqueCount":           {LogsUniqueCount: &LogsUniqueCount{MaxUniqueCountPerGroupByKey: ptr.To[uint64](10)}},
+		"sloThreshold": {SloThreshold: &SloThreshold{
+			SloDefinition: SloDefinition{SloRef: SloRef{BackendRef: &SloBackendRef{ID: ptr.To("slo-1")}}},
+			ErrorBudget:   &ErrorBudget{},
+		}},
+		"analyticsImmediate": {AnalyticsImmediate: &AnalyticsImmediate{}},
+		"analyticsThreshold": {AnalyticsThreshold: &AnalyticsThreshold{}},
+	} {
+		t.Run(name, func(t *testing.T) {
+			spec := analyticsAlertSpec(typeDefinition)
+			spec.CaseSettings = &AlertCaseSettings{AutoResolveMode: ptr.To(CaseAutoResolveModeDisabled)}
+			props, err := spec.ExtractAlertDefProperties(&GetResourceRefProperties{})
+			require.NoError(t, err)
+			require.Equal(t, want, props.CaseSettings)
 		})
 	}
 }
