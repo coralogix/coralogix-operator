@@ -63,7 +63,7 @@ func (r *GlobalRouterReconciler) HandleCreation(ctx context.Context, log logr.Lo
 	}
 
 	createRequest := &globalrouters.CreateGlobalRouterRequest{
-		Router: router,
+		Router: *router,
 	}
 
 	log.Info("Creating remote GlobalRouter", "GlobalRouter", utils.FormatJSON(createRequest))
@@ -92,7 +92,7 @@ func (r *GlobalRouterReconciler) HandleUpdate(ctx context.Context, log logr.Logg
 
 	router.Id = globalRouter.Status.Id
 	replaceRequest := &globalrouters.ReplaceGlobalRouterRequest{
-		Router: router,
+		Router: *router,
 	}
 
 	log.Info("Updating remote GlobalRouter", "GlobalRouter", utils.FormatJSON(replaceRequest))
