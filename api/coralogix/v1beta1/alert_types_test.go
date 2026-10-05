@@ -240,7 +240,7 @@ func TestExtractAlertDefPropertiesCaseSettings(t *testing.T) {
 				},
 				Destinations: []CaseDestination{
 					{Connector: backendRef("connector-1"), Preset: ptr.To(backendRef("preset-1")), Condition: "true"},
-					{Connector: backendRef("connector-2"), Condition: "case.priority == 'P1'"},
+					{Connector: backendRef("connector-2"), Condition: "caseMetadata.notificationReason == 'caseResolved'"},
 				},
 			},
 			want: &alerts.AlertDefCaseSettings{
@@ -250,7 +250,7 @@ func TestExtractAlertDefPropertiesCaseSettings(t *testing.T) {
 				},
 				Destinations: []alerts.AlertDefCaseDestination{
 					{ConnectorId: "connector-1", PresetId: ptr.To("preset-1"), Condition: "true"},
-					{ConnectorId: "connector-2", Condition: "case.priority == 'P1'"},
+					{ConnectorId: "connector-2", Condition: "caseMetadata.notificationReason == 'caseResolved'"},
 				},
 			},
 		},

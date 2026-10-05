@@ -2291,8 +2291,10 @@ spec:
                       description: Destination for case notifications (preview).
                       properties:
                         condition:
-                          description: Routing condition evaluated against the case,
-                            for example "true" or "case.priority == 'P1'".
+                          description: Routing condition evaluated against the case
+                            notification. Use "true" to notify on every case notification,
+                            or filter on caseMetadata.notificationReason (for example
+                            caseMetadata.notificationReason == 'caseResolved').
                           maxLength: 20000
                           minLength: 1
                           type: string

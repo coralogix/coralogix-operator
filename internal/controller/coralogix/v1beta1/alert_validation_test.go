@@ -198,7 +198,7 @@ var _ = Describe("Alert validation", func() {
 				{
 					Connector: coralogixv1beta1.NCRef{ResourceRef: &coralogixv1beta1.ResourceRef{Name: "cases-connector"}},
 					Preset:    &coralogixv1beta1.NCRef{BackendRef: &coralogixv1beta1.NCBackendRef{ID: "preset_system_generic_https_cases_empty"}},
-					Condition: "case.priority == 'P1'",
+					Condition: "caseMetadata.notificationReason == 'caseResolved'",
 				},
 				caseDestination("true"),
 			},
@@ -218,7 +218,7 @@ var _ = Describe("Alert validation", func() {
 	It("should accept an alert with 100 case destinations", func(ctx context.Context) {
 		destinations := make([]coralogixv1beta1.CaseDestination, 100)
 		for i := range destinations {
-			destinations[i] = caseDestination(fmt.Sprintf("case.priority == 'P%d'", i))
+			destinations[i] = caseDestination(fmt.Sprintf("caseMetadata.notificationReason == 'reason%d'", i))
 		}
 		alert := caseSettingsAlert("case-settings-max-destinations", &coralogixv1beta1.AlertCaseSettings{Destinations: destinations})
 

@@ -886,7 +886,7 @@ var _ = Describe("Alert caseSettings", Ordered, func() {
 					Destinations: []coralogixv1beta1.CaseDestination{
 						{
 							Connector: coralogixv1beta1.NCRef{ResourceRef: &coralogixv1beta1.ResourceRef{Name: connector.Name}},
-							Condition: "case.priority == 'P1'",
+							Condition: "caseMetadata.notificationReason == 'caseResolved'",
 						},
 						{
 							Connector: coralogixv1beta1.NCRef{ResourceRef: &coralogixv1beta1.ResourceRef{Name: connector.Name}},
@@ -917,7 +917,7 @@ var _ = Describe("Alert caseSettings", Ordered, func() {
 				string(alerts.ALERTDEFCASEENRICHMENTQUERYTYPE_ALERT_DEF_CASE_ENRICHMENT_QUERY_TYPE_DATAPRIME) + "|source logs | limit 1",
 			))
 			g.Expect(destinations(caseSettings)).To(ConsistOf(
-				connectorID+"||case.priority == 'P1'",
+				connectorID+"||caseMetadata.notificationReason == 'caseResolved'",
 				connectorID+"|"+casesPresetID+"|true",
 			))
 		}, time.Minute, time.Second).Should(Succeed())

@@ -58,7 +58,7 @@ spec:
       - connector:
           resourceRef:
             name: cases-connector
-        condition: case.priority == 'P1'
+        condition: caseMetadata.notificationReason == 'caseResolved'
       - connector:
           resourceRef:
             name: cases-connector

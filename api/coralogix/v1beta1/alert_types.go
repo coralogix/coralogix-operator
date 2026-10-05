@@ -540,7 +540,7 @@ type CaseDestination struct {
 	// +optional
 	Preset *NCRef `json:"preset,omitempty"`
 
-	// Routing condition evaluated against the case, for example "true" or "case.priority == 'P1'".
+	// Routing condition evaluated against the case notification. Use "true" to notify on every case notification, or filter on caseMetadata.notificationReason (for example caseMetadata.notificationReason == 'caseResolved').
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:MaxLength=20000
 	Condition string `json:"condition"`

@@ -7650,7 +7650,7 @@ Destination for case notifications (preview).
         <td><b>condition</b></td>
         <td>string</td>
         <td>
-          Routing condition evaluated against the case, for example "true" or "case.priority == 'P1'".<br/>
+          Routing condition evaluated against the case notification. Use "true" to notify on every case notification, or filter on caseMetadata.notificationReason (for example caseMetadata.notificationReason == 'caseResolved').<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -27935,7 +27935,7 @@ Destination for case notifications (preview).
         <td><b>condition</b></td>
         <td>string</td>
         <td>
-          Routing condition evaluated against the case, for example "true" or "case.priority == 'P1'".<br/>
+          Routing condition evaluated against the case notification. Use "true" to notify on every case notification, or filter on caseMetadata.notificationReason (for example caseMetadata.notificationReason == 'caseResolved').<br/>
         </td>
         <td>true</td>
       </tr><tr>
