@@ -271,6 +271,13 @@ var (
 		NoDataPolicyStateKeepLast: alerts.NODATAPOLICYSTATE_NO_DATA_POLICY_STATE_KEEP_LAST,
 		NoDataPolicyStateNoData:   alerts.NODATAPOLICYSTATE_NO_DATA_POLICY_STATE_NO_DATA,
 	}
+	CaseAutoResolveModeToOpenAPI = map[CaseAutoResolveMode]alerts.AlertDefCaseAutoResolveMode{
+		CaseAutoResolveModeEnabled:  alerts.ALERTDEFCASEAUTORESOLVEMODE_ALERT_DEF_CASE_AUTO_RESOLVE_MODE_ENABLED,
+		CaseAutoResolveModeDisabled: alerts.ALERTDEFCASEAUTORESOLVEMODE_ALERT_DEF_CASE_AUTO_RESOLVE_MODE_DISABLED,
+	}
+	CaseEnrichmentQueryTypeToOpenAPI = map[CaseEnrichmentQueryType]alerts.AlertDefCaseEnrichmentQueryType{
+		CaseEnrichmentQueryTypeDataprime: alerts.ALERTDEFCASEENRICHMENTQUERYTYPE_ALERT_DEF_CASE_ENRICHMENT_QUERY_TYPE_DATAPRIME,
+	}
 )
 
 // AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
@@ -313,6 +320,11 @@ type AlertSpec struct {
 	// Deprecated: Legacy field for when multiple notification groups were attached.
 	// +optional
 	NotificationGroupExcess []NotificationGroup `json:"notificationGroupExcess,omitempty"`
+
+	// Settings for the cases opened by the alert (preview).
+	// When omitted, case settings are reset to the defaults: auto-resolve enabled, no enrichment query and no case destinations.
+	// +optional
+	CaseSettings *AlertCaseSettings `json:"caseSettings,omitempty"`
 
 	// Labels attached to the alert.
 	// +optional
@@ -470,6 +482,68 @@ type NotificationGroup struct {
 	// The router for notifications (Notification Center feature) where to route notifications to.
 	// +optional
 	Router *NotificationRouter `json:"router,omitempty"`
+}
+
+// Settings for the cases opened by the alert (preview).
+type AlertCaseSettings struct {
+	// Whether cases are resolved automatically when the alert resolves (preview). Enabled when omitted.
+	// +optional
+	AutoResolveMode *CaseAutoResolveMode `json:"autoResolveMode,omitempty"`
+
+	// Queries that enrich the cases opened by the alert (preview).
+	// +kubebuilder:validation:MaxItems=1
+	// +optional
+	EnrichmentQueries []CaseEnrichmentQuery `json:"enrichmentQueries,omitempty"`
+
+	// Where case notifications are sent (preview).
+	// +kubebuilder:validation:MaxItems=100
+	// +optional
+	Destinations []CaseDestination `json:"destinations,omitempty"`
+}
+
+// +kubebuilder:validation:Enum=enabled;disabled
+// Case auto-resolve mode (preview).
+type CaseAutoResolveMode string
+
+const (
+	CaseAutoResolveModeEnabled  CaseAutoResolveMode = "enabled"
+	CaseAutoResolveModeDisabled CaseAutoResolveMode = "disabled"
+)
+
+// Query that enriches the cases opened by the alert (preview).
+type CaseEnrichmentQuery struct {
+	// The enrichment query.
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=65535
+	Query string `json:"query"`
+
+	// The query language. DataPrime when omitted.
+	// +optional
+	Type *CaseEnrichmentQueryType `json:"type,omitempty"`
+}
+
+// +kubebuilder:validation:Enum=dataprime
+// Case enrichment query language (preview).
+type CaseEnrichmentQueryType string
+
+const (
+	CaseEnrichmentQueryTypeDataprime CaseEnrichmentQueryType = "dataprime"
+)
+
+// Destination for case notifications (preview).
+type CaseDestination struct {
+	// Connector to send case notifications to. The connector must support the cases entity type.
+	Connector NCRef `json:"connector"`
+
+	// Preset for the case notifications. Must be a cases preset for the connector type.
+	// The default preset of the connector type is used when omitted.
+	// +optional
+	Preset *NCRef `json:"preset,omitempty"`
+
+	// Routing condition evaluated against the case notification. Use "true" to notify on every case notification, or filter on caseMetadata.notificationReason (for example caseMetadata.notificationReason == 'caseResolved').
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=20000
+	Condition string `json:"condition"`
 }
 
 // Settings for a notification webhook.
@@ -1822,6 +1896,11 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 		return nil, fmt.Errorf("failed to expand notification group excess: %w", err)
 	}
 
+	caseSettings, err := expandCaseSettings(in.CaseSettings, listingAlertsAndWebhooksProperties)
+	if err != nil {
+		return nil, fmt.Errorf("failed to expand case settings: %w", err)
+	}
+
 	priority := AlertPriorityToOpenAPIPriority[in.Priority]
 
 	dataSources := expandAlertDataSources(in.DataSources)
@@ -1837,6 +1916,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
+			CaseSettings:            caseSettings,
 			EntityLabels:            in.EntityLabels,
 			PhantomMode:             alerts.PtrBool(in.PhantomMode),
 			ActiveOn:                expandAlertSchedule(in.Schedule),
@@ -1854,6 +1934,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
+			CaseSettings:            caseSettings,
 			EntityLabels:            in.EntityLabels,
 			PhantomMode:             alerts.PtrBool(in.PhantomMode),
 			ActiveOn:                expandAlertSchedule(in.Schedule),
@@ -1871,6 +1952,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
+			CaseSettings:            caseSettings,
 			EntityLabels:            in.EntityLabels,
 			PhantomMode:             alerts.PtrBool(in.PhantomMode),
 			ActiveOn:                expandAlertSchedule(in.Schedule),
@@ -1888,6 +1970,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			IncidentsSettings:         expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:         notificationGroup,
 			NotificationGroupExcess:   notificationGroupExcess,
+			CaseSettings:              caseSettings,
 			EntityLabels:              in.EntityLabels,
 			PhantomMode:               alerts.PtrBool(in.PhantomMode),
 			ActiveOn:                  expandAlertSchedule(in.Schedule),
@@ -1905,6 +1988,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
+			CaseSettings:            caseSettings,
 			EntityLabels:            in.EntityLabels,
 			PhantomMode:             alerts.PtrBool(in.PhantomMode),
 			ActiveOn:                expandAlertSchedule(in.Schedule),
@@ -1922,6 +2006,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
+			CaseSettings:            caseSettings,
 			EntityLabels:            in.EntityLabels,
 			PhantomMode:             alerts.PtrBool(in.PhantomMode),
 			ActiveOn:                expandAlertSchedule(in.Schedule),
@@ -1939,6 +2024,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
+			CaseSettings:            caseSettings,
 			EntityLabels:            in.EntityLabels,
 			PhantomMode:             alerts.PtrBool(in.PhantomMode),
 			ActiveOn:                expandAlertSchedule(in.Schedule),
@@ -1956,6 +2042,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
+			CaseSettings:            caseSettings,
 			EntityLabels:            in.EntityLabels,
 			PhantomMode:             alerts.PtrBool(in.PhantomMode),
 			ActiveOn:                expandAlertSchedule(in.Schedule),
@@ -1973,6 +2060,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
+			CaseSettings:            caseSettings,
 			EntityLabels:            in.EntityLabels,
 			PhantomMode:             alerts.PtrBool(in.PhantomMode),
 			ActiveOn:                expandAlertSchedule(in.Schedule),
@@ -1990,6 +2078,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
+			CaseSettings:            caseSettings,
 			EntityLabels:            in.EntityLabels,
 			PhantomMode:             alerts.PtrBool(in.PhantomMode),
 			ActiveOn:                expandAlertSchedule(in.Schedule),
@@ -2007,6 +2096,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
+			CaseSettings:            caseSettings,
 			EntityLabels:            in.EntityLabels,
 			PhantomMode:             alerts.PtrBool(in.PhantomMode),
 			ActiveOn:                expandAlertSchedule(in.Schedule),
@@ -2024,6 +2114,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
+			CaseSettings:            caseSettings,
 			EntityLabels:            in.EntityLabels,
 			PhantomMode:             alerts.PtrBool(in.PhantomMode),
 			ActiveOn:                expandAlertSchedule(in.Schedule),
@@ -2045,6 +2136,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
+			CaseSettings:            caseSettings,
 			EntityLabels:            in.EntityLabels,
 			PhantomMode:             alerts.PtrBool(in.PhantomMode),
 			ActiveOn:                expandAlertSchedule(in.Schedule),
@@ -2062,6 +2154,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
+			CaseSettings:            caseSettings,
 			EntityLabels:            in.EntityLabels,
 			PhantomMode:             alerts.PtrBool(in.PhantomMode),
 			ActiveOn:                expandAlertSchedule(in.Schedule),
@@ -2079,6 +2172,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			IncidentsSettings:       expandIncidentsSettings(in.IncidentsSettings),
 			NotificationGroup:       notificationGroup,
 			NotificationGroupExcess: notificationGroupExcess,
+			CaseSettings:            caseSettings,
 			EntityLabels:            in.EntityLabels,
 			PhantomMode:             alerts.PtrBool(in.PhantomMode),
 			ActiveOn:                expandAlertSchedule(in.Schedule),
@@ -2320,6 +2414,62 @@ func expandNotificationDestinations(destinations []NotificationDestination, prop
 	}
 
 	return result, nil
+}
+
+func expandCaseSettings(caseSettings *AlertCaseSettings, properties *GetResourceRefProperties) (*alerts.AlertDefCaseSettings, error) {
+	if caseSettings == nil {
+		return nil, nil
+	}
+
+	var autoResolveMode *alerts.AlertDefCaseAutoResolveMode
+	if caseSettings.AutoResolveMode != nil {
+		autoResolveMode = CaseAutoResolveModeToOpenAPI[*caseSettings.AutoResolveMode].Ptr()
+	}
+
+	var enrichmentQueries []alerts.AlertDefCaseEnrichmentQuery
+	if caseSettings.EnrichmentQueries != nil {
+		enrichmentQueries = make([]alerts.AlertDefCaseEnrichmentQuery, 0, len(caseSettings.EnrichmentQueries))
+	}
+	for _, query := range caseSettings.EnrichmentQueries {
+		enrichmentQuery := alerts.AlertDefCaseEnrichmentQuery{Query: query.Query}
+		if query.Type != nil {
+			enrichmentQuery.Type = CaseEnrichmentQueryTypeToOpenAPI[*query.Type].Ptr()
+		}
+		enrichmentQueries = append(enrichmentQueries, enrichmentQuery)
+	}
+
+	var destinations []alerts.AlertDefCaseDestination
+	if caseSettings.Destinations != nil {
+		destinations = make([]alerts.AlertDefCaseDestination, 0, len(caseSettings.Destinations))
+	}
+	for _, destination := range caseSettings.Destinations {
+		connectorId, err := getResourceID(destination.Connector, properties, utils.ConnectorKind)
+		if err != nil {
+			return nil, fmt.Errorf("failed to expand case destination connector ID: %w", err)
+		}
+
+		var presetId *string
+		if destination.Preset != nil {
+			id, err := getResourceID(*destination.Preset, properties, utils.PresetKind)
+			if err != nil {
+				return nil, fmt.Errorf("failed to expand case destination preset ID: %w", err)
+			}
+
+			presetId = &id
+		}
+
+		destinations = append(destinations, alerts.AlertDefCaseDestination{
+			ConnectorId: connectorId,
+			PresetId:    presetId,
+			Condition:   destination.Condition,
+		})
+	}
+
+	return &alerts.AlertDefCaseSettings{
+		AutoResolveMode:   autoResolveMode,
+		EnrichmentQueries: enrichmentQueries,
+		Destinations:      destinations,
+	}, nil
 }
 
 func expandRoutingOverrides(overrides NotificationRouting) *alerts.V3SourceOverrides {

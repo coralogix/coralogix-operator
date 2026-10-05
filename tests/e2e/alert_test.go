@@ -796,3 +796,182 @@ var _ = Describe("Alert", Ordered, func() {
 		}, time.Minute, time.Second).Should(BeTrue())
 	})
 })
+
+var _ = Describe("Alert caseSettings", Ordered, func() {
+	var (
+		crClient      client.Client
+		openAPIAlerts *alerts.AlertDefinitionsServiceAPIService
+		connector     *coralogixv1alpha1.Connector
+		connectorID   string
+		alert         *coralogixv1beta1.Alert
+		alertID       string
+	)
+
+	const casesPresetID = "preset_system_generic_https_cases_empty"
+
+	// Decoded SDK models carry unmarshalling state, so compare destinations and queries by their fields.
+	destinations := func(caseSettings *alerts.AlertDefCaseSettings) []string {
+		var result []string
+		for _, destination := range caseSettings.GetDestinations() {
+			result = append(result, destination.GetConnectorId()+"|"+destination.GetPresetId()+"|"+destination.GetCondition())
+		}
+		return result
+	}
+	enrichmentQueries := func(caseSettings *alerts.AlertDefCaseSettings) []string {
+		var result []string
+		for _, query := range caseSettings.GetEnrichmentQueries() {
+			result = append(result, string(query.GetType())+"|"+query.GetQuery())
+		}
+		return result
+	}
+
+	getCaseSettings := func(ctx context.Context, g Gomega) *alerts.AlertDefCaseSettings {
+		resp, _, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, alertID).Execute()
+		g.Expect(err).ToNot(HaveOccurred())
+		return resp.GetAlertDef().AlertDefProperties.CaseSettings
+	}
+
+	patchCaseSettings := func(ctx context.Context, caseSettings *coralogixv1beta1.AlertCaseSettings) {
+		fetchedAlert := &coralogixv1beta1.Alert{}
+		Expect(crClient.Get(ctx, client.ObjectKeyFromObject(alert), fetchedAlert)).To(Succeed())
+		modifiedAlert := fetchedAlert.DeepCopy()
+		modifiedAlert.Spec.CaseSettings = caseSettings
+		Expect(crClient.Patch(ctx, modifiedAlert, client.MergeFrom(fetchedAlert))).To(Succeed())
+	}
+
+	BeforeAll(func(ctx context.Context) {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		openAPIAlerts = newOpenAPIClientSet().Alerts()
+
+		By("Creating a Connector for case notifications")
+		connector = getSampleGenericHttpsConnectorWithCasesOverride(uniqueName("cases-connector-for-alert"), testNamespace)
+		Expect(crClient.Create(ctx, connector)).To(Succeed())
+		Eventually(func(g Gomega) {
+			fetchedConnector := &coralogixv1alpha1.Connector{}
+			g.Expect(crClient.Get(ctx, client.ObjectKeyFromObject(connector), fetchedConnector)).To(Succeed())
+			g.Expect(fetchedConnector.Status.Id).ToNot(BeNil())
+			connectorID = *fetchedConnector.Status.Id
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	AfterAll(func(ctx context.Context) {
+		// The backend refuses to delete a connector that a case destination still uses.
+		if alert != nil {
+			Expect(client.IgnoreNotFound(crClient.Delete(ctx, alert))).To(Succeed())
+			Eventually(func() bool {
+				_, httpResp, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, alertID).Execute()
+				return oapicxsdk.IsNotFound(oapicxsdk.NewAPIError(httpResp, err))
+			}, time.Minute, time.Second).Should(BeTrue())
+		}
+		Expect(client.IgnoreNotFound(crClient.Delete(ctx, connector))).To(Succeed())
+	})
+
+	It("Should create an alert with case settings", func(ctx context.Context) {
+		alertName := uniqueName("case-settings-alert")
+		alert = &coralogixv1beta1.Alert{
+			ObjectMeta: metav1.ObjectMeta{Name: alertName, Namespace: testNamespace},
+			Spec: coralogixv1beta1.AlertSpec{
+				Name:        alertName,
+				Description: "alert from k8s operator",
+				Priority:    coralogixv1beta1.AlertPriorityP3,
+				Enabled:     ptr.To(false),
+				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
+					LogsImmediate: &coralogixv1beta1.LogsImmediate{},
+				},
+				CaseSettings: &coralogixv1beta1.AlertCaseSettings{
+					AutoResolveMode: ptr.To(coralogixv1beta1.CaseAutoResolveModeDisabled),
+					EnrichmentQueries: []coralogixv1beta1.CaseEnrichmentQuery{
+						{Query: "source logs | limit 1", Type: ptr.To(coralogixv1beta1.CaseEnrichmentQueryTypeDataprime)},
+					},
+					Destinations: []coralogixv1beta1.CaseDestination{
+						{
+							Connector: coralogixv1beta1.NCRef{ResourceRef: &coralogixv1beta1.ResourceRef{Name: connector.Name}},
+							Condition: "caseMetadata.notificationReason == 'caseResolved'",
+						},
+						{
+							Connector: coralogixv1beta1.NCRef{ResourceRef: &coralogixv1beta1.ResourceRef{Name: connector.Name}},
+							Preset:    &coralogixv1beta1.NCRef{BackendRef: &coralogixv1beta1.NCBackendRef{ID: casesPresetID}},
+							Condition: "true",
+						},
+					},
+				},
+			},
+		}
+		Expect(crClient.Create(ctx, alert)).To(Succeed())
+
+		By("Fetching the Alert ID")
+		Eventually(func(g Gomega) {
+			fetchedAlert := &coralogixv1beta1.Alert{}
+			g.Expect(crClient.Get(ctx, client.ObjectKeyFromObject(alert), fetchedAlert)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedAlert.Status.ID).ToNot(BeNil())
+			alertID = *fetchedAlert.Status.ID
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying the case settings in Coralogix backend")
+		Eventually(func(g Gomega) {
+			caseSettings := getCaseSettings(ctx, g)
+			g.Expect(caseSettings).ToNot(BeNil())
+			g.Expect(caseSettings.GetAutoResolveMode()).To(Equal(alerts.ALERTDEFCASEAUTORESOLVEMODE_ALERT_DEF_CASE_AUTO_RESOLVE_MODE_DISABLED))
+			g.Expect(enrichmentQueries(caseSettings)).To(ConsistOf(
+				string(alerts.ALERTDEFCASEENRICHMENTQUERYTYPE_ALERT_DEF_CASE_ENRICHMENT_QUERY_TYPE_DATAPRIME) + "|source logs | limit 1",
+			))
+			g.Expect(destinations(caseSettings)).To(ConsistOf(
+				connectorID+"||caseMetadata.notificationReason == 'caseResolved'",
+				connectorID+"|"+casesPresetID+"|true",
+			))
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should update the case settings", func(ctx context.Context) {
+		patchCaseSettings(ctx, &coralogixv1beta1.AlertCaseSettings{
+			AutoResolveMode: ptr.To(coralogixv1beta1.CaseAutoResolveModeEnabled),
+			Destinations: []coralogixv1beta1.CaseDestination{
+				{
+					Connector: coralogixv1beta1.NCRef{BackendRef: &coralogixv1beta1.NCBackendRef{ID: connectorID}},
+					Condition: "true",
+				},
+			},
+		})
+
+		Eventually(func(g Gomega) {
+			caseSettings := getCaseSettings(ctx, g)
+			g.Expect(caseSettings).ToNot(BeNil())
+			g.Expect(caseSettings.GetAutoResolveMode()).To(Equal(alerts.ALERTDEFCASEAUTORESOLVEMODE_ALERT_DEF_CASE_AUTO_RESOLVE_MODE_ENABLED))
+			g.Expect(caseSettings.GetEnrichmentQueries()).To(BeEmpty())
+			g.Expect(destinations(caseSettings)).To(ConsistOf(connectorID + "||true"))
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should keep auto-resolve disabled across updates of other fields", func(ctx context.Context) {
+		patchCaseSettings(ctx, &coralogixv1beta1.AlertCaseSettings{
+			AutoResolveMode: ptr.To(coralogixv1beta1.CaseAutoResolveModeDisabled),
+		})
+
+		By("Updating a field outside of the case settings")
+		fetchedAlert := &coralogixv1beta1.Alert{}
+		Expect(crClient.Get(ctx, client.ObjectKeyFromObject(alert), fetchedAlert)).To(Succeed())
+		modifiedAlert := fetchedAlert.DeepCopy()
+		modifiedAlert.Spec.Description = "updated alert from k8s operator"
+		Expect(crClient.Patch(ctx, modifiedAlert, client.MergeFrom(fetchedAlert))).To(Succeed())
+
+		Eventually(func(g Gomega) {
+			resp, _, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, alertID).Execute()
+			g.Expect(err).ToNot(HaveOccurred())
+			props := resp.GetAlertDef().AlertDefProperties
+			g.Expect(props.GetDescription()).To(Equal("updated alert from k8s operator"))
+			g.Expect(props.CaseSettings).ToNot(BeNil())
+			g.Expect(props.CaseSettings.GetAutoResolveMode()).To(Equal(alerts.ALERTDEFCASEAUTORESOLVEMODE_ALERT_DEF_CASE_AUTO_RESOLVE_MODE_DISABLED))
+			g.Expect(props.CaseSettings.GetDestinations()).To(BeEmpty())
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should reset the case settings when they are removed", func(ctx context.Context) {
+		patchCaseSettings(ctx, nil)
+
+		// The backend omits case settings that are back to their defaults.
+		Eventually(func(g Gomega) {
+			g.Expect(getCaseSettings(ctx, g)).To(BeNil())
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+})
