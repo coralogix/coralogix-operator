@@ -162,7 +162,7 @@ func (g *GlobalRouter) ExtractGlobalRouter(ctx context.Context) (*globalrouters.
 	}
 
 	return &globalrouters.GlobalRouter{
-		Name:            globalrouters.PtrString(g.Spec.Name),
+		Name:            g.Spec.Name,
 		Description:     globalrouters.PtrString(g.Spec.Description),
 		Id:              g.Spec.ID,
 		EntityLabels:    ptr.Deref(g.Spec.EntityLabels, nil),
@@ -191,8 +191,8 @@ func extractFallbackTargets(ctx context.Context, namespace string, fallbackTarge
 		}
 
 		result = append(result, globalrouters.FallbackTarget{
-			EntityType: entityType.Ptr(),
-			Target:     target,
+			EntityType: entityType,
+			Target:     *target,
 		})
 	}
 
@@ -241,8 +241,8 @@ func extractRoutingRule(ctx context.Context, namespace string, rule RoutingRule)
 	}
 
 	routingRule := &globalrouters.RoutingRule{
-		Name:      globalrouters.PtrString(rule.Name),
-		Condition: globalrouters.PtrString(rule.Condition),
+		Name:      rule.Name,
+		Condition: rule.Condition,
 		Targets:   targets,
 	}
 
@@ -295,7 +295,7 @@ func extractRoutingTarget(ctx context.Context, namespace string, target RoutingT
 	}
 
 	routingTarget := &globalrouters.RoutingTarget{
-		ConnectorId: globalrouters.PtrString(connectorID),
+		ConnectorId: connectorID,
 		PresetId:    presetID,
 	}
 	if len(target.CustomDetails) > 0 {
