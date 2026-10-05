@@ -318,12 +318,10 @@ func TestGlobalRouterExtractDisabledFallbackTargetsAndCases(t *testing.T) {
 		string(*got.Rules[0].EntityType) != "CASES" {
 		t.Fatalf("rule entity type = %v, want CASES", got.Rules)
 	}
-	if len(got.FallbackTargets) != 1 || got.FallbackTargets[0].EntityType == nil ||
-		string(*got.FallbackTargets[0].EntityType) != "ALERTS" {
+	if len(got.FallbackTargets) != 1 || string(got.FallbackTargets[0].EntityType) != "ALERTS" {
 		t.Fatalf("fallbackTargets = %v, want one ALERTS target", got.FallbackTargets)
 	}
-	if got.FallbackTargets[0].Target == nil || got.FallbackTargets[0].Target.ConnectorId == nil ||
-		*got.FallbackTargets[0].Target.ConnectorId != "conn-1" {
+	if got.FallbackTargets[0].Target.ConnectorId != "conn-1" {
 		t.Fatalf("fallbackTargets[0].Target connector = %v, want conn-1", got.FallbackTargets[0].Target)
 	}
 	if got.Rules[0].CustomDetails == nil || got.Rules[0].CustomDetails["ruleKey"] != "ruleVal" {
