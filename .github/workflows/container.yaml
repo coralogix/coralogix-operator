@@ -28,8 +28,19 @@ env:
 
 jobs:
   build:
-    name: Build Container
+    name: Build Container (${{ matrix.variant }})
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - variant: standard
+            suffix: ""
+            gofips140: "off"
+            godebug: ""
+          - variant: fips
+            suffix: "-fips"
+            gofips140: "v1.0.0"
+            godebug: "fips140=on"
 
     steps:
       - name: Checkout repository
@@ -47,6 +58,8 @@ jobs:
         uses: docker/metadata-action@c4ee3adeed93b1fa6a762f209fb01608c1a22f1e
         with:
           images: ${{ env.DOCKERHUB_REGISTRY }}
+          flavor: |
+            suffix=${{ matrix.suffix }},onlatest=true
 
       # No QEMU: the builder stage is pinned to the build platform and cross-compiles with
       # GOARCH, and the runtime stage only copies the binary in, so nothing needs emulating.
@@ -58,6 +71,9 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64
+          build-args: |
+            GOFIPS140=${{ matrix.gofips140 }}
+            GODEBUG=${{ matrix.godebug }}
           push: ${{ startsWith(github.ref, 'refs/tags/') }}
           # Keep the published manifest shape as it was before the action was upgraded;
           # build-push-action v6 would otherwise attach provenance attestations.
@@ -68,4 +84,4 @@ jobs:
           # source change. Cross-compiling instead of emulating is where the win actually is.
           tags: |
             ${{ steps.meta.outputs.tags }}
-            ${{ env.DOCKERHUB_REGISTRY }}:${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
+            ${{ env.DOCKERHUB_REGISTRY }}:${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}${{ matrix.suffix }}
