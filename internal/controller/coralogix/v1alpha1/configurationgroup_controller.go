@@ -245,9 +245,9 @@ func expandFamilyCreate(family coralogixv1alpha1.ConfigurationFamilySpec) (*cfgg
 
 func expandFamilyReplace(family coralogixv1alpha1.ConfigurationFamilySpec) (*cfggroups.ConfigurationGroupServiceReplaceConfigurationGroupRequestGroupFamily, error) {
 	out := cfggroups.NewConfigurationGroupServiceReplaceConfigurationGroupRequestGroupFamily()
-	if family.Active != nil {
-		out.SetActive(*family.Active)
-	}
+	// Always send active: an omitted value deactivates the family on update.
+	// Fall back to the CRD default (true) if the API server did not apply it.
+	out.SetActive(ptr.Deref(family.Active, true))
 	if family.Description != nil {
 		out.SetDescription(*family.Description)
 	} else {

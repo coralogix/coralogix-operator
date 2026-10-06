@@ -22,6 +22,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/ptr"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cfggroups "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/fleet_manager_configuration_groups"
 
@@ -104,6 +105,18 @@ var _ = Describe("ConfigurationGroup validation", func() {
 		Expect(k8sClient.Update(ctx, group)).To(Succeed())
 	})
 
+	It("should default family.active to true", func(ctx context.Context) {
+		group := configurationGroupWithFamily("cg-active-default", coralogixv1alpha1.ConfigurationFamilySpec{Raw: rawFamily()})
+		Expect(k8sClient.Create(ctx, group)).To(Succeed())
+		DeferCleanup(func(ctx context.Context) {
+			Expect(k8sClient.Delete(ctx, group)).To(Succeed())
+		})
+
+		fetched := &coralogixv1alpha1.ConfigurationGroup{}
+		Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(group), fetched)).To(Succeed())
+		Expect(fetched.Spec.Family.Active).To(Equal(ptr.To(true)))
+	})
+
 	It("should reject a family with both preset and raw", func(ctx context.Context) {
 		group := configurationGroupWithFamily("cg-both", coralogixv1alpha1.ConfigurationFamilySpec{
 			Preset: presetFamily(),
@@ -179,6 +192,7 @@ var _ = Describe("ConfigurationGroup expansion", func() {
 		Expect(replaceReq.Group.Family.Preset).To(BeNil())
 		Expect(replaceReq.Group.Family.Raw.Metadata).To(Equal(map[string]string{}))
 		Expect(replaceReq.Group.Family.Raw.RemoteConfigurations).To(HaveLen(1))
+		Expect(replaceReq.Group.Family.Active).To(Equal(ptr.To(true)))
 	})
 
 	It("should reject observabilityFeatures that are not a JSON object", func() {
