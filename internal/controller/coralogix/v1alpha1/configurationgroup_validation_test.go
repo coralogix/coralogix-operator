@@ -71,6 +71,39 @@ var _ = Describe("ConfigurationGroup validation", func() {
 		Expect(k8sClient.Delete(ctx, group)).To(Succeed())
 	})
 
+	DescribeTable("should reject switching a family between preset and raw",
+		func(ctx context.Context, name string, from, to coralogixv1alpha1.ConfigurationFamilySpec) {
+			group := configurationGroupWithFamily(name, from)
+			Expect(k8sClient.Create(ctx, group)).To(Succeed())
+			DeferCleanup(func(ctx context.Context) {
+				Expect(k8sClient.Delete(ctx, group)).To(Succeed())
+			})
+
+			group.Spec.Family = to
+			err := k8sClient.Update(ctx, group)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("cannot switch between preset and raw"))
+		},
+		Entry("raw to preset", "cg-raw-to-preset",
+			coralogixv1alpha1.ConfigurationFamilySpec{Raw: rawFamily()},
+			coralogixv1alpha1.ConfigurationFamilySpec{Preset: presetFamily()}),
+		Entry("preset to raw", "cg-preset-to-raw",
+			coralogixv1alpha1.ConfigurationFamilySpec{Preset: presetFamily()},
+			coralogixv1alpha1.ConfigurationFamilySpec{Raw: rawFamily()}),
+	)
+
+	It("should accept updating the content of the same family kind", func(ctx context.Context) {
+		group := configurationGroupWithFamily("cg-raw-update", coralogixv1alpha1.ConfigurationFamilySpec{Raw: rawFamily()})
+		Expect(k8sClient.Create(ctx, group)).To(Succeed())
+		DeferCleanup(func(ctx context.Context) {
+			Expect(k8sClient.Delete(ctx, group)).To(Succeed())
+		})
+
+		group.Spec.Family.Raw.CollectorVersion = ptr.To("0.115.0")
+		group.Spec.Family.Description = ptr.To("updated")
+		Expect(k8sClient.Update(ctx, group)).To(Succeed())
+	})
+
 	It("should reject a family with both preset and raw", func(ctx context.Context) {
 		group := configurationGroupWithFamily("cg-both", coralogixv1alpha1.ConfigurationFamilySpec{
 			Preset: presetFamily(),

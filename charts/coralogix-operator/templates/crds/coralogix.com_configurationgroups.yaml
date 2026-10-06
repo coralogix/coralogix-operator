@@ -167,6 +167,9 @@ spec:
                 x-kubernetes-validations:
                 - message: Exactly one of preset or raw is required
                   rule: has(self.preset) != has(self.raw)
+                - message: family cannot switch between preset and raw; delete and
+                    recreate the ConfigurationGroup
+                  rule: has(self.preset) == has(oldSelf.preset)
               name:
                 description: Display name.
                 type: string

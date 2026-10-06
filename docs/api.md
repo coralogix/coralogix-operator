@@ -10862,7 +10862,7 @@ This resource is in Beta and uses the Preview configuration-group API.
         <td>
           Latest configuration family for this group.<br/>
           <br/>
-            <i>Validations</i>:<li>has(self.preset) != has(self.raw): Exactly one of preset or raw is required</li>
+            <i>Validations</i>:<li>has(self.preset) != has(self.raw): Exactly one of preset or raw is required</li><li>has(self.preset) == has(oldSelf.preset): family cannot switch between preset and raw; delete and recreate the ConfigurationGroup</li>
         </td>
         <td>true</td>
       </tr><tr>
