@@ -1,0 +1,22 @@
+apiVersion: coralogix.com/v1alpha1
+kind: ConfigurationGroup
+metadata:
+  name: configuration-group-preset-sample
+spec:
+  name: production-k8s-collectors
+  description: Kubernetes collectors generated from the OTel integration template.
+  tags:
+    - production
+  family:
+    active: true
+    description: Kubernetes preset family
+    # chartVersion, metadata and observabilityFeatures are illustrative; use values
+    # supported by the chosen configuration template version.
+    preset:
+      chartName: otelIntegration
+      chartVersion: "0.0.230"
+      metadata:
+        ClusterName: production
+      observabilityFeatures:
+        logsCollection:
+          enabled: true

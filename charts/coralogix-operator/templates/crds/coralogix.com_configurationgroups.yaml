@@ -61,54 +61,110 @@ spec:
                     default: true
                     description: Whether this family is active.
                     type: boolean
-                  collectorVersion:
-                    description: |-
-                      Collector semantic version this family targets, without a leading v prefix.
-                      The replace API keeps the existing value when this field is omitted.
-                    maxLength: 256
-                    minLength: 5
-                    pattern: ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$
-                    type: string
                   description:
                     description: Human-readable description.
                     type: string
-                  metadata:
-                    additionalProperties:
-                      type: string
-                    description: Metadata stored with this configuration family.
+                  preset:
+                    description: Configuration template settings. Coralogix generates
+                      the remote configurations from them.
+                    properties:
+                      chartName:
+                        description: |-
+                          Configuration template type: otelIntegration for Kubernetes, otelEcsEc2 for ECS on EC2,
+                          or otelLinuxStandalone, otelWindowsStandalone or otelMacosStandalone for hosts.
+                        enum:
+                        - otelIntegration
+                        - opentelemetryCollector
+                        - otelLinuxStandalone
+                        - otelWindowsStandalone
+                        - otelMacosStandalone
+                        - otelEcsEc2
+                        type: string
+                      chartVersion:
+                        description: |-
+                          Configuration template version. It determines the OpenTelemetry Collector version, the generated
+                          collector configuration, and which integrationVersion values are supported.
+                        maxLength: 256
+                        pattern: ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$
+                        type: string
+                      integrationVersion:
+                        description: Version of the observability features format.
+                          Omit it to use the default for the template type and version.
+                        maxLength: 256
+                        pattern: ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$
+                        type: string
+                      metadata:
+                        additionalProperties:
+                          type: string
+                        description: |-
+                          Environment setup values for the configuration template, such as ClusterName, KubernetesRunningOn,
+                          ApplicationName or SubsystemName. Set observability features in observabilityFeatures, not here.
+                        type: object
+                      observabilityFeatures:
+                        description: |-
+                          Observability feature settings for the configuration template. The available features depend on
+                          chartName and integrationVersion. It is sent to the API as a JSON object string.
+                        type: object
+                        x-kubernetes-preserve-unknown-fields: true
+                    required:
+                    - chartName
+                    - chartVersion
+                    - observabilityFeatures
                     type: object
-                  remoteConfigurations:
-                    description: Remote OpenTelemetry Collector configurations in
-                      this family.
-                    items:
-                      description: RemoteConfigurationSpec is a remote OpenTelemetry
-                        Collector configuration.
-                      properties:
-                        agentSelector:
-                          additionalProperties:
-                            type: string
-                          description: Flat agent attributes that match agents for
-                            this configuration.
+                  raw:
+                    description: Configuration family defined directly by its remote
+                      configurations.
+                    properties:
+                      collectorVersion:
+                        description: |-
+                          Collector semantic version this family targets, without a leading v prefix.
+                          The replace API keeps the existing value when this field is omitted.
+                        maxLength: 256
+                        minLength: 5
+                        pattern: ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$
+                        type: string
+                      metadata:
+                        additionalProperties:
+                          type: string
+                        description: Metadata stored with this configuration family.
+                        type: object
+                      remoteConfigurations:
+                        description: Remote OpenTelemetry Collector configurations
+                          in this family.
+                        items:
+                          description: RemoteConfigurationSpec is a remote OpenTelemetry
+                            Collector configuration.
+                          properties:
+                            agentSelector:
+                              additionalProperties:
+                                type: string
+                              description: Flat agent attributes that match agents
+                                for this configuration.
+                              type: object
+                            name:
+                              description: Remote configuration name.
+                              type: string
+                            rawConfiguration:
+                              description: OpenTelemetry Collector configuration YAML.
+                                The supervisor-managed OpAMP extension must not be
+                                configured.
+                              maxLength: 1048576
+                              minLength: 1
+                              type: string
+                          required:
+                          - name
+                          - rawConfiguration
                           type: object
-                        name:
-                          description: Remote configuration name.
-                          type: string
-                        rawConfiguration:
-                          description: OpenTelemetry Collector configuration YAML.
-                            The supervisor-managed OpAMP extension must not be configured.
-                          maxLength: 1048576
-                          minLength: 1
-                          type: string
-                      required:
-                      - name
-                      - rawConfiguration
-                      type: object
-                    maxItems: 128
-                    minItems: 1
-                    type: array
-                required:
-                - remoteConfigurations
+                        maxItems: 128
+                        minItems: 1
+                        type: array
+                    required:
+                    - remoteConfigurations
+                    type: object
                 type: object
+                x-kubernetes-validations:
+                - message: Exactly one of preset or raw is required
+                  rule: has(self.preset) != has(self.raw)
               name:
                 description: Display name.
                 type: string

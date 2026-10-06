@@ -16,10 +16,12 @@ package v1alpha1
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/go-logr/logr"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -56,7 +58,10 @@ func (r *ConfigurationGroupReconciler) RequeueInterval() time.Duration {
 
 func (r *ConfigurationGroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	group := obj.(*coralogixv1alpha1.ConfigurationGroup)
-	createReq := expandCreateRequest(group)
+	createReq, err := expandCreateRequest(group)
+	if err != nil {
+		return fmt.Errorf("error on expanding configuration group: %w", err)
+	}
 	log.Info("Creating remote configuration group", "name", group.Spec.Name)
 	createResp, httpResp, err := r.ConfigurationGroupsClient.
 		ConfigurationGroupServiceCreateConfigurationGroup(ctx).
@@ -77,7 +82,10 @@ func (r *ConfigurationGroupReconciler) HandleCreation(ctx context.Context, log l
 
 func (r *ConfigurationGroupReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	group := obj.(*coralogixv1alpha1.ConfigurationGroup)
-	replaceReq := expandReplaceRequest(group)
+	replaceReq, err := expandReplaceRequest(group)
+	if err != nil {
+		return fmt.Errorf("error on expanding configuration group: %w", err)
+	}
 	log.Info("Updating remote configuration group", "id", *group.Status.ID, "name", group.Spec.Name)
 	_, httpResp, err := r.ConfigurationGroupsClient.
 		ConfigurationGroupServiceReplaceConfigurationGroup(ctx, *group.Status.ID).
@@ -140,7 +148,7 @@ func (r *ConfigurationGroupReconciler) SetupWithManager(mgr ctrl.Manager) error 
 		Complete(r)
 }
 
-func expandCreateRequest(group *coralogixv1alpha1.ConfigurationGroup) cfggroups.ConfigurationGroupServiceCreateConfigurationGroupRequest {
+func expandCreateRequest(group *coralogixv1alpha1.ConfigurationGroup) (cfggroups.ConfigurationGroupServiceCreateConfigurationGroupRequest, error) {
 	create := cfggroups.NewConfigurationGroupCreate()
 	create.SetName(group.Spec.Name)
 	if group.Spec.Description != nil {
@@ -152,13 +160,17 @@ func expandCreateRequest(group *coralogixv1alpha1.ConfigurationGroup) cfggroups.
 	if group.Spec.PriorityOrder != nil {
 		create.SetPriorityOrder(*group.Spec.PriorityOrder)
 	}
-	create.SetFamily(*expandFamilyCreate(group.Spec.Family))
+	family, err := expandFamilyCreate(group.Spec.Family)
+	if err != nil {
+		return cfggroups.ConfigurationGroupServiceCreateConfigurationGroupRequest{}, err
+	}
+	create.SetFamily(*family)
 	req := cfggroups.NewConfigurationGroupServiceCreateConfigurationGroupRequest()
 	req.SetGroup(*create)
-	return *req
+	return *req, nil
 }
 
-func expandReplaceRequest(group *coralogixv1alpha1.ConfigurationGroup) cfggroups.ConfigurationGroupServiceReplaceConfigurationGroupRequest {
+func expandReplaceRequest(group *coralogixv1alpha1.ConfigurationGroup) (cfggroups.ConfigurationGroupServiceReplaceConfigurationGroupRequest, error) {
 	replace := cfggroups.NewConfigurationGroupServiceReplaceConfigurationGroupRequestGroup()
 	replace.SetName(group.Spec.Name)
 	if group.Spec.Description != nil {
@@ -176,13 +188,26 @@ func expandReplaceRequest(group *coralogixv1alpha1.ConfigurationGroup) cfggroups
 		priorityOrder = *group.Spec.PriorityOrder
 	}
 	replace.SetPriorityOrder(priorityOrder)
-	replace.SetFamily(*expandFamilyReplace(group.Spec.Family))
+	family, err := expandFamilyReplace(group.Spec.Family)
+	if err != nil {
+		return cfggroups.ConfigurationGroupServiceReplaceConfigurationGroupRequest{}, err
+	}
+	replace.SetFamily(*family)
 	req := cfggroups.NewConfigurationGroupServiceReplaceConfigurationGroupRequest()
 	req.SetGroup(*replace)
-	return *req
+	return *req, nil
 }
 
-func expandFamilyCreate(family coralogixv1alpha1.ConfigurationFamilySpec) *cfggroups.ConfigurationFamilyCreate {
+var schemaToOpenAPIChartName = map[string]cfggroups.ChartName{
+	"otelIntegration":        cfggroups.CHARTNAME_CHART_NAME_OTEL_INTEGRATION,
+	"opentelemetryCollector": cfggroups.CHARTNAME_CHART_NAME_OPENTELEMETRY_COLLECTOR,
+	"otelLinuxStandalone":    cfggroups.CHARTNAME_CHART_NAME_OTEL_LINUX_STANDALONE,
+	"otelWindowsStandalone":  cfggroups.CHARTNAME_CHART_NAME_OTEL_WINDOWS_STANDALONE,
+	"otelMacosStandalone":    cfggroups.CHARTNAME_CHART_NAME_OTEL_MACOS_STANDALONE,
+	"otelEcsEc2":             cfggroups.CHARTNAME_CHART_NAME_OTEL_ECS_EC2,
+}
+
+func expandFamilyCreate(family coralogixv1alpha1.ConfigurationFamilySpec) (*cfggroups.ConfigurationFamilyCreate, error) {
 	out := cfggroups.NewConfigurationFamilyCreate()
 	if family.Active != nil {
 		out.SetActive(*family.Active)
@@ -190,17 +215,36 @@ func expandFamilyCreate(family coralogixv1alpha1.ConfigurationFamilySpec) *cfggr
 	if family.Description != nil {
 		out.SetDescription(*family.Description)
 	}
-	if family.CollectorVersion != nil {
-		out.SetCollectorVersion(*family.CollectorVersion)
+	switch {
+	case family.Preset != nil:
+		chartName, observabilityFeatures, err := expandPresetCommon(family.Preset)
+		if err != nil {
+			return nil, err
+		}
+		preset := cfggroups.NewPresetConfigurationFamilyCreate(chartName, family.Preset.ChartVersion, observabilityFeatures)
+		if family.Preset.IntegrationVersion != nil {
+			preset.SetIntegrationVersion(*family.Preset.IntegrationVersion)
+		}
+		if family.Preset.Metadata != nil {
+			preset.SetMetadata(family.Preset.Metadata)
+		}
+		out.SetPreset(*preset)
+	case family.Raw != nil:
+		raw := cfggroups.NewRawConfigurationFamilyCreate(expandRemoteCreates(family.Raw.RemoteConfigurations))
+		if family.Raw.CollectorVersion != nil {
+			raw.SetCollectorVersion(*family.Raw.CollectorVersion)
+		}
+		if family.Raw.Metadata != nil {
+			raw.SetMetadata(family.Raw.Metadata)
+		}
+		out.SetRaw(*raw)
+	default:
+		return nil, fmt.Errorf("exactly one of family.preset or family.raw is required")
 	}
-	if family.Metadata != nil {
-		out.SetMetadata(family.Metadata)
-	}
-	out.SetRemoteConfigurations(expandRemoteCreates(family.RemoteConfigurations))
-	return out
+	return out, nil
 }
 
-func expandFamilyReplace(family coralogixv1alpha1.ConfigurationFamilySpec) *cfggroups.ConfigurationGroupServiceReplaceConfigurationGroupRequestGroupFamily {
+func expandFamilyReplace(family coralogixv1alpha1.ConfigurationFamilySpec) (*cfggroups.ConfigurationGroupServiceReplaceConfigurationGroupRequestGroupFamily, error) {
 	out := cfggroups.NewConfigurationGroupServiceReplaceConfigurationGroupRequestGroupFamily()
 	if family.Active != nil {
 		out.SetActive(*family.Active)
@@ -210,16 +254,67 @@ func expandFamilyReplace(family coralogixv1alpha1.ConfigurationFamilySpec) *cfgg
 	} else {
 		out.SetDescription("")
 	}
-	if family.CollectorVersion != nil {
-		out.SetCollectorVersion(*family.CollectorVersion)
+	switch {
+	case family.Preset != nil:
+		chartName, observabilityFeatures, err := expandPresetCommon(family.Preset)
+		if err != nil {
+			return nil, err
+		}
+		preset := cfggroups.NewPresetConfigurationFamilyReplace(chartName, family.Preset.ChartVersion, observabilityFeatures)
+		if family.Preset.IntegrationVersion != nil {
+			preset.SetIntegrationVersion(*family.Preset.IntegrationVersion)
+		}
+		preset.SetMetadata(nonNilStringMap(family.Preset.Metadata))
+		out.SetPreset(*preset)
+	case family.Raw != nil:
+		raw := cfggroups.NewRawConfigurationFamilyReplace(expandRemoteReplaces(family.Raw.RemoteConfigurations))
+		if family.Raw.CollectorVersion != nil {
+			raw.SetCollectorVersion(*family.Raw.CollectorVersion)
+		}
+		raw.SetMetadata(nonNilStringMap(family.Raw.Metadata))
+		out.SetRaw(*raw)
+	default:
+		return nil, fmt.Errorf("exactly one of family.preset or family.raw is required")
 	}
-	metadata := family.Metadata
-	if metadata == nil {
-		metadata = map[string]string{}
+	return out, nil
+}
+
+func expandPresetCommon(preset *coralogixv1alpha1.PresetConfigurationFamilySpec) (cfggroups.ChartName, string, error) {
+	chartName, ok := schemaToOpenAPIChartName[preset.ChartName]
+	if !ok {
+		return "", "", fmt.Errorf("unsupported family.preset.chartName %q", preset.ChartName)
 	}
-	out.SetMetadata(metadata)
-	out.SetRemoteConfigurations(expandRemoteReplaces(family.RemoteConfigurations))
-	return out
+	observabilityFeatures, err := expandObservabilityFeatures(preset.ObservabilityFeatures)
+	if err != nil {
+		return "", "", err
+	}
+	return chartName, observabilityFeatures, nil
+}
+
+// expandObservabilityFeatures serializes the structured CRD object into the JSON object string the API expects.
+func expandObservabilityFeatures(features runtime.RawExtension) (string, error) {
+	if len(features.Raw) == 0 {
+		return "{}", nil
+	}
+	var object map[string]interface{}
+	if err := json.Unmarshal(features.Raw, &object); err != nil {
+		return "", fmt.Errorf("family.preset.observabilityFeatures must be a JSON object: %w", err)
+	}
+	if object == nil {
+		return "{}", nil
+	}
+	out, err := json.Marshal(object)
+	if err != nil {
+		return "", fmt.Errorf("marshaling family.preset.observabilityFeatures: %w", err)
+	}
+	return string(out), nil
+}
+
+func nonNilStringMap(m map[string]string) map[string]string {
+	if m == nil {
+		return map[string]string{}
+	}
+	return m
 }
 
 func expandRemoteCreates(remotes []coralogixv1alpha1.RemoteConfigurationSpec) []cfggroups.RemoteConfigurationCreate {

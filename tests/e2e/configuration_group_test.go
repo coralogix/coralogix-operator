@@ -55,18 +55,20 @@ var _ = Describe("ConfigurationGroup", Ordered, func() {
 				Description: ptr.To("e2e configuration group"),
 				Tags:        []string{"e2e"},
 				Family: coralogixv1alpha1.ConfigurationFamilySpec{
-					Active:           ptr.To(true),
-					CollectorVersion: ptr.To("0.114.0"),
-					RemoteConfigurations: []coralogixv1alpha1.RemoteConfigurationSpec{
-						{
-							Name: "default",
-							RawConfiguration: `receivers:
+					Active: ptr.To(true),
+					Raw: &coralogixv1alpha1.RawConfigurationFamilySpec{
+						CollectorVersion: ptr.To("0.114.0"),
+						RemoteConfigurations: []coralogixv1alpha1.RemoteConfigurationSpec{
+							{
+								Name: "default",
+								RawConfiguration: `receivers:
   otlp:
     protocols:
       grpc: {}
 `,
-							AgentSelector: map[string]string{
-								"cx.agent.type": "agent",
+								AgentSelector: map[string]string{
+									"cx.agent.type": "agent",
+								},
 							},
 						},
 					},
