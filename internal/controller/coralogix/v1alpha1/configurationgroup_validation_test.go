@@ -156,7 +156,7 @@ var _ = Describe("ConfigurationGroup validation", func() {
 })
 
 var _ = Describe("ConfigurationGroup expansion", func() {
-	It("should expand a preset family into create and replace requests", func() {
+	It("should expand a preset family into create and update requests", func() {
 		group := configurationGroupWithFamily("cg", coralogixv1alpha1.ConfigurationFamilySpec{Preset: presetFamily()})
 
 		createReq, err := expandCreateRequest(group)
@@ -169,16 +169,17 @@ var _ = Describe("ConfigurationGroup expansion", func() {
 		Expect(createFamily.Preset.GetIntegrationVersion()).To(Equal("0.8.0"))
 		Expect(createFamily.Preset.ObservabilityFeatures).To(MatchJSON(`{"logsCollection":{"enabled":true}}`))
 
-		replaceReq, err := expandReplaceRequest(group)
+		updateReq, updateMask, err := expandUpdateRequest(group)
 		Expect(err).NotTo(HaveOccurred())
-		replaceFamily := replaceReq.Group.Family
-		Expect(replaceFamily.Raw).To(BeNil())
-		Expect(replaceFamily.Preset).NotTo(BeNil())
-		Expect(replaceFamily.Preset.ChartName).To(Equal(cfggroups.CHARTNAME_CHART_NAME_OTEL_INTEGRATION))
-		Expect(replaceFamily.Preset.Metadata).To(Equal(map[string]string{"ClusterName": "prod"}))
+		updateFamily := updateReq.Family
+		Expect(updateMask).To(Equal("name,description,tags,priorityOrder,family.description,family.active,family.preset"))
+		Expect(updateFamily.Raw).To(BeNil())
+		Expect(updateFamily.Preset).NotTo(BeNil())
+		Expect(updateFamily.Preset.ChartName).To(Equal(cfggroups.CHARTNAME_CHART_NAME_OTEL_INTEGRATION))
+		Expect(updateFamily.Preset.Metadata).To(Equal(map[string]string{"ClusterName": "prod"}))
 	})
 
-	It("should expand a raw family into create and replace requests", func() {
+	It("should expand a raw family into create and update requests", func() {
 		group := configurationGroupWithFamily("cg", coralogixv1alpha1.ConfigurationFamilySpec{Raw: rawFamily()})
 
 		createReq, err := expandCreateRequest(group)
@@ -187,12 +188,16 @@ var _ = Describe("ConfigurationGroup expansion", func() {
 		Expect(createReq.Group.Family.Raw.GetCollectorVersion()).To(Equal("0.114.0"))
 		Expect(createReq.Group.Family.Raw.RemoteConfigurations).To(HaveLen(1))
 
-		replaceReq, err := expandReplaceRequest(group)
+		updateReq, updateMask, err := expandUpdateRequest(group)
 		Expect(err).NotTo(HaveOccurred())
-		Expect(replaceReq.Group.Family.Preset).To(BeNil())
-		Expect(replaceReq.Group.Family.Raw.Metadata).To(Equal(map[string]string{}))
-		Expect(replaceReq.Group.Family.Raw.RemoteConfigurations).To(HaveLen(1))
-		Expect(replaceReq.Group.Family.Active).To(Equal(ptr.To(true)))
+		Expect(updateReq.Family.Preset).To(BeNil())
+		Expect(updateMask).To(Equal("name,description,tags,priorityOrder,family.description,family.active,family.raw"))
+		Expect(updateReq.Family.Raw.RemoteConfigurations[0].RawConfiguration).To(Equal("receivers: {}"))
+		Expect(updateReq.GetDescription()).To(Equal(""))
+		Expect(updateReq.GetPriorityOrder()).To(Equal(int32(0)))
+		Expect(updateReq.Family.Raw.Metadata).To(Equal(map[string]string{}))
+		Expect(updateReq.Family.Raw.RemoteConfigurations).To(HaveLen(1))
+		Expect(updateReq.Family.Active).To(Equal(ptr.To(true)))
 	})
 
 	It("should reject observabilityFeatures that are not a JSON object", func() {
