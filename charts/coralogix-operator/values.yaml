@@ -119,8 +119,6 @@ coralogixOperator:
     repository: coralogixrepo/coralogix-operator
     tag: ""
     pullPolicy: IfNotPresent
-    # -- Select the image built with Go Cryptographic Module v1.0.0 and FIPS mode enabled. Appends -fips to the image tag.
-    fips: false
 
   # -- Coralogix Account Region
   region: ""

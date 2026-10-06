@@ -1,30 +1,31 @@
 # FIPS image and government endpoint configuration
 
-The container release workflow builds standard and FIPS variants for Linux amd64
-and arm64. A release tagged `vX.Y.Z` publishes the FIPS variant as
-`coralogixrepo/coralogix-operator:vX.Y.Z-fips` alongside the standard image.
+The operator image builds with `GOFIPS140=v1.0.0` and runs with
+`GODEBUG=fips140=on` by default. The container release workflow publishes the
+usual `coralogixrepo/coralogix-operator:vX.Y.Z` tags for Linux amd64 and arm64.
+Helm uses those same tags without an additional FIPS value or tag suffix.
 
-The FIPS variant builds with `GOFIPS140=v1.0.0` and sets `GODEBUG=fips140=on`
-in the image. It uses the same Go 1.26 builder, `CGO_ENABLED=0`, and distroless
-static runtime base as the standard variant. It uses Go's native cryptographic
-module; BoringCrypto is not required.
+The image retains the Go 1.26 builder, `CGO_ENABLED=0`, and distroless static
+runtime base. It uses Go's native cryptographic module. Makefile builds and
+unit tests also default to the pinned module, and the CI test image uses the
+same runtime setting as the release image.
+
+FIPS mode restricts TLS negotiation to approved protocol versions, cipher suites,
+signature algorithms, and key exchanges. Test connectivity to the Coralogix and
+Kubernetes API endpoints with the default image in the target environment.
 
 ## Deploy with Helm
 
-Set `coralogixOperator.image.fips=true` to append `-fips` to the image version.
-The version defaults to the chart's `appVersion`, or can be overridden with
-`coralogixOperator.image.tag` (without the leading `v`). Explicit tags already
-ending in `-fips` remain unchanged.
-
-Use a release for which the FIPS image has been published. The values below are
-also supported by the local chart at `./charts/coralogix-operator` when testing
-an unreleased build.
+Use an operator release that includes this default. Previously published images
+are unchanged. The image version defaults to the chart's `appVersion`, or can
+be overridden with `coralogixOperator.image.tag` (without the leading `v`).
+The values below are also supported by the local chart at
+`./charts/coralogix-operator` when testing an unreleased build.
 
 ```yaml
 coralogixOperator:
-  image:
-    fips: true
-    # tag: "X.Y.Z" # Optional published operator version, without the leading v.
+  # image:
+  #   tag: "X.Y.Z" # Optional published operator version, without the leading v.
   region: ""
   domain: "gov.example.com" # Replace with your assigned Coralogix domain.
 secret:
@@ -78,11 +79,10 @@ deployment test evidence for the assessment. Do not override the image's
 
 ## Local build and inspection
 
-Use Docker Buildx/BuildKit to build the FIPS image:
+Use Docker Buildx/BuildKit to build the default image:
 
 ```sh
 docker buildx build --load --platform linux/amd64 \
-  --build-arg GOFIPS140=v1.0.0 --build-arg GODEBUG=fips140=on \
   --tag coralogix-operator-local:fips .
 docker image inspect coralogix-operator-local:fips --format '{{json .Config.Env}}'
 docker run --rm coralogix-operator-local:fips --help
