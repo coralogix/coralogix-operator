@@ -33,7 +33,10 @@ jobs:
     - uses: actions/setup-go@v5
       with:
         go-version-file: go.mod
-        cache-dependency-path: go.sum
+        # Include build settings such as GOFIPS140 when selecting the Go cache.
+        cache-dependency-path: |
+          go.sum
+          Makefile
     - name: Cache Makefile tool binaries
       uses: actions/cache@v4
       with:
