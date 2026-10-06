@@ -99,6 +99,9 @@ var _ = Describe("Alert", Ordered, func() {
 				Name:        alertName,
 				Description: "alert from k8s operator",
 				Priority:    coralogixv1beta1.AlertPriorityP1,
+				IncidentsSettings: &coralogixv1beta1.IncidentsSettings{
+					NotifyOn: coralogixv1beta1.NotifyOnTriggeredAndResolved,
+				},
 				NotificationGroup: &coralogixv1beta1.NotificationGroup{
 					Webhooks: []coralogixv1beta1.WebhookSettings{
 						{
@@ -245,6 +248,9 @@ var _ = Describe("Alert", Ordered, func() {
 				Name:        alertName,
 				Description: "alert from k8s operator",
 				Priority:    coralogixv1beta1.AlertPriorityP1,
+				IncidentsSettings: &coralogixv1beta1.IncidentsSettings{
+					NotifyOn: coralogixv1beta1.NotifyOnTriggeredAndResolved,
+				},
 				NotificationGroup: &coralogixv1beta1.NotificationGroup{
 					Webhooks: []coralogixv1beta1.WebhookSettings{
 						{
