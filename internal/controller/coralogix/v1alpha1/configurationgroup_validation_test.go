@@ -31,8 +31,8 @@ import (
 func presetFamily() *coralogixv1alpha1.PresetConfigurationFamilySpec {
 	return &coralogixv1alpha1.PresetConfigurationFamilySpec{
 		ChartName:             "otelIntegration",
-		ChartVersion:          "0.0.230",
-		IntegrationVersion:    ptr.To("1.0.0"),
+		ChartVersion:          "0.0.289",
+		IntegrationVersion:    ptr.To("0.8.0"),
 		Metadata:              map[string]string{"ClusterName": "prod"},
 		ObservabilityFeatures: runtime.RawExtension{Raw: []byte(`{"logsCollection":{"enabled":true}}`)},
 	}
@@ -106,8 +106,8 @@ var _ = Describe("ConfigurationGroup expansion", func() {
 		Expect(createFamily.Raw).To(BeNil())
 		Expect(createFamily.Preset).NotTo(BeNil())
 		Expect(createFamily.Preset.ChartName).To(Equal(cfggroups.CHARTNAME_CHART_NAME_OTEL_INTEGRATION))
-		Expect(createFamily.Preset.ChartVersion).To(Equal("0.0.230"))
-		Expect(createFamily.Preset.GetIntegrationVersion()).To(Equal("1.0.0"))
+		Expect(createFamily.Preset.ChartVersion).To(Equal("0.0.289"))
+		Expect(createFamily.Preset.GetIntegrationVersion()).To(Equal("0.8.0"))
 		Expect(createFamily.Preset.ObservabilityFeatures).To(MatchJSON(`{"logsCollection":{"enabled":true}}`))
 
 		replaceReq, err := expandReplaceRequest(group)
