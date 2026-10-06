@@ -50,12 +50,14 @@ runs:
         path: |
           ~/.cache/go-build
           ~/go/pkg/mod
-        # Namespaced so only build-linux writes it, and keyed on the toolchain plus go.sum, which
-        # together decide whether the cached dependency objects are still usable - Go's own cache
-        # keys on compiler version, so a patch bump would otherwise leave dead entries behind.
+        # Namespaced so only build-linux writes it, and keyed on the Makefile build settings
+        # (including GOFIPS140), toolchain, and go.sum. Keep the Makefile hash in the restore
+        # prefix too so changes to build settings do not reuse caches from another FIPS mode.
+        # Go's own cache keys on compiler version, so a patch bump would otherwise leave dead
+        # entries behind.
         # Our own packages recompile incrementally on top, which is fast.
-        key: ${{ runner.os }}-go-image-build-${{ steps.setup-go.outputs.go-version }}-${{ hashFiles('go.sum') }}
-        restore-keys: ${{ runner.os }}-go-image-build-${{ steps.setup-go.outputs.go-version }}-
+        key: ${{ runner.os }}-go-image-build-${{ hashFiles('Makefile') }}-${{ steps.setup-go.outputs.go-version }}-${{ hashFiles('go.sum') }}
+        restore-keys: ${{ runner.os }}-go-image-build-${{ hashFiles('Makefile') }}-${{ steps.setup-go.outputs.go-version }}-
 
     - name: Build the manager binary
       shell: bash
