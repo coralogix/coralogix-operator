@@ -117,9 +117,10 @@ coralogixOperator:
   # --  Coralogix operator Image
   image:
     repository: coralogixrepo/coralogix-operator
-    # For the FIPS image, set tag to "X.Y.Z-fips" using the desired release version (omit the leading "v").
     tag: ""
     pullPolicy: IfNotPresent
+    # -- Select the image built with Go Cryptographic Module v1.0.0 and FIPS mode enabled. Appends -fips to the chart appVersion unless image.tag is overridden.
+    fips: false
 
   # -- Coralogix Account Region
   region: ""
