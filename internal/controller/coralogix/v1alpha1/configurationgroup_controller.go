@@ -199,12 +199,11 @@ func expandReplaceRequest(group *coralogixv1alpha1.ConfigurationGroup) (cfggroup
 }
 
 var schemaToOpenAPIChartName = map[string]cfggroups.ChartName{
-	"otelIntegration":        cfggroups.CHARTNAME_CHART_NAME_OTEL_INTEGRATION,
-	"opentelemetryCollector": cfggroups.CHARTNAME_CHART_NAME_OPENTELEMETRY_COLLECTOR,
-	"otelLinuxStandalone":    cfggroups.CHARTNAME_CHART_NAME_OTEL_LINUX_STANDALONE,
-	"otelWindowsStandalone":  cfggroups.CHARTNAME_CHART_NAME_OTEL_WINDOWS_STANDALONE,
-	"otelMacosStandalone":    cfggroups.CHARTNAME_CHART_NAME_OTEL_MACOS_STANDALONE,
-	"otelEcsEc2":             cfggroups.CHARTNAME_CHART_NAME_OTEL_ECS_EC2,
+	"otelIntegration":       cfggroups.CHARTNAME_CHART_NAME_OTEL_INTEGRATION,
+	"otelLinuxStandalone":   cfggroups.CHARTNAME_CHART_NAME_OTEL_LINUX_STANDALONE,
+	"otelWindowsStandalone": cfggroups.CHARTNAME_CHART_NAME_OTEL_WINDOWS_STANDALONE,
+	"otelMacosStandalone":   cfggroups.CHARTNAME_CHART_NAME_OTEL_MACOS_STANDALONE,
+	"otelEcsEc2":            cfggroups.CHARTNAME_CHART_NAME_OTEL_ECS_EC2,
 }
 
 func expandFamilyCreate(family coralogixv1alpha1.ConfigurationFamilySpec) (*cfggroups.ConfigurationFamilyCreate, error) {

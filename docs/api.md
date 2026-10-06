@@ -10972,7 +10972,7 @@ Configuration template settings. Coralogix generates the remote configurations f
           Configuration template type: otelIntegration for Kubernetes, otelEcsEc2 for ECS on EC2,
 or otelLinuxStandalone, otelWindowsStandalone or otelMacosStandalone for hosts.<br/>
           <br/>
-            <i>Enum</i>: otelIntegration, opentelemetryCollector, otelLinuxStandalone, otelWindowsStandalone, otelMacosStandalone, otelEcsEc2<br/>
+            <i>Enum</i>: otelIntegration, otelLinuxStandalone, otelWindowsStandalone, otelMacosStandalone, otelEcsEc2<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -11004,6 +11004,8 @@ chartName and integrationVersion. It is sent to the API as a JSON object string.
         <td>
           Environment setup values for the configuration template, such as ClusterName, KubernetesRunningOn,
 ApplicationName or SubsystemName. Set observability features in observabilityFeatures, not here.<br/>
+          <br/>
+            <i>Validations</i>:<li>!('ObservabilityFeatures' in self): Set observability features in observabilityFeatures, not in metadata</li>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11037,8 +11039,7 @@ Configuration family defined directly by its remote configurations.
         <td><b>collectorVersion</b></td>
         <td>string</td>
         <td>
-          Collector semantic version this family targets, without a leading v prefix.
-The replace API keeps the existing value when this field is omitted.<br/>
+          Collector semantic version this family targets, without a leading v prefix.<br/>
         </td>
         <td>false</td>
       </tr><tr>

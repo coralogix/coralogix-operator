@@ -44,7 +44,8 @@ type ConfigurationGroupSpec struct {
 }
 
 // ConfigurationFamilySpec is the latest family nested in a configuration group.
-// Exactly one of preset or raw must be set.
+// Exactly one of preset or raw must be set. Updates replace the whole preset or raw
+// content, so omitted optional fields are cleared rather than kept.
 // +kubebuilder:validation:XValidation:rule="has(self.preset) != has(self.raw)",message="Exactly one of preset or raw is required"
 type ConfigurationFamilySpec struct {
 	// Whether this family is active.
@@ -69,7 +70,7 @@ type ConfigurationFamilySpec struct {
 type PresetConfigurationFamilySpec struct {
 	// Configuration template type: otelIntegration for Kubernetes, otelEcsEc2 for ECS on EC2,
 	// or otelLinuxStandalone, otelWindowsStandalone or otelMacosStandalone for hosts.
-	// +kubebuilder:validation:Enum=otelIntegration;opentelemetryCollector;otelLinuxStandalone;otelWindowsStandalone;otelMacosStandalone;otelEcsEc2
+	// +kubebuilder:validation:Enum=otelIntegration;otelLinuxStandalone;otelWindowsStandalone;otelMacosStandalone;otelEcsEc2
 	ChartName string `json:"chartName"`
 
 	// Configuration template version. It determines the OpenTelemetry Collector version, the generated
@@ -87,6 +88,7 @@ type PresetConfigurationFamilySpec struct {
 	// Environment setup values for the configuration template, such as ClusterName, KubernetesRunningOn,
 	// ApplicationName or SubsystemName. Set observability features in observabilityFeatures, not here.
 	// +optional
+	// +kubebuilder:validation:XValidation:rule="!('ObservabilityFeatures' in self)",message="Set observability features in observabilityFeatures, not in metadata"
 	Metadata map[string]string `json:"metadata,omitempty"`
 
 	// Observability feature settings for the configuration template. The available features depend on
@@ -99,7 +101,6 @@ type PresetConfigurationFamilySpec struct {
 // RawConfigurationFamilySpec defines a family by its remote OpenTelemetry Collector configurations.
 type RawConfigurationFamilySpec struct {
 	// Collector semantic version this family targets, without a leading v prefix.
-	// The replace API keeps the existing value when this field is omitted.
 	// +optional
 	// +kubebuilder:validation:MinLength=5
 	// +kubebuilder:validation:MaxLength=256

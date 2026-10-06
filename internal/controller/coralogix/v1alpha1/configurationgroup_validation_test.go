@@ -88,11 +88,24 @@ var _ = Describe("ConfigurationGroup validation", func() {
 		Expect(err.Error()).To(ContainSubstring("Exactly one of preset or raw is required"))
 	})
 
-	It("should reject an unknown preset chartName", func(ctx context.Context) {
+	DescribeTable("should reject a chartName the API does not accept",
+		func(ctx context.Context, chartName string) {
+			preset := presetFamily()
+			preset.ChartName = chartName
+			group := configurationGroupWithFamily("cg-bad-chart", coralogixv1alpha1.ConfigurationFamilySpec{Preset: preset})
+			Expect(k8sClient.Create(ctx, group)).NotTo(Succeed())
+		},
+		Entry("unspecified", "CHART_NAME_UNSPECIFIED"),
+		Entry("opentelemetry collector", "opentelemetryCollector"),
+	)
+
+	It("should reject ObservabilityFeatures in preset metadata", func(ctx context.Context) {
 		preset := presetFamily()
-		preset.ChartName = "CHART_NAME_UNSPECIFIED"
-		group := configurationGroupWithFamily("cg-bad-chart", coralogixv1alpha1.ConfigurationFamilySpec{Preset: preset})
-		Expect(k8sClient.Create(ctx, group)).NotTo(Succeed())
+		preset.Metadata["ObservabilityFeatures"] = "{}"
+		group := configurationGroupWithFamily("cg-features-in-metadata", coralogixv1alpha1.ConfigurationFamilySpec{Preset: preset})
+		err := k8sClient.Create(ctx, group)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("not in metadata"))
 	})
 })
 

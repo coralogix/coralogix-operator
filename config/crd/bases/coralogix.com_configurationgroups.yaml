@@ -73,7 +73,6 @@ spec:
                           or otelLinuxStandalone, otelWindowsStandalone or otelMacosStandalone for hosts.
                         enum:
                         - otelIntegration
-                        - opentelemetryCollector
                         - otelLinuxStandalone
                         - otelWindowsStandalone
                         - otelMacosStandalone
@@ -99,6 +98,10 @@ spec:
                           Environment setup values for the configuration template, such as ClusterName, KubernetesRunningOn,
                           ApplicationName or SubsystemName. Set observability features in observabilityFeatures, not here.
                         type: object
+                        x-kubernetes-validations:
+                        - message: Set observability features in observabilityFeatures,
+                            not in metadata
+                          rule: '!(''ObservabilityFeatures'' in self)'
                       observabilityFeatures:
                         description: |-
                           Observability feature settings for the configuration template. The available features depend on
@@ -115,9 +118,8 @@ spec:
                       configurations.
                     properties:
                       collectorVersion:
-                        description: |-
-                          Collector semantic version this family targets, without a leading v prefix.
-                          The replace API keeps the existing value when this field is omitted.
+                        description: Collector semantic version this family targets,
+                          without a leading v prefix.
                         maxLength: 256
                         minLength: 5
                         pattern: ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$
