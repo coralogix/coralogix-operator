@@ -1,4 +1,15 @@
 {{/*
+Resolve the image version, retaining support for explicitly suffixed tags.
+*/}}
+{{- define "coralogixOperator.image" -}}
+{{- $tag := printf "v%s" (toString (.Values.coralogixOperator.image.tag | default .Chart.AppVersion)) -}}
+{{- if and .Values.coralogixOperator.image.fips (not (hasSuffix "-fips" $tag)) -}}
+{{- $tag = printf "%s-fips" $tag -}}
+{{- end -}}
+{{- printf "%s:%s" .Values.coralogixOperator.image.repository $tag -}}
+{{- end -}}
+
+{{/*
 Expand the name of the chart.
 */}}
 {{- define "coralogixOperator.name" -}}

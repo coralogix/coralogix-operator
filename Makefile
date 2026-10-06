@@ -1,9 +1,6 @@
 
 # Image URL to use all building/pushing image targets
 IMG ?= coralogixrepo/coralogix-operator:latest
-# Pin the native Go cryptographic module and enable FIPS mode for builds and tests.
-GOFIPS140 ?= v1.0.0
-export GOFIPS140
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.30.3
 

@@ -8,7 +8,6 @@
 # The runtime layer below must stay identical to the final stage of Dockerfile, which is what
 # the released image is built from.
 FROM gcr.io/distroless/static:nonroot
-ENV GODEBUG=fips140=on
 WORKDIR /
 COPY dist/manager .
 USER 65532:65532
