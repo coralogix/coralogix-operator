@@ -32,8 +32,6 @@ helm install <my-release> coralogix/coralogix-operator \
 ```
 For a complete list of configuration options, refer to the [Helm Chart Docs](./charts/coralogix-operator/README.md).
 
-For FIPS mode and custom government endpoint configuration, see [FIPS deployment](./docs/fips.md).
-
 3. Upgrade the operator:
 ```sh  
 helm upgrade <my-release> coralogix/coralogix-operator \
