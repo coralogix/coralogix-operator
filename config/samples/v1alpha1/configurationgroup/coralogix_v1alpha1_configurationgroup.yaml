@@ -34,3 +34,4 @@ spec:
                   exporters: [nop]
           agentSelector:
             cx.agent.type: agent
+            service.version: "0.114.0"

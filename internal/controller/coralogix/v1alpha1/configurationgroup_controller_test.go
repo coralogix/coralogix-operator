@@ -52,7 +52,7 @@ func configurationGroupsTestClient(t *testing.T, requests *[]recordedRequest) *c
 			body:       string(body),
 		})
 		w.Header().Set("Content-Type", "application/json")
-		_, err = w.Write([]byte(`{"id":"` + testConfigurationGroupID + `"}`))
+		_, err = w.Write([]byte(`{"id":"` + testConfigurationGroupID + `","priorityOrder":0}`))
 		require.NoError(t, err)
 	}))
 	t.Cleanup(server.Close)
@@ -91,6 +91,15 @@ func TestConfigurationGroupCreateReadsUnwrappedResponse(t *testing.T) {
 	require.Len(t, requests, 1)
 	require.Equal(t, http.MethodPost, requests[0].method)
 	require.Equal(t, "/fleet-management/configuration-groups/v1", requests[0].path)
+	require.JSONEq(t, `{
+		"name": "cg",
+		"family": {
+			"active": true,
+			"raw": {
+				"remoteConfigurations": [{"name": "default", "rawConfiguration": "receivers: {}"}]
+			}
+		}
+	}`, requests[0].body)
 	require.Equal(t, ptr.To(testConfigurationGroupID), group.Status.ID)
 }
 

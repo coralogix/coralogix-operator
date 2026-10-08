@@ -63,7 +63,7 @@ func (r *ConnectorReconciler) HandleCreation(ctx context.Context, log logr.Logge
 	}
 
 	createRequest := connectors.CreateConnectorRequest{
-		Connector: requestConnector,
+		Connector: *requestConnector,
 	}
 
 	log.Info("Creating remote Connector", "name", connector.Spec.Name, "type", connector.Spec.Type)
@@ -91,7 +91,7 @@ func (r *ConnectorReconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 	}
 	requestConnector.Id = connector.Status.Id
 	updateRequest := &connectors.ReplaceConnectorRequest{
-		Connector: requestConnector,
+		Connector: *requestConnector,
 	}
 	log.Info("Updating remote Connector", "name", connector.Spec.Name, "id", *connector.Status.Id)
 	updateResponse, httpResp, err := r.ConnectorsClient.

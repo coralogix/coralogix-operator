@@ -161,7 +161,7 @@ var _ = Describe("ConfigurationGroup expansion", func() {
 
 		createReq, err := expandCreateRequest(group)
 		Expect(err).NotTo(HaveOccurred())
-		createFamily := createReq.Group.Family
+		createFamily := createReq.Family
 		Expect(createFamily.Raw).To(BeNil())
 		Expect(createFamily.Preset).NotTo(BeNil())
 		Expect(createFamily.Preset.ChartName).To(Equal(cfggroups.CHARTNAME_CHART_NAME_OTEL_INTEGRATION))
@@ -184,9 +184,9 @@ var _ = Describe("ConfigurationGroup expansion", func() {
 
 		createReq, err := expandCreateRequest(group)
 		Expect(err).NotTo(HaveOccurred())
-		Expect(createReq.Group.Family.Preset).To(BeNil())
-		Expect(createReq.Group.Family.Raw.GetCollectorVersion()).To(Equal("0.114.0"))
-		Expect(createReq.Group.Family.Raw.RemoteConfigurations).To(HaveLen(1))
+		Expect(createReq.Family.Preset).To(BeNil())
+		Expect(createReq.Family.Raw.GetCollectorVersion()).To(Equal("0.114.0"))
+		Expect(createReq.Family.Raw.RemoteConfigurations).To(HaveLen(1))
 
 		updateReq, updateMask, err := expandUpdateRequest(group)
 		Expect(err).NotTo(HaveOccurred())

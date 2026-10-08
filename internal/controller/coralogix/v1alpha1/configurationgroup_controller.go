@@ -153,7 +153,7 @@ func expandCreateRequest(group *coralogixv1alpha1.ConfigurationGroup) (cfggroups
 	if err != nil {
 		return cfggroups.ConfigurationGroupServiceCreateConfigurationGroupRequest{}, err
 	}
-	create := cfggroups.NewConfigurationGroupCreate(*family)
+	create := cfggroups.NewConfigurationGroupServiceCreateConfigurationGroupRequest(*family)
 	create.SetName(group.Spec.Name)
 	if group.Spec.Description != nil {
 		create.SetDescription(*group.Spec.Description)
@@ -164,7 +164,7 @@ func expandCreateRequest(group *coralogixv1alpha1.ConfigurationGroup) (cfggroups
 	if group.Spec.PriorityOrder != nil {
 		create.SetPriorityOrder(*group.Spec.PriorityOrder)
 	}
-	return *cfggroups.NewConfigurationGroupServiceCreateConfigurationGroupRequest(*create), nil
+	return *create, nil
 }
 
 // configurationGroupUpdateMask lists every group field the operator manages, so each
