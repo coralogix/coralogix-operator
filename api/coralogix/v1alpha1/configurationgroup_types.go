@@ -16,6 +16,7 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // ConfigurationGroupSpec defines the desired state of a Fleet Manager configuration group.
@@ -43,6 +44,11 @@ type ConfigurationGroupSpec struct {
 }
 
 // ConfigurationFamilySpec is the latest family nested in a configuration group.
+// Exactly one of preset or raw must be set. Updates replace the whole preset or raw
+// content, so omitted optional fields are cleared rather than kept. A family cannot
+// switch between preset and raw; delete and recreate the ConfigurationGroup instead.
+// +kubebuilder:validation:XValidation:rule="has(self.preset) != has(self.raw)",message="Exactly one of preset or raw is required"
+// +kubebuilder:validation:XValidation:rule="has(self.preset) == has(oldSelf.preset)",message="family cannot switch between preset and raw; delete and recreate the ConfigurationGroup"
 type ConfigurationFamilySpec struct {
 	// Whether this family is active.
 	// +kubebuilder:default=true
@@ -53,8 +59,50 @@ type ConfigurationFamilySpec struct {
 	// +optional
 	Description *string `json:"description,omitempty"`
 
+	// Configuration template settings. Coralogix generates the remote configurations from them.
+	// +optional
+	Preset *PresetConfigurationFamilySpec `json:"preset,omitempty"`
+
+	// Configuration family defined directly by its remote configurations.
+	// +optional
+	Raw *RawConfigurationFamilySpec `json:"raw,omitempty"`
+}
+
+// PresetConfigurationFamilySpec defines a family generated from a Coralogix configuration template.
+type PresetConfigurationFamilySpec struct {
+	// Configuration template type: otelIntegration for Kubernetes, otelEcsEc2 for ECS on EC2,
+	// or otelLinuxStandalone, otelWindowsStandalone or otelMacosStandalone for hosts.
+	// +kubebuilder:validation:Enum=otelIntegration;otelLinuxStandalone;otelWindowsStandalone;otelMacosStandalone;otelEcsEc2
+	ChartName string `json:"chartName"`
+
+	// Configuration template version. It determines the OpenTelemetry Collector version, the generated
+	// collector configuration, and which integrationVersion values are supported.
+	// +kubebuilder:validation:MaxLength=256
+	// +kubebuilder:validation:Pattern=`^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$`
+	ChartVersion string `json:"chartVersion"`
+
+	// Version of the observability features format. Omit it to use the default for the template type and version.
+	// +optional
+	// +kubebuilder:validation:MaxLength=256
+	// +kubebuilder:validation:Pattern=`^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$`
+	IntegrationVersion *string `json:"integrationVersion,omitempty"`
+
+	// Environment setup values for the configuration template, such as ClusterName, KubernetesRunningOn,
+	// ApplicationName or SubsystemName. Set observability features in observabilityFeatures, not here.
+	// +optional
+	// +kubebuilder:validation:XValidation:rule="!('ObservabilityFeatures' in self)",message="Set observability features in observabilityFeatures, not in metadata"
+	Metadata map[string]string `json:"metadata,omitempty"`
+
+	// Observability feature settings for the configuration template. The available features depend on
+	// chartName and integrationVersion. It is sent to the API as a JSON object string.
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +kubebuilder:validation:Type=object
+	ObservabilityFeatures runtime.RawExtension `json:"observabilityFeatures"`
+}
+
+// RawConfigurationFamilySpec defines a family by its remote OpenTelemetry Collector configurations.
+type RawConfigurationFamilySpec struct {
 	// Collector semantic version this family targets, without a leading v prefix.
-	// The replace API keeps the existing value when this field is omitted.
 	// +optional
 	// +kubebuilder:validation:MinLength=5
 	// +kubebuilder:validation:MaxLength=256

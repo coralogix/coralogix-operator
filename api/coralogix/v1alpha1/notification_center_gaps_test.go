@@ -102,11 +102,11 @@ func TestConnectorExtractPagerdutyIncidentsAndCases(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ExtractConnector returned error: %v", err)
 	}
-	if got.Type == nil || *got.Type != connectors.NOTIFICATIONCENTERCONNECTORTYPE_PAGERDUTY_INCIDENTS {
+	if got.Type != connectors.NOTIFICATIONCENTERCONNECTORTYPE_PAGERDUTY_INCIDENTS {
 		t.Fatalf("Type = %v, want PAGERDUTY_INCIDENTS", got.Type)
 	}
-	if len(got.ConfigOverrides) != 1 || got.ConfigOverrides[0].EntityType == nil ||
-		*got.ConfigOverrides[0].EntityType != connectors.NOTIFICATIONCENTERENTITYTYPE_CASES {
+	if len(got.ConfigOverrides) != 1 ||
+		got.ConfigOverrides[0].EntityType != connectors.NOTIFICATIONCENTERENTITYTYPE_CASES {
 		t.Fatalf("config override entity type = %v, want CASES", got.ConfigOverrides)
 	}
 }
@@ -156,7 +156,7 @@ func TestConnectorExtractMicrosoftTeams(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ExtractConnector returned error: %v", err)
 	}
-	if got.Type == nil || *got.Type != connectors.NOTIFICATIONCENTERCONNECTORTYPE_MICROSOFT_TEAMS {
+	if got.Type != connectors.NOTIFICATIONCENTERCONNECTORTYPE_MICROSOFT_TEAMS {
 		t.Fatalf("Type = %v, want MICROSOFT_TEAMS", got.Type)
 	}
 }
@@ -182,7 +182,7 @@ func TestConnectorExtractEventBridge(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ExtractConnector returned error: %v", err)
 	}
-	if got.Type == nil || *got.Type != connectors.NOTIFICATIONCENTERCONNECTORTYPE_EVENTBRIDGE {
+	if got.Type != connectors.NOTIFICATIONCENTERCONNECTORTYPE_EVENTBRIDGE {
 		t.Fatalf("Type = %v, want EVENTBRIDGE", got.Type)
 	}
 
@@ -190,8 +190,8 @@ func TestConnectorExtractEventBridge(t *testing.T) {
 	gotFields := map[string]string{}
 	if got.ConnectorConfig != nil {
 		for _, f := range got.ConnectorConfig.Fields {
-			if f.FieldName != nil && f.Value != nil {
-				gotFields[*f.FieldName] = *f.Value
+			if f.Value != nil {
+				gotFields[f.FieldName] = *f.Value
 			}
 		}
 	}
@@ -248,7 +248,7 @@ func TestConnectorExtractIncidentIO(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ExtractConnector returned error: %v", err)
 	}
-	if got.Type == nil || *got.Type != connectors.NOTIFICATIONCENTERCONNECTORTYPE_INCIDENT_IO {
+	if got.Type != connectors.NOTIFICATIONCENTERCONNECTORTYPE_INCIDENT_IO {
 		t.Fatalf("Type = %v, want INCIDENT_IO", got.Type)
 	}
 }

@@ -10861,6 +10861,8 @@ This resource is in Beta and uses the Preview configuration-group API.
         <td>object</td>
         <td>
           Latest configuration family for this group.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.preset) != has(self.raw): Exactly one of preset or raw is required</li><li>has(self.preset) == has(oldSelf.preset): family cannot switch between preset and raw; delete and recreate the ConfigurationGroup</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -10914,13 +10916,6 @@ Latest configuration family for this group.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#configurationgroupspecfamilyremoteconfigurationsindex">remoteConfigurations</a></b></td>
-        <td>[]object</td>
-        <td>
-          Remote OpenTelemetry Collector configurations in this family.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>active</b></td>
         <td>boolean</td>
         <td>
@@ -10930,18 +10925,121 @@ Latest configuration family for this group.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>collectorVersion</b></td>
-        <td>string</td>
-        <td>
-          Collector semantic version this family targets, without a leading v prefix.
-The replace API keeps the existing value when this field is omitted.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
           Human-readable description.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#configurationgroupspecfamilypreset">preset</a></b></td>
+        <td>object</td>
+        <td>
+          Configuration template settings. Coralogix generates the remote configurations from them.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#configurationgroupspecfamilyraw">raw</a></b></td>
+        <td>object</td>
+        <td>
+          Configuration family defined directly by its remote configurations.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ConfigurationGroup.spec.family.preset
+<sup><sup>[↩ Parent](#configurationgroupspecfamily)</sup></sup>
+
+
+
+Configuration template settings. Coralogix generates the remote configurations from them.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>chartName</b></td>
+        <td>enum</td>
+        <td>
+          Configuration template type: otelIntegration for Kubernetes, otelEcsEc2 for ECS on EC2,
+or otelLinuxStandalone, otelWindowsStandalone or otelMacosStandalone for hosts.<br/>
+          <br/>
+            <i>Enum</i>: otelIntegration, otelLinuxStandalone, otelWindowsStandalone, otelMacosStandalone, otelEcsEc2<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>chartVersion</b></td>
+        <td>string</td>
+        <td>
+          Configuration template version. It determines the OpenTelemetry Collector version, the generated
+collector configuration, and which integrationVersion values are supported.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observabilityFeatures</b></td>
+        <td>object</td>
+        <td>
+          Observability feature settings for the configuration template. The available features depend on
+chartName and integrationVersion. It is sent to the API as a JSON object string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>integrationVersion</b></td>
+        <td>string</td>
+        <td>
+          Version of the observability features format. Omit it to use the default for the template type and version.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>metadata</b></td>
+        <td>map[string]string</td>
+        <td>
+          Environment setup values for the configuration template, such as ClusterName, KubernetesRunningOn,
+ApplicationName or SubsystemName. Set observability features in observabilityFeatures, not here.<br/>
+          <br/>
+            <i>Validations</i>:<li>!('ObservabilityFeatures' in self): Set observability features in observabilityFeatures, not in metadata</li>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ConfigurationGroup.spec.family.raw
+<sup><sup>[↩ Parent](#configurationgroupspecfamily)</sup></sup>
+
+
+
+Configuration family defined directly by its remote configurations.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#configurationgroupspecfamilyrawremoteconfigurationsindex">remoteConfigurations</a></b></td>
+        <td>[]object</td>
+        <td>
+          Remote OpenTelemetry Collector configurations in this family.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>collectorVersion</b></td>
+        <td>string</td>
+        <td>
+          Collector semantic version this family targets, without a leading v prefix.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -10955,8 +11053,8 @@ The replace API keeps the existing value when this field is omitted.<br/>
 </table>
 
 
-### ConfigurationGroup.spec.family.remoteConfigurations[index]
-<sup><sup>[↩ Parent](#configurationgroupspecfamily)</sup></sup>
+### ConfigurationGroup.spec.family.raw.remoteConfigurations[index]
+<sup><sup>[↩ Parent](#configurationgroupspecfamilyraw)</sup></sup>
 
 
 
