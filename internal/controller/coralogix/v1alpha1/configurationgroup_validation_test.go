@@ -157,6 +157,40 @@ var _ = Describe("ConfigurationGroup validation", func() {
 		Entry("longer than 256 characters", strings.Repeat("n", 257)),
 	)
 
+	DescribeTable("should reject values over the API size limits",
+		func(ctx context.Context, mutate func(*coralogixv1alpha1.ConfigurationGroup)) {
+			group := configurationGroupWithFamily("cg-too-big", coralogixv1alpha1.ConfigurationFamilySpec{Raw: rawFamily()})
+			mutate(group)
+			Expect(k8sClient.Create(ctx, group)).NotTo(Succeed())
+		},
+		Entry("description", func(g *coralogixv1alpha1.ConfigurationGroup) {
+			g.Spec.Description = ptr.To(strings.Repeat("d", 4097))
+		}),
+		Entry("family description", func(g *coralogixv1alpha1.ConfigurationGroup) {
+			g.Spec.Family.Description = ptr.To(strings.Repeat("d", 4097))
+		}),
+		Entry("more than 64 tags", func(g *coralogixv1alpha1.ConfigurationGroup) {
+			for i := range 65 {
+				g.Spec.Tags = append(g.Spec.Tags, fmt.Sprintf("tag%d", i))
+			}
+		}),
+		Entry("tag", func(g *coralogixv1alpha1.ConfigurationGroup) {
+			g.Spec.Tags = []string{strings.Repeat("t", 257)}
+		}),
+		Entry("metadata value", func(g *coralogixv1alpha1.ConfigurationGroup) {
+			g.Spec.Family.Raw.Metadata = map[string]string{"key": strings.Repeat("v", 4097)}
+		}),
+		Entry("remote configuration name", func(g *coralogixv1alpha1.ConfigurationGroup) {
+			g.Spec.Family.Raw.RemoteConfigurations[0].Name = ptr.To(strings.Repeat("n", 257))
+		}),
+		Entry("more than 128 remote configurations", func(g *coralogixv1alpha1.ConfigurationGroup) {
+			remote := g.Spec.Family.Raw.RemoteConfigurations[0]
+			for range 128 {
+				g.Spec.Family.Raw.RemoteConfigurations = append(g.Spec.Family.Raw.RemoteConfigurations, remote)
+			}
+		}),
+	)
+
 	It("should reject metadata with more than 64 entries", func(ctx context.Context) {
 		raw := rawFamily()
 		raw.Metadata = map[string]string{}

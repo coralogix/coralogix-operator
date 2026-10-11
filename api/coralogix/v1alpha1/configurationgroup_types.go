@@ -28,10 +28,13 @@ type ConfigurationGroupSpec struct {
 
 	// Human-readable description.
 	// +optional
+	// +kubebuilder:validation:MaxLength=4096
 	Description *string `json:"description,omitempty"`
 
 	// Tags attached to the configuration group.
 	// +optional
+	// +kubebuilder:validation:MaxItems=64
+	// +kubebuilder:validation:items:MaxLength=256
 	Tags []string `json:"tags,omitempty"`
 
 	// Selection precedence. Higher values win on ties and 0 is the default.
@@ -55,6 +58,7 @@ type ConfigurationFamilySpec struct {
 
 	// Human-readable description.
 	// +optional
+	// +kubebuilder:validation:MaxLength=4096
 	Description *string `json:"description,omitempty"`
 
 	// Configuration template settings; Coralogix generates the remote configurations from them.
@@ -76,11 +80,13 @@ type PresetConfigurationFamilySpec struct {
 
 	// Configuration template version. It determines the OTel Collector version, the generated collector configuration,
 	// and which integrationVersion values are supported. Unsupported versions are rejected.
+	// +kubebuilder:validation:MaxLength=256
 	// +kubebuilder:validation:Pattern=`^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$`
 	ChartVersion string `json:"chartVersion"`
 
 	// Version of the observability features format. Omit it to use the default for the template type and version.
 	// +optional
+	// +kubebuilder:validation:MaxLength=256
 	// +kubebuilder:validation:Pattern=`^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$`
 	IntegrationVersion *string `json:"integrationVersion,omitempty"`
 
@@ -88,11 +94,13 @@ type PresetConfigurationFamilySpec struct {
 	// ApplicationName, or SubsystemName. Set the observability features in observabilityFeatures.
 	// +optional
 	// +kubebuilder:validation:MaxProperties=64
+	// +kubebuilder:validation:XValidation:rule="self.all(k, size(self[k]) <= 4096)",message="metadata values must be at most 4096 characters"
 	Metadata map[string]string `json:"metadata,omitempty"`
 
 	// Observability feature settings for the configuration template, as a JSON object string;
 	// the available features depend on chartName and integrationVersion.
 	// +kubebuilder:validation:MinLength=2
+	// +kubebuilder:validation:MaxLength=1048576
 	ObservabilityFeatures string `json:"observabilityFeatures"`
 }
 
@@ -101,16 +109,19 @@ type RawConfigurationFamilySpec struct {
 	// Collector semantic version this family targets, without a leading v prefix.
 	// Every agentSelector must then set service.version to this value.
 	// +optional
+	// +kubebuilder:validation:MaxLength=256
 	// +kubebuilder:validation:Pattern=`^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$`
 	CollectorVersion *string `json:"collectorVersion,omitempty"`
 
 	// Metadata stored with this configuration family.
 	// +optional
 	// +kubebuilder:validation:MaxProperties=64
+	// +kubebuilder:validation:XValidation:rule="self.all(k, size(self[k]) <= 4096)",message="metadata values must be at most 4096 characters"
 	Metadata map[string]string `json:"metadata,omitempty"`
 
 	// Remote configurations in this family.
 	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=128
 	RemoteConfigurations []RemoteConfigurationSpec `json:"remoteConfigurations"`
 }
 
@@ -118,10 +129,12 @@ type RawConfigurationFamilySpec struct {
 type RemoteConfigurationSpec struct {
 	// Remote configuration name.
 	// +optional
+	// +kubebuilder:validation:MaxLength=256
 	Name *string `json:"name,omitempty"`
 
 	// OpenTelemetry Collector configuration YAML. The supervisor-managed OpAMP extension must not be configured.
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=1048576
 	RawConfiguration string `json:"rawConfiguration"`
 
 	// Agent attributes that match agents for this configuration.

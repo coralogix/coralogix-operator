@@ -11003,6 +11003,8 @@ the available features depend on chartName and integrationVersion.<br/>
         <td>
           Environment setup values for the configuration template, such as ClusterName, KubernetesRunningOn,
 ApplicationName, or SubsystemName. Set the observability features in observabilityFeatures.<br/>
+          <br/>
+            <i>Validations</i>:<li>self.all(k, size(self[k]) <= 4096): metadata values must be at most 4096 characters</li>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11046,6 +11048,8 @@ Every agentSelector must then set service.version to this value.<br/>
         <td>map[string]string</td>
         <td>
           Metadata stored with this configuration family.<br/>
+          <br/>
+            <i>Validations</i>:<li>self.all(k, size(self[k]) <= 4096): metadata values must be at most 4096 characters</li>
         </td>
         <td>false</td>
       </tr></tbody>
