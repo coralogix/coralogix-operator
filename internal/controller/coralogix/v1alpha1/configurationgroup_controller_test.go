@@ -52,7 +52,7 @@ func configurationGroupsTestClient(t *testing.T, requests *[]recordedRequest) *c
 			body:       string(body),
 		})
 		w.Header().Set("Content-Type", "application/json")
-		_, err = w.Write([]byte(`{"id":"` + testConfigurationGroupID + `","priorityOrder":0}`))
+		_, err = w.Write([]byte(`{"id":"` + testConfigurationGroupID + `","priorityOrder":0,"archived":false}`))
 		require.NoError(t, err)
 	}))
 	t.Cleanup(server.Close)
