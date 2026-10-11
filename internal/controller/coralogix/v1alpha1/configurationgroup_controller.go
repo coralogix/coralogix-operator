@@ -161,11 +161,17 @@ func expandCreateRequest(group *coralogixv1alpha1.ConfigurationGroup) (cfggroups
 
 // configurationGroupUpdateMask lists every group field the operator manages, so each
 // update syncs the full desired state. A masked field missing from the body is cleared.
-const configurationGroupUpdateMask = "name,description,tags,priorityOrder,family.description,family.active"
+// name is added only when set: the API rejects a masked empty name with 409 when
+// another unnamed group exists.
+const configurationGroupUpdateMask = "description,tags,priorityOrder,family.description,family.active"
 
 func expandUpdateRequest(group *coralogixv1alpha1.ConfigurationGroup) (cfggroups.ConfigurationGroupServiceUpdateConfigurationGroupRequest, string, error) {
 	update := cfggroups.NewConfigurationGroupServiceUpdateConfigurationGroupRequest()
-	update.SetName(ptr.Deref(group.Spec.Name, ""))
+	mask := configurationGroupUpdateMask
+	if group.Spec.Name != nil {
+		update.SetName(*group.Spec.Name)
+		mask = "name," + mask
+	}
 	update.SetDescription(ptr.Deref(group.Spec.Description, ""))
 	tags := group.Spec.Tags
 	if tags == nil {
@@ -182,7 +188,7 @@ func expandUpdateRequest(group *coralogixv1alpha1.ConfigurationGroup) (cfggroups
 	if family.Preset != nil {
 		familyKindPath = "family.preset"
 	}
-	return *update, configurationGroupUpdateMask + "," + familyKindPath, nil
+	return *update, mask + "," + familyKindPath, nil
 }
 
 func expandFamilyCreate(family coralogixv1alpha1.ConfigurationFamilySpec) (*cfggroups.ConfigurationFamilyCreate, error) {

@@ -16,6 +16,7 @@ package v1alpha1
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -145,4 +146,19 @@ func TestConfigurationGroupDeletionDeactivatesThenArchives(t *testing.T) {
 	require.JSONEq(t, `{"family": {"active": false}}`, requests[0].body)
 	require.Equal(t, http.MethodPost, requests[1].method)
 	require.Equal(t, "/fleet-management/configuration-groups/v1/"+testConfigurationGroupID+"/archive", requests[1].path)
+}
+
+func TestConfigurationGroupUpdateWithoutNameLeavesNameUnmasked(t *testing.T) {
+	var requests []recordedRequest
+	r := &ConfigurationGroupReconciler{ConfigurationGroupsClient: configurationGroupsTestClient(t, &requests)}
+	group := syncedConfigurationGroup()
+	group.Spec.Name = nil
+
+	require.NoError(t, r.HandleUpdate(context.Background(), logr.Discard(), group))
+
+	require.Len(t, requests, 1)
+	require.Equal(t, "description,tags,priorityOrder,family.description,family.active,family.raw", requests[0].updateMask)
+	var body map[string]any
+	require.NoError(t, json.Unmarshal([]byte(requests[0].body), &body))
+	require.NotContains(t, body, "name")
 }
