@@ -3,7 +3,7 @@ module github.com/coralogix/coralogix-operator/v2
 go 1.26.0
 
 require (
-	github.com/coralogix/coralogix-management-sdk v1.9.4-0.20261011112510-882c13a2bb01
+	github.com/coralogix/coralogix-management-sdk v1.9.4-0.20261011132049-b24610f4f2b8
 	github.com/go-logr/logr v1.4.3
 	github.com/google/uuid v1.6.0
 	github.com/onsi/ginkgo/v2 v2.23.4

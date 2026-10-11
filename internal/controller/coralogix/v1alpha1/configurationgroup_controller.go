@@ -213,13 +213,16 @@ func expandFamilyUpdate(family coralogixv1alpha1.ConfigurationFamilySpec) (*cfgg
 	out.SetDescription(ptr.Deref(family.Description, ""))
 	switch {
 	case family.Preset != nil:
-		preset := cfggroups.NewPresetConfigurationFamilyUpdate(
-			cfggroups.ChartName(family.Preset.ChartName), family.Preset.ChartVersion, family.Preset.ObservabilityFeatures)
+		preset := cfggroups.NewPresetConfigurationFamilyUpdate()
+		preset.SetChartName(cfggroups.ChartName(family.Preset.ChartName))
+		preset.SetChartVersion(family.Preset.ChartVersion)
+		preset.SetObservabilityFeatures(family.Preset.ObservabilityFeatures)
 		preset.IntegrationVersion = family.Preset.IntegrationVersion
 		preset.SetMetadata(nonNilStringMap(family.Preset.Metadata))
 		out.SetPreset(*preset)
 	case family.Raw != nil:
-		raw := cfggroups.NewRawConfigurationFamilyUpdate(expandRemoteReplaces(family.Raw.RemoteConfigurations))
+		raw := cfggroups.NewRawConfigurationFamilyUpdate()
+		raw.SetRemoteConfigurations(expandRemoteReplaces(family.Raw.RemoteConfigurations))
 		raw.CollectorVersion = family.Raw.CollectorVersion
 		raw.SetMetadata(nonNilStringMap(family.Raw.Metadata))
 		out.SetRaw(*raw)

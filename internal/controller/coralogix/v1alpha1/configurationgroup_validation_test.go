@@ -223,7 +223,9 @@ var _ = Describe("ConfigurationGroup expansion", func() {
 		Expect(updateMask).To(Equal("name,description,tags,priorityOrder,family.description,family.active,family.preset"))
 		Expect(updateFamily.Raw).To(BeNil())
 		Expect(updateFamily.Preset).NotTo(BeNil())
-		Expect(updateFamily.Preset.ChartName).To(Equal(cfggroups.CHARTNAME_CHART_NAME_OTEL_INTEGRATION))
+		Expect(updateFamily.Preset.ChartName).To(HaveValue(Equal(cfggroups.CHARTNAME_CHART_NAME_OTEL_INTEGRATION)))
+		Expect(updateFamily.Preset.ChartVersion).To(HaveValue(Equal("0.0.289")))
+		Expect(updateFamily.Preset.ObservabilityFeatures).To(HaveValue(MatchJSON(`{"logsCollection":{"enabled":true}}`)))
 		Expect(updateFamily.Preset.Metadata).To(Equal(map[string]string{"ClusterName": "prod"}))
 	})
 
