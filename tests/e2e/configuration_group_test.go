@@ -51,7 +51,7 @@ var _ = Describe("ConfigurationGroup", Ordered, func() {
 				Namespace: testNamespace,
 			},
 			Spec: coralogixv1alpha1.ConfigurationGroupSpec{
-				Name:        name,
+				Name:        ptr.To(name),
 				Description: ptr.To("e2e configuration group"),
 				Tags:        []string{"e2e"},
 				Family: coralogixv1alpha1.ConfigurationFamilySpec{
@@ -60,16 +60,16 @@ var _ = Describe("ConfigurationGroup", Ordered, func() {
 						CollectorVersion: ptr.To("0.114.0"),
 						RemoteConfigurations: []coralogixv1alpha1.RemoteConfigurationSpec{
 							{
-								Name: "default",
+								Name: ptr.To("default"),
 								RawConfiguration: `receivers:
   otlp:
     protocols:
       grpc: {}
 `,
-								AgentSelector: map[string]string{
+								AgentSelector: &coralogixv1alpha1.AgentSelectorSpec{Attributes: map[string]string{
 									"cx.agent.type":   "agent",
 									"service.version": "0.114.0",
-								},
+								}},
 							},
 						},
 					},

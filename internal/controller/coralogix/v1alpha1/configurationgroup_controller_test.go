@@ -65,13 +65,16 @@ func syncedConfigurationGroup() *coralogixv1alpha1.ConfigurationGroup {
 	return &coralogixv1alpha1.ConfigurationGroup{
 		ObjectMeta: metav1.ObjectMeta{Name: "cg", Namespace: "default"},
 		Spec: coralogixv1alpha1.ConfigurationGroupSpec{
-			Name: "cg",
+			Name: ptr.To("cg"),
 			Family: coralogixv1alpha1.ConfigurationFamilySpec{
 				Active: ptr.To(true),
 				Raw: &coralogixv1alpha1.RawConfigurationFamilySpec{
 					RemoteConfigurations: []coralogixv1alpha1.RemoteConfigurationSpec{{
-						Name:             "default",
+						Name:             ptr.To("default"),
 						RawConfiguration: "receivers: {}",
+						AgentSelector: &coralogixv1alpha1.AgentSelectorSpec{
+							Attributes: map[string]string{"cx.agent.type": "agent"},
+						},
 					}},
 				},
 			},
@@ -96,7 +99,7 @@ func TestConfigurationGroupCreateReadsUnwrappedResponse(t *testing.T) {
 		"family": {
 			"active": true,
 			"raw": {
-				"remoteConfigurations": [{"name": "default", "rawConfiguration": "receivers: {}"}]
+				"remoteConfigurations": [{"name": "default", "rawConfiguration": "receivers: {}", "agentSelector": {"attributes": {"cx.agent.type": "agent"}}}]
 			}
 		}
 	}`, requests[0].body)
@@ -123,7 +126,7 @@ func TestConfigurationGroupUpdatePatchesFullMask(t *testing.T) {
 			"description": "",
 			"raw": {
 				"metadata": {},
-				"remoteConfigurations": [{"name": "default", "rawConfiguration": "receivers: {}"}]
+				"remoteConfigurations": [{"name": "default", "rawConfiguration": "receivers: {}", "agentSelector": {"attributes": {"cx.agent.type": "agent"}}}]
 			}
 		}
 	}`, requests[0].body)

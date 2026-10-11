@@ -20,7 +20,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -31,11 +30,11 @@ import (
 
 func presetFamily() *coralogixv1alpha1.PresetConfigurationFamilySpec {
 	return &coralogixv1alpha1.PresetConfigurationFamilySpec{
-		ChartName:             "otelIntegration",
+		ChartName:             "CHART_NAME_OTEL_INTEGRATION",
 		ChartVersion:          "0.0.289",
 		IntegrationVersion:    ptr.To("0.8.0"),
 		Metadata:              map[string]string{"ClusterName": "prod"},
-		ObservabilityFeatures: runtime.RawExtension{Raw: []byte(`{"logsCollection":{"enabled":true}}`)},
+		ObservabilityFeatures: `{"logsCollection":{"enabled":true}}`,
 	}
 }
 
@@ -43,7 +42,7 @@ func rawFamily() *coralogixv1alpha1.RawConfigurationFamilySpec {
 	return &coralogixv1alpha1.RawConfigurationFamilySpec{
 		CollectorVersion: ptr.To("0.114.0"),
 		RemoteConfigurations: []coralogixv1alpha1.RemoteConfigurationSpec{{
-			Name:             "default",
+			Name:             ptr.To("default"),
 			RawConfiguration: "receivers: {}",
 		}},
 	}
@@ -53,7 +52,7 @@ func configurationGroupWithFamily(name string, family coralogixv1alpha1.Configur
 	return &coralogixv1alpha1.ConfigurationGroup{
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: "default"},
 		Spec: coralogixv1alpha1.ConfigurationGroupSpec{
-			Name:   name,
+			Name:   ptr.To(name),
 			Family: family,
 		},
 	}
@@ -105,7 +104,7 @@ var _ = Describe("ConfigurationGroup validation", func() {
 		Expect(k8sClient.Update(ctx, group)).To(Succeed())
 	})
 
-	It("should default family.active to true", func(ctx context.Context) {
+	It("should leave family.active unset by default", func(ctx context.Context) {
 		group := configurationGroupWithFamily("cg-active-default", coralogixv1alpha1.ConfigurationFamilySpec{Raw: rawFamily()})
 		Expect(k8sClient.Create(ctx, group)).To(Succeed())
 		DeferCleanup(func(ctx context.Context) {
@@ -114,7 +113,7 @@ var _ = Describe("ConfigurationGroup validation", func() {
 
 		fetched := &coralogixv1alpha1.ConfigurationGroup{}
 		Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(group), fetched)).To(Succeed())
-		Expect(fetched.Spec.Family.Active).To(Equal(ptr.To(true)))
+		Expect(fetched.Spec.Family.Active).To(BeNil())
 	})
 
 	It("should reject a family with both preset and raw", func(ctx context.Context) {
@@ -142,17 +141,10 @@ var _ = Describe("ConfigurationGroup validation", func() {
 			Expect(k8sClient.Create(ctx, group)).NotTo(Succeed())
 		},
 		Entry("unspecified", "CHART_NAME_UNSPECIFIED"),
-		Entry("opentelemetry collector", "opentelemetryCollector"),
+		Entry("opentelemetry collector", "CHART_NAME_OPENTELEMETRY_COLLECTOR"),
+		Entry("camelCase spelling", "otelIntegration"),
 	)
 
-	It("should reject ObservabilityFeatures in preset metadata", func(ctx context.Context) {
-		preset := presetFamily()
-		preset.Metadata["ObservabilityFeatures"] = "{}"
-		group := configurationGroupWithFamily("cg-features-in-metadata", coralogixv1alpha1.ConfigurationFamilySpec{Preset: preset})
-		err := k8sClient.Create(ctx, group)
-		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("not in metadata"))
-	})
 })
 
 var _ = Describe("ConfigurationGroup expansion", func() {
@@ -197,14 +189,7 @@ var _ = Describe("ConfigurationGroup expansion", func() {
 		Expect(updateReq.GetPriorityOrder()).To(Equal(int32(0)))
 		Expect(updateReq.Family.Raw.Metadata).To(Equal(map[string]string{}))
 		Expect(updateReq.Family.Raw.RemoteConfigurations).To(HaveLen(1))
-		Expect(updateReq.Family.Active).To(Equal(ptr.To(true)))
+		Expect(updateReq.Family.Active).To(Equal(ptr.To(false)))
 	})
 
-	It("should reject observabilityFeatures that are not a JSON object", func() {
-		preset := presetFamily()
-		preset.ObservabilityFeatures = runtime.RawExtension{Raw: []byte(`["not","an","object"]`)}
-		group := configurationGroupWithFamily("cg", coralogixv1alpha1.ConfigurationFamilySpec{Preset: preset})
-		_, err := expandCreateRequest(group)
-		Expect(err).To(MatchError(ContainSubstring("must be a JSON object")))
-	})
 })

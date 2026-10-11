@@ -26,7 +26,7 @@ spec:
       openAPIV3Schema:
         description: |-
           ConfigurationGroup is the Schema for the configurationgroups API.
-          This resource is in Beta. It uses the Fleet Manager Preview configuration-group API.
+          This resource is in Preview and may change in breaking ways. It uses the Fleet Manager configuration-groups API.
         properties:
           apiVersion:
             description: |-
@@ -48,7 +48,7 @@ spec:
           spec:
             description: |-
               ConfigurationGroupSpec defines the desired state of a Fleet Manager configuration group.
-              This resource is in Beta and uses the Preview configuration-group API.
+              It mirrors the configuration-groups API create request. This resource is in Preview.
             properties:
               description:
                 description: Human-readable description.
@@ -57,38 +57,35 @@ spec:
                 description: Latest configuration family for this group.
                 properties:
                   active:
-                    default: true
-                    description: Whether this family is active.
+                    description: Whether this family is active. Defaults to false.
                     type: boolean
                   description:
                     description: Human-readable description.
                     type: string
                   preset:
-                    description: Configuration template settings. Coralogix generates
+                    description: Configuration template settings; Coralogix generates
                       the remote configurations from them.
                     properties:
                       chartName:
                         description: |-
-                          Configuration template type: otelIntegration for Kubernetes, otelEcsEc2 for ECS on EC2,
-                          or otelLinuxStandalone, otelWindowsStandalone or otelMacosStandalone for hosts.
+                          Configuration template type: CHART_NAME_OTEL_INTEGRATION for Kubernetes, CHART_NAME_OTEL_ECS_EC2 for ECS on EC2,
+                          or CHART_NAME_OTEL_LINUX_STANDALONE, CHART_NAME_OTEL_WINDOWS_STANDALONE, or CHART_NAME_OTEL_MACOS_STANDALONE for hosts.
                         enum:
-                        - otelIntegration
-                        - otelLinuxStandalone
-                        - otelWindowsStandalone
-                        - otelMacosStandalone
-                        - otelEcsEc2
+                        - CHART_NAME_OTEL_INTEGRATION
+                        - CHART_NAME_OTEL_LINUX_STANDALONE
+                        - CHART_NAME_OTEL_WINDOWS_STANDALONE
+                        - CHART_NAME_OTEL_MACOS_STANDALONE
+                        - CHART_NAME_OTEL_ECS_EC2
                         type: string
                       chartVersion:
                         description: |-
-                          Configuration template version. It determines the OpenTelemetry Collector version, the generated
-                          collector configuration, and which integrationVersion values are supported.
-                        maxLength: 256
+                          Configuration template version. It determines the OTel Collector version, the generated collector configuration,
+                          and which integrationVersion values are supported. Unsupported versions are rejected.
                         pattern: ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$
                         type: string
                       integrationVersion:
                         description: Version of the observability features format.
                           Omit it to use the default for the template type and version.
-                        maxLength: 256
                         pattern: ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$
                         type: string
                       metadata:
@@ -96,32 +93,28 @@ spec:
                           type: string
                         description: |-
                           Environment setup values for the configuration template, such as ClusterName, KubernetesRunningOn,
-                          ApplicationName or SubsystemName. Set observability features in observabilityFeatures, not here.
+                          ApplicationName, or SubsystemName. Set the observability features in observabilityFeatures.
                         type: object
-                        x-kubernetes-validations:
-                        - message: Set observability features in observabilityFeatures,
-                            not in metadata
-                          rule: '!(''ObservabilityFeatures'' in self)'
                       observabilityFeatures:
                         description: |-
-                          Observability feature settings for the configuration template. The available features depend on
-                          chartName and integrationVersion. It is sent to the API as a JSON object string.
-                        type: object
-                        x-kubernetes-preserve-unknown-fields: true
+                          Observability feature settings for the configuration template, as a JSON object string;
+                          the available features depend on chartName and integrationVersion.
+                        minLength: 2
+                        type: string
                     required:
                     - chartName
                     - chartVersion
                     - observabilityFeatures
                     type: object
                   raw:
-                    description: Configuration family defined directly by its remote
-                      configurations.
+                    description: |-
+                      Configuration family defined directly by its remote configurations, each with an
+                      OTel Collector configuration and an agent selector.
                     properties:
                       collectorVersion:
-                        description: Collector semantic version this family targets,
-                          without a leading v prefix.
-                        maxLength: 256
-                        minLength: 5
+                        description: |-
+                          Collector semantic version this family targets, without a leading v prefix.
+                          Every agentSelector must then set service.version to this value.
                         pattern: ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$
                         type: string
                       metadata:
@@ -130,17 +123,22 @@ spec:
                         description: Metadata stored with this configuration family.
                         type: object
                       remoteConfigurations:
-                        description: Remote OpenTelemetry Collector configurations
-                          in this family.
+                        description: Remote configurations in this family.
                         items:
                           description: RemoteConfigurationSpec is a remote OpenTelemetry
                             Collector configuration.
                           properties:
                             agentSelector:
-                              additionalProperties:
-                                type: string
-                              description: Flat agent attributes that match agents
-                                for this configuration.
+                              description: Agent attributes that match agents for
+                                this configuration.
+                              properties:
+                                attributes:
+                                  additionalProperties:
+                                    type: string
+                                  description: Flat agent attributes to match. If
+                                    collectorVersion is set, service.version must
+                                    match it.
+                                  type: object
                               type: object
                             name:
                               description: Remote configuration name.
@@ -149,14 +147,11 @@ spec:
                               description: OpenTelemetry Collector configuration YAML.
                                 The supervisor-managed OpAMP extension must not be
                                 configured.
-                              maxLength: 1048576
                               minLength: 1
                               type: string
                           required:
-                          - name
                           - rawConfiguration
                           type: object
-                        maxItems: 128
                         minItems: 1
                         type: array
                     required:
@@ -170,7 +165,7 @@ spec:
                     recreate the ConfigurationGroup
                   rule: has(self.preset) == has(oldSelf.preset)
               name:
-                description: Display name.
+                description: Display name. Group names are unique per company.
                 type: string
               priorityOrder:
                 description: Selection precedence. Higher values win on ties and 0
@@ -180,13 +175,10 @@ spec:
               tags:
                 description: Tags attached to the configuration group.
                 items:
-                  maxLength: 256
                   type: string
-                maxItems: 64
                 type: array
             required:
             - family
-            - name
             type: object
           status:
             description: ConfigurationGroupStatus defines the observed state of ConfigurationGroup.

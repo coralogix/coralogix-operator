@@ -16,12 +16,10 @@ package v1alpha1
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/go-logr/logr"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -154,16 +152,10 @@ func expandCreateRequest(group *coralogixv1alpha1.ConfigurationGroup) (cfggroups
 		return cfggroups.ConfigurationGroupServiceCreateConfigurationGroupRequest{}, err
 	}
 	create := cfggroups.NewConfigurationGroupServiceCreateConfigurationGroupRequest(*family)
-	create.SetName(group.Spec.Name)
-	if group.Spec.Description != nil {
-		create.SetDescription(*group.Spec.Description)
-	}
-	if group.Spec.Tags != nil {
-		create.SetTags(group.Spec.Tags)
-	}
-	if group.Spec.PriorityOrder != nil {
-		create.SetPriorityOrder(*group.Spec.PriorityOrder)
-	}
+	create.Name = group.Spec.Name
+	create.Description = group.Spec.Description
+	create.Tags = group.Spec.Tags
+	create.PriorityOrder = group.Spec.PriorityOrder
 	return *create, nil
 }
 
@@ -173,7 +165,7 @@ const configurationGroupUpdateMask = "name,description,tags,priorityOrder,family
 
 func expandUpdateRequest(group *coralogixv1alpha1.ConfigurationGroup) (cfggroups.ConfigurationGroupServiceUpdateConfigurationGroupRequest, string, error) {
 	update := cfggroups.NewConfigurationGroupServiceUpdateConfigurationGroupRequest()
-	update.SetName(group.Spec.Name)
+	update.SetName(ptr.Deref(group.Spec.Name, ""))
 	update.SetDescription(ptr.Deref(group.Spec.Description, ""))
 	tags := group.Spec.Tags
 	if tags == nil {
@@ -193,44 +185,21 @@ func expandUpdateRequest(group *coralogixv1alpha1.ConfigurationGroup) (cfggroups
 	return *update, configurationGroupUpdateMask + "," + familyKindPath, nil
 }
 
-var schemaToOpenAPIChartName = map[string]cfggroups.ChartName{
-	"otelIntegration":       cfggroups.CHARTNAME_CHART_NAME_OTEL_INTEGRATION,
-	"otelLinuxStandalone":   cfggroups.CHARTNAME_CHART_NAME_OTEL_LINUX_STANDALONE,
-	"otelWindowsStandalone": cfggroups.CHARTNAME_CHART_NAME_OTEL_WINDOWS_STANDALONE,
-	"otelMacosStandalone":   cfggroups.CHARTNAME_CHART_NAME_OTEL_MACOS_STANDALONE,
-	"otelEcsEc2":            cfggroups.CHARTNAME_CHART_NAME_OTEL_ECS_EC2,
-}
-
 func expandFamilyCreate(family coralogixv1alpha1.ConfigurationFamilySpec) (*cfggroups.ConfigurationFamilyCreate, error) {
 	out := cfggroups.NewConfigurationFamilyCreate()
-	if family.Active != nil {
-		out.SetActive(*family.Active)
-	}
-	if family.Description != nil {
-		out.SetDescription(*family.Description)
-	}
+	out.Active = family.Active
+	out.Description = family.Description
 	switch {
 	case family.Preset != nil:
-		chartName, observabilityFeatures, err := expandPresetCommon(family.Preset)
-		if err != nil {
-			return nil, err
-		}
-		preset := cfggroups.NewPresetConfigurationFamilyCreate(chartName, family.Preset.ChartVersion, observabilityFeatures)
-		if family.Preset.IntegrationVersion != nil {
-			preset.SetIntegrationVersion(*family.Preset.IntegrationVersion)
-		}
-		if family.Preset.Metadata != nil {
-			preset.SetMetadata(family.Preset.Metadata)
-		}
+		preset := cfggroups.NewPresetConfigurationFamilyCreate(
+			cfggroups.ChartName(family.Preset.ChartName), family.Preset.ChartVersion, family.Preset.ObservabilityFeatures)
+		preset.IntegrationVersion = family.Preset.IntegrationVersion
+		preset.Metadata = family.Preset.Metadata
 		out.SetPreset(*preset)
 	case family.Raw != nil:
 		raw := cfggroups.NewRawConfigurationFamilyCreate(expandRemoteCreates(family.Raw.RemoteConfigurations))
-		if family.Raw.CollectorVersion != nil {
-			raw.SetCollectorVersion(*family.Raw.CollectorVersion)
-		}
-		if family.Raw.Metadata != nil {
-			raw.SetMetadata(family.Raw.Metadata)
-		}
+		raw.CollectorVersion = family.Raw.CollectorVersion
+		raw.Metadata = family.Raw.Metadata
 		out.SetRaw(*raw)
 	default:
 		return nil, fmt.Errorf("exactly one of family.preset or family.raw is required")
@@ -240,68 +209,25 @@ func expandFamilyCreate(family coralogixv1alpha1.ConfigurationFamilySpec) (*cfgg
 
 func expandFamilyUpdate(family coralogixv1alpha1.ConfigurationFamilySpec) (*cfggroups.ConfigurationFamilyUpdate, error) {
 	out := cfggroups.NewConfigurationFamilyUpdate()
-	// Always send active: an omitted value deactivates the family on update.
-	// Fall back to the CRD default (true) if the API server did not apply it.
-	out.SetActive(ptr.Deref(family.Active, true))
-	if family.Description != nil {
-		out.SetDescription(*family.Description)
-	} else {
-		out.SetDescription("")
-	}
+	// Always send active and description: masked fields omitted from the body are cleared.
+	out.SetActive(ptr.Deref(family.Active, false))
+	out.SetDescription(ptr.Deref(family.Description, ""))
 	switch {
 	case family.Preset != nil:
-		chartName, observabilityFeatures, err := expandPresetCommon(family.Preset)
-		if err != nil {
-			return nil, err
-		}
-		preset := cfggroups.NewPresetConfigurationFamilyUpdate(chartName, family.Preset.ChartVersion, observabilityFeatures)
-		if family.Preset.IntegrationVersion != nil {
-			preset.SetIntegrationVersion(*family.Preset.IntegrationVersion)
-		}
+		preset := cfggroups.NewPresetConfigurationFamilyUpdate(
+			cfggroups.ChartName(family.Preset.ChartName), family.Preset.ChartVersion, family.Preset.ObservabilityFeatures)
+		preset.IntegrationVersion = family.Preset.IntegrationVersion
 		preset.SetMetadata(nonNilStringMap(family.Preset.Metadata))
 		out.SetPreset(*preset)
 	case family.Raw != nil:
 		raw := cfggroups.NewRawConfigurationFamilyUpdate(expandRemoteReplaces(family.Raw.RemoteConfigurations))
-		if family.Raw.CollectorVersion != nil {
-			raw.SetCollectorVersion(*family.Raw.CollectorVersion)
-		}
+		raw.CollectorVersion = family.Raw.CollectorVersion
 		raw.SetMetadata(nonNilStringMap(family.Raw.Metadata))
 		out.SetRaw(*raw)
 	default:
 		return nil, fmt.Errorf("exactly one of family.preset or family.raw is required")
 	}
 	return out, nil
-}
-
-func expandPresetCommon(preset *coralogixv1alpha1.PresetConfigurationFamilySpec) (cfggroups.ChartName, string, error) {
-	chartName, ok := schemaToOpenAPIChartName[preset.ChartName]
-	if !ok {
-		return "", "", fmt.Errorf("unsupported family.preset.chartName %q", preset.ChartName)
-	}
-	observabilityFeatures, err := expandObservabilityFeatures(preset.ObservabilityFeatures)
-	if err != nil {
-		return "", "", err
-	}
-	return chartName, observabilityFeatures, nil
-}
-
-// expandObservabilityFeatures serializes the structured CRD object into the JSON object string the API expects.
-func expandObservabilityFeatures(features runtime.RawExtension) (string, error) {
-	if len(features.Raw) == 0 {
-		return "{}", nil
-	}
-	var object map[string]interface{}
-	if err := json.Unmarshal(features.Raw, &object); err != nil {
-		return "", fmt.Errorf("family.preset.observabilityFeatures must be a JSON object: %w", err)
-	}
-	if object == nil {
-		return "{}", nil
-	}
-	out, err := json.Marshal(object)
-	if err != nil {
-		return "", fmt.Errorf("marshaling family.preset.observabilityFeatures: %w", err)
-	}
-	return string(out), nil
 }
 
 func nonNilStringMap(m map[string]string) map[string]string {
@@ -311,16 +237,19 @@ func nonNilStringMap(m map[string]string) map[string]string {
 	return m
 }
 
+func expandAgentSelector(selector *coralogixv1alpha1.AgentSelectorSpec) *cfggroups.AgentSelectorRequest {
+	if selector == nil {
+		return nil
+	}
+	return &cfggroups.AgentSelectorRequest{Attributes: selector.Attributes}
+}
+
 func expandRemoteCreates(remotes []coralogixv1alpha1.RemoteConfigurationSpec) []cfggroups.RemoteConfigurationCreate {
 	out := make([]cfggroups.RemoteConfigurationCreate, 0, len(remotes))
 	for _, remote := range remotes {
 		item := cfggroups.NewRemoteConfigurationCreate(remote.RawConfiguration)
-		item.SetName(remote.Name)
-		if len(remote.AgentSelector) > 0 {
-			selector := cfggroups.NewAgentSelectorRequest()
-			selector.SetAttributes(remote.AgentSelector)
-			item.SetAgentSelector(*selector)
-		}
+		item.Name = remote.Name
+		item.AgentSelector = expandAgentSelector(remote.AgentSelector)
 		out = append(out, *item)
 	}
 	return out
@@ -330,12 +259,8 @@ func expandRemoteReplaces(remotes []coralogixv1alpha1.RemoteConfigurationSpec) [
 	out := make([]cfggroups.RemoteConfigurationReplace, 0, len(remotes))
 	for _, remote := range remotes {
 		item := cfggroups.NewRemoteConfigurationReplace(remote.RawConfiguration)
-		item.SetName(remote.Name)
-		if len(remote.AgentSelector) > 0 {
-			selector := cfggroups.NewAgentSelectorRequest()
-			selector.SetAttributes(remote.AgentSelector)
-			item.SetAgentSelector(*selector)
-		}
+		item.Name = remote.Name
+		item.AgentSelector = expandAgentSelector(remote.AgentSelector)
 		out = append(out, *item)
 	}
 	return out

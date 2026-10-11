@@ -13,40 +13,51 @@ spec:
     # The API rejects unsupported chart versions; use a currently supported chartVersion.
     # integrationVersion can be omitted to use the default for the chart version.
     preset:
-      chartName: otelIntegration
+      chartName: CHART_NAME_OTEL_INTEGRATION
       chartVersion: "0.0.289"
       metadata:
         ClusterName: production
         KubernetesRunningOn: openshift
         PrivateLinkEnabled: "false"
-      observabilityFeatures:
-        apm:
-          enabled: true
-          ebpf: false
-          span_metrics:
-            enabled: true
-            histogram_buckets: []
-            transform_statements: []
-          sampling: {}
-          profiling:
-            enabled: false
-        logs:
-          enabled: false
-        kubernetes_events: true
-        reduce_resources_attributes: true
-        metrics:
-          host:
-            enabled: false
-          kubelet: false
-          cluster: false
-          kubernetes_extra:
-            enabled: false
-            scrape_all: false
-          collector: false
-          statsd: false
-          target_allocator: false
-        resource_catalog: false
-        fleet_management:
-          enabled: false
-          remote_config: false
-        coralogix_operator: false
+      # A JSON object string, as the API expects.
+      observabilityFeatures: |
+        {
+          "apm": {
+            "enabled": true,
+            "ebpf": false,
+            "span_metrics": {
+              "enabled": true,
+              "histogram_buckets": [],
+              "transform_statements": []
+            },
+            "sampling": {},
+            "profiling": {
+              "enabled": false
+            }
+          },
+          "logs": {
+            "enabled": false
+          },
+          "kubernetes_events": true,
+          "reduce_resources_attributes": true,
+          "metrics": {
+            "host": {
+              "enabled": false
+            },
+            "kubelet": false,
+            "cluster": false,
+            "kubernetes_extra": {
+              "enabled": false,
+              "scrape_all": false
+            },
+            "collector": false,
+            "statsd": false,
+            "target_allocator": false
+          },
+          "resource_catalog": false,
+          "fleet_management": {
+            "enabled": false,
+            "remote_config": false
+          },
+          "coralogix_operator": false
+        }
