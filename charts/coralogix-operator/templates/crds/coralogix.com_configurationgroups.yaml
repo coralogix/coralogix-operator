@@ -95,6 +95,7 @@ spec:
                         description: |-
                           Environment setup values for the configuration template, such as ClusterName, KubernetesRunningOn,
                           ApplicationName, or SubsystemName. Set the observability features in observabilityFeatures.
+                        maxProperties: 64
                         type: object
                       observabilityFeatures:
                         description: |-
@@ -122,6 +123,7 @@ spec:
                         additionalProperties:
                           type: string
                         description: Metadata stored with this configuration family.
+                        maxProperties: 64
                         type: object
                       remoteConfigurations:
                         description: Remote configurations in this family.
@@ -166,7 +168,10 @@ spec:
                     recreate the ConfigurationGroup
                   rule: has(self.preset) == has(oldSelf.preset)
               name:
-                description: Display name. Group names are unique per company.
+                description: Display name. Group names are unique per team and cannot
+                  be cleared.
+                maxLength: 256
+                minLength: 1
                 type: string
               priorityOrder:
                 description: Selection precedence. Higher values win on ties and 0
@@ -180,6 +185,7 @@ spec:
                 type: array
             required:
             - family
+            - name
             type: object
           status:
             description: ConfigurationGroupStatus defines the observed state of ConfigurationGroup.

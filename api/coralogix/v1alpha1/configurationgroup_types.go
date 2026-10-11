@@ -21,9 +21,10 @@ import (
 // ConfigurationGroupSpec defines the desired state of a Fleet Manager configuration group.
 // It mirrors the configuration-groups API create request. This resource is in Preview.
 type ConfigurationGroupSpec struct {
-	// Display name. Group names are unique per company.
-	// +optional
-	Name *string `json:"name,omitempty"`
+	// Display name. Group names are unique per team and cannot be cleared.
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=256
+	Name string `json:"name"`
 
 	// Human-readable description.
 	// +optional
@@ -86,6 +87,7 @@ type PresetConfigurationFamilySpec struct {
 	// Environment setup values for the configuration template, such as ClusterName, KubernetesRunningOn,
 	// ApplicationName, or SubsystemName. Set the observability features in observabilityFeatures.
 	// +optional
+	// +kubebuilder:validation:MaxProperties=64
 	Metadata map[string]string `json:"metadata,omitempty"`
 
 	// Observability feature settings for the configuration template, as a JSON object string;
@@ -104,6 +106,7 @@ type RawConfigurationFamilySpec struct {
 
 	// Metadata stored with this configuration family.
 	// +optional
+	// +kubebuilder:validation:MaxProperties=64
 	Metadata map[string]string `json:"metadata,omitempty"`
 
 	// Remote configurations in this family.

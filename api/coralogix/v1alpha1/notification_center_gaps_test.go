@@ -73,10 +73,10 @@ func TestPresetExtractPagerdutyIncidentsAndCases(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ExtractPreset returned error: %v", err)
 	}
-	if got.ConnectorType == nil || *got.ConnectorType != presets.NOTIFICATIONCENTERCONNECTORTYPE_PAGERDUTY_INCIDENTS {
+	if got.ConnectorType != presets.NOTIFICATIONCENTERCONNECTORTYPE_PAGERDUTY_INCIDENTS {
 		t.Fatalf("ConnectorType = %v, want PAGERDUTY_INCIDENTS", got.ConnectorType)
 	}
-	if got.EntityType == nil || *got.EntityType != presets.NOTIFICATIONCENTERENTITYTYPE_CASES {
+	if got.EntityType != presets.NOTIFICATIONCENTERENTITYTYPE_CASES {
 		t.Fatalf("EntityType = %v, want CASES", got.EntityType)
 	}
 }
@@ -125,10 +125,10 @@ func TestPresetExtractMicrosoftTeams(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ExtractPreset returned error: %v", err)
 	}
-	if got.ConnectorType == nil || *got.ConnectorType != presets.NOTIFICATIONCENTERCONNECTORTYPE_MICROSOFT_TEAMS {
+	if got.ConnectorType != presets.NOTIFICATIONCENTERCONNECTORTYPE_MICROSOFT_TEAMS {
 		t.Fatalf("ConnectorType = %v, want MICROSOFT_TEAMS", got.ConnectorType)
 	}
-	if got.EntityType == nil || *got.EntityType != presets.NOTIFICATIONCENTERENTITYTYPE_ALERTS {
+	if got.EntityType != presets.NOTIFICATIONCENTERENTITYTYPE_ALERTS {
 		t.Fatalf("EntityType = %v, want ALERTS", got.EntityType)
 	}
 }
@@ -217,10 +217,10 @@ func TestPresetExtractEventBridge(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ExtractPreset returned error: %v", err)
 	}
-	if got.ConnectorType == nil || *got.ConnectorType != presets.NOTIFICATIONCENTERCONNECTORTYPE_EVENTBRIDGE {
+	if got.ConnectorType != presets.NOTIFICATIONCENTERCONNECTORTYPE_EVENTBRIDGE {
 		t.Fatalf("ConnectorType = %v, want EVENTBRIDGE", got.ConnectorType)
 	}
-	if got.EntityType == nil || *got.EntityType != presets.NOTIFICATIONCENTERENTITYTYPE_CASES {
+	if got.EntityType != presets.NOTIFICATIONCENTERENTITYTYPE_CASES {
 		t.Fatalf("EntityType = %v, want CASES", got.EntityType)
 	}
 }
@@ -267,10 +267,10 @@ func TestPresetExtractIncidentIO(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ExtractPreset returned error: %v", err)
 	}
-	if got.ConnectorType == nil || *got.ConnectorType != presets.NOTIFICATIONCENTERCONNECTORTYPE_INCIDENT_IO {
+	if got.ConnectorType != presets.NOTIFICATIONCENTERCONNECTORTYPE_INCIDENT_IO {
 		t.Fatalf("ConnectorType = %v, want INCIDENT_IO", got.ConnectorType)
 	}
-	if got.EntityType == nil || *got.EntityType != presets.NOTIFICATIONCENTERENTITYTYPE_CASES {
+	if got.EntityType != presets.NOTIFICATIONCENTERENTITYTYPE_CASES {
 		t.Fatalf("EntityType = %v, want CASES", got.EntityType)
 	}
 }

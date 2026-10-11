@@ -51,7 +51,7 @@ var _ = Describe("ConfigurationGroup", Ordered, func() {
 				Namespace: testNamespace,
 			},
 			Spec: coralogixv1alpha1.ConfigurationGroupSpec{
-				Name:        ptr.To(name),
+				Name:        name,
 				Description: ptr.To("e2e configuration group"),
 				Tags:        []string{"e2e"},
 				Family: coralogixv1alpha1.ConfigurationFamilySpec{

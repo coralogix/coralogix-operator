@@ -10866,17 +10866,17 @@ It mirrors the configuration-groups API create request. This resource is in Prev
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Display name. Group names are unique per team and cannot be cleared.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
           Human-readable description.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          Display name. Group names are unique per company.<br/>
         </td>
         <td>false</td>
       </tr><tr>

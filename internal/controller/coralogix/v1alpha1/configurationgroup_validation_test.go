@@ -16,6 +16,8 @@ package v1alpha1
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -52,7 +54,7 @@ func configurationGroupWithFamily(name string, family coralogixv1alpha1.Configur
 	return &coralogixv1alpha1.ConfigurationGroup{
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: "default"},
 		Spec: coralogixv1alpha1.ConfigurationGroupSpec{
-			Name:   ptr.To(name),
+			Name:   name,
 			Family: family,
 		},
 	}
@@ -144,6 +146,26 @@ var _ = Describe("ConfigurationGroup validation", func() {
 		Entry("opentelemetry collector", "CHART_NAME_OPENTELEMETRY_COLLECTOR"),
 		Entry("camelCase spelling", "otelIntegration"),
 	)
+
+	DescribeTable("should reject a name the API does not accept",
+		func(ctx context.Context, name string) {
+			group := configurationGroupWithFamily("cg-bad-name", coralogixv1alpha1.ConfigurationFamilySpec{Raw: rawFamily()})
+			group.Spec.Name = name
+			Expect(k8sClient.Create(ctx, group)).NotTo(Succeed())
+		},
+		Entry("empty", ""),
+		Entry("longer than 256 characters", strings.Repeat("n", 257)),
+	)
+
+	It("should reject metadata with more than 64 entries", func(ctx context.Context) {
+		raw := rawFamily()
+		raw.Metadata = map[string]string{}
+		for i := range 65 {
+			raw.Metadata[fmt.Sprintf("key%d", i)] = "value"
+		}
+		group := configurationGroupWithFamily("cg-big-metadata", coralogixv1alpha1.ConfigurationFamilySpec{Raw: raw})
+		Expect(k8sClient.Create(ctx, group)).NotTo(Succeed())
+	})
 
 })
 

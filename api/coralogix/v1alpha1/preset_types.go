@@ -148,7 +148,7 @@ var (
 
 func (p *Preset) ExtractPreset() (*presets.Preset, error) {
 	preset := &presets.Preset{
-		Name:        presets.PtrString(p.Spec.Name),
+		Name:        p.Spec.Name,
 		Description: presets.PtrString(p.Spec.Description),
 		ParentId:    p.Spec.ParentId,
 	}
@@ -157,14 +157,14 @@ func (p *Preset) ExtractPreset() (*presets.Preset, error) {
 	if !ok {
 		return nil, fmt.Errorf("invalid connector type %s", p.Spec.ConnectorType)
 	}
-	preset.ConnectorType = connectorType.Ptr()
+	preset.ConnectorType = connectorType
 
 	entityType, ok := schemaToOpenApiPresetsEntityType[p.Spec.EntityType]
 	if !ok {
 		return nil, fmt.Errorf("invalid entity type %s", p.Spec.EntityType)
 	}
 
-	preset.EntityType = entityType.Ptr()
+	preset.EntityType = entityType
 
 	if p.Spec.AttachmentConfig != nil {
 		policy := presets.AttachmentConfigPolicy(*p.Spec.AttachmentConfig)
