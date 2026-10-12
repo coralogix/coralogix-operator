@@ -41,7 +41,6 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	openapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
-	cfggroups "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/fleet_manager_configuration_groups"
 
 	"github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/api/coralogix/v1beta1"
@@ -367,7 +366,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&v1alpha1controllers.ConfigurationGroupReconciler{
-		ConfigurationGroupsClient: newConfigurationGroupsClient(cfg.CoralogixOpenApiUrl, cfg.CoralogixApiKey, OperatorVersion),
+		ConfigurationGroupsClient: oapiClientSet.ConfigGroups(),
 		Interval:                  cfg.ReconcileIntervals[utils.ConfigurationGroupKind],
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ConfigurationGroup")
@@ -458,12 +457,4 @@ func prometheusRuleCRDExists(ctx context.Context, c client.Reader) (bool, error)
 	}
 
 	return true, nil
-}
-
-func newConfigurationGroupsClient(url, apiKey, version string) *cfggroups.FleetManagerConfigurationGroupsAPIService {
-	cfg := cfggroups.NewConfiguration()
-	cfg.Servers = cfggroups.ServerConfigurations{{URL: url}}
-	cfg.AddDefaultHeader("Authorization", "Bearer "+apiKey)
-	cfg.AddDefaultHeader("x-cx-sdk-version", "operator-"+version)
-	return cfggroups.NewAPIClient(cfg).FleetManagerConfigurationGroupsAPI
 }
