@@ -10792,7 +10792,7 @@ with respect to the current state of the instance.<br/>
 
 
 ConfigurationGroup is the Schema for the configurationgroups API.
-This resource is in Beta. It uses the Fleet Manager Preview configuration-group API.
+This resource is in Preview and may change in breaking ways. It uses the Fleet Manager configuration-groups API.
 
 <table>
     <thead>
@@ -10825,7 +10825,7 @@ This resource is in Beta. It uses the Fleet Manager Preview configuration-group 
         <td>object</td>
         <td>
           ConfigurationGroupSpec defines the desired state of a Fleet Manager configuration group.
-This resource is in Beta and uses the Preview configuration-group API.<br/>
+It mirrors the configuration-groups API create request. This resource is in Preview.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -10845,7 +10845,7 @@ This resource is in Beta and uses the Preview configuration-group API.<br/>
 
 
 ConfigurationGroupSpec defines the desired state of a Fleet Manager configuration group.
-This resource is in Beta and uses the Preview configuration-group API.
+It mirrors the configuration-groups API create request. This resource is in Preview.
 
 <table>
     <thead>
@@ -10861,13 +10861,15 @@ This resource is in Beta and uses the Preview configuration-group API.
         <td>object</td>
         <td>
           Latest configuration family for this group.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.preset) != has(self.raw): Exactly one of preset or raw is required</li>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          Display name.<br/>
+          Display name. Group names are unique per team and cannot be cleared.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -10914,27 +10916,10 @@ Latest configuration family for this group.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#configurationgroupspecfamilyremoteconfigurationsindex">remoteConfigurations</a></b></td>
-        <td>[]object</td>
-        <td>
-          Remote OpenTelemetry Collector configurations in this family.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>active</b></td>
         <td>boolean</td>
         <td>
-          Whether this family is active.<br/>
-          <br/>
-            <i>Default</i>: true<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>collectorVersion</b></td>
-        <td>string</td>
-        <td>
-          Collector semantic version this family targets, without a leading v prefix.
-The replace API keeps the existing value when this field is omitted.<br/>
+          Whether this family is active. Defaults to false.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -10945,18 +10930,134 @@ The replace API keeps the existing value when this field is omitted.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>metadata</b></td>
-        <td>map[string]string</td>
+        <td><b><a href="#configurationgroupspecfamilypreset">preset</a></b></td>
+        <td>object</td>
         <td>
-          Metadata stored with this configuration family.<br/>
+          Configuration template settings; Coralogix generates the remote configurations from them.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#configurationgroupspecfamilyraw">raw</a></b></td>
+        <td>object</td>
+        <td>
+          Configuration family defined directly by its remote configurations, each with an
+OTel Collector configuration and an agent selector.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
 </table>
 
 
-### ConfigurationGroup.spec.family.remoteConfigurations[index]
+### ConfigurationGroup.spec.family.preset
 <sup><sup>[↩ Parent](#configurationgroupspecfamily)</sup></sup>
+
+
+
+Configuration template settings; Coralogix generates the remote configurations from them.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>chartName</b></td>
+        <td>enum</td>
+        <td>
+          Configuration template type: CHART_NAME_OTEL_INTEGRATION for Kubernetes, CHART_NAME_OTEL_ECS_EC2 for ECS on EC2,
+or CHART_NAME_OTEL_LINUX_STANDALONE, CHART_NAME_OTEL_WINDOWS_STANDALONE, or CHART_NAME_OTEL_MACOS_STANDALONE for hosts.<br/>
+          <br/>
+            <i>Enum</i>: CHART_NAME_OTEL_INTEGRATION, CHART_NAME_OTEL_LINUX_STANDALONE, CHART_NAME_OTEL_WINDOWS_STANDALONE, CHART_NAME_OTEL_MACOS_STANDALONE, CHART_NAME_OTEL_ECS_EC2<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>chartVersion</b></td>
+        <td>string</td>
+        <td>
+          Configuration template version. It determines the OTel Collector version, the generated collector configuration,
+and which integrationVersion values are supported. Unsupported versions are rejected.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observabilityFeatures</b></td>
+        <td>string</td>
+        <td>
+          Observability feature settings for the configuration template, as a JSON object string;
+the available features depend on chartName and integrationVersion.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>integrationVersion</b></td>
+        <td>string</td>
+        <td>
+          Version of the observability features format. Omit it to use the default for the template type and version.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>metadata</b></td>
+        <td>map[string]string</td>
+        <td>
+          Environment setup values for the configuration template, such as ClusterName, KubernetesRunningOn,
+ApplicationName, or SubsystemName. Set the observability features in observabilityFeatures.<br/>
+          <br/>
+            <i>Validations</i>:<li>self.all(k, size(self[k]) <= 4096): metadata values must be at most 4096 characters</li>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ConfigurationGroup.spec.family.raw
+<sup><sup>[↩ Parent](#configurationgroupspecfamily)</sup></sup>
+
+
+
+Configuration family defined directly by its remote configurations, each with an
+OTel Collector configuration and an agent selector.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#configurationgroupspecfamilyrawremoteconfigurationsindex">remoteConfigurations</a></b></td>
+        <td>[]object</td>
+        <td>
+          Remote configurations in this family.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>collectorVersion</b></td>
+        <td>string</td>
+        <td>
+          Collector semantic version this family targets, without a leading v prefix.
+Every agentSelector must then set service.version to this value.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>metadata</b></td>
+        <td>map[string]string</td>
+        <td>
+          Metadata stored with this configuration family.<br/>
+          <br/>
+            <i>Validations</i>:<li>self.all(k, size(self[k]) <= 4096): metadata values must be at most 4096 characters</li>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ConfigurationGroup.spec.family.raw.remoteConfigurations[index]
+<sup><sup>[↩ Parent](#configurationgroupspecfamilyraw)</sup></sup>
 
 
 
@@ -10972,13 +11073,6 @@ RemoteConfigurationSpec is a remote OpenTelemetry Collector configuration.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          Remote configuration name.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>rawConfiguration</b></td>
         <td>string</td>
         <td>
@@ -10986,10 +11080,44 @@ RemoteConfigurationSpec is a remote OpenTelemetry Collector configuration.
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>agentSelector</b></td>
+        <td><b><a href="#configurationgroupspecfamilyrawremoteconfigurationsindexagentselector">agentSelector</a></b></td>
+        <td>object</td>
+        <td>
+          Agent attributes that match agents for this configuration.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Remote configuration name.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ConfigurationGroup.spec.family.raw.remoteConfigurations[index].agentSelector
+<sup><sup>[↩ Parent](#configurationgroupspecfamilyrawremoteconfigurationsindex)</sup></sup>
+
+
+
+Agent attributes that match agents for this configuration.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>attributes</b></td>
         <td>map[string]string</td>
         <td>
-          Flat agent attributes that match agents for this configuration.<br/>
+          Flat agent attributes to match. If collectorVersion is set, service.version must match it.<br/>
         </td>
         <td>false</td>
       </tr></tbody>

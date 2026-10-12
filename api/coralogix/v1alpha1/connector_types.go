@@ -138,7 +138,7 @@ var (
 
 func (c *Connector) ExtractConnector(ctx context.Context) (*connectors.Connector, error) {
 	connector := &connectors.Connector{
-		Name:        connectors.PtrString(c.Spec.Name),
+		Name:        c.Spec.Name,
 		Description: connectors.PtrString(c.Spec.Description),
 	}
 
@@ -146,7 +146,7 @@ func (c *Connector) ExtractConnector(ctx context.Context) (*connectors.Connector
 	if !ok {
 		return nil, fmt.Errorf("unsupported connector type: %s", c.Spec.Type)
 	}
-	connector.Type = connectorType.Ptr()
+	connector.Type = connectorType
 
 	fields, err := ExtractConnectorConfigFields(ctx, c.Spec.ConnectorConfig.Fields, c.Namespace)
 	if err != nil {
@@ -182,7 +182,7 @@ func ExtractConnectorConfigFields(ctx context.Context, fields []ConnectorConfigF
 		}
 
 		result = append(result, connectors.NotificationCenterConnectorConfigField{
-			FieldName: connectors.PtrString(field.FieldName),
+			FieldName: field.FieldName,
 			Value:     connectors.PtrString(value),
 		})
 	}
@@ -199,7 +199,7 @@ func ExtractEntityTypeConfigOverrides(overrides []EntityTypeConfigOverrides) ([]
 		}
 
 		entityTypeConfigOverrides := connectors.EntityTypeConfigOverrides{
-			EntityType: entityType.Ptr(),
+			EntityType: entityType,
 		}
 
 		entityTypeConfigOverrides.Fields = ExtractConfigOverridesFields(override.Fields)
@@ -213,7 +213,7 @@ func ExtractConfigOverridesFields(fields []TemplatedConnectorConfigField) []conn
 	var result []connectors.TemplatedConnectorConfigField
 	for _, field := range fields {
 		result = append(result, connectors.TemplatedConnectorConfigField{
-			FieldName: connectors.PtrString(field.FieldName),
+			FieldName: field.FieldName,
 			Template:  connectors.PtrString(field.Template),
 		})
 	}

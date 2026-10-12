@@ -55,18 +55,21 @@ var _ = Describe("ConfigurationGroup", Ordered, func() {
 				Description: ptr.To("e2e configuration group"),
 				Tags:        []string{"e2e"},
 				Family: coralogixv1alpha1.ConfigurationFamilySpec{
-					Active:           ptr.To(true),
-					CollectorVersion: ptr.To("0.114.0"),
-					RemoteConfigurations: []coralogixv1alpha1.RemoteConfigurationSpec{
-						{
-							Name: "default",
-							RawConfiguration: `receivers:
+					Active: ptr.To(true),
+					Raw: &coralogixv1alpha1.RawConfigurationFamilySpec{
+						CollectorVersion: ptr.To("0.114.0"),
+						RemoteConfigurations: []coralogixv1alpha1.RemoteConfigurationSpec{
+							{
+								Name: ptr.To("default"),
+								RawConfiguration: `receivers:
   otlp:
     protocols:
       grpc: {}
 `,
-							AgentSelector: map[string]string{
-								"cx.agent.type": "agent",
+								AgentSelector: &coralogixv1alpha1.AgentSelectorSpec{Attributes: map[string]string{
+									"cx.agent.type":   "agent",
+									"service.version": "0.114.0",
+								}},
 							},
 						},
 					},
@@ -123,6 +126,40 @@ var _ = Describe("ConfigurationGroup", Ordered, func() {
 		Eventually(func() error {
 			return crClient.Get(ctx,
 				types.NamespacedName{Name: configurationGroup.Name, Namespace: testNamespace},
+				&coralogixv1alpha1.ConfigurationGroup{})
+		}, time.Minute, time.Second).ShouldNot(Succeed())
+	})
+
+	It("Should be recreated after deletion", func(ctx context.Context) {
+		By("Recreating the ConfigurationGroup resource with a new group name")
+		recreated := &coralogixv1alpha1.ConfigurationGroup{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      configurationGroup.Name,
+				Namespace: testNamespace,
+			},
+			Spec: *configurationGroup.Spec.DeepCopy(),
+		}
+		recreated.Spec.Name = uniqueName("configuration-group")
+		Expect(crClient.Create(ctx, recreated)).To(Succeed())
+
+		By("Verifying the recreated ConfigurationGroup gets a new remote ID")
+		fetched := &coralogixv1alpha1.ConfigurationGroup{}
+		Eventually(func(g Gomega) {
+			g.Expect(crClient.Get(ctx,
+				types.NamespacedName{Name: recreated.Name, Namespace: testNamespace},
+				fetched)).To(Succeed())
+			condition := meta.FindStatusCondition(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)
+			g.Expect(condition).ToNot(BeNil())
+			g.Expect(condition.Status).To(Equal(metav1.ConditionTrue), "RemoteSynced: %s", condition.Message)
+			g.Expect(fetched.Status.ID).ToNot(BeNil())
+			g.Expect(*fetched.Status.ID).ToNot(Equal(configurationGroupID))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Deleting the recreated ConfigurationGroup")
+		Expect(crClient.Delete(ctx, fetched)).To(Succeed())
+		Eventually(func() error {
+			return crClient.Get(ctx,
+				types.NamespacedName{Name: recreated.Name, Namespace: testNamespace},
 				&coralogixv1alpha1.ConfigurationGroup{})
 		}, time.Minute, time.Second).ShouldNot(Succeed())
 	})

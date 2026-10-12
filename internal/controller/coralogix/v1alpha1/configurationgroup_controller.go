@@ -56,7 +56,10 @@ func (r *ConfigurationGroupReconciler) RequeueInterval() time.Duration {
 
 func (r *ConfigurationGroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	group := obj.(*coralogixv1alpha1.ConfigurationGroup)
-	createReq := expandCreateRequest(group)
+	createReq, err := expandCreateRequest(group)
+	if err != nil {
+		return fmt.Errorf("error on expanding configuration group: %w", err)
+	}
 	log.Info("Creating remote configuration group", "name", group.Spec.Name)
 	createResp, httpResp, err := r.ConfigurationGroupsClient.
 		ConfigurationGroupServiceCreateConfigurationGroup(ctx).
@@ -65,23 +68,27 @@ func (r *ConfigurationGroupReconciler) HandleCreation(ctx context.Context, log l
 	if err != nil {
 		return fmt.Errorf("error on creating remote configuration group: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	if createResp == nil || createResp.Group == nil || createResp.Group.Id == nil {
+	if createResp == nil || createResp.Id == "" {
 		return fmt.Errorf("error on creating remote configuration group: empty response")
 	}
-	log.Info("Remote configuration group created", "id", createResp.Group.GetId(), "name", group.Spec.Name)
+	log.Info("Remote configuration group created", "id", createResp.Id, "name", group.Spec.Name)
 	group.Status = coralogixv1alpha1.ConfigurationGroupStatus{
-		ID: ptr.To(createResp.Group.GetId()),
+		ID: ptr.To(createResp.Id),
 	}
 	return nil
 }
 
 func (r *ConfigurationGroupReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	group := obj.(*coralogixv1alpha1.ConfigurationGroup)
-	replaceReq := expandReplaceRequest(group)
+	updateReq, updateMask, err := expandUpdateRequest(group)
+	if err != nil {
+		return fmt.Errorf("error on expanding configuration group: %w", err)
+	}
 	log.Info("Updating remote configuration group", "id", *group.Status.ID, "name", group.Spec.Name)
 	_, httpResp, err := r.ConfigurationGroupsClient.
-		ConfigurationGroupServiceReplaceConfigurationGroup(ctx, *group.Status.ID).
-		ConfigurationGroupServiceReplaceConfigurationGroupRequest(replaceReq).
+		ConfigurationGroupServiceUpdateConfigurationGroup(ctx, *group.Status.ID).
+		UpdateMask(updateMask).
+		ConfigurationGroupServiceUpdateConfigurationGroupRequest(updateReq).
 		Execute()
 	if err != nil {
 		return cxsdk.NewAPIError(httpResp, err)
@@ -112,17 +119,16 @@ func (r *ConfigurationGroupReconciler) HandleDeletion(ctx context.Context, log l
 }
 
 func (r *ConfigurationGroupReconciler) deactivateFamilyIfActive(ctx context.Context, group *coralogixv1alpha1.ConfigurationGroup) error {
-	// Send only family.active=false so a rejected desired spec (for example
-	// forbidden collector YAML) cannot block archive by failing this replace.
-	family := cfggroups.NewConfigurationGroupServiceReplaceConfigurationGroupRequestGroupFamily()
+	// Patch only family.active=false so a rejected desired spec (for example
+	// forbidden collector YAML) cannot block archive by failing this update.
+	family := cfggroups.NewConfigurationFamilyUpdate()
 	family.SetActive(false)
-	replace := cfggroups.NewConfigurationGroupServiceReplaceConfigurationGroupRequestGroup()
-	replace.SetFamily(*family)
-	replaceReq := cfggroups.NewConfigurationGroupServiceReplaceConfigurationGroupRequest()
-	replaceReq.SetGroup(*replace)
+	updateReq := cfggroups.NewConfigurationGroupServiceUpdateConfigurationGroupRequest()
+	updateReq.SetFamily(*family)
 	_, httpResp, err := r.ConfigurationGroupsClient.
-		ConfigurationGroupServiceReplaceConfigurationGroup(ctx, *group.Status.ID).
-		ConfigurationGroupServiceReplaceConfigurationGroupRequest(*replaceReq).
+		ConfigurationGroupServiceUpdateConfigurationGroup(ctx, *group.Status.ID).
+		UpdateMask("family.active").
+		ConfigurationGroupServiceUpdateConfigurationGroupRequest(*updateReq).
 		Execute()
 	if err != nil {
 		if apiErr := cxsdk.NewAPIError(httpResp, err); cxsdk.IsNotFound(apiErr) {
@@ -140,99 +146,112 @@ func (r *ConfigurationGroupReconciler) SetupWithManager(mgr ctrl.Manager) error 
 		Complete(r)
 }
 
-func expandCreateRequest(group *coralogixv1alpha1.ConfigurationGroup) cfggroups.ConfigurationGroupServiceCreateConfigurationGroupRequest {
-	create := cfggroups.NewConfigurationGroupCreate()
-	create.SetName(group.Spec.Name)
-	if group.Spec.Description != nil {
-		create.SetDescription(*group.Spec.Description)
+func expandCreateRequest(group *coralogixv1alpha1.ConfigurationGroup) (cfggroups.ConfigurationGroupServiceCreateConfigurationGroupRequest, error) {
+	family, err := expandFamilyCreate(group.Spec.Family)
+	if err != nil {
+		return cfggroups.ConfigurationGroupServiceCreateConfigurationGroupRequest{}, err
 	}
-	if group.Spec.Tags != nil {
-		create.SetTags(group.Spec.Tags)
-	}
-	if group.Spec.PriorityOrder != nil {
-		create.SetPriorityOrder(*group.Spec.PriorityOrder)
-	}
-	create.SetFamily(*expandFamilyCreate(group.Spec.Family))
-	req := cfggroups.NewConfigurationGroupServiceCreateConfigurationGroupRequest()
-	req.SetGroup(*create)
-	return *req
+	create := cfggroups.NewConfigurationGroupServiceCreateConfigurationGroupRequest(*family, group.Spec.Name)
+	create.Description = group.Spec.Description
+	create.Tags = group.Spec.Tags
+	create.PriorityOrder = group.Spec.PriorityOrder
+	return *create, nil
 }
 
-func expandReplaceRequest(group *coralogixv1alpha1.ConfigurationGroup) cfggroups.ConfigurationGroupServiceReplaceConfigurationGroupRequest {
-	replace := cfggroups.NewConfigurationGroupServiceReplaceConfigurationGroupRequestGroup()
-	replace.SetName(group.Spec.Name)
-	if group.Spec.Description != nil {
-		replace.SetDescription(*group.Spec.Description)
-	} else {
-		replace.SetDescription("")
-	}
+// configurationGroupUpdateMask lists every group field the operator manages, so each
+// update syncs the full desired state. A masked field missing from the body is cleared.
+const configurationGroupUpdateMask = "name,description,tags,priorityOrder,family.description,family.active"
+
+func expandUpdateRequest(group *coralogixv1alpha1.ConfigurationGroup) (cfggroups.ConfigurationGroupServiceUpdateConfigurationGroupRequest, string, error) {
+	update := cfggroups.NewConfigurationGroupServiceUpdateConfigurationGroupRequest()
+	update.SetName(group.Spec.Name)
+	update.SetDescription(ptr.Deref(group.Spec.Description, ""))
 	tags := group.Spec.Tags
 	if tags == nil {
 		tags = []string{}
 	}
-	replace.SetTags(tags)
-	priorityOrder := int32(0)
-	if group.Spec.PriorityOrder != nil {
-		priorityOrder = *group.Spec.PriorityOrder
+	update.SetTags(tags)
+	update.SetPriorityOrder(ptr.Deref(group.Spec.PriorityOrder, 0))
+	family, err := expandFamilyUpdate(group.Spec.Family)
+	if err != nil {
+		return cfggroups.ConfigurationGroupServiceUpdateConfigurationGroupRequest{}, "", err
 	}
-	replace.SetPriorityOrder(priorityOrder)
-	replace.SetFamily(*expandFamilyReplace(group.Spec.Family))
-	req := cfggroups.NewConfigurationGroupServiceReplaceConfigurationGroupRequest()
-	req.SetGroup(*replace)
-	return *req
+	update.SetFamily(*family)
+	familyKindPath := "family.raw"
+	if family.Preset != nil {
+		familyKindPath = "family.preset"
+	}
+	return *update, configurationGroupUpdateMask + "," + familyKindPath, nil
 }
 
-func expandFamilyCreate(family coralogixv1alpha1.ConfigurationFamilySpec) *cfggroups.ConfigurationFamilyCreate {
+func expandFamilyCreate(family coralogixv1alpha1.ConfigurationFamilySpec) (*cfggroups.ConfigurationFamilyCreate, error) {
 	out := cfggroups.NewConfigurationFamilyCreate()
-	if family.Active != nil {
-		out.SetActive(*family.Active)
+	out.Active = family.Active
+	out.Description = family.Description
+	switch {
+	case family.Preset != nil:
+		preset := cfggroups.NewPresetConfigurationFamilyCreate(
+			cfggroups.ChartName(family.Preset.ChartName), family.Preset.ChartVersion, family.Preset.ObservabilityFeatures)
+		preset.IntegrationVersion = family.Preset.IntegrationVersion
+		preset.Metadata = family.Preset.Metadata
+		out.SetPreset(*preset)
+	case family.Raw != nil:
+		raw := cfggroups.NewRawConfigurationFamilyCreate(expandRemoteCreates(family.Raw.RemoteConfigurations))
+		raw.CollectorVersion = family.Raw.CollectorVersion
+		raw.Metadata = family.Raw.Metadata
+		out.SetRaw(*raw)
+	default:
+		return nil, fmt.Errorf("exactly one of family.preset or family.raw is required")
 	}
-	if family.Description != nil {
-		out.SetDescription(*family.Description)
-	}
-	if family.CollectorVersion != nil {
-		out.SetCollectorVersion(*family.CollectorVersion)
-	}
-	if family.Metadata != nil {
-		out.SetMetadata(family.Metadata)
-	}
-	out.SetRemoteConfigurations(expandRemoteCreates(family.RemoteConfigurations))
-	return out
+	return out, nil
 }
 
-func expandFamilyReplace(family coralogixv1alpha1.ConfigurationFamilySpec) *cfggroups.ConfigurationGroupServiceReplaceConfigurationGroupRequestGroupFamily {
-	out := cfggroups.NewConfigurationGroupServiceReplaceConfigurationGroupRequestGroupFamily()
-	if family.Active != nil {
-		out.SetActive(*family.Active)
+func expandFamilyUpdate(family coralogixv1alpha1.ConfigurationFamilySpec) (*cfggroups.ConfigurationFamilyUpdate, error) {
+	out := cfggroups.NewConfigurationFamilyUpdate()
+	// Always send active and description: masked fields omitted from the body are cleared.
+	out.SetActive(ptr.Deref(family.Active, false))
+	out.SetDescription(ptr.Deref(family.Description, ""))
+	switch {
+	case family.Preset != nil:
+		preset := cfggroups.NewPresetConfigurationFamilyUpdate()
+		preset.SetChartName(cfggroups.ChartName(family.Preset.ChartName))
+		preset.SetChartVersion(family.Preset.ChartVersion)
+		preset.SetObservabilityFeatures(family.Preset.ObservabilityFeatures)
+		preset.IntegrationVersion = family.Preset.IntegrationVersion
+		preset.SetMetadata(nonNilStringMap(family.Preset.Metadata))
+		out.SetPreset(*preset)
+	case family.Raw != nil:
+		raw := cfggroups.NewRawConfigurationFamilyUpdate()
+		raw.SetRemoteConfigurations(expandRemoteReplaces(family.Raw.RemoteConfigurations))
+		raw.CollectorVersion = family.Raw.CollectorVersion
+		raw.SetMetadata(nonNilStringMap(family.Raw.Metadata))
+		out.SetRaw(*raw)
+	default:
+		return nil, fmt.Errorf("exactly one of family.preset or family.raw is required")
 	}
-	if family.Description != nil {
-		out.SetDescription(*family.Description)
-	} else {
-		out.SetDescription("")
+	return out, nil
+}
+
+func nonNilStringMap(m map[string]string) map[string]string {
+	if m == nil {
+		return map[string]string{}
 	}
-	if family.CollectorVersion != nil {
-		out.SetCollectorVersion(*family.CollectorVersion)
+	return m
+}
+
+func expandAgentSelector(selector *coralogixv1alpha1.AgentSelectorSpec) *cfggroups.AgentSelectorRequest {
+	if selector == nil {
+		return nil
 	}
-	metadata := family.Metadata
-	if metadata == nil {
-		metadata = map[string]string{}
-	}
-	out.SetMetadata(metadata)
-	out.SetRemoteConfigurations(expandRemoteReplaces(family.RemoteConfigurations))
-	return out
+	return &cfggroups.AgentSelectorRequest{Attributes: selector.Attributes}
 }
 
 func expandRemoteCreates(remotes []coralogixv1alpha1.RemoteConfigurationSpec) []cfggroups.RemoteConfigurationCreate {
 	out := make([]cfggroups.RemoteConfigurationCreate, 0, len(remotes))
 	for _, remote := range remotes {
-		item := cfggroups.NewRemoteConfigurationCreate()
-		item.SetName(remote.Name)
-		item.SetRawConfiguration(remote.RawConfiguration)
-		if len(remote.AgentSelector) > 0 {
-			selector := cfggroups.NewAgentSelectorRequest()
-			selector.SetAttributes(remote.AgentSelector)
-			item.SetAgentSelector(*selector)
-		}
+		item := cfggroups.NewRemoteConfigurationCreate(remote.RawConfiguration)
+		item.Name = remote.Name
+		item.AgentSelector = expandAgentSelector(remote.AgentSelector)
 		out = append(out, *item)
 	}
 	return out
@@ -241,14 +260,9 @@ func expandRemoteCreates(remotes []coralogixv1alpha1.RemoteConfigurationSpec) []
 func expandRemoteReplaces(remotes []coralogixv1alpha1.RemoteConfigurationSpec) []cfggroups.RemoteConfigurationReplace {
 	out := make([]cfggroups.RemoteConfigurationReplace, 0, len(remotes))
 	for _, remote := range remotes {
-		item := cfggroups.NewRemoteConfigurationReplace()
-		item.SetName(remote.Name)
-		item.SetRawConfiguration(remote.RawConfiguration)
-		if len(remote.AgentSelector) > 0 {
-			selector := cfggroups.NewAgentSelectorRequest()
-			selector.SetAttributes(remote.AgentSelector)
-			item.SetAgentSelector(*selector)
-		}
+		item := cfggroups.NewRemoteConfigurationReplace(remote.RawConfiguration)
+		item.Name = remote.Name
+		item.AgentSelector = expandAgentSelector(remote.AgentSelector)
 		out = append(out, *item)
 	}
 	return out
