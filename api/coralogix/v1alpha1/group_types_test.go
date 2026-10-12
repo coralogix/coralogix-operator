@@ -15,6 +15,7 @@
 package v1alpha1
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -46,4 +47,30 @@ func TestCustomRoleRefFallsBackToFirstCustomRolesEntry(t *testing.T) {
 
 func TestCustomRoleRefEmpty(t *testing.T) {
 	require.Nil(t, (&Group{}).customRoleRef())
+}
+
+// A Group without a custom role must not send a role id. Role id 0 does not exist, and the
+// API rejects it with 403 on both create and update.
+func TestExtractCreateGroupRequestWithoutCustomRoleOmitsRoleId(t *testing.T) {
+	group := &Group{Spec: GroupSpec{Name: "group-without-role"}}
+
+	req, err := group.ExtractCreateGroupRequest(nil)
+	require.NoError(t, err)
+	require.Nil(t, req.RoleId)
+
+	body, err := json.Marshal(req)
+	require.NoError(t, err)
+	require.NotContains(t, string(body), "roleId")
+}
+
+func TestExtractUpdateGroupRequestWithoutCustomRoleOmitsRoleUpdate(t *testing.T) {
+	group := &Group{Spec: GroupSpec{Name: "group-without-role"}}
+
+	req, err := group.ExtractUpdateGroupRequest(nil)
+	require.NoError(t, err)
+	require.Nil(t, req.RoleUpdate)
+
+	body, err := json.Marshal(req)
+	require.NoError(t, err)
+	require.NotContains(t, string(body), "roleUpdate")
 }

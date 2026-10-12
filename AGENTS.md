@@ -64,6 +64,10 @@ Preserve `observedGeneration` behavior and `RemoteSynced` reasons from `internal
 
 When a remote resource is missing during update, the shared reconciler removes `status.id` so the next reconciliation can recreate it.
 
+An optional reference that is not set must leave its field out of the request. Do not send the zero id: the API reads it as a real id and rejects it.
+
+During a Helm upgrade, the old operator pod can stay leader for about 20–30 seconds after the new CRDs are applied. It writes objects back with its own Go types, so it drops spec fields it does not know. The new operator must handle the result: a resource with a status id and without those fields.
+
 Deep-copy status values that contain slices or maps before change detection. A shallow copy can hide in-place condition changes.
 
 ## Review Checklist

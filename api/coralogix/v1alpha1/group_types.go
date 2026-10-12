@@ -117,7 +117,7 @@ func (g *Group) ExtractCreateGroupRequest(userIDs []string) (*groups.CreateTeamG
 		Description: g.Spec.Description,
 		GroupType:   groupType,
 		UserIds:     userIDs,
-		RoleId:      &roleId,
+		RoleId:      roleId,
 		Scope: &groups.V2Scope{
 			ScopeId: scopeId,
 		},
@@ -140,6 +140,20 @@ func (g *Group) ExtractUpdateGroupRequest(userIDs []string) (*groups.UpdateTeamG
 		return nil, err
 	}
 
+	// Without a custom role reference, leave the remote role unchanged. Role id 0 does not
+	// exist, and the API rejects it with 403.
+	var roleUpdate *groups.RoleUpdate
+	if roleId != nil {
+		roleUpdate = &groups.RoleUpdate{
+			Action: &groups.RoleUpdateAction{
+				ActionType: "set_role_id",
+				SetRoleId: &groups.SetRoleId{
+					Value: roleId,
+				},
+			},
+		}
+	}
+
 	return &groups.UpdateTeamGroupRequest{
 		Name:        groups.PtrString(g.Spec.Name),
 		Description: g.Spec.Description,
@@ -152,14 +166,7 @@ func (g *Group) ExtractUpdateGroupRequest(userIDs []string) (*groups.UpdateTeamG
 				},
 			},
 		},
-		RoleUpdate: &groups.RoleUpdate{
-			Action: &groups.RoleUpdateAction{
-				ActionType: "set_role_id",
-				SetRoleId: &groups.SetRoleId{
-					Value: &roleId,
-				},
-			},
-		},
+		RoleUpdate: roleUpdate,
 		ScopeUpdate: &groups.ScopeUpdate{
 			Action: &groups.ScopeUpdateAction{
 				ActionType: "set_scope_id",
@@ -181,10 +188,12 @@ func (g *Group) customRoleRef() *GroupCustomRole {
 	return nil
 }
 
-func (g *Group) ExtractRoleId() (int64, error) {
+// ExtractRoleId returns the remote id of the referenced custom role, or nil when the Group
+// references no custom role.
+func (g *Group) ExtractRoleId() (*int64, error) {
 	ref := g.customRoleRef()
 	if ref == nil {
-		return 0, nil
+		return nil, nil
 	}
 	var namespace string
 	if ns := ref.ResourceRef.Namespace; ns != nil {
@@ -195,23 +204,23 @@ func (g *Group) ExtractRoleId() (int64, error) {
 
 	cr := &CustomRole{}
 	if err := config.GetClient().Get(context.Background(), client.ObjectKey{Name: ref.ResourceRef.Name, Namespace: namespace}, cr); err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	if !config.GetConfig().Selector.Matches(cr.Labels, cr.Namespace) {
-		return 0, fmt.Errorf("custom role %s does not match selector", cr.Name)
+		return nil, fmt.Errorf("custom role %s does not match selector", cr.Name)
 	}
 
 	if cr.Status.ID == nil {
-		return 0, fmt.Errorf("ID is not populated for CustomRole %s", ref.ResourceRef.Name)
+		return nil, fmt.Errorf("ID is not populated for CustomRole %s", ref.ResourceRef.Name)
 	}
 
-	roleID, err := strconv.Atoi(*cr.Status.ID)
+	roleID, err := strconv.ParseInt(*cr.Status.ID, 10, 64)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	return int64(roleID), nil
+	return &roleID, nil
 }
 
 func (g *Group) ExtractScopeId() (*string, error) {
