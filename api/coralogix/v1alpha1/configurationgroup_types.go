@@ -47,10 +47,8 @@ type ConfigurationGroupSpec struct {
 
 // ConfigurationFamilySpec is the latest configuration family of a group.
 // Exactly one of preset or raw must be set. Updates replace the whole preset or raw
-// content, so omitted optional fields are cleared rather than kept. A family cannot
-// switch between preset and raw; delete and recreate the ConfigurationGroup instead.
+// content, so omitted optional fields are cleared rather than kept.
 // +kubebuilder:validation:XValidation:rule="has(self.preset) != has(self.raw)",message="Exactly one of preset or raw is required"
-// +kubebuilder:validation:XValidation:rule="has(self.preset) == has(oldSelf.preset)",message="family cannot switch between preset and raw; delete and recreate the ConfigurationGroup"
 type ConfigurationFamilySpec struct {
 	// Whether this family is active. Defaults to false.
 	// +optional

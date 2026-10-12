@@ -10862,7 +10862,7 @@ It mirrors the configuration-groups API create request. This resource is in Prev
         <td>
           Latest configuration family for this group.<br/>
           <br/>
-            <i>Validations</i>:<li>has(self.preset) != has(self.raw): Exactly one of preset or raw is required</li><li>has(self.preset) == has(oldSelf.preset): family cannot switch between preset and raw; delete and recreate the ConfigurationGroup</li>
+            <i>Validations</i>:<li>has(self.preset) != has(self.raw): Exactly one of preset or raw is required</li>
         </td>
         <td>true</td>
       </tr><tr>
