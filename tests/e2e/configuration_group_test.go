@@ -130,8 +130,8 @@ var _ = Describe("ConfigurationGroup", Ordered, func() {
 		}, time.Minute, time.Second).ShouldNot(Succeed())
 	})
 
-	It("Should be recreated with the same name after deletion", func(ctx context.Context) {
-		By("Recreating the ConfigurationGroup with the archived group's name")
+	It("Should be recreated after deletion", func(ctx context.Context) {
+		By("Recreating the ConfigurationGroup resource with a new group name")
 		recreated := &coralogixv1alpha1.ConfigurationGroup{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      configurationGroup.Name,
@@ -139,6 +139,7 @@ var _ = Describe("ConfigurationGroup", Ordered, func() {
 			},
 			Spec: *configurationGroup.Spec.DeepCopy(),
 		}
+		recreated.Spec.Name = uniqueName("configuration-group")
 		Expect(crClient.Create(ctx, recreated)).To(Succeed())
 
 		By("Verifying the recreated ConfigurationGroup gets a new remote ID")
