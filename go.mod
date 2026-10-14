@@ -13,7 +13,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	go.uber.org/mock v0.5.2
 	go.uber.org/zap v1.27.0
-	google.golang.org/grpc v1.83.1
+	google.golang.org/grpc v1.83.2
 	google.golang.org/protobuf v1.36.11
 	k8s.io/api v0.33.2
 	k8s.io/apiextensions-apiserver v0.33.2
