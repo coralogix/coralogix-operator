@@ -14,10 +14,8 @@ runs:
   using: composite
   steps:
     # The released image builds inside the `golang:` tag in Dockerfile, so read the version from
-    # there rather than from go.mod. go.mod's `go` directive is the module's *minimum* (1.26.0),
-    # which is not what ships: `golang:1.26` resolves to the newest 1.26.x. Taking go.mod at face
-    # value would have CI compile the tested binary with an older patch release than the one the
-    # released binary is built with.
+    # there rather than from go.mod. go.mod's `go` directive is the module's minimum version,
+    # which is not necessarily the toolchain that ships in the image.
     - name: Resolve the Go version the released image is built with
       id: go-version
       shell: bash
@@ -33,8 +31,7 @@ runs:
       id: setup-go
       uses: actions/setup-go@v5
       with:
-        # Only the minor is pinned in Dockerfile, so check-latest keeps this on the newest patch
-        # of it - the same thing the golang: tag does.
+        # Match the exact Go toolchain used by the released image.
         go-version: ${{ steps.go-version.outputs.version }}
         check-latest: true
         # The cache is managed below instead. setup-go keys its cache on go.sum alone, so this
