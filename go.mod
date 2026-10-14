@@ -1,6 +1,6 @@
 module github.com/coralogix/coralogix-operator/v2
 
-go 1.26.9
+go 1.27.2
 
 require (
 	github.com/coralogix/coralogix-management-sdk v1.9.4-0.20261012120424-829eba7641a2
