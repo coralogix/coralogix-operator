@@ -310,7 +310,7 @@ func (spec *Events2MetricSpec) ExtractReplaceE2MRequest(id string) (*events2metr
 	}
 
 	e2m := &events2metrics.E2M1{
-		Id:           &id,
+		Id:           id,
 		Name:         spec.Name,
 		Description:  emptyStringIfNil(spec.Description),
 		DataSource:   spec.DataSource,
@@ -346,7 +346,7 @@ func extractE2mPermutations(permutations *int32) *events2metrics.E2MPermutations
 
 func expandCreateE2MQuery(e2m *events2metrics.E2MCreateParams, query E2MQuery) error {
 	if spans := query.Spans; spans != nil {
-		e2m.Type = events2metrics.E2MTYPE_E2_M_TYPE_SPANS2_METRICS.Ptr()
+		e2m.Type = events2metrics.E2MTYPE_E2_M_TYPE_SPANS2_METRICS
 		e2m.SpansQuery = &events2metrics.V2SpansQuery{
 			Lucene:                 spans.Lucene,
 			ApplicationnameFilters: spans.ApplicationNameFilters,
@@ -357,7 +357,7 @@ func expandCreateE2MQuery(e2m *events2metrics.E2MCreateParams, query E2MQuery) e
 		return nil
 	}
 	if logs := query.Logs; logs != nil {
-		e2m.Type = events2metrics.E2MTYPE_E2_M_TYPE_LOGS2_METRICS.Ptr()
+		e2m.Type = events2metrics.E2MTYPE_E2_M_TYPE_LOGS2_METRICS
 		e2m.LogsQuery = &events2metrics.V2LogsQuery{
 			Lucene:                 logs.Lucene,
 			Alias:                  logs.Alias,
@@ -448,8 +448,8 @@ func extractE2mAggregations(aggregations []MetricFieldAggregation) ([]events2met
 		targetMetricName := aggregation.TargetMetricName
 		metricAggregation := events2metrics.V2Aggregation{
 			Enabled:          &enabled,
-			AggType:          aggType.Ptr(),
-			TargetMetricName: &targetMetricName,
+			AggType:          aggType,
+			TargetMetricName: targetMetricName,
 		}
 		if err := expandE2MAggMetadata(&metricAggregation, aggregation.AggMetadata); err != nil {
 			return nil, err
@@ -466,7 +466,7 @@ func expandE2MAggMetadata(metricAggregation *events2metrics.V2Aggregation, metad
 			return fmt.Errorf("unsupported sample type %q", metadata.Samples.SampleType)
 		}
 		metricAggregation.Samples = &events2metrics.E2MAggSamples{
-			SampleType: sampleType.Ptr(),
+			SampleType: sampleType,
 		}
 		return nil
 	}

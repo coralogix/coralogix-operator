@@ -2713,7 +2713,7 @@ func convertSloBackendNameToId(listingSloProperties *GetResourceRefProperties, n
 		return "", fmt.Errorf("failed to list SLOs: %w", oapicxsdk.NewAPIError(httpResp, err))
 	}
 	for _, slo := range listResp.Slos {
-		if ptr.Deref(slo.Name, "") == *name && slo.Id != nil {
+		if slo.Name == *name && slo.Id != nil {
 			return *slo.Id, nil
 		}
 	}

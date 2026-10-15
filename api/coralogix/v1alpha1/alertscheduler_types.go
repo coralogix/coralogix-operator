@@ -248,14 +248,17 @@ func (a *AlertScheduler) ExtractAlertSchedulerRule() (*alertscheduler.AlertSched
 		return nil, fmt.Errorf("error on extracting schedule: %w", err)
 	}
 
-	return &alertscheduler.AlertSchedulerRule{
-		Name:        ptr.To(a.Spec.Name),
+	rule := &alertscheduler.AlertSchedulerRule{
+		Name:        a.Spec.Name,
 		Description: ptr.To(a.Spec.Description),
 		MetaLabels:  metaLabels,
-		Filter:      filter,
-		Schedule:    schedule,
+		Schedule:    *schedule,
 		Enabled:     ptr.To(a.Spec.Enabled),
-	}, nil
+	}
+	if filter != nil {
+		rule.Filter = *filter
+	}
+	return rule, nil
 }
 
 func extractMetaLabels(metaLabels []MetaLabel) []alertscheduler.MetaLabelsProtobufV1MetaLabel {
@@ -273,7 +276,7 @@ func (a *AlertScheduler) extractFilter() (*alertscheduler.AlertSchedulerRuleProt
 	if a.Spec.Filter.MetaLabels != nil {
 		metaLabels := extractMetaLabels(a.Spec.Filter.MetaLabels)
 		return &alertscheduler.AlertSchedulerRuleProtobufV1Filter{
-			WhatExpression: ptr.To(a.Spec.Filter.WhatExpression),
+			WhatExpression: a.Spec.Filter.WhatExpression,
 			AlertMetaLabels: &alertscheduler.MetaLabels{
 				Value: metaLabels,
 			},
@@ -285,7 +288,7 @@ func (a *AlertScheduler) extractFilter() (*alertscheduler.AlertSchedulerRuleProt
 		}
 
 		return &alertscheduler.AlertSchedulerRuleProtobufV1Filter{
-			WhatExpression: ptr.To(a.Spec.Filter.WhatExpression),
+			WhatExpression: a.Spec.Filter.WhatExpression,
 			AlertUniqueIds: &alertscheduler.AlertUniqueIds{
 				Value: alertsIds,
 			},
@@ -351,7 +354,7 @@ func (a *AlertScheduler) extractSchedule() (*alertscheduler.Schedule, error) {
 		}
 		return &alertscheduler.Schedule{
 			OneTime:           oneTime,
-			ScheduleOperation: &scheduleOperation,
+			ScheduleOperation: scheduleOperation,
 		}, nil
 	} else if a.Spec.Schedule.Recurring != nil {
 		recurring, err := a.extractRecurring()
@@ -360,7 +363,7 @@ func (a *AlertScheduler) extractSchedule() (*alertscheduler.Schedule, error) {
 		}
 		return &alertscheduler.Schedule{
 			Recurring:         recurring,
-			ScheduleOperation: &scheduleOperation,
+			ScheduleOperation: scheduleOperation,
 		}, nil
 	}
 
@@ -374,7 +377,7 @@ func (a *AlertScheduler) extractOneTime() (*alertscheduler.OneTime, error) {
 	}
 
 	return &alertscheduler.OneTime{
-		Timeframe: timeFrame,
+		Timeframe: *timeFrame,
 	}, nil
 }
 
@@ -409,7 +412,7 @@ func (a *AlertScheduler) extractDynamic() (*alertscheduler.RecurringDynamic, err
 		return &alertscheduler.RecurringDynamic{
 			Daily:           map[string]interface{}{},
 			RepeatEvery:     &repeatEvery,
-			Timeframe:       timeFrame,
+			Timeframe:       *timeFrame,
 			TerminationDate: a.Spec.Schedule.Recurring.Dynamic.TerminationDate,
 		}, nil
 	} else if weekly := a.Spec.Schedule.Recurring.Dynamic.Frequency.Weekly; weekly != nil {
@@ -422,7 +425,7 @@ func (a *AlertScheduler) extractDynamic() (*alertscheduler.RecurringDynamic, err
 				DaysOfWeek: daysOfWeek,
 			},
 			RepeatEvery:     &repeatEvery,
-			Timeframe:       timeFrame,
+			Timeframe:       *timeFrame,
 			TerminationDate: a.Spec.Schedule.Recurring.Dynamic.TerminationDate,
 		}, nil
 	} else if monthly := a.Spec.Schedule.Recurring.Dynamic.Frequency.Monthly; monthly != nil {
@@ -431,7 +434,7 @@ func (a *AlertScheduler) extractDynamic() (*alertscheduler.RecurringDynamic, err
 				DaysOfMonth: monthly.Days,
 			},
 			RepeatEvery:     &repeatEvery,
-			Timeframe:       timeFrame,
+			Timeframe:       *timeFrame,
 			TerminationDate: a.Spec.Schedule.Recurring.Dynamic.TerminationDate,
 		}, nil
 	}
@@ -443,17 +446,17 @@ func extractTimeFrame(timeFrame *TimeFrame) (*alertscheduler.Timeframe, error) {
 	if timeFrame.EndTime != nil {
 		return &alertscheduler.Timeframe{
 			StartTime: ptr.To(timeFrame.StartTime),
-			Timezone:  ptr.To(timeFrame.Timezone),
+			Timezone:  timeFrame.Timezone,
 			EndTime:   timeFrame.EndTime,
 		}, nil
 	} else if timeFrame.Duration != nil {
 		frequency := schemaToDurationFrequency[timeFrame.Duration.Frequency]
 		return &alertscheduler.Timeframe{
 			StartTime: ptr.To(timeFrame.StartTime),
-			Timezone:  ptr.To(timeFrame.Timezone),
+			Timezone:  timeFrame.Timezone,
 			Duration: &alertscheduler.V1Duration{
 				ForOver:   ptr.To(timeFrame.Duration.ForOver),
-				Frequency: &frequency,
+				Frequency: frequency,
 			},
 		}, nil
 	}

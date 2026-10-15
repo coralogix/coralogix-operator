@@ -365,15 +365,18 @@ func (s *SLOSpec) extractCommon() (*slos.Slo1, error) {
 		return nil, fmt.Errorf("error expanding product type: %w", err)
 	}
 
-	return &slos.Slo1{
-		Name:                      slos.PtrString(s.Name),
+	slo := &slos.Slo1{
+		Name:                      s.Name,
 		Description:               s.Description,
 		Labels:                    ptr.Deref(s.Labels, nil),
-		SloTimeFrame:              timeFrame,
 		ProductType:               productType,
 		OwnershipTags:             s.OwnershipTags.ExpandOwnershipTags(),
 		TargetThresholdPercentage: slos.PtrFloat32(float32(s.TargetThresholdPercentage.AsApproximateFloat64())),
-	}, nil
+	}
+	if timeFrame != nil {
+		slo.SloTimeFrame = *timeFrame
+	}
+	return slo, nil
 }
 
 // ExpandOwnershipTags builds the ownership tags block. resolvedValues is server-computed
@@ -423,11 +426,11 @@ func (s *SLOSpec) ExtractRequestBasedMetricSli() (*slos.Slo1, error) {
 
 	sli := s.SliType.RequestBasedMetricSli
 	slo.RequestBasedMetricSli = &slos.RequestBasedMetricSli{
-		GoodEvents: &slos.Metric{
-			Query: slos.PtrString(sli.GoodEvents.Query),
+		GoodEvents: slos.Metric{
+			Query: sli.GoodEvents.Query,
 		},
-		TotalEvents: &slos.Metric{
-			Query: slos.PtrString(sli.TotalEvents.Query),
+		TotalEvents: slos.Metric{
+			Query: sli.TotalEvents.Query,
 		},
 	}
 	return slo, nil
@@ -463,11 +466,11 @@ func (s *SLOSpec) ExtractWindowBasedMetricSli() (*slos.Slo1, error) {
 	}
 
 	slo.WindowBasedMetricSli = &slos.WindowBasedMetricSli{
-		Query: &slos.Metric{
-			Query: slos.PtrString(query.Query),
+		Query: slos.Metric{
+			Query: query.Query,
 		},
-		Window:              window.Ptr(),
-		ComparisonOperator:  comparisonOperator.Ptr(),
+		Window:              window,
+		ComparisonOperator:  comparisonOperator,
 		MissingDataStrategy: missingDataStrategy,
 		Threshold:           slos.PtrFloat32(float32(sli.Threshold.AsApproximateFloat64())),
 	}
@@ -546,7 +549,7 @@ func (l *ApmLatencySli) ExpandApmLatencySli() (*slos.ApmLatencySli, error) {
 	}
 
 	latencyConfig := &slos.ApmLatencySli{
-		TimeWindow: timeWindow.Ptr(),
+		TimeWindow: timeWindow,
 	}
 
 	if l.Threshold != nil {
@@ -585,7 +588,7 @@ func expandApmFilters(filters []ApmFilter) []slos.ApmFilter {
 		}
 
 		expanded = append(expanded, slos.ApmFilter{
-			Key:    slos.PtrString(filter.Key),
+			Key:    filter.Key,
 			Values: values,
 		})
 	}

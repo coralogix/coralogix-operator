@@ -186,7 +186,7 @@ var _ = Describe("Events2Metric", Ordered, func() {
 
 			disabledMaxFound := false
 			for _, agg := range getE2mRes.E2m.MetricFields[0].Aggregations {
-				if agg.AggType != nil && *agg.AggType == events2metrics.AGGTYPE_AGG_TYPE_MAX &&
+				if agg.AggType == events2metrics.AGGTYPE_AGG_TYPE_MAX &&
 					agg.Enabled != nil && !*agg.Enabled {
 					disabledMaxFound = true
 				}
@@ -375,18 +375,14 @@ var _ = Describe("Events2Metric spans samples histogram", Ordered, func() {
 			var foundSamples, foundHistogram bool
 			for _, field := range getE2mRes.E2m.MetricFields {
 				for _, agg := range field.Aggregations {
-					if agg.AggType == nil {
-						continue
-					}
 					switch {
 					case field.TargetBaseMetricName == samplesMetric &&
-						*agg.AggType == events2metrics.AGGTYPE_AGG_TYPE_SAMPLES:
+						agg.AggType == events2metrics.AGGTYPE_AGG_TYPE_SAMPLES:
 						foundSamples = true
 						g.Expect(agg.Samples).ToNot(BeNil())
-						g.Expect(agg.Samples.SampleType).ToNot(BeNil())
-						g.Expect(*agg.Samples.SampleType).To(Equal(events2metrics.SAMPLETYPE_SAMPLE_TYPE_MAX))
+						g.Expect(agg.Samples.SampleType).To(Equal(events2metrics.SAMPLETYPE_SAMPLE_TYPE_MAX))
 					case field.TargetBaseMetricName == histogramMetric &&
-						*agg.AggType == events2metrics.AGGTYPE_AGG_TYPE_HISTOGRAM:
+						agg.AggType == events2metrics.AGGTYPE_AGG_TYPE_HISTOGRAM:
 						foundHistogram = true
 						g.Expect(agg.Histogram).ToNot(BeNil())
 						g.Expect(agg.Histogram.Buckets).To(Equal([]float32{0.1, 5.5, 100}))

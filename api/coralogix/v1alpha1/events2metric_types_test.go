@@ -85,7 +85,7 @@ func TestExtractCreateE2MRequestLogsWireShape(t *testing.T) {
 	require.Equal(t, ptr.To("desc"), got.Description)
 	require.Equal(t, ptr.To("default/logs"), got.DataSource)
 	require.Equal(t, ptr.To(int32(100)), got.PermutationsLimit)
-	require.Equal(t, events2metrics.E2MTYPE_E2_M_TYPE_LOGS2_METRICS.Ptr(), got.Type)
+	require.Equal(t, events2metrics.E2MTYPE_E2_M_TYPE_LOGS2_METRICS, got.Type)
 	require.Nil(t, got.SpansQuery)
 	require.NotNil(t, got.LogsQuery)
 	require.Equal(t, ptr.To("status:200"), got.LogsQuery.Lucene)
@@ -107,7 +107,7 @@ func TestExtractCreateE2MRequestLogsWireShape(t *testing.T) {
 
 	for _, agg := range got.MetricFields[0].Aggregations {
 		require.NotNil(t, agg.Enabled)
-		require.NotNil(t, agg.AggType)
+		require.NotEmpty(t, agg.AggType)
 		require.NotNil(t, agg.TargetMetricName)
 		require.Nil(t, agg.Samples)
 		require.Nil(t, agg.Histogram)
@@ -115,8 +115,8 @@ func TestExtractCreateE2MRequestLogsWireShape(t *testing.T) {
 	}
 	require.True(t, *got.MetricFields[0].Aggregations[0].Enabled)
 	require.False(t, *got.MetricFields[0].Aggregations[1].Enabled)
-	require.Equal(t, events2metrics.AGGTYPE_AGG_TYPE_MIN, *got.MetricFields[0].Aggregations[0].AggType)
-	require.Equal(t, events2metrics.AGGTYPE_AGG_TYPE_MAX, *got.MetricFields[0].Aggregations[1].AggType)
+	require.Equal(t, events2metrics.AGGTYPE_AGG_TYPE_MIN, got.MetricFields[0].Aggregations[0].AggType)
+	require.Equal(t, events2metrics.AGGTYPE_AGG_TYPE_MAX, got.MetricFields[0].Aggregations[1].AggType)
 }
 
 func TestExtractCreateE2MRequestSpansWireShape(t *testing.T) {
@@ -148,7 +148,7 @@ func TestExtractCreateE2MRequestSpansWireShape(t *testing.T) {
 
 	got, err := spec.ExtractCreateE2MRequest()
 	require.NoError(t, err)
-	require.Equal(t, events2metrics.E2MTYPE_E2_M_TYPE_SPANS2_METRICS.Ptr(), got.Type)
+	require.Equal(t, events2metrics.E2MTYPE_E2_M_TYPE_SPANS2_METRICS, got.Type)
 	require.Nil(t, got.LogsQuery)
 	require.NotNil(t, got.SpansQuery)
 	require.Equal(t, ptr.To("service:nginx"), got.SpansQuery.Lucene)
@@ -201,14 +201,14 @@ func TestExtractCreateE2MRequestSamplesAndHistogram(t *testing.T) {
 	require.Len(t, got.MetricFields[0].Aggregations, 2)
 
 	samples := got.MetricFields[0].Aggregations[0]
-	require.Equal(t, events2metrics.AGGTYPE_AGG_TYPE_SAMPLES, *samples.AggType)
+	require.Equal(t, events2metrics.AGGTYPE_AGG_TYPE_SAMPLES, samples.AggType)
 	require.NotNil(t, samples.Samples)
-	require.Equal(t, events2metrics.SAMPLETYPE_SAMPLE_TYPE_MAX, *samples.Samples.SampleType)
+	require.Equal(t, events2metrics.SAMPLETYPE_SAMPLE_TYPE_MAX, samples.Samples.SampleType)
 	require.Nil(t, samples.Histogram)
 	require.Nil(t, samples.None)
 
 	histogram := got.MetricFields[0].Aggregations[1]
-	require.Equal(t, events2metrics.AGGTYPE_AGG_TYPE_HISTOGRAM, *histogram.AggType)
+	require.Equal(t, events2metrics.AGGTYPE_AGG_TYPE_HISTOGRAM, histogram.AggType)
 	require.NotNil(t, histogram.Histogram)
 	require.Equal(t, []float32{0.1, 5.5, 100}, histogram.Histogram.Buckets)
 	require.Nil(t, histogram.Samples)
@@ -270,7 +270,7 @@ func TestExtractCreateAndReplaceOmitOptionalFields(t *testing.T) {
 
 	replace, err := spec.ExtractReplaceE2MRequest("11111111-1111-1111-1111-111111111111")
 	require.NoError(t, err)
-	require.Equal(t, ptr.To("11111111-1111-1111-1111-111111111111"), replace.Id)
+	require.Equal(t, "11111111-1111-1111-1111-111111111111", replace.Id)
 	require.Equal(t, ptr.To(""), replace.Description)
 	require.Nil(t, replace.DataSource)
 	require.Nil(t, replace.LogsQuery.Lucene)

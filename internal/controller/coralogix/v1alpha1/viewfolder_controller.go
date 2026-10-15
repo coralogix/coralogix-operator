@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -57,7 +58,7 @@ func (r *ViewFolderReconciler) FinalizerName() string {
 func (r *ViewFolderReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	viewFolder := obj.(*coralogixv1alpha1.ViewFolder)
 	createRequest := &viewfolders.CreateViewFolderRequest{
-		Name: viewfolders.PtrString(viewFolder.Spec.Name),
+		Name: viewFolder.Spec.Name,
 	}
 
 	log.Info("Creating remote ViewFolder", "ViewFolder", utils.FormatJSON(createRequest))
@@ -72,7 +73,7 @@ func (r *ViewFolderReconciler) HandleCreation(ctx context.Context, log logr.Logg
 	log.Info("Remote viewFolder created", "response", utils.FormatJSON(createResponse))
 
 	viewFolder.Status = coralogixv1alpha1.ViewFolderStatus{
-		ID: createResponse.Id,
+		ID: &createResponse.Id,
 	}
 
 	return nil
@@ -81,7 +82,7 @@ func (r *ViewFolderReconciler) HandleCreation(ctx context.Context, log logr.Logg
 func (r *ViewFolderReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	viewFolder := obj.(*coralogixv1alpha1.ViewFolder)
 	replaceRequest := &viewfolders.ViewFolder1{
-		Id:   viewFolder.Status.ID,
+		Id:   ptr.Deref(viewFolder.Status.ID, ""),
 		Name: viewFolder.Spec.Name,
 	}
 
