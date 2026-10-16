@@ -167,7 +167,7 @@ func (r *DashboardReconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 func newReplaceDashboardRequest(dashboard *coralogixv1alpha1.Dashboard, dashboardToUpdate dashboards.Dashboard) dashboards.ReplaceDashboardRequestDataStructure {
 	return dashboards.ReplaceDashboardRequestDataStructure{
 		AccessPolicy: dashboard.Spec.AccessPolicy,
-		Dashboard:    dashboardToUpdate,
+		Dashboard:    &dashboardToUpdate,
 		RequestId:    newDashboardRequestID("replace"),
 	}
 }
