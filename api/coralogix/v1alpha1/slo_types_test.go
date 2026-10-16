@@ -121,7 +121,7 @@ func TestExpandApmLatencySliRequiresExactlyOneQueryType(t *testing.T) {
 			}
 
 			require.NoError(t, err)
-			require.Equal(t, "WINDOW_SLO_WINDOW_5_MINUTES", string(*expanded.TimeWindow))
+			require.Equal(t, "WINDOW_SLO_WINDOW_5_MINUTES", string(expanded.TimeWindow))
 		})
 	}
 }
@@ -143,7 +143,7 @@ func TestExpandApmFiltersSendsAnEmptyListRatherThanNil(t *testing.T) {
 	expanded, err := apmSli.ExpandApmSli()
 	require.NoError(t, err)
 	require.Len(t, expanded.Filters, 1)
-	require.Equal(t, "http.method", *expanded.Filters[0].Key)
+	require.Equal(t, "http.method", expanded.Filters[0].Key)
 	// The API accepts an empty values list. A nil slice would be dropped by the SDK,
 	// which is a shape no probe covered.
 	require.NotNil(t, expanded.Filters[0].Values)

@@ -71,12 +71,12 @@ func (r *Events2MetricReconciler) HandleCreation(ctx context.Context, log logr.L
 	}
 	log.Info("Remote E2M created", "response", utils.FormatJSON(createResponse))
 
-	if createResponse == nil || createResponse.E2m == nil || createResponse.E2m.Id == nil || *createResponse.E2m.Id == "" {
+	if createResponse == nil || createResponse.E2m == nil || createResponse.E2m.Id == "" {
 		return fmt.Errorf("error on creating remote E2M: empty id in response")
 	}
 
 	e2m.Status = coralogixv1alpha1.Events2MetricStatus{
-		Id: createResponse.E2m.Id,
+		Id: &createResponse.E2m.Id,
 	}
 
 	return nil
