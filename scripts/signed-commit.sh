@@ -26,6 +26,7 @@ additions=$(for file in "$@"; do
     '{path: $path, contents: $contents}'
 done | jq -s .)
 
+# shellcheck disable=SC2016 # $input is a GraphQL variable, not a shell one
 query='mutation($input: CreateCommitOnBranchInput!) {
   createCommitOnBranch(input: $input) { commit { oid } }
 }'
