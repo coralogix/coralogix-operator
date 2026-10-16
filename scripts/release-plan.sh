@@ -62,14 +62,14 @@ if [[ -n "$highest" ]] && ! version_gt "$version" "$highest"; then
 fi
 
 if [[ "$patch" == "0" ]]; then
-  kind=minor
+  kind="minor"
   # A new minor or major line is cut from main, which is ahead of every release line.
   if [[ "$latest" != "true" ]]; then
     echo "error: $version is not above the highest release v$highest; a new line must be the newest" >&2
     exit 1
   fi
 else
-  kind=patch
+  kind="patch"
   if [[ "$branch_exists" != "true" ]]; then
     echo "error: $version is a patch release, but branch $branch does not exist" >&2
     exit 1

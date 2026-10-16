@@ -9,6 +9,10 @@ name: Release
 # Commits go through the GraphQL API (scripts/signed-commit.sh), so GitHub signs them.
 # Refs and commits made with GITHUB_TOKEN do not start other workflows, so the image and
 # chart workflows are called directly instead of being triggered by the tag and the commit.
+#
+# dry_run runs every job up to the first write: it plans, checks the version bump, builds
+# both images without pushing, and packages the chart and signs in to JFrog without uploading.
+# It writes no branch, commit, tag, image, chart, release or PR.
 on:
   workflow_dispatch:
     inputs:
@@ -16,6 +20,11 @@ on:
         description: "Version to release, for example 2.16.0 (new minor line) or 2.15.3 (patch on release-2.15)"
         required: true
         type: string
+      dry_run:
+        description: "Dry run: check every step, write nothing"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -54,6 +63,7 @@ jobs:
           BRANCH: ${{ steps.plan.outputs.branch }}
           BRANCH_EXISTS: ${{ steps.plan.outputs.branch_exists }}
           LATEST: ${{ steps.plan.outputs.latest }}
+          DRY_RUN: ${{ inputs.dry_run }}
         run: |
           {
             echo "### Release $TAG"
@@ -63,6 +73,7 @@ jobs:
             echo "| Kind | $KIND |"
             echo "| Branch | \`$BRANCH\` (exists: $BRANCH_EXISTS) |"
             echo "| Marked latest | $LATEST |"
+            echo "| Dry run | $DRY_RUN |"
           } >> "$GITHUB_STEP_SUMMARY"
 
   prepare:
@@ -74,11 +85,17 @@ jobs:
     environment: release
     permissions:
       contents: write
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       VERSION: ${{ needs.plan.outputs.version }}
       TAG: ${{ needs.plan.outputs.tag }}
       BRANCH: ${{ needs.plan.outputs.branch }}
+      DRY_RUN: ${{ inputs.dry_run }}
+      # Release branches cut before this workflow existed do not have the release scripts,
+      # so they are taken from the commit the workflow runs from.
+      TOOLS: ${{ github.workspace }}/.release-tools
     steps:
       # A new line starts from main; an existing branch (patch, or a minor run that cut the
       # branch and then failed) is released from its own head.
@@ -86,6 +103,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ needs.plan.outputs.branch_exists == 'true' && needs.plan.outputs.branch || github.event.repository.default_branch }}
+
+      - name: Checkout release scripts
+        uses: actions/checkout@v4
+        with:
+          path: .release-tools
+          sparse-checkout: scripts
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -95,13 +118,17 @@ jobs:
       - name: Cut release branch
         if: ${{ needs.plan.outputs.branch_exists != 'true' }}
         run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "Dry run: would create $BRANCH at $(git rev-parse HEAD)"
+            exit 0
+          fi
           gh api "repos/$GITHUB_REPOSITORY/git/refs" \
             -f ref="refs/heads/$BRANCH" -f sha="$(git rev-parse HEAD)" > /dev/null
           echo "Created $BRANCH at $(git rev-parse HEAD)"
 
       - name: Bump version
         run: |
-          scripts/release-bump.sh "$VERSION"
+          "$TOOLS/scripts/release-bump.sh" "$VERSION"
           make helm-sync-docs
 
       - name: Commit version bump
@@ -114,12 +141,17 @@ jobs:
             echo "::error::Unexpected changes from the version bump: $unexpected"
             exit 1
           fi
+          git diff
           if [ -z "$files" ]; then
             echo "Branch already at $VERSION; tagging its head."
             sha=$(git rev-parse HEAD)
+          elif [ "$DRY_RUN" = "true" ]; then
+            printf 'Dry run: would commit to %s:\n%s\n' "$BRANCH" "$files"
+            # Later jobs build from the unbumped head.
+            sha=$(git rev-parse HEAD)
           else
             # shellcheck disable=SC2086 # one path per word
-            sha=$(scripts/signed-commit.sh "$BRANCH" "$(git rev-parse HEAD)" "chore: release $VERSION" $files)
+            sha=$("$TOOLS/scripts/signed-commit.sh" "$BRANCH" "$(git rev-parse HEAD)" "chore: release $VERSION" $files)
           fi
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
 
@@ -127,27 +159,34 @@ jobs:
         env:
           SHA: ${{ steps.commit.outputs.sha }}
         run: |
-          sha="$SHA"
-          gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$TAG" -f sha="$sha" > /dev/null
-          echo "Tagged $TAG at $sha"
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "Dry run: would tag $TAG at $SHA"
+            exit 0
+          fi
+          gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$TAG" -f sha="$SHA" > /dev/null
+          echo "Tagged $TAG at $SHA"
 
   image:
     name: Push image
     needs: [plan, prepare]
     uses: ./.github/workflows/container.yaml
     with:
+      ref: ${{ needs.prepare.outputs.sha }}
       tag: ${{ needs.plan.outputs.tag }}
       latest: ${{ needs.plan.outputs.latest == 'true' }}
+      push: ${{ !inputs.dry_run }}
     secrets: inherit
     permissions:
       contents: read
 
   chart:
     name: Publish chart
-    needs: [plan, image]
+    needs: [plan, prepare, image]
     uses: ./.github/workflows/helm-chart-deploy.yml
     with:
-      tag: ${{ needs.plan.outputs.tag }}
+      ref: ${{ needs.prepare.outputs.sha }}
+      version: ${{ needs.plan.outputs.version }}
+      upload: ${{ !inputs.dry_run }}
     permissions:
       contents: read
       id-token: write
@@ -155,6 +194,7 @@ jobs:
   github-release:
     name: Create GitHub release
     needs: [plan, chart]
+    if: ${{ !inputs.dry_run }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
