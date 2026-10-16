@@ -7,6 +7,14 @@ on:
       - release-*
     paths:
       - charts/coralogix-operator/Chart.yaml
+  # Called by the Release workflow after the image is pushed. Its commits are made with
+  # GITHUB_TOKEN and do not trigger the push event above.
+  workflow_call:
+    inputs:
+      tag:
+        description: Release tag to package the chart from, for example v2.16.0.
+        required: true
+        type: string
 
 # The chart is uploaded to Artifactory using a short-lived token obtained via GitHub OIDC
 # (id-token: write). contents: read is all the workflow token itself needs.
@@ -24,6 +32,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2.4.0
+        with:
+          ref: ${{ inputs.tag }}
+      - name: Check chart version matches the release tag
+        if: ${{ inputs.tag }}
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          chart_version=$(yq eval '.version' charts/coralogix-operator/Chart.yaml)
+          if [ "v$chart_version" != "$RELEASE_TAG" ]; then
+            echo "::error::Chart.yaml version $chart_version does not match release tag $RELEASE_TAG"
+            exit 1
+          fi
       - name: Set up JFrog CLI
         # Exchanges this job's GitHub OIDC JWT for a short-lived Artifactory token,
         # replacing the rotated JFROG_USER / JFROG_PASSWORD secret pair. The action

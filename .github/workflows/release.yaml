@@ -1,0 +1,217 @@
+name: Release
+
+# Releases the operator end to end from one version input:
+#   X.Y.0 (minor or major): cuts release-X.Y from main.
+#   X.Y.Z (patch):           releases from the existing release-X.Y branch.
+# Then: version bump commit on the release branch, tag, image push, chart publish to JFrog,
+# GitHub release, and for minor/major a version bump PR against main.
+#
+# Commits go through the GraphQL API (scripts/signed-commit.sh), so GitHub signs them.
+# Refs and commits made with GITHUB_TOKEN do not start other workflows, so the image and
+# chart workflows are called directly instead of being triggered by the tag and the commit.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, for example 2.16.0 (new minor line) or 2.15.3 (patch on release-2.15)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+# Releases share tags, release branches and the latest image tag; run one at a time.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: Plan release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.plan.outputs.version }}
+      tag: ${{ steps.plan.outputs.tag }}
+      kind: ${{ steps.plan.outputs.kind }}
+      branch: ${{ steps.plan.outputs.branch }}
+      branch_exists: ${{ steps.plan.outputs.branch_exists }}
+      latest: ${{ steps.plan.outputs.latest }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Plan
+        id: plan
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          scripts/release-plan.sh "$VERSION" | tee -a "$GITHUB_OUTPUT"
+
+      - name: Summary
+        env:
+          TAG: ${{ steps.plan.outputs.tag }}
+          KIND: ${{ steps.plan.outputs.kind }}
+          BRANCH: ${{ steps.plan.outputs.branch }}
+          BRANCH_EXISTS: ${{ steps.plan.outputs.branch_exists }}
+          LATEST: ${{ steps.plan.outputs.latest }}
+        run: |
+          {
+            echo "### Release $TAG"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Kind | $KIND |"
+            echo "| Branch | \`$BRANCH\` (exists: $BRANCH_EXISTS) |"
+            echo "| Marked latest | $LATEST |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  prepare:
+    name: Bump version and tag
+    needs: plan
+    runs-on: ubuntu-latest
+    # Optional approval gate: add required reviewers to the "release" environment in the
+    # repository settings to have a person confirm the plan before anything is written.
+    environment: release
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      VERSION: ${{ needs.plan.outputs.version }}
+      TAG: ${{ needs.plan.outputs.tag }}
+      BRANCH: ${{ needs.plan.outputs.branch }}
+    steps:
+      # A new line starts from main; an existing branch (patch, or a minor run that cut the
+      # branch and then failed) is released from its own head.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.branch_exists == 'true' && needs.plan.outputs.branch || github.event.repository.default_branch }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Cut release branch
+        if: ${{ needs.plan.outputs.branch_exists != 'true' }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/git/refs" \
+            -f ref="refs/heads/$BRANCH" -f sha="$(git rev-parse HEAD)" > /dev/null
+          echo "Created $BRANCH at $(git rev-parse HEAD)"
+
+      - name: Bump version
+        run: |
+          scripts/release-bump.sh "$VERSION"
+          make helm-sync-docs
+
+      - name: Commit version bump
+        id: commit
+        run: |
+          # helm-docs only touches the README; anything else changing means the bump is wrong.
+          files=$(git diff --name-only)
+          unexpected=$(grep -vxE 'cmd/main.go|charts/coralogix-operator/(Chart.yaml|README.md)' <<<"$files" || true)
+          if [ -n "$unexpected" ]; then
+            echo "::error::Unexpected changes from the version bump: $unexpected"
+            exit 1
+          fi
+          if [ -z "$files" ]; then
+            echo "Branch already at $VERSION; tagging its head."
+            sha=$(git rev-parse HEAD)
+          else
+            # shellcheck disable=SC2086 # one path per word
+            sha=$(scripts/signed-commit.sh "$BRANCH" "$(git rev-parse HEAD)" "chore: release $VERSION" $files)
+          fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+      - name: Tag release
+        env:
+          SHA: ${{ steps.commit.outputs.sha }}
+        run: |
+          sha="$SHA"
+          gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$TAG" -f sha="$sha" > /dev/null
+          echo "Tagged $TAG at $sha"
+
+  image:
+    name: Push image
+    needs: [plan, prepare]
+    uses: ./.github/workflows/container.yaml
+    with:
+      tag: ${{ needs.plan.outputs.tag }}
+      latest: ${{ needs.plan.outputs.latest == 'true' }}
+    secrets: inherit
+    permissions:
+      contents: read
+
+  chart:
+    name: Publish chart
+    needs: [plan, image]
+    uses: ./.github/workflows/helm-chart-deploy.yml
+    with:
+      tag: ${{ needs.plan.outputs.tag }}
+    permissions:
+      contents: read
+      id-token: write
+
+  github-release:
+    name: Create GitHub release
+    needs: [plan, chart]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      TAG: ${{ needs.plan.outputs.tag }}
+      LATEST: ${{ needs.plan.outputs.latest }}
+    steps:
+      - name: Create release
+        run: |
+          gh release create "$TAG" --verify-tag --title "$TAG" --generate-notes --latest="$LATEST"
+
+  main-pr:
+    name: Open version bump PR to main
+    needs: [plan, github-release]
+    if: ${{ needs.plan.outputs.kind == 'minor' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      VERSION: ${{ needs.plan.outputs.version }}
+      BASE: ${{ github.event.repository.default_branch }}
+      HEAD_BRANCH: release-bump/${{ needs.plan.outputs.tag }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Bump version
+        run: |
+          scripts/release-bump.sh "$VERSION"
+          make helm-sync-docs
+
+      - name: Open PR
+        run: |
+          files=$(git diff --name-only)
+          if [ -z "$files" ]; then
+            echo "$BASE is already at $VERSION."
+            exit 0
+          fi
+          gh api "repos/$GITHUB_REPOSITORY/git/refs" \
+            -f ref="refs/heads/$HEAD_BRANCH" -f sha="$(git rev-parse HEAD)" > /dev/null
+          # shellcheck disable=SC2086 # one path per word
+          scripts/signed-commit.sh "$HEAD_BRANCH" "$(git rev-parse HEAD)" "chore: bump version to $VERSION" $files
+          url=$(gh pr create --base "$BASE" --head "$HEAD_BRANCH" \
+            --title "chore: bump version to $VERSION" \
+            --body "Brings the version bump from the v$VERSION release onto $BASE. Opened by the Release workflow.")
+          echo "Opened $url"
+          echo "Version bump PR: $url" >> "$GITHUB_STEP_SUMMARY"
+          # Merges once approved, when auto-merge is enabled for the repository.
+          gh pr merge "$url" --auto --squash || echo "::notice::Auto-merge not enabled; merge $url after approval."
