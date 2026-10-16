@@ -332,7 +332,7 @@ func TestExtractAlertDefPropertiesCaseSettingsForEveryAlertType(t *testing.T) {
 		"logsAnomaly":               {LogsAnomaly: &LogsAnomaly{}},
 		"metricAnomaly":             {MetricAnomaly: &MetricAnomaly{}},
 		"logsNewValue":              {LogsNewValue: &LogsNewValue{}},
-		"logsUniqueCount":           {LogsUniqueCount: &LogsUniqueCount{MaxUniqueCountPerGroupByKey: ptr.To[uint64](10)}},
+		"logsUniqueCount":           {LogsUniqueCount: &LogsUniqueCount{}},
 		"sloThreshold": {SloThreshold: &SloThreshold{
 			SloDefinition: SloDefinition{SloRef: SloRef{BackendRef: &SloBackendRef{ID: ptr.To("slo-1")}}},
 			ErrorBudget:   &ErrorBudget{},
@@ -348,4 +348,26 @@ func TestExtractAlertDefPropertiesCaseSettingsForEveryAlertType(t *testing.T) {
 			require.Equal(t, want, props.CaseSettings)
 		})
 	}
+}
+
+func TestExpandLogsUniqueCountMaxUniqueCountPerGroupByKey(t *testing.T) {
+	t.Run("unset is not sent", func(t *testing.T) {
+		got := expandLogsUniqueCount(&LogsUniqueCount{UniqueCountKeypath: "remote_addr"})
+		require.Nil(t, got.MaxUniqueCountPerGroupByKey)
+		require.Equal(t, "remote_addr", got.GetUniqueCountKeypath())
+	})
+
+	t.Run("set is sent", func(t *testing.T) {
+		got := expandLogsUniqueCount(&LogsUniqueCount{MaxUniqueCountPerGroupByKey: ptr.To[uint64](10)})
+		require.Equal(t, ptr.To("10"), got.MaxUniqueCountPerGroupByKey)
+	})
+}
+
+func TestExtractAlertDefPropertiesUngroupedLogsUniqueCount(t *testing.T) {
+	spec := analyticsAlertSpec(AlertTypeDefinition{LogsUniqueCount: &LogsUniqueCount{}})
+	spec.GroupByKeys = nil
+	require.NotPanics(t, func() {
+		_, err := spec.ExtractAlertDefProperties(&GetResourceRefProperties{})
+		require.NoError(t, err)
+	})
 }
