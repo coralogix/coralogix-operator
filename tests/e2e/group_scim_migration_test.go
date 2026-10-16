@@ -200,7 +200,9 @@ func helmUpgradeToOpenAPIOperator(ctx context.Context, image string) {
 	out, err := cmd.CombinedOutput()
 	Expect(err).ToNot(HaveOccurred(), string(out))
 
-	waitForOperatorRollout(ctx, operatorDeploymentName(ctx), image)
+	depName := operatorDeploymentName(ctx)
+	waitForOperatorRollout(ctx, depName, image)
+	waitForCurrentOperatorLeader(ctx, depName)
 }
 
 func helmImageRepoAndTag(image string) (string, string) {

@@ -25,9 +25,12 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"
+	coordinationv1 "k8s.io/api/coordination/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/coralogix/coralogix-operator/v2/tests/e2e/operatorready"
 )
 
 const testNamespace = "coralogix-e2e-test"
@@ -103,10 +106,44 @@ var _ = SynchronizedBeforeSuite(func(ctx context.Context) []byte {
 		return false
 	}, time.Minute, time.Second).Should(BeTrue())
 
+	waitForCurrentOperatorLeader(ctx, operatorDeploymentName(ctx))
+
 	return nil
 }, func(_ context.Context, _ []byte) {
 	initClients()
 })
+
+// waitForCurrentOperatorLeader waits until the operator that reconciles CRs is the one the
+// Deployment describes. Available is not enough after a Helm upgrade: the old pod keeps the
+// leader lease until it expires, so specs that start earlier run against the old operator.
+func waitForCurrentOperatorLeader(ctx context.Context, depName string) {
+	By("Waiting for the current operator pod to hold the leader lease")
+	k8sClient := ClientsInstance.GetK8sClient()
+	Eventually(func(g Gomega) {
+		dep, err := k8sClient.AppsV1().Deployments(operatorNamespace).Get(ctx, depName, metav1.GetOptions{})
+		g.Expect(err).ToNot(HaveOccurred())
+		selector, err := metav1.LabelSelectorAsSelector(dep.Spec.Selector)
+		g.Expect(err).ToNot(HaveOccurred())
+		listOptions := metav1.ListOptions{LabelSelector: selector.String()}
+		replicaSets, err := k8sClient.AppsV1().ReplicaSets(operatorNamespace).List(ctx, listOptions)
+		g.Expect(err).ToNot(HaveOccurred())
+		pods, err := k8sClient.CoreV1().Pods(operatorNamespace).List(ctx, listOptions)
+		g.Expect(err).ToNot(HaveOccurred())
+
+		var lease *coordinationv1.Lease
+		if containers := dep.Spec.Template.Spec.Containers; len(containers) > 0 {
+			if leaseName, enabled := operatorready.LeaderLease(containers[0]); enabled {
+				lease, err = k8sClient.CoordinationV1().Leases(operatorNamespace).Get(ctx, leaseName, metav1.GetOptions{})
+				if errors.IsNotFound(err) {
+					lease, err = nil, nil
+				}
+				g.Expect(err).ToNot(HaveOccurred())
+			}
+		}
+
+		g.Expect(operatorready.Check(dep, replicaSets.Items, pods.Items, lease)).To(Succeed())
+	}, 3*time.Minute, 2*time.Second).Should(Succeed())
+}
 
 var _ = SynchronizedAfterSuite(func() {}, func(ctx context.Context) {
 	By("Deleting test namespace")
