@@ -33,10 +33,13 @@ patch="${BASH_REMATCH[3]}"
 tag="v$version"
 branch="release-$major.$minor"
 
-# Only plain vX.Y.Z tags count as releases.
-tags=$(git ls-remote --tags --refs "$remote" 'v*' |
-  sed -E 's#.*refs/tags/##' |
-  grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' || true)
+# Read the remote before filtering, so a failed ls-remote stops the plan instead of looking
+# like a repository with no releases.
+tag_refs=$(git ls-remote --tags --refs "$remote" 'v*')
+branch_ref=$(git ls-remote --heads "$remote" "refs/heads/$branch")
+
+# Only plain vX.Y.Z tags count as releases. grep exits 1 when nothing matches.
+tags=$(sed -E 's#.*refs/tags/##' <<<"$tag_refs" | { grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' || true; })
 
 if grep -qxF "$tag" <<<"$tags"; then
   echo "error: tag $tag already exists" >&2
@@ -44,7 +47,7 @@ if grep -qxF "$tag" <<<"$tags"; then
 fi
 
 branch_exists=false
-if [[ -n "$(git ls-remote --heads "$remote" "refs/heads/$branch")" ]]; then
+if [[ -n "$branch_ref" ]]; then
   branch_exists=true
 fi
 
