@@ -58,6 +58,14 @@ func (r *ArchiveMetricsTargetReconciler) RequeueInterval() time.Duration {
 	return r.Interval
 }
 
+// SkipCreationRollback always skips the status-failure rollback: this is a
+// tenant-level singleton assigned a constant ID, so a retry cannot create a
+// duplicate, while rolling back would disable the archive and interrupt
+// archiving until the next successful reconcile.
+func (r *ArchiveMetricsTargetReconciler) SkipCreationRollback(client.Object) bool {
+	return true
+}
+
 // We first configure the tenant and then update because we cannot specify the retention days in the configure request.
 func (r *ArchiveMetricsTargetReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	archiveMetricsTarget := obj.(*coralogixv1alpha1.ArchiveMetricsTarget)
