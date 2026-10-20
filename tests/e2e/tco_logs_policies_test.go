@@ -148,14 +148,21 @@ var _ = Describe("TCOLogsPolicies", Serial, func() {
 						Severities: []coralogixv1alpha1.TCOPolicySeverity{"info", "debug"},
 						Targets: []coralogixv1alpha1.TCOPolicyTarget{
 							{
-								Dataset:   "myDataset",
+								Dataset:   "cicd",
 								Dataspace: ptr.To("default"),
 								Priority:  "low",
 							},
 							{
-								Dataset:   "myDataset2",
+								Dataset:   "logs",
 								Dataspace: ptr.To("default"),
-								Priority:  "medium",
+								Priority:  "block",
+								PriorityOverride: &coralogixv1alpha1.TCOPolicyPriorityOverride{
+									QuotaBased: &coralogixv1alpha1.TCOPolicyQuotaBased{
+										UsageTiers: []coralogixv1alpha1.TCOPolicyUsageTier{
+											{DailyQuotaPercentage: resource.MustParse("80"), Priority: "low"},
+										},
+									},
+								},
 							},
 						},
 					},
