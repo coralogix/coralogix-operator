@@ -148,7 +148,7 @@ var _ = Describe("TCOLogsPolicies", Serial, func() {
 						Severities: []coralogixv1alpha1.TCOPolicySeverity{"info", "debug"},
 						Targets: []coralogixv1alpha1.TCOPolicyTarget{
 							{
-								Dataset:   "logs",
+								Dataset:   "cicd",
 								Dataspace: ptr.To("default"),
 								Priority:  "low",
 							},
