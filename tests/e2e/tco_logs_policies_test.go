@@ -152,6 +152,18 @@ var _ = Describe("TCOLogsPolicies", Serial, func() {
 								Dataspace: ptr.To("default"),
 								Priority:  "low",
 							},
+							{
+								Dataset:   "logs",
+								Dataspace: ptr.To("default"),
+								Priority:  "block",
+								PriorityOverride: &coralogixv1alpha1.TCOPolicyPriorityOverride{
+									QuotaBased: &coralogixv1alpha1.TCOPolicyQuotaBased{
+										UsageTiers: []coralogixv1alpha1.TCOPolicyUsageTier{
+											{DailyQuotaPercentage: resource.MustParse("80"), Priority: "low"},
+										},
+									},
+								},
+							},
 						},
 					},
 					{
