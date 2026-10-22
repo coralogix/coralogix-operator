@@ -981,3 +981,236 @@ var _ = Describe("Alert caseSettings", Ordered, func() {
 		}, time.Minute, time.Second).Should(Succeed())
 	})
 })
+
+var _ = Describe("Alert access policy", Ordered, func() {
+	var (
+		crClient      client.Client
+		openAPIAlerts *alerts.AlertDefinitionsServiceAPIService
+		alert         *coralogixv1beta1.Alert
+		alertName     string
+		alertID       string
+	)
+
+	BeforeAll(func() {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		openAPIAlerts = newOpenAPIClientSet().Alerts()
+	})
+
+	patchAlert := func(ctx context.Context, mutate func(*coralogixv1beta1.AlertSpec)) *coralogixv1beta1.Alert {
+		current := &coralogixv1beta1.Alert{}
+		Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, current)).To(Succeed())
+		updated := current.DeepCopy()
+		mutate(&updated.Spec)
+		Expect(crClient.Patch(ctx, updated, client.MergeFrom(current))).To(Succeed())
+		refreshed := &coralogixv1beta1.Alert{}
+		Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, refreshed)).To(Succeed())
+		return waitAlertReconciled(ctx, crClient, alertName, refreshed.Generation)
+	}
+
+	bumpAlertAnnotations := func(ctx context.Context) {
+		current := &coralogixv1beta1.Alert{}
+		Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, current)).To(Succeed())
+		updated := current.DeepCopy()
+		if updated.Annotations == nil {
+			updated.Annotations = map[string]string{}
+		}
+		updated.Annotations["coralogix-operator-e2e-probe"] = gouuid.NewString()
+		Expect(crClient.Patch(ctx, updated, client.MergeFrom(current))).To(Succeed())
+	}
+
+	It("Should manage an alert access policy", func(ctx context.Context) {
+		By("Creating an Alert with access policy P1")
+		alertName = uniqueName("alert-access-policy")
+		renamedAlertName := alertName + " renamed"
+		// Registered before creation so a mid-spec failure still deletes the
+		// CR and sweeps the remote alert (both names: the spec renames it).
+		// The fixtures end on P1, which grants Delete, so the operator can
+		// delete; any other outcome is collected and reported.
+		DeferCleanup(func(cleanupCtx context.Context) {
+			var cleanupErrs []error
+			key := types.NamespacedName{Name: alertName, Namespace: testNamespace}
+			ids := map[string]struct{}{}
+			if alertID != "" {
+				ids[alertID] = struct{}{}
+			}
+			fresh := &coralogixv1beta1.Alert{}
+			if err := crClient.Get(cleanupCtx, key, fresh); err != nil {
+				if client.IgnoreNotFound(err) != nil {
+					cleanupErrs = append(cleanupErrs, err)
+				}
+			} else {
+				if fresh.Status.ID != nil {
+					ids[*fresh.Status.ID] = struct{}{}
+				}
+				var delErr error
+				for i := 0; i < 3; i++ {
+					f := &coralogixv1beta1.Alert{}
+					if err := crClient.Get(cleanupCtx, key, f); err != nil {
+						delErr = client.IgnoreNotFound(err)
+						break
+					}
+					err := crClient.Delete(cleanupCtx, f)
+					if client.IgnoreNotFound(err) == nil {
+						delErr = nil
+						break
+					}
+					delErr = err
+				}
+				if delErr != nil {
+					cleanupErrs = append(cleanupErrs, delErr)
+				} else if err := waitObjectGone(cleanupCtx, crClient, key, &coralogixv1beta1.Alert{}); err != nil {
+					cleanupErrs = append(cleanupErrs, err)
+				}
+			}
+			for _, name := range []string{alertName, renamedAlertName} {
+				if name == "" {
+					continue
+				}
+				if err := sweepAlertsByName(cleanupCtx, openAPIAlerts, name); err != nil {
+					cleanupErrs = append(cleanupErrs, err)
+				}
+			}
+			for id := range ids {
+				if err := waitRemoteAlertGone(cleanupCtx, openAPIAlerts, id); err != nil {
+					cleanupErrs = append(cleanupErrs, err)
+				}
+			}
+			reportCleanupErrors(cleanupErrs)
+		})
+		alert = newAccessPolicyTestAlert(alertName, testNamespace, ptr.To(alertAccessPolicyP1))
+		Expect(crClient.Create(ctx, alert)).To(Succeed())
+
+		created := &coralogixv1beta1.Alert{}
+		Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, created)).To(Succeed())
+		fetched := waitAlertReconciled(ctx, crClient, alertName, created.Generation)
+		Expect(fetched.Status.ID).ToNot(BeNil())
+		alertID = *fetched.Status.ID
+		Expect(fetched.Status.AccessPolicyManaged).To(BeTrue())
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, ptr.To(alertAccessPolicyP1))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Updating the access policy to P2")
+		patchAlert(ctx, func(spec *coralogixv1beta1.AlertSpec) {
+			spec.AccessPolicy = ptr.To(alertAccessPolicyP2)
+		})
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, ptr.To(alertAccessPolicyP2))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Omitting the policy while renaming the alert")
+		renamedAlertName = alertName + " renamed"
+		fetched = patchAlert(ctx, func(spec *coralogixv1beta1.AlertSpec) {
+			spec.AccessPolicy = nil
+			spec.Name = renamedAlertName
+		})
+
+		By("Waiting for the rename to reach the backend before asserting the policy survived")
+		Eventually(func(g Gomega) {
+			resp, httpResp, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, alertID).Execute()
+			g.Expect(oapicxsdk.NewAPIError(httpResp, err)).ToNot(HaveOccurred())
+			alertDef, ok := resp.GetAlertDefOk()
+			g.Expect(ok).To(BeTrue())
+			g.Expect(alertDef.AlertDefProperties.GetName()).To(Equal(renamedAlertName))
+		}, time.Minute, time.Second).Should(Succeed())
+		Expect(fetched.Status.AccessPolicyManaged).To(BeTrue())
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, ptr.To(alertAccessPolicyP2))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Setting the policy to empty to delete the remote policy")
+		fetched = patchAlert(ctx, func(spec *coralogixv1beta1.AlertSpec) {
+			spec.AccessPolicy = ptr.To("")
+		})
+		Expect(fetched.Status.AccessPolicyManaged).To(BeFalse())
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, nil)
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Changing the description while empty is held (second delete)")
+		patchAlert(ctx, func(spec *coralogixv1beta1.AlertSpec) {
+			spec.Description = "alert access policy e2e second delete"
+		})
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, nil)
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Restoring a policy externally while empty is held, then reconciling it away")
+		setPolicyExternally(ctx, openAPIAlerts, alertID, &alerts.AccessPolicyAction{Upsert: ptr.To(alertAccessPolicyP1)})
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, ptr.To(alertAccessPolicyP1))
+		}, time.Minute, time.Second).Should(Succeed())
+		bumpAlertAnnotations(ctx)
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, nil)
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Re-adding P1")
+		fetched = patchAlert(ctx, func(spec *coralogixv1beta1.AlertSpec) {
+			spec.AccessPolicy = ptr.To(alertAccessPolicyP1)
+		})
+		Expect(fetched.Status.AccessPolicyManaged).To(BeTrue())
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, ptr.To(alertAccessPolicyP1))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Drifting the managed policy externally, then reconciling it back")
+		setPolicyExternally(ctx, openAPIAlerts, alertID, &alerts.AccessPolicyAction{Upsert: ptr.To(alertAccessPolicyP2)})
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, ptr.To(alertAccessPolicyP2))
+		}, time.Minute, time.Second).Should(Succeed())
+		bumpAlertAnnotations(ctx)
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, ptr.To(alertAccessPolicyP1))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Deleting the Alert")
+		fresh := &coralogixv1beta1.Alert{}
+		Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, fresh)).To(Succeed())
+		Expect(crClient.Delete(ctx, fresh)).To(Succeed())
+		Eventually(func() bool {
+			_, httpResp, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, alertID).Execute()
+			return oapicxsdk.IsNotFound(oapicxsdk.NewAPIError(httpResp, err))
+		}, time.Minute, time.Second).Should(BeTrue())
+	})
+
+	It("Should create an alert with an empty access policy", func(ctx context.Context) {
+		By("Creating an Alert with an empty access policy")
+		emptyName := uniqueName("alert-empty-access-policy")
+		emptyAlert := newAccessPolicyTestAlert(emptyName, testNamespace, ptr.To(""))
+		Expect(crClient.Create(ctx, emptyAlert)).To(Succeed())
+
+		created := &coralogixv1beta1.Alert{}
+		Expect(crClient.Get(ctx, types.NamespacedName{Name: emptyName, Namespace: testNamespace}, created)).To(Succeed())
+		fetched := waitAlertReconciled(ctx, crClient, emptyName, created.Generation)
+		Expect(fetched.Status.ID).ToNot(BeNil())
+		emptyID := *fetched.Status.ID
+		Expect(fetched.Status.AccessPolicyManaged).To(BeFalse())
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, emptyID, nil)
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Triggering a second reconcile with a description change")
+		current := &coralogixv1beta1.Alert{}
+		Expect(crClient.Get(ctx, types.NamespacedName{Name: emptyName, Namespace: testNamespace}, current)).To(Succeed())
+		updated := current.DeepCopy()
+		updated.Spec.Description = "alert empty access policy e2e updated"
+		Expect(crClient.Patch(ctx, updated, client.MergeFrom(current))).To(Succeed())
+		refreshed := &coralogixv1beta1.Alert{}
+		Expect(crClient.Get(ctx, types.NamespacedName{Name: emptyName, Namespace: testNamespace}, refreshed)).To(Succeed())
+		waitAlertReconciled(ctx, crClient, emptyName, refreshed.Generation)
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, emptyID, nil)
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Deleting the Alert")
+		fresh := &coralogixv1beta1.Alert{}
+		Expect(crClient.Get(ctx, types.NamespacedName{Name: emptyName, Namespace: testNamespace}, fresh)).To(Succeed())
+		Expect(crClient.Delete(ctx, fresh)).To(Succeed())
+		Eventually(func() bool {
+			_, httpResp, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, emptyID).Execute()
+			return oapicxsdk.IsNotFound(oapicxsdk.NewAPIError(httpResp, err))
+		}, time.Minute, time.Second).Should(BeTrue())
+	})
+})
+
