@@ -70,6 +70,7 @@ func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 
 	createRequest := &alerts.CreateAlertDefinitionRequest{
 		AlertDefProperties: props,
+		AccessPolicy:       alert.Spec.ExtractCreateAccessPolicy(),
 	}
 
 	log.Info("Creating remote alert", "alert", utils.FormatJSON(createRequest))
@@ -81,7 +82,7 @@ func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 		return fmt.Errorf("error on creating remote alert: %w", cxsdk.NewAPIError(httpResp, err))
 	}
 	log.Info("Remote alert created", "response", utils.FormatJSON(createResponse))
-	alert.Status = coralogixv1beta1.AlertStatus{ID: createResponse.AlertDef.Id}
+	alert.Status = coralogixv1beta1.AlertStatus{ID: createResponse.AlertDef.Id, AccessPolicyManaged: createRequest.AccessPolicy != nil}
 	return nil
 }
 
@@ -103,9 +104,20 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 		return fmt.Errorf("alert ID is missing")
 	}
 
+	policyAction := alert.Spec.ExtractAccessPolicyAction()
+	if policyAction != nil && policyAction.Upsert != nil && !alert.Status.AccessPolicyManaged {
+		// Record the policy before sending it: once applied, a policy that denies the operator's API key
+		// makes the alert look deleted, and the record must already exist to stop a recreate.
+		alert.Status.AccessPolicyManaged = true
+		if err := config.GetClient().Status().Update(ctx, alert); err != nil {
+			return fmt.Errorf("error on recording the alert access policy in status: %w", err)
+		}
+	}
+
 	updateRequest := alerts.ReplaceAlertDefinitionRequest{
 		AlertDefProperties: props,
 		Id:                 alert.Status.ID,
+		AccessPolicy:       policyAction,
 	}
 
 	log.Info("Updating remote alert", "alert", utils.FormatJSON(updateRequest))
@@ -114,9 +126,20 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 		ReplaceAlertDefinitionRequest(updateRequest).
 		Execute()
 	if err != nil {
-		return cxsdk.NewAPIError(httpResp, err)
+		apiErr := cxsdk.NewAPIError(httpResp, err)
+		if cxsdk.IsNotFound(apiErr) && alert.Spec.AccessPolicyMayDenyOperator(alert.Status.AccessPolicyManaged) {
+			// Not wrapped on purpose: the shared reconciler drops status.id on a wrapped not-found error
+			// and recreates the alert, which would duplicate an alert whose policy locks the operator out.
+			return fmt.Errorf("remote alert %s was not found, or its access policy denies the operator's API key; "+
+				"not recreating it. If it was deleted, remove status.id to recreate it; if it is locked, "+
+				"recreating leaves it orphaned: %s", *alert.Status.ID, apiErr.Error())
+		}
+		return apiErr
 	}
 	log.Info("Remote alert updated", "alert", utils.FormatJSON(updateResponse))
+	if policyAction != nil && policyAction.Delete != nil {
+		alert.Status.AccessPolicyManaged = false
+	}
 	return nil
 }
 
@@ -133,6 +156,9 @@ func (r *AlertReconciler) HandleDeletion(ctx context.Context, log logr.Logger, o
 		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
 			log.Error(err, "Error deleting remote alert", "id", *alert.Status.ID)
 			return fmt.Errorf("error deleting remote alert %s: %w", *alert.Status.ID, err)
+		}
+		if alert.Spec.AccessPolicyMayDenyOperator(alert.Status.AccessPolicyManaged) {
+			log.Info("Remote alert not found; if its access policy denied the operator's API key, it still exists remotely and is now orphaned", "id", *alert.Status.ID)
 		}
 	}
 	log.Info("Alert deleted from remote system", "id", *alert.Status.ID)

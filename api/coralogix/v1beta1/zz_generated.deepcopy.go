@@ -300,6 +300,11 @@ func (in *AlertSpec) DeepCopyInto(out *AlertSpec) {
 		*out = new(AlertSchedule)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.AccessPolicy != nil {
+		in, out := &in.AccessPolicy, &out.AccessPolicy
+		*out = new(string)
+		**out = **in
+	}
 	in.TypeDefinition.DeepCopyInto(&out.TypeDefinition)
 }
 
