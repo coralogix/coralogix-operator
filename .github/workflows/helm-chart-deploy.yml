@@ -7,6 +7,22 @@ on:
       - release-*
     paths:
       - charts/coralogix-operator/Chart.yaml
+  # Called by the Release workflow after the image is pushed. Its commits are made with
+  # GITHUB_TOKEN and do not trigger the push event above.
+  workflow_call:
+    inputs:
+      ref:
+        description: Commit to package the chart from.
+        required: true
+        type: string
+      version:
+        description: Chart version the release expects, for example 2.16.0.
+        required: true
+        type: string
+      upload:
+        description: Upload the chart. False packages it and signs in to JFrog only, for a release dry run.
+        required: true
+        type: boolean
 
 # The chart is uploaded to Artifactory using a short-lived token obtained via GitHub OIDC
 # (id-token: write). contents: read is all the workflow token itself needs.
@@ -24,6 +40,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2.4.0
+        with:
+          ref: ${{ inputs.ref }}
+      # A dry run packages the unbumped chart, so there is no version to match.
+      - name: Check chart version matches the release
+        if: ${{ inputs.version && inputs.upload }}
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          chart_version=$(yq eval '.version' charts/coralogix-operator/Chart.yaml)
+          if [ "$chart_version" != "$RELEASE_VERSION" ]; then
+            echo "::error::Chart.yaml version $chart_version does not match release version $RELEASE_VERSION"
+            exit 1
+          fi
       - name: Set up JFrog CLI
         # Exchanges this job's GitHub OIDC JWT for a short-lived Artifactory token,
         # replacing the rotated JFROG_USER / JFROG_PASSWORD secret pair. The action
@@ -39,7 +68,11 @@ jobs:
         run: |
           cd charts/coralogix-operator
           helm package .
+      # Proves the OIDC token exchange gave a working Artifactory token, also on a dry run.
+      - name: Check Artifactory access
+        run: jf rt ping
       - name: use-jfrog-cli
+        if: ${{ !inputs.version || inputs.upload }}
         run: |
           cd charts/coralogix-operator
           jf rt upload "${{ env.CHART_NAME }}-*.tgz" coralogix-charts
