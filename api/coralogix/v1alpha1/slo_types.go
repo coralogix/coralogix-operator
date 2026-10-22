@@ -1,0 +1,641 @@
+/*
+Copyright 2024.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package v1alpha1
+
+import (
+	"fmt"
+
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
+
+	slos "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/slos_service"
+)
+
+var (
+	// WindowSloWindowSchemaToOpenAPI has no "unspecified" entry on purpose. The Coralogix
+	// API has no implementation for WINDOW_SLO_WINDOW_UNSPECIFIED and answers HTTP 500 for
+	// it, so a CR that still carries the value is rejected in the extract path with a clear
+	// message. This mirrors how "90d" is kept out of sloTimeFrameSchemaToOpenAPI.
+	WindowSloWindowSchemaToOpenAPI = map[SloWindowEnum]slos.WindowSloWindow{
+		"1m": slos.WINDOWSLOWINDOW_WINDOW_SLO_WINDOW_1_MINUTE,
+		"5m": slos.WINDOWSLOWINDOW_WINDOW_SLO_WINDOW_5_MINUTES,
+	}
+	SloProductTypeSchemaToOpenAPI = map[SloProductType]slos.SloProductType{
+		"unspecified": slos.SLOPRODUCTTYPE_SLO_PRODUCT_TYPE_UNSPECIFIED,
+		"apm":         slos.SLOPRODUCTTYPE_SLO_PRODUCT_TYPE_APM,
+	}
+	MissingDataStrategySchemaToOpenAPI = map[MissingDataStrategy]slos.MissingDataStrategy{
+		"uncounted": slos.MISSINGDATASTRATEGY_MISSING_DATA_STRATEGY_UNCOUNTED,
+		"good":      slos.MISSINGDATASTRATEGY_MISSING_DATA_STRATEGY_GOOD,
+		"bad":       slos.MISSINGDATASTRATEGY_MISSING_DATA_STRATEGY_BAD,
+	}
+	// ComparisonOperatorSchemaToOpenAPI has no "unspecified" entry, for the same reason as
+	// WindowSloWindowSchemaToOpenAPI. The API answers
+	// `400 Invalid comparison operator: 0` both when the field is omitted and when
+	// COMPARISON_OPERATOR_UNSPECIFIED is sent explicitly.
+	ComparisonOperatorSchemaToOpenAPI = map[ComparisonOperator]slos.ComparisonOperator{
+		"greaterThan":         slos.COMPARISONOPERATOR_COMPARISON_OPERATOR_GREATER_THAN,
+		"lessThan":            slos.COMPARISONOPERATOR_COMPARISON_OPERATOR_LESS_THAN,
+		"greaterThanOrEquals": slos.COMPARISONOPERATOR_COMPARISON_OPERATOR_GREATER_THAN_OR_EQUALS,
+		"lessThanOrEquals":    slos.COMPARISONOPERATOR_COMPARISON_OPERATOR_LESS_THAN_OR_EQUALS,
+	}
+)
+
+// SLOSpec defines the desired state of SLO. For more information, see: https://coralogix.com/platform/apm/slo-management/
+// +kubebuilder:validation:XValidation:rule="!(has(self.productType) && self.productType == 'apm') || has(self.sliType.apmSli)",message="productType 'apm' requires sliType.apmSli"
+type SLOSpec struct {
+	// SLO name
+	Name string `json:"name"`
+	// +optional
+	// Optional SLO description
+	Description *string `json:"description"`
+	// +optional
+	// Labels are additional labels to be added to the SLO.
+	Labels *map[string]string `json:"labels,omitempty"`
+	// SliType defines the type of SLI used for the SLO.
+	// Exactly one of requestBasedMetric, windowBasedMetric or apmSli must be set.
+	SliType SliType `json:"sliType"`
+	// +optional
+	// OwnershipTags assign the SLO to a service, environment and team. Omitting the block
+	// clears the tags on the remote SLO, which is the declarative contract. An empty block,
+	// or a dimension whose lists are both empty, is discarded by the API and has no effect.
+	OwnershipTags *SloOwnershipTags `json:"ownershipTags,omitempty"`
+	// +optional
+	// ProductType selects the Coralogix product the SLO is built from. Valid values are
+	// "unspecified" and "apm". Setting "apm" requires sliType.apmSli.
+	//
+	// Setting it is never necessary. The API infers "apm" from the presence of
+	// sliType.apmSli and stores SLO_PRODUCT_TYPE_APM even when this field is omitted or
+	// set to "unspecified". For a metric SLI the API stores SLO_PRODUCT_TYPE_UNSPECIFIED.
+	//
+	// The coupling only runs one way. "apm" without an apmSli answers
+	// `400 slo.apm_sli is required when slo.product_type is SLO_PRODUCT_TYPE_APM`, so the
+	// rule on this struct mirrors that. An apmSli without "apm" is accepted, so there is
+	// no rule in the other direction.
+	ProductType *SloProductType `json:"productType,omitempty"`
+	// Window defines the time window for the SLO.
+	Window SloWindow `json:"window"`
+	// TargetThresholdPercentage is the target compliance percentage for the SLO, so 99.9
+	// means three nines. The API rejects a value above 100 with
+	// `400 "slo.targetThresholdPercentage" must be less than or equal to 100`. The bound
+	// is not declared in the protobuf and is not enforced here either: the field is a
+	// resource.Quantity, which renders as int-or-string in the CRD, so the numeric
+	// Minimum and Maximum markers do not apply to it. The lower bound is unverified.
+	TargetThresholdPercentage resource.Quantity `json:"targetThresholdPercentage"`
+}
+
+// +kubebuilder:validation:XValidation:rule="[has(self.requestBasedMetric),has(self.windowBasedMetric),has(self.apmSli)].filter(x, x).size() == 1",message="Exactly one of requestBasedMetric, windowBasedMetric or apmSli must be set"
+type SliType struct {
+	// +optional
+	RequestBasedMetricSli *RequestBasedMetricSli `json:"requestBasedMetric,omitempty"`
+	// +optional
+	WindowBasedMetricSli *WindowBasedMetricSli `json:"windowBasedMetric,omitempty"`
+	// +optional
+	// ApmSli builds the SLO from an APM Service Catalog service instead of a PromQL query.
+	// It requires spec.productType "apm".
+	ApmSli *ApmSli `json:"apmSli,omitempty"`
+}
+
+type RequestBasedMetricSli struct {
+	// GoodEvents defines the good events metric.
+	GoodEvents SloMetricEvent `json:"goodEvents"`
+	// TotalEvents defines the total events metric.
+	TotalEvents SloMetricEvent `json:"totalEvents"`
+	// +optional
+	// GroupByLabels has no effect. The Coralogix API derives the SLO grouping itself and
+	// the value is never sent. The field is kept because removing it would break existing
+	// resources.
+	// Deprecated: ignored by the operator and by the API.
+	GroupByLabels []string `json:"groupByLabels,omitempty"`
+}
+
+type WindowBasedMetricSli struct {
+	// Query defines the metric query for the SLO.
+	Query *SloMetricEvent `json:"query"`
+	// Window defines the time window for the SLO. Valid values are "1m" and "5m".
+	Window SloWindowEnum `json:"window"`
+	// ComparisonOperator defines the comparison operator for the SLO. Valid values are
+	// "greaterThan", "lessThan", "greaterThanOrEquals" and "lessThanOrEquals".
+	ComparisonOperator ComparisonOperator `json:"comparisonOperator"`
+	// Threshold defines the threshold the comparisonOperator applies to.
+	// The protobuf field is a bare float with no presence tracking, so the API cannot tell
+	// an omitted threshold from a threshold of 0. Omitting it here sends 0.
+	Threshold resource.Quantity `json:"threshold,omitempty"`
+	// +optional
+	// MissingDataStrategy decides how a window with no data counts. Valid values are
+	// "uncounted", "good" and "bad". When omitted, the API stores
+	// MISSING_DATA_STRATEGY_UNCOUNTED.
+	MissingDataStrategy *MissingDataStrategy `json:"missingDataStrategy,omitempty"`
+}
+
+// ApmSli defines an SLI over an APM Service Catalog service.
+//
+// Exactly one of errorConfig or latencyConfig must be set. That is enforced in
+// ExpandApmSli, not by a CEL rule. errorConfig is an empty object, so its schema has no
+// properties, and Kubernetes 1.29 and earlier cannot evaluate a CEL rule that touches
+// such a field: it fails with "invalid object type, expected either Properties or
+// AdditionalProperties". The chart supports those versions, so the check lives in Go.
+type ApmSli struct {
+	// Services lists the APM Service Catalog services the SLO covers. The Coralogix API
+	// accepts exactly one service today and rejects names that are not in the catalog.
+	// The count is deliberately not capped here, so a server-side relaxation needs no
+	// operator release.
+	// +kubebuilder:validation:MinItems=1
+	Services []string `json:"services"`
+	// +optional
+	// Filters narrows the SLI to spans matching every filter.
+	Filters []ApmFilter `json:"filters,omitempty"`
+	// +optional
+	// GroupingKeys splits the SLI by the given span attributes.
+	GroupingKeys []string `json:"groupingKeys,omitempty"`
+	// +optional
+	// ErrorConfig makes this an APM error-rate SLI. It carries no settings.
+	ErrorConfig *ApmErrorSli `json:"errorConfig,omitempty"`
+	// +optional
+	// LatencyConfig makes this an APM latency SLI.
+	LatencyConfig *ApmLatencySli `json:"latencyConfig,omitempty"`
+}
+
+// ApmErrorSli selects the APM error-rate SLI. It has no fields.
+type ApmErrorSli struct{}
+
+// ApmLatencySli defines an APM latency SLI.
+//
+// Exactly one of quantile or average must be set. Enforced in ExpandApmLatencySli rather
+// than by a CEL rule, because average is an empty object. See the note on ApmSli.
+type ApmLatencySli struct {
+	// TimeWindow defines the evaluation window. Valid values are "1m" and "5m".
+	// Omitting it answers HTTP 500 with the same "Not implemented yet" error as an
+	// omitted windowBasedMetric.window, so it is required.
+	TimeWindow SloWindowEnum `json:"timeWindow"`
+	// +optional
+	// Threshold is the latency threshold in milliseconds, so 500 means 500ms. Latency at
+	// or below the threshold is good. The API stores 0 when omitted.
+	Threshold *resource.Quantity `json:"threshold,omitempty"`
+	// +optional
+	// Quantile measures a latency quantile.
+	Quantile *ApmLatencyQuantile `json:"quantile,omitempty"`
+	// +optional
+	// Average measures average latency. It carries no settings.
+	Average *ApmLatencyAverage `json:"average,omitempty"`
+}
+
+// ApmLatencyQuantile selects the quantile latency query type.
+type ApmLatencyQuantile struct {
+	// +optional
+	// Percentile is a fraction, so 0.95 means P95. The API stores 0 when omitted.
+	// There is deliberately no range validator: the API accepts and stores any float,
+	// including 5 and -1, so rejecting them here would be stricter than the API.
+	Percentile *resource.Quantity `json:"percentile,omitempty"`
+}
+
+// ApmLatencyAverage selects the average latency query type. It has no fields.
+type ApmLatencyAverage struct{}
+
+// ApmFilter matches a span attribute against a set of values.
+type ApmFilter struct {
+	// Key is the span attribute name. Omitting it makes the API build a malformed query
+	// and answer HTTP 400, so it is required.
+	Key string `json:"key"`
+	// +optional
+	// Values are the accepted values for Key. There is deliberately no MinItems: the API
+	// accepts and stores an empty list, so rejecting one here would be stricter than the
+	// API. An absent list is sent as an empty list, which is the form the API is known to
+	// accept.
+	Values []string `json:"values,omitempty"`
+}
+
+// SloOwnershipTags assign an SLO to a service, environment and team.
+type SloOwnershipTags struct {
+	// +optional
+	// Service tags the SLO with an APM service. The API validates static values against
+	// the APM Service Catalog, so the operator does not.
+	Service *SloOwnershipTag `json:"service,omitempty"`
+	// +optional
+	// Environment tags the SLO with a free-form environment name.
+	Environment *SloOwnershipTag `json:"environment,omitempty"`
+	// +optional
+	// Team tags the SLO with a free-form team name.
+	Team *SloOwnershipTag `json:"team,omitempty"`
+}
+
+// SloOwnershipTag names one ownership dimension, either by fixed values or by metric
+// label. Both lists are ordered and round-trip in the order given.
+//
+// Setting both lists to a non-empty value is rejected by the API with
+// `400 use either staticValues or labelKeys, not both`, so the rule below mirrors it.
+// The rule compares list length rather than field presence: `staticValues: []` is
+// present but empty, and the API accepts a dimension whose lists are both empty and
+// simply discards it. There is no at-least-one rule for the same reason.
+// +kubebuilder:validation:XValidation:rule="!(has(self.staticValues) && self.staticValues.size() > 0 && has(self.labelKeys) && self.labelKeys.size() > 0)",message="Use either staticValues or labelKeys, not both"
+type SloOwnershipTag struct {
+	// +optional
+	// StaticValues assigns the dimension group-wide, with fixed values.
+	StaticValues []string `json:"staticValues,omitempty"`
+	// +optional
+	// LabelKeys assigns the dimension from metric label names, resolved per series.
+	LabelKeys []string `json:"labelKeys,omitempty"`
+}
+
+// +kubebuilder:validation:Enum={"uncounted","good","bad"}
+type MissingDataStrategy string
+
+// +kubebuilder:validation:Enum={"unspecified","apm"}
+type SloProductType string
+
+// +kubebuilder:validation:Enum={"1m","5m"}
+type SloWindowEnum string
+
+// +kubebuilder:validation:Enum={"greaterThan","lessThan","greaterThanOrEquals","lessThanOrEquals"}
+type ComparisonOperator string
+
+type SloMetricEvent struct {
+	// Query is the metric query string.
+	Query string `json:"query"`
+}
+
+type SloWindow struct {
+	// +optional
+	// TimeFrame defines the time frame for the SLO window. Valid values are "unspecified", "7d", "14d", "21d", and "28d".
+	// Deprecated: "90d" is no longer supported by the Coralogix API and will be rejected by the operator.
+	TimeFrame *SloTimeFrame `json:"timeFrame,omitempty"`
+}
+
+// +kubebuilder:validation:Enum={"unspecified","7d","14d","21d","28d","90d"}
+type SloTimeFrame string
+
+const (
+	SloTimeFrameUnspecified SloTimeFrame = "unspecified"
+	SloTimeFrame7d          SloTimeFrame = "7d"
+	SloTimeFrame14d         SloTimeFrame = "14d"
+	SloTimeFrame21d         SloTimeFrame = "21d"
+	SloTimeFrame28d         SloTimeFrame = "28d"
+	SloTimeFrame90d         SloTimeFrame = "90d"
+)
+
+var sloTimeFrameSchemaToOpenAPI = map[SloTimeFrame]slos.SloTimeFrame{
+	SloTimeFrameUnspecified: slos.SLOTIMEFRAME_SLO_TIME_FRAME_UNSPECIFIED,
+	SloTimeFrame7d:          slos.SLOTIMEFRAME_SLO_TIME_FRAME_7_DAYS,
+	SloTimeFrame14d:         slos.SLOTIMEFRAME_SLO_TIME_FRAME_14_DAYS,
+	SloTimeFrame21d:         slos.SLOTIMEFRAME_SLO_TIME_FRAME_21_DAYS,
+	SloTimeFrame28d:         slos.SLOTIMEFRAME_SLO_TIME_FRAME_28_DAYS,
+}
+
+// SLOStatus defines the observed state of SLO.
+type SLOStatus struct {
+	// +optional
+	ID *string `json:"id,omitempty"`
+	// +optional
+	Revision *int32 `json:"revision,omitempty"`
+	// +optional
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+// SLO is the Schema for the slos API.
+// See also https://coralogix.com/platform/apm/slo-management/
+type SLO struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   SLOSpec   `json:"spec,omitempty"`
+	Status SLOStatus `json:"status,omitempty"`
+}
+
+func (s *SLO) ExtractSLOCreateRequest() (*slos.Slo1, error) {
+	return s.Spec.extractSLO()
+}
+
+func (s *SLO) ExtractSLOUpdateRequest() (*slos.Slo1, error) {
+	slo, err := s.Spec.extractSLO()
+	if err != nil {
+		return nil, err
+	}
+
+	slo.Id = s.Status.ID
+	return slo, nil
+}
+
+// extractSLO builds the request body for the SLI arm the spec selects. A CEL rule on
+// SliType already requires exactly one arm, so the default case only guards against a CR
+// stored before that rule existed.
+func (s *SLOSpec) extractSLO() (*slos.Slo1, error) {
+	switch {
+	case s.SliType.RequestBasedMetricSli != nil:
+		return s.ExtractRequestBasedMetricSli()
+	case s.SliType.WindowBasedMetricSli != nil:
+		return s.ExtractWindowBasedMetricSli()
+	case s.SliType.ApmSli != nil:
+		return s.ExtractApmSli()
+	default:
+		return nil, fmt.Errorf("sliType must be set to one of requestBasedMetric, windowBasedMetric or apmSli")
+	}
+}
+
+// extractCommon builds the fields every SLI arm shares.
+func (s *SLOSpec) extractCommon() (*slos.Slo1, error) {
+	timeFrame, err := s.Window.ExpandTimeFrame()
+	if err != nil {
+		return nil, fmt.Errorf("error expanding time frame: %w", err)
+	}
+
+	productType, err := s.ExpandProductType()
+	if err != nil {
+		return nil, fmt.Errorf("error expanding product type: %w", err)
+	}
+
+	slo := &slos.Slo1{
+		Name:                      s.Name,
+		Description:               s.Description,
+		Labels:                    ptr.Deref(s.Labels, nil),
+		ProductType:               productType,
+		OwnershipTags:             s.OwnershipTags.ExpandOwnershipTags(),
+		TargetThresholdPercentage: slos.PtrFloat32(float32(s.TargetThresholdPercentage.AsApproximateFloat64())),
+	}
+	if timeFrame != nil {
+		slo.SloTimeFrame = *timeFrame
+	}
+	return slo, nil
+}
+
+// ExpandOwnershipTags builds the ownership tags block. resolvedValues is server-computed
+// and is never written.
+func (t *SloOwnershipTags) ExpandOwnershipTags() *slos.SloOwnershipTags {
+	if t == nil {
+		return nil
+	}
+
+	return &slos.SloOwnershipTags{
+		Service:     t.Service.ExpandOwnershipTag(),
+		Environment: t.Environment.ExpandOwnershipTag(),
+		Team:        t.Team.ExpandOwnershipTag(),
+	}
+}
+
+func (t *SloOwnershipTag) ExpandOwnershipTag() *slos.SloOwnershipTag {
+	if t == nil {
+		return nil
+	}
+
+	return &slos.SloOwnershipTag{
+		StaticValues: t.StaticValues,
+		LabelKeys:    t.LabelKeys,
+	}
+}
+
+// ExpandProductType maps the spec value to the SDK enum. The field is optional, so an
+// absent value leaves it out of the request and lets the API pick its own default.
+func (s *SLOSpec) ExpandProductType() (*slos.SloProductType, error) {
+	if s.ProductType == nil {
+		return nil, nil
+	}
+
+	productType, ok := SloProductTypeSchemaToOpenAPI[*s.ProductType]
+	if !ok {
+		return nil, fmt.Errorf("invalid SLO product type: %s", *s.ProductType)
+	}
+	return productType.Ptr(), nil
+}
+
+func (s *SLOSpec) ExtractRequestBasedMetricSli() (*slos.Slo1, error) {
+	slo, err := s.extractCommon()
+	if err != nil {
+		return nil, err
+	}
+
+	sli := s.SliType.RequestBasedMetricSli
+	slo.RequestBasedMetricSli = &slos.RequestBasedMetricSli{
+		GoodEvents: slos.Metric{
+			Query: sli.GoodEvents.Query,
+		},
+		TotalEvents: slos.Metric{
+			Query: sli.TotalEvents.Query,
+		},
+	}
+	return slo, nil
+}
+
+func (s *SLOSpec) ExtractWindowBasedMetricSli() (*slos.Slo1, error) {
+	slo, err := s.extractCommon()
+	if err != nil {
+		return nil, err
+	}
+
+	sli := s.SliType.WindowBasedMetricSli
+	window, ok := WindowSloWindowSchemaToOpenAPI[sli.Window]
+	if !ok {
+		return nil, fmt.Errorf("invalid SLO window: %s", sli.Window)
+	}
+
+	comparisonOperator, ok := ComparisonOperatorSchemaToOpenAPI[sli.ComparisonOperator]
+	if !ok {
+		return nil, fmt.Errorf("invalid SLO comparison operator: %s", sli.ComparisonOperator)
+	}
+
+	missingDataStrategy, err := sli.ExpandMissingDataStrategy()
+	if err != nil {
+		return nil, fmt.Errorf("error expanding missing data strategy: %w", err)
+	}
+
+	// query is required, so this only guards a CR stored before that marker existed. The
+	// guard keeps the failure a clear reconcile error rather than a nil dereference.
+	query := sli.Query
+	if query == nil {
+		return nil, fmt.Errorf("windowBasedMetric.query is required")
+	}
+
+	slo.WindowBasedMetricSli = &slos.WindowBasedMetricSli{
+		Query: slos.Metric{
+			Query: query.Query,
+		},
+		Window:              window,
+		ComparisonOperator:  comparisonOperator,
+		MissingDataStrategy: missingDataStrategy,
+		Threshold:           slos.PtrFloat32(float32(sli.Threshold.AsApproximateFloat64())),
+	}
+	return slo, nil
+}
+
+// ExpandMissingDataStrategy maps the spec value to the SDK enum. The field is optional,
+// so an absent value leaves it out of the request. The controller rebuilds the whole
+// request from spec on every reconcile and never reads the remote SLO, so an omission
+// means the same thing on create and on replace.
+func (w *WindowBasedMetricSli) ExpandMissingDataStrategy() (*slos.MissingDataStrategy, error) {
+	if w.MissingDataStrategy == nil {
+		return nil, nil
+	}
+
+	strategy, ok := MissingDataStrategySchemaToOpenAPI[*w.MissingDataStrategy]
+	if !ok {
+		return nil, fmt.Errorf("invalid SLO missing data strategy: %s", *w.MissingDataStrategy)
+	}
+	return strategy.Ptr(), nil
+}
+
+func (s *SLOSpec) ExtractApmSli() (*slos.Slo1, error) {
+	slo, err := s.extractCommon()
+	if err != nil {
+		return nil, err
+	}
+
+	apmSli, err := s.SliType.ApmSli.ExpandApmSli()
+	if err != nil {
+		return nil, fmt.Errorf("error expanding apm SLI: %w", err)
+	}
+
+	// apmSliMetadata is a server-side mirror of apmSli. The API rejects it on write, so
+	// it is never part of the request.
+	slo.ApmSli = apmSli
+	return slo, nil
+}
+
+func (a *ApmSli) ExpandApmSli() (*slos.ApmSli, error) {
+	if (a.ErrorConfig == nil) == (a.LatencyConfig == nil) {
+		return nil, fmt.Errorf("exactly one of errorConfig or latencyConfig must be set")
+	}
+
+	apmSli := &slos.ApmSli{
+		Services:     a.Services,
+		GroupingKeys: a.GroupingKeys,
+		Filters:      expandApmFilters(a.Filters),
+	}
+
+	if a.ErrorConfig != nil {
+		// errorConfig is an empty JSON object. The SDK drops a nil map and serializes a
+		// non-nil empty map as {}, so the map must be allocated.
+		apmSli.ErrorConfig = map[string]interface{}{}
+	}
+
+	if a.LatencyConfig != nil {
+		latencyConfig, err := a.LatencyConfig.ExpandApmLatencySli()
+		if err != nil {
+			return nil, fmt.Errorf("error expanding latency config: %w", err)
+		}
+		apmSli.LatencyConfig = latencyConfig
+	}
+
+	return apmSli, nil
+}
+
+func (l *ApmLatencySli) ExpandApmLatencySli() (*slos.ApmLatencySli, error) {
+	if (l.Quantile == nil) == (l.Average == nil) {
+		return nil, fmt.Errorf("exactly one of quantile or average must be set")
+	}
+
+	timeWindow, ok := WindowSloWindowSchemaToOpenAPI[l.TimeWindow]
+	if !ok {
+		return nil, fmt.Errorf("invalid APM latency time window: %s", l.TimeWindow)
+	}
+
+	latencyConfig := &slos.ApmLatencySli{
+		TimeWindow: timeWindow,
+	}
+
+	if l.Threshold != nil {
+		latencyConfig.Threshold = slos.PtrFloat32(float32(l.Threshold.AsApproximateFloat64()))
+	}
+
+	if l.Quantile != nil {
+		latencyConfig.Quantile = &slos.ApmLatencyQuantile{}
+		if percentile := l.Quantile.Percentile; percentile != nil {
+			latencyConfig.Quantile.Percentile = slos.PtrFloat32(float32(percentile.AsApproximateFloat64()))
+		}
+	}
+
+	if l.Average != nil {
+		// average is an empty JSON object, same as errorConfig.
+		latencyConfig.Average = map[string]interface{}{}
+	}
+
+	return latencyConfig, nil
+}
+
+// expandApmFilters writes the plural values field only. The scalar value field is
+// deprecated in the API.
+func expandApmFilters(filters []ApmFilter) []slos.ApmFilter {
+	if filters == nil {
+		return nil
+	}
+
+	expanded := make([]slos.ApmFilter, 0, len(filters))
+	for _, filter := range filters {
+		// The SDK drops a nil slice, and a filter with no values field is an unprobed
+		// shape. Send the empty list instead, which the API is known to accept.
+		values := filter.Values
+		if values == nil {
+			values = []string{}
+		}
+
+		expanded = append(expanded, slos.ApmFilter{
+			Key:    filter.Key,
+			Values: values,
+		})
+	}
+	return expanded
+}
+
+func (w *SloWindow) ExpandTimeFrame() (*slos.SloTimeFrame, error) {
+	if w.TimeFrame != nil {
+		tf, ok := sloTimeFrameSchemaToOpenAPI[*w.TimeFrame]
+		if !ok {
+			return nil, fmt.Errorf("invalid SLO time frame: %s", *w.TimeFrame)
+		}
+		return tf.Ptr(), nil
+	}
+
+	return nil, nil
+}
+
+func (s *SLO) SetConditions(conditions []metav1.Condition) {
+	s.Status.Conditions = conditions
+}
+
+func (s *SLO) GetConditions() []metav1.Condition {
+	return s.Status.Conditions
+}
+
+func (s *SLO) GetPrintableStatus() string {
+	return s.Status.PrintableStatus
+}
+
+func (s *SLO) SetPrintableStatus(status string) {
+	s.Status.PrintableStatus = status
+}
+
+func (s *SLO) HasIDInStatus() bool {
+	return s.Status.ID != nil && *s.Status.ID != ""
+}
+
+// +kubebuilder:object:root=true
+
+// SLOList contains a list of SLO.
+type SLOList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []SLO `json:"items"`
+}
+
+func init() {
+	SchemeBuilder.Register(&SLO{}, &SLOList{})
+}

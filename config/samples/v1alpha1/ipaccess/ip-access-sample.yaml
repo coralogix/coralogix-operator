@@ -1,0 +1,13 @@
+apiVersion: coralogix.com/v1alpha1
+kind: IPAccess
+metadata:
+  name: company-ip-access
+spec:
+  enableCoralogixCustomerSupportAccess: disabled
+  ipAccess:
+    - name: "Office Network"
+      ipRange: "31.154.215.114/32"
+      enabled: false
+    - name: "VPN"
+      ipRange: "198.51.100.0/24"
+      enabled: false

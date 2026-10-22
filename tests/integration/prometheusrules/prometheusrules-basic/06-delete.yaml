@@ -1,0 +1,4 @@
+apiVersion: coralogix.com/v1beta1
+kind: Alert
+metadata:
+  name: prometheus-example-rules-updated-app-latency-0

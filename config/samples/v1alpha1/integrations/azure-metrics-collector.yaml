@@ -1,0 +1,21 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Integration
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: integration-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: azure-metrics-collector
+spec:
+  integrationKey: azure-metrics-collector
+  version: 1.2.0
+  parameters:
+    IntegrationName: AzureMetricsCollector
+    SubscriptionId: <SubscriptionId>
+    TenantId: <TenantId>
+    ClientId: <ClientId>
+    ClientSecret: <ClientSecret>
+    EnableServiceBusMetrics: false
+    EnableUsageMetrics: false

@@ -1,0 +1,423 @@
+// Copyright 2024 Coralogix Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package v1alpha1
+
+import (
+	"context"
+	"errors"
+	"fmt"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	globalrouters "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/global_routers_service"
+
+	"github.com/coralogix/coralogix-operator/v2/internal/config"
+)
+
+// GlobalRouterSpec defines the desired state of the Global Router.
+type GlobalRouterSpec struct {
+	// Name is the name of the global router.
+	Name string `json:"name"`
+
+	// Description is the description of the global router.
+	Description string `json:"description"`
+
+	// ID of the global router.
+	// +optional
+	ID *string `json:"id,omitempty"`
+
+	// EntityLabels are optional labels to attach to the global router.
+	// +optional
+	EntityLabels *map[string]string `json:"entityLabels,omitempty"`
+
+	// RoutingLabels Allows to configure routing labels which are used for routers resolution.
+	// Should be used only if ID is not set to `router_default`.
+	// +optional
+	RoutingLabels *RoutingLabels `json:"routingLabels,omitempty"`
+
+	// Disabled disables the global router without deleting it. Defaults to false.
+	// +optional
+	Disabled *bool `json:"disabled,omitempty"`
+
+	// Fallback is the fallback routing target for the global router.
+	// Deprecated: use FallbackTargets, which supports per-entity-type fallback.
+	// +optional
+	Fallback []RoutingTarget `json:"fallback,omitempty"`
+
+	// FallbackTargets are the per-entity-type fallback targets used when no routing rule matches.
+	// Replaces the deprecated Fallback field.
+	// +optional
+	FallbackTargets []FallbackTarget `json:"fallbackTargets,omitempty"`
+
+	// Rules are the routing rules for the global router.
+	// +optional
+	Rules []RoutingRule `json:"rules,omitempty"`
+}
+
+// FallbackTarget defines a fallback routing target scoped to an entity type.
+type FallbackTarget struct {
+	// EntityType is the entity type this fallback applies to. Can be one of alerts or cases.
+	// +kubebuilder:validation:Enum=alerts;cases
+	EntityType string `json:"entityType"`
+
+	// Target is the fallback routing target.
+	Target RoutingTarget `json:"target"`
+}
+
+// RoutingLabels defines the routing labels for the Global Router.
+// At least one of the routing labels fields must be set, in case ID is not set to `router_default`.
+type RoutingLabels struct {
+	// Environment is the environment routing label.
+	// +optional
+	Environment *string `json:"environment,omitempty"`
+
+	// Service is the service routing label.
+	// +optional
+	Service *string `json:"service,omitempty"`
+
+	// Team is the team routing label.
+	// +optional
+	Team *string `json:"team,omitempty"`
+}
+
+type RoutingRule struct {
+	// Name is the name of the routing rule.
+	Name string `json:"name"`
+
+	// EntityType is the entity type for the global router. Can be one of alerts or cases.
+	// +kubebuilder:validation:Enum=alerts;cases
+	// +optional
+	EntityType *string `json:"entityType,omitempty"`
+
+	// CustomDetails are optional custom details to attach to the routing rule.
+	// +optional
+	CustomDetails map[string]string `json:"customDetails,omitempty"`
+
+	// Condition is the condition for the routing rule.
+	Condition string `json:"condition"`
+
+	// Targets are the routing targets for the routing rule.
+	Targets []RoutingTarget `json:"targets"`
+}
+
+type RoutingTarget struct {
+	// CustomDetails are optional custom details to attach to the routing target.
+	// +optional
+	CustomDetails map[string]string `json:"customDetails,omitempty"`
+
+	// Connector is the connector for the routing target. Should be one of backendRef or resourceRef.
+	Connector NCRef `json:"connector"`
+
+	// Preset is the preset for the routing target. Should be one of backendRef or resourceRef.
+	// +optional
+	Preset *NCRef `json:"preset,omitempty"`
+}
+
+// +kubebuilder:validation:XValidation:rule="has(self.backendRef) != has(self.resourceRef)",message="Exactly one of backendRef or resourceRef must be set"
+type NCRef struct {
+	// BackendRef is a reference to a backend resource.
+	// +optional
+	BackendRef *NCBackendRef `json:"backendRef,omitempty"`
+
+	// ResourceRef is a reference to a Kubernetes resource.
+	// +optional
+	ResourceRef *ResourceRef `json:"resourceRef,omitempty"`
+}
+
+var (
+	EntityTypeSchemaToOpenAPI = map[string]globalrouters.NotificationCenterEntityType{
+		"alerts": globalrouters.NOTIFICATIONCENTERENTITYTYPE_ALERTS,
+		"cases":  globalrouters.NOTIFICATIONCENTERENTITYTYPE_CASES,
+	}
+)
+
+func (g *GlobalRouter) ExtractGlobalRouter(ctx context.Context) (*globalrouters.GlobalRouter, error) {
+	fallback, err := extractRoutingTargets(ctx, g.Namespace, g.Spec.Fallback)
+	if err != nil {
+		return nil, err
+	}
+
+	rules, err := extractRoutingRules(ctx, g.Namespace, g.Spec.Rules)
+	if err != nil {
+		return nil, err
+	}
+
+	fallbackTargets, err := extractFallbackTargets(ctx, g.Namespace, g.Spec.FallbackTargets)
+	if err != nil {
+		return nil, err
+	}
+
+	return &globalrouters.GlobalRouter{
+		Name:            g.Spec.Name,
+		Description:     globalrouters.PtrString(g.Spec.Description),
+		Id:              g.Spec.ID,
+		EntityLabels:    ptr.Deref(g.Spec.EntityLabels, nil),
+		RoutingLabels:   extractRoutingLabels(g.Spec.RoutingLabels),
+		Disabled:        g.Spec.Disabled,
+		Fallback:        fallback,
+		FallbackTargets: fallbackTargets,
+		Rules:           rules,
+	}, nil
+}
+
+func extractFallbackTargets(ctx context.Context, namespace string, fallbackTargets []FallbackTarget) ([]globalrouters.FallbackTarget, error) {
+	var result []globalrouters.FallbackTarget
+	var errs error
+	for _, fallbackTarget := range fallbackTargets {
+		entityType, ok := EntityTypeSchemaToOpenAPI[fallbackTarget.EntityType]
+		if !ok {
+			errs = errors.Join(errs, fmt.Errorf("invalid entity type: %s", fallbackTarget.EntityType))
+			continue
+		}
+
+		target, err := extractRoutingTarget(ctx, namespace, fallbackTarget.Target)
+		if err != nil {
+			errs = errors.Join(errs, err)
+			continue
+		}
+
+		result = append(result, globalrouters.FallbackTarget{
+			EntityType: entityType,
+			Target:     *target,
+		})
+	}
+
+	if errs != nil {
+		return nil, errs
+	}
+
+	return result, nil
+}
+
+func extractRoutingLabels(routingLabels *RoutingLabels) *globalrouters.RoutingLabels {
+	if routingLabels == nil {
+		return nil
+	}
+
+	return &globalrouters.RoutingLabels{
+		Environment: routingLabels.Environment,
+		Service:     routingLabels.Service,
+		Team:        routingLabels.Team,
+	}
+}
+
+func extractRoutingRules(ctx context.Context, namespace string, rules []RoutingRule) ([]globalrouters.RoutingRule, error) {
+	var result []globalrouters.RoutingRule
+	var errs error
+	for _, rule := range rules {
+		routingRule, err := extractRoutingRule(ctx, namespace, rule)
+		if err != nil {
+			errs = errors.Join(errs, err)
+			continue
+		}
+		result = append(result, *routingRule)
+	}
+
+	if errs != nil {
+		return nil, errs
+	}
+
+	return result, nil
+}
+
+func extractRoutingRule(ctx context.Context, namespace string, rule RoutingRule) (*globalrouters.RoutingRule, error) {
+	targets, err := extractRoutingTargets(ctx, namespace, rule.Targets)
+	if err != nil {
+		return nil, err
+	}
+
+	routingRule := &globalrouters.RoutingRule{
+		Name:      rule.Name,
+		Condition: rule.Condition,
+		Targets:   targets,
+	}
+
+	if len(rule.CustomDetails) > 0 {
+		routingRule.CustomDetails = rule.CustomDetails
+	}
+
+	if rule.EntityType != nil {
+		entityType, ok := EntityTypeSchemaToOpenAPI[*rule.EntityType]
+		if !ok {
+			return nil, fmt.Errorf("invalid entity type: %s", *rule.EntityType)
+		}
+		routingRule.EntityType = entityType.Ptr()
+	}
+
+	return routingRule, nil
+}
+
+func extractRoutingTargets(ctx context.Context, namespace string, targets []RoutingTarget) ([]globalrouters.RoutingTarget, error) {
+	var result []globalrouters.RoutingTarget
+	var errs error
+	for _, target := range targets {
+		routingTarget, err := extractRoutingTarget(ctx, namespace, target)
+		if err != nil {
+			errs = errors.Join(errs, err)
+			continue
+		}
+		result = append(result, *routingTarget)
+	}
+
+	if errs != nil {
+		return nil, errs
+	}
+
+	return result, nil
+}
+
+func extractRoutingTarget(ctx context.Context, namespace string, target RoutingTarget) (*globalrouters.RoutingTarget, error) {
+	connectorID, err := extractConnectorID(ctx, namespace, target.Connector)
+	if err != nil {
+		return nil, err
+	}
+
+	var presetID *string
+	if target.Preset != nil {
+		presetID, err = extractPresetID(ctx, namespace, target.Preset)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	routingTarget := &globalrouters.RoutingTarget{
+		ConnectorId: connectorID,
+		PresetId:    presetID,
+	}
+	if len(target.CustomDetails) > 0 {
+		routingTarget.CustomDetails = target.CustomDetails
+	}
+	return routingTarget, nil
+}
+
+func extractConnectorID(ctx context.Context, namespace string, connector NCRef) (string, error) {
+	if connector.BackendRef != nil {
+		return connector.BackendRef.ID, nil
+	}
+
+	if connector.ResourceRef != nil && connector.ResourceRef.Namespace != nil {
+		namespace = *connector.ResourceRef.Namespace
+	}
+
+	c := &Connector{}
+	err := config.GetClient().Get(ctx, client.ObjectKey{Name: connector.ResourceRef.Name, Namespace: namespace}, c)
+	if err != nil {
+		return "", err
+	}
+
+	if !config.GetConfig().Selector.Matches(c.Labels, c.Namespace) {
+		return "", fmt.Errorf("connector %s does not match selector", c.Name)
+	}
+
+	if c.Status.Id == nil {
+		return "", fmt.Errorf("ID is not populated for Connector %s", c.Name)
+	}
+
+	return *c.Status.Id, nil
+}
+
+func extractPresetID(ctx context.Context, namespace string, preset *NCRef) (*string, error) {
+	if preset.BackendRef != nil {
+		return ptr.To(preset.BackendRef.ID), nil
+	}
+
+	if preset.ResourceRef != nil && preset.ResourceRef.Namespace != nil {
+		namespace = *preset.ResourceRef.Namespace
+	}
+
+	p := &Preset{}
+	err := config.GetClient().Get(ctx, client.ObjectKey{Name: preset.ResourceRef.Name, Namespace: namespace}, p)
+	if err != nil {
+		return nil, err
+	}
+
+	if !config.GetConfig().Selector.Matches(p.Labels, p.Namespace) {
+		return nil, fmt.Errorf("preset %s does not match selector", p.Name)
+	}
+
+	if p.Status.Id == nil {
+		return nil, fmt.Errorf("ID is not populated for Preset %s", p.Name)
+	}
+
+	return p.Status.Id, nil
+}
+
+type NCBackendRef struct {
+	ID string `json:"id"`
+}
+
+// GlobalRouterStatus defines the observed state of GlobalRouter.
+type GlobalRouterStatus struct {
+	// +optional
+	Id *string `json:"id,omitempty"`
+	// +optional
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
+}
+
+func (g *GlobalRouter) GetConditions() []metav1.Condition {
+	return g.Status.Conditions
+}
+
+func (g *GlobalRouter) SetConditions(conditions []metav1.Condition) {
+	g.Status.Conditions = conditions
+}
+
+func (g *GlobalRouter) GetPrintableStatus() string {
+	return g.Status.PrintableStatus
+}
+
+func (g *GlobalRouter) SetPrintableStatus(printableStatus string) {
+	g.Status.PrintableStatus = printableStatus
+}
+
+func (g *GlobalRouter) HasIDInStatus() bool {
+	return g.Status.Id != nil && *g.Status.Id != ""
+}
+
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+// GlobalRouter is the Schema for the GlobalRouters API.
+// NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
+//
+// See also https://coralogix.com/docs/user-guides/notification-center/routing/
+//
+// **Added in v0.4.0**
+type GlobalRouter struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   GlobalRouterSpec   `json:"spec,omitempty"`
+	Status GlobalRouterStatus `json:"status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// GlobalRouterList contains a list of GlobalRouter.
+type GlobalRouterList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []GlobalRouter `json:"items"`
+}
+
+func init() {
+	SchemeBuilder.Register(&GlobalRouter{}, &GlobalRouterList{})
+}

@@ -1,0 +1,1216 @@
+// Copyright 2024 Coralogix Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package e2e
+
+import (
+	"context"
+	"time"
+
+	gouuid "github.com/google/uuid"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/protobuf/types/known/wrapperspb"
+	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/ptr"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	oapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	alerts "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/alert_definitions_service"
+
+	"github.com/coralogix/coralogix-operator/v2/api/coralogix"
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
+	coralogixv1beta1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1beta1"
+	"github.com/coralogix/coralogix-operator/v2/internal/utils"
+)
+
+var _ = Describe("Alert", Ordered, func() {
+	var (
+		crClient     client.Client
+		alertsClient *cxsdk.AlertsClient
+		alertID      string
+		alert        *coralogixv1beta1.Alert
+	)
+
+	BeforeAll(func() {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		alertsClient = ClientsInstance.GetCoralogixClientSet().Alerts()
+	})
+
+	It("Should be created successfully", func(ctx context.Context) {
+		By("Creating Slack Connector")
+		connectorName := uniqueName("slack-connector-for-alert")
+		Expect(crClient.Create(ctx, getSampleSlackConnector(connectorName))).To(Succeed())
+
+		By("Creating Slack Preset")
+		presetName := uniqueName("slack-preset-for-alert")
+		Expect(crClient.Create(ctx, getSampleSlackPreset(presetName, testNamespace))).To(Succeed())
+
+		// Same reason as in the GlobalRouter specs: the router below references both by name and
+		// needs their IDs resolved, so do not assume they sync before it is created.
+		By("Waiting for the Connector and Preset to be synced so their IDs can be resolved")
+		Eventually(func(g Gomega) *string {
+			fetchedConnector := &coralogixv1alpha1.Connector{}
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: connectorName, Namespace: testNamespace}, fetchedConnector)).To(Succeed())
+			return fetchedConnector.Status.Id
+		}, time.Minute, time.Second).ShouldNot(BeNil())
+
+		Eventually(func(g Gomega) *string {
+			fetchedPreset := &coralogixv1alpha1.Preset{}
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: presetName, Namespace: testNamespace}, fetchedPreset)).To(Succeed())
+			return fetchedPreset.Status.Id
+		}, time.Minute, time.Second).ShouldNot(BeNil())
+
+		By("Creating GlobalRouter")
+		globalRouterName := "global-router-for-alert" + gouuid.NewString()
+		globalRouter := getSampleGlobalRouter(globalRouterName, testNamespace, connectorName, presetName)
+		Expect(crClient.Create(ctx, globalRouter)).To(Succeed())
+
+		By("Creating OutboundWebhooks")
+		firstWebhookName := uniqueName("first-webhook-for-alert")
+		Expect(crClient.Create(ctx, getSampleWebhook(firstWebhookName, testNamespace))).To(Succeed())
+		secondWebhookName := uniqueName("second-webhook-for-alert")
+		Expect(crClient.Create(ctx, getSampleWebhook(secondWebhookName, testNamespace))).To(Succeed())
+
+		By("Creating Alert")
+		alertName := uniqueName("promql-alert")
+		alert = &coralogixv1beta1.Alert{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      alertName,
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1beta1.AlertSpec{
+				Name:        alertName,
+				Description: "alert from k8s operator",
+				Priority:    coralogixv1beta1.AlertPriorityP1,
+				IncidentsSettings: &coralogixv1beta1.IncidentsSettings{
+					NotifyOn: coralogixv1beta1.NotifyOnTriggeredAndResolved,
+				},
+				NotificationGroup: &coralogixv1beta1.NotificationGroup{
+					Webhooks: []coralogixv1beta1.WebhookSettings{
+						{
+							NotifyOn: coralogixv1beta1.NotifyOnTriggeredOnly,
+							RetriggeringPeriod: coralogixv1beta1.RetriggeringPeriod{
+								Minutes: ptr.To(int64(1)),
+							},
+							Integration: coralogixv1beta1.IntegrationType{
+								Recipients: []string{"example@coralogix.com"},
+							},
+						},
+						{
+							NotifyOn: coralogixv1beta1.NotifyOnTriggeredOnly,
+							RetriggeringPeriod: coralogixv1beta1.RetriggeringPeriod{
+								Minutes: ptr.To(int64(1)),
+							},
+							Integration: coralogixv1beta1.IntegrationType{
+								IntegrationRef: &coralogixv1beta1.IntegrationRef{
+									ResourceRef: &coralogixv1beta1.ResourceRef{
+										Name: firstWebhookName,
+									},
+								},
+							},
+						},
+						{
+							NotifyOn: coralogixv1beta1.NotifyOnTriggeredOnly,
+							RetriggeringPeriod: coralogixv1beta1.RetriggeringPeriod{
+								Minutes: ptr.To(int64(1)),
+							},
+							Integration: coralogixv1beta1.IntegrationType{
+								IntegrationRef: &coralogixv1beta1.IntegrationRef{
+									BackendRef: &coralogixv1beta1.OutboundWebhookBackendRef{
+										Name: ptr.To(secondWebhookName),
+									},
+								},
+							},
+						},
+					},
+					Router: &coralogixv1beta1.NotificationRouter{
+						NotifyOn: coralogixv1beta1.NotifyOnTriggeredAndResolved,
+					},
+				},
+
+				Schedule: &coralogixv1beta1.AlertSchedule{
+					TimeZone: "UTC+02",
+					ActiveOn: &coralogixv1beta1.ActiveOn{
+						DayOfWeek: []coralogixv1beta1.DayOfWeek{coralogixv1beta1.DayOfWeekWednesday, coralogixv1beta1.DayOfWeekThursday},
+						StartTime: ptr.To(coralogixv1beta1.TimeOfDay("08:30")),
+						EndTime:   ptr.To(coralogixv1beta1.TimeOfDay("20:30")),
+					},
+				},
+				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
+					MetricThreshold: &coralogixv1beta1.MetricThreshold{
+						MissingValues: coralogixv1beta1.MetricMissingValues{
+							MinNonNullValuesPct: ptr.To(int64(10)),
+						},
+						MetricFilter: coralogixv1beta1.MetricFilter{
+							Promql: "http_requests_total{status!~\"4..\"}",
+						},
+						NoDataPolicy: &coralogixv1beta1.NoDataPolicy{
+							State:             coralogixv1beta1.NoDataPolicyStateAlerting,
+							AutoRetireSeconds: ptr.To(int32(1800)),
+						},
+						EvaluationDelayMs: ptr.To(int32(60000)),
+						Rules: []coralogixv1beta1.MetricThresholdRule{
+							{
+								Condition: coralogixv1beta1.MetricThresholdRuleCondition{
+									Threshold:     coralogix.FloatToQuantity(3),
+									ForOverPct:    50,
+									ConditionType: coralogixv1beta1.MetricThresholdConditionTypeMoreThan,
+									OfTheLast: coralogixv1beta1.MetricTimeWindow{
+										DynamicDuration: ptr.To("12h"),
+									},
+								},
+								Override: &coralogixv1beta1.AlertOverride{
+									Priority: coralogixv1beta1.AlertPriorityP1,
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		Expect(crClient.Create(ctx, alert)).To(Succeed())
+
+		By("Fetching the Alert ID and Conditions")
+		fetchedAlert := &coralogixv1beta1.Alert{}
+		Eventually(func(g Gomega) {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, fetchedAlert)).To(Succeed())
+
+			g.Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+
+			g.Expect(fetchedAlert.Status.PrintableStatus).To(Equal("RemoteSynced"))
+
+			g.Expect(fetchedAlert.Status.ID).ToNot(BeNil())
+
+			alertID = *fetchedAlert.Status.ID
+
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying Alert exists in Coralogix backend with the correct priority")
+		Eventually(func(g Gomega) cxsdk.AlertDefPriority {
+			alertDef, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(alertID)})
+			g.Expect(err).ToNot(HaveOccurred())
+			return alertDef.GetAlertDef().GetAlertDefProperties().GetPriority()
+		}, time.Minute, time.Second).Should(Equal(cxsdk.AlertDefPriorityP1))
+	})
+
+	It("Should be updated successfully", func(ctx context.Context) {
+		By("Patching the Alert")
+		newAlertName := uniqueName("promql-alert-updated")
+		modifiedAlert := alert.DeepCopy()
+		modifiedAlert.Spec.Name = newAlertName
+		Expect(crClient.Patch(ctx, modifiedAlert, client.MergeFrom(alert))).To(Succeed())
+
+		By("Verifying Alert is updated in Coralogix backend")
+		Eventually(func() *wrapperspb.StringValue {
+			getAlertRes, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(alertID)})
+			Expect(err).ToNot(HaveOccurred())
+			return getAlertRes.GetAlertDef().AlertDefProperties.GetName()
+		}, time.Minute, time.Second).Should(Equal(wrapperspb.String(newAlertName)))
+	})
+
+	It("Should be deleted successfully", func(ctx context.Context) {
+		By("Deleting the Alert")
+		Expect(crClient.Delete(ctx, alert)).To(Succeed())
+
+		By("Verifying Alert is deleted from Coralogix backend")
+		Eventually(func() codes.Code {
+			_, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(alertID)})
+			return cxsdk.Code(err)
+		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
+	})
+
+	It("Should store an err condition in status", func(ctx context.Context) {
+		By("Creating Alert with a non-existing webhook")
+		alertName := uniqueName("promql-alert")
+		newAlert := &coralogixv1beta1.Alert{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      alertName,
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1beta1.AlertSpec{
+				Name:        alertName,
+				Description: "alert from k8s operator",
+				Priority:    coralogixv1beta1.AlertPriorityP1,
+				IncidentsSettings: &coralogixv1beta1.IncidentsSettings{
+					NotifyOn: coralogixv1beta1.NotifyOnTriggeredAndResolved,
+				},
+				NotificationGroup: &coralogixv1beta1.NotificationGroup{
+					Webhooks: []coralogixv1beta1.WebhookSettings{
+						{
+							NotifyOn: coralogixv1beta1.NotifyOnTriggeredOnly,
+							RetriggeringPeriod: coralogixv1beta1.RetriggeringPeriod{
+								Minutes: ptr.To(int64(1)),
+							},
+							Integration: coralogixv1beta1.IntegrationType{
+								IntegrationRef: &coralogixv1beta1.IntegrationRef{
+									ResourceRef: &coralogixv1beta1.ResourceRef{
+										Name: "non-existing-webhook",
+									},
+								},
+							},
+						},
+					},
+					Router: &coralogixv1beta1.NotificationRouter{
+						NotifyOn: coralogixv1beta1.NotifyOnTriggeredAndResolved,
+					},
+				},
+				Schedule: &coralogixv1beta1.AlertSchedule{
+					TimeZone: "UTC+02",
+					ActiveOn: &coralogixv1beta1.ActiveOn{
+						DayOfWeek: []coralogixv1beta1.DayOfWeek{coralogixv1beta1.DayOfWeekWednesday, coralogixv1beta1.DayOfWeekThursday},
+						StartTime: ptr.To(coralogixv1beta1.TimeOfDay("08:30")),
+						EndTime:   ptr.To(coralogixv1beta1.TimeOfDay("20:30")),
+					},
+				},
+				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
+					MetricThreshold: &coralogixv1beta1.MetricThreshold{
+						MissingValues: coralogixv1beta1.MetricMissingValues{
+							MinNonNullValuesPct: ptr.To(int64(10)),
+						},
+						MetricFilter: coralogixv1beta1.MetricFilter{
+							Promql: "http_requests_total{status!~\"4..\"}",
+						},
+						Rules: []coralogixv1beta1.MetricThresholdRule{
+							{
+								Condition: coralogixv1beta1.MetricThresholdRuleCondition{
+									Threshold:     coralogix.FloatToQuantity(3),
+									ForOverPct:    50,
+									ConditionType: coralogixv1beta1.MetricThresholdConditionTypeMoreThan,
+									OfTheLast: coralogixv1beta1.MetricTimeWindow{
+										DynamicDuration: ptr.To("12h"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		newAlert.Spec.Name = alertName
+
+		err := crClient.Create(ctx, newAlert)
+		Expect(err).ToNot(HaveOccurred())
+
+		By("Fetching the Alert and verifying the RemoteSynced condition is false")
+		fetchedAlert := &coralogixv1beta1.Alert{}
+		Eventually(func(g Gomega) {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: newAlert.Name, Namespace: newAlert.Namespace}, fetchedAlert)).To(Succeed())
+
+			g.Expect(meta.IsStatusConditionFalse(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+
+			g.Expect(fetchedAlert.Status.PrintableStatus).To(Equal("RemoteUnsynced"))
+
+		}, time.Minute, time.Second).Should(Succeed())
+
+		webhook := &coralogixv1alpha1.OutboundWebhook{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "webhook",
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1alpha1.OutboundWebhookSpec{
+				Name: "webhook",
+				OutboundWebhookType: coralogixv1alpha1.OutboundWebhookType{
+					Slack: &coralogixv1alpha1.Slack{
+						Url: "https://slack.com",
+					},
+				},
+			},
+		}
+		Expect(crClient.Create(ctx, webhook)).To(Succeed())
+
+		By("Updating the Alert with a valid webhook")
+		updateAlert := newAlert.DeepCopy()
+		updateAlert.Spec.NotificationGroup.Webhooks[0].Integration = coralogixv1beta1.IntegrationType{
+			IntegrationRef: &coralogixv1beta1.IntegrationRef{
+				ResourceRef: &coralogixv1beta1.ResourceRef{
+					Name: webhook.Name,
+				},
+			},
+		}
+		Expect(crClient.Patch(ctx, updateAlert, client.MergeFrom(newAlert))).To(Succeed())
+
+		By("Fetching the Alert again and verifying the RemoteSynced condition is true")
+		fetchedAlert = &coralogixv1beta1.Alert{}
+		Eventually(func(g Gomega) {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: newAlert.Name, Namespace: newAlert.Namespace}, fetchedAlert)).To(Succeed())
+
+			g.Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+
+			g.Expect(fetchedAlert.Status.PrintableStatus).To(Equal("RemoteSynced"))
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should deny creation of Alert with more then one alert type", func(ctx context.Context) {
+		By("Creating Alert")
+		alert.Spec.TypeDefinition.MetricAnomaly = &coralogixv1beta1.MetricAnomaly{
+			MetricFilter: coralogixv1beta1.MetricFilter{
+				Promql: "http_requests_total{status!~\"4..\"}",
+			},
+			Rules: []coralogixv1beta1.MetricAnomalyRule{
+				{
+					Condition: coralogixv1beta1.MetricAnomalyCondition{
+						Threshold:     coralogix.FloatToQuantity(3),
+						ForOverPct:    50,
+						ConditionType: coralogixv1beta1.MetricAnomalyConditionTypeMoreThanUsual,
+						OfTheLast: coralogixv1beta1.MetricAnomalyTimeWindow{
+							SpecificValue: coralogixv1beta1.MetricTimeWindowValue12Hours,
+						},
+					},
+				},
+			},
+		}
+		err := crClient.Create(ctx, alert)
+		Expect(err.Error()).To(ContainSubstring("Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue, logsUniqueCount, sloThreshold, analyticsImmediate, analyticsThreshold must be set"))
+	})
+
+	It("Should create a logs-ratio alert with groupByFor, ignoreInfinity, notificationPayloadFilter and undetectedValuesManagement", func(ctx context.Context) {
+		By("Creating Alert")
+		alertName := "logs-ratio-alert-gaps"
+		ratioAlert := &coralogixv1beta1.Alert{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      alertName,
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1beta1.AlertSpec{
+				Name:        alertName,
+				Description: "alert from k8s operator",
+				Priority:    coralogixv1beta1.AlertPriorityP3,
+				GroupByKeys: []string{"coralogix.metadata.applicationName"},
+				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
+					LogsRatioThreshold: &coralogixv1beta1.LogsRatioThreshold{
+						Numerator: coralogixv1beta1.LogsFilter{
+							SimpleFilter: coralogixv1beta1.LogsSimpleFilter{LuceneQuery: ptr.To("numerator-query")},
+						},
+						NumeratorAlias: "Query 1",
+						Denominator: coralogixv1beta1.LogsFilter{
+							SimpleFilter: coralogixv1beta1.LogsSimpleFilter{LuceneQuery: ptr.To("denominator-query")},
+						},
+						DenominatorAlias:          "Query 2",
+						GroupByFor:                ptr.To(coralogixv1beta1.LogsRatioGroupByForNumeratorOnly),
+						IgnoreInfinity:            true,
+						NotificationPayloadFilter: []string{"obj.field"},
+						// undetectedValuesManagement requires at least one rule with a lessThan condition.
+						UndetectedValuesManagement: &coralogixv1beta1.UndetectedValuesManagement{
+							TriggerUndetectedValues: true,
+							AutoRetireTimeframe:     coralogixv1beta1.AutoRetireTimeframe5M,
+						},
+						Rules: []coralogixv1beta1.LogsRatioThresholdRule{
+							{
+								Condition: coralogixv1beta1.LogsRatioCondition{
+									Threshold:     coralogix.FloatToQuantity(1),
+									TimeWindow:    coralogixv1beta1.LogsRatioTimeWindow{SpecificValue: coralogixv1beta1.LogsRatioTimeWindowMinutes5},
+									ConditionType: coralogixv1beta1.LogsRatioConditionTypeLessThan,
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		Expect(crClient.Create(ctx, ratioAlert)).To(Succeed())
+
+		By("Fetching the Alert ID")
+		var ratioAlertID string
+		fetchedAlert := &coralogixv1beta1.Alert{}
+		Eventually(func(g Gomega) {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, fetchedAlert)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedAlert.Status.ID).ToNot(BeNil())
+			ratioAlertID = *fetchedAlert.Status.ID
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying the new fields in Coralogix backend")
+		Eventually(func(g Gomega) {
+			alertDef, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(ratioAlertID)})
+			g.Expect(err).ToNot(HaveOccurred())
+			ratioThreshold := alertDef.GetAlertDef().GetAlertDefProperties().GetLogsRatioThreshold()
+			g.Expect(ratioThreshold.GetGroupByFor()).To(Equal(cxsdk.LogsRatioGroupByForNumeratorOnly))
+			g.Expect(ratioThreshold.GetIgnoreInfinity().GetValue()).To(BeTrue())
+			g.Expect(ratioThreshold.GetNotificationPayloadFilter()).To(HaveLen(1))
+			g.Expect(ratioThreshold.GetNotificationPayloadFilter()[0].GetValue()).To(Equal("obj.field"))
+			g.Expect(ratioThreshold.GetUndetectedValuesManagement().GetTriggerUndetectedValues().GetValue()).To(BeTrue())
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Deleting the Alert")
+		Expect(crClient.Delete(ctx, ratioAlert)).To(Succeed())
+		Eventually(func() codes.Code {
+			_, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(ratioAlertID)})
+			return cxsdk.Code(err)
+		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
+	})
+
+	It("Should create a logs-anomaly alert with anomalyAlertSettings and conditionType", func(ctx context.Context) {
+		By("Creating Alert")
+		alertName := "logs-anomaly-alert-gaps"
+		anomalyAlert := &coralogixv1beta1.Alert{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      alertName,
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1beta1.AlertSpec{
+				Name:        alertName,
+				Description: "alert from k8s operator",
+				Priority:    coralogixv1beta1.AlertPriorityP3,
+				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
+					LogsAnomaly: &coralogixv1beta1.LogsAnomaly{
+						LogsFilter: &coralogixv1beta1.LogsFilter{
+							SimpleFilter: coralogixv1beta1.LogsSimpleFilter{LuceneQuery: ptr.To("anomaly-query")},
+						},
+						AnomalyAlertSettings: &coralogixv1beta1.AnomalyAlertSettings{
+							PercentageOfDeviation: coralogix.FloatToQuantity(15),
+						},
+						Rules: []coralogixv1beta1.LogsAnomalyRule{
+							{
+								Condition: coralogixv1beta1.LogsAnomalyCondition{
+									MinimumThreshold: coralogix.FloatToQuantity(10),
+									TimeWindow:       coralogixv1beta1.LogsTimeWindow{SpecificValue: coralogixv1beta1.LogsTimeWindow5Minutes},
+									ConditionType:    coralogixv1beta1.LogsAnomalyConditionTypeMoreThanUsual,
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		Expect(crClient.Create(ctx, anomalyAlert)).To(Succeed())
+
+		By("Fetching the Alert ID")
+		var anomalyAlertID string
+		fetchedAlert := &coralogixv1beta1.Alert{}
+		Eventually(func(g Gomega) {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, fetchedAlert)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedAlert.Status.ID).ToNot(BeNil())
+			anomalyAlertID = *fetchedAlert.Status.ID
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying anomalyAlertSettings in Coralogix backend")
+		Eventually(func(g Gomega) {
+			alertDef, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(anomalyAlertID)})
+			g.Expect(err).ToNot(HaveOccurred())
+			logsAnomaly := alertDef.GetAlertDef().GetAlertDefProperties().GetLogsAnomaly()
+			g.Expect(logsAnomaly.GetAnomalyAlertSettings().GetPercentageOfDeviation().GetValue()).To(Equal(float32(15)))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Deleting the Alert")
+		Expect(crClient.Delete(ctx, anomalyAlert)).To(Succeed())
+		Eventually(func() codes.Code {
+			_, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(anomalyAlertID)})
+			return cxsdk.Code(err)
+		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
+	})
+
+	It("Should create an alert with dataSources and a destination retriggeringPeriodMinutes", func(ctx context.Context) {
+		By("Creating Slack Connector for the destination")
+		connectorName := uniqueName("slack-connector-for-alert-gaps")
+		Expect(crClient.Create(ctx, getSampleSlackConnector(connectorName))).To(Succeed())
+
+		// The Alert below cannot reach RemoteSynced until the Connector it references has an ID
+		// to resolve, so wait for that first rather than relying on the Connector winning the
+		// race - under load it does not. Same pattern as the GlobalRouter specs.
+		By("Waiting for the Connector to be synced so its ID can be resolved")
+		Eventually(func(g Gomega) *string {
+			fetchedConnector := &coralogixv1alpha1.Connector{}
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: connectorName, Namespace: testNamespace}, fetchedConnector)).To(Succeed())
+			return fetchedConnector.Status.Id
+		}, time.Minute, time.Second).ShouldNot(BeNil())
+
+		By("Creating Alert")
+		alertName := "data-sources-alert-gaps"
+		dataSourcesAlert := &coralogixv1beta1.Alert{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      alertName,
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1beta1.AlertSpec{
+				Name:        alertName,
+				Description: "alert from k8s operator",
+				Priority:    coralogixv1beta1.AlertPriorityP3,
+				DataSources: []coralogixv1beta1.AlertDataSource{
+					{DataSpace: "default", DataSet: "logs"},
+				},
+				NotificationGroup: &coralogixv1beta1.NotificationGroup{
+					Destinations: []coralogixv1beta1.NotificationDestination{
+						{
+							Connector: coralogixv1beta1.NCRef{
+								ResourceRef: &coralogixv1beta1.ResourceRef{Name: connectorName},
+							},
+							NotifyOn:                  coralogixv1beta1.NotifyOnTriggeredOnly,
+							RetriggeringPeriodMinutes: ptr.To(int64(10)),
+							TriggeredRoutingOverrides: coralogixv1beta1.NotificationRouting{},
+						},
+					},
+				},
+				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
+					LogsImmediate: &coralogixv1beta1.LogsImmediate{
+						LogsFilter: &coralogixv1beta1.LogsFilter{
+							SimpleFilter: coralogixv1beta1.LogsSimpleFilter{LuceneQuery: ptr.To("data-sources-query")},
+						},
+					},
+				},
+			},
+		}
+		Expect(crClient.Create(ctx, dataSourcesAlert)).To(Succeed())
+
+		// The pinned gRPC SDK used for backend assertions has no getters for
+		// dataSources and retriggeringPeriodMinutes, so this spec only verifies
+		// the backend accepted the payload (RemoteSynced).
+		By("Verifying the Alert is synced with the backend")
+		var dataSourcesAlertID string
+		fetchedAlert := &coralogixv1beta1.Alert{}
+		Eventually(func(g Gomega) {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, fetchedAlert)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedAlert.Status.ID).ToNot(BeNil())
+			dataSourcesAlertID = *fetchedAlert.Status.ID
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Deleting the Alert")
+		Expect(crClient.Delete(ctx, dataSourcesAlert)).To(Succeed())
+		Eventually(func() codes.Code {
+			_, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(dataSourcesAlertID)})
+			return cxsdk.Code(err)
+		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
+	})
+
+	It("Should create, update and clear an analytics immediate alert", func(ctx context.Context) {
+		openAPIAlerts := newOpenAPIClientSet().Alerts()
+
+		By("Creating Alert")
+		alertName := uniqueName("analytics-immediate-alert")
+		analyticsAlert := &coralogixv1beta1.Alert{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      alertName,
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1beta1.AlertSpec{
+				Name:        alertName,
+				Description: "alert from k8s operator",
+				Priority:    coralogixv1beta1.AlertPriorityP3,
+				// The backend requires groupByKeys to be columns returned by the query.
+				GroupByKeys: []string{"applicationname"},
+				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
+					AnalyticsImmediate: &coralogixv1beta1.AnalyticsImmediate{
+						DataprimeQuery: coralogixv1beta1.DataprimeQuery{
+							Query: "source logs | groupby $l.applicationname aggregate count() as cnt",
+						},
+						TimeframeMinutes:      45,
+						UseRowsAsPermutations: ptr.To(true),
+						EvaluationDelayMs:     ptr.To(int32(120000)),
+						NoDataPolicy: &coralogixv1beta1.NoDataPolicy{
+							State:             coralogixv1beta1.NoDataPolicyStateAlerting,
+							AutoRetireSeconds: ptr.To(int32(3600)),
+						},
+					},
+				},
+			},
+		}
+		Expect(crClient.Create(ctx, analyticsAlert)).To(Succeed())
+
+		By("Fetching the Alert ID")
+		var analyticsAlertID string
+		fetchedAlert := &coralogixv1beta1.Alert{}
+		Eventually(func(g Gomega) {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, fetchedAlert)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedAlert.Status.ID).ToNot(BeNil())
+			analyticsAlertID = *fetchedAlert.Status.ID
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying the Alert in Coralogix backend")
+		Eventually(func(g Gomega) {
+			resp, _, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, analyticsAlertID).Execute()
+			g.Expect(err).ToNot(HaveOccurred())
+			props := resp.GetAlertDef().AlertDefProperties
+			g.Expect(props.GetType()).To(Equal(alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_ANALYTICS_IMMEDIATE))
+			g.Expect(props.GetGroupByKeys()).To(Equal([]string{"applicationname"}))
+			immediate := props.AnalyticsImmediate
+			g.Expect(immediate).ToNot(BeNil())
+			g.Expect(immediate.DataprimeQuery.GetQuery()).To(Equal("source logs | groupby $l.applicationname aggregate count() as cnt"))
+			g.Expect(immediate.GetTimeframeMinutes()).To(Equal(int32(45)))
+			g.Expect(immediate.UseRowsAsPermutations).To(Equal(ptr.To(true)))
+			g.Expect(immediate.EvaluationDelayMs).To(Equal(ptr.To(int32(120000))))
+			g.Expect(immediate.NoDataPolicy.GetState()).To(Equal(alerts.NODATAPOLICYSTATE_NO_DATA_POLICY_STATE_ALERTING))
+			g.Expect(immediate.NoDataPolicy.GetAutoRetireSeconds()).To(Equal(int32(3600)))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Clearing the optional fields")
+		modifiedAlert := fetchedAlert.DeepCopy()
+		modifiedAlert.Spec.GroupByKeys = nil
+		modifiedAlert.Spec.TypeDefinition.AnalyticsImmediate = &coralogixv1beta1.AnalyticsImmediate{
+			DataprimeQuery:   coralogixv1beta1.DataprimeQuery{Query: "source logs | count"},
+			TimeframeMinutes: 15,
+		}
+		Expect(crClient.Patch(ctx, modifiedAlert, client.MergeFrom(fetchedAlert))).To(Succeed())
+
+		By("Verifying the optional fields are cleared in Coralogix backend")
+		Eventually(func(g Gomega) {
+			resp, _, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, analyticsAlertID).Execute()
+			g.Expect(err).ToNot(HaveOccurred())
+			props := resp.GetAlertDef().AlertDefProperties
+			g.Expect(props.GetGroupByKeys()).To(BeEmpty())
+			immediate := props.AnalyticsImmediate
+			g.Expect(immediate).ToNot(BeNil())
+			g.Expect(immediate.DataprimeQuery.GetQuery()).To(Equal("source logs | count"))
+			g.Expect(immediate.GetTimeframeMinutes()).To(Equal(int32(15)))
+			g.Expect(immediate.UseRowsAsPermutations).To(BeNil())
+			g.Expect(immediate.EvaluationDelayMs).To(BeNil())
+			g.Expect(immediate.NoDataPolicy).To(BeNil())
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Deleting the Alert")
+		Expect(crClient.Delete(ctx, analyticsAlert)).To(Succeed())
+		Eventually(func() bool {
+			_, httpResp, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, analyticsAlertID).Execute()
+			return oapicxsdk.IsNotFound(oapicxsdk.NewAPIError(httpResp, err))
+		}, time.Minute, time.Second).Should(BeTrue())
+	})
+
+	It("Should create, update and clear an analytics threshold alert", func(ctx context.Context) {
+		openAPIAlerts := newOpenAPIClientSet().Alerts()
+
+		By("Creating Alert")
+		alertName := uniqueName("analytics-threshold-alert")
+		analyticsAlert := &coralogixv1beta1.Alert{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      alertName,
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1beta1.AlertSpec{
+				Name:        alertName,
+				Description: "alert from k8s operator",
+				Priority:    coralogixv1beta1.AlertPriorityP3,
+				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
+					AnalyticsThreshold: &coralogixv1beta1.AnalyticsThreshold{
+						DataprimeQuery: coralogixv1beta1.DataprimeQuery{
+							Query: "source logs | count as error_count",
+						},
+						Rules: []coralogixv1beta1.AnalyticsThresholdRule{
+							{
+								Condition: coralogixv1beta1.AnalyticsThresholdRuleCondition{Threshold: resource.MustParse("30")},
+								Override:  &coralogixv1beta1.AlertOverride{Priority: coralogixv1beta1.AlertPriorityP1},
+							},
+							{
+								Condition: coralogixv1beta1.AnalyticsThresholdRuleCondition{Threshold: resource.MustParse("20.5")},
+								Override:  &coralogixv1beta1.AlertOverride{Priority: coralogixv1beta1.AlertPriorityP2},
+							},
+							{
+								Condition: coralogixv1beta1.AnalyticsThresholdRuleCondition{Threshold: resource.MustParse("10")},
+							},
+						},
+						Operator:              ptr.To(coralogixv1beta1.AnalyticsThresholdOperatorLessThan),
+						TargetColumn:          ptr.To("error_count"),
+						TimeframeMinutes:      30,
+						UseRowsAsPermutations: ptr.To(false),
+						EvaluationDelayMs:     ptr.To(int32(60000)),
+						NoDataPolicy: &coralogixv1beta1.NoDataPolicy{
+							State: coralogixv1beta1.NoDataPolicyStateKeepLast,
+						},
+					},
+				},
+			},
+		}
+		Expect(crClient.Create(ctx, analyticsAlert)).To(Succeed())
+
+		By("Fetching the Alert ID")
+		var analyticsAlertID string
+		fetchedAlert := &coralogixv1beta1.Alert{}
+		Eventually(func(g Gomega) {
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, fetchedAlert)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedAlert.Status.ID).ToNot(BeNil())
+			analyticsAlertID = *fetchedAlert.Status.ID
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying the Alert in Coralogix backend")
+		Eventually(func(g Gomega) {
+			resp, _, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, analyticsAlertID).Execute()
+			g.Expect(err).ToNot(HaveOccurred())
+			props := resp.GetAlertDef().AlertDefProperties
+			g.Expect(props.GetType()).To(Equal(alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_ANALYTICS_THRESHOLD))
+			threshold := props.AnalyticsThreshold
+			g.Expect(threshold).ToNot(BeNil())
+			g.Expect(threshold.DataprimeQuery.GetQuery()).To(Equal("source logs | count as error_count"))
+			g.Expect(threshold.GetOperator()).To(Equal(alerts.ANALYTICSTHRESHOLDOPERATOR_ANALYTICS_THRESHOLD_OPERATOR_LESS_THAN))
+			g.Expect(threshold.GetTargetColumn()).To(Equal("error_count"))
+			g.Expect(threshold.GetTimeframeMinutes()).To(Equal(int32(30)))
+			g.Expect(threshold.UseRowsAsPermutations).To(Equal(ptr.To(false)))
+			g.Expect(threshold.EvaluationDelayMs).To(Equal(ptr.To(int32(60000))))
+			g.Expect(threshold.NoDataPolicy.GetState()).To(Equal(alerts.NODATAPOLICYSTATE_NO_DATA_POLICY_STATE_KEEP_LAST))
+			// Match rules by threshold rather than position, the API does not guarantee list order.
+			g.Expect(threshold.GetRules()).To(HaveLen(3))
+			priorityByThreshold := map[float64]alerts.AlertDefPriority{}
+			for _, rule := range threshold.GetRules() {
+				priorityByThreshold[rule.Condition.GetThreshold()] = rule.Override.GetPriority()
+			}
+			g.Expect(priorityByThreshold).To(Equal(map[float64]alerts.AlertDefPriority{
+				30:   alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P1,
+				20.5: alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P2,
+				// A rule without an override falls back to the alert priority.
+				10: alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P3,
+			}))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Clearing the optional fields")
+		modifiedAlert := fetchedAlert.DeepCopy()
+		modifiedThreshold := modifiedAlert.Spec.TypeDefinition.AnalyticsThreshold
+		modifiedThreshold.Rules = modifiedThreshold.Rules[:1]
+		modifiedThreshold.Operator = nil
+		modifiedThreshold.TargetColumn = nil
+		modifiedThreshold.UseRowsAsPermutations = nil
+		modifiedThreshold.EvaluationDelayMs = nil
+		modifiedThreshold.NoDataPolicy = nil
+		Expect(crClient.Patch(ctx, modifiedAlert, client.MergeFrom(fetchedAlert))).To(Succeed())
+
+		By("Verifying the optional fields are cleared in Coralogix backend")
+		Eventually(func(g Gomega) {
+			resp, _, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, analyticsAlertID).Execute()
+			g.Expect(err).ToNot(HaveOccurred())
+			threshold := resp.GetAlertDef().AlertDefProperties.AnalyticsThreshold
+			g.Expect(threshold).ToNot(BeNil())
+			g.Expect(threshold.GetRules()).To(HaveLen(1))
+			// The backend reports the default operator once it is unset.
+			g.Expect(threshold.GetOperator()).To(Equal(alerts.ANALYTICSTHRESHOLDOPERATOR_ANALYTICS_THRESHOLD_OPERATOR_MORE_THAN_OR_UNSPECIFIED))
+			g.Expect(threshold.TargetColumn).To(BeNil())
+			g.Expect(threshold.UseRowsAsPermutations).To(BeNil())
+			g.Expect(threshold.EvaluationDelayMs).To(BeNil())
+			g.Expect(threshold.NoDataPolicy).To(BeNil())
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Deleting the Alert")
+		Expect(crClient.Delete(ctx, analyticsAlert)).To(Succeed())
+		Eventually(func() bool {
+			_, httpResp, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, analyticsAlertID).Execute()
+			return oapicxsdk.IsNotFound(oapicxsdk.NewAPIError(httpResp, err))
+		}, time.Minute, time.Second).Should(BeTrue())
+	})
+})
+
+var _ = Describe("Alert caseSettings", Ordered, func() {
+	var (
+		crClient      client.Client
+		openAPIAlerts *alerts.AlertDefinitionsServiceAPIService
+		connector     *coralogixv1alpha1.Connector
+		connectorID   string
+		alert         *coralogixv1beta1.Alert
+		alertID       string
+	)
+
+	const casesPresetID = "preset_system_generic_https_cases_empty"
+
+	// Decoded SDK models carry unmarshalling state, so compare destinations and queries by their fields.
+	destinations := func(caseSettings *alerts.AlertDefCaseSettings) []string {
+		var result []string
+		for _, destination := range caseSettings.GetDestinations() {
+			result = append(result, destination.GetConnectorId()+"|"+destination.GetPresetId()+"|"+destination.GetCondition())
+		}
+		return result
+	}
+	enrichmentQueries := func(caseSettings *alerts.AlertDefCaseSettings) []string {
+		var result []string
+		for _, query := range caseSettings.GetEnrichmentQueries() {
+			result = append(result, string(query.GetType())+"|"+query.GetQuery())
+		}
+		return result
+	}
+
+	getCaseSettings := func(ctx context.Context, g Gomega) *alerts.AlertDefCaseSettings {
+		resp, _, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, alertID).Execute()
+		g.Expect(err).ToNot(HaveOccurred())
+		return resp.GetAlertDef().AlertDefProperties.CaseSettings
+	}
+
+	patchCaseSettings := func(ctx context.Context, caseSettings *coralogixv1beta1.AlertCaseSettings) {
+		fetchedAlert := &coralogixv1beta1.Alert{}
+		Expect(crClient.Get(ctx, client.ObjectKeyFromObject(alert), fetchedAlert)).To(Succeed())
+		modifiedAlert := fetchedAlert.DeepCopy()
+		modifiedAlert.Spec.CaseSettings = caseSettings
+		Expect(crClient.Patch(ctx, modifiedAlert, client.MergeFrom(fetchedAlert))).To(Succeed())
+	}
+
+	BeforeAll(func(ctx context.Context) {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		openAPIAlerts = newOpenAPIClientSet().Alerts()
+
+		By("Creating a Connector for case notifications")
+		connector = getSampleGenericHttpsConnectorWithCasesOverride(uniqueName("cases-connector-for-alert"), testNamespace)
+		Expect(crClient.Create(ctx, connector)).To(Succeed())
+		Eventually(func(g Gomega) {
+			fetchedConnector := &coralogixv1alpha1.Connector{}
+			g.Expect(crClient.Get(ctx, client.ObjectKeyFromObject(connector), fetchedConnector)).To(Succeed())
+			g.Expect(fetchedConnector.Status.Id).ToNot(BeNil())
+			connectorID = *fetchedConnector.Status.Id
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	AfterAll(func(ctx context.Context) {
+		// The backend refuses to delete a connector that a case destination still uses.
+		if alert != nil {
+			Expect(client.IgnoreNotFound(crClient.Delete(ctx, alert))).To(Succeed())
+			Eventually(func() bool {
+				_, httpResp, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, alertID).Execute()
+				return oapicxsdk.IsNotFound(oapicxsdk.NewAPIError(httpResp, err))
+			}, time.Minute, time.Second).Should(BeTrue())
+		}
+		Expect(client.IgnoreNotFound(crClient.Delete(ctx, connector))).To(Succeed())
+	})
+
+	It("Should create an alert with case settings", func(ctx context.Context) {
+		alertName := uniqueName("case-settings-alert")
+		alert = &coralogixv1beta1.Alert{
+			ObjectMeta: metav1.ObjectMeta{Name: alertName, Namespace: testNamespace},
+			Spec: coralogixv1beta1.AlertSpec{
+				Name:        alertName,
+				Description: "alert from k8s operator",
+				Priority:    coralogixv1beta1.AlertPriorityP3,
+				Enabled:     ptr.To(false),
+				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
+					LogsImmediate: &coralogixv1beta1.LogsImmediate{},
+				},
+				CaseSettings: &coralogixv1beta1.AlertCaseSettings{
+					AutoResolveMode: ptr.To(coralogixv1beta1.CaseAutoResolveModeDisabled),
+					EnrichmentQueries: []coralogixv1beta1.CaseEnrichmentQuery{
+						{Query: "source logs | limit 1", Type: ptr.To(coralogixv1beta1.CaseEnrichmentQueryTypeDataprime)},
+					},
+					Destinations: []coralogixv1beta1.CaseDestination{
+						{
+							Connector: coralogixv1beta1.NCRef{ResourceRef: &coralogixv1beta1.ResourceRef{Name: connector.Name}},
+							Condition: "caseMetadata.notificationReason == 'caseResolved'",
+						},
+						{
+							Connector: coralogixv1beta1.NCRef{ResourceRef: &coralogixv1beta1.ResourceRef{Name: connector.Name}},
+							Preset:    &coralogixv1beta1.NCRef{BackendRef: &coralogixv1beta1.NCBackendRef{ID: casesPresetID}},
+							Condition: "true",
+						},
+					},
+				},
+			},
+		}
+		Expect(crClient.Create(ctx, alert)).To(Succeed())
+
+		By("Fetching the Alert ID")
+		Eventually(func(g Gomega) {
+			fetchedAlert := &coralogixv1beta1.Alert{}
+			g.Expect(crClient.Get(ctx, client.ObjectKeyFromObject(alert), fetchedAlert)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedAlert.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedAlert.Status.ID).ToNot(BeNil())
+			alertID = *fetchedAlert.Status.ID
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying the case settings in Coralogix backend")
+		Eventually(func(g Gomega) {
+			caseSettings := getCaseSettings(ctx, g)
+			g.Expect(caseSettings).ToNot(BeNil())
+			g.Expect(caseSettings.GetAutoResolveMode()).To(Equal(alerts.ALERTDEFCASEAUTORESOLVEMODE_ALERT_DEF_CASE_AUTO_RESOLVE_MODE_DISABLED))
+			g.Expect(enrichmentQueries(caseSettings)).To(ConsistOf(
+				string(alerts.ALERTDEFCASEENRICHMENTQUERYTYPE_ALERT_DEF_CASE_ENRICHMENT_QUERY_TYPE_DATAPRIME) + "|source logs | limit 1",
+			))
+			g.Expect(destinations(caseSettings)).To(ConsistOf(
+				connectorID+"||caseMetadata.notificationReason == 'caseResolved'",
+				connectorID+"|"+casesPresetID+"|true",
+			))
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should update the case settings", func(ctx context.Context) {
+		patchCaseSettings(ctx, &coralogixv1beta1.AlertCaseSettings{
+			AutoResolveMode: ptr.To(coralogixv1beta1.CaseAutoResolveModeEnabled),
+			Destinations: []coralogixv1beta1.CaseDestination{
+				{
+					Connector: coralogixv1beta1.NCRef{BackendRef: &coralogixv1beta1.NCBackendRef{ID: connectorID}},
+					Condition: "true",
+				},
+			},
+		})
+
+		Eventually(func(g Gomega) {
+			caseSettings := getCaseSettings(ctx, g)
+			g.Expect(caseSettings).ToNot(BeNil())
+			g.Expect(caseSettings.GetAutoResolveMode()).To(Equal(alerts.ALERTDEFCASEAUTORESOLVEMODE_ALERT_DEF_CASE_AUTO_RESOLVE_MODE_ENABLED))
+			g.Expect(caseSettings.GetEnrichmentQueries()).To(BeEmpty())
+			g.Expect(destinations(caseSettings)).To(ConsistOf(connectorID + "||true"))
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should keep auto-resolve disabled across updates of other fields", func(ctx context.Context) {
+		patchCaseSettings(ctx, &coralogixv1beta1.AlertCaseSettings{
+			AutoResolveMode: ptr.To(coralogixv1beta1.CaseAutoResolveModeDisabled),
+		})
+
+		By("Updating a field outside of the case settings")
+		fetchedAlert := &coralogixv1beta1.Alert{}
+		Expect(crClient.Get(ctx, client.ObjectKeyFromObject(alert), fetchedAlert)).To(Succeed())
+		modifiedAlert := fetchedAlert.DeepCopy()
+		modifiedAlert.Spec.Description = "updated alert from k8s operator"
+		Expect(crClient.Patch(ctx, modifiedAlert, client.MergeFrom(fetchedAlert))).To(Succeed())
+
+		Eventually(func(g Gomega) {
+			resp, _, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, alertID).Execute()
+			g.Expect(err).ToNot(HaveOccurred())
+			props := resp.GetAlertDef().AlertDefProperties
+			g.Expect(props.GetDescription()).To(Equal("updated alert from k8s operator"))
+			g.Expect(props.CaseSettings).ToNot(BeNil())
+			g.Expect(props.CaseSettings.GetAutoResolveMode()).To(Equal(alerts.ALERTDEFCASEAUTORESOLVEMODE_ALERT_DEF_CASE_AUTO_RESOLVE_MODE_DISABLED))
+			g.Expect(props.CaseSettings.GetDestinations()).To(BeEmpty())
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	It("Should reset the case settings when they are removed", func(ctx context.Context) {
+		patchCaseSettings(ctx, nil)
+
+		// The backend omits case settings that are back to their defaults.
+		Eventually(func(g Gomega) {
+			g.Expect(getCaseSettings(ctx, g)).To(BeNil())
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+})
+
+var _ = Describe("Alert access policy", Ordered, func() {
+	var (
+		crClient      client.Client
+		openAPIAlerts *alerts.AlertDefinitionsServiceAPIService
+		alert         *coralogixv1beta1.Alert
+		alertName     string
+		alertID       string
+	)
+
+	BeforeAll(func() {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		openAPIAlerts = newOpenAPIClientSet().Alerts()
+	})
+
+	patchAlert := func(ctx context.Context, mutate func(*coralogixv1beta1.AlertSpec)) *coralogixv1beta1.Alert {
+		current := &coralogixv1beta1.Alert{}
+		Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, current)).To(Succeed())
+		updated := current.DeepCopy()
+		mutate(&updated.Spec)
+		Expect(crClient.Patch(ctx, updated, client.MergeFrom(current))).To(Succeed())
+		refreshed := &coralogixv1beta1.Alert{}
+		Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, refreshed)).To(Succeed())
+		return waitAlertReconciled(ctx, crClient, alertName, refreshed.Generation)
+	}
+
+	bumpAlertAnnotations := func(ctx context.Context) {
+		current := &coralogixv1beta1.Alert{}
+		Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, current)).To(Succeed())
+		updated := current.DeepCopy()
+		if updated.Annotations == nil {
+			updated.Annotations = map[string]string{}
+		}
+		updated.Annotations["coralogix-operator-e2e-probe"] = gouuid.NewString()
+		Expect(crClient.Patch(ctx, updated, client.MergeFrom(current))).To(Succeed())
+	}
+
+	It("Should manage an alert access policy", func(ctx context.Context) {
+		By("Creating an Alert with access policy P1")
+		alertName = uniqueName("alert-access-policy")
+		renamedAlertName := alertName + " renamed"
+		// Registered before creation so a mid-spec failure still deletes the
+		// CR and sweeps the remote alert (both names: the spec renames it).
+		// The fixtures end on P1, which grants Delete, so the operator can
+		// delete; any other outcome is collected and reported.
+		DeferCleanup(func(cleanupCtx context.Context) {
+			var cleanupErrs []error
+			key := types.NamespacedName{Name: alertName, Namespace: testNamespace}
+			ids := map[string]struct{}{}
+			if alertID != "" {
+				ids[alertID] = struct{}{}
+			}
+			fresh := &coralogixv1beta1.Alert{}
+			if err := crClient.Get(cleanupCtx, key, fresh); err != nil {
+				if client.IgnoreNotFound(err) != nil {
+					cleanupErrs = append(cleanupErrs, err)
+				}
+			} else {
+				if fresh.Status.ID != nil {
+					ids[*fresh.Status.ID] = struct{}{}
+				}
+				var delErr error
+				for i := 0; i < 3; i++ {
+					f := &coralogixv1beta1.Alert{}
+					if err := crClient.Get(cleanupCtx, key, f); err != nil {
+						delErr = client.IgnoreNotFound(err)
+						break
+					}
+					err := crClient.Delete(cleanupCtx, f)
+					if client.IgnoreNotFound(err) == nil {
+						delErr = nil
+						break
+					}
+					delErr = err
+				}
+				if delErr != nil {
+					cleanupErrs = append(cleanupErrs, delErr)
+				} else if err := waitObjectGone(cleanupCtx, crClient, key, &coralogixv1beta1.Alert{}); err != nil {
+					cleanupErrs = append(cleanupErrs, err)
+				}
+			}
+			for _, name := range []string{alertName, renamedAlertName} {
+				if name == "" {
+					continue
+				}
+				if err := sweepAlertsByName(cleanupCtx, openAPIAlerts, name); err != nil {
+					cleanupErrs = append(cleanupErrs, err)
+				}
+			}
+			for id := range ids {
+				if err := waitRemoteAlertGone(cleanupCtx, openAPIAlerts, id); err != nil {
+					cleanupErrs = append(cleanupErrs, err)
+				}
+			}
+			reportCleanupErrors(cleanupErrs)
+		})
+		alert = newAccessPolicyTestAlert(alertName, testNamespace, ptr.To(alertAccessPolicyP1))
+		Expect(crClient.Create(ctx, alert)).To(Succeed())
+
+		created := &coralogixv1beta1.Alert{}
+		Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, created)).To(Succeed())
+		fetched := waitAlertReconciled(ctx, crClient, alertName, created.Generation)
+		Expect(fetched.Status.ID).ToNot(BeNil())
+		alertID = *fetched.Status.ID
+		Expect(fetched.Status.AccessPolicyManaged).To(BeTrue())
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, ptr.To(alertAccessPolicyP1))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Updating the access policy to P2")
+		patchAlert(ctx, func(spec *coralogixv1beta1.AlertSpec) {
+			spec.AccessPolicy = ptr.To(alertAccessPolicyP2)
+		})
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, ptr.To(alertAccessPolicyP2))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Omitting the policy while renaming the alert")
+		renamedAlertName = alertName + " renamed"
+		fetched = patchAlert(ctx, func(spec *coralogixv1beta1.AlertSpec) {
+			spec.AccessPolicy = nil
+			spec.Name = renamedAlertName
+		})
+
+		By("Waiting for the rename to reach the backend before asserting the policy survived")
+		Eventually(func(g Gomega) {
+			resp, httpResp, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, alertID).Execute()
+			g.Expect(oapicxsdk.NewAPIError(httpResp, err)).ToNot(HaveOccurred())
+			alertDef, ok := resp.GetAlertDefOk()
+			g.Expect(ok).To(BeTrue())
+			g.Expect(alertDef.AlertDefProperties.GetName()).To(Equal(renamedAlertName))
+		}, time.Minute, time.Second).Should(Succeed())
+		Expect(fetched.Status.AccessPolicyManaged).To(BeTrue())
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, ptr.To(alertAccessPolicyP2))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Setting the policy to empty to delete the remote policy")
+		fetched = patchAlert(ctx, func(spec *coralogixv1beta1.AlertSpec) {
+			spec.AccessPolicy = ptr.To("")
+		})
+		Expect(fetched.Status.AccessPolicyManaged).To(BeFalse())
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, nil)
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Changing the description while empty is held (second delete)")
+		patchAlert(ctx, func(spec *coralogixv1beta1.AlertSpec) {
+			spec.Description = "alert access policy e2e second delete"
+		})
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, nil)
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Restoring a policy externally while empty is held, then reconciling it away")
+		setPolicyExternally(ctx, openAPIAlerts, alertID, &alerts.AccessPolicyAction{Upsert: ptr.To(alertAccessPolicyP1)})
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, ptr.To(alertAccessPolicyP1))
+		}, time.Minute, time.Second).Should(Succeed())
+		bumpAlertAnnotations(ctx)
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, nil)
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Re-adding P1")
+		fetched = patchAlert(ctx, func(spec *coralogixv1beta1.AlertSpec) {
+			spec.AccessPolicy = ptr.To(alertAccessPolicyP1)
+		})
+		Expect(fetched.Status.AccessPolicyManaged).To(BeTrue())
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, ptr.To(alertAccessPolicyP1))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Drifting the managed policy externally, then reconciling it back")
+		setPolicyExternally(ctx, openAPIAlerts, alertID, &alerts.AccessPolicyAction{Upsert: ptr.To(alertAccessPolicyP2)})
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, ptr.To(alertAccessPolicyP2))
+		}, time.Minute, time.Second).Should(Succeed())
+		bumpAlertAnnotations(ctx)
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, ptr.To(alertAccessPolicyP1))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Deleting the Alert")
+		fresh := &coralogixv1beta1.Alert{}
+		Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, fresh)).To(Succeed())
+		Expect(crClient.Delete(ctx, fresh)).To(Succeed())
+		Eventually(func() bool {
+			_, httpResp, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, alertID).Execute()
+			return oapicxsdk.IsNotFound(oapicxsdk.NewAPIError(httpResp, err))
+		}, time.Minute, time.Second).Should(BeTrue())
+	})
+
+	It("Should create an alert with an empty access policy", func(ctx context.Context) {
+		By("Creating an Alert with an empty access policy")
+		emptyName := uniqueName("alert-empty-access-policy")
+		emptyAlert := newAccessPolicyTestAlert(emptyName, testNamespace, ptr.To(""))
+		Expect(crClient.Create(ctx, emptyAlert)).To(Succeed())
+
+		created := &coralogixv1beta1.Alert{}
+		Expect(crClient.Get(ctx, types.NamespacedName{Name: emptyName, Namespace: testNamespace}, created)).To(Succeed())
+		fetched := waitAlertReconciled(ctx, crClient, emptyName, created.Generation)
+		Expect(fetched.Status.ID).ToNot(BeNil())
+		emptyID := *fetched.Status.ID
+		Expect(fetched.Status.AccessPolicyManaged).To(BeFalse())
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, emptyID, nil)
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Triggering a second reconcile with a description change")
+		current := &coralogixv1beta1.Alert{}
+		Expect(crClient.Get(ctx, types.NamespacedName{Name: emptyName, Namespace: testNamespace}, current)).To(Succeed())
+		updated := current.DeepCopy()
+		updated.Spec.Description = "alert empty access policy e2e updated"
+		Expect(crClient.Patch(ctx, updated, client.MergeFrom(current))).To(Succeed())
+		refreshed := &coralogixv1beta1.Alert{}
+		Expect(crClient.Get(ctx, types.NamespacedName{Name: emptyName, Namespace: testNamespace}, refreshed)).To(Succeed())
+		waitAlertReconciled(ctx, crClient, emptyName, refreshed.Generation)
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, emptyID, nil)
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Deleting the Alert")
+		fresh := &coralogixv1beta1.Alert{}
+		Expect(crClient.Get(ctx, types.NamespacedName{Name: emptyName, Namespace: testNamespace}, fresh)).To(Succeed())
+		Expect(crClient.Delete(ctx, fresh)).To(Succeed())
+		Eventually(func() bool {
+			_, httpResp, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, emptyID).Execute()
+			return oapicxsdk.IsNotFound(oapicxsdk.NewAPIError(httpResp, err))
+		}, time.Minute, time.Second).Should(BeTrue())
+	})
+})
+

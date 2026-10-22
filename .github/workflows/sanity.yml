@@ -1,0 +1,68 @@
+name: sanity
+
+on:
+  push:
+    branches:
+      - main
+      - release-*
+    paths-ignore:
+      - "charts/**"
+  pull_request:
+    branches:
+      - main
+      - release-*
+    paths-ignore:
+      - "charts/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-docs:
+    name: Check generated files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: go.mod
+      - name: Generate docs and manifests
+        run: |
+          go mod tidy
+          make generate
+          make manifests
+          make generate-api-docs
+          make helm-sync-docs
+      - name: Check for changes
+        run: |
+          if ! git diff --exit-code; then
+            echo "Some files are out of date. Please run the following commands and commit the changes:"
+            echo "    go mod tidy"
+            echo "    make generate-api-docs"
+            echo "    make generate"
+            echo "    make manifests"
+            echo "    make helm-sync-docs"
+            exit 1
+          fi
+
+  linters:
+    name: Linter Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v7
+        with:
+          version: v2.12.2
+          args: --timeout=5m

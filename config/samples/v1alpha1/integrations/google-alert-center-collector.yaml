@@ -1,0 +1,19 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Integration
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: integration-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: google-alert-center-collector
+spec:
+  integrationKey: google-alert-center-collector
+  version: 0.0.1
+  parameters:
+    IntegrationName: GoogleAlertCenter
+    ServiceAccountKey: <ServiceAccountKey>
+    ImpersonatedEmail: <ImpersonatedEmail>
+    ApplicationName: <ApplicationName>
+    SubsystemName: Google Workspace Alert Center

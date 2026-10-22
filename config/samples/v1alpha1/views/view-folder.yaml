@@ -1,0 +1,6 @@
+apiVersion: coralogix.com/v1alpha1
+kind: ViewFolder
+metadata:
+  name: sample-folder
+spec:
+  name: sample-folder

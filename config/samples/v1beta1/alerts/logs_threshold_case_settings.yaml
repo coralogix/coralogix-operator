@@ -1,0 +1,68 @@
+# Case settings are in preview.
+apiVersion: coralogix.com/v1alpha1
+kind: Connector
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: connector-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: cases-connector
+spec:
+  name: cases-connector
+  description: Generic HTTPS connector for case notifications
+  type: genericHttps
+  connectorConfig:
+    fields:
+      - fieldName: url
+        value: https://example.com/cases
+      - fieldName: method
+        value: post
+---
+apiVersion: coralogix.com/v1beta1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/name: alert
+    app.kubernetes.io/instance: alert-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: logs-threshold-case-settings
+spec:
+  name: logs-threshold-case-settings alert example
+  description: alert from k8s operator
+  priority: p3
+  alertType:
+    logsThreshold:
+      logsFilter:
+        simpleFilter:
+          luceneQuery: level:ERROR
+      rules:
+        - condition:
+            threshold: 10
+            timeWindow:
+              specificValue: 10m
+            logsThresholdConditionType: moreThan
+          override:
+            priority: p3
+  # Omitting caseSettings resets them to the defaults: auto-resolve enabled, no enrichment query and no case destinations.
+  caseSettings:
+    autoResolveMode: disabled
+    enrichmentQueries:
+      - query: source logs | filter $m.severity == Severity.ERROR | limit 10
+        type: dataprime
+    destinations:
+      # Conditions are evaluated against the case.
+      - connector:
+          resourceRef:
+            name: cases-connector
+        condition: caseMetadata.notificationReason == 'caseResolved'
+      - connector:
+          resourceRef:
+            name: cases-connector
+        preset:
+          backendRef:
+            id: preset_system_generic_https_cases_empty
+        condition: "true"

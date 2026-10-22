@@ -1,0 +1,17 @@
+apiVersion: coralogix.com/v1alpha1
+kind: CustomRole
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: custom-role-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: custom-role-sample
+spec:
+  name: custom-role-sample
+  description: This is a sample custom role
+  parentRoleName: Standard User
+  permissions:
+    - team-actions:UpdateConfig
+    - TEAM-CUSTOM-API-KEYS:READCONFIG

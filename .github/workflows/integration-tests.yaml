@@ -1,0 +1,135 @@
+name: integration-tests
+on:
+  schedule:
+    - cron: 0 1 * * *
+  push:
+    branches:
+      - main
+      - release-*
+    paths-ignore:
+      - "charts/**"
+  pull_request:
+    branches:
+      - main
+      - release-*
+    paths-ignore:
+      - "charts/**"
+      - "docs/**"
+      - "**.md"
+
+permissions:
+  contents: read
+
+concurrency:
+  # Shared across e2e, helm-e2e, upgrade-test, and integration-tests so those
+  # live suites cannot overlap on the same Coralogix team (archive metrics,
+  # TCO, quota, IP access).
+  group: coralogix-operator-live-cx
+  # Not cancel-in-progress: these specs create real Coralogix resources, and cleanup happens in
+  # the suite's own teardown. Cancelling kills the Kind cluster before finalizers run, so the
+  # remote resources leak and pollute the shared team. Let the old run finish and queue behind
+  # it instead.
+  cancel-in-progress: false
+
+jobs:
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    env:
+      IMG: coralogix-operator-image:latest
+      CORALOGIX_REGION: ${{ secrets.CORALOGIX_REGION }}
+      CORALOGIX_API_KEY: ${{ secrets.CORALOGIX_API_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Cache Makefile tool binaries
+        uses: actions/cache@v4
+        with:
+          path: bin
+          key: ${{ runner.os }}-tools-${{ github.workflow }}-${{ hashFiles('Makefile', 'go.sum') }}
+      - name: Build the controller-manager image
+        uses: ./.github/actions/build-operator-image
+        with:
+          image: ${{ env.IMG }}
+      - name: Create k8s Kind Cluster
+        uses: helm/kind-action@v1.4.0
+      - name: Load the controller-manager image into Kind
+        run: |
+          kind load docker-image ${{ env.IMG }} --name chart-testing
+      - name: Deploy the controller-manager
+        run: |
+          make deploy
+      - name: Install kuttl
+        run: |
+          curl -Lo /usr/local/bin/kubectl-kuttl https://github.com/kudobuilder/kuttl/releases/download/v0.12.1/kubectl-kuttl_0.12.1_linux_x86_64
+          chmod +x /usr/local/bin/kubectl-kuttl
+      - name: Run Integration Tests
+        run: |
+          make integration-tests
+      - name: Collect Operator Logs
+        if: always()
+        run: |
+          scripts/collect-logs.sh
+
+  notify-failure:
+    name: Notify Slack on failure
+    # Scheduled (nightly) runs alert. Pull request and push runs stay quiet.
+    if: ${{ always() && github.event_name == 'schedule' }}
+    needs:
+      - tests
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post failure to Slack
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        env:
+          # Slack incoming webhook URL, from the SLACK_CI_WEBHOOK_URL repository secret.
+          # Keep the URL out of both the logs and the process list.
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+          NEEDS_JSON: ${{ toJSON(needs) }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          REPOSITORY: ${{ github.repository }}
+          REF_NAME: ${{ github.ref_name }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SLACK_WEBHOOK_URL:-}" ]; then
+            echo "::warning::SLACK_CI_WEBHOOK_URL is not set; skipping the Slack notification."
+            exit 0
+          fi
+          umask 077
+          curl_config="$(mktemp)"
+          trap 'rm -f "$curl_config"' EXIT
+          printf 'url = "%s"\n' "$SLACK_WEBHOOK_URL" > "$curl_config"
+          failed_jobs=$(printf '%s' "$NEEDS_JSON" | jq -r '
+            to_entries
+            | map(select(.value.result != "success"))
+            | map("• \(.key): \(.value.result)")
+            | join("\n")
+          ')
+          jq -n \
+            --arg repo "$REPOSITORY" \
+            --arg ref "$REF_NAME" \
+            --arg event "$EVENT_NAME" \
+            --arg url "$RUN_URL" \
+            --arg jobs "$failed_jobs" \
+            '{
+              text: ":rotating_light: Acceptance tests failed",
+              blocks: [
+                {
+                  type: "section",
+                  text: {
+                    type: "mrkdwn",
+                    text: ":rotating_light: *Acceptance tests failed*\n*Repository:* \($repo)\n*Ref:* \($ref)\n*Trigger:* \($event)\n*Failed jobs:*\n\($jobs)\n<\($url)|View the workflow run>"
+                  }
+                }
+              ]
+            }' \
+            | curl --config "$curl_config" \
+                --fail --silent --show-error \
+                --max-time 30 --retry 3 --retry-connrefused \
+                --header 'Content-Type: application/json' \
+                --data @- \
+                --output /dev/null \
+                --write-out 'Slack responded with HTTP %{http_code}\n'

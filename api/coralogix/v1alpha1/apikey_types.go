@@ -1,0 +1,152 @@
+// Copyright 2024 Coralogix Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package v1alpha1
+
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	apikeys "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/api_keys_service"
+)
+
+// ApiKeySpec defines the desired state of a Coralogix ApiKey.
+// +kubebuilder:validation:XValidation:rule="has(self.presets) || has(self.permissions)",message="At least one of presets or permissions must be set"
+type ApiKeySpec struct {
+
+	//+kubebuilder:validation:MinLength=0
+	// Name of the ApiKey
+	Name string `json:"name"`
+
+	//+kubebuilder:default=true
+	// Whether the ApiKey Is active.
+	// +optional
+	// TODO: add validation for active to be true on create
+	Active bool `json:"active"`
+
+	// Owner of the ApiKey.
+	Owner ApiKeyOwner `json:"owner"`
+
+	// Permission Presets that the ApiKey uses.
+	// +optional
+	Presets []string `json:"presets,omitempty"`
+
+	// Permissions of the ApiKey
+	// +optional
+	Permissions []string `json:"permissions,omitempty"`
+
+	// JSON string representing the access policy for this API key. Defines granular permissions for users and groups.
+	// +optional
+	AccessPolicy *string `json:"accessPolicy,omitempty"`
+}
+
+// Owner of an ApiKey.
+// +kubebuilder:validation:XValidation:rule="has(self.userId) != has(self.teamId)",message="Exactly one of userId or teamId must be set"
+type ApiKeyOwner struct {
+	// User that owns the key.
+	// +optional
+	UserId *string `json:"userId,omitempty"`
+
+	// Team that owns the key.
+	// +optional
+	TeamId *uint32 `json:"teamId,omitempty"`
+}
+
+// ApiKeyStatus defines the observed state of ApiKey.
+type ApiKeyStatus struct {
+	// +optional
+	Id *string `json:"id,omitempty"`
+	// +optional
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
+}
+
+func (a *ApiKey) GetConditions() []metav1.Condition {
+	return a.Status.Conditions
+}
+
+func (a *ApiKey) SetConditions(conditions []metav1.Condition) {
+	a.Status.Conditions = conditions
+}
+
+func (a *ApiKey) GetPrintableStatus() string {
+	return a.Status.PrintableStatus
+}
+
+func (a *ApiKey) SetPrintableStatus(printableStatus string) {
+	a.Status.PrintableStatus = printableStatus
+}
+
+func (a *ApiKey) HasIDInStatus() bool {
+	return a.Status.Id != nil && *a.Status.Id != ""
+}
+
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+// ApiKey is the Schema for the ApiKeys API.
+// See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-keys/
+//
+// **Added in v0.4.0**
+type ApiKey struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   ApiKeySpec   `json:"spec,omitempty"`
+	Status ApiKeyStatus `json:"status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+// ApiKeyList contains a list of ApiKeys.
+type ApiKeyList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []ApiKey `json:"items"`
+}
+
+func (s *ApiKeySpec) ExtractCreateApiKeyRequest() *apikeys.CreateApiKeyRequest {
+	owner := &apikeys.Owner{}
+	if s.Owner.UserId != nil {
+		owner.UserId = s.Owner.UserId
+	}
+	if s.Owner.TeamId != nil {
+		owner.TeamId = apikeys.PtrInt64(int64(*s.Owner.TeamId))
+	}
+
+	return &apikeys.CreateApiKeyRequest{
+		Name:  apikeys.PtrString(s.Name),
+		Owner: owner,
+		KeyPermissions: &apikeys.CreateApiKeyRequestKeyPermissions{
+			Presets:     s.Presets,
+			Permissions: s.Permissions,
+		},
+		AccessPolicy: s.AccessPolicy,
+	}
+}
+
+func (s *ApiKeySpec) ExtractUpdateApiKeyRequest() *apikeys.UpdateApiKeyRequest {
+	return &apikeys.UpdateApiKeyRequest{
+		NewName:      apikeys.PtrString(s.Name),
+		IsActive:     apikeys.PtrBool(s.Active),
+		Presets:      &apikeys.Presets{Presets: s.Presets},
+		Permissions:  &apikeys.UpdateApiKeyRequestPermissions{Permissions: s.Permissions},
+		AccessPolicy: s.AccessPolicy,
+	}
+}
+
+func init() {
+	SchemeBuilder.Register(&ApiKey{}, &ApiKeyList{})
+}

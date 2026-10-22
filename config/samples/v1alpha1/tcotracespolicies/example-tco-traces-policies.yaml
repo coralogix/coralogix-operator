@@ -1,0 +1,74 @@
+apiVersion: coralogix.com/v1alpha1
+kind: TCOTracesPolicies
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: tco-traces-policies-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: tco-traces-policies-sample
+spec:
+  policies:
+    - name: first policy
+      priority: high
+      description: This is the first policy
+      actions:
+        names:
+          - action1
+          - action2
+        ruleType: is
+      services:
+        names:
+          - service
+          - system
+        ruleType: includes
+      tags:
+        - name: tags.http
+          ruleType: is
+          values:
+            - GET
+            - POST
+        - name: tags.env
+          ruleType: is
+          values:
+            - prod
+            - dev
+      archiveRetention:
+        backendRef:
+          name: Default
+          # Alternatively, reference the retention directly by its ID
+          # (exactly one of name or id must be set):
+          # id: 12345678-1234-4234-8234-123456789abc
+    - name: second policy
+      priority: low
+      description: This is the second policy
+      disabled: true
+      actions:
+          names:
+          - action3
+          ruleType: is
+      services:
+          names:
+          - service
+          ruleType: is
+      tags:
+        - name: tags.http
+          ruleType: is
+          values:
+              - GET
+    - name: third policy with dpxl expression
+      priority: medium
+      # dpxlExpression is mutually exclusive with services, actions, tags, applications and subsystems.
+      dpxlExpression: "<v1> $d.status == 'ERROR'"
+    - name: fourth policy with quota-based priority override
+      # Base priority must be lower than every usage-tier priority.
+      priority: low
+      description: de-prioritize as the daily quota fills
+      priorityOverride:
+        quotaBased:
+          usageTiers:
+            - dailyQuotaPercentage: 30
+              priority: high
+            - dailyQuotaPercentage: 60
+              priority: medium

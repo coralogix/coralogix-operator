@@ -1,0 +1,26 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Preset
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: preset-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: microsoft-teams-sample
+spec:
+  name: microsoft-teams-sample
+  description: This is a sample Microsoft Teams preset
+  connectorType: microsoftTeams
+  entityType: alerts
+  parentId: preset_system_microsoft_teams_alerts_basic
+  configOverrides:
+    - conditionType:
+        matchEntityTypeAndSubType:
+          entitySubType: logsImmediateTriggered
+      messageConfig:
+        fields:
+          - fieldName: title
+            template: "CUSTOM PRESET OVERRIDE: {{alert.status}} {{alertDef.priority}} - {{alertDef.name}}"
+          - fieldName: description
+            template: "{{alertDef.description}}"

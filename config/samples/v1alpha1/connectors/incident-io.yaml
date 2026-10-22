@@ -1,0 +1,22 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Connector
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: connector-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: incident-io-sample
+spec:
+  name: incident-io-sample
+  description: This is a sample incident.io connector
+  type: incidentIo
+  connectorConfig:
+    fields:
+      - fieldName: apiKey
+        value: some-api-key
+      - fieldName: alertEventsUrl
+        value: https://api.incident.io/v2/alert_events/http/source-id
+      - fieldName: alertSourceToken
+        value: some-alert-source-token

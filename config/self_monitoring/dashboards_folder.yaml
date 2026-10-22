@@ -1,0 +1,6 @@
+apiVersion: coralogix.com/v1alpha1
+kind: DashboardsFolder
+metadata:
+  name: coralogix-operator-dashboards
+spec:
+  name: coralogix-operator-dashboards

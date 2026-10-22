@@ -1,0 +1,237 @@
+// Copyright 2024 Coralogix Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package e2e
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+	openapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	tcopolicies "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/policies_service"
+
+	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
+	"github.com/coralogix/coralogix-operator/v2/internal/utils"
+)
+
+var _ = Describe("TCOLogsPolicies schema validation", func() {
+	It("should reject a policy with more than 50 subsystem names", func(ctx context.Context) {
+		names := make([]string, 51)
+		for i := range names {
+			names[i] = fmt.Sprintf("subsystem-%d", i)
+		}
+		policy := &coralogixv1alpha1.TCOLogsPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "too-many-subsystems",
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
+					Name:       "over-limit",
+					Priority:   ptr.To("low"),
+					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					Subsystems: &coralogixv1alpha1.TCOPolicyRule{
+						Names:    names,
+						RuleType: "is",
+					},
+				}},
+			},
+		}
+		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("Too many"))
+	})
+
+	It("should reject a policy that sets both severities and dpxlExpression", func(ctx context.Context) {
+		policy := &coralogixv1alpha1.TCOLogsPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "logs-both-rules",
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
+					Name:           "conflicting-rules",
+					Priority:       ptr.To("low"),
+					Severities:     []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					DpxlExpression: ptr.To("<v1>$d.applicationname == 'prod'"),
+				}},
+			},
+		}
+		err := ClientsInstance.GetControllerRuntimeClient().Create(ctx, policy)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("mutually exclusive"))
+	})
+})
+
+var _ = Describe("TCOLogsPolicies", Serial, func() {
+	var (
+		crClient        client.Client
+		tcoClient       *cxsdk.TCOPoliciesClient
+		policiesClient  *tcopolicies.PoliciesServiceAPIService
+		logsPolicyName  = "tco-logs-policies-sample"
+		TCOLogsPolicies *coralogixv1alpha1.TCOLogsPolicies
+		policies        []*cxsdk.TCOPolicy
+	)
+
+	BeforeEach(func() {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		tcoClient = ClientsInstance.GetCoralogixClientSet().TCOPolicies()
+		cfg := openapicxsdk.NewConfigBuilder().WithAPIKeyEnv().WithRegionEnv().Build()
+		policiesClient = openapicxsdk.NewClientSet(cfg).TCOPolicies()
+		TCOLogsPolicies = &coralogixv1alpha1.TCOLogsPolicies{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      logsPolicyName,
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
+				Policies: []coralogixv1alpha1.TCOLogsPolicy{
+					{
+						Name:       "sample policy",
+						Priority:   ptr.To("high"),
+						Severities: []coralogixv1alpha1.TCOPolicySeverity{"critical", "error"},
+						Applications: &coralogixv1alpha1.TCOPolicyRule{
+							Names:    []string{"prod"},
+							RuleType: "start_with",
+						},
+						Subsystems: &coralogixv1alpha1.TCOPolicyRule{
+							Names:    []string{"mobile"},
+							RuleType: "is",
+						},
+						ArchiveRetention: &coralogixv1alpha1.ArchiveRetention{
+							BackendRef: coralogixv1alpha1.ArchiveRetentionBackendRef{
+								Name: ptr.To("Default"),
+							},
+						},
+					},
+					{
+						Name:       "sample policy 2",
+						Priority:   ptr.To("high"),
+						Disabled:   ptr.To(true),
+						Severities: []coralogixv1alpha1.TCOPolicySeverity{"critical", "error"},
+						Applications: &coralogixv1alpha1.TCOPolicyRule{
+							Names:    []string{"prod"},
+							RuleType: "start_with",
+						},
+						Subsystems: &coralogixv1alpha1.TCOPolicyRule{
+							Names:    []string{"mobile"},
+							RuleType: "is",
+						},
+						ArchiveRetention: &coralogixv1alpha1.ArchiveRetention{
+							BackendRef: coralogixv1alpha1.ArchiveRetentionBackendRef{
+								Name: ptr.To("Default"),
+							},
+						},
+					},
+					{
+						Name:       "targets policy",
+						Severities: []coralogixv1alpha1.TCOPolicySeverity{"info", "debug"},
+						Targets: []coralogixv1alpha1.TCOPolicyTarget{
+							{
+								Dataset:   "cicd",
+								Dataspace: ptr.To("default"),
+								Priority:  "low",
+							},
+							{
+								Dataset:   "logs",
+								Dataspace: ptr.To("default"),
+								Priority:  "block",
+								PriorityOverride: &coralogixv1alpha1.TCOPolicyPriorityOverride{
+									QuotaBased: &coralogixv1alpha1.TCOPolicyQuotaBased{
+										UsageTiers: []coralogixv1alpha1.TCOPolicyUsageTier{
+											{DailyQuotaPercentage: resource.MustParse("80"), Priority: "low"},
+										},
+									},
+								},
+							},
+						},
+					},
+					{
+						Name:           "dpxl policy",
+						Priority:       ptr.To("medium"),
+						DpxlExpression: ptr.To("<v1>$d.applicationname == 'prod'"),
+					},
+					{
+						Name:       "priority override policy",
+						Priority:   ptr.To("low"),
+						Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
+						PriorityOverride: &coralogixv1alpha1.TCOPolicyPriorityOverride{
+							QuotaBased: &coralogixv1alpha1.TCOPolicyQuotaBased{
+								UsageTiers: []coralogixv1alpha1.TCOPolicyUsageTier{
+									{DailyQuotaPercentage: resource.MustParse("30"), Priority: "high"},
+									{DailyQuotaPercentage: resource.MustParse("60"), Priority: "medium"},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+	})
+
+	It("Should create TCOLogsPolicies successfully", func(ctx context.Context) {
+		By("Creating TCOLogsPolicies")
+		Expect(crClient.Create(ctx, TCOLogsPolicies)).To(Succeed())
+
+		By("Verifying TCOLogsPolicies is synced")
+		Eventually(func(g Gomega) {
+			fetchedTCOLogsPolicies := &coralogixv1alpha1.TCOLogsPolicies{}
+			g.Expect(crClient.Get(ctx, client.ObjectKey{Name: logsPolicyName, Namespace: testNamespace}, fetchedTCOLogsPolicies)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetchedTCOLogsPolicies.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetchedTCOLogsPolicies.Status.PrintableStatus).To(Equal("RemoteSynced"))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying policies exist in the Coralogix backend")
+		Eventually(func() []*cxsdk.TCOPolicy {
+			listRes, err := tcoClient.List(ctx, &cxsdk.GetCompanyPoliciesRequest{SourceType: ptr.To(cxsdk.TCOPolicySourceTypeLogs)})
+			Expect(err).ToNot(HaveOccurred())
+			policies = listRes.Policies
+			return policies
+		}, time.Minute, time.Second).Should(HaveLen(5))
+
+		Expect(policies[0].Name.Value).To(Equal(TCOLogsPolicies.Spec.Policies[0].Name))
+
+		By("Verifying the advanced-field policies exist in the backend")
+		Eventually(func(g Gomega) {
+			resp, _, err := policiesClient.PoliciesServiceGetCompanyPolicies(ctx).
+				SourceType(tcopolicies.V1SOURCETYPE_SOURCE_TYPE_LOGS).
+				Execute()
+			g.Expect(err).NotTo(HaveOccurred())
+			byName := make(map[string]tcopolicies.Policy, len(resp.Policies))
+			for _, p := range resp.Policies {
+				byName[p.Name] = p
+			}
+			g.Expect(byName).To(HaveKey("targets policy"))
+			g.Expect(byName).To(HaveKey("dpxl policy"))
+			g.Expect(byName).To(HaveKey("priority override policy"))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Deleting the TCOLogsPolicies")
+		Expect(crClient.Delete(ctx, TCOLogsPolicies)).To(Succeed())
+		Eventually(func() []*cxsdk.TCOPolicy {
+			listRes, err := tcoClient.List(ctx, &cxsdk.GetCompanyPoliciesRequest{SourceType: ptr.To(cxsdk.TCOPolicySourceTypeLogs)})
+			Expect(err).ToNot(HaveOccurred())
+			return listRes.Policies
+		}, time.Minute, time.Second).Should(BeEmpty())
+	})
+})

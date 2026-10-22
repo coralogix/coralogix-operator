@@ -1,0 +1,36 @@
+apiVersion: coralogix.com/v1alpha1
+kind: AlertScheduler
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: recurring-scheduler-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: recurring-scheduler-sample
+spec:
+  name: recurring-scheduler-sample
+  description: One time alert scheduler sample
+  enabled: true
+  filter:
+    whatExpression: source logs | filter $d.cpodId:string == '122'
+    metaLabels:
+      - key: app
+        value: my-app
+      - key: env
+  schedule:
+    operation: mute
+    recurring:
+      dynamic:
+        frequency:
+          weekly:
+            days:
+              - Monday
+              - Tuesday
+              - Wednesday
+        repeatEvery: 1
+        terminationDate: 2028-01-01T00:00:00.000
+        timeFrame:
+          startTime: 2026-01-04T00:00:00.000
+          timezone: UTC+2
+          endTime: 2027-06-04T23:59:59.999

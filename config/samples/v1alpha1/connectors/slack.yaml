@@ -1,0 +1,28 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Connector
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: connector-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: slack-sample
+spec:
+  name: slack-sample
+  description: This is a sample slack connector
+  type: slack
+  connectorConfig:
+    fields:
+      - fieldName: channel
+        value: general
+      - fieldName: integrationId
+        value: some-integration-id
+      - fieldName: fallbackChannel
+        value: fallback_general
+  configOverrides:
+    - entityType: alerts
+      fields:
+        - fieldName: channel
+          template: |
+            {{alertDef.priority}}

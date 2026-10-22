@@ -1,0 +1,67 @@
+apiVersion: coralogix.com/v1beta1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/name: alert
+    app.kubernetes.io/instance: alert-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: logs-ratio-threshold
+spec:
+  name: logs-ratio-threshold alert example
+  description: alert from k8s operator
+  entityLabels:
+    alert_type: security
+    security_severity: high
+  alertType:
+    logsRatioThreshold:
+      numerator:
+        simpleFilter:
+          luceneQuery: "mod_date:[20030101 TO 20040101]"
+          labelFilters:
+            applicationName:
+              - operation: includes
+                value: nginx
+              - operation: endsWith
+                value: "1.29"
+            subsystemName:
+              - operation: is
+                value: webapp
+            severity: [ "warning", "info" ]
+      numeratorAlias: "numerator"
+      denominator:
+        simpleFilter:
+          luceneQuery: "mod_date:[20020101 TO 20030101]"
+          labelFilters:
+            applicationName:
+              - operation: includes
+                value: nginx
+              - operation: endsWith
+                value: "1.29"
+            subsystemName:
+              - value: webapp2
+                operation: is
+            severity: [ "warning", "info" ]
+      denominatorAlias: "denominator"
+      evaluationDelayMs: 30000
+      groupByFor: numeratorOnly
+      ignoreInfinity: true
+      notificationPayloadFilter:
+        - obj.field
+      undetectedValuesManagement:
+        triggerUndetectedValues: true
+        autoRetireTimeframe: 5m
+      rules:
+        - condition:
+            timeWindow:
+              specificValue: 5m
+            threshold: "100.4"
+            conditionType: lessThan
+          override:
+            priority: p2
+  groupByKeys:
+    - coralogix.metadata.applicationName
+  notificationGroup:
+    router:
+      notifyOn: triggeredAndResolved

@@ -1,0 +1,42 @@
+apiVersion: coralogix.com/v1beta1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/name: alert
+    app.kubernetes.io/instance: alert-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: logs-time-relative-threshold
+spec:
+  name: logs-time-relative-threshold alert example
+  description: alert from k8s operator
+  entityLabels:
+    alert_type: security
+    security_severity: high
+  alertType:
+    logsTimeRelativeThreshold:
+      logsFilter:
+        simpleFilter:
+          luceneQuery: remote_addr_enriched:/.*/
+          labelFilters:
+            applicationName:
+              - operation: includes
+                value: nginx
+              - operation: endsWith
+                value: "1.29"
+            subsystemName:
+              - operation: is
+                value: webapp
+            severity: [ "warning", "info" ]
+      evaluationDelayMs: 30000
+      rules:
+        - condition:
+            threshold: "100.4"
+            comparedTo: previousHour
+            conditionType: moreThan
+          override:
+            priority: p1
+  notificationGroup:
+    router:
+      notifyOn: triggeredAndResolved

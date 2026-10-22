@@ -1,0 +1,23 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Connector
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: connector-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: service-now-sample
+spec:
+  name: service-now-sample
+  description: ServiceNow connector example
+  type: serviceNow
+  connectorConfig:
+    fields:
+      - fieldName: instanceUrl
+        value: https://your-instance.service-now.com
+      - fieldName: username
+        value: username-example
+      - fieldName: password
+        value: password-example
+  configOverrides: []

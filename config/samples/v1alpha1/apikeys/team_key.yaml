@@ -1,0 +1,22 @@
+apiVersion: coralogix.com/v1alpha1
+kind: ApiKey
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: alert-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: team-key-sample
+spec:
+  name: team-key-sample
+  owner:
+    teamId: 4013254
+  presets:
+    - APM
+  permissions:
+    - ALERTS-MAP:READ
+  accessPolicy: "{ \"version\": \"v2025-01-01\", 
+  \"rules\": [], \"default\": { \"permissions\": { \"team-custom-api-keys:ReadConfig\": \"grant\", 
+  \"team-custom-api-keys:Manage\": \"grant\", \"team-custom-api-keys:ReadAccessPolicy\": \"grant\", 
+  \"team-custom-api-keys:UpdateAccessPolicy\": \"grant\" }, \"additionalInfo\": null } }"

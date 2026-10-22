@@ -1,0 +1,51 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Connector
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: connector-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: generic-https-sample
+spec:
+  name: generic-https-sample
+  description: This is a sample generic https connector
+  type: genericHttps
+  connectorConfig:
+    fields:
+      - fieldName: url
+        value: https://api.opsgenie.com/v2/alerts
+      - fieldName: method
+        value: POST
+      - fieldName: additionalHeaders
+        value: |
+          {
+            "Authorization":"GenieKey <key>","Content-Type":"application/json"
+          }
+      - fieldName: additionalBodyFields
+        value: |
+          {
+            "text": "This is a generic HTTPS connector general message"
+          }
+  configOverrides:
+    - entityType: alerts
+      fields:
+        - fieldName: url
+          template: |
+            {% if alert.status == 'Triggered' %}
+            https://api.opsgenie.com/v2/alerts
+            {% else %}
+            https://api.opsgenie.com/v2/alerts/{{alert.groupingKey}}/close?identifierType=alias
+            {% endif %}
+        - fieldName: additionalHeaders
+          template: |
+            {
+              "Authorization": "GenieKey some-key",
+              "Content-Type": "application/json"
+            }
+        - fieldName: additionalBodyFields
+          template: |
+            {
+              "alias": "{{alert.groupingKey}}"
+            }

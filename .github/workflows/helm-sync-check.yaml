@@ -1,0 +1,29 @@
+name: helm-sync-check
+
+on:
+  pull_request:
+    paths:
+      - "charts/coralogix-operator/**"
+      - "config/**"
+    branches:
+      - main
+      - release-*
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Check if Helm CRDs templates are updated
+        run: |
+          make helm-sync-check

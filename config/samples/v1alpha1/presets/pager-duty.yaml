@@ -1,0 +1,31 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Preset
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: preset-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: pager-duty-sample
+spec:
+  name: pager-duty-sample
+  description: This is a sample pager duty preset
+  connectorType: pagerDuty
+  entityType: alerts
+  parentId: preset_system_pagerduty_alerts_basic
+  configOverrides:
+    - conditionType:
+        matchEntityTypeAndSubType:
+          entitySubType: logsThresholdMoreThanTriggered
+      messageConfig:
+        fields:
+          - fieldName: summary
+            template: "{{ alertDef.name }} - {{ alertDef.description }}"
+    - conditionType:
+        matchEntityTypeAndSubType:
+          entitySubType: logsThresholdLessThanTriggered
+      messageConfig:
+        fields:
+          - fieldName: severity
+            template: "{{ alertDef.severity }}"

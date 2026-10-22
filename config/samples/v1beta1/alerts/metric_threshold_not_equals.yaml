@@ -1,0 +1,28 @@
+apiVersion: coralogix.com/v1beta1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/name: alert
+    app.kubernetes.io/instance: alert-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: metric-threshold-not-equals
+spec:
+  name: metric-threshold not-equals example
+  description: alert from k8s operator
+  alertType:
+    metricThreshold:
+      metricFilter:
+        promql: sum(rate(http_requests_total[5m]))
+      missingValues:
+        replaceWithZero: true
+      rules:
+        - condition:
+            threshold: "0"
+            forOverPct: 100
+            ofTheLast:
+              specificValue: 5m
+            conditionType: notEquals
+          override:
+            priority: p3

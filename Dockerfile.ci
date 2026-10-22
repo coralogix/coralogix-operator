@@ -1,0 +1,15 @@
+# Packages a manager binary that was already built on the host (see `make build-linux`).
+#
+# CI uses this instead of the multi-stage Dockerfile because a build inside the Dockerfile
+# builder stage cannot reuse the Go build cache between workflow runs, which made every test
+# job pay ~2 minutes to recompile all dependencies from scratch. Building on the runner lets
+# actions/setup-go restore the cache, so the same build takes ~20s.
+#
+# The runtime layer below must stay identical to the final stage of Dockerfile, which is what
+# the released image is built from.
+FROM gcr.io/distroless/static:nonroot
+WORKDIR /
+COPY dist/manager .
+USER 65532:65532
+
+ENTRYPOINT ["/manager"]

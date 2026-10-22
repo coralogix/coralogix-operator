@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "coralogixOperator.fullname" . }}
+  labels:
+    {{- include "coralogixOperator.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.deployment.replicas }}
+  selector:
+    matchLabels:
+      {{- include "coralogixOperator.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: {{ .Chart.Name }}
+        {{- with .Values.podAnnotations }}
+            {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "coralogixOperator.selectorLabels" . | nindent 8 }}
+        {{- with .Values.deployment.podLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "coralogixOperator.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.securityContext | nindent 8 }}
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: {{ .Chart.Name }}
+        args:
+        - -health-probe-bind-address=:8081
+        - -metrics-bind-address=:8080
+        - -leader-elect={{.Values.coralogixOperator.leaderElection.enabled}}
+        - -leader-election-id={{ include "coralogixOperator.fullname" . }}
+        - -prometheus-rule-controller={{.Values.coralogixOperator.prometheusRules.enabled}}
+        - -label-selector={{ .Values.coralogixOperator.labelSelector | toJson }}
+        - -namespace-selector={{ .Values.coralogixOperator.namespaceSelector | toJson }}
+{{- range $key, $value := .Values.coralogixOperator.reconcileIntervalSeconds }}
+{{- if $value }}
+        - -{{ lower $key }}-reconcile-interval-seconds={{ $value }}
+{{- end }}
+{{- end }}
+        env:
+          - name: CORALOGIX_REGION
+            value: {{ .Values.coralogixOperator.region | quote }}
+          - name: CORALOGIX_DOMAIN
+            value: {{ .Values.coralogixOperator.domain | quote }}
+          - name: CORALOGIX_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "coralogixOperator.secretName" . }}
+                key: {{ include "coralogixOperator.secretKey" . }}
+        image: {{ include "coralogixOperator.image" . }}
+        imagePullPolicy: {{ .Values.coralogixOperator.image.pullPolicy }}
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          {{- toYaml .Values.coralogixOperator.resources | nindent 12 }}
+        securityContext:
+          {{- toYaml .Values.coralogixOperator.securityContext | nindent 12 }}
+        {{- with .Values.volumeMounts }}
+        volumeMounts:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}

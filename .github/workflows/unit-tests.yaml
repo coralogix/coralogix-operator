@@ -1,0 +1,47 @@
+name: unit-tests
+on:
+  pull_request:
+    paths-ignore:
+      - "charts/**"
+      - "docs/**"
+      - "**.md"
+  push:
+    branches:
+      - 'main'
+      - 'release-*'
+    paths-ignore:
+      - "charts/**"
+
+permissions:
+  # seriousben/go-patch-cover-action needs both, one per event type:
+  #   push: its "Save Coverage" step runs `git push origin refs/notes/coverage` to persist the
+  #         coverage baseline that PR runs later diff against.
+  #   pull_request: it creates/updates the patch-coverage comment via the GraphQL API.
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    name: Unit tests
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v5
+      with:
+        go-version-file: go.mod
+        cache-dependency-path: go.sum
+    - name: Cache Makefile tool binaries
+      uses: actions/cache@v4
+      with:
+        path: bin
+        key: ${{ runner.os }}-tools-${{ github.workflow }}-${{ hashFiles('Makefile', 'go.sum') }}
+    - run: make unit-tests
+    - name: Patch Coverage
+      uses: seriousben/go-patch-cover-action@v1
+      with:
+        version: v0.2.0
+        coverage_filename: cover.out

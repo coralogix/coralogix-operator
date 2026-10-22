@@ -1,0 +1,30 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Connector
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: connector-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: pager-duty-sample
+spec:
+  name: pager-duty-sample
+  description: This is a sample pager duty connector
+  type: pagerDuty
+  connectorConfig:
+    fields:
+      - fieldName: integrationKey
+        value: some-integration-key
+  configOverrides:
+    - entityType: alerts
+      fields:
+        - fieldName: integrationKey
+          template: |
+            {% if alert.groups[0].keyValues[alertDef.groupByKeys[1]]|lower == "sample" %}
+            sample-integration-key
+            {% elif alert.groups[0].keyValues[alertDef.groupByKeys[1]]|lower == "another" %}
+            another-integrations-key
+            {% else %}
+            generic-integration-key
+            {% endif %}

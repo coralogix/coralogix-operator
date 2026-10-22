@@ -1,0 +1,13 @@
+apiVersion: coralogix.com/v1beta1
+kind: Alert
+metadata:
+  finalizers:
+    - alert.coralogix.com/finalizer
+  labels:
+    app.kubernetes.io/managed-by: prometheus-example-rules
+  name: prometheus-example-rules-app-latency-0
+  namespace: default
+  ownerReferences:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      name: prometheus-example-rules

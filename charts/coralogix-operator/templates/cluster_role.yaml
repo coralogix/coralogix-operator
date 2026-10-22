@@ -1,0 +1,178 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "coralogixOperator.fullname" . }}
+  labels:
+    {{- include "coralogixOperator.labels" . | nindent 4 }}
+rules:
+  - nonResourceURLs:
+      - /metrics
+    verbs:
+      - get
+  - apiGroups:
+      - authentication.k8s.io
+    resources:
+      - tokenreviews
+    verbs:
+      - create
+  - apiGroups:
+      - authorization.k8s.io
+    resources:
+      - subjectaccessreviews
+    verbs:
+      - create
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - namespaces
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - apiextensions.k8s.io
+    resources:
+      - customresourcedefinitions
+    verbs:
+      - get
+  - apiGroups:
+      - coralogix.com
+    resources:
+      - aicustomevaluations
+      - aievaluations
+      - alerts
+      - alertschedulers
+      - alertsets
+      - apikeys
+      - archivelogstargets
+      - archivemetricstargets
+      - configurationgroups
+      - connectors
+      - customenrichments
+      - customroles
+      - dashboards
+      - dashboardsfolders
+      - enrichments
+      - events2metrics
+      - globalrouters
+      - groups
+      - integrations
+      - ipaccesses
+      - outboundwebhooks
+      - presets
+      - quotaallocationrulesets
+      - recordingrulegroupsets
+      - rulegroups
+      - scopes
+      - slos
+      - tcologspolicies
+      - tcorumpolicies
+      - tcotracespolicies
+      - viewfolders
+      - views
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - coralogix.com
+    resources:
+      - aicustomevaluations/finalizers
+      - aievaluations/finalizers
+      - alerts/finalizers
+      - alertschedulers/finalizers
+      - alertsets/finalizers
+      - apikeys/finalizers
+      - archivelogstargets/finalizers
+      - archivemetricstargets/finalizers
+      - configurationgroups/finalizers
+      - connectors/finalizers
+      - customenrichments/finalizers
+      - customroles/finalizers
+      - dashboards/finalizers
+      - dashboardsfolders/finalizers
+      - enrichments/finalizers
+      - events2metrics/finalizers
+      - globalrouters/finalizers
+      - groups/finalizers
+      - integrations/finalizers
+      - ipaccesses/finalizers
+      - outboundwebhooks/finalizers
+      - presets/finalizers
+      - quotaallocationrulesets/finalizers
+      - recordingrulegroupsets/finalizers
+      - rulegroups/finalizers
+      - scopes/finalizers
+      - slos/finalizers
+      - tcologspolicies/finalizers
+      - tcorumpolicies/finalizers
+      - tcotracespolicies/finalizers
+      - viewfolders/finalizers
+      - views/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - coralogix.com
+    resources:
+      - aicustomevaluations/status
+      - aievaluations/status
+      - alerts/status
+      - alertschedulers/status
+      - alertsets/status
+      - apikeys/status
+      - archivelogstargets/status
+      - archivemetricstargets/status
+      - configurationgroups/status
+      - connectors/status
+      - customenrichments/status
+      - customroles/status
+      - dashboards/status
+      - dashboardsfolders/status
+      - enrichments/status
+      - events2metrics/status
+      - globalrouters/status
+      - groups/status
+      - integrations/status
+      - ipaccesses/status
+      - outboundwebhooks/status
+      - presets/status
+      - quotaallocationrulesets/status
+      - recordingrulegroupsets/status
+      - rulegroups/status
+      - scopes/status
+      - slos/status
+      - tcologspolicies/status
+      - tcorumpolicies/status
+      - tcotracespolicies/status
+      - viewfolders/status
+      - views/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - monitoring.coreos.com
+    resources:
+      - prometheusrules
+    verbs:
+      - get
+      - list
+      - watch

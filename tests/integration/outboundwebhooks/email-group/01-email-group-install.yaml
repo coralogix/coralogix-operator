@@ -1,0 +1,18 @@
+apiVersion: coralogix.com/v1alpha1
+kind: OutboundWebhook
+metadata:
+  labels:
+    app.kubernetes.io/name: outboundwebhook
+    app.kubernetes.io/instance: outboundwebhook-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: email-group-webhook
+spec:
+  name: email-group-webhook
+  outboundWebhookType:
+    emailGroup:
+      emailAddresses:
+        - example@coralogix.com
+          example2@coralogix.com
+          example3@coralogix.com

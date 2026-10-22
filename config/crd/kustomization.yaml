@@ -1,0 +1,47 @@
+# This kustomization.yaml is not intended to be run by itself,
+# since it depends on service name and namespace that are out of this kustomize package.
+# It should be run by config/default
+resources:
+  - bases/coralogix.com_rulegroups.yaml
+  - bases/coralogix.com_alerts.yaml
+  - bases/coralogix.com_alertsets.yaml
+  - bases/coralogix.com_recordingrulegroupsets.yaml
+  - bases/coralogix.com_outboundwebhooks.yaml
+  - bases/coralogix.com_apikeys.yaml
+  - bases/coralogix.com_connectors.yaml
+  - bases/coralogix.com_customroles.yaml
+  - bases/coralogix.com_scopes.yaml
+  - bases/coralogix.com_groups.yaml
+  - bases/coralogix.com_globalrouters.yaml
+  - bases/coralogix.com_quotaallocationrulesets.yaml
+  - bases/coralogix.com_tcologspolicies.yaml
+  - bases/coralogix.com_tcotracespolicies.yaml
+  - bases/coralogix.com_tcorumpolicies.yaml
+  - bases/coralogix.com_integrations.yaml
+  - bases/coralogix.com_alertschedulers.yaml
+  - bases/coralogix.com_dashboards.yaml
+  - bases/coralogix.com_dashboardsfolders.yaml
+  - bases/coralogix.com_presets.yaml
+  - bases/coralogix.com_viewfolders.yaml
+  - bases/coralogix.com_views.yaml
+  - bases/coralogix.com_archivelogstargets.yaml
+  - bases/coralogix.com_archivemetricstargets.yaml
+  - bases/coralogix.com_slos.yaml
+  - bases/coralogix.com_events2metrics.yaml
+  - bases/coralogix.com_ipaccesses.yaml
+  - bases/coralogix.com_customenrichments.yaml
+  - bases/coralogix.com_enrichments.yaml
+  - bases/coralogix.com_aievaluations.yaml
+  - bases/coralogix.com_aicustomevaluations.yaml
+  - bases/coralogix.com_configurationgroups.yaml
+#+kubebuilder:scaffold:crdkustomizeresource
+
+#patchesStrategicMerge:
+#+kubebuilder:scaffold:crdkustomizewebhookpatch
+
+# patches here are for enabling the CA injection for each CRD
+#+kubebuilder:scaffold:crdkustomizecainjectionpatch
+
+# the following config is for teaching kustomize how to do kustomization for CRDs.
+configurations:
+  - kustomizeconfig.yaml

@@ -1,0 +1,453 @@
+{{- if .Values.crds.create }}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.17.2
+  name: slos.coralogix.com
+spec:
+  group: coralogix.com
+  names:
+    kind: SLO
+    listKind: SLOList
+    plural: slos
+    singular: slo
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.printableStatus
+      name: Status
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: |-
+          SLO is the Schema for the slos API.
+          See also https://coralogix.com/platform/apm/slo-management/
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: 'SLOSpec defines the desired state of SLO. For more information,
+              see: https://coralogix.com/platform/apm/slo-management/'
+            properties:
+              description:
+                description: Optional SLO description
+                type: string
+              labels:
+                additionalProperties:
+                  type: string
+                description: Labels are additional labels to be added to the SLO.
+                type: object
+              name:
+                description: SLO name
+                type: string
+              ownershipTags:
+                description: |-
+                  OwnershipTags assign the SLO to a service, environment and team. Omitting the block
+                  clears the tags on the remote SLO, which is the declarative contract. An empty block,
+                  or a dimension whose lists are both empty, is discarded by the API and has no effect.
+                properties:
+                  environment:
+                    description: Environment tags the SLO with a free-form environment
+                      name.
+                    properties:
+                      labelKeys:
+                        description: LabelKeys assigns the dimension from metric label
+                          names, resolved per series.
+                        items:
+                          type: string
+                        type: array
+                      staticValues:
+                        description: StaticValues assigns the dimension group-wide,
+                          with fixed values.
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                    x-kubernetes-validations:
+                    - message: Use either staticValues or labelKeys, not both
+                      rule: '!(has(self.staticValues) && self.staticValues.size()
+                        > 0 && has(self.labelKeys) && self.labelKeys.size() > 0)'
+                  service:
+                    description: |-
+                      Service tags the SLO with an APM service. The API validates static values against
+                      the APM Service Catalog, so the operator does not.
+                    properties:
+                      labelKeys:
+                        description: LabelKeys assigns the dimension from metric label
+                          names, resolved per series.
+                        items:
+                          type: string
+                        type: array
+                      staticValues:
+                        description: StaticValues assigns the dimension group-wide,
+                          with fixed values.
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                    x-kubernetes-validations:
+                    - message: Use either staticValues or labelKeys, not both
+                      rule: '!(has(self.staticValues) && self.staticValues.size()
+                        > 0 && has(self.labelKeys) && self.labelKeys.size() > 0)'
+                  team:
+                    description: Team tags the SLO with a free-form team name.
+                    properties:
+                      labelKeys:
+                        description: LabelKeys assigns the dimension from metric label
+                          names, resolved per series.
+                        items:
+                          type: string
+                        type: array
+                      staticValues:
+                        description: StaticValues assigns the dimension group-wide,
+                          with fixed values.
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                    x-kubernetes-validations:
+                    - message: Use either staticValues or labelKeys, not both
+                      rule: '!(has(self.staticValues) && self.staticValues.size()
+                        > 0 && has(self.labelKeys) && self.labelKeys.size() > 0)'
+                type: object
+              productType:
+                description: |-
+                  ProductType selects the Coralogix product the SLO is built from. Valid values are
+                  "unspecified" and "apm". Setting "apm" requires sliType.apmSli.
+
+                  Setting it is never necessary. The API infers "apm" from the presence of
+                  sliType.apmSli and stores SLO_PRODUCT_TYPE_APM even when this field is omitted or
+                  set to "unspecified". For a metric SLI the API stores SLO_PRODUCT_TYPE_UNSPECIFIED.
+
+                  The coupling only runs one way. "apm" without an apmSli answers
+                  `400 slo.apm_sli is required when slo.product_type is SLO_PRODUCT_TYPE_APM`, so the
+                  rule on this struct mirrors that. An apmSli without "apm" is accepted, so there is
+                  no rule in the other direction.
+                enum:
+                - unspecified
+                - apm
+                type: string
+              sliType:
+                description: |-
+                  SliType defines the type of SLI used for the SLO.
+                  Exactly one of requestBasedMetric, windowBasedMetric or apmSli must be set.
+                properties:
+                  apmSli:
+                    description: |-
+                      ApmSli builds the SLO from an APM Service Catalog service instead of a PromQL query.
+                      It requires spec.productType "apm".
+                    properties:
+                      errorConfig:
+                        description: ErrorConfig makes this an APM error-rate SLI.
+                          It carries no settings.
+                        type: object
+                      filters:
+                        description: Filters narrows the SLI to spans matching every
+                          filter.
+                        items:
+                          description: ApmFilter matches a span attribute against
+                            a set of values.
+                          properties:
+                            key:
+                              description: |-
+                                Key is the span attribute name. Omitting it makes the API build a malformed query
+                                and answer HTTP 400, so it is required.
+                              type: string
+                            values:
+                              description: |-
+                                Values are the accepted values for Key. There is deliberately no MinItems: the API
+                                accepts and stores an empty list, so rejecting one here would be stricter than the
+                                API. An absent list is sent as an empty list, which is the form the API is known to
+                                accept.
+                              items:
+                                type: string
+                              type: array
+                          required:
+                          - key
+                          type: object
+                        type: array
+                      groupingKeys:
+                        description: GroupingKeys splits the SLI by the given span
+                          attributes.
+                        items:
+                          type: string
+                        type: array
+                      latencyConfig:
+                        description: LatencyConfig makes this an APM latency SLI.
+                        properties:
+                          average:
+                            description: Average measures average latency. It carries
+                              no settings.
+                            type: object
+                          quantile:
+                            description: Quantile measures a latency quantile.
+                            properties:
+                              percentile:
+                                anyOf:
+                                - type: integer
+                                - type: string
+                                description: |-
+                                  Percentile is a fraction, so 0.95 means P95. The API stores 0 when omitted.
+                                  There is deliberately no range validator: the API accepts and stores any float,
+                                  including 5 and -1, so rejecting them here would be stricter than the API.
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                            type: object
+                          threshold:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            description: |-
+                              Threshold is the latency threshold in milliseconds, so 500 means 500ms. Latency at
+                              or below the threshold is good. The API stores 0 when omitted.
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                          timeWindow:
+                            description: |-
+                              TimeWindow defines the evaluation window. Valid values are "1m" and "5m".
+                              Omitting it answers HTTP 500 with the same "Not implemented yet" error as an
+                              omitted windowBasedMetric.window, so it is required.
+                            enum:
+                            - 1m
+                            - 5m
+                            type: string
+                        required:
+                        - timeWindow
+                        type: object
+                      services:
+                        description: |-
+                          Services lists the APM Service Catalog services the SLO covers. The Coralogix API
+                          accepts exactly one service today and rejects names that are not in the catalog.
+                          The count is deliberately not capped here, so a server-side relaxation needs no
+                          operator release.
+                        items:
+                          type: string
+                        minItems: 1
+                        type: array
+                    required:
+                    - services
+                    type: object
+                  requestBasedMetric:
+                    properties:
+                      goodEvents:
+                        description: GoodEvents defines the good events metric.
+                        properties:
+                          query:
+                            description: Query is the metric query string.
+                            type: string
+                        required:
+                        - query
+                        type: object
+                      groupByLabels:
+                        description: |-
+                          GroupByLabels has no effect. The Coralogix API derives the SLO grouping itself and
+                          the value is never sent. The field is kept because removing it would break existing
+                          resources.
+                          Deprecated: ignored by the operator and by the API.
+                        items:
+                          type: string
+                        type: array
+                      totalEvents:
+                        description: TotalEvents defines the total events metric.
+                        properties:
+                          query:
+                            description: Query is the metric query string.
+                            type: string
+                        required:
+                        - query
+                        type: object
+                    required:
+                    - goodEvents
+                    - totalEvents
+                    type: object
+                  windowBasedMetric:
+                    properties:
+                      comparisonOperator:
+                        description: |-
+                          ComparisonOperator defines the comparison operator for the SLO. Valid values are
+                          "greaterThan", "lessThan", "greaterThanOrEquals" and "lessThanOrEquals".
+                        enum:
+                        - greaterThan
+                        - lessThan
+                        - greaterThanOrEquals
+                        - lessThanOrEquals
+                        type: string
+                      missingDataStrategy:
+                        description: |-
+                          MissingDataStrategy decides how a window with no data counts. Valid values are
+                          "uncounted", "good" and "bad". When omitted, the API stores
+                          MISSING_DATA_STRATEGY_UNCOUNTED.
+                        enum:
+                        - uncounted
+                        - good
+                        - bad
+                        type: string
+                      query:
+                        description: Query defines the metric query for the SLO.
+                        properties:
+                          query:
+                            description: Query is the metric query string.
+                            type: string
+                        required:
+                        - query
+                        type: object
+                      threshold:
+                        anyOf:
+                        - type: integer
+                        - type: string
+                        description: |-
+                          Threshold defines the threshold the comparisonOperator applies to.
+                          The protobuf field is a bare float with no presence tracking, so the API cannot tell
+                          an omitted threshold from a threshold of 0. Omitting it here sends 0.
+                        pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                        x-kubernetes-int-or-string: true
+                      window:
+                        description: Window defines the time window for the SLO. Valid
+                          values are "1m" and "5m".
+                        enum:
+                        - 1m
+                        - 5m
+                        type: string
+                    required:
+                    - comparisonOperator
+                    - query
+                    - window
+                    type: object
+                type: object
+                x-kubernetes-validations:
+                - message: Exactly one of requestBasedMetric, windowBasedMetric or
+                    apmSli must be set
+                  rule: '[has(self.requestBasedMetric),has(self.windowBasedMetric),has(self.apmSli)].filter(x,
+                    x).size() == 1'
+              targetThresholdPercentage:
+                anyOf:
+                - type: integer
+                - type: string
+                description: |-
+                  TargetThresholdPercentage is the target compliance percentage for the SLO, so 99.9
+                  means three nines. The API rejects a value above 100 with
+                  `400 "slo.targetThresholdPercentage" must be less than or equal to 100`. The bound
+                  is not declared in the protobuf and is not enforced here either: the field is a
+                  resource.Quantity, which renders as int-or-string in the CRD, so the numeric
+                  Minimum and Maximum markers do not apply to it. The lower bound is unverified.
+                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                x-kubernetes-int-or-string: true
+              window:
+                description: Window defines the time window for the SLO.
+                properties:
+                  timeFrame:
+                    description: |-
+                      TimeFrame defines the time frame for the SLO window. Valid values are "unspecified", "7d", "14d", "21d", and "28d".
+                      Deprecated: "90d" is no longer supported by the Coralogix API and will be rejected by the operator.
+                    enum:
+                    - unspecified
+                    - 7d
+                    - 14d
+                    - 21d
+                    - 28d
+                    - 90d
+                    type: string
+                type: object
+            required:
+            - name
+            - sliType
+            - targetThresholdPercentage
+            - window
+            type: object
+            x-kubernetes-validations:
+            - message: productType 'apm' requires sliType.apmSli
+              rule: '!(has(self.productType) && self.productType == ''apm'') || has(self.sliType.apmSli)'
+          status:
+            description: SLOStatus defines the observed state of SLO.
+            properties:
+              conditions:
+                items:
+                  description: Condition contains details for one aspect of the current
+                    state of this API Resource.
+                  properties:
+                    lastTransitionTime:
+                      description: |-
+                        lastTransitionTime is the last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
+                      format: date-time
+                      type: string
+                    message:
+                      description: |-
+                        message is a human readable message indicating details about the transition.
+                        This may be an empty string.
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      description: |-
+                        observedGeneration represents the .metadata.generation that the condition was set based upon.
+                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                        with respect to the current state of the instance.
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      description: |-
+                        reason contains a programmatic identifier indicating the reason for the condition's last transition.
+                        Producers of specific condition types may define expected values and meanings for this field,
+                        and whether the values are considered a guaranteed API.
+                        The value should be a CamelCase string.
+                        This field may not be empty.
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      description: status of the condition, one of True, False, Unknown.
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              id:
+                type: string
+              printableStatus:
+                type: string
+              revision:
+                format: int32
+                type: integer
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+{{- end }}

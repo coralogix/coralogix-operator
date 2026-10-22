@@ -1,0 +1,26 @@
+apiVersion: coralogix.com/v1alpha1
+kind: QuotaAllocationRuleSet
+metadata:
+  name: example-quota-allocation-rule-set
+spec:
+  rules:
+    - entityType: logs
+      allocation: 50
+      allocationType: percentage
+      enabled: true
+      canOverflow: true
+    - entityType: spans
+      allocation: 1
+      allocationType: lockedUnits
+      enabled: true
+      canOverflow: false
+    - entityType: browserLogs
+      allocation: 10
+      allocationType: percentage
+      enabled: true
+      canOverflow: false
+    - entityType: browserLogs/v2
+      allocation: 10
+      allocationType: percentage
+      enabled: true
+      canOverflow: false

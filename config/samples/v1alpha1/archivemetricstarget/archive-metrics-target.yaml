@@ -1,0 +1,14 @@
+apiVersion: coralogix.com/v1alpha1
+kind: ArchiveMetricsTarget
+metadata:
+  name: s3-archivemetrics-target
+  namespace: default  # You can change this to your desired namespace
+spec:
+  s3Target:
+    region: ${AWS_REGION}  # Replace with your AWS region
+    bucketName: ${METRICS_BUCKET}  # Replace with your S3 bucket name
+  resolutionPolicy:
+    rawResolution: 1
+    fiveMinutesResolution: 1
+    oneHourResolution: 1
+  retentionDays: 2 

@@ -1,0 +1,17 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Integration
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: integration-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: github-enterprise-collector
+spec:
+  integrationKey: github-enterprise-collector
+  version: 0.0.1
+  parameters:
+    IntegrationName: GitHub Enterprise
+    ApplicationName: <ApplicationName>
+    PersonalAccessToken: <PersonalAccessToken>

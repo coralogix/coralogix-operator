@@ -1,0 +1,22 @@
+apiVersion: coralogix.com/v1beta1
+kind: Alert
+metadata:
+  name: coralogix-operator-reconcile-error-high
+spec:
+  name: coralogix-operator-reconcile-error-high
+  description: High reconcile error - over 10% of reconciliations are failing.
+  priority: p4
+  alertType:
+    metricThreshold:
+      metricFilter:
+        promql: |
+          coralogix_operator:reconcile_errors_rate:pod / coralogix_operator:reconcile_rate:pod
+      missingValues:
+        minNonNullValuesPct: 0
+      rules:
+        - condition:
+            threshold: "0.1"
+            forOverPct: 100
+            ofTheLast:
+              specificValue: 10m
+            conditionType: moreThan

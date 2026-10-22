@@ -1,0 +1,39 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Preset
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: preset-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: incident-io-sample
+spec:
+  name: incident-io-sample
+  description: This is a sample incident.io preset
+  connectorType: incidentIo
+  entityType: cases
+  parentId: preset_system_incident_io_cases_basic
+  configOverrides:
+    - conditionType:
+        matchEntityType: {}
+      messageConfig:
+        fields:
+          - fieldName: incidentKey
+            template: "{{ case.id }}"
+          - fieldName: title
+            template: "{{ case.title }}"
+          - fieldName: severity
+            template: "{% if case.priority == 'P1' %}Critical{% elif case.priority == 'P2' %}Major{% else %}Minor{% endif %}"
+          - fieldName: summary
+            template: |
+              {{ case.url }}
+              {{ case.description | default(value='') }}
+          - fieldName: status
+            template: "{% if case.status == 'RESOLVED' or case.status == 'CLOSED' %}resolved{% else %}active{% endif %}"
+          - fieldName: assigneeEmail
+            template: "{% if case.assignee.coralogixUser.userEmail %}{{ case.assignee.coralogixUser.userEmail }}{% endif %}"
+          - fieldName: caseUrl
+            template: "{{ case.url }}"
+          - fieldName: alertMetadata
+            template: '{"priority": "{{ case.priority }}"}'

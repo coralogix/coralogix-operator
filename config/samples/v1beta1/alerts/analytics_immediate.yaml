@@ -1,0 +1,28 @@
+# Analytics alerts are in preview.
+apiVersion: coralogix.com/v1beta1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/name: alert
+    app.kubernetes.io/instance: alert-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: analytics-immediate
+spec:
+  name: analytics-immediate alert example
+  description: alert from k8s operator
+  priority: p3
+  # groupByKeys must be columns returned by the query.
+  groupByKeys:
+    - applicationname
+  alertType:
+    analyticsImmediate:
+      dataprimeQuery:
+        query: source logs | filter $m.severity == Severity.ERROR | groupby $l.applicationname aggregate count() as errors
+      timeframeMinutes: 15
+      useRowsAsPermutations: true
+      evaluationDelayMs: 60000
+      noDataPolicy:
+        state: alerting
+        autoRetireSeconds: 3600

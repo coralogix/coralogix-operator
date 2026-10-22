@@ -1,0 +1,19 @@
+apiVersion: coralogix.com/v1alpha1
+kind: Scope
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: scope-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: scope-sample
+spec:
+  name: scope-sample
+  description: This is a sample scope
+  filters:
+    - entityType: logs
+      expression: <v1>(subsystemName == 'purchases') || (subsystemName == 'signups')
+    - entityType: spans
+      expression: <v1>(subsystemName == 'clothing') || (subsystemName == 'electronics')
+  defaultExpression: <v1>true

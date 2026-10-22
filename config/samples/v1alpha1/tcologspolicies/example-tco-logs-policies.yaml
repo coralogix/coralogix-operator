@@ -1,0 +1,89 @@
+apiVersion: coralogix.com/v1alpha1
+kind: TCOLogsPolicies
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: tco-logs-policies-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: tco-logs-policies-sample
+spec:
+  policies:
+    - name: first policy
+      priority: high
+      severities:
+      - critical
+      - error
+      applications:
+        names:
+          - prod
+        ruleType: is
+      subsystems:
+        names:
+          - mobile
+        ruleType: is
+      archiveRetention:
+        backendRef:
+          name: Default
+          # Alternatively, reference the retention directly by its ID
+          # (exactly one of name or id must be set):
+          # id: 12345678-1234-4234-8234-123456789abc
+    - name: second policy
+      priority: low
+      severities:
+      - warning
+      applications:
+        names:
+          - dev
+        ruleType: start_with
+      subsystems:
+        names:
+          - test
+        ruleType: is_not
+    - name: third policy
+      priority: medium
+      disabled: true
+      severities:
+      - info
+      applications:
+        names:
+          - prod
+        ruleType: includes
+      subsystems:
+        names:
+          - mobile
+        ruleType: start_with
+    - name: fourth policy with targets
+      severities:
+      - debug
+      - info
+      targets:
+        - dataset: myDataset
+          dataspace: default
+          priority: low
+        - dataset: archiveDataset
+          dataspace: default
+          priority: low
+          priorityOverride:
+            quotaBased:
+              usageTiers:
+                - dailyQuotaPercentage: 60
+                  priority: medium
+          archiveRetention:
+            backendRef:
+              name: Default
+    - name: fifth policy with dpxl expression
+      priority: medium
+      # dpxlExpression is mutually exclusive with severities, applications and subsystems.
+      dpxlExpression: "<v1>$d.applicationname == 'prod'"
+    - name: sixth policy with policy-level quota-based priority override
+      # Base priority must be lower than every usage-tier priority.
+      priority: low
+      severities:
+      - info
+      priorityOverride:
+        quotaBased:
+          usageTiers:
+            - dailyQuotaPercentage: 60
+              priority: medium

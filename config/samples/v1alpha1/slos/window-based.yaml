@@ -1,0 +1,38 @@
+apiVersion: coralogix.com/v1alpha1
+kind: SLO
+metadata:
+  labels:
+    app.kubernetes.io/name: coralogix-operator
+    app.kubernetes.io/instance: slo-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: window-based-slo-example
+spec:
+  name: window-based-slo-example
+  description: Coralogix SLO example
+  sliType:
+    windowBasedMetric:
+      query:
+        query: sum(rate(coralogix_logs_events_total{app="coralogix-slo-example", status="success"}[10m]))
+      window: 1m
+      comparisonOperator: greaterThan
+      threshold: "0.232"
+      # How a window with no data counts. One of uncounted, good or bad.
+      # When omitted, the API counts it as uncounted.
+      missingDataStrategy: good
+  # Ownership tags assign the SLO to a service, environment and team.
+  # Omitting this block clears the tags on the remote SLO.
+  # Each dimension takes either staticValues or labelKeys, not both.
+  # Leaving both out, or both empty, is allowed: the API discards the dimension.
+  ownershipTags:
+    environment:
+      staticValues:
+        - production
+    team:
+      labelKeys:
+        - team
+  window:
+    timeFrame: 7d
+  targetThresholdPercentage: 10
+
