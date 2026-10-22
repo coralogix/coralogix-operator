@@ -22,6 +22,8 @@ import (
 	"github.com/go-logr/logr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
+	"k8s.io/utils/ptr"
 
 	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 	alerts "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/alert_definitions_service"
@@ -70,6 +72,7 @@ func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 
 	createRequest := &alerts.CreateAlertDefinitionRequest{
 		AlertDefProperties: props,
+		AccessPolicy:       alert.Spec.ExtractCreateAccessPolicy(),
 	}
 
 	log.Info("Creating remote alert", "alert", utils.FormatJSON(createRequest))
@@ -81,7 +84,10 @@ func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 		return fmt.Errorf("error on creating remote alert: %w", cxsdk.NewAPIError(httpResp, err))
 	}
 	log.Info("Remote alert created", "response", utils.FormatJSON(createResponse))
-	alert.Status = coralogixv1beta1.AlertStatus{ID: createResponse.AlertDef.Id}
+	alert.Status = coralogixv1beta1.AlertStatus{ID: createResponse.AlertDef.Id, AccessPolicyManaged: createRequest.AccessPolicy != nil}
+	if createRequest.AccessPolicy != nil {
+		setAccessPolicyManagedAnnotation(ctx, alert, createRequest.AccessPolicy)
+	}
 	return nil
 }
 
@@ -103,9 +109,21 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 		return fmt.Errorf("alert ID is missing")
 	}
 
+	policyAction := alert.Spec.ExtractAccessPolicyAction()
+	if policyAction != nil && policyAction.Upsert != nil && !alert.Status.AccessPolicyManaged {
+		// Record the policy before sending it: once applied, a policy that denies the operator's API key
+		// makes the alert look deleted, and the record must already exist to stop a recreate.
+		alert.Status.AccessPolicyManaged = true
+		if err := config.GetClient().Status().Update(ctx, alert); err != nil {
+			return fmt.Errorf("error on recording the alert access policy in status: %w", err)
+		}
+		setAccessPolicyManagedAnnotation(ctx, alert, policyAction.Upsert)
+	}
+
 	updateRequest := alerts.ReplaceAlertDefinitionRequest{
 		AlertDefProperties: props,
 		Id:                 alert.Status.ID,
+		AccessPolicy:       policyAction,
 	}
 
 	log.Info("Updating remote alert", "alert", utils.FormatJSON(updateRequest))
@@ -114,10 +132,59 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 		ReplaceAlertDefinitionRequest(updateRequest).
 		Execute()
 	if err != nil {
-		return cxsdk.NewAPIError(httpResp, err)
+		apiErr := cxsdk.NewAPIError(httpResp, err)
+		if cxsdk.IsNotFound(apiErr) && alert.Spec.AccessPolicyMayDenyOperator(alert.Status.AccessPolicyManaged, alert.Annotations) {
+			// Not wrapped on purpose: the shared reconciler drops status.id on a wrapped not-found error
+			// and recreates the alert, which would duplicate an alert whose policy locks the operator out.
+			return fmt.Errorf("remote alert %s was not found, or its access policy denies the operator's API key; "+
+				"not recreating it. If it was deleted, remove status.id to recreate it; if it is locked, "+
+				"recreating leaves it orphaned: %s", *alert.Status.ID, apiErr.Error())
+		}
+		return apiErr
 	}
 	log.Info("Remote alert updated", "alert", utils.FormatJSON(updateResponse))
+	if policyAction != nil && policyAction.Delete != nil {
+		alert.Status.AccessPolicyManaged = false
+		clearAlertAnnotations := &coralogixv1beta1.Alert{}
+		if err := config.GetClient().Get(ctx, client.ObjectKeyFromObject(alert), clearAlertAnnotations); err != nil {
+			return fmt.Errorf("error on clearing the alert access policy record: reading the alert failed: %w", err)
+		}
+		delete(clearAlertAnnotations.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation)
+		if err := config.GetClient().Update(ctx, clearAlertAnnotations); err != nil {
+			return fmt.Errorf("error on clearing the alert access policy record: %w", err)
+		}
+		delete(alert.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation)
+	}
 	return nil
+}
+
+// setAccessPolicyManagedAnnotation records the applied policy durably on the CR metadata.
+// Unlike status.accessPolicyManaged, the annotation survives a rolling upgrade's old-binary
+// writes (their typed client preserves annotations but drops the unknown status field), so the
+// not-found guard keeps protecting the alert across the upgrade window. A failed annotation
+// write is logged but does not fail the reconcile: the status tombstone still covers the
+// current version, and the annotation is re-set on the next policy-applying reconcile.
+// The Update runs on a fresh copy of the object: a full-object Update never carries status
+// (it is a subresource), so patching the in-memory alert directly would rely on the caller
+// having already persisted its status.
+func setAccessPolicyManagedAnnotation(ctx context.Context, alert *coralogixv1beta1.Alert, policy *string) {
+	fresh := &coralogixv1beta1.Alert{}
+	if err := config.GetClient().Get(ctx, client.ObjectKeyFromObject(alert), fresh); err != nil {
+		log.FromContext(ctx).Error(err, "Error recording the alert access policy annotation: reading the alert failed")
+		return
+	}
+	if fresh.Annotations == nil {
+		fresh.Annotations = map[string]string{}
+	}
+	fresh.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation] = ptr.Deref(policy, "")
+	if err := config.GetClient().Update(ctx, fresh); err != nil {
+		log.FromContext(ctx).Error(err, "Error recording the alert access policy annotation")
+		return
+	}
+	if alert.Annotations == nil {
+		alert.Annotations = map[string]string{}
+	}
+	alert.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation] = fresh.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation]
 }
 
 func (r *AlertReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
@@ -133,6 +200,9 @@ func (r *AlertReconciler) HandleDeletion(ctx context.Context, log logr.Logger, o
 		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
 			log.Error(err, "Error deleting remote alert", "id", *alert.Status.ID)
 			return fmt.Errorf("error deleting remote alert %s: %w", *alert.Status.ID, err)
+		}
+		if alert.Spec.AccessPolicyMayDenyOperator(alert.Status.AccessPolicyManaged, alert.Annotations) {
+			log.Info("Remote alert not found; if its access policy denied the operator's API key, it still exists remotely and is now orphaned", "id", *alert.Status.ID)
 		}
 	}
 	log.Info("Alert deleted from remote system", "id", *alert.Status.ID)
