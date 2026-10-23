@@ -7,6 +7,8 @@
 > [!WARNING]
 > **Security advisory**: On October 20, 2026, the private keys for 8 intermediate certificate authority (CA) certificates operated by eMudhra were compromised. Update the Coralogix Operator to **v2.16.0** (FIPS build: v2.16.0-fips) or later to remove this exposure. Coralogix endpoints don't use eMudhra or emSign certificates, so your connection to Coralogix is not affected.
 >
+> See the [eMudhra security advisory](https://coralogix.com/blog/coralogix-security-advisory-emudhra-certificate-update/) for full upgrade guidance and breaking-change details.
+>
 > Our support team is here to help. Reach us through the in-app chat (or [support@coralogix.com](mailto:support@coralogix.com)) and say: "I'm contacting you regarding the Security advisory eMudhra," then mention which component you'd like help upgrading.
 
 
