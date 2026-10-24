@@ -2845,13 +2845,18 @@ func expandSloBurnRateRuleCondition(condition BurnRateRuleCondition) *alerts.Slo
 }
 
 func expandLogsUniqueCount(uniqueCount *LogsUniqueCount) *alerts.LogsUniqueCountType {
-	return &alerts.LogsUniqueCountType{
-		LogsFilter:                  expandLogsFilter(uniqueCount.LogsFilter),
-		Rules:                       expandLogsUniqueCountRules(uniqueCount.Rules),
-		NotificationPayloadFilter:   uniqueCount.NotificationPayloadFilter,
-		MaxUniqueCountPerGroupByKey: alerts.PtrString(strconv.FormatUint(*uniqueCount.MaxUniqueCountPerGroupByKey, 10)),
-		UniqueCountKeypath:          alerts.PtrString(uniqueCount.UniqueCountKeypath),
+	result := &alerts.LogsUniqueCountType{
+		LogsFilter:                expandLogsFilter(uniqueCount.LogsFilter),
+		Rules:                     expandLogsUniqueCountRules(uniqueCount.Rules),
+		NotificationPayloadFilter: uniqueCount.NotificationPayloadFilter,
+		UniqueCountKeypath:        alerts.PtrString(uniqueCount.UniqueCountKeypath),
 	}
+	// maxUniqueCountPerGroupByKey is optional, and the API rejects it on
+	// alerts without group-by keys, so only send it when it is set.
+	if uniqueCount.MaxUniqueCountPerGroupByKey != nil {
+		result.MaxUniqueCountPerGroupByKey = alerts.PtrString(strconv.FormatUint(*uniqueCount.MaxUniqueCountPerGroupByKey, 10))
+	}
+	return result
 }
 
 func expandLogsUniqueCountRules(rules []LogsUniqueCountRule) []alerts.LogsUniqueCountRule {
