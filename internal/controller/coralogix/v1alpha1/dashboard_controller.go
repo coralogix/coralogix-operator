@@ -57,6 +57,15 @@ func (r *DashboardReconciler) RequeueInterval() time.Duration {
 	return r.Interval
 }
 
+// SkipCreationRollback skips the status-failure rollback for adopted (imported)
+// dashboards: HandleCreation only looked the remote dashboard up, so deleting it
+// would destroy a pre-existing dashboard the operator never created. A genuinely
+// created dashboard has Imported=false and is still rolled back.
+func (r *DashboardReconciler) SkipCreationRollback(obj client.Object) bool {
+	dashboard, ok := obj.(*coralogixv1alpha1.Dashboard)
+	return ok && dashboard.Status.Imported
+}
+
 func (r *DashboardReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	dashboard := obj.(*coralogixv1alpha1.Dashboard)
 	dashboardToCreate, err := dashboard.Spec.ExtractDashboardFromSpec(ctx, dashboard.Namespace)
