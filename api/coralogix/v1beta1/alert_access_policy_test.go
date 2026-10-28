@@ -23,7 +23,7 @@ import (
 )
 
 func TestAlertSpecAccessPolicyMapping(t *testing.T) {
-	policy := `{"version":"2025-01-01","default":{"permissions":{"alerts:Read":"grant"}},"rules":[]}`
+	policy := `{"version":"2025-01-01","default":{"permissions":{"alerts:ReadConfig":"grant"}},"rules":[]}`
 
 	t.Run("nil leaves the remote policy unchanged", func(t *testing.T) {
 		spec := &AlertSpec{}
@@ -60,7 +60,7 @@ func TestAlertSpecAccessPolicyMapping(t *testing.T) {
 }
 
 func TestAlertSpecAccessPolicyMayDenyOperator(t *testing.T) {
-	policy := `{"version":"2025-01-01","default":{"permissions":{"alerts:Read":"grant"}},"rules":[]}`
+	policy := `{"version":"2025-01-01","default":{"permissions":{"alerts:ReadConfig":"grant"}},"rules":[]}`
 
 	for _, tc := range []struct {
 		name        string

@@ -16,7 +16,7 @@ spec:
     alert_type: security
     security_severity: high
   # JSON string representing the access policy for this alert. The policy must
-  # keep granting the operator's API key alerts Read, Update and Delete.
+  # keep granting the operator's API key alerts:ReadConfig and alerts:UpdateConfig.
   # Note for Helm template authors: an unset value rendered with `quote` produces
   # "", which deletes the remote policy. Wrap the field in `{{- with .Values.policy }}`.
   accessPolicy: |-
@@ -24,11 +24,10 @@ spec:
       "version": "2025-01-01",
       "default": {
         "permissions": {
-          "alerts:Read": "grant",
+          "alerts:ReadConfig": "grant",
           "alerts:ReadAccessPolicy": "grant",
-          "alerts:Update": "grant",
-          "alerts:UpdateAccessPolicy": "grant",
-          "alerts:Delete": "grant"
+          "alerts:UpdateConfig": "grant",
+          "alerts:UpdateAccessPolicy": "grant"
         }
       },
       "rules": []

@@ -111,7 +111,7 @@ func initAlertClient(t *testing.T, alert *coralogixv1beta1.Alert, statusClient f
 }
 
 func TestHandleUpdateSendsAccessPolicyAction(t *testing.T) {
-	policy := `{"version":"2025-01-01","default":{"permissions":{"alerts:Read":"grant"}},"rules":[]}`
+	policy := `{"version":"2025-01-01","default":{"permissions":{"alerts:ReadConfig":"grant"}},"rules":[]}`
 
 	for _, tc := range []struct {
 		name   string
@@ -214,7 +214,7 @@ func TestHandleUpdateKeepsIDWhenPolicyManagedAlertIsNotFound(t *testing.T) {
 }
 
 func TestHandleUpdateRecordsAccessPolicyBeforeSending(t *testing.T) {
-	policy := `{"version":"2025-01-01","default":{"permissions":{"alerts:Read":"grant"}},"rules":[]}`
+	policy := `{"version":"2025-01-01","default":{"permissions":{"alerts:ReadConfig":"grant"}},"rules":[]}`
 
 	t.Run("tombstone is persisted before the request", func(t *testing.T) {
 		var baseClient client.Client
@@ -291,7 +291,7 @@ func TestHandleUpdateClearsAccessPolicyManagedAfterDelete(t *testing.T) {
 }
 
 func TestHandleCreationSendsAccessPolicy(t *testing.T) {
-	policy := `{"version":"2025-01-01","default":{"permissions":{"alerts:Read":"grant"}},"rules":[]}`
+	policy := `{"version":"2025-01-01","default":{"permissions":{"alerts:ReadConfig":"grant"}},"rules":[]}`
 
 	for _, tc := range []struct {
 		name        string

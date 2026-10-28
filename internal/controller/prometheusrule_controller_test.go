@@ -419,7 +419,7 @@ func TestPrometheusRuleUpdatePreservesAlertAccessPolicy(t *testing.T) {
 		}
 	})
 
-	policy := `{"version":"2025-01-01","default":{"permissions":{"alerts:Read":"grant"}},"rules":[]}`
+	policy := `{"version":"2025-01-01","default":{"permissions":{"alerts:ReadConfig":"grant"}},"rules":[]}`
 	generated.Spec.AccessPolicy = ptr.To(policy)
 	assert.NoError(t, config.GetClient().Update(ctx, generated))
 

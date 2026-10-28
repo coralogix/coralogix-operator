@@ -33,7 +33,7 @@ import (
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 )
 
-const testAlertSetAccessPolicy = `{"version":"2025-01-01","default":{"permissions":{"alerts:Read":"grant"}},"rules":[]}`
+const testAlertSetAccessPolicy = `{"version":"2025-01-01","default":{"permissions":{"alerts:ReadConfig":"grant"}},"rules":[]}`
 
 func accessPolicyAlertSetItem(key string, policy *string) coralogixv1alpha1.AlertSetItem {
 	item := minimalAlertSetItem(key)

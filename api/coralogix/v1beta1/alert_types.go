@@ -341,7 +341,7 @@ type AlertSpec struct {
 	// Set to "" to keep the alert without a policy; a policy added elsewhere is removed on the next reconcile.
 	// When omitted, the policy is not managed and is left unchanged.
 	// Setting the policy requires the alerts:UpdateAccessPolicy permission on the operator's API key.
-	// The policy must keep granting the operator's API key alerts Read, Update and Delete. Otherwise the operator
+	// The policy must keep granting the operator's API key alerts:ReadConfig and alerts:UpdateConfig. Otherwise the operator
 	// stops managing the alert and does not recreate it; forcing a recreate leaves the locked alert orphaned.
 	// +optional
 	AccessPolicy *string `json:"accessPolicy,omitempty"`

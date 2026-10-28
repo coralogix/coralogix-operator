@@ -36,18 +36,17 @@ import (
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
-// The alert policy schema (version string, permission keys, and how a rule
-// names an API key or its role) is not yet published, so every fixture below
-// mirrors the Dashboard-shaped policy envelope already used in the samples.
-// Revisit once the schema questions are answered.
+// Alert policies use the alerts:*Config permission keys; there is no
+// alerts:Read, alerts:Update or alerts:Delete. The operator's API key needs
+// ReadConfig and UpdateConfig to keep managing (and deleting) the alert.
 const (
-	alertAccessPolicyP1 = `{"version":"2025-01-01","default":{"permissions":{"alerts:Read":"grant","alerts:ReadAccessPolicy":"grant","alerts:Update":"grant","alerts:UpdateAccessPolicy":"grant","alerts:Delete":"grant"}},"rules":[]}`
-	// P2 differs from P1 only by denying alerts:Delete. Update stays granted
-	// so reconciles still apply while P2 is active; the "" step removes it
-	// before the CR is deleted.
-	alertAccessPolicyP2 = `{"version":"2025-01-01","default":{"permissions":{"alerts:Read":"grant","alerts:ReadAccessPolicy":"grant","alerts:Update":"grant","alerts:UpdateAccessPolicy":"grant","alerts:Delete":"deny"}},"rules":[]}`
+	alertAccessPolicyP1 = `{"version":"2025-01-01","default":{"permissions":{"alerts:ReadConfig":"grant","alerts:ReadAccessPolicy":"grant","alerts:UpdateConfig":"grant","alerts:UpdateAccessPolicy":"grant"}},"rules":[]}`
+	// P2 differs from P1 only by denying alerts:MetricsUpdateConfig, which does
+	// not apply to the logs alerts under test, so reconciles still apply while
+	// P2 is active.
+	alertAccessPolicyP2 = `{"version":"2025-01-01","default":{"permissions":{"alerts:ReadConfig":"grant","alerts:ReadAccessPolicy":"grant","alerts:UpdateConfig":"grant","alerts:UpdateAccessPolicy":"grant","alerts:MetricsUpdateConfig":"deny"}},"rules":[]}`
 	// Unknown version: exercises the per-item invalid-policy path.
-	alertAccessPolicyInvalid = `{"version":"v2099-01-01","default":{"permissions":{"alerts:Read":"grant"}},"rules":[]}`
+	alertAccessPolicyInvalid = `{"version":"v2099-01-01","default":{"permissions":{"alerts:ReadConfig":"grant"}},"rules":[]}`
 )
 
 // expectAlertPolicy asserts the remote alert's access policy. It first asserts
