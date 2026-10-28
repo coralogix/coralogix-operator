@@ -235,3 +235,12 @@ helm-update-crds:
 .PHONY: helm-sync-docs
 helm-sync-docs: helm-docs
 	$(HELM_DOCS)
+
+##@ Release
+
+BUMP ?= patch
+
+.PHONY: bump
+bump: ## Bump the release version in cmd/main.go and the chart (BUMP=patch|minor|major, default patch).
+	bash scripts/bump-version.sh $(BUMP)
+	$(MAKE) helm-sync-docs

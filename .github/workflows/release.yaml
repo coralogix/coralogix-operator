@@ -1,294 +1,98 @@
 name: Release
 
-# Releases the operator end to end from one version input:
-#   X.Y.0 (minor or major): cuts release-X.Y from main.
-#   X.Y.Z (patch):           releases from the existing release-X.Y branch.
-# Then: version bump commit on the release branch, tag, image push, chart publish to JFrog,
-# GitHub release, and for minor/major a version bump PR against main.
+# Releases every merge to main whose version is not released yet: the version in
+# charts/coralogix-operator/Chart.yaml, which PRs raise with `make bump` (checked by Version
+# Bump). Publishes the image (also as latest), the chart to JFrog, and a GitHub release that
+# creates the vX.Y.Z tag.
 #
-# Commits go through the GraphQL API (scripts/signed-commit.sh), so GitHub signs them.
-# Refs and commits made with GITHUB_TOKEN do not start other workflows, so the image and
-# chart workflows are called directly instead of being triggered by the tag and the commit.
-#
-# dry_run runs every job up to the first write: it plans, checks the version bump, builds
-# both images without pushing, and packages the chart and signs in to JFrog without uploading.
-# It writes no branch, commit, tag, image, chart, release or PR.
+# The tag is created with GITHUB_TOKEN, which does not start other workflows, so the image and
+# chart workflows are called here instead of being triggered by it. A merge whose version is
+# already tagged (a docs-only PR, or a run of an older commit) publishes nothing.
 on:
+  push:
+    branches:
+      - main
+  # Retries a release from main after a failed run.
   workflow_dispatch:
-    inputs:
-      version:
-        description: "Version to release, for example 2.16.0 (new minor line) or 2.15.3 (patch on release-2.15)"
-        required: true
-        type: string
-      dry_run:
-        description: "Dry run: check every step, write nothing"
-        required: false
-        type: boolean
-        default: false
 
 permissions:
   contents: read
 
-# An explicit bash shell runs with -eo pipefail; the implicit default is only -e, which lets
-# a failing command hide behind a pipe such as `| tee`.
 defaults:
   run:
     shell: bash
 
-# Releases share tags, release branches and the latest image tag; run one at a time.
+# One release at a time. A newer merge waiting here replaces an older waiting one, which is
+# fine: the newer commit carries the older one's changes and a higher version.
 concurrency:
   group: release
   cancel-in-progress: false
 
 jobs:
-  plan:
-    name: Plan release
+  version:
+    name: Read version
+    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.plan.outputs.version }}
-      tag: ${{ steps.plan.outputs.tag }}
-      kind: ${{ steps.plan.outputs.kind }}
-      branch: ${{ steps.plan.outputs.branch }}
-      branch_exists: ${{ steps.plan.outputs.branch_exists }}
-      latest: ${{ steps.plan.outputs.latest }}
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      released: ${{ steps.version.outputs.released }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Plan
-        id: plan
-        env:
-          VERSION: ${{ inputs.version }}
+      - name: Read version
+        id: version
         run: |
-          scripts/release-plan.sh "$VERSION" | tee -a "$GITHUB_OUTPUT"
-
-      - name: Summary
-        env:
-          TAG: ${{ steps.plan.outputs.tag }}
-          KIND: ${{ steps.plan.outputs.kind }}
-          BRANCH: ${{ steps.plan.outputs.branch }}
-          BRANCH_EXISTS: ${{ steps.plan.outputs.branch_exists }}
-          LATEST: ${{ steps.plan.outputs.latest }}
-          DRY_RUN: ${{ inputs.dry_run }}
-        run: |
+          version=$(yq eval '.version' charts/coralogix-operator/Chart.yaml)
+          tag="v$version"
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" > /dev/null; then
+            released=true
+            echo "$tag is already released; nothing to publish."
+          else
+            released=false
+            echo "Releasing $tag"
+          fi
           {
-            echo "### Release $TAG"
-            echo
-            echo "| | |"
-            echo "|---|---|"
-            echo "| Kind | $KIND |"
-            echo "| Branch | \`$BRANCH\` (exists: $BRANCH_EXISTS) |"
-            echo "| Marked latest | $LATEST |"
-            echo "| Dry run | $DRY_RUN |"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-  prepare:
-    name: Bump version and tag
-    needs: plan
-    runs-on: ubuntu-latest
-    # Optional approval gate: add required reviewers to the "release" environment in the
-    # repository settings to have a person confirm the plan before anything is written.
-    environment: release
-    permissions:
-      contents: write
-    outputs:
-      sha: ${{ steps.commit.outputs.sha }}
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      VERSION: ${{ needs.plan.outputs.version }}
-      TAG: ${{ needs.plan.outputs.tag }}
-      BRANCH: ${{ needs.plan.outputs.branch }}
-      DRY_RUN: ${{ inputs.dry_run }}
-      # Release branches cut before this workflow existed do not have the release scripts,
-      # so they are taken from the commit the workflow runs from.
-      TOOLS: ${{ github.workspace }}/.release-tools
-    steps:
-      # A new line starts from main; an existing branch (patch, or a minor run that cut the
-      # branch and then failed) is released from its own head.
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.plan.outputs.branch_exists == 'true' && needs.plan.outputs.branch || github.event.repository.default_branch }}
-
-      - name: Checkout release scripts
-        uses: actions/checkout@v4
-        with:
-          path: .release-tools
-          sparse-checkout: scripts
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-
-      # A re-run of this job after the branch was cut finds it on the remote and continues
-      # from its head, which may already hold the version bump.
-      - name: Cut release branch
-        if: ${{ needs.plan.outputs.branch_exists != 'true' }}
-        run: |
-          if git ls-remote --exit-code --heads origin "refs/heads/$BRANCH" > /dev/null; then
-            git fetch -q --depth=1 origin "$BRANCH"
-            git checkout -q FETCH_HEAD
-            echo "$BRANCH already exists; continuing from $(git rev-parse HEAD)"
-          elif [ "$DRY_RUN" = "true" ]; then
-            echo "Dry run: would create $BRANCH at $(git rev-parse HEAD)"
-          else
-            gh api "repos/$GITHUB_REPOSITORY/git/refs" \
-              -f ref="refs/heads/$BRANCH" -f sha="$(git rev-parse HEAD)" > /dev/null
-            echo "Created $BRANCH at $(git rev-parse HEAD)"
-          fi
-
-      - name: Bump version
-        run: |
-          "$TOOLS/scripts/release-bump.sh" "$VERSION"
-          make helm-sync-docs
-
-      - name: Commit version bump
-        id: commit
-        run: |
-          # helm-docs only touches the README; anything else changing means the bump is wrong.
-          files=$(git diff --name-only)
-          unexpected=$(grep -vxE 'cmd/main.go|charts/coralogix-operator/(Chart.yaml|README.md)' <<<"$files" || true)
-          if [ -n "$unexpected" ]; then
-            echo "::error::Unexpected changes from the version bump: $unexpected"
-            exit 1
-          fi
-          git diff
-          if [ -z "$files" ]; then
-            echo "Branch already at $VERSION; tagging its head."
-            sha=$(git rev-parse HEAD)
-          elif [ "$DRY_RUN" = "true" ]; then
-            printf 'Dry run: would commit to %s:\n%s\n' "$BRANCH" "$files"
-            # Later jobs build from the unbumped head.
-            sha=$(git rev-parse HEAD)
-          else
-            # shellcheck disable=SC2086 # one path per word
-            sha=$("$TOOLS/scripts/signed-commit.sh" "$BRANCH" "$(git rev-parse HEAD)" "chore: release $VERSION" $files)
-          fi
-          echo "sha=$sha" >> "$GITHUB_OUTPUT"
-
-      - name: Tag release
-        env:
-          SHA: ${{ steps.commit.outputs.sha }}
-        run: |
-          # Lightweight tags point straight at the commit, so a re-run can compare shas.
-          existing=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/$TAG" \
-            --jq ".[] | select(.ref == \"refs/tags/$TAG\") | .object.sha")
-          if [ -n "$existing" ]; then
-            if [ "$existing" != "$SHA" ]; then
-              echo "::error::$TAG already exists at $existing, not at $SHA"
-              exit 1
-            fi
-            echo "$TAG already at $SHA"
-          elif [ "$DRY_RUN" = "true" ]; then
-            echo "Dry run: would tag $TAG at $SHA"
-          else
-            gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$TAG" -f sha="$SHA" > /dev/null
-            echo "Tagged $TAG at $SHA"
-          fi
+            echo "version=$version"
+            echo "tag=$tag"
+            echo "released=$released"
+          } >> "$GITHUB_OUTPUT"
 
   image:
     name: Push image
-    needs: [plan, prepare]
+    needs: version
+    if: ${{ needs.version.outputs.released == 'false' }}
     uses: ./.github/workflows/container.yaml
     with:
-      ref: ${{ needs.prepare.outputs.sha }}
-      tag: ${{ needs.plan.outputs.tag }}
-      latest: ${{ needs.plan.outputs.latest == 'true' }}
-      push: ${{ !inputs.dry_run }}
+      ref: ${{ github.sha }}
+      tag: ${{ needs.version.outputs.tag }}
     secrets: inherit
     permissions:
       contents: read
 
   chart:
     name: Publish chart
-    needs: [plan, prepare, image]
+    needs: [version, image]
     uses: ./.github/workflows/helm-chart-deploy.yml
     with:
-      ref: ${{ needs.prepare.outputs.sha }}
-      version: ${{ needs.plan.outputs.version }}
-      upload: ${{ !inputs.dry_run }}
+      ref: ${{ github.sha }}
+      version: ${{ needs.version.outputs.version }}
     permissions:
       contents: read
       id-token: write
 
   github-release:
     name: Create GitHub release
-    needs: [plan, chart]
-    if: ${{ !inputs.dry_run }}
+    needs: [version, chart]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GH_REPO: ${{ github.repository }}
-      TAG: ${{ needs.plan.outputs.tag }}
-      LATEST: ${{ needs.plan.outputs.latest }}
+      TAG: ${{ needs.version.outputs.tag }}
     steps:
       - name: Create release
         run: |
-          if gh release view "$TAG" > /dev/null 2>&1; then
-            echo "Release $TAG already exists"
-            exit 0
-          fi
-          gh release create "$TAG" --verify-tag --title "$TAG" --generate-notes --latest="$LATEST"
-
-  main-pr:
-    name: Open version bump PR to main
-    needs: [plan, github-release]
-    if: ${{ needs.plan.outputs.kind == 'minor' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      VERSION: ${{ needs.plan.outputs.version }}
-      BASE: ${{ github.event.repository.default_branch }}
-      HEAD_BRANCH: release-bump/${{ needs.plan.outputs.tag }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.repository.default_branch }}
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-
-      - name: Bump version
-        run: |
-          scripts/release-bump.sh "$VERSION"
-          make helm-sync-docs
-
-      - name: Open PR
-        run: |
-          files=$(git diff --name-only)
-          if [ -z "$files" ]; then
-            echo "$BASE is already at $VERSION."
-            exit 0
-          fi
-          # The head branch belongs to this workflow. A re-run resets it to the current base and
-          # commits the bump again, then reuses the PR if the first attempt opened one.
-          if git ls-remote --exit-code --heads origin "refs/heads/$HEAD_BRANCH" > /dev/null; then
-            gh api -X PATCH "repos/$GITHUB_REPOSITORY/git/refs/heads/$HEAD_BRANCH" \
-              -f sha="$(git rev-parse HEAD)" -F force=true > /dev/null
-          else
-            gh api "repos/$GITHUB_REPOSITORY/git/refs" \
-              -f ref="refs/heads/$HEAD_BRANCH" -f sha="$(git rev-parse HEAD)" > /dev/null
-          fi
-          # shellcheck disable=SC2086 # one path per word
-          scripts/signed-commit.sh "$HEAD_BRANCH" "$(git rev-parse HEAD)" "chore: bump version to $VERSION" $files
-          url=$(gh pr list --base "$BASE" --head "$HEAD_BRANCH" --state open --json url --jq '.[0].url // ""')
-          if [ -n "$url" ]; then
-            echo "Reusing $url"
-          else
-            url=$(gh pr create --base "$BASE" --head "$HEAD_BRANCH" \
-              --title "chore: bump version to $VERSION" \
-              --body "Brings the version bump from the v$VERSION release onto $BASE. Opened by the Release workflow.")
-            echo "Opened $url"
-          fi
-          echo "Version bump PR: $url" >> "$GITHUB_STEP_SUMMARY"
-          # Merges once approved, when auto-merge is enabled for the repository.
-          gh pr merge "$url" --auto --squash || echo "::notice::Auto-merge not enabled; merge $url after approval."
+          gh release create "$TAG" --target "$GITHUB_SHA" --title "$TAG" --generate-notes --latest
