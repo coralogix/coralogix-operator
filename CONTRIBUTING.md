@@ -79,6 +79,20 @@ $ pre-commit run gitleaks
 
 If needed, bypass with `SKIP=gitleaks git commit ...` or `git commit --no-verify`.
 
+Releasing
+---------------------
+Every merge to `main` is released. The version lives in `cmd/main.go` (`OperatorVersion`) and in `charts/coralogix-operator/Chart.yaml` (`version` and `appVersion`). Bump it in your PR:
+
+```sh
+$ make bump                # patch: 2.16.0 -> 2.16.1
+$ make bump BUMP=minor     # 2.16.0 -> 2.17.0
+$ make bump BUMP=major     # 2.16.0 -> 3.0.0
+```
+
+The `Version Bump` check fails a PR that changes what ships without raising the version. PRs that only touch docs, tests or CI don't need a bump.
+
+After the merge, the `Release` workflow pushes the `coralogixrepo/coralogix-operator` image (also tagged `latest`), publishes the chart, and creates the GitHub release with the `vX.Y.Z` tag. If a run fails, re-run its failed jobs, or run `Release` on `main` again.
+
 Running E2E Tests
 ---------------------
 The test files are located at [./tests/e2e/](./tests/e2e).

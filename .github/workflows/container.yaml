@@ -13,7 +13,7 @@ on:
       - "v*"
     paths-ignore:
       - "charts/**"
-  # Called by the Release workflow, which creates the tag with GITHUB_TOKEN. Tag pushes made
+  # Called by the Release workflow, which creates the release tag with GITHUB_TOKEN. Tags made
   # with GITHUB_TOKEN do not start workflows, so the release calls this one directly.
   workflow_call:
     inputs:
@@ -22,17 +22,9 @@ on:
         required: true
         type: string
       tag:
-        description: Image tag to push, for example v2.16.0.
+        description: Image tag to push, for example v2.16.1. The image is also pushed as latest.
         required: true
         type: string
-      latest:
-        description: Also push the latest tag. False for patches on older release lines.
-        required: true
-        type: boolean
-      push:
-        description: Push the image. False builds only, for a release dry run.
-        required: true
-        type: boolean
 
 # The image is pushed to DockerHub with credentials from secrets.*, never to GHCR, so the
 # workflow token only ever needs to read the repo.
@@ -75,6 +67,8 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # Skipped for a release, which names its own tags below: metadata-action would derive them
+      # from main, not from the release version.
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         if: ${{ !inputs.tag }}
@@ -83,31 +77,6 @@ jobs:
           images: ${{ env.DOCKERHUB_REGISTRY }}
           flavor: |
             suffix=${{ matrix.suffix }},onlatest=true
-
-      # A release call names its tags itself: metadata-action would derive them from the caller's
-      # ref (the branch the Release workflow was dispatched from), not from the release tag.
-      - name: Resolve image tags
-        id: tags
-        env:
-          RELEASE_TAG: ${{ inputs.tag }}
-          LATEST: ${{ inputs.latest }}
-          META_TAGS: ${{ steps.meta.outputs.tags }}
-          REF_TAG: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
-          SUFFIX: ${{ matrix.suffix }}
-        run: |
-          {
-            echo "tags<<EOF"
-            if [ -n "$RELEASE_TAG" ]; then
-              echo "$DOCKERHUB_REGISTRY:$RELEASE_TAG$SUFFIX"
-              if [ "$LATEST" = "true" ]; then
-                echo "$DOCKERHUB_REGISTRY:latest$SUFFIX"
-              fi
-            else
-              echo "$META_TAGS"
-              echo "$DOCKERHUB_REGISTRY:$REF_TAG$SUFFIX"
-            fi
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
 
       # No QEMU: the builder stage is pinned to the build platform and cross-compiles with
       # GOARCH, and the runtime stage only copies the binary in, so nothing needs emulating.
@@ -122,7 +91,7 @@ jobs:
           build-args: |
             GOFIPS140=${{ matrix.gofips140 }}
             GODEBUG=${{ matrix.godebug }}
-          push: ${{ inputs.tag && inputs.push || !inputs.tag && startsWith(github.ref, 'refs/tags/') }}
+          push: ${{ startsWith(github.ref, 'refs/tags/') || inputs.tag != '' }}
           # Keep the published manifest shape as it was before the action was upgraded;
           # build-push-action v6 would otherwise attach provenance attestations.
           provenance: false
@@ -130,4 +99,7 @@ jobs:
           # run (mode=max has to push the whole multi-GB builder stage), while the only layer
           # it could ever restore is `go mod download` - the build layer is invalidated by any
           # source change. Cross-compiling instead of emulating is where the win actually is.
-          tags: ${{ steps.tags.outputs.tags }}
+          # A release pushes <tag> and latest; other runs keep the metadata tags plus <ref or sha>.
+          tags: |
+            ${{ inputs.tag && format('{0}:{1}{2}', env.DOCKERHUB_REGISTRY, inputs.tag, matrix.suffix) || steps.meta.outputs.tags }}
+            ${{ inputs.tag && format('{0}:latest{1}', env.DOCKERHUB_REGISTRY, matrix.suffix) || format('{0}:{1}{2}', env.DOCKERHUB_REGISTRY, startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha, matrix.suffix) }}
