@@ -178,6 +178,9 @@ func (r *AlertSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			alertSet.Status.Alerts = sortedAlertSetStatuses(statusByKey)
 			return r.finish(ctx, alertSet, originalStatus, utils.ReasonRemoteDeletionFailed, cleanupErrs)
 		}
+		// The removed items are gone remotely, so their policy records go now rather than with a
+		// later create or replace that may not happen: the write drops keys no longer in the spec.
+		writeAlertSetPolicyRecord(ctx, alertSet, alertSetPolicyRecord(alertSet), reconcileLog)
 	}
 
 	var reconcileErrs []error
@@ -368,6 +371,10 @@ func (r *AlertSetReconciler) createAlerts(
 			status.AccessPolicyManaged = true
 			statusByKey[key] = status
 			recorded[key] = struct{}{}
+		} else {
+			// A new remote alert without a policy: a record left from an earlier item with the
+			// same key must not make its later deletion look like a lockout.
+			delete(recorded, key)
 		}
 	}
 	writeAlertSetPolicyRecord(ctx, alertSet, recorded, reconcileLog)

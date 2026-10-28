@@ -614,3 +614,38 @@ func TestReplaceAlertsDoesNotRecordPerItemFailures(t *testing.T) {
 	require.False(t, byKey["failed"].AccessPolicyManaged, "the rollback must be persisted")
 	require.Equal(t, `["ok"]`, persisted.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation])
 }
+
+func TestCreateAlertsDropsStaleRecordForPolicyFreeItem(t *testing.T) {
+	alertSet := &coralogixv1alpha1.AlertSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-alert-set",
+			Namespace: "default",
+			// Left by an earlier item with the same key whose cleanup never pruned it.
+			Annotations: map[string]string{coralogixv1beta1.AccessPolicyManagedAnnotation: `["readded"]`},
+		},
+		Spec: coralogixv1alpha1.AlertSetSpec{Alerts: []coralogixv1alpha1.AlertSetItem{
+			accessPolicyAlertSetItem("readded", nil),
+		}},
+	}
+	baseClient := initAlertSetClient(t, alertSet, nil)
+	stored := &coralogixv1alpha1.AlertSet{}
+	require.NoError(t, baseClient.Get(context.Background(), client.ObjectKeyFromObject(alertSet), stored))
+	reconciler := &AlertSetReconciler{api: fakeAlertSetAPI{
+		bulkCreate: func(context.Context, alerts.BulkCreateAlertDefinitionsRequest) (*alerts.BulkCreateAlertDefsResponse, *http.Response, error) {
+			return &alerts.BulkCreateAlertDefsResponse{AlertDefs: []alerts.AlertDef{{Id: ptr.To("new-id")}}}, nil, nil
+		},
+	}}
+	statuses := map[string]coralogixv1alpha1.AlertSetItemStatus{
+		"readded": {Key: "readded", State: coralogixv1alpha1.AlertSetItemStatePending},
+	}
+
+	createdKeys, _, requestErr := reconciler.createAlerts(context.Background(), logr.Discard(), stored,
+		desiredAlertSetItemsByKey(stored.Spec.Alerts), statuses)
+
+	require.NoError(t, requestErr)
+	require.Contains(t, createdKeys, "readded")
+	persisted := &coralogixv1alpha1.AlertSet{}
+	require.NoError(t, baseClient.Get(context.Background(), client.ObjectKeyFromObject(alertSet), persisted))
+	require.NotContains(t, persisted.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation,
+		"a policy-free item created under a recorded key must not inherit the stale record")
+}
