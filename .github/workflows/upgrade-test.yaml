@@ -83,6 +83,10 @@ jobs:
             --create-namespace \
             --set secret.data.apiKey="${{ secrets.CORALOGIX_API_KEY }}" \
             --set coralogixOperator.region="${{ secrets.CORALOGIX_REGION }}"
+      - name: Create a ViewFolder with the released operator
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+        run: scripts/upgrade-check-viewfolder.sh before
       - name: Build PR image
         uses: ./.github/actions/build-operator-image
         with:
@@ -106,6 +110,11 @@ jobs:
       - name: Run e2e Tests
         run: |
           make e2e-tests
+      # After the e2e tests, which wait until the new operator holds the leader lease.
+      - name: Check the ViewFolder of the released operator
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+        run: scripts/upgrade-check-viewfolder.sh after
       - name: Collect Operator Logs
         if: always()
         run: |
