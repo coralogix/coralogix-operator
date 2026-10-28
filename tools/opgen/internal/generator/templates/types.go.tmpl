@@ -1,0 +1,72 @@
+{{.Header}}
+
+{{template "license"}}
+
+package v1alpha1
+
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+{{template "struct" .Spec}}
+{{- range .Types}}
+{{template "struct" .}}
+{{- end}}
+// {{.Kind}}Status defines the observed state of a {{.Kind}}.
+type {{.Kind}}Status struct {
+	// +optional
+	ID *string `json:"id,omitempty"`
+
+	// +optional
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	PrintableStatus string `json:"printableStatus,omitempty"`
+}
+
+func (in *{{.Kind}}) GetConditions() []metav1.Condition {
+	return in.Status.Conditions
+}
+
+func (in *{{.Kind}}) SetConditions(conditions []metav1.Condition) {
+	in.Status.Conditions = conditions
+}
+
+func (in *{{.Kind}}) GetPrintableStatus() string {
+	return in.Status.PrintableStatus
+}
+
+func (in *{{.Kind}}) SetPrintableStatus(printableStatus string) {
+	in.Status.PrintableStatus = printableStatus
+}
+
+func (in *{{.Kind}}) HasIDInStatus() bool {
+	return in.Status.ID != nil && *in.Status.ID != ""
+}
+
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:path={{.Plural}}
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.printableStatus"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+
+// {{.Kind}} is the Schema for the {{.Plural}} API.
+type {{.Kind}} struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   {{.Kind}}Spec   `json:"spec,omitempty"`
+	Status {{.Kind}}Status `json:"status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// {{.Kind}}List contains a list of {{.Kind}}.
+type {{.Kind}}List struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []{{.Kind}} `json:"items"`
+}
+
+func init() {
+	SchemeBuilder.Register(&{{.Kind}}{}, &{{.Kind}}List{})
+}
