@@ -568,3 +568,45 @@ func TestReplaceAlertsRollsBackTombstonesWhenRequestIsRejected(t *testing.T) {
 		})
 	}
 }
+
+func TestReplaceAlertsDoesNotRecordPerItemFailures(t *testing.T) {
+	failedID, okID := "id-failed", "id-ok"
+	alertSet := &coralogixv1alpha1.AlertSet{
+		ObjectMeta: metav1.ObjectMeta{Name: "test-alert-set", Namespace: "default"},
+		Spec: coralogixv1alpha1.AlertSetSpec{Alerts: []coralogixv1alpha1.AlertSetItem{
+			accessPolicyAlertSetItem("failed", ptr.To(testAlertSetAccessPolicy)),
+			accessPolicyAlertSetItem("ok", ptr.To(testAlertSetAccessPolicy)),
+		}},
+		Status: coralogixv1alpha1.AlertSetStatus{Alerts: []coralogixv1alpha1.AlertSetItemStatus{
+			{Key: "failed", ID: &failedID, State: coralogixv1alpha1.AlertSetItemStateSynced},
+			{Key: "ok", ID: &okID, State: coralogixv1alpha1.AlertSetItemStateSynced},
+		}},
+	}
+	baseClient := initAlertSetClient(t, alertSet, nil)
+	stored := &coralogixv1alpha1.AlertSet{}
+	require.NoError(t, baseClient.Get(context.Background(), client.ObjectKeyFromObject(alertSet), stored))
+	reconciler := &AlertSetReconciler{api: fakeAlertSetAPI{
+		bulkReplace: func(context.Context, alerts.BulkReplaceAlertDefinitionsRequest) (*alerts.BulkReplaceAlertDefsResponse, *http.Response, error) {
+			return &alerts.BulkReplaceAlertDefsResponse{
+				AlertDefs:                []alerts.AlertDef{{Id: &okID}},
+				FailedToReplaceAlertDefs: []alerts.FailedToReplaceAlertDef{{Id: &failedID, Reason: ptr.To("rejected")}},
+			}, nil, nil
+		},
+	}}
+	statuses, err := alertSetStatusByKey(stored.Status.Alerts)
+	require.NoError(t, err)
+
+	itemErrs, requestErr := reconciler.replaceAlerts(context.Background(), logr.Discard(), stored,
+		desiredAlertSetItemsByKey(stored.Spec.Alerts), statuses, map[string]struct{}{})
+
+	require.NoError(t, requestErr)
+	require.Len(t, itemErrs, 1)
+	require.False(t, statuses["failed"].AccessPolicyManaged, "a failed item's policy was not applied")
+	require.True(t, statuses["ok"].AccessPolicyManaged)
+	persisted := &coralogixv1alpha1.AlertSet{}
+	require.NoError(t, baseClient.Get(context.Background(), client.ObjectKeyFromObject(alertSet), persisted))
+	byKey, err := alertSetStatusByKey(persisted.Status.Alerts)
+	require.NoError(t, err)
+	require.False(t, byKey["failed"].AccessPolicyManaged, "the rollback must be persisted")
+	require.Equal(t, `["ok"]`, persisted.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation])
+}

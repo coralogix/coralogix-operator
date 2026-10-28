@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -500,13 +501,32 @@ func (r *AlertSetReconciler) replaceAlerts(
 
 	recorded := alertSetPolicyRecord(alertSet)
 	responseErrs := applyBulkReplaceResponse(requestIDs, response, statusByKey, desiredByKey, recorded)
-	for _, key := range requestIDs {
+	// Items the API reports in failedToReplaceAlertDefs were not replaced, so their policy was not
+	// applied: neither record it nor keep a tombstone this pass wrote ahead for it.
+	failedIDs := map[string]struct{}{}
+	if response != nil {
+		for _, failure := range response.FailedToReplaceAlertDefs {
+			if failure.Id != nil {
+				failedIDs[*failure.Id] = struct{}{}
+			}
+		}
+	}
+	rolledBack := false
+	for id, key := range requestIDs {
 		desired, found := desiredByKey[key]
 		if !found {
 			continue
 		}
 		action := desired.Spec.ExtractAccessPolicyAction()
+		_, failed := failedIDs[id]
 		switch {
+		case action != nil && action.Upsert != nil && failed:
+			if slices.Contains(writeAheadKeys, key) {
+				status := statusByKey[key]
+				status.AccessPolicyManaged = false
+				statusByKey[key] = status
+				rolledBack = true
+			}
 		case action != nil && action.Upsert != nil:
 			recorded[key] = struct{}{}
 		case action != nil && action.Delete != nil &&
@@ -514,6 +534,14 @@ func (r *AlertSetReconciler) replaceAlerts(
 			// Only once the remote delete succeeded: applyBulkReplaceResponse marks the item synced
 			// and clears its tombstone then.
 			delete(recorded, key)
+		}
+	}
+	if rolledBack {
+		// Persisted here: the final status write compares against the pre-reconcile status and
+		// may skip it.
+		alertSet.Status.Alerts = sortedAlertSetStatuses(statusByKey)
+		if err := config.GetClient().Status().Update(ctx, alertSet); err != nil {
+			responseErrs = append(responseErrs, fmt.Errorf("roll back the alertset access policy records: %w", err))
 		}
 	}
 	writeAlertSetPolicyRecord(ctx, alertSet, recorded, reconcileLog)

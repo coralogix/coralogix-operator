@@ -17,6 +17,7 @@ package v1beta1
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -27,8 +28,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -497,4 +500,56 @@ func TestHandleUpdateRollsBackRecordWhenUpsertIsRejected(t *testing.T) {
 			require.Equal(t, tc.wantKept, annotated)
 		})
 	}
+}
+
+// concurrentWriterClient makes its first Update fail with a conflict after another writer edits
+// the stored alert's description, as a concurrent kubectl edit would.
+type concurrentWriterClient struct {
+	client.Client
+	conflicted bool
+}
+
+func (c *concurrentWriterClient) Update(ctx context.Context, obj client.Object, opts ...client.UpdateOption) error {
+	if !c.conflicted {
+		c.conflicted = true
+		edited := &coralogixv1beta1.Alert{}
+		if err := c.Get(ctx, client.ObjectKeyFromObject(obj), edited); err != nil {
+			return err
+		}
+		edited.Spec.Description = "edited concurrently"
+		if err := c.Client.Update(ctx, edited); err != nil {
+			return err
+		}
+		return apierrors.NewConflict(schema.GroupResource{Resource: "alerts"}, obj.GetName(), errors.New("concurrent edit"))
+	}
+	return c.Client.Update(ctx, obj, opts...)
+}
+
+func TestHandleCreationSurvivesConcurrentEditDuringAnnotationWrite(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"alertDef":{"id":"created-id"}}`))
+	}))
+	t.Cleanup(server.Close)
+
+	alert := testAlert(ptr.To(`{"version":"2025-01-01","default":{"permissions":{"alerts:ReadConfig":"grant"}},"rules":[]}`), false)
+	alert.Status = coralogixv1beta1.AlertStatus{}
+	initAlertClient(t, alert, func(c client.Client) client.Client { return &concurrentWriterClient{Client: c} })
+
+	reconciler := testAlertReconciler(t, server)
+	require.NoError(t, reconciler.HandleCreation(context.Background(), logr.Discard(), alert))
+
+	// What the shared reconciler does next: persist the new ID, then add the finalizer.
+	require.NoError(t, config.GetClient().Status().Update(context.Background(), alert),
+		"the new remote ID must persist despite the conflicting concurrent edit")
+	alert.Finalizers = append(alert.Finalizers, "alert.coralogix.com/finalizer")
+	require.NoError(t, config.GetClient().Update(context.Background(), alert))
+
+	persisted := &coralogixv1beta1.Alert{}
+	require.NoError(t, config.GetClient().Get(context.Background(), client.ObjectKeyFromObject(alert), persisted))
+	require.NotNil(t, persisted.Status.ID)
+	require.Equal(t, "created-id", *persisted.Status.ID)
+	require.Contains(t, persisted.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation)
+	require.Equal(t, "edited concurrently", persisted.Spec.Description,
+		"later full-object writes must not revert the concurrent edit")
 }

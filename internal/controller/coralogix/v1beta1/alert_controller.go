@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	"k8s.io/client-go/util/retry"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -180,23 +181,20 @@ func rejectedBeforeApplying(resp *http.Response) bool {
 	return resp != nil && resp.StatusCode >= 400 && resp.StatusCode < 500 && resp.StatusCode != http.StatusNotFound
 }
 
-// clearAccessPolicyManagedAnnotation removes the policy record from the CR metadata. Like
-// setAccessPolicyManagedAnnotation it writes a fresh copy and then carries the new resource
-// version over to alert, so the reconciler's following status update does not conflict.
+// clearAccessPolicyManagedAnnotation removes the policy record from the CR metadata through
+// updateAlertMetadata, so the reconciler's following writes do not conflict.
 func clearAccessPolicyManagedAnnotation(ctx context.Context, alert *coralogixv1beta1.Alert) error {
-	fresh := &coralogixv1beta1.Alert{}
-	if err := config.GetClient().Get(ctx, client.ObjectKeyFromObject(alert), fresh); err != nil {
-		return fmt.Errorf("error on clearing the alert access policy record: reading the alert failed: %w", err)
-	}
 	delete(alert.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation)
-	if _, recorded := fresh.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation]; !recorded {
-		return nil
-	}
-	delete(fresh.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation)
-	if err := config.GetClient().Update(ctx, fresh); err != nil {
+	err := updateAlertMetadata(ctx, alert, func(fresh *coralogixv1beta1.Alert) bool {
+		if _, recorded := fresh.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation]; !recorded {
+			return false
+		}
+		delete(fresh.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation)
+		return true
+	})
+	if err != nil {
 		return fmt.Errorf("error on clearing the alert access policy record: %w", err)
 	}
-	alert.SetResourceVersion(fresh.GetResourceVersion())
 	return nil
 }
 
@@ -206,35 +204,59 @@ func clearAccessPolicyManagedAnnotation(ctx context.Context, alert *coralogixv1b
 // not-found guard keeps protecting the alert across the upgrade window. A failed annotation
 // write is logged but does not fail the reconcile: the status tombstone still covers the
 // current version, and the annotation is re-set on the next policy-applying reconcile.
-// The Update runs on a fresh copy of the object: a full-object Update never carries status
-// (it is a subresource), so patching the in-memory alert directly would rely on the caller
-// having already persisted its status. The new resource version is then carried over to
-// alert: the reconciler writes alert's status next (on create, the new remote ID), and a
-// stale resource version would make that write conflict and lose it.
 func setAccessPolicyManagedAnnotation(ctx context.Context, alert *coralogixv1beta1.Alert, policy *string) {
-	fresh := &coralogixv1beta1.Alert{}
-	if err := config.GetClient().Get(ctx, client.ObjectKeyFromObject(alert), fresh); err != nil {
-		log.FromContext(ctx).Error(err, "Error recording the alert access policy annotation: reading the alert failed")
-		return
-	}
 	value := ptr.Deref(policy, "")
-	if alert.Annotations == nil {
-		alert.Annotations = map[string]string{}
-	}
-	if current, recorded := fresh.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation]; recorded && current == value {
-		alert.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation] = value
-		return
-	}
-	if fresh.Annotations == nil {
-		fresh.Annotations = map[string]string{}
-	}
-	fresh.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation] = value
-	if err := config.GetClient().Update(ctx, fresh); err != nil {
+	err := updateAlertMetadata(ctx, alert, func(fresh *coralogixv1beta1.Alert) bool {
+		if current, recorded := fresh.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation]; recorded && current == value {
+			return false
+		}
+		if fresh.Annotations == nil {
+			fresh.Annotations = map[string]string{}
+		}
+		fresh.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation] = value
+		return true
+	})
+	if err != nil {
 		log.FromContext(ctx).Error(err, "Error recording the alert access policy annotation")
 		return
 	}
+	if alert.Annotations == nil {
+		alert.Annotations = map[string]string{}
+	}
 	alert.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation] = value
-	alert.SetResourceVersion(fresh.GetResourceVersion())
+}
+
+// updateAlertMetadata applies mutate to a fresh copy of the alert and writes it, retrying on
+// conflict; mutate returns false when no write is needed. The write runs on a fresh copy because
+// a full-object Update never carries status (a subresource), and alert may hold status the
+// reconciler has not persisted yet (on create, the new remote ID). After a write, alert adopts the
+// written metadata and spec but keeps its in-memory status: the reconciler persists that status
+// next, and a stale resource version would make the write conflict and lose it, while taking
+// only the new resource version would let its later full-object writes revert concurrent edits.
+func updateAlertMetadata(ctx context.Context, alert *coralogixv1beta1.Alert, mutate func(*coralogixv1beta1.Alert) bool) error {
+	var written *coralogixv1beta1.Alert
+	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		fresh := &coralogixv1beta1.Alert{}
+		if err := config.GetClient().Get(ctx, client.ObjectKeyFromObject(alert), fresh); err != nil {
+			return err
+		}
+		if !mutate(fresh) {
+			return nil
+		}
+		if err := config.GetClient().Update(ctx, fresh); err != nil {
+			return err
+		}
+		written = fresh
+		return nil
+	})
+	if err != nil || written == nil {
+		return err
+	}
+	status := alert.Status
+	written.ObjectMeta.DeepCopyInto(&alert.ObjectMeta)
+	written.Spec.DeepCopyInto(&alert.Spec)
+	alert.Status = status
+	return nil
 }
 
 func (r *AlertReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
