@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
@@ -30,6 +31,8 @@ type CheckOptions struct {
 	Kind        string // the custom resource kind; "" uses the resource name
 	Resource    string
 	OpenAPIPath string
+	// E2EPath is the e2e.yaml file of the kind, "" for none.
+	E2EPath string
 }
 
 type docType = *v3.Document
@@ -39,6 +42,7 @@ type validated struct {
 	entry    kindEntry
 	resource *model.Resource
 	refs     []sdkcheck.Ref
+	e2e      *e2eFile
 }
 
 // Generate resolves the SDK that the operator pins and publishes every kind of the kinds file.
@@ -64,16 +68,24 @@ func Check(options CheckOptions) error {
 	if entry.Kind == "" {
 		entry.Kind = options.Resource
 	}
+	e2e := &e2eFile{}
+	if options.E2EPath != "" {
+		if e2e, err = readE2E(options.E2EPath); err != nil {
+			return asEligibility(entry, err)
+		}
+	}
 	doc, err := model.Load(data)
 	if err != nil {
 		return &EligibilityError{Report: issue.Report{{Code: "OPENAPI_INVALID", Location: "openapi", Message: err.Error(), Remediation: "Correct the OpenAPI document."}}}
 	}
-	v, err := validate(doc, entry, source.SDKModule)
+	v, err := validate(doc, entry, source.SDKModule, "candidate.invalid/coralogix-operator", e2e)
 	if err != nil {
 		return err
 	}
-	_, err = renderAll([]*validated{v})
-	return err
+	if _, err := renderAll([]*validated{v}, source.SDKModule, "candidate.invalid/coralogix-operator"); err != nil {
+		return err
+	}
+	return nil
 }
 
 // generateFromInput generates every listed kind into the operator at root. loadDir is the module
@@ -91,7 +103,12 @@ func generateFromInput(input source.Input, root, loadDir string) error {
 			return fmt.Errorf("read the OpenAPI of the SDK: %w", err)
 		}
 		for _, entry := range kinds {
-			v, err := validate(doc, entry, input.SDKModule)
+			e2e, err := readE2E(filepath.Join(root, entry.dir(), e2eFileName))
+			if err != nil {
+				report = append(report, eligibility(entry, err).Report...)
+				continue
+			}
+			v, err := validate(doc, entry, input.SDKModule, input.Module, e2e)
 			if err != nil {
 				report = append(report, eligibility(entry, err).Report...)
 				continue
@@ -105,7 +122,7 @@ func generateFromInput(input source.Input, root, loadDir string) error {
 	if err := checkSDK(all, input, loadDir); err != nil {
 		return err
 	}
-	out, err := renderAll(all)
+	out, err := renderAll(all, input.SDKModule, input.Module)
 	if err != nil {
 		return err
 	}
@@ -116,7 +133,7 @@ func generateFromInput(input source.Input, root, loadDir string) error {
 }
 
 // validate runs the contract checks of iac and the operator checks on one kind.
-func validate(doc docType, entry kindEntry, sdkModule string) (*validated, error) {
+func validate(doc docType, entry kindEntry, sdkModule, module string, e2e *e2eFile) (*validated, error) {
 	var policy model.Policy
 	if report := model.ValidateWithPolicy(doc, entry.Resource, model.OperationIDs{}, policy); len(report) != 0 {
 		return nil, &EligibilityError{Report: located(entry, report)}
@@ -133,8 +150,8 @@ func validate(doc docType, entry kindEntry, sdkModule string) (*validated, error
 	if err != nil {
 		return nil, asEligibility(entry, &shapeError{code: "SDK_SHAPE_UNSUPPORTED", path: "resource", msg: err.Error()})
 	}
-	v := &validated{entry: entry, resource: r, refs: refs}
-	if _, err := renderAll([]*validated{v}); err != nil {
+	v := &validated{entry: entry, resource: r, refs: refs, e2e: e2e}
+	if _, err := renderAll([]*validated{v}, sdkModule, module); err != nil {
 		return nil, err
 	}
 	return v, nil
@@ -171,16 +188,18 @@ func sdkIssues(refs []sdkcheck.Ref, loaded map[string]*packages.Package, input s
 	})
 }
 
-// renderAll renders every kind.
-func renderAll(all []*validated) (output, error) {
+// renderAll renders every kind and the files that list them.
+func renderAll(all []*validated, sdkModule, module string) (output, error) {
 	out := output{files: map[string][]byte{}}
+	var kinds []*kindData
 	var report issue.Report
 	for _, v := range all {
-		files, err := renderOne(v)
+		files, d, err := renderOne(v, module)
 		if err != nil {
 			report = append(report, eligibility(v.entry, err).Report...)
 			continue
 		}
+		kinds = append(kinds, d)
 		for path, data := range files {
 			out.files[path] = data
 		}
@@ -188,19 +207,36 @@ func renderAll(all []*validated) (output, error) {
 	if len(report) != 0 {
 		return output{}, &EligibilityError{Report: report.Normalize()}
 	}
+	shared, err := renderShared(module, sdkModule+"/go/openapi/cxsdk", kinds)
+	if err != nil {
+		return output{}, err
+	}
+	for path, data := range shared.files {
+		out.files[path] = data
+	}
+	out.blocks = shared.blocks
 	return out, nil
 }
 
-func renderOne(v *validated) (map[string][]byte, error) {
-	d, err := buildKind(v.resource, v.refs, v.entry)
+func renderOne(v *validated, module string) (map[string][]byte, *kindData, error) {
+	d, err := buildKind(v.resource, v.refs, v.entry, module)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	files, err := renderKind(d)
+	ix, err := indexRefs(v.refs)
 	if err != nil {
-		return nil, &shapeError{code: "RENDERER_OUTPUT_INVALID", path: "renderer.output", msg: err.Error()}
+		return nil, nil, err
 	}
-	return files, nil
+	full, _, e2e, err := buildValues(d, ix, v.e2e)
+	if err != nil {
+		return nil, nil, err
+	}
+	d.E2E = e2e
+	files, err := renderKind(d, full)
+	if err != nil {
+		return nil, nil, &shapeError{code: "RENDERER_OUTPUT_INVALID", path: "renderer.output", msg: err.Error()}
+	}
+	return files, d, nil
 }
 
 // eligibility turns an error of one kind into a report.
@@ -220,6 +256,9 @@ func asEligibility(entry kindEntry, err error) *EligibilityError {
 	remediation := map[string]string{
 		codeShapeUnsupported:         "Use a contract shape that the operator renderer supports, or extend the renderer.",
 		codeNameCollision:            "Rename the component or the field in the API contract.",
+		codeE2EInvalid:               "Fix " + e2eFileName + ".",
+		codeE2ERequired:              "Set the value in " + e2eFileName + ".",
+		codeE2EUnused:                "Delete the line from " + e2eFileName + ", or fix the field path.",
 		"OPERATION_TAG_INCOMPATIBLE": "Give every lifecycle operation exactly one matching SDK package tag.",
 		"SDK_SHAPE_UNSUPPORTED":      "Use OpenAPI shapes that have deterministic generated Go SDK names and types.",
 		"RENDERER_OUTPUT_INVALID":    "Use names and shapes that render as valid formatted Go code.",

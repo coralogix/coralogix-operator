@@ -12,8 +12,9 @@ import (
 	"github.com/coralogix/coralogix-operator/v2/tools/opgen/internal/version"
 )
 
-// check runs opgen check on the synthetic contract after edit changes it.
-func check(t *testing.T, resource string, edit func(string) string) error {
+// checkWith runs opgen check on the synthetic contract after edit changes it. e2eKind names the
+// e2e.yaml file of a kind in the seed root, "" for none.
+func checkWith(t *testing.T, resource, e2eKind string, edit func(string) string) error {
 	t.Helper()
 	data, err := os.ReadFile(filepath.Join("testdata", "openapi.yaml"))
 	if err != nil {
@@ -23,7 +24,11 @@ func check(t *testing.T, resource string, edit func(string) string) error {
 	if err := os.WriteFile(path, []byte(edit(string(data))), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	return Check(CheckOptions{Resource: resource, OpenAPIPath: path})
+	options := CheckOptions{Resource: resource, OpenAPIPath: path}
+	if e2eKind != "" {
+		options.E2EPath = filepath.Join("testdata", "root", "tools", "opgen", "kinds", e2eKind, e2eFileName)
+	}
+	return Check(options)
 }
 
 func replaceOnce(t *testing.T, s, old, replacement string) string {
@@ -49,8 +54,8 @@ func wantCode(t *testing.T, err error, code string) {
 }
 
 func TestCheckAcceptsTheSyntheticContracts(t *testing.T) {
-	for _, resource := range []string{"Thing", "PatchThing"} {
-		if err := check(t, resource, func(s string) string { return s }); err != nil {
+	for resource, e2eKind := range map[string]string{"Thing": "thing", "PatchThing": ""} {
+		if err := checkWith(t, resource, e2eKind, func(s string) string { return s }); err != nil {
 			t.Fatalf("%s: %v", resource, err)
 		}
 	}
@@ -113,10 +118,18 @@ func TestCheckReportsGaps(t *testing.T) {
 			},
 			code: codeShapeUnsupported,
 		},
+		{
+			name: "a made-up value that cannot match the pattern",
+			edit: func(t *testing.T, s string) string {
+				return replaceOnce(t, s, "endpoint: {type: string, minLength: 1, description: The endpoint URL.}",
+					"endpoint: {type: string, minLength: 1, pattern: '^https://.+$', description: The endpoint URL.}")
+			},
+			code: codeE2ERequired,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			wantCode(t, check(t, "Thing", func(s string) string { return tt.edit(t, s) }), tt.code)
+			wantCode(t, checkWith(t, "Thing", "thing", func(s string) string { return tt.edit(t, s) }), tt.code)
 		})
 	}
 }
@@ -160,24 +173,27 @@ func TestPublishKeepsHandwrittenFiles(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), "has no "+version.Tool+" header") {
 		t.Fatalf("want a refusal to replace the handwritten file, got %v", err)
 	}
-	if _, err := os.Stat(filepath.Join(root, "api", "coralogix", "v1alpha1", "patchthing_types.go")); !errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat(filepath.Join(root, "internal", "utils", "generated_kinds.go")); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("a failed run wrote a file: %v", err)
 	}
-}
-
-// A block needs both marker lines, in order. The lines between them are replaced.
-func TestReplaceBlock(t *testing.T) {
-	got, err := replaceBlock([]byte("a\n  # BEGIN generated kinds\n  - old\n  # END generated kinds\nb\n"), "  - new\n")
+	project, err := os.ReadFile(filepath.Join(root, "PROJECT"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := "a\n  # BEGIN generated kinds\n  - new\n  # END generated kinds\nb\n"; string(got) != want {
-		t.Fatalf("got %q, want %q", got, want)
+	if strings.Contains(string(project), "kind: Thing") {
+		t.Fatal("a failed run changed PROJECT")
 	}
-	for _, data := range []string{"a\n", "# END generated kinds\n# BEGIN generated kinds\n", "# BEGIN generated kinds\n# BEGIN generated kinds\n# END generated kinds\n"} {
-		if _, err := replaceBlock([]byte(data), ""); err == nil {
-			t.Errorf("want an error for %q", data)
-		}
+}
+
+// A block needs both marker lines.
+func TestPublishNeedsMarkers(t *testing.T) {
+	root, input := syntheticRoot(t)
+	path := filepath.Join(root, "config", "crd", "kustomization.yaml")
+	if err := os.WriteFile(path, []byte("resources: []\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := generateFromInput(input, root, root); err == nil || !strings.Contains(err.Error(), blockBegin) {
+		t.Fatalf("want an error about the markers, got %v", err)
 	}
 }
 
@@ -194,10 +210,13 @@ func TestPublishRemovesFilesOfRemovedKinds(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, kindsFile), []byte("kinds:\n  - {kind: PatchThing, resource: PatchThing}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	if err := os.RemoveAll(filepath.Join(root, kindsDir, "thing")); err != nil {
+		t.Fatal(err)
+	}
 	if err := generateFromInput(input, root, root); err != nil {
 		t.Fatal(err)
 	}
-	for _, rel := range []string{"api/coralogix/v1alpha1/thing_types.go"} {
+	for _, rel := range []string{"api/coralogix/v1alpha1/thing_types.go", "tests/e2e/thing_generated_test.go", "config/samples/v1alpha1/generated/thing.yaml"} {
 		if _, err := os.Stat(filepath.Join(root, rel)); !errors.Is(err, os.ErrNotExist) {
 			t.Errorf("%s of the removed kind is still there: %v", rel, err)
 		}
@@ -216,9 +235,6 @@ func TestReadKindsRejectsUnknownKeysAndDirectories(t *testing.T) {
 		t.Fatalf("want an unknown key error, got %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(root, kindsFile), []byte("kinds: []\n"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.MkdirAll(filepath.Join(root, kindsDir, "thing"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := readKinds(root); err == nil || !strings.Contains(err.Error(), "belongs to no kind") {

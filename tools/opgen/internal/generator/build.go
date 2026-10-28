@@ -32,15 +32,34 @@ func collision(path, format string, args ...any) error {
 
 // kindData is everything that the templates of one kind need.
 type kindData struct {
-	Header string
-	Kind   string // ViewFolder
-	Lower  string // viewfolder
-	Plural string // viewfolders
+	Header    string
+	Kind      string // ViewFolder
+	Lower     string // viewfolder
+	Plural    string // viewfolders
+	Finalizer string
+	Module    string // the operator module path
+
+	SDKPath, SDKAlias string
+	CxsdkPath         string
+	Client            string // the SDK client type
+	Accessor          string // the method of the SDK client set that returns the client
 
 	Spec    *crType
 	Types   []*crType   // nested types, in order of first use
 	Scalars []*crScalar // map value types, in order of first use
 	Enums   []*enumMap
+	Convs   []string // conversion methods, as Go code
+
+	CreateBody, UpdateBody     string // SDK request body types
+	CreateMethod, CreateSetter string
+	UpdateMethod, UpdateSetter string
+	GetMethod, DeleteMethod    string
+	Replace                    bool
+	Mask, MaskSetter           string // the update mask and its setter, "" for a full replace
+	IDField                    string // the Go field of the id in the resource response
+	IDValue                    bool   // the id field is a value, not a pointer
+
+	E2E *e2eData
 }
 
 // crType is a Go struct of the custom resource.
@@ -66,7 +85,6 @@ type crScalar struct {
 // crField is a field of a Go struct of the custom resource.
 type crField struct {
 	API       string // the API property name
-	JSON      string // the custom resource name
 	GoName    string
 	GoType    string
 	Optional  bool
@@ -81,9 +99,9 @@ type crField struct {
 // JSONTag is the json struct tag of the field.
 func (f *crField) JSONTag() string {
 	if f.Optional {
-		return f.JSON + ",omitempty"
+		return f.API + ",omitempty"
 	}
-	return f.JSON
+	return f.API
 }
 
 // enumMap maps the custom resource spelling of an enum to the SDK constants.
@@ -116,28 +134,39 @@ type builder struct {
 	scalars []*crScalar
 	enums   map[string]*enumMap
 	enumSeq []*enumMap
+	convs   map[string]string // conversion method by "crType->sdkType"
+	code    []string
+	tmp     int
 }
 
 // buildKind maps the resource and its SDK names to the data of the templates. It is also the
 // renderer check of check: an error is a contract that the renderer cannot write.
-func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry) (*kindData, error) {
+func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module string) (*kindData, error) {
 	ix, err := indexRefs(refs)
 	if err != nil {
 		return nil, err
 	}
-	b := &builder{kind: entry.Kind, ix: ix, alias: sdkAlias(ix.pkg.Name), types: map[string]*crType{}, enums: map[string]*enumMap{}}
-	d := &kindData{Kind: entry.Kind, Lower: strings.ToLower(entry.Kind), Plural: plural(entry.Kind)}
+	b := &builder{kind: entry.Kind, ix: ix, alias: sdkAlias(ix.pkg.Name), types: map[string]*crType{},
+		enums: map[string]*enumMap{}, convs: map[string]string{}}
+	d := &kindData{
+		Kind: entry.Kind, Lower: strings.ToLower(entry.Kind), Plural: plural(entry.Kind),
+		Finalizer: kebab(entry.Kind) + ".coralogix.com/finalizer", Module: module,
+		SDKPath: ix.pkg.Pkg, SDKAlias: b.alias, CxsdkPath: ix.cxsdk, Replace: r.Replace,
+	}
 	if err := checkLifecycle(r); err != nil {
 		return nil, err
 	}
 	if d.Spec, err = b.spec(r); err != nil {
 		return nil, err
 	}
-	d.Types, d.Scalars, d.Enums = b.order, b.scalars, b.enumSeq
-	if err := b.checkNames(d); err != nil {
+	if err := b.operations(r, d); err != nil {
 		return nil, err
 	}
-	return d, nil
+	if err := b.requests(r, d); err != nil {
+		return nil, err
+	}
+	d.Types, d.Scalars, d.Enums, d.Convs = b.order, b.scalars, b.enumSeq, b.code
+	return d, b.checkNames(d)
 }
 
 // checkLifecycle rejects the API shapes that only a released resource has. Their keys land with

@@ -11,9 +11,9 @@ import (
 	"github.com/coralogix/coralogix-management-sdk/iac/source"
 )
 
-// The types of the synthetic kinds, generated into a copy of the operator, compile with the real
-// operator code and pass controller-gen (make generate manifests). The CRDs that controller-gen
-// writes are the golden CRDs that the envtest test of the operator installs.
+// The synthetic kinds, generated into a copy of the operator, compile with the real operator code
+// and pass controller-gen (make generate manifests). The CRDs that controller-gen writes are the
+// golden CRDs that the envtest test of the operator installs.
 //
 // The test needs controller-gen (make controller-gen, or CONTROLLER_GEN) and the modules of the
 // operator in the module cache. It is skipped in short mode.
@@ -61,7 +61,7 @@ func TestGeneratedKindsBuildInTheOperator(t *testing.T) {
 	run(t, sandbox, controllerGen, `object:headerFile=hack/boilerplate.go.txt`, `paths=./...`)
 	run(t, sandbox, controllerGen, `rbac:roleName=manager-role`, `crd`, `paths=./...`, `output:crd:artifacts:config=config/crd/bases`)
 	run(t, sandbox, "go", "build", "./...")
-	run(t, sandbox, "go", "vet", "./api/...")
+	run(t, sandbox, "go", "vet", "./api/...", "./internal/controller/...", "./internal/utils/...", "./cmd/...", "./tests/e2e/")
 
 	golden := filepath.Join("testdata", "crd")
 	for _, name := range []string{"coralogix.com_things.yaml", "coralogix.com_patchthings.yaml"} {
@@ -83,6 +83,15 @@ func TestGeneratedKindsBuildInTheOperator(t *testing.T) {
 		}
 		if !bytes.Equal(want, got) {
 			t.Errorf("golden CRD %s differs; run go test ./internal/generator -run TestGeneratedKindsBuildInTheOperator -update:\n%s", name, firstDifference(string(want), string(got)))
+		}
+	}
+	role, err := os.ReadFile(filepath.Join(sandbox, "config", "rbac", "role.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, resource := range []string{"things", "things/finalizers", "things/status", "patchthings"} {
+		if !bytes.Contains(role, []byte("- "+resource+"\n")) {
+			t.Errorf("the role that controller-gen writes has no %s", resource)
 		}
 	}
 }

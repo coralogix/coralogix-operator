@@ -1,0 +1,30 @@
+{{.Header}}
+
+{{template "license"}}
+
+package v1alpha1
+
+import (
+	"fmt"
+	"time"
+
+	ctrl "sigs.k8s.io/controller-runtime"
+
+	"{{.CxsdkPath}}"
+
+	"{{.Module}}/internal/utils"
+)
+
+// SetupGeneratedControllers sets up the controller of every generated kind. The interval of a
+// kind is its reconcile interval.
+func SetupGeneratedControllers(mgr ctrl.Manager, clientSet *cxsdk.ClientSet, intervals map[string]time.Duration) error {
+{{- range .Kinds}}
+	if err := (&{{.Kind}}Reconciler{
+		Client:   clientSet.{{.Accessor}}(),
+		Interval: intervals[utils.{{.Kind}}Kind],
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create the controller of %s: %w", utils.{{.Kind}}Kind, err)
+	}
+{{- end}}
+	return nil
+}

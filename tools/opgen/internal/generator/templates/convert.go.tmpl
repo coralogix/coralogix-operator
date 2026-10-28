@@ -1,0 +1,48 @@
+{{.Header}}
+
+{{template "license"}}
+
+package v1alpha1
+
+import (
+	"context"
+	"fmt"
+	"strconv"
+
+	{{.SDKAlias}} "{{.SDKPath}}"
+)
+{{- if .Mask}}
+
+// {{.Kind}}UpdateMask lists every field that Update sends. The operator keeps no prior spec, so
+// Update sets every field, and a field that the spec leaves out is cleared.
+const {{.Kind}}UpdateMask = "{{.Mask}}"
+{{- end}}
+
+// CreateRequest returns the body of the Create request of the {{.Kind}}.
+func (in *{{.Kind}}) CreateRequest(ctx context.Context) (*{{.SDKAlias}}.{{.CreateBody}}, error) {
+	return in.Spec.to{{.CreateBody}}(ctx, in.Namespace)
+}
+
+// UpdateRequest returns the body of the Update request of the {{.Kind}}.{{if .Replace}} The body
+// has the whole spec: the API replaces the resource.{{end}}
+func (in *{{.Kind}}) UpdateRequest(ctx context.Context) (*{{.SDKAlias}}.{{.UpdateBody}}, error) {
+	return in.Spec.to{{.UpdateBody}}(ctx, in.Namespace)
+}
+{{range .Convs}}{{.}}{{end}}
+{{- range .Enums}}
+// {{.Var}} maps each value of the spec to the API value.
+var {{.Var}} = map[string]{{.SDKType}}{
+{{- range .Values}}
+	"{{.Name}}": {{.Const}},
+{{- end}}
+}
+
+// {{.Func}} returns the API value of a spec value.
+func {{.Func}}(value string) ({{.SDKType}}, error) {
+	v, ok := {{.Var}}[value]
+	if !ok {
+		return "", fmt.Errorf("unknown value %q", value)
+	}
+	return v, nil
+}
+{{end -}}

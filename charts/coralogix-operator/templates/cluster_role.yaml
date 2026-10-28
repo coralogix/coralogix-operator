@@ -176,3 +176,5 @@ rules:
       - get
       - list
       - watch
+  # BEGIN generated kinds
+  # END generated kinds

@@ -53,7 +53,7 @@ func immutable(f *crField, path string) {
 // A rule on the object that holds the field would not run when the object itself is added or removed.
 func presenceRules(spec, t *crType, prefix []string, optionalParent bool) {
 	for _, f := range t.Fields {
-		path := append(slices.Clone(prefix), f.JSON)
+		path := append(slices.Clone(prefix), f.API)
 		if f.immutable && (f.Optional || optionalParent) {
 			var self, old []string
 			for i := range path {
@@ -104,20 +104,18 @@ func celMarker(rule, message string) string {
 func groupRules(t *crType, groups []model.OneOfGroup, path string) error {
 	t.groups = groups
 	for _, g := range groups {
-		var terms, names []string
+		var terms []string
 		for _, arm := range g.Arms {
-			i := slices.IndexFunc(t.Fields, func(f *crField) bool { return f.API == arm })
-			if i < 0 {
+			if !slices.ContainsFunc(t.Fields, func(f *crField) bool { return f.API == arm }) {
 				return unsupported(path+"."+arm, "a oneOf arm that the custom resource cannot set is not supported")
 			}
-			terms = append(terms, fmt.Sprintf("(has(self.%s) ? 1 : 0)", t.Fields[i].JSON))
-			names = append(names, t.Fields[i].JSON)
+			terms = append(terms, fmt.Sprintf("(has(self.%s) ? 1 : 0)", arm))
 		}
 		rule, msg := " == 1", "Exactly one of %s must be set"
 		if g.AllowNone {
 			rule, msg = " <= 1", "At most one of %s can be set"
 		}
-		t.Markers = append(t.Markers, celMarker(strings.Join(terms, " + ")+rule, fmt.Sprintf(msg, strings.Join(names, ", "))))
+		t.Markers = append(t.Markers, celMarker(strings.Join(terms, " + ")+rule, fmt.Sprintf(msg, strings.Join(g.Arms, ", "))))
 	}
 	return nil
 }
@@ -128,7 +126,7 @@ func (b *builder) field(owner, name, description string, t *model.Type, required
 	if err := wrapped(t, path); err != nil {
 		return nil, err
 	}
-	f := &crField{API: name, JSON: name, GoName: goName(name), Optional: !required, Doc: docLines(description), typ: t}
+	f := &crField{API: name, GoName: goName(name), Optional: !required, Doc: docLines(description), typ: t}
 	if !required {
 		f.Markers = append(f.Markers, "+optional")
 	}

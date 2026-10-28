@@ -1,0 +1,3 @@
+# The contract cannot state a URL that matches the pattern of destinations.
+values:
+  destinations: [https://example.com]

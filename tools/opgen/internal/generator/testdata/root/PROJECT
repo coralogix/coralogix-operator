@@ -1,0 +1,19 @@
+domain: coralogix.com
+layout:
+- go.kubebuilder.io/v4
+multigroup: true
+projectName: coralogix-operator
+repo: github.com/coralogix/coralogix-operator
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: coralogix.com
+  group: coralogix
+  kind: Handwritten
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
+  version: v1alpha1
+# BEGIN generated kinds
+# END generated kinds
+version: "3"

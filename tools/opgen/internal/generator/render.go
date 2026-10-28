@@ -8,8 +8,10 @@ import (
 	"go/parser"
 	"go/token"
 	"strconv"
+	"strings"
 	"text/template"
 
+	"go.yaml.in/yaml/v4"
 	"golang.org/x/tools/go/ast/astutil"
 
 	"github.com/coralogix/coralogix-operator/v2/tools/opgen/internal/version"
@@ -20,17 +22,141 @@ var templateFS embed.FS
 
 var templates = template.Must(template.New("").Funcs(template.FuncMap{"lowerFirst": lowerFirst}).ParseFS(templateFS, "templates/*.tmpl"))
 
-// apiDir holds the generated types, relative to the operator root.
-const apiDir = "api/coralogix/v1alpha1"
+// Paths of the generated files, relative to the operator root.
+const (
+	apiDir        = "api/coralogix/v1alpha1"
+	controllerDir = "internal/controller/coralogix/v1alpha1"
+	registryFile  = controllerDir + "/generated_registry.go"
+	kindsGoFile   = "internal/utils/generated_kinds.go"
+	samplesDir    = "config/samples/v1alpha1/generated"
+	e2eDir        = "tests/e2e"
+)
+
+// Handwritten files with a block of generated lines, relative to the operator root.
+const (
+	projectFile      = "PROJECT"
+	crdKustomization = "config/crd/kustomization.yaml"
+	helmClusterRole  = "charts/coralogix-operator/templates/cluster_role.yaml"
+)
 
 // renderKind returns the files of one kind by path.
-func renderKind(d *kindData) (map[string][]byte, error) {
+func renderKind(d *kindData, full *omap) (map[string][]byte, error) {
 	d.Header = version.GoHeader
-	src, err := execute("types.go.tmpl", d)
+	files := map[string][]byte{}
+	for _, f := range []struct{ path, tmpl string }{
+		{apiDir + "/" + d.Lower + "_types.go", "types.go.tmpl"},
+		{apiDir + "/" + d.Lower + "_convert.go", "convert.go.tmpl"},
+		{controllerDir + "/" + d.Lower + "_controller.go", "controller.go.tmpl"},
+		{e2eDir + "/" + d.Lower + "_generated_test.go", "e2e_test.go.tmpl"},
+	} {
+		src, err := execute(f.tmpl, d)
+		if err != nil {
+			return nil, err
+		}
+		files[f.path] = src
+	}
+	sample, err := renderSample(d, full)
 	if err != nil {
 		return nil, err
 	}
-	return map[string][]byte{apiDir + "/" + d.Lower + "_types.go": src}, nil
+	files[samplesDir+"/"+d.Lower+".yaml"] = sample
+	return files, nil
+}
+
+// sharedData is the data of the files that list every kind.
+type sharedData struct {
+	Header    string
+	Module    string
+	CxsdkPath string
+	Kinds     []*kindData
+}
+
+// renderShared returns the files and the blocks that list every kind.
+func renderShared(module, cxsdk string, kinds []*kindData) (output, error) {
+	data := &sharedData{Header: version.GoHeader, Module: module, CxsdkPath: cxsdk, Kinds: kinds}
+	out := output{files: map[string][]byte{}, blocks: map[string]string{}}
+	for path, tmpl := range map[string]string{registryFile: "registry.go.tmpl", kindsGoFile: "kinds.go.tmpl"} {
+		src, err := execute(tmpl, data)
+		if err != nil {
+			return output{}, err
+		}
+		out.files[path] = src
+	}
+	var project, kustomization strings.Builder
+	var resources []string
+	for _, k := range kinds {
+		fmt.Fprintf(&project, `- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: coralogix.com
+  group: coralogix
+  kind: %s
+  path: %s/api/coralogix/v1alpha1
+  version: v1alpha1
+`, k.Kind, module)
+		fmt.Fprintf(&kustomization, "  - bases/coralogix.com_%s.yaml\n", k.Plural)
+		resources = append(resources, k.Plural)
+	}
+	out.blocks[projectFile] = project.String()
+	out.blocks[crdKustomization] = kustomization.String()
+	out.blocks[helmClusterRole] = clusterRoleRules(resources)
+	return out, nil
+}
+
+// clusterRoleRules are the rules of the Helm cluster role for the generated kinds, as the
+// kubebuilder RBAC markers of the controllers state them.
+func clusterRoleRules(resources []string) string {
+	if len(resources) == 0 {
+		return ""
+	}
+	var b strings.Builder
+	for _, rule := range []struct {
+		suffix string
+		verbs  []string
+	}{
+		{"", []string{"create", "delete", "get", "list", "patch", "update", "watch"}},
+		{"/finalizers", []string{"update"}},
+		{"/status", []string{"get", "patch", "update"}},
+	} {
+		b.WriteString("  - apiGroups:\n      - coralogix.com\n    resources:\n")
+		for _, r := range resources {
+			b.WriteString("      - " + r + rule.suffix + "\n")
+		}
+		b.WriteString("    verbs:\n")
+		for _, v := range rule.verbs {
+			b.WriteString("      - " + v + "\n")
+		}
+	}
+	return b.String()
+}
+
+// renderSample writes the sample custom resource with every field.
+func renderSample(d *kindData, full *omap) ([]byte, error) {
+	spec, err := yamlNode(full)
+	if err != nil {
+		return nil, err
+	}
+	root := &yaml.Node{Kind: yaml.MappingNode}
+	add := func(key string, value *yaml.Node) {
+		root.Content = append(root.Content, &yaml.Node{Kind: yaml.ScalarNode, Value: key}, value)
+	}
+	scalar := func(v string) *yaml.Node { return &yaml.Node{Kind: yaml.ScalarNode, Value: v} }
+	add("apiVersion", scalar("coralogix.com/v1alpha1"))
+	add("kind", scalar(d.Kind))
+	add("metadata", &yaml.Node{Kind: yaml.MappingNode, Content: []*yaml.Node{scalar("name"), scalar(kebab(d.Kind) + "-sample")}})
+	add("spec", spec)
+	var buf bytes.Buffer
+	buf.WriteString(version.YAMLHeader + "\n")
+	enc := yaml.NewEncoder(&buf)
+	enc.SetIndent(2)
+	if err := enc.Encode(root); err != nil {
+		return nil, err
+	}
+	if err := enc.Close(); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
 
 func execute(name string, data any) ([]byte, error) {

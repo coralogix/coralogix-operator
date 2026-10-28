@@ -270,4 +270,6 @@ resources:
   kind: ConfigurationGroup
   path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
   version: v1alpha1
+# BEGIN generated kinds
+# END generated kinds
 version: "3"
