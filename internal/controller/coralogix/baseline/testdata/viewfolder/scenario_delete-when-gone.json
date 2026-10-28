@@ -1,0 +1,52 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "name": "Team views"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/data-exploration/views/v1/folders",
+        "body": {
+          "name": "Team views"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "view-folder.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "delete: the folder was deleted outside the operator",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/data-exploration/views/v1/folders/<id-1>",
+        "status": 404
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]
