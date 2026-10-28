@@ -67,11 +67,24 @@ jobs:
       - name: Install Coralogix Operator (Helm)
         run: |
           set -euo pipefail
+          # A PR bumps appVersion with `make bump` before its image exists: Release pushes it
+          # only after the merge. Until then, run the newest released image, so the deployment
+          # check below still has an operator to wait for.
+          app_version=$(yq eval '.appVersion' charts/coralogix-operator/Chart.yaml)
+          image_args=()
+          if ! docker manifest inspect "coralogixrepo/coralogix-operator:v$app_version" > /dev/null 2>&1; then
+            released=$(git ls-remote --tags --refs origin 'v*' | sed -E 's#.*refs/tags/v##' |
+              grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n1)
+            echo "::notice::Image v$app_version is not published yet; deploying v$released instead."
+            # The chart adds the v prefix itself.
+            image_args=(--set coralogixOperator.image.tag="$released")
+          fi
           helm install coralogix-operator ./charts/coralogix-operator \
             --namespace coralogix-operator-system \
             --create-namespace \
             --set secret.data.apiKey="test-key" \
-            --set coralogixOperator.region="EU2"
+            --set coralogixOperator.region="EU2" \
+            "${image_args[@]}"
           status="$(helm status coralogix-operator -n coralogix-operator-system -o json | jq -r .info.status)"
           if [ "${status}" != "deployed" ]; then
             echo "helm install finished but release status is '${status}', expected 'deployed'"
