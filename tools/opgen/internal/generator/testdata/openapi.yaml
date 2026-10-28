@@ -3,6 +3,8 @@
 # a nested object with an immutable and a computed field, an ordered list of objects, a list with
 # a pattern, a set, a map, a 64-bit number, a server default, and computed fields.
 # PatchThing: a PATCH with updateMask, an immutable enum, an optional oneOf, and a server default.
+# RefThing: a kind that users already have, with a required and an optional id of a Thing. Its
+# behavior-overrides file makes both ids references (the ref key).
 openapi: 3.1.0
 info:
   title: Synthetic things API
@@ -184,6 +186,70 @@ paths:
           content:
             application/json:
               schema: {type: object}
+  /ref-things:
+    post:
+      tags: [Ref Things Service]
+      operationId: RefThingsService_CreateRefThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: CreateRefThingRequest
+              type: object
+              required: [name, thingId]
+              properties:
+                name: {type: string, minLength: 1, x-coralogix-presence: true}
+                thingId: {type: string, minLength: 1, x-coralogix-presence: true}
+                parentId: {type: string, x-coralogix-presence: true}
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RefThing'}
+  /ref-things/{id}:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: string}}
+    get:
+      tags: [Ref Things Service]
+      operationId: RefThingsService_GetRefThing
+      responses:
+        '200':
+          description: Found
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RefThing'}
+    put:
+      tags: [Ref Things Service]
+      operationId: RefThingsService_ReplaceRefThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: ReplaceRefThingRequest
+              type: object
+              required: [name, thingId]
+              properties:
+                name: {type: string, minLength: 1, x-coralogix-presence: true}
+                thingId: {type: string, minLength: 1, x-coralogix-presence: true}
+                parentId: {type: string, x-coralogix-presence: true}
+      responses:
+        '200':
+          description: Replaced
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RefThing'}
+    delete:
+      tags: [Ref Things Service]
+      operationId: RefThingsService_DeleteRefThing
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema: {type: object}
 components:
   schemas:
     Thing:
@@ -311,3 +377,11 @@ components:
       required: [value]
       properties:
         value: {type: string, minLength: 1}
+    RefThing:
+      type: object
+      required: [id, name, thingId]
+      properties:
+        id: {type: string, readOnly: true}
+        name: {type: string, minLength: 1}
+        thingId: {type: string, minLength: 1, description: The id of the Thing that it uses.}
+        parentId: {type: string, description: The id of the parent Thing.}

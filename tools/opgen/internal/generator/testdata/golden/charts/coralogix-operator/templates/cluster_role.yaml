@@ -15,6 +15,7 @@ rules:
       - coralogix.com
     resources:
       - patchthings
+      - refthings
       - things
     verbs:
       - create
@@ -28,6 +29,7 @@ rules:
       - coralogix.com
     resources:
       - patchthings/finalizers
+      - refthings/finalizers
       - things/finalizers
     verbs:
       - update
@@ -35,6 +37,7 @@ rules:
       - coralogix.com
     resources:
       - patchthings/status
+      - refthings/status
       - things/status
     verbs:
       - get

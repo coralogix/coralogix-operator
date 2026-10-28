@@ -19,5 +19,6 @@ package utils
 // The kinds that the operator generator writes.
 const (
 	PatchThingKind = "PatchThing"
+	RefThingKind   = "RefThing"
 	ThingKind      = "Thing"
 )

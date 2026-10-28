@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/coralogix/coralogix-management-sdk/iac/model"
+
+	"github.com/coralogix/coralogix-operator/v2/tools/opgen/internal/overrides"
 )
 
 // spec builds the spec from the top-level fields. A field that only the server sets is not in it.
@@ -23,7 +25,7 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 			continue
 		}
 		required := f.Create.Required && !inGroup[f.Name]
-		field, err := b.field(b.kind, f.Name, f.Description, f.Type, required, "spec."+f.Name, false)
+		field, err := b.field(b.kind, r.Name, f.Name, f.Description, f.Type, required, "spec."+f.Name, false)
 		if err != nil {
 			return nil, err
 		}
@@ -53,7 +55,7 @@ func immutable(f *crField, path string) {
 // A rule on the object that holds the field would not run when the object itself is added or removed.
 func presenceRules(spec, t *crType, prefix []string, optionalParent bool) {
 	for _, f := range t.Fields {
-		path := append(slices.Clone(prefix), f.API)
+		path := append(slices.Clone(prefix), f.JSON)
 		if f.immutable && (f.Optional || optionalParent) {
 			var self, old []string
 			for i := range path {
@@ -104,31 +106,36 @@ func celMarker(rule, message string) string {
 func groupRules(t *crType, groups []model.OneOfGroup, path string) error {
 	t.groups = groups
 	for _, g := range groups {
-		var terms []string
+		var terms, names []string
 		for _, arm := range g.Arms {
-			if !slices.ContainsFunc(t.Fields, func(f *crField) bool { return f.API == arm }) {
+			i := slices.IndexFunc(t.Fields, func(f *crField) bool { return f.API == arm })
+			if i < 0 {
 				return unsupported(path+"."+arm, "a oneOf arm that the custom resource cannot set is not supported")
 			}
-			terms = append(terms, fmt.Sprintf("(has(self.%s) ? 1 : 0)", arm))
+			terms = append(terms, fmt.Sprintf("(has(self.%s) ? 1 : 0)", t.Fields[i].JSON))
+			names = append(names, t.Fields[i].JSON)
 		}
 		rule, msg := " == 1", "Exactly one of %s must be set"
 		if g.AllowNone {
 			rule, msg = " <= 1", "At most one of %s can be set"
 		}
-		t.Markers = append(t.Markers, celMarker(strings.Join(terms, " + ")+rule, fmt.Sprintf(msg, strings.Join(g.Arms, ", "))))
+		t.Markers = append(t.Markers, celMarker(strings.Join(terms, " + ")+rule, fmt.Sprintf(msg, strings.Join(names, ", "))))
 	}
 	return nil
 }
 
-// field builds one field of the Go type owner. inItem is true inside a list item or a map value,
-// where kubectl cannot compare a value with its old value.
-func (b *builder) field(owner, name, description string, t *model.Type, required bool, path string, inItem bool) (*crField, error) {
+// field builds one field of the Go type owner, which holds component. inItem is true inside a
+// list item or a map value, where kubectl cannot compare a value with its old value.
+func (b *builder) field(owner, component, name, description string, t *model.Type, required bool, path string, inItem bool) (*crField, error) {
 	if err := wrapped(t, path); err != nil {
 		return nil, err
 	}
-	f := &crField{API: name, GoName: goName(name), Optional: !required, Doc: docLines(description), typ: t}
+	f := &crField{API: name, JSON: name, GoName: goName(name), Optional: !required, Doc: docLines(description), typ: t}
 	if !required {
 		f.Markers = append(f.Markers, "+optional")
+	}
+	if ref := b.file.Ref(component, name); ref != nil {
+		return b.refField(f, component, ref)
 	}
 	switch t.Kind {
 	case model.List, model.Set, model.Map:
@@ -186,6 +193,25 @@ func wrapped(t *model.Type, path string) error {
 		return unsupported(path, "wrapper and keyedBy values are not supported yet")
 	}
 	return nil
+}
+
+// refField makes a string id of another resource a reference (way 2). The custom resource names
+// the field after the API field, with Ref in place of a trailing Id: thingId is thingRef.
+func (b *builder) refField(f *crField, component string, ref *overrides.Ref) (*crField, error) {
+	line := overrides.Line{Component: component, Field: f.API}
+	if f.typ.Kind != model.String || f.typ.Format != "" {
+		return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".ref",
+			msg: fmt.Sprintf("ref needs a string id, the field is a %s", f.typ.Kind)}
+	}
+	b.used[line] = true
+	base, _ := strings.CutSuffix(strings.TrimSuffix(f.API, "Id"), "ID")
+	f.JSON = base + "Ref"
+	f.GoName, f.GoType, f.ref = goName(f.JSON), "ResourceIDRef", ref.Kind
+	if f.Optional {
+		f.GoType = "*" + f.GoType
+	}
+	f.Doc = append(f.Doc, fmt.Sprintf("It refers to a %s: by backendRef.id, or by resourceRef, a %s custom resource.", ref.Kind, ref.Kind))
+	return f, nil
 }
 
 // elemType is the Go type of the items of a list or the values of a map.
@@ -361,7 +387,7 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 		}
 		required := t.Kind != model.OneOf && f.Create.Required && !inGroup[f.Name]
 		child := path + "." + f.Name
-		field, err := b.field(obj.Name, f.Name, f.Description, f.Type, required, child, inItem)
+		field, err := b.field(obj.Name, t.Schema, f.Name, f.Description, f.Type, required, child, inItem)
 		if err != nil {
 			return nil, err
 		}

@@ -210,8 +210,10 @@ func TestPublishRemovesFilesOfRemovedKinds(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, kindsFile), []byte("kinds:\n  - {kind: PatchThing, resource: PatchThing}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.RemoveAll(filepath.Join(root, kindsDir, "thing")); err != nil {
-		t.Fatal(err)
+	for _, dir := range []string{"thing", "refthing"} {
+		if err := os.RemoveAll(filepath.Join(root, kindsDir, dir)); err != nil {
+			t.Fatal(err)
+		}
 	}
 	if err := generateFromInput(input, root, root); err != nil {
 		t.Fatal(err)
@@ -262,11 +264,15 @@ func TestHandwrittenNameCollision(t *testing.T) {
 // ThingConfig makes the root type ThingConfig, and the kind Thing makes it for its component.
 func TestGeneratedNameCollision(t *testing.T) {
 	root, input := syntheticRoot(t)
-	kinds := "kinds:\n  - kind: Thing\n    resource: Thing\n  - kind: ThingConfig\n    resource: PatchThing\n"
-	if err := os.WriteFile(filepath.Join(root, "tools", "opgen", "kinds.yaml"), []byte(kinds), 0o644); err != nil {
+	path := filepath.Join(root, "tools", "opgen", "kinds.yaml")
+	kinds, err := os.ReadFile(path)
+	if err != nil {
 		t.Fatal(err)
 	}
-	err := generateFromInput(input, root, root)
+	if err := os.WriteFile(path, append(kinds, "  - kind: ThingConfig\n    resource: PatchThing\n"...), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	err = generateFromInput(input, root, root)
 	wantCode(t, err, codeNameCollision)
 	if !strings.Contains(err.Error(), "ThingConfig is also declared in the generated file") {
 		t.Fatalf("want the clash between the two kinds, got:\n%v", err)
@@ -282,7 +288,7 @@ func TestWrappedElementIsUnsupported(t *testing.T) {
 	item := &model.Type{Kind: model.String, Wrappers: []model.Wrapper{{}}}
 	for _, kind := range []model.Kind{model.List, model.Map} {
 		b := &builder{kind: "Thing", types: map[string]*crType{}, enums: map[string]*enumMap{}}
-		_, err := b.field("Thing", "tags", "", &model.Type{Kind: kind, Elem: item}, false, "spec.tags", false)
+		_, err := b.field("Thing", "Thing", "tags", "", &model.Type{Kind: kind, Elem: item}, false, "spec.tags", false)
 		s, ok := isShapeError(err)
 		if !ok || s.code != codeShapeUnsupported || s.path != "spec.tags[]" {
 			t.Errorf("%s: want %s at spec.tags[], got %v", kind, codeShapeUnsupported, err)

@@ -120,11 +120,11 @@ func (v *sampleValues) object(t *crType, prefix string, full bool) (*omap, error
 		if skip[f.API] || (!full && f.Optional && !inGroup) {
 			continue
 		}
-		value, err := v.field(f, prefix+f.API, full)
+		value, err := v.field(f, prefix+f.JSON, full)
 		if err != nil {
 			return nil, err
 		}
-		out.set(f.API, value)
+		out.set(f.JSON, value)
 	}
 	return out, nil
 }
@@ -133,6 +133,10 @@ func (v *sampleValues) field(f *crField, path string, full bool) (any, error) {
 	if value, ok := v.file.Values[path]; ok {
 		v.used[path] = true
 		return value, nil
+	}
+	if f.ref != "" {
+		return nil, &shapeError{code: codeE2ERequired, path: e2eFileName + ":values." + path,
+			msg: fmt.Sprintf("a reference to a %s needs a value: a backendRef id or a resourceRef that the test can use", f.ref)}
 	}
 	switch f.typ.Kind {
 	case model.List, model.Set:
@@ -210,7 +214,7 @@ func updateStep(d *kindData, ix *refIndex, full *omap, file *e2eFile, nameField 
 		if file.Update != nil && file.Update.Field != f.API {
 			continue
 		}
-		if f.immutable || inGroup[f.API] || f.enum != nil || f.typ.Pattern != "" || f.typ.WireString ||
+		if f.immutable || inGroup[f.API] || f.enum != nil || f.ref != "" || f.typ.Pattern != "" || f.typ.WireString ||
 			!slices.Contains([]model.Kind{model.String, model.Bool, model.Integer}, f.typ.Kind) {
 			if file.Update != nil {
 				return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":update.field",
@@ -260,7 +264,7 @@ func updateValue(f *crField, full *omap, file *e2eFile, nameField string) (strin
 	if f.GoName == nameField {
 		return "fullName + \"-updated\"", nil
 	}
-	switch value := full.get(f.API).(type) {
+	switch value := full.get(f.JSON).(type) {
 	case bool:
 		return strconv.FormatBool(!value), nil
 	case int64:

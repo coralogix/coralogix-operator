@@ -133,7 +133,7 @@ func (b *builder) conversion(cr *crType, sdkType string, fields []*model.Field, 
 			}
 			continue
 		}
-		code, err := b.assign(cr.Fields[i], rf.Type, sdkType, path+"."+rf.Name)
+		code, err := b.assign(cr.Fields[i], rf.Type, sdkType, path+"."+cr.Fields[i].JSON)
 		if err != nil {
 			return "", err
 		}
@@ -209,6 +209,10 @@ func (b *builder) temp(prefix string) string {
 // value writes the statements that convert src, a value of the custom resource, to the SDK value
 // type want. It returns the expression of the result and whether that expression is a pointer.
 func (b *builder) value(f *crField, rt *model.Type, src, want, path string) (string, string, bool, error) {
+	if f.ref != "" {
+		v := b.temp("v")
+		return fmt.Sprintf("%s, err := ResolveResourceID(ctx, namespace, %s, %q)\nif err != nil {\nreturn nil, fmt.Errorf(\"%s: %%w\", err)\n}\n", v, arg(src), f.ref, path), v, false, nil
+	}
 	switch rt.Kind {
 	case model.List, model.Set, model.Map:
 		elemWant, ok := strings.CutPrefix(want, "[]")
@@ -218,7 +222,7 @@ func (b *builder) value(f *crField, rt *model.Type, src, want, path string) (str
 		if !ok {
 			return "", "", false, fmt.Errorf("%s: the SDK type %s is not a collection", path, want)
 		}
-		elem := &crField{API: f.API, typ: f.typ.Elem, object: f.object, enum: f.enum}
+		elem := &crField{API: f.API, JSON: f.JSON, typ: f.typ.Elem, object: f.object, enum: f.enum}
 		v, e, k := b.temp("v"), b.temp("e"), "_"
 		if rt.Kind == model.Map {
 			k = b.temp("k")
