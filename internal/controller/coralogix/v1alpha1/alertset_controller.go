@@ -430,7 +430,7 @@ func (r *AlertSetReconciler) replaceAlerts(
 	requestItems := make([]alerts.AlertDefToReplace, 0, len(keys))
 	requestIDs := make(map[string]string, len(keys))
 	var itemErrs []error
-	writeAhead := false
+	var writeAheadKeys []string
 	for _, key := range keys {
 		if _, created := createdKeys[key]; created {
 			continue
@@ -459,7 +459,7 @@ func (r *AlertSetReconciler) replaceAlerts(
 			// makes the alert look deleted, and the record must already exist to stop a recreate.
 			status.AccessPolicyManaged = true
 			statusByKey[key] = status
-			writeAhead = true
+			writeAheadKeys = append(writeAheadKeys, key)
 		}
 		requestItems = append(requestItems, alerts.AlertDefToReplace{Id: &id, AlertDefProperties: props, AccessPolicy: policyAction})
 		requestIDs[id] = key
@@ -468,7 +468,7 @@ func (r *AlertSetReconciler) replaceAlerts(
 		return itemErrs, nil
 	}
 
-	if writeAhead {
+	if len(writeAheadKeys) > 0 {
 		alertSet.Status.Alerts = sortedAlertSetStatuses(statusByKey)
 		if err := config.GetClient().Status().Update(ctx, alertSet); err != nil {
 			return itemErrs, fmt.Errorf("error on recording the alertset access policies in status: %w", err)
@@ -479,7 +479,23 @@ func (r *AlertSetReconciler) replaceAlerts(
 	reconcileLog.Info("Replacing remote alerts", "count", len(requestItems))
 	response, httpResponse, err := r.alertsAPI().BulkReplace(ctx, request)
 	if err != nil {
-		return itemErrs, fmt.Errorf("bulk replace remote alerts: %w", cxsdk.NewAPIError(httpResponse, err))
+		requestErr := fmt.Errorf("bulk replace remote alerts: %w", cxsdk.NewAPIError(httpResponse, err))
+		if len(writeAheadKeys) > 0 && rejectedBeforeApplying(httpResponse) {
+			// The whole request was refused, so none of the policies recorded ahead of it were
+			// applied. Keeping the records would make a later genuine deletion look like a lockout.
+			// Persisted here: the final status write compares against the pre-reconcile status,
+			// which already has these tombstones cleared, and would skip it.
+			for _, key := range writeAheadKeys {
+				status := statusByKey[key]
+				status.AccessPolicyManaged = false
+				statusByKey[key] = status
+			}
+			alertSet.Status.Alerts = sortedAlertSetStatuses(statusByKey)
+			if statusErr := config.GetClient().Status().Update(ctx, alertSet); statusErr != nil {
+				requestErr = errors.Join(requestErr, fmt.Errorf("roll back the alertset access policy records: %w", statusErr))
+			}
+		}
+		return itemErrs, requestErr
 	}
 
 	recorded := alertSetPolicyRecord(alertSet)
@@ -1036,4 +1052,11 @@ func (r *AlertSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&coralogixv1alpha1.AlertSet{}).
 		WithEventFilter(config.GetConfig().Selector.Predicate()).
 		Complete(r)
+}
+
+// rejectedBeforeApplying reports whether a failed bulk request provably changed nothing remotely:
+// a client error other than not-found. A server error may follow a partial apply (the API also
+// answers a batch holding an invalid policy with 500), so it keeps the records.
+func rejectedBeforeApplying(resp *http.Response) bool {
+	return resp != nil && resp.StatusCode >= 400 && resp.StatusCode < 500 && resp.StatusCode != http.StatusNotFound
 }

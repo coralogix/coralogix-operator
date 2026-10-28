@@ -465,3 +465,36 @@ func TestHandleDeletionClearsAccessPolicyAnnotation(t *testing.T) {
 	require.NotContains(t, persisted.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation,
 		"once the remote alert is deleted its policy record must not survive into a later recreate")
 }
+
+func TestHandleUpdateRollsBackRecordWhenUpsertIsRejected(t *testing.T) {
+	policy := `{"version":"2025-01-01","default":{"permissions":{"alerts:ReadConfig":"grant"}},"rules":[]}`
+	for _, tc := range []struct {
+		name       string
+		statusCode int
+		wantKept   bool
+	}{
+		{name: "client error rolls back", statusCode: http.StatusBadRequest, wantKept: false},
+		{name: "server error keeps the record", statusCode: http.StatusInternalServerError, wantKept: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(tc.statusCode)
+				_, _ = w.Write([]byte(`{"code":3,"message":"rejected"}`))
+			}))
+			t.Cleanup(server.Close)
+
+			alert := testAlert(ptr.To(policy), false)
+			initAlertClient(t, alert, nil)
+			reconciler := testAlertReconciler(t, server)
+			require.Error(t, reconciler.HandleUpdate(context.Background(), logr.Discard(), alert))
+
+			persisted := &coralogixv1beta1.Alert{}
+			require.NoError(t, config.GetClient().Get(context.Background(), client.ObjectKeyFromObject(alert), persisted))
+			require.Equal(t, tc.wantKept, persisted.Status.AccessPolicyManaged,
+				"a refused upsert applied nothing; a server error may have")
+			_, annotated := persisted.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation]
+			require.Equal(t, tc.wantKept, annotated)
+		})
+	}
+}

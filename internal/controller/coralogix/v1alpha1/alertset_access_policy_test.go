@@ -16,6 +16,7 @@ package v1alpha1
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"testing"
 
@@ -522,4 +523,48 @@ func TestReconcileSelectorMismatchClearsPolicyRecord(t *testing.T) {
 	require.NotContains(t, persisted.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation,
 		"selector cleanup must not leave policy records for items that may be recreated later")
 	require.Empty(t, persisted.Finalizers)
+}
+
+func TestReplaceAlertsRollsBackTombstonesWhenRequestIsRejected(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		statusCode int
+		wantKept   bool
+	}{
+		{name: "client error rolls back", statusCode: http.StatusBadRequest, wantKept: false},
+		{name: "server error keeps the record", statusCode: http.StatusInternalServerError, wantKept: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			id := "id-set-policy"
+			alertSet := &coralogixv1alpha1.AlertSet{
+				ObjectMeta: metav1.ObjectMeta{Name: "test-alert-set", Namespace: "default"},
+				Spec: coralogixv1alpha1.AlertSetSpec{Alerts: []coralogixv1alpha1.AlertSetItem{
+					accessPolicyAlertSetItem("set-policy", ptr.To(testAlertSetAccessPolicy)),
+				}},
+				Status: coralogixv1alpha1.AlertSetStatus{Alerts: []coralogixv1alpha1.AlertSetItemStatus{
+					{Key: "set-policy", ID: &id, State: coralogixv1alpha1.AlertSetItemStateSynced},
+				}},
+			}
+			baseClient := initAlertSetClient(t, alertSet, nil)
+			stored := &coralogixv1alpha1.AlertSet{}
+			require.NoError(t, baseClient.Get(context.Background(), client.ObjectKeyFromObject(alertSet), stored))
+			reconciler := &AlertSetReconciler{api: fakeAlertSetAPI{
+				bulkReplace: func(context.Context, alerts.BulkReplaceAlertDefinitionsRequest) (*alerts.BulkReplaceAlertDefsResponse, *http.Response, error) {
+					return nil, &http.Response{StatusCode: tc.statusCode, Body: http.NoBody}, errors.New("rejected")
+				},
+			}}
+			statuses, err := alertSetStatusByKey(stored.Status.Alerts)
+			require.NoError(t, err)
+
+			_, requestErr := reconciler.replaceAlerts(context.Background(), logr.Discard(), stored,
+				desiredAlertSetItemsByKey(stored.Spec.Alerts), statuses, map[string]struct{}{})
+
+			require.Error(t, requestErr)
+			require.Equal(t, tc.wantKept, statuses["set-policy"].AccessPolicyManaged)
+			persisted := &coralogixv1alpha1.AlertSet{}
+			require.NoError(t, baseClient.Get(context.Background(), client.ObjectKeyFromObject(alertSet), persisted))
+			require.Equal(t, tc.wantKept, persisted.Status.Alerts[0].AccessPolicyManaged,
+				"the persisted tombstone must match: a refused request applied nothing, a server error may have")
+		})
+	}
 }

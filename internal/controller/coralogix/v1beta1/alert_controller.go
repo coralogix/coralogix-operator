@@ -16,7 +16,9 @@ package v1beta1
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -110,10 +112,12 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 	}
 
 	policyAction := alert.Spec.ExtractAccessPolicyAction()
+	wroteAhead := false
 	if policyAction != nil && policyAction.Upsert != nil {
 		// Record the policy before sending it: once applied, a policy that denies the operator's API key
 		// makes the alert look deleted, and the record must already exist to stop a recreate.
 		if !alert.Status.AccessPolicyManaged {
+			wroteAhead = true
 			alert.Status.AccessPolicyManaged = true
 			if err := config.GetClient().Status().Update(ctx, alert); err != nil {
 				return fmt.Errorf("error on recording the alert access policy in status: %w", err)
@@ -144,6 +148,19 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 				"not recreating it. If it was deleted, remove status.id to recreate it; if it is locked, "+
 				"recreating leaves it orphaned: %s", *alert.Status.ID, apiErr.Error())
 		}
+		if wroteAhead && rejectedBeforeApplying(httpResp) {
+			// The request was refused, so the policy recorded ahead of it was never applied. Keeping
+			// the record would make a later genuine deletion look like a lockout.
+			// Persisted here: the shared reconciler writes status after an error only when the
+			// condition changes.
+			alert.Status.AccessPolicyManaged = false
+			if clearErr := clearAccessPolicyManagedAnnotation(ctx, alert); clearErr != nil {
+				return errors.Join(apiErr, clearErr)
+			}
+			if statusErr := config.GetClient().Status().Update(ctx, alert); statusErr != nil {
+				return errors.Join(apiErr, fmt.Errorf("error on rolling back the alert access policy record: %w", statusErr))
+			}
+		}
 		return apiErr
 	}
 	log.Info("Remote alert updated", "alert", utils.FormatJSON(updateResponse))
@@ -154,6 +171,13 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 		}
 	}
 	return nil
+}
+
+// rejectedBeforeApplying reports whether a failed replace provably changed nothing remotely: a
+// client error other than not-found. A not-found may hide a policy lockout, and a server error
+// may follow a partial apply (the API also answers some invalid policies with 500).
+func rejectedBeforeApplying(resp *http.Response) bool {
+	return resp != nil && resp.StatusCode >= 400 && resp.StatusCode < 500 && resp.StatusCode != http.StatusNotFound
 }
 
 // clearAccessPolicyManagedAnnotation removes the policy record from the CR metadata. Like
