@@ -2,11 +2,15 @@ package generator
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
+
+	"go.yaml.in/yaml/v4"
 
 	"github.com/coralogix/coralogix-management-sdk/iac/source"
 )
@@ -43,17 +47,19 @@ func TestGeneratedKindsBuildInTheOperator(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if err := copyTree(filepath.Join("testdata", "root", "tools"), filepath.Join(sandbox, "tools")); err != nil {
-		t.Fatal(err)
+	// The run generates the real kinds of the operator next to the synthetic ones, as make codegen
+	// does, so it keeps the generated files of the real kinds.
+	for _, dir := range []string{filepath.Join(root, toolDir), filepath.Join("testdata", "root", toolDir)} {
+		if err := copyTree(filepath.Join(dir, "kinds"), filepath.Join(sandbox, kindsDir)); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			t.Fatal(err)
+		}
 	}
+	writeKinds(t, filepath.Join(sandbox, kindsFile), filepath.Join(root, kindsFile), filepath.Join("testdata", "root", kindsFile))
 	overlaySDK(t, pinned.SDKDir, sdk)
 	goMod := filepath.Join(sandbox, "go.mod")
 	appendFile(t, goMod, fmt.Sprintf("\nreplace %s => %s\n", source.SDKModule, sdk))
 
-	openAPI, err := os.ReadFile(filepath.Join("testdata", "openapi.yaml"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	openAPI := mergeOpenAPI(t, pinned.OpenAPI, filepath.Join("testdata", "openapi.yaml"))
 	input := source.Input{ModuleRoot: sandbox, Module: operatorModule, SDKDir: sdk, SDKModule: source.SDKModule, OpenAPI: openAPI}
 	if err := generateFromInput(input, sandbox, sandbox); err != nil {
 		t.Fatal(err)
@@ -94,6 +100,74 @@ func TestGeneratedKindsBuildInTheOperator(t *testing.T) {
 			t.Errorf("the role that controller-gen writes has no %s", resource)
 		}
 	}
+}
+
+// writeKinds writes the kinds of every listed kinds file to path.
+func writeKinds(t *testing.T, path string, files ...string) {
+	t.Helper()
+	var all kindList
+	for _, file := range files {
+		data, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var list kindList
+		if err := yaml.Unmarshal(data, &list); err != nil {
+			t.Fatal(err)
+		}
+		all.Kinds = append(all.Kinds, list.Kinds...)
+	}
+	data, err := yaml.Marshal(all)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, data, 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// mergeOpenAPI adds the paths and the component schemas of the synthetic contract to the OpenAPI
+// of the pinned SDK. It keeps the order of every key, as the order of oneOf arms is output.
+func mergeOpenAPI(t *testing.T, pinned []byte, synthetic string) []byte {
+	t.Helper()
+	extra, err := os.ReadFile(synthetic)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var base, add yaml.Node
+	if err := yaml.Unmarshal(pinned, &base); err != nil {
+		t.Fatal(err)
+	}
+	if err := yaml.Unmarshal(extra, &add); err != nil {
+		t.Fatal(err)
+	}
+	for _, path := range [][]string{{"paths"}, {"components", "schemas"}} {
+		into, from := mappingAt(t, base.Content[0], path), mappingAt(t, add.Content[0], path)
+		into.Content = append(into.Content, from.Content...)
+	}
+	data, err := yaml.Marshal(&base)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return data
+}
+
+// mappingAt returns the mapping node at the key path.
+func mappingAt(t *testing.T, n *yaml.Node, path []string) *yaml.Node {
+	t.Helper()
+	for _, key := range path {
+		found := false
+		for i := 0; i+1 < len(n.Content); i += 2 {
+			if n.Content[i].Value == key {
+				n, found = n.Content[i+1], true
+				break
+			}
+		}
+		if !found || n.Kind != yaml.MappingNode {
+			t.Fatalf("the OpenAPI has no mapping %v", path)
+		}
+	}
+	return n
 }
 
 // overlaySDK builds a copy of the pinned SDK at dir from symbolic links, with the stand-in packages of
