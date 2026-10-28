@@ -249,14 +249,28 @@ func updateAlertMetadata(ctx context.Context, alert *coralogixv1beta1.Alert, mut
 		written = fresh
 		return nil
 	})
-	if err != nil || written == nil {
+	if err != nil {
+		// The write may still have been committed (a timeout after the server applied it), so
+		// adopt whatever is stored now: either way alert then carries the current resource version.
+		latest := &coralogixv1beta1.Alert{}
+		if getErr := config.GetClient().Get(ctx, client.ObjectKeyFromObject(alert), latest); getErr == nil {
+			adoptAlertMetadata(alert, latest)
+		}
 		return err
 	}
-	status := alert.Status
-	written.ObjectMeta.DeepCopyInto(&alert.ObjectMeta)
-	written.Spec.DeepCopyInto(&alert.Spec)
-	alert.Status = status
+	if written != nil {
+		adoptAlertMetadata(alert, written)
+	}
 	return nil
+}
+
+// adoptAlertMetadata makes alert carry stored's metadata and spec while keeping its own status,
+// which the reconciler may not have persisted yet.
+func adoptAlertMetadata(alert, stored *coralogixv1beta1.Alert) {
+	status := alert.Status
+	stored.ObjectMeta.DeepCopyInto(&alert.ObjectMeta)
+	stored.Spec.DeepCopyInto(&alert.Spec)
+	alert.Status = status
 }
 
 func (r *AlertReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {

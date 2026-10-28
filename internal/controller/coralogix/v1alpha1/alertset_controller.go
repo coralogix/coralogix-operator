@@ -431,7 +431,7 @@ func (r *AlertSetReconciler) replaceAlerts(
 	requestItems := make([]alerts.AlertDefToReplace, 0, len(keys))
 	requestIDs := make(map[string]string, len(keys))
 	var itemErrs []error
-	var writeAheadKeys []string
+	var writeAheadKeys, upsertKeys []string
 	for _, key := range keys {
 		if _, created := createdKeys[key]; created {
 			continue
@@ -462,6 +462,9 @@ func (r *AlertSetReconciler) replaceAlerts(
 			statusByKey[key] = status
 			writeAheadKeys = append(writeAheadKeys, key)
 		}
+		if policyAction != nil && policyAction.Upsert != nil {
+			upsertKeys = append(upsertKeys, key)
+		}
 		requestItems = append(requestItems, alerts.AlertDefToReplace{Id: &id, AlertDefProperties: props, AccessPolicy: policyAction})
 		requestIDs[id] = key
 	}
@@ -475,6 +478,19 @@ func (r *AlertSetReconciler) replaceAlerts(
 			return itemErrs, fmt.Errorf("error on recording the alertset access policies in status: %w", err)
 		}
 	}
+	// The durable record goes ahead of the request too: if the replace applies a policy but the
+	// response is lost or a server error, only these records survive an old operator's writes
+	// during a rolling upgrade. Keys added here are dropped again only where the API proves the
+	// policy was not applied.
+	recorded := alertSetPolicyRecord(alertSet)
+	var recordedAhead []string
+	for _, key := range upsertKeys {
+		if _, found := recorded[key]; !found {
+			recorded[key] = struct{}{}
+			recordedAhead = append(recordedAhead, key)
+		}
+	}
+	writeAlertSetPolicyRecord(ctx, alertSet, recorded, reconcileLog)
 
 	request := alerts.BulkReplaceAlertDefinitionsRequest{AlertDefsToReplace: requestItems}
 	reconcileLog.Info("Replacing remote alerts", "count", len(requestItems))
@@ -496,10 +512,15 @@ func (r *AlertSetReconciler) replaceAlerts(
 				requestErr = errors.Join(requestErr, fmt.Errorf("roll back the alertset access policy records: %w", statusErr))
 			}
 		}
+		if len(recordedAhead) > 0 && rejectedBeforeApplying(httpResponse) {
+			for _, key := range recordedAhead {
+				delete(recorded, key)
+			}
+			writeAlertSetPolicyRecord(ctx, alertSet, recorded, reconcileLog)
+		}
 		return itemErrs, requestErr
 	}
 
-	recorded := alertSetPolicyRecord(alertSet)
 	responseErrs := applyBulkReplaceResponse(requestIDs, response, statusByKey, desiredByKey, recorded)
 	// Items the API reports in failedToReplaceAlertDefs were not replaced, so their policy was not
 	// applied: neither record it nor keep a tombstone this pass wrote ahead for it.
@@ -521,6 +542,9 @@ func (r *AlertSetReconciler) replaceAlerts(
 		_, failed := failedIDs[id]
 		switch {
 		case action != nil && action.Upsert != nil && failed:
+			if slices.Contains(recordedAhead, key) {
+				delete(recorded, key)
+			}
 			if slices.Contains(writeAheadKeys, key) {
 				status := statusByKey[key]
 				status.AccessPolicyManaged = false

@@ -286,6 +286,8 @@ func TestReplaceAlertsRecordsAccessPolicyBeforeSending(t *testing.T) {
 				require.NoError(t, baseClient.Get(context.Background(), client.ObjectKeyFromObject(stored), remote))
 				require.Len(t, remote.Status.Alerts, 1)
 				require.True(t, remote.Status.Alerts[0].AccessPolicyManaged, "tombstone must be persisted before the bulk replace is sent")
+				require.Equal(t, `["set-policy"]`, remote.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation],
+					"the durable record must be persisted before the bulk replace is sent")
 				replaced := make([]alerts.AlertDef, len(request.AlertDefsToReplace))
 				for i := range request.AlertDefsToReplace {
 					replaced[i].Id = request.AlertDefsToReplace[i].Id
@@ -565,6 +567,8 @@ func TestReplaceAlertsRollsBackTombstonesWhenRequestIsRejected(t *testing.T) {
 			require.NoError(t, baseClient.Get(context.Background(), client.ObjectKeyFromObject(alertSet), persisted))
 			require.Equal(t, tc.wantKept, persisted.Status.Alerts[0].AccessPolicyManaged,
 				"the persisted tombstone must match: a refused request applied nothing, a server error may have")
+			_, recorded := persisted.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation]
+			require.Equal(t, tc.wantKept, recorded, "the durable record written ahead must follow the tombstone")
 		})
 	}
 }

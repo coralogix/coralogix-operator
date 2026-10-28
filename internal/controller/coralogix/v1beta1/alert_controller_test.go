@@ -553,3 +553,45 @@ func TestHandleCreationSurvivesConcurrentEditDuringAnnotationWrite(t *testing.T)
 	require.Equal(t, "edited concurrently", persisted.Spec.Description,
 		"later full-object writes must not revert the concurrent edit")
 }
+
+// committedTimeoutClient commits its first Update but reports a timeout, as when the response
+// is lost after the API server applied the write.
+type committedTimeoutClient struct {
+	client.Client
+	timedOut bool
+}
+
+func (c *committedTimeoutClient) Update(ctx context.Context, obj client.Object, opts ...client.UpdateOption) error {
+	if err := c.Client.Update(ctx, obj, opts...); err != nil {
+		return err
+	}
+	if !c.timedOut {
+		c.timedOut = true
+		obj.SetResourceVersion("stale-after-lost-response")
+		return apierrors.NewTimeoutError("lost response", 1)
+	}
+	return nil
+}
+
+func TestHandleCreationSurvivesCommittedAnnotationWriteWithLostResponse(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"alertDef":{"id":"created-id"}}`))
+	}))
+	t.Cleanup(server.Close)
+
+	alert := testAlert(ptr.To(`{"version":"2025-01-01","default":{"permissions":{"alerts:ReadConfig":"grant"}},"rules":[]}`), false)
+	alert.Status = coralogixv1beta1.AlertStatus{}
+	initAlertClient(t, alert, func(c client.Client) client.Client { return &committedTimeoutClient{Client: c} })
+
+	reconciler := testAlertReconciler(t, server)
+	require.NoError(t, reconciler.HandleCreation(context.Background(), logr.Discard(), alert))
+	require.NoError(t, config.GetClient().Status().Update(context.Background(), alert),
+		"the new remote ID must persist although the annotation write's response was lost")
+
+	persisted := &coralogixv1beta1.Alert{}
+	require.NoError(t, config.GetClient().Get(context.Background(), client.ObjectKeyFromObject(alert), persisted))
+	require.NotNil(t, persisted.Status.ID)
+	require.Equal(t, "created-id", *persisted.Status.ID)
+	require.Contains(t, persisted.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation)
+}
