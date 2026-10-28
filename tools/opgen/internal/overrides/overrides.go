@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"go/token"
 	"io"
+	"reflect"
 	"slices"
 	"strings"
 
@@ -38,8 +39,27 @@ type File struct {
 	Resource string `yaml:"resource"`
 	// Mode is "existing" or "new".
 	Mode string `yaml:"mode"`
+	// Validators says which validation markers the generated kind has. A kind that users already
+	// have must state it.
+	Validators *Validators `yaml:"validators"`
+	// API describes the parts of the HTTP contract that differ from a new resource. These are the
+	// API keys of the shared iac module. opgen supports updateIDInBody.
+	API API `yaml:"api"`
 	// Types has one entry per OpenAPI component.
 	Types map[string]Type `yaml:"types"`
+}
+
+// Validators is the validators section.
+type Validators struct {
+	// Inferred: false drops the contract limits (lengths, bounds, patterns, item counts) from the
+	// markers, as the released kind has none. A required field stays required, and an enum keeps
+	// its values. true keeps the limits.
+	Inferred *bool `yaml:"inferred"`
+}
+
+// API is the api section: the API keys of the iac module.
+type API struct {
+	iacoverrides.API `yaml:",inline"`
 }
 
 // Type is the lines of one component.
@@ -91,6 +111,15 @@ func (f *File) check() error {
 	if f.Mode != ModeExisting && f.Mode != ModeNew {
 		return fmt.Errorf("mode is %q, want %q or %q", f.Mode, ModeExisting, ModeNew)
 	}
+	if err := f.checkAPI(); err != nil {
+		return err
+	}
+	if f.Mode == ModeNew && f.Validators != nil {
+		return errors.New("validators: a new kind keeps the contract limits, so mode new has no validators key")
+	}
+	if f.Mode == ModeExisting && (f.Validators == nil || f.Validators.Inferred == nil) {
+		return errors.New("validators.inferred is required: false for a kind whose released validation has no contract limits, and true otherwise")
+	}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
 		if field.Ref == nil {
@@ -103,13 +132,35 @@ func (f *File) check() error {
 	return nil
 }
 
-// Policy returns the contract rules of the kind: the rules of a released resource in mode
-// existing, and the rules of a new resource in mode new. No key of this file is an API key yet.
+// checkAPI accepts only the API keys that the operator renderer supports. A new kind has none.
+func (f *File) checkAPI() error {
+	if err := f.API.Check(); err != nil {
+		return err
+	}
+	rest := f.API.API
+	rest.UpdateIDInBody = false
+	if !reflect.DeepEqual(rest, iacoverrides.API{}) {
+		return errors.New("api: opgen supports only api.updateIDInBody so far; another key lands with the first kind that needs it")
+	}
+	if f.Mode == ModeNew && f.API.UpdateIDInBody {
+		return errors.New("api: a new kind follows the contract, so mode new has no api keys")
+	}
+	return nil
+}
+
+// Policy returns the contract rules of the kind: the rules of a released resource with the API keys
+// of the file in mode existing, and the rules of a new resource in mode new.
 func (f *File) Policy() model.Policy {
 	if f == nil || f.Mode == ModeNew {
 		return model.Policy{}
 	}
-	return iacoverrides.Exceptions{}.Policy()
+	return iacoverrides.Exceptions{API: f.API.API}.Policy()
+}
+
+// Inferred reports whether the markers have the contract limits: true unless the file says
+// validators.inferred: false.
+func (f *File) Inferred() bool {
+	return f == nil || f.Validators == nil || f.Validators.Inferred == nil || *f.Validators.Inferred
 }
 
 // Lines returns every field line in a stable order.

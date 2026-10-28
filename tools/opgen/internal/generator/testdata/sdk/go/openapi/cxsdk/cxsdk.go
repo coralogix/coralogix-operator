@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	bodyidthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/body_id_things_service"
 	patchthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/patch_things_service"
 	refthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/ref_things_service"
 	things "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/things_service"
@@ -26,6 +27,11 @@ func (c *ClientSet) PatchThings() *patchthings.PatchThingsServiceAPIService {
 // RefThings returns the client of the ref things API.
 func (c *ClientSet) RefThings() *refthings.RefThingsServiceAPIService {
 	return refthings.NewRefThingsServiceAPIService()
+}
+
+// BodyIDThings returns the client of the body id things API.
+func (c *ClientSet) BodyIDThings() *bodyidthings.BodyIDThingsServiceAPIService {
+	return bodyidthings.NewBodyIDThingsServiceAPIService()
 }
 
 // APIError is an error with an HTTP status.

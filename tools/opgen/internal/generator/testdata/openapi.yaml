@@ -3,6 +3,9 @@
 # a nested object with an immutable and a computed field, an ordered list of objects, a list with
 # a pattern, a set, a map, a 64-bit number, a server default, and computed fields.
 # PatchThing: a PATCH with updateMask, an immutable enum, an optional oneOf, and a server default.
+# BodyIDThing: a kind that users already have, as the view folders API has it. Replace is a PUT on
+# the Create path with the id in the body (api.updateIDInBody), and the released kind has no
+# contract limits (validators.inferred: false).
 # RefThing: a kind that users already have, with a required and an optional id of a Thing. Its
 # behavior-overrides file makes both ids references (the ref key).
 openapi: 3.1.0
@@ -250,6 +253,69 @@ paths:
           content:
             application/json:
               schema: {type: object}
+  /body-id-things:
+    post:
+      tags: [Body ID Things Service]
+      operationId: BodyIDThingsService_CreateBodyIDThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: CreateBodyIDThingRequest
+              type: object
+              required: [name]
+              properties:
+                name: {type: string, minLength: 1, maxLength: 100, x-coralogix-presence: true}
+                limit: {type: integer, format: int32, minimum: 1, maximum: 10, x-coralogix-presence: true}
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/BodyIDThing'}
+    put:
+      tags: [Body ID Things Service]
+      operationId: BodyIDThingsService_ReplaceBodyIDThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: BodyIDThing
+              type: object
+              required: [id, name]
+              properties:
+                id: {type: string, minLength: 1, x-coralogix-presence: true}
+                name: {type: string, minLength: 1, maxLength: 100, x-coralogix-presence: true}
+                limit: {type: integer, format: int32, minimum: 1, maximum: 10, x-coralogix-presence: true}
+      responses:
+        '200':
+          description: Replaced
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/BodyIDThing'}
+  /body-id-things/{id}:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: string}}
+    get:
+      tags: [Body ID Things Service]
+      operationId: BodyIDThingsService_GetBodyIDThing
+      responses:
+        '200':
+          description: Found
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/BodyIDThing'}
+    delete:
+      tags: [Body ID Things Service]
+      operationId: BodyIDThingsService_DeleteBodyIDThing
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema: {type: object}
 components:
   schemas:
     Thing:
@@ -385,3 +451,10 @@ components:
         name: {type: string, minLength: 1}
         thingId: {type: string, minLength: 1, description: The id of the Thing that it uses.}
         parentId: {type: string, description: The id of the parent Thing.}
+    BodyIDThing:
+      type: object
+      required: [id, name]
+      properties:
+        id: {type: string, minLength: 1, x-coralogix-presence: true}
+        name: {type: string, minLength: 1, maxLength: 100, x-coralogix-presence: true, description: The name.}
+        limit: {type: integer, format: int32, minimum: 1, maximum: 10, x-coralogix-presence: true}

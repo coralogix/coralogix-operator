@@ -5,3 +5,5 @@ kinds:
     resource: PatchThing
   - kind: RefThing
     resource: RefThing
+  - kind: BodyIDThing
+    resource: BodyIDThing

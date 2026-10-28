@@ -62,6 +62,11 @@ type kindData struct {
 	Mask, MaskSetter           string // the update mask and its setter, "" for a full replace
 	IDField                    string // the Go field of the id in the resource response
 	IDValue                    bool   // the id field is a value, not a pointer
+	// UpdateIDInBody: Update has no id in its path (api.updateIDInBody). UpdateRequest copies the
+	// status id into the body field BodyIDField, a value when BodyIDValue is true.
+	UpdateIDInBody bool
+	BodyIDField    string
+	BodyIDValue    bool
 
 	E2E *e2eData
 }
@@ -145,6 +150,8 @@ type builder struct {
 	convs   map[string]string // conversion method by "crType->sdkType"
 	code    []string
 	tmp     int
+	// droppedLimits: validators.inferred: false dropped at least one contract limit.
+	droppedLimits bool
 }
 
 // buildKind maps the resource and its SDK names to the data of the templates. It is also the
@@ -182,6 +189,10 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 			return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String(), msg: "the line changes no generated code"}
 		}
 	}
+	if !file.Inferred() && !b.droppedLimits {
+		return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":validators.inferred",
+			msg: "the contract has no limit that validators.inferred: false drops"}
+	}
 	return d, nil
 }
 
@@ -195,7 +206,7 @@ func checkLifecycle(r *model.Resource) error {
 		return unsupported("resource", "the id must be a string")
 	case r.MaskInBody:
 		return unsupported("update", "an update mask in the body is not supported yet")
-	case r.Policy.UpdateIDInBody, r.Policy.RequestWrapper != "", r.Policy.CustomMethods:
+	case r.Policy.RequestWrapper != "", r.Policy.CustomMethods:
 		return unsupported("api", "api keys are not supported yet")
 	case !r.Create.Response.Direct || r.Create.Response.ID != "":
 		return unsupported("create.response", "Create must return the resource")

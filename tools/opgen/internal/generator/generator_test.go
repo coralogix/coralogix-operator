@@ -50,7 +50,7 @@ func wantCode(t *testing.T, err error, code string) {
 			return
 		}
 	}
-	t.Fatalf("want %s, got:\n%s", code, e)
+	t.Fatalf("want %s, got:\n%s", code, e.Error())
 }
 
 func TestCheckAcceptsTheSyntheticContracts(t *testing.T) {
@@ -210,7 +210,7 @@ func TestPublishRemovesFilesOfRemovedKinds(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, kindsFile), []byte("kinds:\n  - {kind: PatchThing, resource: PatchThing}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	for _, dir := range []string{"thing", "refthing"} {
+	for _, dir := range []string{"thing", "refthing", "bodyidthing"} {
 		if err := os.RemoveAll(filepath.Join(root, kindsDir, dir)); err != nil {
 			t.Fatal(err)
 		}
