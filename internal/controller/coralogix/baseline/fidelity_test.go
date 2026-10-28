@@ -26,6 +26,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -188,8 +189,22 @@ func TestRecordFidelity(t *testing.T) {
 		}
 		out.Cases = append(out.Cases, rec)
 	}
-	if err := os.WriteFile(filepath.Join(fidelityDir(k), "recorded.json"), marshalGolden(t, out), 0o644); err != nil {
+	recorded := marshalGolden(t, out)
+	checkNoSecrets(t, recorded, apiKey, base)
+	if err := os.WriteFile(filepath.Join(fidelityDir(k), "recorded.json"), recorded, 0o644); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// checkNoSecrets stops the recording before it writes a file that holds the API key or the
+// API host. The file goes into a public repository.
+func checkNoSecrets(t *testing.T, recorded []byte, apiKey, base string) {
+	t.Helper()
+	if bytes.Contains(recorded, []byte(apiKey)) {
+		t.Fatal("the recording holds the API key; nothing was written")
+	}
+	if u, err := url.Parse(base); err == nil && u.Host != "" && bytes.Contains(recorded, []byte(u.Host)) {
+		t.Fatalf("the recording holds the API host %s; nothing was written", u.Host)
 	}
 }
 
@@ -269,17 +284,56 @@ func normalizeAnswer(t *testing.T, k kind, s fidelityStep, status int, resp any,
 			text = strings.ReplaceAll(text, value, "{{"+name+"}}")
 		}
 	}
-	text = uuidPattern.ReplaceAllStringFunc(text, func(id string) string {
-		if strings.HasPrefix(id, fixedIDPrefix) {
+	text = anyCaseUUIDPattern.ReplaceAllStringFunc(text, func(id string) string {
+		if strings.HasPrefix(strings.ToLower(id), fixedIDPrefix) {
 			return id
 		}
 		return "<id>"
 	})
+	text = redactText(text)
 	var out any
 	if err := json.Unmarshal([]byte(text), &out); err != nil {
 		t.Fatal(err)
 	}
-	return out
+	return redactFields(out)
+}
+
+// The recording goes into a public repository, so it keeps no value that names an account.
+var (
+	anyCaseUUIDPattern = regexp.MustCompile(`(?i)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`)
+	// CompanyId(123456) in an error message becomes CompanyId(<redacted>).
+	labeledIDPattern = regexp.MustCompile(`(?i)\b((?:company|team|user|org|account)_?id)\(([^)]*)\)`)
+	emailPattern     = regexp.MustCompile(`[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}`)
+	// A run of five or more digits is a company, team, or user number.
+	longNumberPattern = regexp.MustCompile(`\b[0-9]{5,}\b`)
+	// Values of these response fields name an account or a single request.
+	redactedFieldPattern = regexp.MustCompile(`(?i)^(companyid|teamid|userid|orgid|accountid|email|requestid|traceid|correlationid)$`)
+)
+
+// redactText hides account values inside free text, such as an error message.
+func redactText(text string) string {
+	text = labeledIDPattern.ReplaceAllString(text, "${1}(<redacted>)")
+	text = emailPattern.ReplaceAllString(text, "<email>")
+	return longNumberPattern.ReplaceAllString(text, "<number>")
+}
+
+// redactFields hides the values of response fields that name an account or a request.
+func redactFields(v any) any {
+	switch v := v.(type) {
+	case map[string]any:
+		for key, value := range v {
+			if redactedFieldPattern.MatchString(key) {
+				v[key] = "<redacted>"
+				continue
+			}
+			v[key] = redactFields(value)
+		}
+	case []any:
+		for i := range v {
+			v[i] = redactFields(v[i])
+		}
+	}
+	return v
 }
 
 func splitQuery(t *testing.T, path string) (string, url.Values) {
@@ -337,4 +391,24 @@ func compact(v any) string {
 		return fmt.Sprint(v)
 	}
 	return string(raw)
+}
+
+func TestRedactHidesAccountValues(t *testing.T) {
+	text := redactText(`Bad Request: parent folder for CompanyId(4012345) and team_id(77) of admin@example.com, request 123456789`)
+	want := `Bad Request: parent folder for CompanyId(<redacted>) and team_id(<redacted>) of <email>, request <number>`
+	if text != want {
+		t.Fatalf("redactText:\n got %s\nwant %s", text, want)
+	}
+
+	got := redactFields(map[string]any{
+		"folder": map[string]any{"name": "cxo-fidelity-a", "teamId": 4012345},
+		"items":  []any{map[string]any{"requestId": "abc"}},
+	})
+	wantFields := map[string]any{
+		"folder": map[string]any{"name": "cxo-fidelity-a", "teamId": "<redacted>"},
+		"items":  []any{map[string]any{"requestId": "<redacted>"}},
+	}
+	if !reflect.DeepEqual(got, wantFields) {
+		t.Fatalf("redactFields:\n got %v\nwant %v", got, wantFields)
+	}
 }
