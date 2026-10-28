@@ -16,10 +16,14 @@ package v1beta1
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/go-logr/logr"
+	"k8s.io/client-go/util/retry"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -70,6 +74,16 @@ func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 
 	createRequest := &alerts.CreateAlertDefinitionRequest{
 		AlertDefProperties: props,
+		AccessPolicy:       alert.Spec.ExtractCreateAccessPolicy(),
+	}
+
+	if createRequest.AccessPolicy != nil {
+		// Recorded before the alert exists: once created with a policy that denies the operator's
+		// API key, the alert looks deleted, and only a durable record stops a recreate. Without a
+		// confirmed record nothing is created; the next reconcile retries.
+		if err := setAccessPolicyManagedAnnotation(ctx, alert, createRequest.AccessPolicy); err != nil {
+			return err
+		}
 	}
 
 	log.Info("Creating remote alert", "alert", utils.FormatJSON(createRequest))
@@ -81,7 +95,14 @@ func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 		return fmt.Errorf("error on creating remote alert: %w", cxsdk.NewAPIError(httpResp, err))
 	}
 	log.Info("Remote alert created", "response", utils.FormatJSON(createResponse))
-	alert.Status = coralogixv1beta1.AlertStatus{ID: createResponse.AlertDef.Id}
+	alert.Status = coralogixv1beta1.AlertStatus{ID: createResponse.AlertDef.Id, AccessPolicyManaged: createRequest.AccessPolicy != nil}
+	if createRequest.AccessPolicy == nil {
+		// A record left from an earlier policy must not make this policy-free alert's later
+		// deletion look like a lockout. Best effort: a stale record only stops a recreate.
+		if err := clearAccessPolicyManagedAnnotation(ctx, alert); err != nil {
+			log.Error(err, "Error clearing a stale alert access policy record")
+		}
+	}
 	return nil
 }
 
@@ -103,9 +124,31 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 		return fmt.Errorf("alert ID is missing")
 	}
 
+	policyAction := alert.Spec.ExtractAccessPolicyAction()
+	wroteAhead := false
+	if policyAction != nil && policyAction.Upsert != nil {
+		// Record the policy before sending it: once applied, a policy that denies the operator's API key
+		// makes the alert look deleted, and the record must already exist to stop a recreate.
+		if !alert.Status.AccessPolicyManaged {
+			wroteAhead = true
+			alert.Status.AccessPolicyManaged = true
+			if err := config.GetClient().Status().Update(ctx, alert); err != nil {
+				return fmt.Errorf("error on recording the alert access policy in status: %w", err)
+			}
+		}
+		// On every upsert, not only the first: a failed annotation write is retried here, and the
+		// call is a no-op once the annotation holds the desired policy. The policy is not sent
+		// until the durable record is confirmed: an old operator's writes during a rolling upgrade
+		// can drop the status tombstone, and the annotation is then the only record left.
+		if err := setAccessPolicyManagedAnnotation(ctx, alert, policyAction.Upsert); err != nil {
+			return err
+		}
+	}
+
 	updateRequest := alerts.ReplaceAlertDefinitionRequest{
 		AlertDefProperties: props,
 		Id:                 alert.Status.ID,
+		AccessPolicy:       policyAction,
 	}
 
 	log.Info("Updating remote alert", "alert", utils.FormatJSON(updateRequest))
@@ -114,10 +157,139 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 		ReplaceAlertDefinitionRequest(updateRequest).
 		Execute()
 	if err != nil {
-		return cxsdk.NewAPIError(httpResp, err)
+		apiErr := cxsdk.NewAPIError(httpResp, err)
+		if cxsdk.IsNotFound(apiErr) && alert.Spec.AccessPolicyMayDenyOperator(alert.Status.AccessPolicyManaged, alert.Annotations) {
+			// Not wrapped on purpose: the shared reconciler drops status.id on a wrapped not-found error
+			// and recreates the alert, which would duplicate an alert whose policy locks the operator out.
+			return fmt.Errorf("remote alert %s was not found, or its access policy denies the operator's API key; "+
+				"not recreating it. If it was deleted, remove status.id to recreate it; if it is locked, "+
+				"recreating leaves it orphaned: %s", *alert.Status.ID, apiErr.Error())
+		}
+		if wroteAhead && rejectedBeforeApplying(httpResp) {
+			// The request was refused, so the policy recorded ahead of it was never applied. Keeping
+			// the record would make a later genuine deletion look like a lockout.
+			// Persisted here: the shared reconciler writes status after an error only when the
+			// condition changes.
+			alert.Status.AccessPolicyManaged = false
+			if clearErr := clearAccessPolicyManagedAnnotation(ctx, alert); clearErr != nil {
+				return errors.Join(apiErr, clearErr)
+			}
+			if statusErr := config.GetClient().Status().Update(ctx, alert); statusErr != nil {
+				return errors.Join(apiErr, fmt.Errorf("error on rolling back the alert access policy record: %w", statusErr))
+			}
+		}
+		return apiErr
 	}
 	log.Info("Remote alert updated", "alert", utils.FormatJSON(updateResponse))
+	if policyAction != nil && policyAction.Delete != nil {
+		alert.Status.AccessPolicyManaged = false
+		if err := clearAccessPolicyManagedAnnotation(ctx, alert); err != nil {
+			return err
+		}
+	}
 	return nil
+}
+
+// rejectedBeforeApplying reports whether a failed replace provably changed nothing remotely: a
+// client error other than not-found. A not-found may hide a policy lockout, and a server error
+// may follow a partial apply (the API also answers some invalid policies with 500).
+func rejectedBeforeApplying(resp *http.Response) bool {
+	return resp != nil && resp.StatusCode >= 400 && resp.StatusCode < 500 && resp.StatusCode != http.StatusNotFound
+}
+
+// clearAccessPolicyManagedAnnotation removes the policy record from the CR metadata through
+// updateAlertMetadata, so the reconciler's following writes do not conflict.
+func clearAccessPolicyManagedAnnotation(ctx context.Context, alert *coralogixv1beta1.Alert) error {
+	delete(alert.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation)
+	err := updateAlertMetadata(ctx, alert, func(fresh *coralogixv1beta1.Alert) bool {
+		if _, recorded := fresh.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation]; !recorded {
+			return false
+		}
+		delete(fresh.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation)
+		return true
+	})
+	if err != nil {
+		return fmt.Errorf("error on clearing the alert access policy record: %w", err)
+	}
+	return nil
+}
+
+// setAccessPolicyManagedAnnotation records the applied policy durably on the CR metadata.
+// Unlike status.accessPolicyManaged, the annotation survives a rolling upgrade's old-binary
+// writes (their typed client preserves annotations but drops the unknown status field), so the
+// not-found guard keeps protecting the alert across the upgrade window. Callers send the policy
+// only once this returns nil, so a policy is never applied without its durable record.
+func setAccessPolicyManagedAnnotation(ctx context.Context, alert *coralogixv1beta1.Alert, policy *string) error {
+	value := ptr.Deref(policy, "")
+	err := updateAlertMetadata(ctx, alert, func(fresh *coralogixv1beta1.Alert) bool {
+		if current, recorded := fresh.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation]; recorded && current == value {
+			return false
+		}
+		if fresh.Annotations == nil {
+			fresh.Annotations = map[string]string{}
+		}
+		fresh.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation] = value
+		return true
+	})
+	if err != nil {
+		return fmt.Errorf("error on recording the alert access policy annotation: %w", err)
+	}
+	if alert.Annotations == nil {
+		alert.Annotations = map[string]string{}
+	}
+	alert.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation] = value
+	return nil
+}
+
+// updateAlertMetadata applies mutate to a fresh copy of the alert and writes it, retrying on
+// conflict; mutate returns false when no write is needed. The write runs on a fresh copy because
+// a full-object Update never carries status (a subresource), and alert may hold status the
+// reconciler has not persisted yet (on create, the new remote ID). After a write, alert adopts the
+// written metadata and spec but keeps its in-memory status: the reconciler persists that status
+// next, and a stale resource version would make the write conflict and lose it, while taking
+// only the new resource version would let its later full-object writes revert concurrent edits.
+func updateAlertMetadata(ctx context.Context, alert *coralogixv1beta1.Alert, mutate func(*coralogixv1beta1.Alert) bool) error {
+	var written *coralogixv1beta1.Alert
+	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		fresh := &coralogixv1beta1.Alert{}
+		if err := config.GetClient().Get(ctx, client.ObjectKeyFromObject(alert), fresh); err != nil {
+			return err
+		}
+		if !mutate(fresh) {
+			return nil
+		}
+		if err := config.GetClient().Update(ctx, fresh); err != nil {
+			return err
+		}
+		written = fresh
+		return nil
+	})
+	if err != nil {
+		// The write may still have been committed (a timeout after the server applied it), so
+		// adopt whatever is stored now: either way alert then carries the current resource version.
+		latest := &coralogixv1beta1.Alert{}
+		if getErr := config.GetClient().Get(ctx, client.ObjectKeyFromObject(alert), latest); getErr == nil {
+			adoptAlertMetadata(alert, latest)
+			if !mutate(latest.DeepCopy()) {
+				// The stored object already has the change: the write was committed after all.
+				return nil
+			}
+		}
+		return err
+	}
+	if written != nil {
+		adoptAlertMetadata(alert, written)
+	}
+	return nil
+}
+
+// adoptAlertMetadata makes alert carry stored's metadata and spec while keeping its own status,
+// which the reconciler may not have persisted yet.
+func adoptAlertMetadata(alert, stored *coralogixv1beta1.Alert) {
+	status := alert.Status
+	stored.ObjectMeta.DeepCopyInto(&alert.ObjectMeta)
+	stored.Spec.DeepCopyInto(&alert.Spec)
+	alert.Status = status
 }
 
 func (r *AlertReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
@@ -134,9 +306,14 @@ func (r *AlertReconciler) HandleDeletion(ctx context.Context, log logr.Logger, o
 			log.Error(err, "Error deleting remote alert", "id", *alert.Status.ID)
 			return fmt.Errorf("error deleting remote alert %s: %w", *alert.Status.ID, err)
 		}
+		if alert.Spec.AccessPolicyMayDenyOperator(alert.Status.AccessPolicyManaged, alert.Annotations) {
+			log.Info("Remote alert not found; if its access policy denied the operator's API key, it still exists remotely and is now orphaned", "id", *alert.Status.ID)
+		}
 	}
 	log.Info("Alert deleted from remote system", "id", *alert.Status.ID)
-	return nil
+	// The remote alert is gone, so its policy record goes too. This matters when the CR stops
+	// matching the selector and stays: a later recreate must not inherit a stale record.
+	return clearAccessPolicyManagedAnnotation(ctx, alert)
 }
 
 // SetupWithManager sets up the controller with the Manager.

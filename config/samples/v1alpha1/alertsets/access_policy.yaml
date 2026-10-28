@@ -1,0 +1,71 @@
+apiVersion: coralogix.com/v1alpha1
+kind: AlertSet
+metadata:
+  labels:
+    app.kubernetes.io/name: alertset
+    app.kubernetes.io/instance: alertset-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: access-policy-alerts
+spec:
+  alerts:
+    - key: high-error-rate
+      spec:
+        name: High error rate
+        description: Alerts when the HTTP error rate is high.
+        priority: p2
+        # JSON string representing the access policy for this alert. The policy must
+        # keep granting the operator's API key alerts:ReadConfig, alerts:UpdateConfig and the
+        # read/update pair for the alert's type; permissions it leaves out are denied.
+        # Note for Helm template authors: an unset value rendered with `quote` produces
+        # "", which deletes the remote policy. Wrap the field in `{{- with .Values.policy }}`.
+        accessPolicy: |-
+          {
+            "version": "2025-01-01",
+            "default": {
+              "permissions": {
+                "alerts:ReadConfig": "grant",
+                "alerts:ReadAccessPolicy": "grant",
+                "alerts:UpdateConfig": "grant",
+                "alerts:MetricsReadConfig": "grant",
+                "alerts:MetricsUpdateConfig": "grant",
+                "alerts:UpdateAccessPolicy": "grant"
+              }
+            },
+            "rules": []
+          }
+        alertType:
+          metricThreshold:
+            metricFilter:
+              promql: rate(http_errors_total[5m])
+            missingValues:
+              minNonNullValuesPct: 60
+            rules:
+              - condition:
+                  threshold: "10"
+                  conditionType: moreThan
+                  forOverPct: 20
+                  ofTheLast:
+                    dynamicDuration: 5m
+    - key: high-latency
+      spec:
+        name: High latency
+        description: Alerts when HTTP request latency is high.
+        priority: p3
+        # "" keeps the alert without a policy; a policy added elsewhere is removed
+        # on the next reconcile.
+        accessPolicy: ""
+        alertType:
+          metricThreshold:
+            metricFilter:
+              promql: http_request_duration_seconds
+            missingValues:
+              minNonNullValuesPct: 60
+            rules:
+              - condition:
+                  threshold: "2"
+                  conditionType: moreThan
+                  forOverPct: 20
+                  ofTheLast:
+                    dynamicDuration: 5m

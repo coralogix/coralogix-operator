@@ -2020,6 +2020,21 @@ Spec defines the alert.
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>accessPolicy</b></td>
+        <td>string</td>
+        <td>
+          JSON string representing the access policy for this alert. Defines granular permissions for users and groups.
+When set, the operator owns the policy and re-applies it on every reconcile, reverting changes made elsewhere.
+Set to "" to keep the alert without a policy; a policy added elsewhere is removed on the next reconcile.
+When omitted, the policy is not managed and is left unchanged.
+Setting the policy requires the alerts:UpdateAccessPolicy permission on the operator's API key.
+Permissions the policy leaves out are denied. The policy must keep granting the operator's API key alerts:ReadConfig,
+alerts:UpdateConfig and the read/update pair for the alert's type (for example alerts:LogsReadConfig and
+alerts:LogsUpdateConfig for logs alerts). Otherwise the operator
+stops managing the alert and does not recreate it; forcing a recreate leaves the locked alert orphaned.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#alertsetspecalertsindexspeccasesettings">caseSettings</a></b></td>
         <td>object</td>
         <td>
@@ -9810,6 +9825,15 @@ AlertSetItemStatus defines the observed state of one alert.
           Key is the stable identity of the alert in this AlertSet.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>accessPolicyManaged</b></td>
+        <td>boolean</td>
+        <td>
+          AccessPolicyManaged is set once the operator may have applied an access policy to the remote alert,
+and cleared once it removes it. While set, a not-found response is not treated as a deleted alert,
+because a policy that denies the operator's API key can look the same.<br/>
+        </td>
+        <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
@@ -22433,6 +22457,21 @@ AlertSpec defines the desired state of a Coralogix Alert. For more info check - 
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>accessPolicy</b></td>
+        <td>string</td>
+        <td>
+          JSON string representing the access policy for this alert. Defines granular permissions for users and groups.
+When set, the operator owns the policy and re-applies it on every reconcile, reverting changes made elsewhere.
+Set to "" to keep the alert without a policy; a policy added elsewhere is removed on the next reconcile.
+When omitted, the policy is not managed and is left unchanged.
+Setting the policy requires the alerts:UpdateAccessPolicy permission on the operator's API key.
+Permissions the policy leaves out are denied. The policy must keep granting the operator's API key alerts:ReadConfig,
+alerts:UpdateConfig and the read/update pair for the alert's type (for example alerts:LogsReadConfig and
+alerts:LogsUpdateConfig for logs alerts). Otherwise the operator
+stops managing the alert and does not recreate it; forcing a recreate leaves the locked alert orphaned.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#alertspeccasesettings">caseSettings</a></b></td>
         <td>object</td>
         <td>
@@ -30176,6 +30215,15 @@ AlertStatus defines the observed state of Alert
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>accessPolicyManaged</b></td>
+        <td>boolean</td>
+        <td>
+          AccessPolicyManaged is set once the operator may have applied an access policy to the remote alert,
+and cleared once it removes it. While set, a not-found response is not treated as a deleted alert,
+because a policy that denies the operator's API key can look the same.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#alertstatusconditionsindex">conditions</a></b></td>
         <td>[]object</td>
         <td>
