@@ -180,7 +180,7 @@ func TestRecordFidelity(t *testing.T) {
 			if status == http.StatusUnauthorized || status == http.StatusForbidden {
 				t.Fatalf("%s: %s %s returned %d. The API key needs permission to manage %s.", c.Name, s.Method, s.Path, status, k.name)
 			}
-			if s.Capture != "" && status == http.StatusOK {
+			if s.Capture != "" && succeeded(status) {
 				if id := capturedID(resp, k); id != "" {
 					created = append(created, id)
 				}
@@ -194,6 +194,11 @@ func TestRecordFidelity(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(fidelityDir(k), "recorded.json"), recorded, 0o644); err != nil {
 		t.Fatal(err)
 	}
+}
+
+// succeeded is true for every 2xx answer. Some Create operations answer 201.
+func succeeded(status int) bool {
+	return status >= 200 && status < 300
 }
 
 // checkNoSecrets stops the recording before it writes a file that holds the API key or the
@@ -271,7 +276,7 @@ func capturedID(resp any, k kind) string {
 // id and <id> for any other id that the API made. Each run makes new ids.
 func normalizeAnswer(t *testing.T, k kind, s fidelityStep, status int, resp any, vars map[string]string) any {
 	t.Helper()
-	if s.Capture != "" && status == http.StatusOK {
+	if s.Capture != "" && succeeded(status) {
 		vars[s.Capture] = capturedID(resp, k)
 	}
 	raw, err := json.Marshal(resp)
@@ -410,5 +415,26 @@ func TestRedactHidesAccountValues(t *testing.T) {
 	}
 	if !reflect.DeepEqual(got, wantFields) {
 		t.Fatalf("redactFields:\n got %v\nwant %v", got, wantFields)
+	}
+}
+
+func TestSucceededAcceptsEvery2xx(t *testing.T) {
+	for status, want := range map[int]bool{199: false, 200: true, 201: true, 204: true, 299: true, 300: false, 404: false} {
+		if got := succeeded(status); got != want {
+			t.Errorf("succeeded(%d) = %v, want %v", status, got, want)
+		}
+	}
+}
+
+func TestNormalizeAnswerCapturesIDOf201(t *testing.T) {
+	k := kinds["viewfolder"]
+	vars := map[string]string{}
+	resp := map[string]any{"id": "3dc02998-0b50-4ea8-b68a-4779d716fa1f", "name": "cxo-fidelity-a"}
+	got := normalizeAnswer(t, k, fidelityStep{Capture: "id"}, http.StatusCreated, resp, vars)
+	if vars["id"] != "3dc02998-0b50-4ea8-b68a-4779d716fa1f" {
+		t.Fatalf("id not captured from a 201 answer: vars = %v", vars)
+	}
+	if want := map[string]any{"id": "{{id}}", "name": "cxo-fidelity-a"}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("normalizeAnswer = %v, want %v", got, want)
 	}
 }
