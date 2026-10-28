@@ -142,7 +142,10 @@ func TestReplaceAlertsSendsAccessPolicyAction(t *testing.T) {
 		accessPolicyAlertSetItem("empty-policy", ptr.To("")),
 		accessPolicyAlertSetItem("set-policy", ptr.To(testAlertSetAccessPolicy)),
 	}
-	alertSet := &coralogixv1alpha1.AlertSet{ObjectMeta: metav1.ObjectMeta{Name: "test-alert-set", Namespace: "default"}}
+	alertSet := &coralogixv1alpha1.AlertSet{
+		ObjectMeta: metav1.ObjectMeta{Name: "test-alert-set", Namespace: "default"},
+		Spec:       coralogixv1alpha1.AlertSetSpec{Alerts: items},
+	}
 	baseClient := initAlertSetClient(t, alertSet, nil)
 	stored := &coralogixv1alpha1.AlertSet{}
 	require.NoError(t, baseClient.Get(context.Background(), client.ObjectKeyFromObject(alertSet), stored))
@@ -192,6 +195,12 @@ func TestReplaceAlertsSendsAccessPolicyAction(t *testing.T) {
 	require.Nil(t, setItem.AccessPolicy.Delete)
 	require.NotNil(t, setItem.AccessPolicy.Upsert)
 	require.Equal(t, testAlertSetAccessPolicy, *setItem.AccessPolicy.Upsert)
+
+	// requestIDs maps remote IDs to item keys; the record must name the item, not its ID.
+	persisted := &coralogixv1alpha1.AlertSet{}
+	require.NoError(t, baseClient.Get(context.Background(), client.ObjectKeyFromObject(alertSet), persisted))
+	require.Equal(t, `["set-policy"]`, persisted.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation],
+		"an upserted policy must be recorded durably under its item key")
 }
 
 func TestCreateAlertsRecordsAccessPolicyManaged(t *testing.T) {
