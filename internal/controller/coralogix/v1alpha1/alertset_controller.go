@@ -297,7 +297,11 @@ func (r *AlertSetReconciler) reconcileSelectorMismatch(
 		}
 		return ctrl.Result{}, fmt.Errorf("clear AlertSet status after selector mismatch: %w", err)
 	}
-	if controllerutil.ContainsFinalizer(alertSet, alertSetFinalizer) {
+	// The remote alerts are gone, so their policy records go too: if the set matches again,
+	// recreated items must not inherit stale records.
+	_, recorded := alertSet.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation]
+	delete(alertSet.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation)
+	if controllerutil.ContainsFinalizer(alertSet, alertSetFinalizer) || recorded {
 		controllerutil.RemoveFinalizer(alertSet, alertSetFinalizer)
 		if err := config.GetClient().Update(ctx, alertSet); err != nil {
 			if k8serrors.IsConflict(err) {
@@ -807,7 +811,7 @@ func applyBulkReplaceResponse(
 	}
 	seen := make(map[string]struct{}, len(requestIDs))
 	var resultErrs []error
-	markSynced := func(id, result string, clearAccessPolicyManaged bool) {
+	markSynced := func(id, result string) {
 		key, found := requestIDs[id]
 		if !found {
 			resultErrs = append(resultErrs, fmt.Errorf("bulk replace %s result returned unknown ID %q", result, id))
@@ -821,10 +825,10 @@ func applyBulkReplaceResponse(
 		status := statusByKey[key]
 		status.State = coralogixv1alpha1.AlertSetItemStateSynced
 		status.Message = ""
-		if clearAccessPolicyManaged {
-			if desired, found := desiredByKey[key]; found && desired.Spec.AccessPolicy != nil && *desired.Spec.AccessPolicy == "" {
-				status.AccessPolicyManaged = false
-			}
+		// A requested policy delete is confirmed by a skipped result too: the API reports a
+		// replace with unchanged properties as skipped even when it applied the policy change.
+		if desired, found := desiredByKey[key]; found && desired.Spec.AccessPolicy != nil && *desired.Spec.AccessPolicy == "" {
+			status.AccessPolicyManaged = false
 		}
 		statusByKey[key] = status
 	}
@@ -833,10 +837,10 @@ func applyBulkReplaceResponse(
 			resultErrs = append(resultErrs, errors.New("bulk replace response returned a successful result without an ID"))
 			continue
 		}
-		markSynced(*replaced.Id, "successful", true)
+		markSynced(*replaced.Id, "successful")
 	}
 	for _, id := range response.SkippedIds {
-		markSynced(id, "skipped", false)
+		markSynced(id, "skipped")
 	}
 	for _, failure := range response.FailedToReplaceAlertDefs {
 		if failure.Id == nil || *failure.Id == "" {

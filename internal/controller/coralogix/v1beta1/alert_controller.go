@@ -110,13 +110,17 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 	}
 
 	policyAction := alert.Spec.ExtractAccessPolicyAction()
-	if policyAction != nil && policyAction.Upsert != nil && !alert.Status.AccessPolicyManaged {
+	if policyAction != nil && policyAction.Upsert != nil {
 		// Record the policy before sending it: once applied, a policy that denies the operator's API key
 		// makes the alert look deleted, and the record must already exist to stop a recreate.
-		alert.Status.AccessPolicyManaged = true
-		if err := config.GetClient().Status().Update(ctx, alert); err != nil {
-			return fmt.Errorf("error on recording the alert access policy in status: %w", err)
+		if !alert.Status.AccessPolicyManaged {
+			alert.Status.AccessPolicyManaged = true
+			if err := config.GetClient().Status().Update(ctx, alert); err != nil {
+				return fmt.Errorf("error on recording the alert access policy in status: %w", err)
+			}
 		}
+		// On every upsert, not only the first: a failed annotation write is retried here, and the
+		// call is a no-op once the annotation holds the desired policy.
 		setAccessPolicyManagedAnnotation(ctx, alert, policyAction.Upsert)
 	}
 
@@ -228,7 +232,9 @@ func (r *AlertReconciler) HandleDeletion(ctx context.Context, log logr.Logger, o
 		}
 	}
 	log.Info("Alert deleted from remote system", "id", *alert.Status.ID)
-	return nil
+	// The remote alert is gone, so its policy record goes too. This matters when the CR stops
+	// matching the selector and stays: a later recreate must not inherit a stale record.
+	return clearAccessPolicyManagedAnnotation(ctx, alert)
 }
 
 // SetupWithManager sets up the controller with the Manager.

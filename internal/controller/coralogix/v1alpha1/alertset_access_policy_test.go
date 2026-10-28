@@ -408,7 +408,9 @@ func TestApplyBulkReplaceResponseClearsAccessPolicyManagedAfterDelete(t *testing
 		require.False(t, statuses["alpha"].AccessPolicyManaged)
 	})
 
-	t.Run("skipped delete keeps the tombstone", func(t *testing.T) {
+	t.Run("skipped delete clears the tombstone", func(t *testing.T) {
+		// The API reports a replace with unchanged properties as skipped even when it applied
+		// the policy delete, and also when the policy was already absent.
 		statuses := newStatuses()
 		response := &alerts.BulkReplaceAlertDefsResponse{SkippedIds: []string{"alpha-id"}}
 
@@ -416,7 +418,7 @@ func TestApplyBulkReplaceResponseClearsAccessPolicyManagedAfterDelete(t *testing
 
 		require.Empty(t, resultErrs)
 		require.Equal(t, coralogixv1alpha1.AlertSetItemStateSynced, statuses["alpha"].State)
-		require.True(t, statuses["alpha"].AccessPolicyManaged)
+		require.False(t, statuses["alpha"].AccessPolicyManaged)
 	})
 }
 
@@ -485,4 +487,39 @@ func TestWriteAlertSetPolicyRecord(t *testing.T) {
 	writeAlertSetPolicyRecord(context.Background(), alertSet, map[string]struct{}{}, logr.Discard())
 	require.NoError(t, config.GetClient().Get(context.Background(), client.ObjectKeyFromObject(alertSet), persisted))
 	require.NotContains(t, persisted.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation)
+}
+
+func TestReconcileSelectorMismatchClearsPolicyRecord(t *testing.T) {
+	id := "alpha-id"
+	alertSet := &coralogixv1alpha1.AlertSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "set",
+			Namespace:   "default",
+			Finalizers:  []string{alertSetFinalizer},
+			Annotations: map[string]string{coralogixv1beta1.AccessPolicyManagedAnnotation: `["alpha"]`},
+		},
+		Spec: coralogixv1alpha1.AlertSetSpec{Alerts: []coralogixv1alpha1.AlertSetItem{
+			accessPolicyAlertSetItem("alpha", ptr.To(testAlertSetAccessPolicy)),
+		}},
+		Status: coralogixv1alpha1.AlertSetStatus{Alerts: []coralogixv1alpha1.AlertSetItemStatus{
+			{Key: "alpha", ID: &id, State: coralogixv1alpha1.AlertSetItemStateSynced, AccessPolicyManaged: true},
+		}},
+	}
+	initAlertSetClient(t, alertSet, nil)
+	stored := &coralogixv1alpha1.AlertSet{}
+	require.NoError(t, config.GetClient().Get(context.Background(), client.ObjectKeyFromObject(alertSet), stored))
+	reconciler := &AlertSetReconciler{api: fakeAlertSetAPI{
+		bulkDelete: func(_ context.Context, request alerts.BulkDeleteAlertDefinitionsRequest) (*alerts.BulkDeleteAlertDefsResponse, *http.Response, error) {
+			return &alerts.BulkDeleteAlertDefsResponse{DeletedIds: request.Ids}, nil, nil
+		},
+	}}
+
+	_, err := reconciler.reconcileSelectorMismatch(context.Background(), logr.Discard(), stored, deepCopyAlertSetStatus(stored))
+	require.NoError(t, err)
+
+	persisted := &coralogixv1alpha1.AlertSet{}
+	require.NoError(t, config.GetClient().Get(context.Background(), client.ObjectKeyFromObject(alertSet), persisted))
+	require.NotContains(t, persisted.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation,
+		"selector cleanup must not leave policy records for items that may be recreated later")
+	require.Empty(t, persisted.Finalizers)
 }

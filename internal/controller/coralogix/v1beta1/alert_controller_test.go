@@ -421,3 +421,47 @@ func TestHandleCreationSendsAccessPolicy(t *testing.T) {
 		})
 	}
 }
+
+func TestHandleUpdateRetriesAnnotationWhenTombstoneIsSet(t *testing.T) {
+	policy := `{"version":"2025-01-01","default":{"permissions":{"alerts:ReadConfig":"grant"}},"rules":[]}`
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"alertDef":{"id":"alert-id"}}`))
+	}))
+	t.Cleanup(server.Close)
+
+	// The status tombstone was persisted but the annotation write failed on an earlier reconcile.
+	alert := testAlert(ptr.To(policy), true)
+	initAlertClient(t, alert, nil)
+
+	reconciler := testAlertReconciler(t, server)
+	require.NoError(t, reconciler.HandleUpdate(context.Background(), logr.Discard(), alert))
+	require.NoError(t, config.GetClient().Status().Update(context.Background(), alert))
+	persisted := &coralogixv1beta1.Alert{}
+	require.NoError(t, config.GetClient().Get(context.Background(), client.ObjectKeyFromObject(alert), persisted))
+	require.Equal(t, policy, persisted.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation],
+		"a missing annotation must be retried on every upsert, not only when the tombstone is first set")
+}
+
+func TestHandleDeletionClearsAccessPolicyAnnotation(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	t.Cleanup(server.Close)
+
+	alert := testAlert(ptr.To(""), true)
+	alert.Annotations = map[string]string{coralogixv1beta1.AccessPolicyManagedAnnotation: `{"version":"2025-01-01"}`}
+	alert.Finalizers = []string{"alert.coralogix.com/finalizer"}
+	initAlertClient(t, alert, nil)
+
+	reconciler := testAlertReconciler(t, server)
+	require.NoError(t, reconciler.HandleDeletion(context.Background(), logr.Discard(), alert))
+	// The shared reconciler removes the finalizer from the same object next (selector cleanup).
+	alert.Finalizers = nil
+	require.NoError(t, config.GetClient().Update(context.Background(), alert))
+	persisted := &coralogixv1beta1.Alert{}
+	require.NoError(t, config.GetClient().Get(context.Background(), client.ObjectKeyFromObject(alert), persisted))
+	require.NotContains(t, persisted.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation,
+		"once the remote alert is deleted its policy record must not survive into a later recreate")
+}
