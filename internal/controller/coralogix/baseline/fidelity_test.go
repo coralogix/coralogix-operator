@@ -334,7 +334,24 @@ var (
 func redactText(text string) string {
 	text = labeledIDPattern.ReplaceAllString(text, "${1}(<redacted>)")
 	text = emailPattern.ReplaceAllString(text, "<email>")
-	return longNumberPattern.ReplaceAllString(text, "<number>")
+	return replaceLongNumbers(text)
+}
+
+// replaceLongNumbers hides each long number, but not a digit group of a UUID, such as the
+// 00000000 of a fixed test id.
+func replaceLongNumbers(text string) string {
+	var b strings.Builder
+	last := 0
+	for _, m := range longNumberPattern.FindAllStringIndex(text, -1) {
+		if (m[0] > 0 && text[m[0]-1] == '-') || (m[1] < len(text) && text[m[1]] == '-') {
+			continue
+		}
+		b.WriteString(text[last:m[0]])
+		b.WriteString("<number>")
+		last = m[1]
+	}
+	b.WriteString(text[last:])
+	return b.String()
 }
 
 // redactFields hides the values of response fields that name an account or a request.
@@ -414,8 +431,8 @@ func compact(v any) string {
 }
 
 func TestRedactHidesAccountValues(t *testing.T) {
-	text := redactText(`Bad Request: parent folder for CompanyId(4012345) and team_id(77) of admin@example.com, request 123456789`)
-	want := `Bad Request: parent folder for CompanyId(<redacted>) and team_id(<redacted>) of <email>, request <number>`
+	text := redactText(`Bad Request: parent folder for CompanyId(4012345) and team_id(77) of admin@example.com, request 123456789, folder 00000000-0000-4000-8000-00000000dead`)
+	want := `Bad Request: parent folder for CompanyId(<redacted>) and team_id(<redacted>) of <email>, request <number>, folder 00000000-0000-4000-8000-00000000dead`
 	if text != want {
 		t.Fatalf("redactText:\n got %s\nwant %s", text, want)
 	}

@@ -1,0 +1,109 @@
+{
+  "cases": [
+    {
+      "name": "create, get, replace, delete, delete again, replace after delete",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "id": "{{id}}",
+            "name": "cxo-fidelity-a"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{id}}",
+            "name": "cxo-fidelity-a"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{id}}",
+            "name": "cxo-fidelity-a2"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{id}}",
+            "name": "cxo-fidelity-a2"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: {\"message\":\"NOT_FOUND: folder not found\",\"status\":5,\"details\":{\"folderId\":\"{{id}}\"}}"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: {\"message\":\"NOT_FOUND: folder not found\",\"status\":5}"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: {\"message\":\"NOT_FOUND: folder not found\",\"status\":5}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with an empty name",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"message\":\"INVALID_ARGUMENT: validation error: folder name not found\",\"status\":3}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with a name over 100 characters",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "id": "{{id}}",
+            "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{id}}",
+            "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "replace with an unknown id",
+      "steps": [
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: {\"message\":\"NOT_FOUND: folder not found\",\"status\":5}"
+          }
+        }
+      ]
+    }
+  ]
+}

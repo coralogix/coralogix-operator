@@ -118,8 +118,8 @@ var viewFolderScenarios = map[string]func(h *harness){
 //	GET    /folders                   -> {folders: [...]}
 //	DELETE /folders/{id}              -> {}
 //
-// The error texts are a best guess until fidelity/recorded.json exists. The operator reads only
-// the status code, and whether a 404 names a resource or a missing route.
+// The status codes and error texts follow fidelity/recorded.json, which the real API answered.
+// The operator reads only the status code, and whether a 404 names a resource or a missing route.
 type viewFolderFake struct {
 	mu      sync.Mutex
 	folders map[string]string // id -> name
@@ -160,7 +160,7 @@ func (f *viewFolderFake) handle(method, path string, _ url.Values, body any) (in
 			return status, errBody
 		}
 		if _, ok := f.folders[id]; !ok {
-			return viewFolderNotFound(id)
+			return viewFolderNotFound("")
 		}
 		f.folders[id] = name
 		return http.StatusOK, map[string]any{"id": id, "name": name}
@@ -181,7 +181,7 @@ func (f *viewFolderFake) handle(method, path string, _ url.Values, body any) (in
 
 	case method == http.MethodDelete && id != "" && !strings.Contains(id, "/"):
 		if _, ok := f.folders[id]; !ok {
-			return viewFolderNotFound(id)
+			return viewFolderNotFound("")
 		}
 		delete(f.folders, id)
 		return http.StatusOK, map[string]any{}
@@ -195,7 +195,7 @@ func (f *viewFolderFake) handle(method, path string, _ url.Values, body any) (in
 func viewFolderName(in map[string]any) (string, int, any) {
 	name, _ := in["name"].(string)
 	if name == "" {
-		status, body := apiError(http.StatusBadRequest, "name is required")
+		status, body := apiError(http.StatusBadRequest, `{"message":"INVALID_ARGUMENT: validation error: folder name not found","status":3}`)
 		return "", status, body
 	}
 	if r := []rune(name); len(r) > 100 {
@@ -204,6 +204,10 @@ func viewFolderName(in map[string]any) (string, int, any) {
 	return name, 0, nil
 }
 
+// viewFolderNotFound is the answer for a folder that does not exist. Only Get names the id.
 func viewFolderNotFound(id string) (int, any) {
-	return apiError(http.StatusNotFound, fmt.Sprintf(`{"reason":"View folder with id %s not found"}`, id))
+	if id == "" {
+		return apiError(http.StatusNotFound, `{"message":"NOT_FOUND: folder not found","status":5}`)
+	}
+	return apiError(http.StatusNotFound, fmt.Sprintf(`{"message":"NOT_FOUND: folder not found","status":5,"details":{"folderId":%q}}`, id))
 }
