@@ -37,7 +37,7 @@ func init() {
 		resource: "viewfolders",
 		newFake:  func() apiFake { return &viewFolderFake{folders: map[string]string{}} },
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
-			return &v1alpha1controllers.ViewFolderReconciler{ViewFoldersClient: cs.ViewsFolders()}
+			return &v1alpha1controllers.ViewFolderReconciler{ViewFoldersClient: cs.ViewsFolders(), Interval: reconcileInterval}
 		},
 		scenarios: viewFolderScenarios,
 		fidelity: fidelityConfig{

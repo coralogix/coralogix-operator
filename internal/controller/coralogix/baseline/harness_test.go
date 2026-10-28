@@ -34,6 +34,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
@@ -365,6 +366,10 @@ func TestScenarios(t *testing.T) {
 }
 
 var uuidPattern = regexp.MustCompile(`[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`)
+
+// reconcileInterval is the reconcile interval of every recorded reconciler. It is not zero, so
+// the goldens show that a successful reconcile asks to run again after the interval.
+const reconcileInterval = 10 * time.Minute
 
 // fixedIDPrefix marks the ids that a scenario or case writes itself. They stay as they are.
 const fixedIDPrefix = "00000000-0000-4000-8000-"

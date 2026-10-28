@@ -15,7 +15,8 @@
       }
     ],
     "result": {
-      "error": false
+      "error": false,
+      "requeueAfter": "10m0s"
     },
     "object": {
       "finalizers": [
@@ -85,7 +86,8 @@
       }
     ],
     "result": {
-      "error": false
+      "error": false,
+      "requeueAfter": "10m0s"
     },
     "object": {
       "finalizers": [
