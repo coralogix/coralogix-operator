@@ -16,7 +16,8 @@ spec:
         description: Alerts when the HTTP error rate is high.
         priority: p2
         # JSON string representing the access policy for this alert. The policy must
-        # keep granting the operator's API key alerts:ReadConfig and alerts:UpdateConfig.
+        # keep granting the operator's API key alerts:ReadConfig, alerts:UpdateConfig and the
+        # read/update pair for the alert's type; permissions it leaves out are denied.
         # Note for Helm template authors: an unset value rendered with `quote` produces
         # "", which deletes the remote policy. Wrap the field in `{{- with .Values.policy }}`.
         accessPolicy: |-
@@ -27,6 +28,8 @@ spec:
                 "alerts:ReadConfig": "grant",
                 "alerts:ReadAccessPolicy": "grant",
                 "alerts:UpdateConfig": "grant",
+                "alerts:MetricsReadConfig": "grant",
+                "alerts:MetricsUpdateConfig": "grant",
                 "alerts:UpdateAccessPolicy": "grant"
               }
             },

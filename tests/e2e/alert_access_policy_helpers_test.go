@@ -16,6 +16,7 @@ package e2e
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -37,14 +38,17 @@ import (
 )
 
 // Alert policies use the alerts:*Config permission keys; there is no
-// alerts:Read, alerts:Update or alerts:Delete. The operator's API key needs
-// ReadConfig and UpdateConfig to keep managing (and deleting) the alert.
+// alerts:Read, alerts:Update or alerts:Delete. The API stores every alerts
+// permission and denies the ones a policy leaves out, so the operator's API
+// key needs ReadConfig and UpdateConfig plus the type-specific pair for the
+// alert's type (Logs*Config for the logs alerts under test). Without them the
+// alert answers 404 to the key.
 const (
-	alertAccessPolicyP1 = `{"version":"2025-01-01","default":{"permissions":{"alerts:ReadConfig":"grant","alerts:ReadAccessPolicy":"grant","alerts:UpdateConfig":"grant","alerts:UpdateAccessPolicy":"grant"}},"rules":[]}`
-	// P2 differs from P1 only by denying alerts:MetricsUpdateConfig, which does
-	// not apply to the logs alerts under test, so reconciles still apply while
-	// P2 is active.
-	alertAccessPolicyP2 = `{"version":"2025-01-01","default":{"permissions":{"alerts:ReadConfig":"grant","alerts:ReadAccessPolicy":"grant","alerts:UpdateConfig":"grant","alerts:UpdateAccessPolicy":"grant","alerts:MetricsUpdateConfig":"deny"}},"rules":[]}`
+	alertAccessPolicyP1 = `{"version":"2025-01-01","default":{"permissions":{"alerts:ReadConfig":"grant","alerts:UpdateConfig":"grant","alerts:LogsReadConfig":"grant","alerts:LogsUpdateConfig":"grant","alerts:ReadAccessPolicy":"grant","alerts:UpdateAccessPolicy":"grant"}},"rules":[]}`
+	// P2 differs from P1 only by also granting alerts:MetricsReadConfig, which
+	// does not apply to the logs alerts under test, so reconciles still apply
+	// while P2 is active.
+	alertAccessPolicyP2 = `{"version":"2025-01-01","default":{"permissions":{"alerts:ReadConfig":"grant","alerts:UpdateConfig":"grant","alerts:LogsReadConfig":"grant","alerts:LogsUpdateConfig":"grant","alerts:ReadAccessPolicy":"grant","alerts:UpdateAccessPolicy":"grant","alerts:MetricsReadConfig":"grant"}},"rules":[]}`
 	// Unknown version: exercises the per-item invalid-policy path.
 	alertAccessPolicyInvalid = `{"version":"v2099-01-01","default":{"permissions":{"alerts:ReadConfig":"grant"}},"rules":[]}`
 )
@@ -66,7 +70,25 @@ func expectAlertPolicy(ctx context.Context, g Gomega, svc *alerts.AlertDefinitio
 	}
 	g.Expect(hasPolicy).To(BeTrue(), "expected a remote access policy")
 	g.Expect(policy).ToNot(BeNil(), "expected a remote access policy")
-	g.Expect(*policy).To(MatchJSON(*want))
+	g.Expect(expandAlertPolicy(g, *policy)).To(Equal(expandAlertPolicy(g, *want)))
+}
+
+// expandAlertPolicy decodes a policy and drops "deny" default permissions.
+// The API stores every alerts permission and denies the ones a policy leaves
+// out, so an explicit deny and an omitted permission are equivalent.
+func expandAlertPolicy(g Gomega, raw string) map[string]any {
+	var policy map[string]any
+	g.Expect(json.Unmarshal([]byte(raw), &policy)).To(Succeed())
+	if def, ok := policy["default"].(map[string]any); ok {
+		if perms, ok := def["permissions"].(map[string]any); ok {
+			for name, effect := range perms {
+				if effect == "deny" {
+					delete(perms, name)
+				}
+			}
+		}
+	}
+	return policy
 }
 
 // waitAlertReconciled waits for RemoteSynced=True at the given generation and
