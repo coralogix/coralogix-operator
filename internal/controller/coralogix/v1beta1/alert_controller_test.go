@@ -595,3 +595,47 @@ func TestHandleCreationSurvivesCommittedAnnotationWriteWithLostResponse(t *testi
 	require.Equal(t, "created-id", *persisted.Status.ID)
 	require.Contains(t, persisted.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation)
 }
+
+// failingUpdateClient rejects every full-object Update without committing it.
+type failingUpdateClient struct {
+	client.Client
+}
+
+func (c failingUpdateClient) Update(context.Context, client.Object, ...client.UpdateOption) error {
+	return apierrors.NewServiceUnavailable("unavailable")
+}
+
+func TestPolicyIsNotSentWithoutConfirmedRecord(t *testing.T) {
+	policy := `{"version":"2025-01-01","default":{"permissions":{"alerts:ReadConfig":"grant"}},"rules":[]}`
+	for _, tc := range []struct {
+		name string
+		run  func(*AlertReconciler, *coralogixv1beta1.Alert) error
+		id   bool
+	}{
+		{name: "create", id: false, run: func(r *AlertReconciler, a *coralogixv1beta1.Alert) error {
+			return r.HandleCreation(context.Background(), logr.Discard(), a)
+		}},
+		{name: "update", id: true, run: func(r *AlertReconciler, a *coralogixv1beta1.Alert) error {
+			return r.HandleUpdate(context.Background(), logr.Discard(), a)
+		}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			called := false
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				called = true
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(`{"alertDef":{"id":"alert-id"}}`))
+			}))
+			t.Cleanup(server.Close)
+
+			alert := testAlert(ptr.To(policy), true)
+			if !tc.id {
+				alert.Status = coralogixv1beta1.AlertStatus{}
+			}
+			initAlertClient(t, alert, func(c client.Client) client.Client { return failingUpdateClient{Client: c} })
+
+			require.Error(t, tc.run(testAlertReconciler(t, server), alert))
+			require.False(t, called, "the policy must not reach the API before its durable record is confirmed")
+		})
+	}
+}

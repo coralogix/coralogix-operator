@@ -477,17 +477,17 @@ func TestWriteAlertSetPolicyRecord(t *testing.T) {
 	initAlertSetClient(t, alertSet, nil)
 	require.NoError(t, config.GetClient().Get(context.Background(), client.ObjectKeyFromObject(alertSet), alertSet))
 
-	writeAlertSetPolicyRecord(context.Background(), alertSet, map[string]struct{}{"beta": {}, "alpha": {}, "removed": {}}, logr.Discard())
+	require.NoError(t, writeAlertSetPolicyRecord(context.Background(), alertSet, map[string]struct{}{"beta": {}, "alpha": {}, "removed": {}}))
 	persisted := &coralogixv1alpha1.AlertSet{}
 	require.NoError(t, config.GetClient().Get(context.Background(), client.ObjectKeyFromObject(alertSet), persisted))
 	require.Equal(t, `["alpha","beta"]`, persisted.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation],
 		"keys of items no longer in the spec are dropped")
 
 	version := alertSet.GetResourceVersion()
-	writeAlertSetPolicyRecord(context.Background(), alertSet, map[string]struct{}{"alpha": {}, "beta": {}}, logr.Discard())
+	require.NoError(t, writeAlertSetPolicyRecord(context.Background(), alertSet, map[string]struct{}{"alpha": {}, "beta": {}}))
 	require.Equal(t, version, alertSet.GetResourceVersion(), "an unchanged record must not be rewritten")
 
-	writeAlertSetPolicyRecord(context.Background(), alertSet, map[string]struct{}{}, logr.Discard())
+	require.NoError(t, writeAlertSetPolicyRecord(context.Background(), alertSet, map[string]struct{}{}))
 	require.NoError(t, config.GetClient().Get(context.Background(), client.ObjectKeyFromObject(alertSet), persisted))
 	require.NotContains(t, persisted.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation)
 }
@@ -648,4 +648,72 @@ func TestCreateAlertsDropsStaleRecordForPolicyFreeItem(t *testing.T) {
 	require.NoError(t, baseClient.Get(context.Background(), client.ObjectKeyFromObject(alertSet), persisted))
 	require.NotContains(t, persisted.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation,
 		"a policy-free item created under a recorded key must not inherit the stale record")
+}
+
+// failingAlertSetUpdateClient rejects every full-object Update without committing it.
+type failingAlertSetUpdateClient struct {
+	client.Client
+}
+
+func (c failingAlertSetUpdateClient) Update(context.Context, client.Object, ...client.UpdateOption) error {
+	return errors.New("unavailable")
+}
+
+func TestAlertSetPolicyIsNotSentWithoutConfirmedRecord(t *testing.T) {
+	newAlertSet := func(withID bool) *coralogixv1alpha1.AlertSet {
+		alertSet := &coralogixv1alpha1.AlertSet{
+			ObjectMeta: metav1.ObjectMeta{Name: "test-alert-set", Namespace: "default"},
+			Spec: coralogixv1alpha1.AlertSetSpec{Alerts: []coralogixv1alpha1.AlertSetItem{
+				accessPolicyAlertSetItem("set-policy", ptr.To(testAlertSetAccessPolicy)),
+			}},
+		}
+		if withID {
+			alertSet.Status.Alerts = []coralogixv1alpha1.AlertSetItemStatus{
+				{Key: "set-policy", ID: ptr.To("id-set-policy"), State: coralogixv1alpha1.AlertSetItemStateSynced},
+			}
+		}
+		return alertSet
+	}
+	wrap := func(c client.Client) client.Client { return failingAlertSetUpdateClient{Client: c} }
+
+	t.Run("create", func(t *testing.T) {
+		alertSet := newAlertSet(false)
+		baseClient := initAlertSetClient(t, alertSet, wrap)
+		stored := &coralogixv1alpha1.AlertSet{}
+		require.NoError(t, baseClient.Get(context.Background(), client.ObjectKeyFromObject(alertSet), stored))
+		called := false
+		reconciler := &AlertSetReconciler{api: fakeAlertSetAPI{
+			bulkCreate: func(context.Context, alerts.BulkCreateAlertDefinitionsRequest) (*alerts.BulkCreateAlertDefsResponse, *http.Response, error) {
+				called = true
+				return &alerts.BulkCreateAlertDefsResponse{}, nil, nil
+			},
+		}}
+		statuses := map[string]coralogixv1alpha1.AlertSetItemStatus{
+			"set-policy": {Key: "set-policy", State: coralogixv1alpha1.AlertSetItemStatePending},
+		}
+		_, _, requestErr := reconciler.createAlerts(context.Background(), logr.Discard(), stored,
+			desiredAlertSetItemsByKey(stored.Spec.Alerts), statuses)
+		require.Error(t, requestErr)
+		require.False(t, called, "no alert may be created with a policy before its durable record is confirmed")
+	})
+
+	t.Run("replace", func(t *testing.T) {
+		alertSet := newAlertSet(true)
+		baseClient := initAlertSetClient(t, alertSet, wrap)
+		stored := &coralogixv1alpha1.AlertSet{}
+		require.NoError(t, baseClient.Get(context.Background(), client.ObjectKeyFromObject(alertSet), stored))
+		called := false
+		reconciler := &AlertSetReconciler{api: fakeAlertSetAPI{
+			bulkReplace: func(context.Context, alerts.BulkReplaceAlertDefinitionsRequest) (*alerts.BulkReplaceAlertDefsResponse, *http.Response, error) {
+				called = true
+				return &alerts.BulkReplaceAlertDefsResponse{}, nil, nil
+			},
+		}}
+		statuses, err := alertSetStatusByKey(stored.Status.Alerts)
+		require.NoError(t, err)
+		_, requestErr := reconciler.replaceAlerts(context.Background(), logr.Discard(), stored,
+			desiredAlertSetItemsByKey(stored.Spec.Alerts), statuses, map[string]struct{}{})
+		require.Error(t, requestErr)
+		require.False(t, called, "no policy may be sent before its durable record is confirmed")
+	})
 }

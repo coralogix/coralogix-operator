@@ -26,7 +26,6 @@ import (
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 	alerts "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/alert_definitions_service"
@@ -78,6 +77,15 @@ func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 		AccessPolicy:       alert.Spec.ExtractCreateAccessPolicy(),
 	}
 
+	if createRequest.AccessPolicy != nil {
+		// Recorded before the alert exists: once created with a policy that denies the operator's
+		// API key, the alert looks deleted, and only a durable record stops a recreate. Without a
+		// confirmed record nothing is created; the next reconcile retries.
+		if err := setAccessPolicyManagedAnnotation(ctx, alert, createRequest.AccessPolicy); err != nil {
+			return err
+		}
+	}
+
 	log.Info("Creating remote alert", "alert", utils.FormatJSON(createRequest))
 	createResponse, httpResp, err := r.ClientSet.Alerts().
 		AlertDefsServiceCreateAlertDef(ctx).
@@ -88,8 +96,12 @@ func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 	}
 	log.Info("Remote alert created", "response", utils.FormatJSON(createResponse))
 	alert.Status = coralogixv1beta1.AlertStatus{ID: createResponse.AlertDef.Id, AccessPolicyManaged: createRequest.AccessPolicy != nil}
-	if createRequest.AccessPolicy != nil {
-		setAccessPolicyManagedAnnotation(ctx, alert, createRequest.AccessPolicy)
+	if createRequest.AccessPolicy == nil {
+		// A record left from an earlier policy must not make this policy-free alert's later
+		// deletion look like a lockout. Best effort: a stale record only stops a recreate.
+		if err := clearAccessPolicyManagedAnnotation(ctx, alert); err != nil {
+			log.Error(err, "Error clearing a stale alert access policy record")
+		}
 	}
 	return nil
 }
@@ -125,8 +137,12 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 			}
 		}
 		// On every upsert, not only the first: a failed annotation write is retried here, and the
-		// call is a no-op once the annotation holds the desired policy.
-		setAccessPolicyManagedAnnotation(ctx, alert, policyAction.Upsert)
+		// call is a no-op once the annotation holds the desired policy. The policy is not sent
+		// until the durable record is confirmed: an old operator's writes during a rolling upgrade
+		// can drop the status tombstone, and the annotation is then the only record left.
+		if err := setAccessPolicyManagedAnnotation(ctx, alert, policyAction.Upsert); err != nil {
+			return err
+		}
 	}
 
 	updateRequest := alerts.ReplaceAlertDefinitionRequest{
@@ -201,10 +217,9 @@ func clearAccessPolicyManagedAnnotation(ctx context.Context, alert *coralogixv1b
 // setAccessPolicyManagedAnnotation records the applied policy durably on the CR metadata.
 // Unlike status.accessPolicyManaged, the annotation survives a rolling upgrade's old-binary
 // writes (their typed client preserves annotations but drops the unknown status field), so the
-// not-found guard keeps protecting the alert across the upgrade window. A failed annotation
-// write is logged but does not fail the reconcile: the status tombstone still covers the
-// current version, and the annotation is re-set on the next policy-applying reconcile.
-func setAccessPolicyManagedAnnotation(ctx context.Context, alert *coralogixv1beta1.Alert, policy *string) {
+// not-found guard keeps protecting the alert across the upgrade window. Callers send the policy
+// only once this returns nil, so a policy is never applied without its durable record.
+func setAccessPolicyManagedAnnotation(ctx context.Context, alert *coralogixv1beta1.Alert, policy *string) error {
 	value := ptr.Deref(policy, "")
 	err := updateAlertMetadata(ctx, alert, func(fresh *coralogixv1beta1.Alert) bool {
 		if current, recorded := fresh.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation]; recorded && current == value {
@@ -217,13 +232,13 @@ func setAccessPolicyManagedAnnotation(ctx context.Context, alert *coralogixv1bet
 		return true
 	})
 	if err != nil {
-		log.FromContext(ctx).Error(err, "Error recording the alert access policy annotation")
-		return
+		return fmt.Errorf("error on recording the alert access policy annotation: %w", err)
 	}
 	if alert.Annotations == nil {
 		alert.Annotations = map[string]string{}
 	}
 	alert.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation] = value
+	return nil
 }
 
 // updateAlertMetadata applies mutate to a fresh copy of the alert and writes it, retrying on
@@ -255,6 +270,10 @@ func updateAlertMetadata(ctx context.Context, alert *coralogixv1beta1.Alert, mut
 		latest := &coralogixv1beta1.Alert{}
 		if getErr := config.GetClient().Get(ctx, client.ObjectKeyFromObject(alert), latest); getErr == nil {
 			adoptAlertMetadata(alert, latest)
+			if !mutate(latest.DeepCopy()) {
+				// The stored object already has the change: the write was committed after all.
+				return nil
+			}
 		}
 		return err
 	}

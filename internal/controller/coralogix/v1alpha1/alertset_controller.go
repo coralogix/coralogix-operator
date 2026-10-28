@@ -180,7 +180,9 @@ func (r *AlertSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		}
 		// The removed items are gone remotely, so their policy records go now rather than with a
 		// later create or replace that may not happen: the write drops keys no longer in the spec.
-		writeAlertSetPolicyRecord(ctx, alertSet, alertSetPolicyRecord(alertSet), reconcileLog)
+		if err := writeAlertSetPolicyRecord(ctx, alertSet, alertSetPolicyRecord(alertSet)); err != nil {
+			reconcileLog.Error(err, "Error pruning the AlertSet access policy records")
+		}
 	}
 
 	var reconcileErrs []error
@@ -355,6 +357,20 @@ func (r *AlertSetReconciler) createAlerts(
 		return createdKeys, itemErrs, nil
 	}
 
+	// Recorded before the alerts exist: once created with a policy that denies the operator's API
+	// key, an alert looks deleted, and only a durable record stops a recreate. Without a confirmed
+	// record nothing is created; the next reconcile retries.
+	recordedAhead := alertSetPolicyRecord(alertSet)
+	for _, key := range requestKeys {
+		desired := desiredByKey[key]
+		if desired.Spec.ExtractCreateAccessPolicy() != nil {
+			recordedAhead[key] = struct{}{}
+		}
+	}
+	if err := writeAlertSetPolicyRecord(ctx, alertSet, recordedAhead); err != nil {
+		return createdKeys, itemErrs, err
+	}
+
 	request := alerts.BulkCreateAlertDefinitionsRequest{AlertDefsToCreate: requestItems}
 	reconcileLog.Info("Creating remote alerts", "count", len(requestItems))
 	response, httpResponse, err := r.alertsAPI().BulkCreate(ctx, request)
@@ -377,7 +393,9 @@ func (r *AlertSetReconciler) createAlerts(
 			delete(recorded, key)
 		}
 	}
-	writeAlertSetPolicyRecord(ctx, alertSet, recorded, reconcileLog)
+	if err := writeAlertSetPolicyRecord(ctx, alertSet, recorded); err != nil {
+		reconcileLog.Error(err, "Error updating the AlertSet access policy records after create")
+	}
 	return createdKeys, append(itemErrs, responseErrs...), nil
 }
 
@@ -497,7 +515,9 @@ func (r *AlertSetReconciler) replaceAlerts(
 			recordedAhead = append(recordedAhead, key)
 		}
 	}
-	writeAlertSetPolicyRecord(ctx, alertSet, recorded, reconcileLog)
+	if err := writeAlertSetPolicyRecord(ctx, alertSet, recorded); err != nil {
+		return itemErrs, err
+	}
 
 	request := alerts.BulkReplaceAlertDefinitionsRequest{AlertDefsToReplace: requestItems}
 	reconcileLog.Info("Replacing remote alerts", "count", len(requestItems))
@@ -523,7 +543,9 @@ func (r *AlertSetReconciler) replaceAlerts(
 			for _, key := range recordedAhead {
 				delete(recorded, key)
 			}
-			writeAlertSetPolicyRecord(ctx, alertSet, recorded, reconcileLog)
+			if err := writeAlertSetPolicyRecord(ctx, alertSet, recorded); err != nil {
+				requestErr = errors.Join(requestErr, err)
+			}
 		}
 		return itemErrs, requestErr
 	}
@@ -575,7 +597,9 @@ func (r *AlertSetReconciler) replaceAlerts(
 			responseErrs = append(responseErrs, fmt.Errorf("roll back the alertset access policy records: %w", err))
 		}
 	}
-	writeAlertSetPolicyRecord(ctx, alertSet, recorded, reconcileLog)
+	if err := writeAlertSetPolicyRecord(ctx, alertSet, recorded); err != nil {
+		reconcileLog.Error(err, "Error updating the AlertSet access policy records after replace")
+	}
 	return append(itemErrs, responseErrs...), nil
 }
 
@@ -614,13 +638,14 @@ func alertSetItemAnnotations(recorded map[string]struct{}, key string) map[strin
 
 // writeAlertSetPolicyRecord stores the recorded item keys on the AlertSet metadata, dropping keys
 // of items no longer in the spec, and skips the write when nothing changed. A failed write is
-// logged and retried on the next reconcile.
+// checked against the stored object, since it may have been committed regardless; either way
+// alertSet then carries the stored metadata and spec, keeping its in-memory status. Callers that
+// are about to apply a policy abort on an error; elsewhere it is retried on the next reconcile.
 func writeAlertSetPolicyRecord(
 	ctx context.Context,
 	alertSet *coralogixv1alpha1.AlertSet,
 	recorded map[string]struct{},
-	reconcileLog logr.Logger,
-) {
+) error {
 	desired := desiredAlertSetItemsByKey(alertSet.Spec.Alerts)
 	keys := make([]string, 0, len(recorded))
 	for key := range recorded {
@@ -629,29 +654,44 @@ func writeAlertSetPolicyRecord(
 		}
 	}
 	sort.Strings(keys)
-	current, found := alertSet.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation]
-	if len(keys) == 0 {
-		if !found {
-			return
-		}
-		delete(alertSet.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation)
-	} else {
+	want := ""
+	if len(keys) > 0 {
 		value, err := json.Marshal(keys)
 		if err != nil {
-			reconcileLog.Error(err, "Error encoding the AlertSet access policy record")
-			return
+			return fmt.Errorf("encode the AlertSet access policy record: %w", err)
 		}
-		if found && current == string(value) {
-			return
-		}
+		want = string(value)
+	}
+	matches := func(annotations map[string]string) bool {
+		current, found := annotations[coralogixv1beta1.AccessPolicyManagedAnnotation]
+		return (want == "" && !found) || (found && current == want)
+	}
+	if matches(alertSet.Annotations) {
+		return nil
+	}
+	if want == "" {
+		delete(alertSet.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation)
+	} else {
 		if alertSet.Annotations == nil {
 			alertSet.Annotations = map[string]string{}
 		}
-		alertSet.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation] = string(value)
+		alertSet.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation] = want
 	}
-	if err := config.GetClient().Update(ctx, alertSet); err != nil {
-		reconcileLog.Error(err, "Error recording the AlertSet access policy annotation")
+	status := alertSet.Status
+	err := config.GetClient().Update(ctx, alertSet)
+	alertSet.Status = status
+	if err == nil {
+		return nil
 	}
+	latest := &coralogixv1alpha1.AlertSet{}
+	if getErr := config.GetClient().Get(ctx, client.ObjectKeyFromObject(alertSet), latest); getErr == nil {
+		latest.ObjectMeta.DeepCopyInto(&alertSet.ObjectMeta)
+		latest.Spec.DeepCopyInto(&alertSet.Spec)
+		if matches(latest.Annotations) {
+			return nil
+		}
+	}
+	return fmt.Errorf("record the AlertSet access policies: %w", err)
 }
 
 func (r *AlertSetReconciler) deleteAlerts(
