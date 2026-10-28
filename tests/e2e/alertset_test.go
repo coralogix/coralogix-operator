@@ -442,6 +442,8 @@ var _ = Describe("AlertSet access policy", Ordered, func() {
 			Expect(crClient.Get(ctx, types.NamespacedName{Name: alertSetName, Namespace: testNamespace}, current)).To(Succeed())
 			invalidGeneration = current.Generation
 		}
+		// The API rejects the whole bulk replace when one item carries an invalid policy, so the
+		// set reports the request failure rather than a per-item one, and A's change waits.
 		Eventually(func(g Gomega) {
 			fresh := &coralogixv1alpha1.AlertSet{}
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertSetName, Namespace: testNamespace}, fresh)).To(Succeed())
@@ -449,17 +451,7 @@ var _ = Describe("AlertSet access policy", Ordered, func() {
 			g.Expect(cond).ToNot(BeNil())
 			g.Expect(cond.ObservedGeneration).To(Equal(invalidGeneration))
 			g.Expect(cond.Status).To(Equal(metav1.ConditionFalse))
-			st := alertSetStatusesByKey(fresh.Status.Alerts)
-			g.Expect(st["item-b"].State).To(Equal(coralogixv1alpha1.AlertSetItemStateFailed))
-			g.Expect(st["item-b"].Message).ToNot(BeEmpty())
-			g.Expect(st["item-a"].State).To(Equal(coralogixv1alpha1.AlertSetItemStateSynced))
-		}, time.Minute, time.Second).Should(Succeed())
-		Eventually(func(g Gomega) {
-			resp, httpResp, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, idA).Execute()
-			g.Expect(oapicxsdk.NewAPIError(httpResp, err)).ToNot(HaveOccurred())
-			alertDef, ok := resp.GetAlertDefOk()
-			g.Expect(ok).To(BeTrue())
-			g.Expect(alertDef.AlertDefProperties.GetDescription()).To(Equal(updatedADescription))
+			g.Expect(cond.Message).To(ContainSubstring("bulk replace"))
 		}, time.Minute, time.Second).Should(Succeed())
 
 		By("Adding an item with an invalid policy (create path)")
@@ -486,6 +478,14 @@ var _ = Describe("AlertSet access policy", Ordered, func() {
 			g.Expect(st["item-d"].State).To(Equal(coralogixv1alpha1.AlertSetItemStateFailed))
 			g.Expect(st["item-d"].Message).ToNot(BeEmpty())
 			g.Expect(st["item-a"].State).To(Equal(coralogixv1alpha1.AlertSetItemStateSynced))
+		}, time.Minute, time.Second).Should(Succeed())
+		// With B's invalid policy gone the bulk replace succeeds again, so A's earlier change lands.
+		Eventually(func(g Gomega) {
+			resp, httpResp, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, idA).Execute()
+			g.Expect(oapicxsdk.NewAPIError(httpResp, err)).ToNot(HaveOccurred())
+			alertDef, ok := resp.GetAlertDefOk()
+			g.Expect(ok).To(BeTrue())
+			g.Expect(alertDef.AlertDefProperties.GetDescription()).To(Equal(updatedADescription))
 		}, time.Minute, time.Second).Should(Succeed())
 
 		By("Restoring a deletable policy on A before teardown")

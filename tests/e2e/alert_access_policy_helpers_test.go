@@ -49,8 +49,9 @@ const (
 	// does not apply to the logs alerts under test, so reconciles still apply
 	// while P2 is active.
 	alertAccessPolicyP2 = `{"version":"2025-01-01","default":{"permissions":{"alerts:ReadConfig":"grant","alerts:UpdateConfig":"grant","alerts:LogsReadConfig":"grant","alerts:LogsUpdateConfig":"grant","alerts:ReadAccessPolicy":"grant","alerts:UpdateAccessPolicy":"grant","alerts:MetricsReadConfig":"grant"}},"rules":[]}`
-	// Unknown version: exercises the per-item invalid-policy path.
-	alertAccessPolicyInvalid = `{"version":"v2099-01-01","default":{"permissions":{"alerts:ReadConfig":"grant"}},"rules":[]}`
+	// Unknown permission name: the API rejects it (an unknown version string is accepted and
+	// rewritten, so it would not exercise the invalid-policy paths).
+	alertAccessPolicyInvalid = `{"version":"2025-01-01","default":{"permissions":{"alerts:Read":"grant"}},"rules":[]}`
 )
 
 // expectAlertPolicy asserts the remote alert's access policy. It first asserts
