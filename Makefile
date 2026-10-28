@@ -56,6 +56,21 @@ unit-tests: manifests generate envtest prometheus-crds ## Run tests.
 	PROMETHEUS_CRDS_DIR="$(PROMETHEUS_CRDS_DIR)" \
 	go test ./internal/controller/... ./api/... ./internal/utils/... ./tests/e2e/operatorready/... -coverprofile cover.out
 
+##@ Code generation
+
+.PHONY: codegen
+codegen: ## Generate the kinds of tools/opgen/kinds.yaml, then the code, manifests, API docs, and Helm CRDs.
+	cd tools/opgen && go run ./cmd/opgen generate
+	$(MAKE) generate manifests generate-api-docs helm-update-crds
+
+.PHONY: opgen-test
+opgen-test: controller-gen ## Build, vet, and test the operator generator.
+	cd tools/opgen && go build ./... && go vet ./... && CONTROLLER_GEN=$(CONTROLLER_GEN) go test ./...
+
+.PHONY: crd-size-check
+crd-size-check: ## Fail when a CRD is too large for a client-side apply.
+	bash scripts/crd-size-check.sh
+
 ##@ Documentation
 .PHONY: generate-api-docs
 generate-api-docs: crdoc ## Generate API documentation.
