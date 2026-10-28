@@ -64,7 +64,7 @@ jobs:
           path: bin
           key: ${{ runner.os }}-tools-${{ github.workflow }}-${{ hashFiles('Makefile', 'go.sum') }}
       - name: Create Kind cluster
-        uses: helm/kind-action@v1.4.0
+        uses: helm/kind-action@v1.10.0
       - name: Install Prometheus Operator CRDs
         run: |
           make install-prometheus-crds
@@ -133,7 +133,7 @@ jobs:
           path: bin
           key: ${{ runner.os }}-tools-${{ github.workflow }}-${{ hashFiles('Makefile', 'go.sum') }}
       - name: Create Kind cluster
-        uses: helm/kind-action@v1.4.0
+        uses: helm/kind-action@v1.10.0
       - name: Install Prometheus Operator CRDs
         run: |
           make install-prometheus-crds

@@ -4,6 +4,14 @@
 ![Go Report Card](https://goreportcard.com/badge/github.com/coralogix/coralogix-operator/v2)
 ![e2e-tests](https://github.com/coralogix/coralogix-operator/actions/workflows/e2e-tests.yaml/badge.svg?style=plastic)
 
+> [!WARNING]
+> **Security advisory** (Priority: Medium): On October 20, 2026, the private keys for 8 intermediate certificate authorities operated by eMudhra were reported compromised. This is an industry-wide issue, not specific to Coralogix. Update the Coralogix Operator to **v2.16.0** (FIPS build: v2.16.0-fips) or later out of an abundance of caution. Coralogix endpoints and internal services do not use eMudhra or emSign certificates, and we have not identified any impact to customer data.
+>
+> See the [eMudhra security advisory](https://coralogix.com/blog/coralogix-security-advisory-emudhra-certificate-update/) for full upgrade guidance and breaking-change details.
+>
+> If you have any questions or need help upgrading, our Support team is here to help. Reach out through in-app chat and mention "Security advisory eMudhra" and the required component.
+
+
 ## Overview
 The Coralogix Operator provides Kubernetes-native deployment and management for Coralogix, designed to simplify and automate the configuration of Coralogix APIs through Kubernetes [Custom Resource Definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) and controllers.
 

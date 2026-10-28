@@ -280,11 +280,11 @@ func (e *AIEvaluation) ExtractCreateAIEvaluationRequest() (*aievaluations.AiEval
 	}
 
 	return &aievaluations.AiEvaluationsServiceCreateAiEvaluationRequest{
-		Application: aievaluations.PtrString(e.Spec.Application),
-		Config:      config,
+		Application: e.Spec.Application,
+		Config:      *config,
 		IsEnabled:   aievaluations.PtrBool(isEnabled),
-		Subsystem:   aievaluations.PtrString(e.Spec.Subsystem),
-		Target:      schemaToOpenAPIAIEvaluationTarget[e.Spec.Target].Ptr(),
+		Subsystem:   e.Spec.Subsystem,
+		Target:      schemaToOpenAPIAIEvaluationTarget[e.Spec.Target],
 		Threshold:   aievaluations.PtrFloat64(e.Spec.Threshold.AsApproximateFloat64()),
 	}, nil
 }

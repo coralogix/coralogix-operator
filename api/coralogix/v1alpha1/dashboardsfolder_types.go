@@ -46,7 +46,7 @@ type DashboardsFolderSpec struct {
 
 func (in *DashboardsFolderSpec) ExtractDashboardsFolderFromSpec(ctx context.Context, namespace string) (*dashboardsfolders.DashboardFolder, error) {
 	folder := &dashboardsfolders.DashboardFolder{
-		Name: dashboardsfolders.PtrString(in.Name),
+		Name: in.Name,
 	}
 
 	if parentID := in.ParentFolderID; parentID != nil {

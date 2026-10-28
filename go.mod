@@ -1,9 +1,9 @@
 module github.com/coralogix/coralogix-operator/v2
 
-go 1.26.9
+go 1.26.10
 
 require (
-	github.com/coralogix/coralogix-management-sdk v1.9.4-0.20261014101828-fd8db5e770ff
+	github.com/coralogix/coralogix-management-sdk v1.9.4-0.20261026134027-8b26803fa4ca
 	github.com/go-logr/logr v1.4.4
 	github.com/google/uuid v1.6.0
 	github.com/onsi/ginkgo/v2 v2.23.4
@@ -45,7 +45,7 @@ require (
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/btree v1.1.3 // indirect
-	github.com/google/cel-go v0.29.0 // indirect
+	github.com/google/cel-go v0.30.0 // indirect
 	github.com/google/gnostic-models v0.7.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/pprof v0.0.0-20250630185457-6e76a2b096b5 // indirect
