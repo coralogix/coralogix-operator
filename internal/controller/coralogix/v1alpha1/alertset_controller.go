@@ -16,6 +16,7 @@ package v1alpha1
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -354,15 +355,17 @@ func (r *AlertSetReconciler) createAlerts(
 	}
 
 	responseErrs := applyBulkCreateResponse(requestKeys, response, statusByKey, createdKeys)
+	recorded := alertSetPolicyRecord(alertSet)
 	for key := range createdKeys {
 		desired := desiredByKey[key]
 		if desired.Spec.ExtractCreateAccessPolicy() != nil {
 			status := statusByKey[key]
 			status.AccessPolicyManaged = true
 			statusByKey[key] = status
-			setAlertSetAccessPolicyAnnotation(ctx, alertSet, desired, reconcileLog)
+			recorded[key] = struct{}{}
 		}
 	}
+	writeAlertSetPolicyRecord(ctx, alertSet, recorded, reconcileLog)
 	return createdKeys, append(itemErrs, responseErrs...), nil
 }
 
@@ -475,41 +478,98 @@ func (r *AlertSetReconciler) replaceAlerts(
 		return itemErrs, fmt.Errorf("bulk replace remote alerts: %w", cxsdk.NewAPIError(httpResponse, err))
 	}
 
-	responseErrs := applyBulkReplaceResponse(requestIDs, response, statusByKey, desiredByKey, alertSet.Annotations)
-	for key := range requestIDs {
+	recorded := alertSetPolicyRecord(alertSet)
+	responseErrs := applyBulkReplaceResponse(requestIDs, response, statusByKey, desiredByKey, recorded)
+	for _, key := range requestIDs {
 		desired, found := desiredByKey[key]
 		if !found {
 			continue
 		}
-		if action := desired.Spec.ExtractAccessPolicyAction(); action != nil && action.Upsert != nil {
-			setAlertSetAccessPolicyAnnotation(ctx, alertSet, desired, reconcileLog)
+		action := desired.Spec.ExtractAccessPolicyAction()
+		switch {
+		case action != nil && action.Upsert != nil:
+			recorded[key] = struct{}{}
+		case action != nil && action.Delete != nil &&
+			statusByKey[key].State == coralogixv1alpha1.AlertSetItemStateSynced && !statusByKey[key].AccessPolicyManaged:
+			// Only once the remote delete succeeded: applyBulkReplaceResponse marks the item synced
+			// and clears its tombstone then.
+			delete(recorded, key)
 		}
 	}
+	writeAlertSetPolicyRecord(ctx, alertSet, recorded, reconcileLog)
 	return append(itemErrs, responseErrs...), nil
 }
 
-// setAlertSetAccessPolicyAnnotation records the applied policy durably on the AlertSet CR
-// metadata, mirroring the Alert controller's annotation. AlertSet items share the CR's metadata,
-// so the annotation covers every policy-managed item; the value is the JSON of the most recently
-// applied item policy, kept for diagnostics only. Like the Alert annotation it survives old-binary
-// writes across a rolling upgrade, where the per-item status tombstones would be dropped.
-// A failed write is logged and retried on the next policy-applying reconcile.
-func setAlertSetAccessPolicyAnnotation(
+// alertSetPolicyRecord returns the item keys recorded in the AlertSet's access policy
+// annotation. The annotation mirrors the Alert controller's: it survives old-binary writes
+// across a rolling upgrade, where the per-item status tombstones would be dropped. A value that
+// is not a JSON list of keys records every current item, the safe direction for the not-found guard.
+func alertSetPolicyRecord(alertSet *coralogixv1alpha1.AlertSet) map[string]struct{} {
+	recorded := map[string]struct{}{}
+	value, found := alertSet.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation]
+	if !found {
+		return recorded
+	}
+	var keys []string
+	if err := json.Unmarshal([]byte(value), &keys); err != nil {
+		for _, item := range alertSet.Spec.Alerts {
+			recorded[item.Key] = struct{}{}
+		}
+		return recorded
+	}
+	for _, key := range keys {
+		recorded[key] = struct{}{}
+	}
+	return recorded
+}
+
+// alertSetItemAnnotations returns the annotations AccessPolicyMayDenyOperator should see for one
+// item: the policy record only when that item is recorded, so a policy on one item never makes
+// another, policy-free item look locked.
+func alertSetItemAnnotations(recorded map[string]struct{}, key string) map[string]string {
+	if _, found := recorded[key]; !found {
+		return nil
+	}
+	return map[string]string{coralogixv1beta1.AccessPolicyManagedAnnotation: ""}
+}
+
+// writeAlertSetPolicyRecord stores the recorded item keys on the AlertSet metadata, dropping keys
+// of items no longer in the spec, and skips the write when nothing changed. A failed write is
+// logged and retried on the next reconcile.
+func writeAlertSetPolicyRecord(
 	ctx context.Context,
 	alertSet *coralogixv1alpha1.AlertSet,
-	item coralogixv1alpha1.AlertSetItem,
+	recorded map[string]struct{},
 	reconcileLog logr.Logger,
 ) {
-	if alertSet.Annotations == nil {
-		alertSet.Annotations = map[string]string{}
+	desired := desiredAlertSetItemsByKey(alertSet.Spec.Alerts)
+	keys := make([]string, 0, len(recorded))
+	for key := range recorded {
+		if _, found := desired[key]; found {
+			keys = append(keys, key)
+		}
 	}
-	policy := ""
-	if action := item.Spec.ExtractAccessPolicyAction(); action != nil && action.Upsert != nil {
-		policy = *action.Upsert
-	} else if item.Spec.ExtractCreateAccessPolicy() != nil {
-		policy = *item.Spec.ExtractCreateAccessPolicy()
+	sort.Strings(keys)
+	current, found := alertSet.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation]
+	if len(keys) == 0 {
+		if !found {
+			return
+		}
+		delete(alertSet.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation)
+	} else {
+		value, err := json.Marshal(keys)
+		if err != nil {
+			reconcileLog.Error(err, "Error encoding the AlertSet access policy record")
+			return
+		}
+		if found && current == string(value) {
+			return
+		}
+		if alertSet.Annotations == nil {
+			alertSet.Annotations = map[string]string{}
+		}
+		alertSet.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation] = string(value)
 	}
-	alertSet.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation] = policy
 	if err := config.GetClient().Update(ctx, alertSet); err != nil {
 		reconcileLog.Error(err, "Error recording the AlertSet access policy annotation")
 	}
@@ -573,7 +633,7 @@ func (r *AlertSetReconciler) deleteAlerts(
 	for _, id := range response.NotFoundIds {
 		completedIDs[id] = struct{}{}
 		if key, requested := idToKey[id]; requested {
-			if desired, found := desiredByKey[key]; found && desired.Spec.AccessPolicyMayDenyOperator(statusByKey[key].AccessPolicyManaged, alertSet.Annotations) {
+			if desired, found := desiredByKey[key]; found && desired.Spec.AccessPolicyMayDenyOperator(statusByKey[key].AccessPolicyManaged, alertSetItemAnnotations(alertSetPolicyRecord(alertSet), key)) {
 				reconcileLog.Info("Remote alert not found; if its access policy denied the operator's API key, it still exists remotely and is now orphaned", "key", key, "id", id)
 			}
 		}
@@ -618,7 +678,7 @@ func (r *AlertSetReconciler) deleteAlertsIndividually(
 		apiErr := cxsdk.NewAPIError(httpResponse, err)
 		if httpResponse != nil && httpResponse.StatusCode == http.StatusNotFound {
 			if key, requested := idToKey[id]; requested {
-				if desired, found := desiredByKey[key]; found && desired.Spec.AccessPolicyMayDenyOperator(statusByKey[key].AccessPolicyManaged, alertSet.Annotations) {
+				if desired, found := desiredByKey[key]; found && desired.Spec.AccessPolicyMayDenyOperator(statusByKey[key].AccessPolicyManaged, alertSetItemAnnotations(alertSetPolicyRecord(alertSet), key)) {
 					reconcileLog.Info("Remote alert not found; if its access policy denied the operator's API key, it still exists remotely and is now orphaned", "key", key, "id", id)
 				}
 			}
@@ -740,7 +800,7 @@ func applyBulkReplaceResponse(
 	response *alerts.BulkReplaceAlertDefsResponse,
 	statusByKey map[string]coralogixv1alpha1.AlertSetItemStatus,
 	desiredByKey map[string]coralogixv1alpha1.AlertSetItem,
-	annotations map[string]string,
+	recorded map[string]struct{},
 ) []error {
 	if response == nil {
 		return []error{errors.New("bulk replace response is empty")}
@@ -813,7 +873,7 @@ func applyBulkReplaceResponse(
 			continue
 		}
 		seen[id] = struct{}{}
-		if desired, found := desiredByKey[key]; found && desired.Spec.AccessPolicyMayDenyOperator(statusByKey[key].AccessPolicyManaged, annotations) {
+		if desired, found := desiredByKey[key]; found && desired.Spec.AccessPolicyMayDenyOperator(statusByKey[key].AccessPolicyManaged, alertSetItemAnnotations(recorded, key)) {
 			// Not reset to Pending on purpose: the alert may be locked out by its access policy rather
 			// than deleted, and resetting would recreate it as a duplicate. The ID and the tombstone are kept.
 			message := fmt.Sprintf("remote alert %q with ID %q was not found, or its access policy denies the operator's API key; "+

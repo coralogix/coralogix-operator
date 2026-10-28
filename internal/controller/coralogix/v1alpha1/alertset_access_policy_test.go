@@ -30,6 +30,7 @@ import (
 	alerts "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/alert_definitions_service"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
+	coralogixv1beta1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 )
 
@@ -408,4 +409,71 @@ func TestApplyBulkReplaceResponseClearsAccessPolicyManagedAfterDelete(t *testing
 		require.Equal(t, coralogixv1alpha1.AlertSetItemStateSynced, statuses["alpha"].State)
 		require.True(t, statuses["alpha"].AccessPolicyManaged)
 	})
+}
+
+func TestApplyBulkReplaceResponseScopesPolicyRecordToItem(t *testing.T) {
+	alphaID, betaID := "alpha-id", "beta-id"
+	statuses := map[string]coralogixv1alpha1.AlertSetItemStatus{
+		"alpha": {Key: "alpha", ID: &alphaID, State: coralogixv1alpha1.AlertSetItemStateSynced},
+		"beta":  {Key: "beta", ID: &betaID, State: coralogixv1alpha1.AlertSetItemStateSynced},
+	}
+	desired := desiredAlertSetItemsByKey([]coralogixv1alpha1.AlertSetItem{
+		accessPolicyAlertSetItem("alpha", nil),
+		accessPolicyAlertSetItem("beta", nil),
+	})
+	response := &alerts.BulkReplaceAlertDefsResponse{NotFoundIds: []string{alphaID, betaID}}
+
+	resultErrs := applyBulkReplaceResponse(
+		map[string]string{alphaID: "alpha", betaID: "beta"}, response, statuses, desired,
+		map[string]struct{}{"alpha": {}},
+	)
+
+	require.Len(t, resultErrs, 2)
+	require.Equal(t, coralogixv1alpha1.AlertSetItemStateFailed, statuses["alpha"].State, "the recorded item may be locked out")
+	require.NotNil(t, statuses["alpha"].ID)
+	require.Equal(t, coralogixv1alpha1.AlertSetItemStatePending, statuses["beta"].State,
+		"a policy recorded on another item must not stop a deleted policy-free item from being recreated")
+	require.Nil(t, statuses["beta"].ID)
+}
+
+func TestAlertSetPolicyRecord(t *testing.T) {
+	alertSet := &coralogixv1alpha1.AlertSet{Spec: coralogixv1alpha1.AlertSetSpec{Alerts: []coralogixv1alpha1.AlertSetItem{
+		minimalAlertSetItem("alpha"), minimalAlertSetItem("beta"),
+	}}}
+	require.Empty(t, alertSetPolicyRecord(alertSet))
+
+	alertSet.Annotations = map[string]string{coralogixv1beta1.AccessPolicyManagedAnnotation: `["alpha"]`}
+	require.Equal(t, map[string]struct{}{"alpha": {}}, alertSetPolicyRecord(alertSet))
+
+	alertSet.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation] = `{"version":"2025-01-01"}`
+	require.Equal(t, map[string]struct{}{"alpha": {}, "beta": {}}, alertSetPolicyRecord(alertSet),
+		"an unreadable record must cover every item")
+
+	require.Nil(t, alertSetItemAnnotations(map[string]struct{}{"alpha": {}}, "beta"))
+	require.Contains(t, alertSetItemAnnotations(map[string]struct{}{"alpha": {}}, "alpha"), coralogixv1beta1.AccessPolicyManagedAnnotation)
+}
+
+func TestWriteAlertSetPolicyRecord(t *testing.T) {
+	alertSet := &coralogixv1alpha1.AlertSet{
+		ObjectMeta: metav1.ObjectMeta{Name: "set", Namespace: "default"},
+		Spec: coralogixv1alpha1.AlertSetSpec{Alerts: []coralogixv1alpha1.AlertSetItem{
+			minimalAlertSetItem("alpha"), minimalAlertSetItem("beta"),
+		}},
+	}
+	initAlertSetClient(t, alertSet, nil)
+	require.NoError(t, config.GetClient().Get(context.Background(), client.ObjectKeyFromObject(alertSet), alertSet))
+
+	writeAlertSetPolicyRecord(context.Background(), alertSet, map[string]struct{}{"beta": {}, "alpha": {}, "removed": {}}, logr.Discard())
+	persisted := &coralogixv1alpha1.AlertSet{}
+	require.NoError(t, config.GetClient().Get(context.Background(), client.ObjectKeyFromObject(alertSet), persisted))
+	require.Equal(t, `["alpha","beta"]`, persisted.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation],
+		"keys of items no longer in the spec are dropped")
+
+	version := alertSet.GetResourceVersion()
+	writeAlertSetPolicyRecord(context.Background(), alertSet, map[string]struct{}{"alpha": {}, "beta": {}}, logr.Discard())
+	require.Equal(t, version, alertSet.GetResourceVersion(), "an unchanged record must not be rewritten")
+
+	writeAlertSetPolicyRecord(context.Background(), alertSet, map[string]struct{}{}, logr.Discard())
+	require.NoError(t, config.GetClient().Get(context.Background(), client.ObjectKeyFromObject(alertSet), persisted))
+	require.NotContains(t, persisted.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation)
 }

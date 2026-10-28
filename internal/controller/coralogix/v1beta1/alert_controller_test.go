@@ -288,6 +288,59 @@ func TestHandleUpdateClearsAccessPolicyManagedAfterDelete(t *testing.T) {
 	require.False(t, alert.Status.AccessPolicyManaged)
 	require.NotContains(t, alert.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation,
 		"the annotation must be cleared together with the status tombstone after a delete")
+
+	// The shared reconciler persists status from the same object next; clearing the annotation
+	// must not leave it with a stale resource version.
+	require.NoError(t, config.GetClient().Status().Update(context.Background(), alert))
+	persisted := &coralogixv1beta1.Alert{}
+	require.NoError(t, config.GetClient().Get(context.Background(), client.ObjectKeyFromObject(alert), persisted))
+	require.False(t, persisted.Status.AccessPolicyManaged)
+	require.NotContains(t, persisted.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation)
+}
+
+func TestHandleCreationWithPolicyKeepsStatusWritable(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"alertDef":{"id":"created-id"}}`))
+	}))
+	t.Cleanup(server.Close)
+
+	alert := testAlert(ptr.To(`{"version":"2025-01-01","default":{"permissions":{"alerts:ReadConfig":"grant"}},"rules":[]}`), false)
+	alert.Status = coralogixv1beta1.AlertStatus{}
+	initAlertClient(t, alert, nil)
+
+	reconciler := testAlertReconciler(t, server)
+	require.NoError(t, reconciler.HandleCreation(context.Background(), logr.Discard(), alert))
+
+	// The shared reconciler persists the new ID from the same object right after creation. A
+	// stale resource version after the annotation write would make this conflict, lose the ID
+	// and create a duplicate remote alert on the next reconcile.
+	require.NoError(t, config.GetClient().Status().Update(context.Background(), alert))
+	persisted := &coralogixv1beta1.Alert{}
+	require.NoError(t, config.GetClient().Get(context.Background(), client.ObjectKeyFromObject(alert), persisted))
+	require.NotNil(t, persisted.Status.ID)
+	require.Equal(t, "created-id", *persisted.Status.ID)
+	require.True(t, persisted.Status.AccessPolicyManaged)
+	require.Contains(t, persisted.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation)
+}
+
+func TestHandleUpdateWritesAnnotationOnlyWhenChanged(t *testing.T) {
+	policy := `{"version":"2025-01-01","default":{"permissions":{"alerts:ReadConfig":"grant"}},"rules":[]}`
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"alertDef":{"id":"alert-id"}}`))
+	}))
+	t.Cleanup(server.Close)
+
+	alert := testAlert(ptr.To(policy), false)
+	initAlertClient(t, alert, nil)
+	reconciler := testAlertReconciler(t, server)
+	require.NoError(t, reconciler.HandleUpdate(context.Background(), logr.Discard(), alert))
+	require.NoError(t, config.GetClient().Status().Update(context.Background(), alert))
+
+	version := alert.GetResourceVersion()
+	require.NoError(t, reconciler.HandleUpdate(context.Background(), logr.Discard(), alert))
+	require.Equal(t, version, alert.GetResourceVersion(), "an unchanged policy record must not be rewritten")
 }
 
 func TestHandleCreationSendsAccessPolicy(t *testing.T) {

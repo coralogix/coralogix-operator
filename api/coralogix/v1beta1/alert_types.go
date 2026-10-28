@@ -357,7 +357,9 @@ type AlertSpec struct {
 // survives writes from operator versions that predate this field: their typed client drops the
 // unknown status field on decode yet preserves ObjectMeta annotations through the same
 // full-object Update, so the management record cannot be erased by a rolling upgrade.
-// The value is the desired spec.accessPolicy at the time of the last applied policy action.
+// On an Alert the value is the desired spec.accessPolicy at the time of the last applied policy
+// action. On an AlertSet it is a JSON list of the keys of the items whose policy the operator
+// manages, so each item's not-found guard only considers its own record.
 const AccessPolicyManagedAnnotation = "alerts.coralogix.com/access-policy-managed"
 
 // Data source to run the alert on.

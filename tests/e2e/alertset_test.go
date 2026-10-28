@@ -523,4 +523,3 @@ var _ = Describe("AlertSet access policy", Ordered, func() {
 		verifyRemoteAlertDeleted(ctx, alertsClient, idC)
 	})
 })
-

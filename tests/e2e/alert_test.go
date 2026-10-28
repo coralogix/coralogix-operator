@@ -1213,4 +1213,3 @@ var _ = Describe("Alert access policy", Ordered, func() {
 		}, time.Minute, time.Second).Should(BeTrue())
 	})
 })
-

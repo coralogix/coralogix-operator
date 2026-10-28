@@ -20,10 +20,10 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"k8s.io/utils/ptr"
 
 	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 	alerts "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/alert_definitions_service"
@@ -145,16 +145,30 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 	log.Info("Remote alert updated", "alert", utils.FormatJSON(updateResponse))
 	if policyAction != nil && policyAction.Delete != nil {
 		alert.Status.AccessPolicyManaged = false
-		clearAlertAnnotations := &coralogixv1beta1.Alert{}
-		if err := config.GetClient().Get(ctx, client.ObjectKeyFromObject(alert), clearAlertAnnotations); err != nil {
-			return fmt.Errorf("error on clearing the alert access policy record: reading the alert failed: %w", err)
+		if err := clearAccessPolicyManagedAnnotation(ctx, alert); err != nil {
+			return err
 		}
-		delete(clearAlertAnnotations.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation)
-		if err := config.GetClient().Update(ctx, clearAlertAnnotations); err != nil {
-			return fmt.Errorf("error on clearing the alert access policy record: %w", err)
-		}
-		delete(alert.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation)
 	}
+	return nil
+}
+
+// clearAccessPolicyManagedAnnotation removes the policy record from the CR metadata. Like
+// setAccessPolicyManagedAnnotation it writes a fresh copy and then carries the new resource
+// version over to alert, so the reconciler's following status update does not conflict.
+func clearAccessPolicyManagedAnnotation(ctx context.Context, alert *coralogixv1beta1.Alert) error {
+	fresh := &coralogixv1beta1.Alert{}
+	if err := config.GetClient().Get(ctx, client.ObjectKeyFromObject(alert), fresh); err != nil {
+		return fmt.Errorf("error on clearing the alert access policy record: reading the alert failed: %w", err)
+	}
+	delete(alert.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation)
+	if _, recorded := fresh.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation]; !recorded {
+		return nil
+	}
+	delete(fresh.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation)
+	if err := config.GetClient().Update(ctx, fresh); err != nil {
+		return fmt.Errorf("error on clearing the alert access policy record: %w", err)
+	}
+	alert.SetResourceVersion(fresh.GetResourceVersion())
 	return nil
 }
 
@@ -166,25 +180,33 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 // current version, and the annotation is re-set on the next policy-applying reconcile.
 // The Update runs on a fresh copy of the object: a full-object Update never carries status
 // (it is a subresource), so patching the in-memory alert directly would rely on the caller
-// having already persisted its status.
+// having already persisted its status. The new resource version is then carried over to
+// alert: the reconciler writes alert's status next (on create, the new remote ID), and a
+// stale resource version would make that write conflict and lose it.
 func setAccessPolicyManagedAnnotation(ctx context.Context, alert *coralogixv1beta1.Alert, policy *string) {
 	fresh := &coralogixv1beta1.Alert{}
 	if err := config.GetClient().Get(ctx, client.ObjectKeyFromObject(alert), fresh); err != nil {
 		log.FromContext(ctx).Error(err, "Error recording the alert access policy annotation: reading the alert failed")
 		return
 	}
+	value := ptr.Deref(policy, "")
+	if alert.Annotations == nil {
+		alert.Annotations = map[string]string{}
+	}
+	if current, recorded := fresh.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation]; recorded && current == value {
+		alert.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation] = value
+		return
+	}
 	if fresh.Annotations == nil {
 		fresh.Annotations = map[string]string{}
 	}
-	fresh.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation] = ptr.Deref(policy, "")
+	fresh.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation] = value
 	if err := config.GetClient().Update(ctx, fresh); err != nil {
 		log.FromContext(ctx).Error(err, "Error recording the alert access policy annotation")
 		return
 	}
-	if alert.Annotations == nil {
-		alert.Annotations = map[string]string{}
-	}
-	alert.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation] = fresh.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation]
+	alert.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation] = value
+	alert.SetResourceVersion(fresh.GetResourceVersion())
 }
 
 func (r *AlertReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
