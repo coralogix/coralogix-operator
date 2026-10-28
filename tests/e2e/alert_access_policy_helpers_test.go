@@ -157,9 +157,11 @@ func newAccessPolicyTestAlert(name, namespace string, policy *string) *coralogix
 	}
 }
 
-// listAlertsByNamePage lists one page of remote alerts with exactly the given
-// name, using the server-side name filter. It returns the page and the next
-// page token, or a nil token when there are no more pages.
+// listAlertsByNamePage lists one page of remote alerts, asking the server to
+// filter by the given name. The filter is not honored as the SDK encodes it, so
+// the page may hold every alert in the team; callers must match names
+// themselves. It returns the page and the next page token, or a nil token when
+// there are no more pages.
 func listAlertsByNamePage(ctx context.Context, svc *alerts.AlertDefinitionsServiceAPIService, name string, pageToken *string) (*alerts.ListAlertDefsResponse, *string, error) {
 	matcher := alerts.ALERTSV3FILTERMATCHER_FILTER_MATCHER_EQUALS
 	req := svc.AlertDefsServiceListAlertDefs(ctx).QueryFilter(alerts.AlertDefQueryFilter{
@@ -196,8 +198,12 @@ func sweepAlertsByName(ctx context.Context, svc *alerts.AlertDefinitionsServiceA
 			return errors.Join(errs...)
 		}
 		for i := range resp.GetAlertDefs() {
-			id := resp.GetAlertDefs()[i].GetId()
-			if id == "" {
+			alertDef := resp.GetAlertDefs()[i]
+			id := alertDef.GetId()
+			// Match the name here too: the API ignores the name filter as the SDK encodes it
+			// (query_filter[nameFilter][...]) and returns every alert in the team, so trusting
+			// it would delete alerts that belong to other specs.
+			if id == "" || alertDef.AlertDefProperties.GetName() != name {
 				continue
 			}
 			_, httpResp, err := svc.AlertDefsServiceDeleteAlertDef(ctx, id).Execute()
