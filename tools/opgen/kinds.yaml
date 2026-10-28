@@ -1,4 +1,6 @@
 # The kinds that opgen generates. Each entry names the custom resource kind and the OpenAPI
 # component of its API resource. A kind with handwritten generator input has a directory
 # kinds/<lower-case kind>.
-kinds: []
+kinds:
+  - kind: ViewFolder
+    resource: ViewFolder

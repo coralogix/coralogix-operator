@@ -41,7 +41,6 @@ const (
 	DashboardKind              = "Dashboard"
 	DashboardsFolderKind       = "DashboardsFolder"
 	ViewKind                   = "View"
-	ViewFolderKind             = "ViewFolder"
 	ConnectorKind              = "Connector"
 	PresetKind                 = "Preset"
 	GlobalRouterKind           = "GlobalRouter"

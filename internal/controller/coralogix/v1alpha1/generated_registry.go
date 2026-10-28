@@ -18,15 +18,24 @@
 package v1alpha1
 
 import (
+	"fmt"
 	"time"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+
+	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // SetupGeneratedControllers sets up the controller of every generated kind. The interval of a
 // kind is its reconcile interval.
 func SetupGeneratedControllers(mgr ctrl.Manager, clientSet *cxsdk.ClientSet, intervals map[string]time.Duration) error {
+	if err := (&ViewFolderReconciler{
+		Client:   clientSet.ViewsFolders(),
+		Interval: intervals[utils.ViewFolderKind],
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create the controller of %s: %w", utils.ViewFolderKind, err)
+	}
 	return nil
 }

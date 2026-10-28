@@ -82,7 +82,6 @@ rules:
       - tcologspolicies
       - tcorumpolicies
       - tcotracespolicies
-      - viewfolders
       - views
     verbs:
       - create
@@ -125,7 +124,6 @@ rules:
       - tcologspolicies/finalizers
       - tcorumpolicies/finalizers
       - tcotracespolicies/finalizers
-      - viewfolders/finalizers
       - views/finalizers
     verbs:
       - update
@@ -162,7 +160,6 @@ rules:
       - tcologspolicies/status
       - tcorumpolicies/status
       - tcotracespolicies/status
-      - viewfolders/status
       - views/status
     verbs:
       - get
@@ -177,4 +174,30 @@ rules:
       - list
       - watch
   # BEGIN generated kinds
+  - apiGroups:
+      - coralogix.com
+    resources:
+      - viewfolders
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - coralogix.com
+    resources:
+      - viewfolders/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - coralogix.com
+    resources:
+      - viewfolders/status
+    verbs:
+      - get
+      - patch
+      - update
   # END generated kinds
