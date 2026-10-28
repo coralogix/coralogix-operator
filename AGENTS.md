@@ -65,6 +65,7 @@ cd tools/opgen && go run ./cmd/opgen check \
 - Do not hand-edit generated files. Change the contract or the generator, and run `make codegen`.
 - `tools/opgen/kinds/<kind>/e2e.yaml` holds only the e2e values that the contract cannot state.
 - A field with a line in `behavior-overrides.yaml` keeps its released behavior. A field without a line follows the contract. A key lands with the first kind that needs it, together with a golden fixture.
+- `tools/opgen/kinds/<kind>/behavior-overrides.yaml` has `resource`, `mode` (`existing` for a kind that users already have, `new` otherwise), and field lines. The only key is `ref`: it makes a string id of another resource a `ResourceIDRef` (`backendRef.id` or `resourceRef`). `ResolveResourceID` in `api/coralogix/v1alpha1/resourceidref.go` resolves it.
 - Goldens: `cd tools/opgen && go test ./internal/generator -update` rewrites them. Review the golden diff like code.
 
 ## Reconciliation
