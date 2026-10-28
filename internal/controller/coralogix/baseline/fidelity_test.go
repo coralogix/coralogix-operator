@@ -163,8 +163,10 @@ func TestRecordFidelity(t *testing.T) {
 	var created []string
 	t.Cleanup(func() {
 		for _, id := range created {
-			// The cases may have deleted it already, so the answer does not matter.
-			_, _, _ = sendRecordRequest(base, apiKey, http.MethodDelete, k.fidelity.deletePath(id), nil)
+			status, _, err := sendRecordRequest(base, apiKey, http.MethodDelete, k.fidelity.deletePath(id), nil)
+			if problem := cleanupProblem(status, err); problem != "" {
+				t.Errorf("cleanup: DELETE %s %s; delete it by hand", k.fidelity.deletePath(id), problem)
+			}
 		}
 	})
 
@@ -193,6 +195,19 @@ func TestRecordFidelity(t *testing.T) {
 	checkNoSecrets(t, recorded, apiKey, base)
 	if err := os.WriteFile(filepath.Join(fidelityDir(k), "recorded.json"), recorded, 0o644); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// cleanupProblem says why a cleanup delete failed, or "" when it worked. A 404 is no problem: a
+// case already deleted the resource.
+func cleanupProblem(status int, err error) string {
+	switch {
+	case err != nil:
+		return fmt.Sprintf("failed: %v", err)
+	case succeeded(status), status == http.StatusNotFound:
+		return ""
+	default:
+		return fmt.Sprintf("returned %d", status)
 	}
 }
 
@@ -436,5 +451,24 @@ func TestNormalizeAnswerCapturesIDOf201(t *testing.T) {
 	}
 	if want := map[string]any{"id": "{{id}}", "name": "cxo-fidelity-a"}; !reflect.DeepEqual(got, want) {
 		t.Fatalf("normalizeAnswer = %v, want %v", got, want)
+	}
+}
+
+func TestCleanupProblemReportsFailedDeletes(t *testing.T) {
+	for _, c := range []struct {
+		status int
+		err    error
+		want   string
+	}{
+		{status: 200, want: ""},
+		{status: 204, want: ""},
+		{status: 404, want: ""},
+		{status: 500, want: "returned 500"},
+		{status: 403, want: "returned 403"},
+		{err: errors.New("connection reset"), want: "failed: connection reset"},
+	} {
+		if got := cleanupProblem(c.status, c.err); got != c.want {
+			t.Errorf("cleanupProblem(%d, %v) = %q, want %q", c.status, c.err, got, c.want)
+		}
 	}
 }
