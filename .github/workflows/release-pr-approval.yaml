@@ -1,0 +1,55 @@
+name: Release PR Approval
+
+# Approves a release PR from `make release-pr` as github-actions[bot], so it needs no human
+# review: it only re-publishes code already reviewed on main. Other PRs are left alone.
+#
+# pull_request_target runs this file and the check script from main, never from the PR, so a
+# PR cannot change what gets approved. Nothing from the PR is checked out or run; the diff is
+# read through the API.
+#
+# The approval counts only while "Allow GitHub Actions to create and approve pull requests" is
+# enabled for the repository.
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches:
+      - main
+
+permissions: {}
+
+jobs:
+  approve:
+    name: Approve release PR
+    if: >-
+      startsWith(github.head_ref, 'prepare-v') &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      PR: ${{ github.event.pull_request.number }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Check the diff
+        run: |
+          set -euo pipefail
+          base_version=$(yq eval '.version' charts/coralogix-operator/Chart.yaml)
+          gh api "repos/$GH_REPO/compare/main...$HEAD_SHA" -H "Accept: application/vnd.github.diff" |
+            scripts/check-release-pr.sh "$base_version"
+
+      # Pinned to the checked commit: a later push needs its own approval.
+      - name: Approve
+        run: |
+          gh api -X POST "repos/$GH_REPO/pulls/$PR/reviews" -f event=APPROVE -f commit_id="$HEAD_SHA" \
+            -f body="Release PR: only the version changes. Approved by the Release PR Approval workflow." \
+            --silent
