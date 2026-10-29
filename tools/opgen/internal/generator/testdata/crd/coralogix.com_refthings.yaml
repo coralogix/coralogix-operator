@@ -79,6 +79,8 @@ spec:
                 x-kubernetes-validations:
                 - message: Exactly one of backendRef or resourceRef must be set
                   rule: has(self.backendRef) != has(self.resourceRef)
+                - message: backendRef.id must not be empty
+                  rule: '!has(self.backendRef) || size(self.backendRef.id) > 0'
               thingRef:
                 description: |-
                   The id of the Thing that it uses.
@@ -109,6 +111,8 @@ spec:
                 x-kubernetes-validations:
                 - message: Exactly one of backendRef or resourceRef must be set
                   rule: has(self.backendRef) != has(self.resourceRef)
+                - message: backendRef.id must not be empty
+                  rule: '!has(self.backendRef) || size(self.backendRef.id) > 0'
             required:
             - name
             - thingRef

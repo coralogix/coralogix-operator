@@ -170,6 +170,19 @@ var _ = Describe("Generated CRD validation", Ordered, func() {
 		Expect(err.Error()).To(ContainSubstring("Exactly one of backendRef or resourceRef must be set"))
 	})
 
+	It("should reject a reference with an empty backendRef id", func(ctx context.Context) {
+		refThing := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{
+			"name":     "empty",
+			"thingRef": map[string]any{"backendRef": map[string]any{"id": ""}},
+		}}}
+		refThing.SetGroupVersionKind(schema.GroupVersionKind{Group: "coralogix.com", Version: "v1alpha1", Kind: "RefThing"})
+		refThing.SetName("empty-backend-id")
+		refThing.SetNamespace("default")
+		err := k8sClient.Create(ctx, refThing)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("backendRef.id must not be empty"))
+	})
+
 	It("should allow a mutable field to change", func(ctx context.Context) {
 		thing := newThing("mutable", minimalSpec())
 		Expect(k8sClient.Create(ctx, thing)).To(Succeed())

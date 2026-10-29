@@ -27,6 +27,7 @@ import (
 // ResourceIDRef refers to another Coralogix resource: by its id, or by the custom resource that
 // manages it. Generated kinds use it for a field that a ref line of the operator generator names.
 // +kubebuilder:validation:XValidation:rule="has(self.backendRef) != has(self.resourceRef)",message="Exactly one of backendRef or resourceRef must be set"
+// +kubebuilder:validation:XValidation:rule="!has(self.backendRef) || size(self.backendRef.id) > 0",message="backendRef.id must not be empty"
 type ResourceIDRef struct {
 	// BackendRef is the id of the resource in Coralogix.
 	// +optional
