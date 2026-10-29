@@ -1,0 +1,100 @@
+{
+  "cases": [
+    {
+      "name": "create, get, replace, delete, delete again, replace after delete",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/data-exploration/views/v1/folders",
+          "body": {
+            "name": "cxo-fidelity-a"
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/data-exploration/views/v1/folders/{{id}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/data-exploration/views/v1/folders",
+          "body": {
+            "id": "{{id}}",
+            "name": "cxo-fidelity-a2"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/data-exploration/views/v1/folders/{{id}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/data-exploration/views/v1/folders/{{id}}"
+        },
+        {
+          "method": "GET",
+          "path": "/data-exploration/views/v1/folders/{{id}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/data-exploration/views/v1/folders/{{id}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/data-exploration/views/v1/folders",
+          "body": {
+            "id": "{{id}}",
+            "name": "cxo-fidelity-a3"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with an empty name",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/data-exploration/views/v1/folders",
+          "body": {
+            "name": ""
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "create with a name over 100 characters",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/data-exploration/views/v1/folders",
+          "body": {
+            "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/data-exploration/views/v1/folders/{{id}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/data-exploration/views/v1/folders/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "replace with an unknown id",
+      "steps": [
+        {
+          "method": "PUT",
+          "path": "/data-exploration/views/v1/folders",
+          "body": {
+            "id": "00000000-0000-4000-8000-00000000dead",
+            "name": "cxo-fidelity-unknown"
+          }
+        }
+      ]
+    }
+  ]
+}
