@@ -58,29 +58,3 @@ func TestAlertSpecAccessPolicyMapping(t *testing.T) {
 		require.JSONEq(t, string(want), string(raw))
 	})
 }
-
-func TestAlertSpecAccessPolicyMayDenyOperator(t *testing.T) {
-	policy := `{"version":"2025-01-01","default":{"permissions":{"alerts:ReadConfig":"grant"}},"rules":[]}`
-
-	for _, tc := range []struct {
-		name        string
-		spec        *AlertSpec
-		managed     bool
-		annotations map[string]string
-		want        bool
-	}{
-		{name: "absent without tombstone or annotation", spec: &AlertSpec{}, managed: false, annotations: nil, want: false},
-		{name: "absent with tombstone", spec: &AlertSpec{}, managed: true, annotations: nil, want: true},
-		{name: "absent with annotation", spec: &AlertSpec{}, managed: false, annotations: map[string]string{AccessPolicyManagedAnnotation: policy}, want: true},
-		{name: "empty without tombstone or annotation", spec: &AlertSpec{AccessPolicy: ptr.To("")}, managed: false, annotations: nil, want: false},
-		{name: "empty with tombstone", spec: &AlertSpec{AccessPolicy: ptr.To("")}, managed: true, annotations: nil, want: true},
-		{name: "empty with annotation (delete in flight, still managed)", spec: &AlertSpec{AccessPolicy: ptr.To("")}, managed: false, annotations: map[string]string{AccessPolicyManagedAnnotation: policy}, want: true},
-		{name: "set without tombstone or annotation", spec: &AlertSpec{AccessPolicy: ptr.To(policy)}, managed: false, annotations: nil, want: true},
-		{name: "set with tombstone", spec: &AlertSpec{AccessPolicy: ptr.To(policy)}, managed: true, annotations: nil, want: true},
-		{name: "nil annotations map", spec: &AlertSpec{}, managed: false, annotations: nil, want: false},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			require.Equal(t, tc.want, tc.spec.AccessPolicyMayDenyOperator(tc.managed, tc.annotations))
-		})
-	}
-}

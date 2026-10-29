@@ -2030,8 +2030,8 @@ When omitted, the policy is not managed and is left unchanged.
 Setting the policy requires the alerts:UpdateAccessPolicy permission on the operator's API key.
 Permissions the policy leaves out are denied. The policy must keep granting the operator's API key alerts:ReadConfig,
 alerts:UpdateConfig and the read/update pair for the alert's type (for example alerts:LogsReadConfig and
-alerts:LogsUpdateConfig for logs alerts). Otherwise the operator
-stops managing the alert and does not recreate it; forcing a recreate leaves the locked alert orphaned.<br/>
+alerts:LogsUpdateConfig for logs alerts). Otherwise the API denies the operator's requests for the alert
+and the Alert stays RemoteSynced=False until the policy grants them again.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -9829,9 +9829,9 @@ AlertSetItemStatus defines the observed state of one alert.
         <td><b>accessPolicyManaged</b></td>
         <td>boolean</td>
         <td>
-          AccessPolicyManaged is set once the operator may have applied an access policy to the remote alert,
-and cleared once it removes it. While set, a not-found response is not treated as a deleted alert,
-because a policy that denies the operator's API key can look the same.<br/>
+          Deprecated: no longer set or read. Operator 2.17.0 set it while an access policy was applied, to avoid
+recreating the alert on a not-found response. The API answers a policy denial with 403, not 404, so the
+operator now recreates a deleted alert regardless. A value written by 2.17.0 may remain and has no effect.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -22467,8 +22467,8 @@ When omitted, the policy is not managed and is left unchanged.
 Setting the policy requires the alerts:UpdateAccessPolicy permission on the operator's API key.
 Permissions the policy leaves out are denied. The policy must keep granting the operator's API key alerts:ReadConfig,
 alerts:UpdateConfig and the read/update pair for the alert's type (for example alerts:LogsReadConfig and
-alerts:LogsUpdateConfig for logs alerts). Otherwise the operator
-stops managing the alert and does not recreate it; forcing a recreate leaves the locked alert orphaned.<br/>
+alerts:LogsUpdateConfig for logs alerts). Otherwise the API denies the operator's requests for the alert
+and the Alert stays RemoteSynced=False until the policy grants them again.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -30218,9 +30218,9 @@ AlertStatus defines the observed state of Alert
         <td><b>accessPolicyManaged</b></td>
         <td>boolean</td>
         <td>
-          AccessPolicyManaged is set once the operator may have applied an access policy to the remote alert,
-and cleared once it removes it. While set, a not-found response is not treated as a deleted alert,
-because a policy that denies the operator's API key can look the same.<br/>
+          Deprecated: no longer set or read. Operator 2.17.0 set it while an access policy was applied, to avoid
+recreating the alert on a not-found response. The API answers a policy denial with 403, not 404, so the
+operator now recreates a deleted alert regardless. A value written by 2.17.0 may remain and has no effect.<br/>
         </td>
         <td>false</td>
       </tr><tr>

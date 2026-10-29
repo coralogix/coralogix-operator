@@ -1085,7 +1085,6 @@ var _ = Describe("Alert access policy", Ordered, func() {
 		fetched := waitAlertReconciled(ctx, crClient, alertName, created.Generation)
 		Expect(fetched.Status.ID).ToNot(BeNil())
 		alertID = *fetched.Status.ID
-		Expect(fetched.Status.AccessPolicyManaged).To(BeTrue())
 		Eventually(func(g Gomega) {
 			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, ptr.To(alertAccessPolicyP1))
 		}, time.Minute, time.Second).Should(Succeed())
@@ -1100,7 +1099,7 @@ var _ = Describe("Alert access policy", Ordered, func() {
 
 		By("Omitting the policy while renaming the alert")
 		renamedAlertName = alertName + " renamed"
-		fetched = patchAlert(ctx, func(spec *coralogixv1beta1.AlertSpec) {
+		patchAlert(ctx, func(spec *coralogixv1beta1.AlertSpec) {
 			spec.AccessPolicy = nil
 			spec.Name = renamedAlertName
 		})
@@ -1113,16 +1112,14 @@ var _ = Describe("Alert access policy", Ordered, func() {
 			g.Expect(ok).To(BeTrue())
 			g.Expect(alertDef.AlertDefProperties.GetName()).To(Equal(renamedAlertName))
 		}, time.Minute, time.Second).Should(Succeed())
-		Expect(fetched.Status.AccessPolicyManaged).To(BeTrue())
 		Eventually(func(g Gomega) {
 			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, ptr.To(alertAccessPolicyP2))
 		}, time.Minute, time.Second).Should(Succeed())
 
 		By("Setting the policy to empty to delete the remote policy")
-		fetched = patchAlert(ctx, func(spec *coralogixv1beta1.AlertSpec) {
+		patchAlert(ctx, func(spec *coralogixv1beta1.AlertSpec) {
 			spec.AccessPolicy = ptr.To("")
 		})
-		Expect(fetched.Status.AccessPolicyManaged).To(BeFalse())
 		Eventually(func(g Gomega) {
 			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, nil)
 		}, time.Minute, time.Second).Should(Succeed())
@@ -1146,10 +1143,9 @@ var _ = Describe("Alert access policy", Ordered, func() {
 		}, time.Minute, time.Second).Should(Succeed())
 
 		By("Re-adding P1")
-		fetched = patchAlert(ctx, func(spec *coralogixv1beta1.AlertSpec) {
+		patchAlert(ctx, func(spec *coralogixv1beta1.AlertSpec) {
 			spec.AccessPolicy = ptr.To(alertAccessPolicyP1)
 		})
-		Expect(fetched.Status.AccessPolicyManaged).To(BeTrue())
 		Eventually(func(g Gomega) {
 			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, ptr.To(alertAccessPolicyP1))
 		}, time.Minute, time.Second).Should(Succeed())
@@ -1160,6 +1156,22 @@ var _ = Describe("Alert access policy", Ordered, func() {
 			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, ptr.To(alertAccessPolicyP2))
 		}, time.Minute, time.Second).Should(Succeed())
 		bumpAlertAnnotations(ctx)
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, ptr.To(alertAccessPolicyP1))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Deleting the remote alert externally, then expecting it recreated with P1")
+		_, httpResp, err := openAPIAlerts.AlertDefsServiceDeleteAlertDef(ctx, alertID).Execute()
+		Expect(oapicxsdk.NewAPIError(httpResp, err)).ToNot(HaveOccurred())
+		deletedID := alertID
+		bumpAlertAnnotations(ctx)
+		Eventually(func(g Gomega) {
+			current := &coralogixv1beta1.Alert{}
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, current)).To(Succeed())
+			g.Expect(current.Status.ID).ToNot(BeNil())
+			g.Expect(*current.Status.ID).ToNot(Equal(deletedID))
+			alertID = *current.Status.ID
+		}, 2*time.Minute, time.Second).Should(Succeed())
 		Eventually(func(g Gomega) {
 			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, ptr.To(alertAccessPolicyP1))
 		}, time.Minute, time.Second).Should(Succeed())
@@ -1185,7 +1197,6 @@ var _ = Describe("Alert access policy", Ordered, func() {
 		fetched := waitAlertReconciled(ctx, crClient, emptyName, created.Generation)
 		Expect(fetched.Status.ID).ToNot(BeNil())
 		emptyID := *fetched.Status.ID
-		Expect(fetched.Status.AccessPolicyManaged).To(BeFalse())
 		Eventually(func(g Gomega) {
 			expectAlertPolicy(ctx, g, openAPIAlerts, emptyID, nil)
 		}, time.Minute, time.Second).Should(Succeed())
