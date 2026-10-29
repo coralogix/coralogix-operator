@@ -12,11 +12,14 @@ import (
 	"github.com/coralogix/coralogix-management-sdk/iac/issue"
 )
 
-// handwrittenCollisions reports each top-level name of a generated Go file that a handwritten file
-// of the same package declares. The operator would not compile, so the run stops before it writes.
-func handwrittenCollisions(root string, files map[string][]byte) issue.Report {
+// nameCollisions reports each top-level name of a generated Go file that a handwritten file of the
+// same package declares, or that another generated file of the same package declares, for example
+// two kinds that both make a type ViewFolder. The operator would not compile, so the run stops
+// before it writes.
+func nameCollisions(root string, files map[string][]byte) issue.Report {
 	var report issue.Report
 	handwritten := map[string]map[string]string{} // directory → name → file
+	generated := map[string]map[string]string{}   // directory and package → name → file
 	for _, path := range sortedKeys(files) {
 		if filepath.Ext(path) != ".go" {
 			continue
@@ -29,12 +32,23 @@ func handwrittenCollisions(root string, files map[string][]byte) issue.Report {
 		if err != nil {
 			continue // rendering already parsed every file
 		}
+		pkg := dir + " " + f.Name.Name
+		if _, ok := generated[pkg]; !ok {
+			generated[pkg] = map[string]string{}
+		}
 		for _, name := range topLevelNames(f) {
 			if other, ok := handwritten[dir][name]; ok {
 				report = append(report, issue.Issue{Code: codeNameCollision, Location: path,
 					Message:     fmt.Sprintf("the generated %s is declared in the handwritten file %s", name, other),
 					Remediation: "Rename the handwritten declaration, or the component or field in the API contract."})
 			}
+			if other, ok := generated[pkg][name]; ok {
+				report = append(report, issue.Issue{Code: codeNameCollision, Location: path,
+					Message:     fmt.Sprintf("the generated %s is also declared in the generated file %s", name, other),
+					Remediation: "Rename the component or field in the API contract of one of the two kinds."})
+				continue
+			}
+			generated[pkg][name] = path
 		}
 	}
 	return report

@@ -222,3 +222,21 @@ func TestHandwrittenNameCollision(t *testing.T) {
 		t.Fatalf("a failed run wrote a file: %v", err)
 	}
 }
+
+// Two kinds of one run that declare the same Go name stop the run before it writes. The kind
+// ThingConfig makes the root type ThingConfig, and the kind Thing makes it for its component.
+func TestGeneratedNameCollision(t *testing.T) {
+	root, input := syntheticRoot(t)
+	kinds := "kinds:\n  - kind: Thing\n    resource: Thing\n  - kind: ThingConfig\n    resource: PatchThing\n"
+	if err := os.WriteFile(filepath.Join(root, "tools", "opgen", "kinds.yaml"), []byte(kinds), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	err := generateFromInput(input, root, root)
+	wantCode(t, err, codeNameCollision)
+	if !strings.Contains(err.Error(), "ThingConfig is also declared in the generated file") {
+		t.Fatalf("want the clash between the two kinds, got:\n%v", err)
+	}
+	if _, err := os.Stat(filepath.Join(root, "api", "coralogix", "v1alpha1", "thing_types.go")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("a failed run wrote a file: %v", err)
+	}
+}

@@ -109,7 +109,7 @@ func generateFromInput(input source.Input, root, loadDir string) error {
 	if err != nil {
 		return err
 	}
-	if report := handwrittenCollisions(root, out.files); len(report) != 0 {
+	if report := nameCollisions(root, out.files); len(report) != 0 {
 		return &EligibilityError{Report: report.Normalize()}
 	}
 	return publish(root, out)
