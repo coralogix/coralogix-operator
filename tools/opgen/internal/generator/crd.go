@@ -125,8 +125,8 @@ func groupRules(t *crType, groups []model.OneOfGroup, path string) error {
 // field builds one field of the Go type owner. inItem is true inside a list item or a map value,
 // where kubectl cannot compare a value with its old value.
 func (b *builder) field(owner, name, description string, t *model.Type, required bool, path string, inItem bool) (*crField, error) {
-	if len(t.Wrappers) != 0 || t.Keyed != nil {
-		return nil, unsupported(path, "wrapper and keyedBy values are not supported yet")
+	if err := wrapped(t, path); err != nil {
+		return nil, err
 	}
 	f := &crField{API: name, JSON: name, GoName: goName(name), Optional: !required, Doc: docLines(description), typ: t}
 	if !required {
@@ -181,8 +181,20 @@ func (b *builder) field(owner, name, description string, t *model.Type, required
 	return f, nil
 }
 
+// wrapped rejects a value that the API holds in a wrapper object or keys by a property: the
+// renderer would write the bare value and lose the wrapper.
+func wrapped(t *model.Type, path string) error {
+	if len(t.Wrappers) != 0 || t.Keyed != nil {
+		return unsupported(path, "wrapper and keyedBy values are not supported yet")
+	}
+	return nil
+}
+
 // elemType is the Go type of the items of a list or the values of a map.
 func (b *builder) elemType(t *model.Type, path string, f *crField) (string, error) {
+	if err := wrapped(t, path+"[]"); err != nil {
+		return "", err
+	}
 	switch t.Kind {
 	case model.Object, model.OneOf:
 		obj, err := b.object(t, path, true)

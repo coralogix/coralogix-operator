@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/coralogix/coralogix-management-sdk/iac/model"
+
 	"github.com/coralogix/coralogix-operator/v2/tools/opgen/internal/version"
 )
 
@@ -255,5 +257,19 @@ func TestGeneratedNameCollision(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(root, "api", "coralogix", "v1alpha1", "thing_types.go")); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("a failed run wrote a file: %v", err)
+	}
+}
+
+// A list item or a map value in a wrapper stops the renderer, as a wrapped field does. Only a
+// behavior-overrides line makes a wrapper, so the test builds the type itself.
+func TestWrappedElementIsUnsupported(t *testing.T) {
+	item := &model.Type{Kind: model.String, Wrappers: []model.Wrapper{{}}}
+	for _, kind := range []model.Kind{model.List, model.Map} {
+		b := &builder{kind: "Thing", types: map[string]*crType{}, enums: map[string]*enumMap{}}
+		_, err := b.field("Thing", "tags", "", &model.Type{Kind: kind, Elem: item}, false, "spec.tags", false)
+		s, ok := isShapeError(err)
+		if !ok || s.code != codeShapeUnsupported || s.path != "spec.tags[]" {
+			t.Errorf("%s: want %s at spec.tags[], got %v", kind, codeShapeUnsupported, err)
+		}
 	}
 }
