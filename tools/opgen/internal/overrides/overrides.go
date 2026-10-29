@@ -47,6 +47,10 @@ type File struct {
 	API API `yaml:"api"`
 	// Types has one entry per OpenAPI component.
 	Types map[string]Type `yaml:"types"`
+
+	// apiNode is the api section as the file writes it, nil without one. A Go bool cannot tell a
+	// written false from a missing key, so the checks of the api keys read the node.
+	apiNode *yaml.Node
 }
 
 // Validators is the validators section.
@@ -98,6 +102,11 @@ func Parse(data []byte) (*File, error) {
 		}
 		return nil, fmt.Errorf("%s: %w", FileName, err)
 	}
+	var doc yaml.Node
+	if err := yaml.Unmarshal(data, &doc); err != nil {
+		return nil, fmt.Errorf("%s: %w", FileName, err)
+	}
+	f.apiNode = section(&doc, "api")
 	if err := f.check(); err != nil {
 		return nil, fmt.Errorf("%s: %w", FileName, err)
 	}
@@ -132,20 +141,54 @@ func (f *File) check() error {
 	return nil
 }
 
-// checkAPI accepts only the API keys that the operator renderer supports. A new kind has none.
+// checkAPI accepts only the API keys that the operator renderer supports, each with a value that
+// changes the generated code. A new kind has no api section.
 func (f *File) checkAPI() error {
-	if err := f.API.Check(); err != nil {
-		return err
+	if f.apiNode == nil {
+		return nil
 	}
-	rest := f.API.API
-	rest.UpdateIDInBody = false
-	if !reflect.DeepEqual(rest, iacoverrides.API{}) {
-		return errors.New("api: opgen supports only api.updateIDInBody so far; another key lands with the first kind that needs it")
+	if f.Mode == ModeNew {
+		return errors.New("api: a new kind follows the contract, so mode new has no api section")
 	}
-	if f.Mode == ModeNew && f.API.UpdateIDInBody {
-		return errors.New("api: a new kind follows the contract, so mode new has no api keys")
+	if f.apiNode.Kind != yaml.MappingNode || len(f.apiNode.Content) == 0 {
+		return errors.New("api: the section sets no key; delete it")
+	}
+	for i := 0; i < len(f.apiNode.Content); i += 2 {
+		key, value := f.apiNode.Content[i].Value, f.apiNode.Content[i+1]
+		if key != "updateIDInBody" {
+			return fmt.Errorf("api.%s: opgen supports only api.updateIDInBody so far; another key lands with the first kind that needs it", key)
+		}
+		if zeroValue(value) {
+			return fmt.Errorf("api.%s: %q is the default and changes nothing; delete the line", key, value.Value)
+		}
+	}
+	return f.API.Check()
+}
+
+// section returns the value of a top-level key of the document, nil when the file has no such key.
+func section(doc *yaml.Node, key string) *yaml.Node {
+	if doc.Kind != yaml.DocumentNode || len(doc.Content) == 0 || doc.Content[0].Kind != yaml.MappingNode {
+		return nil
+	}
+	root := doc.Content[0]
+	for i := 0; i+1 < len(root.Content); i += 2 {
+		if root.Content[i].Value == key {
+			return root.Content[i+1]
+		}
 	}
 	return nil
+}
+
+// zeroValue reports whether a node is false, 0, "", null, or empty: the value a missing key has.
+func zeroValue(n *yaml.Node) bool {
+	if n.Kind == yaml.MappingNode || n.Kind == yaml.SequenceNode {
+		return len(n.Content) == 0
+	}
+	var v any
+	if err := n.Decode(&v); err != nil {
+		return false
+	}
+	return v == nil || reflect.ValueOf(v).IsZero()
 }
 
 // Policy returns the contract rules of the kind: the rules of a released resource with the API keys

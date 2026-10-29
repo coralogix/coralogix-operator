@@ -144,6 +144,27 @@ func TestValidatorsAndAPIKeys(t *testing.T) {
 			code: codeOverrideInvalid,
 		},
 		{
+			name: "an api key that opgen does not support yet, set to false",
+			edit: func(t *testing.T, s string) string {
+				return replaceOnce(t, s, "  updateIDInBody: true", "  updateIDInBody: true\n  clientSetID: false")
+			},
+			code: codeOverrideInvalid,
+		},
+		{
+			name: "api.updateIDInBody set to false",
+			edit: func(t *testing.T, s string) string {
+				return replaceOnce(t, s, "  updateIDInBody: true", "  updateIDInBody: false")
+			},
+			code: codeOverrideInvalid,
+		},
+		{
+			name: "an empty api section",
+			edit: func(t *testing.T, s string) string {
+				return replaceOnce(t, s, "api:\n  updateIDInBody: true   # Replace sends the id in the body\n", "api: {}\n")
+			},
+			code: codeOverrideInvalid,
+		},
+		{
 			name: "mode existing without validators.inferred",
 			edit: func(t *testing.T, s string) string {
 				return replaceOnce(t, s, "validators:\n  inferred: false        # the released kind has no length or bound limits\n", "")
@@ -154,6 +175,15 @@ func TestValidatorsAndAPIKeys(t *testing.T) {
 			name: "mode new with an api key",
 			edit: func(t *testing.T, s string) string {
 				s = replaceOnce(t, s, "validators:\n  inferred: false        # the released kind has no length or bound limits\n", "")
+				return replaceOnce(t, s, "mode: existing", "mode: new")
+			},
+			code: codeOverrideInvalid,
+		},
+		{
+			name: "mode new with an api key set to false",
+			edit: func(t *testing.T, s string) string {
+				s = replaceOnce(t, s, "validators:\n  inferred: false        # the released kind has no length or bound limits\n", "")
+				s = replaceOnce(t, s, "  updateIDInBody: true", "  updateIDInBody: false")
 				return replaceOnce(t, s, "mode: existing", "mode: new")
 			},
 			code: codeOverrideInvalid,
