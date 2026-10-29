@@ -1,0 +1,5 @@
+kinds:
+  - kind: Thing
+    resource: Thing
+  - kind: PatchThing
+    resource: PatchThing
