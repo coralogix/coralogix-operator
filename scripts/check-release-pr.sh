@@ -10,22 +10,40 @@ base_version="$1"
 chart="charts/coralogix-operator/Chart.yaml"
 expected=$(printf '%s\n' cmd/main.go "$chart" charts/coralogix-operator/README.md | sort)
 
-files=()
-removed=()
-added=()
-while IFS= read -r line; do
-  case "$line" in
-    "diff --git "*) files+=("${line##* b/}") ;;
-    "--- "* | "+++ "*) ;;
-    -*) removed+=("${line:1}") ;;
-    +*) added+=("${line:1}") ;;
-  esac
-done
-
 fail() {
   echo "not a release PR: $*" >&2
   exit 1
 }
+
+# A file's header runs from its "diff --git" line to its first hunk; only lines inside hunks
+# count as changes, so an added "++ ..." line can't pass for a "+++" header. A header line
+# other than index and the plain ---/+++ lines (a mode change, rename, new or deleted file) is
+# rejected.
+files=()
+removed=()
+added=()
+path=""
+in_header=false
+while IFS= read -r line; do
+  if [[ "$line" == "diff --git "* ]]; then
+    path="${line##* b/}"
+    files+=("$path")
+    in_header=true
+  elif $in_header; then
+    case "$line" in
+      "@@ "*) in_header=false ;;
+      "index "* | "--- a/$path" | "+++ b/$path") ;;
+      *) fail "unexpected header line in $path: $line" ;;
+    esac
+  else
+    case "$line" in
+      -*) removed+=("${line:1}") ;;
+      +*) added+=("${line:1}") ;;
+      " "* | "@@ "* | "\\ No newline at end of file") ;;
+      *) fail "unexpected diff line in $path: $line" ;;
+    esac
+  fi
+done
 
 if [[ "$(printf '%s\n' "${files[@]}" | sort)" != "$expected" ]]; then
   fail "it changes $(printf '%s ' "${files[@]}")instead of exactly $(echo "$expected" | tr '\n' ' ')"
