@@ -9826,6 +9826,15 @@ AlertSetItemStatus defines the observed state of one alert.
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>accessPolicyManaged</b></td>
+        <td>boolean</td>
+        <td>
+          Deprecated: no longer set or read. Operator 2.17.0 set it while an access policy was applied, to avoid
+recreating the alert on a not-found response. The API answers a policy denial with 403, not 404, so the
+operator now recreates a deleted alert regardless. A value written by 2.17.0 may remain and has no effect.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
@@ -30206,6 +30215,15 @@ AlertStatus defines the observed state of Alert
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>accessPolicyManaged</b></td>
+        <td>boolean</td>
+        <td>
+          Deprecated: no longer set or read. Operator 2.17.0 set it while an access policy was applied, to avoid
+recreating the alert on a not-found response. The API answers a policy denial with 403, not 404, so the
+operator now recreates a deleted alert regardless. A value written by 2.17.0 may remain and has no effect.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#alertstatusconditionsindex">conditions</a></b></td>
         <td>[]object</td>
         <td>

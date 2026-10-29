@@ -368,6 +368,12 @@ type AlertStatus struct {
 	// +optional
 	ID *string `json:"id,omitempty"`
 
+	// Deprecated: no longer set or read. Operator 2.17.0 set it while an access policy was applied, to avoid
+	// recreating the alert on a not-found response. The API answers a policy denial with 403, not 404, so the
+	// operator now recreates a deleted alert regardless. A value written by 2.17.0 may remain and has no effect.
+	// +optional
+	AccessPolicyManaged bool `json:"accessPolicyManaged,omitempty"`
+
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
