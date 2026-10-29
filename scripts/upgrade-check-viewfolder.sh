@@ -1,15 +1,17 @@
 #!/bin/bash
 # Checks that a ViewFolder that the released operator created still works after the upgrade.
 #
-#   before: create the ViewFolder with the released operator and wait for its id.
-#   after:  with the new operator, wait for RemoteSynced with the same id, change the name, wait
-#           for RemoteSynced of the new generation, then delete it and wait until it is gone.
+#   before:  create the ViewFolder with the released operator and wait for its id.
+#   after:   with the new operator, wait for RemoteSynced with the same id, change the name, wait
+#            for RemoteSynced of the new generation, then delete it and wait until it is gone.
+#   cleanup: delete the ViewFolder if a failed step left it, through whichever operator runs, so
+#            no run leaves the folder in Coralogix. It warns with the id when it cannot.
 #
 # NAME is the name of the folder in Coralogix; give each run its own.
 
 set -euo pipefail
 
-mode="${1:?usage: $0 before|after}"
+mode="${1:?usage: $0 before|after|cleanup}"
 cr="upgrade-test-view-folder"
 namespace="default"
 name="${NAME:?NAME is required}"
@@ -74,8 +76,20 @@ after)
     wait_for gone
     echo "The new operator synced, updated, and deleted the folder."
     ;;
+cleanup)
+    if gone; then
+        echo "No folder to clean up."
+        exit 0
+    fi
+    kubectl delete viewfolder "$cr" -n "$namespace" --wait=false
+    if wait_for gone; then
+        echo "The operator deleted the folder."
+        exit 0
+    fi
+    echo "::warning::The upgrade test left the folder $(cat "$id_file" 2>/dev/null || echo "with an unknown id") in Coralogix. Delete it by hand."
+    ;;
 *)
-    echo "usage: $0 before|after"
+    echo "usage: $0 before|after|cleanup"
     exit 2
     ;;
 esac

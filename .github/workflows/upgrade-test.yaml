@@ -115,6 +115,13 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
         run: scripts/upgrade-check-viewfolder.sh after
+      # A failed step before the check skips it, so delete the folder here; no run leaves it in
+      # Coralogix.
+      - name: Delete the ViewFolder of the upgrade test
+        if: always()
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+        run: scripts/upgrade-check-viewfolder.sh cleanup
       - name: Collect Operator Logs
         if: always()
         run: |
