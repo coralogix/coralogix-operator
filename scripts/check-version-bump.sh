@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Checks that a branch raises the operator version above the base branch, and that
-# cmd/main.go and the chart agree on it. Every merge to main is released from that version.
+# Checks the operator version on a branch: cmd/main.go and the chart must agree on it, and a
+# changed version must be above the base branch. Merging a raised version releases it; see
+# `make release-pr`.
 #
 # Usage: scripts/check-version-bump.sh [base-ref]   (default: origin/main)
 set -euo pipefail
@@ -23,10 +24,14 @@ if ! [[ "$chart_version" == "$app_version" && "$chart_version" == "$operator_ver
   exit 1
 fi
 
-if [[ "$chart_version" == "$base_version" ||
-  "$(printf '%s\n%s\n' "$chart_version" "$base_version" | sort -V | tail -n1)" != "$chart_version" ]]; then
-  echo "error: version $chart_version is not above $base_version on $base." >&2
-  echo "Run 'make bump' (patch), or 'make bump BUMP=minor' / 'make bump BUMP=major', and commit the result." >&2
+if [[ "$chart_version" == "$base_version" ]]; then
+  echo "ok: version unchanged; this merge releases nothing"
+  exit 0
+fi
+
+if [[ "$(printf '%s\n%s\n' "$chart_version" "$base_version" | sort -V | tail -n1)" != "$chart_version" ]]; then
+  echo "error: version $chart_version is below $base_version on $base." >&2
+  echo "Merge $base into this branch and run 'make bump' again." >&2
   exit 1
 fi
 

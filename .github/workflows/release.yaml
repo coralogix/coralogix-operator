@@ -1,14 +1,13 @@
 name: Release
 
-# Releases every merge to main whose version is not released yet: the version in
-# charts/coralogix-operator/Chart.yaml, which PRs raise with `make bump` (checked by Version
-# Bump). Publishes the image (also as latest), the chart to JFrog, and a GitHub release that
-# creates the vX.Y.Z tag.
+# Releases a merge to main whose version is not released yet: the version in
+# charts/coralogix-operator/Chart.yaml, which a release PR from `make release-pr` raises.
+# Publishes the image (also as latest), the chart to JFrog, and a GitHub release that creates
+# the vX.Y.Z tag.
 #
 # The tag is created with GITHUB_TOKEN, which does not start other workflows, so the image and
-# chart workflows are called here instead of being triggered by it. A merge whose version is
-# already tagged publishes nothing if it only changes docs, tests or CI, and fails otherwise:
-# that PR reused a released version and needs a new bump.
+# chart workflows are called here instead of being triggered by it. Any other merge
+# keeps a released version and publishes nothing; it ships with the next release PR.
 on:
   push:
     branches:
@@ -50,15 +49,7 @@ jobs:
         run: |
           version=$(yq eval '.version' charts/coralogix-operator/Chart.yaml)
           tag="v$version"
-          if tagged=$(git rev-parse -q --verify "refs/tags/$tag^{commit}"); then
-            # The tag can point at an earlier merge: a docs-only PR (no bump needed), or a PR
-            # that bumped to the same version as one merged before it. Only the first is fine.
-            # Same paths as the Version Bump check ignores.
-            if ! git diff --quiet "$tagged" HEAD -- . ':(exclude)docs' ':(exclude)tests' \
-              ':(exclude).github' ':(glob,exclude)**/*.md'; then
-              echo "::error::$tag is already released from $tagged, and this merge changes what ships. Bump the version in a new PR with 'make bump'."
-              exit 1
-            fi
+          if git rev-parse -q --verify "refs/tags/$tag" > /dev/null; then
             released=true
             echo "$tag is already released; nothing to publish."
           else
