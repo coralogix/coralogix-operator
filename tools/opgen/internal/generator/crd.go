@@ -75,6 +75,27 @@ func presenceRules(spec, t *crType, prefix []string, optionalParent bool) {
 	}
 }
 
+// immutableField returns the path of the first immutable field in t or in an object that it holds,
+// or "" when it has none.
+func immutableField(t *crType, path string, seen map[*crType]bool) string {
+	if seen[t] {
+		return ""
+	}
+	seen[t] = true
+	for _, f := range t.Fields {
+		child := path + "." + f.API
+		if f.immutable {
+			return child
+		}
+		if f.object != nil {
+			if found := immutableField(f.object, child, seen); found != "" {
+				return found
+			}
+		}
+	}
+	return ""
+}
+
 func celMarker(rule, message string) string {
 	return fmt.Sprintf("+kubebuilder:validation:XValidation:rule=%s,message=%s", strconv.Quote(rule), strconv.Quote(message))
 }
@@ -295,6 +316,13 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 	if existing, ok := b.types[name]; ok {
 		if existing.schema != t.Schema {
 			return nil, collision(path, "the components %s and %s both are the Go type %s", existing.schema, t.Schema, name)
+		}
+		// The type was built for another place. A list item or a map value still cannot hold an
+		// immutable field, so check that again here.
+		if inItem {
+			if field := immutableField(existing, path, map[*crType]bool{}); field != "" {
+				return nil, unsupported(field, "kubectl cannot reject a change of an immutable field inside a list item or a map value")
+			}
 		}
 		return existing, nil
 	}

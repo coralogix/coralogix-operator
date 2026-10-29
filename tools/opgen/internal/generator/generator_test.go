@@ -70,6 +70,23 @@ func TestCheckReportsGaps(t *testing.T) {
 			code: "REQUIRED_VALUE_CAN_BE_EMPTY",
 		},
 		{
+			// settings is visited first as a plain field, so the list reuses its Go type.
+			name: "an immutable field in an object that a list also holds",
+			edit: func(t *testing.T, s string) string {
+				for _, c := range []struct{ indent, component string }{
+					{"                ", "ThingSettingsCreate"},
+					{"                ", "ThingSettingsUpdate"},
+					{"        ", "ThingSettings"},
+				} {
+					settings := c.indent + "settings: {$ref: '#/components/schemas/" + c.component + "'}\n"
+					history := c.indent + "history:\n" + c.indent + "  type: array\n" + c.indent + "  items: {$ref: '#/components/schemas/" + c.component + "'}\n"
+					s = replaceOnce(t, s, settings, settings+history)
+				}
+				return s
+			},
+			code: codeShapeUnsupported,
+		},
+		{
 			name: "a number",
 			edit: func(t *testing.T, s string) string {
 				s = replaceOnce(t, s, "weight: {type: integer, format: int32, minimum: 1}", "weight: {type: number, format: double, minimum: 1}")
