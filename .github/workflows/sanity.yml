@@ -54,6 +54,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the version check builds the generator at the base commit
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
@@ -64,6 +66,11 @@ jobs:
         run: go mod download
       - name: Build and test the generator
         run: make opgen-test
+      - name: Test the generator version check
+        run: bash tools/opgen/scripts/check-version-change_test.sh
+      - name: Require a new generator version when its output changes
+        if: github.event_name == 'pull_request'
+        run: tools/opgen/scripts/check-version-change.sh '${{ github.event.pull_request.base.sha }}'
 
   linters:
     name: Linter Checks

@@ -67,6 +67,7 @@ cd tools/opgen && go run ./cmd/opgen check \
 - A field with a line in `behavior-overrides.yaml` keeps its released behavior. A field without a line follows the contract. A key lands with the first kind that needs it, together with a golden fixture.
 - `tools/opgen/kinds/<kind>/behavior-overrides.yaml` has `resource`, `mode` (`existing` for a kind that users already have, `new` otherwise), and field lines. The only key is `ref`: it makes a string id of another resource a `ResourceIDRef` (`backendRef.id` or `resourceRef`). `ResolveResourceID` in `api/coralogix/v1alpha1/resourceidref.go` resolves it.
 - Goldens: `cd tools/opgen && go test ./internal/generator -update` rewrites them. Review the golden diff like code.
+- Version: every generated file names `version.Current` of `tools/opgen/internal/version/version.go`. Give the generator a new version (during beta, the next `-beta.N`) when a change changes what it produces: a generated file, a golden file, or a `check` report. A refactor with the same output keeps the version. CI enforces this with `tools/opgen/scripts/check-version-change.sh`: it builds opgen at the base commit and at the PR, runs both on the same input, and compares the output.
 
 ## Reconciliation
 
