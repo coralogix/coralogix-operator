@@ -52,6 +52,28 @@ func TestOverridesFile(t *testing.T) {
 			t.Errorf("mode new with %q: %v", validators, err)
 		}
 	}
+	// An api key may state its default, false, in either mode. A new kind sets no key to another
+	// value. RefThing has its id in the Replace path, so it needs no api key.
+	for _, tt := range []struct {
+		mode, api string
+		wantErr   bool
+	}{
+		{mode: "existing", api: "api:\n  updateIDInBody: false\n"},
+		{mode: "new", api: "api:\n  updateIDInBody: false\n"},
+		{mode: "new", api: "api:\n  updateIDInBody: true\n", wantErr: true},
+	} {
+		err := checkRefThing(t, func(s string) string {
+			if tt.mode == "new" {
+				s = replaceOnce(t, replaceOnce(t, s, "validators:\n  inferred: true\n", ""), "mode: existing", "mode: new")
+			}
+			return s + tt.api
+		})
+		if tt.wantErr {
+			wantCode(t, err, codeOverrideInvalid)
+		} else if err != nil {
+			t.Errorf("mode %s with %q: %v", tt.mode, tt.api, err)
+		}
+	}
 	tests := []struct {
 		name string
 		edit func(t *testing.T, s string) string
@@ -169,13 +191,6 @@ func TestValidatorsAndAPIKeys(t *testing.T) {
 			code: codeOverrideInvalid,
 		},
 		{
-			name: "api.updateIDInBody set to false",
-			edit: func(t *testing.T, s string) string {
-				return replaceOnce(t, s, "  updateIDInBody: true", "  updateIDInBody: false")
-			},
-			code: codeOverrideInvalid,
-		},
-		{
 			name: "an empty api section",
 			edit: func(t *testing.T, s string) string {
 				return replaceOnce(t, s, "api:\n  updateIDInBody: true   # Replace sends the id in the body\n", "api: {}\n")
@@ -193,15 +208,6 @@ func TestValidatorsAndAPIKeys(t *testing.T) {
 			name: "mode new with an api key",
 			edit: func(t *testing.T, s string) string {
 				s = replaceOnce(t, s, "validators:\n  inferred: false        # the released kind has no length or bound limits\n", "")
-				return replaceOnce(t, s, "mode: existing", "mode: new")
-			},
-			code: codeOverrideInvalid,
-		},
-		{
-			name: "mode new with an api key set to false",
-			edit: func(t *testing.T, s string) string {
-				s = replaceOnce(t, s, "validators:\n  inferred: false        # the released kind has no length or bound limits\n", "")
-				s = replaceOnce(t, s, "  updateIDInBody: true", "  updateIDInBody: false")
 				return replaceOnce(t, s, "mode: existing", "mode: new")
 			},
 			code: codeOverrideInvalid,

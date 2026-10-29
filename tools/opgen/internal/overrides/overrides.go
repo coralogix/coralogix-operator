@@ -142,14 +142,12 @@ func (f *File) check() error {
 	return nil
 }
 
-// checkAPI accepts only the API keys that the operator renderer supports, each with a value that
-// changes the generated code. A new kind has no api section.
+// checkAPI accepts only the API keys that the operator renderer supports. A key may state its
+// default (false), as validators.inferred: true does, but a new kind follows the contract, so it
+// sets no key to another value. A written section must set a key.
 func (f *File) checkAPI() error {
 	if f.apiNode == nil {
 		return nil
-	}
-	if f.Mode == ModeNew {
-		return errors.New("api: a new kind follows the contract, so mode new has no api section")
 	}
 	if f.apiNode.Kind != yaml.MappingNode || len(f.apiNode.Content) == 0 {
 		return errors.New("api: the section sets no key; delete it")
@@ -159,8 +157,8 @@ func (f *File) checkAPI() error {
 		if key != "updateIDInBody" {
 			return fmt.Errorf("api.%s: opgen supports only api.updateIDInBody so far; another key lands with the first kind that needs it", key)
 		}
-		if zeroValue(value) {
-			return fmt.Errorf("api.%s: %q is the default and changes nothing; delete the line", key, value.Value)
+		if f.Mode == ModeNew && !zeroValue(value) {
+			return fmt.Errorf("api.%s: a new kind follows the contract, so mode new sets no api key", key)
 		}
 	}
 	return f.API.Check()
