@@ -380,12 +380,7 @@ func TestApplyBulkReplaceResponseHandlesAllResultTypes(t *testing.T) {
 		NotFoundIds: []string{"missing-id"},
 	}
 
-	resultErrs := applyBulkReplaceResponse(ids, response, statuses, desiredAlertSetItemsByKey([]coralogixv1alpha1.AlertSetItem{
-		minimalAlertSetItem("alpha"),
-		minimalAlertSetItem("bravo"),
-		minimalAlertSetItem("charlie"),
-		minimalAlertSetItem("delta"),
-	}), nil)
+	resultErrs := applyBulkReplaceResponse(ids, response, statuses)
 
 	require.Len(t, resultErrs, 2)
 	require.Equal(t, coralogixv1alpha1.AlertSetItemStateSynced, statuses["alpha"].State)
@@ -636,8 +631,6 @@ func TestDeleteAlertsFallsBackAndPersistsPartialProgress(t *testing.T) {
 	resultErrs := reconciler.deleteAlerts(
 		context.Background(),
 		logr.Discard(),
-		&coralogixv1alpha1.AlertSet{},
-		nil,
 		statuses,
 		[]string{"alpha", "bravo", "charlie"},
 	)
@@ -688,8 +681,6 @@ func TestDeleteAlertsDoesNotFallBackForOtherErrors(t *testing.T) {
 			resultErrs := reconciler.deleteAlerts(
 				context.Background(),
 				logr.Discard(),
-				&coralogixv1alpha1.AlertSet{},
-				nil,
 				statuses,
 				[]string{"alpha"},
 			)

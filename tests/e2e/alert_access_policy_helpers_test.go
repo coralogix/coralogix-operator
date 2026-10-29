@@ -42,7 +42,7 @@ import (
 // permission and denies the ones a policy leaves out, so the operator's API
 // key needs ReadConfig and UpdateConfig plus the type-specific pair for the
 // alert's type (Logs*Config for the logs alerts under test). Without them the
-// alert answers 404 to the key.
+// API denies the key with 403 Permission Denied.
 const (
 	alertAccessPolicyP1 = `{"version":"2025-01-01","default":{"permissions":{"alerts:ReadConfig":"grant","alerts:UpdateConfig":"grant","alerts:LogsReadConfig":"grant","alerts:LogsUpdateConfig":"grant","alerts:ReadAccessPolicy":"grant","alerts:UpdateAccessPolicy":"grant"}},"rules":[]}`
 	// P2 differs from P1 only by also granting alerts:MetricsReadConfig, which

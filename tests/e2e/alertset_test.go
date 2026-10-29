@@ -328,9 +328,6 @@ var _ = Describe("AlertSet access policy", Ordered, func() {
 		Expect(statuses["item-b"].ID).ToNot(BeNil())
 		Expect(statuses["item-c"].ID).ToNot(BeNil())
 		idA, idB, idC := *statuses["item-a"].ID, *statuses["item-b"].ID, *statuses["item-c"].ID
-		Expect(statuses["item-a"].AccessPolicyManaged).To(BeTrue())
-		Expect(statuses["item-b"].AccessPolicyManaged).To(BeFalse())
-		Expect(statuses["item-c"].AccessPolicyManaged).To(BeTrue())
 		Eventually(func(g Gomega) {
 			expectAlertPolicy(ctx, g, openAPIAlerts, idA, ptr.To(alertAccessPolicyP1))
 			expectAlertPolicy(ctx, g, openAPIAlerts, idB, nil)
@@ -349,7 +346,7 @@ var _ = Describe("AlertSet access policy", Ordered, func() {
 
 		By("Omitting the policy on A while renaming it")
 		renamedA := "AlertSet access policy A renamed"
-		fetched = patchItems(ctx, func(items []coralogixv1alpha1.AlertSetItem) {
+		patchItems(ctx, func(items []coralogixv1alpha1.AlertSetItem) {
 			for i := range items {
 				if items[i].Key == "item-a" {
 					items[i].Spec.AccessPolicy = nil
@@ -362,8 +359,6 @@ var _ = Describe("AlertSet access policy", Ordered, func() {
 		Eventually(func(g Gomega) {
 			g.Expect(remoteName(ctx, idA)).To(Equal(renamedA))
 		}, time.Minute, time.Second).Should(Succeed())
-		statuses = alertSetStatusesByKey(fetched.Status.Alerts)
-		Expect(statuses["item-a"].AccessPolicyManaged).To(BeTrue())
 		Eventually(func(g Gomega) {
 			expectAlertPolicy(ctx, g, openAPIAlerts, idA, ptr.To(alertAccessPolicyP2))
 		}, time.Minute, time.Second).Should(Succeed())
@@ -374,7 +369,6 @@ var _ = Describe("AlertSet access policy", Ordered, func() {
 		})
 		statuses = alertSetStatusesByKey(fetched.Status.Alerts)
 		Expect(*statuses["item-c"].ID).To(Equal(idC))
-		Expect(statuses["item-c"].AccessPolicyManaged).To(BeFalse())
 		Eventually(func(g Gomega) {
 			expectAlertPolicy(ctx, g, openAPIAlerts, idC, nil)
 		}, time.Minute, time.Second).Should(Succeed())
@@ -407,7 +401,6 @@ var _ = Describe("AlertSet access policy", Ordered, func() {
 		})
 		statuses = alertSetStatusesByKey(fetched.Status.Alerts)
 		Expect(*statuses["item-a"].ID).To(Equal(idA))
-		Expect(statuses["item-a"].AccessPolicyManaged).To(BeTrue())
 		Eventually(func(g Gomega) {
 			expectAlertPolicy(ctx, g, openAPIAlerts, idA, ptr.To(alertAccessPolicyP2))
 		}, time.Minute, time.Second).Should(Succeed())
@@ -504,7 +497,24 @@ var _ = Describe("AlertSet access policy", Ordered, func() {
 		fetched = waitAlertSetReconciled(ctx, crClient, alertSetName, refreshed.Generation)
 		statuses = alertSetStatusesByKey(fetched.Status.Alerts)
 		Expect(statuses).NotTo(HaveKey("item-d"))
-		Expect(statuses["item-a"].AccessPolicyManaged).To(BeTrue())
+		Eventually(func(g Gomega) {
+			expectAlertPolicy(ctx, g, openAPIAlerts, idA, ptr.To(alertAccessPolicyP1))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Deleting A's remote alert externally, then expecting it recreated with P1")
+		_, httpResp, err := openAPIAlerts.AlertDefsServiceDeleteAlertDef(ctx, idA).Execute()
+		Expect(oapicxsdk.NewAPIError(httpResp, err)).ToNot(HaveOccurred())
+		deletedA := idA
+		bumpAlertSetAnnotations(ctx)
+		Eventually(func(g Gomega) {
+			fresh := &coralogixv1alpha1.AlertSet{}
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertSetName, Namespace: testNamespace}, fresh)).To(Succeed())
+			st := alertSetStatusesByKey(fresh.Status.Alerts)["item-a"]
+			g.Expect(st.State).To(Equal(coralogixv1alpha1.AlertSetItemStateSynced))
+			g.Expect(st.ID).ToNot(BeNil())
+			g.Expect(*st.ID).ToNot(Equal(deletedA))
+			idA = *st.ID
+		}, 2*time.Minute, time.Second).Should(Succeed())
 		Eventually(func(g Gomega) {
 			expectAlertPolicy(ctx, g, openAPIAlerts, idA, ptr.To(alertAccessPolicyP1))
 		}, time.Minute, time.Second).Should(Succeed())

@@ -343,24 +343,14 @@ type AlertSpec struct {
 	// Setting the policy requires the alerts:UpdateAccessPolicy permission on the operator's API key.
 	// Permissions the policy leaves out are denied. The policy must keep granting the operator's API key alerts:ReadConfig,
 	// alerts:UpdateConfig and the read/update pair for the alert's type (for example alerts:LogsReadConfig and
-	// alerts:LogsUpdateConfig for logs alerts). Otherwise the operator
-	// stops managing the alert and does not recreate it; forcing a recreate leaves the locked alert orphaned.
+	// alerts:LogsUpdateConfig for logs alerts). Otherwise the API denies the operator's requests for the alert
+	// and the Alert stays RemoteSynced=False until the policy grants them again.
 	// +optional
 	AccessPolicy *string `json:"accessPolicy,omitempty"`
 
 	// Type of alert.
 	TypeDefinition AlertTypeDefinition `json:"alertType"`
 }
-
-// AccessPolicyManagedAnnotation records on the CR that the operator has applied an access policy
-// to the remote alert. It mirrors status.accessPolicyManaged, but unlike the status field it
-// survives writes from operator versions that predate this field: their typed client drops the
-// unknown status field on decode yet preserves ObjectMeta annotations through the same
-// full-object Update, so the management record cannot be erased by a rolling upgrade.
-// On an Alert the value is the desired spec.accessPolicy at the time of the last applied policy
-// action. On an AlertSet it is a JSON list of the keys of the items whose policy the operator
-// manages, so each item's not-found guard only considers its own record.
-const AccessPolicyManagedAnnotation = "alerts.coralogix.com/access-policy-managed"
 
 // Data source to run the alert on.
 type AlertDataSource struct {
@@ -377,12 +367,6 @@ type AlertDataSource struct {
 type AlertStatus struct {
 	// +optional
 	ID *string `json:"id,omitempty"`
-
-	// AccessPolicyManaged is set once the operator may have applied an access policy to the remote alert,
-	// and cleared once it removes it. While set, a not-found response is not treated as a deleted alert,
-	// because a policy that denies the operator's API key can look the same.
-	// +optional
-	AccessPolicyManaged bool `json:"accessPolicyManaged,omitempty"`
 
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
@@ -1932,20 +1916,6 @@ func (in *AlertSpec) ExtractAccessPolicyAction() *alerts.AccessPolicyAction {
 	default:
 		return &alerts.AccessPolicyAction{Upsert: in.AccessPolicy}
 	}
-}
-
-// AccessPolicyMayDenyOperator reports whether the remote alert may carry a policy the operator applied.
-// A not-found response is then ambiguous: the alert may be deleted, or its policy may deny the operator's API key.
-// managed is the status tombstone; annotations carries the CR's annotations, which record the same
-// fact durably (see AccessPolicyManagedAnnotation) across operator rolling upgrades.
-func (in *AlertSpec) AccessPolicyMayDenyOperator(managed bool, annotations map[string]string) bool {
-	if managed {
-		return true
-	}
-	if _, recorded := annotations[AccessPolicyManagedAnnotation]; recorded {
-		return true
-	}
-	return ptr.Deref(in.AccessPolicy, "") != ""
 }
 
 func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksProperties *GetResourceRefProperties) (*alerts.AlertDefProperties, error) {

@@ -66,12 +66,6 @@ type AlertSetItemStatus struct {
 	// +optional
 	State AlertSetItemState `json:"state,omitempty"`
 
-	// AccessPolicyManaged is set once the operator may have applied an access policy to the remote alert,
-	// and cleared once it removes it. While set, a not-found response is not treated as a deleted alert,
-	// because a policy that denies the operator's API key can look the same.
-	// +optional
-	AccessPolicyManaged bool `json:"accessPolicyManaged,omitempty"`
-
 	// Message describes the latest synchronization failure.
 	// +optional
 	Message string `json:"message,omitempty"`
