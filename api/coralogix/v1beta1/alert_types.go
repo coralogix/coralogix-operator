@@ -352,6 +352,13 @@ type AlertSpec struct {
 	TypeDefinition AlertTypeDefinition `json:"alertType"`
 }
 
+// AccessPolicyManagedAnnotation is the annotation operator 2.17.0 wrote on Alerts and AlertSets
+// that carried an access policy, to avoid recreating them on a not-found response.
+//
+// Deprecated: the operator no longer reads or writes it. The API answers a policy denial with
+// 403, not 404, so a deleted alert is recreated regardless. An existing value has no effect.
+const AccessPolicyManagedAnnotation = "alerts.coralogix.com/access-policy-managed"
+
 // Data source to run the alert on.
 type AlertDataSource struct {
 	//+kubebuilder:validation:MinLength=1
@@ -1922,6 +1929,21 @@ func (in *AlertSpec) ExtractAccessPolicyAction() *alerts.AccessPolicyAction {
 	default:
 		return &alerts.AccessPolicyAction{Upsert: in.AccessPolicy}
 	}
+}
+
+// AccessPolicyMayDenyOperator reports whether the remote alert may carry a policy the operator applied,
+// from the status tombstone, the AccessPolicyManagedAnnotation record, or the spec.
+//
+// Deprecated: the operator no longer uses it. The API answers a policy denial with 403, not 404, so a
+// not-found response always means the alert is absent.
+func (in *AlertSpec) AccessPolicyMayDenyOperator(managed bool, annotations map[string]string) bool {
+	if managed {
+		return true
+	}
+	if _, recorded := annotations[AccessPolicyManagedAnnotation]; recorded {
+		return true
+	}
+	return ptr.Deref(in.AccessPolicy, "") != ""
 }
 
 func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksProperties *GetResourceRefProperties) (*alerts.AlertDefProperties, error) {
