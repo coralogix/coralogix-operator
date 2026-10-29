@@ -19,6 +19,11 @@ echo "base $base: $base_version"
 echo "Chart.yaml version: $chart_version, appVersion: $app_version"
 echo "$main_go OperatorVersion: $operator_version"
 
+if [[ ! "$chart_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  echo "error: version '$chart_version' is not X.Y.Z; run 'make bump' instead of editing it by hand" >&2
+  exit 1
+fi
+
 if ! [[ "$chart_version" == "$app_version" && "$chart_version" == "$operator_version" ]]; then
   echo "error: versions differ; run 'make bump' instead of editing them by hand" >&2
   exit 1
