@@ -91,6 +91,8 @@ $ make release-pr BUMP=major     # 2.17.0 -> 3.0.0
 
 It needs a clean working tree. It branches `prepare-vX.Y.Z` from `origin/main`, runs `make bump`, commits, pushes and opens the PR with `gh` (without `gh`, open the PR yourself), then switches back to your branch.
 
+The `Release PR Approval` workflow approves the PR as `github-actions[bot]` when it changes only the version lines, so it needs no human review. Merge it once the checks pass.
+
 Merging the release PR runs the `Release` workflow: it pushes the `coralogixrepo/coralogix-operator` image (also tagged `latest`), publishes the chart, and creates the GitHub release with the `vX.Y.Z` tag and notes for every PR since the previous one. If a run fails, re-run its failed jobs, or run `Release` on `main` again.
 
 If another PR changes the version before yours merges, merge `main` into the release branch and run `make bump` again.
