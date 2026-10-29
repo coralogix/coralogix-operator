@@ -87,6 +87,15 @@ func TestCheckReportsGaps(t *testing.T) {
 			code: codeShapeUnsupported,
 		},
 		{
+			// The shared module rejects it before the CRD walk, which has no cycle guard.
+			name: "an object that holds itself",
+			edit: func(t *testing.T, s string) string {
+				weight := "        weight: {type: integer, format: int32, minimum: 1}\n"
+				return replaceOnce(t, s, weight, weight+"        child: {$ref: '#/components/schemas/ThingItem'}\n")
+			},
+			code: "SCHEMA_RECURSIVE",
+		},
+		{
 			name: "a number",
 			edit: func(t *testing.T, s string) string {
 				s = replaceOnce(t, s, "weight: {type: integer, format: int32, minimum: 1}", "weight: {type: number, format: double, minimum: 1}")
