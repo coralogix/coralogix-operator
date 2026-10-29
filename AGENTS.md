@@ -66,7 +66,7 @@ cd tools/opgen && go run ./cmd/opgen check \
 - `tools/opgen/kinds/<kind>/e2e.yaml` holds only the e2e values that the contract cannot state.
 - A field with a line in `behavior-overrides.yaml` keeps its released behavior. A field without a line follows the contract. A key lands with the first kind that needs it, together with a golden fixture.
 - `tools/opgen/kinds/<kind>/behavior-overrides.yaml` has `resource`, `mode` (`existing` for a kind that users already have, `new` otherwise), and these keys:
-  - `validators.inferred` (required in mode `existing`): `false` drops the contract limits from the markers. A required field stays required.
+  - `validators.inferred`: `false` drops the contract limits from the markers, for an API whose limits the server does not apply. A required field stays required. Mode `existing` requires the key, `true` or `false`, to state the released validation. Mode `new` keeps the limits by default, so the key is optional there. A `validators` section without the key stops the run.
   - `api.updateIDInBody`: Update has no id in its path, so the generated Update copies the status id into the body.
   - An `api` line must change the generated code: a key set to its default (`false`, empty) stops the run, and mode `new` has no `api` section.
   - `ref` on a field line: it makes a string id of another resource a `ResourceIDRef` (`backendRef.id` or `resourceRef`). `ResolveResourceID` in `api/coralogix/v1alpha1/resourceidref.go` resolves it.

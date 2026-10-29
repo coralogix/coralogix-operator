@@ -51,6 +51,9 @@ type File struct {
 	// apiNode is the api section as the file writes it, nil without one. A Go bool cannot tell a
 	// written false from a missing key, so the checks of the api keys read the node.
 	apiNode *yaml.Node
+	// validatorsNode is the validators section as the file writes it, nil without one. A written
+	// validators: null decodes as a missing section.
+	validatorsNode *yaml.Node
 }
 
 // Validators is the validators section.
@@ -107,6 +110,7 @@ func Parse(data []byte) (*File, error) {
 		return nil, fmt.Errorf("%s: %w", FileName, err)
 	}
 	f.apiNode = section(&doc, "api")
+	f.validatorsNode = section(&doc, "validators")
 	if err := f.check(); err != nil {
 		return nil, fmt.Errorf("%s: %w", FileName, err)
 	}
@@ -123,11 +127,8 @@ func (f *File) check() error {
 	if err := f.checkAPI(); err != nil {
 		return err
 	}
-	if f.Mode == ModeNew && f.Validators != nil {
-		return errors.New("validators: a new kind keeps the contract limits, so mode new has no validators key")
-	}
-	if f.Mode == ModeExisting && (f.Validators == nil || f.Validators.Inferred == nil) {
-		return errors.New("validators.inferred is required: false for a kind whose released validation has no contract limits, and true otherwise")
+	if err := f.checkValidators(); err != nil {
+		return err
 	}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
@@ -175,6 +176,23 @@ func section(doc *yaml.Node, key string) *yaml.Node {
 		if root.Content[i].Value == key {
 			return root.Content[i+1]
 		}
+	}
+	return nil
+}
+
+// checkValidators requires validators.inferred in mode existing, where it states the released
+// validation. A new kind keeps the contract limits by default, so there the section is optional:
+// inferred: false drops the limits of an API whose server does not apply them, and inferred: true
+// states the default. A written section must set the key.
+func (f *File) checkValidators() error {
+	if f.Mode == ModeExisting {
+		if f.Validators == nil || f.Validators.Inferred == nil {
+			return errors.New("validators.inferred is required: false for a kind whose released validation has no contract limits, and true otherwise")
+		}
+		return nil
+	}
+	if f.validatorsNode != nil && (f.Validators == nil || f.Validators.Inferred == nil) {
+		return errors.New("validators: the section sets no key; delete it")
 	}
 	return nil
 }

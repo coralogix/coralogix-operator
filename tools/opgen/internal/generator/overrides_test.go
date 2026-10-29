@@ -34,6 +34,24 @@ func TestOverridesFile(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("mode new: %v", err)
 	}
+	// A new kind keeps the contract limits by default. inferred: false drops them, for an API whose
+	// server does not apply them, and inferred: true states the default. A section without the key
+	// says nothing.
+	for validators, wantErr := range map[string]bool{
+		"validators:\n  inferred: false\n": false,
+		"validators:\n  inferred: true\n":  false,
+		"validators: null\n":               true,
+		"validators: {}\n":                 true,
+	} {
+		err := checkRefThing(t, func(s string) string {
+			return replaceOnce(t, replaceOnce(t, s, "validators:\n  inferred: true\n", validators), "mode: existing", "mode: new")
+		})
+		if wantErr {
+			wantCode(t, err, codeOverrideInvalid)
+		} else if err != nil {
+			t.Errorf("mode new with %q: %v", validators, err)
+		}
+	}
 	tests := []struct {
 		name string
 		edit func(t *testing.T, s string) string
