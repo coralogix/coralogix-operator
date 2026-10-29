@@ -1,0 +1,63 @@
+apiVersion: coralogix.com/v1beta1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/name: alert
+    app.kubernetes.io/instance: alert-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: logs-immediate-alert-access-policy
+spec:
+  name: logs-immediate alert with access policy example
+  description: alert from k8s operator
+  priority: p2
+  entityLabels:
+    alert_type: security
+    security_severity: high
+  # JSON string representing the access policy for this alert. The policy must
+  # keep granting the operator's API key alerts:ReadConfig, alerts:UpdateConfig and the
+  # read/update pair for the alert's type; permissions it leaves out are denied.
+  # Note for Helm template authors: an unset value rendered with `quote` produces
+  # "", which deletes the remote policy. Wrap the field in `{{- with .Values.policy }}`.
+  accessPolicy: |-
+    {
+      "version": "2025-01-01",
+      "default": {
+        "permissions": {
+          "alerts:ReadConfig": "grant",
+          "alerts:ReadAccessPolicy": "grant",
+          "alerts:UpdateConfig": "grant",
+          "alerts:LogsReadConfig": "grant",
+          "alerts:LogsUpdateConfig": "grant",
+          "alerts:UpdateAccessPolicy": "grant"
+        }
+      },
+      "rules": []
+    }
+  alertType:
+    logsImmediate:
+      logsFilter:
+        simpleFilter:
+          luceneQuery: remote_addr_enriched:/.*/
+          labelFilters:
+            applicationName:
+              - operation: includes
+                value: nginx
+              - operation: endsWith
+                value: "1.29"
+            subsystemName:
+              - value: warning
+                operation: is
+              - value: info
+                operation: endsWith
+            severity: [ "warning", "info" ]
+  notificationGroup:
+    router:
+      notifyOn: triggeredAndResolved
+  schedule:
+    timeZone: UTC+02
+    activeOn:
+      dayOfWeek: [ "wednesday", "thursday" ]
+      startTime: 08:30
+      endTime: 20:30

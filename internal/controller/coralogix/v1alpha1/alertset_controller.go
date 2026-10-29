@@ -16,10 +16,12 @@ package v1alpha1
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -172,9 +174,14 @@ func (r *AlertSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	}
 	sort.Strings(removedKeys)
 	if len(removedKeys) > 0 {
-		if cleanupErrs := r.deleteAlerts(ctx, reconcileLog, statusByKey, removedKeys); len(cleanupErrs) > 0 {
+		if cleanupErrs := r.deleteAlerts(ctx, reconcileLog, alertSet, desiredByKey, statusByKey, removedKeys); len(cleanupErrs) > 0 {
 			alertSet.Status.Alerts = sortedAlertSetStatuses(statusByKey)
 			return r.finish(ctx, alertSet, originalStatus, utils.ReasonRemoteDeletionFailed, cleanupErrs)
+		}
+		// The removed items are gone remotely, so their policy records go now rather than with a
+		// later create or replace that may not happen: the write drops keys no longer in the spec.
+		if err := writeAlertSetPolicyRecord(ctx, alertSet, alertSetPolicyRecord(alertSet)); err != nil {
+			reconcileLog.Error(err, "Error pruning the AlertSet access policy records")
 		}
 	}
 
@@ -241,7 +248,7 @@ func (r *AlertSetReconciler) reconcileDeletion(
 		return r.finish(ctx, alertSet, originalStatus, utils.ReasonRemoteDeletionFailed, []error{err})
 	}
 	keys := alertSetStatusKeysWithIDs(statusByKey)
-	if cleanupErrs := r.deleteAlerts(ctx, reconcileLog, statusByKey, keys); len(cleanupErrs) > 0 {
+	if cleanupErrs := r.deleteAlerts(ctx, reconcileLog, alertSet, desiredAlertSetItemsByKey(alertSet.Spec.Alerts), statusByKey, keys); len(cleanupErrs) > 0 {
 		alertSet.Status.Alerts = sortedAlertSetStatuses(statusByKey)
 		return r.finish(ctx, alertSet, originalStatus, utils.ReasonRemoteDeletionFailed, cleanupErrs)
 	}
@@ -284,7 +291,7 @@ func (r *AlertSetReconciler) reconcileSelectorMismatch(
 	if err != nil {
 		return r.finish(ctx, alertSet, originalStatus, utils.ReasonRemoteDeletionFailed, []error{err})
 	}
-	if cleanupErrs := r.deleteAlerts(ctx, reconcileLog, statusByKey, alertSetStatusKeysWithIDs(statusByKey)); len(cleanupErrs) > 0 {
+	if cleanupErrs := r.deleteAlerts(ctx, reconcileLog, alertSet, desiredAlertSetItemsByKey(alertSet.Spec.Alerts), statusByKey, alertSetStatusKeysWithIDs(statusByKey)); len(cleanupErrs) > 0 {
 		alertSet.Status.Alerts = sortedAlertSetStatuses(statusByKey)
 		return r.finish(ctx, alertSet, originalStatus, utils.ReasonRemoteDeletionFailed, cleanupErrs)
 	}
@@ -296,7 +303,11 @@ func (r *AlertSetReconciler) reconcileSelectorMismatch(
 		}
 		return ctrl.Result{}, fmt.Errorf("clear AlertSet status after selector mismatch: %w", err)
 	}
-	if controllerutil.ContainsFinalizer(alertSet, alertSetFinalizer) {
+	// The remote alerts are gone, so their policy records go too: if the set matches again,
+	// recreated items must not inherit stale records.
+	_, recorded := alertSet.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation]
+	delete(alertSet.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation)
+	if controllerutil.ContainsFinalizer(alertSet, alertSetFinalizer) || recorded {
 		controllerutil.RemoveFinalizer(alertSet, alertSetFinalizer)
 		if err := config.GetClient().Update(ctx, alertSet); err != nil {
 			if k8serrors.IsConflict(err) {
@@ -338,12 +349,26 @@ func (r *AlertSetReconciler) createAlerts(
 			itemErrs = append(itemErrs, itemErr)
 			continue
 		}
-		requestItems = append(requestItems, alerts.AlertDefToCreate{AlertDefProperties: *props})
+		requestItems = append(requestItems, alerts.AlertDefToCreate{AlertDefProperties: *props, AccessPolicy: desired.Spec.ExtractCreateAccessPolicy()})
 		requestKeys = append(requestKeys, key)
 	}
 	createdKeys := make(map[string]struct{}, len(requestKeys))
 	if len(requestItems) == 0 {
 		return createdKeys, itemErrs, nil
+	}
+
+	// Recorded before the alerts exist: once created with a policy that denies the operator's API
+	// key, an alert looks deleted, and only a durable record stops a recreate. Without a confirmed
+	// record nothing is created; the next reconcile retries.
+	recordedAhead := alertSetPolicyRecord(alertSet)
+	for _, key := range requestKeys {
+		desired := desiredByKey[key]
+		if desired.Spec.ExtractCreateAccessPolicy() != nil {
+			recordedAhead[key] = struct{}{}
+		}
+	}
+	if err := writeAlertSetPolicyRecord(ctx, alertSet, recordedAhead); err != nil {
+		return createdKeys, itemErrs, err
 	}
 
 	request := alerts.BulkCreateAlertDefinitionsRequest{AlertDefsToCreate: requestItems}
@@ -354,6 +379,23 @@ func (r *AlertSetReconciler) createAlerts(
 	}
 
 	responseErrs := applyBulkCreateResponse(requestKeys, response, statusByKey, createdKeys)
+	recorded := alertSetPolicyRecord(alertSet)
+	for key := range createdKeys {
+		desired := desiredByKey[key]
+		if desired.Spec.ExtractCreateAccessPolicy() != nil {
+			status := statusByKey[key]
+			status.AccessPolicyManaged = true
+			statusByKey[key] = status
+			recorded[key] = struct{}{}
+		} else {
+			// A new remote alert without a policy: a record left from an earlier item with the
+			// same key must not make its later deletion look like a lockout.
+			delete(recorded, key)
+		}
+	}
+	if err := writeAlertSetPolicyRecord(ctx, alertSet, recorded); err != nil {
+		reconcileLog.Error(err, "Error updating the AlertSet access policy records after create")
+	}
 	return createdKeys, append(itemErrs, responseErrs...), nil
 }
 
@@ -414,6 +456,7 @@ func (r *AlertSetReconciler) replaceAlerts(
 	requestItems := make([]alerts.AlertDefToReplace, 0, len(keys))
 	requestIDs := make(map[string]string, len(keys))
 	var itemErrs []error
+	var writeAheadKeys, upsertKeys []string
 	for _, key := range keys {
 		if _, created := createdKeys[key]; created {
 			continue
@@ -436,27 +479,226 @@ func (r *AlertSetReconciler) replaceAlerts(
 			continue
 		}
 		id := *status.ID
-		requestItems = append(requestItems, alerts.AlertDefToReplace{Id: &id, AlertDefProperties: props})
+		policyAction := desired.Spec.ExtractAccessPolicyAction()
+		if policyAction != nil && policyAction.Upsert != nil && !status.AccessPolicyManaged {
+			// Record the policy before sending it: once applied, a policy that denies the operator's API key
+			// makes the alert look deleted, and the record must already exist to stop a recreate.
+			status.AccessPolicyManaged = true
+			statusByKey[key] = status
+			writeAheadKeys = append(writeAheadKeys, key)
+		}
+		if policyAction != nil && policyAction.Upsert != nil {
+			upsertKeys = append(upsertKeys, key)
+		}
+		requestItems = append(requestItems, alerts.AlertDefToReplace{Id: &id, AlertDefProperties: props, AccessPolicy: policyAction})
 		requestIDs[id] = key
 	}
 	if len(requestItems) == 0 {
 		return itemErrs, nil
 	}
 
+	if len(writeAheadKeys) > 0 {
+		alertSet.Status.Alerts = sortedAlertSetStatuses(statusByKey)
+		if err := config.GetClient().Status().Update(ctx, alertSet); err != nil {
+			return itemErrs, fmt.Errorf("error on recording the alertset access policies in status: %w", err)
+		}
+	}
+	// The durable record goes ahead of the request too: if the replace applies a policy but the
+	// response is lost or a server error, only these records survive an old operator's writes
+	// during a rolling upgrade. Keys added here are dropped again only where the API proves the
+	// policy was not applied.
+	recorded := alertSetPolicyRecord(alertSet)
+	var recordedAhead []string
+	for _, key := range upsertKeys {
+		if _, found := recorded[key]; !found {
+			recorded[key] = struct{}{}
+			recordedAhead = append(recordedAhead, key)
+		}
+	}
+	if err := writeAlertSetPolicyRecord(ctx, alertSet, recorded); err != nil {
+		return itemErrs, err
+	}
+
 	request := alerts.BulkReplaceAlertDefinitionsRequest{AlertDefsToReplace: requestItems}
 	reconcileLog.Info("Replacing remote alerts", "count", len(requestItems))
 	response, httpResponse, err := r.alertsAPI().BulkReplace(ctx, request)
 	if err != nil {
-		return itemErrs, fmt.Errorf("bulk replace remote alerts: %w", cxsdk.NewAPIError(httpResponse, err))
+		requestErr := fmt.Errorf("bulk replace remote alerts: %w", cxsdk.NewAPIError(httpResponse, err))
+		if len(writeAheadKeys) > 0 && rejectedBeforeApplying(httpResponse) {
+			// The whole request was refused, so none of the policies recorded ahead of it were
+			// applied. Keeping the records would make a later genuine deletion look like a lockout.
+			// Persisted here: the final status write compares against the pre-reconcile status,
+			// which already has these tombstones cleared, and would skip it.
+			for _, key := range writeAheadKeys {
+				status := statusByKey[key]
+				status.AccessPolicyManaged = false
+				statusByKey[key] = status
+			}
+			alertSet.Status.Alerts = sortedAlertSetStatuses(statusByKey)
+			if statusErr := config.GetClient().Status().Update(ctx, alertSet); statusErr != nil {
+				requestErr = errors.Join(requestErr, fmt.Errorf("roll back the alertset access policy records: %w", statusErr))
+			}
+		}
+		if len(recordedAhead) > 0 && rejectedBeforeApplying(httpResponse) {
+			for _, key := range recordedAhead {
+				delete(recorded, key)
+			}
+			if err := writeAlertSetPolicyRecord(ctx, alertSet, recorded); err != nil {
+				requestErr = errors.Join(requestErr, err)
+			}
+		}
+		return itemErrs, requestErr
 	}
 
-	responseErrs := applyBulkReplaceResponse(requestIDs, response, statusByKey)
+	responseErrs := applyBulkReplaceResponse(requestIDs, response, statusByKey, desiredByKey, recorded)
+	// Items the API reports in failedToReplaceAlertDefs were not replaced, so their policy was not
+	// applied: neither record it nor keep a tombstone this pass wrote ahead for it.
+	failedIDs := map[string]struct{}{}
+	if response != nil {
+		for _, failure := range response.FailedToReplaceAlertDefs {
+			if failure.Id != nil {
+				failedIDs[*failure.Id] = struct{}{}
+			}
+		}
+	}
+	rolledBack := false
+	for id, key := range requestIDs {
+		desired, found := desiredByKey[key]
+		if !found {
+			continue
+		}
+		action := desired.Spec.ExtractAccessPolicyAction()
+		_, failed := failedIDs[id]
+		switch {
+		case action != nil && action.Upsert != nil && failed:
+			if slices.Contains(recordedAhead, key) {
+				delete(recorded, key)
+			}
+			if slices.Contains(writeAheadKeys, key) {
+				status := statusByKey[key]
+				status.AccessPolicyManaged = false
+				statusByKey[key] = status
+				rolledBack = true
+			}
+		case action != nil && action.Upsert != nil:
+			recorded[key] = struct{}{}
+		case action != nil && action.Delete != nil &&
+			statusByKey[key].State == coralogixv1alpha1.AlertSetItemStateSynced && !statusByKey[key].AccessPolicyManaged:
+			// Only once the remote delete succeeded: applyBulkReplaceResponse marks the item synced
+			// and clears its tombstone then.
+			delete(recorded, key)
+		}
+	}
+	if rolledBack {
+		// Persisted here: the final status write compares against the pre-reconcile status and
+		// may skip it.
+		alertSet.Status.Alerts = sortedAlertSetStatuses(statusByKey)
+		if err := config.GetClient().Status().Update(ctx, alertSet); err != nil {
+			responseErrs = append(responseErrs, fmt.Errorf("roll back the alertset access policy records: %w", err))
+		}
+	}
+	if err := writeAlertSetPolicyRecord(ctx, alertSet, recorded); err != nil {
+		reconcileLog.Error(err, "Error updating the AlertSet access policy records after replace")
+	}
 	return append(itemErrs, responseErrs...), nil
+}
+
+// alertSetPolicyRecord returns the item keys recorded in the AlertSet's access policy
+// annotation. The annotation mirrors the Alert controller's: it survives old-binary writes
+// across a rolling upgrade, where the per-item status tombstones would be dropped. A value that
+// is not a JSON list of keys records every current item, the safe direction for the not-found guard.
+func alertSetPolicyRecord(alertSet *coralogixv1alpha1.AlertSet) map[string]struct{} {
+	recorded := map[string]struct{}{}
+	value, found := alertSet.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation]
+	if !found {
+		return recorded
+	}
+	var keys []string
+	if err := json.Unmarshal([]byte(value), &keys); err != nil {
+		for _, item := range alertSet.Spec.Alerts {
+			recorded[item.Key] = struct{}{}
+		}
+		return recorded
+	}
+	for _, key := range keys {
+		recorded[key] = struct{}{}
+	}
+	return recorded
+}
+
+// alertSetItemAnnotations returns the annotations AccessPolicyMayDenyOperator should see for one
+// item: the policy record only when that item is recorded, so a policy on one item never makes
+// another, policy-free item look locked.
+func alertSetItemAnnotations(recorded map[string]struct{}, key string) map[string]string {
+	if _, found := recorded[key]; !found {
+		return nil
+	}
+	return map[string]string{coralogixv1beta1.AccessPolicyManagedAnnotation: ""}
+}
+
+// writeAlertSetPolicyRecord stores the recorded item keys on the AlertSet metadata, dropping keys
+// of items no longer in the spec, and skips the write when nothing changed. A failed write is
+// checked against the stored object, since it may have been committed regardless; either way
+// alertSet then carries the stored metadata and spec, keeping its in-memory status. Callers that
+// are about to apply a policy abort on an error; elsewhere it is retried on the next reconcile.
+func writeAlertSetPolicyRecord(
+	ctx context.Context,
+	alertSet *coralogixv1alpha1.AlertSet,
+	recorded map[string]struct{},
+) error {
+	desired := desiredAlertSetItemsByKey(alertSet.Spec.Alerts)
+	keys := make([]string, 0, len(recorded))
+	for key := range recorded {
+		if _, found := desired[key]; found {
+			keys = append(keys, key)
+		}
+	}
+	sort.Strings(keys)
+	want := ""
+	if len(keys) > 0 {
+		value, err := json.Marshal(keys)
+		if err != nil {
+			return fmt.Errorf("encode the AlertSet access policy record: %w", err)
+		}
+		want = string(value)
+	}
+	matches := func(annotations map[string]string) bool {
+		current, found := annotations[coralogixv1beta1.AccessPolicyManagedAnnotation]
+		return (want == "" && !found) || (found && current == want)
+	}
+	if matches(alertSet.Annotations) {
+		return nil
+	}
+	if want == "" {
+		delete(alertSet.Annotations, coralogixv1beta1.AccessPolicyManagedAnnotation)
+	} else {
+		if alertSet.Annotations == nil {
+			alertSet.Annotations = map[string]string{}
+		}
+		alertSet.Annotations[coralogixv1beta1.AccessPolicyManagedAnnotation] = want
+	}
+	status := alertSet.Status
+	err := config.GetClient().Update(ctx, alertSet)
+	alertSet.Status = status
+	if err == nil {
+		return nil
+	}
+	latest := &coralogixv1alpha1.AlertSet{}
+	if getErr := config.GetClient().Get(ctx, client.ObjectKeyFromObject(alertSet), latest); getErr == nil {
+		latest.ObjectMeta.DeepCopyInto(&alertSet.ObjectMeta)
+		latest.Spec.DeepCopyInto(&alertSet.Spec)
+		if matches(latest.Annotations) {
+			return nil
+		}
+	}
+	return fmt.Errorf("record the AlertSet access policies: %w", err)
 }
 
 func (r *AlertSetReconciler) deleteAlerts(
 	ctx context.Context,
 	reconcileLog logr.Logger,
+	alertSet *coralogixv1alpha1.AlertSet,
+	desiredByKey map[string]coralogixv1alpha1.AlertSetItem,
 	statusByKey map[string]coralogixv1alpha1.AlertSetItemStatus,
 	keys []string,
 ) []error {
@@ -488,7 +730,7 @@ func (r *AlertSetReconciler) deleteAlerts(
 	response, httpResponse, err := r.alertsAPI().BulkDelete(ctx, request)
 	if err != nil {
 		if httpResponse != nil && httpResponse.StatusCode == http.StatusBadRequest {
-			return r.deleteAlertsIndividually(ctx, statusByKey, ids, idToKey)
+			return r.deleteAlertsIndividually(ctx, reconcileLog, alertSet, desiredByKey, statusByKey, ids, idToKey)
 		}
 		apiErr := cxsdk.NewAPIError(httpResponse, err)
 		message := fmt.Sprintf("bulk delete remote alerts: %v", apiErr)
@@ -509,6 +751,11 @@ func (r *AlertSetReconciler) deleteAlerts(
 	}
 	for _, id := range response.NotFoundIds {
 		completedIDs[id] = struct{}{}
+		if key, requested := idToKey[id]; requested {
+			if desired, found := desiredByKey[key]; found && desired.Spec.AccessPolicyMayDenyOperator(statusByKey[key].AccessPolicyManaged, alertSetItemAnnotations(alertSetPolicyRecord(alertSet), key)) {
+				reconcileLog.Info("Remote alert not found; if its access policy denied the operator's API key, it still exists remotely and is now orphaned", "key", key, "id", id)
+			}
+		}
 	}
 	var resultErrs []error
 	for _, id := range ids {
@@ -533,6 +780,9 @@ func (r *AlertSetReconciler) deleteAlerts(
 
 func (r *AlertSetReconciler) deleteAlertsIndividually(
 	ctx context.Context,
+	reconcileLog logr.Logger,
+	alertSet *coralogixv1alpha1.AlertSet,
+	desiredByKey map[string]coralogixv1alpha1.AlertSetItem,
 	statusByKey map[string]coralogixv1alpha1.AlertSetItemStatus,
 	ids []string,
 	idToKey map[string]string,
@@ -546,6 +796,11 @@ func (r *AlertSetReconciler) deleteAlertsIndividually(
 		}
 		apiErr := cxsdk.NewAPIError(httpResponse, err)
 		if httpResponse != nil && httpResponse.StatusCode == http.StatusNotFound {
+			if key, requested := idToKey[id]; requested {
+				if desired, found := desiredByKey[key]; found && desired.Spec.AccessPolicyMayDenyOperator(statusByKey[key].AccessPolicyManaged, alertSetItemAnnotations(alertSetPolicyRecord(alertSet), key)) {
+					reconcileLog.Info("Remote alert not found; if its access policy denied the operator's API key, it still exists remotely and is now orphaned", "key", key, "id", id)
+				}
+			}
 			delete(statusByKey, idToKey[id])
 			continue
 		}
@@ -663,6 +918,8 @@ func applyBulkReplaceResponse(
 	requestIDs map[string]string,
 	response *alerts.BulkReplaceAlertDefsResponse,
 	statusByKey map[string]coralogixv1alpha1.AlertSetItemStatus,
+	desiredByKey map[string]coralogixv1alpha1.AlertSetItem,
+	recorded map[string]struct{},
 ) []error {
 	if response == nil {
 		return []error{errors.New("bulk replace response is empty")}
@@ -683,6 +940,11 @@ func applyBulkReplaceResponse(
 		status := statusByKey[key]
 		status.State = coralogixv1alpha1.AlertSetItemStateSynced
 		status.Message = ""
+		// A requested policy delete is confirmed by a skipped result too: the API reports a
+		// replace with unchanged properties as skipped even when it applied the policy change.
+		if desired, found := desiredByKey[key]; found && desired.Spec.AccessPolicy != nil && *desired.Spec.AccessPolicy == "" {
+			status.AccessPolicyManaged = false
+		}
 		statusByKey[key] = status
 	}
 	for _, replaced := range response.AlertDefs {
@@ -730,6 +992,16 @@ func applyBulkReplaceResponse(
 			continue
 		}
 		seen[id] = struct{}{}
+		if desired, found := desiredByKey[key]; found && desired.Spec.AccessPolicyMayDenyOperator(statusByKey[key].AccessPolicyManaged, alertSetItemAnnotations(recorded, key)) {
+			// Not reset to Pending on purpose: the alert may be locked out by its access policy rather
+			// than deleted, and resetting would recreate it as a duplicate. The ID and the tombstone are kept.
+			message := fmt.Sprintf("remote alert %q with ID %q was not found, or its access policy denies the operator's API key; "+
+				"not recreating it. If it was deleted, remove its ID from status to recreate it; if it is locked, "+
+				"recreating leaves it orphaned", key, id)
+			setAlertSetStatusFailure(statusByKey, key, message)
+			resultErrs = append(resultErrs, errors.New(message))
+			continue
+		}
 		message := fmt.Sprintf("remote alert %q with ID %q was not found", key, id)
 		statusByKey[key] = coralogixv1alpha1.AlertSetItemStatus{
 			Key:     key,
@@ -879,4 +1151,11 @@ func (r *AlertSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&coralogixv1alpha1.AlertSet{}).
 		WithEventFilter(config.GetConfig().Selector.Predicate()).
 		Complete(r)
+}
+
+// rejectedBeforeApplying reports whether a failed bulk request provably changed nothing remotely:
+// a client error other than not-found. A server error may follow a partial apply (the API also
+// answers a batch holding an invalid policy with 500), so it keeps the records.
+func rejectedBeforeApplying(resp *http.Response) bool {
+	return resp != nil && resp.StatusCode >= 400 && resp.StatusCode < 500 && resp.StatusCode != http.StatusNotFound
 }

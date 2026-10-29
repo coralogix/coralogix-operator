@@ -185,6 +185,7 @@ func removeMultipleFields(ctx context.Context, obj client.Object, fieldsList [][
 func clearRemoteStatus(ctx context.Context, obj client.Object) error {
 	return removeMultipleFields(ctx, obj, [][]string{
 		{"status", "id"},
+		{"status", "accessPolicyManaged"}, // Alert
 		{"status", "conditions"},
 		{"status", "printableStatus"},
 		{"status", "externalId"}, // OutboundWebhook
