@@ -7,7 +7,8 @@ name: Release
 #
 # The tag is created with GITHUB_TOKEN, which does not start other workflows, so the image and
 # chart workflows are called here instead of being triggered by it. A merge whose version is
-# already tagged (a docs-only PR, or a run of an older commit) publishes nothing.
+# already tagged publishes nothing if it only changes docs, tests or CI, and fails otherwise:
+# that PR reused a released version and needs a new bump.
 on:
   push:
     branches:
@@ -38,15 +39,26 @@ jobs:
       tag: ${{ steps.version.outputs.tag }}
       released: ${{ steps.version.outputs.released }}
     steps:
+      # Full history and tags, so the tag lookup below is local and cannot fail on the network.
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Read version
         id: version
         run: |
           version=$(yq eval '.version' charts/coralogix-operator/Chart.yaml)
           tag="v$version"
-          if git ls-remote --exit-code --tags origin "refs/tags/$tag" > /dev/null; then
+          if tagged=$(git rev-parse -q --verify "refs/tags/$tag^{commit}"); then
+            # The tag can point at an earlier merge: a docs-only PR (no bump needed), or a PR
+            # that bumped to the same version as one merged before it. Only the first is fine.
+            # Same paths as the Version Bump check ignores.
+            if ! git diff --quiet "$tagged" HEAD -- . ':(exclude)docs' ':(exclude)tests' \
+              ':(exclude).github' ':(glob,exclude)**/*.md'; then
+              echo "::error::$tag is already released from $tagged, and this merge changes what ships. Bump the version in a new PR with 'make bump'."
+              exit 1
+            fi
             released=true
             echo "$tag is already released; nothing to publish."
           else
