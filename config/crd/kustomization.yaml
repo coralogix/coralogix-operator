@@ -34,6 +34,8 @@ resources:
   - bases/coralogix.com_aievaluations.yaml
   - bases/coralogix.com_aicustomevaluations.yaml
   - bases/coralogix.com_configurationgroups.yaml
+  # BEGIN generated kinds
+  # END generated kinds
 #+kubebuilder:scaffold:crdkustomizeresource
 
 #patchesStrategicMerge:

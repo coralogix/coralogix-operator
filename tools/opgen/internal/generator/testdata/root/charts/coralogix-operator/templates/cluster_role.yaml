@@ -1,0 +1,14 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "coralogixOperator.fullname" . }}
+rules:
+  - apiGroups:
+      - coralogix.com
+    resources:
+      - handwrittens
+    verbs:
+      - get
+  # BEGIN generated kinds
+  # END generated kinds

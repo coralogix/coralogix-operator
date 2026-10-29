@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
+	"slices"
 	"strings"
 
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
@@ -14,6 +16,8 @@ import (
 	"github.com/coralogix/coralogix-management-sdk/iac/model"
 	"github.com/coralogix/coralogix-management-sdk/iac/sdkcheck"
 	"github.com/coralogix/coralogix-management-sdk/iac/source"
+
+	"github.com/coralogix/coralogix-operator/v2/tools/opgen/internal/overrides"
 )
 
 // EligibilityError reports every reason that a kind cannot be generated.
@@ -30,6 +34,10 @@ type CheckOptions struct {
 	Kind        string // the custom resource kind; "" uses the resource name
 	Resource    string
 	OpenAPIPath string
+	// E2EPath is the e2e.yaml file of the kind, "" for none.
+	E2EPath string
+	// OverridesPath is the behavior-overrides.yaml file of the kind, "" for none.
+	OverridesPath string
 }
 
 type docType = *v3.Document
@@ -39,6 +47,8 @@ type validated struct {
 	entry    kindEntry
 	resource *model.Resource
 	refs     []sdkcheck.Ref
+	e2e      *e2eFile
+	file     *overrides.File // nil for a kind without a behavior-overrides file
 }
 
 // Generate resolves the SDK that the operator pins and publishes every kind of the kinds file.
@@ -64,16 +74,28 @@ func Check(options CheckOptions) error {
 	if entry.Kind == "" {
 		entry.Kind = options.Resource
 	}
+	e2e := &e2eFile{}
+	if options.E2EPath != "" {
+		if e2e, err = readE2E(options.E2EPath); err != nil {
+			return asEligibility(entry, err)
+		}
+	}
+	file, err := readOverrides(options.OverridesPath)
+	if err != nil {
+		return asEligibility(entry, err)
+	}
 	doc, err := model.Load(data)
 	if err != nil {
 		return &EligibilityError{Report: issue.Report{{Code: "OPENAPI_INVALID", Location: "openapi", Message: err.Error(), Remediation: "Correct the OpenAPI document."}}}
 	}
-	v, err := validate(doc, entry, source.SDKModule)
+	v, err := validate(doc, entry, source.SDKModule, "candidate.invalid/coralogix-operator", e2e, file)
 	if err != nil {
 		return err
 	}
-	_, err = renderAll([]*validated{v})
-	return err
+	if _, err := renderAll([]*validated{v}, source.SDKModule, "candidate.invalid/coralogix-operator"); err != nil {
+		return err
+	}
+	return nil
 }
 
 // generateFromInput generates every listed kind into the operator at root. loadDir is the module
@@ -91,7 +113,20 @@ func generateFromInput(input source.Input, root, loadDir string) error {
 			return fmt.Errorf("read the OpenAPI of the SDK: %w", err)
 		}
 		for _, entry := range kinds {
-			v, err := validate(doc, entry, input.SDKModule)
+			e2e, err := readE2E(filepath.Join(root, entry.dir(), e2eFileName))
+			if err != nil {
+				report = append(report, eligibility(entry, err).Report...)
+				continue
+			}
+			file, err := readOverrides(filepath.Join(root, entry.dir(), overrides.FileName))
+			if err == nil {
+				err = refKindIssues(root, kinds, file)
+			}
+			if err != nil {
+				report = append(report, eligibility(entry, err).Report...)
+				continue
+			}
+			v, err := validate(doc, entry, input.SDKModule, input.Module, e2e, file)
 			if err != nil {
 				report = append(report, eligibility(entry, err).Report...)
 				continue
@@ -105,7 +140,7 @@ func generateFromInput(input source.Input, root, loadDir string) error {
 	if err := checkSDK(all, input, loadDir); err != nil {
 		return err
 	}
-	out, err := renderAll(all)
+	out, err := renderAll(all, input.SDKModule, input.Module)
 	if err != nil {
 		return err
 	}
@@ -116,8 +151,11 @@ func generateFromInput(input source.Input, root, loadDir string) error {
 }
 
 // validate runs the contract checks of iac and the operator checks on one kind.
-func validate(doc docType, entry kindEntry, sdkModule string) (*validated, error) {
-	var policy model.Policy
+func validate(doc docType, entry kindEntry, sdkModule, module string, e2e *e2eFile, file *overrides.File) (*validated, error) {
+	if err := overrideIssues(doc, entry, file); err != nil {
+		return nil, asEligibility(entry, err)
+	}
+	policy := file.Policy()
 	if report := model.ValidateWithPolicy(doc, entry.Resource, model.OperationIDs{}, policy); len(report) != 0 {
 		return nil, &EligibilityError{Report: located(entry, report)}
 	}
@@ -133,8 +171,8 @@ func validate(doc docType, entry kindEntry, sdkModule string) (*validated, error
 	if err != nil {
 		return nil, asEligibility(entry, &shapeError{code: "SDK_SHAPE_UNSUPPORTED", path: "resource", msg: err.Error()})
 	}
-	v := &validated{entry: entry, resource: r, refs: refs}
-	if _, err := renderAll([]*validated{v}); err != nil {
+	v := &validated{entry: entry, resource: r, refs: refs, e2e: e2e, file: file}
+	if _, err := renderAll([]*validated{v}, sdkModule, module); err != nil {
 		return nil, err
 	}
 	return v, nil
@@ -171,16 +209,18 @@ func sdkIssues(refs []sdkcheck.Ref, loaded map[string]*packages.Package, input s
 	})
 }
 
-// renderAll renders every kind.
-func renderAll(all []*validated) (output, error) {
+// renderAll renders every kind and the files that list them.
+func renderAll(all []*validated, sdkModule, module string) (output, error) {
 	out := output{files: map[string][]byte{}}
+	var kinds []*kindData
 	var report issue.Report
 	for _, v := range all {
-		files, err := renderOne(v)
+		files, d, err := renderOne(v, module)
 		if err != nil {
 			report = append(report, eligibility(v.entry, err).Report...)
 			continue
 		}
+		kinds = append(kinds, d)
 		for path, data := range files {
 			out.files[path] = data
 		}
@@ -188,19 +228,97 @@ func renderAll(all []*validated) (output, error) {
 	if len(report) != 0 {
 		return output{}, &EligibilityError{Report: report.Normalize()}
 	}
+	shared, err := renderShared(module, sdkModule+"/go/openapi/cxsdk", kinds)
+	if err != nil {
+		return output{}, err
+	}
+	for path, data := range shared.files {
+		out.files[path] = data
+	}
+	out.blocks = shared.blocks
 	return out, nil
 }
 
-func renderOne(v *validated) (map[string][]byte, error) {
-	d, err := buildKind(v.resource, v.refs, v.entry)
+func renderOne(v *validated, module string) (map[string][]byte, *kindData, error) {
+	d, err := buildKind(v.resource, v.refs, v.entry, module, v.file)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	files, err := renderKind(d)
+	ix, err := indexRefs(v.refs)
 	if err != nil {
-		return nil, &shapeError{code: "RENDERER_OUTPUT_INVALID", path: "renderer.output", msg: err.Error()}
+		return nil, nil, err
 	}
-	return files, nil
+	full, _, e2e, err := buildValues(d, ix, v.e2e)
+	if err != nil {
+		return nil, nil, err
+	}
+	d.E2E = e2e
+	files, err := renderKind(d, full)
+	if err != nil {
+		return nil, nil, &shapeError{code: "RENDERER_OUTPUT_INVALID", path: "renderer.output", msg: err.Error()}
+	}
+	return files, d, nil
+}
+
+// readOverrides reads the behavior-overrides file of a kind. It returns nil when path is "" or the
+// file does not exist: the kind follows the contract alone.
+func readOverrides(path string) (*overrides.File, error) {
+	if path == "" {
+		return nil, nil
+	}
+	data, err := os.ReadFile(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("read %s: %w", path, err)
+	}
+	file, err := overrides.Parse(data)
+	if err != nil {
+		return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName, msg: err.Error()}
+	}
+	return file, nil
+}
+
+// overrideIssues checks that the file is for the resource of the kind, and that each line names a
+// property of a component of the contract. The renderer then checks that each line changes the
+// output.
+func overrideIssues(doc docType, entry kindEntry, file *overrides.File) error {
+	if file == nil {
+		return nil
+	}
+	if file.Resource != entry.Resource {
+		return &shapeError{code: "OVERRIDE_RESOURCE_MISMATCH", path: overrides.FileName,
+			msg: fmt.Sprintf("the file is for resource %q, but the kind is resource %q", file.Resource, entry.Resource)}
+	}
+	for _, line := range file.Lines() {
+		ok := false
+		if doc.Components != nil && doc.Components.Schemas != nil {
+			if proxy, found := doc.Components.Schemas.Get(line.Component); found && proxy.Schema() != nil && proxy.Schema().Properties != nil {
+				_, ok = proxy.Schema().Properties.Get(line.Field)
+			}
+		}
+		if !ok {
+			return &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String(), msg: "the contract has no such property"}
+		}
+	}
+	return nil
+}
+
+// refKindIssues checks that each ref line names a kind of the operator: a generated kind, or a kind
+// whose types file exists.
+func refKindIssues(root string, kinds []kindEntry, file *overrides.File) error {
+	for _, line := range file.Lines() {
+		kind := file.Ref(line.Component, line.Field).Kind
+		if slices.ContainsFunc(kinds, func(k kindEntry) bool { return k.Kind == kind }) {
+			continue
+		}
+		if _, err := os.Stat(filepath.Join(root, apiDir, strings.ToLower(kind)+"_types.go")); err != nil {
+			return &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".ref.kind",
+				msg: fmt.Sprintf("the operator has no kind %s", kind)}
+		}
+	}
+	return nil
 }
 
 // eligibility turns an error of one kind into a report.
@@ -220,6 +338,9 @@ func asEligibility(entry kindEntry, err error) *EligibilityError {
 	remediation := map[string]string{
 		codeShapeUnsupported:         "Use a contract shape that the operator renderer supports, or extend the renderer.",
 		codeNameCollision:            "Rename the component or the field in the API contract.",
+		codeE2EInvalid:               "Fix " + e2eFileName + ".",
+		codeE2ERequired:              "Set the value in " + e2eFileName + ".",
+		codeE2EUnused:                "Delete the line from " + e2eFileName + ", or fix the field path.",
 		"OPERATION_TAG_INCOMPATIBLE": "Give every lifecycle operation exactly one matching SDK package tag.",
 		"SDK_SHAPE_UNSUPPORTED":      "Use OpenAPI shapes that have deterministic generated Go SDK names and types.",
 		"RENDERER_OUTPUT_INVALID":    "Use names and shapes that render as valid formatted Go code.",

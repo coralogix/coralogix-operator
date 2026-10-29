@@ -11,9 +11,9 @@ import (
 	"github.com/coralogix/coralogix-management-sdk/iac/source"
 )
 
-// The types of the synthetic kinds, generated into a copy of the operator, compile with the real
-// operator code and pass controller-gen (make generate manifests). The CRDs that controller-gen
-// writes are the golden CRDs that the envtest test of the operator installs.
+// The synthetic kinds, generated into a copy of the operator, compile with the real operator code
+// and pass controller-gen (make generate manifests). The CRDs that controller-gen writes are the
+// golden CRDs that the envtest test of the operator installs.
 //
 // The test needs controller-gen (make controller-gen, or CONTROLLER_GEN) and the modules of the
 // operator in the module cache. It is skipped in short mode.
@@ -61,10 +61,10 @@ func TestGeneratedKindsBuildInTheOperator(t *testing.T) {
 	run(t, sandbox, controllerGen, `object:headerFile=hack/boilerplate.go.txt`, `paths=./...`)
 	run(t, sandbox, controllerGen, `rbac:roleName=manager-role`, `crd`, `paths=./...`, `output:crd:artifacts:config=config/crd/bases`)
 	run(t, sandbox, "go", "build", "./...")
-	run(t, sandbox, "go", "vet", "./api/...")
+	run(t, sandbox, "go", "vet", "./api/...", "./internal/controller/...", "./internal/utils/...", "./cmd/...", "./tests/e2e/")
 
 	golden := filepath.Join("testdata", "crd")
-	for _, name := range []string{"coralogix.com_things.yaml", "coralogix.com_patchthings.yaml"} {
+	for _, name := range []string{"coralogix.com_things.yaml", "coralogix.com_patchthings.yaml", "coralogix.com_refthings.yaml"} {
 		got, err := os.ReadFile(filepath.Join(sandbox, "config", "crd", "bases", name))
 		if err != nil {
 			t.Fatal(err)
@@ -85,6 +85,15 @@ func TestGeneratedKindsBuildInTheOperator(t *testing.T) {
 			t.Errorf("golden CRD %s differs; run go test ./internal/generator -run TestGeneratedKindsBuildInTheOperator -update:\n%s", name, firstDifference(string(want), string(got)))
 		}
 	}
+	role, err := os.ReadFile(filepath.Join(sandbox, "config", "rbac", "role.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, resource := range []string{"things", "things/finalizers", "things/status", "patchthings"} {
+		if !bytes.Contains(role, []byte("- "+resource+"\n")) {
+			t.Errorf("the role that controller-gen writes has no %s", resource)
+		}
+	}
 }
 
 // overlaySDK builds a copy of the pinned SDK at dir from symbolic links, with the stand-in packages of
@@ -97,7 +106,7 @@ func overlaySDK(t *testing.T, pinned, dir string) {
 	linkExcept(t, filepath.Join(pinned, openapi), filepath.Join(dir, openapi), "gen", "cxsdk")
 	linkExcept(t, filepath.Join(pinned, openapi, "gen"), filepath.Join(dir, openapi, "gen"))
 	linkExcept(t, filepath.Join(pinned, openapi, "cxsdk"), filepath.Join(dir, openapi, "cxsdk"))
-	for _, pkg := range []string{"things_service", "patch_things_service"} {
+	for _, pkg := range []string{"things_service", "patch_things_service", "ref_things_service"} {
 		if err := copyTree(filepath.Join("testdata", "sdk", openapi, "gen", pkg), filepath.Join(dir, openapi, "gen", pkg)); err != nil {
 			t.Fatal(err)
 		}
@@ -106,6 +115,7 @@ func overlaySDK(t *testing.T, pinned, dir string) {
 
 import (
 	patchthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/patch_things_service"
+	refthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/ref_things_service"
 	things "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/things_service"
 )
 
@@ -113,6 +123,10 @@ func (c *ClientSet) Things() *things.ThingsServiceAPIService { return things.New
 
 func (c *ClientSet) PatchThings() *patchthings.PatchThingsServiceAPIService {
 	return patchthings.NewPatchThingsServiceAPIService()
+}
+
+func (c *ClientSet) RefThings() *refthings.RefThingsServiceAPIService {
+	return refthings.NewRefThingsServiceAPIService()
 }
 `
 	if err := os.WriteFile(filepath.Join(dir, openapi, "cxsdk", "opgen_synthetic.go"), []byte(accessors), 0o644); err != nil {

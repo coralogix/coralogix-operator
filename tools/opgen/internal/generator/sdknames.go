@@ -70,6 +70,14 @@ func indexRefs(refs []sdkcheck.Ref) (*refIndex, error) {
 	return ix, nil
 }
 
+func (ix *refIndex) typeRef(path string) (sdkcheck.Ref, error) {
+	ref, ok := ix.types[path]
+	if !ok {
+		return sdkcheck.Ref{}, fmt.Errorf("no SDK type for %s", path)
+	}
+	return ref, nil
+}
+
 func (ix *refIndex) schemaType(schema string) (string, error) {
 	ref, ok := ix.bySchema[schema]
 	if !ok {
@@ -78,12 +86,56 @@ func (ix *refIndex) schemaType(schema string) (string, error) {
 	return ref.Name, nil
 }
 
+// field returns the Go type of the field of owner for the API property name.
+func (ix *refIndex) field(owner, property string) (sdkcheck.Ref, error) {
+	ref, ok := ix.fields[owner+"."+goName(property)]
+	if !ok {
+		return sdkcheck.Ref{}, fmt.Errorf("no SDK field %s.%s", owner, goName(property))
+	}
+	return ref, nil
+}
+
+// method returns the method at path. With owner "", the path must have exactly one method that is
+// not Execute.
+func (ix *refIndex) method(path, owner string) (sdkcheck.Ref, error) {
+	var found []sdkcheck.Ref
+	for _, ref := range ix.methods[path] {
+		if (owner == "" && ref.Name != "Execute") || ref.Owner == owner {
+			found = append(found, ref)
+		}
+	}
+	if len(found) != 1 {
+		return sdkcheck.Ref{}, fmt.Errorf("want one SDK method for %s, found %d", path, len(found))
+	}
+	return found[0], nil
+}
+
 func (ix *refIndex) enumConst(typeName, value string) (string, error) {
 	name := enumConstName(typeName, value)
 	if !ix.consts[name] {
 		return "", fmt.Errorf("no SDK constant %s", name)
 	}
 	return name, nil
+}
+
+// qualify writes an SDK type relative to its package as Go code in another package: "[]Item" is
+// "[]alias.Item", and "*string" stays.
+func qualify(goType, alias string) string {
+	prefix := ""
+	for _, p := range []string{"*", "[]", "map[string]"} {
+		for strings.HasPrefix(goType, p) {
+			prefix, goType = prefix+p, goType[len(p):]
+		}
+	}
+	if builtinTypes[goType] || strings.Contains(goType, ".") {
+		return prefix + goType
+	}
+	return prefix + alias + "." + goType
+}
+
+var builtinTypes = map[string]bool{
+	"string": true, "bool": true, "int32": true, "int64": true, "float32": true, "float64": true,
+	"interface{}": true, "any": true,
 }
 
 func sortedKeys[V any](m map[string]V) []string {

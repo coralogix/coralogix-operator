@@ -4,7 +4,7 @@ package version
 import "strings"
 
 // Current is the semantic version of the generator. Every generated file names it in its header.
-const Current = "v0.1.0-beta.1"
+const Current = "v0.1.0-beta.2"
 
 // Tool is the name of the generator in the header of every generated file.
 const Tool = "coralogix-operator-codegen"

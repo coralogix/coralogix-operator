@@ -36,6 +36,9 @@ type kindList struct {
 	Kinds []kindEntry `yaml:"kinds"`
 }
 
+// dir is the input directory of the kind, relative to the operator root.
+func (k kindEntry) dir() string { return filepath.Join(kindsDir, strings.ToLower(k.Kind)) }
+
 // readKinds reads the kinds file. The list is strict: an unknown key, an invalid or repeated kind,
 // and a directory under kinds/ that names no listed kind are errors.
 func readKinds(root string) ([]kindEntry, error) {

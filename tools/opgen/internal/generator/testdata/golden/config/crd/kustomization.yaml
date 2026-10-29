@@ -1,0 +1,7 @@
+resources:
+  - bases/coralogix.com_handwrittens.yaml
+  # BEGIN generated kinds
+  - bases/coralogix.com_patchthings.yaml
+  - bases/coralogix.com_refthings.yaml
+  - bases/coralogix.com_things.yaml
+  # END generated kinds

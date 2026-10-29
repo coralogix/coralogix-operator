@@ -1,0 +1,4 @@
+# A reference needs an object that exists when the test runs.
+values:
+  thingRef: {resourceRef: {name: thing-sample}}
+  parentRef: {backendRef: {id: parent-thing-id}}

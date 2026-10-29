@@ -1,0 +1,9 @@
+resource: RefThing
+mode: existing
+types:
+  RefThing:
+    fields:
+      thingId:
+        ref: {kind: Thing}
+      parentId:
+        ref: {kind: Thing}

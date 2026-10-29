@@ -58,6 +58,8 @@ func runCheck(args []string) int {
 	resource := set.String("resource", "", "OpenAPI component name of the resource")
 	kind := set.String("kind", "", "custom resource kind (default: the resource name)")
 	openAPI := set.String("openapi", "", "local candidate OpenAPI file")
+	e2e := set.String("e2e", "", "e2e.yaml file of the kind")
+	overridesFile := set.String("overrides", "", "behavior-overrides.yaml file of the kind")
 	if err := set.Parse(args); err != nil {
 		return 2
 	}
@@ -65,7 +67,7 @@ func runCheck(args []string) int {
 		fmt.Fprintf(os.Stderr, "opgen: unexpected arguments: %v\n", set.Args())
 		return 2
 	}
-	if err := generator.Check(generator.CheckOptions{Kind: *kind, Resource: *resource, OpenAPIPath: *openAPI}); err != nil {
+	if err := generator.Check(generator.CheckOptions{Kind: *kind, Resource: *resource, OpenAPIPath: *openAPI, E2EPath: *e2e, OverridesPath: *overridesFile}); err != nil {
 		fmt.Fprintf(os.Stderr, "opgen: %s\n", err)
 		return 1
 	}
@@ -74,6 +76,6 @@ func runCheck(args []string) int {
 
 func printUsage() {
 	fmt.Fprintln(os.Stderr, "usage: opgen generate")
-	fmt.Fprintln(os.Stderr, "       opgen check --resource <component> --openapi <candidate_openapi_file> [--kind <kind>]")
+	fmt.Fprintln(os.Stderr, "       opgen check --resource <component> --openapi <candidate_openapi_file> [--kind <kind>] [--e2e <file>] [--overrides <file>]")
 	fmt.Fprintln(os.Stderr, "       opgen version")
 }

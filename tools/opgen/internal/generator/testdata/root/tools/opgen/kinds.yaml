@@ -3,3 +3,5 @@ kinds:
     resource: Thing
   - kind: PatchThing
     resource: PatchThing
+  - kind: RefThing
+    resource: RefThing

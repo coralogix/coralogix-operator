@@ -34,21 +34,43 @@ jobs:
       - name: Generate docs and manifests
         run: |
           go mod tidy
-          make generate
-          make manifests
-          make generate-api-docs
+          make codegen
           make helm-sync-docs
       - name: Check for changes
         run: |
-          if ! git diff --exit-code; then
+          if ! git diff --exit-code || [ -n "$(git status --porcelain --untracked-files=all)" ]; then
+            git status --short
             echo "Some files are out of date. Please run the following commands and commit the changes:"
             echo "    go mod tidy"
-            echo "    make generate-api-docs"
-            echo "    make generate"
-            echo "    make manifests"
+            echo "    make codegen"
             echo "    make helm-sync-docs"
             exit 1
           fi
+      - name: Check CRD sizes
+        run: make crd-size-check
+
+  opgen:
+    name: Operator generator
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the version check builds the generator at the base commit
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: |
+            go.sum
+            tools/opgen/go.sum
+      - name: Download the operator modules
+        run: go mod download
+      - name: Build and test the generator
+        run: make opgen-test
+      - name: Test the generator version check
+        run: bash tools/opgen/scripts/check-version-change_test.sh
+      - name: Require a new generator version when its output changes
+        if: github.event_name == 'pull_request'
+        run: tools/opgen/scripts/check-version-change.sh '${{ github.event.pull_request.base.sha }}'
 
   linters:
     name: Linter Checks
@@ -66,3 +88,10 @@ jobs:
         with:
           version: v2.12.2
           args: --timeout=5m
+
+      - name: Run golangci-lint on the operator generator
+        uses: golangci/golangci-lint-action@v7
+        with:
+          version: v2.12.2
+          working-directory: tools/opgen
+          args: --timeout=5m --config=../../.golangci.yaml

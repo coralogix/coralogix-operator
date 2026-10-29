@@ -1,0 +1,14 @@
+{{.Header}}
+
+{{template "license"}}
+
+package utils
+{{- if .Kinds}}
+
+// The kinds that the operator generator writes.
+const (
+{{- range .Kinds}}
+	{{.Kind}}Kind = "{{.Kind}}"
+{{- end}}
+)
+{{- end}}

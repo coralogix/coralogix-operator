@@ -1,0 +1,109 @@
+{{.Header}}
+
+{{template "license"}}
+
+package v1alpha1
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/go-logr/logr"
+	"k8s.io/utils/ptr"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"{{.CxsdkPath}}"
+	{{.SDKAlias}} "{{.SDKPath}}"
+
+	coralogixv1alpha1 "{{.Module}}/api/coralogix/v1alpha1"
+	"{{.Module}}/internal/config"
+	coralogixreconciler "{{.Module}}/internal/controller/coralogix/coralogix-reconciler"
+	"{{.Module}}/internal/utils"
+)
+
+// {{.Kind}}Reconciler reconciles a {{.Kind}} object.
+type {{.Kind}}Reconciler struct {
+	Client   *{{.SDKAlias}}.{{.Client}}
+	Interval time.Duration
+}
+
+// +kubebuilder:rbac:groups=coralogix.com,resources={{.Plural}},verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=coralogix.com,resources={{.Plural}}/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=coralogix.com,resources={{.Plural}}/finalizers,verbs=update
+
+func (r *{{.Kind}}Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	return coralogixreconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.{{.Kind}}{}, r)
+}
+
+func (r *{{.Kind}}Reconciler) RequeueInterval() time.Duration {
+	return r.Interval
+}
+
+func (r *{{.Kind}}Reconciler) FinalizerName() string {
+	return "{{.Finalizer}}"
+}
+
+func (r *{{.Kind}}Reconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
+	cr := obj.(*coralogixv1alpha1.{{.Kind}})
+	body, err := cr.CreateRequest(ctx)
+	if err != nil {
+		return fmt.Errorf("error on building the create request of {{.Kind}}: %w", err)
+	}
+	log.Info("Creating remote {{.Kind}}", "{{.Kind}}", utils.FormatJSON(body))
+	resp, httpResp, err := r.Client.{{.CreateMethod}}(ctx).{{.CreateSetter}}(*body).Execute()
+	if err != nil {
+		return fmt.Errorf("error on creating remote {{.Kind}}: %w", cxsdk.NewAPIError(httpResp, err))
+	}
+	log.Info("Remote {{.Kind}} created", "response", utils.FormatJSON(resp))
+{{- if .IDValue}}
+	id := resp.{{.IDField}}
+{{- else}}
+	id := ptr.Deref(resp.{{.IDField}}, "")
+{{- end}}
+	if id == "" {
+		return fmt.Errorf("the create response of {{.Kind}} has no id")
+	}
+	cr.Status = coralogixv1alpha1.{{.Kind}}Status{ID: ptr.To(id)}
+	return nil
+}
+
+func (r *{{.Kind}}Reconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
+	cr := obj.(*coralogixv1alpha1.{{.Kind}})
+	id := ptr.Deref(cr.Status.ID, "")
+	body, err := cr.UpdateRequest(ctx)
+	if err != nil {
+		return fmt.Errorf("error on building the update request of {{.Kind}}: %w", err)
+	}
+	log.Info("Updating remote {{.Kind}}", "id", id, "{{.Kind}}", utils.FormatJSON(body))
+	resp, httpResp, err := r.Client.{{.UpdateMethod}}(ctx, id).{{.UpdateSetter}}(*body){{if .MaskSetter}}.{{.MaskSetter}}(coralogixv1alpha1.{{.Kind}}UpdateMask){{end}}.Execute()
+	if err != nil {
+		return fmt.Errorf("error on updating remote {{.Kind}} %s: %w", id, cxsdk.NewAPIError(httpResp, err))
+	}
+	log.Info("Remote {{.Kind}} updated", "response", utils.FormatJSON(resp))
+	return nil
+}
+
+func (r *{{.Kind}}Reconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
+	cr := obj.(*coralogixv1alpha1.{{.Kind}})
+	id := ptr.Deref(cr.Status.ID, "")
+	log.Info("Deleting remote {{.Kind}}", "id", id)
+	_, httpResp, err := r.Client.{{.DeleteMethod}}(ctx, id).Execute()
+	if err != nil {
+		// A confirmed missing resource is deleted. A 404 of a missing route is an error.
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+			return fmt.Errorf("error on deleting remote {{.Kind}} %s: %w", id, apiErr)
+		}
+	}
+	log.Info("Remote {{.Kind}} deleted", "id", id)
+	return nil
+}
+
+// SetupWithManager sets up the controller with the Manager.
+func (r *{{.Kind}}Reconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&coralogixv1alpha1.{{.Kind}}{}).
+		WithEventFilter(config.GetConfig().Selector.Predicate()).
+		Complete(r)
+}

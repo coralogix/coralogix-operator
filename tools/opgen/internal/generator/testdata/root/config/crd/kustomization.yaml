@@ -1,0 +1,4 @@
+resources:
+  - bases/coralogix.com_handwrittens.yaml
+  # BEGIN generated kinds
+  # END generated kinds
