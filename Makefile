@@ -241,6 +241,10 @@ helm-sync-docs: helm-docs
 BUMP ?= patch
 
 .PHONY: bump
-bump: ## Bump the release version in cmd/main.go and the chart (BUMP=patch|minor|major, default patch).
+bump: ## Bump the version in cmd/main.go and the chart (BUMP=patch|minor|major, default patch).
 	bash scripts/bump-version.sh $(BUMP)
 	$(MAKE) helm-sync-docs
+
+.PHONY: release-pr
+release-pr: ## Open a release PR from origin/main with the version bumped (BUMP=patch|minor|major); merging it releases.
+	bash scripts/release-pr.sh $(BUMP)

@@ -1,23 +1,23 @@
 name: Version Bump
 
-# Every merge to main is released from the version in Chart.yaml (see release.yaml), so a PR
-# that changes what ships must raise it with `make bump`. Docs, tests and CI changes do not.
+# A merge to main that raises the version in Chart.yaml releases it (see release.yaml). Checks
+# that cmd/main.go and the chart agree on the version, and that a changed version is above main.
 on:
   pull_request:
     branches:
       - main
-    paths-ignore:
-      - "docs/**"
-      - "tests/**"
-      - ".github/**"
-      - "**.md"
+    paths:
+      - "cmd/main.go"
+      - "charts/coralogix-operator/Chart.yaml"
+      - "scripts/check-version-bump.sh"
+      - ".github/workflows/version-bump.yaml"
 
 permissions:
   contents: read
 
 jobs:
   check:
-    name: Check version bump
+    name: Check version
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

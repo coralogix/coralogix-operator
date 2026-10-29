@@ -81,17 +81,19 @@ If needed, bypass with `SKIP=gitleaks git commit ...` or `git commit --no-verify
 
 Releasing
 ---------------------
-Every merge to `main` is released. The version lives in `cmd/main.go` (`OperatorVersion`) and in `charts/coralogix-operator/Chart.yaml` (`version` and `appVersion`). Bump it in your PR:
+Releases are cut on demand from `main`. The version lives in `cmd/main.go` (`OperatorVersion`) and in `charts/coralogix-operator/Chart.yaml` (`version` and `appVersion`); regular PRs leave it alone. To release, open a release PR:
 
 ```sh
-$ make bump                # patch: 2.16.0 -> 2.16.1
-$ make bump BUMP=minor     # 2.16.0 -> 2.17.0
-$ make bump BUMP=major     # 2.16.0 -> 3.0.0
+$ make release-pr                # patch: 2.17.0 -> 2.17.1
+$ make release-pr BUMP=minor     # 2.17.0 -> 2.18.0
+$ make release-pr BUMP=major     # 2.17.0 -> 3.0.0
 ```
 
-The `Version Bump` check fails a PR that changes what ships without raising the version. PRs that only touch docs, tests or CI don't need a bump.
+It needs a clean working tree. It branches `prepare-vX.Y.Z` from `origin/main`, runs `make bump`, commits, pushes and opens the PR with `gh` (without `gh`, open the PR yourself), then switches back to your branch.
 
-After the merge, the `Release` workflow pushes the `coralogixrepo/coralogix-operator` image (also tagged `latest`), publishes the chart, and creates the GitHub release with the `vX.Y.Z` tag. If a run fails, re-run its failed jobs, or run `Release` on `main` again.
+Merging the release PR runs the `Release` workflow: it pushes the `coralogixrepo/coralogix-operator` image (also tagged `latest`), publishes the chart, and creates the GitHub release with the `vX.Y.Z` tag and notes for every PR since the previous one. If a run fails, re-run its failed jobs, or run `Release` on `main` again.
+
+If another PR changes the version before yours merges, merge `main` into the release branch and run `make bump` again.
 
 Running E2E Tests
 ---------------------
