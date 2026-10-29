@@ -5,7 +5,7 @@ import "strings"
 
 // Current is the semantic version of the generator. tools/opgen/versions.yaml holds it for every
 // generated kind.
-const Current = "v0.1.0-beta.4"
+const Current = "v0.1.0-beta.1"
 
 // Tool is the name of the generator in the header of every generated file.
 const Tool = "coralogix-operator-codegen"
