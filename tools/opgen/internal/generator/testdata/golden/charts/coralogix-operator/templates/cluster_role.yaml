@@ -14,6 +14,7 @@ rules:
   - apiGroups:
       - coralogix.com
     resources:
+      - bodyidthings
       - patchthings
       - refthings
       - things
@@ -28,6 +29,7 @@ rules:
   - apiGroups:
       - coralogix.com
     resources:
+      - bodyidthings/finalizers
       - patchthings/finalizers
       - refthings/finalizers
       - things/finalizers
@@ -36,6 +38,7 @@ rules:
   - apiGroups:
       - coralogix.com
     resources:
+      - bodyidthings/status
       - patchthings/status
       - refthings/status
       - things/status

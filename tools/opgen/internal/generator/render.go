@@ -7,6 +7,7 @@ import (
 	"go/format"
 	"go/parser"
 	"go/token"
+	"slices"
 	"strconv"
 	"strings"
 	"text/template"
@@ -98,10 +99,27 @@ func renderShared(module, cxsdk string, kinds []*kindData) (output, error) {
 		fmt.Fprintf(&kustomization, "  - bases/coralogix.com_%s.yaml\n", k.Plural)
 		resources = append(resources, k.Plural)
 	}
+	out.files[version.VersionsFile] = renderVersions(kinds)
 	out.blocks[projectFile] = project.String()
 	out.blocks[crdKustomization] = kustomization.String()
 	out.blocks[helmClusterRole] = clusterRoleRules(resources)
 	return out, nil
+}
+
+// renderVersions returns versions.yaml: the generator version of each kind. Every run generates
+// every kind, so each kind has the current version, and a kind that is no longer listed drops out.
+func renderVersions(kinds []*kindData) []byte {
+	var b strings.Builder
+	b.WriteString(version.YAMLHeaderLine + "\n# The generator version of each generated kind.\n")
+	names := make([]string, len(kinds))
+	for i, k := range kinds {
+		names[i] = k.Kind
+	}
+	slices.Sort(names)
+	for _, name := range names {
+		fmt.Fprintf(&b, "%s: %s\n", name, version.Current)
+	}
+	return []byte(b.String())
 }
 
 // clusterRoleRules are the rules of the Helm cluster role for the generated kinds, as the

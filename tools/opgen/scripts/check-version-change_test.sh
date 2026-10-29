@@ -107,7 +107,8 @@ printf 'new golden\n' >"$repo/tools/opgen/internal/generator/testdata/golden/thi
 commit_all "$repo" golden
 fails "changed golden file" "$repo" "$base" "$work/opgen-a" "$work/opgen-a" "golden files changed"
 
-# A change outside the generator, in its scripts, or in the kinds it generates runs nothing.
+# A change outside the generator, in its scripts, in the kinds it generates, or in versions.yaml runs
+# nothing.
 repo="$work/outside"
 new_repo "$repo"
 base=$(git -C "$repo" rev-parse HEAD)
@@ -116,6 +117,7 @@ mkdir -p "$repo/tools/opgen/scripts" "$repo/tools/opgen/kinds/thing"
 printf '# script\n' >"$repo/tools/opgen/scripts/x.sh"
 printf 'kinds:\n  - kind: Thing\n    resource: Thing\n' >"$repo/tools/opgen/kinds.yaml"
 printf 'resource: Thing\n' >"$repo/tools/opgen/kinds/thing/behavior-overrides.yaml"
+printf 'Thing: v0.1.0-beta.1\n' >"$repo/tools/opgen/versions.yaml"
 commit_all "$repo" outside
 passes "change outside the generator" "$repo" "$base" "$work/opgen-a" "$work/opgen-b"
 

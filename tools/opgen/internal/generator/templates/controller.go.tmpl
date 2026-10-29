@@ -77,7 +77,7 @@ func (r *{{.Kind}}Reconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 		return fmt.Errorf("error on building the update request of {{.Kind}}: %w", err)
 	}
 	log.Info("Updating remote {{.Kind}}", "id", id, "{{.Kind}}", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.{{.UpdateMethod}}(ctx, id).{{.UpdateSetter}}(*body){{if .MaskSetter}}.{{.MaskSetter}}(coralogixv1alpha1.{{.Kind}}UpdateMask){{end}}.Execute()
+	resp, httpResp, err := r.Client.{{.UpdateMethod}}(ctx{{if not .UpdateIDInBody}}, id{{end}}).{{.UpdateSetter}}(*body){{if .MaskSetter}}.{{.MaskSetter}}(coralogixv1alpha1.{{.Kind}}UpdateMask){{end}}.Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote {{.Kind}} %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}

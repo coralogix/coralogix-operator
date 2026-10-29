@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -208,6 +209,25 @@ var _ = Describe("Generated CRD validation", Ordered, func() {
 			Expect(k8sClient.Create(ctx, refThing)).To(Succeed())
 			Expect(k8sClient.Delete(ctx, refThing)).To(Succeed())
 		}
+	})
+
+	It("should accept values outside the contract limits when validators.inferred is false", func(ctx context.Context) {
+		newBodyIDThing := func(name string, spec map[string]any) *unstructured.Unstructured {
+			u := &unstructured.Unstructured{Object: map[string]any{"spec": spec}}
+			u.SetGroupVersionKind(schema.GroupVersionKind{Group: "coralogix.com", Version: "v1alpha1", Kind: "BodyIDThing"})
+			u.SetName(name)
+			u.SetNamespace("default")
+			return u
+		}
+		// The contract limits name to 1–100 characters and limit to 1–10.
+		long := newBodyIDThing("no-limits", map[string]any{"name": strings.Repeat("n", 150), "limit": int64(50)})
+		Expect(k8sClient.Create(ctx, long)).To(Succeed())
+		Expect(k8sClient.Delete(ctx, long)).To(Succeed())
+
+		By("keeping a required field required")
+		err := k8sClient.Create(ctx, newBodyIDThing("no-name", map[string]any{"limit": int64(1)}))
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("spec.name: Required value"))
 	})
 
 	It("should allow a mutable field to change", func(ctx context.Context) {

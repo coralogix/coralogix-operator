@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"k8s.io/utils/ptr"
+
 	{{.SDKAlias}} "{{.SDKPath}}"
 )
 {{- if .Mask}}
@@ -26,7 +28,17 @@ func (in *{{.Kind}}) CreateRequest(ctx context.Context) (*{{.SDKAlias}}.{{.Creat
 // UpdateRequest returns the body of the Update request of the {{.Kind}}.{{if .Replace}} The body
 // has the whole spec: the API replaces the resource.{{end}}
 func (in *{{.Kind}}) UpdateRequest(ctx context.Context) (*{{.SDKAlias}}.{{.UpdateBody}}, error) {
+{{- if .UpdateIDInBody}}
+	out, err := in.Spec.to{{.UpdateBody}}(ctx, in.Namespace)
+	if err != nil {
+		return nil, err
+	}
+	// Update has no id in its path: the body holds the id of the status.
+	out.{{.BodyIDField}} = {{if .BodyIDValue}}ptr.Deref(in.Status.ID, ""){{else}}ptr.To(ptr.Deref(in.Status.ID, "")){{end}}
+	return out, nil
+{{- else}}
 	return in.Spec.to{{.UpdateBody}}(ctx, in.Namespace)
+{{- end}}
 }
 {{range .Convs}}{{.}}{{end}}
 {{- range .Enums}}

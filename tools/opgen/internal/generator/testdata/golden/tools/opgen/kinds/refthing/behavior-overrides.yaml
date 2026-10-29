@@ -1,5 +1,7 @@
 resource: RefThing
 mode: existing
+validators:
+  inferred: true
 types:
   RefThing:
     fields:

@@ -144,11 +144,11 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 			return nil, err
 		}
 		if t.Kind == model.Map {
-			if markers := scalarMarkers(t.Elem, f.enum); f.object == nil && len(markers) != 0 {
+			if markers := b.scalarMarkers(t.Elem, f.enum); f.object == nil && len(markers) != 0 {
 				elem = b.scalar(owner+f.GoName+"Value", elem, markers, path)
 			}
 			f.GoType = "map[string]" + elem
-			f.Markers = append(f.Markers, boundMarkers("MinProperties", "MaxProperties", t.MinItems, t.MaxItems)...)
+			f.Markers = append(f.Markers, b.limits(boundMarkers("MinProperties", "MaxProperties", t.MinItems, t.MaxItems))...)
 			return f, nil
 		}
 		f.GoType = "[]" + elem
@@ -158,8 +158,8 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 			}
 			f.Markers = append(f.Markers, "+listType=set")
 		}
-		f.Markers = append(f.Markers, boundMarkers("MinItems", "MaxItems", t.MinItems, t.MaxItems)...)
-		f.Markers = append(f.Markers, prefixed("items:", scalarMarkers(t.Elem, f.enum))...)
+		f.Markers = append(f.Markers, b.limits(boundMarkers("MinItems", "MaxItems", t.MinItems, t.MaxItems))...)
+		f.Markers = append(f.Markers, prefixed("items:", b.scalarMarkers(t.Elem, f.enum))...)
 		return f, nil
 	case model.Object, model.OneOf:
 		obj, err := b.object(t, path, inItem)
@@ -178,7 +178,7 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 			}
 		}
 		f.GoType = goType
-		f.Markers = append(f.Markers, scalarMarkers(t, f.enum)...)
+		f.Markers = append(f.Markers, b.scalarMarkers(t, f.enum)...)
 	}
 	if !required {
 		f.GoType = "*" + f.GoType
@@ -270,13 +270,30 @@ func scalarType(t *model.Type, path string) (string, error) {
 	return "", unsupported(path, "a %s is not supported", t.Kind)
 }
 
-// scalarMarkers are the markers of the contract limits of a scalar. The limits are API limits, so
-// kubectl rejects only a value that the API rejects too.
-func scalarMarkers(t *model.Type, enum *enumMap) []string {
-	var out []string
+// scalarMarkers are the markers of a scalar: the values of an enum, or the contract limits that
+// limits keeps. The limits are API limits, so kubectl rejects only a value that the API rejects
+// too.
+func (b *builder) scalarMarkers(t *model.Type, enum *enumMap) []string {
 	if enum != nil {
 		return []string{"+kubebuilder:validation:Enum=" + enum.Names()}
 	}
+	return b.limits(limitMarkers(t))
+}
+
+// limits returns the markers of contract limits, or none when validators.inferred is false. It
+// records a dropped limit, so a validators line that drops nothing is reported as unused.
+func (b *builder) limits(markers []string) []string {
+	if b.file.Inferred() {
+		return markers
+	}
+	if len(markers) != 0 {
+		b.droppedLimits = true
+	}
+	return nil
+}
+
+func limitMarkers(t *model.Type) []string {
+	var out []string
 	out = append(out, boundMarkers("MinLength", "MaxLength", t.MinLength, t.MaxLength)...)
 	if t.Pattern != "" {
 		out = append(out, "+kubebuilder:validation:Pattern="+markerString(t.Pattern))

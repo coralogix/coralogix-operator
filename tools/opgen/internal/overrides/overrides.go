@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"go/token"
 	"io"
+	"reflect"
 	"slices"
 	"strings"
 
@@ -38,8 +39,34 @@ type File struct {
 	Resource string `yaml:"resource"`
 	// Mode is "existing" or "new".
 	Mode string `yaml:"mode"`
+	// Validators says which validation markers the generated kind has. A kind that users already
+	// have must state it.
+	Validators *Validators `yaml:"validators"`
+	// API describes the parts of the HTTP contract that differ from a new resource. These are the
+	// API keys of the shared iac module. opgen supports updateIDInBody.
+	API API `yaml:"api"`
 	// Types has one entry per OpenAPI component.
 	Types map[string]Type `yaml:"types"`
+
+	// apiNode is the api section as the file writes it, nil without one. A Go bool cannot tell a
+	// written false from a missing key, so the checks of the api keys read the node.
+	apiNode *yaml.Node
+	// validatorsNode is the validators section as the file writes it, nil without one. A written
+	// validators: null decodes as a missing section.
+	validatorsNode *yaml.Node
+}
+
+// Validators is the validators section.
+type Validators struct {
+	// Inferred: false drops the contract limits (lengths, bounds, patterns, item counts) from the
+	// markers, as the released kind has none. A required field stays required, and an enum keeps
+	// its values. true keeps the limits.
+	Inferred *bool `yaml:"inferred"`
+}
+
+// API is the api section: the API keys of the iac module.
+type API struct {
+	iacoverrides.API `yaml:",inline"`
 }
 
 // Type is the lines of one component.
@@ -78,6 +105,12 @@ func Parse(data []byte) (*File, error) {
 		}
 		return nil, fmt.Errorf("%s: %w", FileName, err)
 	}
+	var doc yaml.Node
+	if err := yaml.Unmarshal(data, &doc); err != nil {
+		return nil, fmt.Errorf("%s: %w", FileName, err)
+	}
+	f.apiNode = section(&doc, "api")
+	f.validatorsNode = section(&doc, "validators")
 	if err := f.check(); err != nil {
 		return nil, fmt.Errorf("%s: %w", FileName, err)
 	}
@@ -91,6 +124,12 @@ func (f *File) check() error {
 	if f.Mode != ModeExisting && f.Mode != ModeNew {
 		return fmt.Errorf("mode is %q, want %q or %q", f.Mode, ModeExisting, ModeNew)
 	}
+	if err := f.checkAPI(); err != nil {
+		return err
+	}
+	if err := f.checkValidators(); err != nil {
+		return err
+	}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
 		if field.Ref == nil {
@@ -103,13 +142,84 @@ func (f *File) check() error {
 	return nil
 }
 
-// Policy returns the contract rules of the kind: the rules of a released resource in mode
-// existing, and the rules of a new resource in mode new. No key of this file is an API key yet.
+// checkAPI accepts only the API keys that the operator renderer supports. A key may state its
+// default (false), as validators.inferred: true does, but a new kind follows the contract, so it
+// sets no key to another value. A written section must set a key.
+func (f *File) checkAPI() error {
+	if f.apiNode == nil {
+		return nil
+	}
+	if f.apiNode.Kind != yaml.MappingNode || len(f.apiNode.Content) == 0 {
+		return errors.New("api: the section sets no key; delete it")
+	}
+	for i := 0; i < len(f.apiNode.Content); i += 2 {
+		key, value := f.apiNode.Content[i].Value, f.apiNode.Content[i+1]
+		if key != "updateIDInBody" {
+			return fmt.Errorf("api.%s: opgen supports only api.updateIDInBody so far; another key lands with the first kind that needs it", key)
+		}
+		if f.Mode == ModeNew && !zeroValue(value) {
+			return fmt.Errorf("api.%s: a new kind follows the contract, so mode new sets no api key", key)
+		}
+	}
+	return f.API.Check()
+}
+
+// section returns the value of a top-level key of the document, nil when the file has no such key.
+func section(doc *yaml.Node, key string) *yaml.Node {
+	if doc.Kind != yaml.DocumentNode || len(doc.Content) == 0 || doc.Content[0].Kind != yaml.MappingNode {
+		return nil
+	}
+	root := doc.Content[0]
+	for i := 0; i+1 < len(root.Content); i += 2 {
+		if root.Content[i].Value == key {
+			return root.Content[i+1]
+		}
+	}
+	return nil
+}
+
+// checkValidators requires validators.inferred in mode existing, where it states the released
+// validation. A new kind keeps the contract limits by default, so there the section is optional:
+// inferred: false drops the limits of an API whose server does not apply them, and inferred: true
+// states the default. A written section must set the key.
+func (f *File) checkValidators() error {
+	if f.Mode == ModeExisting {
+		if f.Validators == nil || f.Validators.Inferred == nil {
+			return errors.New("validators.inferred is required: false for a kind whose released validation has no contract limits, and true otherwise")
+		}
+		return nil
+	}
+	if f.validatorsNode != nil && (f.Validators == nil || f.Validators.Inferred == nil) {
+		return errors.New("validators: the section sets no key; delete it")
+	}
+	return nil
+}
+
+// zeroValue reports whether a node is false, 0, "", null, or empty: the value a missing key has.
+func zeroValue(n *yaml.Node) bool {
+	if n.Kind == yaml.MappingNode || n.Kind == yaml.SequenceNode {
+		return len(n.Content) == 0
+	}
+	var v any
+	if err := n.Decode(&v); err != nil {
+		return false
+	}
+	return v == nil || reflect.ValueOf(v).IsZero()
+}
+
+// Policy returns the contract rules of the kind: the rules of a released resource with the API keys
+// of the file in mode existing, and the rules of a new resource in mode new.
 func (f *File) Policy() model.Policy {
 	if f == nil || f.Mode == ModeNew {
 		return model.Policy{}
 	}
-	return iacoverrides.Exceptions{}.Policy()
+	return iacoverrides.Exceptions{API: f.API.API}.Policy()
+}
+
+// Inferred reports whether the markers have the contract limits: true unless the file says
+// validators.inferred: false.
+func (f *File) Inferred() bool {
+	return f == nil || f.Validators == nil || f.Validators.Inferred == nil || *f.Validators.Inferred
 }
 
 // Lines returns every field line in a stable order.

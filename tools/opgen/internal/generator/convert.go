@@ -82,9 +82,13 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 func (b *builder) requests(r *model.Resource, d *kindData) error {
 	var create, update []*model.Field
 	var mask []string
+	bodyID := r.Policy.UpdateIDInBody
 	for _, f := range r.Fields {
 		if f.Create != nil {
 			create = append(create, &model.Field{Name: f.Name, Type: f.Type.CreateType(), Create: f.Create, Attrs: *f.Create})
+		}
+		if bodyID && f.Name == r.ID() {
+			continue // UpdateRequest copies the status id
 		}
 		if f.Update != nil {
 			update = append(update, &model.Field{Name: f.Name, Type: f.Type.UpdateType(), Update: f.Update, Attrs: *f.Update})
@@ -96,6 +100,13 @@ func (b *builder) requests(r *model.Resource, d *kindData) error {
 	}
 	if _, err := b.conversion(d.Spec, d.UpdateBody, update, "spec"); err != nil {
 		return err
+	}
+	if bodyID {
+		ref, err := b.ix.field(d.UpdateBody, r.ID())
+		if err != nil {
+			return err
+		}
+		d.UpdateIDInBody, d.BodyIDField, d.BodyIDValue = true, ref.Name, ref.Want == "string"
 	}
 	if r.Replace {
 		return nil

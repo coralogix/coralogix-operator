@@ -7,7 +7,8 @@
 #   - the `opgen check` report of every component of the pinned spec;
 #   - the golden files of the generator tests, which hold the output for the synthetic specs.
 # A change of code that changes none of these needs no new version. A change of only the kinds
-# list or the files of a kind (tools/opgen/kinds.yaml, tools/opgen/kinds/) is input, not code.
+# list or the files of a kind (tools/opgen/kinds.yaml, tools/opgen/kinds/) is input, not code, and
+# tools/opgen/versions.yaml is output.
 #
 # usage: check-version-change.sh <base-commit>
 # OPGEN_OLD and OPGEN_NEW name prebuilt binaries instead of building them, and SPEC names the
@@ -18,7 +19,7 @@ base=${1:?usage: check-version-change.sh <base-commit>}
 root=$(git rev-parse --show-toplevel)
 cd "$root"
 
-changed=$(git diff --name-only "$base"...HEAD -- tools/opgen | grep -Ev '^tools/opgen/(scripts/|kinds\.yaml$|kinds/)' || true)
+changed=$(git diff --name-only "$base"...HEAD -- tools/opgen | grep -Ev '^tools/opgen/(scripts/|kinds\.yaml$|kinds/|versions\.yaml$)' || true)
 if [[ -z "$changed" ]]; then
   exit 0
 fi

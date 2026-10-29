@@ -1,0 +1,6 @@
+resource: BodyIDThing
+mode: existing
+validators:
+  inferred: false        # the released kind has no length or bound limits
+api:
+  updateIDInBody: true   # Replace sends the id in the body
