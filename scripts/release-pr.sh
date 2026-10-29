@@ -32,15 +32,21 @@ make bump BUMP="$part"
 version=$(sed -n -E 's/^version: *//p' charts/coralogix-operator/Chart.yaml)
 # Not release-*: pushing a branch with that name publishes the chart (helm-chart-deploy.yml).
 branch="prepare-v$version"
-git switch --quiet -c "$branch"
-git commit --quiet -am "Release $version"
-git push --set-upstream origin "$branch"
+title="Release $version"
+# -C and --force: a retry after a failed run replaces the branch that run left behind. The
+# script creates the branch and nothing else writes to it.
+git switch --quiet -C "$branch"
+git commit --quiet -am "$title"
+git push --force --set-upstream origin "$branch"
 trap - ERR
 git checkout --quiet "$start"
 
-if command -v gh > /dev/null; then
-  gh pr create --base main --head "$branch" --title "Release $version" \
-    --body "Releases $version. Merging this PR publishes the image, the Helm chart and the GitHub release."
+if ! command -v gh > /dev/null; then
+  echo "Branch $branch is pushed. Open the PR against main: $title"
+elif url=$(gh pr view "$branch" --json url,state --jq 'select(.state == "OPEN") | .url' 2> /dev/null) &&
+  [[ -n "$url" ]]; then
+  echo "The release PR is already open, now with this push: $url"
 else
-  echo "Branch $branch is pushed. Open the PR against main: Release $version"
+  gh pr create --base main --head "$branch" --title "$title" \
+    --body "Releases $version. Merging this PR publishes the image, the Helm chart and the GitHub release."
 fi
