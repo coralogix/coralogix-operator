@@ -72,7 +72,7 @@ type ThingSpec struct {
 
 	// Labels by key.
 	// +optional
-	Labels map[string]string `json:"labels,omitempty"`
+	Labels map[string]ThingLabelsValue `json:"labels,omitempty"`
 }
 
 // ThingConfig is the ThingConfig object of the API.
@@ -125,6 +125,11 @@ type ThingItem struct {
 	// +kubebuilder:validation:Minimum=1
 	Weight *int32 `json:"weight,omitempty"`
 }
+
+// ThingLabelsValue is a value of spec.labels.
+// +kubebuilder:validation:MinLength=1
+// +kubebuilder:validation:MaxLength=63
+type ThingLabelsValue string
 
 // ThingStatus defines the observed state of a Thing.
 type ThingStatus struct {

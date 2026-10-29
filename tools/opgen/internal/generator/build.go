@@ -37,9 +37,10 @@ type kindData struct {
 	Lower  string // viewfolder
 	Plural string // viewfolders
 
-	Spec  *crType
-	Types []*crType // nested types, in order of first use
-	Enums []*enumMap
+	Spec    *crType
+	Types   []*crType   // nested types, in order of first use
+	Scalars []*crScalar // map value types, in order of first use
+	Enums   []*enumMap
 }
 
 // crType is a Go struct of the custom resource.
@@ -50,6 +51,16 @@ type crType struct {
 	Fields  []*crField
 	schema  string // the response component, "" for the spec
 	groups  []model.OneOfGroup
+}
+
+// crScalar is a named Go type of the values of a map. A map value has no marker of its own, so
+// the limits of the contract sit on its type, as they do on the items of a list.
+type crScalar struct {
+	Name    string
+	GoType  string
+	Doc     []string
+	Markers []string
+	path    string
 }
 
 // crField is a field of a Go struct of the custom resource.
@@ -102,6 +113,7 @@ type builder struct {
 	alias   string
 	types   map[string]*crType
 	order   []*crType
+	scalars []*crScalar
 	enums   map[string]*enumMap
 	enumSeq []*enumMap
 }
@@ -121,7 +133,7 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry) (*kindDa
 	if d.Spec, err = b.spec(r); err != nil {
 		return nil, err
 	}
-	d.Types, d.Enums = b.order, b.enumSeq
+	d.Types, d.Scalars, d.Enums = b.order, b.scalars, b.enumSeq
 	if err := b.checkNames(d); err != nil {
 		return nil, err
 	}

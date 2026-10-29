@@ -31,7 +31,7 @@ import (
 var opgenCRDs = filepath.Join("..", "..", "..", "..", "tools", "opgen", "internal", "generator", "testdata", "crd")
 
 // The generated validation of a new kind: kubectl accepts a minimal Thing, and rejects a change of
-// an immutable field, two oneOf arms, and a value outside an enum.
+// an immutable field, two oneOf arms, a value outside an enum, and a map value outside its limits.
 var _ = Describe("Generated CRD validation", Ordered, func() {
 	BeforeAll(func() {
 		_, err := envtest.InstallCRDs(cfg, envtest.CRDInstallOptions{Paths: []string{opgenCRDs}, ErrorIfPathMissing: true})
@@ -65,6 +65,20 @@ var _ = Describe("Generated CRD validation", Ordered, func() {
 		err := k8sClient.Create(ctx, newThing("bad-enum", spec))
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring(`supported values: "standard", "advanced"`))
+	})
+
+	It("should check the limits of a map value", func(ctx context.Context) {
+		spec := minimalSpec()
+		spec["labels"] = map[string]any{"team": ""}
+		err := k8sClient.Create(ctx, newThing("empty-label", spec))
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("spec.labels.team"))
+		Expect(err.Error()).To(ContainSubstring("should be at least 1 chars long"))
+
+		spec["labels"] = map[string]any{"team": "core"}
+		thing := newThing("label", spec)
+		Expect(k8sClient.Create(ctx, thing)).To(Succeed())
+		Expect(k8sClient.Delete(ctx, thing)).To(Succeed())
 	})
 
 	It("should reject two oneOf arms", func(ctx context.Context) {

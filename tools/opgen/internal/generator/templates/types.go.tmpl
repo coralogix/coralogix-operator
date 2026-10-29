@@ -11,6 +11,16 @@ import (
 {{- range .Types}}
 {{template "struct" .}}
 {{- end}}
+{{- range .Scalars}}
+{{- range .Doc}}
+// {{.}}
+{{- end}}
+{{- range .Markers}}
+// {{.}}
+{{- end}}
+type {{.Name}} {{.GoType}}
+
+{{end -}}
 // {{.Kind}}Status defines the observed state of a {{.Kind}}.
 type {{.Kind}}Status struct {
 	// +optional

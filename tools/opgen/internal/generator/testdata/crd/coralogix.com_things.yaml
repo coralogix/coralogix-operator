@@ -115,6 +115,9 @@ spec:
                   rule: self == oldSelf
               labels:
                 additionalProperties:
+                  description: ThingLabelsValue is a value of spec.labels.
+                  maxLength: 63
+                  minLength: 1
                   type: string
                 description: Labels by key.
                 type: object

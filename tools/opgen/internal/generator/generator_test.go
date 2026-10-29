@@ -87,6 +87,14 @@ func TestCheckReportsGaps(t *testing.T) {
 			code: codeShapeUnsupported,
 		},
 		{
+			// The values of spec.labels have limits, so their Go type is ThingLabelsValue.
+			name: "a component with the Go name of a map value type",
+			edit: func(t *testing.T, s string) string {
+				return strings.ReplaceAll(s, "ThingItem", "ThingLabelsValue")
+			},
+			code: codeNameCollision,
+		},
+		{
 			// The shared module rejects it before the CRD walk, which has no cycle guard.
 			name: "an object that holds itself",
 			edit: func(t *testing.T, s string) string {

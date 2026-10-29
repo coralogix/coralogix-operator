@@ -23,7 +23,7 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 			continue
 		}
 		required := f.Create.Required && !inGroup[f.Name]
-		field, err := b.field(f.Name, f.Description, f.Type, required, "spec."+f.Name, false)
+		field, err := b.field(b.kind, f.Name, f.Description, f.Type, required, "spec."+f.Name, false)
 		if err != nil {
 			return nil, err
 		}
@@ -122,9 +122,9 @@ func groupRules(t *crType, groups []model.OneOfGroup, path string) error {
 	return nil
 }
 
-// field builds one field. inItem is true inside a list item or a map value, where kubectl cannot
-// compare a value with its old value.
-func (b *builder) field(name, description string, t *model.Type, required bool, path string, inItem bool) (*crField, error) {
+// field builds one field of the Go type owner. inItem is true inside a list item or a map value,
+// where kubectl cannot compare a value with its old value.
+func (b *builder) field(owner, name, description string, t *model.Type, required bool, path string, inItem bool) (*crField, error) {
 	if len(t.Wrappers) != 0 || t.Keyed != nil {
 		return nil, unsupported(path, "wrapper and keyedBy values are not supported yet")
 	}
@@ -139,6 +139,9 @@ func (b *builder) field(name, description string, t *model.Type, required bool, 
 			return nil, err
 		}
 		if t.Kind == model.Map {
+			if markers := scalarMarkers(t.Elem, f.enum); f.object == nil && len(markers) != 0 {
+				elem = b.scalar(owner+f.GoName+"Value", elem, markers, path)
+			}
 			f.GoType = "map[string]" + elem
 			f.Markers = append(f.Markers, boundMarkers("MinProperties", "MaxProperties", t.MinItems, t.MaxItems)...)
 			return f, nil
@@ -297,6 +300,13 @@ func docLines(description string) []string {
 	return out
 }
 
+// scalar declares the named type of the values of a map, which holds the limits of the values.
+func (b *builder) scalar(name, goType string, markers []string, path string) string {
+	b.scalars = append(b.scalars, &crScalar{Name: name, GoType: goType, Markers: markers, path: path,
+		Doc: []string{fmt.Sprintf("%s is a value of %s.", name, path)}})
+	return name
+}
+
 // typeName is the Go type of a component in the custom resource. It starts with the kind, so two
 // kinds in one package cannot declare the same type.
 func (b *builder) typeName(component string) string {
@@ -341,7 +351,7 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 		}
 		required := t.Kind != model.OneOf && f.Create.Required && !inGroup[f.Name]
 		child := path + "." + f.Name
-		field, err := b.field(f.Name, f.Description, f.Type, required, child, inItem)
+		field, err := b.field(obj.Name, f.Name, f.Description, f.Type, required, child, inItem)
 		if err != nil {
 			return nil, err
 		}
@@ -401,11 +411,21 @@ func (b *builder) enum(t *model.Type, path string) (*enumMap, error) {
 
 // checkNames rejects two Go types or two fields with one name.
 func (b *builder) checkNames(d *kindData) error {
-	reserved := map[string]bool{d.Kind: true, d.Kind + "Spec": true, d.Kind + "Status": true, d.Kind + "List": true}
+	reserved := map[string]string{}
+	for _, name := range []string{d.Kind, d.Kind + "Spec", d.Kind + "Status", d.Kind + "List"} {
+		reserved[name] = "the kind"
+	}
 	for _, t := range d.Types {
-		if reserved[t.Name] {
+		if _, ok := reserved[t.Name]; ok {
 			return collision(t.schema, "the component %s is the Go type %s, which the kind declares", t.schema, t.Name)
 		}
+		reserved[t.Name] = "the component " + t.schema
+	}
+	for _, s := range d.Scalars {
+		if prior, ok := reserved[s.Name]; ok {
+			return collision(s.path, "the values of %s are the Go type %s, which %s declares", s.path, s.Name, prior)
+		}
+		reserved[s.Name] = "the values of " + s.path
 	}
 	for _, t := range append([]*crType{d.Spec}, d.Types...) {
 		seen := map[string]string{}
