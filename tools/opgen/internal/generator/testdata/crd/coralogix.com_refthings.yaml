@@ -81,6 +81,11 @@ spec:
                   rule: has(self.backendRef) != has(self.resourceRef)
                 - message: backendRef.id must not be empty
                   rule: '!has(self.backendRef) || size(self.backendRef.id) > 0'
+                - message: resourceRef.name must not be empty
+                  rule: '!has(self.resourceRef) || size(self.resourceRef.name) > 0'
+                - message: resourceRef.namespace must not be empty when it is set
+                  rule: '!has(self.resourceRef) || !has(self.resourceRef.__namespace__)
+                    || size(self.resourceRef.__namespace__) > 0'
               thingRef:
                 description: |-
                   The id of the Thing that it uses.
@@ -113,6 +118,11 @@ spec:
                   rule: has(self.backendRef) != has(self.resourceRef)
                 - message: backendRef.id must not be empty
                   rule: '!has(self.backendRef) || size(self.backendRef.id) > 0'
+                - message: resourceRef.name must not be empty
+                  rule: '!has(self.resourceRef) || size(self.resourceRef.name) > 0'
+                - message: resourceRef.namespace must not be empty when it is set
+                  rule: '!has(self.resourceRef) || !has(self.resourceRef.__namespace__)
+                    || size(self.resourceRef.__namespace__) > 0'
             required:
             - name
             - thingRef

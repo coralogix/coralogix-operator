@@ -28,6 +28,8 @@ import (
 // manages it. Generated kinds use it for a field that a ref line of the operator generator names.
 // +kubebuilder:validation:XValidation:rule="has(self.backendRef) != has(self.resourceRef)",message="Exactly one of backendRef or resourceRef must be set"
 // +kubebuilder:validation:XValidation:rule="!has(self.backendRef) || size(self.backendRef.id) > 0",message="backendRef.id must not be empty"
+// +kubebuilder:validation:XValidation:rule="!has(self.resourceRef) || size(self.resourceRef.name) > 0",message="resourceRef.name must not be empty"
+// +kubebuilder:validation:XValidation:rule="!has(self.resourceRef) || !has(self.resourceRef.__namespace__) || size(self.resourceRef.__namespace__) > 0",message="resourceRef.namespace must not be empty when it is set"
 type ResourceIDRef struct {
 	// BackendRef is the id of the resource in Coralogix.
 	// +optional

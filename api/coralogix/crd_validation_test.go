@@ -30,16 +30,22 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// Every CRD passes the checks that the API server runs when it creates the CRD, without a running
-// API server. One of them is the CEL cost budget: a CRD over it fails here with "estimated rule
-// cost exceeds budget", for example a generated kind whose rules sit in lists without a size limit.
+// Every CRD, also each CRD of the generator tests, passes the checks that the API server runs when
+// it creates the CRD, without a running API server. One of them is the CEL cost budget: a CRD over
+// it fails here with "estimated rule cost exceeds budget", for example a generated kind whose rules
+// sit in lists without a size limit.
 func TestCRDsPassAPIServerValidation(t *testing.T) {
-	paths, err := filepath.Glob(filepath.Join("..", "..", "config", "crd", "bases", "*.yaml"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(paths) == 0 {
-		t.Fatal("no CRD in config/crd/bases")
+	var paths []string
+	// The real CRDs, and the CRDs of the synthetic kinds of the operator generator tests.
+	for _, dir := range []string{"config/crd/bases", "tools/opgen/internal/generator/testdata/crd"} {
+		found, err := filepath.Glob(filepath.Join("..", "..", filepath.FromSlash(dir), "*.yaml"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(found) == 0 {
+			t.Fatalf("no CRD in %s", dir)
+		}
+		paths = append(paths, found...)
 	}
 	for _, path := range paths {
 		t.Run(filepath.Base(path), func(t *testing.T) {

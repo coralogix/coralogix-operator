@@ -170,17 +170,44 @@ var _ = Describe("Generated CRD validation", Ordered, func() {
 		Expect(err.Error()).To(ContainSubstring("Exactly one of backendRef or resourceRef must be set"))
 	})
 
-	It("should reject a reference with an empty backendRef id", func(ctx context.Context) {
-		refThing := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{
-			"name":     "empty",
-			"thingRef": map[string]any{"backendRef": map[string]any{"id": ""}},
-		}}}
-		refThing.SetGroupVersionKind(schema.GroupVersionKind{Group: "coralogix.com", Version: "v1alpha1", Kind: "RefThing"})
-		refThing.SetName("empty-backend-id")
-		refThing.SetNamespace("default")
-		err := k8sClient.Create(ctx, refThing)
-		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("backendRef.id must not be empty"))
+	It("should reject a reference with an empty id, name, or namespace", func(ctx context.Context) {
+		tests := []struct {
+			name string
+			ref  map[string]any
+			want string
+		}{
+			{name: "empty-backend-id", ref: map[string]any{"backendRef": map[string]any{"id": ""}}, want: "backendRef.id must not be empty"},
+			{name: "empty-resource-name", ref: map[string]any{"resourceRef": map[string]any{"name": ""}}, want: "resourceRef.name must not be empty"},
+			{
+				name: "empty-resource-namespace",
+				ref:  map[string]any{"resourceRef": map[string]any{"name": "thing", "namespace": ""}},
+				want: "resourceRef.namespace must not be empty when it is set",
+			},
+		}
+		for _, tt := range tests {
+			refThing := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{"name": tt.name, "thingRef": tt.ref}}}
+			refThing.SetGroupVersionKind(schema.GroupVersionKind{Group: "coralogix.com", Version: "v1alpha1", Kind: "RefThing"})
+			refThing.SetName(tt.name)
+			refThing.SetNamespace("default")
+			err := k8sClient.Create(ctx, refThing)
+			Expect(err).To(HaveOccurred(), tt.name)
+			Expect(err.Error()).To(ContainSubstring(tt.want), tt.name)
+		}
+	})
+
+	It("should accept a reference by name, with or without a namespace", func(ctx context.Context) {
+		for _, ref := range []map[string]any{
+			{"resourceRef": map[string]any{"name": "thing"}},
+			{"resourceRef": map[string]any{"name": "thing", "namespace": "default"}},
+			{"backendRef": map[string]any{"id": "thing-id"}},
+		} {
+			refThing := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{"name": "valid", "thingRef": ref}}}
+			refThing.SetGroupVersionKind(schema.GroupVersionKind{Group: "coralogix.com", Version: "v1alpha1", Kind: "RefThing"})
+			refThing.SetName("valid-ref")
+			refThing.SetNamespace("default")
+			Expect(k8sClient.Create(ctx, refThing)).To(Succeed())
+			Expect(k8sClient.Delete(ctx, refThing)).To(Succeed())
+		}
 	})
 
 	It("should allow a mutable field to change", func(ctx context.Context) {
