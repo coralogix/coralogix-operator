@@ -4,6 +4,7 @@ name: Release
 # charts/coralogix-operator/Chart.yaml, which a release PR from `make release-pr` raises.
 # Publishes the image (also as latest), the chart to JFrog, and a GitHub release that creates
 # the vX.Y.Z tag.
+# Then asks telemetry-shippers to bump the operator chart in otel-integration.
 #
 # The tag is created with GITHUB_TOKEN, which does not start other workflows, so the image and
 # chart workflows are called here instead of being triggered by it. Any other merge
@@ -103,3 +104,22 @@ jobs:
       - name: Create release
         run: |
           gh release create "$TAG" --target "$GITHUB_SHA" --title "$TAG" --generate-notes --latest
+
+  # Asks telemetry-shippers to bump the coralogix-operator dependency of otel-integration; its
+  # sync workflow opens that PR. Same repository_dispatch pattern as the OpenTelemetry Collector
+  # chart release.
+  telemetry-shippers:
+    name: Notify telemetry-shippers
+    needs: [version, github-release]
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      VERSION: ${{ needs.version.outputs.version }}
+      RELEASE_URL: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ needs.version.outputs.tag }}
+    steps:
+      - name: Dispatch the release
+        run: |
+          gh api repos/coralogix/telemetry-shippers/dispatches \
+            -f event_type=coralogix-operator-release \
+            -f "client_payload[version]=$VERSION" \
+            -f "client_payload[release_url]=$RELEASE_URL"
