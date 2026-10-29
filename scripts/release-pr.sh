@@ -4,8 +4,8 @@
 #
 # Usage: scripts/release-pr.sh [patch|minor|major]   (default: patch)
 #
-# Run it through `make release-pr BUMP=...`. Needs a clean working tree; opens the PR with `gh`
-# when it is installed, and otherwise prints where to open it.
+# Run it through `make release-pr BUMP=...`. Needs a clean working tree. With `gh` installed it
+# opens the PR and turns on auto-merge for it; otherwise it prints what to open.
 set -euo pipefail
 
 part="${1:-patch}"
@@ -43,10 +43,22 @@ git checkout --quiet "$start"
 
 if ! command -v gh > /dev/null; then
   echo "Branch $branch is pushed. Open the PR against main: $title"
-elif url=$(gh pr view "$branch" --json url,state --jq 'select(.state == "OPEN") | .url' 2> /dev/null) &&
+  echo "Then turn on auto-merge (squash) for it, so it merges once Release PR Approval approves it."
+  exit 0
+fi
+
+if url=$(gh pr view "$branch" --json url,state --jq 'select(.state == "OPEN") | .url' 2> /dev/null) &&
   [[ -n "$url" ]]; then
   echo "The release PR is already open, now with this push: $url"
 else
   gh pr create --base main --head "$branch" --title "$title" \
     --body "Releases $version. Merging this PR publishes the image, the Helm chart and the GitHub release."
+fi
+
+# Auto-merge with your token, not the bot's: GitHub starts no workflows for a merge made with
+# GITHUB_TOKEN, so Release would not run. The PR then merges once it is approved.
+if gh pr merge "$branch" --auto --squash; then
+  echo "Auto-merge is on: the PR merges once Release PR Approval approves it, and the merge releases $version."
+else
+  echo "warning: could not turn on auto-merge; merge the PR yourself once it is approved." >&2
 fi
