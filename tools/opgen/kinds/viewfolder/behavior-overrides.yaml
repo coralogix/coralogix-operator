@@ -1,0 +1,6 @@
+resource: ViewFolder
+mode: existing
+validators:
+  inferred: false        # the contract limits name to 1-100 characters; the released CRD has no limit
+api:
+  updateIDInBody: true   # PUT /view-folders sends the id in the body

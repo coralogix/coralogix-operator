@@ -22,7 +22,6 @@ resources:
   - bases/coralogix.com_dashboards.yaml
   - bases/coralogix.com_dashboardsfolders.yaml
   - bases/coralogix.com_presets.yaml
-  - bases/coralogix.com_viewfolders.yaml
   - bases/coralogix.com_views.yaml
   - bases/coralogix.com_archivelogstargets.yaml
   - bases/coralogix.com_archivemetricstargets.yaml
@@ -35,6 +34,7 @@ resources:
   - bases/coralogix.com_aicustomevaluations.yaml
   - bases/coralogix.com_configurationgroups.yaml
   # BEGIN generated kinds
+  - bases/coralogix.com_viewfolders.yaml
   # END generated kinds
 #+kubebuilder:scaffold:crdkustomizeresource
 

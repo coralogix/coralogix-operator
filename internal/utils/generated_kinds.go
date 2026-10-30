@@ -16,3 +16,8 @@
 // limitations under the License.
 
 package utils
+
+// The kinds that the operator generator writes.
+const (
+	ViewFolderKind = "ViewFolder"
+)

@@ -21706,14 +21706,14 @@ ViewFolder is the Schema for the viewfolders API.
         <td><b><a href="#viewfolderspec">spec</a></b></td>
         <td>object</td>
         <td>
-          ViewFolderSpec defines the desired state of folder for views.<br/>
+          ViewFolderSpec defines the desired state of a ViewFolder.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#viewfolderstatus">status</a></b></td>
         <td>object</td>
         <td>
-          ViewFolderStatus defines the observed state of ViewFolder.<br/>
+          ViewFolderStatus defines the observed state of a ViewFolder.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -21725,7 +21725,7 @@ ViewFolder is the Schema for the viewfolders API.
 
 
 
-ViewFolderSpec defines the desired state of folder for views.
+ViewFolderSpec defines the desired state of a ViewFolder.
 
 <table>
     <thead>
@@ -21740,7 +21740,7 @@ ViewFolderSpec defines the desired state of folder for views.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          Name of the view folder<br/>
+          Folder name<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -21752,7 +21752,7 @@ ViewFolderSpec defines the desired state of folder for views.
 
 
 
-ViewFolderStatus defines the observed state of ViewFolder.
+ViewFolderStatus defines the observed state of a ViewFolder.
 
 <table>
     <thead>
