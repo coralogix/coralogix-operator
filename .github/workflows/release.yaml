@@ -58,6 +58,13 @@ jobs:
             released=true
             echo "$tag is already released; nothing to publish."
           else
+            # main has no required checks, so a merge can skip the Version Bump check. An
+            # untagged version below the newest release would otherwise overwrite latest.
+            newest=$(git tag -l 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n1 || true)
+            if [[ -n "$newest" && "$(printf '%s\n%s\n' "$tag" "$newest" | sort -V | tail -n1)" != "$tag" ]]; then
+              echo "::error::$tag is below the newest release $newest; raise the version with 'make bump'"
+              exit 1
+            fi
             released=false
             echo "Releasing $tag"
           fi
