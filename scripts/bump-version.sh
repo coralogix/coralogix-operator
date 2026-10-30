@@ -4,7 +4,7 @@
 #
 # Usage: scripts/bump-version.sh [patch|minor|major]   (default: patch)
 #
-# `make bump` runs this and then refreshes the version badges in the chart README.
+# `make bump-version` runs this and then refreshes the version badges in the chart README.
 set -euo pipefail
 
 part="${1:-patch}"

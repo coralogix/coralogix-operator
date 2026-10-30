@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Opens a release PR: a branch from origin/main with the version bumped by `make bump`.
+# Opens a release PR: a branch from origin/main with the version bumped by `make bump-version`.
 # Merging the PR releases the new version (see .github/workflows/release.yaml).
 #
 # Usage: scripts/release-pr.sh [patch|minor|major]   (default: patch)
 #
-# Run it through `make release-pr BUMP=...`. Needs a clean working tree. With `gh` installed it
+# Run it through `make bump BUMP=...`. Needs a clean working tree. With `gh` installed it
 # opens the PR and turns on auto-merge for it; otherwise it prints what to open.
 set -euo pipefail
 
@@ -28,7 +28,7 @@ git switch --quiet --detach origin/main
 # On a failure, drop the bump and go back to where you were.
 trap 'git checkout --quiet -- . && git checkout --quiet "$start"' ERR
 
-make bump BUMP="$part"
+make bump-version BUMP="$part"
 version=$(sed -n -E 's/^version: *//p' charts/coralogix-operator/Chart.yaml)
 # Not release-*: pushing a branch with that name publishes the chart (helm-chart-deploy.yml).
 branch="prepare-v$version"

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Checks the operator version on a branch: cmd/main.go and the chart must agree on it, and a
 # changed version must be above the base branch. Merging a raised version releases it; see
-# `make release-pr`.
+# `make bump`.
 #
 # Usage: scripts/check-version-bump.sh [base-ref]   (default: origin/main)
 set -euo pipefail
