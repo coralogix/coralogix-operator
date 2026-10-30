@@ -129,6 +129,8 @@ make generate-api-docs  # Regenerate docs/api.md
 make helm-sync-check    # Verify chart CRDs match generated CRDs
 make helm-update-crds   # Sync generated CRDs into the Helm chart
 make helm-sync-docs     # Regenerate chart README with helm-docs
+make bump               # Open a release PR from origin/main with the version bumped (BUMP=patch|minor|major); merging it releases
+make bump-version       # Bump the version in the working tree only
 ```
 
 Cluster/API tests:

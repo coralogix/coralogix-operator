@@ -13,6 +13,18 @@ on:
       - "v*"
     paths-ignore:
       - "charts/**"
+  # Called by the Release workflow, which creates the release tag with GITHUB_TOKEN. Tags made
+  # with GITHUB_TOKEN do not start workflows, so the release calls this one directly.
+  workflow_call:
+    inputs:
+      ref:
+        description: Commit to check out and build.
+        required: true
+        type: string
+      tag:
+        description: Image tag to push, for example v2.16.1. The image is also pushed as latest.
+        required: true
+        type: string
 
 # The image is pushed to DockerHub with credentials from secrets.*, never to GHCR, so the
 # workflow token only ever needs to read the repo.
@@ -45,6 +57,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
 
       - name: Login to DockerHub
         uses: docker/login-action@v3
@@ -53,8 +67,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # Skipped for a release, which names its own tags below: metadata-action would derive them
+      # from main, not from the release version.
       - name: Extract metadata (tags, labels) for Docker
         id: meta
+        if: ${{ !inputs.tag }}
         uses: docker/metadata-action@c4ee3adeed93b1fa6a762f209fb01608c1a22f1e
         with:
           images: ${{ env.DOCKERHUB_REGISTRY }}
@@ -74,7 +91,7 @@ jobs:
           build-args: |
             GOFIPS140=${{ matrix.gofips140 }}
             GODEBUG=${{ matrix.godebug }}
-          push: ${{ startsWith(github.ref, 'refs/tags/') }}
+          push: ${{ startsWith(github.ref, 'refs/tags/') || inputs.tag != '' }}
           # Keep the published manifest shape as it was before the action was upgraded;
           # build-push-action v6 would otherwise attach provenance attestations.
           provenance: false
@@ -82,6 +99,7 @@ jobs:
           # run (mode=max has to push the whole multi-GB builder stage), while the only layer
           # it could ever restore is `go mod download` - the build layer is invalidated by any
           # source change. Cross-compiling instead of emulating is where the win actually is.
+          # A release pushes <tag> and latest; other runs keep the metadata tags plus <ref or sha>.
           tags: |
-            ${{ steps.meta.outputs.tags }}
-            ${{ env.DOCKERHUB_REGISTRY }}:${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}${{ matrix.suffix }}
+            ${{ inputs.tag && format('{0}:{1}{2}', env.DOCKERHUB_REGISTRY, inputs.tag, matrix.suffix) || steps.meta.outputs.tags }}
+            ${{ inputs.tag && format('{0}:latest{1}', env.DOCKERHUB_REGISTRY, matrix.suffix) || format('{0}:{1}{2}', env.DOCKERHUB_REGISTRY, startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha, matrix.suffix) }}

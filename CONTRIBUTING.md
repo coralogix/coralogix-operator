@@ -79,6 +79,24 @@ $ pre-commit run gitleaks
 
 If needed, bypass with `SKIP=gitleaks git commit ...` or `git commit --no-verify`.
 
+Releasing
+---------------------
+Releases are cut on demand from `main`. The version lives in `cmd/main.go` (`OperatorVersion`) and in `charts/coralogix-operator/Chart.yaml` (`version` and `appVersion`); regular PRs leave it alone. To release, open a release PR:
+
+```sh
+$ make bump                # patch: 2.17.0 -> 2.17.1
+$ make bump BUMP=minor     # 2.17.0 -> 2.18.0
+$ make bump BUMP=major     # 2.17.0 -> 3.0.0
+```
+
+It needs a clean working tree. It branches `prepare-vX.Y.Z` from `origin/main`, bumps the version, commits, pushes, opens the PR with `gh` and turns on auto-merge (squash) for it, then switches back to your branch. Without `gh`, open the PR and turn on auto-merge yourself.
+
+The `Release PR Approval` workflow approves the PR as `github-actions[bot]` when it changes only the version lines, so it needs no human review, and auto-merge then merges it. `main` requires no status checks, so auto-merge doesn't wait for CI.
+
+Merging the release PR runs the `Release` workflow: it pushes the `coralogixrepo/coralogix-operator` image (also tagged `latest`), publishes the chart, and creates the GitHub release with the `vX.Y.Z` tag and notes for every PR since the previous one. If a run fails, re-run its failed jobs, or run `Release` on `main` again.
+
+If another release merges before yours, close your release PR and run `make bump` again: it starts from the new `main`. To bump the version in your working tree without opening a PR, run `make bump-version`.
+
 Running E2E Tests
 ---------------------
 The test files are located at [./tests/e2e/](./tests/e2e).

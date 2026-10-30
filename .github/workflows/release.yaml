@@ -1,0 +1,132 @@
+name: Release
+
+# Releases a merge to main whose version is not released yet: the version in
+# charts/coralogix-operator/Chart.yaml, which a release PR from `make bump` raises.
+# Publishes the image (also as latest), the chart to JFrog, and a GitHub release that creates
+# the vX.Y.Z tag.
+# Then asks telemetry-shippers to bump the operator chart in otel-integration.
+#
+# The tag is created with GITHUB_TOKEN, which does not start other workflows, so the image and
+# chart workflows are called here instead of being triggered by it. Any other merge
+# keeps a released version and publishes nothing; it ships with the next release PR.
+on:
+  push:
+    branches:
+      - main
+  # Retries a release from main after a failed run.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+# One release at a time. A newer merge waiting here replaces an older waiting one, which is
+# fine: the newer commit carries the older one's changes and a higher version.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  version:
+    name: Read version
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      released: ${{ steps.version.outputs.released }}
+    steps:
+      # Full history and tags, so the tag lookup below is local and cannot fail on the network.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read version
+        id: version
+        run: |
+          version=$(yq eval '.version' charts/coralogix-operator/Chart.yaml)
+          tag="v$version"
+          if [[ ! "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "::error::Chart.yaml version '$version' is not X.Y.Z without leading zeros"
+            exit 1
+          fi
+          if git rev-parse -q --verify "refs/tags/$tag" > /dev/null; then
+            released=true
+            echo "$tag is already released; nothing to publish."
+          else
+            # main has no required checks, so a merge can skip the Version Bump check. An
+            # untagged version below the newest release would otherwise overwrite latest.
+            newest=$(git tag -l 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n1 || true)
+            if [[ -n "$newest" && "$(printf '%s\n%s\n' "$tag" "$newest" | sort -V | tail -n1)" != "$tag" ]]; then
+              echo "::error::$tag is below the newest release $newest; raise the version with 'make bump'"
+              exit 1
+            fi
+            released=false
+            echo "Releasing $tag"
+          fi
+          {
+            echo "version=$version"
+            echo "tag=$tag"
+            echo "released=$released"
+          } >> "$GITHUB_OUTPUT"
+
+  image:
+    name: Push image
+    needs: version
+    if: ${{ needs.version.outputs.released == 'false' }}
+    uses: ./.github/workflows/container.yaml
+    with:
+      ref: ${{ github.sha }}
+      tag: ${{ needs.version.outputs.tag }}
+    secrets: inherit
+    permissions:
+      contents: read
+
+  chart:
+    name: Publish chart
+    needs: [version, image]
+    uses: ./.github/workflows/helm-chart-deploy.yml
+    with:
+      ref: ${{ github.sha }}
+      version: ${{ needs.version.outputs.version }}
+    permissions:
+      contents: read
+      id-token: write
+
+  github-release:
+    name: Create GitHub release
+    needs: [version, chart]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      TAG: ${{ needs.version.outputs.tag }}
+    steps:
+      - name: Create release
+        run: |
+          gh release create "$TAG" --target "$GITHUB_SHA" --title "$TAG" --generate-notes --latest
+
+  # Asks telemetry-shippers to bump the coralogix-operator dependency of otel-integration; its
+  # sync workflow opens that PR. Same repository_dispatch pattern as the OpenTelemetry Collector
+  # chart release.
+  telemetry-shippers:
+    name: Notify telemetry-shippers
+    needs: [version, github-release]
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      VERSION: ${{ needs.version.outputs.version }}
+      RELEASE_URL: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ needs.version.outputs.tag }}
+    steps:
+      - name: Dispatch the release
+        run: |
+          gh api repos/coralogix/telemetry-shippers/dispatches \
+            -f event_type=coralogix-operator-release \
+            -f "client_payload[version]=$VERSION" \
+            -f "client_payload[release_url]=$RELEASE_URL"
