@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Checks that a diff is a release PR from `make release-pr` and nothing else: it changes only
+# Checks that a diff is a release PR from `make bump` and nothing else: it changes only
 # the version lines in cmd/main.go, Chart.yaml and the chart README, from the base version to a
 # higher one. The Release PR Approval workflow approves a PR that passes.
 #
@@ -57,7 +57,7 @@ for line in "${added[@]}"; do
 done
 [[ -n "$new_version" ]] || fail "no new version in $chart"
 if ! printf '%s\n' "${removed[@]}" | grep -qx "version: *$base_version"; then
-  fail "it doesn't start from $base_version on the base branch; merge the base branch and run 'make bump' again"
+  fail "it doesn't start from $base_version on the base branch; run 'make bump' again"
 fi
 if [[ "$new_version" == "$base_version" ||
   "$(printf '%s\n%s\n' "$new_version" "$base_version" | sort -V | tail -n1)" != "$new_version" ]]; then

@@ -1,7 +1,7 @@
 name: Release
 
 # Releases a merge to main whose version is not released yet: the version in
-# charts/coralogix-operator/Chart.yaml, which a release PR from `make release-pr` raises.
+# charts/coralogix-operator/Chart.yaml, which a release PR from `make bump` raises.
 # Publishes the image (also as latest), the chart to JFrog, and a GitHub release that creates
 # the vX.Y.Z tag.
 # Then asks telemetry-shippers to bump the operator chart in otel-integration.

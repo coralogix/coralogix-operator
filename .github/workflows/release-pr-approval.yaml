@@ -1,6 +1,6 @@
 name: Release PR Approval
 
-# Approves a release PR from `make release-pr` as github-actions[bot], so it needs no human
+# Approves a release PR from `make bump` as github-actions[bot], so it needs no human
 # review: it only re-publishes code already reviewed on main. Other PRs are left alone.
 #
 # pull_request_target runs this file and the check script from main, never from the PR, so a
