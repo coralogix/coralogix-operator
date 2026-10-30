@@ -51,11 +51,11 @@ fi
 
 new_version=""
 for line in "${added[@]}"; do
-  if [[ "$line" =~ ^version:\ *([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+  if [[ "$line" =~ ^version:\ *((0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*))$ ]]; then
     new_version="${BASH_REMATCH[1]}"
   fi
 done
-[[ -n "$new_version" ]] || fail "no new version in $chart"
+[[ -n "$new_version" ]] || fail "no new X.Y.Z version (without leading zeros) in $chart"
 if ! printf '%s\n' "${removed[@]}" | grep -qx "version: *$base_version"; then
   fail "it doesn't start from $base_version on the base branch; run 'make bump' again"
 fi

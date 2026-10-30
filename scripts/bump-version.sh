@@ -17,8 +17,8 @@ if [[ "$current" != "$operator" ]]; then
   echo "error: $chart version $current and $main_go OperatorVersion $operator differ" >&2
   exit 1
 fi
-if [[ ! "$current" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-  echo "error: current version '$current' is not X.Y.Z" >&2
+if [[ ! "$current" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+  echo "error: current version '$current' is not X.Y.Z without leading zeros" >&2
   exit 1
 fi
 major="${BASH_REMATCH[1]}"

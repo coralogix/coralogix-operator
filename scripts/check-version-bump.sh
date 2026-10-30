@@ -19,8 +19,8 @@ echo "base $base: $base_version"
 echo "Chart.yaml version: $chart_version, appVersion: $app_version"
 echo "$main_go OperatorVersion: $operator_version"
 
-if [[ ! "$chart_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  echo "error: version '$chart_version' is not X.Y.Z; run 'make bump' instead of editing it by hand" >&2
+if [[ ! "$chart_version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+  echo "error: version '$chart_version' is not X.Y.Z without leading zeros; run 'make bump' instead of editing it by hand" >&2
   exit 1
 fi
 
