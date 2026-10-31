@@ -7,3 +7,5 @@ kinds:
     resource: RefThing
   - kind: BodyIDThing
     resource: BodyIDThing
+  - kind: WrappedThing
+    resource: WrappedThing

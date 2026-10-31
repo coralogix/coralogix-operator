@@ -55,6 +55,7 @@ type kindData struct {
 	Convs   []string // conversion methods, as Go code
 
 	CreateBody, UpdateBody     string // SDK request body types
+	CreateConv, UpdateConv     string // spec conversion methods
 	CreateMethod, CreateSetter string
 	UpdateMethod, UpdateSetter string
 	GetMethod, DeleteMethod    string
@@ -62,11 +63,26 @@ type kindData struct {
 	Mask, MaskSetter           string // the update mask and its setter, "" for a full replace
 	IDField                    string // the Go field of the id in the resource response
 	IDValue                    bool   // the id field is a value, not a pointer
+	CreateResponseField        string // the field that wraps the resource in the Create response
+	CreateResponseValue        bool
+	GetResponseField           string
+	GetResponseValue           bool
+	CreateWrapperField         string // the request field that wraps the resource
+	CreateWrapperValue         bool
+	UpdateWrapperField         string
+	UpdateWrapperValue         bool
+	ResourceBody               string // the SDK resource type inside a request wrapper
+	MaskInBody                 bool
+	MaskBodyField              string
+	MaskBodyValue              bool
+	CreateValues, UpdateValues []requestValueData
+	HasUUID                    bool
 	// UpdateIDInBody: Update has no id in its path (api.updateIDInBody). UpdateRequest copies the
 	// status id into the body field BodyIDField, a value when BodyIDValue is true.
-	UpdateIDInBody bool
-	BodyIDField    string
-	BodyIDValue    bool
+	UpdateIDInBody  bool
+	BodyIDInWrapper bool
+	BodyIDField     string
+	BodyIDValue     bool
 
 	E2E *e2eData
 }
@@ -127,6 +143,11 @@ type enumValue struct {
 	Name, Const string
 }
 
+type requestValueData struct {
+	Field string
+	Expr  string
+}
+
 // Names returns the custom resource values, for the Enum marker.
 func (e *enumMap) Names() string {
 	names := make([]string, len(e.Values))
@@ -137,26 +158,27 @@ func (e *enumMap) Names() string {
 }
 
 type builder struct {
-	kind    string
-	file    *overrides.File
-	used    map[overrides.Line]bool // the lines of the file that changed the output
-	ix      *refIndex
-	alias   string
-	types   map[string]*crType
-	order   []*crType
-	scalars []*crScalar
-	enums   map[string]*enumMap
-	enumSeq []*enumMap
-	convs   map[string]string // conversion method by "crType->sdkType"
-	code    []string
-	tmp     int
+	kind             string
+	file             *overrides.File
+	used             map[overrides.Line]bool // the lines of the file that changed the output
+	ix               *refIndex
+	alias            string
+	types            map[string]*crType
+	order            []*crType
+	scalars          []*crScalar
+	enums            map[string]*enumMap
+	enumSeq          []*enumMap
+	convs            map[string]string // conversion method by "crType->sdkType"
+	code             []string
+	tmp              int
+	conversionSuffix string // separates Create and Update conversions of a wrapped resource
 	// droppedLimits: validators.inferred: false dropped at least one contract limit.
 	droppedLimits bool
 }
 
 // buildKind maps the resource and its SDK names to the data of the templates. It is also the
 // renderer check of check: an error is a contract that the renderer cannot write.
-func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module string, file *overrides.File) (*kindData, error) {
+func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module string, file *overrides.File, updateIDOutsideWrapper bool) (*kindData, error) {
 	ix, err := indexRefs(refs)
 	if err != nil {
 		return nil, err
@@ -168,6 +190,7 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 		Finalizer: kebab(entry.Kind) + ".coralogix.com/finalizer", Module: module,
 		SDKPath: ix.pkg.Pkg, SDKAlias: b.alias, CxsdkPath: ix.cxsdk, Replace: r.Replace,
 	}
+	d.BodyIDInWrapper = r.Policy.RequestWrapper != "" && !updateIDOutsideWrapper
 	if err := checkLifecycle(r); err != nil {
 		return nil, err
 	}
@@ -185,6 +208,10 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 		return nil, err
 	}
 	for _, line := range file.Lines() {
+		if file.Types[line.Component].Fields[line.Field].ReadOnly && resourceHasField(r, line) {
+			// The shared model removes a read-only field from the spec and requests.
+			b.used[line] = true
+		}
 		if !b.used[line] {
 			return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String(), msg: "the line changes no generated code"}
 		}
@@ -196,6 +223,42 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 	return d, nil
 }
 
+func resourceHasField(r *model.Resource, line overrides.Line) bool {
+	seen := map[*model.Type]bool{}
+	var hasTypeField func(*model.Type) bool
+	hasTypeField = func(t *model.Type) bool {
+		if t == nil || seen[t] {
+			return false
+		}
+		seen[t] = true
+		if t.Schema == line.Component {
+			for _, f := range t.Fields {
+				if f.Name == line.Field {
+					return true
+				}
+			}
+		}
+		if hasTypeField(t.Elem) {
+			return true
+		}
+		for _, f := range t.Fields {
+			if hasTypeField(f.Type) {
+				return true
+			}
+		}
+		return false
+	}
+	for _, f := range r.Fields {
+		if r.Name == line.Component && f.Name == line.Field {
+			return true
+		}
+		if hasTypeField(f.Type) {
+			return true
+		}
+	}
+	return false
+}
+
 // checkLifecycle rejects the API shapes that only a released resource has. Their keys land with
 // the first kind that needs them.
 func checkLifecycle(r *model.Resource) error {
@@ -204,12 +267,8 @@ func checkLifecycle(r *model.Resource) error {
 		return unsupported("resource", "a singleton is not supported yet")
 	case r.IDType == nil || r.IDType.Kind != model.String:
 		return unsupported("resource", "the id must be a string")
-	case r.MaskInBody:
-		return unsupported("update", "an update mask in the body is not supported yet")
-	case r.Policy.RequestWrapper != "", r.Policy.CustomMethods:
-		return unsupported("api", "api keys are not supported yet")
-	case !r.Create.Response.Direct || r.Create.Response.ID != "":
-		return unsupported("create.response", "Create must return the resource")
+	case !r.Create.Response.Direct && r.Create.Response.Field == "":
+		return unsupported("create.response", "Create must return the resource directly or in a field")
 	}
 	return nil
 }

@@ -230,7 +230,11 @@ func updateStep(d *kindData, ix *refIndex, full *omap, file *e2eFile, nameField 
 		if err != nil {
 			return nil, err
 		}
-		read := "got." + got.Name
+		read := "got."
+		if d.GetResponseField != "" {
+			read += d.GetResponseField + "."
+		}
+		read += got.Name
 		if strings.HasPrefix(got.Want, "*") {
 			read = fmt.Sprintf("ptr.Deref(%s, %s)", read, zeroLiteral(f.typ))
 		}

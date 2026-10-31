@@ -177,18 +177,18 @@ func TestValidatorsAndAPIKeys(t *testing.T) {
 			code: "",
 		},
 		{
-			name: "an api key that opgen does not support yet",
+			name: "clientSetID requires an id in Create",
 			edit: func(t *testing.T, s string) string {
 				return replaceOnce(t, s, "  updateIDInBody: true", "  updateIDInBody: true\n  clientSetID: true")
 			},
-			code: codeOverrideInvalid,
+			code: "CLIENT_SET_ID_NOT_IN_CREATE",
 		},
 		{
-			name: "an api key that opgen does not support yet, set to false",
+			name: "clientSetID false states the default",
 			edit: func(t *testing.T, s string) string {
 				return replaceOnce(t, s, "  updateIDInBody: true", "  updateIDInBody: true\n  clientSetID: false")
 			},
-			code: codeOverrideInvalid,
+			code: "OK",
 		},
 		{
 			name: "an empty api section",
@@ -216,6 +216,12 @@ func TestValidatorsAndAPIKeys(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := checkBodyIDThing(t, func(s string) string { return tt.edit(t, s) })
+			if tt.code == "OK" {
+				if err != nil {
+					t.Fatal(err)
+				}
+				return
+			}
 			if tt.code == "" {
 				if err == nil {
 					t.Fatal("want an error")

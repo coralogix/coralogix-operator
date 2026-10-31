@@ -70,6 +70,9 @@ func (r *ThingReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 		return fmt.Errorf("error on creating remote Thing: %w", cxsdk.NewAPIError(httpResp, err))
 	}
 	log.Info("Remote Thing created", "response", utils.FormatJSON(resp))
+	if resp == nil {
+		return fmt.Errorf("the create response of Thing has no resource")
+	}
 	id := resp.Id
 	if id == "" {
 		return fmt.Errorf("the create response of Thing has no id")

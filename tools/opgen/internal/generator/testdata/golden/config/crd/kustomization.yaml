@@ -5,4 +5,5 @@ resources:
   - bases/coralogix.com_patchthings.yaml
   - bases/coralogix.com_refthings.yaml
   - bases/coralogix.com_things.yaml
+  - bases/coralogix.com_wrappedthings.yaml
   # END generated kinds
