@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/coralogix/coralogix-management-sdk/iac/model"
+	"github.com/coralogix/coralogix-operator/v2/tools/opgen/internal/overrides"
 )
 
 // operations reads the SDK names of the calls.
@@ -64,7 +65,43 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 		return err
 	}
 	d.IDField, d.IDValue = id.Name, id.Want == "string"
-	if !r.Replace {
+	if r.Create.Response.Field != "" {
+		response, err := b.ix.typeRef("create.response")
+		if err != nil {
+			return err
+		}
+		field, err := b.ix.field(response.Name, r.Create.Response.Field)
+		if err != nil {
+			return err
+		}
+		d.CreateResponseField, d.CreateResponseValue = field.Name, field.Want == resource.Name
+	}
+	if r.Get.Response.Field != "" {
+		response, err := b.ix.typeRef("get.response")
+		if err != nil {
+			return err
+		}
+		field, err := b.ix.field(response.Name, r.Get.Response.Field)
+		if err != nil {
+			return err
+		}
+		d.GetResponseField, d.GetResponseValue = field.Name, field.Want == resource.Name
+	}
+	if r.Policy.RequestWrapper != "" {
+		d.ResourceBody = resource.Name
+		for _, request := range []struct {
+			body  string
+			field *string
+			value *bool
+		}{{d.CreateBody, &d.CreateWrapperField, &d.CreateWrapperValue}, {d.UpdateBody, &d.UpdateWrapperField, &d.UpdateWrapperValue}} {
+			ref, err := b.ix.field(request.body, r.Policy.RequestWrapper)
+			if err != nil {
+				return err
+			}
+			*request.field, *request.value = ref.Name, ref.Want == resource.Name
+		}
+	}
+	if !r.Replace && !r.MaskInBody {
 		builderType, err := b.ix.typeRef("update")
 		if err != nil {
 			return err
@@ -75,6 +112,13 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 		}
 		d.MaskSetter = mask.Name
 	}
+	if r.MaskInBody {
+		field, err := b.ix.field(d.UpdateBody, r.UpdateMask)
+		if err != nil {
+			return err
+		}
+		d.MaskInBody, d.MaskBodyField, d.MaskBodyValue = true, field.Name, field.Want == "string"
+	}
 	return nil
 }
 
@@ -82,6 +126,7 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 func (b *builder) requests(r *model.Resource, d *kindData) error {
 	var create, update []*model.Field
 	var mask []string
+	var err error
 	bodyID := r.Policy.UpdateIDInBody
 	for _, f := range r.Fields {
 		if f.Create != nil {
@@ -95,21 +140,31 @@ func (b *builder) requests(r *model.Resource, d *kindData) error {
 			mask = append(mask, f.Name)
 		}
 	}
-	if _, err := b.conversion(d.Spec, d.CreateBody, create, "spec"); err != nil {
+	createType, updateType := d.CreateBody, d.UpdateBody
+	createSuffix, updateSuffix := "", ""
+	if d.ResourceBody != "" {
+		createType, updateType = d.ResourceBody, d.ResourceBody
+		createSuffix, updateSuffix = "Create", "Update"
+	}
+	if d.CreateConv, err = b.conversionAs(d.Spec, createType, create, "spec", createSuffix); err != nil {
 		return err
 	}
-	if _, err := b.conversion(d.Spec, d.UpdateBody, update, "spec"); err != nil {
+	if d.UpdateConv, err = b.conversionAs(d.Spec, updateType, update, "spec", updateSuffix); err != nil {
 		return err
 	}
 	if bodyID {
-		ref, err := b.ix.field(d.UpdateBody, r.ID())
+		owner := d.UpdateBody
+		if d.BodyIDInWrapper {
+			owner = d.ResourceBody
+		}
+		ref, err := b.ix.field(owner, r.ID())
 		if err != nil {
 			return err
 		}
 		d.UpdateIDInBody, d.BodyIDField, d.BodyIDValue = true, ref.Name, ref.Want == "string"
 	}
 	if r.Replace {
-		return nil
+		return b.requestValues(r, d)
 	}
 	if r.UpdateMaskPattern != "" {
 		valid, _, err := model.UpdateMaskRule(r.UpdateMaskPattern)
@@ -123,18 +178,85 @@ func (b *builder) requests(r *model.Resource, d *kindData) error {
 		}
 	}
 	d.Mask = strings.Join(mask, ",")
+	return b.requestValues(r, d)
+}
+
+func (b *builder) requestValues(r *model.Resource, d *kindData) error {
+	if b.file == nil {
+		return nil
+	}
+	for _, request := range []struct {
+		name, body string
+		values     *[]requestValueData
+	}{{"create", d.CreateBody, &d.CreateValues}, {"update", d.UpdateBody, &d.UpdateValues}} {
+		for _, name := range sortedKeys(b.file.API.RequestValues[request.name]) {
+			location := "api.requestValues." + request.name + "." + name
+			if name == r.ID() && request.name == "update" && r.Policy.UpdateIDInBody {
+				return unsupported(location, "the status id already sets this field")
+			}
+			if name == r.UpdateMask && request.name == "update" && r.MaskInBody {
+				return unsupported(location, "the update mask already sets this field")
+			}
+			ref, err := b.ix.field(request.body, name)
+			if err != nil {
+				return unsupported(location, "%s", err)
+			}
+			source := b.file.API.RequestValues[request.name][name]
+			expr, pointer, err := b.requestValueExpression(source, d, location)
+			if err != nil {
+				return err
+			}
+			switch ref.Want {
+			case "string":
+				if pointer {
+					expr = "ptr.Deref(" + expr + ", \"\")"
+				}
+			case "*string":
+				if !pointer {
+					expr = "ptr.To(" + expr + ")"
+				}
+			default:
+				return unsupported(location, "the sibling field must be a string")
+			}
+			*request.values = append(*request.values, requestValueData{Field: ref.Name, Expr: expr})
+		}
+	}
 	return nil
+}
+
+func (b *builder) requestValueExpression(source overrides.RequestValue, d *kindData, location string) (string, bool, error) {
+	switch source.Source {
+	case "uuid":
+		d.HasUUID = true
+		return strconv.Quote(source.Value) + " + gouuid.NewString()", false, nil
+	case "literal":
+		return strconv.Quote(source.Value), false, nil
+	}
+	name := strings.TrimPrefix(source.Source, "spec.")
+	for _, field := range d.Spec.Fields {
+		if field.JSON == name && field.typ.Kind == model.String {
+			return "in.Spec." + field.GoName, field.Optional, nil
+		}
+	}
+	return "", false, unsupported(location, "the spec has no string field %s", name)
 }
 
 // conversion writes the method that converts a struct of the custom resource to an SDK request
 // type, once per pair, and returns its name.
 func (b *builder) conversion(cr *crType, sdkType string, fields []*model.Field, path string) (string, error) {
-	key := cr.Name + "->" + sdkType
+	return b.conversionAs(cr, sdkType, fields, path, b.conversionSuffix)
+}
+
+func (b *builder) conversionAs(cr *crType, sdkType string, fields []*model.Field, path, suffix string) (string, error) {
+	key := cr.Name + "->" + sdkType + suffix
 	if name, ok := b.convs[key]; ok {
 		return name, nil
 	}
-	name := "to" + sdkType
+	name := "to" + sdkType + suffix
 	b.convs[key] = name
+	previous := b.conversionSuffix
+	b.conversionSuffix = suffix
+	defer func() { b.conversionSuffix = previous }()
 	var body strings.Builder
 	for _, rf := range fields {
 		i := slices.IndexFunc(cr.Fields, func(f *crField) bool { return f.API == rf.Name })
