@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -71,7 +72,7 @@ func (r *IntegrationReconciler) HandleCreation(ctx context.Context, log logr.Log
 	log.Info("Remote integration created", "response", utils.FormatJSON(createResponse))
 
 	integration.Status = coralogixv1alpha1.IntegrationStatus{
-		Id: createResponse.IntegrationId,
+		Id: ptr.To(createResponse.IntegrationId),
 	}
 
 	return nil

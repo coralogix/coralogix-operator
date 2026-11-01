@@ -23,6 +23,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
@@ -72,10 +73,10 @@ func (i *Integration) ExtractCreateIntegrationRequest(ctx context.Context) (*int
 		return nil, fmt.Errorf("failed to extract parameters: %w", err)
 	}
 	return &integrations.SaveIntegrationRequest{
-		Metadata: &integrations.IntegrationMetadata{
-			IntegrationKey: integrations.PtrString(i.Spec.IntegrationKey),
-			Version:        integrations.PtrString(i.Spec.Version),
-			IntegrationParameters: &integrations.GenericIntegrationParameters{
+		Metadata: integrations.IntegrationMetadata{
+			IntegrationKey: i.Spec.IntegrationKey,
+			Version:        i.Spec.Version,
+			IntegrationParameters: integrations.GenericIntegrationParameters{
 				Parameters: parameters,
 			},
 		},
@@ -92,11 +93,11 @@ func (i *Integration) ExtractUpdateIntegrationRequest(ctx context.Context, id *s
 	}
 
 	return &integrations.UpdateIntegrationRequest{
-		Id: id,
-		Metadata: &integrations.IntegrationMetadata{
-			IntegrationKey: integrations.PtrString(i.Spec.IntegrationKey),
-			Version:        integrations.PtrString(i.Spec.Version),
-			IntegrationParameters: &integrations.GenericIntegrationParameters{
+		Id: ptr.Deref(id, ""),
+		Metadata: integrations.IntegrationMetadata{
+			IntegrationKey: i.Spec.IntegrationKey,
+			Version:        i.Spec.Version,
+			IntegrationParameters: integrations.GenericIntegrationParameters{
 				Parameters: parameters,
 			},
 		},
