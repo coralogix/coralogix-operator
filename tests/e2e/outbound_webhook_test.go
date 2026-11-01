@@ -103,7 +103,7 @@ var _ = Describe("OutboundWebhook", Ordered, func() {
 		outBoundWebhook.Spec.OutboundWebhookType = coralogixv1alpha1.OutboundWebhookType{}
 		err := crClient.Create(ctx, outBoundWebhook)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge, ibmEventNotifications"))
 	})
 
 	It("should deny creation of OutboundWebhook with two types", func(ctx context.Context) {
@@ -112,7 +112,7 @@ var _ = Describe("OutboundWebhook", Ordered, func() {
 			Url:     "https://example.com",
 		}
 		err := crClient.Create(ctx, outBoundWebhook)
-		Expect(err.Error()).To(ContainSubstring("Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge, ibmEventNotifications"))
 	})
 })
 
