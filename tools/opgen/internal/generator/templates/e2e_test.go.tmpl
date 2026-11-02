@@ -13,7 +13,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
@@ -49,22 +48,16 @@ var _ = Describe("{{.Kind}} (generated)", Ordered{{if .E2E.Serial}}, Serial{{end
 		minimalName = uniqueName("e2e-{{.Lower}}-min")
 {{- range .E2E.Fixtures}}
 		{
-			fixture := &unstructured.Unstructured{}
-			Expect(json.Unmarshal([]byte(strings.ReplaceAll({{.SpecJSON}}, "@{run}", fullName)), &fixture.Object)).To(Succeed())
-			fixture.SetAPIVersion("coralogix.com/v1alpha1")
-			fixture.SetKind("{{.Kind}}")
-			fixture.SetName(fullName + "{{.Suffix}}")
-			fixture.SetNamespace(testNamespace)
+			fixture := &coralogixv1alpha1.{{.Kind}}{ObjectMeta: metav1.ObjectMeta{Name: fullName + "{{.Suffix}}", Namespace: testNamespace}}
+			decoder := json.NewDecoder(strings.NewReader(strings.ReplaceAll({{.SpecJSON}}, "@{run}", fullName)))
+			decoder.DisallowUnknownFields()
+			Expect(decoder.Decode(&fixture.Spec)).To(Succeed())
 			Expect(crClient.Create(ctx, fixture)).To(Succeed())
 			DeferCleanup(func(ctx context.Context) { _ = crClient.Delete(ctx, fixture) })
 			Eventually(func(g Gomega) {
-				current := &unstructured.Unstructured{}
-				current.SetAPIVersion("coralogix.com/v1alpha1")
-				current.SetKind("{{.Kind}}")
-				g.Expect(crClient.Get(ctx, types.NamespacedName{Name: fixture.GetName(), Namespace: testNamespace}, current)).To(Succeed())
-				id, found, err := unstructured.NestedString(current.Object, "status", "id")
-				g.Expect(err).NotTo(HaveOccurred())
-				g.Expect(found && id != "").To(BeTrue())
+				current := &coralogixv1alpha1.{{.Kind}}{}
+				g.Expect(crClient.Get(ctx, types.NamespacedName{Name: fixture.Name, Namespace: testNamespace}, current)).To(Succeed())
+				g.Expect(current.Status.{{.StatusField}}).NotTo(BeNil())
 			}, time.Minute, time.Second).Should(Succeed())
 		}
 {{- end}}

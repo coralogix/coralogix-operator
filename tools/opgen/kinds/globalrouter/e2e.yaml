@@ -8,6 +8,7 @@ substitutions:
 fixtures:
   - kind: Connector
     suffix: -connector
+    statusField: Id
     spec:
       name: '@{run}-connector'
       description: generic HTTPS connector for the generated GlobalRouter test

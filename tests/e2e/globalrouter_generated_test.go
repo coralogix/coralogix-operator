@@ -27,7 +27,6 @@ import (
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -121,22 +120,16 @@ var _ = Describe("GlobalRouter (generated)", Ordered, Serial, func() {
 		fullName = uniqueName("e2e-globalrouter")
 		minimalName = uniqueName("e2e-globalrouter-min")
 		{
-			fixture := &unstructured.Unstructured{}
-			Expect(json.Unmarshal([]byte(strings.ReplaceAll(`{"connectorConfig":{"fields":[{"fieldName":"url","value":"https://httpbun.org/post"},{"fieldName":"method","value":"post"}]},"description":"generic HTTPS connector for the generated GlobalRouter test","name":"@{run}-connector","type":"genericHttps"}`, "@{run}", fullName)), &fixture.Object)).To(Succeed())
-			fixture.SetAPIVersion("coralogix.com/v1alpha1")
-			fixture.SetKind("Connector")
-			fixture.SetName(fullName + "-connector")
-			fixture.SetNamespace(testNamespace)
+			fixture := &coralogixv1alpha1.Connector{ObjectMeta: metav1.ObjectMeta{Name: fullName + "-connector", Namespace: testNamespace}}
+			decoder := json.NewDecoder(strings.NewReader(strings.ReplaceAll(`{"connectorConfig":{"fields":[{"fieldName":"url","value":"https://httpbun.org/post"},{"fieldName":"method","value":"post"}]},"description":"generic HTTPS connector for the generated GlobalRouter test","name":"@{run}-connector","type":"genericHttps"}`, "@{run}", fullName)))
+			decoder.DisallowUnknownFields()
+			Expect(decoder.Decode(&fixture.Spec)).To(Succeed())
 			Expect(crClient.Create(ctx, fixture)).To(Succeed())
 			DeferCleanup(func(ctx context.Context) { _ = crClient.Delete(ctx, fixture) })
 			Eventually(func(g Gomega) {
-				current := &unstructured.Unstructured{}
-				current.SetAPIVersion("coralogix.com/v1alpha1")
-				current.SetKind("Connector")
-				g.Expect(crClient.Get(ctx, types.NamespacedName{Name: fixture.GetName(), Namespace: testNamespace}, current)).To(Succeed())
-				id, found, err := unstructured.NestedString(current.Object, "status", "id")
-				g.Expect(err).NotTo(HaveOccurred())
-				g.Expect(found && id != "").To(BeTrue())
+				current := &coralogixv1alpha1.Connector{}
+				g.Expect(crClient.Get(ctx, types.NamespacedName{Name: fixture.Name, Namespace: testNamespace}, current)).To(Succeed())
+				g.Expect(current.Status.Id).NotTo(BeNil())
 			}, time.Minute, time.Second).Should(Succeed())
 		}
 		DeferCleanup(func(ctx context.Context) {

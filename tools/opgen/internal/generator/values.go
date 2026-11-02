@@ -50,9 +50,10 @@ type e2eFile struct {
 }
 
 type e2eFixture struct {
-	Kind   string         `yaml:"kind"`
-	Suffix string         `yaml:"suffix"`
-	Spec   map[string]any `yaml:"spec"`
+	Kind        string         `yaml:"kind"`
+	Suffix      string         `yaml:"suffix"`
+	StatusField string         `yaml:"statusField"`
+	Spec        map[string]any `yaml:"spec"`
 }
 
 type e2eUpgrade struct {
@@ -102,7 +103,7 @@ type e2eData struct {
 }
 
 type fixtureData struct {
-	Kind, Suffix, SpecJSON string
+	Kind, Suffix, StatusField, SpecJSON string
 }
 
 type substitutionData struct {
@@ -172,14 +173,14 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 	}
 	e2e = &e2eData{FullJSON: goString(full.json()), MinimalJSON: goString(minimal.json()), Serial: file.Serial, Omit: file.Omit}
 	for _, fixture := range file.Fixtures {
-		if !token.IsIdentifier(fixture.Kind) || fixture.Suffix == "" || len(fixture.Spec) == 0 {
-			return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":fixtures", msg: "kind, suffix, and spec are required"}
+		if !token.IsIdentifier(fixture.Kind) || fixture.Suffix == "" || !token.IsIdentifier(fixture.StatusField) || len(fixture.Spec) == 0 {
+			return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":fixtures", msg: "kind, suffix, statusField, and spec are required"}
 		}
 		encoded, err := json.Marshal(fixture.Spec)
 		if err != nil {
 			return nil, nil, nil, err
 		}
-		e2e.Fixtures = append(e2e.Fixtures, fixtureData{fixture.Kind, fixture.Suffix, goString(string(encoded))})
+		e2e.Fixtures = append(e2e.Fixtures, fixtureData{fixture.Kind, fixture.Suffix, fixture.StatusField, goString(string(encoded))})
 	}
 	for _, from := range sortedKeys(file.Substitutions) {
 		e2e.Substitutions = append(e2e.Substitutions, substitutionData{from, file.Substitutions[from]})
