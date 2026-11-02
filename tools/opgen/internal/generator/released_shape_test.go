@@ -71,9 +71,9 @@ func TestReleasedShapeGroupMovesTheCRFieldAndConversion(t *testing.T) {
 }
 
 func TestReleasedShapeGroupRequireOneMovesTheCELRule(t *testing.T) {
-	file := &overrides.File{Resource: "Thing", Groups: map[string]overrides.Group{"choice": {Fields: []string{"left", "right"}, RequireOne: true}}}
+	file := &overrides.File{Resource: "Thing", Groups: map[string]overrides.Group{"choice": {Fields: []string{"left", "right", "timeout"}, RequireOne: true}}}
 	b := &builder{file: file, types: map[string]*crType{}, usedGroups: map[string]bool{}}
-	owner := &crType{Name: "ThingSpec", Fields: []*crField{{API: "left", JSON: "left", GoName: "Left", Optional: true}, {API: "right", JSON: "right", GoName: "Right", Optional: true}}}
+	owner := &crType{Name: "ThingSpec", Fields: []*crField{{API: "left", JSON: "left", GoName: "Left", Optional: true}, {API: "right", JSON: "right", GoName: "Right", Optional: true}, {API: "timeout", JSON: "timeout", GoName: "Timeout", Optional: true}}}
 	remaining, err := b.groupFields("Thing", owner, []model.OneOfGroup{{Arms: []string{"left", "right"}, AllowNone: true}})
 	if err != nil {
 		t.Fatal(err)
@@ -82,16 +82,16 @@ func TestReleasedShapeGroupRequireOneMovesTheCELRule(t *testing.T) {
 		t.Fatal("the oneOf rule or fields did not move into the group")
 	}
 	markers := strings.Join(owner.Fields[0].object.Markers, "\n")
-	if !strings.Contains(markers, "== 1") {
-		t.Fatalf("the group lost its exactly-one rule: %s", markers)
+	if !strings.Contains(markers, "== 1") || strings.Contains(markers, "timeout") || len(owner.Fields[0].object.Fields) != 3 {
+		t.Fatalf("the group lost its shared field or exactly-one rule: %s", markers)
 	}
 }
 
 func TestReleasedShapeRequestValueBy(t *testing.T) {
 	cr := &crType{Name: "Choice", Fields: []*crField{{API: "left", GoName: "Left", Optional: true, typ: &model.Type{Kind: model.Object}}, {API: "right", GoName: "Right", Optional: true, typ: &model.Type{Kind: model.Object}}}, groups: []model.OneOfGroup{{Arms: []string{"left", "right"}, AllowNone: true}}}
 	ix := &refIndex{fields: map[string]sdkcheck.Ref{"Choice.Type": {Name: "Type", Want: "*ChoiceType"}}, bySchema: map[string]sdkcheck.Ref{"ChoiceType": {Name: "ChoiceType"}}, consts: map[string]bool{"CHOICETYPE_LEFT": true, "CHOICETYPE_RIGHT": true}}
-	b := &builder{ix: ix, alias: "sdk"}
-	field := &model.Field{Name: "type", Type: &model.Type{Kind: model.Enum, Schema: "ChoiceType", Values: []string{"LEFT", "RIGHT"}}, Attrs: model.Attrs{Required: true}}
+	b := &builder{file: &overrides.File{Resource: "Choice"}, ix: ix, alias: "sdk"}
+	field := &model.Field{Name: "type", Type: &model.Type{Kind: model.Enum, Schema: "ChoiceType", EnumZero: "UNSPECIFIED", Values: []string{"LEFT", "RIGHT"}}, Attrs: model.Attrs{Required: true}}
 	code, err := b.requestValueBy(cr, "Choice", field, map[string]string{"left": "LEFT", "right": "RIGHT"}, "spec")
 	if err != nil {
 		t.Fatal(err)
@@ -104,8 +104,13 @@ func TestReleasedShapeRequestValueBy(t *testing.T) {
 	if _, err := parser.ParseFile(token.NewFileSet(), "generated.go", "package generated\nfunc convert() {\n"+code+"}\n", 0); err != nil {
 		t.Fatalf("requestValueBy writes invalid Go: %v\n%s", err, code)
 	}
-	if _, err := b.requestValueBy(cr, "Choice", field, map[string]string{"left": "MISSING"}, "spec"); err == nil {
+	if _, err := b.requestValueBy(cr, "Choice", field, map[string]string{"left": "MISSING", "right": "RIGHT"}, "spec"); err == nil {
 		t.Fatal("an unknown API enum value passed")
+	}
+	if _, err := b.requestValueBy(cr, "Choice", field, map[string]string{"left": "UNSPECIFIED", "right": "RIGHT"}, "spec"); err == nil {
+		t.Fatal("an enum zero value passed as a selected-arm value")
+	} else if shape, ok := isShapeError(err); !ok || shape.code != codeOverrideInvalid {
+		t.Fatalf("want an invalid override for the enum zero value, got %v", err)
 	}
 }
 
@@ -234,4 +239,9 @@ func TestReleasedShapeRequestValueBySyntheticKind(t *testing.T) {
 	if !strings.Contains(string(conversion), "if in.Http != nil") || !strings.Contains(string(conversion), "THINGCONFIGTYPE_THING_CONFIG_TYPE_HTTP") {
 		t.Fatal("Create or Update does not derive the discriminator")
 	}
+	zeroOverride := strings.Replace(override, "http: THING_CONFIG_TYPE_HTTP", "http: THING_CONFIG_TYPE_UNSPECIFIED", 1)
+	if err := os.WriteFile(path, []byte(zeroOverride), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	wantCode(t, generateFromInput(input, root, root), codeOverrideInvalid)
 }

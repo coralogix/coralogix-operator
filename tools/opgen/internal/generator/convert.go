@@ -353,7 +353,15 @@ func (b *builder) requestValueBy(cr *crType, sdkType string, field *model.Field,
 		value := by[source]
 		expr := strconv.Quote(value)
 		if field.Type.Kind == model.Enum {
-			if value != field.Type.EnumZero && !slices.Contains(field.Type.Values, value) {
+			if value == field.Type.EnumZero && value != "" {
+				component := cr.schema
+				if component == "" {
+					component = b.file.Resource
+				}
+				line := overrides.Line{Component: component, Field: field.Name}
+				return "", &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".requestValueBy", msg: "the enum zero value cannot represent a selected arm"}
+			}
+			if !slices.Contains(field.Type.Values, value) {
 				return "", unsupported(location, "requestValueBy value %s is not in the API enum", value)
 			}
 			enumType, err := b.ix.schemaType(field.Type.Schema)

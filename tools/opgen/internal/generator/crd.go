@@ -222,7 +222,7 @@ func (b *builder) groupFields(component string, owner *crType, groups []model.On
 		}
 		rules := groupRulesByName[name]
 		if group.RequireOne {
-			if len(rules) != 1 || !rules[0].AllowNone || len(rules[0].Arms) != len(child.Fields) {
+			if len(rules) != 1 || !rules[0].AllowNone {
 				return nil, unsupported("groups."+name+".requireOne", "requireOne needs one complete oneOf group that permits zero arms")
 			}
 			rules[0].AllowNone = false
