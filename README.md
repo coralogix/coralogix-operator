@@ -86,7 +86,7 @@ To install, upgrade, or uninstall the Coralogix Operator, using either the stand
     To check which image a release runs:
 
     ```sh
-    kubectl get deployment -l app.kubernetes.io/instance=<my-release> \
+    kubectl get deployment -A -l app.kubernetes.io/instance=<my-release> \
       -o jsonpath='{.items[*].spec.template.spec.containers[0].image}'
     ```
 
