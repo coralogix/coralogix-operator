@@ -41,9 +41,9 @@ jobs:
           ref: main
           persist-credentials: false
 
-      # Only the people in .github/RELEASERS on main release: the author and every commit's signer.
+      # Only the people in .github/RELEASERS release: the author and every commit's signer.
       - name: Check who opened the release PR
-        run: scripts/check-releaser.sh "$PR" .github/RELEASERS
+        run: scripts/check-releaser.sh "$PR"
 
       - name: Check the diff
         run: |

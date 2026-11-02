@@ -13,7 +13,7 @@ on:
   push:
     branches:
       - main
-  # Retries a release from main after a failed run.
+  # Retries a release from main after a failed run, or resends the telemetry-shippers notification.
   workflow_dispatch:
 
 permissions:
@@ -79,24 +79,20 @@ jobs:
 
       # Only the people in .github/RELEASERS release, also when a release PR is merged by hand or
       # this workflow is started by hand: the release commit's PR must come from them. The list is
-      # read from main before the merge, so a PR can't add its own author.
+      # read at the PR's base, so a PR can't add its own author.
       - name: Check who released
         if: ${{ steps.version.outputs.released == 'false' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
         run: |
-          if ! git show "$GITHUB_SHA^:.github/RELEASERS" > "$RUNNER_TEMP/RELEASERS"; then
-            echo "::error::.github/RELEASERS is missing on main before $GITHUB_SHA"
-            exit 1
-          fi
           pr=$(gh api "repos/$GH_REPO/commits/$GITHUB_SHA/pulls" \
             --jq '[.[] | select(.merged_at != null and .base.ref == "main")][0].number // empty')
           if [[ -z "$pr" ]]; then
             echo "::error::$GITHUB_SHA is not the merge of a PR; releases come from 'make bump' PRs"
             exit 1
           fi
-          scripts/check-releaser.sh "$pr" "$RUNNER_TEMP/RELEASERS"
+          scripts/check-releaser.sh "$pr"
 
   image:
     name: Push image
@@ -139,9 +135,16 @@ jobs:
   # Asks telemetry-shippers to bump the coralogix-operator dependency of otel-integration; its
   # sync workflow opens that PR. Same repository_dispatch pattern as the OpenTelemetry Collector
   # chart release.
+  #
+  # A retry started by hand resends it when the release already exists, in case only this job
+  # failed: the release jobs above are skipped then, so this one doesn't wait for them.
   telemetry-shippers:
     name: Notify telemetry-shippers
     needs: [version, github-release]
+    if: >-
+      ${{ always() && needs.version.result == 'success' &&
+      (needs.github-release.result == 'success' ||
+      (github.event_name == 'workflow_dispatch' && needs.version.outputs.released == 'true')) }}
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
