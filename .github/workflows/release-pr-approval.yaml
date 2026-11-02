@@ -1,7 +1,8 @@
 name: Release PR Approval
 
 # Approves a release PR from `make bump` as github-actions[bot], so it needs no human
-# review: it only re-publishes code already reviewed on main. Other PRs are left alone.
+# review: it only re-publishes code already reviewed on main. Other PRs are left alone. Only a
+# release PR from coralogix/team-eco-system is approved (scripts/check-releaser.sh).
 #
 # pull_request_target runs this file and the check script from main, never from the PR, so a
 # PR cannot change what gets approved. Nothing from the PR is checked out or run; the diff is
@@ -39,6 +40,12 @@ jobs:
         with:
           ref: main
           persist-credentials: false
+
+      # Only coralogix/team-eco-system releases: the author and every commit's signer.
+      - name: Check who opened the release PR
+        env:
+          RELEASE_TEAM_TOKEN: ${{ secrets.RELEASE_TEAM_TOKEN }}
+        run: scripts/check-releaser.sh "$PR"
 
       - name: Check the diff
         run: |

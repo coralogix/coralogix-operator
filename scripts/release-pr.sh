@@ -22,6 +22,17 @@ if [[ -n "$(git status --porcelain)" ]]; then
   exit 1
 fi
 
+# CI refuses a release PR from anyone else (scripts/check-releaser.sh); this only says so early.
+if command -v gh > /dev/null && login=$(gh api user --jq .login 2> /dev/null); then
+  if ! err=$(gh api "orgs/coralogix/teams/team-eco-system/memberships/$login" --jq .state 2>&1); then
+    if [[ "$err" == *"HTTP 404"* ]]; then
+      echo "error: only members of coralogix/team-eco-system release the operator, and $login is not one" >&2
+      exit 1
+    fi
+    echo "warning: could not check that $login is in coralogix/team-eco-system: $err" >&2
+  fi
+fi
+
 git fetch origin main
 start=$(git symbolic-ref --quiet --short HEAD || git rev-parse HEAD)
 git switch --quiet --detach origin/main
