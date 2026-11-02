@@ -78,6 +78,7 @@ cd tools/opgen && go run ./cmd/opgen check \
   - `enums.<component>` lists accepted API `values` and `rejected` values. `zero`, `names`, `verbatim`, and `trimPrefix` set CR spellings. `aliases` maps one accepted CR spelling to another business value for requests. Each accepted spelling maps to a checked SDK constant. A new kind uses the contract without an enum line.
   - Check values before writing them into Kubebuilder markers. Reject syntax characters that controller-gen can read as marker separators, or encode the values so the generated CRD keeps them exactly.
 - Goldens: `cd tools/opgen && go test ./internal/generator -update` rewrites them. Review the golden diff like code.
+- When a synthetic CR field changes, update envtest objects that use its golden CRD and run `make unit-tests`.
 - Version: the generated files have no version in their header. `tools/opgen/versions.yaml` is generated and holds `version.Current` of `tools/opgen/internal/version/version.go` for each kind, so a new version changes one file. Give the generator a new version (during beta, the next `-beta.N`) when a change changes what it produces: a generated file, a golden file, or a `check` report. A refactor with the same output keeps the version. CI enforces this with `tools/opgen/scripts/check-version-change.sh`: it builds opgen at the base commit and at the PR, runs both on the same input, and compares the output.
 
 ## Reconciliation
