@@ -287,7 +287,7 @@ func (e Enum) check(name string) error {
 	return nil
 }
 
-func validEnumValue(value string) bool { return value != "" && !strings.ContainsAny(value, ";\r\n") }
+func validEnumValue(value string) bool { return value != "" && !strings.ContainsAny(value, ",;\r\n") }
 
 // checkAPI accepts only the API keys that the operator renderer supports. A key may state its
 // default (false), as validators.inferred: true does, but a new kind follows the contract, so it

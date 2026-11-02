@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/coralogix/coralogix-operator/v2/tools/opgen/internal/overrides"
 )
 
 func syntheticContract(t *testing.T) string {
@@ -154,4 +156,19 @@ func TestEnumLineWithoutOutputChangeIsUnused(t *testing.T) {
 		t.Fatal(err)
 	}
 	wantCode(t, Check(CheckOptions{Resource: "Thing", OpenAPIPath: openAPI, OverridesPath: override}), codeOverrideUnused)
+}
+
+func TestEnumMarkerDelimitersAreRejected(t *testing.T) {
+	for name, line := range map[string]string{
+		"zero":    "zero: 'unspec,ified'\n    values: [THING_PRIORITY_LOW]",
+		"names":   "values: [THING_PRIORITY_LOW]\n    names: {THING_PRIORITY_LOW: 'foo,bar'}",
+		"aliases": "values: [THING_PRIORITY_LOW]\n    aliases: {'foo,bar': low}",
+	} {
+		t.Run(name, func(t *testing.T) {
+			data := "resource: Thing\nmode: existing\nvalidators: {inferred: true}\nenums:\n  ThingPriority:\n    " + line + "\n"
+			if _, err := overrides.Parse([]byte(data)); err == nil || !strings.Contains(err.Error(), "enums.ThingPriority") {
+				t.Fatalf("Parse() error = %v, want an enum path error", err)
+			}
+		})
+	}
 }

@@ -219,15 +219,21 @@ var _ = Describe("Generated CRD validation", Ordered, func() {
 			u.SetNamespace("default")
 			return u
 		}
-		// The contract limits name to 1–100 characters and limit to 1–10.
-		long := newBodyIDThing("no-limits", map[string]any{"name": strings.Repeat("n", 150), "limit": int64(50)})
+		// The contract limits the API name to 1–100 characters and limit to 1–10.
+		// The released CR calls the API name title.
+		long := newBodyIDThing("no-limits", map[string]any{"title": strings.Repeat("n", 150), "limit": int64(50)})
 		Expect(k8sClient.Create(ctx, long)).To(Succeed())
 		Expect(k8sClient.Delete(ctx, long)).To(Succeed())
 
 		By("keeping a required field required")
-		err := k8sClient.Create(ctx, newBodyIDThing("no-name", map[string]any{"limit": int64(1)}))
+		err := k8sClient.Create(ctx, newBodyIDThing("no-title", map[string]any{"limit": int64(1)}))
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("spec.name: Required value"))
+		Expect(err.Error()).To(ContainSubstring("spec.title: Required value"))
+
+		By("keeping the released required limit")
+		err = k8sClient.Create(ctx, newBodyIDThing("no-limit", map[string]any{"title": "valid"}))
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("spec.limit: Required value"))
 	})
 
 	It("should allow a mutable field to change", func(ctx context.Context) {
