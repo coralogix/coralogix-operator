@@ -211,7 +211,7 @@ func updateStep(d *kindData, ix *refIndex, full *omap, file *e2eFile, nameField 
 		}
 	}
 	for _, f := range d.Spec.Fields {
-		if file.Update != nil && file.Update.Field != f.API {
+		if file.Update != nil && file.Update.Field != f.JSON {
 			continue
 		}
 		if f.immutable || inGroup[f.API] || f.enum != nil || f.ref != "" || f.typ.Pattern != "" || f.typ.WireString ||

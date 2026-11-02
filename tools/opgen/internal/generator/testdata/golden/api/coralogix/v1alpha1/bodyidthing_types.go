@@ -24,10 +24,13 @@ import (
 // BodyIDThingSpec defines the desired state of a BodyIDThing.
 type BodyIDThingSpec struct {
 	// The name.
-	Name string `json:"name"`
+	Title string `json:"title"`
+
+	Limit int32 `json:"limit"`
 
 	// +optional
-	Limit *int32 `json:"limit,omitempty"`
+	// +kubebuilder:validation:Enum=unspecified;alerts
+	Mode *string `json:"mode,omitempty"`
 }
 
 // BodyIDThingStatus defines the observed state of a BodyIDThing.

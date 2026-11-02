@@ -19,6 +19,7 @@ package v1alpha1
 
 import (
 	"context"
+	"fmt"
 
 	"k8s.io/utils/ptr"
 
@@ -45,15 +46,46 @@ func (in *BodyIDThing) UpdateRequest(ctx context.Context) (*bodyidthingsservice.
 // toCreateBodyIDThingRequest converts the BodyIDThingSpec to the API type CreateBodyIDThingRequest.
 func (in *BodyIDThingSpec) toCreateBodyIDThingRequest(ctx context.Context, namespace string) (*bodyidthingsservice.CreateBodyIDThingRequest, error) {
 	out := &bodyidthingsservice.CreateBodyIDThingRequest{}
-	out.Name = in.Name
-	out.Limit = in.Limit
+	out.Name = in.Title
+	v1 := in.Limit
+	out.Limit = &v1
+	if in.Mode != nil {
+		v2, err := bodyIDThingModeToAPI(*in.Mode)
+		if err != nil {
+			return nil, fmt.Errorf("spec.mode: %w", err)
+		}
+		out.Mode = &v2
+	}
 	return out, nil
 }
 
 // toBodyIDThing1 converts the BodyIDThingSpec to the API type BodyIDThing1.
 func (in *BodyIDThingSpec) toBodyIDThing1(ctx context.Context, namespace string) (*bodyidthingsservice.BodyIDThing1, error) {
 	out := &bodyidthingsservice.BodyIDThing1{}
-	out.Name = in.Name
-	out.Limit = in.Limit
+	out.Name = in.Title
+	v3 := in.Limit
+	out.Limit = &v3
+	if in.Mode != nil {
+		v4, err := bodyIDThingModeToAPI(*in.Mode)
+		if err != nil {
+			return nil, fmt.Errorf("spec.mode: %w", err)
+		}
+		out.Mode = &v4
+	}
 	return out, nil
+}
+
+// bodyIDThingModeValues maps each value of the spec to the API value.
+var bodyIDThingModeValues = map[string]bodyidthingsservice.BodyIDThingMode{
+	"unspecified": bodyidthingsservice.BODYIDTHINGMODE_BODY_ID_THING_MODE_LOW,
+	"alerts":      bodyidthingsservice.BODYIDTHINGMODE_BODY_ID_THING_MODE_LOW,
+}
+
+// bodyIDThingModeToAPI returns the API value of a spec value.
+func bodyIDThingModeToAPI(value string) (bodyidthingsservice.BodyIDThingMode, error) {
+	v, ok := bodyIDThingModeValues[value]
+	if !ok {
+		return "", fmt.Errorf("unknown value %q", value)
+	}
+	return v, nil
 }

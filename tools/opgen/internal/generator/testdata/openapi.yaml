@@ -268,6 +268,7 @@ paths:
               properties:
                 name: {type: string, minLength: 1, maxLength: 100, x-coralogix-presence: true}
                 limit: {type: integer, format: int32, minimum: 1, maximum: 10, x-coralogix-presence: true}
+                mode: {$ref: '#/components/schemas/BodyIDThingMode'}
       responses:
         '200':
           description: Created
@@ -289,6 +290,7 @@ paths:
                 id: {type: string, minLength: 1, x-coralogix-presence: true}
                 name: {type: string, minLength: 1, maxLength: 100, x-coralogix-presence: true}
                 limit: {type: integer, format: int32, minimum: 1, maximum: 10, x-coralogix-presence: true}
+                mode: {$ref: '#/components/schemas/BodyIDThingMode'}
       responses:
         '200':
           description: Replaced
@@ -507,6 +509,10 @@ components:
         id: {type: string, minLength: 1, x-coralogix-presence: true}
         name: {type: string, minLength: 1, maxLength: 100, x-coralogix-presence: true, description: The name.}
         limit: {type: integer, format: int32, minimum: 1, maximum: 10, x-coralogix-presence: true}
+        mode: {$ref: '#/components/schemas/BodyIDThingMode'}
+    BodyIDThingMode:
+      type: string
+      enum: [BODY_ID_THING_MODE_UNSPECIFIED, BODY_ID_THING_MODE_LOW, BODY_ID_THING_MODE_HIGH]
     WrappedThingResponse:
       type: object
       required: [item]

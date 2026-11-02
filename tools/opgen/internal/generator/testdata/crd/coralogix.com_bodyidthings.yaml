@@ -49,11 +49,17 @@ spec:
               limit:
                 format: int32
                 type: integer
-              name:
+              mode:
+                enum:
+                - unspecified
+                - alerts
+                type: string
+              title:
                 description: The name.
                 type: string
             required:
-            - name
+            - limit
+            - title
             type: object
           status:
             description: BodyIDThingStatus defines the observed state of a BodyIDThing.

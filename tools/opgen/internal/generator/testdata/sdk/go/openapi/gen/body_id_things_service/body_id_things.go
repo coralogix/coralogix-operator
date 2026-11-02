@@ -7,22 +7,33 @@ import (
 	"net/http"
 )
 
+type BodyIDThingMode string
+
+const (
+	BODYIDTHINGMODE_BODY_ID_THING_MODE_UNSPECIFIED BodyIDThingMode = "BODY_ID_THING_MODE_UNSPECIFIED"
+	BODYIDTHINGMODE_BODY_ID_THING_MODE_LOW         BodyIDThingMode = "BODY_ID_THING_MODE_LOW"
+	BODYIDTHINGMODE_BODY_ID_THING_MODE_HIGH        BodyIDThingMode = "BODY_ID_THING_MODE_HIGH"
+)
+
 type BodyIDThing struct {
-	Id    string `json:"id"`
-	Name  string `json:"name"`
-	Limit *int32 `json:"limit,omitempty"`
+	Id    string           `json:"id"`
+	Name  string           `json:"name"`
+	Limit *int32           `json:"limit,omitempty"`
+	Mode  *BodyIDThingMode `json:"mode,omitempty"`
 }
 
 type CreateBodyIDThingRequest struct {
-	Name  string `json:"name"`
-	Limit *int32 `json:"limit,omitempty"`
+	Name  string           `json:"name"`
+	Limit *int32           `json:"limit,omitempty"`
+	Mode  *BodyIDThingMode `json:"mode,omitempty"`
 }
 
 // BodyIDThing1 is the Replace body. openapi-generator adds 1 because a component has its title.
 type BodyIDThing1 struct {
-	Id    string `json:"id"`
-	Name  string `json:"name"`
-	Limit *int32 `json:"limit,omitempty"`
+	Id    string           `json:"id"`
+	Name  string           `json:"name"`
+	Limit *int32           `json:"limit,omitempty"`
+	Mode  *BodyIDThingMode `json:"mode,omitempty"`
 }
 
 var errFake = errors.New("the stand-in SDK sends no request")
