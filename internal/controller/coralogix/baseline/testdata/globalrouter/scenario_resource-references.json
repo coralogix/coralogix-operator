@@ -1,0 +1,97 @@
+[
+  {
+    "step": "create with connector and preset resource references",
+    "spec": {
+      "description": "Reference baseline",
+      "name": "Reference router",
+      "rules": [
+        {
+          "condition": "alertDef.priority == \"P1\"",
+          "name": "with-preset",
+          "targets": [
+            {
+              "connector": {
+                "resourceRef": {
+                  "name": "connector"
+                }
+              },
+              "preset": {
+                "resourceRef": {
+                  "name": "preset"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "condition": "alertDef.priority == \"P2\"",
+          "name": "without-preset",
+          "targets": [
+            {
+              "connector": {
+                "resourceRef": {
+                  "name": "connector"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/notifications/notification-center/v1/routers",
+        "body": {
+          "router": {
+            "description": "Reference baseline",
+            "name": "Reference router",
+            "rules": [
+              {
+                "condition": "alertDef.priority == \"P1\"",
+                "name": "with-preset",
+                "targets": [
+                  {
+                    "connectorId": "connector_status_id",
+                    "presetId": "preset_status_id"
+                  }
+                ]
+              },
+              {
+                "condition": "alertDef.priority == \"P2\"",
+                "name": "without-preset",
+                "targets": [
+                  {
+                    "connectorId": "connector_status_id"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "global-router.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]
