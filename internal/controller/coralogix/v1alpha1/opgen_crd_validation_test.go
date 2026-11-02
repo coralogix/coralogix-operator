@@ -158,7 +158,7 @@ var _ = Describe("Generated CRD validation", Ordered, func() {
 	It("should reject a reference that sets both backendRef and resourceRef", func(ctx context.Context) {
 		refThing := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{
 			"name": "both",
-			"thingRef": map[string]any{
+			"thing": map[string]any{
 				"backendRef":  map[string]any{"id": "thing-id"},
 				"resourceRef": map[string]any{"name": "thing"},
 			},
@@ -186,7 +186,11 @@ var _ = Describe("Generated CRD validation", Ordered, func() {
 			},
 		}
 		for _, tt := range tests {
-			refThing := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{"name": tt.name, "thingRef": tt.ref}}}
+			refThing := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{
+				"name":      tt.name,
+				"thing":     map[string]any{"backendRef": map[string]any{"id": "thing-id"}},
+				"parentRef": tt.ref,
+			}}}
 			refThing.SetGroupVersionKind(schema.GroupVersionKind{Group: "coralogix.com", Version: "v1alpha1", Kind: "RefThing"})
 			refThing.SetName(tt.name)
 			refThing.SetNamespace("default")
@@ -202,7 +206,7 @@ var _ = Describe("Generated CRD validation", Ordered, func() {
 			{"resourceRef": map[string]any{"name": "thing", "namespace": "default"}},
 			{"backendRef": map[string]any{"id": "thing-id"}},
 		} {
-			refThing := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{"name": "valid", "thingRef": ref}}}
+			refThing := &unstructured.Unstructured{Object: map[string]any{"spec": map[string]any{"name": "valid", "thing": ref}}}
 			refThing.SetGroupVersionKind(schema.GroupVersionKind{Group: "coralogix.com", Version: "v1alpha1", Kind: "RefThing"})
 			refThing.SetName("valid-ref")
 			refThing.SetNamespace("default")

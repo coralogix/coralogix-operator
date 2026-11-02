@@ -1,0 +1,7 @@
+values:
+  fallback.connector: {resourceRef: {name: connector-sample}}
+  fallback.preset: {backendRef: {id: preset-example}}
+  fallbackTargets.target.connector: {resourceRef: {name: connector-sample}}
+  fallbackTargets.target.preset: {backendRef: {id: preset-example}}
+  rules.targets.connector: {resourceRef: {name: connector-sample}}
+  rules.targets.preset: {backendRef: {id: preset-example}}

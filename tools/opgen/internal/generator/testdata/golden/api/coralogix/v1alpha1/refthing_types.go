@@ -28,7 +28,7 @@ type RefThingSpec struct {
 
 	// The id of the Thing that it uses.
 	// It refers to a Thing: by backendRef.id, or by resourceRef, a Thing custom resource.
-	ThingRef ResourceIDRef `json:"thingRef"`
+	Thing NCRef `json:"thing"`
 
 	// The id of the parent Thing.
 	// It refers to a Thing: by backendRef.id, or by resourceRef, a Thing custom resource.

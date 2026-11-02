@@ -213,8 +213,8 @@ func wrapped(t *model.Type, path string) error {
 	return nil
 }
 
-// refField makes a string id of another resource a reference (way 2). The custom resource names
-// the field after the API field, with Ref in place of a trailing Id: thingId is thingRef.
+// refField makes a string id of another resource a reference (way 2). Without a name override,
+// it replaces a trailing Id with Ref: thingId becomes thingRef.
 func (b *builder) refField(f *crField, component string, ref *overrides.Ref) (*crField, error) {
 	line := overrides.Line{Component: component, Field: f.API}
 	if f.typ.Kind != model.String || f.typ.Format != "" {
@@ -223,8 +223,18 @@ func (b *builder) refField(f *crField, component string, ref *overrides.Ref) (*c
 	}
 	b.used[line] = true
 	base, _ := strings.CutSuffix(strings.TrimSuffix(f.API, "Id"), "ID")
-	f.JSON = base + "Ref"
+	defaultName := base + "Ref"
+	if name := b.file.Field(component, f.API).Name; name != "" && name == defaultName {
+		return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String() + ".name",
+			msg: "the name is already the default reference name"}
+	}
+	if b.file.Field(component, f.API).Name == "" {
+		f.JSON = defaultName
+	}
 	f.GoName, f.GoType, f.ref = goName(f.JSON), "ResourceIDRef", ref.Kind
+	if ref.Type != "" {
+		f.GoType, f.refType = ref.Type, ref.Type
+	}
 	if f.Optional {
 		f.GoType = "*" + f.GoType
 	}

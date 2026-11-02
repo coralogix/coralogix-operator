@@ -129,6 +129,8 @@ type Type struct {
 
 // Field is one field line.
 type Field struct {
+	// Skip omits a released top-level API field from the CR and requests.
+	Skip bool `yaml:"skip"`
 	// Ref makes a string id of another resource a reference (way 2): the custom resource sets
 	// backendRef.id, or resourceRef, the custom resource that manages the other resource.
 	Ref *Ref `yaml:"ref"`
@@ -156,6 +158,9 @@ type Enum struct {
 type Ref struct {
 	// Kind is the kind of the custom resource that resourceRef names. Its status id is sent.
 	Kind string `yaml:"kind"`
+	// Type is NCRef when a released CR uses its one-rule reference validation. Without it,
+	// generated fields use ResourceIDRef and its four rules.
+	Type string `yaml:"type"`
 }
 
 // Line is one field line: the component and the field that it names.
@@ -203,8 +208,14 @@ func (f *File) check() error {
 	}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
-		if field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && field.Name == "" {
+		if !field.Skip && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && field.Name == "" {
 			return fmt.Errorf("%s: the line sets no key", line)
+		}
+		if field.Skip && (field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.Name != "") {
+			return fmt.Errorf("%s.skip: skip cannot change another property of the CR field", line)
+		}
+		if field.Skip && f.Mode != ModeExisting {
+			return fmt.Errorf("%s.skip: a new kind follows the contract", line)
 		}
 		if field.Ref != nil && field.ReadOnly {
 			return fmt.Errorf("%s: ref and readOnly cannot be set together", line)
@@ -214,9 +225,6 @@ func (f *File) check() error {
 		}
 		if field.ReadOnly && (field.Required || field.Optional || field.Name != "") {
 			return fmt.Errorf("%s: readOnly cannot change the CR field", line)
-		}
-		if field.Ref != nil && field.Name != "" {
-			return fmt.Errorf("%s: ref and name cannot be set together", line)
 		}
 		if f.Mode == ModeNew && field.ReadOnly {
 			return fmt.Errorf("%s.readOnly: a new kind follows the contract", line)
@@ -229,6 +237,17 @@ func (f *File) check() error {
 		}
 		if field.Ref != nil && (!token.IsIdentifier(field.Ref.Kind) || !token.IsExported(field.Ref.Kind)) {
 			return fmt.Errorf("%s.ref.kind: %q is not a kind", line, field.Ref.Kind)
+		}
+		if field.Ref != nil {
+			switch field.Ref.Type {
+			case "":
+			case "NCRef":
+				if f.Mode != ModeExisting {
+					return fmt.Errorf("%s.ref.type: NCRef keeps released validation and needs mode existing", line)
+				}
+			default:
+				return fmt.Errorf("%s.ref.type: %q is not a supported reference type; omit it for ResourceIDRef", line, field.Ref.Type)
+			}
 		}
 	}
 	if f.Mode == ModeNew && len(f.Enums) != 0 {
@@ -365,13 +384,13 @@ func (f *File) Policy() model.Policy {
 	exceptions := iacoverrides.Exceptions{API: f.API.API, Fields: map[string]map[string]iacoverrides.Field{}}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
-		if !field.ReadOnly && !field.Optional {
+		if !field.Skip && !field.ReadOnly && !field.Optional {
 			continue
 		}
 		if exceptions.Fields[line.Component] == nil {
 			exceptions.Fields[line.Component] = map[string]iacoverrides.Field{}
 		}
-		exceptions.Fields[line.Component][line.Field] = iacoverrides.Field{ReadOnly: field.ReadOnly, Optional: field.Optional}
+		exceptions.Fields[line.Component][line.Field] = iacoverrides.Field{Skip: field.Skip, ReadOnly: field.ReadOnly, Optional: field.Optional}
 	}
 	p := exceptions.Policy()
 	for _, line := range f.Lines() {

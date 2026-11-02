@@ -401,6 +401,15 @@ func overrideIssues(doc docType, entry kindEntry, file *overrides.File) error {
 				property, found := proxy.Schema().Properties.Get(line.Field)
 				ok = found
 				change := file.Field(line.Component, line.Field)
+				if change.Skip && line.Component != entry.Resource {
+					return &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".skip", msg: "skip supports only a top-level resource field"}
+				}
+				if found && change.Skip && property.Schema() != nil && property.Schema().ReadOnly != nil && *property.Schema().ReadOnly {
+					return &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String() + ".skip", msg: "the contract already marks this field read-only"}
+				}
+				if found && change.Skip && !requestHasField(doc, entry.Resource, file, line.Field) {
+					return &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String() + ".skip", msg: "Create and Update already omit this field"}
+				}
 				if found && change.ReadOnly && property.Schema() != nil && property.Schema().ReadOnly != nil && *property.Schema().ReadOnly {
 					return &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String() + ".readOnly", msg: "the contract already marks this field read-only"}
 				}
@@ -454,6 +463,15 @@ func overrideIssues(doc docType, entry kindEntry, file *overrides.File) error {
 
 // requestRequiresField reports whether Create or Update requires a top-level API property.
 func requestRequiresField(doc docType, resource string, file *overrides.File, field string) bool {
+	return requestField(doc, resource, file, field, schemaRequiresProperty)
+}
+
+// requestHasField reports whether Create or Update can send a top-level API property.
+func requestHasField(doc docType, resource string, file *overrides.File, field string) bool {
+	return requestField(doc, resource, file, field, hasRequestProperty)
+}
+
+func requestField(doc docType, resource string, file *overrides.File, field string, matches func(*base.Schema, string) bool) bool {
 	if doc.Paths == nil || doc.Paths.PathItems == nil {
 		return false
 	}
@@ -475,11 +493,11 @@ func requestRequiresField(doc docType, resource string, file *overrides.File, fi
 			if body == nil {
 				continue
 			}
-			if schemaRequiresProperty(body, field) {
+			if matches(body, field) {
 				return true
 			}
 			if wrapper := file.API.RequestWrapper; wrapper != "" && body.Properties != nil {
-				if property := body.Properties.GetOrZero(wrapper); property != nil && schemaRequiresProperty(property.Schema(), field) {
+				if property := body.Properties.GetOrZero(wrapper); property != nil && matches(property.Schema(), field) {
 					return true
 				}
 			}

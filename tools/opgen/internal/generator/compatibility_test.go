@@ -89,6 +89,57 @@ func TestReleasedOptionalField(t *testing.T) {
 	}
 }
 
+func TestSkipReleasedTopLevelField(t *testing.T) {
+	file := "resource: BodyIDThing\nmode: existing\nvalidators: {inferred: false}\napi: {updateIDInBody: true}\ntypes:\n  BodyIDThing:\n    fields:\n      limit: {skip: true}\n"
+	files := checkLifecycleFixture(t, "BodyIDThing", syntheticContract(t), file)
+	for path, absent := range map[string][]string{
+		"api/coralogix/v1alpha1/bodyidthing_types.go":        {"Limit", "json:\"limit"},
+		"api/coralogix/v1alpha1/bodyidthing_convert.go":      {"out.Limit", "in.Limit"},
+		"config/samples/v1alpha1/generated/bodyidthing.yaml": {"limit:"},
+	} {
+		for _, text := range absent {
+			if strings.Contains(string(files[path]), text) {
+				t.Errorf("%s still contains skipped field %q", path, text)
+			}
+		}
+	}
+}
+
+func TestSkipRejectsInvalidLines(t *testing.T) {
+	for _, tc := range []struct {
+		name, field, code string
+	}{
+		{"false has no effect", "limit: {skip: false}", codeOverrideInvalid},
+		{"conflicts with name", "limit: {skip: true, name: quota}", codeOverrideInvalid},
+		{"required request field", "name: {skip: true}", "SKIP_REQUIRED_FIELD"},
+		{"unknown field", "missing: {skip: true}", codeOverrideUnused},
+		{"already absent from requests", "limit: {skip: true}", codeOverrideUnused},
+		{"nested field", "ThingItem: {fields: {name: {skip: true}}}", codeOverrideInvalid},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			fields := "types:\n  BodyIDThing:\n    fields:\n      " + tc.field + "\n"
+			if tc.name == "nested field" {
+				fields = "types:\n  " + tc.field + "\n"
+			}
+			file := "resource: BodyIDThing\nmode: existing\nvalidators: {inferred: false}\napi: {updateIDInBody: true}\n" + fields
+			dir := t.TempDir()
+			openAPI, override := filepath.Join(dir, "openapi.yaml"), filepath.Join(dir, "behavior-overrides.yaml")
+			contract := syntheticContract(t)
+			if tc.name == "already absent from requests" {
+				property := "                limit: {type: integer, format: int32, minimum: 1, maximum: 10, x-coralogix-presence: true}\n"
+				contract = strings.Replace(contract, property, "", 2)
+			}
+			if err := os.WriteFile(openAPI, []byte(contract), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(override, []byte(file), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			wantCode(t, Check(CheckOptions{Resource: "BodyIDThing", OpenAPIPath: openAPI, OverridesPath: override}), tc.code)
+		})
+	}
+}
+
 func TestReleasedEnumVerbatimTrimmedAndBusinessFirst(t *testing.T) {
 	file := "resource: Thing\nmode: existing\nvalidators: {inferred: true}\nenums:\n  ThingPriority:\n    zero: unspecified\n    values: [THING_PRIORITY_LOW, THING_PRIORITY_PAGER_DUTY_INCIDENTS]\n    trimPrefix: THING_PRIORITY_\n    verbatim: true\n"
 	files := checkLifecycleFixture(t, "Thing", syntheticContract(t), file)

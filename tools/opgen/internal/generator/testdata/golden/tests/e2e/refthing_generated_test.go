@@ -41,7 +41,7 @@ import (
 const (
 	refThingFullSpec = `{
   "name": "sample-name",
-  "thingRef": {
+  "thing": {
     "resourceRef": {
       "name": "thing-sample"
     }
@@ -54,7 +54,7 @@ const (
 }`
 	refThingMinimalSpec = `{
   "name": "sample-name",
-  "thingRef": {
+  "thing": {
     "resourceRef": {
       "name": "thing-sample"
     }
