@@ -122,6 +122,7 @@ type crField struct {
 	immutable bool
 	ref       string // the kind that a reference names, "" for a field that is not one
 	refType   string // the CR reference type, when it differs from ResourceIDRef
+	group     bool   // this field groups API fields under a released CR object
 }
 
 // JSONTag is the json struct tag of the field.
@@ -163,6 +164,7 @@ type builder struct {
 	file             *overrides.File
 	used             map[overrides.Line]bool // the lines of the file that changed the output
 	usedEnums        map[string]bool
+	usedGroups       map[string]bool
 	ix               *refIndex
 	alias            string
 	types            map[string]*crType
@@ -186,7 +188,7 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 		return nil, err
 	}
 	b := &builder{kind: entry.Kind, file: file, used: map[overrides.Line]bool{}, usedEnums: map[string]bool{}, ix: ix, alias: sdkAlias(ix.pkg.Name), types: map[string]*crType{},
-		enums: map[string]*enumMap{}, convs: map[string]string{}}
+		enums: map[string]*enumMap{}, usedGroups: map[string]bool{}, convs: map[string]string{}}
 	d := &kindData{
 		Kind: entry.Kind, Lower: strings.ToLower(entry.Kind), Plural: plural(entry.Kind),
 		Finalizer: kebab(entry.Kind) + ".coralogix.com/finalizer", Module: module,
@@ -195,6 +197,16 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 	d.BodyIDInWrapper = r.Policy.RequestWrapper != "" && !updateIDOutsideWrapper
 	if err := checkLifecycle(r); err != nil {
 		return nil, err
+	}
+	hasGroups := false
+	if file != nil {
+		hasGroups = len(file.Groups) != 0
+		for _, typ := range file.Types {
+			hasGroups = hasGroups || len(typ.Groups) != 0
+		}
+	}
+	if !r.Replace && hasGroups {
+		return nil, unsupported("groups", "groups need a full-replace Update; PATCH nested mask paths are not supported")
 	}
 	if d.Spec, err = b.spec(r); err != nil {
 		return nil, err
@@ -210,6 +222,9 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 		return nil, err
 	}
 	for _, line := range file.Lines() {
+		if file.Field(line.Component, line.Field).Unwrap != nil && r.UnwrapUsed[line.Component+"."+line.Field] {
+			b.used[line] = true
+		}
 		if file.Field(line.Component, line.Field).Skip {
 			// overrideIssues checked that this is a used top-level API property. The model
 			// removes it before the renderer sees the resource.
@@ -224,6 +239,23 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 		}
 	}
 	if file != nil {
+		for _, name := range file.Unwrap {
+			if !r.UnwrapUsed["unwrap."+name] {
+				return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":unwrap." + name, msg: "the component has no wrapper in this resource"}
+			}
+		}
+		for name := range file.Groups {
+			if !b.usedGroups[r.Name+"."+name] {
+				return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":groups." + name, msg: "the group changes no generated CR field"}
+			}
+		}
+		for component, typ := range file.Types {
+			for name := range typ.Groups {
+				if !b.usedGroups[component+"."+name] {
+					return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":types." + component + ".groups." + name, msg: "the group changes no generated CR field"}
+				}
+			}
+		}
 		for name := range file.Enums {
 			if !b.usedEnums[name] {
 				return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":enums." + name, msg: "the line changes no generated code"}

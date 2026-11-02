@@ -48,6 +48,10 @@ type File struct {
 	API API `yaml:"api"`
 	// Types has one entry per OpenAPI component.
 	Types map[string]Type `yaml:"types"`
+	// Unwrap names one-property components whose value is shown without its wrapper.
+	Unwrap []string `yaml:"unwrap"`
+	// Groups place API fields under released CR objects.
+	Groups map[string]Group `yaml:"groups"`
 	// Enums keeps released custom resource spellings of API enum values.
 	Enums map[string]Enum `yaml:"enums"`
 
@@ -125,6 +129,13 @@ func (a API) Check() error {
 // Type is the lines of one component.
 type Type struct {
 	Fields map[string]Field `yaml:"fields"`
+	Groups map[string]Group `yaml:"groups"`
+}
+
+// Group is a released CR object that holds fields from one API component.
+type Group struct {
+	Fields     []string `yaml:"fields"`
+	RequireOne bool     `yaml:"requireOne"`
 }
 
 // Field is one field line.
@@ -141,6 +152,12 @@ type Field struct {
 	Optional bool `yaml:"optional"`
 	// Name is the released CR property name when it differs from the API property.
 	Name string `yaml:"name"`
+	// RequireOne keeps the released exactly-one rule for a oneOf that allows no arm in the CR.
+	RequireOne bool `yaml:"requireOne"`
+	// Unwrap overrides the component-wide wrapper choice at this field.
+	Unwrap *bool `yaml:"unwrap"`
+	// RequestValueBy sends a hidden API value chosen by the populated object arm.
+	RequestValueBy map[string]string `yaml:"requestValueBy"`
 }
 
 // Enum records the accepted API values and their custom resource spellings.
@@ -208,10 +225,10 @@ func (f *File) check() error {
 	}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
-		if !field.Skip && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && field.Name == "" {
+		if !field.Skip && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 {
 			return fmt.Errorf("%s: the line sets no key", line)
 		}
-		if field.Skip && (field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.Name != "") {
+		if field.Skip && (field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0) {
 			return fmt.Errorf("%s.skip: skip cannot change another property of the CR field", line)
 		}
 		if field.Skip && f.Mode != ModeExisting {
@@ -229,11 +246,21 @@ func (f *File) check() error {
 		if f.Mode == ModeNew && field.ReadOnly {
 			return fmt.Errorf("%s.readOnly: a new kind follows the contract", line)
 		}
-		if f.Mode == ModeNew && (field.Required || field.Optional || field.Name != "") {
+		if f.Mode == ModeNew && (field.Required || field.Optional || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0) {
 			return fmt.Errorf("%s: a new kind follows the contract", line)
 		}
 		if field.Name != "" && !validJSONName(field.Name) {
 			return fmt.Errorf("%s.name: %q is not a CR property name", line, field.Name)
+		}
+		if len(field.RequestValueBy) != 0 {
+			if field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.Name != "" || field.RequireOne || field.Unwrap != nil {
+				return fmt.Errorf("%s.requestValueBy: the hidden API field cannot set another field key", line)
+			}
+			for source, value := range field.RequestValueBy {
+				if source == "" || value == "" {
+					return fmt.Errorf("%s.requestValueBy: name an arm and a nonempty API value", line)
+				}
+			}
 		}
 		if field.Ref != nil && (!token.IsIdentifier(field.Ref.Kind) || !token.IsExported(field.Ref.Kind)) {
 			return fmt.Errorf("%s.ref.kind: %q is not a kind", line, field.Ref.Kind)
@@ -256,6 +283,46 @@ func (f *File) check() error {
 	for name, enum := range f.Enums {
 		if err := enum.check(name); err != nil {
 			return err
+		}
+	}
+	if f.Mode == ModeNew && len(f.Unwrap) != 0 {
+		return errors.New("unwrap: a new kind follows the contract")
+	}
+	seenUnwrap := map[string]bool{}
+	for _, name := range f.Unwrap {
+		if name == "" || seenUnwrap[name] {
+			return fmt.Errorf("unwrap: component %q is empty or listed twice", name)
+		}
+		seenUnwrap[name] = true
+	}
+	if f.Mode == ModeNew && len(f.Groups) != 0 {
+		return errors.New("groups: a new kind follows the contract")
+	}
+	if err := checkGroups("groups", f.Groups); err != nil {
+		return err
+	}
+	for name, typ := range f.Types {
+		if f.Mode == ModeNew && len(typ.Groups) != 0 {
+			return fmt.Errorf("types.%s.groups: a new kind follows the contract", name)
+		}
+		if err := checkGroups("types."+name+".groups", typ.Groups); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func checkGroups(path string, groups map[string]Group) error {
+	used := map[string]bool{}
+	for name, group := range groups {
+		if !validJSONName(name) || len(group.Fields) == 0 {
+			return fmt.Errorf("%s.%s: name a CR object and at least one API field", path, name)
+		}
+		for _, field := range group.Fields {
+			if field == "" || used[field] {
+				return fmt.Errorf("%s.%s: field %q is empty or belongs to more than one group", path, name, field)
+			}
+			used[field] = true
 		}
 	}
 	return nil
@@ -381,21 +448,24 @@ func (f *File) Policy() model.Policy {
 	if f == nil || f.Mode == ModeNew {
 		return model.Policy{}
 	}
-	exceptions := iacoverrides.Exceptions{API: f.API.API, Fields: map[string]map[string]iacoverrides.Field{}}
+	exceptions := iacoverrides.Exceptions{API: f.API.API, Unwrap: f.Unwrap, Fields: map[string]map[string]iacoverrides.Field{}}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
-		if !field.Skip && !field.ReadOnly && !field.Optional {
+		if !field.Skip && !field.ReadOnly && !field.Optional && field.Unwrap == nil {
 			continue
 		}
 		if exceptions.Fields[line.Component] == nil {
 			exceptions.Fields[line.Component] = map[string]iacoverrides.Field{}
 		}
-		exceptions.Fields[line.Component][line.Field] = iacoverrides.Field{Skip: field.Skip, ReadOnly: field.ReadOnly, Optional: field.Optional}
+		exceptions.Fields[line.Component][line.Field] = iacoverrides.Field{Skip: field.Skip, ReadOnly: field.ReadOnly, Optional: field.Optional, Unwrap: field.Unwrap}
 	}
 	p := exceptions.Policy()
 	for _, line := range f.Lines() {
 		if f.Field(line.Component, line.Field).Optional {
 			p.Released = append(p.Released, line.Component+"."+line.Field)
+		}
+		if len(f.Field(line.Component, line.Field).RequestValueBy) != 0 {
+			p.FixedRequest = append(p.FixedRequest, line.Component+"."+line.Field)
 		}
 	}
 	for name, enum := range f.Enums {
@@ -443,6 +513,17 @@ func (f *File) Field(component, field string) Field {
 		return Field{}
 	}
 	return f.Types[component].Fields[field]
+}
+
+// GroupsFor returns the groups of a resource or nested component.
+func (f *File) GroupsFor(component string) map[string]Group {
+	if f == nil {
+		return nil
+	}
+	if component == f.Resource {
+		return f.Groups
+	}
+	return f.Types[component].Groups
 }
 
 // Enum returns the line for an API enum component.

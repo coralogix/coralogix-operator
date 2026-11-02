@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/coralogix/coralogix-management-sdk/iac/model"
+	"github.com/coralogix/coralogix-management-sdk/iac/sdkcheck"
 	"github.com/coralogix/coralogix-operator/v2/tools/opgen/internal/overrides"
 )
 
@@ -259,14 +260,27 @@ func (b *builder) conversionAs(cr *crType, sdkType string, fields []*model.Field
 	defer func() { b.conversionSuffix = previous }()
 	var body strings.Builder
 	for _, rf := range fields {
-		i := slices.IndexFunc(cr.Fields, func(f *crField) bool { return f.API == rf.Name })
-		if i < 0 {
+		field, src := sourceField(cr, rf.Name)
+		if field == nil {
+			component := cr.schema
+			if component == "" && b.file != nil {
+				component = b.file.Resource
+			}
+			if by := b.file.Field(component, rf.Name).RequestValueBy; len(by) != 0 {
+				code, err := b.requestValueBy(cr, sdkType, rf, by, path)
+				if err != nil {
+					return "", err
+				}
+				b.used[overrides.Line{Component: component, Field: rf.Name}] = true
+				body.WriteString(code)
+				continue
+			}
 			if rf.Attrs.Required {
 				return "", unsupported(path+"."+rf.Name, "the request requires a field that the custom resource does not have")
 			}
 			continue
 		}
-		code, err := b.assign(cr.Fields[i], rf.Type, sdkType, path+"."+cr.Fields[i].JSON)
+		code, err := b.assignFrom(field, rf.Type, sdkType, path+"."+field.JSON, src)
 		if err != nil {
 			return "", err
 		}
@@ -282,14 +296,96 @@ func (in *%s) %s(ctx context.Context, namespace string) (*%s.%s, error) {
 	return name, nil
 }
 
+// sourceField finds an API field at its released CR path.
+func sourceField(cr *crType, api string) (*crField, string) {
+	for _, f := range cr.Fields {
+		if f.group {
+			for _, child := range f.object.Fields {
+				if child.API == api {
+					return child, "in." + f.GoName + "." + child.GoName
+				}
+			}
+			continue
+		}
+		if f.API == api {
+			return f, "in." + f.GoName
+		}
+	}
+	return nil, ""
+}
+
+// requestValueBy sends a hidden string or enum value from the selected object arm.
+func (b *builder) requestValueBy(cr *crType, sdkType string, field *model.Field, by map[string]string, path string) (string, error) {
+	location := path + "." + field.Name
+	if field.Type.Kind != model.String && field.Type.Kind != model.Enum {
+		return "", unsupported(location, "requestValueBy needs a string or enum API field")
+	}
+	var choices []model.OneOfGroup
+	choices = append(choices, cr.groups...)
+	for _, f := range cr.Fields {
+		if f.group {
+			choices = append(choices, f.object.groups...)
+		}
+	}
+	if !slices.ContainsFunc(choices, func(g model.OneOfGroup) bool {
+		if field.Attrs.Required && len(by) != len(g.Arms) {
+			return false
+		}
+		for source := range by {
+			if !slices.Contains(g.Arms, source) {
+				return false
+			}
+		}
+		return true
+	}) {
+		return "", unsupported(location, "requestValueBy must name arms of one oneOf group; a required value needs every arm")
+	}
+	ref, err := b.ix.field(sdkType, field.Name)
+	if err != nil {
+		return "", err
+	}
+	var code strings.Builder
+	for i, source := range sortedKeys(by) {
+		arm, src := sourceField(cr, source)
+		if arm == nil || (arm.typ.Kind != model.Object && arm.typ.Kind != model.OneOf) || !arm.Optional {
+			return "", unsupported(location, "requestValueBy source %s must be an optional object arm", source)
+		}
+		value := by[source]
+		expr := strconv.Quote(value)
+		if field.Type.Kind == model.Enum {
+			if value != field.Type.EnumZero && !slices.Contains(field.Type.Values, value) {
+				return "", unsupported(location, "requestValueBy value %s is not in the API enum", value)
+			}
+			enumType, err := b.ix.schemaType(field.Type.Schema)
+			if err != nil {
+				return "", err
+			}
+			constant, err := b.ix.enumConst(enumType, value)
+			if err != nil {
+				return "", err
+			}
+			expr = b.alias + "." + constant
+		}
+		if i > 0 {
+			code.WriteString("else ")
+		}
+		code.WriteString("if " + src + " != nil {\n")
+		code.WriteString(b.set("out."+ref.Name, ref.Want, expr, false))
+		code.WriteString("}")
+	}
+	if field.Attrs.Required {
+		code.WriteString(" else {\nreturn nil, fmt.Errorf(" + strconv.Quote(location+": exactly one source arm is required") + ")\n}")
+	}
+	return code.String() + "\n", nil
+}
+
 // assign writes the statements that set one SDK field from the custom resource field.
-func (b *builder) assign(f *crField, rt *model.Type, owner, path string) (string, error) {
+func (b *builder) assignFrom(f *crField, rt *model.Type, owner, path, src string) (string, error) {
 	ref, err := b.ix.field(owner, f.API)
 	if err != nil {
 		return "", err
 	}
 	target := "out." + ref.Name
-	src := "in." + f.GoName
 	switch {
 	case f.typ.Kind == model.List || f.typ.Kind == model.Set || f.typ.Kind == model.Map:
 		stmts, expr, _, err := b.value(f, rt, src, ref.Want, path)
@@ -350,6 +446,9 @@ func (b *builder) value(f *crField, rt *model.Type, src, want, path string) (str
 		}
 		return fmt.Sprintf("%s, err := ResolveResourceID(ctx, namespace, %s, %q)\nif err != nil {\nreturn nil, fmt.Errorf(\"%s: %%w\", err)\n}\n", v, value, f.ref, path), v, false, nil
 	}
+	if len(rt.Wrappers) != 0 {
+		return b.wrappedValue(f, rt, src, path)
+	}
 	switch rt.Kind {
 	case model.List, model.Set, model.Map:
 		elemWant, ok := strings.CutPrefix(want, "[]")
@@ -375,8 +474,10 @@ func (b *builder) value(f *crField, rt *model.Type, src, want, path string) (str
 		if stmts == "" && expr == e && builtinTypes[elemWant] {
 			return "", src, false, nil // the same Go type: the value needs no conversion
 		}
-		if isPtr {
+		if isPtr && !strings.HasPrefix(elemWant, "*") {
 			expr = "*" + expr
+		} else if !isPtr && strings.HasPrefix(elemWant, "*") {
+			expr = "&" + expr
 		}
 		goType := qualify(want, b.alias)
 		if rt.Kind == model.Map {
@@ -402,6 +503,40 @@ func (b *builder) value(f *crField, rt *model.Type, src, want, path string) (str
 		// A scalar needs no conversion.
 	}
 	return "", src, false, nil
+}
+
+// wrappedValue restores each one-property API wrapper around the CR value.
+func (b *builder) wrappedValue(f *crField, rt *model.Type, src, path string) (string, string, bool, error) {
+	types := make([]string, len(rt.Wrappers))
+	fields := make([]sdkcheck.Ref, len(rt.Wrappers))
+	for i, w := range rt.Wrappers {
+		if w.Schema == "" {
+			return "", "", false, unsupported(path, "the request wrapper has no component")
+		}
+		name, err := b.ix.schemaType(w.Schema)
+		if err != nil {
+			return "", "", false, err
+		}
+		field, err := b.ix.field(name, w.Field)
+		if err != nil {
+			return "", "", false, err
+		}
+		types[i], fields[i] = name, field
+	}
+	inner := *f
+	inner.typ = f.typ.Unwrapped()
+	last := len(fields) - 1
+	stmts, expr, isPtr, err := b.value(&inner, rt.Unwrapped(), src, fields[last].Want, path)
+	if err != nil {
+		return "", "", false, err
+	}
+	for i := last; i >= 0; i-- {
+		v := b.temp("w")
+		stmts += fmt.Sprintf("%s := %s.%s{}\n", v, b.alias, types[i])
+		stmts += b.set(v+"."+fields[i].Name, fields[i].Want, expr, isPtr)
+		expr, isPtr = v, false
+	}
+	return stmts, expr, false, nil
 }
 
 // mapValue returns the named type of the values of the map field f, nil when they have none.
