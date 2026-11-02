@@ -40,11 +40,13 @@ import (
 // The full spec sets every field. The minimal spec sets only the required fields.
 const (
 	bodyIDThingFullSpec = `{
-  "name": "sample-name",
-  "limit": 1
+  "title": "sample-name",
+  "limit": 1,
+  "mode": "unspecified"
 }`
 	bodyIDThingMinimalSpec = `{
-  "name": "sample-name"
+  "title": "sample-name",
+  "limit": 1
 }`
 )
 
@@ -86,7 +88,7 @@ var _ = Describe("BodyIDThing (generated)", Ordered, func() {
 		current := &coralogixv1alpha1.BodyIDThing{}
 		Expect(crClient.Get(ctx, types.NamespacedName{Name: fullName, Namespace: testNamespace}, current)).To(Succeed())
 		updated := current.DeepCopy()
-		updated.Spec.Name = fullName + "-updated"
+		updated.Spec.Title = fullName + "-updated"
 		Expect(crClient.Patch(ctx, updated, client.MergeFrom(current))).To(Succeed())
 
 		By("Reading the change from the API")
@@ -126,7 +128,7 @@ func newBodyIDThingGenerated(name, spec string) *coralogixv1alpha1.BodyIDThing {
 	decoder := json.NewDecoder(strings.NewReader(spec))
 	decoder.DisallowUnknownFields()
 	Expect(decoder.Decode(&cr.Spec)).To(Succeed())
-	cr.Spec.Name = name
+	cr.Spec.Title = name
 	return cr
 }
 

@@ -24,6 +24,9 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 		if f.Behavior == model.Computed || f.Create == nil {
 			continue
 		}
+		if inGroup[f.Name] && b.file.Field(r.Name, f.Name).Required {
+			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":types." + r.Name + ".fields." + f.Name + ".required", msg: "a oneOf arm cannot be required on its own"}
+		}
 		required := f.Create.Required && !inGroup[f.Name]
 		field, err := b.field(b.kind, r.Name, f.Name, f.Description, f.Type, required, "spec."+f.Name, false)
 		if err != nil {
@@ -130,7 +133,22 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 	if err := wrapped(t, path); err != nil {
 		return nil, err
 	}
-	f := &crField{API: name, JSON: name, GoName: goName(name), Optional: !required, Doc: docLines(description), typ: t}
+	line := overrides.Line{Component: component, Field: name}
+	change := b.file.Field(component, name)
+	if change.Required && !required {
+		required = true
+		b.used[line] = true
+	}
+	if change.Optional {
+		// The policy relaxes a required request field before the model is built.
+		b.used[line] = true
+	}
+	jsonName := name
+	if change.Name != "" && change.Name != name {
+		jsonName = change.Name
+		b.used[line] = true
+	}
+	f := &crField{API: name, JSON: jsonName, GoName: goName(jsonName), Optional: !required, Doc: docLines(description), typ: t}
 	if !required {
 		f.Markers = append(f.Markers, "+optional")
 	}
@@ -402,6 +420,9 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 		if f.Behavior == model.Computed || f.Behavior == "" || f.Create == nil {
 			continue
 		}
+		if (t.Kind == model.OneOf || inGroup[f.Name]) && b.file.Field(t.Schema, f.Name).Required {
+			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":types." + t.Schema + ".fields." + f.Name + ".required", msg: "a oneOf arm cannot be required on its own"}
+		}
 		required := t.Kind != model.OneOf && f.Create.Required && !inGroup[f.Name]
 		child := path + "." + f.Name
 		field, err := b.field(obj.Name, t.Schema, f.Name, f.Description, f.Type, required, child, inItem)
@@ -442,8 +463,31 @@ func (b *builder) enum(t *model.Type, path string) (*enumMap, error) {
 	base := lowerFirst(b.typeName(t.Schema))
 	e := &enumMap{Func: base + "ToAPI", Var: base + "Values", SDKType: b.alias + "." + sdkType}
 	seen := map[string]string{}
-	for _, v := range t.Values {
+	line, overridden := b.file.Enum(t.Schema)
+	values := t.Values
+	if overridden {
+		values = slices.Clone(line.Values)
+		if line.Zero != "" {
+			values = append([]string{t.EnumZero}, values...)
+		}
+	}
+	constantByName := map[string]string{}
+	for _, v := range values {
 		name := enumName(v, t.EnumZero)
+		if overridden {
+			switch {
+			case v == t.EnumZero && line.Zero != "":
+				name = line.Zero
+			case line.Names[v] != "":
+				name = line.Names[v]
+			case line.Verbatim:
+				name = strings.TrimPrefix(v, line.TrimPrefix)
+			case line.TrimPrefix != "":
+				name = enumName(strings.TrimPrefix(v, line.TrimPrefix), "")
+			default:
+				name = enumName(v, t.EnumZero)
+			}
+		}
 		if prior, ok := seen[name]; ok || name == "" {
 			return nil, collision(path, "the enum values %s and %s both are %q", prior, v, name)
 		}
@@ -452,7 +496,33 @@ func (b *builder) enum(t *model.Type, path string) (*enumMap, error) {
 		if err != nil {
 			return nil, err
 		}
-		e.Values = append(e.Values, enumValue{Name: name, Const: b.alias + "." + c})
+		constantByName[name] = b.alias + "." + c
+		e.Values = append(e.Values, enumValue{Name: name, Const: constantByName[name]})
+	}
+	if overridden {
+		for alias, target := range line.Aliases {
+			if _, ok := constantByName[alias]; !ok {
+				return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":enums." + t.Schema + ".aliases", msg: fmt.Sprintf("%q is not an accepted CR value", alias)}
+			}
+			if alias == target || line.Aliases[target] != "" || constantByName[target] == "" || target == line.Zero {
+				return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":enums." + t.Schema + ".aliases", msg: fmt.Sprintf("%q must map to another accepted business value", alias)}
+			}
+			for i := range e.Values {
+				if e.Values[i].Name == alias {
+					e.Values[i].Const = constantByName[target]
+				}
+			}
+		}
+		if len(values) != len(t.Values) || len(line.Aliases) != 0 {
+			b.usedEnums[t.Schema] = true
+		} else {
+			for i, v := range t.Values {
+				if values[i] != v || e.Values[i].Name != enumName(v, t.EnumZero) {
+					b.usedEnums[t.Schema] = true
+					break
+				}
+			}
+		}
 	}
 	if len(e.Values) == 0 {
 		return nil, unsupported(path, "an enum without values")
@@ -482,11 +552,16 @@ func (b *builder) checkNames(d *kindData) error {
 	}
 	for _, t := range append([]*crType{d.Spec}, d.Types...) {
 		seen := map[string]string{}
+		jsonNames := map[string]string{}
 		for _, f := range t.Fields {
 			if prior, ok := seen[f.GoName]; ok {
 				return collision(t.Name, "the fields %s and %s both are the Go field %s", prior, f.API, f.GoName)
 			}
 			seen[f.GoName] = f.API
+			if prior, ok := jsonNames[f.JSON]; ok {
+				return collision(t.Name, "the fields %s and %s both are the CR property %s", prior, f.API, f.JSON)
+			}
+			jsonNames[f.JSON] = f.API
 		}
 	}
 	return nil

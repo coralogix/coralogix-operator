@@ -400,8 +400,14 @@ func overrideIssues(doc docType, entry kindEntry, file *overrides.File) error {
 			if proxy, found := doc.Components.Schemas.Get(line.Component); found && proxy.Schema() != nil && proxy.Schema().Properties != nil {
 				property, found := proxy.Schema().Properties.Get(line.Field)
 				ok = found
-				if found && file.Types[line.Component].Fields[line.Field].ReadOnly && property.Schema() != nil && property.Schema().ReadOnly != nil && *property.Schema().ReadOnly {
+				change := file.Field(line.Component, line.Field)
+				if found && change.ReadOnly && property.Schema() != nil && property.Schema().ReadOnly != nil && *property.Schema().ReadOnly {
 					return &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String() + ".readOnly", msg: "the contract already marks this field read-only"}
+				}
+				if found && change.Optional &&
+					((line.Component == entry.Resource && !requestRequiresField(doc, entry.Resource, file, line.Field)) ||
+						(line.Component != entry.Resource && !slices.Contains(proxy.Schema().Required, line.Field))) {
+					return &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String() + ".optional", msg: "the contract already makes this field optional"}
 				}
 			}
 		}
@@ -409,7 +415,92 @@ func overrideIssues(doc docType, entry kindEntry, file *overrides.File) error {
 			return &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String(), msg: "the contract has no such property"}
 		}
 	}
+	for name, enum := range file.Enums {
+		location := overrides.FileName + ":enums." + name
+		if doc.Components == nil || doc.Components.Schemas == nil {
+			return &shapeError{code: codeOverrideUnused, path: location, msg: "the contract has no component schemas"}
+		}
+		proxy := doc.Components.Schemas.GetOrZero(name)
+		if proxy == nil || proxy.Schema() == nil || len(proxy.Schema().Enum) == 0 {
+			return &shapeError{code: codeOverrideUnused, path: location, msg: "the contract has no such enum"}
+		}
+		var contract []string
+		for _, value := range proxy.Schema().Enum {
+			contract = append(contract, value.Value)
+		}
+		for _, value := range append(slices.Clone(enum.Values), enum.Rejected...) {
+			if !slices.Contains(contract, value) {
+				return &shapeError{code: codeOverrideInvalid, path: location, msg: fmt.Sprintf("the API enum has no value %q", value)}
+			}
+		}
+		hasZero := len(contract) != 0 && strings.HasSuffix(contract[0], "_UNSPECIFIED")
+		if hasZero != (enum.Zero != "") {
+			return &shapeError{code: codeOverrideInvalid, path: location + ".zero", msg: "zero must name the *_UNSPECIFIED value, and only that value"}
+		}
+		if hasZero && (slices.Contains(enum.Values, contract[0]) || slices.Contains(enum.Rejected, contract[0])) {
+			return &shapeError{code: codeOverrideInvalid, path: location, msg: "the zero API value belongs only in zero"}
+		}
+		for i, value := range contract {
+			if i == 0 && hasZero {
+				continue
+			}
+			if !slices.Contains(enum.Values, value) && !slices.Contains(enum.Rejected, value) {
+				return &shapeError{code: codeOverrideInvalid, path: location, msg: fmt.Sprintf("the API value %q is neither accepted nor rejected", value)}
+			}
+		}
+	}
 	return nil
+}
+
+// requestRequiresField reports whether Create or Update requires a top-level API property.
+func requestRequiresField(doc docType, resource string, file *overrides.File, field string) bool {
+	if doc.Paths == nil || doc.Paths.PathItems == nil {
+		return false
+	}
+	for _, item := range doc.Paths.PathItems.FromOldest() {
+		for _, operation := range item.GetOperations().FromOldest() {
+			id := operation.OperationId
+			selected := strings.HasSuffix(id, "_Create"+resource) || strings.HasSuffix(id, "_Update"+resource) || strings.HasSuffix(id, "_Replace"+resource)
+			if file.API.Operations != nil {
+				selected = selected || id == file.API.Operations.Create || id == file.API.Operations.Update
+			}
+			if !selected || operation.RequestBody == nil || operation.RequestBody.Content == nil {
+				continue
+			}
+			media := operation.RequestBody.Content.GetOrZero("application/json")
+			if media == nil || media.Schema == nil {
+				continue
+			}
+			body := media.Schema.Schema()
+			if body == nil {
+				continue
+			}
+			if schemaRequiresProperty(body, field) {
+				return true
+			}
+			if wrapper := file.API.RequestWrapper; wrapper != "" && body.Properties != nil {
+				if property := body.Properties.GetOrZero(wrapper); property != nil && schemaRequiresProperty(property.Schema(), field) {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+func schemaRequiresProperty(schema *base.Schema, property string) bool {
+	if schema == nil {
+		return false
+	}
+	if slices.Contains(schema.Required, property) {
+		return true
+	}
+	for _, part := range schema.AllOf {
+		if schemaRequiresProperty(part.Schema(), property) {
+			return true
+		}
+	}
+	return false
 }
 
 // refKindIssues checks that each ref line names a kind of the operator: a generated kind, or a kind

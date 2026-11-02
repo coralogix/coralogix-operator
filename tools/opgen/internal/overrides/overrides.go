@@ -48,6 +48,8 @@ type File struct {
 	API API `yaml:"api"`
 	// Types has one entry per OpenAPI component.
 	Types map[string]Type `yaml:"types"`
+	// Enums keeps released custom resource spellings of API enum values.
+	Enums map[string]Enum `yaml:"enums"`
 
 	// apiNode is the api section as the file writes it, nil without one. A Go bool cannot tell a
 	// written false from a missing key, so the checks of the api keys read the node.
@@ -132,6 +134,22 @@ type Field struct {
 	Ref *Ref `yaml:"ref"`
 	// ReadOnly states that the server owns this field, even when the contract does not.
 	ReadOnly bool `yaml:"readOnly"`
+	// Required and Optional keep the released CRD presence rule.
+	Required bool `yaml:"required"`
+	Optional bool `yaml:"optional"`
+	// Name is the released CR property name when it differs from the API property.
+	Name string `yaml:"name"`
+}
+
+// Enum records the accepted API values and their custom resource spellings.
+type Enum struct {
+	Zero       string            `yaml:"zero"`
+	Values     []string          `yaml:"values"`
+	Verbatim   bool              `yaml:"verbatim"`
+	TrimPrefix string            `yaml:"trimPrefix"`
+	Names      map[string]string `yaml:"names"`
+	Aliases    map[string]string `yaml:"aliases"`
+	Rejected   []string          `yaml:"rejected"`
 }
 
 // Ref is the ref key of a field line.
@@ -185,21 +203,91 @@ func (f *File) check() error {
 	}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
-		if field.Ref == nil && !field.ReadOnly {
+		if field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && field.Name == "" {
 			return fmt.Errorf("%s: the line sets no key", line)
 		}
 		if field.Ref != nil && field.ReadOnly {
 			return fmt.Errorf("%s: ref and readOnly cannot be set together", line)
 		}
+		if field.Required && field.Optional {
+			return fmt.Errorf("%s: required and optional cannot be set together", line)
+		}
+		if field.ReadOnly && (field.Required || field.Optional || field.Name != "") {
+			return fmt.Errorf("%s: readOnly cannot change the CR field", line)
+		}
+		if field.Ref != nil && field.Name != "" {
+			return fmt.Errorf("%s: ref and name cannot be set together", line)
+		}
 		if f.Mode == ModeNew && field.ReadOnly {
 			return fmt.Errorf("%s.readOnly: a new kind follows the contract", line)
+		}
+		if f.Mode == ModeNew && (field.Required || field.Optional || field.Name != "") {
+			return fmt.Errorf("%s: a new kind follows the contract", line)
+		}
+		if field.Name != "" && !validJSONName(field.Name) {
+			return fmt.Errorf("%s.name: %q is not a CR property name", line, field.Name)
 		}
 		if field.Ref != nil && (!token.IsIdentifier(field.Ref.Kind) || !token.IsExported(field.Ref.Kind)) {
 			return fmt.Errorf("%s.ref.kind: %q is not a kind", line, field.Ref.Kind)
 		}
 	}
+	if f.Mode == ModeNew && len(f.Enums) != 0 {
+		return errors.New("enums: a new kind follows the contract")
+	}
+	for name, enum := range f.Enums {
+		if err := enum.check(name); err != nil {
+			return err
+		}
+	}
 	return nil
 }
+
+func validJSONName(name string) bool {
+	if name == "" || !asciiLetter(name[0]) {
+		return false
+	}
+	for i := 1; i < len(name); i++ {
+		c := name[i]
+		if !asciiLetter(c) && (c < '0' || c > '9') && c != '_' {
+			return false
+		}
+	}
+	return true
+}
+
+func asciiLetter(c byte) bool { return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' }
+
+func (e Enum) check(name string) error {
+	if name == "" || len(e.Values) == 0 {
+		return fmt.Errorf("enums.%s.values: name an enum and at least one accepted value", name)
+	}
+	if !validEnumValue(e.Zero) && e.Zero != "" {
+		return fmt.Errorf("enums.%s.zero: %q is not one CR enum value", name, e.Zero)
+	}
+	seen := map[string]bool{}
+	for _, value := range append(slices.Clone(e.Values), e.Rejected...) {
+		if value == "" || seen[value] {
+			return fmt.Errorf("enums.%s: value %q is empty or listed twice", name, value)
+		}
+		seen[value] = true
+	}
+	for value, cr := range e.Names {
+		if !slices.Contains(e.Values, value) || !validEnumValue(cr) {
+			return fmt.Errorf("enums.%s.names.%s: name an accepted API value and a nonempty CR value", name, value)
+		}
+	}
+	for alias, target := range e.Aliases {
+		if !validEnumValue(alias) || !validEnumValue(target) {
+			return fmt.Errorf("enums.%s.aliases: %q and %q must be single CR enum values", name, alias, target)
+		}
+	}
+	if e.TrimPrefix != "" && !slices.ContainsFunc(e.Values, func(value string) bool { return strings.HasPrefix(value, e.TrimPrefix) }) {
+		return fmt.Errorf("enums.%s.trimPrefix: %q is not a prefix of an accepted API value", name, e.TrimPrefix)
+	}
+	return nil
+}
+
+func validEnumValue(value string) bool { return value != "" && !strings.ContainsAny(value, ",;\r\n") }
 
 // checkAPI accepts only the API keys that the operator renderer supports. A key may state its
 // default (false), as validators.inferred: true does, but a new kind follows the contract, so it
@@ -276,15 +364,27 @@ func (f *File) Policy() model.Policy {
 	}
 	exceptions := iacoverrides.Exceptions{API: f.API.API, Fields: map[string]map[string]iacoverrides.Field{}}
 	for _, line := range f.Lines() {
-		if !f.Types[line.Component].Fields[line.Field].ReadOnly {
+		field := f.Types[line.Component].Fields[line.Field]
+		if !field.ReadOnly && !field.Optional {
 			continue
 		}
 		if exceptions.Fields[line.Component] == nil {
 			exceptions.Fields[line.Component] = map[string]iacoverrides.Field{}
 		}
-		exceptions.Fields[line.Component][line.Field] = iacoverrides.Field{ReadOnly: true}
+		exceptions.Fields[line.Component][line.Field] = iacoverrides.Field{ReadOnly: field.ReadOnly, Optional: field.Optional}
 	}
-	return exceptions.Policy()
+	p := exceptions.Policy()
+	for _, line := range f.Lines() {
+		if f.Field(line.Component, line.Field).Optional {
+			p.Released = append(p.Released, line.Component+"."+line.Field)
+		}
+	}
+	for name, enum := range f.Enums {
+		if len(enum.Values) != 0 {
+			p.EnumAnyPrefix = append(p.EnumAnyPrefix, name)
+		}
+	}
+	return p
 }
 
 // Inferred reports whether the markers have the contract limits: true unless the file says
@@ -316,4 +416,21 @@ func (f *File) Ref(component, field string) *Ref {
 		return nil
 	}
 	return f.Types[component].Fields[field].Ref
+}
+
+// Field returns the line for one API property.
+func (f *File) Field(component, field string) Field {
+	if f == nil {
+		return Field{}
+	}
+	return f.Types[component].Fields[field]
+}
+
+// Enum returns the line for an API enum component.
+func (f *File) Enum(component string) (Enum, bool) {
+	if f == nil {
+		return Enum{}, false
+	}
+	e, ok := f.Enums[component]
+	return e, ok
 }

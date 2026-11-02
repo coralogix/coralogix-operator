@@ -14,7 +14,10 @@ import (
 // resolveSDKNames lists the SDK names that the generated code uses: the names of the resource,
 // and the accessor of the SDK client set that the generated registry calls.
 func resolveSDKNames(r *model.Resource, tag, module string, updateIDOutsideWrapper bool, file *overrides.File) ([]sdkcheck.Ref, error) {
-	refs, err := sdkcheck.Names(r, tag, module, nil)
+	refs, err := sdkcheck.Names(r, tag, module, func(component string) bool {
+		enum, ok := file.Enum(component)
+		return ok && enum.Zero != ""
+	})
 	if err != nil {
 		return nil, err
 	}

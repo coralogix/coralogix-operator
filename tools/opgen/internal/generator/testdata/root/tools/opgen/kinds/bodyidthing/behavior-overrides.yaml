@@ -4,3 +4,15 @@ validators:
   inferred: false        # the released kind has no length or bound limits
 api:
   updateIDInBody: true   # Replace sends the id in the body
+types:
+  BodyIDThing:
+    fields:
+      name: {name: title}
+      limit: {required: true}
+enums:
+  BodyIDThingMode:
+    zero: unspecified
+    values: [BODY_ID_THING_MODE_LOW]
+    rejected: [BODY_ID_THING_MODE_HIGH]
+    names: {BODY_ID_THING_MODE_LOW: alerts}
+    aliases: {unspecified: alerts}

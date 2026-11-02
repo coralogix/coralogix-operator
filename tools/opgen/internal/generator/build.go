@@ -161,6 +161,7 @@ type builder struct {
 	kind             string
 	file             *overrides.File
 	used             map[overrides.Line]bool // the lines of the file that changed the output
+	usedEnums        map[string]bool
 	ix               *refIndex
 	alias            string
 	types            map[string]*crType
@@ -183,7 +184,7 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 	if err != nil {
 		return nil, err
 	}
-	b := &builder{kind: entry.Kind, file: file, used: map[overrides.Line]bool{}, ix: ix, alias: sdkAlias(ix.pkg.Name), types: map[string]*crType{},
+	b := &builder{kind: entry.Kind, file: file, used: map[overrides.Line]bool{}, usedEnums: map[string]bool{}, ix: ix, alias: sdkAlias(ix.pkg.Name), types: map[string]*crType{},
 		enums: map[string]*enumMap{}, convs: map[string]string{}}
 	d := &kindData{
 		Kind: entry.Kind, Lower: strings.ToLower(entry.Kind), Plural: plural(entry.Kind),
@@ -214,6 +215,13 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 		}
 		if !b.used[line] {
 			return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String(), msg: "the line changes no generated code"}
+		}
+	}
+	if file != nil {
+		for name := range file.Enums {
+			if !b.usedEnums[name] {
+				return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":enums." + name, msg: "the line changes no generated code"}
+			}
 		}
 	}
 	if !file.Inferred() && !b.droppedLimits {
