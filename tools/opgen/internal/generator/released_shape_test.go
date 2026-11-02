@@ -70,6 +70,44 @@ func TestReleasedShapeGroupMovesTheCRFieldAndConversion(t *testing.T) {
 	}
 }
 
+func TestReleasedShapeGroupSuppliesE2EUpdate(t *testing.T) {
+	for _, tt := range []struct {
+		name, update, assignment, assertion string
+	}{
+		{name: "automatic", assignment: `updated.Spec.Routing.Name = fullName + "-updated"`, assertion: `g.Expect(got.Name).To(Equal(fullName + "-updated"))`},
+		{name: "configured", update: "update:\n  field: routing.description\n  value: changed\n", assignment: `updated.Spec.Routing.Description = ptr.To("changed")`, assertion: `g.Expect(ptr.Deref(got.Description, "")).To(Equal("changed"))`},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			root, input := syntheticRoot(t)
+			kindDir := filepath.Join(root, kindsDir, "thing")
+			override := "resource: Thing\nmode: existing\nvalidators: {inferred: true}\ngroups:\n  routing: {fields: [name, description, enabled, quota]}\n"
+			if err := os.WriteFile(filepath.Join(kindDir, "behavior-overrides.yaml"), []byte(override), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			if tt.update != "" {
+				if err := os.WriteFile(filepath.Join(kindDir, "e2e.yaml"), []byte("values:\n  destinations: [https://example.com]\n"+tt.update), 0o644); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := generateFromInput(input, root, root); err != nil {
+				t.Fatal(err)
+			}
+			data, err := os.ReadFile(filepath.Join(root, "tests", "e2e", "thing_generated_test.go"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err := parser.ParseFile(token.NewFileSet(), "thing_generated_test.go", data, 0); err != nil {
+				t.Fatalf("generated e2e test is invalid Go: %v", err)
+			}
+			for _, want := range []string{tt.assignment, tt.assertion, "cr.Spec.Routing.Name = name"} {
+				if !strings.Contains(string(data), want) {
+					t.Errorf("generated e2e test omits %q", want)
+				}
+			}
+		})
+	}
+}
+
 func TestReleasedShapeGroupRequireOneMovesTheCELRule(t *testing.T) {
 	file := &overrides.File{Resource: "Thing", Groups: map[string]overrides.Group{"choice": {Fields: []string{"left", "right", "timeout"}, RequireOne: true}}}
 	b := &builder{file: file, types: map[string]*crType{}, usedGroups: map[string]bool{}}

@@ -36,7 +36,7 @@ type e2eFile struct {
 	Update *e2eUpdate `yaml:"update"`
 }
 
-// e2eUpdate changes one top-level field that Update sends.
+// e2eUpdate changes one scalar field that Update sends. A field in a root group uses a dotted path.
 type e2eUpdate struct {
 	Field string `yaml:"field"`
 	Value any    `yaml:"value"`
@@ -62,7 +62,7 @@ func readE2E(path string) (*e2eFile, error) {
 // e2eData is what the e2e test template needs.
 type e2eData struct {
 	FullJSON, MinimalJSON string // Go string literals of the spec as JSON
-	NameField             string // the Go field of a top-level string name, "" when there is none
+	NameField             string // the Go path of a string name, "" when there is none
 	NamePtr               bool
 	Update                *updateData
 }
@@ -71,6 +71,13 @@ type e2eData struct {
 // the value that the API then returns, and the expression that reads it from the response "got".
 type updateData struct {
 	Field, Set, Want, Got string
+}
+
+type updateCandidate struct {
+	field            *crField
+	jsonPath, goPath string
+	value            any
+	inOneOf          bool
 }
 
 // sampleValues makes up the full and the minimal spec of the sample and the e2e test.
@@ -94,12 +101,14 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 		}
 	}
 	e2e = &e2eData{FullJSON: goString(full.json()), MinimalJSON: goString(minimal.json())}
-	for _, f := range d.Spec.Fields {
-		if f.API == "name" && f.typ.Kind == model.String {
-			e2e.NameField, e2e.NamePtr = f.GoName, f.Optional
+	candidates := updateCandidates(d.Spec, full)
+	for _, candidate := range candidates {
+		if candidate.field.API == "name" && candidate.field.typ.Kind == model.String {
+			e2e.NameField, e2e.NamePtr = candidate.goPath, candidate.field.Optional
+			break
 		}
 	}
-	if e2e.Update, err = updateStep(d, ix, full, file, e2e.NameField); err != nil {
+	if e2e.Update, err = updateStep(d, ix, candidates, file, e2e.NameField); err != nil {
 		return nil, nil, nil, err
 	}
 	return full, minimal, e2e, nil
@@ -197,32 +206,67 @@ func stringValue(name string, t *model.Type, path string) (string, error) {
 	return s, nil
 }
 
+// updateCandidates lists top-level fields first, then fields in root groups. A group keeps its
+// API fields at the root, even though the CR and its sample put them in an object.
+func updateCandidates(spec *crType, full *omap) []updateCandidate {
+	var candidates []updateCandidate
+	appendFields := func(owner *crType, jsonPrefix, goPrefix string, value any) {
+		inOneOf := map[string]bool{}
+		for _, group := range owner.groups {
+			for _, arm := range group.Arms {
+				inOneOf[arm] = true
+			}
+		}
+		for _, field := range owner.Fields {
+			if field.group {
+				continue
+			}
+			candidates = append(candidates, updateCandidate{
+				field: field, jsonPath: jsonPrefix + field.JSON, goPath: goPrefix + field.GoName,
+				value: objectValue(value, field.JSON), inOneOf: inOneOf[field.API],
+			})
+		}
+	}
+	appendFields(spec, "", "", full)
+	for _, group := range spec.Fields {
+		if group.group {
+			appendFields(group.object, group.JSON+".", group.GoName+".", full.get(group.JSON))
+		}
+	}
+	return candidates
+}
+
+func objectValue(object any, field string) any {
+	switch value := object.(type) {
+	case *omap:
+		return value.get(field)
+	case map[string]any:
+		return value[field]
+	}
+	return nil
+}
+
 // updateStep picks the change of the update step: the update line of e2e.yaml, or the first
-// mutable top-level string, bool, or integer that is not in a oneOf group.
-func updateStep(d *kindData, ix *refIndex, full *omap, file *e2eFile, nameField string) (*updateData, error) {
+// mutable scalar outside a oneOf. A top-level field takes precedence over a grouped field.
+func updateStep(d *kindData, ix *refIndex, candidates []updateCandidate, file *e2eFile, nameField string) (*updateData, error) {
 	resource, err := ix.typeRef("fields")
 	if err != nil {
 		return nil, err
 	}
-	inGroup := map[string]bool{}
-	for _, g := range d.Spec.groups {
-		for _, arm := range g.Arms {
-			inGroup[arm] = true
-		}
-	}
-	for _, f := range d.Spec.Fields {
-		if file.Update != nil && file.Update.Field != f.JSON {
+	for _, candidate := range candidates {
+		f := candidate.field
+		if file.Update != nil && file.Update.Field != candidate.jsonPath {
 			continue
 		}
-		if f.immutable || inGroup[f.API] || f.enum != nil || f.ref != "" || f.typ.Pattern != "" || f.typ.WireString ||
+		if f.immutable || candidate.inOneOf || f.enum != nil || f.ref != "" || f.typ.Pattern != "" || f.typ.WireString ||
 			!slices.Contains([]model.Kind{model.String, model.Bool, model.Integer}, f.typ.Kind) {
 			if file.Update != nil {
 				return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":update.field",
-					msg: fmt.Sprintf("%s is not a mutable top-level string, bool, or integer outside a oneOf", f.API)}
+					msg: fmt.Sprintf("%s is not a mutable string, bool, or integer outside a oneOf", candidate.jsonPath)}
 			}
 			continue
 		}
-		value, err := updateValue(f, full, file, nameField)
+		value, err := updateValue(f, candidate.value, file, nameField == candidate.goPath)
 		if err != nil {
 			return nil, err
 		}
@@ -242,17 +286,17 @@ func updateStep(d *kindData, ix *refIndex, full *omap, file *e2eFile, nameField 
 		if f.Optional {
 			set = "ptr.To(" + value + ")"
 		}
-		return &updateData{Field: f.GoName, Set: set, Want: value, Got: read}, nil
+		return &updateData{Field: candidate.goPath, Set: set, Want: value, Got: read}, nil
 	}
 	if file.Update != nil {
 		return nil, &shapeError{code: codeE2EUnused, path: e2eFileName + ":update.field", msg: "the spec has no such field"}
 	}
 	return nil, &shapeError{code: codeE2ERequired, path: e2eFileName + ":update",
-		msg: "the spec has no mutable top-level string, bool, or integer that the update step can change; set update in " + e2eFileName}
+		msg: "the spec has no mutable string, bool, or integer outside a oneOf that the update step can change; set update in " + e2eFileName}
 }
 
 // updateValue is the new value of the update step as Go code.
-func updateValue(f *crField, full *omap, file *e2eFile, nameField string) (string, error) {
+func updateValue(f *crField, current any, file *e2eFile, nameField bool) (string, error) {
 	goType := strings.TrimPrefix(f.GoType, "*")
 	if file.Update != nil {
 		switch value := file.Update.Value.(type) {
@@ -265,10 +309,10 @@ func updateValue(f *crField, full *omap, file *e2eFile, nameField string) (strin
 		}
 		return "", &shapeError{code: codeE2EInvalid, path: e2eFileName + ":update.value", msg: "the value must be a string, a bool, or an integer"}
 	}
-	if f.GoName == nameField {
+	if nameField {
 		return "fullName + \"-updated\"", nil
 	}
-	switch value := full.get(f.JSON).(type) {
+	switch value := current.(type) {
 	case bool:
 		return strconv.FormatBool(!value), nil
 	case int64:
