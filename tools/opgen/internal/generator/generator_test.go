@@ -282,10 +282,9 @@ func TestGeneratedNameCollision(t *testing.T) {
 	}
 }
 
-// A list item or a map value in a wrapper stops the renderer, as a wrapped field does. Only a
-// behavior-overrides line makes a wrapper, so the test builds the type itself.
-func TestWrappedElementIsUnsupported(t *testing.T) {
-	item := &model.Type{Kind: model.String, Wrappers: []model.Wrapper{{}}}
+// A keyed list or map still needs its own renderer support.
+func TestKeyedElementIsUnsupported(t *testing.T) {
+	item := &model.Type{Kind: model.String, Keyed: &model.Keyed{}}
 	for _, kind := range []model.Kind{model.List, model.Map} {
 		b := &builder{kind: "Thing", types: map[string]*crType{}, enums: map[string]*enumMap{}}
 		_, err := b.field("Thing", "Thing", "tags", "", &model.Type{Kind: kind, Elem: item}, false, "spec.tags", false)

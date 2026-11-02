@@ -24,6 +24,9 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 		if f.Behavior == model.Computed || f.Create == nil {
 			continue
 		}
+		if len(b.file.Field(r.Name, f.Name).RequestValueBy) != 0 {
+			continue
+		}
 		if inGroup[f.Name] && b.file.Field(r.Name, f.Name).Required {
 			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":types." + r.Name + ".fields." + f.Name + ".required", msg: "a oneOf arm cannot be required on its own"}
 		}
@@ -37,8 +40,16 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 		}
 		spec.Fields = append(spec.Fields, field)
 	}
+	groups, err := b.overrideGroups(r.Name, r.Groups, spec.Fields)
+	if err != nil {
+		return nil, err
+	}
+	groups, err = b.groupFields(r.Name, spec, groups)
+	if err != nil {
+		return nil, err
+	}
 	presenceRules(spec, spec, nil, false)
-	if err := groupRules(spec, r.Groups, "spec"); err != nil {
+	if err := groupRules(spec, groups, "spec"); err != nil {
 		return nil, err
 	}
 	return spec, nil
@@ -127,6 +138,107 @@ func groupRules(t *crType, groups []model.OneOfGroup, path string) error {
 	return nil
 }
 
+// overrideGroups keeps a released exactly-one rule when the contract permits zero arms.
+func (b *builder) overrideGroups(component string, groups []model.OneOfGroup, fields []*crField) ([]model.OneOfGroup, error) {
+	out := slices.Clone(groups)
+	for i, g := range groups {
+		out[i] = g
+		out[i].Arms = slices.Clone(g.Arms)
+		for _, arm := range g.Arms {
+			line := overrides.Line{Component: component, Field: arm}
+			if !b.file.Field(component, arm).RequireOne {
+				continue
+			}
+			if !g.AllowNone || !out[i].AllowNone {
+				return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String() + ".requireOne", msg: "the group already requires one arm"}
+			}
+			out[i].AllowNone = false
+			b.used[line] = true
+		}
+	}
+	for _, f := range fields {
+		line := overrides.Line{Component: component, Field: f.API}
+		if !b.file.Field(component, f.API).RequireOne || b.used[line] {
+			continue
+		}
+		return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".requireOne", msg: "requireOne needs a oneOf field or an arm of a oneOf group"}
+	}
+	return out, nil
+}
+
+// groupFields places released CR fields under named objects and moves their oneOf rules.
+func (b *builder) groupFields(component string, owner *crType, groups []model.OneOfGroup) ([]model.OneOfGroup, error) {
+	configured := b.file.GroupsFor(component)
+	if len(configured) == 0 {
+		return groups, nil
+	}
+	selected := map[string]string{}
+	for name, group := range configured {
+		if slices.ContainsFunc(owner.Fields, func(f *crField) bool { return f.JSON == name }) {
+			return nil, collision("groups."+name, "the group name is already a CR field")
+		}
+		for _, field := range group.Fields {
+			selected[field] = name
+		}
+	}
+	remainingGroups := make([]model.OneOfGroup, 0, len(groups))
+	groupRulesByName := map[string][]model.OneOfGroup{}
+	for _, rule := range groups {
+		name := ""
+		for _, arm := range rule.Arms {
+			if selected[arm] != "" {
+				if name != "" && name != selected[arm] {
+					return nil, unsupported("groups", "oneOf arms must stay in one group")
+				}
+				name = selected[arm]
+			}
+		}
+		if name == "" {
+			remainingGroups = append(remainingGroups, rule)
+			continue
+		}
+		if slices.ContainsFunc(rule.Arms, func(arm string) bool { return selected[arm] != name }) {
+			return nil, unsupported("groups."+name, "all oneOf arms must be in the same group")
+		}
+		groupRulesByName[name] = append(groupRulesByName[name], rule)
+	}
+	remainingFields := slices.DeleteFunc(slices.Clone(owner.Fields), func(f *crField) bool { return selected[f.API] != "" })
+	for _, name := range sortedKeys(configured) {
+		group := configured[name]
+		typeName := owner.Name + goName(name)
+		if b.types[typeName] != nil {
+			return nil, collision("groups."+name, "the group type %s already exists", typeName)
+		}
+		child := &crType{Name: typeName, Doc: []string{fmt.Sprintf("%s holds the %s fields of the released CR.", typeName, name)}}
+		for _, api := range group.Fields {
+			i := slices.IndexFunc(owner.Fields, func(f *crField) bool { return f.API == api })
+			if i < 0 {
+				return nil, unsupported("groups."+name, "the API component has no managed field %s", api)
+			}
+			if owner.Fields[i].immutable {
+				return nil, unsupported("groups."+name, "an immutable field cannot move into a required group")
+			}
+			child.Fields = append(child.Fields, owner.Fields[i])
+		}
+		rules := groupRulesByName[name]
+		if group.RequireOne {
+			if len(rules) != 1 || !rules[0].AllowNone {
+				return nil, unsupported("groups."+name+".requireOne", "requireOne needs one complete oneOf group that permits zero arms")
+			}
+			rules[0].AllowNone = false
+		}
+		if err := groupRules(child, rules, "groups."+name); err != nil {
+			return nil, err
+		}
+		b.types[typeName] = child
+		b.order = append(b.order, child)
+		remainingFields = append(remainingFields, &crField{API: name, JSON: name, GoName: goName(name), GoType: typeName, typ: &model.Type{Kind: model.Object}, object: child, group: true})
+		b.usedGroups[component+"."+name] = true
+	}
+	owner.Fields = remainingFields
+	return remainingGroups, nil
+}
+
 // field builds one field of the Go type owner, which holds component. inItem is true inside a
 // list item or a map value, where kubectl cannot compare a value with its old value.
 func (b *builder) field(owner, component, name, description string, t *model.Type, required bool, path string, inItem bool) (*crField, error) {
@@ -135,6 +247,15 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 	}
 	line := overrides.Line{Component: component, Field: name}
 	change := b.file.Field(component, name)
+	if change.RequireOne && t.Kind == model.OneOf {
+		if !t.AllowNone {
+			return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String() + ".requireOne", msg: "the oneOf already requires one arm"}
+		}
+		requiredType := *t
+		requiredType.AllowNone = false
+		t = &requiredType
+		b.used[line] = true
+	}
 	if change.Required && !required {
 		required = true
 		b.used[line] = true
@@ -204,11 +325,10 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 	return f, nil
 }
 
-// wrapped rejects a value that the API holds in a wrapper object or keys by a property: the
-// renderer would write the bare value and lose the wrapper.
+// wrapped rejects a keyed value. Wrapper objects are restored by request conversion.
 func wrapped(t *model.Type, path string) error {
-	if len(t.Wrappers) != 0 || t.Keyed != nil {
-		return unsupported(path, "wrapper and keyedBy values are not supported yet")
+	if t.Keyed != nil {
+		return unsupported(path, "keyedBy values are not supported yet")
 	}
 	return nil
 }
@@ -408,6 +528,9 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 		if existing.schema != t.Schema {
 			return nil, collision(path, "the components %s and %s both are the Go type %s", existing.schema, t.Schema, name)
 		}
+		if t.Kind == model.OneOf && len(existing.groups) != 0 && existing.groups[0].AllowNone != t.AllowNone {
+			return nil, unsupported(path, "one component cannot have different requireOne rules at different CR fields")
+		}
 		// The type was built for another place. A list item or a map value still cannot hold an
 		// immutable field, so check that again here.
 		if inItem {
@@ -428,6 +551,9 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 	}
 	for _, f := range t.Fields {
 		if f.Behavior == model.Computed || f.Behavior == "" || f.Create == nil {
+			continue
+		}
+		if len(b.file.Field(t.Schema, f.Name).RequestValueBy) != 0 {
 			continue
 		}
 		if (t.Kind == model.OneOf || inGroup[f.Name]) && b.file.Field(t.Schema, f.Name).Required {
@@ -457,6 +583,14 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 			arms[i] = f.API
 		}
 		groups = append([]model.OneOfGroup{{Arms: arms, AllowNone: t.AllowNone}}, groups...)
+	}
+	groups, err := b.overrideGroups(t.Schema, groups, obj.Fields)
+	if err != nil {
+		return nil, err
+	}
+	groups, err = b.groupFields(t.Schema, obj, groups)
+	if err != nil {
+		return nil, err
 	}
 	return obj, groupRules(obj, groups, path)
 }
