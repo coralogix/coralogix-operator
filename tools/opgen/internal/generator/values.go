@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"go/token"
 	"io"
 	"os"
 	"regexp"
@@ -28,6 +29,13 @@ const (
 
 // e2eFile is the content of e2e.yaml. It is handwritten and optional.
 type e2eFile struct {
+	// Serial keeps a kind whose resources affect the whole account in one Ginkgo process.
+	Serial bool `yaml:"serial"`
+	// Setup and Prepare name handwritten e2e helpers for kinds with remote dependencies.
+	Setup   string `yaml:"setup"`
+	Prepare string `yaml:"prepare"`
+	// Omit lists optional top-level fields that cannot appear with other full-spec fields.
+	Omit []string `yaml:"omit"`
 	// Values are spec values by field path, for example config.http.endpoint. A value replaces the
 	// whole value that the generator makes up for that field. The path of a field inside a list item
 	// or a map value has no index: the value is used for every item.
@@ -56,11 +64,18 @@ func readE2E(path string) (*e2eFile, error) {
 	if err := dec.Decode(&f); err != nil && !errors.Is(err, io.EOF) {
 		return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName, msg: err.Error()}
 	}
+	if (f.Setup != "" && !token.IsIdentifier(f.Setup)) || (f.Prepare != "" && !token.IsIdentifier(f.Prepare)) {
+		return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName, msg: "setup and prepare must name Go functions"}
+	}
 	return &f, nil
 }
 
 // e2eData is what the e2e test template needs.
 type e2eData struct {
+	Omit                  []string
+	Serial                bool
+	Setup                 string
+	Prepare               string
 	FullJSON, MinimalJSON string // Go string literals of the spec as JSON
 	NameField             string // the Go path of a string name, "" when there is none
 	NamePtr               bool
@@ -89,6 +104,18 @@ type sampleValues struct {
 // buildValues makes up the full and the minimal spec from the contract and e2e.yaml.
 func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap, e2e *e2eData, err error) {
 	v := &sampleValues{file: file, used: map[string]bool{}}
+	for _, name := range file.Omit {
+		found := false
+		for _, field := range d.Spec.Fields {
+			if field.JSON == name && field.Optional {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":omit", msg: "omit must name an optional top-level spec field"}
+		}
+	}
 	if full, err = v.object(d.Spec, "", true); err != nil {
 		return nil, nil, nil, err
 	}
@@ -100,7 +127,7 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 			return nil, nil, nil, &shapeError{code: codeE2EUnused, path: e2eFileName + ":values." + path, msg: "the spec has no such field"}
 		}
 	}
-	e2e = &e2eData{FullJSON: goString(full.json()), MinimalJSON: goString(minimal.json())}
+	e2e = &e2eData{FullJSON: goString(full.json()), MinimalJSON: goString(minimal.json()), Serial: file.Serial, Setup: file.Setup, Prepare: file.Prepare, Omit: file.Omit}
 	candidates := updateCandidates(d.Spec, full)
 	for _, candidate := range candidates {
 		if candidate.field.API == "name" && candidate.field.typ.Kind == model.String {
@@ -126,7 +153,7 @@ func (v *sampleValues) object(t *crType, prefix string, full bool) (*omap, error
 	out := &omap{}
 	for _, f := range t.Fields {
 		_, inGroup := skip[f.API]
-		if skip[f.API] || (!full && f.Optional && !inGroup) {
+		if skip[f.API] || (full && prefix == "" && slices.Contains(v.file.Omit, f.JSON)) || (!full && f.Optional && !inGroup) {
 			continue
 		}
 		value, err := v.field(f, prefix+f.JSON, full)

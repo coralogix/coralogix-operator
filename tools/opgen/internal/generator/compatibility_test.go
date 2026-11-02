@@ -63,6 +63,19 @@ func TestReleasedEnumValues(t *testing.T) {
 	}
 }
 
+func TestReleasedEnumCanRejectExplicitZero(t *testing.T) {
+	file := "resource: Thing\nmode: existing\nvalidators: {inferred: true}\nenums:\n  ThingPriority:\n    zero: unspecified\n    rejectZero: true\n    values: [THING_PRIORITY_LOW]\n    rejected: [THING_PRIORITY_PAGER_DUTY_INCIDENTS]\n"
+	files := checkLifecycleFixture(t, "Thing", syntheticContract(t), file)
+	types := string(files["api/coralogix/v1alpha1/thing_types.go"])
+	convert := string(files["api/coralogix/v1alpha1/thing_convert.go"])
+	if !strings.Contains(types, "+kubebuilder:validation:Enum=low") || strings.Contains(types, "Enum=unspecified") {
+		t.Error("CR enum must accept only the business value")
+	}
+	if strings.Contains(convert, `"unspecified":`) || !strings.Contains(convert, `"low":`) {
+		t.Error("conversion must reject an explicit zero value")
+	}
+}
+
 func TestReleasedRequiredAndNameLinesMustChangeOutput(t *testing.T) {
 	for _, line := range []string{"name: {required: true}", "name: {name: name}", "limit: {optional: true}"} {
 		t.Run(line, func(t *testing.T) {

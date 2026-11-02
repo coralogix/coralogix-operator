@@ -31,6 +31,12 @@ import (
 // SetupGeneratedControllers sets up the controller of every generated kind. The interval of a
 // kind is its reconcile interval.
 func SetupGeneratedControllers(mgr ctrl.Manager, clientSet *cxsdk.ClientSet, intervals map[string]time.Duration) error {
+	if err := (&GlobalRouterReconciler{
+		Client:   clientSet.GlobalRouters(),
+		Interval: intervals[utils.GlobalRouterKind],
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create the controller of %s: %w", utils.GlobalRouterKind, err)
+	}
 	if err := (&ViewFolderReconciler{
 		Client:   clientSet.ViewsFolders(),
 		Interval: intervals[utils.ViewFolderKind],

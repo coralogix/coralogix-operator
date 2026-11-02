@@ -284,13 +284,6 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Preset")
 		os.Exit(1)
 	}
-	if err = (&v1alpha1controllers.GlobalRouterReconciler{
-		GlobalRoutersClient: oapiClientSet.GlobalRouters(),
-		Interval:            cfg.ReconcileIntervals[utils.GlobalRouterKind],
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "GlobalRouter")
-		os.Exit(1)
-	}
 
 	if err = (&v1alpha1controllers.ArchiveLogsTargetReconciler{
 		ArchiveLogsTargetsClient: oapiClientSet.ArchiveLogs(),

@@ -1,0 +1,9 @@
+serial: true
+setup: setupGlobalRouterGeneratedE2E
+prepare: prepareGlobalRouterGeneratedE2E
+omit: [fallback, id]
+values:
+  fallbackTargets.target: {connector: {resourceRef: {name: connector-sample}}, customDetails: {key: sample-custom-details}}
+  rules.targets.connector: {resourceRef: {name: connector-sample}}
+  rules.targets.preset: {backendRef: {id: preset_system_generic_https_alerts_empty}}
+  rules.condition: 'alertDef.priority == "P1"'

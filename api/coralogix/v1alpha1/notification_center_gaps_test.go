@@ -276,7 +276,7 @@ func TestPresetExtractIncidentIO(t *testing.T) {
 }
 
 // GlobalRouter supports disabled, fallbackTargets, and CASES routing-rule entity type.
-func TestGlobalRouterExtractDisabledFallbackTargetsAndCases(t *testing.T) {
+func TestGlobalRouterCreateRequestDisabledFallbackTargetsAndCases(t *testing.T) {
 	disabled := true
 	entityType := "cases"
 	router := &GlobalRouter{
@@ -284,13 +284,13 @@ func TestGlobalRouterExtractDisabledFallbackTargetsAndCases(t *testing.T) {
 			Name:        "r",
 			Description: "d",
 			Disabled:    &disabled,
-			Rules: []RoutingRule{
+			Rules: []GlobalRouterRoutingRule{
 				{
 					Name:          "rule",
 					EntityType:    &entityType,
 					Condition:     "true",
 					CustomDetails: map[string]string{"ruleKey": "ruleVal"},
-					Targets: []RoutingTarget{
+					Targets: []GlobalRouterRoutingTarget{
 						{
 							Connector:     NCRef{BackendRef: &NCBackendRef{ID: "conn-1"}},
 							CustomDetails: map[string]string{"targetKey": "targetVal"},
@@ -298,19 +298,20 @@ func TestGlobalRouterExtractDisabledFallbackTargetsAndCases(t *testing.T) {
 					},
 				},
 			},
-			FallbackTargets: []FallbackTarget{
+			FallbackTargets: []GlobalRouterFallbackTarget{
 				{
 					EntityType: "alerts",
-					Target:     RoutingTarget{Connector: NCRef{BackendRef: &NCBackendRef{ID: "conn-1"}}},
+					Target:     GlobalRouterRoutingTarget{Connector: NCRef{BackendRef: &NCBackendRef{ID: "conn-1"}}},
 				},
 			},
 		},
 	}
 
-	got, err := router.ExtractGlobalRouter(context.Background())
+	request, err := router.CreateRequest(context.Background())
 	if err != nil {
-		t.Fatalf("ExtractGlobalRouter returned error: %v", err)
+		t.Fatalf("CreateRequest returned error: %v", err)
 	}
+	got := request.Router
 	if got.Disabled == nil || !*got.Disabled {
 		t.Fatalf("Disabled = %v, want true", got.Disabled)
 	}
@@ -330,5 +331,26 @@ func TestGlobalRouterExtractDisabledFallbackTargetsAndCases(t *testing.T) {
 	if len(got.Rules[0].Targets) != 1 || got.Rules[0].Targets[0].CustomDetails == nil ||
 		got.Rules[0].Targets[0].CustomDetails["targetKey"] != "targetVal" {
 		t.Fatalf("target custom details = %v, want targetKey=targetVal", got.Rules[0].Targets)
+	}
+}
+
+// An omitted rule entity type is valid. An explicit API zero value is not.
+func TestGlobalRouterRejectsExplicitUnspecifiedEntityType(t *testing.T) {
+	router := &GlobalRouter{Spec: GlobalRouterSpec{
+		Name: "r", Description: "d",
+		Rules: []GlobalRouterRoutingRule{{Name: "rule", Condition: "true", Targets: []GlobalRouterRoutingTarget{{Connector: NCRef{BackendRef: &NCBackendRef{ID: "conn-1"}}}}}},
+	}}
+	if _, err := router.CreateRequest(context.Background()); err != nil {
+		t.Fatalf("omitted rule entity type: %v", err)
+	}
+	unspecified := "unspecified"
+	router.Spec.Rules[0].EntityType = &unspecified
+	if _, err := router.CreateRequest(context.Background()); err == nil {
+		t.Fatal("explicit rule unspecified entity type was accepted")
+	}
+	router.Spec.Rules[0].EntityType = nil
+	router.Spec.FallbackTargets = []GlobalRouterFallbackTarget{{EntityType: unspecified, Target: GlobalRouterRoutingTarget{Connector: NCRef{BackendRef: &NCBackendRef{ID: "conn-1"}}}}}
+	if _, err := router.CreateRequest(context.Background()); err == nil {
+		t.Fatal("explicit fallback unspecified entity type was accepted")
 	}
 }

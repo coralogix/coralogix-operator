@@ -43,7 +43,6 @@ const (
 	ViewKind                   = "View"
 	ConnectorKind              = "Connector"
 	PresetKind                 = "Preset"
-	GlobalRouterKind           = "GlobalRouter"
 	ArchiveLogsTargetKind      = "ArchiveLogsTarget"
 	ArchiveMetricsTargetKind   = "ArchiveMetricsTarget"
 	SLOKind                    = "SLO"

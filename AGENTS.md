@@ -34,6 +34,8 @@ For Coralogix API semantics, use the pinned `coralogix-management-sdk` and, when
 
 Pay attention to presence semantics: pointers, protobuf `optional`, wrappers, empty slices, and zero values are not interchangeable.
 
+For released enums, keep the CRD value set and conversion aligned. An omitted optional enum can be valid even when an explicit API zero value is not.
+
 Do not hand-edit generated files: `zz_generated.deepcopy.go`, `config/crd/bases/*.yaml`, or `docs/api.md`. Change source types/markers and run the relevant generation target.
 
 When changing a CRD field, update the full path:

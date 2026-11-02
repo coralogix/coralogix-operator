@@ -19,5 +19,6 @@ package utils
 
 // The kinds that the operator generator writes.
 const (
-	ViewFolderKind = "ViewFolder"
+	GlobalRouterKind = "GlobalRouter"
+	ViewFolderKind   = "ViewFolder"
 )

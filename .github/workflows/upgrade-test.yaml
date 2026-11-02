@@ -52,6 +52,7 @@ jobs:
       SLACK_INTEGRATION_CHANNEL: ${{ secrets.SLACK_INTEGRATION_CHANNEL }}
       PD_INTEGRATION_ID: ${{ secrets.PD_INTEGRATION_ID }}
       TEST_TEAM_ID: ${{ secrets.TEST_TEAM_ID }}
+      E2E_GLOBALROUTER_UPGRADE: "1"
       # A service name from the tenant's APM Service Catalog. The APM SLO specs fail
       # loudly in CI without it, instead of skipping silently.
       CORALOGIX_SLO_APM_SERVICE: ${{ secrets.CORALOGIX_SLO_APM_SERVICE }}
@@ -87,6 +88,10 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
         run: scripts/upgrade-check-viewfolder.sh before
+      - name: Create a GlobalRouter with the released operator
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+        run: scripts/upgrade-check-globalrouter.sh before
       - name: Build PR image
         uses: ./.github/actions/build-operator-image
         with:
@@ -117,6 +122,9 @@ jobs:
         run: scripts/upgrade-check-viewfolder.sh after
       # A failed step before the check skips it, so delete the folder here; no run leaves it in
       # Coralogix.
+      - name: Delete the GlobalRouter of the upgrade test
+        if: always()
+        run: scripts/upgrade-check-globalrouter.sh cleanup
       - name: Delete the ViewFolder of the upgrade test
         if: always()
         env:
