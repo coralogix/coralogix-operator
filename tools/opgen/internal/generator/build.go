@@ -121,6 +121,7 @@ type crField struct {
 	enum      *enumMap    // the enum, or the enum of the items of a list
 	immutable bool
 	ref       string // the kind that a reference names, "" for a field that is not one
+	refType   string // the CR reference type, when it differs from ResourceIDRef
 }
 
 // JSONTag is the json struct tag of the field.
@@ -209,6 +210,11 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 		return nil, err
 	}
 	for _, line := range file.Lines() {
+		if file.Field(line.Component, line.Field).Skip {
+			// overrideIssues checked that this is a used top-level API property. The model
+			// removes it before the renderer sees the resource.
+			b.used[line] = true
+		}
 		if file.Types[line.Component].Fields[line.Field].ReadOnly && resourceHasField(r, line) {
 			// The shared model removes a read-only field from the spec and requests.
 			b.used[line] = true

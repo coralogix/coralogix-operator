@@ -344,7 +344,11 @@ func (b *builder) temp(prefix string) string {
 func (b *builder) value(f *crField, rt *model.Type, src, want, path string) (string, string, bool, error) {
 	if f.ref != "" {
 		v := b.temp("v")
-		return fmt.Sprintf("%s, err := ResolveResourceID(ctx, namespace, %s, %q)\nif err != nil {\nreturn nil, fmt.Errorf(\"%s: %%w\", err)\n}\n", v, arg(src), f.ref, path), v, false, nil
+		value := arg(src)
+		if f.refType != "" {
+			value = "ResourceIDRef(" + value + ")"
+		}
+		return fmt.Sprintf("%s, err := ResolveResourceID(ctx, namespace, %s, %q)\nif err != nil {\nreturn nil, fmt.Errorf(\"%s: %%w\", err)\n}\n", v, value, f.ref, path), v, false, nil
 	}
 	switch rt.Kind {
 	case model.List, model.Set, model.Map:

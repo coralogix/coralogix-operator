@@ -39,9 +39,9 @@ func (in *RefThing) UpdateRequest(ctx context.Context) (*refthingsservice.Replac
 func (in *RefThingSpec) toCreateRefThingRequest(ctx context.Context, namespace string) (*refthingsservice.CreateRefThingRequest, error) {
 	out := &refthingsservice.CreateRefThingRequest{}
 	out.Name = in.Name
-	v1, err := ResolveResourceID(ctx, namespace, in.ThingRef, "Thing")
+	v1, err := ResolveResourceID(ctx, namespace, ResourceIDRef(in.Thing), "Thing")
 	if err != nil {
-		return nil, fmt.Errorf("spec.thingRef: %w", err)
+		return nil, fmt.Errorf("spec.thing: %w", err)
 	}
 	out.ThingId = v1
 	if in.ParentRef != nil {
@@ -58,9 +58,9 @@ func (in *RefThingSpec) toCreateRefThingRequest(ctx context.Context, namespace s
 func (in *RefThingSpec) toReplaceRefThingRequest(ctx context.Context, namespace string) (*refthingsservice.ReplaceRefThingRequest, error) {
 	out := &refthingsservice.ReplaceRefThingRequest{}
 	out.Name = in.Name
-	v3, err := ResolveResourceID(ctx, namespace, in.ThingRef, "Thing")
+	v3, err := ResolveResourceID(ctx, namespace, ResourceIDRef(in.Thing), "Thing")
 	if err != nil {
-		return nil, fmt.Errorf("spec.thingRef: %w", err)
+		return nil, fmt.Errorf("spec.thing: %w", err)
 	}
 	out.ThingId = v3
 	if in.ParentRef != nil {

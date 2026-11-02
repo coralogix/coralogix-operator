@@ -16,12 +16,25 @@ func checkRefThing(t *testing.T, edit func(string) string) error {
 	if err != nil {
 		t.Fatal(err)
 	}
-	path := filepath.Join(t.TempDir(), "behavior-overrides.yaml")
-	if err := os.WriteFile(path, []byte(edit(string(data))), 0o644); err != nil {
+	temp := t.TempDir()
+	path := filepath.Join(temp, "behavior-overrides.yaml")
+	changed := edit(string(data))
+	if err := os.WriteFile(path, []byte(changed), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	e2ePath := filepath.Join(dir, "e2e.yaml")
+	if strings.Contains(changed, "mode: new") {
+		data, err := os.ReadFile(e2ePath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		e2ePath = filepath.Join(temp, "e2e.yaml")
+		if err := os.WriteFile(e2ePath, []byte(strings.Replace(string(data), "  thing:", "  thingRef:", 1)), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
 	return Check(CheckOptions{Resource: "RefThing", OpenAPIPath: filepath.Join("testdata", "openapi.yaml"),
-		E2EPath: filepath.Join(dir, "e2e.yaml"), OverridesPath: path})
+		E2EPath: e2ePath, OverridesPath: path})
 }
 
 func TestOverridesFile(t *testing.T) {
@@ -30,7 +43,9 @@ func TestOverridesFile(t *testing.T) {
 	}
 	// A new kind can use ref too. It keeps the contract checks of a new resource.
 	if err := checkRefThing(t, func(s string) string {
-		return replaceOnce(t, replaceOnce(t, s, "validators:\n  inferred: true\n", ""), "mode: existing", "mode: new")
+		s = replaceOnce(t, s, "validators:\n  inferred: true\n", "")
+		s = replaceOnce(t, s, "name: thing\n        ref: {kind: Thing, type: NCRef}", "ref: {kind: Thing}")
+		return replaceOnce(t, s, "mode: existing", "mode: new")
 	}); err != nil {
 		t.Fatalf("mode new: %v", err)
 	}
@@ -44,7 +59,9 @@ func TestOverridesFile(t *testing.T) {
 		"validators: {}\n":                 true,
 	} {
 		err := checkRefThing(t, func(s string) string {
-			return replaceOnce(t, replaceOnce(t, s, "validators:\n  inferred: true\n", validators), "mode: existing", "mode: new")
+			s = replaceOnce(t, s, "validators:\n  inferred: true\n", validators)
+			s = replaceOnce(t, s, "name: thing\n        ref: {kind: Thing, type: NCRef}", "ref: {kind: Thing}")
+			return replaceOnce(t, s, "mode: existing", "mode: new")
 		})
 		if wantErr {
 			wantCode(t, err, codeOverrideInvalid)
@@ -65,6 +82,7 @@ func TestOverridesFile(t *testing.T) {
 		err := checkRefThing(t, func(s string) string {
 			if tt.mode == "new" {
 				s = replaceOnce(t, replaceOnce(t, s, "validators:\n  inferred: true\n", ""), "mode: existing", "mode: new")
+				s = replaceOnce(t, s, "name: thing\n        ref: {kind: Thing, type: NCRef}", "ref: {kind: Thing}")
 			}
 			return s + tt.api
 		})
@@ -82,7 +100,28 @@ func TestOverridesFile(t *testing.T) {
 		{
 			name: "an unknown key",
 			edit: func(t *testing.T, s string) string {
-				return replaceOnce(t, s, "ref: {kind: Thing}\n      parentId:", "ref: {kind: Thing}\n        name: thing\n      parentId:")
+				return replaceOnce(t, s, "ref: {kind: Thing}\n", "ref: {kind: Thing}\n        alias: thing\n")
+			},
+			code: codeOverrideInvalid,
+		},
+		{
+			name: "a name that repeats the default reference name",
+			edit: func(t *testing.T, s string) string {
+				return replaceOnce(t, s, "ref: {kind: Thing}\n", "name: parentRef\n        ref: {kind: Thing}\n")
+			},
+			code: codeOverrideUnused,
+		},
+		{
+			name: "an unsupported reference type",
+			edit: func(t *testing.T, s string) string {
+				return replaceOnce(t, s, "ref: {kind: Thing}\n", "ref: {kind: Thing, type: OtherRef}\n")
+			},
+			code: codeOverrideInvalid,
+		},
+		{
+			name: "the default reference type does not need a key",
+			edit: func(t *testing.T, s string) string {
+				return replaceOnce(t, s, "ref: {kind: Thing}\n", "ref: {kind: Thing, type: ResourceIDRef}\n")
 			},
 			code: codeOverrideInvalid,
 		},
@@ -137,10 +176,42 @@ func TestRefKindMustExist(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(path, []byte(replaceOnce(t, string(data), "ref: {kind: Thing}\n      parentId", "ref: {kind: Thingy}\n      parentId")), 0o644); err != nil {
+	if err := os.WriteFile(path, []byte(replaceOnce(t, string(data), "ref: {kind: Thing, type: NCRef}", "ref: {kind: Thingy, type: NCRef}")), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	wantCode(t, generateFromInput(input, root, root), codeOverrideInvalid)
+}
+
+// A released kind can use the one-rule NCRef for an optional field. An absent field must not
+// write a zero id to the API request.
+func TestOptionalReleasedReference(t *testing.T) {
+	root, input := syntheticRoot(t)
+	path := filepath.Join(root, kindsDir, "refthing", "behavior-overrides.yaml")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	changed := replaceOnce(t, string(data), "parentId:\n        ref: {kind: Thing}", "parentId:\n        ref: {kind: Thing, type: NCRef}")
+	if err := os.WriteFile(path, []byte(changed), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := generateFromInput(input, root, root); err != nil {
+		t.Fatal(err)
+	}
+	types, err := os.ReadFile(filepath.Join(root, apiDir, "refthing_types.go"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(types), "ParentRef *NCRef `json:\"parentRef,omitempty\"`") {
+		t.Fatal("the optional reference lost its pointer or CR name")
+	}
+	conversion, err := os.ReadFile(filepath.Join(root, apiDir, "refthing_convert.go"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(conversion), "if in.ParentRef != nil {\n\t\tv2, err := ResolveResourceID(ctx, namespace, ResourceIDRef(*in.ParentRef), \"Thing\")") {
+		t.Fatal("the optional reference does not guard the API assignment")
+	}
 }
 
 // checkBodyIDThing runs opgen check on BodyIDThing with the overrides file that edit makes from the

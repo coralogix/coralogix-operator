@@ -6,7 +6,7 @@ metadata:
   name: ref-thing-sample
 spec:
   name: sample-name
-  thingRef:
+  thing:
     resourceRef:
       name: thing-sample
   parentRef:

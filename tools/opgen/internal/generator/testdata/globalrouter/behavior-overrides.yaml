@@ -1,0 +1,21 @@
+resource: GlobalRouter
+mode: existing
+validators:
+  inferred: false
+api:
+  requestWrapper: router
+  updateIDInBody: true
+  clientSetID: true
+types:
+  GlobalRouter:
+    fields:
+      entityType: {skip: true}
+  RoutingTarget:
+    fields:
+      connectorId: {name: connector, ref: {kind: Connector, type: NCRef}}
+      presetId: {name: preset, ref: {kind: Preset, type: NCRef}}
+enums:
+  notification_center.EntityType:
+    zero: unspecified
+    values: [ALERTS, CASES]
+    rejected: [TEST_NOTIFICATIONS, OLLY_SCHEDULED_TASKS]
