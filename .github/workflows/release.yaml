@@ -77,22 +77,26 @@ jobs:
             echo "released=$released"
           } >> "$GITHUB_OUTPUT"
 
-      # Only coralogix/team-eco-system releases, also when a release PR is merged by hand or this
-      # workflow is started by hand: the release commit's PR must come from that team.
+      # Only the people in .github/RELEASERS release, also when a release PR is merged by hand or
+      # this workflow is started by hand: the release commit's PR must come from them. The list is
+      # read from main before the merge, so a PR can't add its own author.
       - name: Check who released
         if: ${{ steps.version.outputs.released == 'false' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
-          RELEASE_TEAM_TOKEN: ${{ secrets.RELEASE_TEAM_TOKEN }}
         run: |
+          if ! git show "$GITHUB_SHA^:.github/RELEASERS" > "$RUNNER_TEMP/RELEASERS"; then
+            echo "::error::.github/RELEASERS is missing on main before $GITHUB_SHA"
+            exit 1
+          fi
           pr=$(gh api "repos/$GH_REPO/commits/$GITHUB_SHA/pulls" \
             --jq '[.[] | select(.merged_at != null and .base.ref == "main")][0].number // empty')
           if [[ -z "$pr" ]]; then
             echo "::error::$GITHUB_SHA is not the merge of a PR; releases come from 'make bump' PRs"
             exit 1
           fi
-          scripts/check-releaser.sh "$pr"
+          scripts/check-releaser.sh "$pr" "$RUNNER_TEMP/RELEASERS"
 
   image:
     name: Push image

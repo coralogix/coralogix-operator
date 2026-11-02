@@ -33,6 +33,20 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Check who released
+        # A run started by hand or by a push must come from someone in .github/RELEASERS on main.
+        # The Release workflow checks before it calls this with a version.
+        if: ${{ !inputs.version }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.triggering_actor }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/contents/.github/RELEASERS?ref=main" \
+            -H "Accept: application/vnd.github.raw" > "$RUNNER_TEMP/RELEASERS"
+          if ! sed -e 's/#.*//' -e 's/[[:space:]]//g' "$RUNNER_TEMP/RELEASERS" | grep -qixF "$ACTOR"; then
+            echo "::error::$ACTOR is not in .github/RELEASERS; only coralogix/team-eco-system releases"
+            exit 1
+          fi
       - name: Checkout
         uses: actions/checkout@v2.4.0
         with:

@@ -55,6 +55,20 @@ jobs:
             godebug: "fips140=on"
 
     steps:
+      - name: Check who released
+        # A pushed v* tag publishes the image, so the pusher must be in .github/RELEASERS on main.
+        # The Release workflow creates its tag without starting this and calls it with a tag.
+        if: ${{ startsWith(github.ref, 'refs/tags/') && !inputs.tag }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.triggering_actor }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/contents/.github/RELEASERS?ref=main" \
+            -H "Accept: application/vnd.github.raw" > "$RUNNER_TEMP/RELEASERS"
+          if ! sed -e 's/#.*//' -e 's/[[:space:]]//g' "$RUNNER_TEMP/RELEASERS" | grep -qixF "$ACTOR"; then
+            echo "::error::$ACTOR is not in .github/RELEASERS; only coralogix/team-eco-system releases"
+            exit 1
+          fi
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
