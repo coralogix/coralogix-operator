@@ -1,0 +1,217 @@
+[
+  {
+    "step": "create with backend references and released shapes",
+    "spec": {
+      "description": "Baseline description",
+      "disabled": true,
+      "entityLabels": {
+        "team": "example"
+      },
+      "fallbackTargets": [
+        {
+          "entityType": "cases",
+          "target": {
+            "connector": {
+              "backendRef": {
+                "id": "connector_cases"
+              }
+            }
+          }
+        }
+      ],
+      "id": "router_spec_id",
+      "name": "Baseline router",
+      "routingLabels": {
+        "environment": "test",
+        "service": "api",
+        "team": "example"
+      },
+      "rules": [
+        {
+          "condition": "alertDef.priority == \"P1\"",
+          "customDetails": {
+            "source": "baseline"
+          },
+          "entityType": "alerts",
+          "name": "urgent",
+          "targets": [
+            {
+              "connector": {
+                "backendRef": {
+                  "id": "connector_alerts"
+                }
+              },
+              "customDetails": {
+                "channel": "primary"
+              },
+              "preset": {
+                "backendRef": {
+                  "id": "preset_alerts"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/notifications/notification-center/v1/routers",
+        "body": {
+          "router": {
+            "description": "Baseline description",
+            "disabled": true,
+            "entityLabels": {
+              "team": "example"
+            },
+            "fallbackTargets": [
+              {
+                "entityType": "CASES",
+                "target": {
+                  "connectorId": "connector_cases"
+                }
+              }
+            ],
+            "id": "router_spec_id",
+            "name": "Baseline router",
+            "routingLabels": {
+              "environment": "test",
+              "service": "api",
+              "team": "example"
+            },
+            "rules": [
+              {
+                "condition": "alertDef.priority == \"P1\"",
+                "customDetails": {
+                  "source": "baseline"
+                },
+                "entityType": "ALERTS",
+                "name": "urgent",
+                "targets": [
+                  {
+                    "connectorId": "connector_alerts",
+                    "customDetails": {
+                      "channel": "primary"
+                    },
+                    "presetId": "preset_alerts"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "global-router.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "update with status id",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/notifications/notification-center/v1/routers",
+        "body": {
+          "router": {
+            "description": "Baseline description",
+            "disabled": true,
+            "entityLabels": {
+              "team": "example"
+            },
+            "fallbackTargets": [
+              {
+                "entityType": "CASES",
+                "target": {
+                  "connectorId": "connector_cases"
+                }
+              }
+            ],
+            "id": "<id-1>",
+            "name": "Baseline router",
+            "routingLabels": {
+              "environment": "test",
+              "service": "api",
+              "team": "example"
+            },
+            "rules": [
+              {
+                "condition": "alertDef.priority == \"P1\"",
+                "customDetails": {
+                  "source": "baseline"
+                },
+                "entityType": "ALERTS",
+                "name": "urgent",
+                "targets": [
+                  {
+                    "connectorId": "connector_alerts",
+                    "customDetails": {
+                      "channel": "primary"
+                    },
+                    "presetId": "preset_alerts"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "global-router.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "delete with status id",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/notifications/notification-center/v1/routers/<id-1>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

@@ -1,0 +1,60 @@
+[
+  {
+    "step": "do not call the API before the connector has a status id",
+    "spec": {
+      "description": "Reference baseline",
+      "name": "Reference router",
+      "rules": [
+        {
+          "condition": "alertDef.priority == \"P1\"",
+          "name": "with-preset",
+          "targets": [
+            {
+              "connector": {
+                "resourceRef": {
+                  "name": "connector"
+                }
+              },
+              "preset": {
+                "resourceRef": {
+                  "name": "preset"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "condition": "alertDef.priority == \"P2\"",
+          "name": "without-preset",
+          "targets": [
+            {
+              "connector": {
+                "resourceRef": {
+                  "name": "connector"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "requests": [],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

@@ -1,0 +1,57 @@
+[
+  {
+    "step": "create with deprecated fallback",
+    "spec": {
+      "description": "Deprecated fallback baseline",
+      "fallback": [
+        {
+          "connector": {
+            "backendRef": {
+              "id": "connector_fallback"
+            }
+          }
+        }
+      ],
+      "name": "Deprecated fallback router"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/notifications/notification-center/v1/routers",
+        "body": {
+          "router": {
+            "description": "Deprecated fallback baseline",
+            "fallback": [
+              {
+                "connectorId": "connector_fallback"
+              }
+            ],
+            "name": "Deprecated fallback router"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "global-router.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]
