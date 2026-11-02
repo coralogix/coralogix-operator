@@ -39,7 +39,7 @@ jobs:
       fail-fast: false
       max-parallel: 1
       matrix:
-        operator_version: [ "0.5", "1.0" ]
+        operator_version: [ "0.5", "1.0", "2.0" ]
     env:
       IMG_REPO: coralogix-operator-image
       IMG_TAG: 0.0.1
@@ -52,7 +52,6 @@ jobs:
       SLACK_INTEGRATION_CHANNEL: ${{ secrets.SLACK_INTEGRATION_CHANNEL }}
       PD_INTEGRATION_ID: ${{ secrets.PD_INTEGRATION_ID }}
       TEST_TEAM_ID: ${{ secrets.TEST_TEAM_ID }}
-      E2E_GLOBALROUTER_UPGRADE: "1"
       # A service name from the tenant's APM Service Catalog. The APM SLO specs fail
       # loudly in CI without it, instead of skipping silently.
       CORALOGIX_SLO_APM_SERVICE: ${{ secrets.CORALOGIX_SLO_APM_SERVICE }}
@@ -87,11 +86,12 @@ jobs:
       - name: Create a ViewFolder with the released operator
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
-        run: scripts/upgrade-check-viewfolder.sh before
+        run: bash scripts/upgrade-check-viewfolder.sh before
       - name: Create a GlobalRouter with the released operator
+        if: matrix.operator_version == '2.0'
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
-        run: scripts/upgrade-check-globalrouter.sh before
+        run: bash scripts/upgrade-check-globalrouter.sh before
       - name: Build PR image
         uses: ./.github/actions/build-operator-image
         with:
@@ -119,17 +119,24 @@ jobs:
       - name: Check the ViewFolder of the released operator
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
-        run: scripts/upgrade-check-viewfolder.sh after
+        run: bash scripts/upgrade-check-viewfolder.sh after
+      - name: Check the GlobalRouter of the released operator
+        if: matrix.operator_version == '2.0'
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+        run: bash scripts/upgrade-check-globalrouter.sh after
       # A failed step before the check skips it, so delete the folder here; no run leaves it in
       # Coralogix.
       - name: Delete the GlobalRouter of the upgrade test
-        if: always()
-        run: scripts/upgrade-check-globalrouter.sh cleanup
+        if: always() && matrix.operator_version == '2.0'
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+        run: bash scripts/upgrade-check-globalrouter.sh cleanup
       - name: Delete the ViewFolder of the upgrade test
         if: always()
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
-        run: scripts/upgrade-check-viewfolder.sh cleanup
+        run: bash scripts/upgrade-check-viewfolder.sh cleanup
       - name: Collect Operator Logs
         if: always()
         run: |

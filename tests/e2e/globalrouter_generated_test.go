@@ -27,6 +27,7 @@ import (
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -97,7 +98,10 @@ const (
 }`
 	globalRouterMinimalSpec = `{
   "description": "sample-description",
-  "name": "sample-name"
+  "name": "sample-name",
+  "routingLabels": {
+    "environment": "sample-environment"
+  }
 }`
 )
 
@@ -116,7 +120,25 @@ var _ = Describe("GlobalRouter (generated)", Ordered, Serial, func() {
 		apiClient = newOpenAPIClientSet().GlobalRouters()
 		fullName = uniqueName("e2e-globalrouter")
 		minimalName = uniqueName("e2e-globalrouter-min")
-		setupGlobalRouterGeneratedE2E(ctx, crClient, fullName)
+		{
+			fixture := &unstructured.Unstructured{}
+			Expect(json.Unmarshal([]byte(strings.ReplaceAll(`{"connectorConfig":{"fields":[{"fieldName":"url","value":"https://httpbun.org/post"},{"fieldName":"method","value":"post"}]},"description":"generic HTTPS connector for the generated GlobalRouter test","name":"@{run}-connector","type":"genericHttps"}`, "@{run}", fullName)), &fixture.Object)).To(Succeed())
+			fixture.SetAPIVersion("coralogix.com/v1alpha1")
+			fixture.SetKind("Connector")
+			fixture.SetName(fullName + "-connector")
+			fixture.SetNamespace(testNamespace)
+			Expect(crClient.Create(ctx, fixture)).To(Succeed())
+			DeferCleanup(func(ctx context.Context) { _ = crClient.Delete(ctx, fixture) })
+			Eventually(func(g Gomega) {
+				current := &unstructured.Unstructured{}
+				current.SetAPIVersion("coralogix.com/v1alpha1")
+				current.SetKind("Connector")
+				g.Expect(crClient.Get(ctx, types.NamespacedName{Name: fixture.GetName(), Namespace: testNamespace}, current)).To(Succeed())
+				id, found, err := unstructured.NestedString(current.Object, "status", "id")
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(found && id != "").To(BeTrue())
+			}, time.Minute, time.Second).Should(Succeed())
+		}
 		DeferCleanup(func(ctx context.Context) {
 			for _, name := range []string{fullName, minimalName} {
 				_ = crClient.Delete(ctx, &coralogixv1alpha1.GlobalRouter{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: testNamespace}})
@@ -126,7 +148,6 @@ var _ = Describe("GlobalRouter (generated)", Ordered, Serial, func() {
 
 	It("creates a GlobalRouter with every field", func(ctx context.Context) {
 		full = newGlobalRouterGenerated(fullName, globalRouterFullSpec)
-		prepareGlobalRouterGeneratedE2E(full)
 		Expect(crClient.Create(ctx, full)).To(Succeed())
 		fullID = waitForGlobalRouterGenerated(ctx, crClient, fullName)
 
@@ -166,7 +187,6 @@ var _ = Describe("GlobalRouter (generated)", Ordered, Serial, func() {
 
 	It("creates and deletes a GlobalRouter with only the required fields", func(ctx context.Context) {
 		minimal := newGlobalRouterGenerated(minimalName, globalRouterMinimalSpec)
-		prepareGlobalRouterGeneratedE2E(minimal)
 		Expect(crClient.Create(ctx, minimal)).To(Succeed())
 		id := waitForGlobalRouterGenerated(ctx, crClient, minimalName)
 
@@ -181,6 +201,8 @@ var _ = Describe("GlobalRouter (generated)", Ordered, Serial, func() {
 // newGlobalRouterGenerated returns a GlobalRouter with the spec that the JSON holds.
 func newGlobalRouterGenerated(name, spec string) *coralogixv1alpha1.GlobalRouter {
 	cr := &coralogixv1alpha1.GlobalRouter{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: testNamespace}}
+	spec = strings.ReplaceAll(spec, "connector-sample", strings.ReplaceAll("@{run}-connector", "@{run}", name))
+	spec = strings.ReplaceAll(spec, "sample-environment", strings.ReplaceAll("@{run}", "@{run}", name))
 	decoder := json.NewDecoder(strings.NewReader(spec))
 	decoder.DisallowUnknownFields()
 	Expect(decoder.Decode(&cr.Spec)).To(Succeed())

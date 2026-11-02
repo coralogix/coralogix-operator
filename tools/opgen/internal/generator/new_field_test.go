@@ -75,6 +75,82 @@ func TestReleasedKindTakesANewFieldWithoutOverrides(t *testing.T) {
 	}
 }
 
+// A new GlobalRouter field enters the current generated test. The chart 2.0 create spec stays
+// fixed, because that chart cannot accept fields added after its release.
+func TestGlobalRouterNewFieldKeepsReleasedUpgradeSpec(t *testing.T) {
+	input, err := source.Resolve(".")
+	if err != nil {
+		if os.Getenv("CI") != "" {
+			t.Fatal(err)
+		}
+		t.Skipf("the pinned SDK is not in the module cache: %v", err)
+	}
+	entry := kindEntry{Kind: "GlobalRouter", Resource: "GlobalRouter"}
+	dir := filepath.Join(input.ModuleRoot, entry.dir())
+	file, err := readOverrides(filepath.Join(dir, "behavior-overrides.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	e2e, err := readE2E(filepath.Join(dir, e2eFileName))
+	if err != nil {
+		t.Fatal(err)
+	}
+	render := func(spec []byte) map[string][]byte {
+		t.Helper()
+		doc, err := model.Load(spec)
+		if err != nil {
+			t.Fatal(err)
+		}
+		v, err := validate(doc, entry, input.SDKModule, input.Module, e2e, file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		out, err := renderAll([]*validated{v}, input.SDKModule, input.Module)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return out.files
+	}
+	before := render(input.OpenAPI)
+	after := render(withNewGlobalRouterField(t, input.OpenAPI))
+	for name, content := range after {
+		if removed := removedLines(string(before[name]), string(content)); len(removed) != 0 {
+			t.Errorf("%s: a new field changed existing lines:\n%s", name, strings.Join(removed, "\n"))
+		}
+	}
+	for _, want := range []struct{ file, text string }{
+		{"api/coralogix/v1alpha1/globalrouter_types.go", "ProbeNote *string `json:\"probeNote,omitempty\"`"},
+		{"api/coralogix/v1alpha1/globalrouter_convert.go", "out.ProbeNote = in.ProbeNote"},
+		{"config/samples/v1alpha1/generated/globalrouter.yaml", "probeNote:"},
+		{"tests/e2e/globalrouter_generated_test.go", `"probeNote":`},
+	} {
+		if !strings.Contains(normalizeSpace(string(after[want.file])), normalizeSpace(want.text)) {
+			t.Errorf("%s has no %q", want.file, want.text)
+		}
+	}
+	if string(after["scripts/upgrade-check-globalrouter.sh"]) != string(before["scripts/upgrade-check-globalrouter.sh"]) {
+		t.Error("a new field changed the released chart upgrade check")
+	}
+}
+
+func withNewGlobalRouterField(t *testing.T, spec []byte) []byte {
+	t.Helper()
+	var doc map[string]any
+	if err := yaml.Unmarshal(spec, &doc); err != nil {
+		t.Fatal(err)
+	}
+	components := doc["components"].(map[string]any)
+	schemas := components["schemas"].(map[string]any)
+	router := schemas["GlobalRouter"].(map[string]any)
+	properties := router["properties"].(map[string]any)
+	properties["probeNote"] = map[string]any{"type": "string", "x-coralogix-presence": true, "description": "A test note."}
+	out, err := yaml.Marshal(doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
+
 // withNewField adds the optional field probeNote to the Create body, the Replace body, and the
 // resource of ViewFolder.
 func withNewField(t *testing.T, spec []byte) []byte {

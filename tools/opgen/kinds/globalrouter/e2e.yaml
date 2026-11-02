@@ -1,7 +1,29 @@
 serial: true
-setup: setupGlobalRouterGeneratedE2E
-prepare: prepareGlobalRouterGeneratedE2E
 omit: [fallback, id]
+minimal:
+  routingLabels: {environment: sample-environment}
+substitutions:
+  connector-sample: '@{run}-connector'
+  sample-environment: '@{run}'
+fixtures:
+  - kind: Connector
+    suffix: -connector
+    spec:
+      name: '@{run}-connector'
+      description: generic HTTPS connector for the generated GlobalRouter test
+      type: genericHttps
+      connectorConfig:
+        fields:
+          - {fieldName: url, value: 'https://httpbun.org/post'}
+          - {fieldName: method, value: post}
+upgrade:
+  from: '2.0'
+  spec:
+    name: '@{run}'
+    description: Router created before the operator upgrade
+    routingLabels: {environment: '@{run}'}
+  field: description
+  value: Router updated after the operator upgrade
 values:
   fallbackTargets.target: {connector: {resourceRef: {name: connector-sample}}, customDetails: {key: sample-custom-details}}
   rules.targets.connector: {resourceRef: {name: connector-sample}}

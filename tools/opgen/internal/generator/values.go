@@ -31,9 +31,14 @@ const (
 type e2eFile struct {
 	// Serial keeps a kind whose resources affect the whole account in one Ginkgo process.
 	Serial bool `yaml:"serial"`
-	// Setup and Prepare name handwritten e2e helpers for kinds with remote dependencies.
-	Setup   string `yaml:"setup"`
-	Prepare string `yaml:"prepare"`
+	// Fixtures are resources that the generated test creates before this kind.
+	Fixtures []e2eFixture `yaml:"fixtures"`
+	// Minimal adds fields that the API needs although the CRD marks them optional.
+	Minimal map[string]any `yaml:"minimal"`
+	// Substitutions replace sample values with run-specific values in generated tests.
+	Substitutions map[string]string `yaml:"substitutions"`
+	// Upgrade freezes the spec accepted by a released chart.
+	Upgrade *e2eUpgrade `yaml:"upgrade"`
 	// Omit lists optional top-level fields that cannot appear with other full-spec fields.
 	Omit []string `yaml:"omit"`
 	// Values are spec values by field path, for example config.http.endpoint. A value replaces the
@@ -42,6 +47,19 @@ type e2eFile struct {
 	Values map[string]any `yaml:"values"`
 	// Update is the change of the update step.
 	Update *e2eUpdate `yaml:"update"`
+}
+
+type e2eFixture struct {
+	Kind   string         `yaml:"kind"`
+	Suffix string         `yaml:"suffix"`
+	Spec   map[string]any `yaml:"spec"`
+}
+
+type e2eUpgrade struct {
+	From  string         `yaml:"from"`
+	Spec  map[string]any `yaml:"spec"`
+	Field string         `yaml:"field"`
+	Value string         `yaml:"value"`
 }
 
 // e2eUpdate changes one scalar field that Update sends. A field in a root group uses a dotted path.
@@ -64,8 +82,8 @@ func readE2E(path string) (*e2eFile, error) {
 	if err := dec.Decode(&f); err != nil && !errors.Is(err, io.EOF) {
 		return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName, msg: err.Error()}
 	}
-	if (f.Setup != "" && !token.IsIdentifier(f.Setup)) || (f.Prepare != "" && !token.IsIdentifier(f.Prepare)) {
-		return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName, msg: "setup and prepare must name Go functions"}
+	if f.Upgrade != nil && (f.Upgrade.From == "" || f.Upgrade.Field == "" || f.Upgrade.Value == "" || len(f.Upgrade.Spec) == 0) {
+		return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":upgrade", msg: "from, spec, field, and value are required"}
 	}
 	return &f, nil
 }
@@ -74,12 +92,25 @@ func readE2E(path string) (*e2eFile, error) {
 type e2eData struct {
 	Omit                  []string
 	Serial                bool
-	Setup                 string
-	Prepare               string
+	Fixtures              []fixtureData
+	Substitutions         []substitutionData
+	Upgrade               *upgradeData
 	FullJSON, MinimalJSON string // Go string literals of the spec as JSON
 	NameField             string // the Go path of a string name, "" when there is none
 	NamePtr               bool
 	Update                *updateData
+}
+
+type fixtureData struct {
+	Kind, Suffix, SpecJSON string
+}
+
+type substitutionData struct {
+	From, To string
+}
+
+type upgradeData struct {
+	From, SpecJSON, Field, Value string
 }
 
 // updateData is the update step as Go code: the field that it changes, the value that it sets,
@@ -122,12 +153,55 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 	if minimal, err = v.object(d.Spec, "", false); err != nil {
 		return nil, nil, nil, err
 	}
+	for name, value := range file.Minimal {
+		known := false
+		for _, field := range d.Spec.Fields {
+			if field.JSON == name && field.Optional {
+				known = true
+			}
+		}
+		if !known {
+			return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":minimal." + name, msg: "not an optional spec field"}
+		}
+		minimal.set(name, value)
+	}
 	for _, path := range sortedKeys(file.Values) {
 		if !v.used[path] {
 			return nil, nil, nil, &shapeError{code: codeE2EUnused, path: e2eFileName + ":values." + path, msg: "the spec has no such field"}
 		}
 	}
-	e2e = &e2eData{FullJSON: goString(full.json()), MinimalJSON: goString(minimal.json()), Serial: file.Serial, Setup: file.Setup, Prepare: file.Prepare, Omit: file.Omit}
+	e2e = &e2eData{FullJSON: goString(full.json()), MinimalJSON: goString(minimal.json()), Serial: file.Serial, Omit: file.Omit}
+	for _, fixture := range file.Fixtures {
+		if !token.IsIdentifier(fixture.Kind) || fixture.Suffix == "" || len(fixture.Spec) == 0 {
+			return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":fixtures", msg: "kind, suffix, and spec are required"}
+		}
+		encoded, err := json.Marshal(fixture.Spec)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		e2e.Fixtures = append(e2e.Fixtures, fixtureData{fixture.Kind, fixture.Suffix, goString(string(encoded))})
+	}
+	for _, from := range sortedKeys(file.Substitutions) {
+		e2e.Substitutions = append(e2e.Substitutions, substitutionData{from, file.Substitutions[from]})
+	}
+	if file.Upgrade != nil {
+		for name := range file.Upgrade.Spec {
+			known := false
+			for _, field := range d.Spec.Fields {
+				if field.JSON == name {
+					known = true
+				}
+			}
+			if !known {
+				return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":upgrade.spec." + name, msg: "not a spec field"}
+			}
+		}
+		encoded, err := json.MarshalIndent(file.Upgrade.Spec, "", "  ")
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		e2e.Upgrade = &upgradeData{file.Upgrade.From, string(encoded), file.Upgrade.Field, file.Upgrade.Value}
+	}
 	candidates := updateCandidates(d.Spec, full)
 	for _, candidate := range candidates {
 		if candidate.field.API == "name" && candidate.field.typ.Kind == model.String {

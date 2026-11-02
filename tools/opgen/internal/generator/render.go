@@ -61,7 +61,22 @@ func renderKind(d *kindData, full *omap) (map[string][]byte, error) {
 		return nil, err
 	}
 	files[samplesDir+"/"+d.Lower+".yaml"] = sample
+	if d.E2E.Upgrade != nil {
+		script, err := renderUpgradeScript(d)
+		if err != nil {
+			return nil, err
+		}
+		files["scripts/upgrade-check-"+d.Lower+".sh"] = script
+	}
 	return files, nil
+}
+
+func renderUpgradeScript(d *kindData) ([]byte, error) {
+	var buf bytes.Buffer
+	if err := templates.ExecuteTemplate(&buf, "upgrade_test.sh.tmpl", d); err != nil {
+		return nil, fmt.Errorf("upgrade_test.sh.tmpl: %w", err)
+	}
+	return buf.Bytes(), nil
 }
 
 // sharedData is the data of the files that list every kind.
