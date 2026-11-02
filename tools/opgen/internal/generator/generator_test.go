@@ -228,6 +228,31 @@ func TestPublishRemovesFilesOfRemovedKinds(t *testing.T) {
 	}
 }
 
+func TestPublishRemovesStaleUpgradeScripts(t *testing.T) {
+	root := t.TempDir()
+	dir := filepath.Join(root, "scripts")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	generated := filepath.Join(dir, "upgrade-check-thing.sh")
+	handwritten := filepath.Join(dir, "manual-check.sh")
+	if err := os.WriteFile(generated, []byte(version.GoHeaderLine+"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(handwritten, []byte("#!/bin/bash\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := publish(root, output{files: map[string][]byte{}}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(generated); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("stale generated upgrade script remains: %v", err)
+	}
+	if _, err := os.Stat(handwritten); err != nil {
+		t.Errorf("handwritten script changed: %v", err)
+	}
+}
+
 func TestReadKindsRejectsUnknownKeysAndDirectories(t *testing.T) {
 	root, _ := syntheticRoot(t)
 	if err := os.WriteFile(filepath.Join(root, kindsFile), []byte("kinds:\n  - {kind: Thing, resource: Thing, extra: 1}\n"), 0o644); err != nil {
