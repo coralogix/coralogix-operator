@@ -38,6 +38,8 @@ For released enums, keep the CRD value set and conversion aligned. An omitted op
 
 Do not hand-edit generated files: `zz_generated.deepcopy.go`, `config/crd/bases/*.yaml`, or `docs/api.md`. Change source types/markers and run the relevant generation target.
 
+When a handwritten kind becomes generated, remove its old CRD entry from `config/crd/kustomization.yaml`. Keep one entry in the generated block. Build `config/default` with Kustomize to check for duplicate resources.
+
 When changing a CRD field, update the full path:
 
 - API type, JSON tag, validation/defaulting markers, and status fields.
