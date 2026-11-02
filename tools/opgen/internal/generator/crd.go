@@ -149,7 +149,7 @@ func (b *builder) overrideGroups(component string, groups []model.OneOfGroup, fi
 			if !b.file.Field(component, arm).RequireOne {
 				continue
 			}
-			if !g.AllowNone || out[i].AllowNone == false {
+			if !g.AllowNone || !out[i].AllowNone {
 				return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String() + ".requireOne", msg: "the group already requires one arm"}
 			}
 			out[i].AllowNone = false
@@ -251,9 +251,9 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 		if !t.AllowNone {
 			return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String() + ".requireOne", msg: "the oneOf already requires one arm"}
 		}
-		copy := *t
-		copy.AllowNone = false
-		t = &copy
+		requiredType := *t
+		requiredType.AllowNone = false
+		t = &requiredType
 		b.used[line] = true
 	}
 	if change.Required && !required {
