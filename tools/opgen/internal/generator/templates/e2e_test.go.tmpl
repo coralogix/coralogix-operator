@@ -77,6 +77,12 @@ var _ = Describe("{{.Kind}} (generated)", Ordered, func() {
 		Eventually(func(g Gomega) {
 			got, httpResp, err := apiClient.{{$.GetMethod}}(ctx, fullID).Execute()
 			g.Expect(cxsdk.NewAPIError(httpResp, err)).To(Succeed())
+{{- if $.GetResponseField}}
+			g.Expect(got).NotTo(BeNil())
+{{- if not $.GetResponseValue}}
+			g.Expect(got.{{$.GetResponseField}}).NotTo(BeNil())
+{{- end}}
+{{- end}}
 			g.Expect({{.Got}}).To(Equal({{.Want}}))
 		}, time.Minute, time.Second).Should(Succeed())
 {{- end}}

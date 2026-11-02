@@ -9,6 +9,7 @@ import (
 	patchthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/patch_things_service"
 	refthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/ref_things_service"
 	things "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/things_service"
+	wrappedthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/wrapped_things_service"
 )
 
 // ClientSet holds the API clients.
@@ -32,6 +33,10 @@ func (c *ClientSet) RefThings() *refthings.RefThingsServiceAPIService {
 // BodyIDThings returns the client of the body id things API.
 func (c *ClientSet) BodyIDThings() *bodyidthings.BodyIDThingsServiceAPIService {
 	return bodyidthings.NewBodyIDThingsServiceAPIService()
+}
+
+func (c *ClientSet) WrappedThings() *wrappedthings.WrappedThingsServiceAPIService {
+	return wrappedthings.NewWrappedThingsServiceAPIService()
 }
 
 // APIError is an error with an HTTP status.

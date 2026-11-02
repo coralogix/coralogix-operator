@@ -70,6 +70,9 @@ func (r *BodyIDThingReconciler) HandleCreation(ctx context.Context, log logr.Log
 		return fmt.Errorf("error on creating remote BodyIDThing: %w", cxsdk.NewAPIError(httpResp, err))
 	}
 	log.Info("Remote BodyIDThing created", "response", utils.FormatJSON(resp))
+	if resp == nil {
+		return fmt.Errorf("the create response of BodyIDThing has no resource")
+	}
 	id := resp.Id
 	if id == "" {
 		return fmt.Errorf("the create response of BodyIDThing has no id")

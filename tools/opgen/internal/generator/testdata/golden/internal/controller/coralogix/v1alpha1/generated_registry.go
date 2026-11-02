@@ -55,5 +55,11 @@ func SetupGeneratedControllers(mgr ctrl.Manager, clientSet *cxsdk.ClientSet, int
 	}).SetupWithManager(mgr); err != nil {
 		return fmt.Errorf("unable to create the controller of %s: %w", utils.ThingKind, err)
 	}
+	if err := (&WrappedThingReconciler{
+		Client:   clientSet.WrappedThings(),
+		Interval: intervals[utils.WrappedThingKind],
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create the controller of %s: %w", utils.WrappedThingKind, err)
+	}
 	return nil
 }

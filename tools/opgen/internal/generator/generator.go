@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/pb33f/libopenapi/datamodel/high/base"
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 	"golang.org/x/tools/go/packages"
 
@@ -44,11 +45,12 @@ type docType = *v3.Document
 
 // validated is one kind that passed every check before the SDK check.
 type validated struct {
-	entry    kindEntry
-	resource *model.Resource
-	refs     []sdkcheck.Ref
-	e2e      *e2eFile
-	file     *overrides.File // nil for a kind without a behavior-overrides file
+	entry                  kindEntry
+	resource               *model.Resource
+	refs                   []sdkcheck.Ref
+	e2e                    *e2eFile
+	file                   *overrides.File // nil for a kind without a behavior-overrides file
+	updateIDOutsideWrapper bool
 }
 
 // Generate resolves the SDK that the operator pins and publishes every kind of the kinds file.
@@ -163,19 +165,120 @@ func validate(doc docType, entry kindEntry, sdkModule, module string, e2e *e2eFi
 	if err != nil {
 		return nil, fmt.Errorf("%s: build the validated resource: %w", entry.Kind, err)
 	}
+	if err := checkRequestValues(doc, r, file); err != nil {
+		return nil, asEligibility(entry, err)
+	}
 	tag, err := sdkcheck.ResourceTag(doc, r)
 	if err != nil {
 		return nil, asEligibility(entry, &shapeError{code: "OPERATION_TAG_INCOMPATIBLE", path: "paths", msg: err.Error()})
 	}
-	refs, err := resolveSDKNames(r, tag, sdkModule)
+	outside := updateIDOutsideWrapper(doc, r)
+	refs, err := resolveSDKNames(r, tag, sdkModule, outside, file)
 	if err != nil {
 		return nil, asEligibility(entry, &shapeError{code: "SDK_SHAPE_UNSUPPORTED", path: "resource", msg: err.Error()})
 	}
-	v := &validated{entry: entry, resource: r, refs: refs, e2e: e2e, file: file}
+	v := &validated{entry: entry, resource: r, refs: refs, e2e: e2e, file: file, updateIDOutsideWrapper: outside}
 	if _, err := renderAll([]*validated{v}, sdkModule, module); err != nil {
 		return nil, err
 	}
 	return v, nil
+}
+
+// updateIDOutsideWrapper checks whether Update has the id beside its resource wrapper.
+// The shared model describes the resource inside the wrapper but not sibling fields.
+func updateIDOutsideWrapper(doc docType, r *model.Resource) bool {
+	if !r.Policy.UpdateIDInBody || r.Policy.RequestWrapper == "" || doc.Paths == nil || doc.Paths.PathItems == nil {
+		return false
+	}
+	return hasRequestProperty(requestBodySchema(doc, r.Update), r.ID())
+}
+
+func requestBodySchema(doc docType, operation model.Operation) *base.Schema {
+	if doc.Paths == nil || doc.Paths.PathItems == nil {
+		return nil
+	}
+	item, ok := doc.Paths.PathItems.Get(operation.Path)
+	if !ok || item == nil {
+		return nil
+	}
+	op, ok := item.GetOperations().Get(strings.ToLower(operation.Method))
+	if !ok || op == nil || op.RequestBody == nil || op.RequestBody.Content == nil {
+		return nil
+	}
+	media := op.RequestBody.Content.GetOrZero("application/json")
+	if media == nil || media.Schema == nil {
+		return nil
+	}
+	return media.Schema.Schema()
+}
+
+func checkRequestValues(doc docType, r *model.Resource, file *overrides.File) error {
+	if r.Policy.RequestWrapper == "" {
+		return nil
+	}
+	for _, request := range []struct {
+		name string
+		op   model.Operation
+	}{{"create", r.Create}, {"update", r.Update}} {
+		properties := requestProperties(requestBodySchema(doc, request.op))
+		values := map[string]overrides.RequestValue{}
+		if file != nil {
+			values = file.API.RequestValues[request.name]
+		}
+		for _, name := range sortedKeys(values) {
+			if _, ok := properties[name]; !ok {
+				return &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":api.requestValues." + request.name + "." + name,
+					msg: "the request body has no such sibling field"}
+			}
+		}
+		for _, name := range sortedKeys(properties) {
+			property := properties[name]
+			if name == r.Policy.RequestWrapper || (request.name == "update" && r.Policy.UpdateIDInBody && name == r.ID()) ||
+				(request.name == "update" && r.MaskInBody && name == r.UpdateMask) ||
+				(property.Schema() != nil && property.Schema().ReadOnly != nil && *property.Schema().ReadOnly) {
+				continue
+			}
+			if _, ok := values[name]; !ok {
+				return unsupported("api."+request.name+"."+name, "the request field beside the wrapper needs api.requestValues.%s.%s", request.name, name)
+			}
+		}
+	}
+	return nil
+}
+
+func requestProperties(schema *base.Schema) map[string]*base.SchemaProxy {
+	out := map[string]*base.SchemaProxy{}
+	if schema == nil {
+		return out
+	}
+	if schema.Properties != nil {
+		for name, property := range schema.Properties.FromOldest() {
+			out[name] = property
+		}
+	}
+	for _, part := range schema.AllOf {
+		for name, property := range requestProperties(part.Schema()) {
+			out[name] = property
+		}
+	}
+	return out
+}
+
+func hasRequestProperty(schema *base.Schema, name string) bool {
+	if schema == nil {
+		return false
+	}
+	if schema.Properties != nil {
+		if _, ok := schema.Properties.Get(name); ok {
+			return true
+		}
+	}
+	for _, part := range schema.AllOf {
+		if hasRequestProperty(part.Schema(), name) {
+			return true
+		}
+	}
+	return false
 }
 
 // checkSDK checks that the pinned SDK has every name that the generated code uses. It sets the
@@ -240,7 +343,7 @@ func renderAll(all []*validated, sdkModule, module string) (output, error) {
 }
 
 func renderOne(v *validated, module string) (map[string][]byte, *kindData, error) {
-	d, err := buildKind(v.resource, v.refs, v.entry, module, v.file)
+	d, err := buildKind(v.resource, v.refs, v.entry, module, v.file, v.updateIDOutsideWrapper)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -295,7 +398,11 @@ func overrideIssues(doc docType, entry kindEntry, file *overrides.File) error {
 		ok := false
 		if doc.Components != nil && doc.Components.Schemas != nil {
 			if proxy, found := doc.Components.Schemas.Get(line.Component); found && proxy.Schema() != nil && proxy.Schema().Properties != nil {
-				_, ok = proxy.Schema().Properties.Get(line.Field)
+				property, found := proxy.Schema().Properties.Get(line.Field)
+				ok = found
+				if found && file.Types[line.Component].Fields[line.Field].ReadOnly && property.Schema() != nil && property.Schema().ReadOnly != nil && *property.Schema().ReadOnly {
+					return &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String() + ".readOnly", msg: "the contract already marks this field read-only"}
+				}
 			}
 		}
 		if !ok {
@@ -309,7 +416,11 @@ func overrideIssues(doc docType, entry kindEntry, file *overrides.File) error {
 // whose types file exists.
 func refKindIssues(root string, kinds []kindEntry, file *overrides.File) error {
 	for _, line := range file.Lines() {
-		kind := file.Ref(line.Component, line.Field).Kind
+		ref := file.Ref(line.Component, line.Field)
+		if ref == nil {
+			continue
+		}
+		kind := ref.Kind
 		if slices.ContainsFunc(kinds, func(k kindEntry) bool { return k.Kind == kind }) {
 			continue
 		}

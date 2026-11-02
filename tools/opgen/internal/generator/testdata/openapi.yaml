@@ -316,6 +316,55 @@ paths:
           content:
             application/json:
               schema: {type: object}
+  /wrapped-things:
+    post:
+      tags: [Wrapped Things Service]
+      operationId: WrappedThingsService_CreateWrappedThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: CreateWrappedThingRequest
+              type: object
+              required: [item]
+              properties:
+                item: {$ref: '#/components/schemas/WrappedThing'}
+                label: {type: string}
+                requestId: {type: string}
+      responses:
+        '200': {description: Created, content: {application/json: {schema: {$ref: '#/components/schemas/WrappedThingResponse'}}}}
+    put:
+      tags: [Wrapped Things Service]
+      operationId: WrappedThingsService_ReplaceWrappedThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: ReplaceWrappedThingRequest
+              type: object
+              required: [item]
+              properties:
+                item: {$ref: '#/components/schemas/WrappedThing'}
+                id: {type: string}
+                label: {type: string}
+                requestId: {type: string}
+      responses:
+        '200': {description: Replaced, content: {application/json: {schema: {$ref: '#/components/schemas/WrappedThingResponse'}}}}
+  /wrapped-things/{item_id}:
+    parameters:
+      - {name: item_id, in: path, required: true, schema: {type: string}}
+    get:
+      tags: [Wrapped Things Service]
+      operationId: WrappedThingsService_GetWrappedThing
+      responses:
+        '200': {description: Found, content: {application/json: {schema: {$ref: '#/components/schemas/WrappedThingResponse'}}}}
+    delete:
+      tags: [Wrapped Things Service]
+      operationId: WrappedThingsService_DeleteWrappedThing
+      responses:
+        '200': {description: Deleted, content: {application/json: {schema: {type: object}}}}
 components:
   schemas:
     Thing:
@@ -458,3 +507,14 @@ components:
         id: {type: string, minLength: 1, x-coralogix-presence: true}
         name: {type: string, minLength: 1, maxLength: 100, x-coralogix-presence: true, description: The name.}
         limit: {type: integer, format: int32, minimum: 1, maximum: 10, x-coralogix-presence: true}
+    WrappedThingResponse:
+      type: object
+      required: [item]
+      properties:
+        item: {$ref: '#/components/schemas/WrappedThing'}
+    WrappedThing:
+      type: object
+      required: [name]
+      properties:
+        id: {type: string}
+        name: {type: string, minLength: 1, x-coralogix-presence: true}

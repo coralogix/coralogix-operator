@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"go/token"
 	"io"
+	"maps"
 	"reflect"
 	"slices"
 	"strings"
@@ -43,7 +44,7 @@ type File struct {
 	// have must state it.
 	Validators *Validators `yaml:"validators"`
 	// API describes the parts of the HTTP contract that differ from a new resource. These are the
-	// API keys of the shared iac module. opgen supports updateIDInBody.
+	// API keys of the shared iac module that the operator renderer supports.
 	API API `yaml:"api"`
 	// Types has one entry per OpenAPI component.
 	Types map[string]Type `yaml:"types"`
@@ -67,6 +68,56 @@ type Validators struct {
 // API is the api section: the API keys of the iac module.
 type API struct {
 	iacoverrides.API `yaml:",inline"`
+	// RequestValues sets fields beside a request wrapper from the CR or a generated value.
+	RequestValues map[string]map[string]RequestValue `yaml:"requestValues"`
+}
+
+// RequestValue names the source of a string field beside a request wrapper.
+type RequestValue struct {
+	// Source is spec.<field>, uuid, or literal.
+	Source string `yaml:"source"`
+	// Value is the value of a literal source, or the prefix of a uuid source.
+	Value string `yaml:"value"`
+}
+
+func (a API) Check() error {
+	if err := a.API.Check(); err != nil {
+		return err
+	}
+	if len(a.RequestValues) == 0 {
+		return nil
+	}
+	if a.RequestWrapper == "" {
+		return errors.New("api.requestValues needs api.requestWrapper")
+	}
+	for _, operation := range slices.Sorted(maps.Keys(a.RequestValues)) {
+		fields := a.RequestValues[operation]
+		if operation != "create" && operation != "update" {
+			return fmt.Errorf("api.requestValues.%s: want create or update", operation)
+		}
+		if len(fields) == 0 {
+			return fmt.Errorf("api.requestValues.%s: no fields", operation)
+		}
+		for _, name := range slices.Sorted(maps.Keys(fields)) {
+			source := fields[name]
+			if name == "" || name == a.RequestWrapper {
+				return fmt.Errorf("api.requestValues.%s.%s: name a field beside the wrapper", operation, name)
+			}
+			switch {
+			case source.Source == "uuid", source.Source == "literal":
+				if source.Source == "literal" && source.Value == "" {
+					return fmt.Errorf("api.requestValues.%s.%s: literal needs a value", operation, name)
+				}
+			case strings.HasPrefix(source.Source, "spec.") && len(source.Source) > len("spec."):
+				if source.Value != "" {
+					return fmt.Errorf("api.requestValues.%s.%s: spec source cannot set value", operation, name)
+				}
+			default:
+				return fmt.Errorf("api.requestValues.%s.%s: source is not spec.<field>, uuid, or literal", operation, name)
+			}
+		}
+	}
+	return nil
 }
 
 // Type is the lines of one component.
@@ -79,6 +130,8 @@ type Field struct {
 	// Ref makes a string id of another resource a reference (way 2): the custom resource sets
 	// backendRef.id, or resourceRef, the custom resource that manages the other resource.
 	Ref *Ref `yaml:"ref"`
+	// ReadOnly states that the server owns this field, even when the contract does not.
+	ReadOnly bool `yaml:"readOnly"`
 }
 
 // Ref is the ref key of a field line.
@@ -132,10 +185,16 @@ func (f *File) check() error {
 	}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
-		if field.Ref == nil {
+		if field.Ref == nil && !field.ReadOnly {
 			return fmt.Errorf("%s: the line sets no key", line)
 		}
-		if !token.IsIdentifier(field.Ref.Kind) || !token.IsExported(field.Ref.Kind) {
+		if field.Ref != nil && field.ReadOnly {
+			return fmt.Errorf("%s: ref and readOnly cannot be set together", line)
+		}
+		if f.Mode == ModeNew && field.ReadOnly {
+			return fmt.Errorf("%s.readOnly: a new kind follows the contract", line)
+		}
+		if field.Ref != nil && (!token.IsIdentifier(field.Ref.Kind) || !token.IsExported(field.Ref.Kind)) {
 			return fmt.Errorf("%s.ref.kind: %q is not a kind", line, field.Ref.Kind)
 		}
 	}
@@ -154,8 +213,10 @@ func (f *File) checkAPI() error {
 	}
 	for i := 0; i < len(f.apiNode.Content); i += 2 {
 		key, value := f.apiNode.Content[i].Value, f.apiNode.Content[i+1]
-		if key != "updateIDInBody" {
-			return fmt.Errorf("api.%s: opgen supports only api.updateIDInBody so far; another key lands with the first kind that needs it", key)
+		switch key {
+		case "updateIDInBody", "operations", "customMethods", "serverSetID", "idProperty", "clientSetID", "delete", "updateMaskInBody", "requestWrapper", "requestValues":
+		default:
+			return fmt.Errorf("api.%s: opgen does not support this api key", key)
 		}
 		if f.Mode == ModeNew && !zeroValue(value) {
 			return fmt.Errorf("api.%s: a new kind follows the contract, so mode new sets no api key", key)
@@ -213,7 +274,17 @@ func (f *File) Policy() model.Policy {
 	if f == nil || f.Mode == ModeNew {
 		return model.Policy{}
 	}
-	return iacoverrides.Exceptions{API: f.API.API}.Policy()
+	exceptions := iacoverrides.Exceptions{API: f.API.API, Fields: map[string]map[string]iacoverrides.Field{}}
+	for _, line := range f.Lines() {
+		if !f.Types[line.Component].Fields[line.Field].ReadOnly {
+			continue
+		}
+		if exceptions.Fields[line.Component] == nil {
+			exceptions.Fields[line.Component] = map[string]iacoverrides.Field{}
+		}
+		exceptions.Fields[line.Component][line.Field] = iacoverrides.Field{ReadOnly: true}
+	}
+	return exceptions.Policy()
 }
 
 // Inferred reports whether the markers have the contract limits: true unless the file says

@@ -57,10 +57,18 @@ func (r *{{.Kind}}Reconciler) HandleCreation(ctx context.Context, log logr.Logge
 		return fmt.Errorf("error on creating remote {{.Kind}}: %w", cxsdk.NewAPIError(httpResp, err))
 	}
 	log.Info("Remote {{.Kind}} created", "response", utils.FormatJSON(resp))
+	if resp == nil {
+		return fmt.Errorf("the create response of {{.Kind}} has no resource")
+	}
+{{- if and .CreateResponseField (not .CreateResponseValue)}}
+	if resp.{{.CreateResponseField}} == nil {
+		return fmt.Errorf("the create response of {{.Kind}} has no resource")
+	}
+{{- end}}
 {{- if .IDValue}}
-	id := resp.{{.IDField}}
+	id := resp.{{if .CreateResponseField}}{{.CreateResponseField}}.{{end}}{{.IDField}}
 {{- else}}
-	id := ptr.Deref(resp.{{.IDField}}, "")
+	id := ptr.Deref(resp.{{if .CreateResponseField}}{{.CreateResponseField}}.{{end}}{{.IDField}}, "")
 {{- end}}
 	if id == "" {
 		return fmt.Errorf("the create response of {{.Kind}} has no id")

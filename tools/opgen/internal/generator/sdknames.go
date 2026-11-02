@@ -8,14 +8,40 @@ import (
 
 	"github.com/coralogix/coralogix-management-sdk/iac/model"
 	"github.com/coralogix/coralogix-management-sdk/iac/sdkcheck"
+	"github.com/coralogix/coralogix-operator/v2/tools/opgen/internal/overrides"
 )
 
 // resolveSDKNames lists the SDK names that the generated code uses: the names of the resource,
 // and the accessor of the SDK client set that the generated registry calls.
-func resolveSDKNames(r *model.Resource, tag, module string) ([]sdkcheck.Ref, error) {
+func resolveSDKNames(r *model.Resource, tag, module string, updateIDOutsideWrapper bool, file *overrides.File) ([]sdkcheck.Ref, error) {
 	refs, err := sdkcheck.Names(r, tag, module, nil)
 	if err != nil {
 		return nil, err
+	}
+	if updateIDOutsideWrapper {
+		for _, ref := range refs {
+			if ref.Path != "update.body" || ref.Kind != sdkcheck.KindType {
+				continue
+			}
+			refs = append(refs, sdkcheck.Ref{Path: "update.body." + r.ID(), Kind: sdkcheck.KindField,
+				Pkg: ref.Pkg, Owner: ref.Name, Name: model.GoName(r.ID()), Want: "*string", WantValue: "string", Rule: sdkcheck.RuleProperty})
+			break
+		}
+	}
+	if file != nil {
+		for _, operation := range []string{"create", "update"} {
+			values := file.API.RequestValues[operation]
+			for _, ref := range refs {
+				if ref.Path != operation+".body" || ref.Kind != sdkcheck.KindType {
+					continue
+				}
+				for _, name := range sortedKeys(values) {
+					refs = append(refs, sdkcheck.Ref{Path: operation + ".body." + name, Kind: sdkcheck.KindField,
+						Pkg: ref.Pkg, Owner: ref.Name, Name: model.GoName(name), Want: "*string", WantValue: "string", Rule: sdkcheck.RuleProperty})
+				}
+				break
+			}
+		}
 	}
 	// The client set accessor usually drops " Service" from the tag. When it does not, the check
 	// finds the one accessor that returns the client type.

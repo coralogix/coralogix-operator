@@ -70,6 +70,9 @@ func (r *PatchThingReconciler) HandleCreation(ctx context.Context, log logr.Logg
 		return fmt.Errorf("error on creating remote PatchThing: %w", cxsdk.NewAPIError(httpResp, err))
 	}
 	log.Info("Remote PatchThing created", "response", utils.FormatJSON(resp))
+	if resp == nil {
+		return fmt.Errorf("the create response of PatchThing has no resource")
+	}
 	id := resp.Id
 	if id == "" {
 		return fmt.Errorf("the create response of PatchThing has no id")

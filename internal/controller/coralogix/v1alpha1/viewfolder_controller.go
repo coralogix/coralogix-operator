@@ -70,6 +70,9 @@ func (r *ViewFolderReconciler) HandleCreation(ctx context.Context, log logr.Logg
 		return fmt.Errorf("error on creating remote ViewFolder: %w", cxsdk.NewAPIError(httpResp, err))
 	}
 	log.Info("Remote ViewFolder created", "response", utils.FormatJSON(resp))
+	if resp == nil {
+		return fmt.Errorf("the create response of ViewFolder has no resource")
+	}
 	id := resp.Id
 	if id == "" {
 		return fmt.Errorf("the create response of ViewFolder has no id")

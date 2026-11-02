@@ -1,0 +1,21 @@
+resource: WrappedThing
+mode: existing
+validators:
+  inferred: true
+api:
+  requestWrapper: item
+  serverSetID: true
+  idProperty: id
+  updateIDInBody: true
+  requestValues:
+    create:
+      label: {source: spec.name}
+      requestId: {source: uuid, value: "cx-operator-create-"}
+    update:
+      label: {source: spec.name}
+      requestId: {source: uuid, value: "cx-operator-replace-"}
+types:
+  WrappedThing:
+    fields:
+      id:
+        readOnly: true

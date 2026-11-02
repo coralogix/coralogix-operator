@@ -210,7 +210,7 @@ func TestPublishRemovesFilesOfRemovedKinds(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, kindsFile), []byte("kinds:\n  - {kind: PatchThing, resource: PatchThing}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	for _, dir := range []string{"thing", "refthing", "bodyidthing"} {
+	for _, dir := range []string{"thing", "refthing", "bodyidthing", "wrappedthing"} {
 		if err := os.RemoveAll(filepath.Join(root, kindsDir, dir)); err != nil {
 			t.Fatal(err)
 		}
