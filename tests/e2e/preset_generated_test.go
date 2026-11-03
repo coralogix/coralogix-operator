@@ -74,7 +74,30 @@ const (
   "connectorType": "genericHttps",
   "description": "sample-description",
   "entityType": "alerts",
-  "name": "sample-name"
+  "name": "sample-name",
+  "parentId": "preset_system_generic_https_alerts_empty",
+  "configOverrides": [
+    {
+      "conditionType": {
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "logsImmediateResolved"
+        }
+      },
+      "messageConfig": {
+        "fields": [
+          {
+            "fieldName": "headers",
+            "template": "{}"
+          },
+          {
+            "fieldName": "body",
+            "template": "{ \"groupingKey\": \"{{alert.groupingKey}}\", \"status\": \"{{alert.status}}\", \"groups\": \"{{alert.groups}}\" }"
+          }
+        ]
+      },
+      "payloadType": "generic_https_default"
+    }
+  ]
 }`
 )
 
