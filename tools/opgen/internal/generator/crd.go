@@ -611,7 +611,7 @@ func (b *builder) enum(t *model.Type, path string) (*enumMap, error) {
 	values := t.Values
 	if overridden {
 		values = slices.Clone(line.Values)
-		if line.Zero != "" {
+		if line.Zero != "" && !line.RejectZero {
 			values = append([]string{t.EnumZero}, values...)
 		}
 	}

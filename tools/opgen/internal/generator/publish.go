@@ -27,6 +27,7 @@ var ownedDirs = []string{
 	"internal/utils",
 	"tests/e2e",
 	"config/samples/v1alpha1/generated",
+	"scripts",
 }
 
 // output is everything that one run writes.

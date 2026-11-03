@@ -41,7 +41,7 @@ func init() {
 		newFake:  func() apiFake { return &globalRouterFake{routers: map[string]any{}} },
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
 			return &v1alpha1controllers.GlobalRouterReconciler{
-				GlobalRoutersClient: cs.GlobalRouters(), Interval: reconcileInterval,
+				Client: cs.GlobalRouters(), Interval: reconcileInterval,
 			}
 		},
 		scenarios: globalRouterScenarios,

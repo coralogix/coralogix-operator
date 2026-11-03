@@ -13999,12 +13999,7 @@ with respect to the current state of the instance.<br/>
 
 
 
-GlobalRouter is the Schema for the GlobalRouters API.
-NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
-
-See also https://coralogix.com/docs/user-guides/notification-center/routing/
-
-**Added in v0.4.0**
+GlobalRouter is the Schema for the globalrouters API.
 
 <table>
     <thead>
@@ -14036,14 +14031,14 @@ See also https://coralogix.com/docs/user-guides/notification-center/routing/
         <td><b><a href="#globalrouterspec">spec</a></b></td>
         <td>object</td>
         <td>
-          GlobalRouterSpec defines the desired state of the Global Router.<br/>
+          GlobalRouterSpec defines the desired state of a GlobalRouter.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#globalrouterstatus">status</a></b></td>
         <td>object</td>
         <td>
-          GlobalRouterStatus defines the observed state of GlobalRouter.<br/>
+          GlobalRouterStatus defines the observed state of a GlobalRouter.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -14055,7 +14050,7 @@ See also https://coralogix.com/docs/user-guides/notification-center/routing/
 
 
 
-GlobalRouterSpec defines the desired state of the Global Router.
+GlobalRouterSpec defines the desired state of a GlobalRouter.
 
 <table>
     <thead>
@@ -14070,66 +14065,63 @@ GlobalRouterSpec defines the desired state of the Global Router.
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          Description is the description of the global router.<br/>
+          Human-readable description.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          Name is the name of the global router.<br/>
+          Display name.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>disabled</b></td>
         <td>boolean</td>
         <td>
-          Disabled disables the global router without deleting it. Defaults to false.<br/>
+          Whether the router is disabled.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>entityLabels</b></td>
         <td>map[string]string</td>
         <td>
-          EntityLabels are optional labels to attach to the global router.<br/>
+          The entity labels.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#globalrouterspecfallbackindex">fallback</a></b></td>
         <td>[]object</td>
         <td>
-          Fallback is the fallback routing target for the global router.
-Deprecated: use FallbackTargets, which supports per-entity-type fallback.<br/>
+          The fallback destinations to be used if no rule matches. Deprecated: use fallbackTargets. A router cannot set both fallback and fallbackTargets. The server does not keep the order of the targets.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#globalrouterspecfallbacktargetsindex">fallbackTargets</a></b></td>
         <td>[]object</td>
         <td>
-          FallbackTargets are the per-entity-type fallback targets used when no routing rule matches.
-Replaces the deprecated Fallback field.<br/>
+          The fallback targets. A router cannot set both fallback and fallbackTargets. The server does not keep the order of the fallback targets.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
-          ID of the global router.<br/>
+          Unique identifier.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#globalrouterspecroutinglabels">routingLabels</a></b></td>
         <td>object</td>
         <td>
-          RoutingLabels Allows to configure routing labels which are used for routers resolution.
-Should be used only if ID is not set to `router_default`.<br/>
+          Allows to configure routing labels which are used for routers resolution. Every router needs at least one label, except the default router, whose `id` is `router_default`. The default router must have no labels.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#globalrouterspecrulesindex">rules</a></b></td>
         <td>[]object</td>
         <td>
-          Rules are the routing rules for the global router.<br/>
+          List of rules.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -14141,7 +14133,7 @@ Should be used only if ID is not set to `router_default`.<br/>
 
 
 
-
+GlobalRouterRoutingTarget is the RoutingTarget object of the API.
 
 <table>
     <thead>
@@ -14156,7 +14148,8 @@ Should be used only if ID is not set to `router_default`.<br/>
         <td><b><a href="#globalrouterspecfallbackindexconnector">connector</a></b></td>
         <td>object</td>
         <td>
-          Connector is the connector for the routing target. Should be one of backendRef or resourceRef.<br/>
+          The connector id.
+It refers to a Connector: by backendRef.id, or by resourceRef, a Connector custom resource.<br/>
           <br/>
             <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
         </td>
@@ -14165,14 +14158,15 @@ Should be used only if ID is not set to `router_default`.<br/>
         <td><b>customDetails</b></td>
         <td>map[string]string</td>
         <td>
-          CustomDetails are optional custom details to attach to the routing target.<br/>
+          The custom details.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#globalrouterspecfallbackindexpreset">preset</a></b></td>
         <td>object</td>
         <td>
-          Preset is the preset for the routing target. Should be one of backendRef or resourceRef.<br/>
+          The preset id.
+It refers to a Preset: by backendRef.id, or by resourceRef, a Preset custom resource.<br/>
           <br/>
             <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
         </td>
@@ -14186,7 +14180,8 @@ Should be used only if ID is not set to `router_default`.<br/>
 
 
 
-Connector is the connector for the routing target. Should be one of backendRef or resourceRef.
+The connector id.
+It refers to a Connector: by backendRef.id, or by resourceRef, a Connector custom resource.
 
 <table>
     <thead>
@@ -14281,7 +14276,8 @@ ResourceRef is a reference to a Kubernetes resource.
 
 
 
-Preset is the preset for the routing target. Should be one of backendRef or resourceRef.
+The preset id.
+It refers to a Preset: by backendRef.id, or by resourceRef, a Preset custom resource.
 
 <table>
     <thead>
@@ -14376,7 +14372,7 @@ ResourceRef is a reference to a Kubernetes resource.
 
 
 
-FallbackTarget defines a fallback routing target scoped to an entity type.
+GlobalRouterFallbackTarget is the FallbackTarget object of the API.
 
 <table>
     <thead>
@@ -14391,7 +14387,7 @@ FallbackTarget defines a fallback routing target scoped to an entity type.
         <td><b>entityType</b></td>
         <td>enum</td>
         <td>
-          EntityType is the entity type this fallback applies to. Can be one of alerts or cases.<br/>
+          Entity type.<br/>
           <br/>
             <i>Enum</i>: alerts, cases<br/>
         </td>
@@ -14400,7 +14396,7 @@ FallbackTarget defines a fallback routing target scoped to an entity type.
         <td><b><a href="#globalrouterspecfallbacktargetsindextarget">target</a></b></td>
         <td>object</td>
         <td>
-          Target is the fallback routing target.<br/>
+          Defines routing target for notifications<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -14412,7 +14408,7 @@ FallbackTarget defines a fallback routing target scoped to an entity type.
 
 
 
-Target is the fallback routing target.
+Defines routing target for notifications
 
 <table>
     <thead>
@@ -14427,7 +14423,8 @@ Target is the fallback routing target.
         <td><b><a href="#globalrouterspecfallbacktargetsindextargetconnector">connector</a></b></td>
         <td>object</td>
         <td>
-          Connector is the connector for the routing target. Should be one of backendRef or resourceRef.<br/>
+          The connector id.
+It refers to a Connector: by backendRef.id, or by resourceRef, a Connector custom resource.<br/>
           <br/>
             <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
         </td>
@@ -14436,14 +14433,15 @@ Target is the fallback routing target.
         <td><b>customDetails</b></td>
         <td>map[string]string</td>
         <td>
-          CustomDetails are optional custom details to attach to the routing target.<br/>
+          The custom details.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#globalrouterspecfallbacktargetsindextargetpreset">preset</a></b></td>
         <td>object</td>
         <td>
-          Preset is the preset for the routing target. Should be one of backendRef or resourceRef.<br/>
+          The preset id.
+It refers to a Preset: by backendRef.id, or by resourceRef, a Preset custom resource.<br/>
           <br/>
             <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
         </td>
@@ -14457,7 +14455,8 @@ Target is the fallback routing target.
 
 
 
-Connector is the connector for the routing target. Should be one of backendRef or resourceRef.
+The connector id.
+It refers to a Connector: by backendRef.id, or by resourceRef, a Connector custom resource.
 
 <table>
     <thead>
@@ -14552,7 +14551,8 @@ ResourceRef is a reference to a Kubernetes resource.
 
 
 
-Preset is the preset for the routing target. Should be one of backendRef or resourceRef.
+The preset id.
+It refers to a Preset: by backendRef.id, or by resourceRef, a Preset custom resource.
 
 <table>
     <thead>
@@ -14647,8 +14647,7 @@ ResourceRef is a reference to a Kubernetes resource.
 
 
 
-RoutingLabels Allows to configure routing labels which are used for routers resolution.
-Should be used only if ID is not set to `router_default`.
+Allows to configure routing labels which are used for routers resolution. Every router needs at least one label, except the default router, whose `id` is `router_default`. The default router must have no labels.
 
 <table>
     <thead>
@@ -14663,21 +14662,21 @@ Should be used only if ID is not set to `router_default`.
         <td><b>environment</b></td>
         <td>string</td>
         <td>
-          Environment is the environment routing label.<br/>
+          The environment. The limit is 255 bytes.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>service</b></td>
         <td>string</td>
         <td>
-          Service is the service routing label.<br/>
+          Service name. The limit is 255 bytes.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>team</b></td>
         <td>string</td>
         <td>
-          Team is the team routing label.<br/>
+          Team. The limit is 255 bytes.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -14689,7 +14688,7 @@ Should be used only if ID is not set to `router_default`.
 
 
 
-
+GlobalRouterRoutingRule is the RoutingRule object of the API.
 
 <table>
     <thead>
@@ -14704,35 +14703,35 @@ Should be used only if ID is not set to `router_default`.
         <td><b>condition</b></td>
         <td>string</td>
         <td>
-          Condition is the condition for the routing rule.<br/>
+          Condition.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          Name is the name of the routing rule.<br/>
+          Display name.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#globalrouterspecrulesindextargetsindex">targets</a></b></td>
         <td>[]object</td>
         <td>
-          Targets are the routing targets for the routing rule.<br/>
+          List of targets. The server does not keep the order of the targets.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>customDetails</b></td>
         <td>map[string]string</td>
         <td>
-          CustomDetails are optional custom details to attach to the routing rule.<br/>
+          The custom details.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>entityType</b></td>
         <td>enum</td>
         <td>
-          EntityType is the entity type for the global router. Can be one of alerts or cases.<br/>
+          <br/>
           <br/>
             <i>Enum</i>: alerts, cases<br/>
         </td>
@@ -14746,7 +14745,7 @@ Should be used only if ID is not set to `router_default`.
 
 
 
-
+GlobalRouterRoutingTarget is the RoutingTarget object of the API.
 
 <table>
     <thead>
@@ -14761,7 +14760,8 @@ Should be used only if ID is not set to `router_default`.
         <td><b><a href="#globalrouterspecrulesindextargetsindexconnector">connector</a></b></td>
         <td>object</td>
         <td>
-          Connector is the connector for the routing target. Should be one of backendRef or resourceRef.<br/>
+          The connector id.
+It refers to a Connector: by backendRef.id, or by resourceRef, a Connector custom resource.<br/>
           <br/>
             <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
         </td>
@@ -14770,14 +14770,15 @@ Should be used only if ID is not set to `router_default`.
         <td><b>customDetails</b></td>
         <td>map[string]string</td>
         <td>
-          CustomDetails are optional custom details to attach to the routing target.<br/>
+          The custom details.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#globalrouterspecrulesindextargetsindexpreset">preset</a></b></td>
         <td>object</td>
         <td>
-          Preset is the preset for the routing target. Should be one of backendRef or resourceRef.<br/>
+          The preset id.
+It refers to a Preset: by backendRef.id, or by resourceRef, a Preset custom resource.<br/>
           <br/>
             <i>Validations</i>:<li>has(self.backendRef) != has(self.resourceRef): Exactly one of backendRef or resourceRef must be set</li>
         </td>
@@ -14791,7 +14792,8 @@ Should be used only if ID is not set to `router_default`.
 
 
 
-Connector is the connector for the routing target. Should be one of backendRef or resourceRef.
+The connector id.
+It refers to a Connector: by backendRef.id, or by resourceRef, a Connector custom resource.
 
 <table>
     <thead>
@@ -14886,7 +14888,8 @@ ResourceRef is a reference to a Kubernetes resource.
 
 
 
-Preset is the preset for the routing target. Should be one of backendRef or resourceRef.
+The preset id.
+It refers to a Preset: by backendRef.id, or by resourceRef, a Preset custom resource.
 
 <table>
     <thead>
@@ -14981,7 +14984,7 @@ ResourceRef is a reference to a Kubernetes resource.
 
 
 
-GlobalRouterStatus defines the observed state of GlobalRouter.
+GlobalRouterStatus defines the observed state of a GlobalRouter.
 
 <table>
     <thead>

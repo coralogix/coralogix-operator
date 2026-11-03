@@ -68,7 +68,6 @@ rules:
       - dashboardsfolders
       - enrichments
       - events2metrics
-      - globalrouters
       - groups
       - integrations
       - ipaccesses
@@ -110,7 +109,6 @@ rules:
       - dashboardsfolders/finalizers
       - enrichments/finalizers
       - events2metrics/finalizers
-      - globalrouters/finalizers
       - groups/finalizers
       - integrations/finalizers
       - ipaccesses/finalizers
@@ -146,7 +144,6 @@ rules:
       - dashboardsfolders/status
       - enrichments/status
       - events2metrics/status
-      - globalrouters/status
       - groups/status
       - integrations/status
       - ipaccesses/status
@@ -177,6 +174,7 @@ rules:
   - apiGroups:
       - coralogix.com
     resources:
+      - globalrouters
       - viewfolders
     verbs:
       - create
@@ -189,12 +187,14 @@ rules:
   - apiGroups:
       - coralogix.com
     resources:
+      - globalrouters/finalizers
       - viewfolders/finalizers
     verbs:
       - update
   - apiGroups:
       - coralogix.com
     resources:
+      - globalrouters/status
       - viewfolders/status
     verbs:
       - get

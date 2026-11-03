@@ -10,6 +10,10 @@ types:
   GlobalRouter:
     fields:
       entityType: {skip: true}
+      description: {required: true}
+  RoutingRule:
+    fields:
+      targets: {required: true}
   RoutingTarget:
     fields:
       connectorId: {name: connector, ref: {kind: Connector, type: NCRef}}
@@ -17,5 +21,6 @@ types:
 enums:
   notification_center.EntityType:
     zero: unspecified
+    rejectZero: true
     values: [ALERTS, CASES]
     rejected: [TEST_NOTIFICATIONS, OLLY_SCHEDULED_TASKS]

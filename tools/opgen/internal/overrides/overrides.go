@@ -163,6 +163,7 @@ type Field struct {
 // Enum records the accepted API values and their custom resource spellings.
 type Enum struct {
 	Zero       string            `yaml:"zero"`
+	RejectZero bool              `yaml:"rejectZero"`
 	Values     []string          `yaml:"values"`
 	Verbatim   bool              `yaml:"verbatim"`
 	TrimPrefix string            `yaml:"trimPrefix"`
@@ -349,6 +350,9 @@ func (e Enum) check(name string) error {
 	}
 	if !validEnumValue(e.Zero) && e.Zero != "" {
 		return fmt.Errorf("enums.%s.zero: %q is not one CR enum value", name, e.Zero)
+	}
+	if e.RejectZero && e.Zero == "" {
+		return fmt.Errorf("enums.%s.rejectZero: zero must name the omitted API value", name)
 	}
 	seen := map[string]bool{}
 	for _, value := range append(slices.Clone(e.Values), e.Rejected...) {

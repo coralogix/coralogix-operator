@@ -72,8 +72,8 @@ var _ = Describe("GlobalRouter", Ordered, Serial, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: globalRouterName, Namespace: testNamespace}, fetchedGlobalRouter)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedGlobalRouter.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetchedGlobalRouter.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			if fetchedGlobalRouter.Status.Id != nil {
-				globalRouterID = *fetchedGlobalRouter.Status.Id
+			if fetchedGlobalRouter.Status.ID != nil {
+				globalRouterID = *fetchedGlobalRouter.Status.ID
 				return nil
 			}
 			return fmt.Errorf("GlobalRouter ID is not set")
@@ -139,16 +139,16 @@ func getSampleGlobalRouter(globalRouterName, testNamespace, slackConnectorName, 
 		Spec: coralogixv1alpha1.GlobalRouterSpec{
 			Name:        globalRouterName,
 			Description: "global router example",
-			RoutingLabels: &coralogixv1alpha1.RoutingLabels{
+			RoutingLabels: &coralogixv1alpha1.GlobalRouterRoutingLabels{
 				Environment: ptr.To(gouuid.NewString()),
 				Service:     ptr.To(gouuid.NewString()),
 				Team:        ptr.To(gouuid.NewString()),
 			},
-			Rules: []coralogixv1alpha1.RoutingRule{
+			Rules: []coralogixv1alpha1.GlobalRouterRoutingRule{
 				{
 					Name:      "first-rule",
 					Condition: `alertDef.priority == "P1"`,
-					Targets: []coralogixv1alpha1.RoutingTarget{
+					Targets: []coralogixv1alpha1.GlobalRouterRoutingTarget{
 						{
 							Connector: coralogixv1alpha1.NCRef{
 								ResourceRef: &coralogixv1alpha1.ResourceRef{
@@ -166,7 +166,7 @@ func getSampleGlobalRouter(globalRouterName, testNamespace, slackConnectorName, 
 				{
 					Name:      "second-rule",
 					Condition: `alertDef.priority == "P2"`,
-					Targets: []coralogixv1alpha1.RoutingTarget{
+					Targets: []coralogixv1alpha1.GlobalRouterRoutingTarget{
 						{
 							Connector: coralogixv1alpha1.NCRef{
 								ResourceRef: &coralogixv1alpha1.ResourceRef{
@@ -226,8 +226,8 @@ var _ = Describe("GlobalRouter with disabled and fallbackTargets", Ordered, Seri
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: routerName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			if fetched.Status.Id != nil {
-				routerID = *fetched.Status.Id
+			if fetched.Status.ID != nil {
+				routerID = *fetched.Status.ID
 				return nil
 			}
 			return fmt.Errorf("GlobalRouter ID is not set")
@@ -262,17 +262,17 @@ func getSampleGlobalRouterWithGapFields(name, namespace, connectorName string) *
 			Name:        name,
 			Description: "global router with disabled + fallbackTargets",
 			Disabled:    ptr.To(true),
-			RoutingLabels: &coralogixv1alpha1.RoutingLabels{
+			RoutingLabels: &coralogixv1alpha1.GlobalRouterRoutingLabels{
 				Environment: ptr.To(gouuid.NewString()),
 				Service:     ptr.To(gouuid.NewString()),
 				Team:        ptr.To(gouuid.NewString()),
 			},
-			Rules: []coralogixv1alpha1.RoutingRule{
+			Rules: []coralogixv1alpha1.GlobalRouterRoutingRule{
 				{
 					Name:       "first-rule",
 					EntityType: ptr.To("alerts"),
 					Condition:  `alertDef.priority == "P1"`,
-					Targets: []coralogixv1alpha1.RoutingTarget{
+					Targets: []coralogixv1alpha1.GlobalRouterRoutingTarget{
 						{
 							Connector: coralogixv1alpha1.NCRef{
 								ResourceRef: &coralogixv1alpha1.ResourceRef{Name: connectorName},
@@ -285,10 +285,10 @@ func getSampleGlobalRouterWithGapFields(name, namespace, connectorName string) *
 				},
 			},
 			// Per-entity-type fallback. On a non-default router the target references a connector only.
-			FallbackTargets: []coralogixv1alpha1.FallbackTarget{
+			FallbackTargets: []coralogixv1alpha1.GlobalRouterFallbackTarget{
 				{
 					EntityType: "alerts",
-					Target: coralogixv1alpha1.RoutingTarget{
+					Target: coralogixv1alpha1.GlobalRouterRoutingTarget{
 						Connector: coralogixv1alpha1.NCRef{
 							ResourceRef: &coralogixv1alpha1.ResourceRef{Name: connectorName},
 						},

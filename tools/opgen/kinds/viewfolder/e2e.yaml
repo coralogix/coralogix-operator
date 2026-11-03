@@ -1,0 +1,6 @@
+upgrade:
+  from: '0.5'
+  spec:
+    name: '@{run}'
+  field: name
+  value: '@{run}-updated'
