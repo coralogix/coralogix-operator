@@ -40,6 +40,10 @@ on:
     # A new run starts with requested, a re-run with in_progress (re-runs emit no requested), so
     # either withdraws the approval as soon as it starts.
     types: [requested, in_progress, completed]
+    # Only runs on a release branch start this workflow. Without the filter, every run on every
+    # branch starts one that the job's if: then skips. check_run has no branch filter.
+    branches:
+      - "prepare-v*"
   # Checks from outside Actions (CodeQL, GitGuardian) start no workflow_run, so one that finishes
   # last would leave the PR unapproved without this.
   check_run:
