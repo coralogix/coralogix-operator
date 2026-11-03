@@ -9,8 +9,8 @@ name: Release PR Approval
 # GITHUB_TOKEN starts no push workflow. A run that finds the PR merged but never released starts
 # Release itself; a Release run that was cancelled or failed stays stopped for a person to restart.
 #
-# It runs when the release PR changes and whenever a PR workflow starts or finishes, so the
-# approval follows the last check. A check that fails or runs again withdraws the approval until every
+# It runs when the release PR changes, whenever a PR workflow starts or finishes, and whenever a
+# check from outside Actions finishes, so the approval follows the last check. A check that fails or runs again withdraws the approval until every
 # check passes, and approvals of an older commit are dismissed.
 #
 # Both triggers run this file and the check scripts from main, never from the PR, so a PR cannot
@@ -37,8 +37,13 @@ on:
       - unit-tests
       - upgrade-test
       - Version Bump
-    # requested too: a re-run after the approval withdraws it as soon as it starts.
-    types: [requested, completed]
+    # A new run starts with requested, a re-run with in_progress (re-runs emit no requested), so
+    # either withdraws the approval as soon as it starts.
+    types: [requested, in_progress, completed]
+  # Checks from outside Actions (CodeQL, GitGuardian) start no workflow_run, so one that finishes
+  # last would leave the PR unapproved without this.
+  check_run:
+    types: [completed]
 
 permissions: {}
 
@@ -53,12 +58,15 @@ jobs:
       (github.event_name == 'workflow_run' &&
        github.event.workflow_run.event == 'pull_request' &&
        startsWith(github.event.workflow_run.head_branch, 'prepare-v') &&
-       github.event.workflow_run.head_repository.full_name == github.repository)
+       github.event.workflow_run.head_repository.full_name == github.repository) ||
+      (github.event_name == 'check_run' &&
+       github.event.check_run.app.slug != 'github-actions' &&
+       startsWith(github.event.check_run.check_suite.head_branch, 'prepare-v'))
     runs-on: ubuntu-latest
     # Never cancel a running job: one cancelled between merging and starting Release would leave
     # the version merged but not released. A newer event replaces only a waiting run.
     concurrency:
-      group: release-pr-approval-${{ github.head_ref || github.event.workflow_run.head_branch }}
+      group: release-pr-approval-${{ github.head_ref || github.event.workflow_run.head_branch || github.event.check_run.check_suite.head_branch }}
       cancel-in-progress: false
     permissions:
       contents: write
@@ -68,7 +76,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GH_REPO: ${{ github.repository }}
-      HEAD_REF: ${{ github.head_ref || github.event.workflow_run.head_branch }}
+      HEAD_REF: ${{ github.head_ref || github.event.workflow_run.head_branch || github.event.check_run.check_suite.head_branch }}
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
@@ -80,8 +88,10 @@ jobs:
         name: Find the release PR
         run: |
           set -euo pipefail
+          # Only a PR from this repository: a check_run event doesn't say where its branch lives.
           pr=$(gh pr list --head "$HEAD_REF" --base main --state open \
-            --json number,headRefOid,isDraft,autoMergeRequest --jq '.[0] // empty')
+            --json number,headRefOid,isDraft,autoMergeRequest,isCrossRepository \
+            --jq '[.[] | select(.isCrossRepository | not)][0] // empty')
           if [[ -z "$pr" ]]; then echo "::notice::No open PR from $HEAD_REF"; exit 0; fi
           jq -r '"number=\(.number)\nsha=\(.headRefOid)\ndraft=\(.isDraft)\nauto=\(.autoMergeRequest != null)"' <<< "$pr" >> "$GITHUB_OUTPUT"
 
@@ -102,7 +112,8 @@ jobs:
         run: |
           set -euo pipefail
           merged=$(gh pr list --head "$HEAD_REF" --base main --state merged \
-            --json mergeCommit,mergedAt --jq '.[0] // empty | "\(.mergeCommit.oid) \(.mergedAt)"')
+            --json mergeCommit,mergedAt,isCrossRepository \
+            --jq '[.[] | select(.isCrossRepository | not)][0] // empty | "\(.mergeCommit.oid) \(.mergedAt)"')
           if [[ -z "$merged" ]]; then exit 0; fi
           read -r sha merged_at <<< "$merged"
           version=$(gh api "repos/$GH_REPO/contents/charts/coralogix-operator/Chart.yaml?ref=$sha" \

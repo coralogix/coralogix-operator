@@ -44,6 +44,8 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
+      actions: read
+      checks: read
     outputs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
@@ -140,6 +142,31 @@ jobs:
           GH_REPO: ${{ github.repository }}
           PR: ${{ steps.version.outputs.pr }}
         run: scripts/check-releaser.sh "$PR"
+
+      # main requires no checks, so a release PR can merge while one still runs: by hand, or when
+      # a re-run starts right after Release PR Approval's last look. Nothing is published until
+      # every check on the release PR's last commit has passed, and a failed check stops it.
+      - name: Wait for the release PR's CI
+        if: ${{ steps.version.outputs.publish == 'true' }}
+        timeout-minutes: 240
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR: ${{ steps.version.outputs.pr }}
+        run: |
+          head=$(gh pr view "$PR" --json headRefOid --jq .headRefOid)
+          while true; do
+            status=0
+            scripts/check-release-ci.sh "$head" || status=$?
+            case "$status" in
+              0) break ;;
+              2 | 3) sleep 60 ;;
+              *)
+                echo "::error::A check on release PR #$PR failed. Re-run it, and once it passes, run Release from the Actions tab."
+                exit 1
+                ;;
+            esac
+          done
 
   image:
     name: Push image
