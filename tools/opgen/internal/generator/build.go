@@ -123,6 +123,8 @@ type crField struct {
 	ref       string // the kind that a reference names, "" for a field that is not one
 	refType   string // the CR reference type, when it differs from ResourceIDRef
 	group     bool   // this field groups API fields under a released CR object
+
+	omitEmptyInRequest bool
 }
 
 // JSONTag is the json struct tag of the field.

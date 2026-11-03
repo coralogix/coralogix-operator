@@ -1,0 +1,62 @@
+resource: Preset
+mode: existing
+validators:
+  inferred: false
+api:
+  operations:
+    create: PresetsService_CreateCustomPreset
+    get: PresetsService_GetPreset
+    update: PresetsService_ReplaceCustomPreset
+    delete: PresetsService_DeleteCustomPreset
+  customMethods: true
+  requestWrapper: preset
+  updateIDInBody: true
+  serverSetID: true
+unwrap: [AttachmentConfig]
+types:
+  Preset:
+    fields:
+      id: {readOnly: true}
+      description: {required: true}
+  ConfigOverrides:
+    fields:
+      conditionType: {required: true}
+      messageConfig: {required: true}
+  notification_center.ConditionType:
+    fields:
+      matchEntityType: {requireOne: true}
+  MatchEntityTypeAndSubTypeCondition:
+    fields:
+      entitySubType: {required: true}
+  MessageConfig:
+    fields:
+      fields: {required: true, collection: list, omitEmptyInRequest: true}
+  notification_center.MessageConfigField:
+    fields:
+      fieldName: {required: true}
+      template: {required: true}
+enums:
+  AttachmentConfigPolicy:
+    verbatim: true
+    values: [AUTO, ENABLED, DISABLED]
+  notification_center.ConnectorType:
+    zero: unspecified
+    rejectZero: true
+    values: [SLACK, GENERIC_HTTPS, PAGERDUTY, PAGERDUTY_INCIDENTS, EMAIL, MICROSOFT_TEAMS, EVENTBRIDGE, INCIDENT_IO]
+    rejected: [IBM_EVENT_NOTIFICATIONS, SERVICE_NOW]
+    names:
+      GENERIC_HTTPS: genericHttps
+      PAGERDUTY: pagerDuty
+      PAGERDUTY_INCIDENTS: pagerDutyIncidents
+      MICROSOFT_TEAMS: microsoftTeams
+      EVENTBRIDGE: eventBridge
+      INCIDENT_IO: incidentIo
+  notification_center.EntityType:
+    zero: unspecified
+    rejectZero: true
+    values: [ALERTS, CASES]
+    rejected: [TEST_NOTIFICATIONS, OLLY_SCHEDULED_TASKS]
+  PresetType:
+    zero: unspecified
+    rejectZero: true
+    values: [SYSTEM, CUSTOM]

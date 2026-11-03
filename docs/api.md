@@ -16848,10 +16848,6 @@ with respect to the current state of the instance.<br/>
 
 
 Preset is the Schema for the presets API.
-NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
-See also https://coralogix.com/docs/user-guides/notification-center/presets/introduction/
-
-**Added in v0.4.0**
 
 <table>
     <thead>
@@ -16883,14 +16879,14 @@ See also https://coralogix.com/docs/user-guides/notification-center/presets/intr
         <td><b><a href="#presetspec">spec</a></b></td>
         <td>object</td>
         <td>
-          PresetSpec defines the desired state of Preset.<br/>
+          PresetSpec defines the desired state of a Preset.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#presetstatus">status</a></b></td>
         <td>object</td>
         <td>
-          PresetStatus defines the observed state of Preset.<br/>
+          PresetStatus defines the observed state of a Preset.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -16902,7 +16898,7 @@ See also https://coralogix.com/docs/user-guides/notification-center/presets/intr
 
 
 
-PresetSpec defines the desired state of Preset.
+PresetSpec defines the desired state of a Preset.
 
 <table>
     <thead>
@@ -16917,7 +16913,7 @@ PresetSpec defines the desired state of Preset.
         <td><b>connectorType</b></td>
         <td>enum</td>
         <td>
-          ConnectorType is the type of the connector. Can be one of slack, genericHttps, pagerDuty, pagerDutyIncidents, email, microsoftTeams, eventBridge, or incidentIo (preview).<br/>
+          Connector type.<br/>
           <br/>
             <i>Enum</i>: slack, genericHttps, pagerDuty, pagerDutyIncidents, email, microsoftTeams, eventBridge, incidentIo<br/>
         </td>
@@ -16926,14 +16922,14 @@ PresetSpec defines the desired state of Preset.
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          Description is the description of the preset.<br/>
+          Human-readable description.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>entityType</b></td>
         <td>enum</td>
         <td>
-          EntityType is the entity type for the preset. Can be one of alerts or cases.<br/>
+          <br/>
           <br/>
             <i>Enum</i>: alerts, cases<br/>
         </td>
@@ -16942,14 +16938,14 @@ PresetSpec defines the desired state of Preset.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          Name is the name of the preset.<br/>
+          Display name.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>attachmentConfig</b></td>
         <td>enum</td>
         <td>
-          AttachmentConfig controls whether notification payloads include attachments. Defaults to AUTO.<br/>
+          Attachment config.<br/>
           <br/>
             <i>Enum</i>: AUTO, ENABLED, DISABLED<br/>
         </td>
@@ -16958,14 +16954,14 @@ PresetSpec defines the desired state of Preset.
         <td><b><a href="#presetspecconfigoverridesindex">configOverrides</a></b></td>
         <td>[]object</td>
         <td>
-          ConfigOverrides are the entity type configs, allowing entity type templating.<br/>
+          The config overrides.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>parentId</b></td>
         <td>string</td>
         <td>
-          ParentId is the ID of the parent preset. For example, "preset_system_slack_alerts_basic".<br/>
+          The parent id.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -16977,7 +16973,7 @@ PresetSpec defines the desired state of Preset.
 
 
 
-
+PresetConfigOverrides is the ConfigOverrides object of the API.
 
 <table>
     <thead>
@@ -16992,23 +16988,23 @@ PresetSpec defines the desired state of Preset.
         <td><b><a href="#presetspecconfigoverridesindexconditiontype">conditionType</a></b></td>
         <td>object</td>
         <td>
-          ConditionType is the condition type for the config override.<br/>
+          Field condition.condition type.<br/>
           <br/>
-            <i>Validations</i>:<li>has(self.matchEntityType) != has(self.matchEntityTypeAndSubType): exactly one of matchEntityType or matchEntityTypeAndSubType must be set</li>
+            <i>Validations</i>:<li>(has(self.matchEntityType) ? 1 : 0) + (has(self.matchEntityTypeAndSubType) ? 1 : 0) == 1: Exactly one of matchEntityType, matchEntityTypeAndSubType must be set</li>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#presetspecconfigoverridesindexmessageconfig">messageConfig</a></b></td>
         <td>object</td>
         <td>
-          MessageConfig is the message config for the config override.<br/>
+          Message config.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>payloadType</b></td>
         <td>string</td>
         <td>
-          PayloadType is the payload type for the config override.<br/>
+          Connector payload schema type.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -17020,7 +17016,7 @@ PresetSpec defines the desired state of Preset.
 
 
 
-ConditionType is the condition type for the config override.
+Field condition.condition type.
 
 <table>
     <thead>
@@ -17035,14 +17031,14 @@ ConditionType is the condition type for the config override.
         <td><b>matchEntityType</b></td>
         <td>object</td>
         <td>
-          MatchEntityType is used for matching entity types.<br/>
+          Match entity type condition.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#presetspecconfigoverridesindexconditiontypematchentitytypeandsubtype">matchEntityTypeAndSubType</a></b></td>
         <td>object</td>
         <td>
-          MatchEntityTypeAndSubType is used for matching entity subtypes.<br/>
+          Match entity type and sub type condition.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -17054,7 +17050,7 @@ ConditionType is the condition type for the config override.
 
 
 
-MatchEntityTypeAndSubType is used for matching entity subtypes.
+Match entity type and sub type condition.
 
 <table>
     <thead>
@@ -17069,7 +17065,7 @@ MatchEntityTypeAndSubType is used for matching entity subtypes.
         <td><b>entitySubType</b></td>
         <td>string</td>
         <td>
-          EntitySubType is the entity subtype for the config override. For example, "logsImmediateTriggered".<br/>
+          The entity sub type.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -17081,7 +17077,7 @@ MatchEntityTypeAndSubType is used for matching entity subtypes.
 
 
 
-MessageConfig is the message config for the config override.
+Message config.
 
 <table>
     <thead>
@@ -17096,7 +17092,7 @@ MessageConfig is the message config for the config override.
         <td><b><a href="#presetspecconfigoverridesindexmessageconfigfieldsindex">fields</a></b></td>
         <td>[]object</td>
         <td>
-          Fields are the fields of the message config.<br/>
+          List of fields. The server does not keep the order of the fields, and a repeated field name keeps one entry.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -17108,7 +17104,7 @@ MessageConfig is the message config for the config override.
 
 
 
-
+PresetNotificationCenterMessageConfigField is the notification_center.MessageConfigField object of the API.
 
 <table>
     <thead>
@@ -17123,14 +17119,14 @@ MessageConfig is the message config for the config override.
         <td><b>fieldName</b></td>
         <td>string</td>
         <td>
-          FieldName is the name of the field. e.g. "title" for slack.<br/>
+          The field name.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>template</b></td>
         <td>string</td>
         <td>
-          Template is the template for the field.<br/>
+          The template.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -17142,7 +17138,7 @@ MessageConfig is the message config for the config override.
 
 
 
-PresetStatus defines the observed state of Preset.
+PresetStatus defines the observed state of a Preset.
 
 <table>
     <thead>

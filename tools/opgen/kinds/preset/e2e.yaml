@@ -1,0 +1,25 @@
+serial: true
+upgrade:
+  from: '2.0'
+  spec:
+    name: '@{run}'
+    description: Preset created before the operator upgrade
+    connectorType: slack
+    entityType: alerts
+    parentId: preset_system_slack_alerts_basic
+    configOverrides:
+      - conditionType:
+          matchEntityTypeAndSubType:
+            entitySubType: logsImmediateTriggered
+        messageConfig:
+          fields:
+            - fieldName: title
+              template: Before upgrade
+  field: description
+  value: Preset updated after the operator upgrade
+values:
+  connectorType: slack
+  entityType: alerts
+  parentId: preset_system_slack_alerts_basic
+  configOverrides.messageConfig.fields.fieldName: title
+  configOverrides.messageConfig.fields.template: 'Preset: {{alertDef.name}}'

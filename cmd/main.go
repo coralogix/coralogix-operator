@@ -277,14 +277,6 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Connector")
 		os.Exit(1)
 	}
-	if err = (&v1alpha1controllers.PresetReconciler{
-		PresetsClient: oapiClientSet.Presets(),
-		Interval:      cfg.ReconcileIntervals[utils.PresetKind],
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Preset")
-		os.Exit(1)
-	}
-
 	if err = (&v1alpha1controllers.ArchiveLogsTargetReconciler{
 		ArchiveLogsTargetsClient: oapiClientSet.ArchiveLogs(),
 		ArchiveRetentionsClient:  oapiClientSet.ArchiveRetentions(),

@@ -270,6 +270,13 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 		b.used[line] = true
 	}
 	f := &crField{API: name, JSON: jsonName, GoName: goName(jsonName), Optional: !required, Doc: docLines(description), typ: t}
+	if change.OmitEmptyInRequest {
+		if !required || (t.Kind != model.List && t.Kind != model.Set && t.Kind != model.Map) {
+			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".omitEmptyInRequest", msg: "omitEmptyInRequest needs a required collection"}
+		}
+		f.omitEmptyInRequest = true
+		b.used[line] = true
+	}
 	if !required {
 		f.Markers = append(f.Markers, "+optional")
 	}

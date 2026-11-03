@@ -4,5 +4,7 @@
 kinds:
   - kind: GlobalRouter
     resource: GlobalRouter
+  - kind: Preset
+    resource: Preset
   - kind: ViewFolder
     resource: ViewFolder

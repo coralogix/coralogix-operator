@@ -401,7 +401,7 @@ func (b *builder) assignFrom(f *crField, rt *model.Type, owner, path, src string
 			return "", err
 		}
 		code := stmts + target + " = " + expr + "\n"
-		if f.Optional {
+		if f.Optional || f.omitEmptyInRequest {
 			return "if len(" + src + ") != 0 {\n" + code + "}\n", nil
 		}
 		return code, nil

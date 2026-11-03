@@ -72,7 +72,6 @@ rules:
       - integrations
       - ipaccesses
       - outboundwebhooks
-      - presets
       - quotaallocationrulesets
       - recordingrulegroupsets
       - rulegroups
@@ -113,7 +112,6 @@ rules:
       - integrations/finalizers
       - ipaccesses/finalizers
       - outboundwebhooks/finalizers
-      - presets/finalizers
       - quotaallocationrulesets/finalizers
       - recordingrulegroupsets/finalizers
       - rulegroups/finalizers
@@ -148,7 +146,6 @@ rules:
       - integrations/status
       - ipaccesses/status
       - outboundwebhooks/status
-      - presets/status
       - quotaallocationrulesets/status
       - recordingrulegroupsets/status
       - rulegroups/status
@@ -175,6 +172,7 @@ rules:
       - coralogix.com
     resources:
       - globalrouters
+      - presets
       - viewfolders
     verbs:
       - create
@@ -188,6 +186,7 @@ rules:
       - coralogix.com
     resources:
       - globalrouters/finalizers
+      - presets/finalizers
       - viewfolders/finalizers
     verbs:
       - update
@@ -195,6 +194,7 @@ rules:
       - coralogix.com
     resources:
       - globalrouters/status
+      - presets/status
       - viewfolders/status
     verbs:
       - get
