@@ -5,6 +5,9 @@ permissions:
 
 on:
   workflow_dispatch:
+  # Called by the Release workflow, which creates the release tag with GITHUB_TOKEN. Tags made
+  # with GITHUB_TOKEN do not start workflows, so the push below never sees a release tag.
+  workflow_call:
   push:
     tags:
       - "v*"

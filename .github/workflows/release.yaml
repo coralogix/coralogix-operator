@@ -28,11 +28,13 @@ defaults:
   run:
     shell: bash
 
-# One release at a time. A newer merge waiting here replaces an older waiting one, which is
-# fine: the newer commit carries the older one's changes and a higher version.
+# One release at a time, and every waiting run is kept (queue: max): by default a newer run
+# replaces a waiting one, so an ordinary merge right after a release PR would drop the release
+# PR's run, and the ordinary merge's run doesn't release that version from its own commit.
 concurrency:
   group: release
   cancel-in-progress: false
+  queue: max
 
 jobs:
   version:
@@ -177,6 +179,21 @@ jobs:
       - name: Create release
         run: |
           gh release create "$TAG" --target "$SHA" --title "$TAG" --generate-notes --latest
+
+  # Tells coralogix/documentation to sync the operator docs. The tag is created with
+  # GITHUB_TOKEN, so its push doesn't start the tag-triggered docs workflow; this calls it instead.
+  # A retry started by hand resends it when the release already exists, like telemetry-shippers.
+  docs:
+    name: Sync the documentation
+    needs: [version, github-release]
+    if: >-
+      ${{ always() && needs.version.result == 'success' &&
+      (needs.github-release.result == 'success' ||
+      (github.event_name == 'workflow_dispatch' && needs.version.outputs.released == 'true')) }}
+    uses: ./.github/workflows/dispatch-event-on-docs-change.yml
+    secrets: inherit
+    permissions:
+      contents: read
 
   # Asks telemetry-shippers to bump the coralogix-operator dependency of otel-integration; its
   # sync workflow opens that PR. Same repository_dispatch pattern as the OpenTelemetry Collector
