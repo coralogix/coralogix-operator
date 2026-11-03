@@ -493,6 +493,9 @@ func (b *builder) value(f *crField, rt *model.Type, src, want, path string) (str
 		}
 		return fmt.Sprintf("%s := make(%s, 0, len(%s))\nfor %s, %s := range %s {\n%s%s = append(%s, %s)\n}\n", v, goType, src, k, e, src, stmts, v, v, expr), v, false, nil
 	case model.Object, model.OneOf:
+		if f.object != nil && len(f.object.Fields) == 0 && len(rt.Fields) == 0 && want == "map[string]interface{}" {
+			return "", "map[string]interface{}{}", false, nil
+		}
 		fields := rt.Fields
 		name, err := b.conversion(f.object, strings.TrimPrefix(want, "*"), fields, path)
 		if err != nil {

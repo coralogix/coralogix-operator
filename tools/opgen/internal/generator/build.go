@@ -257,6 +257,12 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 			}
 		}
 		for name := range file.Enums {
+			for _, field := range r.Fields {
+				if field.Behavior == model.Computed && field.Type.Kind == model.Enum && field.Type.Schema == name {
+					// The model needs this line even though no CR field is rendered.
+					b.usedEnums[name] = true
+				}
+			}
 			if !b.usedEnums[name] {
 				return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":enums." + name, msg: "the line changes no generated code"}
 			}

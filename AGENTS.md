@@ -40,6 +40,10 @@ Do not hand-edit generated files: `zz_generated.deepcopy.go`, `config/crd/bases/
 
 When a handwritten kind becomes generated, remove its old CRD entry from `config/crd/kustomization.yaml`. Keep one entry in the generated block. Build `config/default` with Kustomize to check for duplicate resources.
 
+In opgen, an empty API object is a present value when its pointer is set. Preserve `{}` in Create and Update requests. A released CRD can use a pointer map with `MaxProperties=0`; state that shape with `emptyObject: map`.
+
+An API set can appear as a plain CR list. Use `collection: list` for that released shape. If Kubernetes identifies items by a field, add `listMapKey` for a required string item field. Preserve item order and values in the API request.
+
 When changing a CRD field, update the full path:
 
 - API type, JSON tag, validation/defaulting markers, and status fields.
