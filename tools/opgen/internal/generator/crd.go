@@ -278,6 +278,12 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 	}
 	switch t.Kind {
 	case model.List, model.Set, model.Map:
+		if change.Collection != "" {
+			if t.Kind != model.Set {
+				return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".collection", msg: "collection: list needs an API set"}
+			}
+			b.used[line] = true
+		}
 		elem, err := b.elemType(t.Elem, path, f)
 		if err != nil {
 			return nil, err
@@ -291,7 +297,16 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 			return f, nil
 		}
 		f.GoType = "[]" + elem
-		if t.Kind == model.Set {
+		if change.ListMapKey != "" {
+			if f.object == nil {
+				return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".listMapKey", msg: "a list-map needs object items"}
+			}
+			key := slices.IndexFunc(f.object.Fields, func(item *crField) bool { return item.JSON == change.ListMapKey })
+			if key < 0 || f.object.Fields[key].Optional || f.object.Fields[key].GoType != "string" {
+				return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".listMapKey", msg: "the key must be a required string item field"}
+			}
+			f.Markers = append(f.Markers, "+listType=map", "+listMapKey="+change.ListMapKey)
+		} else if t.Kind == model.Set && change.Collection == "" {
 			if f.object != nil {
 				return nil, unsupported(path, "a set of objects is not supported yet")
 			}
@@ -301,6 +316,16 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 		f.Markers = append(f.Markers, prefixed("items:", b.scalarMarkers(t.Elem, f.enum))...)
 		return f, nil
 	case model.Object, model.OneOf:
+		if change.EmptyObject != "" {
+			if t.Kind != model.Object || len(t.Fields) != 0 {
+				return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".emptyObject", msg: "emptyObject: map needs an object with no fields"}
+			}
+			f.object = &crType{}
+			f.GoType = "map[string]string"
+			f.Markers = append(f.Markers, "+kubebuilder:validation:MaxProperties=0")
+			b.used[line] = true
+			break
+		}
 		obj, err := b.object(t, path, inItem)
 		if err != nil {
 			return nil, err
@@ -573,7 +598,7 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 		}
 		obj.Fields = append(obj.Fields, field)
 	}
-	if len(obj.Fields) == 0 {
+	if len(obj.Fields) == 0 && (t.Kind != model.Object || len(t.Fields) != 0) {
 		return nil, unsupported(path, "an object without fields that a request sends is not supported yet")
 	}
 	groups := t.Groups

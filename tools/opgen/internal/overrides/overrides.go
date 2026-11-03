@@ -140,6 +140,12 @@ type Group struct {
 
 // Field is one field line.
 type Field struct {
+	// Collection keeps an API set as a released CR list.
+	Collection string `yaml:"collection"`
+	// ListMapKey identifies items when the released list is a Kubernetes list-map.
+	ListMapKey string `yaml:"listMapKey"`
+	// EmptyObject keeps the released map form of an object with no fields.
+	EmptyObject string `yaml:"emptyObject"`
 	// Skip omits a released top-level API field from the CR and requests.
 	Skip bool `yaml:"skip"`
 	// Ref makes a string id of another resource a reference (way 2): the custom resource sets
@@ -226,10 +232,10 @@ func (f *File) check() error {
 	}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
-		if !field.Skip && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 {
+		if !field.Skip && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" {
 			return fmt.Errorf("%s: the line sets no key", line)
 		}
-		if field.Skip && (field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0) {
+		if field.Skip && (field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "") {
 			return fmt.Errorf("%s.skip: skip cannot change another property of the CR field", line)
 		}
 		if field.Skip && f.Mode != ModeExisting {
@@ -237,6 +243,18 @@ func (f *File) check() error {
 		}
 		if field.Ref != nil && field.ReadOnly {
 			return fmt.Errorf("%s: ref and readOnly cannot be set together", line)
+		}
+		if field.Collection != "" && field.Collection != "list" {
+			return fmt.Errorf("%s.collection: want list", line)
+		}
+		if field.Collection != "" && f.Mode != ModeExisting {
+			return fmt.Errorf("%s.collection: a new kind follows the contract", line)
+		}
+		if field.ListMapKey != "" && (field.Collection != "list" || !validJSONName(field.ListMapKey)) {
+			return fmt.Errorf("%s.listMapKey: name an item field and set collection: list", line)
+		}
+		if field.EmptyObject != "" && (field.EmptyObject != "map" || f.Mode != ModeExisting) {
+			return fmt.Errorf("%s.emptyObject: a released empty object can use map", line)
 		}
 		if field.Required && field.Optional {
 			return fmt.Errorf("%s: required and optional cannot be set together", line)
