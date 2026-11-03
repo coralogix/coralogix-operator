@@ -79,6 +79,24 @@ $ pre-commit run gitleaks
 
 If needed, bypass with `SKIP=gitleaks git commit ...` or `git commit --no-verify`.
 
+Releasing
+---------------------
+Releases are cut on demand from `main`. The version lives in `cmd/main.go` (`OperatorVersion`) and in `charts/coralogix-operator/Chart.yaml` (`version` and `appVersion`); regular PRs leave it alone. To release, open a release PR:
+
+```sh
+$ make bump                # patch: 2.17.0 -> 2.17.1
+$ make bump BUMP=minor     # 2.17.0 -> 2.18.0
+$ make bump BUMP=major     # 2.17.0 -> 3.0.0
+```
+
+It needs a clean working tree. It branches `prepare-vX.Y.Z` from `origin/main`, bumps the version, commits, pushes, opens the PR with `gh`, then switches back to your branch. Without `gh`, open the PR yourself. Don't turn on auto-merge: `main` requires no checks, so it would merge on any approval while tests still run.
+
+The `Release PR Approval` workflow approves the PR as `github-actions[bot]` when it changes only the version lines and every check on it has passed, so it needs no human review. It then checks CI once more, merges the PR, and starts `Release`. `main` requires no status checks, so this workflow is what waits for CI; it turns off auto-merge on a release PR that has it. If a check fails, re-run it: the approval follows when it passes, and a check that fails or runs again after the approval withdraws it.
+
+Merging the release PR runs the `Release` workflow: it pushes the `coralogixrepo/coralogix-operator` image (also tagged `latest`), publishes the chart, and creates the GitHub release with the `vX.Y.Z` tag and notes for every PR since the previous one. Before publishing, `Release` waits for every check on the release PR's last commit to pass, so a release PR merged by hand while tests run publishes only after they pass; a failed check stops the release. If a run fails, re-run its failed jobs, or run `Release` on `main` again: it releases the version from the release PR's commit, not from the newest commit on `main`. A later merge doesn't release the version from its own commit. `make bump` and the `Version Bump` check refuse the next version while the one on `main` has no tag, so a failed release is retried before it can be skipped.
+
+If another release merges before yours, close your release PR and run `make bump` again: it starts from the new `main`. To bump the version in your working tree without opening a PR, run `make bump-version`.
+
 Running E2E Tests
 ---------------------
 The test files are located at [./tests/e2e/](./tests/e2e).

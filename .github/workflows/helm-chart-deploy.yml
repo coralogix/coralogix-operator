@@ -7,6 +7,17 @@ on:
       - release-*
     paths:
       - charts/coralogix-operator/Chart.yaml
+  # Called by the Release workflow after the image is pushed.
+  workflow_call:
+    inputs:
+      ref:
+        description: Commit to package the chart from.
+        required: true
+        type: string
+      version:
+        description: Chart version the release expects, for example 2.16.1.
+        required: true
+        type: string
 
 # The chart is uploaded to Artifactory using a short-lived token obtained via GitHub OIDC
 # (id-token: write). contents: read is all the workflow token itself needs.
@@ -22,8 +33,40 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Check who released
+        # A run started by hand or by a push must come from someone in .github/RELEASERS on main.
+        # The Release workflow checks before it calls this with a version.
+        if: ${{ !inputs.version }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # github.actor started the first run; a re-run keeps it and sets triggering_actor to
+          # whoever re-ran. Both must be listed, so a re-run can't pass someone else's run.
+          ACTORS: ${{ github.actor }} ${{ github.triggering_actor }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/contents/.github/RELEASERS?ref=main" \
+            -H "Accept: application/vnd.github.raw" > "$RUNNER_TEMP/RELEASERS"
+          # Not piped into grep -q: under pipefail, grep stopping early can fail sed.
+          releasers=$(sed -e 's/#.*//' -e 's/[[:space:]]//g' "$RUNNER_TEMP/RELEASERS")
+          for actor in $ACTORS; do
+            if ! grep -qixF "$actor" <<< "$releasers"; then
+              echo "::error::$actor is not in .github/RELEASERS; only coralogix/team-eco-system releases"
+              exit 1
+            fi
+          done
       - name: Checkout
         uses: actions/checkout@v2.4.0
+        with:
+          ref: ${{ inputs.ref }}
+      - name: Check chart version matches the release
+        if: ${{ inputs.version }}
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          chart_version=$(yq eval '.version' charts/coralogix-operator/Chart.yaml)
+          if [ "$chart_version" != "$RELEASE_VERSION" ]; then
+            echo "::error::Chart.yaml version $chart_version does not match release version $RELEASE_VERSION"
+            exit 1
+          fi
       - name: Set up JFrog CLI
         # Exchanges this job's GitHub OIDC JWT for a short-lived Artifactory token,
         # replacing the rotated JFROG_USER / JFROG_PASSWORD secret pair. The action

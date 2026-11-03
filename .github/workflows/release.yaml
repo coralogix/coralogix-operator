@@ -1,0 +1,249 @@
+name: Release
+
+# Releases a merge to main whose version is not released yet: the version in
+# charts/coralogix-operator/Chart.yaml, which a release PR from `make bump` raises.
+# Publishes the image (also as latest), the chart to JFrog, and a GitHub release that creates
+# the vX.Y.Z tag.
+# Then asks telemetry-shippers to bump the operator chart in otel-integration.
+#
+# The tag is created with GITHUB_TOKEN, which does not start other workflows, so the image and
+# chart workflows are called here instead of being triggered by it. Any other merge
+# keeps a released version and publishes nothing; it ships with the next release PR.
+#
+# A version is released from the merge commit of the release PR that set it, and from no other
+# commit. If that release fails before its tag exists, a later merge does not release the
+# version again from its own commit; a retry started by hand releases the release PR's commit.
+on:
+  push:
+    branches:
+      - main
+  # Retries the release of the version on main from its release PR's commit after a failed run,
+  # or resends the telemetry-shippers notification.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+# One release at a time, and every waiting run is kept (queue: max): by default a newer run
+# replaces a waiting one, so an ordinary merge right after a release PR would drop the release
+# PR's run, and the ordinary merge's run doesn't release that version from its own commit.
+concurrency:
+  group: release
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  version:
+    name: Read version
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      actions: read
+      checks: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      released: ${{ steps.version.outputs.released }}
+      publish: ${{ steps.version.outputs.publish }}
+      sha: ${{ steps.version.outputs.sha }}
+      pr: ${{ steps.version.outputs.pr }}
+    steps:
+      # Full history and tags, so the tag lookup below is local and cannot fail on the network.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read version
+        id: version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          chart=charts/coralogix-operator/Chart.yaml
+          version=$(yq eval '.version' "$chart")
+          tag="v$version"
+          if [[ ! "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "::error::Chart.yaml version '$version' is not X.Y.Z without leading zeros"
+            exit 1
+          fi
+          # The commit that set this version: the newest commit on main's first-parent line whose
+          # parent has another version.
+          commits=$(git rev-list --first-parent HEAD -- "$chart")
+          first=""
+          for commit in $commits; do
+            parent=$(git show "$commit^:$chart" 2> /dev/null | yq eval '.version' - || true)
+            if [[ "$parent" != "$version" ]]; then first=$commit; break; fi
+          done
+          if [[ -z "$first" ]]; then echo "::error::No commit on main sets version $version"; exit 1; fi
+          sha=$first
+          pr=""
+          publish=false
+          if git rev-parse -q --verify "refs/tags/$tag" > /dev/null; then
+            released=true
+            echo "$tag is already released; nothing to publish."
+          else
+            # main has no required checks, so a merge can skip the Version Bump check. An
+            # untagged version below the newest release would otherwise overwrite latest.
+            newest=$(git tag -l 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n1 || true)
+            if [[ -n "$newest" && "$(printf '%s\n%s\n' "$tag" "$newest" | sort -V | tail -n1)" != "$tag" ]]; then
+              echo "::error::$tag is below the newest release $newest; raise the version with 'make bump'"
+              exit 1
+            fi
+            # The release commit is the final commit of the PR that set the version, its merge
+            # commit, not the first commit that changed it: a rebase merge of a PR with several
+            # commits puts each of them on main, and only the last has the whole release.
+            merge=$(gh api "repos/$GH_REPO/commits/$first/pulls" \
+              --jq '[.[] | select(.merged_at != null and .base.ref == "main")][0] // empty | "\(.number) \(.merge_commit_sha)"')
+            if [[ -z "$merge" ]]; then
+              echo "::error::$first set version $version but is not part of a merged PR; releases come from 'make bump' PRs"
+              exit 1
+            fi
+            read -r pr sha <<< "$merge"
+            # Not piped into grep -q: under pipefail, grep stopping early fails rev-list.
+            first_parent=$(git rev-list --first-parent HEAD)
+            if ! grep -qxF "$sha" <<< "$first_parent" ||
+              ! git merge-base --is-ancestor "$first" "$sha" ||
+              [[ "$(git show "$sha:$chart" | yq eval '.version' -)" != "$version" ]]; then
+              echo "::error::The merge commit $sha of PR #$pr is not on main after $first with version $version"
+              exit 1
+            fi
+            released=false
+            if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch || "$sha" == "$GITHUB_SHA" ]]; then
+              publish=true
+              echo "Releasing $tag from $sha"
+            else
+              echo "::warning::$tag is not released: its release from $sha failed. This merge doesn't release it from its own commit. To retry, run the Release workflow from the Actions tab; it releases $sha."
+            fi
+          fi
+          {
+            echo "version=$version"
+            echo "tag=$tag"
+            echo "released=$released"
+            echo "publish=$publish"
+            echo "sha=$sha"
+            echo "pr=$pr"
+          } >> "$GITHUB_OUTPUT"
+
+      # Only the people in .github/RELEASERS release, also when a release PR is merged by hand or
+      # this workflow is started by hand: the PR that set the version must come from them. The
+      # list is read at the PR's base, so a PR can't add its own author.
+      - name: Check who released
+        if: ${{ steps.version.outputs.publish == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR: ${{ steps.version.outputs.pr }}
+        run: scripts/check-releaser.sh "$PR"
+
+      # main requires no checks, so a release PR can merge while one still runs: by hand, or when
+      # a re-run starts right after Release PR Approval's last look. Nothing is published until
+      # every check on the release PR's last commit has passed, and a failed check stops it.
+      - name: Wait for the release PR's CI
+        if: ${{ steps.version.outputs.publish == 'true' }}
+        timeout-minutes: 240
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR: ${{ steps.version.outputs.pr }}
+        run: |
+          head=$(gh pr view "$PR" --json headRefOid --jq .headRefOid)
+          while true; do
+            status=0
+            scripts/check-release-ci.sh "$head" || status=$?
+            case "$status" in
+              0) break ;;
+              2 | 3) sleep 60 ;;
+              *)
+                echo "::error::A check on release PR #$PR failed. Re-run it, and once it passes, run Release from the Actions tab."
+                exit 1
+                ;;
+            esac
+          done
+
+  image:
+    name: Push image
+    needs: version
+    if: ${{ needs.version.outputs.publish == 'true' }}
+    uses: ./.github/workflows/container.yaml
+    with:
+      ref: ${{ needs.version.outputs.sha }}
+      tag: ${{ needs.version.outputs.tag }}
+    secrets: inherit
+    permissions:
+      contents: read
+
+  chart:
+    name: Publish chart
+    needs: [version, image]
+    uses: ./.github/workflows/helm-chart-deploy.yml
+    with:
+      ref: ${{ needs.version.outputs.sha }}
+      version: ${{ needs.version.outputs.version }}
+    permissions:
+      contents: read
+      id-token: write
+
+  github-release:
+    name: Create GitHub release
+    needs: [version, chart]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      TAG: ${{ needs.version.outputs.tag }}
+      SHA: ${{ needs.version.outputs.sha }}
+    steps:
+      - name: Create release
+        run: |
+          gh release create "$TAG" --target "$SHA" --title "$TAG" --generate-notes --latest
+
+  # Tells coralogix/documentation to sync the operator docs. The tag is created with
+  # GITHUB_TOKEN, so its push doesn't start the tag-triggered docs workflow; this calls it instead.
+  # A retry started by hand resends it when the release already exists, like telemetry-shippers.
+  docs:
+    name: Sync the documentation
+    needs: [version, github-release]
+    if: >-
+      ${{ always() && needs.version.result == 'success' &&
+      (needs.github-release.result == 'success' ||
+      (github.event_name == 'workflow_dispatch' && needs.version.outputs.released == 'true')) }}
+    uses: ./.github/workflows/dispatch-event-on-docs-change.yml
+    secrets: inherit
+    permissions:
+      contents: read
+
+  # Asks telemetry-shippers to bump the coralogix-operator dependency of otel-integration; its
+  # sync workflow opens that PR. Same repository_dispatch pattern as the OpenTelemetry Collector
+  # chart release.
+  #
+  # A retry started by hand resends it when the release already exists, in case only this job
+  # failed: the release jobs above are skipped then, so this one doesn't wait for them.
+  telemetry-shippers:
+    name: Notify telemetry-shippers
+    needs: [version, github-release]
+    if: >-
+      ${{ always() && needs.version.result == 'success' &&
+      (needs.github-release.result == 'success' ||
+      (github.event_name == 'workflow_dispatch' && needs.version.outputs.released == 'true')) }}
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      VERSION: ${{ needs.version.outputs.version }}
+      RELEASE_URL: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ needs.version.outputs.tag }}
+    steps:
+      - name: Dispatch the release
+        run: |
+          gh api repos/coralogix/telemetry-shippers/dispatches \
+            -f event_type=coralogix-operator-release \
+            -f "client_payload[version]=$VERSION" \
+            -f "client_payload[release_url]=$RELEASE_URL"
