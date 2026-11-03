@@ -25,8 +25,10 @@ latest=$(sort -t $'\t' -k1,1 -k2,2r <<< "$runs" | awk -F'\t' 'NF && !seen[$1]++'
 checks=$(gh api --paginate "repos/$GH_REPO/commits/$sha/check-runs?per_page=100" \
   --jq '.check_runs[] | select(.app.slug != "github-actions") | [.name, "", .status, (.conclusion // "")] | @tsv')
 
+# Not piped into grep -q: under pipefail, grep stopping early can fail the command before it.
+started=$(cut -f1 <<< "$latest")
 for workflow in "${required[@]}"; do
-  if ! cut -f1 <<< "$latest" | grep -qxF "$workflow"; then
+  if ! grep -qxF "$workflow" <<< "$started"; then
     echo "Waiting: workflow '$workflow' has not started on $sha"
     exit 1
   fi

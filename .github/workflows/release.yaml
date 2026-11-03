@@ -10,8 +10,8 @@ name: Release
 # chart workflows are called here instead of being triggered by it. Any other merge
 # keeps a released version and publishes nothing; it ships with the next release PR.
 #
-# A version is released from the commit that set it, the merge of its release PR, and from no
-# other commit. If that release fails before its tag exists, a later merge does not release the
+# A version is released from the merge commit of the release PR that set it, and from no other
+# commit. If that release fails before its tag exists, a later merge does not release the
 # version again from its own commit; a retry started by hand releases the release PR's commit.
 on:
   push:
@@ -48,6 +48,7 @@ jobs:
       released: ${{ steps.version.outputs.released }}
       publish: ${{ steps.version.outputs.publish }}
       sha: ${{ steps.version.outputs.sha }}
+      pr: ${{ steps.version.outputs.pr }}
     steps:
       # Full history and tags, so the tag lookup below is local and cannot fail on the network.
       - name: Checkout repository
@@ -57,6 +58,9 @@ jobs:
 
       - name: Read version
         id: version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           chart=charts/coralogix-operator/Chart.yaml
@@ -66,15 +70,17 @@ jobs:
             echo "::error::Chart.yaml version '$version' is not X.Y.Z without leading zeros"
             exit 1
           fi
-          # The release commit: the newest commit on main's first-parent line whose parent has
-          # another version. main is linear, so that is the merge of the release PR.
+          # The commit that set this version: the newest commit on main's first-parent line whose
+          # parent has another version.
           commits=$(git rev-list --first-parent HEAD -- "$chart")
-          sha=""
+          first=""
           for commit in $commits; do
             parent=$(git show "$commit^:$chart" 2> /dev/null | yq eval '.version' - || true)
-            if [[ "$parent" != "$version" ]]; then sha=$commit; break; fi
+            if [[ "$parent" != "$version" ]]; then first=$commit; break; fi
           done
-          if [[ -z "$sha" ]]; then echo "::error::No commit on main sets version $version"; exit 1; fi
+          if [[ -z "$first" ]]; then echo "::error::No commit on main sets version $version"; exit 1; fi
+          sha=$first
+          pr=""
           publish=false
           if git rev-parse -q --verify "refs/tags/$tag" > /dev/null; then
             released=true
@@ -85,6 +91,24 @@ jobs:
             newest=$(git tag -l 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n1 || true)
             if [[ -n "$newest" && "$(printf '%s\n%s\n' "$tag" "$newest" | sort -V | tail -n1)" != "$tag" ]]; then
               echo "::error::$tag is below the newest release $newest; raise the version with 'make bump'"
+              exit 1
+            fi
+            # The release commit is the final commit of the PR that set the version, its merge
+            # commit, not the first commit that changed it: a rebase merge of a PR with several
+            # commits puts each of them on main, and only the last has the whole release.
+            merge=$(gh api "repos/$GH_REPO/commits/$first/pulls" \
+              --jq '[.[] | select(.merged_at != null and .base.ref == "main")][0] // empty | "\(.number) \(.merge_commit_sha)"')
+            if [[ -z "$merge" ]]; then
+              echo "::error::$first set version $version but is not part of a merged PR; releases come from 'make bump' PRs"
+              exit 1
+            fi
+            read -r pr sha <<< "$merge"
+            # Not piped into grep -q: under pipefail, grep stopping early fails rev-list.
+            first_parent=$(git rev-list --first-parent HEAD)
+            if ! grep -qxF "$sha" <<< "$first_parent" ||
+              ! git merge-base --is-ancestor "$first" "$sha" ||
+              [[ "$(git show "$sha:$chart" | yq eval '.version' -)" != "$version" ]]; then
+              echo "::error::The merge commit $sha of PR #$pr is not on main after $first with version $version"
               exit 1
             fi
             released=false
@@ -101,25 +125,19 @@ jobs:
             echo "released=$released"
             echo "publish=$publish"
             echo "sha=$sha"
+            echo "pr=$pr"
           } >> "$GITHUB_OUTPUT"
 
       # Only the people in .github/RELEASERS release, also when a release PR is merged by hand or
-      # this workflow is started by hand: the release commit's PR must come from them. The list is
-      # read at the PR's base, so a PR can't add its own author.
+      # this workflow is started by hand: the PR that set the version must come from them. The
+      # list is read at the PR's base, so a PR can't add its own author.
       - name: Check who released
         if: ${{ steps.version.outputs.publish == 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
-          SHA: ${{ steps.version.outputs.sha }}
-        run: |
-          pr=$(gh api "repos/$GH_REPO/commits/$SHA/pulls" \
-            --jq '[.[] | select(.merged_at != null and .base.ref == "main")][0].number // empty')
-          if [[ -z "$pr" ]]; then
-            echo "::error::$SHA is not the merge of a PR; releases come from 'make bump' PRs"
-            exit 1
-          fi
-          scripts/check-releaser.sh "$pr"
+          PR: ${{ steps.version.outputs.pr }}
+        run: scripts/check-releaser.sh "$PR"
 
   image:
     name: Push image

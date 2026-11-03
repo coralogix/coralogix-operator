@@ -56,7 +56,8 @@ for line in "${added[@]}"; do
   fi
 done
 [[ -n "$new_version" ]] || fail "no new X.Y.Z version (without leading zeros) in $chart"
-if ! printf '%s\n' "${removed[@]}" | grep -qx "version: *$base_version"; then
+removed_lines=$(printf '%s\n' "${removed[@]}")
+if ! grep -qx "version: *$base_version" <<< "$removed_lines"; then
   fail "it doesn't start from $base_version on the base branch; run 'make bump' again"
 fi
 if [[ "$new_version" == "$base_version" ||

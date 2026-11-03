@@ -26,7 +26,8 @@ git fetch origin main
 # CI refuses a release PR from anyone else (scripts/check-releaser.sh); this only says so early.
 if command -v gh > /dev/null && login=$(gh api user --jq .login 2> /dev/null) &&
   releasers=$(git show origin/main:.github/RELEASERS 2> /dev/null); then
-  if ! sed -e 's/#.*//' -e 's/[[:space:]]//g' <<< "$releasers" | grep -qixF "$login"; then
+  listed=$(sed -e 's/#.*//' -e 's/[[:space:]]//g' <<< "$releasers")
+  if ! grep -qixF "$login" <<< "$listed"; then
     echo "error: only the people in .github/RELEASERS (coralogix/team-eco-system) release the operator, and $login is not listed" >&2
     exit 1
   fi
