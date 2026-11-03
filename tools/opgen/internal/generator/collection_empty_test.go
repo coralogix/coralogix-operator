@@ -108,15 +108,24 @@ func TestSetAsReleasedList(t *testing.T) {
 
 func TestCollectionOverrideNeedsASetAndAValidKey(t *testing.T) {
 	for _, tt := range []struct {
-		name  string
-		field overrides.Field
-		typ   *model.Type
+		name     string
+		field    overrides.Field
+		typ      *model.Type
+		keyIsRef bool
 	}{
 		{name: "list is not a set", field: overrides.Field{Collection: "list"}, typ: &model.Type{Kind: model.List, Elem: &model.Type{Kind: model.String}}},
 		{name: "scalar has no key", field: overrides.Field{Collection: "list", ListMapKey: "entityType"}, typ: &model.Type{Kind: model.Set, Elem: &model.Type{Kind: model.String}}},
+		{name: "reference is not a string key", field: overrides.Field{Collection: "list", ListMapKey: "entityType"}, typ: &model.Type{Kind: model.Set, Elem: &model.Type{Kind: model.Object, Schema: "Item", Fields: []*model.Field{{
+			Name: "entityType", Type: &model.Type{Kind: model.String}, Behavior: model.Normal, Create: &model.Attrs{Required: true},
+		}}}}, keyIsRef: true},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			b := testBuilder(tt.field)
+			if tt.keyIsRef {
+				b.file.Types["Item"] = overrides.Type{Fields: map[string]overrides.Field{
+					"entityType": {Name: "entityType", Ref: &overrides.Ref{Kind: "Thing"}},
+				}}
+			}
 			_, err := b.field("ThingConfig", "ThingConfig", "items", "", tt.typ, false, "spec.items", false)
 			if err == nil || !strings.Contains(err.Error(), "behavior-overrides.yaml") || !strings.Contains(err.Error(), "collection") && !strings.Contains(err.Error(), "listMapKey") {
 				t.Fatalf("want an invalid override, got %v", err)

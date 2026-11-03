@@ -302,7 +302,7 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 				return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".listMapKey", msg: "a list-map needs object items"}
 			}
 			key := slices.IndexFunc(f.object.Fields, func(item *crField) bool { return item.JSON == change.ListMapKey })
-			if key < 0 || f.object.Fields[key].Optional || f.object.Fields[key].typ.Kind != model.String {
+			if key < 0 || f.object.Fields[key].Optional || f.object.Fields[key].GoType != "string" {
 				return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".listMapKey", msg: "the key must be a required string item field"}
 			}
 			f.Markers = append(f.Markers, "+listType=map", "+listMapKey="+change.ListMapKey)
