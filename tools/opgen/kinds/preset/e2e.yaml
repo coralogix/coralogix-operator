@@ -18,11 +18,16 @@ upgrade:
   field: description
   value: Preset updated after the operator upgrade
 values:
-  connectorType: slack
+  connectorType: genericHttps
   entityType: alerts
-  parentId: preset_system_slack_alerts_basic
+  parentId: preset_system_generic_https_alerts_empty
+  attachmentConfig: ENABLED
   configOverrides.conditionType:
     matchEntityTypeAndSubType:
-      entitySubType: logsImmediateTriggered
-  configOverrides.messageConfig.fields.fieldName: title
-  configOverrides.messageConfig.fields.template: 'Preset: {{alertDef.name}}'
+      entitySubType: logsImmediateResolved
+  configOverrides.payloadType: generic_https_default
+  configOverrides.messageConfig.fields:
+    - fieldName: headers
+      template: '{}'
+    - fieldName: body
+      template: '{ "groupingKey": "{{alert.groupingKey}}", "status": "{{alert.status}}", "groups": "{{alert.groups}}" }'

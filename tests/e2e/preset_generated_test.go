@@ -41,33 +41,37 @@ import (
 // The full spec sets every field. The minimal spec sets only the required fields.
 const (
 	presetFullSpec = `{
-  "attachmentConfig": "AUTO",
+  "attachmentConfig": "ENABLED",
   "configOverrides": [
     {
       "conditionType": {
         "matchEntityTypeAndSubType": {
-          "entitySubType": "logsImmediateTriggered"
+          "entitySubType": "logsImmediateResolved"
         }
       },
       "messageConfig": {
         "fields": [
           {
-            "fieldName": "title",
-            "template": "Preset: {{alertDef.name}}"
+            "fieldName": "headers",
+            "template": "{}"
+          },
+          {
+            "fieldName": "body",
+            "template": "{ \"groupingKey\": \"{{alert.groupingKey}}\", \"status\": \"{{alert.status}}\", \"groups\": \"{{alert.groups}}\" }"
           }
         ]
       },
-      "payloadType": "sample-payload-type"
+      "payloadType": "generic_https_default"
     }
   ],
-  "connectorType": "slack",
+  "connectorType": "genericHttps",
   "description": "sample-description",
   "entityType": "alerts",
   "name": "sample-name",
-  "parentId": "preset_system_slack_alerts_basic"
+  "parentId": "preset_system_generic_https_alerts_empty"
 }`
 	presetMinimalSpec = `{
-  "connectorType": "slack",
+  "connectorType": "genericHttps",
   "description": "sample-description",
   "entityType": "alerts",
   "name": "sample-name"

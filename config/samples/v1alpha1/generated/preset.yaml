@@ -5,18 +5,21 @@ kind: Preset
 metadata:
   name: preset-sample
 spec:
-  attachmentConfig: AUTO
+  attachmentConfig: ENABLED
   configOverrides:
     - conditionType:
         matchEntityTypeAndSubType:
-          entitySubType: logsImmediateTriggered
+          entitySubType: logsImmediateResolved
       messageConfig:
         fields:
-          - fieldName: title
-            template: 'Preset: {{alertDef.name}}'
-      payloadType: sample-payload-type
-  connectorType: slack
+          - fieldName: headers
+            template: '{}'
+          - fieldName: body
+            template: '{ "groupingKey": "{{alert.groupingKey}}", "status": "{{alert.status}}",
+              "groups": "{{alert.groups}}" }'
+      payloadType: generic_https_default
+  connectorType: genericHttps
   description: sample-description
   entityType: alerts
   name: sample-name
-  parentId: preset_system_slack_alerts_basic
+  parentId: preset_system_generic_https_alerts_empty

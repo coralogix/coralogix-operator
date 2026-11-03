@@ -74,6 +74,7 @@ cd tools/opgen && go run ./cmd/opgen check \
 - Do not hand-edit generated files. Change the contract or the generator, and run `make codegen`.
 - `tools/opgen/kinds/<kind>/e2e.yaml` holds only the e2e values that the contract cannot state.
 - Choose generated sample values that pass admission on the oldest Kubernetes version in CI. A selected oneOf arm with an empty object can fail CEL validation on older versions.
+- Use values from a working API fixture for strings that name server-side resources, such as output schemas. The API contract can validate their syntax but cannot prove they exist.
 - For a released kind, `e2e.yaml` may also fix the spec accepted by an old chart. Opgen generates its upgrade check. Keep that old spec fixed when the current API gains fields. The current generated e2e test gets the new fields.
 - The generated e2e update changes a mutable scalar outside a oneOf. It tries top-level fields first, then fields inside root `groups`. An `e2e.yaml` `update.field` inside a root group uses a dotted CR JSON path, such as `routing.timeout`.
 - A field with a line in `behavior-overrides.yaml` keeps its released behavior. A field without a line follows the contract. `TestReleasedKindTakesANewFieldWithoutOverrides` adds a field to the pinned contract of a released kind and checks that it reaches the type, the conversions, the sample, and the e2e test with no new line. A key lands with the first kind that needs it, together with a golden fixture.
