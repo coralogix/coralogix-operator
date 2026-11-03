@@ -5,7 +5,8 @@
 # Usage: scripts/release-pr.sh [patch|minor|major]   (default: patch)
 #
 # Run it through `make bump BUMP=...`. Needs a clean working tree. With `gh` installed it
-# opens the PR and turns on auto-merge for it; otherwise it prints what to open.
+# opens the PR; otherwise it prints what to open. Release PR Approval merges it once every check
+# has passed.
 set -euo pipefail
 
 part="${1:-patch}"
@@ -52,7 +53,7 @@ git checkout --quiet "$start"
 
 if ! command -v gh > /dev/null; then
   echo "Branch $branch is pushed. Open the PR against main: $title"
-  echo "Then turn on auto-merge (squash) for it, so it merges once Release PR Approval approves it."
+  echo "Release PR Approval merges it once every check on it has passed."
   exit 0
 fi
 
@@ -64,10 +65,6 @@ else
     --body "Releases $version. Merging this PR publishes the image, the Helm chart and the GitHub release."
 fi
 
-# Auto-merge with your token, not the bot's: GitHub starts no workflows for a merge made with
-# GITHUB_TOKEN, so Release would not run. The PR then merges once it is approved.
-if gh pr merge "$branch" --auto --squash; then
-  echo "Auto-merge is on: the PR merges once Release PR Approval approves it, and the merge releases $version."
-else
-  echo "warning: could not turn on auto-merge; merge the PR yourself once it is approved." >&2
-fi
+# No auto-merge: main requires no checks, so auto-merge would merge on any approval while tests
+# still run. Release PR Approval merges the PR once every check has passed, then starts Release.
+echo "Release PR Approval merges the PR once every check on it has passed; that releases $version."

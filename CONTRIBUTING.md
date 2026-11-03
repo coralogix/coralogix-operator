@@ -89,9 +89,9 @@ $ make bump BUMP=minor     # 2.17.0 -> 2.18.0
 $ make bump BUMP=major     # 2.17.0 -> 3.0.0
 ```
 
-It needs a clean working tree. It branches `prepare-vX.Y.Z` from `origin/main`, bumps the version, commits, pushes, opens the PR with `gh` and turns on auto-merge (squash) for it, then switches back to your branch. Without `gh`, open the PR and turn on auto-merge yourself.
+It needs a clean working tree. It branches `prepare-vX.Y.Z` from `origin/main`, bumps the version, commits, pushes, opens the PR with `gh`, then switches back to your branch. Without `gh`, open the PR yourself. Don't turn on auto-merge: `main` requires no checks, so it would merge on any approval while tests still run.
 
-The `Release PR Approval` workflow approves the PR as `github-actions[bot]` when it changes only the version lines and every check on it has passed, so it needs no human review, and auto-merge then merges it. `main` requires no status checks, so the approval is what waits for CI. If a check fails, re-run it: the approval follows when it passes, and a check that fails or runs again after the approval withdraws it.
+The `Release PR Approval` workflow approves the PR as `github-actions[bot]` when it changes only the version lines and every check on it has passed, so it needs no human review. It then checks CI once more, merges the PR, and starts `Release`. `main` requires no status checks, so this workflow is what waits for CI; it turns off auto-merge on a release PR that has it. If a check fails, re-run it: the approval follows when it passes, and a check that fails or runs again after the approval withdraws it.
 
 Merging the release PR runs the `Release` workflow: it pushes the `coralogixrepo/coralogix-operator` image (also tagged `latest`), publishes the chart, and creates the GitHub release with the `vX.Y.Z` tag and notes for every PR since the previous one. If a run fails, re-run its failed jobs, or run `Release` on `main` again: it releases the version from the release PR's commit, not from the newest commit on `main`. A later merge doesn't release the version from its own commit.
 
