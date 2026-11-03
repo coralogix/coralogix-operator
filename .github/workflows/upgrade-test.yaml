@@ -30,6 +30,10 @@ concurrency:
   # remote resources leak and pollute the shared team. Let the old run finish and queue behind
   # it instead.
   cancel-in-progress: false
+  # Keep every waiting run (the default keeps one, and a newer run cancels it). A push starts all
+  # four suites at once, so without this some are cancelled, and a release PR needs all four to
+  # pass (scripts/check-release-ci.sh).
+  queue: max
 
 jobs:
   upgrade-test:
