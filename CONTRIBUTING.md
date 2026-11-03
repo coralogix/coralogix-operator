@@ -91,9 +91,9 @@ $ make bump BUMP=major     # 2.17.0 -> 3.0.0
 
 It needs a clean working tree. It branches `prepare-vX.Y.Z` from `origin/main`, bumps the version, commits, pushes, opens the PR with `gh` and turns on auto-merge (squash) for it, then switches back to your branch. Without `gh`, open the PR and turn on auto-merge yourself.
 
-The `Release PR Approval` workflow approves the PR as `github-actions[bot]` when it changes only the version lines, so it needs no human review, and auto-merge then merges it. `main` requires no status checks, so auto-merge doesn't wait for CI.
+The `Release PR Approval` workflow approves the PR as `github-actions[bot]` when it changes only the version lines and every check on it has passed, so it needs no human review, and auto-merge then merges it. `main` requires no status checks, so the approval is what waits for CI. If a check fails, re-run it: the approval follows when it passes, and a check that fails or runs again after the approval withdraws it.
 
-Merging the release PR runs the `Release` workflow: it pushes the `coralogixrepo/coralogix-operator` image (also tagged `latest`), publishes the chart, and creates the GitHub release with the `vX.Y.Z` tag and notes for every PR since the previous one. If a run fails, re-run its failed jobs, or run `Release` on `main` again.
+Merging the release PR runs the `Release` workflow: it pushes the `coralogixrepo/coralogix-operator` image (also tagged `latest`), publishes the chart, and creates the GitHub release with the `vX.Y.Z` tag and notes for every PR since the previous one. If a run fails, re-run its failed jobs, or run `Release` on `main` again: it releases the version from the release PR's commit, not from the newest commit on `main`. A later merge doesn't release the version from its own commit.
 
 If another release merges before yours, close your release PR and run `make bump` again: it starts from the new `main`. To bump the version in your working tree without opening a PR, run `make bump-version`.
 

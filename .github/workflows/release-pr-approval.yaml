@@ -2,11 +2,17 @@ name: Release PR Approval
 
 # Approves a release PR from `make bump` as github-actions[bot], so it needs no human
 # review: it only re-publishes code already reviewed on main. Other PRs are left alone. Only a
-# release PR from someone in .github/RELEASERS is approved (scripts/check-releaser.sh).
+# release PR from someone in .github/RELEASERS is approved (scripts/check-releaser.sh), and only
+# once CI on its latest commit has passed (scripts/check-release-ci.sh): main has no required
+# checks, so auto-merge, which `make bump` turns on, merges as soon as the PR is approved.
 #
-# pull_request_target runs this file and the check script from main, never from the PR, so a
-# PR cannot change what gets approved. Nothing from the PR is checked out or run; the diff is
-# read through the API.
+# It runs when the release PR changes and whenever a PR workflow finishes, so the approval
+# follows the last check. A check that fails or runs again withdraws the approval until every
+# check passes, and approvals of an older commit are dismissed.
+#
+# Both triggers run this file and the check scripts from main, never from the PR, so a PR cannot
+# change what gets approved. Nothing from the PR is checked out or run; the diff is read through
+# the API.
 #
 # The approval counts only while "Allow GitHub Actions to create and approve pull requests" is
 # enabled for the repository.
@@ -15,25 +21,49 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
     branches:
       - main
+  # Every workflow that a release PR starts; scripts/check-release-ci.sh lists the same ones.
+  workflow_run:
+    workflows:
+      - Container
+      - crd-validation
+      - e2e-tests
+      - helm-e2e-tests
+      - helm-sync-check
+      - integration-tests
+      - sanity
+      - unit-tests
+      - upgrade-test
+      - Version Bump
+    types: [completed]
 
 permissions: {}
 
 jobs:
   approve:
-    name: Approve release PR
+    # Its own check run is named "Release PR: ...", which no check script waits for.
+    name: "Release PR: approve"
     if: >-
-      startsWith(github.head_ref, 'prepare-v') &&
-      github.event.pull_request.head.repo.full_name == github.repository &&
-      !github.event.pull_request.draft
+      (github.event_name == 'pull_request_target' &&
+       startsWith(github.head_ref, 'prepare-v') &&
+       github.event.pull_request.head.repo.full_name == github.repository) ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.event == 'pull_request' &&
+       startsWith(github.event.workflow_run.head_branch, 'prepare-v') &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: ubuntu-latest
+    # Approving is idempotent, so a newer event may cancel a running check.
+    concurrency:
+      group: release-pr-approval-${{ github.head_ref || github.event.workflow_run.head_branch }}
+      cancel-in-progress: true
     permissions:
       contents: read
       pull-requests: write
+      actions: read
+      checks: read
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GH_REPO: ${{ github.repository }}
-      PR: ${{ github.event.pull_request.number }}
-      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      HEAD_REF: ${{ github.head_ref || github.event.workflow_run.head_branch }}
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
@@ -41,20 +71,86 @@ jobs:
           ref: main
           persist-credentials: false
 
+      - id: pr
+        name: Find the release PR
+        run: |
+          set -euo pipefail
+          pr=$(gh pr list --head "$HEAD_REF" --base main --state open \
+            --json number,headRefOid,isDraft --jq '.[0] // empty')
+          if [[ -z "$pr" ]]; then echo "::notice::No open PR from $HEAD_REF"; exit 0; fi
+          jq -r '"number=\(.number)\nsha=\(.headRefOid)\ndraft=\(.isDraft)"' <<< "$pr" >> "$GITHUB_OUTPUT"
+
+      - name: Dismiss approvals of older commits
+        if: ${{ steps.pr.outputs.number != '' }}
+        env:
+          PR: ${{ steps.pr.outputs.number }}
+          HEAD_SHA: ${{ steps.pr.outputs.sha }}
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/$GH_REPO/pulls/$PR/reviews" \
+            --jq ".[] | select(.user.login == \"github-actions[bot]\" and .state == \"APPROVED\" and .commit_id != \"$HEAD_SHA\") | .id" |
+            while read -r id; do
+              gh api -X PUT "repos/$GH_REPO/pulls/$PR/reviews/$id/dismissals" \
+                -f message="Superseded by a new push; re-checking the release PR." -f event=DISMISS > /dev/null
+            done
+
       # Only the people in .github/RELEASERS release: the author and every commit's signer.
       - name: Check who opened the release PR
+        if: ${{ steps.pr.outputs.number != '' && steps.pr.outputs.draft == 'false' }}
+        env:
+          PR: ${{ steps.pr.outputs.number }}
         run: scripts/check-releaser.sh "$PR"
 
       - name: Check the diff
+        if: ${{ steps.pr.outputs.number != '' && steps.pr.outputs.draft == 'false' }}
+        env:
+          HEAD_SHA: ${{ steps.pr.outputs.sha }}
         run: |
           set -euo pipefail
           base_version=$(yq eval '.version' charts/coralogix-operator/Chart.yaml)
           gh api "repos/$GH_REPO/compare/main...$HEAD_SHA" -H "Accept: application/vnd.github.diff" |
             scripts/check-release-pr.sh "$base_version"
 
+      - id: ci
+        name: Wait for green CI
+        if: ${{ steps.pr.outputs.number != '' && steps.pr.outputs.draft == 'false' }}
+        env:
+          HEAD_SHA: ${{ steps.pr.outputs.sha }}
+        run: |
+          if scripts/check-release-ci.sh "$HEAD_SHA"; then
+            echo "green=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "green=false" >> "$GITHUB_OUTPUT"
+          fi
+
       # Pinned to the checked commit: a later push needs its own approval.
       - name: Approve
+        if: ${{ steps.ci.outputs.green == 'true' }}
+        env:
+          PR: ${{ steps.pr.outputs.number }}
+          HEAD_SHA: ${{ steps.pr.outputs.sha }}
         run: |
+          set -euo pipefail
+          approved=$(gh api --paginate "repos/$GH_REPO/pulls/$PR/reviews" \
+            --jq "[.[] | select(.user.login == \"github-actions[bot]\" and .state == \"APPROVED\" and .commit_id == \"$HEAD_SHA\")] | length")
+          if [[ "$approved" != "0" ]]; then echo "Already approved $HEAD_SHA"; exit 0; fi
           gh api -X POST "repos/$GH_REPO/pulls/$PR/reviews" -f event=APPROVE -f commit_id="$HEAD_SHA" \
-            -f body="Release PR: only the version changes. Approved by the Release PR Approval workflow." \
+            -f body="Release PR: only the version changes, and CI has passed. Approved by the Release PR Approval workflow." \
             --silent
+
+      # A failed check, or CI that is not green (a check failed or runs again), withdraws an
+      # approval that an earlier run gave the same commit, so auto-merge can't merge it.
+      - name: Dismiss the approval
+        if: >-
+          ${{ steps.pr.outputs.number != '' &&
+          (failure() || steps.ci.outputs.green == 'false') }}
+        env:
+          PR: ${{ steps.pr.outputs.number }}
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/$GH_REPO/pulls/$PR/reviews" \
+            --jq '.[] | select(.user.login == "github-actions[bot]" and .state == "APPROVED") | .id' |
+            while read -r id; do
+              gh api -X PUT "repos/$GH_REPO/pulls/$PR/reviews/$id/dismissals" \
+                -f message="The release PR no longer passes its checks; approval follows when they pass again." -f event=DISMISS > /dev/null
+            done

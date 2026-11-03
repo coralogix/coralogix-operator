@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Exits 0 only when CI on a release PR's commit has passed: the latest run of every workflow
+# that a release PR starts, every other workflow run on the commit, and every check from outside
+# GitHub Actions (CodeQL, GitGuardian). The Release PR Approval workflow approves only then: main
+# has no required checks, so auto-merge would merge an approved PR while CI still runs.
+#
+# Usage: scripts/check-release-ci.sh <sha>
+# GH_TOKEN and GH_REPO read the runs.
+set -euo pipefail
+
+sha="$1"
+
+# Every workflow that a release PR starts, also listed under workflow_run in
+# release-pr-approval.yaml. All runs of one push are created together, so once these exist,
+# none is missing.
+required=(Container crd-validation e2e-tests helm-e2e-tests helm-sync-check integration-tests
+  sanity unit-tests upgrade-test "Version Bump")
+
+# Workflow runs, not check runs: several workflows name their job "Tests", and the check-runs API
+# returns only the newest check of each name. A re-run is a new attempt of the same run.
+runs=$(gh api --paginate "repos/$GH_REPO/actions/runs?head_sha=$sha&event=pull_request&per_page=100" \
+  --jq '.workflow_runs[] | [.name, .created_at, .status, (.conclusion // "")] | @tsv')
+# The newest run of each workflow, for a commit that was pushed more than once.
+latest=$(sort -t $'\t' -k1,1 -k2,2r <<< "$runs" | awk -F'\t' 'NF && !seen[$1]++')
+checks=$(gh api --paginate "repos/$GH_REPO/commits/$sha/check-runs?per_page=100" \
+  --jq '.check_runs[] | select(.app.slug != "github-actions") | [.name, "", .status, (.conclusion // "")] | @tsv')
+
+for workflow in "${required[@]}"; do
+  if ! cut -f1 <<< "$latest" | grep -qxF "$workflow"; then
+    echo "Waiting: workflow '$workflow' has not started on $sha"
+    exit 1
+  fi
+done
+all=$(printf '%s\n%s\n' "$latest" "$checks" | awk 'NF')
+pending=$(awk -F'\t' '$3 != "completed" {print $1}' <<< "$all")
+if [[ -n "$pending" ]]; then
+  echo "Waiting for: $(paste -sd, - <<< "$pending")"
+  exit 1
+fi
+failed=$(awk -F'\t' '$4 != "success" && $4 != "skipped" && $4 != "neutral" {print $1 " (" $4 ")"}' <<< "$all")
+if [[ -n "$failed" ]]; then
+  echo "Failed: $(paste -sd, - <<< "$failed"). Re-run them; approval follows when they pass."
+  exit 1
+fi
+echo "CI on $sha has passed."
