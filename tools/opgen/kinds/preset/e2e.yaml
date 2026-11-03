@@ -21,5 +21,8 @@ values:
   connectorType: slack
   entityType: alerts
   parentId: preset_system_slack_alerts_basic
+  configOverrides.conditionType:
+    matchEntityTypeAndSubType:
+      entitySubType: logsImmediateTriggered
   configOverrides.messageConfig.fields.fieldName: title
   configOverrides.messageConfig.fields.template: 'Preset: {{alertDef.name}}'

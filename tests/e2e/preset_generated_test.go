@@ -45,7 +45,9 @@ const (
   "configOverrides": [
     {
       "conditionType": {
-        "matchEntityType": {}
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "logsImmediateTriggered"
+        }
       },
       "messageConfig": {
         "fields": [
