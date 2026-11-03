@@ -24,6 +24,18 @@ if [[ -n "$(git status --porcelain)" ]]; then
 fi
 
 git fetch origin main
+# A failed release must be retried before the next bump; the Version Bump check refuses it too
+# (scripts/check-version-bump.sh).
+current=$(git show origin/main:charts/coralogix-operator/Chart.yaml | sed -n -E 's/^version: *//p')
+status=0
+git ls-remote --exit-code --tags origin "refs/tags/v$current" > /dev/null || status=$?
+if [[ "$status" == 2 ]]; then
+  echo "error: v$current on main is not released yet. Retry the Release workflow from the Actions tab first, then run 'make bump' again" >&2
+  exit 1
+elif [[ "$status" != 0 ]]; then
+  echo "error: could not look up the tag v$current on origin" >&2
+  exit 1
+fi
 # CI refuses a release PR from anyone else (scripts/check-releaser.sh); this only says so early.
 if command -v gh > /dev/null && login=$(gh api user --jq .login 2> /dev/null) &&
   releasers=$(git show origin/main:.github/RELEASERS 2> /dev/null); then

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Checks the operator version on a branch: cmd/main.go and the chart must agree on it, and a
-# changed version must be above the base branch. Merging a raised version releases it; see
-# `make bump`.
+# changed version must be above the base branch, whose version must already be released. Merging
+# a raised version releases it; see `make bump`.
 #
 # Usage: scripts/check-version-bump.sh [base-ref]   (default: origin/main)
 set -euo pipefail
@@ -37,6 +37,18 @@ fi
 if [[ "$(printf '%s\n%s\n' "$chart_version" "$base_version" | sort -V | tail -n1)" != "$chart_version" ]]; then
   echo "error: version $chart_version is below $base_version on $base." >&2
   echo "Merge $base into this branch and run 'make bump' again." >&2
+  exit 1
+fi
+
+# A release that failed before its tag exists must be retried first: once a higher version is on
+# the base branch, Release can only publish that one, and the failed version would be skipped.
+status=0
+git ls-remote --exit-code --tags origin "refs/tags/v$base_version" > /dev/null || status=$?
+if [[ "$status" == 2 ]]; then
+  echo "error: v$base_version on $base is not released yet. Retry the Release workflow first; once v$base_version is tagged, run 'make bump' again." >&2
+  exit 1
+elif [[ "$status" != 0 ]]; then
+  echo "error: could not look up the tag v$base_version on origin" >&2
   exit 1
 fi
 
