@@ -169,6 +169,9 @@ func (b *builder) contractDefault(field *crField, attrs *model.Attrs, path strin
 	default:
 		return unsupported(path, "the API default on a %s needs a supported CR marker", field.typ.Kind)
 	}
+	if !b.file.Inferred() {
+		b.usedValidators[path] = true
+	}
 	field.Markers = append(field.Markers, "+kubebuilder:default="+value)
 	return nil
 }

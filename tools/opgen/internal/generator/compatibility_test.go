@@ -283,6 +283,15 @@ validators:
 	}
 }
 
+func TestPerFieldInferredDefaultCountsAsUsed(t *testing.T) {
+	file := "resource: Thing\nmode: existing\nvalidators:\n  inferred: false\n  fields:\n    spec.enabled: {inferred: true}\n"
+	files := checkLifecycleFixture(t, "Thing", syntheticContract(t), file)
+	types := string(files["api/coralogix/v1alpha1/thing_types.go"])
+	if !strings.Contains(types, "+kubebuilder:default=true") {
+		t.Error("the enabled field must keep its API default")
+	}
+}
+
 func TestNestedAndGroupedValidationUsesCRPaths(t *testing.T) {
 	nested := "resource: Thing\nmode: existing\nvalidators:\n  inferred: true\n  fields:\n    spec.items[].label: {inferred: false}\ntypes:\n  ThingItem:\n    fields:\n      name: {name: label}\n"
 	files := checkLifecycleFixture(t, "Thing", syntheticContract(t), nested)
