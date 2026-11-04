@@ -1,0 +1,173 @@
+[
+  {
+    "step": "create the sample",
+    "spec": {
+      "filters": {
+        "filters": [
+          {
+            "name": "severity",
+            "selectedValues": {
+              "CRITICAL": true,
+              "ERROR": true
+            }
+          },
+          {
+            "name": "applicationName",
+            "selectedValues": {
+              "sample-app": true
+            }
+          },
+          {
+            "name": "subsystemName",
+            "selectedValues": {
+              "sample-subsystem": true
+            }
+          }
+        ]
+      },
+      "folder": {
+        "resourceRef": {
+          "name": "sample-folder"
+        }
+      },
+      "name": "quick-selection-sample",
+      "searchQuery": {
+        "query": "region:us-west-2"
+      },
+      "timeSelection": {
+        "quickSelection": {
+          "seconds": 900
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/data-exploration/views/v1/views",
+        "body": {
+          "filters": {
+            "filters": [
+              {
+                "name": "severity",
+                "selectedValues": {
+                  "CRITICAL": true,
+                  "ERROR": true
+                }
+              },
+              {
+                "name": "applicationName",
+                "selectedValues": {
+                  "sample-app": true
+                }
+              },
+              {
+                "name": "subsystemName",
+                "selectedValues": {
+                  "sample-subsystem": true
+                }
+              }
+            ]
+          },
+          "folderId": "00000000-0000-4000-8000-000000000001",
+          "name": "quick-selection-sample",
+          "searchQuery": {
+            "query": "region:us-west-2"
+          },
+          "timeSelection": {
+            "quickSelection": {
+              "seconds": 900
+            }
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "view.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "1",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again with no change",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/data-exploration/views/v1/views/1",
+        "body": {
+          "filters": {
+            "filters": [
+              {
+                "name": "severity",
+                "selectedValues": {
+                  "CRITICAL": true,
+                  "ERROR": true
+                }
+              },
+              {
+                "name": "applicationName",
+                "selectedValues": {
+                  "sample-app": true
+                }
+              },
+              {
+                "name": "subsystemName",
+                "selectedValues": {
+                  "sample-subsystem": true
+                }
+              }
+            ]
+          },
+          "folderId": "00000000-0000-4000-8000-000000000001",
+          "name": "quick-selection-sample",
+          "searchQuery": {
+            "query": "region:us-west-2"
+          },
+          "timeSelection": {
+            "quickSelection": {
+              "seconds": 900
+            }
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "view.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "1",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

@@ -1,0 +1,155 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: views.coralogix.com
+spec:
+  group: coralogix.com
+  names:
+    kind: View
+    listKind: ViewList
+    plural: views
+    singular: view
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.printableStatus
+      name: Status
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              filters:
+                properties:
+                  filters:
+                    items:
+                      properties:
+                        name:
+                          type: string
+                        selectedValues:
+                          additionalProperties:
+                            type: boolean
+                          type: object
+                      required:
+                      - name
+                      - selectedValues
+                      type: object
+                    minItems: 1
+                    type: array
+                required:
+                - filters
+                type: object
+              folder:
+                properties:
+                  resourceRef:
+                    properties:
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                    required:
+                    - name
+                    type: object
+                required:
+                - resourceRef
+                type: object
+              name:
+                type: string
+              searchQuery:
+                properties:
+                  query:
+                    type: string
+                required:
+                - query
+                type: object
+              timeSelection:
+                properties:
+                  customSelection:
+                    properties:
+                      fromTime:
+                        format: date-time
+                        type: string
+                      toTime:
+                        format: date-time
+                        type: string
+                    required:
+                    - fromTime
+                    - toTime
+                    type: object
+                  quickSelection:
+                    properties:
+                      seconds:
+                        format: int32
+                        type: integer
+                    required:
+                    - seconds
+                    type: object
+                type: object
+                x-kubernetes-validations:
+                - message: Exactly one of quickSelection or customSelection must be
+                    set
+                  rule: has(self.quickSelection) != has(self.customSelection)
+            required:
+            - filters
+            - name
+            - timeSelection
+            type: object
+          status:
+            properties:
+              conditions:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      format: date-time
+                      type: string
+                    message:
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              id:
+                type: string
+              printableStatus:
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

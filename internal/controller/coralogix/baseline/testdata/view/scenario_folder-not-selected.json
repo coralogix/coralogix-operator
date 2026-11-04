@@ -1,0 +1,46 @@
+[
+  {
+    "step": "do not call the API when the selector does not match the folder",
+    "spec": {
+      "filters": {
+        "filters": [
+          {
+            "name": "severity",
+            "selectedValues": {
+              "ERROR": true
+            }
+          }
+        ]
+      },
+      "folder": {
+        "resourceRef": {
+          "name": "folder"
+        }
+      },
+      "name": "Folder view",
+      "timeSelection": {
+        "quickSelection": {
+          "seconds": 900
+        }
+      }
+    },
+    "requests": [],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

@@ -1,0 +1,77 @@
+[
+  {
+    "step": "create with a zone offset and fractional seconds",
+    "spec": {
+      "filters": {
+        "filters": [
+          {
+            "name": "applicationName",
+            "selectedValues": {
+              "sample-app": true
+            }
+          }
+        ]
+      },
+      "name": "Custom time view",
+      "searchQuery": {
+        "query": "region:us-west-2"
+      },
+      "timeSelection": {
+        "customSelection": {
+          "fromTime": "2024-01-25T13:31:43.152+02:00",
+          "toTime": "2024-01-25T11:35:43Z"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/data-exploration/views/v1/views",
+        "body": {
+          "filters": {
+            "filters": [
+              {
+                "name": "applicationName",
+                "selectedValues": {
+                  "sample-app": true
+                }
+              }
+            ]
+          },
+          "name": "Custom time view",
+          "searchQuery": {
+            "query": "region:us-west-2"
+          },
+          "timeSelection": {
+            "customSelection": {
+              "fromTime": "2024-01-25T11:31:43.152Z",
+              "toTime": "2024-01-25T11:35:43Z"
+            }
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "view.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "1",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]
