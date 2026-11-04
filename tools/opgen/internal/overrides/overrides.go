@@ -156,6 +156,8 @@ type Field struct {
 	// Required and Optional keep the released CRD presence rule.
 	Required bool `yaml:"required"`
 	Optional bool `yaml:"optional"`
+	// OmitEmptyInRequest keeps a required collection out of the API request when it is empty.
+	OmitEmptyInRequest bool `yaml:"omitEmptyInRequest"`
 	// Name is the released CR property name when it differs from the API property.
 	Name string `yaml:"name"`
 	// RequireOne keeps the released exactly-one rule for a oneOf that allows no arm in the CR.
@@ -232,14 +234,17 @@ func (f *File) check() error {
 	}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
-		if !field.Skip && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" {
+		if !field.Skip && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" {
 			return fmt.Errorf("%s: the line sets no key", line)
 		}
-		if field.Skip && (field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "") {
+		if field.Skip && (field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "") {
 			return fmt.Errorf("%s.skip: skip cannot change another property of the CR field", line)
 		}
 		if field.Skip && f.Mode != ModeExisting {
 			return fmt.Errorf("%s.skip: a new kind follows the contract", line)
+		}
+		if field.OmitEmptyInRequest && f.Mode != ModeExisting {
+			return fmt.Errorf("%s.omitEmptyInRequest: a new kind follows the contract", line)
 		}
 		if field.Ref != nil && field.ReadOnly {
 			return fmt.Errorf("%s: ref and readOnly cannot be set together", line)

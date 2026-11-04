@@ -22,6 +22,14 @@ import (
 	presets "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/presets_service"
 )
 
+func extractPresetForTest(preset *Preset) (*presets.Preset, error) {
+	request, err := preset.CreateRequest(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	return request.Preset, nil
+}
+
 // Preset attachmentConfig maps to the AttachmentConfig policy.
 func TestPresetExtractAttachmentConfig(t *testing.T) {
 	policy := "ENABLED"
@@ -35,9 +43,9 @@ func TestPresetExtractAttachmentConfig(t *testing.T) {
 		},
 	}
 
-	got, err := preset.ExtractPreset()
+	got, err := extractPresetForTest(preset)
 	if err != nil {
-		t.Fatalf("ExtractPreset returned error: %v", err)
+		t.Fatalf("CreateRequest returned error: %v", err)
 	}
 	if got.AttachmentConfig == nil || got.AttachmentConfig.Policy == nil {
 		t.Fatalf("AttachmentConfig not set")
@@ -48,9 +56,9 @@ func TestPresetExtractAttachmentConfig(t *testing.T) {
 
 	// Unset attachmentConfig => nil (server default AUTO).
 	preset.Spec.AttachmentConfig = nil
-	got, err = preset.ExtractPreset()
+	got, err = extractPresetForTest(preset)
 	if err != nil {
-		t.Fatalf("ExtractPreset returned error: %v", err)
+		t.Fatalf("CreateRequest returned error: %v", err)
 	}
 	if got.AttachmentConfig != nil {
 		t.Fatalf("AttachmentConfig should be nil when unset")
@@ -69,9 +77,9 @@ func TestPresetExtractPagerdutyIncidentsAndCases(t *testing.T) {
 		},
 	}
 
-	got, err := preset.ExtractPreset()
+	got, err := extractPresetForTest(preset)
 	if err != nil {
-		t.Fatalf("ExtractPreset returned error: %v", err)
+		t.Fatalf("CreateRequest returned error: %v", err)
 	}
 	if got.ConnectorType != presets.NOTIFICATIONCENTERCONNECTORTYPE_PAGERDUTY_INCIDENTS {
 		t.Fatalf("ConnectorType = %v, want PAGERDUTY_INCIDENTS", got.ConnectorType)
@@ -121,9 +129,9 @@ func TestPresetExtractMicrosoftTeams(t *testing.T) {
 		},
 	}
 
-	got, err := preset.ExtractPreset()
+	got, err := extractPresetForTest(preset)
 	if err != nil {
-		t.Fatalf("ExtractPreset returned error: %v", err)
+		t.Fatalf("CreateRequest returned error: %v", err)
 	}
 	if got.ConnectorType != presets.NOTIFICATIONCENTERCONNECTORTYPE_MICROSOFT_TEAMS {
 		t.Fatalf("ConnectorType = %v, want MICROSOFT_TEAMS", got.ConnectorType)
@@ -213,9 +221,9 @@ func TestPresetExtractEventBridge(t *testing.T) {
 		},
 	}
 
-	got, err := preset.ExtractPreset()
+	got, err := extractPresetForTest(preset)
 	if err != nil {
-		t.Fatalf("ExtractPreset returned error: %v", err)
+		t.Fatalf("CreateRequest returned error: %v", err)
 	}
 	if got.ConnectorType != presets.NOTIFICATIONCENTERCONNECTORTYPE_EVENTBRIDGE {
 		t.Fatalf("ConnectorType = %v, want EVENTBRIDGE", got.ConnectorType)
@@ -263,9 +271,9 @@ func TestPresetExtractIncidentIO(t *testing.T) {
 		},
 	}
 
-	got, err := preset.ExtractPreset()
+	got, err := extractPresetForTest(preset)
 	if err != nil {
-		t.Fatalf("ExtractPreset returned error: %v", err)
+		t.Fatalf("CreateRequest returned error: %v", err)
 	}
 	if got.ConnectorType != presets.NOTIFICATIONCENTERCONNECTORTYPE_INCIDENT_IO {
 		t.Fatalf("ConnectorType = %v, want INCIDENT_IO", got.ConnectorType)

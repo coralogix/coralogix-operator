@@ -74,7 +74,7 @@ var _ = Describe("Alert", Ordered, func() {
 		Eventually(func(g Gomega) *string {
 			fetchedPreset := &coralogixv1alpha1.Preset{}
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: presetName, Namespace: testNamespace}, fetchedPreset)).To(Succeed())
-			return fetchedPreset.Status.Id
+			return fetchedPreset.Status.ID
 		}, time.Minute, time.Second).ShouldNot(BeNil())
 
 		By("Creating GlobalRouter")

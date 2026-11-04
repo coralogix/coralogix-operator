@@ -42,7 +42,6 @@ const (
 	DashboardsFolderKind       = "DashboardsFolder"
 	ViewKind                   = "View"
 	ConnectorKind              = "Connector"
-	PresetKind                 = "Preset"
 	ArchiveLogsTargetKind      = "ArchiveLogsTarget"
 	ArchiveMetricsTargetKind   = "ArchiveMetricsTarget"
 	SLOKind                    = "SLO"

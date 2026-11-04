@@ -58,8 +58,8 @@ var _ = Describe("Preset", Ordered, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: presetName, Namespace: testNamespace}, fetchedPreset)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedPreset.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetchedPreset.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			if fetchedPreset.Status.Id != nil {
-				presetID = *fetchedPreset.Status.Id
+			if fetchedPreset.Status.ID != nil {
+				presetID = *fetchedPreset.Status.ID
 				return nil
 			}
 			return fmt.Errorf("preset ID is not set")
@@ -126,8 +126,8 @@ var _ = Describe("Preset MicrosoftTeams", Ordered, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: presetName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			if fetched.Status.Id != nil {
-				presetID = *fetched.Status.Id
+			if fetched.Status.ID != nil {
+				presetID = *fetched.Status.ID
 				return nil
 			}
 			return fmt.Errorf("preset ID is not set")
@@ -162,15 +162,15 @@ func getSampleMicrosoftTeamsPreset(name, namespace string) *coralogixv1alpha1.Pr
 			ConnectorType: "microsoftTeams",
 			EntityType:    "alerts",
 			ParentId:      &parentID,
-			ConfigOverrides: []coralogixv1alpha1.ConfigOverride{
+			ConfigOverrides: []coralogixv1alpha1.PresetConfigOverrides{
 				{
-					ConditionType: coralogixv1alpha1.ConditionType{
-						MatchEntityTypeAndSubType: &coralogixv1alpha1.MatchEntityTypeAndSubType{
+					ConditionType: coralogixv1alpha1.PresetNotificationCenterConditionType{
+						MatchEntityTypeAndSubType: &coralogixv1alpha1.PresetMatchEntityTypeAndSubTypeCondition{
 							EntitySubType: "logsImmediateTriggered",
 						},
 					},
-					MessageConfig: coralogixv1alpha1.MessageConfig{
-						Fields: []coralogixv1alpha1.MessageConfigField{
+					MessageConfig: coralogixv1alpha1.PresetMessageConfig{
+						Fields: []coralogixv1alpha1.PresetNotificationCenterMessageConfigField{
 							{
 								FieldName: "title",
 								Template:  "CUSTOM PRESET OVERRIDE: {{alert.status}} {{alertDef.priority}} - {{alertDef.name}}",
@@ -201,15 +201,15 @@ func getSampleSlackPreset(name, namespace string) *coralogixv1alpha1.Preset {
 			ConnectorType: "slack",
 			EntityType:    "alerts",
 			ParentId:      &parentID,
-			ConfigOverrides: []coralogixv1alpha1.ConfigOverride{
+			ConfigOverrides: []coralogixv1alpha1.PresetConfigOverrides{
 				{
-					ConditionType: coralogixv1alpha1.ConditionType{
-						MatchEntityTypeAndSubType: &coralogixv1alpha1.MatchEntityTypeAndSubType{
+					ConditionType: coralogixv1alpha1.PresetNotificationCenterConditionType{
+						MatchEntityTypeAndSubType: &coralogixv1alpha1.PresetMatchEntityTypeAndSubTypeCondition{
 							EntitySubType: "logsImmediateTriggered",
 						},
 					},
-					MessageConfig: coralogixv1alpha1.MessageConfig{
-						Fields: []coralogixv1alpha1.MessageConfigField{
+					MessageConfig: coralogixv1alpha1.PresetMessageConfig{
+						Fields: []coralogixv1alpha1.PresetNotificationCenterMessageConfigField{
 							{
 								FieldName: "title",
 								Template:  "CUSTOM PRESET OVERRIDE: {{alert.status}} {{alertDef.priority}} - {{alertDef.name}}",
@@ -251,8 +251,8 @@ var _ = Describe("Preset with attachmentConfig", Ordered, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: presetName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			if fetched.Status.Id != nil {
-				presetID = *fetched.Status.Id
+			if fetched.Status.ID != nil {
+				presetID = *fetched.Status.ID
 				return nil
 			}
 			return fmt.Errorf("preset ID is not set")
@@ -290,16 +290,16 @@ func getSampleGenericHttpsPresetWithAttachmentConfig(name, namespace string) *co
 			EntityType:       "alerts",
 			ParentId:         &parentID,
 			AttachmentConfig: &attachmentConfig,
-			ConfigOverrides: []coralogixv1alpha1.ConfigOverride{
+			ConfigOverrides: []coralogixv1alpha1.PresetConfigOverrides{
 				{
 					PayloadType: &payloadType,
-					ConditionType: coralogixv1alpha1.ConditionType{
-						MatchEntityTypeAndSubType: &coralogixv1alpha1.MatchEntityTypeAndSubType{
+					ConditionType: coralogixv1alpha1.PresetNotificationCenterConditionType{
+						MatchEntityTypeAndSubType: &coralogixv1alpha1.PresetMatchEntityTypeAndSubTypeCondition{
 							EntitySubType: "logsImmediateResolved",
 						},
 					},
-					MessageConfig: coralogixv1alpha1.MessageConfig{
-						Fields: []coralogixv1alpha1.MessageConfigField{
+					MessageConfig: coralogixv1alpha1.PresetMessageConfig{
+						Fields: []coralogixv1alpha1.PresetNotificationCenterMessageConfigField{
 							{
 								FieldName: "headers",
 								Template:  "{}",

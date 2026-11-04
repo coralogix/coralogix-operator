@@ -23,8 +23,47 @@ func testBuilder(field overrides.Field) *builder {
 		alias: "sdk",
 		ix: &refIndex{fields: map[string]sdkcheck.Ref{
 			"SDKConfig.Empty":    {Name: "Empty", Want: "map[string]interface{}"},
+			"SDKConfig.Items":    {Name: "Items", Want: "[]string"},
 			"SDKItem.EntityType": {Name: "EntityType", Want: "string"},
 		}},
+	}
+}
+
+func TestRequiredListCanOmitEmptyRequestValue(t *testing.T) {
+	b := testBuilder(overrides.Field{OmitEmptyInRequest: true})
+	list := &model.Type{Kind: model.List, Elem: &model.Type{Kind: model.String}}
+	f, err := b.field("ThingConfig", "ThingConfig", "items", "", list, true, "spec.items", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if f.Optional {
+		t.Fatal("the field must stay required in the CRD")
+	}
+	code, err := b.assignFrom(f, list, "SDKConfig", "config.items", "in.Items")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(code, "if len(in.Items) != 0 {") {
+		t.Fatalf("the empty list must stay out of the request:\n%s", code)
+	}
+}
+
+func TestOmitEmptyRequestNeedsRequiredCollection(t *testing.T) {
+	for _, tt := range []struct {
+		name     string
+		typ      *model.Type
+		required bool
+	}{
+		{name: "scalar", typ: &model.Type{Kind: model.String}, required: true},
+		{name: "optional list", typ: &model.Type{Kind: model.List, Elem: &model.Type{Kind: model.String}}},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			b := testBuilder(overrides.Field{OmitEmptyInRequest: true})
+			_, err := b.field("ThingConfig", "ThingConfig", "items", "", tt.typ, tt.required, "spec.items", false)
+			if err == nil || !strings.Contains(err.Error(), "omitEmptyInRequest needs a required collection") {
+				t.Fatalf("want an invalid override, got %v", err)
+			}
+		})
 	}
 }
 
@@ -140,6 +179,8 @@ func TestCollectionOverrideParsing(t *testing.T) {
 		valid             bool
 	}{
 		{name: "plain list", mode: "existing", field: "collection: list", valid: true},
+		{name: "omit empty request", mode: "existing", field: "omitEmptyInRequest: true", valid: true},
+		{name: "omit empty new kind", mode: "new", field: "omitEmptyInRequest: true"},
 		{name: "list-map", mode: "existing", field: "collection: list\n        listMapKey: entityType", valid: true},
 		{name: "unknown collection", mode: "existing", field: "collection: bag"},
 		{name: "key without list", mode: "existing", field: "listMapKey: entityType"},

@@ -10,6 +10,7 @@ Use this skill when an existing operator kind moves from handwritten code to opg
 - Keep the existing e2e tests and upgrade matrix running.
 - Put live test values, dependencies, and the released chart spec in the kind's `tools/opgen/kinds/<kind>/e2e.yaml`.
 - Generate the current e2e lifecycle test and the released chart upgrade check. Do not add handwritten test hooks for a generated kind.
+- When codegen adds an upgrade script, wire its before, after, and always-run cleanup phases into the upgrade workflow. Gate each phase to chart versions that already contain the kind.
 - Keep the released chart spec fixed to fields that chart accepts. A new API field belongs in the current generated e2e test. It must not enter the old chart's create step.
 - Check the same status ID after upgrade. Then update and delete the resource with the new operator.
 - Use a release that can create an isolated resource. An old GlobalRouter release that writes `router_default` is unsafe on a shared account.

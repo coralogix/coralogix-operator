@@ -96,6 +96,11 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
         run: bash scripts/upgrade-check-globalrouter.sh before
+      - name: Create a Preset with the released operator
+        if: matrix.operator_version == '2.0'
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+        run: bash scripts/upgrade-check-preset.sh before
       - name: Build PR image
         uses: ./.github/actions/build-operator-image
         with:
@@ -129,8 +134,18 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
         run: bash scripts/upgrade-check-globalrouter.sh after
-      # A failed step before the check skips it, so delete the folder here; no run leaves it in
+      - name: Check the Preset of the released operator
+        if: matrix.operator_version == '2.0'
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+        run: bash scripts/upgrade-check-preset.sh after
+      # A failed step before the check skips it, so delete the resources here; no run leaves them in
       # Coralogix.
+      - name: Delete the Preset of the upgrade test
+        if: always() && matrix.operator_version == '2.0'
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+        run: bash scripts/upgrade-check-preset.sh cleanup
       - name: Delete the GlobalRouter of the upgrade test
         if: always() && matrix.operator_version == '2.0'
         env:
