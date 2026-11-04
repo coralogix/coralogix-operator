@@ -27,9 +27,32 @@ func run(args []string) int {
 		return runGenerate(args[1:])
 	case "check":
 		return runCheck(args[1:])
+	case "check-schema":
+		return runCheckSchema(args[1:])
 	}
 	printUsage()
 	return 2
+}
+
+func runCheckSchema(args []string) int {
+	set := flag.NewFlagSet("opgen check-schema", flag.ContinueOnError)
+	base := set.String("base", "", "base commit of the proposed CRD change")
+	if err := set.Parse(args); err != nil {
+		return 2
+	}
+	if set.NArg() != 0 {
+		fmt.Fprintf(os.Stderr, "opgen: unexpected arguments: %v\n", set.Args())
+		return 2
+	}
+	cwd, err := os.Getwd()
+	if err == nil {
+		err = generator.CheckReleasedSchema(cwd, *base)
+	}
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "opgen: %s\n", err)
+		return 1
+	}
+	return 0
 }
 
 func runGenerate(args []string) int {
@@ -78,4 +101,5 @@ func printUsage() {
 	fmt.Fprintln(os.Stderr, "usage: opgen generate")
 	fmt.Fprintln(os.Stderr, "       opgen check --resource <component> --openapi <candidate_openapi_file> [--kind <kind>] [--e2e <file>] [--overrides <file>]")
 	fmt.Fprintln(os.Stderr, "       opgen version")
+	fmt.Fprintln(os.Stderr, "       opgen check-schema --base <commit>")
 }

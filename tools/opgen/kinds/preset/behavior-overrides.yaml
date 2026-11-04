@@ -1,7 +1,17 @@
 resource: Preset
 mode: existing
 validators:
-  inferred: false
+  inferred: true
+  fields:
+    spec.configOverrides: {inferred: false}
+    spec.configOverrides[].conditionType.matchEntityTypeAndSubType.entitySubType: {inferred: false}
+    spec.configOverrides[].messageConfig.fields: {inferred: false}
+    spec.configOverrides[].messageConfig.fields[].fieldName: {inferred: false}
+    spec.configOverrides[].messageConfig.fields[].template: {inferred: false}
+    spec.configOverrides[].payloadType: {inferred: false}
+    spec.description: {inferred: false}
+    spec.name: {inferred: false}
+    spec.parentId: {inferred: false}
 api:
   operations:
     create: PresetsService_CreateCustomPreset

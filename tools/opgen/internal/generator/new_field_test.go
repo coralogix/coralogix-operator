@@ -61,6 +61,8 @@ func TestReleasedKindTakesANewFieldWithoutOverrides(t *testing.T) {
 	}
 	for _, want := range []struct{ file, text string }{
 		{"api/coralogix/v1alpha1/viewfolder_types.go", "ProbeNote *string `json:\"probeNote,omitempty\"`"},
+		{"api/coralogix/v1alpha1/viewfolder_types.go", "+kubebuilder:validation:MaxLength=20"},
+		{"api/coralogix/v1alpha1/viewfolder_types.go", "+kubebuilder:default=`memo`"},
 		{"api/coralogix/v1alpha1/viewfolder_convert.go", "out.ProbeNote = in.ProbeNote"},
 		{"config/samples/v1alpha1/generated/viewfolder.yaml", "probeNote:"},
 		{"tests/e2e/viewfolder_generated_test.go", `"probeNote":`},
@@ -166,7 +168,7 @@ func withNewField(t *testing.T, spec []byte) []byte {
 		case map[string]any:
 			if title := v["title"]; title == "ViewFolder" || title == "CreateViewFolderRequest" {
 				if props, ok := v["properties"].(map[string]any); ok {
-					props["probeNote"] = map[string]any{"type": "string", "x-coralogix-presence": true, "description": "A note."}
+					props["probeNote"] = map[string]any{"type": "string", "x-coralogix-presence": true, "description": "A note.", "maxLength": 20, "default": "memo"}
 					added++
 				}
 			}

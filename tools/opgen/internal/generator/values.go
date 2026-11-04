@@ -227,6 +227,16 @@ func (v *sampleValues) object(t *crType, prefix string, full bool) (*omap, error
 	}
 	out := &omap{}
 	for _, f := range t.Fields {
+		if f.synthetic {
+			if _, ok := v.file.Values[prefix+f.JSON]; !ok {
+				continue
+			}
+		}
+		if f.refForm == "split" {
+			if _, ok := v.file.Values[prefix+f.refSibling]; ok {
+				continue
+			}
+		}
 		_, inGroup := skip[f.API]
 		if skip[f.API] || (full && prefix == "" && slices.Contains(v.file.Omit, f.JSON)) || (!full && f.Optional && !inGroup) {
 			continue
@@ -291,6 +301,9 @@ func integerValue(t *model.Type) int64 {
 
 // stringValue makes up a string that meets the length limits and the pattern of the contract.
 func stringValue(name string, t *model.Type, path string) (string, error) {
+	if t.Format == "date-time" {
+		return "2024-01-01T00:00:00Z", nil
+	}
 	s := "sample-" + kebab(goName(name))
 	if t.MaxLength != nil && int64(len(s)) > *t.MaxLength {
 		s = s[:*t.MaxLength]

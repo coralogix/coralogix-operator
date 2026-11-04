@@ -19,9 +19,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -80,5 +84,76 @@ func TestResolveResourceID(t *testing.T) {
 				t.Fatalf("got %q, %v; want %q", got, err, tt.want)
 			}
 		})
+	}
+}
+
+func TestResolveNumericResourceID(t *testing.T) {
+	backend := int64(2147483647)
+	got, err := ResolveNumericResourceID(context.Background(), "team", &backend, nil, "View", "", 32)
+	if err != nil || got != backend {
+		t.Fatalf("got %d, %v; want %d", got, err, backend)
+	}
+	backend++
+	if _, err := ResolveNumericResourceID(context.Background(), "team", &backend, nil, "View", "", 32); err == nil || !strings.Contains(err.Error(), "outside int32 range") {
+		t.Fatalf("want int32 range error, got %v", err)
+	}
+}
+
+func TestResolveResourceIDFromAnotherAPIVersion(t *testing.T) {
+	gvk := schema.GroupVersionKind{Group: GroupVersion.Group, Version: "v1beta1", Kind: "Alert"}
+	scheme := runtime.NewScheme()
+	scheme.AddKnownTypeWithName(gvk, &unstructured.Unstructured{})
+	alert := &unstructured.Unstructured{Object: map[string]any{
+		"apiVersion": gvk.GroupVersion().String(), "kind": gvk.Kind,
+		"metadata": map[string]any{"name": "alert", "namespace": "team"},
+		"status":   map[string]any{"id": "123"},
+	}}
+	originalClient, originalSelector := config.GetClient(), config.GetConfig().Selector
+	t.Cleanup(func() {
+		config.InitClient(originalClient)
+		config.GetConfig().Selector = originalSelector
+	})
+	config.InitClient(fake.NewClientBuilder().WithScheme(scheme).WithObjects(alert).Build())
+	config.GetConfig().Selector = config.Selector{}
+	id, err := ResolveResourceIDVersion(context.Background(), "team", ResourceIDRef{ResourceRef: &ResourceRef{Name: "alert"}}, "Alert", "v1beta1")
+	if err != nil || id != "123" {
+		t.Fatalf("got %q, %v; want 123", id, err)
+	}
+}
+
+func TestResolveNamedResourceIDCachesOneRequest(t *testing.T) {
+	name := "retention"
+	ref := NamedResourceIDRef{BackendRef: &NamedBackendRef{Name: &name}}
+	lookup := NewNameLookupContext(&cxsdk.ClientSet{})
+	calls := 0
+	byName := func(_ context.Context, _ *cxsdk.ClientSet, got string) (string, error) {
+		calls++
+		if got != name {
+			t.Errorf("lookup name %q, want %q", got, name)
+		}
+		return "retention-id", nil
+	}
+	for range 2 {
+		id, err := ResolveNamedResourceID(context.Background(), "team", ref, "ArchiveRetention", "", "LookupArchiveRetentionName", lookup, byName)
+		if err != nil || id != "retention-id" {
+			t.Fatalf("got %q, %v", id, err)
+		}
+	}
+	if calls != 1 {
+		t.Fatalf("lookup called %d times, want once", calls)
+	}
+}
+
+func TestResolveNamedNumericResourceID(t *testing.T) {
+	name := "webhook"
+	lookup := NewNameLookupContext(&cxsdk.ClientSet{})
+	byName := func(_ context.Context, _ *cxsdk.ClientSet, _ string) (string, error) { return "42", nil }
+	id, err := ResolveNamedNumericResourceID(context.Background(), "team", nil, &name, nil, "OutboundWebhook", "", "LookupWebhookName", lookup, byName, 64)
+	if err != nil || id != 42 {
+		t.Fatalf("got %d, %v; want 42", id, err)
+	}
+	tooLarge := int64(2147483648)
+	if _, err := ResolveNamedNumericResourceID(context.Background(), "team", &tooLarge, nil, nil, "View", "", "LookupViewName", lookup, byName, 32); err == nil {
+		t.Fatal("an int32 reference accepted an out-of-range id")
 	}
 }

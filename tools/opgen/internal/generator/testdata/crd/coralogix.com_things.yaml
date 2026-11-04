@@ -85,6 +85,7 @@ spec:
                 maxItems: 10
                 type: array
               enabled:
+                default: true
                 description: Whether the thing is enabled. The server sets true when
                   it is omitted.
                 type: boolean

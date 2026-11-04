@@ -75,7 +75,6 @@ const (
   "description": "sample-description",
   "entityType": "alerts",
   "name": "sample-name",
-  "parentId": "preset_system_generic_https_alerts_empty",
   "configOverrides": [
     {
       "conditionType": {
@@ -97,7 +96,8 @@ const (
       },
       "payloadType": "generic_https_default"
     }
-  ]
+  ],
+  "parentId": "preset_system_generic_https_alerts_empty"
 }`
 )
 

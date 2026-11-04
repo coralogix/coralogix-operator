@@ -312,7 +312,7 @@ func TestKeyedElementIsUnsupported(t *testing.T) {
 	item := &model.Type{Kind: model.String, Keyed: &model.Keyed{}}
 	for _, kind := range []model.Kind{model.List, model.Map} {
 		b := &builder{kind: "Thing", types: map[string]*crType{}, enums: map[string]*enumMap{}}
-		_, err := b.field("Thing", "Thing", "tags", "", &model.Type{Kind: kind, Elem: item}, false, "spec.tags", false)
+		_, err := b.field("Thing", "Thing", "tags", "", &model.Type{Kind: kind, Elem: item}, false, false, "spec.tags", false)
 		s, ok := isShapeError(err)
 		if !ok || s.code != codeShapeUnsupported || s.path != "spec.tags[]" {
 			t.Errorf("%s: want %s at spec.tags[], got %v", kind, codeShapeUnsupported, err)

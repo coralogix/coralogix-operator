@@ -6,8 +6,138 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/coralogix/coralogix-management-sdk/iac/model"
+	"github.com/coralogix/coralogix-management-sdk/iac/source"
+
 	"github.com/coralogix/coralogix-operator/v2/tools/opgen/internal/overrides"
 )
+
+func TestSplitReferenceKeepsTwoReleasedFields(t *testing.T) {
+	file, err := overrides.Parse([]byte("resource: RefThing\nmode: existing\nvalidators: {inferred: true}\ntypes:\n  RefThing:\n    fields:\n      thingId: {name: thing, ref: {kind: Thing, type: NCRef}}\n      parentId: {name: parentFolderId, ref: {kind: Thing, form: split, resourceField: parentFolderRef}}\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	contract, err := model.Load([]byte(syntheticContract(t)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	e2e := &e2eFile{Values: map[string]any{
+		"thing":           map[string]any{"resourceRef": map[string]any{"name": "thing-sample"}},
+		"parentFolderRef": map[string]any{"name": "thing-sample"},
+	}}
+	v, err := validate(contract, kindEntry{Kind: "RefThing", Resource: "RefThing"}, source.SDKModule, operatorModule, e2e, file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	files, _, err := renderOne(v, operatorModule)
+	if err != nil {
+		t.Fatal(err)
+	}
+	types := string(files["api/coralogix/v1alpha1/refthing_types.go"])
+	convert := string(files["api/coralogix/v1alpha1/refthing_convert.go"])
+	if !strings.Contains(types, "ParentFolderId *string `json:\"parentFolderId,omitempty\"`") || !strings.Contains(types, "ParentFolderRef *ResourceRef `json:\"parentFolderRef,omitempty\"`") {
+		t.Error("the split reference must keep both released CR fields")
+	}
+	if !strings.Contains(types, "!(has(self.parentFolderId) && has(self.parentFolderRef))") || !strings.Contains(convert, "if in.ParentFolderId != nil") || !strings.Contains(convert, "ResolveResourceID(ctx, namespace, ResourceIDRef{ResourceRef: in.ParentFolderRef}") {
+		t.Error("the split reference must choose one source and resolve the CR when selected")
+	}
+}
+
+func TestNumericAndVersionedReferenceConversion(t *testing.T) {
+	b := &builder{}
+	f := &crField{ref: "Alert", refIDType: "int32", refVersion: "v1beta1"}
+	code, value := b.referenceValue(f, "in.Alert", "spec.alert")
+	if !strings.Contains(code, "ResolveNumericResourceID(ctx, namespace") || !strings.Contains(code, "\"Alert\", \"v1beta1\", 32)") || !strings.Contains(value, "int32(") {
+		t.Errorf("numeric cross-version reference conversion is incomplete: %s %s", code, value)
+	}
+	if referenceWant(f) != "int32" {
+		t.Error("numeric list element must use the SDK integer type")
+	}
+}
+
+func TestNamedReferencePassesSecondClientAndLookup(t *testing.T) {
+	file, err := overrides.Parse([]byte("resource: RefThing\nmode: existing\nvalidators: {inferred: true}\ntypes:\n  RefThing:\n    fields:\n      thingId: {name: thing, ref: {kind: Thing, type: NCRef}}\n      parentId: {ref: {kind: Thing, form: named, lookup: LookupThingName}}\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	contract, err := model.Load([]byte(syntheticContract(t)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	e2e := &e2eFile{Values: map[string]any{
+		"thing":     map[string]any{"resourceRef": map[string]any{"name": "thing-sample"}},
+		"parentRef": map[string]any{"backendRef": map[string]any{"name": "parent"}},
+	}}
+	v, err := validate(contract, kindEntry{Kind: "RefThing", Resource: "RefThing"}, source.SDKModule, operatorModule, e2e, file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	files, _, err := renderOne(v, operatorModule)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for path, want := range map[string]string{
+		"api/coralogix/v1alpha1/refthing_types.go":                      "ParentRef *NamedResourceIDRef",
+		"api/coralogix/v1alpha1/refthing_convert.go":                    "lookup, LookupThingName",
+		"internal/controller/coralogix/v1alpha1/refthing_controller.go": "cr.CreateRequest(ctx, r.ClientSet)",
+	} {
+		if !strings.Contains(string(files[path]), want) {
+			t.Errorf("%s does not contain %q", path, want)
+		}
+	}
+}
+
+func TestNumericAndListReferenceTypes(t *testing.T) {
+	file, err := overrides.Parse([]byte("resource: BodyIDThing\nmode: existing\nvalidators: {inferred: true}\ntypes:\n  BodyIDThing:\n    fields:\n      roleId: {ref: {kind: CustomRole, backendIDType: uint32}}\n      alertIds: {ref: {kind: Alert, version: v1beta1}}\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	b := &builder{file: file, used: map[overrides.Line]bool{}}
+	integer := &crField{API: "roleId", JSON: "roleId", Optional: true, typ: &model.Type{Kind: model.Integer, Format: "int64"}}
+	got, err := b.refField(integer, "BodyIDThing", file.Ref("BodyIDThing", "roleId"), "spec.roleId")
+	if err != nil || got.GoType != "*UInt32ResourceIDRef" || got.refIDType != "int64" {
+		t.Fatalf("numeric reference: %v, %+v", err, got)
+	}
+	list := &crField{API: "alertIds", JSON: "alertIds", Optional: true, typ: &model.Type{Kind: model.List, Elem: &model.Type{Kind: model.String}}}
+	got, err = b.refField(list, "BodyIDThing", file.Ref("BodyIDThing", "alertIds"), "spec.alertIds")
+	if err != nil || got.GoType != "[]ResourceIDRef" || got.refVersion != "v1beta1" {
+		t.Fatalf("versioned reference list: %v, %+v", err, got)
+	}
+}
+
+func TestNamedNumericReferenceUsesNumericCRField(t *testing.T) {
+	file, err := overrides.Parse([]byte("resource: BodyIDThing\nmode: existing\nvalidators: {inferred: true}\ntypes:\n  BodyIDThing:\n    fields:\n      webhookId: {ref: {kind: OutboundWebhook, form: named, lookup: LookupWebhookName}}\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	b := &builder{file: file, used: map[overrides.Line]bool{}}
+	f := &crField{API: "webhookId", JSON: "webhookId", Optional: true, typ: &model.Type{Kind: model.Integer, Format: "int64"}}
+	got, err := b.refField(f, "BodyIDThing", file.Ref("BodyIDThing", "webhookId"), "spec.webhookId")
+	if err != nil || got.GoType != "*NamedInt64ResourceIDRef" || !b.hasNameLookup {
+		t.Fatalf("named numeric reference: %v, %+v", err, got)
+	}
+	code, _ := b.referenceValue(got, "(*in.WebhookRef)", "spec.webhookRef")
+	if !strings.Contains(code, "ResolveNamedNumericResourceID(") || !strings.Contains(code, "LookupWebhookName, 64)") {
+		t.Errorf("the numeric name must resolve through the second client: %s", code)
+	}
+}
+
+func TestReleasedNamedBackendOnlyReferenceUsesItsGoType(t *testing.T) {
+	file, err := overrides.Parse([]byte("resource: BodyIDThing\nmode: existing\nvalidators: {inferred: true}\ntypes:\n  BodyIDThing:\n    fields:\n      retentionId: {ref: {kind: ArchiveRetention, form: namedBackendOnly, lookup: LookupArchiveRetentionName, type: ArchiveRetention, idField: Id}}\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	b := &builder{file: file, used: map[overrides.Line]bool{}}
+	f := &crField{API: "retentionId", JSON: "retentionId", Optional: true, typ: &model.Type{Kind: model.String}}
+	got, err := b.refField(f, "BodyIDThing", file.Ref("BodyIDThing", "retentionId"), "spec.retentionId")
+	if err != nil || got.GoType != "*ArchiveRetention" {
+		t.Fatalf("released named reference: %v, %+v", err, got)
+	}
+	code, _ := b.referenceValue(got, "(*in.RetentionRef)", "spec.retentionRef")
+	if !strings.Contains(code, "NamedBackendRef{ID: (*in.RetentionRef).BackendRef.Id, Name: (*in.RetentionRef).BackendRef.Name}") {
+		t.Errorf("released backend type was not converted: %s", code)
+	}
+}
 
 func syntheticContract(t *testing.T) string {
 	t.Helper()
@@ -46,6 +176,117 @@ func TestNestedReleasedFieldPresenceAndName(t *testing.T) {
 	}
 	if !strings.Contains(convert, "in.Label") || !strings.Contains(convert, "out.Name =") || !strings.Contains(convert, "out.Weight =") {
 		t.Error("nested request conversions must use API properties")
+	}
+}
+
+func TestReleasedRequiredScalarWithoutPresence(t *testing.T) {
+	contract := syntheticContract(t)
+	start := strings.Index(contract, "  /body-id-things:\n")
+	if start < 0 {
+		t.Fatal("Body ID Thing operations not found")
+	}
+	body := contract[start:]
+	body = replaceOnce(t, body, "required: [name]\n              properties:", "required: [name, limit]\n              properties:")
+	body = strings.ReplaceAll(body,
+		"limit: {type: integer, format: int32, minimum: 1, maximum: 10, x-coralogix-presence: true}",
+		"limit: {type: integer, format: int32, minimum: 0, maximum: 10}")
+	contract = contract[:start] + body
+
+	dir := t.TempDir()
+	openAPI := filepath.Join(dir, "openapi.yaml")
+	override := filepath.Join(dir, "behavior-overrides.yaml")
+	if err := os.WriteFile(openAPI, []byte(contract), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	file := "resource: BodyIDThing\nmode: existing\nvalidators: {inferred: false}\napi: {updateIDInBody: true}\n"
+	if err := os.WriteFile(override, []byte(file), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	options := CheckOptions{Resource: "BodyIDThing", OpenAPIPath: openAPI, OverridesPath: override}
+	wantCode(t, Check(options), "REQUIRED_SCALAR_PRESENCE_UNKNOWN")
+
+	file += "types:\n  BodyIDThing:\n    fields:\n      limit: {required: true}\n"
+	if err := os.WriteFile(override, []byte(file), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := Check(options); err != nil {
+		t.Fatalf("released required field: %v", err)
+	}
+}
+
+func TestReleasedFieldValidationOverride(t *testing.T) {
+	file := "resource: BodyIDThing\nmode: existing\napi: {updateIDInBody: true}\nvalidators:\n  inferred: true\n  fields:\n    spec.name: {inferred: false}\n    spec.limit:\n      remove: ['+kubebuilder:validation:Maximum=10']\n      add: ['+kubebuilder:validation:Maximum=9']\n"
+	files := checkLifecycleFixture(t, "BodyIDThing", syntheticContract(t), file)
+	types := string(files["api/coralogix/v1alpha1/bodyidthing_types.go"])
+	if strings.Contains(types, "+kubebuilder:validation:MaxLength=100") || strings.Contains(types, "+kubebuilder:validation:MinLength=1") {
+		t.Error("the released name must keep its absent length limits")
+	}
+	if !strings.Contains(types, "+kubebuilder:validation:Minimum=1") || !strings.Contains(types, "+kubebuilder:validation:Maximum=9") || strings.Contains(types, "+kubebuilder:validation:Maximum=10") {
+		t.Error("the limit override must keep the API minimum and replace only the maximum")
+	}
+}
+
+func TestReleasedCELAndDefaultOverrides(t *testing.T) {
+	base := checkLifecycleFixture(t, "PatchThing", syntheticContract(t), "resource: PatchThing\nmode: existing\nvalidators: {inferred: true}\n")
+	var oldRule string
+	for _, line := range strings.Split(string(base["api/coralogix/v1alpha1/patchthing_types.go"]), "\n") {
+		if strings.Contains(line, "At most one of some, prefix") {
+			oldRule = strings.TrimPrefix(line, "// ")
+			break
+		}
+	}
+	if oldRule == "" {
+		t.Fatal("the API oneOf has no generated CEL rule")
+	}
+	newRule := celMarker("!(has(self.some) && has(self.prefix))", "Only one target can be set")
+	file := "resource: PatchThing\nmode: existing\nvalidators:\n  inferred: true\n  fields:\n    spec.target#type:\n      remove: ['" + oldRule + "']\n      add: ['" + newRule + "']\n    spec.description:\n      add: ['+kubebuilder:default=`memo`']\n"
+	files := checkLifecycleFixture(t, "PatchThing", syntheticContract(t), file)
+	types := string(files["api/coralogix/v1alpha1/patchthing_types.go"])
+	for _, marker := range []string{newRule, "+kubebuilder:default=`memo`"} {
+		if !strings.Contains(types, marker) {
+			t.Errorf("released marker %q is missing", marker)
+		}
+	}
+	if strings.Contains(types, oldRule) {
+		t.Error("the replaced API CEL rule is still present")
+	}
+}
+
+func TestDateTimeUsesMetav1TimeAndSDKTime(t *testing.T) {
+	typ := &model.Type{Kind: model.String, Format: "date-time"}
+	goType, err := scalarType(typ, "spec.fromTime")
+	if err != nil || goType != "metav1.Time" {
+		t.Fatalf("date-time CR type: %q, %v", goType, err)
+	}
+	b := &builder{}
+	statements, value, pointer, err := b.value(&crField{typ: typ}, typ, "in.FromTime", "time.Time", "spec.fromTime")
+	if err != nil || statements != "" || value != "in.FromTime.Time" || pointer {
+		t.Fatalf("date-time SDK conversion: %q, %q, %v, %v", statements, value, pointer, err)
+	}
+	if got := limitMarkers(typ); len(got) != 0 {
+		t.Fatalf("metav1.Time cannot carry string validation markers: %v", got)
+	}
+}
+
+func TestEmptyCollectionAndObjectContractDefaults(t *testing.T) {
+	for _, tc := range []struct {
+		kind  model.Kind
+		value string
+	}{
+		{model.List, "[]"},
+		{model.Map, "{}"},
+	} {
+		field := &crField{typ: &model.Type{Kind: tc.kind}}
+		if err := (&builder{}).contractDefault(field, &model.Attrs{Default: &tc.value}, "spec.newField"); err != nil {
+			t.Fatal(err)
+		}
+		want := tc.value
+		if tc.kind == model.List {
+			want = "{}"
+		}
+		if len(field.Markers) != 1 || field.Markers[0] != "+kubebuilder:default="+want {
+			t.Fatalf("%s default markers: %v", tc.kind, field.Markers)
+		}
 	}
 }
 

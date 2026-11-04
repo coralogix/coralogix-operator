@@ -1,6 +1,8 @@
 resource: ViewFolder
 mode: existing
 validators:
-  inferred: false        # the contract limits name to 1-100 characters; the released CRD has no limit
+  inferred: true
+  fields:
+    spec.name: {inferred: false} # the released CRD has no 1-100 character limit
 api:
   updateIDInBody: true   # PUT /view-folders sends the id in the body

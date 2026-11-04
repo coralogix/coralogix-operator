@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
@@ -45,6 +46,11 @@ type ResourceIDRef struct {
 // namespace of the referring resource. It must match the selector of the operator, and its status
 // id is sent. Until it has an id, the error makes the reconcile retry.
 func ResolveResourceID(ctx context.Context, namespace string, ref ResourceIDRef, kind string) (string, error) {
+	return ResolveResourceIDVersion(ctx, namespace, ref, kind, GroupVersion.Version)
+}
+
+// ResolveResourceIDVersion resolves a reference to a custom resource in the given API version.
+func ResolveResourceIDVersion(ctx context.Context, namespace string, ref ResourceIDRef, kind, version string) (string, error) {
 	if ref.BackendRef != nil {
 		return ref.BackendRef.ID, nil
 	}
@@ -55,7 +61,7 @@ func ResolveResourceID(ctx context.Context, namespace string, ref ResourceIDRef,
 		namespace = *ref.ResourceRef.Namespace
 	}
 	obj := &unstructured.Unstructured{}
-	obj.SetGroupVersionKind(GroupVersion.WithKind(kind))
+	obj.SetGroupVersionKind(schema.GroupVersionKind{Group: GroupVersion.Group, Version: version, Kind: kind})
 	if err := config.GetClient().Get(ctx, client.ObjectKey{Name: ref.ResourceRef.Name, Namespace: namespace}, obj); err != nil {
 		return "", err
 	}

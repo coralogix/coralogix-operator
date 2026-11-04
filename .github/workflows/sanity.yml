@@ -71,6 +71,9 @@ jobs:
       - name: Require a new generator version when its output changes
         if: github.event_name == 'pull_request'
         run: tools/opgen/scripts/check-version-change.sh '${{ github.event.pull_request.base.sha }}'
+      - name: Review changes to released CRD rules
+        if: github.event_name == 'pull_request'
+        run: cd tools/opgen && go run ./cmd/opgen check-schema --base '${{ github.event.pull_request.base.sha }}'
 
   linters:
     name: Linter Checks
