@@ -1,0 +1,213 @@
+name: live-tests
+
+# Runs the four live suites, one after another, against the shared Coralogix team:
+# e2e-tests, helm-e2e-tests, integration-tests, and upgrade-test. Each one is a reusable
+# workflow in its own file. The last job, "Live tests result", is the check that branch
+# protection requires. It always runs, so it is visible on every pull request, and it fails
+# when any suite failed or was cancelled.
+#
+# The suites run in a fixed order because they share one Coralogix team (archive metrics, TCO,
+# quota, IP access) and must not overlap. A failed suite does not stop the next one: every
+# suite runs, so one run shows every failure. Only a cancelled run stops the chain.
+on:
+  schedule:
+    - cron: 0 0 * * *
+  push:
+    branches:
+      - main
+      - release-*
+  # No paths-ignore: branch protection requires the `Live tests result` job, so the workflow
+  # must start on every pull request. The `changes` job skips the suites for pull requests that
+  # change only files they do not cover.
+  pull_request:
+    branches:
+      - main
+      - release-*
+
+permissions:
+  contents: read
+
+concurrency:
+  # One group for every live run (any pull request, push, or nightly), so two runs never
+  # overlap on the same Coralogix team.
+  group: coralogix-operator-live-cx
+  # Not cancel-in-progress: these specs create real Coralogix resources, and cleanup happens in
+  # the suite's own teardown. Cancelling kills the Kind cluster before finalizers run, so the
+  # remote resources leak and pollute the shared team. Let the old run finish and queue behind
+  # it instead.
+  cancel-in-progress: false
+  # Keep every waiting run (the default keeps one, and a newer run cancels it). A cancelled
+  # required check blocks the pull request, and a release PR needs this run to pass
+  # (scripts/check-release-ci.sh). `max` keeps up to 100 pending runs in FIFO order.
+  queue: max
+
+jobs:
+  changes:
+    name: Detect code changes
+    permissions:
+      pull-requests: read
+    runs-on: ubuntu-latest
+    outputs:
+      # A file outside docs, agent files, and Markdown changed. The suites that install the
+      # chart (helm-e2e, upgrade) need it, because chart changes are what they cover.
+      any_code: ${{ steps.filter.outputs.any_code }}
+      # A file outside charts, docs, agent files, and Markdown changed. The suites that do not
+      # use the chart (e2e, integration) need it.
+      code_outside_charts: ${{ steps.filter.outputs.code_outside_charts }}
+    steps:
+      - name: Check for files that need the live suites
+        id: filter
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          # Paths that a suite does not cover. A pull request that changes only these skips it.
+          IGNORE_ANY_CODE: '^docs/|^(\.claude|\.cursor)/|\.md$'
+          IGNORE_CODE_OUTSIDE_CHARTS: '^(charts|docs)/|^(\.claude|\.cursor)/|\.md$'
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" != "pull_request" ]; then
+            {
+              echo "any_code=true"
+              echo "code_outside_charts=true"
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # A failed API call stops the job here. The result job then fails,
+          # so an error can never skip the suites and report success.
+          # A renamed file lists its old path in previous_filename. Check both, so
+          # moving code to an ignored path still counts as a code change.
+          files=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files" --jq '.[] | .filename, (.previous_filename // empty)')
+          # Here-strings, not pipes: `grep -q` exits at the first match, and
+          # under pipefail the writer's SIGPIPE would make this check false.
+          if grep -qvE "$IGNORE_ANY_CODE" <<< "$files"; then
+            echo "any_code=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "any_code=false" >> "$GITHUB_OUTPUT"
+          fi
+          if grep -qvE "$IGNORE_CODE_OUTSIDE_CHARTS" <<< "$files"; then
+            echo "code_outside_charts=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "code_outside_charts=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  e2e:
+    needs: changes
+    if: ${{ needs.changes.outputs.code_outside_charts == 'true' }}
+    permissions:
+      contents: read
+    uses: ./.github/workflows/e2e-tests.yaml
+    secrets: inherit
+
+  # From here on, `!cancelled()` lets a suite run after an earlier one failed or was skipped.
+  # A cancelled run stops the chain. `changes` must have succeeded, so an error there skips all.
+  helm-e2e:
+    needs: [changes, e2e]
+    if: ${{ !cancelled() && needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' }}
+    permissions:
+      contents: read
+    uses: ./.github/workflows/helm-e2e-tests.yaml
+    secrets: inherit
+
+  integration:
+    needs: [changes, helm-e2e]
+    if: ${{ !cancelled() && needs.changes.result == 'success' && needs.changes.outputs.code_outside_charts == 'true' }}
+    permissions:
+      contents: read
+    uses: ./.github/workflows/integration-tests.yaml
+    secrets: inherit
+
+  upgrade:
+    needs: [changes, integration]
+    if: ${{ !cancelled() && needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' }}
+    permissions:
+      contents: read
+    uses: ./.github/workflows/upgrade-test.yaml
+    secrets: inherit
+
+  live-tests-result:
+    # Branch protection requires this check name. Keep it stable.
+    name: Live tests result
+    # always() keeps this job from being skipped. GitHub counts a skipped
+    # required check as passed. While the run waits in the concurrency queue,
+    # the check is missing, so the pull request cannot merge.
+    if: ${{ always() }}
+    needs:
+      - changes
+      - e2e
+      - helm-e2e
+      - integration
+      - upgrade
+    permissions: {}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if any live test job failed or was cancelled
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        run: exit 1
+
+  notify-failure:
+    name: Notify Slack on failure
+    # Scheduled (nightly) runs alert. Pull request and push runs stay quiet.
+    if: ${{ always() && github.event_name == 'schedule' }}
+    needs:
+      - changes
+      - e2e
+      - helm-e2e
+      - integration
+      - upgrade
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post failure to Slack
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        env:
+          # Slack incoming webhook URL, from the SLACK_CI_WEBHOOK_URL repository secret.
+          # Keep the URL out of both the logs and the process list.
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+          NEEDS_JSON: ${{ toJSON(needs) }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          REPOSITORY: ${{ github.repository }}
+          REF_NAME: ${{ github.ref_name }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SLACK_WEBHOOK_URL:-}" ]; then
+            echo "::warning::SLACK_CI_WEBHOOK_URL is not set; skipping the Slack notification."
+            exit 0
+          fi
+          umask 077
+          curl_config="$(mktemp)"
+          trap 'rm -f "$curl_config"' EXIT
+          printf 'url = "%s"\n' "$SLACK_WEBHOOK_URL" > "$curl_config"
+          failed_jobs=$(printf '%s' "$NEEDS_JSON" | jq -r '
+            to_entries
+            | map(select(.value.result != "success"))
+            | map("• \(.key): \(.value.result)")
+            | join("\n")
+          ')
+          jq -n \
+            --arg repo "$REPOSITORY" \
+            --arg ref "$REF_NAME" \
+            --arg event "$EVENT_NAME" \
+            --arg url "$RUN_URL" \
+            --arg jobs "$failed_jobs" \
+            '{
+              text: ":rotating_light: Live tests failed",
+              blocks: [
+                {
+                  type: "section",
+                  text: {
+                    type: "mrkdwn",
+                    text: ":rotating_light: *Live tests failed*\n*Repository:* \($repo)\n*Ref:* \($ref)\n*Trigger:* \($event)\n*Failed jobs:*\n\($jobs)\n<\($url)|View the workflow run>"
+                  }
+                }
+              ]
+            }' \
+            | curl --config "$curl_config" \
+                --fail --silent --show-error \
+                --max-time 30 --retry 3 --retry-connrefused \
+                --header 'Content-Type: application/json' \
+                --data @- \
+                --output /dev/null \
+                --write-out 'Slack responded with HTTP %{http_code}\n'

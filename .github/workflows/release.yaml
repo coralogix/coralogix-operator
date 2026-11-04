@@ -90,7 +90,7 @@ jobs:
             released=true
             echo "$tag is already released; nothing to publish."
           else
-            # main requires only the four live test results, so a merge can skip the Version Bump check. An
+            # main requires only the live tests result, so a merge can skip the Version Bump check. An
             # untagged version below the newest release would otherwise overwrite latest.
             newest=$(git tag -l 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n1 || true)
             if [[ -n "$newest" && "$(printf '%s\n%s\n' "$tag" "$newest" | sort -V | tail -n1)" != "$tag" ]]; then
