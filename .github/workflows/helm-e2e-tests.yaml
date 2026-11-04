@@ -8,7 +8,7 @@ on:
       - release-*
   # No paths-ignore: branch protection requires the `Helm e2e tests result` job, so the
   # workflow must start on every pull request. The `changes` job skips the tests for
-  # pull requests that change only docs and Markdown files. It does not skip chart changes:
+  # pull requests that change only docs, agent files, and Markdown files. It does not skip chart changes:
   # this job installs the operator with Helm, so chart changes are exactly what it needs to cover.
   pull_request:
     branches:
@@ -51,7 +51,7 @@ jobs:
         id: filter
         uses: ./.github/actions/detect-code-changes
         with:
-          ignore-regex: '^docs/|\.md$'
+          ignore-regex: '^docs/|^(\.claude|\.cursor)/|\.md$'
 
   tests:
     name: Tests

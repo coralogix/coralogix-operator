@@ -10,7 +10,7 @@ on:
       - "charts/**"
   # No paths-ignore: branch protection requires the `Integration tests result` job, so the
   # workflow must start on every pull request. The `changes` job skips the tests for
-  # pull requests that change only charts, docs, and Markdown files.
+  # pull requests that change only charts, docs, agent files, and Markdown files.
   pull_request:
     branches:
       - main
@@ -52,7 +52,7 @@ jobs:
         id: filter
         uses: ./.github/actions/detect-code-changes
         with:
-          ignore-regex: '^(charts|docs)/|\.md$'
+          ignore-regex: '^(charts|docs)/|^(\.claude|\.cursor)/|\.md$'
 
   tests:
     name: Tests
