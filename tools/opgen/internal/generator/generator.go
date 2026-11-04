@@ -342,6 +342,7 @@ func renderAll(all []*validated, sdkModule, module string) (output, error) {
 		out.files[path] = data
 	}
 	out.blocks = shared.blocks
+	out.entries = shared.entries
 	return out, nil
 }
 

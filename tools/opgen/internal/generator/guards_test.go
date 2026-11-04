@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -98,5 +99,27 @@ func TestDuplicateHandwrittenEntryStopsGeneration(t *testing.T) {
 		if is.Code != codeDuplicateEntry || !strings.Contains(is.Remediation, "Remove the handwritten entry") {
 			t.Errorf("unexpected issue: %+v", is)
 		}
+	}
+}
+
+// The whole run stops when a handwritten entry of a generated kind is left in a marked file, and
+// it writes nothing. This runs the real path: render, collect the entries, check, publish.
+func TestGenerateStopsOnHandwrittenEntry(t *testing.T) {
+	root, input := syntheticRoot(t)
+	path := filepath.Join(root, "PROJECT")
+	project, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, append([]byte("- api:\n    crdVersion: v1\n  kind: Thing\n"), project...), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	err = generateFromInput(input, root, root)
+	wantCode(t, err, codeDuplicateEntry)
+	if !strings.Contains(err.Error(), "PROJECT") {
+		t.Fatalf("the report must name the file:\n%v", err)
+	}
+	if _, err := os.Stat(filepath.Join(root, "api", "coralogix", "v1alpha1", "thing_types.go")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("a failed run wrote a file: %v", err)
 	}
 }
