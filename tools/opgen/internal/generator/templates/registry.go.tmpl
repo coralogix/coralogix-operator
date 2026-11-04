@@ -21,6 +21,9 @@ func SetupGeneratedControllers(mgr ctrl.Manager, clientSet *cxsdk.ClientSet, int
 {{- range .Kinds}}
 	if err := (&{{.Kind}}Reconciler{
 		Client:   clientSet.{{.Accessor}}(),
+{{- if .HasNameLookup}}
+		ClientSet: clientSet,
+{{- end}}
 		Interval: intervals[utils.{{.Kind}}Kind],
 	}).SetupWithManager(mgr); err != nil {
 		return fmt.Errorf("unable to create the controller of %s: %w", utils.{{.Kind}}Kind, err)

@@ -30,6 +30,7 @@ type PatchThingSpec struct {
 	Description *string `json:"description,omitempty"`
 
 	// +optional
+	// +kubebuilder:default=true
 	Enabled *bool `json:"enabled,omitempty"`
 
 	// +kubebuilder:validation:Enum=alerts;cases

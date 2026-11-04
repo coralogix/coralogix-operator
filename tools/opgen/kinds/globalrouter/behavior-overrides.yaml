@@ -1,7 +1,22 @@
 resource: GlobalRouter
 mode: existing
 validators:
-  inferred: false
+  inferred: true
+  fields:
+    spec.description: {inferred: false}
+    spec.disabled: {inferred: false}
+    spec.fallback: {inferred: false}
+    spec.fallbackTargets: {inferred: false}
+    spec.id: {inferred: false}
+    spec.name: {inferred: false}
+    spec.routingLabels.environment: {inferred: false}
+    spec.routingLabels.service: {inferred: false}
+    spec.routingLabels.team: {inferred: false}
+    spec.rules: {inferred: false}
+    spec.rules[].condition: {inferred: false}
+    spec.rules[].entityType: {inferred: false}
+    spec.rules[].name: {inferred: false}
+    spec.rules[].targets: {inferred: false}
 api:
   requestWrapper: router
   updateIDInBody: true

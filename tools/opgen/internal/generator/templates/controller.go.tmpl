@@ -7,6 +7,9 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	{{- if .IDBits}}
+	"strconv"
+	{{- end}}
 	"time"
 
 	"github.com/go-logr/logr"
@@ -26,6 +29,9 @@ import (
 // {{.Kind}}Reconciler reconciles a {{.Kind}} object.
 type {{.Kind}}Reconciler struct {
 	Client   *{{.SDKAlias}}.{{.Client}}
+{{- if .HasNameLookup}}
+	ClientSet *cxsdk.ClientSet
+{{- end}}
 	Interval time.Duration
 }
 
@@ -47,7 +53,7 @@ func (r *{{.Kind}}Reconciler) FinalizerName() string {
 
 func (r *{{.Kind}}Reconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	cr := obj.(*coralogixv1alpha1.{{.Kind}})
-	body, err := cr.CreateRequest(ctx)
+	body, err := cr.CreateRequest(ctx{{if .HasNameLookup}}, r.ClientSet{{end}})
 	if err != nil {
 		return fmt.Errorf("error on building the create request of {{.Kind}}: %w", err)
 	}
@@ -65,14 +71,31 @@ func (r *{{.Kind}}Reconciler) HandleCreation(ctx context.Context, log logr.Logge
 		return fmt.Errorf("the create response of {{.Kind}} has no resource")
 	}
 {{- end}}
+{{- if .IDBits}}
 {{- if .IDValue}}
+	idValue := resp.{{if .CreateResponseField}}{{.CreateResponseField}}.{{end}}{{.IDField}}
+{{- else}}
+	if resp.{{if .CreateResponseField}}{{.CreateResponseField}}.{{end}}{{.IDField}} == nil {
+		return fmt.Errorf("the create response of {{.Kind}} has no id")
+	}
+	idValue := *resp.{{if .CreateResponseField}}{{.CreateResponseField}}.{{end}}{{.IDField}}
+{{- end}}
+{{- if not .IDZeroValid}}
+	if idValue == 0 {
+		return fmt.Errorf("the create response of {{.Kind}} has no id")
+	}
+{{- end}}
+	id := strconv.FormatInt(int64(idValue), 10)
+{{- else if .IDValue}}
 	id := resp.{{if .CreateResponseField}}{{.CreateResponseField}}.{{end}}{{.IDField}}
 {{- else}}
 	id := ptr.Deref(resp.{{if .CreateResponseField}}{{.CreateResponseField}}.{{end}}{{.IDField}}, "")
 {{- end}}
+{{- if not .IDBits}}
 	if id == "" {
 		return fmt.Errorf("the create response of {{.Kind}} has no id")
 	}
+{{- end}}
 	cr.Status = coralogixv1alpha1.{{.Kind}}Status{ID: ptr.To(id)}
 	return nil
 }
@@ -80,12 +103,19 @@ func (r *{{.Kind}}Reconciler) HandleCreation(ctx context.Context, log logr.Logge
 func (r *{{.Kind}}Reconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	cr := obj.(*coralogixv1alpha1.{{.Kind}})
 	id := ptr.Deref(cr.Status.ID, "")
-	body, err := cr.UpdateRequest(ctx)
+{{- if and .IDBits (not .UpdateIDInBody)}}
+	parsedID, err := strconv.ParseInt(id, 10, {{.IDBits}})
+	if err != nil {
+		return fmt.Errorf("invalid status id of {{.Kind}} %q: %w", id, err)
+	}
+	backendID := {{.IDGoType}}(parsedID)
+{{- end}}
+	body, err := cr.UpdateRequest(ctx{{if .HasNameLookup}}, r.ClientSet{{end}})
 	if err != nil {
 		return fmt.Errorf("error on building the update request of {{.Kind}}: %w", err)
 	}
 	log.Info("Updating remote {{.Kind}}", "id", id, "{{.Kind}}", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.{{.UpdateMethod}}(ctx{{if not .UpdateIDInBody}}, id{{end}}).{{.UpdateSetter}}(*body){{if .MaskSetter}}.{{.MaskSetter}}(coralogixv1alpha1.{{.Kind}}UpdateMask){{end}}.Execute()
+	resp, httpResp, err := r.Client.{{.UpdateMethod}}(ctx{{if not .UpdateIDInBody}}, {{if .IDBits}}backendID{{else}}id{{end}}{{end}}).{{.UpdateSetter}}(*body){{if .MaskSetter}}.{{.MaskSetter}}(coralogixv1alpha1.{{.Kind}}UpdateMask){{end}}.Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote {{.Kind}} %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
@@ -96,8 +126,15 @@ func (r *{{.Kind}}Reconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 func (r *{{.Kind}}Reconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
 	cr := obj.(*coralogixv1alpha1.{{.Kind}})
 	id := ptr.Deref(cr.Status.ID, "")
+{{- if .IDBits}}
+	parsedID, err := strconv.ParseInt(id, 10, {{.IDBits}})
+	if err != nil {
+		return fmt.Errorf("invalid status id of {{.Kind}} %q: %w", id, err)
+	}
+	backendID := {{.IDGoType}}(parsedID)
+{{- end}}
 	log.Info("Deleting remote {{.Kind}}", "id", id)
-	_, httpResp, err := r.Client.{{.DeleteMethod}}(ctx, id).Execute()
+	_, httpResp, err := r.Client.{{.DeleteMethod}}(ctx, {{if .IDBits}}backendID{{else}}id{{end}}).Execute()
 	if err != nil {
 		// A confirmed missing resource is deleted. A 404 of a missing route is an error.
 		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {

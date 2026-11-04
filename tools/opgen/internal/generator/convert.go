@@ -65,7 +65,21 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 	if err != nil {
 		return err
 	}
-	d.IDField, d.IDValue = id.Name, id.Want == "string"
+	d.IDField, d.IDValue = id.Name, !strings.HasPrefix(id.Want, "*")
+	if r.IDType.Kind == model.Integer {
+		d.IDGoType = r.IDType.Format
+		d.IDZeroValid = r.IDType.ZeroValid
+		if d.IDGoType == "int32" {
+			d.IDBits = 32
+		} else {
+			d.IDBits = 64
+		}
+		if strings.TrimPrefix(id.Want, "*") != d.IDGoType {
+			return unsupported("resource.id", "the SDK id type %s does not match the API %s", id.Want, d.IDGoType)
+		}
+	} else if strings.TrimPrefix(id.Want, "*") != "string" {
+		return unsupported("resource.id", "the SDK id type %s does not match the API string", id.Want)
+	}
 	if r.Create.Response.Field != "" {
 		response, err := b.ix.typeRef("create.response")
 		if err != nil {
@@ -162,7 +176,10 @@ func (b *builder) requests(r *model.Resource, d *kindData) error {
 		if err != nil {
 			return err
 		}
-		d.UpdateIDInBody, d.BodyIDField, d.BodyIDValue = true, ref.Name, ref.Want == "string"
+		if d.IDBits != 0 && strings.TrimPrefix(ref.Want, "*") != d.IDGoType {
+			return unsupported("update.id", "the SDK id type %s does not match the API %s", ref.Want, d.IDGoType)
+		}
+		d.UpdateIDInBody, d.BodyIDField, d.BodyIDValue = true, ref.Name, !strings.HasPrefix(ref.Want, "*")
 	}
 	if r.Replace {
 		return b.requestValues(r, d)
@@ -235,7 +252,7 @@ func (b *builder) requestValueExpression(source overrides.RequestValue, d *kindD
 	}
 	name := strings.TrimPrefix(source.Source, "spec.")
 	for _, field := range d.Spec.Fields {
-		if field.JSON == name && field.typ.Kind == model.String {
+		if field.JSON == name && field.typ != nil && field.typ.Kind == model.String {
 			return "in.Spec." + field.GoName, field.Optional, nil
 		}
 	}
@@ -286,13 +303,17 @@ func (b *builder) conversionAs(cr *crType, sdkType string, fields []*model.Field
 		}
 		body.WriteString(code)
 	}
+	lookupParam := ""
+	if b.hasNameLookup {
+		lookupParam = ", lookup *NameLookupContext"
+	}
 	b.code = append(b.code, fmt.Sprintf(`
 // %s converts the %s to the API type %s.
-func (in *%s) %s(ctx context.Context, namespace string) (*%s.%s, error) {
+func (in *%s) %s(ctx context.Context, namespace string%s) (*%s.%s, error) {
 	out := &%s.%s{}
 %s	return out, nil
 }
-`, name, cr.Name, sdkType, cr.Name, name, b.alias, sdkType, b.alias, sdkType, body.String()))
+`, name, cr.Name, sdkType, cr.Name, name, lookupParam, b.alias, sdkType, b.alias, sdkType, body.String()))
 	return name, nil
 }
 
@@ -394,6 +415,15 @@ func (b *builder) assignFrom(f *crField, rt *model.Type, owner, path, src string
 		return "", err
 	}
 	target := "out." + ref.Name
+	if f.refForm == "split" {
+		sibling := strings.TrimSuffix(src, f.GoName) + goName(f.refSibling)
+		resolved := b.temp("id")
+		call := fmt.Sprintf("ResolveResourceID(ctx, namespace, ResourceIDRef{ResourceRef: %s}, %q)", sibling, f.ref)
+		if f.refVersion != "" {
+			call = fmt.Sprintf("ResolveResourceIDVersion(ctx, namespace, ResourceIDRef{ResourceRef: %s}, %q, %q)", sibling, f.ref, f.refVersion)
+		}
+		return fmt.Sprintf("if %s != nil {\n%s} else if %s != nil {\n%s, err := %s\nif err != nil {\nreturn nil, fmt.Errorf(\"%s: %%w\", err)\n}\n%s}\n", src, b.set(target, ref.Want, src, true), sibling, resolved, call, path, b.set(target, ref.Want, resolved, false)), nil
+	}
 	switch {
 	case f.typ.Kind == model.List || f.typ.Kind == model.Set || f.typ.Kind == model.Map:
 		stmts, expr, _, err := b.value(f, rt, src, ref.Want, path)
@@ -446,16 +476,24 @@ func (b *builder) temp(prefix string) string {
 // value writes the statements that convert src, a value of the custom resource, to the SDK value
 // type want. It returns the expression of the result and whether that expression is a pointer.
 func (b *builder) value(f *crField, rt *model.Type, src, want, path string) (string, string, bool, error) {
-	if f.ref != "" {
-		v := b.temp("v")
-		value := arg(src)
-		if f.refType != "" {
-			value = "ResourceIDRef(" + value + ")"
-		}
-		return fmt.Sprintf("%s, err := ResolveResourceID(ctx, namespace, %s, %q)\nif err != nil {\nreturn nil, fmt.Errorf(\"%s: %%w\", err)\n}\n", v, value, f.ref, path), v, false, nil
-	}
 	if len(rt.Wrappers) != 0 {
 		return b.wrappedValue(f, rt, src, path)
+	}
+	if f.ref != "" {
+		if rt.Kind == model.List || rt.Kind == model.Set {
+			elemWant, ok := strings.CutPrefix(want, "[]")
+			if !ok || elemWant != referenceWant(f) {
+				return "", "", false, unsupported(path, "a reference list needs []%s in the SDK, got %s", referenceWant(f), want)
+			}
+			out, item := b.temp("v"), b.temp("e")
+			statements, value := b.referenceValue(f, item, path+"[]")
+			return fmt.Sprintf("%s := make([]%s, 0, len(%s))\nfor _, %s := range %s {\n%s%s = append(%s, %s)\n}\n", out, elemWant, src, item, src, statements, out, out, value), out, false, nil
+		}
+		if want != referenceWant(f) {
+			return "", "", false, unsupported(path, "a reference needs %s in the SDK, got %s", referenceWant(f), want)
+		}
+		statements, value := b.referenceValue(f, src, path)
+		return statements, value, false, nil
 	}
 	switch rt.Kind {
 	case model.List, model.Set, model.Map:
@@ -502,7 +540,11 @@ func (b *builder) value(f *crField, rt *model.Type, src, want, path string) (str
 			return "", "", false, err
 		}
 		v := b.temp("v")
-		return fmt.Sprintf("%s, err := %s.%s(ctx, namespace)\nif err != nil {\nreturn nil, err\n}\n", v, deref(src), name), v, true, nil
+		args := "ctx, namespace"
+		if b.hasNameLookup {
+			args += ", lookup"
+		}
+		return fmt.Sprintf("%s, err := %s.%s(%s)\nif err != nil {\nreturn nil, err\n}\n", v, deref(src), name, args), v, true, nil
 	case model.Enum:
 		v := b.temp("v")
 		return fmt.Sprintf("%s, err := %s(%s)\nif err != nil {\nreturn nil, fmt.Errorf(\"%s: %%w\", err)\n}\n", v, f.enum.Func, arg(src), path), v, false, nil
@@ -510,10 +552,80 @@ func (b *builder) value(f *crField, rt *model.Type, src, want, path string) (str
 		if rt.WireString {
 			return "", "strconv.FormatInt(" + arg(src) + ", 10)", false, nil
 		}
-	case model.String, model.Bool, model.Number:
+	case model.String:
+		if rt.Format == "date-time" {
+			if want != "time.Time" {
+				return "", "", false, unsupported(path, "the SDK date-time field must be time.Time, got %s", want)
+			}
+			return "", src + ".Time", false, nil
+		}
+	case model.Bool, model.Number:
 		// A scalar needs no conversion.
 	}
 	return "", src, false, nil
+}
+
+func referenceWant(f *crField) string {
+	if f.refIDType != "" {
+		return f.refIDType
+	}
+	return "string"
+}
+
+func (b *builder) referenceValue(f *crField, src, path string) (string, string) {
+	v := b.temp("v")
+	if f.refForm == "named" || f.refForm == "namedBackendOnly" {
+		if f.refIDType != "" {
+			backend := b.temp("backend")
+			name := b.temp("name")
+			bits := 64
+			if f.refIDType == "int32" {
+				bits = 32
+			}
+			statements := fmt.Sprintf("var %s *int64\nvar %s *string\nif %s.BackendRef != nil {\n%s = %s.BackendRef.Name\nif %s.BackendRef.ID != nil {\nid := int64(*%s.BackendRef.ID)\n%s = &id\n}\n}\n", backend, name, src, name, src, src, src, backend)
+			statements += fmt.Sprintf("%s, err := ResolveNamedNumericResourceID(ctx, namespace, %s, %s, %s.ResourceRef, %q, %q, %q, lookup, %s, %d)\nif err != nil {\nreturn nil, fmt.Errorf(\"%s: %%w\", err)\n}\n", v, backend, name, src, f.ref, f.refVersion, f.refLookup, f.refLookup, bits, path)
+			return statements, f.refIDType + "(" + v + ")"
+		}
+		value := arg(src)
+		if f.refForm == "namedBackendOnly" {
+			if f.refType == "" {
+				value = "NamedResourceIDRef{BackendRef: &" + src + ".BackendRef}"
+			} else {
+				idField := f.refIDField
+				if idField == "" {
+					idField = "ID"
+				}
+				value = "NamedResourceIDRef{BackendRef: &NamedBackendRef{ID: " + src + ".BackendRef." + idField + ", Name: " + src + ".BackendRef.Name}}"
+			}
+		}
+		call := fmt.Sprintf("ResolveNamedResourceID(ctx, namespace, %s, %q, %q, %q, lookup, %s)", value, f.ref, f.refVersion, f.refLookup, f.refLookup)
+		return fmt.Sprintf("%s, err := %s\nif err != nil {\nreturn nil, fmt.Errorf(\"%s: %%w\", err)\n}\n", v, call, path), v
+	}
+	if f.refIDType != "" {
+		backend := b.temp("backend")
+		resource := src + ".ResourceRef"
+		statements := "var " + backend + " *int64\n"
+		if f.refForm != "resourceRefOnly" {
+			statements += fmt.Sprintf("if %s.BackendRef != nil {\nid := int64(%s.BackendRef.ID)\n%s = &id\n}\n", src, src, backend)
+		}
+		bits := 64
+		if f.refIDType == "int32" {
+			bits = 32
+		}
+		statements += fmt.Sprintf("%s, err := ResolveNumericResourceID(ctx, namespace, %s, %s, %q, %q, %d)\nif err != nil {\nreturn nil, fmt.Errorf(\"%s: %%w\", err)\n}\n", v, backend, resource, f.ref, f.refVersion, bits, path)
+		return statements, f.refIDType + "(" + v + ")"
+	}
+	value := arg(src)
+	if f.refForm == "resourceRefOnly" {
+		value = "ResourceIDRef{ResourceRef: " + src + ".ResourceRef}"
+	} else if f.refType != "" {
+		value = "ResourceIDRef(" + value + ")"
+	}
+	call := fmt.Sprintf("ResolveResourceID(ctx, namespace, %s, %q)", value, f.ref)
+	if f.refVersion != "" {
+		call = fmt.Sprintf("ResolveResourceIDVersion(ctx, namespace, %s, %q, %q)", value, f.ref, f.refVersion)
+	}
+	return fmt.Sprintf("%s, err := %s\nif err != nil {\nreturn nil, fmt.Errorf(\"%s: %%w\", err)\n}\n", v, call, path), v
 }
 
 // wrappedValue restores each one-property API wrapper around the CR value.

@@ -14,6 +14,7 @@ import (
 	"io"
 	"maps"
 	"reflect"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -69,6 +70,17 @@ type Validators struct {
 	// markers, as the released kind has none. A required field stays required, and an enum keeps
 	// its values. true keeps the limits.
 	Inferred *bool `yaml:"inferred"`
+	// Fields changes released validation at one CR spec path. Unlisted fields follow the contract.
+	Fields map[string]Validation `yaml:"fields"`
+}
+
+// Validation changes the validation markers of one released CR spec path.
+type Validation struct {
+	// Inferred overrides validators.inferred for this path's contract limits and default.
+	Inferred *bool `yaml:"inferred"`
+	// Remove names exact generated markers. Add supplies released markers.
+	Remove []string `yaml:"remove"`
+	Add    []string `yaml:"add"`
 }
 
 // API is the api section: the API keys of the iac module.
@@ -184,6 +196,18 @@ type Enum struct {
 type Ref struct {
 	// Kind is the kind of the custom resource that resourceRef names. Its status id is sent.
 	Kind string `yaml:"kind"`
+	// Form keeps a released reference with only resourceRef. The default also accepts backendRef.
+	Form string `yaml:"form"`
+	// ResourceField is the second CR field of a split reference.
+	ResourceField string `yaml:"resourceField"`
+	// Lookup names a Go function that resolves a backend name through a second SDK client.
+	Lookup string `yaml:"lookup"`
+	// IDField is the Go name of a handwritten namedBackendOnly type's backend id field.
+	IDField string `yaml:"idField"`
+	// Version is the API version of the referenced custom resource; v1alpha1 is the default.
+	Version string `yaml:"version"`
+	// BackendIDType keeps a released numeric backendRef.id type, such as uint32.
+	BackendIDType string `yaml:"backendIdType"`
 	// Type is NCRef when a released CR uses its one-rule reference validation. Without it,
 	// generated fields use ResourceIDRef and its four rules.
 	Type string `yaml:"type"`
@@ -290,14 +314,49 @@ func (f *File) check() error {
 			return fmt.Errorf("%s.ref.kind: %q is not a kind", line, field.Ref.Kind)
 		}
 		if field.Ref != nil {
+			if field.Ref.BackendIDType != "" && field.Ref.BackendIDType != "int32" && field.Ref.BackendIDType != "int64" && field.Ref.BackendIDType != "uint32" {
+				return fmt.Errorf("%s.ref.backendIdType: use int32, int64, or uint32", line)
+			}
+			if field.Ref.Form == "resourceRefOnly" && field.Ref.BackendIDType != "" {
+				return fmt.Errorf("%s.ref.backendIdType: resourceRefOnly has no backend id", line)
+			}
+			if field.Ref.Form != "" && field.Ref.Form != "resourceRefOnly" && field.Ref.Form != "split" && field.Ref.Form != "named" && field.Ref.Form != "namedBackendOnly" {
+				return fmt.Errorf("%s.ref.form: use resourceRefOnly, split, named, namedBackendOnly, or omit form", line)
+			}
+			if (field.Ref.Form == "named" || field.Ref.Form == "namedBackendOnly") && (!token.IsIdentifier(field.Ref.Lookup) || !token.IsExported(field.Ref.Lookup)) {
+				return fmt.Errorf("%s.ref.lookup: a named reference needs an exported lookup function", line)
+			}
+			if field.Ref.Form != "named" && field.Ref.Form != "namedBackendOnly" && field.Ref.Lookup != "" {
+				return fmt.Errorf("%s.ref.lookup: only a named reference uses this key", line)
+			}
+			if field.Ref.Form == "split" && (!validJSONName(field.Ref.ResourceField) || field.Ref.ResourceField == field.Name) {
+				return fmt.Errorf("%s.ref.resourceField: split needs a distinct CR property name", line)
+			}
+			if field.Ref.Form != "split" && field.Ref.ResourceField != "" {
+				return fmt.Errorf("%s.ref.resourceField: only split uses this key", line)
+			}
+			if field.Ref.Version != "" && !regexp.MustCompile(`^v[0-9]+(?:(?:alpha|beta)[0-9]+)?$`).MatchString(field.Ref.Version) {
+				return fmt.Errorf("%s.ref.version: %q is not a Kubernetes API version", line, field.Ref.Version)
+			}
+			if field.Ref.IDField != "" && (field.Ref.Form != "namedBackendOnly" || field.Ref.Type == "" || !token.IsIdentifier(field.Ref.IDField)) {
+				return fmt.Errorf("%s.ref.idField: use it with a handwritten namedBackendOnly type", line)
+			}
+			if field.Ref.Form != "" && field.Ref.Form != "namedBackendOnly" && field.Ref.Type != "" {
+				return fmt.Errorf("%s.ref.type: the selected form has its own CR type", line)
+			}
 			switch field.Ref.Type {
 			case "":
 			case "NCRef":
+				if field.Ref.Form != "" {
+					return fmt.Errorf("%s.ref.type: NCRef needs the default reference form", line)
+				}
 				if f.Mode != ModeExisting {
 					return fmt.Errorf("%s.ref.type: NCRef keeps released validation and needs mode existing", line)
 				}
 			default:
-				return fmt.Errorf("%s.ref.type: %q is not a supported reference type; omit it for ResourceIDRef", line, field.Ref.Type)
+				if field.Ref.Form != "namedBackendOnly" || f.Mode != ModeExisting || !token.IsIdentifier(field.Ref.Type) || !token.IsExported(field.Ref.Type) {
+					return fmt.Errorf("%s.ref.type: %q is not a supported released reference type", line, field.Ref.Type)
+				}
 			}
 		}
 	}
@@ -445,9 +504,27 @@ func section(doc *yaml.Node, key string) *yaml.Node {
 // inferred: false drops the limits of an API whose server does not apply them, and inferred: true
 // states the default. A written section must set the key.
 func (f *File) checkValidators() error {
+	if f.Validators != nil {
+		if f.Mode == ModeNew && len(f.Validators.Fields) != 0 {
+			return errors.New("validators.fields: a new kind follows the contract")
+		}
+		for path, change := range f.Validators.Fields {
+			if path != "spec" && !strings.HasPrefix(path, "spec.") {
+				return fmt.Errorf("validators.fields.%s: use a spec path", path)
+			}
+			if change.Inferred == nil && len(change.Remove) == 0 && len(change.Add) == 0 {
+				return fmt.Errorf("validators.fields.%s: set inferred, remove, or add", path)
+			}
+			for _, marker := range append(slices.Clone(change.Remove), change.Add...) {
+				if !strings.HasPrefix(marker, "+kubebuilder:validation:") && !strings.HasPrefix(marker, "+kubebuilder:default=") {
+					return fmt.Errorf("validators.fields.%s: %q is not a validation or default marker", path, marker)
+				}
+			}
+		}
+	}
 	if f.Mode == ModeExisting {
 		if f.Validators == nil || f.Validators.Inferred == nil {
-			return errors.New("validators.inferred is required: false for a kind whose released validation has no contract limits, and true otherwise")
+			return errors.New("validators.inferred is required: use true and set validators.fields.<path>.inferred: false for released fields without contract limits")
 		}
 		return nil
 	}
@@ -488,7 +565,7 @@ func (f *File) Policy() model.Policy {
 	}
 	p := exceptions.Policy()
 	for _, line := range f.Lines() {
-		if f.Field(line.Component, line.Field).Optional {
+		if field := f.Field(line.Component, line.Field); field.Optional || field.Required {
 			p.Released = append(p.Released, line.Component+"."+line.Field)
 		}
 		if len(f.Field(line.Component, line.Field).RequestValueBy) != 0 {
@@ -507,6 +584,25 @@ func (f *File) Policy() model.Policy {
 // validators.inferred: false.
 func (f *File) Inferred() bool {
 	return f == nil || f.Validators == nil || f.Validators.Inferred == nil || *f.Validators.Inferred
+}
+
+// InferredAt reports whether a CR spec path keeps contract validation and defaults.
+func (f *File) InferredAt(path string) bool {
+	if f != nil && f.Validators != nil {
+		if change, ok := f.Validators.Fields[path]; ok && change.Inferred != nil {
+			return *change.Inferred
+		}
+	}
+	return f.Inferred()
+}
+
+// ValidationAt returns the released validation line at a CR spec path.
+func (f *File) ValidationAt(path string) (Validation, bool) {
+	if f == nil || f.Validators == nil {
+		return Validation{}, false
+	}
+	change, ok := f.Validators.Fields[path]
+	return change, ok
 }
 
 // Lines returns every field line in a stable order.

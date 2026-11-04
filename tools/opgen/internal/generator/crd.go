@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"slices"
 	"strconv"
@@ -31,14 +32,20 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":types." + r.Name + ".fields." + f.Name + ".required", msg: "a oneOf arm cannot be required on its own"}
 		}
 		required := f.Create.Required && !inGroup[f.Name]
-		field, err := b.field(b.kind, r.Name, f.Name, f.Description, f.Type, required, "spec."+f.Name, false)
+		field, err := b.field(b.kind, r.Name, f.Name, f.Description, f.Type, required, requiredScalarWithoutPresence(f.Create, f.Type), "spec."+f.Name, false)
 		if err != nil {
 			return nil, err
 		}
+		if err := b.contractDefault(field, f.Create, field.validationPath); err != nil {
+			return nil, err
+		}
 		if f.Behavior == model.Immutable {
-			immutable(field, "spec."+f.Name)
+			immutable(field, field.validationPath)
 		}
 		spec.Fields = append(spec.Fields, field)
+		if field.refForm == "split" {
+			spec.Fields = append(spec.Fields, splitReferenceField(field))
+		}
 	}
 	groups, err := b.overrideGroups(r.Name, r.Groups, spec.Fields)
 	if err != nil {
@@ -52,7 +59,121 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 	if err := groupRules(spec, groups, "spec"); err != nil {
 		return nil, err
 	}
+	splitReferenceRules(spec)
+	if err := b.applyValidation(spec, "spec", map[*crType]bool{}, true); err != nil {
+		return nil, err
+	}
+	for _, scalar := range b.scalars {
+		if err := b.applyValidationMarkers(&scalar.Markers, scalar.path+"{}"); err != nil {
+			return nil, err
+		}
+	}
 	return spec, nil
+}
+
+// applyValidation changes released markers after the contract and oneOf rules are built.
+func (b *builder) applyValidation(t *crType, path string, seen map[*crType]bool, root bool) error {
+	if seen[t] {
+		return nil
+	}
+	seen[t] = true
+	markerPath := path + "#type"
+	if root {
+		markerPath = path
+	}
+	if err := b.applyValidationMarkers(&t.Markers, markerPath); err != nil {
+		return err
+	}
+	for _, field := range t.Fields {
+		child := path + "." + field.JSON
+		if err := b.applyValidationMarkers(&field.Markers, child); err != nil {
+			return err
+		}
+		if field.object != nil {
+			if strings.HasPrefix(field.GoType, "[]") {
+				child += "[]"
+			} else if strings.HasPrefix(field.GoType, "map[") {
+				child += "{}"
+			}
+			if err := b.applyValidation(field.object, child, seen, false); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (b *builder) applyValidationMarkers(markers *[]string, path string) error {
+	change, ok := b.file.ValidationAt(path)
+	if !ok {
+		return nil
+	}
+	for _, marker := range change.Remove {
+		index := slices.Index(*markers, marker)
+		if index < 0 {
+			return &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":validators.fields." + path, msg: fmt.Sprintf("marker %q is not generated", marker)}
+		}
+		*markers = slices.Delete(*markers, index, index+1)
+		b.usedValidators[path] = true
+	}
+	for _, marker := range change.Add {
+		if slices.Contains(*markers, marker) {
+			return &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":validators.fields." + path, msg: fmt.Sprintf("marker %q is already generated", marker)}
+		}
+		*markers = append(*markers, marker)
+		b.usedValidators[path] = true
+	}
+	return nil
+}
+
+// contractDefault writes a Kubernetes default for a field that follows the API contract.
+func (b *builder) contractDefault(field *crField, attrs *model.Attrs, path string) error {
+	if attrs == nil || attrs.Default == nil {
+		return nil
+	}
+	if !b.file.InferredAt(path) {
+		if b.file.Inferred() {
+			b.usedValidators[path] = true
+		} else {
+			b.droppedLimits = true
+		}
+		return nil
+	}
+	value := *attrs.Default
+	switch field.typ.Kind {
+	case model.String:
+		value = markerString(value)
+	case model.Enum:
+		matched := false
+		for _, enum := range field.enum.Values {
+			if enum.API == value {
+				value, matched = markerString(enum.Name), true
+				break
+			}
+		}
+		if !matched {
+			return unsupported(path, "the API default %q is not an accepted CR enum value", value)
+		}
+	case model.Bool, model.Integer, model.Number:
+		// The API default is already a scalar literal.
+	case model.List, model.Set:
+		if strings.TrimSpace(value) != "[]" {
+			return unsupported(path, "the API collection default %q is not an empty list", value)
+		}
+		value = "{}" // controller-gen reads {} as an empty list for a slice field
+	case model.Map, model.Object, model.OneOf:
+		if strings.TrimSpace(value) != "{}" {
+			return unsupported(path, "the API object default %q is not empty", value)
+		}
+		value = "{}"
+	default:
+		return unsupported(path, "the API default on a %s needs a supported CR marker", field.typ.Kind)
+	}
+	if !b.file.Inferred() {
+		b.usedValidators[path] = true
+	}
+	field.Markers = append(field.Markers, "+kubebuilder:default="+value)
+	return nil
 }
 
 // immutable adds the rule that rejects a change of the field. A rule on the field does not run
@@ -239,9 +360,35 @@ func (b *builder) groupFields(component string, owner *crType, groups []model.On
 	return remainingGroups, nil
 }
 
+// requiredScalarWithoutPresence reports a required zero-valued scalar whose released behavior
+// needs an explicit required line because the API contract cannot distinguish zero from omission.
+func requiredScalarWithoutPresence(create *model.Attrs, t *model.Type) bool {
+	if create == nil || !create.Required || create.Presence || !t.ZeroValid {
+		return false
+	}
+	switch t.Kind {
+	case model.Bool, model.Number, model.Integer:
+		return true
+	case model.String, model.Enum, model.Object, model.OneOf, model.List, model.Set, model.Map:
+		return false
+	}
+	return false
+}
+
+// validationPath maps an API field to its final CR path before markers are selected.
+func (b *builder) validationPath(component, path, apiName, crName string) string {
+	parent := strings.TrimSuffix(path, "."+apiName)
+	for groupName, group := range b.file.GroupsFor(component) {
+		if slices.Contains(group.Fields, apiName) {
+			return parent + "." + groupName + "." + crName
+		}
+	}
+	return parent + "." + crName
+}
+
 // field builds one field of the Go type owner, which holds component. inItem is true inside a
 // list item or a map value, where kubectl cannot compare a value with its old value.
-func (b *builder) field(owner, component, name, description string, t *model.Type, required bool, path string, inItem bool) (*crField, error) {
+func (b *builder) field(owner, component, name, description string, t *model.Type, required, requiredPresenceMissing bool, path string, inItem bool) (*crField, error) {
 	if err := wrapped(t, path); err != nil {
 		return nil, err
 	}
@@ -256,7 +403,7 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 		t = &requiredType
 		b.used[line] = true
 	}
-	if change.Required && !required {
+	if change.Required && (!required || requiredPresenceMissing) {
 		required = true
 		b.used[line] = true
 	}
@@ -270,6 +417,8 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 		b.used[line] = true
 	}
 	f := &crField{API: name, JSON: jsonName, GoName: goName(jsonName), Optional: !required, Doc: docLines(description), typ: t}
+	path = b.validationPath(component, path, name, jsonName)
+	f.validationPath = path
 	if change.OmitEmptyInRequest {
 		if !required || (t.Kind != model.List && t.Kind != model.Set && t.Kind != model.Map) {
 			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".omitEmptyInRequest", msg: "omitEmptyInRequest needs a required collection"}
@@ -281,7 +430,7 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 		f.Markers = append(f.Markers, "+optional")
 	}
 	if ref := b.file.Ref(component, name); ref != nil {
-		return b.refField(f, component, ref)
+		return b.refField(f, component, ref, path)
 	}
 	switch t.Kind {
 	case model.List, model.Set, model.Map:
@@ -296,11 +445,11 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 			return nil, err
 		}
 		if t.Kind == model.Map {
-			if markers := b.scalarMarkers(t.Elem, f.enum); f.object == nil && len(markers) != 0 {
+			if markers := b.scalarMarkers(t.Elem, f.enum, path+"{}"); f.object == nil && len(markers) != 0 {
 				elem = b.scalar(owner+f.GoName+"Value", elem, markers, path)
 			}
 			f.GoType = "map[string]" + elem
-			f.Markers = append(f.Markers, b.limits(boundMarkers("MinProperties", "MaxProperties", t.MinItems, t.MaxItems))...)
+			f.Markers = append(f.Markers, b.limits(boundMarkers("MinProperties", "MaxProperties", t.MinItems, t.MaxItems), path)...)
 			return f, nil
 		}
 		f.GoType = "[]" + elem
@@ -319,8 +468,8 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 			}
 			f.Markers = append(f.Markers, "+listType=set")
 		}
-		f.Markers = append(f.Markers, b.limits(boundMarkers("MinItems", "MaxItems", t.MinItems, t.MaxItems))...)
-		f.Markers = append(f.Markers, prefixed("items:", b.scalarMarkers(t.Elem, f.enum))...)
+		f.Markers = append(f.Markers, b.limits(boundMarkers("MinItems", "MaxItems", t.MinItems, t.MaxItems), path)...)
+		f.Markers = append(f.Markers, prefixed("items:", b.scalarMarkers(t.Elem, f.enum, path+"[]"))...)
 		return f, nil
 	case model.Object, model.OneOf:
 		if change.EmptyObject != "" {
@@ -349,7 +498,7 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 			}
 		}
 		f.GoType = goType
-		f.Markers = append(f.Markers, b.scalarMarkers(t, f.enum)...)
+		f.Markers = append(f.Markers, b.scalarMarkers(t, f.enum, path)...)
 	}
 	if !required {
 		f.GoType = "*" + f.GoType
@@ -367,11 +516,19 @@ func wrapped(t *model.Type, path string) error {
 
 // refField makes a string id of another resource a reference (way 2). Without a name override,
 // it replaces a trailing Id with Ref: thingId becomes thingRef.
-func (b *builder) refField(f *crField, component string, ref *overrides.Ref) (*crField, error) {
+func (b *builder) refField(f *crField, component string, ref *overrides.Ref, path string) (*crField, error) {
 	line := overrides.Line{Component: component, Field: f.API}
-	if f.typ.Kind != model.String || f.typ.Format != "" {
+	value := f.typ.Unwrapped()
+	collection := value.Kind == model.List || value.Kind == model.Set
+	if collection {
+		value = value.Elem
+	}
+	if value == nil || value.Kind != model.String && value.Kind != model.Integer || value.Kind == model.String && value.Format != "" || value.Kind == model.Integer && value.Format != "int32" && value.Format != "int64" {
 		return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".ref",
-			msg: fmt.Sprintf("ref needs a string id, the field is a %s", f.typ.Kind)}
+			msg: fmt.Sprintf("ref needs a string or int32/int64 id, or a list of ids, the field is a %s", f.typ.Kind)}
+	}
+	if value.Kind == model.String && ref.BackendIDType != "" {
+		return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".ref.backendIdType", msg: "a string id has no numeric backend id type"}
 	}
 	b.used[line] = true
 	base, _ := strings.CutSuffix(strings.TrimSuffix(f.API, "Id"), "ID")
@@ -384,13 +541,85 @@ func (b *builder) refField(f *crField, component string, ref *overrides.Ref) (*c
 		f.JSON = defaultName
 	}
 	f.GoName, f.GoType, f.ref = goName(f.JSON), "ResourceIDRef", ref.Kind
+	path = path[:strings.LastIndex(path, ".")+1] + f.JSON
+	f.validationPath = path
+	f.refForm, f.refVersion = ref.Form, ref.Version
+	f.refIDField = ref.IDField
+	if ref.Form == "named" || ref.Form == "namedBackendOnly" {
+		if ref.BackendIDType != "" {
+			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".ref.backendIdType", msg: "named uses the API id type"}
+		}
+		if ref.Form == "namedBackendOnly" && value.Kind != model.String {
+			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".ref.form", msg: "namedBackendOnly needs a string id"}
+		}
+		f.refLookup = ref.Lookup
+		switch value.Kind {
+		case model.String:
+			if ref.Form == "namedBackendOnly" {
+				f.GoType = "NamedBackendOnlyRef"
+			} else {
+				f.GoType = "NamedResourceIDRef"
+			}
+		case model.Integer:
+			if value.Format == "int32" {
+				f.GoType = "NamedInt32ResourceIDRef"
+			} else {
+				f.GoType = "NamedInt64ResourceIDRef"
+			}
+		case model.Bool, model.Number, model.Enum, model.Object, model.OneOf, model.List, model.Set, model.Map:
+			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".ref", msg: "a named reference needs a string or integer id"}
+		}
+		b.hasNameLookup = true
+	}
+	if ref.Form == "split" {
+		if collection || !f.Optional || value.Kind != model.String {
+			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".ref.form", msg: "split needs one optional string id"}
+		}
+		f.refSibling = ref.ResourceField
+		f.GoType = "*string"
+		f.Doc = append(f.Doc, fmt.Sprintf("It holds the backend id of a %s.", ref.Kind))
+		return f, nil
+	}
+	if value.Kind == model.Integer {
+		f.refIDType = value.Format
+		if ref.Form != "named" && ref.Form != "namedBackendOnly" {
+			backendType := value.Format
+			if ref.BackendIDType != "" {
+				backendType = ref.BackendIDType
+			}
+			switch backendType {
+			case "int32":
+				f.GoType = "Int32ResourceIDRef"
+			case "int64":
+				f.GoType = "Int64ResourceIDRef"
+			case "uint32":
+				f.GoType = "UInt32ResourceIDRef"
+			}
+		}
+	}
+	if ref.Form == "resourceRefOnly" {
+		f.GoType = "ResourceOnlyRef"
+	}
 	if ref.Type != "" {
 		f.GoType, f.refType = ref.Type, ref.Type
 	}
-	if f.Optional {
+	if collection {
+		f.GoType = "[]" + f.GoType
+		f.Markers = append(f.Markers, b.limits(boundMarkers("MinItems", "MaxItems", f.typ.MinItems, f.typ.MaxItems), path)...)
+		if f.typ.Kind == model.Set && b.file.Field(component, f.API).Collection != "list" {
+			f.Markers = append(f.Markers, "+listType=set")
+		}
+	} else if f.Optional {
 		f.GoType = "*" + f.GoType
 	}
-	f.Doc = append(f.Doc, fmt.Sprintf("It refers to a %s: by backendRef.id, or by resourceRef, a %s custom resource.", ref.Kind, ref.Kind))
+	switch ref.Form {
+	case "resourceRefOnly":
+		f.Doc = append(f.Doc, fmt.Sprintf("It refers to a %s custom resource through resourceRef.", ref.Kind))
+	case "named", "namedBackendOnly":
+		f.Doc = append(f.Doc, fmt.Sprintf("It refers to a %s by backend id, backend name, or custom resource.", ref.Kind))
+	default:
+		f.Doc = append(f.Doc, fmt.Sprintf("It refers to a %s: by backendRef.id, or by resourceRef, a %s custom resource.", ref.Kind, ref.Kind))
+	}
 	return f, nil
 }
 
@@ -401,7 +630,11 @@ func (b *builder) elemType(t *model.Type, path string, f *crField) (string, erro
 	}
 	switch t.Kind {
 	case model.Object, model.OneOf:
-		obj, err := b.object(t, path, true)
+		suffix := "[]"
+		if f.typ.Kind == model.Map {
+			suffix = "{}"
+		}
+		obj, err := b.object(t, path+suffix, true)
 		if err != nil {
 			return "", err
 		}
@@ -427,10 +660,12 @@ func (b *builder) elemType(t *model.Type, path string, f *crField) (string, erro
 // scalarType is the Go type of a scalar in the custom resource.
 func scalarType(t *model.Type, path string) (string, error) {
 	switch t.Kind {
-	case model.String, model.Enum:
+	case model.String:
 		if t.Format == "date-time" {
-			return "", unsupported(path, "a date-time is not supported yet")
+			return "metav1.Time", nil
 		}
+		return "string", nil
+	case model.Enum:
 		return "string", nil
 	case model.Bool:
 		return "bool", nil
@@ -453,26 +688,37 @@ func scalarType(t *model.Type, path string) (string, error) {
 // scalarMarkers are the markers of a scalar: the values of an enum, or the contract limits that
 // limits keeps. The limits are API limits, so kubectl rejects only a value that the API rejects
 // too.
-func (b *builder) scalarMarkers(t *model.Type, enum *enumMap) []string {
+func (b *builder) scalarMarkers(t *model.Type, enum *enumMap, path string) []string {
 	if enum != nil {
 		return []string{"+kubebuilder:validation:Enum=" + enum.Names()}
 	}
-	return b.limits(limitMarkers(t))
+	return b.limits(limitMarkers(t), path)
 }
 
 // limits returns the markers of contract limits, or none when validators.inferred is false. It
 // records a dropped limit, so a validators line that drops nothing is reported as unused.
-func (b *builder) limits(markers []string) []string {
-	if b.file.Inferred() {
+func (b *builder) limits(markers []string, path string) []string {
+	if b.file.InferredAt(path) {
+		if !b.file.Inferred() && len(markers) != 0 {
+			b.usedValidators[path] = true
+		}
 		return markers
 	}
 	if len(markers) != 0 {
-		b.droppedLimits = true
+		if b.file.Inferred() {
+			b.usedValidators[path] = true
+		} else {
+			b.droppedLimits = true
+		}
 	}
 	return nil
 }
 
 func limitMarkers(t *model.Type) []string {
+	if t.Format == "date-time" {
+		// metav1.Time provides the date-time schema; controller-gen rejects string limits on it.
+		return nil
+	}
 	var out []string
 	out = append(out, boundMarkers("MinLength", "MaxLength", t.MinLength, t.MaxLength)...)
 	if t.Pattern != "" {
@@ -550,12 +796,20 @@ func (b *builder) typeName(component string) string {
 	return b.kind + name
 }
 
-// object builds the struct of an object or a oneOf, once per component.
+// object builds the struct of an object or a oneOf. A path with different validation gets its own struct.
 func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, error) {
 	if t.Schema == "" {
 		return nil, unsupported(path, "an inline object is not supported")
 	}
 	name := b.typeName(t.Schema)
+	if existing := b.types[name]; existing != nil && existing.schema != t.Schema {
+		return nil, collision(path, "the components %s and %s both are the Go type %s", existing.schema, t.Schema, name)
+	}
+	if existing := b.types[name]; existing != nil && existing.path != path &&
+		(b.hasNestedValidation(existing.path) || b.hasNestedValidation(path)) {
+		hash := sha256.Sum256([]byte(path))
+		name = fmt.Sprintf("%sAt%s%x", name, goName(path), hash[:6])
+	}
 	if existing, ok := b.types[name]; ok {
 		if existing.schema != t.Schema {
 			return nil, collision(path, "the components %s and %s both are the Go type %s", existing.schema, t.Schema, name)
@@ -572,7 +826,7 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 		}
 		return existing, nil
 	}
-	obj := &crType{Name: name, schema: t.Schema, Doc: []string{fmt.Sprintf("%s is the %s object of the API.", name, t.Schema)}}
+	obj := &crType{Name: name, schema: t.Schema, path: path, Doc: []string{fmt.Sprintf("%s is the %s object of the API.", name, t.Schema)}}
 	b.types[name] = obj
 	b.order = append(b.order, obj)
 	inGroup := map[string]bool{}
@@ -593,17 +847,23 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 		}
 		required := t.Kind != model.OneOf && f.Create.Required && !inGroup[f.Name]
 		child := path + "." + f.Name
-		field, err := b.field(obj.Name, t.Schema, f.Name, f.Description, f.Type, required, child, inItem)
+		field, err := b.field(obj.Name, t.Schema, f.Name, f.Description, f.Type, required, requiredScalarWithoutPresence(f.Create, f.Type), child, inItem)
 		if err != nil {
+			return nil, err
+		}
+		if err := b.contractDefault(field, f.Create, field.validationPath); err != nil {
 			return nil, err
 		}
 		if f.Behavior == model.Immutable {
 			if inItem {
 				return nil, unsupported(child, "kubectl cannot reject a change of an immutable field inside a list item or a map value")
 			}
-			immutable(field, child)
+			immutable(field, field.validationPath)
 		}
 		obj.Fields = append(obj.Fields, field)
+		if field.refForm == "split" {
+			obj.Fields = append(obj.Fields, splitReferenceField(field))
+		}
 	}
 	if len(obj.Fields) == 0 && (t.Kind != model.Object || len(t.Fields) != 0) {
 		return nil, unsupported(path, "an object without fields that a request sends is not supported yet")
@@ -624,7 +884,40 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 	if err != nil {
 		return nil, err
 	}
-	return obj, groupRules(obj, groups, path)
+	if err := groupRules(obj, groups, path); err != nil {
+		return nil, err
+	}
+	splitReferenceRules(obj)
+	return obj, nil
+}
+
+// hasNestedValidation reports whether a path changes markers inside an object.
+func (b *builder) hasNestedValidation(path string) bool {
+	if b.file == nil || b.file.Validators == nil {
+		return false
+	}
+	for key := range b.file.Validators.Fields {
+		if key == path+"#type" || strings.HasPrefix(key, path+".") {
+			return true
+		}
+	}
+	return false
+}
+
+func splitReferenceRules(t *crType) {
+	for _, f := range t.Fields {
+		if f.refForm == "split" {
+			rule := fmt.Sprintf("!(has(self.%s) && has(self.%s))", f.JSON, f.refSibling)
+			t.Markers = append(t.Markers, celMarker(rule, "Only one of "+f.JSON+" or "+f.refSibling+" can be set"))
+		}
+	}
+}
+
+func splitReferenceField(f *crField) *crField {
+	return &crField{
+		JSON: f.refSibling, GoName: goName(f.refSibling), GoType: "*ResourceRef", Optional: true,
+		Doc: []string{fmt.Sprintf("It refers to a %s custom resource.", f.ref)}, synthetic: true,
+	}
 }
 
 // enum builds the map of an enum component, once per component.
@@ -673,7 +966,7 @@ func (b *builder) enum(t *model.Type, path string) (*enumMap, error) {
 			return nil, err
 		}
 		constantByName[name] = b.alias + "." + c
-		e.Values = append(e.Values, enumValue{Name: name, Const: constantByName[name]})
+		e.Values = append(e.Values, enumValue{API: v, Name: name, Const: constantByName[name]})
 	}
 	if overridden {
 		for alias, target := range line.Aliases {

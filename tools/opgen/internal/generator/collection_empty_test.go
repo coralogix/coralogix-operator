@@ -32,7 +32,7 @@ func testBuilder(field overrides.Field) *builder {
 func TestRequiredListCanOmitEmptyRequestValue(t *testing.T) {
 	b := testBuilder(overrides.Field{OmitEmptyInRequest: true})
 	list := &model.Type{Kind: model.List, Elem: &model.Type{Kind: model.String}}
-	f, err := b.field("ThingConfig", "ThingConfig", "items", "", list, true, "spec.items", false)
+	f, err := b.field("ThingConfig", "ThingConfig", "items", "", list, true, false, "spec.items", false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,7 +59,7 @@ func TestOmitEmptyRequestNeedsRequiredCollection(t *testing.T) {
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			b := testBuilder(overrides.Field{OmitEmptyInRequest: true})
-			_, err := b.field("ThingConfig", "ThingConfig", "items", "", tt.typ, tt.required, "spec.items", false)
+			_, err := b.field("ThingConfig", "ThingConfig", "items", "", tt.typ, tt.required, false, "spec.items", false)
 			if err == nil || !strings.Contains(err.Error(), "omitEmptyInRequest needs a required collection") {
 				t.Fatalf("want an invalid override, got %v", err)
 			}
@@ -78,7 +78,7 @@ func TestEmptyObjectArm(t *testing.T) {
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			b := testBuilder(overrides.Field{EmptyObject: tt.shape})
-			f, err := b.field("ThingConfig", "ThingConfig", "empty", "", empty, false, "spec.config.empty", false)
+			f, err := b.field("ThingConfig", "ThingConfig", "empty", "", empty, false, false, "spec.config.empty", false)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -115,7 +115,7 @@ func TestSetAsReleasedList(t *testing.T) {
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			b := testBuilder(overrides.Field{Collection: "list", ListMapKey: tt.key})
-			f, err := b.field("ThingConfig", "ThingConfig", "items", "", &model.Type{Kind: model.Set, Elem: tt.elem}, false, "spec.items", false)
+			f, err := b.field("ThingConfig", "ThingConfig", "items", "", &model.Type{Kind: model.Set, Elem: tt.elem}, false, false, "spec.items", false)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -165,7 +165,7 @@ func TestCollectionOverrideNeedsASetAndAValidKey(t *testing.T) {
 					"entityType": {Name: "entityType", Ref: &overrides.Ref{Kind: "Thing"}},
 				}}
 			}
-			_, err := b.field("ThingConfig", "ThingConfig", "items", "", tt.typ, false, "spec.items", false)
+			_, err := b.field("ThingConfig", "ThingConfig", "items", "", tt.typ, false, false, "spec.items", false)
 			if err == nil || !strings.Contains(err.Error(), "behavior-overrides.yaml") || !strings.Contains(err.Error(), "collection") && !strings.Contains(err.Error(), "listMapKey") {
 				t.Fatalf("want an invalid override, got %v", err)
 			}

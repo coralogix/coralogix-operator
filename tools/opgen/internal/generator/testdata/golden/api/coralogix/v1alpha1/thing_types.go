@@ -35,6 +35,7 @@ type ThingSpec struct {
 
 	// Whether the thing is enabled. The server sets true when it is omitted.
 	// +optional
+	// +kubebuilder:default=true
 	Enabled *bool `json:"enabled,omitempty"`
 
 	// The kind. It cannot change.

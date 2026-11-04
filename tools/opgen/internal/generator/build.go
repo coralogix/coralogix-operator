@@ -63,6 +63,9 @@ type kindData struct {
 	Mask, MaskSetter           string // the update mask and its setter, "" for a full replace
 	IDField                    string // the Go field of the id in the resource response
 	IDValue                    bool   // the id field is a value, not a pointer
+	IDBits                     int    // 32 or 64 for a numeric API id; status still stores a string
+	IDGoType                   string // int32 or int64 for a numeric API id
+	IDZeroValid                bool
 	CreateResponseField        string // the field that wraps the resource in the Create response
 	CreateResponseValue        bool
 	GetResponseField           string
@@ -77,6 +80,7 @@ type kindData struct {
 	MaskBodyValue              bool
 	CreateValues, UpdateValues []requestValueData
 	HasUUID                    bool
+	HasNameLookup              bool
 	// UpdateIDInBody: Update has no id in its path (api.updateIDInBody). UpdateRequest copies the
 	// status id into the body field BodyIDField, a value when BodyIDValue is true.
 	UpdateIDInBody  bool
@@ -94,6 +98,7 @@ type crType struct {
 	Markers []string
 	Fields  []*crField
 	schema  string // the response component, "" for the spec
+	path    string // CR path used to build this component's validation
 	groups  []model.OneOfGroup
 }
 
@@ -109,20 +114,28 @@ type crScalar struct {
 
 // crField is a field of a Go struct of the custom resource.
 type crField struct {
-	API       string // the API property name
-	JSON      string // the custom resource name: the API name, or the name of a reference
-	GoName    string
-	GoType    string
-	Optional  bool
-	Doc       []string
-	Markers   []string
-	typ       *model.Type // the type in the resource response
-	object    *crType     // the struct of an object, or of the items of a list or map
-	enum      *enumMap    // the enum, or the enum of the items of a list
-	immutable bool
-	ref       string // the kind that a reference names, "" for a field that is not one
-	refType   string // the CR reference type, when it differs from ResourceIDRef
-	group     bool   // this field groups API fields under a released CR object
+	API            string // the API property name
+	JSON           string // the custom resource name: the API name, or the name of a reference
+	GoName         string
+	GoType         string
+	Optional       bool
+	Doc            []string
+	Markers        []string
+	typ            *model.Type // the type in the resource response
+	object         *crType     // the struct of an object, or of the items of a list or map
+	enum           *enumMap    // the enum, or the enum of the items of a list
+	immutable      bool
+	ref            string // the kind that a reference names, "" for a field that is not one
+	refType        string // the CR reference type, when it differs from ResourceIDRef
+	refForm        string // resourceRefOnly, or empty for backendRef and resourceRef
+	refVersion     string // the referenced CR API version, empty for v1alpha1
+	refIDType      string // int32 or int64 for a numeric API id; empty for a string id
+	refSibling     string // second CR field of a split reference
+	refLookup      string // Go function that resolves a backend name
+	refIDField     string // Go id field of a handwritten namedBackendOnly type
+	validationPath string // final CR spec path used for inferred validation and defaults
+	synthetic      bool   // a CR field with no API property of its own
+	group          bool   // this field groups API fields under a released CR object
 
 	omitEmptyInRequest bool
 }
@@ -144,7 +157,7 @@ type enumMap struct {
 }
 
 type enumValue struct {
-	Name, Const string
+	API, Name, Const string
 }
 
 type requestValueData struct {
@@ -167,6 +180,7 @@ type builder struct {
 	used             map[overrides.Line]bool // the lines of the file that changed the output
 	usedEnums        map[string]bool
 	usedGroups       map[string]bool
+	usedValidators   map[string]bool
 	ix               *refIndex
 	alias            string
 	types            map[string]*crType
@@ -178,6 +192,7 @@ type builder struct {
 	code             []string
 	tmp              int
 	conversionSuffix string // separates Create and Update conversions of a wrapped resource
+	hasNameLookup    bool
 	// droppedLimits: validators.inferred: false dropped at least one contract limit.
 	droppedLimits bool
 }
@@ -190,7 +205,7 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 		return nil, err
 	}
 	b := &builder{kind: entry.Kind, file: file, used: map[overrides.Line]bool{}, usedEnums: map[string]bool{}, ix: ix, alias: sdkAlias(ix.pkg.Name), types: map[string]*crType{},
-		enums: map[string]*enumMap{}, usedGroups: map[string]bool{}, convs: map[string]string{}}
+		enums: map[string]*enumMap{}, usedGroups: map[string]bool{}, usedValidators: map[string]bool{}, convs: map[string]string{}}
 	d := &kindData{
 		Kind: entry.Kind, Lower: strings.ToLower(entry.Kind), Plural: plural(entry.Kind),
 		Finalizer: kebab(entry.Kind) + ".coralogix.com/finalizer", Module: module,
@@ -220,6 +235,7 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 		return nil, err
 	}
 	d.Types, d.Scalars, d.Enums, d.Convs = b.order, b.scalars, b.enumSeq, b.code
+	d.HasNameLookup = b.hasNameLookup
 	if err := b.checkNames(d); err != nil {
 		return nil, err
 	}
@@ -241,6 +257,13 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 		}
 	}
 	if file != nil {
+		if file.Validators != nil {
+			for path := range file.Validators.Fields {
+				if !b.usedValidators[path] {
+					return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":validators.fields." + path, msg: "the line changes no generated validation"}
+				}
+			}
+		}
 		for _, name := range file.Unwrap {
 			if !r.UnwrapUsed["unwrap."+name] {
 				return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":unwrap." + name, msg: "the component has no wrapper in this resource"}
@@ -319,8 +342,12 @@ func checkLifecycle(r *model.Resource) error {
 	switch {
 	case r.Singleton:
 		return unsupported("resource", "a singleton is not supported yet")
-	case r.IDType == nil || r.IDType.Kind != model.String:
-		return unsupported("resource", "the id must be a string")
+	case r.IDType == nil:
+		return unsupported("resource", "the id has no type")
+	case r.IDType.Kind == model.Integer && r.IDType.Format != "int32" && r.IDType.Format != "int64":
+		return unsupported("resource", "a numeric id must be int32 or int64")
+	case r.IDType.Kind != model.String && r.IDType.Kind != model.Integer:
+		return unsupported("resource", "the id must be a string, int32, or int64")
 	case !r.Create.Response.Direct && r.Create.Response.Field == "":
 		return unsupported("create.response", "Create must return the resource directly or in a field")
 	}

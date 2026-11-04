@@ -8,6 +8,9 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+{{- if .HasNameLookup}}
+	"{{.CxsdkPath}}"
+{{- end}}
 {{- if .HasUUID}}
 	gouuid "github.com/google/uuid"
 {{- end}}
@@ -24,9 +27,12 @@ const {{.Kind}}UpdateMask = "{{.Mask}}"
 {{- end}}
 
 // CreateRequest returns the body of the Create request of the {{.Kind}}.
-func (in *{{.Kind}}) CreateRequest(ctx context.Context) (*{{.SDKAlias}}.{{.CreateBody}}, error) {
+func (in *{{.Kind}}) CreateRequest(ctx context.Context{{if .HasNameLookup}}, clientSet *cxsdk.ClientSet{{end}}) (*{{.SDKAlias}}.{{.CreateBody}}, error) {
+{{- if .HasNameLookup}}
+	lookup := NewNameLookupContext(clientSet)
+{{- end}}
 {{- if .CreateWrapperField}}
-	resource, err := in.Spec.{{.CreateConv}}(ctx, in.Namespace)
+	resource, err := in.Spec.{{.CreateConv}}(ctx, in.Namespace{{if .HasNameLookup}}, lookup{{end}})
 	if err != nil {
 		return nil, err
 	}
@@ -37,15 +43,18 @@ func (in *{{.Kind}}) CreateRequest(ctx context.Context) (*{{.SDKAlias}}.{{.Creat
 {{- end}}
 	return out, nil
 {{- else}}
-	return in.Spec.{{.CreateConv}}(ctx, in.Namespace)
+	return in.Spec.{{.CreateConv}}(ctx, in.Namespace{{if .HasNameLookup}}, lookup{{end}})
 {{- end}}
 }
 
 // UpdateRequest returns the body of the Update request of the {{.Kind}}.{{if .Replace}} The body
 // has the whole spec: the API replaces the resource.{{end}}
-func (in *{{.Kind}}) UpdateRequest(ctx context.Context) (*{{.SDKAlias}}.{{.UpdateBody}}, error) {
+func (in *{{.Kind}}) UpdateRequest(ctx context.Context{{if .HasNameLookup}}, clientSet *cxsdk.ClientSet{{end}}) (*{{.SDKAlias}}.{{.UpdateBody}}, error) {
+{{- if .HasNameLookup}}
+	lookup := NewNameLookupContext(clientSet)
+{{- end}}
 {{- if or .UpdateIDInBody .UpdateWrapperField .MaskInBody}}
-	{{if .UpdateWrapperField}}resource{{else}}out{{end}}, err := in.Spec.{{.UpdateConv}}(ctx, in.Namespace)
+	{{if .UpdateWrapperField}}resource{{else}}out{{end}}, err := in.Spec.{{.UpdateConv}}(ctx, in.Namespace{{if .HasNameLookup}}, lookup{{end}})
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +64,16 @@ func (in *{{.Kind}}) UpdateRequest(ctx context.Context) (*{{.SDKAlias}}.{{.Updat
 {{- end}}
 {{- if .UpdateIDInBody}}
 	// Update has no id in its path: the body holds the id of the status.
+	{{- if .IDBits}}
+	parsedID, err := strconv.ParseInt(ptr.Deref(in.Status.ID, ""), 10, {{.IDBits}})
+	if err != nil {
+		return nil, fmt.Errorf("invalid status id of {{.Kind}} %q: %w", ptr.Deref(in.Status.ID, ""), err)
+	}
+	idValue := {{.IDGoType}}(parsedID)
+	out.{{if .BodyIDInWrapper}}{{.UpdateWrapperField}}.{{end}}{{.BodyIDField}} = {{if .BodyIDValue}}idValue{{else}}ptr.To(idValue){{end}}
+	{{- else}}
 	out.{{if .BodyIDInWrapper}}{{.UpdateWrapperField}}.{{end}}{{.BodyIDField}} = {{if .BodyIDValue}}ptr.Deref(in.Status.ID, ""){{else}}ptr.To(ptr.Deref(in.Status.ID, "")){{end}}
+	{{- end}}
 {{- end}}
 {{- if .MaskInBody}}
 	out.{{.MaskBodyField}} = {{if .MaskBodyValue}}{{.Kind}}UpdateMask{{else}}ptr.To({{.Kind}}UpdateMask){{end}}
@@ -65,7 +83,7 @@ func (in *{{.Kind}}) UpdateRequest(ctx context.Context) (*{{.SDKAlias}}.{{.Updat
 {{- end}}
 	return out, nil
 {{- else}}
-	return in.Spec.{{.UpdateConv}}(ctx, in.Namespace)
+	return in.Spec.{{.UpdateConv}}(ctx, in.Namespace{{if .HasNameLookup}}, lookup{{end}})
 {{- end}}
 }
 {{range .Convs}}{{.}}{{end}}
