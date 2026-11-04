@@ -149,6 +149,9 @@ func generateFromInput(input source.Input, root, loadDir string) error {
 	if report := nameCollisions(root, out.files); len(report) != 0 {
 		return &EligibilityError{Report: report.Normalize()}
 	}
+	if report := duplicateEntries(root, out); len(report) != 0 {
+		return &EligibilityError{Report: report.Normalize()}
+	}
 	return publish(root, out)
 }
 
@@ -339,6 +342,7 @@ func renderAll(all []*validated, sdkModule, module string) (output, error) {
 		out.files[path] = data
 	}
 	out.blocks = shared.blocks
+	out.entries = shared.entries
 	return out, nil
 }
 
@@ -558,6 +562,7 @@ func asEligibility(entry kindEntry, err error) *EligibilityError {
 	remediation := map[string]string{
 		codeShapeUnsupported:         "Use a contract shape that the operator renderer supports, or extend the renderer.",
 		codeNameCollision:            "Rename the component or the field in the API contract.",
+		codeUpdateOnlyField:          "Add `skip: true` for the field to " + overrides.FileName + " to leave it out of the CR and the requests, or extend the renderer to send an Update-only field.",
 		codeE2EInvalid:               "Fix " + e2eFileName + ".",
 		codeE2ERequired:              "Set the value in " + e2eFileName + ".",
 		codeE2EUnused:                "Delete the line from " + e2eFileName + ", or fix the field path.",

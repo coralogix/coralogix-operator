@@ -72,6 +72,8 @@ cd tools/opgen && go run ./cmd/opgen check \
 - When the generator adds an output directory, include it in stale-file cleanup. Test that removing the kind or its output configuration removes the generated file and keeps handwritten files.
 - Per kind it writes `<kind>_types.go`, `<kind>_convert.go`, `<kind>_controller.go`, the sample `config/samples/v1alpha1/generated/<kind>.yaml`, and the e2e test `tests/e2e/<kind>_generated_test.go`. It also writes `generated_registry.go`, `internal/utils/generated_kinds.go`, and the `# BEGIN generated kinds` blocks of `PROJECT`, `config/crd/kustomization.yaml`, and the Helm `cluster_role.yaml`.
 - Do not hand-edit generated files. Change the contract or the generator, and run `make codegen`.
+- An API field that Create does not have but Update does (`OPERATOR_UPDATE_ONLY_FIELD`) stops the run. The renderer cannot send a field in only one request, and it must not drop one without a word. Add `skip: true` for the field to keep it out of the CR and the requests, or extend the renderer.
+- A handwritten entry of a generated kind in `PROJECT`, `config/crd/kustomization.yaml`, or the Helm `cluster_role.yaml` stops the run (`OPERATOR_DUPLICATE_ENTRY`). Remove the handwritten entry when a kind moves to generated code.
 - `tools/opgen/kinds/<kind>/e2e.yaml` holds only the e2e values that the contract cannot state.
 - Choose generated sample values that pass admission on the oldest Kubernetes version in CI. A selected oneOf arm with an empty object can fail CEL validation on older versions.
 - Use values from a working API fixture for strings that name server-side resources, such as output schemas. The API contract can validate their syntax but cannot prove they exist.

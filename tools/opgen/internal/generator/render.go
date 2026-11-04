@@ -90,7 +90,7 @@ type sharedData struct {
 // renderShared returns the files and the blocks that list every kind.
 func renderShared(module, cxsdk string, kinds []*kindData) (output, error) {
 	data := &sharedData{Header: version.GoHeader, Module: module, CxsdkPath: cxsdk, Kinds: kinds}
-	out := output{files: map[string][]byte{}, blocks: map[string]string{}}
+	out := output{files: map[string][]byte{}, blocks: map[string]string{}, entries: map[string][]string{}}
 	for path, tmpl := range map[string]string{registryFile: "registry.go.tmpl", kindsGoFile: "kinds.go.tmpl"} {
 		src, err := execute(tmpl, data)
 		if err != nil {
@@ -113,6 +113,11 @@ func renderShared(module, cxsdk string, kinds []*kindData) (output, error) {
 `, k.Kind, module)
 		fmt.Fprintf(&kustomization, "  - bases/coralogix.com_%s.yaml\n", k.Plural)
 		resources = append(resources, k.Plural)
+		out.entries[projectFile] = append(out.entries[projectFile], "kind: "+k.Kind)
+		out.entries[crdKustomization] = append(out.entries[crdKustomization], "- bases/coralogix.com_"+k.Plural+".yaml")
+		for _, suffix := range []string{"", "/finalizers", "/status"} {
+			out.entries[helmClusterRole] = append(out.entries[helmClusterRole], "- "+k.Plural+suffix)
+		}
 	}
 	out.files[version.VersionsFile] = renderVersions(kinds)
 	out.blocks[projectFile] = project.String()

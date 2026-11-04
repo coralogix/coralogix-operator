@@ -22,6 +22,10 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 		}
 	}
 	for _, f := range r.Fields {
+		if f.Behavior != model.Computed && f.Create == nil && f.Update != nil {
+			return nil, &shapeError{code: codeUpdateOnlyField, path: "types." + r.Name + ".fields." + f.Name,
+				msg: "the Update request has the field " + f.Name + ", but the Create request does not; the renderer cannot send a field in only one of them"}
+		}
 		if f.Behavior == model.Computed || f.Create == nil {
 			continue
 		}
