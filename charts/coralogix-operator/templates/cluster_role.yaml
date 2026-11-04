@@ -80,7 +80,6 @@ rules:
       - tcologspolicies
       - tcorumpolicies
       - tcotracespolicies
-      - views
     verbs:
       - create
       - delete
@@ -120,7 +119,6 @@ rules:
       - tcologspolicies/finalizers
       - tcorumpolicies/finalizers
       - tcotracespolicies/finalizers
-      - views/finalizers
     verbs:
       - update
   - apiGroups:
@@ -154,7 +152,6 @@ rules:
       - tcologspolicies/status
       - tcorumpolicies/status
       - tcotracespolicies/status
-      - views/status
     verbs:
       - get
       - patch
@@ -173,6 +170,7 @@ rules:
     resources:
       - globalrouters
       - presets
+      - views
       - viewfolders
     verbs:
       - create
@@ -187,6 +185,7 @@ rules:
     resources:
       - globalrouters/finalizers
       - presets/finalizers
+      - views/finalizers
       - viewfolders/finalizers
     verbs:
       - update
@@ -195,6 +194,7 @@ rules:
     resources:
       - globalrouters/status
       - presets/status
+      - views/status
       - viewfolders/status
     verbs:
       - get

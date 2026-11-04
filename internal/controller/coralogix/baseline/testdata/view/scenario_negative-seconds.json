@@ -1,0 +1,116 @@
+[
+  {
+    "step": "create with negative seconds: admission accepts it",
+    "spec": {
+      "filters": {
+        "filters": [
+          {
+            "name": "severity",
+            "selectedValues": {
+              "ERROR": true,
+              "INFO": false
+            }
+          }
+        ]
+      },
+      "name": "Baseline view",
+      "timeSelection": {
+        "quickSelection": {
+          "seconds": -1
+        }
+      },
+      "viewType": "logs"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/data-exploration/views/v1/views",
+        "body": {
+          "filters": {
+            "filters": [
+              {
+                "name": "severity",
+                "selectedValues": {
+                  "ERROR": true,
+                  "INFO": false
+                }
+              }
+            ]
+          },
+          "name": "Baseline view",
+          "timeSelection": {
+            "quickSelection": {
+              "seconds": -1
+            }
+          },
+          "viewType": "VIEW_TYPE_LOGS"
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/data-exploration/views/v1/views",
+        "body": {
+          "filters": {
+            "filters": [
+              {
+                "name": "severity",
+                "selectedValues": {
+                  "ERROR": true,
+                  "INFO": false
+                }
+              }
+            ]
+          },
+          "name": "Baseline view",
+          "timeSelection": {
+            "quickSelection": {
+              "seconds": -1
+            }
+          },
+          "viewType": "VIEW_TYPE_LOGS"
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

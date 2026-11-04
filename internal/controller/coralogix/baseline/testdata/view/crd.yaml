@@ -70,6 +70,12 @@ spec:
                 properties:
                   query:
                     type: string
+                  syntaxType:
+                    default: lucene
+                    enum:
+                    - lucene
+                    - dataprime
+                    type: string
                 required:
                 - query
                 type: object
@@ -97,9 +103,18 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-validations:
-                - message: Exactly one of quickSelection or customSelection must be
+                - message: Exactly one of customSelection, quickSelection must be
                     set
-                  rule: has(self.quickSelection) != has(self.customSelection)
+                  rule: '(has(self.customSelection) ? 1 : 0) + (has(self.quickSelection)
+                    ? 1 : 0) == 1'
+              viewType:
+                default: logs
+                enum:
+                - logs
+                - templates
+                - archiveLogs
+                - archiveTemplates
+                type: string
             required:
             - filters
             - name

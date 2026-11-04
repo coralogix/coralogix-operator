@@ -120,7 +120,7 @@ var _ = Describe("View", Ordered, func() {
 
 	It("Should deny a View creation with an invalid timeSelection", func(ctx context.Context) {
 		By("Creating a view with both quickSelection and customSelection")
-		view.Spec.TimeSelection.CustomSelection = &coralogixv1alpha1.CustomTimeSelection{
+		view.Spec.TimeSelection.CustomSelection = &coralogixv1alpha1.ViewCustomTimeSelection{
 			FromTime: metav1.Time{
 				Time: time.Now().Add(time.Hour),
 			},
@@ -131,7 +131,7 @@ var _ = Describe("View", Ordered, func() {
 
 		err := k8sClient.Create(ctx, view)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("Exactly one of quickSelection or customSelection must be set"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of customSelection, quickSelection must be set"))
 	})
 })
 
@@ -155,16 +155,16 @@ func getSampleView(name, folderName, namespace string) *coralogixv1alpha1.View {
 		},
 		Spec: coralogixv1alpha1.ViewSpec{
 			Name: name,
-			SearchQuery: &coralogixv1alpha1.SearchQuery{
+			SearchQuery: &coralogixv1alpha1.ViewSearchQuery{
 				Query: "region:us-west-2",
 			},
-			TimeSelection: coralogixv1alpha1.TimeSelection{
-				QuickSelection: &coralogixv1alpha1.QuickTimeSelection{
+			TimeSelection: coralogixv1alpha1.ViewTimeSelection{
+				QuickSelection: &coralogixv1alpha1.ViewQuickTimeSelection{
 					Seconds: 900,
 				},
 			},
-			Filters: coralogixv1alpha1.SelectedFilters{
-				Filters: []coralogixv1alpha1.ViewFilter{
+			Filters: coralogixv1alpha1.ViewSelectedFilters{
+				Filters: []coralogixv1alpha1.ViewsV1Filter{
 					{Name: "applicationName", SelectedValues: map[string]bool{
 						"sample-app": true,
 					}},
@@ -177,7 +177,7 @@ func getSampleView(name, folderName, namespace string) *coralogixv1alpha1.View {
 					}},
 				},
 			},
-			Folder: &coralogixv1alpha1.Folder{
+			Folder: &coralogixv1alpha1.ResourceOnlyRef{
 				ResourceRef: &coralogixv1alpha1.ResourceRef{
 					Name: folderName,
 				},

@@ -20,7 +20,6 @@ resources:
   - bases/coralogix.com_alertschedulers.yaml
   - bases/coralogix.com_dashboards.yaml
   - bases/coralogix.com_dashboardsfolders.yaml
-  - bases/coralogix.com_views.yaml
   - bases/coralogix.com_archivelogstargets.yaml
   - bases/coralogix.com_archivemetricstargets.yaml
   - bases/coralogix.com_slos.yaml
@@ -34,6 +33,7 @@ resources:
   # BEGIN generated kinds
   - bases/coralogix.com_globalrouters.yaml
   - bases/coralogix.com_presets.yaml
+  - bases/coralogix.com_views.yaml
   - bases/coralogix.com_viewfolders.yaml
   # END generated kinds
 #+kubebuilder:scaffold:crdkustomizeresource

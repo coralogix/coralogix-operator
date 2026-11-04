@@ -1,0 +1,29 @@
+resource: View
+mode: existing
+validators:
+  inferred: true
+  # The released CRD has none of the contract limits on these fields.
+  fields:
+    spec.name: {inferred: false}
+    spec.searchQuery.query: {inferred: false}
+    spec.filters.filters:
+      inferred: false
+      add: ['+kubebuilder:validation:MinItems=1']   # the released limit, without maxItems
+    spec.filters.filters[].name: {inferred: false}
+    spec.timeSelection.quickSelection.seconds:
+      inferred: false
+      add: ['+kubebuilder:validation:Format=int32']   # the API server rejects a value over the int32 range
+types:
+  View:
+    fields:
+      filters: {required: true}
+      folderId: {name: folder, ref: {kind: ViewFolder, form: resourceRefOnly}}
+  SelectedFilters:
+    fields:
+      filters: {required: true}
+  views.v1.Filter:
+    fields:
+      selectedValues: {required: true}
+  QuickTimeSelection:
+    fields:
+      seconds: {required: true}

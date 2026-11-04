@@ -215,3 +215,106 @@ func removedLines(before, after string) []string {
 }
 
 func normalizeSpace(s string) string { return strings.Join(strings.Fields(s), " ") }
+
+// A new View field flows into the type, both requests, the sample, and the current generated
+// test with no behavior-overrides line. The chart 0.5 create spec stays fixed.
+func TestViewNewFieldWithoutOverrides(t *testing.T) {
+	input, err := source.Resolve(".")
+	if err != nil {
+		if os.Getenv("CI") != "" {
+			t.Fatal(err)
+		}
+		t.Skipf("the pinned SDK is not in the module cache: %v", err)
+	}
+	entry := kindEntry{Kind: "View", Resource: "View"}
+	dir := filepath.Join(input.ModuleRoot, entry.dir())
+	file, err := readOverrides(filepath.Join(dir, "behavior-overrides.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	e2e, err := readE2E(filepath.Join(dir, e2eFileName))
+	if err != nil {
+		t.Fatal(err)
+	}
+	render := func(spec []byte) map[string][]byte {
+		t.Helper()
+		doc, err := model.Load(spec)
+		if err != nil {
+			t.Fatal(err)
+		}
+		v, err := validate(doc, entry, input.SDKModule, input.Module, e2e, file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		out, err := renderAll([]*validated{v}, input.SDKModule, input.Module)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return out.files
+	}
+	before := render(input.OpenAPI)
+	after := render(withNewViewField(t, input.OpenAPI))
+	for name, content := range after {
+		if removed := removedLines(string(before[name]), string(content)); len(removed) != 0 {
+			t.Errorf("%s: a new field changed existing lines:\n%s", name, strings.Join(removed, "\n"))
+		}
+	}
+	for _, want := range []struct{ file, text string }{
+		{"api/coralogix/v1alpha1/view_types.go", "ProbeNote *string `json:\"probeNote,omitempty\"`"},
+		{"api/coralogix/v1alpha1/view_types.go", "+kubebuilder:validation:MaxLength=20"},
+		{"config/samples/v1alpha1/generated/view.yaml", "probeNote:"},
+		{"tests/e2e/view_generated_test.go", `"probeNote":`},
+	} {
+		if !strings.Contains(normalizeSpace(string(after[want.file])), normalizeSpace(want.text)) {
+			t.Errorf("%s has no %q", want.file, want.text)
+		}
+	}
+	if n := strings.Count(string(after["api/coralogix/v1alpha1/view_convert.go"]), "out.ProbeNote = in.ProbeNote"); n != 2 {
+		t.Errorf("want probeNote in the Create and the Replace request, got %d conversions", n)
+	}
+	if string(after["scripts/upgrade-check-view.sh"]) != string(before["scripts/upgrade-check-view.sh"]) {
+		t.Error("a new field changed the released chart upgrade check")
+	}
+}
+
+// withNewViewField adds the optional field probeNote to every schema with the View properties:
+// the Create body, the Replace body, and the resource. The bodies are inline in the contract.
+func withNewViewField(t *testing.T, spec []byte) []byte {
+	t.Helper()
+	var doc map[string]any
+	if err := yaml.Unmarshal(spec, &doc); err != nil {
+		t.Fatal(err)
+	}
+	added := 0
+	var walk func(v any)
+	walk = func(v any) {
+		switch v := v.(type) {
+		case map[string]any:
+			if props, ok := v["properties"].(map[string]any); ok {
+				_, hasTime := props["timeSelection"]
+				_, hasFilters := props["filters"]
+				_, hasFolder := props["folderId"]
+				if hasTime && hasFilters && hasFolder {
+					props["probeNote"] = map[string]any{"type": "string", "x-coralogix-presence": true, "description": "A note.", "maxLength": 20}
+					added++
+				}
+			}
+			for _, child := range v {
+				walk(child)
+			}
+		case []any:
+			for _, child := range v {
+				walk(child)
+			}
+		}
+	}
+	walk(doc)
+	if added < 3 {
+		t.Fatalf("want probeNote in the Create body, the Replace body, and the resource, added it %d times", added)
+	}
+	out, err := yaml.Marshal(doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return out
+}

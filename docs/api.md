@@ -21871,10 +21871,7 @@ with respect to the current state of the instance.<br/>
 
 
 
-View is the Schema for the Views API.
-See also https://coralogix.com/docs/user-guides/monitoring-and-insights/explore-screen/custom-views/
-
-**Added in v0.4.0**
+View is the Schema for the views API.
 
 <table>
     <thead>
@@ -21906,14 +21903,14 @@ See also https://coralogix.com/docs/user-guides/monitoring-and-insights/explore-
         <td><b><a href="#viewspec">spec</a></b></td>
         <td>object</td>
         <td>
-          ViewSpec defines the desired state of View.<br/>
+          ViewSpec defines the desired state of a View.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#viewstatus">status</a></b></td>
         <td>object</td>
         <td>
-          ViewStatus defines the observed state of View.<br/>
+          ViewStatus defines the observed state of a View.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -21925,7 +21922,7 @@ See also https://coralogix.com/docs/user-guides/monitoring-and-insights/explore-
 
 
 
-ViewSpec defines the desired state of View.
+ViewSpec defines the desired state of a View.
 
 <table>
     <thead>
@@ -21940,37 +21937,48 @@ ViewSpec defines the desired state of View.
         <td><b><a href="#viewspecfilters">filters</a></b></td>
         <td>object</td>
         <td>
-          Filters is the filters for the view.<br/>
+          Selected filters.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          Name of the view.<br/>
+          View name<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#viewspectimeselection">timeSelection</a></b></td>
         <td>object</td>
         <td>
-          TimeSelection is the time selection for the view. Exactly one of quickSelection or customSelection must be set.<br/>
+          Time selection.<br/>
           <br/>
-            <i>Validations</i>:<li>has(self.quickSelection) != has(self.customSelection): Exactly one of quickSelection or customSelection must be set</li>
+            <i>Validations</i>:<li>(has(self.customSelection) ? 1 : 0) + (has(self.quickSelection) ? 1 : 0) == 1: Exactly one of customSelection, quickSelection must be set</li>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#viewspecfolder">folder</a></b></td>
         <td>object</td>
         <td>
-          Folder is the folder to which the view belongs.<br/>
+          Unique identifier for folders
+It refers to a ViewFolder custom resource through resourceRef.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#viewspecsearchquery">searchQuery</a></b></td>
         <td>object</td>
         <td>
-          SearchQuery is the search query for the view.<br/>
+          Search query.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>viewType</b></td>
+        <td>enum</td>
+        <td>
+          View type.<br/>
+          <br/>
+            <i>Enum</i>: logs, templates, archiveLogs, archiveTemplates<br/>
+            <i>Default</i>: logs<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -21982,7 +21990,7 @@ ViewSpec defines the desired state of View.
 
 
 
-Filters is the filters for the view.
+Selected filters.
 
 <table>
     <thead>
@@ -21997,7 +22005,7 @@ Filters is the filters for the view.
         <td><b><a href="#viewspecfiltersfiltersindex">filters</a></b></td>
         <td>[]object</td>
         <td>
-          Filters is the list of filters for the view.<br/>
+          List of filters.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -22009,7 +22017,7 @@ Filters is the filters for the view.
 
 
 
-
+ViewsV1Filter is the views.v1.Filter object of the API.
 
 <table>
     <thead>
@@ -22024,14 +22032,14 @@ Filters is the filters for the view.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          Name is the name of the filter.<br/>
+          Filter name<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>selectedValues</b></td>
         <td>map[string]boolean</td>
         <td>
-          SelectedValues is the selected values for the filter.<br/>
+          Filter values to select, each set to true. The service keeps only the values set to true and drops a value set to false.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -22043,7 +22051,7 @@ Filters is the filters for the view.
 
 
 
-TimeSelection is the time selection for the view. Exactly one of quickSelection or customSelection must be set.
+Time selection.
 
 <table>
     <thead>
@@ -22058,14 +22066,14 @@ TimeSelection is the time selection for the view. Exactly one of quickSelection 
         <td><b><a href="#viewspectimeselectioncustomselection">customSelection</a></b></td>
         <td>object</td>
         <td>
-          CustomSelection is the custom selection for the view.<br/>
+          Custom time selection.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#viewspectimeselectionquickselection">quickSelection</a></b></td>
         <td>object</td>
         <td>
-          QuickSelection is the quick selection for the view.<br/>
+          Quick time selection.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -22077,7 +22085,7 @@ TimeSelection is the time selection for the view. Exactly one of quickSelection 
 
 
 
-CustomSelection is the custom selection for the view.
+Custom time selection.
 
 <table>
     <thead>
@@ -22092,7 +22100,7 @@ CustomSelection is the custom selection for the view.
         <td><b>fromTime</b></td>
         <td>string</td>
         <td>
-          FromTime is the start time for the custom selection.<br/>
+          The from time.<br/>
           <br/>
             <i>Format</i>: date-time<br/>
         </td>
@@ -22101,7 +22109,7 @@ CustomSelection is the custom selection for the view.
         <td><b>toTime</b></td>
         <td>string</td>
         <td>
-          ToTime is the end time for the custom selection.<br/>
+          The to time.<br/>
           <br/>
             <i>Format</i>: date-time<br/>
         </td>
@@ -22115,7 +22123,7 @@ CustomSelection is the custom selection for the view.
 
 
 
-QuickSelection is the quick selection for the view.
+Quick time selection.
 
 <table>
     <thead>
@@ -22130,7 +22138,7 @@ QuickSelection is the quick selection for the view.
         <td><b>seconds</b></td>
         <td>integer</td>
         <td>
-          Seconds is the number of seconds for the quick selection.<br/>
+          Length of the quick time range, in seconds. The service stores the nearest of 60, 120, 300, 900, 1800, 3600, 7200, 21600, 43200, 86400, 172800, 259200, 432000, and 604800.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -22144,7 +22152,8 @@ QuickSelection is the quick selection for the view.
 
 
 
-Folder is the folder to which the view belongs.
+Unique identifier for folders
+It refers to a ViewFolder custom resource through resourceRef.
 
 <table>
     <thead>
@@ -22159,7 +22168,7 @@ Folder is the folder to which the view belongs.
         <td><b><a href="#viewspecfolderresourceref">resourceRef</a></b></td>
         <td>object</td>
         <td>
-          ViewFolder custom resource name and namespace. If namespace is not set, the View namespace will be used.<br/>
+          Reference to a Coralogix resource within the cluster.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -22171,7 +22180,7 @@ Folder is the folder to which the view belongs.
 
 
 
-ViewFolder custom resource name and namespace. If namespace is not set, the View namespace will be used.
+Reference to a Coralogix resource within the cluster.
 
 <table>
     <thead>
@@ -22205,7 +22214,7 @@ ViewFolder custom resource name and namespace. If namespace is not set, the View
 
 
 
-SearchQuery is the search query for the view.
+Search query.
 
 <table>
     <thead>
@@ -22220,9 +22229,19 @@ SearchQuery is the search query for the view.
         <td><b>query</b></td>
         <td>string</td>
         <td>
-          Query is the search query.<br/>
+          Query string.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>syntaxType</b></td>
+        <td>enum</td>
+        <td>
+          Syntax type.<br/>
+          <br/>
+            <i>Enum</i>: lucene, dataprime<br/>
+            <i>Default</i>: lucene<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -22232,7 +22251,7 @@ SearchQuery is the search query for the view.
 
 
 
-ViewStatus defines the observed state of View.
+ViewStatus defines the observed state of a View.
 
 <table>
     <thead>

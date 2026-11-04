@@ -21,5 +21,6 @@ package utils
 const (
 	GlobalRouterKind = "GlobalRouter"
 	PresetKind       = "Preset"
+	ViewKind         = "View"
 	ViewFolderKind   = "ViewFolder"
 )

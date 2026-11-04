@@ -7,6 +7,7 @@ package e2e
 import (
 	"context"
 	"encoding/json"
+	"strconv"
 	"strings"
 	"time"
 
@@ -37,7 +38,7 @@ var _ = Describe("{{.Kind}} (generated)", Ordered{{if .E2E.Serial}}, Serial{{end
 		apiClient   *{{.SDKAlias}}.{{.Client}}
 		fullName    string
 		minimalName string
-		fullID      string
+		fullID      {{if .IDBits}}{{.IDGoType}}{{else}}string{{end}}
 		full        *coralogixv1alpha1.{{.Kind}}
 	)
 
@@ -141,8 +142,8 @@ func new{{.Kind}}Generated(name, spec string) *coralogixv1alpha1.{{.Kind}} {
 	return cr
 }
 
-// waitFor{{.Kind}}Generated waits until the {{.Kind}} is synced, and returns its id.
-func waitFor{{.Kind}}Generated(ctx context.Context, crClient client.Client, name string) string {
+// waitFor{{.Kind}}Generated waits until the {{.Kind}} is synced, and returns its {{if .IDBits}}API {{end}}id.
+func waitFor{{.Kind}}Generated(ctx context.Context, crClient client.Client, name string) {{if .IDBits}}{{.IDGoType}}{{else}}string{{end}} {
 	var id string
 	Eventually(func(g Gomega) {
 		cr := &coralogixv1alpha1.{{.Kind}}{}
@@ -151,5 +152,11 @@ func waitFor{{.Kind}}Generated(ctx context.Context, crClient client.Client, name
 		g.Expect(cr.Status.ID).NotTo(BeNil())
 		id = *cr.Status.ID
 	}, time.Minute, time.Second).Should(Succeed())
+{{- if .IDBits}}
+	parsedID, err := strconv.ParseInt(id, 10, {{.IDBits}})
+	Expect(err).NotTo(HaveOccurred())
+	return {{.IDGoType}}(parsedID)
+{{- else}}
 	return id
+{{- end}}
 }

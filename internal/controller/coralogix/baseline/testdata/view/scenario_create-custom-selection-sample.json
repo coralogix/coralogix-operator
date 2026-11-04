@@ -32,14 +32,16 @@
       },
       "name": "custom-selection-sample",
       "searchQuery": {
-        "query": "region:us-west-2"
+        "query": "region:us-west-2",
+        "syntaxType": "lucene"
       },
       "timeSelection": {
         "customSelection": {
           "fromTime": "2026-01-01T00:00:00Z",
           "toTime": "2027-01-02T00:00:00Z"
         }
-      }
+      },
+      "viewType": "logs"
     },
     "requests": [
       {
@@ -72,14 +74,16 @@
           "folderId": "00000000-0000-4000-8000-000000000001",
           "name": "custom-selection-sample",
           "searchQuery": {
-            "query": "region:us-west-2"
+            "query": "region:us-west-2",
+            "syntaxType": "SYNTAX_TYPE_LUCENE"
           },
           "timeSelection": {
             "customSelection": {
               "fromTime": "2026-01-01T00:00:00Z",
               "toTime": "2027-01-02T00:00:00Z"
             }
-          }
+          },
+          "viewType": "VIEW_TYPE_LOGS"
         },
         "status": 200
       }

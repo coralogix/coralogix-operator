@@ -14,14 +14,16 @@
       },
       "name": "Custom time view",
       "searchQuery": {
-        "query": "region:us-west-2"
+        "query": "region:us-west-2",
+        "syntaxType": "lucene"
       },
       "timeSelection": {
         "customSelection": {
           "fromTime": "2024-01-25T13:31:43.152+02:00",
           "toTime": "2024-01-25T11:35:43Z"
         }
-      }
+      },
+      "viewType": "logs"
     },
     "requests": [
       {
@@ -40,14 +42,16 @@
           },
           "name": "Custom time view",
           "searchQuery": {
-            "query": "region:us-west-2"
+            "query": "region:us-west-2",
+            "syntaxType": "SYNTAX_TYPE_LUCENE"
           },
           "timeSelection": {
             "customSelection": {
               "fromTime": "2024-01-25T11:31:43.152Z",
               "toTime": "2024-01-25T11:35:43Z"
             }
-          }
+          },
+          "viewType": "VIEW_TYPE_LOGS"
         },
         "status": 200
       }

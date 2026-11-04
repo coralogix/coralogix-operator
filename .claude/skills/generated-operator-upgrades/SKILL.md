@@ -15,3 +15,5 @@ Use this skill when an existing operator kind moves from handwritten code to opg
 - Check the same status ID after upgrade. Then update and delete the resource with the new operator.
 - Use a release that can create an isolated resource. An old GlobalRouter release that writes `router_default` is unsafe on a shared account.
 - Simulate a new optional SDK field in a generator test. Verify that current outputs gain it and the released chart spec stays fixed.
+- Remove the handwritten entry of the kind from every file that also has a `# BEGIN generated kinds` block: `PROJECT`, `config/crd/kustomization.yaml`, and the Helm `cluster_role.yaml`. Codegen adds the generated entry and does not remove the old one. A duplicate CRD entry breaks `kustomize build config/default`, and so `make install` and `make deploy`.
+- Check the migration with `grep -c` of the kind in each of those files (one entry each), and run `bin/kustomize build config/default | grep -c 'name: <plural>.coralogix.com'` (one CRD).

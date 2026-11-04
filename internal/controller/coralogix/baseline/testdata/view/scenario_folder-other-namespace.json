@@ -23,7 +23,8 @@
         "quickSelection": {
           "seconds": 900
         }
-      }
+      },
+      "viewType": "logs"
     },
     "requests": [
       {
@@ -42,14 +43,12 @@
           },
           "folderId": "00000000-0000-4000-8000-000000000002",
           "name": "Folder view",
-          "searchQuery": {
-            "query": ""
-          },
           "timeSelection": {
             "quickSelection": {
               "seconds": 900
             }
-          }
+          },
+          "viewType": "VIEW_TYPE_LOGS"
         },
         "status": 200
       }
