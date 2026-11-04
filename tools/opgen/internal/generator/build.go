@@ -17,6 +17,8 @@ const (
 	codeShapeUnsupported = "RENDERER_SHAPE_UNSUPPORTED"
 	codeOverrideInvalid  = "OVERRIDE_INVALID"
 	codeOverrideUnused   = "OVERRIDE_UNUSED"
+	codeUpdateOnlyField  = "OPERATOR_UPDATE_ONLY_FIELD"
+	codeDuplicateEntry   = "OPERATOR_DUPLICATE_ENTRY"
 )
 
 // shapeError is a contract shape that the operator renderer cannot write. code is the issue code.

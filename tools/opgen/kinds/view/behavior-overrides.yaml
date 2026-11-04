@@ -18,6 +18,7 @@ types:
     fields:
       filters: {required: true}
       folderId: {name: folder, ref: {kind: ViewFolder, form: resourceRefOnly}}
+      isCompactMode: {skip: true}   # only Update has it; the released View never sent it
   SelectedFilters:
     fields:
       filters: {required: true}

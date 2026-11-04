@@ -36,6 +36,9 @@ type output struct {
 	files map[string][]byte
 	// blocks are the new bodies of the marked blocks by path of the handwritten file.
 	blocks map[string]string
+	// entries are the lines that identify a kind in each marked block, by path of the
+	// handwritten file. The same line outside the block is a handwritten entry of that kind.
+	entries map[string][]string
 }
 
 // change is one file that publish writes or removes.
