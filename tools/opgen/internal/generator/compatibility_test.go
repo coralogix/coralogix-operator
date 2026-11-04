@@ -3,6 +3,7 @@ package generator
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -226,6 +227,59 @@ func TestReleasedFieldValidationOverride(t *testing.T) {
 	}
 	if !strings.Contains(types, "+kubebuilder:validation:Minimum=1") || !strings.Contains(types, "+kubebuilder:validation:Maximum=9") || strings.Contains(types, "+kubebuilder:validation:Maximum=10") {
 		t.Error("the limit override must keep the API minimum and replace only the maximum")
+	}
+}
+
+func TestSharedObjectKeepsValidationAtEachCRPath(t *testing.T) {
+	file, err := overrides.Parse([]byte(`resource: ReuseThing
+mode: existing
+validators:
+  inferred: true
+  fields:
+    spec.first.name:
+      remove: ['+kubebuilder:validation:MaxLength=100']
+      add: ['+kubebuilder:validation:MaxLength=10']
+    spec.second.name: {inferred: false}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	minLength, maxLength := int64(1), int64(100)
+	shared := &model.Type{Kind: model.Object, Schema: "Shared", Fields: []*model.Field{{
+		Name: "name", Behavior: model.Normal, Create: &model.Attrs{},
+		Type: &model.Type{Kind: model.String, MinLength: &minLength, MaxLength: &maxLength},
+	}}}
+	r := &model.Resource{Name: "ReuseThing", Fields: []*model.ResourceField{
+		{Name: "first", Behavior: model.Normal, Create: &model.Attrs{}, Type: shared},
+		{Name: "second", Behavior: model.Normal, Create: &model.Attrs{}, Type: shared},
+		{Name: "third", Behavior: model.Normal, Create: &model.Attrs{}, Type: shared},
+	}}
+	b := &builder{kind: "ReuseThing", file: file, types: map[string]*crType{}, usedValidators: map[string]bool{}, used: map[overrides.Line]bool{}}
+	spec, err := b.spec(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := [][]string{
+		{"+kubebuilder:validation:MinLength=1", "+kubebuilder:validation:MaxLength=10"},
+		{},
+		{"+kubebuilder:validation:MinLength=1", "+kubebuilder:validation:MaxLength=100"},
+	}
+	for i, field := range spec.Fields {
+		if field.object == nil || len(field.object.Fields) != 1 {
+			t.Fatalf("%s has no shared object field", field.JSON)
+		}
+		markers := field.object.Fields[0].Markers
+		for _, marker := range want[i] {
+			if !slices.Contains(markers, marker) {
+				t.Errorf("%s lacks %s: %v", field.JSON, marker, markers)
+			}
+		}
+		if len(markers) != len(want[i])+1 { // each optional field also has +optional
+			t.Errorf("%s has unexpected markers: %v", field.JSON, markers)
+		}
+	}
+	if !b.usedValidators["spec.first.name"] || !b.usedValidators["spec.second.name"] {
+		t.Errorf("path-specific overrides were not used: %v", b.usedValidators)
 	}
 }
 

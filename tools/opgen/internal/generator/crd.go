@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"slices"
 	"strconv"
@@ -792,12 +793,20 @@ func (b *builder) typeName(component string) string {
 	return b.kind + name
 }
 
-// object builds the struct of an object or a oneOf, once per component.
+// object builds the struct of an object or a oneOf. A path with different validation gets its own struct.
 func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, error) {
 	if t.Schema == "" {
 		return nil, unsupported(path, "an inline object is not supported")
 	}
 	name := b.typeName(t.Schema)
+	if existing := b.types[name]; existing != nil && existing.schema != t.Schema {
+		return nil, collision(path, "the components %s and %s both are the Go type %s", existing.schema, t.Schema, name)
+	}
+	if existing := b.types[name]; existing != nil && existing.path != path &&
+		(b.hasNestedValidation(existing.path) || b.hasNestedValidation(path)) {
+		hash := sha256.Sum256([]byte(path))
+		name = fmt.Sprintf("%sAt%s%x", name, goName(path), hash[:6])
+	}
 	if existing, ok := b.types[name]; ok {
 		if existing.schema != t.Schema {
 			return nil, collision(path, "the components %s and %s both are the Go type %s", existing.schema, t.Schema, name)
@@ -814,7 +823,7 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 		}
 		return existing, nil
 	}
-	obj := &crType{Name: name, schema: t.Schema, Doc: []string{fmt.Sprintf("%s is the %s object of the API.", name, t.Schema)}}
+	obj := &crType{Name: name, schema: t.Schema, path: path, Doc: []string{fmt.Sprintf("%s is the %s object of the API.", name, t.Schema)}}
 	b.types[name] = obj
 	b.order = append(b.order, obj)
 	inGroup := map[string]bool{}
@@ -877,6 +886,19 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 	}
 	splitReferenceRules(obj)
 	return obj, nil
+}
+
+// hasNestedValidation reports whether a path changes markers inside an object.
+func (b *builder) hasNestedValidation(path string) bool {
+	if b.file == nil || b.file.Validators == nil {
+		return false
+	}
+	for key := range b.file.Validators.Fields {
+		if key == path+"#type" || strings.HasPrefix(key, path+".") {
+			return true
+		}
+	}
+	return false
 }
 
 func splitReferenceRules(t *crType) {

@@ -98,6 +98,7 @@ type crType struct {
 	Markers []string
 	Fields  []*crField
 	schema  string // the response component, "" for the spec
+	path    string // CR path used to build this component's validation
 	groups  []model.OneOfGroup
 }
 
