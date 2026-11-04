@@ -91,6 +91,10 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
         run: bash scripts/upgrade-check-viewfolder.sh before
+      - name: Create a View with the released operator
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+        run: bash scripts/upgrade-check-view.sh before
       - name: Create a GlobalRouter with the released operator
         if: matrix.operator_version == '2.0'
         env:
@@ -129,6 +133,10 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
         run: bash scripts/upgrade-check-viewfolder.sh after
+      - name: Check the View of the released operator
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+        run: bash scripts/upgrade-check-view.sh after
       - name: Check the GlobalRouter of the released operator
         if: matrix.operator_version == '2.0'
         env:
@@ -151,6 +159,11 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
         run: bash scripts/upgrade-check-globalrouter.sh cleanup
+      - name: Delete the View of the upgrade test
+        if: always()
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+        run: bash scripts/upgrade-check-view.sh cleanup
       - name: Delete the ViewFolder of the upgrade test
         if: always()
         env:

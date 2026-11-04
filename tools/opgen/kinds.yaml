@@ -6,5 +6,7 @@ kinds:
     resource: GlobalRouter
   - kind: Preset
     resource: Preset
+  - kind: View
+    resource: View
   - kind: ViewFolder
     resource: ViewFolder

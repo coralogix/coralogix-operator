@@ -40,7 +40,6 @@ const (
 	PrometheusRuleKind         = "PrometheusRule"
 	DashboardKind              = "Dashboard"
 	DashboardsFolderKind       = "DashboardsFolder"
-	ViewKind                   = "View"
 	ConnectorKind              = "Connector"
 	ArchiveLogsTargetKind      = "ArchiveLogsTarget"
 	ArchiveMetricsTargetKind   = "ArchiveMetricsTarget"

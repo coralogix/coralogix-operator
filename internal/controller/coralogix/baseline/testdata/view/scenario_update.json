@@ -18,7 +18,8 @@
         "quickSelection": {
           "seconds": 3600
         }
-      }
+      },
+      "viewType": "logs"
     },
     "requests": [
       {
@@ -37,14 +38,12 @@
             ]
           },
           "name": "Baseline view",
-          "searchQuery": {
-            "query": ""
-          },
           "timeSelection": {
             "quickSelection": {
               "seconds": 3600
             }
-          }
+          },
+          "viewType": "VIEW_TYPE_LOGS"
         },
         "status": 200
       }
@@ -111,13 +110,15 @@
           },
           "name": "Baseline view renamed",
           "searchQuery": {
-            "query": "level:error"
+            "query": "level:error",
+            "syntaxType": "SYNTAX_TYPE_LUCENE"
           },
           "timeSelection": {
             "quickSelection": {
               "seconds": 86400
             }
-          }
+          },
+          "viewType": "VIEW_TYPE_LOGS"
         },
         "status": 200
       }

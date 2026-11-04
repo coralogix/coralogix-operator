@@ -51,7 +51,7 @@ func init() {
 		resource: "views",
 		newFake:  newViewFake,
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
-			return &v1alpha1controllers.ViewReconciler{ViewsClient: cs.Views(), Interval: reconcileInterval}
+			return &v1alpha1controllers.ViewReconciler{Client: cs.Views(), Interval: reconcileInterval}
 		},
 		scenarios: viewScenarios,
 	})

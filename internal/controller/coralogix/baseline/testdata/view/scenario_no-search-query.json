@@ -18,7 +18,8 @@
         "quickSelection": {
           "seconds": 3600
         }
-      }
+      },
+      "viewType": "logs"
     },
     "requests": [
       {
@@ -37,14 +38,12 @@
             ]
           },
           "name": "Baseline view",
-          "searchQuery": {
-            "query": ""
-          },
           "timeSelection": {
             "quickSelection": {
               "seconds": 3600
             }
-          }
+          },
+          "viewType": "VIEW_TYPE_LOGS"
         },
         "status": 200
       }

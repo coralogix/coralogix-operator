@@ -1,0 +1,21 @@
+fixtures:
+  - kind: ViewFolder
+    suffix: -folder
+    statusField: ID
+    spec:
+      name: '@{run}-folder'
+substitutions:
+  view-folder-sample: '@{run}-folder'
+values:
+  folder: {resourceRef: {name: view-folder-sample}}   # the generated ViewFolder sample
+  timeSelection.customSelection.toTime: '2024-01-01T01:00:00Z'   # after fromTime
+  filters.filters.name: severity
+  filters.filters.selectedValues: {ERROR: true}
+upgrade:
+  from: '0.5'
+  spec:
+    name: '@{run}'
+    timeSelection: {quickSelection: {seconds: 3600}}
+    filters: {filters: [{name: severity, selectedValues: {ERROR: true}}]}
+  field: name
+  value: '@{run}-updated'

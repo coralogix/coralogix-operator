@@ -43,6 +43,12 @@ func SetupGeneratedControllers(mgr ctrl.Manager, clientSet *cxsdk.ClientSet, int
 	}).SetupWithManager(mgr); err != nil {
 		return fmt.Errorf("unable to create the controller of %s: %w", utils.PresetKind, err)
 	}
+	if err := (&ViewReconciler{
+		Client:   clientSet.Views(),
+		Interval: intervals[utils.ViewKind],
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create the controller of %s: %w", utils.ViewKind, err)
+	}
 	if err := (&ViewFolderReconciler{
 		Client:   clientSet.ViewsFolders(),
 		Interval: intervals[utils.ViewFolderKind],

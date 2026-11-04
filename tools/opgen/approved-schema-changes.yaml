@@ -1,0 +1,10 @@
+# Reviewed changes to rules on released CRD fields. opgen check-schema compares each kind with the
+# PR base commit and fails on a change that is not listed here with its exact hashes.
+changes:
+  - kind: View
+    path: spec.versions.v1alpha1.schema.openAPIV3Schema.properties.spec.properties.timeSelection
+    before: 206ef5586de34d7f
+    after: 14e8176f45b94a06
+    reason: >-
+      The exactly-one CEL rule is now generated from the API oneOf. It accepts and rejects the
+      same objects as the released rule; only the message wording changes.

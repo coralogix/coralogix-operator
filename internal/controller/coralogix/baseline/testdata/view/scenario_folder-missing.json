@@ -22,7 +22,8 @@
         "quickSelection": {
           "seconds": 900
         }
-      }
+      },
+      "viewType": "logs"
     },
     "requests": [],
     "result": {
