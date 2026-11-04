@@ -108,6 +108,9 @@ var (
 
 func TestMain(m *testing.M) {
 	logf.SetLogger(logr.Discard())
+	// metav1.Time reads a CR time into the local zone, and the SDK sends a time in its own zone.
+	// A fixed zone keeps request goldens the same on every machine.
+	time.Local = time.UTC
 	code := m.Run()
 	if testEnv != nil {
 		if err := testEnv.Stop(); err != nil {
@@ -259,6 +262,15 @@ func (h *harness) Delete(name string) {
 		h.t.Fatalf("%s: delete: %v", name, err)
 	}
 	h.reconcile(name, nil)
+}
+
+// SetSelector sets the operator's label and namespace selector for the rest of the scenario.
+// The selector is global, so the scenarios that use it must not run in parallel.
+func (h *harness) SetSelector(s config.Selector) {
+	h.t.Helper()
+	previous := config.GetConfig().Selector
+	config.GetConfig().Selector = s
+	h.t.Cleanup(func() { config.GetConfig().Selector = previous })
 }
 
 // StatusID returns status.id of the CR.
