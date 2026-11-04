@@ -1,0 +1,63 @@
+[
+  {
+    "step": "create with negative seconds: admission accepts it",
+    "spec": {
+      "filters": {
+        "filters": [
+          {
+            "name": "severity",
+            "selectedValues": {
+              "ERROR": true,
+              "INFO": false
+            }
+          }
+        ]
+      },
+      "name": "Baseline view",
+      "timeSelection": {
+        "quickSelection": {
+          "seconds": -1
+        }
+      }
+    },
+    "requests": [],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "InternalK8sError",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again",
+    "requests": [],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "InternalK8sError",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

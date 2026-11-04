@@ -201,6 +201,37 @@ var viewScenarios = map[string]func(h *harness){
 		h.Reconcile("reconcile again")
 	},
 
+	"update-when-gone-404": func(h *harness) {
+		h.Create("create", viewQuickManifest)
+		f := viewsFake(h)
+		f.forget(h.StatusID())
+		f.replaceMissingNotFound = true
+		h.SetSpec("change the name: the view was deleted outside the operator, and PUT answers 404", map[string]any{
+			"name":          "Baseline view renamed",
+			"timeSelection": map[string]any{"quickSelection": map[string]any{"seconds": int64(3600)}},
+			"filters": map[string]any{"filters": []any{
+				map[string]any{"name": "severity", "selectedValues": map[string]any{"ERROR": true}},
+			}},
+		})
+		h.Reconcile("reconcile again: create the view again")
+	},
+
+	"remove-search-query": func(h *harness) {
+		h.Create("create with a search query", viewCustomTimeManifest)
+		h.SetSpec("remove the search query", map[string]any{
+			"name":          "Custom time view",
+			"timeSelection": map[string]any{"quickSelection": map[string]any{"seconds": int64(3600)}},
+			"filters": map[string]any{"filters": []any{
+				map[string]any{"name": "applicationName", "selectedValues": map[string]any{"sample-app": true}},
+			}},
+		})
+	},
+
+	"negative-seconds": func(h *harness) {
+		h.Create("create with negative seconds: admission accepts it", strings.Replace(viewQuickManifest, "seconds: 3600", "seconds: -1", 1))
+		h.Reconcile("reconcile again")
+	},
+
 	"delete-after-update-when-gone": func(h *harness) {
 		h.Create("create", viewQuickManifest)
 		viewsFake(h).forget(h.StatusID())
@@ -293,12 +324,15 @@ func viewsFake(h *harness) *viewFake {
 //	DELETE /views/{id}                                                         -> {}
 //
 // The service stores a view in its own form: see storedView. A replace of a view that does not
-// exist answers 500, not 404. The operator reads only the id of a Create answer, and the status
+// exist answers 500, not 404; replaceMissingNotFound makes it answer 404, as the backend should.
+// The operator reads only the id of a Create answer, and the status
 // code of the others.
 type viewFake struct {
 	mu     sync.Mutex
 	views  map[int]map[string]any
 	nextID int
+	// replaceMissingNotFound makes a replace of a missing view answer 404 instead of 500.
+	replaceMissingNotFound bool
 }
 
 // viewFolderIDs are the folders that exist in the fake: the status ids that the scenarios give
@@ -352,6 +386,9 @@ func (f *viewFake) handle(method, path string, _ url.Values, body any) (int, any
 		if status, errBody := checkView(in); status != 0 {
 			return status, errBody
 		}
+		if !exists && f.replaceMissingNotFound {
+			return apiError(http.StatusNotFound, fmt.Sprintf(`{"message":"NOT_FOUND: view not found","status":5,"details":{"viewId":%d}}`, id))
+		}
 		if !exists {
 			return apiError(http.StatusInternalServerError, `{"message":"INTERNAL: Request failed","status":13}`)
 		}
@@ -372,8 +409,16 @@ func checkView(in map[string]any) (int, any) {
 	if name, _ := in["name"].(string); name == "" {
 		return apiError(http.StatusBadRequest, `{"message":"INVALID_ARGUMENT: validation error: view name not found","status":3}`)
 	}
-	if _, ok := in["timeSelection"].(map[string]any); !ok {
+	selection, ok := in["timeSelection"].(map[string]any)
+	if !ok {
 		return apiError(http.StatusBadRequest, `{"message":"INVALID_ARGUMENT: Invalid time selection","status":3}`)
+	}
+	// seconds is a uint32 in the API, so the gateway cannot read a negative value. The real
+	// answer also names the position in the body, which the fake leaves out.
+	if quick, ok := selection["quickSelection"].(map[string]any); ok {
+		if seconds, _ := quick["seconds"].(float64); seconds < 0 {
+			return apiError(http.StatusBadRequest, fmt.Sprintf("proto: invalid value for uint32 field seconds: %d", int64(seconds)))
+		}
 	}
 	if folderID, ok := in["folderId"].(string); ok && !viewFolderIDs[folderID] {
 		return apiError(http.StatusBadRequest, `{"message":"INVALID_ARGUMENT: folder not found","status":3}`)
@@ -386,6 +431,7 @@ func checkView(in map[string]any) (int, any) {
 //   - isCompactMode defaults to false, and viewType to VIEW_TYPE_LOGS.
 //   - a filter keeps only the values set to true.
 //   - quickSelection.seconds becomes the nearest supported range, with its caption.
+//   - a replace stores an omitted searchQuery, syntaxType, or viewType as its default.
 func storedView(id int, in map[string]any) map[string]any {
 	out := map[string]any{"id": id, "isCompactMode": false, "viewType": "VIEW_TYPE_LOGS"}
 	for k, v := range in {

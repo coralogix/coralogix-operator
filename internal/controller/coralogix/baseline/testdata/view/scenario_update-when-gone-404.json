@@ -1,0 +1,195 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "filters": {
+        "filters": [
+          {
+            "name": "severity",
+            "selectedValues": {
+              "ERROR": true,
+              "INFO": false
+            }
+          }
+        ]
+      },
+      "name": "Baseline view",
+      "timeSelection": {
+        "quickSelection": {
+          "seconds": 3600
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/data-exploration/views/v1/views",
+        "body": {
+          "filters": {
+            "filters": [
+              {
+                "name": "severity",
+                "selectedValues": {
+                  "ERROR": true,
+                  "INFO": false
+                }
+              }
+            ]
+          },
+          "name": "Baseline view",
+          "searchQuery": {
+            "query": ""
+          },
+          "timeSelection": {
+            "quickSelection": {
+              "seconds": 3600
+            }
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "view.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "1",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "change the name: the view was deleted outside the operator, and PUT answers 404",
+    "spec": {
+      "filters": {
+        "filters": [
+          {
+            "name": "severity",
+            "selectedValues": {
+              "ERROR": true
+            }
+          }
+        ]
+      },
+      "name": "Baseline view renamed",
+      "timeSelection": {
+        "quickSelection": {
+          "seconds": 3600
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/data-exploration/views/v1/views/1",
+        "body": {
+          "filters": {
+            "filters": [
+              {
+                "name": "severity",
+                "selectedValues": {
+                  "ERROR": true
+                }
+              }
+            ]
+          },
+          "name": "Baseline view renamed",
+          "searchQuery": {
+            "query": ""
+          },
+          "timeSelection": {
+            "quickSelection": {
+              "seconds": 3600
+            }
+          }
+        },
+        "status": 404
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeue": true
+    },
+    "object": {
+      "finalizers": [
+        "view.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again: create the view again",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/data-exploration/views/v1/views",
+        "body": {
+          "filters": {
+            "filters": [
+              {
+                "name": "severity",
+                "selectedValues": {
+                  "ERROR": true
+                }
+              }
+            ]
+          },
+          "name": "Baseline view renamed",
+          "searchQuery": {
+            "query": ""
+          },
+          "timeSelection": {
+            "quickSelection": {
+              "seconds": 3600
+            }
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "view.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "2",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]
