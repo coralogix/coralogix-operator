@@ -1,0 +1,49 @@
+name: Detect code changes
+description: >
+  Report whether a pull request changes any file that needs the live test suites.
+  Other events always report true.
+
+inputs:
+  ignore-regex:
+    description: >
+      Extended regular expression for paths that do not need the live tests.
+      A pull request that changes only matching paths reports false.
+    required: true
+  github-token:
+    description: Token that can read pull requests.
+    default: ${{ github.token }}
+
+outputs:
+  code:
+    description: '"true" when the live tests must run, "false" when they can be skipped.'
+    value: ${{ steps.filter.outputs.code }}
+
+runs:
+  using: composite
+  steps:
+    - name: Check for files that need the live tests
+      id: filter
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        IGNORE_REGEX: ${{ inputs.ignore-regex }}
+        EVENT_NAME: ${{ github.event_name }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+      run: |
+        set -euo pipefail
+        if [ "$EVENT_NAME" != "pull_request" ]; then
+          echo "code=true" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        # A failed API call stops the job here. The gate job then fails,
+        # so an error can never skip the tests and report success.
+        # A renamed file lists its old path in previous_filename. Check both, so
+        # moving code to an ignored path still counts as a code change.
+        files=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files" --jq '.[] | .filename, (.previous_filename // empty)')
+        # A here-string, not a pipe: `grep -q` exits at the first match, and
+        # under pipefail the writer's SIGPIPE would make this check false.
+        if grep -qvE "$IGNORE_REGEX" <<< "$files"; then
+          echo "code=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "code=false" >> "$GITHUB_OUTPUT"
+        fi

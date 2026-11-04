@@ -4,7 +4,7 @@
 # GitHub Actions (CodeQL, GitGuardian). Exits 2 while CI still runs, 1 when a check failed, and 3
 # when GitHub can't be read.
 # Release PR Approval approves and merges only on 0, and Release waits for 0 before publishing:
-# main has no required checks, so GitHub doesn't wait for them.
+# main requires only the four live test results, so GitHub doesn't wait for the other checks.
 #
 # Usage: scripts/check-release-ci.sh <sha>
 # GH_TOKEN and GH_REPO read the runs.
