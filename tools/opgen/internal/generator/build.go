@@ -113,27 +113,28 @@ type crScalar struct {
 
 // crField is a field of a Go struct of the custom resource.
 type crField struct {
-	API        string // the API property name
-	JSON       string // the custom resource name: the API name, or the name of a reference
-	GoName     string
-	GoType     string
-	Optional   bool
-	Doc        []string
-	Markers    []string
-	typ        *model.Type // the type in the resource response
-	object     *crType     // the struct of an object, or of the items of a list or map
-	enum       *enumMap    // the enum, or the enum of the items of a list
-	immutable  bool
-	ref        string // the kind that a reference names, "" for a field that is not one
-	refType    string // the CR reference type, when it differs from ResourceIDRef
-	refForm    string // resourceRefOnly, or empty for backendRef and resourceRef
-	refVersion string // the referenced CR API version, empty for v1alpha1
-	refIDType  string // int32 or int64 for a numeric API id; empty for a string id
-	refSibling string // second CR field of a split reference
-	refLookup  string // Go function that resolves a backend name
-	refIDField string // Go id field of a handwritten namedBackendOnly type
-	synthetic  bool   // a CR field with no API property of its own
-	group      bool   // this field groups API fields under a released CR object
+	API            string // the API property name
+	JSON           string // the custom resource name: the API name, or the name of a reference
+	GoName         string
+	GoType         string
+	Optional       bool
+	Doc            []string
+	Markers        []string
+	typ            *model.Type // the type in the resource response
+	object         *crType     // the struct of an object, or of the items of a list or map
+	enum           *enumMap    // the enum, or the enum of the items of a list
+	immutable      bool
+	ref            string // the kind that a reference names, "" for a field that is not one
+	refType        string // the CR reference type, when it differs from ResourceIDRef
+	refForm        string // resourceRefOnly, or empty for backendRef and resourceRef
+	refVersion     string // the referenced CR API version, empty for v1alpha1
+	refIDType      string // int32 or int64 for a numeric API id; empty for a string id
+	refSibling     string // second CR field of a split reference
+	refLookup      string // Go function that resolves a backend name
+	refIDField     string // Go id field of a handwritten namedBackendOnly type
+	validationPath string // final CR spec path used for inferred validation and defaults
+	synthetic      bool   // a CR field with no API property of its own
+	group          bool   // this field groups API fields under a released CR object
 
 	omitEmptyInRequest bool
 }

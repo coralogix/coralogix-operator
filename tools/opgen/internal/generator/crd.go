@@ -35,11 +35,11 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 		if err != nil {
 			return nil, err
 		}
-		if err := b.contractDefault(field, f.Create, "spec."+f.Name); err != nil {
+		if err := b.contractDefault(field, f.Create, field.validationPath); err != nil {
 			return nil, err
 		}
 		if f.Behavior == model.Immutable {
-			immutable(field, "spec."+f.Name)
+			immutable(field, field.validationPath)
 		}
 		spec.Fields = append(spec.Fields, field)
 		if field.refForm == "split" {
@@ -365,9 +365,21 @@ func requiredScalarWithoutPresence(create *model.Attrs, t *model.Type) bool {
 	switch t.Kind {
 	case model.Bool, model.Number, model.Integer:
 		return true
-	default:
+	case model.String, model.Enum, model.Object, model.OneOf, model.List, model.Set, model.Map:
 		return false
 	}
+	return false
+}
+
+// validationPath maps an API field to its final CR path before markers are selected.
+func (b *builder) validationPath(component, path, apiName, crName string) string {
+	parent := strings.TrimSuffix(path, "."+apiName)
+	for groupName, group := range b.file.GroupsFor(component) {
+		if slices.Contains(group.Fields, apiName) {
+			return parent + "." + groupName + "." + crName
+		}
+	}
+	return parent + "." + crName
 }
 
 // field builds one field of the Go type owner, which holds component. inItem is true inside a
@@ -401,6 +413,8 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 		b.used[line] = true
 	}
 	f := &crField{API: name, JSON: jsonName, GoName: goName(jsonName), Optional: !required, Doc: docLines(description), typ: t}
+	path = b.validationPath(component, path, name, jsonName)
+	f.validationPath = path
 	if change.OmitEmptyInRequest {
 		if !required || (t.Kind != model.List && t.Kind != model.Set && t.Kind != model.Map) {
 			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".omitEmptyInRequest", msg: "omitEmptyInRequest needs a required collection"}
@@ -510,7 +524,7 @@ func (b *builder) refField(f *crField, component string, ref *overrides.Ref, pat
 			msg: fmt.Sprintf("ref needs a string or int32/int64 id, or a list of ids, the field is a %s", f.typ.Kind)}
 	}
 	if value.Kind == model.String && ref.BackendIDType != "" {
-		return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".ref.backendIDType", msg: "a string id has no numeric backend id type"}
+		return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".ref.backendIdType", msg: "a string id has no numeric backend id type"}
 	}
 	b.used[line] = true
 	base, _ := strings.CutSuffix(strings.TrimSuffix(f.API, "Id"), "ID")
@@ -523,11 +537,13 @@ func (b *builder) refField(f *crField, component string, ref *overrides.Ref, pat
 		f.JSON = defaultName
 	}
 	f.GoName, f.GoType, f.ref = goName(f.JSON), "ResourceIDRef", ref.Kind
+	path = path[:strings.LastIndex(path, ".")+1] + f.JSON
+	f.validationPath = path
 	f.refForm, f.refVersion = ref.Form, ref.Version
 	f.refIDField = ref.IDField
 	if ref.Form == "named" || ref.Form == "namedBackendOnly" {
 		if ref.BackendIDType != "" {
-			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".ref.backendIDType", msg: "named uses the API id type"}
+			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".ref.backendIdType", msg: "named uses the API id type"}
 		}
 		if ref.Form == "namedBackendOnly" && value.Kind != model.String {
 			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".ref.form", msg: "namedBackendOnly needs a string id"}
@@ -546,6 +562,8 @@ func (b *builder) refField(f *crField, component string, ref *overrides.Ref, pat
 			} else {
 				f.GoType = "NamedInt64ResourceIDRef"
 			}
+		case model.Bool, model.Number, model.Enum, model.Object, model.OneOf, model.List, model.Set, model.Map:
+			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".ref", msg: "a named reference needs a string or integer id"}
 		}
 		b.hasNameLookup = true
 	}
@@ -590,11 +608,12 @@ func (b *builder) refField(f *crField, component string, ref *overrides.Ref, pat
 	} else if f.Optional {
 		f.GoType = "*" + f.GoType
 	}
-	if ref.Form == "resourceRefOnly" {
+	switch ref.Form {
+	case "resourceRefOnly":
 		f.Doc = append(f.Doc, fmt.Sprintf("It refers to a %s custom resource through resourceRef.", ref.Kind))
-	} else if ref.Form == "named" || ref.Form == "namedBackendOnly" {
+	case "named", "namedBackendOnly":
 		f.Doc = append(f.Doc, fmt.Sprintf("It refers to a %s by backend id, backend name, or custom resource.", ref.Kind))
-	} else {
+	default:
 		f.Doc = append(f.Doc, fmt.Sprintf("It refers to a %s: by backendRef.id, or by resourceRef, a %s custom resource.", ref.Kind, ref.Kind))
 	}
 	return f, nil
@@ -820,14 +839,14 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 		if err != nil {
 			return nil, err
 		}
-		if err := b.contractDefault(field, f.Create, child); err != nil {
+		if err := b.contractDefault(field, f.Create, field.validationPath); err != nil {
 			return nil, err
 		}
 		if f.Behavior == model.Immutable {
 			if inItem {
 				return nil, unsupported(child, "kubectl cannot reject a change of an immutable field inside a list item or a map value")
 			}
-			immutable(field, child)
+			immutable(field, field.validationPath)
 		}
 		obj.Fields = append(obj.Fields, field)
 		if field.refForm == "split" {

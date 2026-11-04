@@ -154,7 +154,8 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 	if minimal, err = v.object(d.Spec, "", false); err != nil {
 		return nil, nil, nil, err
 	}
-	for name, value := range file.Minimal {
+	for _, name := range sortedKeys(file.Minimal) {
+		value := file.Minimal[name]
 		known := false
 		for _, field := range d.Spec.Fields {
 			if field.JSON == name && field.Optional {

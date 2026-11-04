@@ -79,7 +79,9 @@ func CheckReleasedSchema(start, base string) error {
 		}
 		for version, oldSpec := range before {
 			newSpec := after[version]
-			compareSchema(kind.Kind, "spec.versions."+version+".schema.openAPIV3Schema.properties.spec", oldSpec, newSpec, &changes)
+			if err := compareSchema(kind.Kind, "spec.versions."+version+".schema.openAPIV3Schema.properties.spec", oldSpec, newSpec, &changes); err != nil {
+				return fmt.Errorf("compare %s: %w", path, err)
+			}
 		}
 	}
 	used := map[int]bool{}
@@ -193,32 +195,45 @@ func nestedMap(parent map[string]any, key string) map[string]any {
 	return child
 }
 
-func compareSchema(kind, path string, old, current map[string]any, changes *[]schemaChange) {
+func compareSchema(kind, path string, old, current map[string]any, changes *[]schemaChange) error {
 	if old == nil && current == nil {
-		return
+		return nil
+	}
+	before, err := ruleHash(old)
+	if err != nil {
+		return fmt.Errorf("%s before: %w", path, err)
+	}
+	after, err := ruleHash(current)
+	if err != nil {
+		return fmt.Errorf("%s after: %w", path, err)
 	}
 	if old == nil || current == nil {
-		*changes = append(*changes, schemaChange{Kind: kind, Path: path, Before: ruleHash(old), After: ruleHash(current)})
-		return
+		*changes = append(*changes, schemaChange{Kind: kind, Path: path, Before: before, After: after})
+		return nil
 	}
-	if before, after := ruleHash(old), ruleHash(current); before != after {
+	if before != after {
 		*changes = append(*changes, schemaChange{Kind: kind, Path: path, Before: before, After: after})
 	}
 	for name, oldChild := range nestedMap(old, "properties") {
 		child, _ := oldChild.(map[string]any)
 		currentChild, _ := nestedMap(current, "properties")[name].(map[string]any)
-		compareSchema(kind, path+".properties."+name, child, currentChild, changes)
+		if err := compareSchema(kind, path+".properties."+name, child, currentChild, changes); err != nil {
+			return err
+		}
 	}
 	for _, part := range []struct{ key, suffix string }{{"items", "[]"}, {"additionalProperties", "{}"}} {
 		if oldChild, ok := old[part.key].(map[string]any); ok {
-			compareSchema(kind, path+part.suffix, oldChild, nestedMap(current, part.key), changes)
+			if err := compareSchema(kind, path+part.suffix, oldChild, nestedMap(current, part.key), changes); err != nil {
+				return err
+			}
 		}
 	}
+	return nil
 }
 
-func ruleHash(schema map[string]any) string {
+func ruleHash(schema map[string]any) (string, error) {
 	if schema == nil {
-		return "missing"
+		return "missing", nil
 	}
 	rules := map[string]any{}
 	for key, value := range schema {
@@ -232,7 +247,10 @@ func ruleHash(schema map[string]any) string {
 		}
 		rules[key] = value
 	}
-	data, _ := json.Marshal(rules)
+	data, err := json.Marshal(rules)
+	if err != nil {
+		return "", fmt.Errorf("encode schema rules: %w", err)
+	}
 	sum := sha256.Sum256(data)
-	return hex.EncodeToString(sum[:8])
+	return hex.EncodeToString(sum[:8]), nil
 }

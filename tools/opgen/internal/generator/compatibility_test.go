@@ -88,7 +88,7 @@ func TestNamedReferencePassesSecondClientAndLookup(t *testing.T) {
 }
 
 func TestNumericAndListReferenceTypes(t *testing.T) {
-	file, err := overrides.Parse([]byte("resource: BodyIDThing\nmode: existing\nvalidators: {inferred: true}\ntypes:\n  BodyIDThing:\n    fields:\n      roleId: {ref: {kind: CustomRole, backendIDType: uint32}}\n      alertIds: {ref: {kind: Alert, version: v1beta1}}\n"))
+	file, err := overrides.Parse([]byte("resource: BodyIDThing\nmode: existing\nvalidators: {inferred: true}\ntypes:\n  BodyIDThing:\n    fields:\n      roleId: {ref: {kind: CustomRole, backendIdType: uint32}}\n      alertIds: {ref: {kind: Alert, version: v1beta1}}\n"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -215,14 +215,40 @@ func TestReleasedRequiredScalarWithoutPresence(t *testing.T) {
 }
 
 func TestReleasedFieldValidationOverride(t *testing.T) {
-	file := "resource: BodyIDThing\nmode: existing\napi: {updateIDInBody: true}\nvalidators:\n  inferred: true\n  fields:\n    spec.name: {inferred: false}\n    spec.limit:\n      remove: ['+kubebuilder:validation:Maximum=10']\n      add: ['+kubebuilder:validation:Maximum=9']\n"
+	file := "resource: BodyIDThing\nmode: existing\napi: {updateIDInBody: true}\nvalidators:\n  inferred: true\n  fields:\n    spec.title: {inferred: false}\n    spec.limit:\n      remove: ['+kubebuilder:validation:Maximum=10']\n      add: ['+kubebuilder:validation:Maximum=9']\ntypes:\n  BodyIDThing:\n    fields:\n      name: {name: title}\n"
 	files := checkLifecycleFixture(t, "BodyIDThing", syntheticContract(t), file)
 	types := string(files["api/coralogix/v1alpha1/bodyidthing_types.go"])
+	if !strings.Contains(types, "Title string `json:\"title\"`") {
+		t.Error("the API name must become the released CR title")
+	}
 	if strings.Contains(types, "+kubebuilder:validation:MaxLength=100") || strings.Contains(types, "+kubebuilder:validation:MinLength=1") {
 		t.Error("the released name must keep its absent length limits")
 	}
 	if !strings.Contains(types, "+kubebuilder:validation:Minimum=1") || !strings.Contains(types, "+kubebuilder:validation:Maximum=9") || strings.Contains(types, "+kubebuilder:validation:Maximum=10") {
 		t.Error("the limit override must keep the API minimum and replace only the maximum")
+	}
+}
+
+func TestNestedAndGroupedValidationUsesCRPaths(t *testing.T) {
+	nested := "resource: Thing\nmode: existing\nvalidators:\n  inferred: true\n  fields:\n    spec.items[].label: {inferred: false}\ntypes:\n  ThingItem:\n    fields:\n      name: {name: label}\n"
+	files := checkLifecycleFixture(t, "Thing", syntheticContract(t), nested)
+	types := string(files["api/coralogix/v1alpha1/thing_types.go"])
+	if !strings.Contains(types, "Label string `json:\"label\"`") || strings.Contains(types, "\t// +kubebuilder:validation:MinLength=1\n\tLabel string `json:\"label\"`") {
+		t.Error("the nested CR label must keep its released validation")
+	}
+
+	grouped := "resource: BodyIDThing\nmode: existing\napi: {updateIDInBody: true}\nvalidators:\n  inferred: true\n  fields:\n    spec.details.title: {inferred: false}\ngroups:\n  details: {fields: [name]}\ntypes:\n  BodyIDThing:\n    fields:\n      name: {name: title}\n"
+	files = checkLifecycleFixture(t, "BodyIDThing", syntheticContract(t), grouped)
+	types = string(files["api/coralogix/v1alpha1/bodyidthing_types.go"])
+	if !strings.Contains(types, "Title string `json:\"title\"`") || strings.Contains(types, "\t// +kubebuilder:validation:MaxLength=100\n\tTitle string `json:\"title\"`") {
+		t.Error("the grouped CR title must use spec.details.title for validation")
+	}
+
+	defaultOverride := "resource: Thing\nmode: existing\nvalidators:\n  inferred: true\n  fields:\n    spec.options.enabled: {inferred: false}\ngroups:\n  options: {fields: [enabled]}\n"
+	files = checkLifecycleFixture(t, "Thing", syntheticContract(t), defaultOverride)
+	types = string(files["api/coralogix/v1alpha1/thing_types.go"])
+	if !strings.Contains(types, "type ThingSpecOptions struct {") || strings.Contains(types, "+kubebuilder:default=true") {
+		t.Error("the grouped CR enabled field must not gain the contract default")
 	}
 }
 

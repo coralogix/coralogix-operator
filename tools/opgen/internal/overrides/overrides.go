@@ -207,7 +207,7 @@ type Ref struct {
 	// Version is the API version of the referenced custom resource; v1alpha1 is the default.
 	Version string `yaml:"version"`
 	// BackendIDType keeps a released numeric backendRef.id type, such as uint32.
-	BackendIDType string `yaml:"backendIDType"`
+	BackendIDType string `yaml:"backendIdType"`
 	// Type is NCRef when a released CR uses its one-rule reference validation. Without it,
 	// generated fields use ResourceIDRef and its four rules.
 	Type string `yaml:"type"`
@@ -315,10 +315,10 @@ func (f *File) check() error {
 		}
 		if field.Ref != nil {
 			if field.Ref.BackendIDType != "" && field.Ref.BackendIDType != "int32" && field.Ref.BackendIDType != "int64" && field.Ref.BackendIDType != "uint32" {
-				return fmt.Errorf("%s.ref.backendIDType: use int32, int64, or uint32", line)
+				return fmt.Errorf("%s.ref.backendIdType: use int32, int64, or uint32", line)
 			}
 			if field.Ref.Form == "resourceRefOnly" && field.Ref.BackendIDType != "" {
-				return fmt.Errorf("%s.ref.backendIDType: resourceRefOnly has no backend id", line)
+				return fmt.Errorf("%s.ref.backendIdType: resourceRefOnly has no backend id", line)
 			}
 			if field.Ref.Form != "" && field.Ref.Form != "resourceRefOnly" && field.Ref.Form != "split" && field.Ref.Form != "named" && field.Ref.Form != "namedBackendOnly" {
 				return fmt.Errorf("%s.ref.form: use resourceRefOnly, split, named, namedBackendOnly, or omit form", line)
