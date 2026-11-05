@@ -103,7 +103,7 @@ func (b *builder) foldedFields(r *model.Resource, f *model.ResourceField, folds 
 			if fold.Type.Elem == nil || !slices.Contains([]model.Kind{model.String, model.Bool, model.Number, model.Integer, model.Enum}, fold.Type.Elem.Kind) {
 				return nil, unsupported("spec."+fold.Field, "createAs supports a scalar, an enum, or a list of them")
 			}
-		default:
+		case model.Object, model.OneOf, model.Map:
 			return nil, unsupported("spec."+fold.Field, "createAs supports a scalar, an enum, or a list of them, got %s", fold.Type.Kind)
 		}
 		field, err := b.field(b.kind, r.Name, fold.Field, f.Description, fold.Type, fold.Required, false, "spec."+fold.Field, false)
@@ -483,7 +483,7 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 	}
 	if change.SendNullAsEmpty {
 		isString := t.Kind == model.String && t.Format != "date-time" && len(t.Wrappers) == 0
-		if required || b.file.Ref(component, name) != nil || !(isString || t.Kind == model.List || t.Kind == model.Set) {
+		if required || b.file.Ref(component, name) != nil || (!isString && t.Kind != model.List && t.Kind != model.Set) {
 			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".sendNullAsEmpty", msg: "sendNullAsEmpty needs an optional string or an optional list"}
 		}
 		f.sendNullAsEmpty = true
