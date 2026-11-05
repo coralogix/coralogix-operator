@@ -18,6 +18,7 @@
         "method": "POST",
         "path": "/mgmt/openapi/5/events2metrics/events2metrics/v2",
         "body": {
+          "description": "",
           "logsQuery": {},
           "metricFields": [
             {
@@ -58,6 +59,7 @@
         "method": "POST",
         "path": "/mgmt/openapi/5/events2metrics/events2metrics/v2",
         "body": {
+          "description": "",
           "logsQuery": {},
           "metricFields": [
             {

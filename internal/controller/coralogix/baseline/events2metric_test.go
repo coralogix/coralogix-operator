@@ -43,7 +43,7 @@ func init() {
 		resource: "events2metrics",
 		newFake:  newE2MFake,
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
-			return &v1alpha1controllers.Events2MetricReconciler{E2MClient: cs.Events2Metrics(), Interval: reconcileInterval}
+			return &v1alpha1controllers.Events2MetricReconciler{Client: cs.Events2Metrics(), Interval: reconcileInterval}
 		},
 		scenarios: events2MetricScenarios,
 		fidelity: fidelityConfig{

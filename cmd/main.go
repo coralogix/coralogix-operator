@@ -293,13 +293,6 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "SLO")
 		os.Exit(1)
 	}
-	if err = (&v1alpha1controllers.Events2MetricReconciler{
-		E2MClient: oapiClientSet.Events2Metrics(),
-		Interval:  cfg.ReconcileIntervals[utils.Events2MetricKind],
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Events2Metric")
-		os.Exit(1)
-	}
 	if err = (&v1alpha1controllers.IPAccessReconciler{
 		IPAccesssClient: oapiClientSet.IPAccess(),
 		Interval:        cfg.ReconcileIntervals[utils.IPAccess],

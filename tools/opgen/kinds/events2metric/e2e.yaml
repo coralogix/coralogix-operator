@@ -1,0 +1,24 @@
+# The live API needs an existing <namespace>/<dataset>; the released test leaves it unset.
+omit: [dataSource]
+substitutions:
+  sample-name: '@{run}'                       # E2M names are unique per account
+  sample-target-base-metric-name: '@{run}'    # metric names must not collide between runs
+values:
+  # The generated sample pairs aggType min with a samples arm. Use a consistent aggregation.
+  metricFields.aggregations: [{aggType: min, enabled: true, targetMetricName: min_value, aggMetadata: {}}]
+update:
+  field: description
+  value: Events2Metric updated by the e2e test
+upgrade:
+  from: '1.0'
+  spec:
+    name: '@{run}'
+    description: Events2Metric created before the operator upgrade
+    query: {logs: {lucene: 'status:200'}}
+    metricLabels: [{targetLabel: status, sourceField: status}]
+    metricFields:
+      - targetBaseMetricName: '@{run}'
+        sourceField: request_count
+        aggregations: [{aggType: min, enabled: true, targetMetricName: min_request_count, aggMetadata: {}}]
+  field: description
+  value: Events2Metric updated after the operator upgrade

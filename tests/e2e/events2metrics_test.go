@@ -73,31 +73,31 @@ var _ = Describe("Events2Metric", Ordered, func() {
 				Name:              e2mName,
 				Description:       ptr.To("e2m from k8s operator"),
 				PermutationsLimit: ptr.To(int32(100)),
-				MetricLabels: []coralogixv1alpha1.MetricLabel{
+				MetricLabels: []coralogixv1alpha1.Events2MetricMetricLabel{
 					{
 						TargetLabel: "status",
 						SourceField: "status",
 					},
 				},
-				MetricFields: []coralogixv1alpha1.MetricField{
+				MetricFields: []coralogixv1alpha1.Events2MetricV2MetricField{
 					{
 						TargetBaseMetricName: baseName,
 						SourceField:          "request_count",
-						Aggregations: []coralogixv1alpha1.MetricFieldAggregation{
+						Aggregations: []coralogixv1alpha1.Events2MetricV2Aggregation{
 							{
-								AggType:          coralogixv1alpha1.AggregationTypeMin,
+								AggType:          "min",
 								TargetMetricName: "min_request_count",
 							},
 						},
 					},
 				},
-				Query: coralogixv1alpha1.E2MQuery{
-					Logs: &coralogixv1alpha1.E2MQueryLogs{
+				Query: coralogixv1alpha1.Events2MetricSpecQuery{
+					Logs: &coralogixv1alpha1.Events2MetricV2LogsQuery{
 						Lucene:                 ptr.To("status:200 AND request_count:[* TO *]"),
 						Alias:                  ptr.To("e2m-logs"),
 						ApplicationNameFilters: []string{"test-app"},
 						SubsystemNameFilters:   []string{"test-subsystem"},
-						SeverityFilters:        []coralogixv1alpha1.L2MSeverity{coralogixv1alpha1.L2MSeverityCritical, coralogixv1alpha1.L2MSeverityError},
+						SeverityFilters:        []string{"critical", "error"},
 					},
 				},
 			},
@@ -111,8 +111,8 @@ var _ = Describe("Events2Metric", Ordered, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: e2mName, Namespace: testNamespace}, fetchedE2M)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedE2M.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetchedE2M.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			g.Expect(fetchedE2M.Status.Id).ToNot(BeNil())
-			e2mID = *fetchedE2M.Status.Id
+			g.Expect(fetchedE2M.Status.ID).ToNot(BeNil())
+			e2mID = *fetchedE2M.Status.ID
 		}, time.Minute, time.Second).Should(Succeed())
 
 		By("Verifying E2M exists in Coralogix backend")
@@ -144,23 +144,23 @@ var _ = Describe("Events2Metric", Ordered, func() {
 		modifiedE2M.Spec.Name = newE2MName
 		modifiedE2M.Spec.Description = ptr.To("updated description")
 		modifiedE2M.Spec.PermutationsLimit = ptr.To(int32(250))
-		modifiedE2M.Spec.MetricLabels = []coralogixv1alpha1.MetricLabel{
+		modifiedE2M.Spec.MetricLabels = []coralogixv1alpha1.Events2MetricMetricLabel{
 			{TargetLabel: "status", SourceField: "status"},
 			{TargetLabel: "method", SourceField: "method"},
 		}
-		modifiedE2M.Spec.MetricFields = []coralogixv1alpha1.MetricField{
+		modifiedE2M.Spec.MetricFields = []coralogixv1alpha1.Events2MetricV2MetricField{
 			{
 				TargetBaseMetricName: baseName,
 				SourceField:          "request_count",
-				Aggregations: []coralogixv1alpha1.MetricFieldAggregation{
+				Aggregations: []coralogixv1alpha1.Events2MetricV2Aggregation{
 					{
 						Enabled:          true,
-						AggType:          coralogixv1alpha1.AggregationTypeMin,
+						AggType:          "min",
 						TargetMetricName: "min_request_count",
 					},
 					{
 						Enabled:          false,
-						AggType:          coralogixv1alpha1.AggregationTypeMax,
+						AggType:          "max",
 						TargetMetricName: "max_request_count",
 					},
 				},
@@ -285,14 +285,14 @@ var _ = Describe("Events2Metric spans samples histogram", Ordered, func() {
 				Name:              e2mName,
 				Description:       ptr.To("spans e2m from k8s operator"),
 				PermutationsLimit: ptr.To(int32(50)),
-				MetricFields: []coralogixv1alpha1.MetricField{
+				MetricFields: []coralogixv1alpha1.Events2MetricV2MetricField{
 					{
 						TargetBaseMetricName: durationMetric,
 						SourceField:          "duration",
-						Aggregations: []coralogixv1alpha1.MetricFieldAggregation{
+						Aggregations: []coralogixv1alpha1.Events2MetricV2Aggregation{
 							{
 								Enabled:          true,
-								AggType:          coralogixv1alpha1.AggregationTypeMin,
+								AggType:          "min",
 								TargetMetricName: "min_duration",
 							},
 						},
@@ -300,14 +300,14 @@ var _ = Describe("Events2Metric spans samples histogram", Ordered, func() {
 					{
 						TargetBaseMetricName: samplesMetric,
 						SourceField:          "duration",
-						Aggregations: []coralogixv1alpha1.MetricFieldAggregation{
+						Aggregations: []coralogixv1alpha1.Events2MetricV2Aggregation{
 							{
 								Enabled:          true,
-								AggType:          coralogixv1alpha1.AggregationTypeSamples,
+								AggType:          "samples",
 								TargetMetricName: "samples_duration",
-								AggMetadata: coralogixv1alpha1.AggregationMetadata{
-									Samples: &coralogixv1alpha1.SamplesMetadata{
-										SampleType: coralogixv1alpha1.E2MAggSamplesSampleTypeMax,
+								AggMetadata: coralogixv1alpha1.Events2MetricV2AggregationAggMetadata{
+									Samples: &coralogixv1alpha1.Events2MetricE2MAggSamples{
+										SampleType: "max",
 									},
 								},
 							},
@@ -316,13 +316,13 @@ var _ = Describe("Events2Metric spans samples histogram", Ordered, func() {
 					{
 						TargetBaseMetricName: histogramMetric,
 						SourceField:          "duration",
-						Aggregations: []coralogixv1alpha1.MetricFieldAggregation{
+						Aggregations: []coralogixv1alpha1.Events2MetricV2Aggregation{
 							{
 								Enabled:          true,
-								AggType:          coralogixv1alpha1.AggregationTypeHistogram,
+								AggType:          "histogram",
 								TargetMetricName: "histogram_duration",
-								AggMetadata: coralogixv1alpha1.AggregationMetadata{
-									Histogram: &coralogixv1alpha1.HistogramMetadata{
+								AggMetadata: coralogixv1alpha1.Events2MetricV2AggregationAggMetadata{
+									Histogram: &coralogixv1alpha1.Events2MetricE2MAggHistogram{
 										Buckets: []resource.Quantity{
 											resource.MustParse("0.1"),
 											resource.MustParse("5.5"),
@@ -334,8 +334,8 @@ var _ = Describe("Events2Metric spans samples histogram", Ordered, func() {
 						},
 					},
 				},
-				Query: coralogixv1alpha1.E2MQuery{
-					Spans: &coralogixv1alpha1.E2MQuerySpans{
+				Query: coralogixv1alpha1.Events2MetricSpecQuery{
+					Spans: &coralogixv1alpha1.Events2MetricV2SpansQuery{
 						Lucene:                 ptr.To("service:nginx"),
 						ApplicationNameFilters: []string{"test-app"},
 						SubsystemNameFilters:   []string{"test-subsystem"},
@@ -353,8 +353,8 @@ var _ = Describe("Events2Metric spans samples histogram", Ordered, func() {
 			fetched := &coralogixv1alpha1.Events2Metric{}
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: e2mName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
-			g.Expect(fetched.Status.Id).ToNot(BeNil())
-			e2mID = *fetched.Status.Id
+			g.Expect(fetched.Status.ID).ToNot(BeNil())
+			e2mID = *fetched.Status.ID
 		}, time.Minute, time.Second).Should(Succeed())
 
 		Eventually(func(g Gomega) {

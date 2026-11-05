@@ -1,0 +1,88 @@
+resource: E2M
+mode: existing
+finalizer: events2metric.coralogix.com/finalizer
+validators:
+  inferred: true
+  # The released CRD has none of the contract limits on these fields.
+  fields:
+    spec.name: {inferred: false}
+    spec.description: {inferred: false}
+    spec.dataSource: {inferred: false}
+    spec.permutationsLimit: {inferred: false}
+    spec.metricLabels: {inferred: false}
+    spec.metricLabels[].sourceField: {inferred: false}
+    spec.metricLabels[].targetLabel: {inferred: false}
+    spec.metricFields: {inferred: false}
+    spec.metricFields[].sourceField: {inferred: false}
+    spec.metricFields[].targetBaseMetricName: {inferred: false}
+    spec.metricFields[].aggregations: {inferred: false}
+    spec.metricFields[].aggregations[].targetMetricName: {inferred: false}
+    spec.metricFields[].aggregations[].enabled:
+      add: ['+kubebuilder:default=true']   # the released CRD default
+    spec.metricFields[].aggregations[].aggMetadata.histogram.buckets: {inferred: false}
+    spec.query.logs.alias: {inferred: false}
+    spec.query.logs.lucene: {inferred: false}
+    spec.query.logs.applicationNameFilters: {inferred: false}
+    spec.query.logs.applicationNameFilters[]: {inferred: false}
+    spec.query.logs.subsystemNameFilters: {inferred: false}
+    spec.query.logs.subsystemNameFilters[]: {inferred: false}
+    spec.query.logs.severityFilters: {inferred: false}
+    spec.query.spans.lucene: {inferred: false}
+    spec.query.spans.applicationNameFilters: {inferred: false}
+    spec.query.spans.applicationNameFilters[]: {inferred: false}
+    spec.query.spans.subsystemNameFilters: {inferred: false}
+    spec.query.spans.subsystemNameFilters[]: {inferred: false}
+    spec.query.spans.actionFilters: {inferred: false}
+    spec.query.spans.actionFilters[]: {inferred: false}
+    spec.query.spans.serviceFilters: {inferred: false}
+    spec.query.spans.serviceFilters[]: {inferred: false}
+api:
+  # Replace takes the whole E2M, with the server-set id in the body.
+  updateIDInBody: true
+groups:
+  query: {fields: [spansQuery, logsQuery]}
+types:
+  E2M:
+    fields:
+      id: {readOnly: true}
+      createTime: {skip: true}
+      updateTime: {skip: true}
+      isInternal: {skip: true}
+      # Create takes the limit flat; Replace and Get nest it. The CR keeps the flat field.
+      permutations: {createAs: {limit: permutationsLimit}}
+      # Replace keeps a stored description that the body omits, so an unset one is sent as "".
+      description: {sendNullAsEmpty: true}
+      # The released requests send [] for these two lists when the CR has none.
+      metricFields: {sendNullAsEmpty: true}
+      metricLabels: {sendNullAsEmpty: true}
+      # The CR has no type: it follows the query arm.
+      type: {requestValueBy: {logsQuery: E2M_TYPE_LOGS2METRICS, spansQuery: E2M_TYPE_SPANS2METRICS}}
+      logsQuery: {name: logs, requireOne: true}
+      spansQuery: {name: spans}
+  v2.LogsQuery:
+    fields:
+      applicationnameFilters: {name: applicationNameFilters}
+      subsystemnameFilters: {name: subsystemNameFilters}
+  v2.SpansQuery:
+    fields:
+      applicationnameFilters: {name: applicationNameFilters}
+      subsystemnameFilters: {name: subsystemNameFilters}
+  v2.MetricField:
+    fields:
+      # The contract requires the list; the released CR does not, and sends [] when it is unset.
+      aggregations: {optional: true, sendNullAsEmpty: true}
+  v2.Aggregation:
+    groups:
+      aggMetadata: {fields: [samples, histogram]}
+    fields:
+      enabled: {required: true}
+      none: {skip: true}   # the released CR has no "none" arm
+  E2MAggHistogram:
+    fields:
+      buckets: {required: true}
+enums:
+  logs2metrics.v2.Severity:
+    zero: unspecified
+    rejectZero: true   # the released CR does not accept an explicit unspecified severity
+    values: [SEVERITY_DEBUG, SEVERITY_VERBOSE, SEVERITY_INFO, SEVERITY_WARNING, SEVERITY_ERROR, SEVERITY_CRITICAL]
+    names: {SEVERITY_WARNING: warn}

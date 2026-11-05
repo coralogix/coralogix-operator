@@ -67,7 +67,6 @@ rules:
       - dashboards
       - dashboardsfolders
       - enrichments
-      - events2metrics
       - groups
       - integrations
       - ipaccesses
@@ -106,7 +105,6 @@ rules:
       - dashboards/finalizers
       - dashboardsfolders/finalizers
       - enrichments/finalizers
-      - events2metrics/finalizers
       - groups/finalizers
       - integrations/finalizers
       - ipaccesses/finalizers
@@ -139,7 +137,6 @@ rules:
       - dashboards/status
       - dashboardsfolders/status
       - enrichments/status
-      - events2metrics/status
       - groups/status
       - integrations/status
       - ipaccesses/status
@@ -168,6 +165,7 @@ rules:
   - apiGroups:
       - coralogix.com
     resources:
+      - events2metrics
       - globalrouters
       - presets
       - views
@@ -183,6 +181,7 @@ rules:
   - apiGroups:
       - coralogix.com
     resources:
+      - events2metrics/finalizers
       - globalrouters/finalizers
       - presets/finalizers
       - views/finalizers
@@ -192,6 +191,7 @@ rules:
   - apiGroups:
       - coralogix.com
     resources:
+      - events2metrics/status
       - globalrouters/status
       - presets/status
       - views/status
