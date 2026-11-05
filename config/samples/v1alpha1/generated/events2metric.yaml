@@ -15,18 +15,10 @@ spec:
       sourceField: request_count
       targetBaseMetricName: sample-target-base-metric-name
   metricLabels:
-    - sourceField: request_count
+    - sourceField: status
       targetLabel: sample-target-label
   name: sample-name
   permutationsLimit: 1
   query:
-    spans:
-      actionFilters:
-        - sample-action-filters
-      applicationNameFilters:
-        - sample-applicationname-filters
-      lucene: sample-lucene
-      serviceFilters:
-        - sample-service-filters
-      subsystemNameFilters:
-        - sample-subsystemname-filters
+    logs:
+      lucene: status:200

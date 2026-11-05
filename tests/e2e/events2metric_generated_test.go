@@ -58,34 +58,24 @@ const (
   ],
   "metricLabels": [
     {
-      "sourceField": "request_count",
+      "sourceField": "status",
       "targetLabel": "sample-target-label"
     }
   ],
   "name": "sample-name",
   "permutationsLimit": 1,
   "query": {
-    "spans": {
-      "actionFilters": [
-        "sample-action-filters"
-      ],
-      "applicationNameFilters": [
-        "sample-applicationname-filters"
-      ],
-      "lucene": "sample-lucene",
-      "serviceFilters": [
-        "sample-service-filters"
-      ],
-      "subsystemNameFilters": [
-        "sample-subsystemname-filters"
-      ]
+    "logs": {
+      "lucene": "status:200"
     }
   }
 }`
 	events2MetricMinimalSpec = `{
   "name": "sample-name",
   "query": {
-    "spans": {}
+    "logs": {
+      "lucene": "status:200"
+    }
   }
 }`
 )
