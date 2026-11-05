@@ -3,6 +3,7 @@ package generator
 import (
 	"crypto/sha256"
 	"fmt"
+	"math"
 	"slices"
 	"strconv"
 	"strings"
@@ -35,6 +36,14 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 		if inGroup[f.Name] && b.file.Field(r.Name, f.Name).Required {
 			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":types." + r.Name + ".fields." + f.Name + ".required", msg: "a oneOf arm cannot be required on its own"}
 		}
+		if folds := r.CreateFolds(f); len(folds) != 0 {
+			fields, err := b.foldedFields(r, f, folds)
+			if err != nil {
+				return nil, err
+			}
+			spec.Fields = append(spec.Fields, fields...)
+			continue
+		}
 		required := f.Create.Required && !inGroup[f.Name]
 		field, err := b.field(b.kind, r.Name, f.Name, f.Description, f.Type, required, requiredScalarWithoutPresence(f.Create, f.Type), "spec."+f.Name, false)
 		if err != nil {
@@ -51,6 +60,7 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 			spec.Fields = append(spec.Fields, splitReferenceField(field))
 		}
 	}
+	b.specType = spec
 	groups, err := b.overrideGroups(r.Name, r.Groups, spec.Fields)
 	if err != nil {
 		return nil, err
@@ -73,6 +83,45 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 		}
 	}
 	return spec, nil
+}
+
+// foldedFields builds the CR fields of a createAs line: one field for each property of the object,
+// under the name of the flat Create field. A CR that follows the released API holds the flat value.
+func (b *builder) foldedFields(r *model.Resource, f *model.ResourceField, folds []model.CreateFold) ([]*crField, error) {
+	if !r.Replace {
+		return nil, unsupported("types."+r.Name+".fields."+f.Name+".createAs", "createAs needs a full-replace Update")
+	}
+	if len(folds) > 1 {
+		// With two flat fields, a CR can set one and leave the other out. Update would then send the
+		// object with the missing property at its zero value, and overwrite the stored value.
+		return nil, unsupported("types."+r.Name+".fields."+f.Name+".createAs", "createAs supports one property per object; %d are named", len(folds))
+	}
+	if b.folds == nil {
+		b.folds = map[string]*foldedField{}
+	}
+	b.folds[f.Name] = &foldedField{field: f, folds: folds}
+	var out []*crField
+	for _, fold := range folds {
+		switch fold.Type.Kind {
+		case model.String, model.Bool, model.Number, model.Integer, model.Enum:
+		case model.List, model.Set:
+			if fold.Type.Elem == nil || !slices.Contains([]model.Kind{model.String, model.Bool, model.Number, model.Integer, model.Enum}, fold.Type.Elem.Kind) {
+				return nil, unsupported("spec."+fold.Field, "createAs supports a scalar, an enum, or a list of them")
+			}
+		case model.Object, model.OneOf, model.Map:
+			return nil, unsupported("spec."+fold.Field, "createAs supports a scalar, an enum, or a list of them, got %s", fold.Type.Kind)
+		}
+		field, err := b.field(b.kind, r.Name, fold.Field, f.Description, fold.Type, fold.Required, false, "spec."+fold.Field, false)
+		if err != nil {
+			return nil, err
+		}
+		field.fold = &foldOrigin{Object: f.Name, Property: fold.Property}
+		if f.Behavior == model.Immutable {
+			immutable(field, field.validationPath)
+		}
+		out = append(out, field)
+	}
+	return out, nil
 }
 
 // applyValidation changes released markers after the contract and oneOf rules are built.
@@ -158,8 +207,16 @@ func (b *builder) contractDefault(field *crField, attrs *model.Attrs, path strin
 		if !matched {
 			return unsupported(path, "the API default %q is not an accepted CR enum value", value)
 		}
-	case model.Bool, model.Integer, model.Number:
+	case model.Bool, model.Integer:
 		// The API default is already a scalar literal.
+	case model.Number:
+		// A Quantity is int-or-string in the CRD, and Kubernetes rejects a number literal as its
+		// default. The default is written as a string in plain decimal form.
+		number, err := strconv.ParseFloat(value, 64)
+		if err != nil || math.IsNaN(number) || math.IsInf(number, 0) {
+			return unsupported(path, "the API number default %q is not a finite number", value)
+		}
+		value = markerString(strconv.FormatFloat(number, 'f', -1, 64))
 	case model.List, model.Set:
 		if strings.TrimSpace(value) != "[]" {
 			return unsupported(path, "the API collection default %q is not an empty list", value)
@@ -430,6 +487,14 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 		f.omitEmptyInRequest = true
 		b.used[line] = true
 	}
+	if change.SendNullAsEmpty {
+		isString := t.Kind == model.String && t.Format != "date-time" && len(t.Wrappers) == 0
+		if required || b.file.Ref(component, name) != nil || (!isString && t.Kind != model.List && t.Kind != model.Set) {
+			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".sendNullAsEmpty", msg: "sendNullAsEmpty needs an optional string or an optional list"}
+		}
+		f.sendNullAsEmpty = true
+		b.used[line] = true
+	}
 	if !required {
 		f.Markers = append(f.Markers, "+optional")
 	}
@@ -649,6 +714,10 @@ func (b *builder) elemType(t *model.Type, path string, f *crField) (string, erro
 	case model.String, model.Bool, model.Number, model.Integer, model.Enum:
 		// A scalar is handled below.
 	}
+	if t.Kind == model.Number && f.typ.Kind == model.Map {
+		// A defined value type over resource.Quantity would lose its JSON and DeepCopy methods.
+		return "", unsupported(path, "a map of numbers is not supported yet")
+	}
 	goType, err := scalarType(t, path)
 	if err != nil {
 		return "", err
@@ -682,7 +751,11 @@ func scalarType(t *model.Type, path string) (string, error) {
 		}
 		return "", unsupported(path, "an integer with format %q is not supported", t.Format)
 	case model.Number:
-		return "", unsupported(path, "a number is not supported yet: a custom resource holds it as a quantity")
+		// A custom resource holds a number as a quantity. The SDK type is float32 or float64.
+		if t.Format != "float" && t.Format != "double" {
+			return "", unsupported(path, "a number needs format float or double, got %q", t.Format)
+		}
+		return "resource.Quantity", nil
 	case model.Object, model.OneOf, model.List, model.Set, model.Map:
 		// Not a scalar: the error below.
 	}
@@ -721,6 +794,10 @@ func (b *builder) limits(markers []string, path string) []string {
 func limitMarkers(t *model.Type) []string {
 	if t.Format == "date-time" {
 		// metav1.Time provides the date-time schema; controller-gen rejects string limits on it.
+		return nil
+	}
+	if t.Kind == model.Number {
+		// A Quantity is int-or-string in the CRD. Minimum and Maximum do not apply to its schema.
 		return nil
 	}
 	var out []string

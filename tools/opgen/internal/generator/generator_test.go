@@ -111,10 +111,19 @@ func TestCheckReportsGaps(t *testing.T) {
 			code: "SCHEMA_RECURSIVE",
 		},
 		{
-			name: "a number",
+			// The shared module names the SDK type of a number from its format.
+			name: "a number without a format",
 			edit: func(t *testing.T, s string) string {
-				s = replaceOnce(t, s, "weight: {type: integer, format: int32, minimum: 1}", "weight: {type: number, format: double, minimum: 1}")
-				return s
+				// The same property in Create, Update, and the resource.
+				s = replaceOnce(t, s, "ratio: {type: number, format: float, description: A fraction that the thing uses.}", "ratio: {type: number, description: A fraction that the thing uses.}")
+				return strings.ReplaceAll(s, "ratio: {type: number, format: float, x-coralogix-presence: true}", "ratio: {type: number, x-coralogix-presence: true}")
+			},
+			code: "SDK_SHAPE_UNSUPPORTED",
+		},
+		{
+			name: "a map of numbers",
+			edit: func(t *testing.T, s string) string {
+				return strings.ReplaceAll(s, "additionalProperties: {type: string, minLength: 1, maxLength: 63}", "additionalProperties: {type: number, format: float}")
 			},
 			code: codeShapeUnsupported,
 		},

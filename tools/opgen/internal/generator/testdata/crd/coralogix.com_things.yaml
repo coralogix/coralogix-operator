@@ -46,6 +46,16 @@ spec:
           spec:
             description: ThingSpec defines the desired state of a Thing.
             properties:
+              buckets:
+                description: Upper bounds of the buckets.
+                items:
+                  anyOf:
+                  - type: integer
+                  - type: string
+                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                  x-kubernetes-int-or-string: true
+                maxItems: 8
+                type: array
               config:
                 description: ThingConfig is the ThingConfig object of the API.
                 properties:
@@ -136,6 +146,13 @@ spec:
                 description: The quota, a 64-bit number.
                 format: int64
                 type: integer
+              ratio:
+                anyOf:
+                - type: integer
+                - type: string
+                description: A fraction that the thing uses.
+                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                x-kubernetes-int-or-string: true
               settings:
                 description: ThingSettings is the ThingSettings object of the API.
                 properties:

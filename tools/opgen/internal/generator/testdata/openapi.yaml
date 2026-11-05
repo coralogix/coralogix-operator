@@ -32,6 +32,11 @@ paths:
                 kind: {$ref: '#/components/schemas/ThingKind'}
                 priority: {$ref: '#/components/schemas/ThingPriority'}
                 quota: {type: string, format: int64, x-coralogix-presence: true}
+                ratio: {type: number, format: float, x-coralogix-presence: true}
+                buckets:
+                  type: array
+                  maxItems: 8
+                  items: {type: number, format: float}
                 config: {$ref: '#/components/schemas/ThingConfig'}
                 settings: {$ref: '#/components/schemas/ThingSettingsCreate'}
                 items:
@@ -84,6 +89,11 @@ paths:
                 enabled: {type: boolean, default: true, x-coralogix-presence: true}
                 priority: {$ref: '#/components/schemas/ThingPriority'}
                 quota: {type: string, format: int64, x-coralogix-presence: true}
+                ratio: {type: number, format: float, x-coralogix-presence: true}
+                buckets:
+                  type: array
+                  maxItems: 8
+                  items: {type: number, format: float}
                 config: {$ref: '#/components/schemas/ThingConfig'}
                 settings: {$ref: '#/components/schemas/ThingSettingsUpdate'}
                 items:
@@ -382,6 +392,12 @@ components:
           description: The kind. It cannot change.
         priority: {$ref: '#/components/schemas/ThingPriority'}
         quota: {type: string, format: int64, description: "The quota, a 64-bit number."}
+        ratio: {type: number, format: float, description: A fraction that the thing uses.}
+        buckets:
+          type: array
+          maxItems: 8
+          items: {type: number, format: float}
+          description: Upper bounds of the buckets.
         config: {$ref: '#/components/schemas/ThingConfig'}
         settings: {$ref: '#/components/schemas/ThingSettings'}
         items:

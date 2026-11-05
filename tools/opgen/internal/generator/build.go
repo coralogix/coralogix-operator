@@ -139,7 +139,11 @@ type crField struct {
 	synthetic      bool   // a CR field with no API property of its own
 	group          bool   // this field groups API fields under a released CR object
 
+	// fold: this flat CR field holds a property of an object that Update and Get nest (createAs).
+	fold *foldOrigin
+
 	omitEmptyInRequest bool
+	sendNullAsEmpty    bool // Create and Update send "" or [] when the optional field is unset
 }
 
 // JSONTag is the json struct tag of the field.
@@ -197,6 +201,31 @@ type builder struct {
 	hasNameLookup    bool
 	// droppedLimits: validators.inferred: false dropped at least one contract limit.
 	droppedLimits bool
+	// folds are the createAs folds of the top-level fields, by API field name. The spec holds the
+	// flat Create fields; Update rebuilds the object that they came from.
+	folds    map[string]*foldedField
+	specType *crType
+	// outVar names the SDK value that assignFrom sets. It is "out" when empty.
+	outVar string
+}
+
+// foldOrigin names the object and the property that a flat createAs field comes from.
+type foldOrigin struct {
+	Object, Property string // for example permutations and limit
+}
+
+// foldedField is a top-level object field that a createAs line replaces in the CR by the flat
+// Create fields of its properties.
+type foldedField struct {
+	field *model.ResourceField
+	folds []model.CreateFold
+}
+
+func (b *builder) out() string {
+	if b.outVar != "" {
+		return b.outVar
+	}
+	return "out"
 }
 
 // buildKind maps the resource and its SDK names to the data of the templates. It is also the
@@ -214,6 +243,12 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 		SDKPath: ix.pkg.Pkg, SDKAlias: b.alias, CxsdkPath: ix.cxsdk, Replace: r.Replace,
 	}
 	d.BodyIDInWrapper = r.Policy.RequestWrapper != "" && !updateIDOutsideWrapper
+	if file != nil && file.Finalizer != "" {
+		if file.Finalizer == d.Finalizer {
+			return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":finalizer", msg: "the value is the generated finalizer"}
+		}
+		d.Finalizer = file.Finalizer
+	}
 	if err := checkLifecycle(r); err != nil {
 		return nil, err
 	}
@@ -243,6 +278,9 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 	}
 	for _, line := range file.Lines() {
 		if file.Field(line.Component, line.Field).Unwrap != nil && r.UnwrapUsed[line.Component+"."+line.Field] {
+			b.used[line] = true
+		}
+		if len(file.Field(line.Component, line.Field).CreateAs) != 0 && b.folds[line.Field] != nil && line.Component == r.Name {
 			b.used[line] = true
 		}
 		if file.Field(line.Component, line.Field).Skip {

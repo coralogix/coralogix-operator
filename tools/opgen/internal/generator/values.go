@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"go/token"
 	"io"
+	"math"
 	"os"
 	"regexp"
 	"slices"
@@ -118,6 +119,8 @@ type upgradeData struct {
 // the value that the API then returns, and the expression that reads it from the response "got".
 type updateData struct {
 	Field, Set, Want, Got string
+	// NotNil lists values that the check reads through: the nested object of a createAs field.
+	NotNil []string
 }
 
 type updateCandidate struct {
@@ -283,8 +286,10 @@ func (v *sampleValues) item(f *crField, t *model.Type, path string, full bool) (
 		return true, nil
 	case model.Integer:
 		return integerValue(t), nil
-	case model.String, model.Number, model.List, model.Set, model.Map:
-		// A string, below. The renderer rejects a number and a collection here.
+	case model.Number:
+		return numberValue(t), nil
+	case model.String, model.List, model.Set, model.Map:
+		// A string, below. The renderer rejects a collection here.
 	}
 	return stringValue(f.API, t, path)
 }
@@ -298,6 +303,23 @@ func integerValue(t *model.Type) int64 {
 		n = int64(*t.Maximum)
 	}
 	return n
+}
+
+// numberValue makes up a number inside the contract bounds. The CR holds it as a quantity, which
+// is int-or-string in the CRD: a whole number can be a YAML number, and a fraction must be a
+// decimal string, or admission rejects it.
+func numberValue(t *model.Type) any {
+	n := 1.0
+	if t.Minimum != nil && n < *t.Minimum {
+		n = *t.Minimum
+	}
+	if t.Maximum != nil && n > *t.Maximum {
+		n = *t.Maximum
+	}
+	if n == math.Trunc(n) && math.Abs(n) < 1e15 {
+		return int64(n)
+	}
+	return strconv.FormatFloat(n, 'f', -1, 64)
 }
 
 // stringValue makes up a string that meets the length limits and the pattern of the contract.
@@ -386,15 +408,29 @@ func updateStep(d *kindData, ix *refIndex, candidates []updateCandidate, file *e
 		if err != nil {
 			return nil, err
 		}
-		got, err := ix.field(resource.Name, f.API)
+		base := "got."
+		if d.GetResponseField != "" {
+			base += d.GetResponseField + "."
+		}
+		// The CR holds a createAs field flat. The response nests it in an object.
+		var notNil []string
+		owner, name := resource.Name, f.API
+		if f.fold != nil {
+			object, err := ix.field(resource.Name, f.fold.Object)
+			if err != nil {
+				return nil, err
+			}
+			base += object.Name + "."
+			if strings.HasPrefix(object.Want, "*") {
+				notNil = append(notNil, strings.TrimSuffix(base, "."))
+			}
+			owner, name = strings.TrimPrefix(object.Want, "*"), f.fold.Property
+		}
+		got, err := ix.field(owner, name)
 		if err != nil {
 			return nil, err
 		}
-		read := "got."
-		if d.GetResponseField != "" {
-			read += d.GetResponseField + "."
-		}
-		read += got.Name
+		read := base + got.Name
 		if strings.HasPrefix(got.Want, "*") {
 			read = fmt.Sprintf("ptr.Deref(%s, %s)", read, zeroLiteral(f.typ))
 		}
@@ -402,7 +438,7 @@ func updateStep(d *kindData, ix *refIndex, candidates []updateCandidate, file *e
 		if f.Optional {
 			set = "ptr.To(" + value + ")"
 		}
-		return &updateData{Field: candidate.goPath, Set: set, Want: value, Got: read}, nil
+		return &updateData{Field: candidate.goPath, Set: set, Want: value, Got: read, NotNil: notNil}, nil
 	}
 	if file.Update != nil {
 		return nil, &shapeError{code: codeE2EUnused, path: e2eFileName + ":update.field", msg: "the spec has no such field"}

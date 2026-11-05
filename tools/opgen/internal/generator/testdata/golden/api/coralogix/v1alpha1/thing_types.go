@@ -18,6 +18,7 @@
 package v1alpha1
 
 import (
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -50,6 +51,15 @@ type ThingSpec struct {
 	// The quota, a 64-bit number.
 	// +optional
 	Quota *int64 `json:"quota,omitempty"`
+
+	// A fraction that the thing uses.
+	// +optional
+	Ratio *resource.Quantity `json:"ratio,omitempty"`
+
+	// Upper bounds of the buckets.
+	// +optional
+	// +kubebuilder:validation:MaxItems=8
+	Buckets []resource.Quantity `json:"buckets,omitempty"`
 
 	Config ThingConfig `json:"config"`
 

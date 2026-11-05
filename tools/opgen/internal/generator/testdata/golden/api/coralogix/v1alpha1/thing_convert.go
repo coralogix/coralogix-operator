@@ -54,18 +54,18 @@ func (in *ThingQueueThingConfig) toQueueThingConfig(ctx context.Context, namespa
 func (in *ThingConfig) toThingConfig(ctx context.Context, namespace string) (*thingsservice.ThingConfig, error) {
 	out := &thingsservice.ThingConfig{}
 	if in.Http != nil {
-		v4, err := in.Http.toHttpThingConfig(ctx, namespace)
+		v7, err := in.Http.toHttpThingConfig(ctx, namespace)
 		if err != nil {
 			return nil, err
 		}
-		out.Http = v4
+		out.Http = v7
 	}
 	if in.Queue != nil {
-		v5, err := in.Queue.toQueueThingConfig(ctx, namespace)
+		v8, err := in.Queue.toQueueThingConfig(ctx, namespace)
 		if err != nil {
 			return nil, err
 		}
-		out.Queue = v5
+		out.Queue = v8
 	}
 	return out, nil
 }
@@ -109,28 +109,39 @@ func (in *ThingSpec) toCreateThingRequest(ctx context.Context, namespace string)
 		v3 := strconv.FormatInt(*in.Quota, 10)
 		out.Quota = &v3
 	}
-	v6, err := in.Config.toThingConfig(ctx, namespace)
+	if in.Ratio != nil {
+		v4 := float32((*in.Ratio).AsApproximateFloat64())
+		out.Ratio = &v4
+	}
+	if len(in.Buckets) != 0 {
+		v5 := make([]float32, 0, len(in.Buckets))
+		for _, e6 := range in.Buckets {
+			v5 = append(v5, float32(e6.AsApproximateFloat64()))
+		}
+		out.Buckets = v5
+	}
+	v9, err := in.Config.toThingConfig(ctx, namespace)
 	if err != nil {
 		return nil, err
 	}
-	out.Config = *v6
+	out.Config = *v9
 	if in.Settings != nil {
-		v7, err := in.Settings.toThingSettingsCreate(ctx, namespace)
+		v10, err := in.Settings.toThingSettingsCreate(ctx, namespace)
 		if err != nil {
 			return nil, err
 		}
-		out.Settings = v7
+		out.Settings = v10
 	}
 	if len(in.Items) != 0 {
-		v8 := make([]thingsservice.ThingItem, 0, len(in.Items))
-		for _, e9 := range in.Items {
-			v10, err := e9.toThingItem(ctx, namespace)
+		v11 := make([]thingsservice.ThingItem, 0, len(in.Items))
+		for _, e12 := range in.Items {
+			v13, err := e12.toThingItem(ctx, namespace)
 			if err != nil {
 				return nil, err
 			}
-			v8 = append(v8, *v10)
+			v11 = append(v11, *v13)
 		}
-		out.Items = v8
+		out.Items = v11
 	}
 	if len(in.Destinations) != 0 {
 		out.Destinations = in.Destinations
@@ -139,11 +150,11 @@ func (in *ThingSpec) toCreateThingRequest(ctx context.Context, namespace string)
 		out.Tags = in.Tags
 	}
 	if len(in.Labels) != 0 {
-		v15 := make(map[string]string, len(in.Labels))
-		for k17, e16 := range in.Labels {
-			v15[k17] = string(e16)
+		v18 := make(map[string]string, len(in.Labels))
+		for k20, e19 := range in.Labels {
+			v18[k20] = string(e19)
 		}
-		out.Labels = v15
+		out.Labels = v18
 	}
 	return out, nil
 }
@@ -163,38 +174,49 @@ func (in *ThingSpec) toReplaceThingRequest(ctx context.Context, namespace string
 	out.Description = in.Description
 	out.Enabled = in.Enabled
 	if in.Priority != nil {
-		v18, err := thingPriorityToAPI(*in.Priority)
+		v21, err := thingPriorityToAPI(*in.Priority)
 		if err != nil {
 			return nil, fmt.Errorf("spec.priority: %w", err)
 		}
-		out.Priority = &v18
+		out.Priority = &v21
 	}
 	if in.Quota != nil {
-		v19 := strconv.FormatInt(*in.Quota, 10)
-		out.Quota = &v19
+		v22 := strconv.FormatInt(*in.Quota, 10)
+		out.Quota = &v22
 	}
-	v20, err := in.Config.toThingConfig(ctx, namespace)
+	if in.Ratio != nil {
+		v23 := float32((*in.Ratio).AsApproximateFloat64())
+		out.Ratio = &v23
+	}
+	if len(in.Buckets) != 0 {
+		v24 := make([]float32, 0, len(in.Buckets))
+		for _, e25 := range in.Buckets {
+			v24 = append(v24, float32(e25.AsApproximateFloat64()))
+		}
+		out.Buckets = v24
+	}
+	v26, err := in.Config.toThingConfig(ctx, namespace)
 	if err != nil {
 		return nil, err
 	}
-	out.Config = *v20
+	out.Config = *v26
 	if in.Settings != nil {
-		v21, err := in.Settings.toThingSettingsUpdate(ctx, namespace)
+		v27, err := in.Settings.toThingSettingsUpdate(ctx, namespace)
 		if err != nil {
 			return nil, err
 		}
-		out.Settings = v21
+		out.Settings = v27
 	}
 	if len(in.Items) != 0 {
-		v22 := make([]thingsservice.ThingItem, 0, len(in.Items))
-		for _, e23 := range in.Items {
-			v24, err := e23.toThingItem(ctx, namespace)
+		v28 := make([]thingsservice.ThingItem, 0, len(in.Items))
+		for _, e29 := range in.Items {
+			v30, err := e29.toThingItem(ctx, namespace)
 			if err != nil {
 				return nil, err
 			}
-			v22 = append(v22, *v24)
+			v28 = append(v28, *v30)
 		}
-		out.Items = v22
+		out.Items = v28
 	}
 	if len(in.Destinations) != 0 {
 		out.Destinations = in.Destinations
@@ -203,11 +225,11 @@ func (in *ThingSpec) toReplaceThingRequest(ctx context.Context, namespace string
 		out.Tags = in.Tags
 	}
 	if len(in.Labels) != 0 {
-		v29 := make(map[string]string, len(in.Labels))
-		for k31, e30 := range in.Labels {
-			v29[k31] = string(e30)
+		v35 := make(map[string]string, len(in.Labels))
+		for k37, e36 := range in.Labels {
+			v35[k37] = string(e36)
 		}
-		out.Labels = v29
+		out.Labels = v35
 	}
 	return out, nil
 }
