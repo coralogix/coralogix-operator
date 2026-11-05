@@ -74,7 +74,7 @@ func (r *OutboundWebhookReconciler) HandleCreation(ctx context.Context, log logr
 
 	log.Info("Getting outbound-webhook from remote", "id", createResponse.Id)
 	remoteOutboundWebhook, httpResp, err := r.OutboundWebhooksClient.
-		OutgoingWebhooksServiceGetOutgoingWebhook(ctx, *createResponse.Id).
+		OutgoingWebhooksServiceGetOutgoingWebhook(ctx, createResponse.Id).
 		Execute()
 	if err != nil {
 		return fmt.Errorf("error to get outbound-webhook %w", cxsdk.NewAPIError(httpResp, err))
@@ -123,20 +123,14 @@ func (r *OutboundWebhookReconciler) HandleDeletion(ctx context.Context, log logr
 	return nil
 }
 
-func getOutboundWebhookStatus(webhook *webhooks.OutgoingWebhook) (*v1alpha1.OutboundWebhookStatus, error) {
-	if webhook == nil {
-		return nil, fmt.Errorf("outbound-webhook is nil")
-	}
-
-	if webhook.Id == nil {
+func getOutboundWebhookStatus(webhook webhooks.OutgoingWebhook) (*v1alpha1.OutboundWebhookStatus, error) {
+	if webhook.Id == "" {
 		return nil, fmt.Errorf("outbound-webhook id is not set")
 	}
 
 	status := &v1alpha1.OutboundWebhookStatus{
-		ID: webhook.Id,
-	}
-	if webhook.ExternalId != nil {
-		status.ExternalID = ptr.To(strconv.Itoa(int(*webhook.ExternalId)))
+		ID:         ptr.To(webhook.Id),
+		ExternalID: ptr.To(strconv.FormatInt(webhook.ExternalId, 10)),
 	}
 
 	return status, nil

@@ -151,8 +151,8 @@ func (p *TCOTracesPolicy) extractCreateSpanPolicyRequest(retentionsByName map[st
 	req := &tcopolicies.CreateSpanPolicyRequest{
 		Policy: tcopolicies.CreateGenericPolicyRequest{
 			Name:             p.Name,
-			Description:      ptr.Deref(p.Description, ""),
-			Priority:         PrioritySchemaToOpenAPI[p.Priority],
+			Description:      ptr.To(ptr.Deref(p.Description, "")),
+			Priority:         ptr.To(PrioritySchemaToOpenAPI[p.Priority]),
 			Disabled:         p.Disabled,
 			ApplicationRule:  expandTCOPolicyRule(p.Applications),
 			SubsystemRule:    expandTCOPolicyRule(p.Subsystems),

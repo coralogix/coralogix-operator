@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -67,7 +68,7 @@ func (r *RuleGroupReconciler) HandleCreation(ctx context.Context, log logr.Logge
 	}
 	log.Info("Remote ruleGroup created", "response", utils.FormatJSON(createResponse))
 	ruleGroup.Status = coralogixv1alpha1.RuleGroupStatus{
-		ID: createResponse.RuleGroup.Id,
+		ID: ptr.To(createResponse.RuleGroup.Id),
 	}
 
 	return nil

@@ -325,7 +325,7 @@ func (in *RuleGroupSpec) ExtractCreateRuleGroupRequest() *rulegroups.RuleGroupsS
 	order := expandOrder(in.Order)
 
 	return &rulegroups.RuleGroupsServiceCreateRuleGroupRequest{
-		Name:          rulegroups.PtrString(in.Name),
+		Name:          in.Name,
 		Description:   rulegroups.PtrString(in.Description),
 		Enabled:       rulegroups.PtrBool(in.Active),
 		Hidden:        rulegroups.PtrBool(in.Hidden),
@@ -347,7 +347,7 @@ func expandRuleSubGroups(subGroups []RuleSubGroup) []rulegroups.CreateRuleGroupR
 	ruleSubGroups := make([]rulegroups.CreateRuleGroupRequestCreateRuleSubgroup, 0, len(subGroups))
 	for i, subGroup := range subGroups {
 		rsg := expandRuleSubGroup(subGroup)
-		rsg.Order = rulegroups.PtrInt64(int64(i + 1))
+		rsg.Order = int64(i + 1)
 		ruleSubGroups = append(ruleSubGroups, *rsg)
 	}
 	return ruleSubGroups
@@ -365,7 +365,7 @@ func expandRules(rules []Rule) []rulegroups.CreateRuleGroupRequestCreateRuleSubg
 	expandedRules := make([]rulegroups.CreateRuleGroupRequestCreateRuleSubgroupCreateRule, 0, len(rules))
 	for i, rule := range rules {
 		r := expandRule(rule)
-		r.Order = rulegroups.PtrInt64(int64(i + 1))
+		r.Order = int64(i + 1)
 		expandedRules = append(expandedRules, *r)
 	}
 	return expandedRules
@@ -375,46 +375,46 @@ func expandRule(rule Rule) *rulegroups.CreateRuleGroupRequestCreateRuleSubgroupC
 	sourceFiled, parameters := expandSourceFiledAndParameters(rule)
 
 	return &rulegroups.CreateRuleGroupRequestCreateRuleSubgroupCreateRule{
-		Name:        rulegroups.PtrString(rule.Name),
+		Name:        rule.Name,
 		Description: rulegroups.PtrString(rule.Description),
-		SourceField: rulegroups.PtrString(sourceFiled),
+		SourceField: sourceFiled,
 		Parameters:  parameters,
 		Enabled:     rulegroups.PtrBool(rule.Active),
 	}
 }
 
-func expandSourceFiledAndParameters(rule Rule) (sourceField string, parameters *rulegroups.RuleParameters) {
+func expandSourceFiledAndParameters(rule Rule) (sourceField string, parameters rulegroups.RuleParameters) {
 	if parse := rule.Parse; parse != nil {
 		sourceField = parse.SourceField
-		parameters = &rulegroups.RuleParameters{
+		parameters = rulegroups.RuleParameters{
 			ParseParameters: &rulegroups.ParseParameters{
-				DestinationField: rulegroups.PtrString(parse.DestinationField),
-				Rule:             rulegroups.PtrString(parse.Regex),
+				DestinationField: parse.DestinationField,
+				Rule:             parse.Regex,
 			},
 		}
 	} else if parseJsonField := rule.ParseJsonField; parseJsonField != nil {
 		sourceField = parseJsonField.SourceField
-		parameters = &rulegroups.RuleParameters{
+		parameters = rulegroups.RuleParameters{
 			JsonParseParameters: &rulegroups.JsonParseParameters{
-				DestinationField: rulegroups.PtrString(parseJsonField.DestinationField),
-				DeleteSource:     rulegroups.PtrBool(!parseJsonField.KeepSourceField),
-				OverrideDest:     rulegroups.PtrBool(!parseJsonField.KeepDestinationField),
+				DestinationField: parseJsonField.DestinationField,
+				DeleteSource:     !parseJsonField.KeepSourceField,
+				OverrideDest:     !parseJsonField.KeepDestinationField,
 				EscapedValue:     rulegroups.PtrBool(true),
 			},
 		}
 	} else if jsonStringify := rule.JsonStringify; jsonStringify != nil {
 		sourceField = jsonStringify.SourceField
-		parameters = &rulegroups.RuleParameters{
+		parameters = rulegroups.RuleParameters{
 			JsonStringifyParameters: &rulegroups.JsonStringifyParameters{
-				DestinationField: rulegroups.PtrString(jsonStringify.DestinationField),
-				DeleteSource:     rulegroups.PtrBool(!jsonStringify.KeepSourceField),
+				DestinationField: jsonStringify.DestinationField,
+				DeleteSource:     !jsonStringify.KeepSourceField,
 			},
 		}
 	} else if jsonExtract := rule.JsonExtract; jsonExtract != nil {
 		sourceField = "text"
 		destinationField := RulesSchemaDestinationFieldToOpenAPISeverityDestinationField[jsonExtract.DestinationField]
-		jsonKey := rulegroups.PtrString(jsonExtract.JsonKey)
-		parameters = &rulegroups.RuleParameters{
+		jsonKey := jsonExtract.JsonKey
+		parameters = rulegroups.RuleParameters{
 			JsonExtractParameters: &rulegroups.JsonExtractParameters{
 				DestinationFieldType: destinationField.Ptr(),
 				Rule:                 jsonKey,
@@ -422,7 +422,7 @@ func expandSourceFiledAndParameters(rule Rule) (sourceField string, parameters *
 		}
 	} else if removeFields := rule.RemoveFields; removeFields != nil {
 		sourceField = "text"
-		parameters = &rulegroups.RuleParameters{
+		parameters = rulegroups.RuleParameters{
 			RemoveFieldsParameters: &rulegroups.RemoveFieldsParameters{
 				Fields: removeFields.ExcludedFields,
 			},
@@ -430,8 +430,8 @@ func expandSourceFiledAndParameters(rule Rule) (sourceField string, parameters *
 	} else if extractTimestamp := rule.ExtractTimestamp; extractTimestamp != nil {
 		sourceField = extractTimestamp.SourceField
 		standard := RulesSchemaFormatStandardToOpenAPIFormatStandard[extractTimestamp.FieldFormatStandard]
-		format := rulegroups.PtrString(extractTimestamp.TimeFormat)
-		parameters = &rulegroups.RuleParameters{
+		format := extractTimestamp.TimeFormat
+		parameters = rulegroups.RuleParameters{
 			ExtractTimestampParameters: &rulegroups.ExtractTimestampParameters{
 				Standard: standard.Ptr(),
 				Format:   format,
@@ -440,34 +440,34 @@ func expandSourceFiledAndParameters(rule Rule) (sourceField string, parameters *
 	} else if block := rule.Block; block != nil {
 		sourceField = block.SourceField
 		if block.BlockingAllMatchingBlocks {
-			parameters = &rulegroups.RuleParameters{
+			parameters = rulegroups.RuleParameters{
 				BlockParameters: &rulegroups.BlockParameters{
-					KeepBlockedLogs: rulegroups.PtrBool(block.KeepBlockedLogs),
-					Rule:            rulegroups.PtrString(block.Regex),
+					KeepBlockedLogs: block.KeepBlockedLogs,
+					Rule:            block.Regex,
 				},
 			}
 		} else {
-			parameters = &rulegroups.RuleParameters{
+			parameters = rulegroups.RuleParameters{
 				AllowParameters: &rulegroups.AllowParameters{
-					KeepBlockedLogs: rulegroups.PtrBool(block.KeepBlockedLogs),
-					Rule:            rulegroups.PtrString(block.Regex),
+					KeepBlockedLogs: block.KeepBlockedLogs,
+					Rule:            block.Regex,
 				},
 			}
 		}
 	} else if replace := rule.Replace; replace != nil {
 		sourceField = replace.SourceField
-		parameters = &rulegroups.RuleParameters{
+		parameters = rulegroups.RuleParameters{
 			ReplaceParameters: &rulegroups.ReplaceParameters{
-				DestinationField: rulegroups.PtrString(replace.DestinationField),
-				ReplaceNewVal:    rulegroups.PtrString(replace.ReplacementString),
-				Rule:             rulegroups.PtrString(replace.Regex),
+				DestinationField: replace.DestinationField,
+				ReplaceNewVal:    replace.ReplacementString,
+				Rule:             replace.Regex,
 			},
 		}
 	} else if extract := rule.Extract; extract != nil {
 		sourceField = extract.SourceField
-		parameters = &rulegroups.RuleParameters{
+		parameters = rulegroups.RuleParameters{
 			ExtractParameters: &rulegroups.ExtractParameters{
-				Rule: rulegroups.PtrString(extract.Regex),
+				Rule: extract.Regex,
 			},
 		}
 	}
