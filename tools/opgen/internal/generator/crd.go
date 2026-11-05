@@ -115,6 +115,7 @@ func (b *builder) foldedFields(r *model.Resource, f *model.ResourceField, folds 
 		if err != nil {
 			return nil, err
 		}
+		field.fold = &foldOrigin{Object: f.Name, Property: fold.Property}
 		if f.Behavior == model.Immutable {
 			immutable(field, field.validationPath)
 		}

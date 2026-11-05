@@ -99,6 +99,9 @@ var _ = Describe("{{.Kind}} (generated)", Ordered{{if .E2E.Serial}}, Serial{{end
 			g.Expect(got.{{$.GetResponseField}}).NotTo(BeNil())
 {{- end}}
 {{- end}}
+{{- range .NotNil}}
+			g.Expect({{.}}).NotTo(BeNil())
+{{- end}}
 			g.Expect({{.Got}}).To(Equal({{.Want}}))
 		}, time.Minute, time.Second).Should(Succeed())
 {{- end}}

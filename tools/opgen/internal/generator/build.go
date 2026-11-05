@@ -139,6 +139,9 @@ type crField struct {
 	synthetic      bool   // a CR field with no API property of its own
 	group          bool   // this field groups API fields under a released CR object
 
+	// fold: this flat CR field holds a property of an object that Update and Get nest (createAs).
+	fold *foldOrigin
+
 	omitEmptyInRequest bool
 	sendNullAsEmpty    bool // Create and Update send "" or [] when the optional field is unset
 }
@@ -204,6 +207,11 @@ type builder struct {
 	specType *crType
 	// outVar names the SDK value that assignFrom sets. It is "out" when empty.
 	outVar string
+}
+
+// foldOrigin names the object and the property that a flat createAs field comes from.
+type foldOrigin struct {
+	Object, Property string // for example permutations and limit
 }
 
 // foldedField is a top-level object field that a createAs line replaces in the CR by the flat

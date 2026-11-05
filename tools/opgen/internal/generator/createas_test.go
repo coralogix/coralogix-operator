@@ -153,3 +153,31 @@ func TestCreateAsRejectsTwoPropertiesInOneObject(t *testing.T) {
 		t.Fatalf("want an error about one property per object, got %v", err)
 	}
 }
+
+// The CR holds a createAs field flat, and the API response nests it. The e2e update step reads the
+// nested value, so a folded field can be the field that the test changes.
+func TestCreateAsFieldCanBeTheE2EUpdateField(t *testing.T) {
+	root, input := skipRoot(t, foldContract(t, ""), foldSDK(t, ""))
+	writeOverrides(t, root, foldOverrides)
+	e2e := filepath.Join(root, kindsDir, "thing", "e2e.yaml")
+	data, err := os.ReadFile(e2e)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(e2e, append(data, []byte("update:\n  field: capacityLimit\n  value: 42\n")...), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := generateFromInput(input, root, root); err != nil {
+		t.Fatal(err)
+	}
+	test := readGenerated(t, root, "tests/e2e/thing_generated_test.go")
+	for _, want := range []string{
+		"updated.Spec.CapacityLimit = ptr.To(int32(42))",
+		"g.Expect(got.Capacity).NotTo(BeNil())",
+		"g.Expect(got.Capacity.Limit).To(Equal(int32(42)))",
+	} {
+		if !strings.Contains(test, want) {
+			t.Errorf("the e2e update step is missing %q", want)
+		}
+	}
+}

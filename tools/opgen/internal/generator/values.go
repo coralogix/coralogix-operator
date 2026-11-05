@@ -119,6 +119,8 @@ type upgradeData struct {
 // the value that the API then returns, and the expression that reads it from the response "got".
 type updateData struct {
 	Field, Set, Want, Got string
+	// NotNil lists values that the check reads through: the nested object of a createAs field.
+	NotNil []string
 }
 
 type updateCandidate struct {
@@ -406,15 +408,29 @@ func updateStep(d *kindData, ix *refIndex, candidates []updateCandidate, file *e
 		if err != nil {
 			return nil, err
 		}
-		got, err := ix.field(resource.Name, f.API)
+		base := "got."
+		if d.GetResponseField != "" {
+			base += d.GetResponseField + "."
+		}
+		// The CR holds a createAs field flat. The response nests it in an object.
+		var notNil []string
+		owner, name := resource.Name, f.API
+		if f.fold != nil {
+			object, err := ix.field(resource.Name, f.fold.Object)
+			if err != nil {
+				return nil, err
+			}
+			base += object.Name + "."
+			if strings.HasPrefix(object.Want, "*") {
+				notNil = append(notNil, strings.TrimSuffix(base, "."))
+			}
+			owner, name = strings.TrimPrefix(object.Want, "*"), f.fold.Property
+		}
+		got, err := ix.field(owner, name)
 		if err != nil {
 			return nil, err
 		}
-		read := "got."
-		if d.GetResponseField != "" {
-			read += d.GetResponseField + "."
-		}
-		read += got.Name
+		read := base + got.Name
 		if strings.HasPrefix(got.Want, "*") {
 			read = fmt.Sprintf("ptr.Deref(%s, %s)", read, zeroLiteral(f.typ))
 		}
@@ -422,7 +438,7 @@ func updateStep(d *kindData, ix *refIndex, candidates []updateCandidate, file *e
 		if f.Optional {
 			set = "ptr.To(" + value + ")"
 		}
-		return &updateData{Field: candidate.goPath, Set: set, Want: value, Got: read}, nil
+		return &updateData{Field: candidate.goPath, Set: set, Want: value, Got: read, NotNil: notNil}, nil
 	}
 	if file.Update != nil {
 		return nil, &shapeError{code: codeE2EUnused, path: e2eFileName + ":update.field", msg: "the spec has no such field"}
