@@ -47,7 +47,11 @@ before)
     {
       "aggregations": [
         {
-          "aggMetadata": {},
+          "aggMetadata": {
+            "samples": {
+              "sampleType": "min"
+            }
+          },
           "aggType": "min",
           "enabled": true,
           "targetMetricName": "min_request_count"

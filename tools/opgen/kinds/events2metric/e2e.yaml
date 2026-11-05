@@ -25,6 +25,8 @@ upgrade:
     metricFields:
       - targetBaseMetricName: '@{run}'
         sourceField: request_count
-        aggregations: [{aggType: min, enabled: true, targetMetricName: min_request_count, aggMetadata: {}}]
+        # Chart 1.0 and 2.0 CRDs require exactly one of samples or histogram. The current CRD allows none,
+        # but the old spec must pass the old CRD. A samples arm passes both.
+        aggregations: [{aggType: min, enabled: true, targetMetricName: min_request_count, aggMetadata: {samples: {sampleType: min}}}]
   field: description
   value: Events2Metric updated after the operator upgrade
