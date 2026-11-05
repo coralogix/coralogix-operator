@@ -52,13 +52,13 @@ const (
           "targetMetricName": "min_value"
         }
       ],
-      "sourceField": "sample-source-field",
+      "sourceField": "request_count",
       "targetBaseMetricName": "sample-target-base-metric-name"
     }
   ],
   "metricLabels": [
     {
-      "sourceField": "sample-source-field",
+      "sourceField": "request_count",
       "targetLabel": "sample-target-label"
     }
   ],

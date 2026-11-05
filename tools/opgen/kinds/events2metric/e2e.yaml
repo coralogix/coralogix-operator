@@ -6,6 +6,9 @@ substitutions:
 values:
   # The generated sample pairs aggType min with a samples arm. Use a consistent aggregation.
   metricFields.aggregations: [{aggType: min, enabled: true, targetMetricName: min_value, aggMetadata: {}}]
+  # The live API rejects the generated placeholder as a source field; the contract allows any string.
+  metricFields.sourceField: request_count
+  metricLabels.sourceField: request_count
 update:
   field: description
   value: Events2Metric updated by the e2e test
