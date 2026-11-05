@@ -91,6 +91,11 @@ func (b *builder) foldedFields(r *model.Resource, f *model.ResourceField, folds 
 	if !r.Replace {
 		return nil, unsupported("types."+r.Name+".fields."+f.Name+".createAs", "createAs needs a full-replace Update")
 	}
+	if len(folds) > 1 {
+		// With two flat fields, a CR can set one and leave the other out. Update would then send the
+		// object with the missing property at its zero value, and overwrite the stored value.
+		return nil, unsupported("types."+r.Name+".fields."+f.Name+".createAs", "createAs supports one property per object; %d are named", len(folds))
+	}
 	if b.folds == nil {
 		b.folds = map[string]*foldedField{}
 	}

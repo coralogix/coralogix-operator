@@ -132,3 +132,24 @@ func TestCreateAsRejectsAMissingCreateField(t *testing.T) {
 		t.Fatal("a createAs line with a missing Create field must stop the run")
 	}
 }
+
+// With two flat fields, a CR can set one and leave the other out. Update would send the object
+// with the missing property at zero. The run stops instead.
+func TestCreateAsRejectsTwoPropertiesInOneObject(t *testing.T) {
+	editAPI := func(s string) string {
+		s = foldContract(t, "        burst: {type: integer, format: int32, minimum: 1}\n")(s)
+		s = replaceOnce(t, s, "      required: [limit]\n", "      required: [limit, burst]\n")
+		return replaceOnce(t, s, "                capacityLimit: {type: integer, format: int32, minimum: 1, maximum: 100, x-coralogix-presence: true}\n",
+			"                capacityLimit: {type: integer, format: int32, minimum: 1, maximum: 100, x-coralogix-presence: true}\n                capacityBurst: {type: integer, format: int32, minimum: 1, x-coralogix-presence: true}\n")
+	}
+	editSDK := func(s string) string {
+		s = foldSDK(t, "	Burst int32 `json:\"burst\"`\n")(s)
+		return replaceOnce(t, s, "type CreateThingRequest struct {\n", "type CreateThingRequest struct {\n	CapacityBurst *int32 `json:\"capacityBurst,omitempty\"`\n")
+	}
+	root, input := skipRoot(t, editAPI, editSDK)
+	writeOverrides(t, root, strings.Replace(foldOverrides, "{limit: capacityLimit}", "{limit: capacityLimit, burst: capacityBurst}", 1))
+	err := generateFromInput(input, root, root)
+	if err == nil || !strings.Contains(err.Error(), "one property per object") {
+		t.Fatalf("want an error about one property per object, got %v", err)
+	}
+}
