@@ -23,6 +23,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -42,16 +43,23 @@ var _ = Describe("CustomEnrichment", Ordered, func() {
 		customEnrichmentID      string
 		customEnrichment        *coralogixv1alpha1.CustomEnrichment
 		configMap               *corev1.ConfigMap
-		customEnrichmentName    = "custom-enrichment-e2e-sample"
+		customEnrichmentName    string
 		configMapName           = "custom-enrichment-e2e-csv"
 	)
 
 	BeforeAll(func() {
+		// The backend rejects a second enrichment with the same dataset name, and one that a
+		// killed run leaves behind would fail every later run. A unique name avoids that.
+		customEnrichmentName = uniqueName("custom-enrichment-e2e")
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		cfg := cxsdk.NewConfigBuilder().WithAPIKeyEnv().WithRegionEnv().Build()
 		customEnrichmentsClient = cxsdk.NewClientSet(cfg).CustomEnrichments()
 		configMap = newConfigMap(configMapName, testNamespace)
 		customEnrichment = newCustomEnrichment(customEnrichmentName, configMapName, testNamespace)
+	})
+
+	AfterAll(func(ctx context.Context) {
+		deleteCustomEnrichmentAndWait(ctx, crClient, customEnrichmentName, configMapName)
 	})
 
 	It("Should be created successfully", func(ctx context.Context) {
@@ -126,6 +134,22 @@ var _ = Describe("CustomEnrichment", Ordered, func() {
 		}, time.Minute, time.Second).Should(BeTrue())
 	})
 })
+
+// deleteCustomEnrichmentAndWait removes the CR and its ConfigMap if they exist, and waits until
+// the operator has finalized the CR, which deletes the remote enrichment. It is safe to call
+// after the spec that deletes them has already passed.
+func deleteCustomEnrichmentAndWait(ctx context.Context, crClient client.Client, name, configMapName string) {
+	customEnrichment := &coralogixv1alpha1.CustomEnrichment{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: testNamespace}}
+	Expect(client.IgnoreNotFound(crClient.Delete(ctx, customEnrichment))).To(Succeed())
+
+	Eventually(func() bool {
+		err := crClient.Get(ctx, types.NamespacedName{Name: name, Namespace: testNamespace}, &coralogixv1alpha1.CustomEnrichment{})
+		return apierrors.IsNotFound(err)
+	}, time.Minute, time.Second).Should(BeTrue())
+
+	configMap := &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: configMapName, Namespace: testNamespace}}
+	Expect(client.IgnoreNotFound(crClient.Delete(ctx, configMap))).To(Succeed())
+}
 
 func newConfigMap(name, namespace string) *corev1.ConfigMap {
 	return &corev1.ConfigMap{
