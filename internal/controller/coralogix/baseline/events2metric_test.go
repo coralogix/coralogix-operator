@@ -310,6 +310,41 @@ spec:
 		h.Reconcile("reconcile again")
 	},
 
+	// The next answer is replaced, as if the API sent a body that the operator cannot use.
+	// A body that the SDK cannot decode is a DeserializationError, and the shared reconciler does
+	// not write the same condition twice.
+	"create-empty-id": func(h *harness) {
+		e2mAPI(h).answerNext(http.MethodPost, map[string]any{"e2m": map[string]any{"id": "", "name": "baseline-e2m", "type": "E2M_TYPE_LOGS2METRICS"}})
+		h.Create("create: the answer has an empty id", e2mLogsManifest)
+		e2mAPI(h).answerNext(http.MethodPost, map[string]any{})
+		h.Reconcile("reconcile again: the answer has no E2M")
+		h.Reconcile("reconcile again: the API answers as it should")
+	},
+
+	"create-malformed-response": func(h *harness) {
+		e2mAPI(h).answerNext(http.MethodPost, "not an E2M")
+		h.Create("create: the answer cannot be decoded", e2mLogsManifest)
+		e2mAPI(h).answerNext(http.MethodPost, "not an E2M")
+		h.Reconcile("reconcile again: the answer cannot be decoded")
+		h.Reconcile("reconcile again: the API answers as it should")
+	},
+
+	"update-malformed-response": func(h *harness) {
+		h.Create("create", e2mLogsManifest)
+		e2mAPI(h).answerNext(http.MethodPut, "not an E2M")
+		h.Reconcile("update: the answer cannot be decoded")
+		e2mAPI(h).answerNext(http.MethodPut, "not an E2M")
+		h.Reconcile("reconcile again: the answer cannot be decoded")
+		h.Reconcile("reconcile again: the API answers as it should")
+	},
+
+	"delete-malformed-response": func(h *harness) {
+		h.Create("create", e2mLogsManifest)
+		e2mAPI(h).answerNext(http.MethodDelete, "not an E2M")
+		h.Delete("delete: the answer cannot be decoded")
+		h.Reconcile("reconcile again: the API answers as it should")
+	},
+
 	"bad-status-id": func(h *harness) {
 		h.Create("create", e2mLogsManifest)
 		setE2MStatusID(h, "not-a-uuid")
@@ -362,12 +397,23 @@ type e2mFake struct {
 	// dataSources are the data sets that exist. Only the rejection of an unknown one is recorded
 	// ("rejections"). The scenarios use these two.
 	dataSources map[string]bool
+	// next holds one 200 body per method. The next request with that method gets it, and the
+	// fake does not run the request.
+	next map[string]any
+}
+
+// answerNext makes the next request with the method get a 200 answer with this body.
+func (f *e2mFake) answerNext(method string, body any) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.next[method] = body
 }
 
 func newE2MFake() apiFake {
 	return &e2mFake{
 		e2ms:        map[string]map[string]any{},
 		dataSources: map[string]bool{"system/poc.error_tracking": true, "system/baseline": true},
+		next:        map[string]any{},
 	}
 }
 
@@ -390,6 +436,10 @@ func (f *e2mFake) handle(method, path string, _ url.Values, body any) (int, any)
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
+	if body, ok := f.next[method]; ok {
+		delete(f.next, method)
+		return http.StatusOK, body
+	}
 	rest, ok := strings.CutPrefix(path, e2mPath)
 	if !ok {
 		return routeNotFound()
