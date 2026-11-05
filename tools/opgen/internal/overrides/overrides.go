@@ -55,6 +55,9 @@ type File struct {
 	Groups map[string]Group `yaml:"groups"`
 	// Enums keeps released custom resource spellings of API enum values.
 	Enums map[string]Enum `yaml:"enums"`
+	// Finalizer keeps the released finalizer name of an existing kind. It is an operator key; the
+	// shared iac module does not know it. The generated name is kebab(Kind).coralogix.com/finalizer.
+	Finalizer string `yaml:"finalizer"`
 
 	// apiNode is the api section as the file writes it, nil without one. A Go bool cannot tell a
 	// written false from a missing key, so the checks of the api keys read the node.
@@ -256,6 +259,9 @@ func (f *File) check() error {
 	if err := f.checkValidators(); err != nil {
 		return err
 	}
+	if err := f.checkFinalizer(); err != nil {
+		return err
+	}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
 		if !field.Skip && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" {
@@ -391,6 +397,23 @@ func (f *File) check() error {
 		if err := checkGroups("types."+name+".groups", typ.Groups); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+// finalizerPattern is a Kubernetes qualified name with a DNS prefix: <prefix>/<name>.
+var finalizerPattern = regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/[A-Za-z0-9]([-A-Za-z0-9_.]*[A-Za-z0-9])?$`)
+
+func (f *File) checkFinalizer() error {
+	if f.Finalizer == "" {
+		return nil
+	}
+	if f.Mode != ModeExisting {
+		return errors.New("finalizer: a new kind uses the generated finalizer")
+	}
+	prefix, name, _ := strings.Cut(f.Finalizer, "/")
+	if !finalizerPattern.MatchString(f.Finalizer) || len(prefix) > 253 || len(name) > 63 {
+		return fmt.Errorf("finalizer: %q is not a qualified name such as example.coralogix.com/finalizer", f.Finalizer)
 	}
 	return nil
 }

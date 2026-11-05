@@ -214,6 +214,12 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 		SDKPath: ix.pkg.Pkg, SDKAlias: b.alias, CxsdkPath: ix.cxsdk, Replace: r.Replace,
 	}
 	d.BodyIDInWrapper = r.Policy.RequestWrapper != "" && !updateIDOutsideWrapper
+	if file != nil && file.Finalizer != "" {
+		if file.Finalizer == d.Finalizer {
+			return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":finalizer", msg: "the value is the generated finalizer"}
+		}
+		d.Finalizer = file.Finalizer
+	}
 	if err := checkLifecycle(r); err != nil {
 		return nil, err
 	}
