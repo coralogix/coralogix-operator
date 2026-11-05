@@ -10,9 +10,9 @@ name: Release PR Approval
 # GITHUB_TOKEN starts no push workflow. A run that finds the PR merged but never released starts
 # Release itself; a Release run that was cancelled or failed stays stopped for a person to restart.
 #
-# It runs when the release PR changes, whenever a PR workflow starts or finishes, and whenever a
-# check from outside Actions finishes, so the approval follows the last check. A check that fails or runs again withdraws the approval until every
-# check passes, and approvals of an older commit are dismissed.
+# It runs when the release PR changes, whenever a PR workflow finishes, and whenever a check from
+# outside Actions finishes, so the approval follows the last check. A check that fails withdraws
+# the approval until every check passes, and approvals of an older commit are dismissed.
 #
 # Both triggers run this file and the check scripts from main, never from the PR, so a PR cannot
 # change what gets approved. Nothing from the PR is checked out or run; the diff is read through
@@ -35,9 +35,10 @@ on:
       - sanity
       - unit-tests
       - Version Bump
-    # A new run starts with requested, a re-run with in_progress (re-runs emit no requested), so
-    # either withdraws the approval as soon as it starts.
-    types: [requested, in_progress, completed]
+    # completed only: the job approves and merges in one go and withdraws the approval if the
+    # merge fails, so no bot approval stays on an open PR for a starting run to withdraw. A run
+    # that starts during the merge is caught by the CI check right before it.
+    types: [completed]
     # Only runs on a release branch start this workflow. Without the filter, every run on every
     # branch starts one that the job's if: then skips. check_run has no branch filter.
     branches:
