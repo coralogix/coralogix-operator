@@ -515,6 +515,10 @@ func (b *builder) assignFrom(f *crField, rt *model.Type, owner, path, src string
 			return "", err
 		}
 		code := stmts + target + " = " + expr + "\n"
+		if f.sendNullAsEmpty {
+			// The API needs [] where the CR has none, not null.
+			return "if len(" + src + ") != 0 {\n" + code + "} else {\n" + target + " = " + qualify(ref.Want, b.alias) + "{}\n}\n", nil
+		}
 		if f.Optional || f.omitEmptyInRequest {
 			return "if len(" + src + ") != 0 {\n" + code + "}\n", nil
 		}
@@ -524,10 +528,20 @@ func (b *builder) assignFrom(f *crField, rt *model.Type, owner, path, src string
 		if err != nil {
 			return "", err
 		}
+		var present string
 		if stmts == "" && strings.HasPrefix(ref.Want, "*") && expr == "(*"+src+")" {
-			return target + " = " + src + "\n", nil // the same pointer type
+			present = target + " = " + src + "\n" // the same pointer type
+			if !f.sendNullAsEmpty {
+				return present, nil
+			}
+		} else {
+			present = stmts + b.set(target, ref.Want, expr, isPtr)
 		}
-		return "if " + src + " != nil {\n" + stmts + b.set(target, ref.Want, expr, isPtr) + "}\n", nil
+		if f.sendNullAsEmpty {
+			// The API keeps the stored value of an omitted field, so the request clears it.
+			return "if " + src + " != nil {\n" + present + "} else {\n" + b.set(target, ref.Want, `""`, false) + "}\n", nil
+		}
+		return "if " + src + " != nil {\n" + present + "}\n", nil
 	}
 	stmts, expr, isPtr, err := b.value(f, rt, src, strings.TrimPrefix(ref.Want, "*"), path)
 	if err != nil {

@@ -140,6 +140,7 @@ type crField struct {
 	group          bool   // this field groups API fields under a released CR object
 
 	omitEmptyInRequest bool
+	sendNullAsEmpty    bool // Create and Update send "" or [] when the optional field is unset
 }
 
 // JSONTag is the json struct tag of the field.

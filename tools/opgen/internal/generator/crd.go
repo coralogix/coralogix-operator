@@ -481,6 +481,14 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 		f.omitEmptyInRequest = true
 		b.used[line] = true
 	}
+	if change.SendNullAsEmpty {
+		isString := t.Kind == model.String && t.Format != "date-time" && len(t.Wrappers) == 0
+		if required || b.file.Ref(component, name) != nil || !(isString || t.Kind == model.List || t.Kind == model.Set) {
+			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".sendNullAsEmpty", msg: "sendNullAsEmpty needs an optional string or an optional list"}
+		}
+		f.sendNullAsEmpty = true
+		b.used[line] = true
+	}
 	if !required {
 		f.Markers = append(f.Markers, "+optional")
 	}

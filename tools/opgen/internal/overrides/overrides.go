@@ -165,6 +165,10 @@ type Field struct {
 	// such as {limit: permutationsLimit}. The CR keeps the flat Create fields; Update builds the
 	// object when one of them is set. It applies to a field of the resource in an existing kind.
 	CreateAs map[string]string `yaml:"createAs"`
+	// SendNullAsEmpty sends "" for an optional string, or [] for an optional list, in Create and
+	// Update when the CR leaves the field out. Use it when the API keeps the stored value of an
+	// omitted field on a full replace, or needs [] instead of null.
+	SendNullAsEmpty bool `yaml:"sendNullAsEmpty"`
 	// Skip omits an API field from the CR and requests. The field can belong to the resource or to
 	// a nested component. A nested skip applies to every CR path of the component. Skipping a oneOf
 	// arm removes the arm; the shared module accepts it only for an empty object arm of a group
@@ -271,10 +275,10 @@ func (f *File) check() error {
 	}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
-		if !field.Skip && len(field.CreateAs) == 0 && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" {
+		if !field.Skip && !field.SendNullAsEmpty && len(field.CreateAs) == 0 && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" {
 			return fmt.Errorf("%s: the line sets no key", line)
 		}
-		if field.Skip && (len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "") {
+		if field.Skip && (field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "") {
 			return fmt.Errorf("%s.skip: skip cannot change another property of the CR field", line)
 		}
 		if field.Skip && f.Mode != ModeExisting {
@@ -290,9 +294,12 @@ func (f *File) check() error {
 			if err := (iacoverrides.Field{CreateAs: field.CreateAs}).Check(); err != nil {
 				return fmt.Errorf("%s.%w", line, err)
 			}
-			if field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" {
+			if field.SendNullAsEmpty || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" {
 				return fmt.Errorf("%s.createAs: the line cannot set another key", line)
 			}
+		}
+		if field.SendNullAsEmpty && f.Mode != ModeExisting {
+			return fmt.Errorf("%s.sendNullAsEmpty: a new kind follows the contract", line)
 		}
 		if field.OmitEmptyInRequest && f.Mode != ModeExisting {
 			return fmt.Errorf("%s.omitEmptyInRequest: a new kind follows the contract", line)
