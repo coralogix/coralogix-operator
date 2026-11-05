@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"go/token"
 	"io"
+	"math"
 	"os"
 	"regexp"
 	"slices"
@@ -302,8 +303,10 @@ func integerValue(t *model.Type) int64 {
 	return n
 }
 
-// numberValue makes up a number inside the contract bounds. The CR holds it as a quantity.
-func numberValue(t *model.Type) float64 {
+// numberValue makes up a number inside the contract bounds. The CR holds it as a quantity, which
+// is int-or-string in the CRD: a whole number can be a YAML number, and a fraction must be a
+// decimal string, or admission rejects it.
+func numberValue(t *model.Type) any {
 	n := 1.0
 	if t.Minimum != nil && n < *t.Minimum {
 		n = *t.Minimum
@@ -311,7 +314,10 @@ func numberValue(t *model.Type) float64 {
 	if t.Maximum != nil && n > *t.Maximum {
 		n = *t.Maximum
 	}
-	return n
+	if n == math.Trunc(n) && math.Abs(n) < 1e15 {
+		return int64(n)
+	}
+	return strconv.FormatFloat(n, 'f', -1, 64)
 }
 
 // stringValue makes up a string that meets the length limits and the pattern of the contract.

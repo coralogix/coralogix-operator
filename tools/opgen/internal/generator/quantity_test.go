@@ -73,3 +73,24 @@ func TestNumberDefaultIsAString(t *testing.T) {
 		}
 	}
 }
+
+// The CRD schema of a Quantity is int-or-string. A fraction as a YAML number fails admission, so
+// the sample holds a whole number as a number and a fraction as a decimal string.
+func TestNumberSampleValueIsAdmissible(t *testing.T) {
+	bound := func(v float64) *float64 { return &v }
+	for name, tc := range map[string]struct {
+		min, max *float64
+		want     any
+	}{
+		"no bounds":          {nil, nil, int64(1)},
+		"whole bound":        {bound(5), bound(10), int64(5)},
+		"maximum below one":  {nil, bound(0.5), "0.5"},
+		"fractional minimum": {bound(2.5), nil, "2.5"},
+		"tiny maximum":       {nil, bound(0.0000001), "0.0000001"},
+	} {
+		got := numberValue(&model.Type{Kind: model.Number, Format: "float", Minimum: tc.min, Maximum: tc.max})
+		if got != tc.want {
+			t.Errorf("%s: got %#v, want %#v", name, got, tc.want)
+		}
+	}
+}
