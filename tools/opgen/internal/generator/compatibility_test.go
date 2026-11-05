@@ -457,7 +457,7 @@ func TestSkipRejectsInvalidLines(t *testing.T) {
 		{"required request field", "name: {skip: true}", "SKIP_REQUIRED_FIELD"},
 		{"unknown field", "missing: {skip: true}", codeOverrideUnused},
 		{"already absent from requests", "limit: {skip: true}", codeOverrideUnused},
-		{"nested field", "ThingItem: {fields: {name: {skip: true}}}", codeOverrideInvalid},
+		{"nested field", "ThingItem: {fields: {name: {skip: true}}}", codeOverrideUnused}, // BodyIDThing sends no ThingItem
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			fields := "types:\n  BodyIDThing:\n    fields:\n      " + tc.field + "\n"

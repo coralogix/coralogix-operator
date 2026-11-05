@@ -168,6 +168,9 @@ func validate(doc docType, entry kindEntry, sdkModule, module string, e2e *e2eFi
 	if err != nil {
 		return nil, fmt.Errorf("%s: build the validated resource: %w", entry.Kind, err)
 	}
+	if err := nestedSkipIssues(doc, entry, file, policy); err != nil {
+		return nil, asEligibility(entry, err)
+	}
 	if err := checkRequestValues(doc, r, file); err != nil {
 		return nil, asEligibility(entry, err)
 	}
@@ -185,6 +188,84 @@ func validate(doc docType, entry kindEntry, sdkModule, module string, e2e *e2eFi
 		return nil, err
 	}
 	return v, nil
+}
+
+// nestedSkipIssues checks the skip lines of nested components. A skipped field is never sent, so
+// the resource must have a type of the component with that field, a request must send the field,
+// and no request may require it. The checks read a model without the nested skips: the shared
+// model prunes a skipped field, and a request can name its own component for the same object, so
+// the component name of the line is the one of the merged type.
+func nestedSkipIssues(doc docType, entry kindEntry, file *overrides.File, policy model.Policy) error {
+	if file == nil {
+		return nil
+	}
+	var lines []overrides.Line
+	for _, line := range file.Lines() {
+		if line.Component != entry.Resource && file.Field(line.Component, line.Field).Skip {
+			lines = append(lines, line)
+		}
+	}
+	if len(lines) == 0 {
+		return nil
+	}
+	policy.Skip = slices.DeleteFunc(slices.Clone(policy.Skip), func(skipped string) bool {
+		return !strings.HasPrefix(skipped, entry.Resource+".")
+	})
+	full, err := model.BuildWithPolicy(doc, entry.Resource, model.OperationIDs{}, policy)
+	if err != nil {
+		return fmt.Errorf("%s: build the resource without nested skips: %w", entry.Kind, err)
+	}
+	for _, line := range lines {
+		path := overrides.FileName + ":" + line.String() + ".skip"
+		fields := componentFields(full, line.Component, line.Field)
+		if len(fields) == 0 {
+			return &shapeError{code: codeOverrideUnused, path: path, msg: "the resource has no type of this component with this field"}
+		}
+		sent := false
+		for _, field := range fields {
+			for _, attrs := range []*model.Attrs{field.Create, field.Update} {
+				if attrs == nil || attrs.ReadOnly {
+					continue
+				}
+				sent = true
+				if attrs.Required {
+					return &shapeError{code: codeOverrideInvalid, path: path, msg: "a request requires this field, so the CR must send it"}
+				}
+			}
+		}
+		if !sent {
+			return &shapeError{code: codeOverrideUnused, path: path, msg: "Create and Update do not send this field"}
+		}
+	}
+	return nil
+}
+
+// componentFields returns the fields with the given name of the types that come from the component.
+func componentFields(r *model.Resource, component, name string) []*model.Field {
+	var out []*model.Field
+	seen := map[*model.Type]bool{}
+	var walk func(*model.Type)
+	walk = func(t *model.Type) {
+		if t == nil || seen[t] {
+			return
+		}
+		seen[t] = true
+		walk(t.Elem)
+		if t.Schema == component {
+			for _, f := range t.Fields {
+				if f.Name == name {
+					out = append(out, f)
+				}
+			}
+		}
+		for _, f := range t.Fields {
+			walk(f.Type)
+		}
+	}
+	for _, f := range r.Fields {
+		walk(f.Type)
+	}
+	return out
 }
 
 // updateIDOutsideWrapper checks whether Update has the id beside its resource wrapper.
@@ -405,13 +486,10 @@ func overrideIssues(doc docType, entry kindEntry, file *overrides.File) error {
 				property, found := proxy.Schema().Properties.Get(line.Field)
 				ok = found
 				change := file.Field(line.Component, line.Field)
-				if change.Skip && line.Component != entry.Resource {
-					return &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".skip", msg: "skip supports only a top-level resource field"}
-				}
 				if found && change.Skip && property.Schema() != nil && property.Schema().ReadOnly != nil && *property.Schema().ReadOnly {
 					return &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String() + ".skip", msg: "the contract already marks this field read-only"}
 				}
-				if found && change.Skip && !requestHasField(doc, entry.Resource, file, line.Field) {
+				if found && change.Skip && line.Component == entry.Resource && !requestHasField(doc, entry.Resource, file, line.Field) {
 					return &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String() + ".skip", msg: "Create and Update already omit this field"}
 				}
 				if found && change.ReadOnly && property.Schema() != nil && property.Schema().ReadOnly != nil && *property.Schema().ReadOnly {

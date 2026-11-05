@@ -161,7 +161,10 @@ type Field struct {
 	ListMapKey string `yaml:"listMapKey"`
 	// EmptyObject keeps the released map form of an object with no fields.
 	EmptyObject string `yaml:"emptyObject"`
-	// Skip omits a released top-level API field from the CR and requests.
+	// Skip omits an API field from the CR and requests. The field can belong to the resource or to
+	// a nested component. A nested skip applies to every CR path of the component. Skipping a oneOf
+	// arm removes the arm; the shared module accepts it only for an empty object arm of a group
+	// that allows no arm.
 	Skip bool `yaml:"skip"`
 	// Ref makes a string id of another resource a reference (way 2): the custom resource sets
 	// backendRef.id, or resourceRef, the custom resource that manages the other resource.
