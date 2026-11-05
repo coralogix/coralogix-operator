@@ -3,8 +3,9 @@ name: Release PR Approval
 # Approves and merges a release PR from `make bump` as github-actions[bot], so it needs no human
 # review: it only re-publishes code already reviewed on main. Other PRs are left alone. Only a
 # release PR from someone in .github/RELEASERS is approved (scripts/check-releaser.sh), and only
-# once CI on its latest commit has passed (scripts/check-release-ci.sh). main requires no checks,
-# so the PR has no auto-merge, which would merge on any approval while tests still run: this
+# once CI on its latest commit has passed (scripts/check-release-ci.sh). main requires only the
+# live tests result, so the PR has no auto-merge, which would merge on any approval while the other
+# checks still run: this
 # workflow merges it after checking CI once more, then starts Release, because a merge by
 # GITHUB_TOKEN starts no push workflow. A run that finds the PR merged but never released starts
 # Release itself; a Release run that was cancelled or failed stays stopped for a person to restart.
@@ -29,13 +30,10 @@ on:
     workflows:
       - Container
       - crd-validation
-      - e2e-tests
-      - helm-e2e-tests
       - helm-sync-check
-      - integration-tests
+      - live-tests
       - sanity
       - unit-tests
-      - upgrade-test
       - Version Bump
     # A new run starts with requested, a re-run with in_progress (re-runs emit no requested), so
     # either withdraws the approval as soon as it starts.

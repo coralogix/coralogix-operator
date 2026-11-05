@@ -2,7 +2,7 @@
 [![license](https://img.shields.io/github/license/coralogix/coralogix-operator.svg)](https://raw.githubusercontent.com/coralogix/coralogix-operator/main/LICENSE)
 ![GitHub tag (latest SemVer pre-release)](https://img.shields.io/github/v/tag/coralogix/coralogix-operator.svg?include_prereleases&style=plastic)
 ![Go Report Card](https://goreportcard.com/badge/github.com/coralogix/coralogix-operator/v2)
-![e2e-tests](https://github.com/coralogix/coralogix-operator/actions/workflows/e2e-tests.yaml/badge.svg?style=plastic)
+![live-tests](https://github.com/coralogix/coralogix-operator/actions/workflows/live-tests.yaml/badge.svg?style=plastic)
 
 > [!WARNING]
 > **Security advisory** (Priority: Medium): On October 20, 2026, the private keys for 8 intermediate certificate authorities operated by eMudhra were reported compromised. This is an industry-wide issue, not specific to Coralogix. Update the Coralogix Operator to **v2.16.0** (FIPS build: v2.16.0-fips) or later out of an abundance of caution. Coralogix endpoints and internal services do not use eMudhra or emSign certificates, and we have not identified any impact to customer data.

@@ -181,6 +181,8 @@ Use focused unit/envtest coverage for controller behavior, validation, status tr
 
 Use KUTTL or e2e coverage when Kubernetes wiring, CRDs, Helm packaging, or real API behavior is part of the risk.
 
+The live suites (e2e, Helm e2e, integration, upgrade) run from `.github/workflows/live-tests.yaml`, one after another, because they share one Coralogix team. Each suite is a reusable workflow in its own file. The `Live tests result` job is the check that branch protection requires. Keep its name stable: renaming it blocks every PR until the ruleset changes. To add a suite, add a `uses:` job to `live-tests.yaml`, chain it with `needs`, and add it to the `needs` of `live-tests-result` and `notify-failure`. A suite that is not in `live-tests-result` does not block merges.
+
 When a test reads a remote resource, do not depend on the order of items inside a returned list. The API can return
 list elements in any order. Assert on a set or find the element by an identifying field, instead of indexing a fixed
 position.
