@@ -46,6 +46,10 @@ const (
   "kind": "standard",
   "priority": "low",
   "quota": 1,
+  "ratio": 1,
+  "buckets": [
+    1
+  ],
   "config": {
     "http": {
       "endpoint": "sample-endpoint"

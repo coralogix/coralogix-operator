@@ -559,7 +559,15 @@ func (b *builder) value(f *crField, rt *model.Type, src, want, path string) (str
 			}
 			return "", src + ".Time", false, nil
 		}
-	case model.Bool, model.Number:
+	case model.Number:
+		switch want {
+		case "float32":
+			return "", "float32(" + src + ".AsApproximateFloat64())", false, nil
+		case "float64":
+			return "", src + ".AsApproximateFloat64()", false, nil
+		}
+		return "", "", false, unsupported(path, "the SDK number field must be float32 or float64, got %s", want)
+	case model.Bool:
 		// A scalar needs no conversion.
 	}
 	return "", src, false, nil

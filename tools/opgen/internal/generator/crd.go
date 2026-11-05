@@ -3,6 +3,7 @@ package generator
 import (
 	"crypto/sha256"
 	"fmt"
+	"math"
 	"slices"
 	"strconv"
 	"strings"
@@ -158,8 +159,16 @@ func (b *builder) contractDefault(field *crField, attrs *model.Attrs, path strin
 		if !matched {
 			return unsupported(path, "the API default %q is not an accepted CR enum value", value)
 		}
-	case model.Bool, model.Integer, model.Number:
+	case model.Bool, model.Integer:
 		// The API default is already a scalar literal.
+	case model.Number:
+		// A Quantity is int-or-string in the CRD, and Kubernetes rejects a number literal as its
+		// default. The default is written as a string in plain decimal form.
+		number, err := strconv.ParseFloat(value, 64)
+		if err != nil || math.IsNaN(number) || math.IsInf(number, 0) {
+			return unsupported(path, "the API number default %q is not a finite number", value)
+		}
+		value = markerString(strconv.FormatFloat(number, 'f', -1, 64))
 	case model.List, model.Set:
 		if strings.TrimSpace(value) != "[]" {
 			return unsupported(path, "the API collection default %q is not an empty list", value)
@@ -649,6 +658,10 @@ func (b *builder) elemType(t *model.Type, path string, f *crField) (string, erro
 	case model.String, model.Bool, model.Number, model.Integer, model.Enum:
 		// A scalar is handled below.
 	}
+	if t.Kind == model.Number && f.typ.Kind == model.Map {
+		// A defined value type over resource.Quantity would lose its JSON and DeepCopy methods.
+		return "", unsupported(path, "a map of numbers is not supported yet")
+	}
 	goType, err := scalarType(t, path)
 	if err != nil {
 		return "", err
@@ -682,7 +695,11 @@ func scalarType(t *model.Type, path string) (string, error) {
 		}
 		return "", unsupported(path, "an integer with format %q is not supported", t.Format)
 	case model.Number:
-		return "", unsupported(path, "a number is not supported yet: a custom resource holds it as a quantity")
+		// A custom resource holds a number as a quantity. The SDK type is float32 or float64.
+		if t.Format != "float" && t.Format != "double" {
+			return "", unsupported(path, "a number needs format float or double, got %q", t.Format)
+		}
+		return "resource.Quantity", nil
 	case model.Object, model.OneOf, model.List, model.Set, model.Map:
 		// Not a scalar: the error below.
 	}
@@ -721,6 +738,10 @@ func (b *builder) limits(markers []string, path string) []string {
 func limitMarkers(t *model.Type) []string {
 	if t.Format == "date-time" {
 		// metav1.Time provides the date-time schema; controller-gen rejects string limits on it.
+		return nil
+	}
+	if t.Kind == model.Number {
+		// A Quantity is int-or-string in the CRD. Minimum and Maximum do not apply to its schema.
 		return nil
 	}
 	var out []string

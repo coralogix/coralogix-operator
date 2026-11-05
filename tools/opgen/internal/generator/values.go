@@ -283,8 +283,10 @@ func (v *sampleValues) item(f *crField, t *model.Type, path string, full bool) (
 		return true, nil
 	case model.Integer:
 		return integerValue(t), nil
-	case model.String, model.Number, model.List, model.Set, model.Map:
-		// A string, below. The renderer rejects a number and a collection here.
+	case model.Number:
+		return numberValue(t), nil
+	case model.String, model.List, model.Set, model.Map:
+		// A string, below. The renderer rejects a collection here.
 	}
 	return stringValue(f.API, t, path)
 }
@@ -296,6 +298,18 @@ func integerValue(t *model.Type) int64 {
 	}
 	if t.Maximum != nil && float64(n) > *t.Maximum {
 		n = int64(*t.Maximum)
+	}
+	return n
+}
+
+// numberValue makes up a number inside the contract bounds. The CR holds it as a quantity.
+func numberValue(t *model.Type) float64 {
+	n := 1.0
+	if t.Minimum != nil && n < *t.Minimum {
+		n = *t.Minimum
+	}
+	if t.Maximum != nil && n > *t.Maximum {
+		n = *t.Maximum
 	}
 	return n
 }

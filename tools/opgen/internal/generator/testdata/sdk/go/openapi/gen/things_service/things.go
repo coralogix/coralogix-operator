@@ -32,6 +32,8 @@ type Thing struct {
 	Kind         ThingKind         `json:"kind"`
 	Priority     *ThingPriority    `json:"priority,omitempty"`
 	Quota        *string           `json:"quota,omitempty"`
+	Ratio        *float32          `json:"ratio,omitempty"`
+	Buckets      []float32         `json:"buckets,omitempty"`
 	Config       ThingConfig       `json:"config"`
 	Settings     *ThingSettings    `json:"settings,omitempty"`
 	Items        []ThingItem       `json:"items,omitempty"`
@@ -84,6 +86,8 @@ type CreateThingRequest struct {
 	Kind         ThingKind            `json:"kind"`
 	Priority     *ThingPriority       `json:"priority,omitempty"`
 	Quota        *string              `json:"quota,omitempty"`
+	Ratio        *float32             `json:"ratio,omitempty"`
+	Buckets      []float32            `json:"buckets,omitempty"`
 	Config       ThingConfig          `json:"config"`
 	Settings     *ThingSettingsCreate `json:"settings,omitempty"`
 	Items        []ThingItem          `json:"items,omitempty"`
@@ -98,6 +102,8 @@ type ReplaceThingRequest struct {
 	Enabled      *bool                `json:"enabled,omitempty"`
 	Priority     *ThingPriority       `json:"priority,omitempty"`
 	Quota        *string              `json:"quota,omitempty"`
+	Ratio        *float32             `json:"ratio,omitempty"`
+	Buckets      []float32            `json:"buckets,omitempty"`
 	Config       ThingConfig          `json:"config"`
 	Settings     *ThingSettingsUpdate `json:"settings,omitempty"`
 	Items        []ThingItem          `json:"items,omitempty"`
