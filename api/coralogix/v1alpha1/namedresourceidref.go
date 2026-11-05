@@ -164,8 +164,8 @@ func LookupArchiveRetentionName(ctx context.Context, clientSet *cxsdk.ClientSet,
 	}
 	var id string
 	for _, retention := range response.Retentions {
-		if retention.Name != nil && *retention.Name == name && retention.Id != nil {
-			id = *retention.Id
+		if retention.Name == name {
+			id = retention.Id
 		}
 	}
 	if id == "" {
@@ -185,8 +185,8 @@ func LookupWebhookName(ctx context.Context, clientSet *cxsdk.ClientSet, name str
 	}
 	var id string
 	for _, webhook := range response.Deployed {
-		if webhook.Name != nil && *webhook.Name == name && webhook.ExternalId != nil {
-			id = strconv.FormatInt(*webhook.ExternalId, 10)
+		if webhook.Name == name {
+			id = strconv.FormatInt(webhook.ExternalId, 10)
 		}
 	}
 	if id == "" {

@@ -250,9 +250,7 @@ func fetchRetentionsByName(ctx context.Context, client *archiveretentions.Retent
 	}
 	m := make(map[string]string, len(resp.Retentions))
 	for _, r := range resp.Retentions {
-		if r.Name != nil && r.Id != nil {
-			m[*r.Name] = *r.Id
-		}
+		m[r.Name] = r.Id
 	}
 	return m, nil
 }
@@ -271,8 +269,8 @@ func (p *TCOLogsPolicy) extractCreateLogPolicyRequest(retentionsByName map[strin
 	req := &tcopolicies.CreateLogPolicyRequest{
 		Policy: tcopolicies.CreateGenericPolicyRequest{
 			Name:             p.Name,
-			Description:      ptr.Deref(p.Description, ""),
-			Priority:         PrioritySchemaToOpenAPI[ptr.Deref(p.Priority, "")],
+			Description:      ptr.To(ptr.Deref(p.Description, "")),
+			Priority:         ptr.To(PrioritySchemaToOpenAPI[ptr.Deref(p.Priority, "")]),
 			Disabled:         p.Disabled,
 			ApplicationRule:  expandTCOPolicyRule(p.Applications),
 			SubsystemRule:    expandTCOPolicyRule(p.Subsystems),

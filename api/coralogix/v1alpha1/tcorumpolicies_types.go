@@ -131,8 +131,8 @@ func (p *TCORumPolicy) extractCreateRumPolicyRequest(retentionsByName map[string
 	req := &tcopolicies.CreateRumPolicyRequest{
 		Policy: tcopolicies.CreateGenericPolicyRequest{
 			Name:             p.Name,
-			Description:      ptr.Deref(p.Description, ""),
-			Priority:         PrioritySchemaToOpenAPI[p.Priority],
+			Description:      ptr.To(ptr.Deref(p.Description, "")),
+			Priority:         ptr.To(PrioritySchemaToOpenAPI[p.Priority]),
 			Disabled:         p.Disabled,
 			ApplicationRule:  expandTCOPolicyRule(p.Applications),
 			SubsystemRule:    expandTCOPolicyRule(p.Subsystems),

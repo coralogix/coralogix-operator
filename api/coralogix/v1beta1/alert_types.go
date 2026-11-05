@@ -2409,10 +2409,7 @@ func fillWebhookNameToId(properties *GetResourceRefProperties) error {
 
 	properties.WebhookNameToId = make(map[string]int64)
 	for _, webhook := range webhooks.Deployed {
-		if webhook.Name == nil || webhook.ExternalId == nil {
-			continue
-		}
-		properties.WebhookNameToId[*webhook.Name] = *webhook.ExternalId
+		properties.WebhookNameToId[webhook.Name] = webhook.ExternalId
 	}
 
 	return nil
