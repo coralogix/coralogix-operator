@@ -1,0 +1,261 @@
+[
+  {
+    "step": "create with every optional field",
+    "spec": {
+      "dataSource": "system/baseline",
+      "description": "Baseline description",
+      "metricFields": [
+        {
+          "aggregations": [
+            {
+              "aggMetadata": {},
+              "aggType": "min",
+              "enabled": true,
+              "targetMetricName": "latency_min"
+            }
+          ],
+          "sourceField": "latency",
+          "targetBaseMetricName": "latency"
+        }
+      ],
+      "metricLabels": [
+        {
+          "sourceField": "status",
+          "targetLabel": "status"
+        }
+      ],
+      "name": "baseline-e2m",
+      "permutationsLimit": 250,
+      "query": {
+        "logs": {
+          "alias": "baseline-alias",
+          "applicationNameFilters": [
+            "app"
+          ],
+          "lucene": "status:200",
+          "severityFilters": [
+            "error"
+          ],
+          "subsystemNameFilters": [
+            "sub"
+          ]
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/events2metrics/events2metrics/v2",
+        "body": {
+          "dataSource": "system/baseline",
+          "description": "Baseline description",
+          "logsQuery": {
+            "alias": "baseline-alias",
+            "applicationnameFilters": [
+              "app"
+            ],
+            "lucene": "status:200",
+            "severityFilters": [
+              "SEVERITY_ERROR"
+            ],
+            "subsystemnameFilters": [
+              "sub"
+            ]
+          },
+          "metricFields": [
+            {
+              "aggregations": [
+                {
+                  "aggType": "AGG_TYPE_MIN",
+                  "enabled": true,
+                  "targetMetricName": "latency_min"
+                }
+              ],
+              "sourceField": "latency",
+              "targetBaseMetricName": "latency"
+            }
+          ],
+          "metricLabels": [
+            {
+              "sourceField": "status",
+              "targetLabel": "status"
+            }
+          ],
+          "name": "baseline-e2m",
+          "permutationsLimit": 250,
+          "type": "E2M_TYPE_LOGS2METRICS"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "events2metric.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "remove the description, data source, limit, lucene, and alias",
+    "spec": {
+      "metricFields": [
+        {
+          "aggregations": [
+            {
+              "aggMetadata": {},
+              "aggType": "min",
+              "targetMetricName": "latency_min"
+            }
+          ],
+          "sourceField": "latency",
+          "targetBaseMetricName": "latency"
+        }
+      ],
+      "metricLabels": [
+        {
+          "sourceField": "status",
+          "targetLabel": "status"
+        }
+      ],
+      "name": "baseline-e2m",
+      "query": {
+        "logs": {
+          "applicationNameFilters": [
+            "app"
+          ],
+          "severityFilters": [
+            "error"
+          ],
+          "subsystemNameFilters": [
+            "sub"
+          ]
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/events2metrics/events2metrics/v2",
+        "body": {
+          "description": "",
+          "id": "<id-1>",
+          "logsQuery": {
+            "applicationnameFilters": [
+              "app"
+            ],
+            "severityFilters": [
+              "SEVERITY_ERROR"
+            ],
+            "subsystemnameFilters": [
+              "sub"
+            ]
+          },
+          "metricFields": [
+            {
+              "aggregations": [
+                {
+                  "aggType": "AGG_TYPE_MIN",
+                  "enabled": true,
+                  "targetMetricName": "latency_min"
+                }
+              ],
+              "sourceField": "latency",
+              "targetBaseMetricName": "latency"
+            }
+          ],
+          "metricLabels": [
+            {
+              "sourceField": "status",
+              "targetLabel": "status"
+            }
+          ],
+          "name": "baseline-e2m",
+          "type": "E2M_TYPE_LOGS2METRICS"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "events2metric.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "remove the labels, the fields, and the filters",
+    "spec": {
+      "name": "baseline-e2m",
+      "query": {
+        "logs": {}
+      }
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/events2metrics/events2metrics/v2",
+        "body": {
+          "description": "",
+          "id": "<id-1>",
+          "logsQuery": {},
+          "metricFields": [],
+          "metricLabels": [],
+          "name": "baseline-e2m",
+          "type": "E2M_TYPE_LOGS2METRICS"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "events2metric.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 3,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

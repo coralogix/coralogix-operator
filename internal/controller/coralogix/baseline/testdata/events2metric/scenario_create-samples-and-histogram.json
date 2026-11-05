@@ -1,0 +1,111 @@
+[
+  {
+    "step": "create with a samples and a histogram aggregation",
+    "spec": {
+      "metricFields": [
+        {
+          "aggregations": [
+            {
+              "aggMetadata": {
+                "samples": {
+                  "sampleType": "max"
+                }
+              },
+              "aggType": "samples",
+              "enabled": true,
+              "targetMetricName": "samples_latency"
+            },
+            {
+              "aggMetadata": {
+                "histogram": {
+                  "buckets": [
+                    "0.1",
+                    "0.5",
+                    "1",
+                    "2.5",
+                    "5.5",
+                    "1e3"
+                  ]
+                }
+              },
+              "aggType": "histogram",
+              "enabled": true,
+              "targetMetricName": "histogram_latency"
+            }
+          ],
+          "sourceField": "latency",
+          "targetBaseMetricName": "latency"
+        }
+      ],
+      "name": "baseline-e2m",
+      "query": {
+        "logs": {}
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/events2metrics/events2metrics/v2",
+        "body": {
+          "logsQuery": {},
+          "metricFields": [
+            {
+              "aggregations": [
+                {
+                  "aggType": "AGG_TYPE_SAMPLES",
+                  "enabled": true,
+                  "samples": {
+                    "sampleType": "SAMPLE_TYPE_MAX"
+                  },
+                  "targetMetricName": "samples_latency"
+                },
+                {
+                  "aggType": "AGG_TYPE_HISTOGRAM",
+                  "enabled": true,
+                  "histogram": {
+                    "buckets": [
+                      0.1,
+                      0.5,
+                      1,
+                      2.5,
+                      5.5,
+                      1000
+                    ]
+                  },
+                  "targetMetricName": "histogram_latency"
+                }
+              ],
+              "sourceField": "latency",
+              "targetBaseMetricName": "latency"
+            }
+          ],
+          "metricLabels": [],
+          "name": "baseline-e2m",
+          "type": "E2M_TYPE_LOGS2METRICS"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "events2metric.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

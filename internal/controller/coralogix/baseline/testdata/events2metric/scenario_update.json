@@ -1,0 +1,159 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "name": "baseline-e2m",
+      "query": {
+        "logs": {}
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/events2metrics/events2metrics/v2",
+        "body": {
+          "logsQuery": {},
+          "metricFields": [],
+          "metricLabels": [],
+          "name": "baseline-e2m",
+          "type": "E2M_TYPE_LOGS2METRICS"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "events2metric.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "rename, describe, set the limit, and add labels and a field",
+    "spec": {
+      "description": "Renamed",
+      "metricFields": [
+        {
+          "aggregations": [
+            {
+              "aggMetadata": {},
+              "aggType": "min",
+              "targetMetricName": "latency_min"
+            },
+            {
+              "aggMetadata": {},
+              "aggType": "max",
+              "enabled": false,
+              "targetMetricName": "latency_max"
+            }
+          ],
+          "sourceField": "latency",
+          "targetBaseMetricName": "latency"
+        }
+      ],
+      "metricLabels": [
+        {
+          "sourceField": "status",
+          "targetLabel": "status"
+        },
+        {
+          "sourceField": "path",
+          "targetLabel": "path"
+        }
+      ],
+      "name": "baseline-e2m-renamed",
+      "permutationsLimit": 250,
+      "query": {
+        "logs": {
+          "alias": "errors",
+          "lucene": "status:500"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/events2metrics/events2metrics/v2",
+        "body": {
+          "description": "Renamed",
+          "id": "<id-1>",
+          "logsQuery": {
+            "alias": "errors",
+            "lucene": "status:500"
+          },
+          "metricFields": [
+            {
+              "aggregations": [
+                {
+                  "aggType": "AGG_TYPE_MIN",
+                  "enabled": true,
+                  "targetMetricName": "latency_min"
+                },
+                {
+                  "aggType": "AGG_TYPE_MAX",
+                  "enabled": false,
+                  "targetMetricName": "latency_max"
+                }
+              ],
+              "sourceField": "latency",
+              "targetBaseMetricName": "latency"
+            }
+          ],
+          "metricLabels": [
+            {
+              "sourceField": "status",
+              "targetLabel": "status"
+            },
+            {
+              "sourceField": "path",
+              "targetLabel": "path"
+            }
+          ],
+          "name": "baseline-e2m-renamed",
+          "permutations": {
+            "hasExceededLimit": false,
+            "limit": 250
+          },
+          "type": "E2M_TYPE_LOGS2METRICS"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "events2metric.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

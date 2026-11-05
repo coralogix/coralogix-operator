@@ -1,0 +1,123 @@
+[
+  {
+    "step": "create the spans sample",
+    "spec": {
+      "description": "Sample spans2metric",
+      "metricFields": [
+        {
+          "aggregations": [
+            {
+              "aggMetadata": {},
+              "aggType": "min",
+              "enabled": true,
+              "targetMetricName": "min_duration"
+            }
+          ],
+          "sourceField": "duration",
+          "targetBaseMetricName": "duration"
+        }
+      ],
+      "metricLabels": [
+        {
+          "sourceField": "status",
+          "targetLabel": "Status"
+        },
+        {
+          "sourceField": "http_referer",
+          "targetLabel": "Path"
+        }
+      ],
+      "name": "spans2metric-sample",
+      "permutationsLimit": 10000,
+      "query": {
+        "spans": {
+          "actionFilters": [
+            "filter:equals:GET"
+          ],
+          "applicationNameFilters": [
+            "filter:startsWith:nginx"
+          ],
+          "lucene": "remote_addr_enriched:/.*/",
+          "serviceFilters": [
+            "filter:equals:nginx"
+          ],
+          "subsystemNameFilters": [
+            "filter:startsWith:nginx"
+          ]
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/events2metrics/events2metrics/v2",
+        "body": {
+          "description": "Sample spans2metric",
+          "metricFields": [
+            {
+              "aggregations": [
+                {
+                  "aggType": "AGG_TYPE_MIN",
+                  "enabled": true,
+                  "targetMetricName": "min_duration"
+                }
+              ],
+              "sourceField": "duration",
+              "targetBaseMetricName": "duration"
+            }
+          ],
+          "metricLabels": [
+            {
+              "sourceField": "status",
+              "targetLabel": "Status"
+            },
+            {
+              "sourceField": "http_referer",
+              "targetLabel": "Path"
+            }
+          ],
+          "name": "spans2metric-sample",
+          "permutationsLimit": 10000,
+          "spansQuery": {
+            "actionFilters": [
+              "filter:equals:GET"
+            ],
+            "applicationnameFilters": [
+              "filter:startsWith:nginx"
+            ],
+            "lucene": "remote_addr_enriched:/.*/",
+            "serviceFilters": [
+              "filter:equals:nginx"
+            ],
+            "subsystemnameFilters": [
+              "filter:startsWith:nginx"
+            ]
+          },
+          "type": "E2M_TYPE_SPANS2METRICS"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "events2metric.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

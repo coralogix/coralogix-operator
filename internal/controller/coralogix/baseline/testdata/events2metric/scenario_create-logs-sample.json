@@ -1,0 +1,115 @@
+[
+  {
+    "step": "create the logs sample",
+    "spec": {
+      "dataSource": "system/poc.error_tracking",
+      "description": "Sample logs2metric",
+      "metricFields": [
+        {
+          "aggregations": [
+            {
+              "aggMetadata": {},
+              "aggType": "min",
+              "enabled": true,
+              "targetMetricName": "Timestamp"
+            }
+          ],
+          "sourceField": "method",
+          "targetBaseMetricName": "method"
+        }
+      ],
+      "metricLabels": [
+        {
+          "sourceField": "status",
+          "targetLabel": "Status"
+        },
+        {
+          "sourceField": "http_referer",
+          "targetLabel": "Path"
+        }
+      ],
+      "name": "logs2metric-sample",
+      "permutationsLimit": 10000,
+      "query": {
+        "logs": {
+          "alias": "remote_addr_enriched",
+          "applicationNameFilters": [
+            "filter:startsWith:nginx"
+          ],
+          "lucene": "remote_addr_enriched:/.*/",
+          "severityFilters": [
+            "debug"
+          ]
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/events2metrics/events2metrics/v2",
+        "body": {
+          "dataSource": "system/poc.error_tracking",
+          "description": "Sample logs2metric",
+          "logsQuery": {
+            "alias": "remote_addr_enriched",
+            "applicationnameFilters": [
+              "filter:startsWith:nginx"
+            ],
+            "lucene": "remote_addr_enriched:/.*/",
+            "severityFilters": [
+              "SEVERITY_DEBUG"
+            ]
+          },
+          "metricFields": [
+            {
+              "aggregations": [
+                {
+                  "aggType": "AGG_TYPE_MIN",
+                  "enabled": true,
+                  "targetMetricName": "Timestamp"
+                }
+              ],
+              "sourceField": "method",
+              "targetBaseMetricName": "method"
+            }
+          ],
+          "metricLabels": [
+            {
+              "sourceField": "status",
+              "targetLabel": "Status"
+            },
+            {
+              "sourceField": "http_referer",
+              "targetLabel": "Path"
+            }
+          ],
+          "name": "logs2metric-sample",
+          "permutationsLimit": 10000,
+          "type": "E2M_TYPE_LOGS2METRICS"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "events2metric.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

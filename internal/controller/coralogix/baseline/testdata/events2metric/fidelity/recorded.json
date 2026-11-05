@@ -1,0 +1,4447 @@
+{
+  "cases": [
+    {
+      "name": "lifecycle: create, get, replace, delete, delete again, get and replace after delete",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{id}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_life"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-life",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{id}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_life"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-life",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{id}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_life"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-life",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{id}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_life"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-life",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "description": "",
+              "id": "{{id}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_life"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-life",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "description": "",
+              "id": "{{id}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_life"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-life",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{id}}"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"message\":\"Bad Request\",\"status\":400,\"details\":[{\"code\":\"custom\",\"message\":\"L2M does not exist\",\"path\":[\"id\"]}]}"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: {\"message\":\"NOT_FOUND: Events2Metrics with id {{id}} not found\",\"status\":5}"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"message\":\"Bad Request\",\"status\":400,\"details\":[{\"code\":\"custom\",\"message\":\"L2M does not exist\",\"path\":[\"id\"]}]}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "description on create: omitted and empty",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{a}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_desc-omitted"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-desc-omitted",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{a}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_desc-omitted"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-desc-omitted",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "description": "",
+              "id": "{{b}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_desc-empty"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-desc-empty",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "description": "",
+              "id": "{{b}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_desc-empty"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-desc-empty",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "description kept when replace omits it",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "description": "a",
+              "id": "{{id}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_desc-kept"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-desc-kept",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "description": "a",
+              "id": "{{id}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_desc-kept"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-desc-kept",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "description": "a",
+              "id": "{{id}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_desc-kept"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-desc-kept",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "permutations: default, replace without it, set and clear",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{a}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_perm-default"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-perm-default",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{a}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_perm-default"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-perm-default",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{a}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_perm-default"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-perm-default",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{a}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_perm-default"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-perm-default",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{b}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_perm-limit"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-perm-limit",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 250
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{b}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_perm-limit"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-perm-limit",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 250
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{b}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_perm-limit"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-perm-limit",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{b}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_perm-limit"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-perm-limit",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{b}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_perm-limit"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-perm-limit",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 300
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{b}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_perm-limit"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-perm-limit",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 300
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "aggregations: empty list, absent, null, and every type",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{a}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_aggs_empty"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-aggs-empty",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{a}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_aggs_empty"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-aggs-empty",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{b}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_aggs_absent"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-aggs-absent",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{c}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_aggs_null"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-aggs-null",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{d}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": false,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_aggs_types"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-aggs-types",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{d}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": false,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_aggs_types"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-aggs-types",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "histogram and samples aggregations",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{a}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": true,
+                      "histogram": {
+                        "buckets": [
+                          0.1,
+                          0.5,
+                          1,
+                          2.5,
+                          5.5,
+                          1000
+                        ]
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_histogram"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-histogram",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{a}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": true,
+                      "histogram": {
+                        "buckets": [
+                          0.1,
+                          0.5,
+                          1,
+                          2.5,
+                          5.5,
+                          1000
+                        ]
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_histogram"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-histogram",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{b}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_samples"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-samples",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{b}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_samples"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-samples",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "query shapes: logs with every severity, spans with every filter",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{a}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [
+                  "app"
+                ],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [
+                  "SEVERITY_DEBUG",
+                  "SEVERITY_VERBOSE",
+                  "SEVERITY_INFO",
+                  "SEVERITY_WARNING",
+                  "SEVERITY_ERROR",
+                  "SEVERITY_CRITICAL"
+                ],
+                "subsystemnameFilters": [
+                  "sub"
+                ]
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_severity"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-severity",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{a}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [
+                  "app"
+                ],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [
+                  "SEVERITY_DEBUG",
+                  "SEVERITY_VERBOSE",
+                  "SEVERITY_INFO",
+                  "SEVERITY_WARNING",
+                  "SEVERITY_ERROR",
+                  "SEVERITY_CRITICAL"
+                ],
+                "subsystemnameFilters": [
+                  "sub"
+                ]
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_severity"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-severity",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{b}}",
+              "isInternal": false,
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_spans"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-spans",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "spansQuery": {
+                "actionFilters": [
+                  "GET"
+                ],
+                "applicationnameFilters": [
+                  "app"
+                ],
+                "lucene": "cxo-fidelity",
+                "serviceFilters": [
+                  "nginx"
+                ],
+                "subsystemnameFilters": [
+                  "sub"
+                ]
+              },
+              "type": "E2M_TYPE_SPANS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{b}}",
+              "isInternal": false,
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_spans"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-spans",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "spansQuery": {
+                "actionFilters": [
+                  "GET"
+                ],
+                "applicationnameFilters": [
+                  "app"
+                ],
+                "lucene": "cxo-fidelity",
+                "serviceFilters": [
+                  "nginx"
+                ],
+                "subsystemnameFilters": [
+                  "sub"
+                ]
+              },
+              "type": "E2M_TYPE_SPANS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "minimal create: name, type, and an empty query",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{id}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [],
+              "metricLabels": [],
+              "name": "cxo-fidelity-e2m-minimal",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{id}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [],
+              "metricLabels": [],
+              "name": "cxo-fidelity-e2m-minimal",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "replace clears lucene and alias",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "description": "cleared later",
+              "id": "{{id}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [
+                  "app"
+                ],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_clear"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-clear",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "description": "",
+              "id": "{{id}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [
+                  "app"
+                ],
+                "lucene": "",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_clear"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-clear",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "description": "",
+              "id": "{{id}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [
+                  "app"
+                ],
+                "lucene": "",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_clear"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-clear",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "replace switches a logs E2M to spans",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{id}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_switch"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-switch",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{id}}",
+              "isInternal": false,
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_switch"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-switch",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "spansQuery": {
+                "actionFilters": [],
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "serviceFilters": [],
+                "subsystemnameFilters": []
+              },
+              "type": "E2M_TYPE_SPANS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{id}}",
+              "isInternal": false,
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_switch"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-switch",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "spansQuery": {
+                "actionFilters": [],
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "serviceFilters": [],
+                "subsystemnameFilters": []
+              },
+              "type": "E2M_TYPE_SPANS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejections: used metric name, invalid metric name, unknown data source",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{a}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_dup"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-dup",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"message\":\"Bad Request\",\"status\":400,\"details\":[{\"code\":\"custom\",\"path\":[],\"message\":\"Metric fields are already in use: cxo_fidelity_e2m_dup\"}]}"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"message\":\"Bad Request\",\"status\":400,\"details\":[{\"validation\":\"regex\",\"code\":\"invalid_string\",\"message\":\"Invalid\",\"path\":[\"metricFields\",0,\"targetBaseMetricName\"]}]}"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"message\":\"Bad Request\",\"status\":400,\"details\":[{\"code\":\"custom\",\"path\":[\"e2m\",\"dataSource\"],\"message\":\"dataSource 'cxo-fidelity/unknown' does not exist\"}]}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "an id that is not a UUID: get, replace, delete",
+      "steps": [
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: {\"message\":\"NOT_FOUND: Events2Metrics with id not-a-uuid not found\",\"status\":5}"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"message\":\"Bad Request\",\"status\":400,\"details\":[{\"validation\":\"uuid\",\"code\":\"invalid_string\",\"message\":\"Invalid uuid\",\"path\":[\"id\"]}]}"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"message\":\"Bad Request\",\"status\":400,\"details\":[{\"validation\":\"uuid\",\"code\":\"invalid_string\",\"message\":\"Invalid uuid\",\"path\":[\"id\"]}]}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "two E2Ms with the same name and different metric names",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{a}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_name-a"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-name-a",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"message\":\"Bad Request\",\"status\":400,\"details\":[{\"code\":\"custom\",\"path\":[\"e2m\",\"name\"],\"message\":\"Name (cxo-fidelity-e2m-name-a) is not unique\"}]}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "samples min and disabled, histogram, disabled max",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{id}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": true,
+                      "histogram": {
+                        "buckets": [
+                          1,
+                          2
+                        ]
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": false,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": false,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MIN"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_agg_options"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-agg-options",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{id}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": true,
+                      "histogram": {
+                        "buckets": [
+                          1,
+                          2
+                        ]
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": false,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": false,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MIN"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_agg_options"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-agg-options",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "replace changes the name, labels, fields, and query",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "id": "{{id}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "cxo-fidelity",
+                "severityFilters": [],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_replace-all"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-replace-all",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 30000
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "description": "renamed",
+              "id": "{{id}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "status:500",
+                "severityFilters": [
+                  "SEVERITY_ERROR"
+                ],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": false,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_replace_all"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                },
+                {
+                  "sourceField": "path",
+                  "targetLabel": "path"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-replace-all-renamed",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 250
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "e2m": {
+              "createTime": "\u003ctime\u003e",
+              "description": "renamed",
+              "id": "{{id}}",
+              "isInternal": false,
+              "logsQuery": {
+                "applicationnameFilters": [],
+                "lucene": "status:500",
+                "severityFilters": [
+                  "SEVERITY_ERROR"
+                ],
+                "subsystemnameFilters": []
+              },
+              "metricFields": [
+                {
+                  "aggregations": [
+                    {
+                      "aggType": "AGG_TYPE_AVG",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_avg"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_HISTOGRAM",
+                      "enabled": false,
+                      "histogram": {
+                        "buckets": []
+                      },
+                      "targetMetricName": "cx_bucket"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_COUNT",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_count"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MAX",
+                      "enabled": false,
+                      "none": {},
+                      "targetMetricName": "cx_max"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_MIN",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_min"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SUM",
+                      "enabled": true,
+                      "none": {},
+                      "targetMetricName": "cx_sum"
+                    },
+                    {
+                      "aggType": "AGG_TYPE_SAMPLES",
+                      "enabled": true,
+                      "samples": {
+                        "sampleType": "SAMPLE_TYPE_MAX"
+                      },
+                      "targetMetricName": "cx_value"
+                    }
+                  ],
+                  "sourceField": "duration",
+                  "targetBaseMetricName": "cxo_fidelity_e2m_replace_all"
+                }
+              ],
+              "metricLabels": [
+                {
+                  "sourceField": "status",
+                  "targetLabel": "status"
+                },
+                {
+                  "sourceField": "path",
+                  "targetLabel": "path"
+                }
+              ],
+              "name": "cxo-fidelity-e2m-replace-all-renamed",
+              "permutations": {
+                "hasExceededLimit": false,
+                "limit": 250
+              },
+              "type": "E2M_TYPE_LOGS2METRICS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
