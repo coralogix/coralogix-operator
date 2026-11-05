@@ -161,6 +161,10 @@ type Field struct {
 	ListMapKey string `yaml:"listMapKey"`
 	// EmptyObject keeps the released map form of an object with no fields.
 	EmptyObject string `yaml:"emptyObject"`
+	// CreateAs names Create-body fields that hold the parts of an object that Update and Get nest,
+	// such as {limit: permutationsLimit}. The CR keeps the flat Create fields; Update builds the
+	// object when one of them is set. It applies to a field of the resource in an existing kind.
+	CreateAs map[string]string `yaml:"createAs"`
 	// Skip omits an API field from the CR and requests. The field can belong to the resource or to
 	// a nested component. A nested skip applies to every CR path of the component. Skipping a oneOf
 	// arm removes the arm; the shared module accepts it only for an empty object arm of a group
@@ -267,14 +271,28 @@ func (f *File) check() error {
 	}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
-		if !field.Skip && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" {
+		if !field.Skip && len(field.CreateAs) == 0 && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" {
 			return fmt.Errorf("%s: the line sets no key", line)
 		}
-		if field.Skip && (field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "") {
+		if field.Skip && (len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "") {
 			return fmt.Errorf("%s.skip: skip cannot change another property of the CR field", line)
 		}
 		if field.Skip && f.Mode != ModeExisting {
 			return fmt.Errorf("%s.skip: a new kind follows the contract", line)
+		}
+		if len(field.CreateAs) != 0 {
+			if f.Mode != ModeExisting {
+				return fmt.Errorf("%s.createAs: a new kind follows the contract", line)
+			}
+			if line.Component != f.Resource {
+				return fmt.Errorf("%s.createAs: it applies only to a field of the resource", line)
+			}
+			if err := (iacoverrides.Field{CreateAs: field.CreateAs}).Check(); err != nil {
+				return fmt.Errorf("%s.%w", line, err)
+			}
+			if field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" {
+				return fmt.Errorf("%s.createAs: the line cannot set another key", line)
+			}
 		}
 		if field.OmitEmptyInRequest && f.Mode != ModeExisting {
 			return fmt.Errorf("%s.omitEmptyInRequest: a new kind follows the contract", line)
@@ -581,13 +599,13 @@ func (f *File) Policy() model.Policy {
 	exceptions := iacoverrides.Exceptions{API: f.API.API, Unwrap: f.Unwrap, Fields: map[string]map[string]iacoverrides.Field{}}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
-		if !field.Skip && !field.ReadOnly && !field.Optional && field.Unwrap == nil {
+		if !field.Skip && !field.ReadOnly && !field.Optional && field.Unwrap == nil && len(field.CreateAs) == 0 {
 			continue
 		}
 		if exceptions.Fields[line.Component] == nil {
 			exceptions.Fields[line.Component] = map[string]iacoverrides.Field{}
 		}
-		exceptions.Fields[line.Component][line.Field] = iacoverrides.Field{Skip: field.Skip, ReadOnly: field.ReadOnly, Optional: field.Optional, Unwrap: field.Unwrap}
+		exceptions.Fields[line.Component][line.Field] = iacoverrides.Field{Skip: field.Skip, ReadOnly: field.ReadOnly, Optional: field.Optional, Unwrap: field.Unwrap, CreateAs: field.CreateAs}
 	}
 	p := exceptions.Policy()
 	for _, line := range f.Lines() {

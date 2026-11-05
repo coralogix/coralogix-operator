@@ -160,7 +160,7 @@ func validate(doc docType, entry kindEntry, sdkModule, module string, e2e *e2eFi
 	if err := overrideIssues(doc, entry, file); err != nil {
 		return nil, asEligibility(entry, err)
 	}
-	policy := file.Policy()
+	policy := withFoldKept(doc, entry, file, file.Policy())
 	if report := model.ValidateWithPolicy(doc, entry.Resource, model.OperationIDs{}, policy); len(report) != 0 {
 		return nil, &EligibilityError{Report: located(entry, report)}
 	}
@@ -188,6 +188,45 @@ func validate(doc docType, entry kindEntry, sdkModule, module string, e2e *e2eFi
 		return nil, err
 	}
 	return v, nil
+}
+
+// withFoldKept exempts the folded properties of a createAs line from the requiredness check of the
+// shared module. Create takes the value flat and optional, and Update requires it inside the
+// object, so the module cannot tell what a client sends when it leaves the value out. The
+// generated Update builds the object only when a flat field is set, and the API keeps its stored
+// value otherwise. That is what the module accepts for a property that the resource response
+// requires and that a client keeps from state: computed and keepState. The property stays
+// required in Update, so the SDK type is the one of the contract.
+func withFoldKept(doc docType, entry kindEntry, file *overrides.File, policy model.Policy) model.Policy {
+	if file == nil || doc.Components == nil || doc.Components.Schemas == nil {
+		return policy
+	}
+	resource := doc.Components.Schemas.GetOrZero(entry.Resource)
+	if resource == nil || resource.Schema() == nil || resource.Schema().Properties == nil {
+		return policy
+	}
+	policy.Computed, policy.KeepState = slices.Clone(policy.Computed), slices.Clone(policy.KeepState)
+	for _, line := range file.Lines() {
+		fold := file.Field(line.Component, line.Field).CreateAs
+		if len(fold) == 0 || line.Component != entry.Resource {
+			continue
+		}
+		property := resource.Schema().Properties.GetOrZero(line.Field)
+		if property == nil || componentName(property) == "" {
+			continue // an inline object has no component name for the policy
+		}
+		for nested := range fold {
+			key := componentName(property) + "." + nested
+			policy.Computed = append(policy.Computed, key)
+			policy.KeepState = append(policy.KeepState, key)
+		}
+	}
+	return policy
+}
+
+// componentName is the component that a schema proxy references, or "" for an inline schema.
+func componentName(proxy *base.SchemaProxy) string {
+	return strings.TrimPrefix(proxy.GetReference(), "#/components/schemas/")
 }
 
 // nestedSkipIssues checks the skip lines of nested components. A skipped field is never sent, so
@@ -554,9 +593,21 @@ func requestHasField(doc docType, resource string, file *overrides.File, field s
 }
 
 func requestField(doc docType, resource string, file *overrides.File, field string, matches func(*base.Schema, string) bool) bool {
-	if doc.Paths == nil || doc.Paths.PathItems == nil {
-		return false
+	for _, body := range requestBodies(doc, resource, file) {
+		if matches(body, field) {
+			return true
+		}
 	}
+	return false
+}
+
+// requestBodies returns the schemas of the Create and Update request bodies. With a request
+// wrapper, the schema of the wrapper property is a body too.
+func requestBodies(doc docType, resource string, file *overrides.File) []*base.Schema {
+	if doc.Paths == nil || doc.Paths.PathItems == nil {
+		return nil
+	}
+	var bodies []*base.Schema
 	for _, item := range doc.Paths.PathItems.FromOldest() {
 		for _, operation := range item.GetOperations().FromOldest() {
 			id := operation.OperationId
@@ -575,17 +626,15 @@ func requestField(doc docType, resource string, file *overrides.File, field stri
 			if body == nil {
 				continue
 			}
-			if matches(body, field) {
-				return true
-			}
+			bodies = append(bodies, body)
 			if wrapper := file.API.RequestWrapper; wrapper != "" && body.Properties != nil {
-				if property := body.Properties.GetOrZero(wrapper); property != nil && matches(property.Schema(), field) {
-					return true
+				if property := body.Properties.GetOrZero(wrapper); property != nil && property.Schema() != nil {
+					bodies = append(bodies, property.Schema())
 				}
 			}
 		}
 	}
-	return false
+	return bodies
 }
 
 func schemaRequiresProperty(schema *base.Schema, property string) bool {

@@ -144,7 +144,12 @@ func (b *builder) requests(r *model.Resource, d *kindData) error {
 	var err error
 	bodyID := r.Policy.UpdateIDInBody
 	for _, f := range r.Fields {
-		if f.Create != nil {
+		if folded := b.folds[f.Name]; folded != nil {
+			for _, fold := range folded.folds {
+				attrs := model.Attrs{Required: fold.Required}
+				create = append(create, &model.Field{Name: fold.Field, Type: fold.Type, Create: &attrs, Attrs: attrs})
+			}
+		} else if f.Create != nil {
 			create = append(create, &model.Field{Name: f.Name, Type: f.Type.CreateType(), Create: f.Create, Attrs: *f.Create})
 		}
 		if bodyID && f.Name == r.ID() {
@@ -277,6 +282,14 @@ func (b *builder) conversionAs(cr *crType, sdkType string, fields []*model.Field
 	defer func() { b.conversionSuffix = previous }()
 	var body strings.Builder
 	for _, rf := range fields {
+		if folded := b.folds[rf.Name]; folded != nil && cr == b.specType && rf.Update != nil {
+			code, err := b.foldedObject(cr, sdkType, rf, folded, path)
+			if err != nil {
+				return "", err
+			}
+			body.WriteString(code)
+			continue
+		}
 		field, src := sourceField(cr, rf.Name)
 		if field == nil {
 			component := cr.schema
@@ -315,6 +328,77 @@ func (in *%s) %s(ctx context.Context, namespace string%s) (*%s.%s, error) {
 }
 `, name, cr.Name, sdkType, cr.Name, name, lookupParam, b.alias, sdkType, b.alias, sdkType, body.String()))
 	return name, nil
+}
+
+// foldedObject writes the Update code of a createAs line: it builds the object that Update nests
+// from the flat CR fields. The object is left out when no flat field is set. A writable property
+// of the object that no createAs line names has no CR field, so it is an error.
+func (b *builder) foldedObject(cr *crType, sdkType string, rf *model.Field, folded *foldedField, path string) (string, error) {
+	ref, err := b.ix.field(sdkType, rf.Name)
+	if err != nil {
+		return "", err
+	}
+	objectType := strings.TrimPrefix(ref.Want, "*")
+	property := map[string]model.CreateFold{}
+	for _, fold := range folded.folds {
+		property[fold.Property] = fold
+	}
+	for _, nested := range rf.Type.Fields {
+		if _, ok := property[nested.Name]; ok {
+			continue
+		}
+		if nested.Attrs.ReadOnly || (nested.Update != nil && nested.Update.ReadOnly) || nested.Behavior == model.Computed {
+			continue // the server sets it
+		}
+		return "", unsupported(path+"."+rf.Name+"."+nested.Name, "Update can write this field of the object, but no createAs line names it, so the CR cannot set it")
+	}
+	object := b.temp("obj")
+	previous := b.outVar
+	b.outVar = object
+	defer func() { b.outVar = previous }()
+	var inner strings.Builder
+	var conditions []string
+	for _, fold := range folded.folds {
+		crf := crFieldByAPI(cr, fold.Field)
+		if crf == nil {
+			return "", fmt.Errorf("%s: the CR has no field for the createAs property %s", path, fold.Property)
+		}
+		if crf.Optional {
+			conditions = append(conditions, "in."+crf.GoName+" != nil")
+		}
+		nested := *crf
+		nested.API = fold.Property
+		code, err := b.assignFrom(&nested, fold.Type, objectType, path+"."+crf.JSON, "in."+crf.GoName)
+		if err != nil {
+			return "", err
+		}
+		inner.WriteString(code)
+	}
+	if len(conditions) != len(folded.folds) {
+		// A required flat field is always set, so the object is always sent.
+		conditions = nil
+	}
+	if len(conditions) != 0 && !strings.HasPrefix(ref.Want, "*") {
+		return "", unsupported(path+"."+rf.Name, "Update requires the object, but its createAs fields are optional in the CR")
+	}
+	assign := "out." + ref.Name + " = " + object + "\n"
+	if !strings.HasPrefix(ref.Want, "*") {
+		assign = "out." + ref.Name + " = *" + object + "\n"
+	}
+	code := fmt.Sprintf("%s := &%s.%s{}\n%s%s", object, b.alias, objectType, inner.String(), assign)
+	if len(conditions) != 0 {
+		code = "if " + strings.Join(conditions, " || ") + " {\n" + code + "}\n"
+	}
+	return code, nil
+}
+
+func crFieldByAPI(cr *crType, api string) *crField {
+	for _, f := range cr.Fields {
+		if f.API == api {
+			return f
+		}
+	}
+	return nil
 }
 
 // sourceField finds an API field at its released CR path.
@@ -414,7 +498,7 @@ func (b *builder) assignFrom(f *crField, rt *model.Type, owner, path, src string
 	if err != nil {
 		return "", err
 	}
-	target := "out." + ref.Name
+	target := b.out() + "." + ref.Name
 	if f.refForm == "split" {
 		sibling := strings.TrimSuffix(src, f.GoName) + goName(f.refSibling)
 		resolved := b.temp("id")

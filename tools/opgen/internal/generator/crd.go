@@ -36,6 +36,14 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 		if inGroup[f.Name] && b.file.Field(r.Name, f.Name).Required {
 			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":types." + r.Name + ".fields." + f.Name + ".required", msg: "a oneOf arm cannot be required on its own"}
 		}
+		if folds := r.CreateFolds(f); len(folds) != 0 {
+			fields, err := b.foldedFields(r, f, folds)
+			if err != nil {
+				return nil, err
+			}
+			spec.Fields = append(spec.Fields, fields...)
+			continue
+		}
 		required := f.Create.Required && !inGroup[f.Name]
 		field, err := b.field(b.kind, r.Name, f.Name, f.Description, f.Type, required, requiredScalarWithoutPresence(f.Create, f.Type), "spec."+f.Name, false)
 		if err != nil {
@@ -52,6 +60,7 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 			spec.Fields = append(spec.Fields, splitReferenceField(field))
 		}
 	}
+	b.specType = spec
 	groups, err := b.overrideGroups(r.Name, r.Groups, spec.Fields)
 	if err != nil {
 		return nil, err
@@ -74,6 +83,39 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 		}
 	}
 	return spec, nil
+}
+
+// foldedFields builds the CR fields of a createAs line: one field for each property of the object,
+// under the name of the flat Create field. A CR that follows the released API holds the flat value.
+func (b *builder) foldedFields(r *model.Resource, f *model.ResourceField, folds []model.CreateFold) ([]*crField, error) {
+	if !r.Replace {
+		return nil, unsupported("types."+r.Name+".fields."+f.Name+".createAs", "createAs needs a full-replace Update")
+	}
+	if b.folds == nil {
+		b.folds = map[string]*foldedField{}
+	}
+	b.folds[f.Name] = &foldedField{field: f, folds: folds}
+	var out []*crField
+	for _, fold := range folds {
+		switch fold.Type.Kind {
+		case model.String, model.Bool, model.Number, model.Integer, model.Enum:
+		case model.List, model.Set:
+			if fold.Type.Elem == nil || !slices.Contains([]model.Kind{model.String, model.Bool, model.Number, model.Integer, model.Enum}, fold.Type.Elem.Kind) {
+				return nil, unsupported("spec."+fold.Field, "createAs supports a scalar, an enum, or a list of them")
+			}
+		default:
+			return nil, unsupported("spec."+fold.Field, "createAs supports a scalar, an enum, or a list of them, got %s", fold.Type.Kind)
+		}
+		field, err := b.field(b.kind, r.Name, fold.Field, f.Description, fold.Type, fold.Required, false, "spec."+fold.Field, false)
+		if err != nil {
+			return nil, err
+		}
+		if f.Behavior == model.Immutable {
+			immutable(field, field.validationPath)
+		}
+		out = append(out, field)
+	}
+	return out, nil
 }
 
 // applyValidation changes released markers after the contract and oneOf rules are built.
