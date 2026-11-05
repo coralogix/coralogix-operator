@@ -1,0 +1,83 @@
+[
+  {
+    "step": "create with a disabled aggregation and one that takes the default",
+    "spec": {
+      "metricFields": [
+        {
+          "aggregations": [
+            {
+              "aggMetadata": {},
+              "aggType": "max",
+              "enabled": false,
+              "targetMetricName": "max_field"
+            },
+            {
+              "aggMetadata": {},
+              "aggType": "min",
+              "enabled": true,
+              "targetMetricName": "min_field"
+            }
+          ],
+          "sourceField": "field",
+          "targetBaseMetricName": "field"
+        }
+      ],
+      "name": "baseline-e2m",
+      "query": {
+        "logs": {}
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/events2metrics/events2metrics/v2",
+        "body": {
+          "logsQuery": {},
+          "metricFields": [
+            {
+              "aggregations": [
+                {
+                  "aggType": "AGG_TYPE_MAX",
+                  "enabled": false,
+                  "targetMetricName": "max_field"
+                },
+                {
+                  "aggType": "AGG_TYPE_MIN",
+                  "enabled": true,
+                  "targetMetricName": "min_field"
+                }
+              ],
+              "sourceField": "field",
+              "targetBaseMetricName": "field"
+            }
+          ],
+          "metricLabels": [],
+          "name": "baseline-e2m",
+          "type": "E2M_TYPE_LOGS2METRICS"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "events2metric.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

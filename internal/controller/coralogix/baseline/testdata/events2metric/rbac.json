@@ -1,0 +1,76 @@
+{
+  "charts/coralogix-operator/templates/cluster_role.yaml": [
+    {
+      "apiGroups": [
+        "coralogix.com"
+      ],
+      "resource": "events2metrics",
+      "verbs": [
+        "create",
+        "delete",
+        "get",
+        "list",
+        "patch",
+        "update",
+        "watch"
+      ]
+    },
+    {
+      "apiGroups": [
+        "coralogix.com"
+      ],
+      "resource": "events2metrics/finalizers",
+      "verbs": [
+        "update"
+      ]
+    },
+    {
+      "apiGroups": [
+        "coralogix.com"
+      ],
+      "resource": "events2metrics/status",
+      "verbs": [
+        "get",
+        "patch",
+        "update"
+      ]
+    }
+  ],
+  "config/rbac/role.yaml": [
+    {
+      "apiGroups": [
+        "coralogix.com"
+      ],
+      "resource": "events2metrics",
+      "verbs": [
+        "create",
+        "delete",
+        "get",
+        "list",
+        "patch",
+        "update",
+        "watch"
+      ]
+    },
+    {
+      "apiGroups": [
+        "coralogix.com"
+      ],
+      "resource": "events2metrics/finalizers",
+      "verbs": [
+        "update"
+      ]
+    },
+    {
+      "apiGroups": [
+        "coralogix.com"
+      ],
+      "resource": "events2metrics/status",
+      "verbs": [
+        "get",
+        "patch",
+        "update"
+      ]
+    }
+  ]
+}

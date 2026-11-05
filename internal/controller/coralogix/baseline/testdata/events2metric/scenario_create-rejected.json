@@ -1,0 +1,102 @@
+[
+  {
+    "step": "create with a metric name that the API rejects",
+    "spec": {
+      "metricFields": [
+        {
+          "sourceField": "field",
+          "targetBaseMetricName": "has space"
+        }
+      ],
+      "name": "baseline-e2m",
+      "query": {
+        "logs": {}
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/events2metrics/events2metrics/v2",
+        "body": {
+          "logsQuery": {},
+          "metricFields": [
+            {
+              "aggregations": [],
+              "sourceField": "field",
+              "targetBaseMetricName": "has space"
+            }
+          ],
+          "metricLabels": [],
+          "name": "baseline-e2m",
+          "type": "E2M_TYPE_LOGS2METRICS"
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/events2metrics/events2metrics/v2",
+        "body": {
+          "logsQuery": {},
+          "metricFields": [
+            {
+              "aggregations": [],
+              "sourceField": "field",
+              "targetBaseMetricName": "has space"
+            }
+          ],
+          "metricLabels": [],
+          "name": "baseline-e2m",
+          "type": "E2M_TYPE_LOGS2METRICS"
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

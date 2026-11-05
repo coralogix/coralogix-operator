@@ -43,7 +43,8 @@ import (
 
 // fidelityConfig is what the recorder needs to know about a kind.
 type fidelityConfig struct {
-	// captureField is the response field that holds the id of a new resource.
+	// captureField is the response field that holds the id of a new resource. A dotted path
+	// reads a nested field: "e2m.id" is the id in {"e2m": {"id": "..."}}.
 	captureField string
 	// deletePath returns the path that deletes a resource. The recorder calls it for each
 	// captured id when it ends, so a failed run leaves nothing behind.
@@ -163,8 +164,8 @@ func TestRecordFidelity(t *testing.T) {
 	var created []string
 	t.Cleanup(func() {
 		for _, id := range created {
-			status, _, err := sendRecordRequest(base, apiKey, http.MethodDelete, k.fidelity.deletePath(id), nil)
-			if problem := cleanupProblem(status, err); problem != "" {
+			status, resp, err := sendRecordRequest(base, apiKey, http.MethodDelete, k.fidelity.deletePath(id), nil)
+			if problem := cleanupProblem(status, resp, err); problem != "" {
 				t.Errorf("cleanup: DELETE %s %s; delete it by hand", k.fidelity.deletePath(id), problem)
 			}
 		}
@@ -199,12 +200,15 @@ func TestRecordFidelity(t *testing.T) {
 }
 
 // cleanupProblem says why a cleanup delete failed, or "" when it worked. A 404 is no problem: a
-// case already deleted the resource.
-func cleanupProblem(status int, err error) string {
+// case already deleted the resource. Some APIs answer a second delete with a 400 that says the
+// resource does not exist. That is no problem either.
+func cleanupProblem(status int, resp any, err error) string {
 	switch {
 	case err != nil:
 		return fmt.Sprintf("failed: %v", err)
 	case succeeded(status), status == http.StatusNotFound:
+		return ""
+	case status == http.StatusBadRequest && strings.Contains(compact(resp), "does not exist"):
 		return ""
 	default:
 		return fmt.Sprintf("returned %d", status)
@@ -281,9 +285,14 @@ func sendRecordRequest(base, apiKey, method, path string, body any) (int, any, e
 	return resp.StatusCode, parsed, nil
 }
 
+// capturedID reads the id of a new resource from a response, or "" when the path has no string.
 func capturedID(resp any, k kind) string {
-	m, _ := resp.(map[string]any)
-	id, _ := m[k.fidelity.captureField].(string)
+	current := resp
+	for _, key := range strings.Split(k.fidelity.captureField, ".") {
+		m, _ := current.(map[string]any)
+		current = m[key]
+	}
+	id, _ := current.(string)
 	return id
 }
 
@@ -310,12 +319,29 @@ func normalizeAnswer(t *testing.T, k kind, s fidelityStep, status int, resp any,
 		}
 		return "<id>"
 	})
-	text = redactText(text)
 	var out any
 	if err := json.Unmarshal([]byte(text), &out); err != nil {
 		t.Fatal(err)
 	}
-	return redactFields(out)
+	return redactFields(redactStrings(out))
+}
+
+// redactStrings hides account values inside each string value. A number that is not in a string
+// stays as it is: a limit of 30000 is a setting, and "<number>" would not be JSON.
+func redactStrings(v any) any {
+	switch v := v.(type) {
+	case string:
+		return redactText(v)
+	case map[string]any:
+		for key, value := range v {
+			v[key] = redactStrings(value)
+		}
+	case []any:
+		for i := range v {
+			v[i] = redactStrings(v[i])
+		}
+	}
+	return v
 }
 
 // The recording goes into a public repository, so it keeps no value that names an account.
@@ -324,6 +350,8 @@ var (
 	// CompanyId(123456) in an error message becomes CompanyId(<redacted>).
 	labeledIDPattern = regexp.MustCompile(`(?i)\b((?:company|team|user|org|account)_?id)\(([^)]*)\)`)
 	emailPattern     = regexp.MustCompile(`[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}`)
+	// A time that the API sets, such as 2026-01-02T03:04:05.678Z. Each run gets a new one.
+	timestampPattern = regexp.MustCompile(`\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?`)
 	// A run of five or more digits is a company, team, or user number.
 	longNumberPattern = regexp.MustCompile(`\b[0-9]{5,}\b`)
 	// Values of these response fields name an account or a single request.
@@ -334,6 +362,7 @@ var (
 func redactText(text string) string {
 	text = labeledIDPattern.ReplaceAllString(text, "${1}(<redacted>)")
 	text = emailPattern.ReplaceAllString(text, "<email>")
+	text = timestampPattern.ReplaceAllString(text, "<time>")
 	return replaceLongNumbers(text)
 }
 
@@ -431,8 +460,8 @@ func compact(v any) string {
 }
 
 func TestRedactHidesAccountValues(t *testing.T) {
-	text := redactText(`Bad Request: parent folder for CompanyId(4012345) and team_id(77) of admin@example.com, request 123456789, folder 00000000-0000-4000-8000-00000000dead`)
-	want := `Bad Request: parent folder for CompanyId(<redacted>) and team_id(<redacted>) of <email>, request <number>, folder 00000000-0000-4000-8000-00000000dead`
+	text := redactText(`Bad Request: parent folder for CompanyId(4012345) and team_id(77) of admin@example.com, request 123456789, folder 00000000-0000-4000-8000-00000000dead, created 2026-01-02T03:04:05.678Z`)
+	want := `Bad Request: parent folder for CompanyId(<redacted>) and team_id(<redacted>) of <email>, request <number>, folder 00000000-0000-4000-8000-00000000dead, created <time>`
 	if text != want {
 		t.Fatalf("redactText:\n got %s\nwant %s", text, want)
 	}
@@ -474,18 +503,66 @@ func TestNormalizeAnswerCapturesIDOf201(t *testing.T) {
 func TestCleanupProblemReportsFailedDeletes(t *testing.T) {
 	for _, c := range []struct {
 		status int
+		resp   any
 		err    error
 		want   string
 	}{
 		{status: 200, want: ""},
 		{status: 204, want: ""},
 		{status: 404, want: ""},
+		{status: 400, resp: map[string]any{"message": "Bad Request: L2M does not exist"}, want: ""},
+		{status: 400, resp: map[string]any{"message": "Bad Request: invalid id"}, want: "returned 400"},
 		{status: 500, want: "returned 500"},
 		{status: 403, want: "returned 403"},
 		{err: errors.New("connection reset"), want: "failed: connection reset"},
 	} {
-		if got := cleanupProblem(c.status, c.err); got != c.want {
+		if got := cleanupProblem(c.status, c.resp, c.err); got != c.want {
 			t.Errorf("cleanupProblem(%d, %v) = %q, want %q", c.status, c.err, got, c.want)
 		}
+	}
+}
+
+func TestCapturedIDReadsADottedPath(t *testing.T) {
+	for _, c := range []struct {
+		field string
+		resp  any
+		want  string
+	}{
+		{"id", map[string]any{"id": "a"}, "a"},
+		{"e2m.id", map[string]any{"e2m": map[string]any{"id": "b"}}, "b"},
+		{"e2m.id", map[string]any{"id": "top-level only"}, ""},
+		{"e2m.id", map[string]any{"e2m": "not an object"}, ""},
+		{"e2m.id", map[string]any{"e2m": map[string]any{"id": 7}}, ""},
+		{"e2m.id", nil, ""},
+	} {
+		k := kind{fidelity: fidelityConfig{captureField: c.field}}
+		if got := capturedID(c.resp, k); got != c.want {
+			t.Errorf("capturedID(%v, %q) = %q, want %q", c.resp, c.field, got, c.want)
+		}
+	}
+}
+
+func TestNormalizeAnswerCapturesANestedID(t *testing.T) {
+	k := kind{fidelity: fidelityConfig{captureField: "e2m.id"}}
+	vars := map[string]string{}
+	id := "3dc02998-0b50-4ea8-b68a-4779d716fa1f"
+	resp := map[string]any{"e2m": map[string]any{"id": id, "createTime": "2026-01-02T03:04:05.678Z"}}
+	got := normalizeAnswer(t, k, fidelityStep{Capture: "id"}, http.StatusOK, resp, vars)
+	if vars["id"] != id {
+		t.Fatalf("id not captured from a nested field: vars = %v", vars)
+	}
+	want := map[string]any{"e2m": map[string]any{"id": "{{id}}", "createTime": "<time>"}}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("normalizeAnswer = %v, want %v", got, want)
+	}
+}
+
+func TestNormalizeAnswerKeepsANumberThatIsNotInAString(t *testing.T) {
+	k := kind{fidelity: fidelityConfig{captureField: "e2m.id"}}
+	resp := map[string]any{"e2m": map[string]any{"permutations": map[string]any{"limit": float64(30000)}, "note": "request 123456789"}}
+	got := normalizeAnswer(t, k, fidelityStep{}, http.StatusOK, resp, map[string]string{})
+	want := map[string]any{"e2m": map[string]any{"permutations": map[string]any{"limit": float64(30000)}, "note": "request <number>"}}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("normalizeAnswer = %v, want %v", got, want)
 	}
 }

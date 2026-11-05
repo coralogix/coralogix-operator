@@ -1,0 +1,120 @@
+[
+  {
+    "step": "create with a spans query",
+    "spec": {
+      "name": "baseline-e2m",
+      "query": {
+        "spans": {
+          "actionFilters": [
+            "GET"
+          ],
+          "applicationNameFilters": [
+            "app"
+          ],
+          "lucene": "service:nginx",
+          "serviceFilters": [
+            "nginx"
+          ],
+          "subsystemNameFilters": [
+            "sub"
+          ]
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/events2metrics/events2metrics/v2",
+        "body": {
+          "metricFields": [],
+          "metricLabels": [],
+          "name": "baseline-e2m",
+          "spansQuery": {
+            "actionFilters": [
+              "GET"
+            ],
+            "applicationnameFilters": [
+              "app"
+            ],
+            "lucene": "service:nginx",
+            "serviceFilters": [
+              "nginx"
+            ],
+            "subsystemnameFilters": [
+              "sub"
+            ]
+          },
+          "type": "E2M_TYPE_SPANS2METRICS"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "events2metric.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "remove lucene and every filter",
+    "spec": {
+      "name": "baseline-e2m",
+      "query": {
+        "spans": {}
+      }
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/events2metrics/events2metrics/v2",
+        "body": {
+          "description": "",
+          "id": "<id-1>",
+          "metricFields": [],
+          "metricLabels": [],
+          "name": "baseline-e2m",
+          "spansQuery": {},
+          "type": "E2M_TYPE_SPANS2METRICS"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "events2metric.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

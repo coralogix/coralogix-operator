@@ -1,0 +1,1372 @@
+{
+  "cases": [
+    {
+      "name": "lifecycle: create, get, replace, delete, delete again, get and replace after delete",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-life",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_life",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_life_min"
+                  }
+                ]
+              }
+            ]
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/events2metrics/events2metrics/v2/{{id}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-life",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_life",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_life_min"
+                  }
+                ]
+              }
+            ],
+            "id": "{{id}}"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/events2metrics/events2metrics/v2/{{id}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-life",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_life",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_life_min"
+                  }
+                ]
+              }
+            ],
+            "description": "",
+            "id": "{{id}}"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/events2metrics/events2metrics/v2/{{id}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/events2metrics/events2metrics/v2/{{id}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/events2metrics/events2metrics/v2/{{id}}"
+        },
+        {
+          "method": "GET",
+          "path": "/events2metrics/events2metrics/v2/{{id}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-life",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_life",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_life_min"
+                  }
+                ]
+              }
+            ],
+            "id": "{{id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "description on create: omitted and empty",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-desc-omitted",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_desc-omitted",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_desc-omitted_min"
+                  }
+                ]
+              }
+            ]
+          },
+          "capture": "a"
+        },
+        {
+          "method": "GET",
+          "path": "/events2metrics/events2metrics/v2/{{a}}"
+        },
+        {
+          "method": "POST",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-desc-empty",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_desc-empty",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_desc-empty_min"
+                  }
+                ]
+              }
+            ],
+            "description": ""
+          },
+          "capture": "b"
+        },
+        {
+          "method": "GET",
+          "path": "/events2metrics/events2metrics/v2/{{b}}"
+        }
+      ]
+    },
+    {
+      "name": "description kept when replace omits it",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-desc-kept",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_desc-kept",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_desc-kept_min"
+                  }
+                ]
+              }
+            ],
+            "description": "a"
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PUT",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-desc-kept",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_desc-kept",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_desc-kept_min"
+                  }
+                ]
+              }
+            ],
+            "id": "{{id}}"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/events2metrics/events2metrics/v2/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "permutations: default, replace without it, set and clear",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-perm-default",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_perm-default",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_perm-default_min"
+                  }
+                ]
+              }
+            ]
+          },
+          "capture": "a"
+        },
+        {
+          "method": "GET",
+          "path": "/events2metrics/events2metrics/v2/{{a}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-perm-default",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_perm-default",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_perm-default_min"
+                  }
+                ]
+              }
+            ],
+            "id": "{{a}}"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/events2metrics/events2metrics/v2/{{a}}"
+        },
+        {
+          "method": "POST",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-perm-limit",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_perm-limit",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_perm-limit_min"
+                  }
+                ]
+              }
+            ],
+            "permutationsLimit": 250
+          },
+          "capture": "b"
+        },
+        {
+          "method": "GET",
+          "path": "/events2metrics/events2metrics/v2/{{b}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-perm-limit",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_perm-limit",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_perm-limit_min"
+                  }
+                ]
+              }
+            ],
+            "id": "{{b}}"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/events2metrics/events2metrics/v2/{{b}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-perm-limit",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_perm-limit",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_perm-limit_min"
+                  }
+                ]
+              }
+            ],
+            "permutations": {
+              "limit": 300,
+              "hasExceededLimit": false
+            },
+            "id": "{{b}}"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/events2metrics/events2metrics/v2/{{b}}"
+        }
+      ]
+    },
+    {
+      "name": "aggregations: empty list, absent, null, and every type",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-aggs-empty",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_aggs_empty",
+                "sourceField": "duration",
+                "aggregations": []
+              }
+            ]
+          },
+          "capture": "a"
+        },
+        {
+          "method": "GET",
+          "path": "/events2metrics/events2metrics/v2/{{a}}"
+        },
+        {
+          "method": "POST",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-aggs-absent",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_aggs_absent",
+                "sourceField": "duration"
+              }
+            ]
+          },
+          "capture": "b"
+        },
+        {
+          "method": "POST",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-aggs-null",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_aggs_null",
+                "sourceField": "duration",
+                "aggregations": null
+              }
+            ]
+          },
+          "capture": "c"
+        },
+        {
+          "method": "POST",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-aggs-types",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_aggs_types",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_COUNT",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_aggs_types_count"
+                  },
+                  {
+                    "aggType": "AGG_TYPE_AVG",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_aggs_types_avg"
+                  },
+                  {
+                    "aggType": "AGG_TYPE_SUM",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_aggs_types_sum"
+                  },
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_aggs_types_min"
+                  },
+                  {
+                    "aggType": "AGG_TYPE_MAX",
+                    "enabled": false,
+                    "targetMetricName": "cxo_fidelity_e2m_aggs_types_max"
+                  }
+                ]
+              }
+            ]
+          },
+          "capture": "d"
+        },
+        {
+          "method": "GET",
+          "path": "/events2metrics/events2metrics/v2/{{d}}"
+        }
+      ]
+    },
+    {
+      "name": "histogram and samples aggregations",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-histogram",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_histogram",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_HISTOGRAM",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_histogram_h",
+                    "histogram": {
+                      "buckets": [
+                        0.1,
+                        0.5,
+                        1,
+                        2.5,
+                        5.5,
+                        1000
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "capture": "a"
+        },
+        {
+          "method": "GET",
+          "path": "/events2metrics/events2metrics/v2/{{a}}"
+        },
+        {
+          "method": "POST",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-samples",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_samples",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_SAMPLES",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_samples_s",
+                    "samples": {
+                      "sampleType": "SAMPLE_TYPE_MAX"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "capture": "b"
+        },
+        {
+          "method": "GET",
+          "path": "/events2metrics/events2metrics/v2/{{b}}"
+        }
+      ]
+    },
+    {
+      "name": "query shapes: logs with every severity, spans with every filter",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-severity",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity",
+              "alias": "cxo-fidelity-alias",
+              "applicationnameFilters": [
+                "app"
+              ],
+              "subsystemnameFilters": [
+                "sub"
+              ],
+              "severityFilters": [
+                "SEVERITY_DEBUG",
+                "SEVERITY_VERBOSE",
+                "SEVERITY_INFO",
+                "SEVERITY_WARNING",
+                "SEVERITY_ERROR",
+                "SEVERITY_CRITICAL"
+              ]
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_severity",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_severity_min"
+                  }
+                ]
+              }
+            ]
+          },
+          "capture": "a"
+        },
+        {
+          "method": "GET",
+          "path": "/events2metrics/events2metrics/v2/{{a}}"
+        },
+        {
+          "method": "POST",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-spans",
+            "type": "E2M_TYPE_SPANS2METRICS",
+            "spansQuery": {
+              "lucene": "cxo-fidelity",
+              "applicationnameFilters": [
+                "app"
+              ],
+              "subsystemnameFilters": [
+                "sub"
+              ],
+              "actionFilters": [
+                "GET"
+              ],
+              "serviceFilters": [
+                "nginx"
+              ]
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_spans",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_spans_min"
+                  }
+                ]
+              }
+            ]
+          },
+          "capture": "b"
+        },
+        {
+          "method": "GET",
+          "path": "/events2metrics/events2metrics/v2/{{b}}"
+        }
+      ]
+    },
+    {
+      "name": "minimal create: name, type, and an empty query",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-minimal",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {}
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/events2metrics/events2metrics/v2/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "replace clears lucene and alias",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-clear",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity",
+              "alias": "cxo-fidelity-alias",
+              "applicationnameFilters": [
+                "app"
+              ]
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_clear",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_clear_min"
+                  }
+                ]
+              }
+            ],
+            "description": "cleared later"
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PUT",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-clear",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "applicationnameFilters": [
+                "app"
+              ]
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_clear",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_clear_min"
+                  }
+                ]
+              }
+            ],
+            "description": "",
+            "id": "{{id}}"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/events2metrics/events2metrics/v2/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "replace switches a logs E2M to spans",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-switch",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_switch",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_switch_min"
+                  }
+                ]
+              }
+            ]
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PUT",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-switch",
+            "type": "E2M_TYPE_SPANS2METRICS",
+            "spansQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_switch",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_switch_min"
+                  }
+                ]
+              }
+            ],
+            "id": "{{id}}"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/events2metrics/events2metrics/v2/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "rejections: used metric name, invalid metric name, unknown data source",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-dup",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_dup",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_dup_min"
+                  }
+                ]
+              }
+            ]
+          },
+          "capture": "a"
+        },
+        {
+          "method": "POST",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-dup",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_dup",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_dup_min"
+                  }
+                ]
+              }
+            ]
+          },
+          "capture": "b"
+        },
+        {
+          "method": "POST",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-bad-metric-name",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "has space",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_bad-metric-name_min"
+                  }
+                ]
+              }
+            ]
+          },
+          "capture": "c"
+        },
+        {
+          "method": "POST",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-data-source",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_data-source",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_data-source_min"
+                  }
+                ]
+              }
+            ],
+            "dataSource": "cxo-fidelity/unknown"
+          },
+          "capture": "d"
+        }
+      ]
+    },
+    {
+      "name": "an id that is not a UUID: get, replace, delete",
+      "steps": [
+        {
+          "method": "GET",
+          "path": "/events2metrics/events2metrics/v2/not-a-uuid"
+        },
+        {
+          "method": "PUT",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-invalid-id",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_invalid-id",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_invalid-id_min"
+                  }
+                ]
+              }
+            ],
+            "id": "not-a-uuid"
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/events2metrics/events2metrics/v2/not-a-uuid"
+        }
+      ]
+    },
+    {
+      "name": "two E2Ms with the same name and different metric names",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-name-a",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_name-a",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_name-a_min"
+                  }
+                ]
+              }
+            ]
+          },
+          "capture": "a"
+        },
+        {
+          "method": "POST",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-name-a",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_name-b",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_name-b_min"
+                  }
+                ]
+              }
+            ]
+          },
+          "capture": "b"
+        }
+      ]
+    },
+    {
+      "name": "samples min and disabled, histogram, disabled max",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-agg-options",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_agg_options",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_SAMPLES",
+                    "enabled": false,
+                    "targetMetricName": "cxo_fidelity_e2m_agg_options_s",
+                    "samples": {
+                      "sampleType": "SAMPLE_TYPE_MIN"
+                    }
+                  },
+                  {
+                    "aggType": "AGG_TYPE_HISTOGRAM",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_agg_options_h",
+                    "histogram": {
+                      "buckets": [
+                        1,
+                        2
+                      ]
+                    }
+                  },
+                  {
+                    "aggType": "AGG_TYPE_MAX",
+                    "enabled": false,
+                    "targetMetricName": "cxo_fidelity_e2m_agg_options_max"
+                  }
+                ]
+              }
+            ]
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/events2metrics/events2metrics/v2/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "replace changes the name, labels, fields, and query",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-replace-all",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "cxo-fidelity"
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_replace-all",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MIN",
+                    "enabled": true,
+                    "targetMetricName": "cxo_fidelity_e2m_replace-all_min"
+                  }
+                ]
+              }
+            ]
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PUT",
+          "path": "/events2metrics/events2metrics/v2",
+          "body": {
+            "name": "cxo-fidelity-e2m-replace-all-renamed",
+            "type": "E2M_TYPE_LOGS2METRICS",
+            "logsQuery": {
+              "lucene": "status:500",
+              "alias": "errors",
+              "severityFilters": [
+                "SEVERITY_ERROR"
+              ]
+            },
+            "metricLabels": [
+              {
+                "targetLabel": "status",
+                "sourceField": "status"
+              },
+              {
+                "targetLabel": "path",
+                "sourceField": "path"
+              }
+            ],
+            "metricFields": [
+              {
+                "targetBaseMetricName": "cxo_fidelity_e2m_replace_all",
+                "sourceField": "duration",
+                "aggregations": [
+                  {
+                    "aggType": "AGG_TYPE_MAX",
+                    "enabled": false,
+                    "targetMetricName": "cxo_fidelity_e2m_replace_all_max"
+                  }
+                ]
+              }
+            ],
+            "description": "renamed",
+            "permutations": {
+              "limit": 250,
+              "hasExceededLimit": false
+            },
+            "id": "{{id}}"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/events2metrics/events2metrics/v2/{{id}}"
+        }
+      ]
+    }
+  ]
+}

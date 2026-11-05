@@ -1,0 +1,98 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "name": "baseline-e2m",
+      "query": {
+        "logs": {}
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/events2metrics/events2metrics/v2",
+        "body": {
+          "logsQuery": {},
+          "metricFields": [],
+          "metricLabels": [],
+          "name": "baseline-e2m",
+          "type": "E2M_TYPE_LOGS2METRICS"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "events2metric.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "delete a CR that has a finalizer and no status id",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/events2metrics/events2metrics/v2",
+        "body": {
+          "logsQuery": {},
+          "metricFields": [],
+          "metricLabels": [],
+          "name": "baseline-e2m",
+          "type": "E2M_TYPE_LOGS2METRICS"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "events2metric.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-2>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/events2metrics/events2metrics/v2/<id-2>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

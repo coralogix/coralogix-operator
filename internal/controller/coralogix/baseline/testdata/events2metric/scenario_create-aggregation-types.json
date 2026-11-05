@@ -1,0 +1,116 @@
+[
+  {
+    "step": "create with every simple aggregation type",
+    "spec": {
+      "metricFields": [
+        {
+          "aggregations": [
+            {
+              "aggMetadata": {},
+              "aggType": "count",
+              "enabled": true,
+              "targetMetricName": "count_request_count"
+            },
+            {
+              "aggMetadata": {},
+              "aggType": "avg",
+              "enabled": true,
+              "targetMetricName": "avg_request_count"
+            },
+            {
+              "aggMetadata": {},
+              "aggType": "sum",
+              "enabled": true,
+              "targetMetricName": "sum_request_count"
+            },
+            {
+              "aggMetadata": {},
+              "aggType": "min",
+              "enabled": true,
+              "targetMetricName": "min_request_count"
+            },
+            {
+              "aggMetadata": {},
+              "aggType": "max",
+              "enabled": true,
+              "targetMetricName": "max_request_count"
+            }
+          ],
+          "sourceField": "request_count",
+          "targetBaseMetricName": "request_count"
+        }
+      ],
+      "name": "baseline-e2m",
+      "query": {
+        "logs": {}
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/events2metrics/events2metrics/v2",
+        "body": {
+          "logsQuery": {},
+          "metricFields": [
+            {
+              "aggregations": [
+                {
+                  "aggType": "AGG_TYPE_COUNT",
+                  "enabled": true,
+                  "targetMetricName": "count_request_count"
+                },
+                {
+                  "aggType": "AGG_TYPE_AVG",
+                  "enabled": true,
+                  "targetMetricName": "avg_request_count"
+                },
+                {
+                  "aggType": "AGG_TYPE_SUM",
+                  "enabled": true,
+                  "targetMetricName": "sum_request_count"
+                },
+                {
+                  "aggType": "AGG_TYPE_MIN",
+                  "enabled": true,
+                  "targetMetricName": "min_request_count"
+                },
+                {
+                  "aggType": "AGG_TYPE_MAX",
+                  "enabled": true,
+                  "targetMetricName": "max_request_count"
+                }
+              ],
+              "sourceField": "request_count",
+              "targetBaseMetricName": "request_count"
+            }
+          ],
+          "metricLabels": [],
+          "name": "baseline-e2m",
+          "type": "E2M_TYPE_LOGS2METRICS"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "events2metric.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

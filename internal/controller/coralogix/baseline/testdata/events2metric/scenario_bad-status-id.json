@@ -1,0 +1,109 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "name": "baseline-e2m",
+      "query": {
+        "logs": {}
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/events2metrics/events2metrics/v2",
+        "body": {
+          "logsQuery": {},
+          "metricFields": [],
+          "metricLabels": [],
+          "name": "baseline-e2m",
+          "type": "E2M_TYPE_LOGS2METRICS"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "events2metric.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "update with a status id that is not a UUID",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/events2metrics/events2metrics/v2",
+        "body": {
+          "description": "",
+          "id": "not-a-uuid",
+          "logsQuery": {},
+          "metricFields": [],
+          "metricLabels": [],
+          "name": "baseline-e2m",
+          "type": "E2M_TYPE_LOGS2METRICS"
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [
+        "events2metric.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteUpdateFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "not-a-uuid",
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "delete with a status id that is not a UUID",
+    "requests": [],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [
+        "events2metric.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteDeletionFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "not-a-uuid",
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]
