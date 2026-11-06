@@ -1018,6 +1018,22 @@ var _ = Describe("Alert access policy", Ordered, func() {
 		Expect(crClient.Patch(ctx, updated, client.MergeFrom(current))).To(Succeed())
 	}
 
+	// reconcileUntil bumps the annotations to trigger a reconcile, then waits
+	// for check to pass. The Alert controller has no periodic resync in CI, so
+	// one lost update event would stall the wait; it bumps again every few
+	// seconds until check passes.
+	reconcileUntil := func(ctx context.Context, timeout time.Duration, check func(g Gomega)) {
+		bumpAlertAnnotations(ctx)
+		lastBump := time.Now()
+		Eventually(func(g Gomega) {
+			if time.Since(lastBump) >= 10*time.Second {
+				bumpAlertAnnotations(ctx)
+				lastBump = time.Now()
+			}
+			check(g)
+		}, timeout, time.Second).Should(Succeed())
+	}
+
 	It("Should manage an alert access policy", func(ctx context.Context) {
 		By("Creating an Alert with access policy P1")
 		alertName = uniqueName("alert-access-policy")
@@ -1137,10 +1153,9 @@ var _ = Describe("Alert access policy", Ordered, func() {
 		Eventually(func(g Gomega) {
 			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, ptr.To(alertAccessPolicyP1))
 		}, time.Minute, time.Second).Should(Succeed())
-		bumpAlertAnnotations(ctx)
-		Eventually(func(g Gomega) {
+		reconcileUntil(ctx, time.Minute, func(g Gomega) {
 			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, nil)
-		}, time.Minute, time.Second).Should(Succeed())
+		})
 
 		By("Re-adding P1")
 		patchAlert(ctx, func(spec *coralogixv1beta1.AlertSpec) {
@@ -1155,23 +1170,21 @@ var _ = Describe("Alert access policy", Ordered, func() {
 		Eventually(func(g Gomega) {
 			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, ptr.To(alertAccessPolicyP2))
 		}, time.Minute, time.Second).Should(Succeed())
-		bumpAlertAnnotations(ctx)
-		Eventually(func(g Gomega) {
+		reconcileUntil(ctx, time.Minute, func(g Gomega) {
 			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, ptr.To(alertAccessPolicyP1))
-		}, time.Minute, time.Second).Should(Succeed())
+		})
 
 		By("Deleting the remote alert externally, then expecting it recreated with P1")
 		_, httpResp, err := openAPIAlerts.AlertDefsServiceDeleteAlertDef(ctx, alertID).Execute()
 		Expect(oapicxsdk.NewAPIError(httpResp, err)).ToNot(HaveOccurred())
 		deletedID := alertID
-		bumpAlertAnnotations(ctx)
-		Eventually(func(g Gomega) {
+		reconcileUntil(ctx, 2*time.Minute, func(g Gomega) {
 			current := &coralogixv1beta1.Alert{}
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, current)).To(Succeed())
 			g.Expect(current.Status.ID).ToNot(BeNil())
 			g.Expect(*current.Status.ID).ToNot(Equal(deletedID))
 			alertID = *current.Status.ID
-		}, 2*time.Minute, time.Second).Should(Succeed())
+		})
 		Eventually(func(g Gomega) {
 			expectAlertPolicy(ctx, g, openAPIAlerts, alertID, ptr.To(alertAccessPolicyP1))
 		}, time.Minute, time.Second).Should(Succeed())
