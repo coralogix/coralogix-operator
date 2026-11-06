@@ -23,12 +23,13 @@ const (
 	getQuota  = "        quota: {type: string, format: int64, description: \"The quota, a 64-bit number.\"}\n"
 )
 
-// requestShape edits the contract. createOnly and replaceOnly add properties to one body.
+// requestShape edits the contract of Thing.
 type requestShape struct {
-	note       bool // Get has note. Create and Replace have memo.
-	bundle     bool // Get has alpha and beta. Create and Replace have bundle {alpha, beta}.
-	bundleOnly string
-	teamID     string // "", "optional", or "required"
+	note         bool // Get has note. Create and Replace have memo.
+	bundle       bool // Get has alpha and beta. Create and Replace have bundle {alpha, beta}.
+	bundleOnly   string
+	teamID       string // "", "optional", or "required"
+	memoRequired bool   // Create and Replace require memo
 }
 
 func (c requestShape) contract(t *testing.T) func(string) string {
@@ -62,6 +63,10 @@ func (c requestShape) contract(t *testing.T) func(string) string {
 		i = strings.Index(s[i:], quotaLine) + i + len(quotaLine)
 		s = s[:i] + replace + s[i:]
 		s = replaceOnce(t, s, getQuota, getQuota+get)
+		if c.memoRequired {
+			s = replaceOnce(t, s, "required: [name, kind, config]", "required: [name, kind, config, memo]")
+			s = replaceOnce(t, s, "required: [name, config]", "required: [name, config, memo]")
+		}
 		if c.teamID == "required" {
 			s = replaceOnce(t, s, "required: [name, kind, config]", "required: [name, kind, config, teamId]")
 		}
@@ -226,7 +231,7 @@ func TestRequestAsIsRejectedOnAPatchResource(t *testing.T) {
 //	Update item:  the same, or without extra when updateHasExtra is false
 //
 // It returns the generated conversions, or the error of the run.
-func wrappedShape(t *testing.T, updateHasExtra bool, lines string) (string, error) {
+func wrappedShape(t *testing.T, updateHasExtra, requireNote bool, lines string) (string, error) {
 	t.Helper()
 	contract, err := os.ReadFile(filepath.Join("testdata", "wrapped.yaml"))
 	if err != nil {
@@ -237,13 +242,21 @@ func wrappedShape(t *testing.T, updateHasExtra bool, lines string) (string, erro
 		"                item: {$ref: '#/components/schemas/WrappedThingCreate'}\n                label: {type: string}\n                requestId: {type: string}\n      responses:\n        '200': {description: Created")
 	spec = replaceOnce(t, spec, "                item: {$ref: '#/components/schemas/WrappedThing'}\n                id: {type: string}",
 		"                item: {$ref: '#/components/schemas/WrappedThingUpdate'}\n                id: {type: string}")
+	extra := "    WrappedExtra:\n      type: object\n      properties:\n"
+	if requireNote {
+		extra = "    WrappedExtra:\n      type: object\n      required: [note]\n      properties:\n"
+	}
 	update := "        extra: {$ref: '#/components/schemas/WrappedExtra'}\n"
 	if !updateHasExtra {
 		update = ""
 	}
-	spec = replaceOnce(t, spec, "    WrappedThing:\n", "    WrappedExtra:\n      type: object\n      properties:\n        note: {type: string, x-coralogix-presence: true}\n        tag: {type: array, items: {type: string}}\n"+
-		"    WrappedThingCreate:\n      type: object\n      required: [name]\n      properties:\n        id: {type: string}\n        name: {type: string, minLength: 1, x-coralogix-presence: true}\n        heading: {type: string, x-coralogix-presence: true}\n        extra: {$ref: '#/components/schemas/WrappedExtra'}\n"+
-		"    WrappedThingUpdate:\n      type: object\n      required: [name]\n      properties:\n        id: {type: string}\n        name: {type: string, minLength: 1, x-coralogix-presence: true}\n        heading: {type: string, x-coralogix-presence: true}\n"+update+
+	required := "[name]"
+	if requireNote {
+		required = "[name, extra]"
+	}
+	spec = replaceOnce(t, spec, "    WrappedThing:\n", extra+"        note: {type: string, x-coralogix-presence: true}\n        tag: {type: array, items: {type: string}}\n"+
+		"    WrappedThingCreate:\n      type: object\n      required: "+required+"\n      properties:\n        id: {type: string}\n        name: {type: string, minLength: 1, x-coralogix-presence: true}\n        heading: {type: string, x-coralogix-presence: true}\n        extra: {$ref: '#/components/schemas/WrappedExtra'}\n"+
+		"    WrappedThingUpdate:\n      type: object\n      required: "+required+"\n      properties:\n        id: {type: string}\n        name: {type: string, minLength: 1, x-coralogix-presence: true}\n        heading: {type: string, x-coralogix-presence: true}\n"+update+
 		"    WrappedThing:\n")
 	spec = strings.TrimRight(spec, "\n") + "\n        title: {type: string, x-coralogix-presence: true}\n        note: {type: string, x-coralogix-presence: true}\n        tag: {type: array, items: {type: string}}\n"
 	file := "resource: WrappedThing\nmode: existing\nvalidators:\n  inferred: true\napi:\n  requestWrapper: item\n  serverSetID: true\n  idProperty: id\n  updateIDInBody: true\n" + wrappedRequestValues + "types:\n  WrappedThing:\n    fields:\n      id:\n        readOnly: true\n" + lines
@@ -271,7 +284,7 @@ const wrappedRenames = "      title: {requestAs: heading}\n      note: {requestA
 // The path is read inside the request wrapper, and the wrapper can hold a request component that
 // is not the resource. A path of one segment sets a field of that component.
 func TestRequestAsBehindARequestWrapper(t *testing.T) {
-	conversion, err := wrappedShape(t, true, wrappedRenames)
+	conversion, err := wrappedShape(t, true, false, wrappedRenames)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -286,7 +299,7 @@ func TestRequestAsBehindARequestWrapper(t *testing.T) {
 // A path with a dot builds the outer object. Two fields under the same object share it: the
 // second field must not replace the object of the first.
 func TestRequestAsWithDotsBuildsOneSharedObject(t *testing.T) {
-	conversion, err := wrappedShape(t, true, wrappedRenames)
+	conversion, err := wrappedShape(t, true, false, wrappedRenames)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -308,7 +321,7 @@ func TestRequestAsWithDotsBuildsOneSharedObject(t *testing.T) {
 
 // A path that only one request has sends the field only in that request.
 func TestRequestAsPathInOneRequestOnly(t *testing.T) {
-	conversion, err := wrappedShape(t, false, wrappedRenames)
+	conversion, err := wrappedShape(t, false, false, wrappedRenames)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -370,5 +383,36 @@ func TestRequestAsLineIsChecked(t *testing.T) {
 	}
 	if _, err := overrides.Parse([]byte(head + "types:\n  Thing:\n    fields:\n      note: {requestAs: bundle.alpha}\n")); err != nil {
 		t.Errorf("a path with dots must be accepted: %v", err)
+	}
+}
+
+// A released optional field can map to a required request property. The check "does a request
+// require this field" follows the request path, not the name in Get.
+func TestOptionalOverrideFollowsARequestAsRename(t *testing.T) {
+	c := requestShape{note: true, memoRequired: true}
+	root, err := c.generate(t, "      note: {requestAs: memo, optional: true}\n")
+	if err != nil {
+		t.Fatalf("a renamed field that a request requires can be optional in the CR: %v", err)
+	}
+	if !strings.Contains(readGenerated(t, root, apiDir+"/thing_types.go"), "Note *string") {
+		t.Error("the CR field must be optional")
+	}
+	// The line stays unused when the request does not require the renamed field.
+	c = requestShape{note: true}
+	_, err = c.generate(t, "      note: {requestAs: memo, optional: true}\n")
+	if err == nil || !strings.Contains(err.Error(), codeOverrideUnused) {
+		t.Fatalf("want %s when memo is optional, got %v", codeOverrideUnused, err)
+	}
+}
+
+// The same for a path with dots: the field is required when every segment of the path is required.
+func TestOptionalOverrideFollowsADottedRequestAs(t *testing.T) {
+	lines := "      title: {requestAs: heading}\n      note: {requestAs: extra.note, optional: true}\n      tag: {requestAs: extra.tag}\n"
+	if _, err := wrappedShape(t, true, true, lines); err != nil {
+		t.Fatalf("note is required in extra, and extra is required: %v", err)
+	}
+	_, err := wrappedShape(t, true, false, lines)
+	if err == nil || !strings.Contains(err.Error(), codeOverrideUnused) {
+		t.Fatalf("want %s when note is optional, got %v", codeOverrideUnused, err)
 	}
 }

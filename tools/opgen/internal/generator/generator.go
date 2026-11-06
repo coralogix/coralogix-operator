@@ -535,7 +535,7 @@ func overrideIssues(doc docType, entry kindEntry, file *overrides.File) error {
 					return &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String() + ".readOnly", msg: "the contract already marks this field read-only"}
 				}
 				if found && change.Optional &&
-					((line.Component == entry.Resource && !requestRequiresField(doc, entry.Resource, file, line.Field)) ||
+					((line.Component == entry.Resource && !requestRequiresField(doc, entry.Resource, file, line.Field, change.RequestAs)) ||
 						(line.Component != entry.Resource && !slices.Contains(proxy.Schema().Required, line.Field))) {
 					return &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String() + ".optional", msg: "the contract already makes this field optional"}
 				}
@@ -600,9 +600,35 @@ func requestOnlyField(doc docType, entry kindEntry, file *overrides.File, field 
 	return slices.Contains(fields, field), nil
 }
 
-// requestRequiresField reports whether Create or Update requires a top-level API property.
-func requestRequiresField(doc docType, resource string, file *overrides.File, field string) bool {
-	return requestField(doc, resource, file, field, schemaRequiresProperty)
+// requestRequiresField reports whether Create or Update requires a top-level API property. The
+// requests can hold the field at another path (requestAs): it is required when every segment of
+// the path is required in its parent.
+func requestRequiresField(doc docType, resource string, file *overrides.File, field, requestAs string) bool {
+	path := []string{field}
+	if requestAs != "" {
+		path = strings.Split(requestAs, ".")
+	}
+	for _, body := range requestBodies(doc, resource, file) {
+		if requiresPath(body, path) {
+			return true
+		}
+	}
+	return false
+}
+
+// requiresPath reports whether every segment of path is required in its parent object.
+func requiresPath(schema *base.Schema, path []string) bool {
+	for _, segment := range path {
+		if !schemaRequiresProperty(schema, segment) {
+			return false
+		}
+		proxy := requestProperties(schema)[segment]
+		if proxy == nil {
+			return true // a required property that the schema does not describe
+		}
+		schema = proxy.Schema()
+	}
+	return true
 }
 
 // requestHasField reports whether Create or Update can send a top-level API property.
