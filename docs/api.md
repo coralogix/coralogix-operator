@@ -13385,9 +13385,6 @@ with respect to the current state of the instance.<br/>
 
 
 
-See also https://coralogix.com/docs/user-guides/monitoring-and-insights/events2metrics/
-
-**Added in v0.5.0**
 Events2Metric is the Schema for the events2metrics API.
 
 <table>
@@ -13420,14 +13417,14 @@ Events2Metric is the Schema for the events2metrics API.
         <td><b><a href="#events2metricspec">spec</a></b></td>
         <td>object</td>
         <td>
-          Events2MetricSpec defines the desired state of Events2Metric.<br/>
+          Events2MetricSpec defines the desired state of a Events2Metric.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#events2metricstatus">status</a></b></td>
         <td>object</td>
         <td>
-          Events2MetricStatus defines the observed state of Events2Metric.<br/>
+          Events2MetricStatus defines the observed state of a Events2Metric.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -13439,7 +13436,7 @@ Events2Metric is the Schema for the events2metrics API.
 
 
 
-Events2MetricSpec defines the desired state of Events2Metric.
+Events2MetricSpec defines the desired state of a Events2Metric.
 
 <table>
     <thead>
@@ -13454,51 +13451,51 @@ Events2MetricSpec defines the desired state of Events2Metric.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          Name of the E2M<br/>
+          Human-readable name for this E2M.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#events2metricspecquery">query</a></b></td>
         <td>object</td>
         <td>
-          Spans or logs type query<br/>
+          Events2MetricSpecQuery holds the query fields of the released CR.<br/>
           <br/>
-            <i>Validations</i>:<li>has(self.spans) != has(self.logs): Exactly one of spans or logs must be set</li>
+            <i>Validations</i>:<li>(has(self.spans) ? 1 : 0) + (has(self.logs) ? 1 : 0) == 1: Exactly one of spans, logs must be set</li>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>dataSource</b></td>
         <td>string</td>
         <td>
-          Data source in <namespace>/<dataset_name> format. If not set, defaults to the standard logs/spans stream.<br/>
+          Optional data source in namespace/dataset_name format. If not set, defaults to the standard logs/spans stream.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          Description of the E2M<br/>
+          Human-readable description of this E2M.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#events2metricspecmetricfieldsindex">metricFields</a></b></td>
         <td>[]object</td>
         <td>
-          E2M metric fields<br/>
+          Metric fields to extract and aggregate from the events.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#events2metricspecmetriclabelsindex">metricLabels</a></b></td>
         <td>[]object</td>
         <td>
-          E2M metric labels<br/>
+          Metric labels to attach to the generated metrics.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>permutationsLimit</b></td>
         <td>integer</td>
         <td>
-          Represents the limit of the permutations<br/>
+          This data structure represents the limit of events2metrics permutations and if the limit was exceeded<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -13512,7 +13509,7 @@ Events2MetricSpec defines the desired state of Events2Metric.
 
 
 
-Spans or logs type query
+Events2MetricSpecQuery holds the query fields of the released CR.
 
 <table>
     <thead>
@@ -13527,14 +13524,14 @@ Spans or logs type query
         <td><b><a href="#events2metricspecquerylogs">logs</a></b></td>
         <td>object</td>
         <td>
-          Logs query for logs2metrics E2M<br/>
+          This data structure represents a query for logs.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#events2metricspecqueryspans">spans</a></b></td>
         <td>object</td>
         <td>
-          Spans query for spans2metrics E2M<br/>
+          This data structure represents a query for spans.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -13546,7 +13543,7 @@ Spans or logs type query
 
 
 
-Logs query for logs2metrics E2M
+This data structure represents a query for logs.
 
 <table>
     <thead>
@@ -13561,28 +13558,28 @@ Logs query for logs2metrics E2M
         <td><b>alias</b></td>
         <td>string</td>
         <td>
-          alias<br/>
+          The alias.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>applicationNameFilters</b></td>
         <td>[]string</td>
         <td>
-          application name filters<br/>
+          The applicationname filters.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>lucene</b></td>
         <td>string</td>
         <td>
-          lucene query<br/>
+          The lucene.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>severityFilters</b></td>
         <td>[]enum</td>
         <td>
-          severity type filters<br/>
+          The severity filters.<br/>
           <br/>
             <i>Enum</i>: debug, verbose, info, warn, error, critical<br/>
         </td>
@@ -13591,7 +13588,7 @@ Logs query for logs2metrics E2M
         <td><b>subsystemNameFilters</b></td>
         <td>[]string</td>
         <td>
-          subsystem names filters<br/>
+          The subsystemname filters.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -13603,7 +13600,7 @@ Logs query for logs2metrics E2M
 
 
 
-Spans query for spans2metrics E2M
+This data structure represents a query for spans.
 
 <table>
     <thead>
@@ -13618,35 +13615,35 @@ Spans query for spans2metrics E2M
         <td><b>actionFilters</b></td>
         <td>[]string</td>
         <td>
-          action filters<br/>
+          The action filters.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>applicationNameFilters</b></td>
         <td>[]string</td>
         <td>
-          application name filters<br/>
+          The applicationname filters.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>lucene</b></td>
         <td>string</td>
         <td>
-          lucene query<br/>
+          The lucene.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>serviceFilters</b></td>
         <td>[]string</td>
         <td>
-          service filters<br/>
+          The service filters.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>subsystemNameFilters</b></td>
         <td>[]string</td>
         <td>
-          subsystem name filters<br/>
+          The subsystemname filters.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -13658,7 +13655,7 @@ Spans query for spans2metrics E2M
 
 
 
-
+Events2MetricV2MetricField is the v2.MetricField object of the API.
 
 <table>
     <thead>
@@ -13673,21 +13670,21 @@ Spans query for spans2metrics E2M
         <td><b>sourceField</b></td>
         <td>string</td>
         <td>
-          Source field<br/>
+          The source field.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>targetBaseMetricName</b></td>
         <td>string</td>
         <td>
-          Target metric field alias name<br/>
+          The target base metric name.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#events2metricspecmetricfieldsindexaggregationsindex">aggregations</a></b></td>
         <td>[]object</td>
         <td>
-          Represents Aggregation type list<br/>
+          The aggregations.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -13699,7 +13696,7 @@ Spans query for spans2metrics E2M
 
 
 
-
+Events2MetricV2Aggregation is the v2.Aggregation object of the API.
 
 <table>
     <thead>
@@ -13714,17 +13711,16 @@ Spans query for spans2metrics E2M
         <td><b><a href="#events2metricspecmetricfieldsindexaggregationsindexaggmetadata">aggMetadata</a></b></td>
         <td>object</td>
         <td>
-          Aggregate metadata, samples or histogram type. Only relevant for the samples and histogram
-aggregation types; leave both samples and histogram unset for min/max/count/avg/sum.<br/>
+          Events2MetricV2AggregationAggMetadata holds the aggMetadata fields of the released CR.<br/>
           <br/>
-            <i>Validations</i>:<li>!(has(self.samples) && has(self.histogram)): At most one of samples or histogram may be set</li>
+            <i>Validations</i>:<li>(has(self.samples) ? 1 : 0) + (has(self.histogram) ? 1 : 0) <= 1: At most one of samples, histogram can be set</li>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>aggType</b></td>
         <td>enum</td>
         <td>
-          Aggregation type<br/>
+          Agg type.<br/>
           <br/>
             <i>Enum</i>: min, max, count, avg, sum, histogram, samples<br/>
         </td>
@@ -13733,7 +13729,7 @@ aggregation types; leave both samples and histogram unset for min/max/count/avg/
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          Is enabled. True by default<br/>
+          Whether this resource is enabled.<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -13742,7 +13738,7 @@ aggregation types; leave both samples and histogram unset for min/max/count/avg/
         <td><b>targetMetricName</b></td>
         <td>string</td>
         <td>
-          Target metric field alias name<br/>
+          Name of the target metric produced by this aggregation.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -13754,8 +13750,7 @@ aggregation types; leave both samples and histogram unset for min/max/count/avg/
 
 
 
-Aggregate metadata, samples or histogram type. Only relevant for the samples and histogram
-aggregation types; leave both samples and histogram unset for min/max/count/avg/sum.
+Events2MetricV2AggregationAggMetadata holds the aggMetadata fields of the released CR.
 
 <table>
     <thead>
@@ -13770,14 +13765,14 @@ aggregation types; leave both samples and histogram unset for min/max/count/avg/
         <td><b><a href="#events2metricspecmetricfieldsindexaggregationsindexaggmetadatahistogram">histogram</a></b></td>
         <td>object</td>
         <td>
-          E2M aggregate histogram type metadata<br/>
+          e2m aggregate histogram type metadata<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#events2metricspecmetricfieldsindexaggregationsindexaggmetadatasamples">samples</a></b></td>
         <td>object</td>
         <td>
-          E2M sample type metadata<br/>
+          This data structure represents the e2m aggregate samples<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -13789,7 +13784,7 @@ aggregation types; leave both samples and histogram unset for min/max/count/avg/
 
 
 
-E2M aggregate histogram type metadata
+e2m aggregate histogram type metadata
 
 <table>
     <thead>
@@ -13804,7 +13799,7 @@ E2M aggregate histogram type metadata
         <td><b>buckets</b></td>
         <td>[]int or string</td>
         <td>
-          Buckets of the E2M<br/>
+          The buckets.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -13816,7 +13811,7 @@ E2M aggregate histogram type metadata
 
 
 
-E2M sample type metadata
+This data structure represents the e2m aggregate samples
 
 <table>
     <thead>
@@ -13831,7 +13826,7 @@ E2M sample type metadata
         <td><b>sampleType</b></td>
         <td>enum</td>
         <td>
-          E2MAggSamplesSampleType defines the type of sample aggregation to be performed.<br/>
+          Sample type.<br/>
           <br/>
             <i>Enum</i>: min, max<br/>
         </td>
@@ -13845,7 +13840,7 @@ E2M sample type metadata
 
 
 
-
+Events2MetricMetricLabel is the MetricLabel object of the API.
 
 <table>
     <thead>
@@ -13860,14 +13855,14 @@ E2M sample type metadata
         <td><b>sourceField</b></td>
         <td>string</td>
         <td>
-          Metric label source field<br/>
+          The source field.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>targetLabel</b></td>
         <td>string</td>
         <td>
-          Metric label target alias name<br/>
+          The target label.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -13879,7 +13874,7 @@ E2M sample type metadata
 
 
 
-Events2MetricStatus defines the observed state of Events2Metric.
+Events2MetricStatus defines the observed state of a Events2Metric.
 
 <table>
     <thead>

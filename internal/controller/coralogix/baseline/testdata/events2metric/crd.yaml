@@ -67,9 +67,9 @@ spec:
                                 type: object
                             type: object
                             x-kubernetes-validations:
-                            - message: At most one of samples or histogram may be
-                                set
-                              rule: '!(has(self.samples) && has(self.histogram))'
+                            - message: At most one of samples, histogram can be set
+                              rule: '(has(self.samples) ? 1 : 0) + (has(self.histogram)
+                                ? 1 : 0) <= 1'
                           aggType:
                             enum:
                             - min
@@ -169,8 +169,8 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-validations:
-                - message: Exactly one of spans or logs must be set
-                  rule: has(self.spans) != has(self.logs)
+                - message: Exactly one of spans, logs must be set
+                  rule: '(has(self.spans) ? 1 : 0) + (has(self.logs) ? 1 : 0) == 1'
             required:
             - name
             - query

@@ -23,7 +23,6 @@ resources:
   - bases/coralogix.com_archivelogstargets.yaml
   - bases/coralogix.com_archivemetricstargets.yaml
   - bases/coralogix.com_slos.yaml
-  - bases/coralogix.com_events2metrics.yaml
   - bases/coralogix.com_ipaccesses.yaml
   - bases/coralogix.com_customenrichments.yaml
   - bases/coralogix.com_enrichments.yaml
@@ -31,6 +30,7 @@ resources:
   - bases/coralogix.com_aicustomevaluations.yaml
   - bases/coralogix.com_configurationgroups.yaml
   # BEGIN generated kinds
+  - bases/coralogix.com_events2metrics.yaml
   - bases/coralogix.com_globalrouters.yaml
   - bases/coralogix.com_presets.yaml
   - bases/coralogix.com_views.yaml
