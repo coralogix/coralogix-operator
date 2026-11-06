@@ -535,11 +535,19 @@ func overrideIssues(doc docType, entry kindEntry, file *overrides.File) error {
 					return &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String() + ".readOnly", msg: "the contract already marks this field read-only"}
 				}
 				if found && change.Optional &&
-					((line.Component == entry.Resource && !requestRequiresField(doc, entry.Resource, file, line.Field)) ||
+					((line.Component == entry.Resource && !requestRequiresField(doc, entry.Resource, file, line.Field, change.RequestAs)) ||
 						(line.Component != entry.Resource && !slices.Contains(proxy.Schema().Required, line.Field))) {
 					return &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String() + ".optional", msg: "the contract already makes this field optional"}
 				}
 			}
+		}
+		if !ok && line.Component == entry.Resource && file.Field(line.Component, line.Field).Skip {
+			// A field that only the requests have has no property in the resource component.
+			requestOnly, err := requestOnlyField(doc, entry, file, line.Field)
+			if err != nil {
+				return err
+			}
+			ok = requestOnly
 		}
 		if !ok {
 			return &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String(), msg: "the contract has no such property"}
@@ -582,9 +590,45 @@ func overrideIssues(doc docType, entry kindEntry, file *overrides.File) error {
 	return nil
 }
 
-// requestRequiresField reports whether Create or Update requires a top-level API property.
-func requestRequiresField(doc docType, resource string, file *overrides.File, field string) bool {
-	return requestField(doc, resource, file, field, schemaRequiresProperty)
+// requestOnlyField reports whether Create or Update has a top-level field that the resource
+// component does not have, such as a teamId that the API reads only on write. A skip line can name it.
+func requestOnlyField(doc docType, entry kindEntry, file *overrides.File, field string) (bool, error) {
+	fields, err := model.RequestOnlyFields(doc, entry.Resource, model.OperationIDs{}, file.Policy())
+	if err != nil {
+		return false, &shapeError{code: codeOverrideInvalid, path: overrides.FileName, msg: err.Error()}
+	}
+	return slices.Contains(fields, field), nil
+}
+
+// requestRequiresField reports whether Create or Update requires a top-level API property. The
+// requests can hold the field at another path (requestAs): it is required when every segment of
+// the path is required in its parent.
+func requestRequiresField(doc docType, resource string, file *overrides.File, field, requestAs string) bool {
+	path := []string{field}
+	if requestAs != "" {
+		path = strings.Split(requestAs, ".")
+	}
+	for _, body := range requestBodies(doc, resource, file) {
+		if requiresPath(body, path) {
+			return true
+		}
+	}
+	return false
+}
+
+// requiresPath reports whether every segment of path is required in its parent object.
+func requiresPath(schema *base.Schema, path []string) bool {
+	for _, segment := range path {
+		if !schemaRequiresProperty(schema, segment) {
+			return false
+		}
+		proxy := requestProperties(schema)[segment]
+		if proxy == nil {
+			return true // a required property that the schema does not describe
+		}
+		schema = proxy.Schema()
+	}
+	return true
 }
 
 // requestHasField reports whether Create or Update can send a top-level API property.

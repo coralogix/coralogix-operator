@@ -8,8 +8,21 @@ import (
 )
 
 type WrappedThing struct {
-	Id   *string `json:"id,omitempty"`
-	Name string  `json:"name"`
+	Id    *string `json:"id,omitempty"`
+	Name  string  `json:"name"`
+	Title *string `json:"title,omitempty"`
+	Note  *string `json:"note,omitempty"`
+}
+
+type WrappedThingBody struct {
+	Id      *string            `json:"id,omitempty"`
+	Name    string             `json:"name"`
+	Heading *string            `json:"heading,omitempty"`
+	Extra   *WrappedThingExtra `json:"extra,omitempty"`
+}
+
+type WrappedThingExtra struct {
+	Note *string `json:"note,omitempty"`
 }
 
 type WrappedThingResponse struct {
@@ -17,16 +30,16 @@ type WrappedThingResponse struct {
 }
 
 type CreateWrappedThingRequest struct {
-	Item      *WrappedThing `json:"item,omitempty"`
-	Label     *string       `json:"label,omitempty"`
-	RequestId string        `json:"requestId,omitempty"`
+	Item      *WrappedThingBody `json:"item,omitempty"`
+	Label     *string           `json:"label,omitempty"`
+	RequestId string            `json:"requestId,omitempty"`
 }
 
 type ReplaceWrappedThingRequest struct {
-	Item      *WrappedThing `json:"item,omitempty"`
-	Id        *string       `json:"id,omitempty"`
-	Label     *string       `json:"label,omitempty"`
-	RequestId string        `json:"requestId,omitempty"`
+	Item      *WrappedThingBody `json:"item,omitempty"`
+	Id        *string           `json:"id,omitempty"`
+	Label     *string           `json:"label,omitempty"`
+	RequestId string            `json:"requestId,omitempty"`
 }
 
 var errFake = errors.New("the stand-in SDK sends no request")

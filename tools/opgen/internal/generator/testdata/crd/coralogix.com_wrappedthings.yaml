@@ -49,6 +49,10 @@ spec:
               name:
                 minLength: 1
                 type: string
+              note:
+                type: string
+              title:
+                type: string
             required:
             - name
             type: object

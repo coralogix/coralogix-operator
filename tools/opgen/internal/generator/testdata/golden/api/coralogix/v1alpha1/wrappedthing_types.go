@@ -25,6 +25,12 @@ import (
 type WrappedThingSpec struct {
 	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name"`
+
+	// +optional
+	Title *string `json:"title,omitempty"`
+
+	// +optional
+	Note *string `json:"note,omitempty"`
 }
 
 // WrappedThingStatus defines the observed state of a WrappedThing.

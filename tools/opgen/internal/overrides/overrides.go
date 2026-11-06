@@ -242,6 +242,10 @@ type Field struct {
 	Unwrap *bool `yaml:"unwrap"`
 	// RequestValueBy sends a hidden API value chosen by the populated object arm.
 	RequestValueBy map[string]string `yaml:"requestValueBy"`
+	// RequestAs is the path of the property that holds the field in the Create and Update bodies,
+	// when it is not the name of the field. A dot goes into an object: "integrationParameters.parameters".
+	// The CR keeps the name of the field. It applies to a field of the resource in an existing kind.
+	RequestAs string `yaml:"requestAs"`
 }
 
 // Enum records the accepted API values and their custom resource spellings.
@@ -332,10 +336,10 @@ func (f *File) check() error {
 	}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
-		if !field.Skip && !field.SendNullAsEmpty && len(field.CreateAs) == 0 && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" {
+		if !field.Skip && !field.SendNullAsEmpty && len(field.CreateAs) == 0 && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" && field.RequestAs == "" {
 			return fmt.Errorf("%s: the line sets no key", line)
 		}
-		if field.Skip && (field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "") {
+		if field.Skip && (field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "") {
 			return fmt.Errorf("%s.skip: skip cannot change another property of the CR field", line)
 		}
 		if field.Skip && f.Mode != ModeExisting {
@@ -351,8 +355,22 @@ func (f *File) check() error {
 			if err := (iacoverrides.Field{CreateAs: field.CreateAs}).Check(); err != nil {
 				return fmt.Errorf("%s.%w", line, err)
 			}
-			if field.SendNullAsEmpty || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" {
+			if field.SendNullAsEmpty || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" {
 				return fmt.Errorf("%s.createAs: the line cannot set another key", line)
+			}
+		}
+		if field.RequestAs != "" {
+			if f.Mode != ModeExisting {
+				return fmt.Errorf("%s.requestAs: a new kind follows the contract", line)
+			}
+			if line.Component != f.Resource {
+				return fmt.Errorf("%s.requestAs: it applies only to a field of the resource", line)
+			}
+			if err := (iacoverrides.Field{RequestAs: field.RequestAs}).Check(); err != nil {
+				return fmt.Errorf("%s.%w", line, err)
+			}
+			if field.Ref != nil || field.ReadOnly || len(field.RequestValueBy) != 0 || field.Unwrap != nil {
+				return fmt.Errorf("%s.requestAs: the line cannot set ref, readOnly, requestValueBy, or unwrap", line)
 			}
 		}
 		if field.SendNullAsEmpty && f.Mode != ModeExisting {
@@ -727,13 +745,13 @@ func (f *File) Policy() model.Policy {
 	exceptions := iacoverrides.Exceptions{API: f.API.API, Unwrap: f.Unwrap, Fields: map[string]map[string]iacoverrides.Field{}}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
-		if !field.Skip && !field.ReadOnly && !field.Optional && field.Unwrap == nil && len(field.CreateAs) == 0 {
+		if !field.Skip && !field.ReadOnly && !field.Optional && field.Unwrap == nil && len(field.CreateAs) == 0 && field.RequestAs == "" {
 			continue
 		}
 		if exceptions.Fields[line.Component] == nil {
 			exceptions.Fields[line.Component] = map[string]iacoverrides.Field{}
 		}
-		exceptions.Fields[line.Component][line.Field] = iacoverrides.Field{Skip: field.Skip, ReadOnly: field.ReadOnly, Optional: field.Optional, Unwrap: field.Unwrap, CreateAs: field.CreateAs}
+		exceptions.Fields[line.Component][line.Field] = iacoverrides.Field{Skip: field.Skip, ReadOnly: field.ReadOnly, Optional: field.Optional, Unwrap: field.Unwrap, CreateAs: field.CreateAs, RequestAs: field.RequestAs}
 	}
 	p := exceptions.Policy()
 	for _, line := range f.Lines() {
