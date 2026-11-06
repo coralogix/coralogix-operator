@@ -40,7 +40,9 @@ import (
 // The full spec sets every field. The minimal spec sets only the required fields.
 const (
 	wrappedThingFullSpec = `{
-  "name": "sample-name"
+  "name": "sample-name",
+  "title": "sample-title",
+  "note": "sample-note"
 }`
 	wrappedThingMinimalSpec = `{
   "name": "sample-name"

@@ -19,3 +19,5 @@ types:
     fields:
       id:
         readOnly: true
+      title: {requestAs: heading}
+      note: {requestAs: extra.note}

@@ -28,7 +28,7 @@ import (
 
 // CreateRequest returns the body of the Create request of the WrappedThing.
 func (in *WrappedThing) CreateRequest(ctx context.Context) (*wrappedthingsservice.CreateWrappedThingRequest, error) {
-	resource, err := in.Spec.toWrappedThingCreate(ctx, in.Namespace)
+	resource, err := in.Spec.toWrappedThingBodyCreate(ctx, in.Namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (in *WrappedThing) CreateRequest(ctx context.Context) (*wrappedthingsservic
 // UpdateRequest returns the body of the Update request of the WrappedThing. The body
 // has the whole spec: the API replaces the resource.
 func (in *WrappedThing) UpdateRequest(ctx context.Context) (*wrappedthingsservice.ReplaceWrappedThingRequest, error) {
-	resource, err := in.Spec.toWrappedThingUpdate(ctx, in.Namespace)
+	resource, err := in.Spec.toWrappedThingBodyUpdate(ctx, in.Namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -55,16 +55,28 @@ func (in *WrappedThing) UpdateRequest(ctx context.Context) (*wrappedthingsservic
 	return out, nil
 }
 
-// toWrappedThingCreate converts the WrappedThingSpec to the API type WrappedThing.
-func (in *WrappedThingSpec) toWrappedThingCreate(ctx context.Context, namespace string) (*wrappedthingsservice.WrappedThing, error) {
-	out := &wrappedthingsservice.WrappedThing{}
+// toWrappedThingBodyCreate converts the WrappedThingSpec to the API type WrappedThingBody.
+func (in *WrappedThingSpec) toWrappedThingBodyCreate(ctx context.Context, namespace string) (*wrappedthingsservice.WrappedThingBody, error) {
+	out := &wrappedthingsservice.WrappedThingBody{}
 	out.Name = in.Name
+	out.Heading = in.Title
+	if in.Note != nil {
+		obj1 := &wrappedthingsservice.WrappedThingExtra{}
+		obj1.Note = in.Note
+		out.Extra = obj1
+	}
 	return out, nil
 }
 
-// toWrappedThingUpdate converts the WrappedThingSpec to the API type WrappedThing.
-func (in *WrappedThingSpec) toWrappedThingUpdate(ctx context.Context, namespace string) (*wrappedthingsservice.WrappedThing, error) {
-	out := &wrappedthingsservice.WrappedThing{}
+// toWrappedThingBodyUpdate converts the WrappedThingSpec to the API type WrappedThingBody.
+func (in *WrappedThingSpec) toWrappedThingBodyUpdate(ctx context.Context, namespace string) (*wrappedthingsservice.WrappedThingBody, error) {
+	out := &wrappedthingsservice.WrappedThingBody{}
 	out.Name = in.Name
+	out.Heading = in.Title
+	if in.Note != nil {
+		obj2 := &wrappedthingsservice.WrappedThingExtra{}
+		obj2.Note = in.Note
+		out.Extra = obj2
+	}
 	return out, nil
 }

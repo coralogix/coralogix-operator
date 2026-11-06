@@ -76,7 +76,8 @@ type kindData struct {
 	CreateWrapperValue         bool
 	UpdateWrapperField         string
 	UpdateWrapperValue         bool
-	ResourceBody               string // the SDK resource type inside a request wrapper
+	CreateResourceBody         string // the SDK type inside the Create wrapper: the resource, or a request component
+	UpdateResourceBody         string // the SDK type inside the Update wrapper
 	MaskInBody                 bool
 	MaskBodyField              string
 	MaskBodyValue              bool

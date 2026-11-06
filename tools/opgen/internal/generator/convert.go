@@ -103,17 +103,18 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 		d.GetResponseField, d.GetResponseValue = field.Name, field.Want == resource.Name
 	}
 	if r.Policy.RequestWrapper != "" {
-		d.ResourceBody = resource.Name
 		for _, request := range []struct {
 			body  string
 			field *string
 			value *bool
-		}{{d.CreateBody, &d.CreateWrapperField, &d.CreateWrapperValue}, {d.UpdateBody, &d.UpdateWrapperField, &d.UpdateWrapperValue}} {
+			inner *string
+		}{{d.CreateBody, &d.CreateWrapperField, &d.CreateWrapperValue, &d.CreateResourceBody}, {d.UpdateBody, &d.UpdateWrapperField, &d.UpdateWrapperValue, &d.UpdateResourceBody}} {
 			ref, err := b.ix.field(request.body, r.Policy.RequestWrapper)
 			if err != nil {
 				return err
 			}
-			*request.field, *request.value = ref.Name, ref.Want == resource.Name
+			// The wrapper holds the resource, or a request component of its own.
+			*request.field, *request.value, *request.inner = ref.Name, !strings.HasPrefix(ref.Want, "*"), strings.TrimPrefix(ref.Want, "*")
 		}
 	}
 	if !r.Replace && !r.MaskInBody {
@@ -144,26 +145,33 @@ func (b *builder) requests(r *model.Resource, d *kindData) error {
 	var err error
 	bodyID := r.Policy.UpdateIDInBody
 	for _, f := range r.Fields {
+		var requestPath []string
+		if f.RequestPath != "" {
+			if !r.Replace {
+				return unsupported("types."+r.Name+".fields."+f.Name+".requestAs", "requestAs needs a full-replace Update: the update mask path of a renamed field is not defined")
+			}
+			requestPath = strings.Split(f.RequestPath, ".")
+		}
 		if folded := b.folds[f.Name]; folded != nil {
 			for _, fold := range folded.folds {
 				attrs := model.Attrs{Required: fold.Required}
 				create = append(create, &model.Field{Name: fold.Field, Type: fold.Type, Create: &attrs, Attrs: attrs})
 			}
 		} else if f.Create != nil {
-			create = append(create, &model.Field{Name: f.Name, Type: f.Type.CreateType(), Create: f.Create, Attrs: *f.Create})
+			create = append(create, &model.Field{Name: f.Name, Type: f.Type.CreateType(), Create: f.Create, Attrs: *f.Create, RequestPath: requestPath})
 		}
 		if bodyID && f.Name == r.ID() {
 			continue // UpdateRequest copies the status id
 		}
 		if f.Update != nil {
-			update = append(update, &model.Field{Name: f.Name, Type: f.Type.UpdateType(), Update: f.Update, Attrs: *f.Update})
+			update = append(update, &model.Field{Name: f.Name, Type: f.Type.UpdateType(), Update: f.Update, Attrs: *f.Update, RequestPath: requestPath})
 			mask = append(mask, f.Name)
 		}
 	}
 	createType, updateType := d.CreateBody, d.UpdateBody
 	createSuffix, updateSuffix := "", ""
-	if d.ResourceBody != "" {
-		createType, updateType = d.ResourceBody, d.ResourceBody
+	if d.CreateResourceBody != "" {
+		createType, updateType = d.CreateResourceBody, d.UpdateResourceBody
 		createSuffix, updateSuffix = "Create", "Update"
 	}
 	if d.CreateConv, err = b.conversionAs(d.Spec, createType, create, "spec", createSuffix); err != nil {
@@ -175,7 +183,7 @@ func (b *builder) requests(r *model.Resource, d *kindData) error {
 	if bodyID {
 		owner := d.UpdateBody
 		if d.BodyIDInWrapper {
-			owner = d.ResourceBody
+			owner = d.UpdateResourceBody
 		}
 		ref, err := b.ix.field(owner, r.ID())
 		if err != nil {
@@ -281,7 +289,14 @@ func (b *builder) conversionAs(cr *crType, sdkType string, fields []*model.Field
 	b.conversionSuffix = suffix
 	defer func() { b.conversionSuffix = previous }()
 	var body strings.Builder
+	moved := &requestObject{}
 	for _, rf := range fields {
+		if len(rf.RequestPath) != 0 && cr == b.specType {
+			if err := b.movedField(cr, sdkType, rf, path, moved, &body); err != nil {
+				return "", err
+			}
+			continue
+		}
 		if folded := b.folds[rf.Name]; folded != nil && cr == b.specType && rf.Update != nil {
 			code, err := b.foldedObject(cr, sdkType, rf, folded, path)
 			if err != nil {
@@ -316,6 +331,7 @@ func (b *builder) conversionAs(cr *crType, sdkType string, fields []*model.Field
 		}
 		body.WriteString(code)
 	}
+	body.WriteString(b.requestObjects(moved))
 	lookupParam := ""
 	if b.hasNameLookup {
 		lookupParam = ", lookup *NameLookupContext"
@@ -328,6 +344,137 @@ func (in *%s) %s(ctx context.Context, namespace string%s) (*%s.%s, error) {
 }
 `, name, cr.Name, sdkType, cr.Name, name, lookupParam, b.alias, sdkType, b.alias, sdkType, body.String()))
 	return name, nil
+}
+
+// requestObject is an object of a request body that holds fields of the CR at a request path with
+// dots (requestAs). The fields that share an object share one value, so the second field cannot
+// replace the object of the first.
+type requestObject struct {
+	ref      sdkcheck.Ref     // the field of the parent that holds the object
+	typeName string           // the SDK type of the object
+	varName  string           // the variable of the generated code
+	leaves   []requestLeaf    // fields that the object holds directly
+	children []*requestObject // objects inside the object, in order of first use
+}
+
+// requestLeaf is the code that sets one field of an object. condition is the test that the CR
+// sets the field, or "" when the request always sends it.
+type requestLeaf struct {
+	code, condition string
+}
+
+// conditions returns the tests of every field below the object. ok is false when one of the fields is
+// always sent.
+func (o *requestObject) conditions() (tests []string, ok bool) {
+	var out []string
+	for _, leaf := range o.leaves {
+		if leaf.condition == "" {
+			return nil, false
+		}
+		out = append(out, leaf.condition)
+	}
+	for _, c := range o.children {
+		inner, ok := c.conditions()
+		if !ok {
+			return nil, false
+		}
+		out = append(out, inner...)
+	}
+	return out, true
+}
+
+// movedField writes the code of a field that the request holds at another path than the field has
+// in Get (requestAs). A path of one segment sets a field of the body. A longer path adds the field
+// to the object tree, which requestObjects writes after the last field.
+func (b *builder) movedField(cr *crType, sdkType string, rf *model.Field, path string, root *requestObject, body *strings.Builder) error {
+	field, src := sourceField(cr, rf.Name)
+	if field == nil {
+		return unsupported(path+"."+rf.Name, "requestAs moves a field that the custom resource does not have")
+	}
+	b.used[overrides.Line{Component: b.file.Resource, Field: rf.Name}] = true
+	segments := rf.RequestPath
+	node, owner := root, sdkType
+	for _, segment := range segments[:len(segments)-1] {
+		ref, err := b.ix.field(owner, segment)
+		if err != nil {
+			return err
+		}
+		var next *requestObject
+		for _, c := range node.children {
+			if c.ref.Name == ref.Name {
+				next = c
+			}
+		}
+		if next == nil {
+			next = &requestObject{ref: ref, typeName: strings.TrimPrefix(ref.Want, "*"), varName: b.temp("obj")}
+			node.children = append(node.children, next)
+		}
+		node, owner = next, next.typeName
+	}
+	leaf := *field
+	leaf.API = segments[len(segments)-1]
+	previous := b.outVar
+	defer func() { b.outVar = previous }()
+	if node != root {
+		b.outVar = node.varName
+	}
+	code, err := b.assignFrom(&leaf, rf.Type, owner, path+"."+field.JSON, src)
+	if err != nil {
+		return err
+	}
+	if node == root {
+		body.WriteString(code)
+		return nil
+	}
+	node.leaves = append(node.leaves, requestLeaf{code: code, condition: sentCondition(field, src)})
+	return nil
+}
+
+// requestObjects writes the code that builds the objects of the tree and sets them in the body.
+func (b *builder) requestObjects(root *requestObject) string {
+	var out strings.Builder
+	for _, c := range root.children {
+		out.WriteString(b.requestObject(c, "out"))
+	}
+	return out.String()
+}
+
+// requestObject builds one object, sets it in its parent, and leaves it out when the CR sets none
+// of its fields and the SDK type allows it.
+func (b *builder) requestObject(o *requestObject, parent string) string {
+	var inner strings.Builder
+	inner.WriteString(o.varName + " := &" + b.alias + "." + o.typeName + "{}\n")
+	for _, leaf := range o.leaves {
+		inner.WriteString(leaf.code)
+	}
+	for _, c := range o.children {
+		inner.WriteString(b.requestObject(c, o.varName))
+	}
+	pointer := strings.HasPrefix(o.ref.Want, "*")
+	if pointer {
+		inner.WriteString(parent + "." + o.ref.Name + " = " + o.varName + "\n")
+	} else {
+		inner.WriteString(parent + "." + o.ref.Name + " = *" + o.varName + "\n")
+	}
+	if conditions, onlyIfSet := o.conditions(); pointer && onlyIfSet && len(conditions) != 0 {
+		return "if " + strings.Join(conditions, " || ") + " {\n" + inner.String() + "}\n"
+	}
+	return inner.String()
+}
+
+// sentCondition is the test that the generated code uses to send a field: "" when it is always sent.
+func sentCondition(f *crField, src string) string {
+	switch {
+	case f.sendNullAsEmpty:
+		return ""
+	case f.typ.Kind == model.List || f.typ.Kind == model.Set || f.typ.Kind == model.Map:
+		if f.Optional || f.omitEmptyInRequest {
+			return "len(" + src + ") != 0"
+		}
+	case f.Optional:
+		return src + " != nil"
+	}
+	return ""
 }
 
 // foldedObject writes the Update code of a createAs line: it builds the object that Update nests

@@ -6,3 +6,5 @@ metadata:
   name: wrapped-thing-sample
 spec:
   name: sample-name
+  title: sample-title
+  note: sample-note

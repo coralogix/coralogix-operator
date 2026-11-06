@@ -541,6 +541,14 @@ func overrideIssues(doc docType, entry kindEntry, file *overrides.File) error {
 				}
 			}
 		}
+		if !ok && line.Component == entry.Resource && file.Field(line.Component, line.Field).Skip {
+			// A field that only the requests have has no property in the resource component.
+			requestOnly, err := requestOnlyField(doc, entry, file, line.Field)
+			if err != nil {
+				return err
+			}
+			ok = requestOnly
+		}
 		if !ok {
 			return &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String(), msg: "the contract has no such property"}
 		}
@@ -580,6 +588,16 @@ func overrideIssues(doc docType, entry kindEntry, file *overrides.File) error {
 		}
 	}
 	return nil
+}
+
+// requestOnlyField reports whether Create or Update has a top-level field that the resource
+// component does not have, such as a teamId that the API reads only on write. A skip line can name it.
+func requestOnlyField(doc docType, entry kindEntry, file *overrides.File, field string) (bool, error) {
+	fields, err := model.RequestOnlyFields(doc, entry.Resource, model.OperationIDs{}, file.Policy())
+	if err != nil {
+		return false, &shapeError{code: codeOverrideInvalid, path: overrides.FileName, msg: err.Error()}
+	}
+	return slices.Contains(fields, field), nil
 }
 
 // requestRequiresField reports whether Create or Update requires a top-level API property.
