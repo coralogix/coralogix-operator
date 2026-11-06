@@ -56,6 +56,12 @@ func TestGeneratedKindsBuildInTheOperator(t *testing.T) {
 	}
 	writeKinds(t, filepath.Join(sandbox, kindsFile), filepath.Join(root, kindsFile), filepath.Join("testdata", "root", kindsFile))
 	overlaySDK(t, pinned.SDKDir, sdk)
+	// The handwritten hooks of the synthetic kinds with hooks. The generator never writes them.
+	for _, name := range []string{"hookthing_hooks.go", "hookdeletething_hooks.go"} {
+		if err := copyPath(filepath.Join("testdata", "hooks", name), filepath.Join(sandbox, controllerDir, name)); err != nil {
+			t.Fatal(err)
+		}
+	}
 	goMod := filepath.Join(sandbox, "go.mod")
 	appendFile(t, goMod, fmt.Sprintf("\nreplace %s => %s\n", source.SDKModule, sdk))
 
@@ -70,7 +76,7 @@ func TestGeneratedKindsBuildInTheOperator(t *testing.T) {
 	run(t, sandbox, "go", "vet", "./api/...", "./internal/controller/...", "./internal/utils/...", "./cmd/...", "./tests/e2e/")
 
 	golden := filepath.Join("testdata", "crd")
-	for _, name := range []string{"coralogix.com_things.yaml", "coralogix.com_patchthings.yaml", "coralogix.com_refthings.yaml", "coralogix.com_bodyidthings.yaml", "coralogix.com_wrappedthings.yaml"} {
+	for _, name := range []string{"coralogix.com_things.yaml", "coralogix.com_patchthings.yaml", "coralogix.com_refthings.yaml", "coralogix.com_bodyidthings.yaml", "coralogix.com_wrappedthings.yaml", "coralogix.com_hookthings.yaml", "coralogix.com_hookdeletethings.yaml"} {
 		got, err := os.ReadFile(filepath.Join(sandbox, "config", "crd", "bases", name))
 		if err != nil {
 			t.Fatal(err)
@@ -180,7 +186,7 @@ func overlaySDK(t *testing.T, pinned, dir string) {
 	linkExcept(t, filepath.Join(pinned, openapi), filepath.Join(dir, openapi), "gen", "cxsdk")
 	linkExcept(t, filepath.Join(pinned, openapi, "gen"), filepath.Join(dir, openapi, "gen"))
 	linkExcept(t, filepath.Join(pinned, openapi, "cxsdk"), filepath.Join(dir, openapi, "cxsdk"))
-	for _, pkg := range []string{"things_service", "patch_things_service", "ref_things_service", "body_id_things_service", "wrapped_things_service"} {
+	for _, pkg := range []string{"things_service", "patch_things_service", "ref_things_service", "body_id_things_service", "wrapped_things_service", "hook_things_service", "hook_delete_things_service"} {
 		if err := copyTree(filepath.Join("testdata", "sdk", openapi, "gen", pkg), filepath.Join(dir, openapi, "gen", pkg)); err != nil {
 			t.Fatal(err)
 		}
@@ -189,6 +195,8 @@ func overlaySDK(t *testing.T, pinned, dir string) {
 
 import (
 	bodyidthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/body_id_things_service"
+	hookdeletethings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/hook_delete_things_service"
+	hookthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/hook_things_service"
 	patchthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/patch_things_service"
 	refthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/ref_things_service"
 	things "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/things_service"
@@ -211,6 +219,14 @@ func (c *ClientSet) BodyIDThings() *bodyidthings.BodyIDThingsServiceAPIService {
 
 func (c *ClientSet) WrappedThings() *wrappedthings.WrappedThingsServiceAPIService {
 	return wrappedthings.NewWrappedThingsServiceAPIService()
+}
+
+func (c *ClientSet) HookThings() *hookthings.HookThingsServiceAPIService {
+	return hookthings.NewHookThingsServiceAPIService()
+}
+
+func (c *ClientSet) HookDeleteThings() *hookdeletethings.HookDeleteThingsServiceAPIService {
+	return hookdeletethings.NewHookDeleteThingsServiceAPIService()
 }
 `
 	if err := os.WriteFile(filepath.Join(dir, openapi, "cxsdk", "opgen_synthetic.go"), []byte(accessors), 0o644); err != nil {

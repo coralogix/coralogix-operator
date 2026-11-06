@@ -6,6 +6,9 @@
 # BodyIDThing: a kind that users already have, as the view folders API has it. Replace is a PUT on
 # the Create path with the id in the body (api.updateIDInBody), and the released kind has no
 # contract limits (validators.inferred: false).
+# HookThing: a kind that users already have, with every hook except delete and with extra status
+# fields. Its Replace returns an empty object. HookDeleteThing: the delete hook, which replaces the
+# generated DELETE; its Replace returns the resource.
 # RefThing: a kind that users already have, with a required and an optional id of a Thing. Its
 # behavior-overrides file makes both ids references (the ref key).
 openapi: 3.1.0
@@ -377,6 +380,134 @@ paths:
       operationId: WrappedThingsService_DeleteWrappedThing
       responses:
         '200': {description: Deleted, content: {application/json: {schema: {type: object}}}}
+  /hook-things:
+    post:
+      tags: [Hook Things Service]
+      operationId: HookThingsService_CreateHookThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: CreateHookThingRequest
+              type: object
+              required:
+                - name
+              properties:
+                name: {type: string, minLength: 1, maxLength: 100, x-coralogix-presence: true}
+                limit: {type: integer, format: int32, minimum: 1, maximum: 5, x-coralogix-presence: true}
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/HookThing'}
+  /hook-things/{id}:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: string}}
+    get:
+      tags: [Hook Things Service]
+      operationId: HookThingsService_GetHookThing
+      responses:
+        '200':
+          description: Found
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/HookThing'}
+    put:
+      tags: [Hook Things Service]
+      operationId: HookThingsService_ReplaceHookThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: ReplaceHookThingRequest
+              type: object
+              required:
+                - name
+              properties:
+                name: {type: string, minLength: 1, maxLength: 100, x-coralogix-presence: true}
+                limit: {type: integer, format: int32, minimum: 1, maximum: 5, x-coralogix-presence: true}
+      responses:
+        '200':
+          description: Replaced
+          content:
+            application/json:
+              schema: {type: object}
+    delete:
+      tags: [Hook Things Service]
+      operationId: HookThingsService_DeleteHookThing
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema: {type: object}
+  /hook-delete-things:
+    post:
+      tags: [Hook Delete Things Service]
+      operationId: HookDeleteThingsService_CreateHookDeleteThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: CreateHookDeleteThingRequest
+              type: object
+              required:
+                - name
+              properties:
+                name: {type: string, minLength: 1, maxLength: 100, x-coralogix-presence: true}
+                limit: {type: integer, format: int32, minimum: 1, maximum: 5, x-coralogix-presence: true}
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/HookDeleteThing'}
+  /hook-delete-things/{id}:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: string}}
+    get:
+      tags: [Hook Delete Things Service]
+      operationId: HookDeleteThingsService_GetHookDeleteThing
+      responses:
+        '200':
+          description: Found
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/HookDeleteThing'}
+    put:
+      tags: [Hook Delete Things Service]
+      operationId: HookDeleteThingsService_ReplaceHookDeleteThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: ReplaceHookDeleteThingRequest
+              type: object
+              required:
+                - name
+              properties:
+                name: {type: string, minLength: 1, maxLength: 100, x-coralogix-presence: true}
+                limit: {type: integer, format: int32, minimum: 1, maximum: 5, x-coralogix-presence: true}
+      responses:
+        '200':
+          description: Replaced
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/HookDeleteThing'}
+    delete:
+      tags: [Hook Delete Things Service]
+      operationId: HookDeleteThingsService_DeleteHookDeleteThing
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema: {type: object}
 components:
   schemas:
     Thing:
@@ -540,3 +671,17 @@ components:
       properties:
         id: {type: string}
         name: {type: string, minLength: 1, x-coralogix-presence: true}
+    HookThing:
+      type: object
+      required: [id, name]
+      properties:
+        id: {type: string, readOnly: true}
+        name: {type: string, minLength: 1, maxLength: 100, x-coralogix-presence: true, description: The name.}
+        limit: {type: integer, format: int32, minimum: 1, maximum: 5, x-coralogix-presence: true}
+    HookDeleteThing:
+      type: object
+      required: [id, name]
+      properties:
+        id: {type: string, readOnly: true}
+        name: {type: string, minLength: 1, maxLength: 100, x-coralogix-presence: true, description: The name.}
+        limit: {type: integer, format: int32, minimum: 1, maximum: 5, x-coralogix-presence: true}

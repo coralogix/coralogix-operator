@@ -58,7 +58,17 @@ type File struct {
 	// Finalizer keeps the released finalizer name of an existing kind. It is an operator key; the
 	// shared iac module does not know it. The generated name is kebab(Kind).coralogix.com/finalizer.
 	Finalizer string `yaml:"finalizer"`
+	// Hooks names the handwritten steps that the generated lifecycle calls. Each hook is an
+	// unexported method of the reconciler, defined in a handwritten file of the same package. Hooks
+	// change the generated body; they never replace it. Mode existing only.
+	Hooks []string `yaml:"hooks"`
+	// Status declares status fields beside id, conditions, and printableStatus. A hook sets them.
+	// Mode existing only.
+	Status map[string]StatusField `yaml:"status"`
 
+	// hooksNode is the hooks key as the file writes it, nil without one. A written empty list is an
+	// error, and a Go slice cannot tell it from a missing key.
+	hooksNode *yaml.Node
 	// apiNode is the api section as the file writes it, nil without one. A Go bool cannot tell a
 	// written false from a missing key, so the checks of the api keys read the node.
 	apiNode *yaml.Node
@@ -66,6 +76,46 @@ type File struct {
 	// validators: null decodes as a missing section.
 	validatorsNode *yaml.Node
 }
+
+// Hook names. The generated controller calls each one in a fixed place of the lifecycle.
+const (
+	// HookValidate runs first in Create and Update. An error stops before any API call.
+	HookValidate = "validate"
+	// HookBeforeCreate and HookBeforeUpdate change the request body before the API call.
+	HookBeforeCreate = "beforeCreate"
+	HookBeforeUpdate = "beforeUpdate"
+	// HookAfterCreate runs after status.id and the finalizer are saved.
+	HookAfterCreate = "afterCreate"
+	// HookAfterUpdate runs after every successful Update, also when nothing changed.
+	HookAfterUpdate = "afterUpdate"
+	// HookBeforeDelete runs before the generated DELETE.
+	HookBeforeDelete = "beforeDelete"
+	// HookDelete runs in place of the generated DELETE.
+	HookDelete = "delete"
+)
+
+// HookNames lists every hook in the order of the lifecycle.
+var HookNames = []string{HookValidate, HookBeforeCreate, HookBeforeUpdate, HookAfterCreate, HookAfterUpdate, HookBeforeDelete, HookDelete}
+
+// HasHook reports whether the file declares the hook.
+func (f *File) HasHook(name string) bool {
+	return f != nil && slices.Contains(f.Hooks, name)
+}
+
+// StatusField is one extra status field.
+type StatusField struct {
+	// Type is string, int32, int64, or bool. The Go field is a pointer with omitempty.
+	Type string `yaml:"type"`
+	// KeepOnCleanup keeps the field when a selector mismatch clears the remote status, as Dashboard
+	// status.imported does.
+	KeepOnCleanup bool `yaml:"keepOnCleanup"`
+}
+
+// StatusTypes are the allowed types of an extra status field.
+var StatusTypes = []string{"string", "int32", "int64", "bool"}
+
+// reservedStatusFields are the status fields that every generated kind has.
+var reservedStatusFields = []string{"id", "conditions", "printableStatus"}
 
 // Validators is the validators section.
 type Validators struct {
@@ -249,6 +299,7 @@ func Parse(data []byte) (*File, error) {
 	if err := yaml.Unmarshal(data, &doc); err != nil {
 		return nil, fmt.Errorf("%s: %w", FileName, err)
 	}
+	f.hooksNode = section(&doc, "hooks")
 	f.apiNode = section(&doc, "api")
 	f.validatorsNode = section(&doc, "validators")
 	if err := f.check(); err != nil {
@@ -271,6 +322,12 @@ func (f *File) check() error {
 		return err
 	}
 	if err := f.checkFinalizer(); err != nil {
+		return err
+	}
+	if err := f.checkHooks(); err != nil {
+		return err
+	}
+	if err := f.checkStatus(); err != nil {
 		return err
 	}
 	for _, line := range f.Lines() {
@@ -442,6 +499,65 @@ func (f *File) checkFinalizer() error {
 	prefix, name, _ := strings.Cut(f.Finalizer, "/")
 	if !finalizerPattern.MatchString(f.Finalizer) || len(prefix) > 253 || len(name) > 63 {
 		return fmt.Errorf("finalizer: %q is not a qualified name such as example.coralogix.com/finalizer", f.Finalizer)
+	}
+	return nil
+}
+
+// checkHooks checks the hooks key. Hooks are for a kind that users already have: a new kind
+// follows the contract alone.
+func (f *File) checkHooks() error {
+	if f.hooksNode == nil {
+		return nil
+	}
+	if f.Mode != ModeExisting {
+		return errors.New("hooks: a new kind follows the contract")
+	}
+	if len(f.Hooks) == 0 {
+		return errors.New("hooks: the list is empty; delete the key or name a hook")
+	}
+	seen := map[string]bool{}
+	for _, name := range f.Hooks {
+		switch {
+		case !slices.Contains(HookNames, name):
+			return fmt.Errorf("hooks: %q is not a hook; use one of %s", name, strings.Join(HookNames, ", "))
+		case seen[name]:
+			return fmt.Errorf("hooks: %q is listed twice", name)
+		}
+		seen[name] = true
+	}
+	if seen[HookDelete] && seen[HookBeforeDelete] {
+		return fmt.Errorf("hooks: %s replaces the generated DELETE and %s runs before it; declare one", HookDelete, HookBeforeDelete)
+	}
+	return nil
+}
+
+// checkStatus checks the status key.
+func (f *File) checkStatus() error {
+	if len(f.Status) == 0 {
+		return nil
+	}
+	if f.Mode != ModeExisting {
+		return errors.New("status: a new kind follows the contract")
+	}
+	goNames := map[string]string{}
+	for _, name := range slices.Sorted(maps.Keys(f.Status)) {
+		field := f.Status[name]
+		switch {
+		case !validJSONName(name):
+			return fmt.Errorf("status.%s: %q is not a status property name", name, name)
+		case slices.Contains(reservedStatusFields, name):
+			return fmt.Errorf("status.%s: every kind has this field", name)
+		case !slices.Contains(StatusTypes, field.Type):
+			return fmt.Errorf("status.%s.type: %q is not one of %s", name, field.Type, strings.Join(StatusTypes, ", "))
+		}
+		goName := model.GoName(name)
+		if slices.Contains([]string{"ID", "Conditions", "PrintableStatus"}, goName) {
+			return fmt.Errorf("status.%s: the Go field %s is a field that every kind has", name, goName)
+		}
+		if other, ok := goNames[goName]; ok {
+			return fmt.Errorf("status.%s: the Go field %s is the one of status.%s too", name, goName, other)
+		}
+		goNames[goName] = name
 	}
 	return nil
 }

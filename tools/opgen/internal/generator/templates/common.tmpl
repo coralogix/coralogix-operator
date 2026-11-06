@@ -35,3 +35,10 @@ type {{.Name}} struct {
 {{- end}}
 }
 {{end -}}
+
+
+{{- define "safeHook" -}}
+A hook can run many times: it must be safe to repeat. Make a state true (get, then create or
+	// update); do not add or create blindly. Do not append to a field that the generated code
+	// filled. See AGENTS.md "Hooks".
+{{- end -}}

@@ -1,0 +1,10 @@
+resource: HookThing
+mode: existing
+validators:
+  inferred: true
+# Every hook except delete. The handwritten methods are in the controller package.
+hooks: [validate, beforeCreate, beforeUpdate, afterCreate, afterUpdate, beforeDelete]
+status:
+  externalId: {type: string}
+  revision: {type: int64}
+  imported: {type: bool, keepOnCleanup: true}

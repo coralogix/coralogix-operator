@@ -19,9 +19,11 @@ package utils
 
 // The kinds that the operator generator writes.
 const (
-	BodyIDThingKind  = "BodyIDThing"
-	PatchThingKind   = "PatchThing"
-	RefThingKind     = "RefThing"
-	ThingKind        = "Thing"
-	WrappedThingKind = "WrappedThing"
+	BodyIDThingKind     = "BodyIDThing"
+	HookDeleteThingKind = "HookDeleteThing"
+	HookThingKind       = "HookThing"
+	PatchThingKind      = "PatchThing"
+	RefThingKind        = "RefThing"
+	ThingKind           = "Thing"
+	WrappedThingKind    = "WrappedThing"
 )

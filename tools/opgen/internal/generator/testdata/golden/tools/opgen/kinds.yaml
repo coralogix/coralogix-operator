@@ -9,3 +9,7 @@ kinds:
     resource: BodyIDThing
   - kind: WrappedThing
     resource: WrappedThing
+  - kind: HookThing
+    resource: HookThing
+  - kind: HookDeleteThing
+    resource: HookDeleteThing

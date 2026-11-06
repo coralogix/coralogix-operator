@@ -32,6 +32,11 @@ type {{.Kind}}Status struct {
 
 	// +optional
 	PrintableStatus string `json:"printableStatus,omitempty"`
+{{- range .Status}}
+
+	// +optional
+	{{.GoName}} {{.GoType}} `json:"{{.JSON}},omitempty"`
+{{- end}}
 }
 
 func (in *{{.Kind}}) GetConditions() []metav1.Condition {
