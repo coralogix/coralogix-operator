@@ -402,6 +402,24 @@ func TestSelectorMismatchRemovesTheStatusFieldsOfTheReconciler(t *testing.T) {
 	}
 }
 
+// A reconciler with status fields of its own owns its cleanup list. A field that it leaves out
+// survives, even when a handwritten kind has the same name in the older fixed list.
+func TestRemoteStatusFieldsHonorKeepOnCleanupForProviders(t *testing.T) {
+	fixed := [][]string{{"status", "id"}, {"status", "conditions"}, {"status", "printableStatus"}}
+	provider := &hookReconciler{statusFields: [][]string{{"status", "revision"}}} // externalId is kept
+	require.Equal(t, append(fixed, []string{"status", "revision"}), remoteStatusFields(provider))
+	require.NotContains(t, remoteStatusFields(provider), []string{"status", "externalId"})
+
+	empty := &hookReconciler{} // all fields are kept
+	require.Equal(t, fixed, remoteStatusFields(empty))
+
+	// A handwritten kind has no provider and keeps the older list.
+	legacy := remoteStatusFields(&noopReconciler{})
+	for _, path := range [][]string{{"status", "accessPolicyManaged"}, {"status", "externalId"}, {"status", "revision"}} {
+		require.Contains(t, legacy, path)
+	}
+}
+
 func TestHookErrorKeepsItsReasonAndTheCauseOfTheError(t *testing.T) {
 	cause := errors.New("cause")
 	hookErr := NewHookError(fmt.Errorf("wrapped: %w", cause))

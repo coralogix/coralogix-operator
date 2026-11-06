@@ -148,19 +148,24 @@ func statusOf(obj client.Object) (map[string]any, error) {
 	return status, nil
 }
 
-// remoteStatusFields returns the status paths that selector-mismatch cleanup removes: the fixed
-// paths, and the paths of the reconciler.
+// remoteStatusFields returns the status paths that selector-mismatch cleanup removes.
+//
+// A reconciler with a RemoteStatusFieldsProvider (a generated kind with status fields) owns its
+// status: the cleanup removes the fields that every kind has and the fields that it lists. A field
+// that it leaves out (keepOnCleanup) survives. Any other reconciler is a handwritten kind. It
+// keeps the older fixed list, which has the extra fields of Alert, OutboundWebhook, and SLO.
 func remoteStatusFields(r CoralogixReconciler) [][]string {
-	fields := [][]string{
+	common := [][]string{
 		{"status", "id"},
-		{"status", "accessPolicyManaged"}, // Alert, deprecated
 		{"status", "conditions"},
 		{"status", "printableStatus"},
-		{"status", "externalId"}, // OutboundWebhook
-		{"status", "revision"},   // SLO
 	}
 	if provider, ok := r.(RemoteStatusFieldsProvider); ok {
-		fields = append(fields, provider.RemoteStatusFields()...)
+		return append(common, provider.RemoteStatusFields()...)
 	}
-	return fields
+	return append(common,
+		[]string{"status", "accessPolicyManaged"}, // Alert, deprecated
+		[]string{"status", "externalId"},          // OutboundWebhook
+		[]string{"status", "revision"},            // SLO
+	)
 }

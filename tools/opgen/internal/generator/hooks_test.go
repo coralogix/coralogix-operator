@@ -16,6 +16,9 @@ func TestHooksKeyParse(t *testing.T) {
 		name, file, wantErr string
 	}{
 		{name: "every hook but delete", file: hookFileHead + "hooks: [validate, beforeCreate, beforeUpdate, afterCreate, afterUpdate, beforeDelete]\n"},
+		{name: "afterCreate with afterUpdate", file: hookFileHead + "hooks: [afterCreate, afterUpdate]\n"},
+		{name: "afterUpdate alone", file: hookFileHead + "hooks: [afterUpdate]\n"},
+		{name: "afterCreate without afterUpdate", file: hookFileHead + "hooks: [validate, afterCreate]\n", wantErr: "afterCreate needs afterUpdate"},
 		{name: "delete alone", file: hookFileHead + "hooks: [delete]\n"},
 		{name: "unknown hook", file: hookFileHead + "hooks: [beforeSave]\n", wantErr: "not a hook"},
 		{name: "duplicate hook", file: hookFileHead + "hooks: [validate, validate]\n", wantErr: "listed twice"},
@@ -167,6 +170,25 @@ func TestKindWithoutHooksHasNoHookCode(t *testing.T) {
 }
 
 // status without hooks adds the fields and the cleanup list, and needs no hook and no client set.
+// A kind whose only status fields have keepOnCleanup still gets RemoteStatusFields. Without the
+// method the cleanup would remove the older fixed fields (externalId, revision), and so remove the
+// field that the kind meant to keep.
+func TestOnlyKeepOnCleanupFieldsStillGenerateTheCleanupList(t *testing.T) {
+	root, input := syntheticRoot(t)
+	path := filepath.Join(root, kindsDir, "thing", overrides.FileName)
+	file := hookFileHead + "status:\n  externalId: {type: string, keepOnCleanup: true}\n"
+	if err := os.WriteFile(path, []byte(file), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := generateFromInput(input, root, root); err != nil {
+		t.Fatal(err)
+	}
+	controller := readKindFile(t, root, "Thing", "controller")
+	if !strings.Contains(controller, "func (r *ThingReconciler) RemoteStatusFields() [][]string {\n\treturn nil\n}") {
+		t.Errorf("the controller must list no field to remove:\n%s", controller)
+	}
+}
+
 func TestStatusWithoutHooks(t *testing.T) {
 	root, input := syntheticRoot(t)
 	path := filepath.Join(root, kindsDir, "thing", overrides.FileName)

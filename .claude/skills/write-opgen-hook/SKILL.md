@@ -12,7 +12,7 @@ A hook is handwritten Go code that runs at a fixed point of the generated lifecy
 Every hook can run many times.
 
 - `afterUpdate` runs on every reconcile interval, also when nothing changed.
-- `afterUpdate` also repairs what a failed `afterCreate` missed.
+- `afterUpdate` also repairs what a failed `afterCreate` missed. This is why a kind that declares `afterCreate` must declare `afterUpdate` too. Opgen rejects the other case.
 - Delete hooks (`beforeDelete`, `delete`) run again after a failure, and on a selector mismatch.
 - `beforeCreate` and `beforeUpdate` run again on every attempt.
 

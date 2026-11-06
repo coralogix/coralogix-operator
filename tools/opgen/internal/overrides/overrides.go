@@ -525,6 +525,11 @@ func (f *File) checkHooks() error {
 		}
 		seen[name] = true
 	}
+	if seen[HookAfterCreate] && !seen[HookAfterUpdate] {
+		// A failed afterCreate keeps status.id, so the next run takes the Update path. Only
+		// afterUpdate runs there and repairs what afterCreate missed.
+		return fmt.Errorf("hooks: %s needs %s: %s repairs what a failed %s missed", HookAfterCreate, HookAfterUpdate, HookAfterUpdate, HookAfterCreate)
+	}
 	if seen[HookDelete] && seen[HookBeforeDelete] {
 		return fmt.Errorf("hooks: %s replaces the generated DELETE and %s runs before it; declare one", HookDelete, HookBeforeDelete)
 	}

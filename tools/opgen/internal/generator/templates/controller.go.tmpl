@@ -239,16 +239,22 @@ func (r *{{.Kind}}Reconciler) SavesHookStatus() bool {
 	return true
 }
 {{- end}}
-{{- if .RemoteStatusFields}}
+{{- if .Status}}
 
-// RemoteStatusFields lists the status fields of this kind that a selector mismatch removes, with
-// the fields that every kind has.
+// RemoteStatusFields lists the status fields of this kind that a selector mismatch removes, besides
+// id, conditions, and printableStatus. A field with keepOnCleanup is not listed, so it survives.
+// Having this method also stops the cleanup from removing the older fixed fields of handwritten
+// kinds, such as externalId and revision.
 func (r *{{.Kind}}Reconciler) RemoteStatusFields() [][]string {
+{{- if .RemoteStatusFields}}
 	return [][]string{
 {{- range .RemoteStatusFields}}
 		{"status", "{{.}}"},
 {{- end}}
 	}
+{{- else}}
+	return nil
+{{- end}}
 }
 {{- end}}
 
