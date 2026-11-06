@@ -29,7 +29,7 @@ import (
 // {{.Kind}}Reconciler reconciles a {{.Kind}} object.
 type {{.Kind}}Reconciler struct {
 	Client   *{{.SDKAlias}}.{{.Client}}
-{{- if .HasNameLookup}}
+{{- if .HasClientSet}}
 	ClientSet *cxsdk.ClientSet
 {{- end}}
 	Interval time.Duration
@@ -51,24 +51,47 @@ func (r *{{.Kind}}Reconciler) FinalizerName() string {
 	return "{{.Finalizer}}"
 }
 
+{{if .Hooks.AfterCreate -}}
+// HandleCreationWithFollowUp creates the remote {{.Kind}} and sets status.id. It returns the step that
+// calls the afterCreate hook. The shared reconciler runs the step after it saves status.id and
+// adds the finalizer, so a failed afterCreate keeps status.id and no second remote {{.Kind}} is
+// created. The next run takes the Update path, and afterUpdate repairs what afterCreate missed.
+func (r *{{.Kind}}Reconciler) HandleCreationWithFollowUp(ctx context.Context, log logr.Logger, obj client.Object) (func(context.Context) error, error) {
+{{- else -}}
 func (r *{{.Kind}}Reconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
+{{- end}}
 	cr := obj.(*coralogixv1alpha1.{{.Kind}})
+{{- if .Hooks.Validate}}
+	// validate runs before any API call. An error stops the Create with reason ValidationFailed.
+	// {{template "safeHook"}}
+	if err := r.validate(ctx, log, cr); err != nil {
+		return {{$.CreateReturn}}coralogixreconciler.NewValidationError(fmt.Errorf("validation of {{.Kind}} failed: %w", err))
+	}
+{{- end}}
 	body, err := cr.CreateRequest(ctx{{if .HasNameLookup}}, r.ClientSet{{end}})
 	if err != nil {
-		return fmt.Errorf("error on building the create request of {{.Kind}}: %w", err)
+		return {{$.CreateReturn}}fmt.Errorf("error on building the create request of {{.Kind}}: %w", err)
 	}
+{{- if .Hooks.BeforeCreate}}
+	// beforeCreate changes the Create body that the generated code built. It runs on every Create
+	// attempt.
+	// {{template "safeHook"}}
+	if err := r.beforeCreate(ctx, log, cr, body); err != nil {
+		return {{$.CreateReturn}}coralogixreconciler.NewHookError(fmt.Errorf("beforeCreate hook of {{.Kind}} failed: %w", err))
+	}
+{{- end}}
 	log.Info("Creating remote {{.Kind}}", "{{.Kind}}", utils.FormatJSON(body))
 	resp, httpResp, err := r.Client.{{.CreateMethod}}(ctx).{{.CreateSetter}}(*body).Execute()
 	if err != nil {
-		return fmt.Errorf("error on creating remote {{.Kind}}: %w", cxsdk.NewAPIError(httpResp, err))
+		return {{$.CreateReturn}}fmt.Errorf("error on creating remote {{.Kind}}: %w", cxsdk.NewAPIError(httpResp, err))
 	}
 	log.Info("Remote {{.Kind}} created", "response", utils.FormatJSON(resp))
 	if resp == nil {
-		return fmt.Errorf("the create response of {{.Kind}} has no resource")
+		return {{$.CreateReturn}}fmt.Errorf("the create response of {{.Kind}} has no resource")
 	}
 {{- if and .CreateResponseField (not .CreateResponseValue)}}
 	if resp.{{.CreateResponseField}} == nil {
-		return fmt.Errorf("the create response of {{.Kind}} has no resource")
+		return {{$.CreateReturn}}fmt.Errorf("the create response of {{.Kind}} has no resource")
 	}
 {{- end}}
 {{- if .IDBits}}
@@ -76,13 +99,13 @@ func (r *{{.Kind}}Reconciler) HandleCreation(ctx context.Context, log logr.Logge
 	idValue := resp.{{if .CreateResponseField}}{{.CreateResponseField}}.{{end}}{{.IDField}}
 {{- else}}
 	if resp.{{if .CreateResponseField}}{{.CreateResponseField}}.{{end}}{{.IDField}} == nil {
-		return fmt.Errorf("the create response of {{.Kind}} has no id")
+		return {{$.CreateReturn}}fmt.Errorf("the create response of {{.Kind}} has no id")
 	}
 	idValue := *resp.{{if .CreateResponseField}}{{.CreateResponseField}}.{{end}}{{.IDField}}
 {{- end}}
 {{- if not .IDZeroValid}}
 	if idValue == 0 {
-		return fmt.Errorf("the create response of {{.Kind}} has no id")
+		return {{$.CreateReturn}}fmt.Errorf("the create response of {{.Kind}} has no id")
 	}
 {{- end}}
 	id := strconv.FormatInt(int64(idValue), 10)
@@ -93,15 +116,45 @@ func (r *{{.Kind}}Reconciler) HandleCreation(ctx context.Context, log logr.Logge
 {{- end}}
 {{- if not .IDBits}}
 	if id == "" {
-		return fmt.Errorf("the create response of {{.Kind}} has no id")
+		return {{$.CreateReturn}}fmt.Errorf("the create response of {{.Kind}} has no id")
 	}
 {{- end}}
 	cr.Status = coralogixv1alpha1.{{.Kind}}Status{ID: ptr.To(id)}
+{{- if .Hooks.AfterCreate}}
+	return func(ctx context.Context) error {
+		// afterCreate runs after status.id and the finalizer are saved. If it fails, the next run
+		// takes the Update path and afterUpdate repairs what it missed.
+		// {{template "safeHook"}}
+		if err := r.afterCreate(ctx, log, cr, resp); err != nil {
+			return coralogixreconciler.NewHookError(fmt.Errorf("afterCreate hook of {{.Kind}} failed: %w", err))
+		}
+		return nil
+	}, nil
+}
+
+// HandleCreation creates the remote {{.Kind}} and runs the afterCreate hook at once. The shared
+// reconciler calls HandleCreationWithFollowUp instead, so that the hook runs after status.id is saved.
+func (r *{{.Kind}}Reconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
+	followUp, err := r.HandleCreationWithFollowUp(ctx, log, obj)
+	if err != nil {
+		return err
+	}
+	return followUp(ctx)
+}
+{{- else}}
 	return nil
 }
+{{- end}}
 
 func (r *{{.Kind}}Reconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	cr := obj.(*coralogixv1alpha1.{{.Kind}})
+{{- if .Hooks.Validate}}
+	// validate runs before any API call. An error stops the Update with reason ValidationFailed.
+	// {{template "safeHook"}}
+	if err := r.validate(ctx, log, cr); err != nil {
+		return coralogixreconciler.NewValidationError(fmt.Errorf("validation of {{.Kind}} failed: %w", err))
+	}
+{{- end}}
 	id := ptr.Deref(cr.Status.ID, "")
 {{- if and .IDBits (not .UpdateIDInBody)}}
 	parsedID, err := strconv.ParseInt(id, 10, {{.IDBits}})
@@ -114,17 +167,51 @@ func (r *{{.Kind}}Reconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 	if err != nil {
 		return fmt.Errorf("error on building the update request of {{.Kind}}: %w", err)
 	}
+{{- if .Hooks.BeforeUpdate}}
+	// beforeUpdate changes the Update body that the generated code built. It runs on every
+	// reconcile interval, also when nothing changed.
+	// {{template "safeHook"}}
+	if err := r.beforeUpdate(ctx, log, cr, body); err != nil {
+		return coralogixreconciler.NewHookError(fmt.Errorf("beforeUpdate hook of {{.Kind}} failed: %w", err))
+	}
+{{- end}}
 	log.Info("Updating remote {{.Kind}}", "id", id, "{{.Kind}}", utils.FormatJSON(body))
 	resp, httpResp, err := r.Client.{{.UpdateMethod}}(ctx{{if not .UpdateIDInBody}}, {{if .IDBits}}backendID{{else}}id{{end}}{{end}}).{{.UpdateSetter}}(*body){{if .MaskSetter}}.{{.MaskSetter}}(coralogixv1alpha1.{{.Kind}}UpdateMask){{end}}.Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote {{.Kind}} %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
 	log.Info("Remote {{.Kind}} updated", "response", utils.FormatJSON(resp))
+{{- if .Hooks.AfterUpdate}}
+	// afterUpdate runs after every successful Update, also when nothing changed, and after a
+	// failed afterCreate. A hook error is not a remote NotFound: it never removes status.id.
+	// {{template "safeHook"}}
+	if err := r.afterUpdate(ctx, log, cr, resp); err != nil {
+		return coralogixreconciler.NewHookError(fmt.Errorf("afterUpdate hook of {{.Kind}} failed: %w", err))
+	}
+{{- end}}
 	return nil
 }
 
 func (r *{{.Kind}}Reconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
 	cr := obj.(*coralogixv1alpha1.{{.Kind}})
+{{- if .Hooks.Delete}}
+	// delete replaces the generated DELETE. It runs on deletion, on a selector mismatch, and again
+	// after a failure. A resource that is already gone is a success.
+	// {{template "safeHook"}}
+	if err := r.delete(ctx, log, cr); err != nil {
+		return coralogixreconciler.NewHookError(fmt.Errorf("delete hook of {{.Kind}} failed: %w", err))
+	}
+	return nil
+}
+{{- else}}
+{{- if .Hooks.BeforeDelete}}
+	// beforeDelete runs before the generated DELETE: on deletion, on a selector mismatch, and again
+	// after a failure. It must accept a resource that is already gone.
+	// {{template "safeHook"}}
+	if err := r.beforeDelete(ctx, log, cr); err != nil {
+		return coralogixreconciler.NewHookError(fmt.Errorf("beforeDelete hook of {{.Kind}} failed: %w", err))
+	}
+{{- end}}
 	id := ptr.Deref(cr.Status.ID, "")
 {{- if .IDBits}}
 	parsedID, err := strconv.ParseInt(id, 10, {{.IDBits}})
@@ -144,6 +231,32 @@ func (r *{{.Kind}}Reconciler) HandleDeletion(ctx context.Context, log logr.Logge
 	log.Info("Remote {{.Kind}} deleted", "id", id)
 	return nil
 }
+{{- end}}
+{{- if .Hooks.Any}}
+
+// SavesHookStatus makes the shared reconciler save the status that a hook changed.
+func (r *{{.Kind}}Reconciler) SavesHookStatus() bool {
+	return true
+}
+{{- end}}
+{{- if .Status}}
+
+// RemoteStatusFields lists the status fields of this kind that a selector mismatch removes, besides
+// id, conditions, and printableStatus. A field with keepOnCleanup is not listed, so it survives.
+// Having this method also stops the cleanup from removing the older fixed fields of handwritten
+// kinds, such as externalId and revision.
+func (r *{{.Kind}}Reconciler) RemoteStatusFields() [][]string {
+{{- if .RemoteStatusFields}}
+	return [][]string{
+{{- range .RemoteStatusFields}}
+		{"status", "{{.}}"},
+{{- end}}
+	}
+{{- else}}
+	return nil
+{{- end}}
+}
+{{- end}}
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *{{.Kind}}Reconciler) SetupWithManager(mgr ctrl.Manager) error {

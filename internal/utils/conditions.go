@@ -28,6 +28,11 @@ const (
 	ReasonInternalK8sError         = "InternalK8sError"
 	ReasonDeserializationError     = "DeserializationError"
 	ReasonPartialFailure           = "PartialFailure"
+	// ReasonValidationFailed is the reason of a `validate` hook that rejects a resource before any
+	// API call.
+	ReasonValidationFailed = "ValidationFailed"
+	// ReasonHookFailed is the reason of any other generated-kind hook that returns an error.
+	ReasonHookFailed = "HookFailed"
 
 	ConditionTypeRemoteSynced = "RemoteSynced"
 )

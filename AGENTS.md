@@ -103,8 +103,54 @@ cd tools/opgen && go run ./cmd/opgen check \
   - `createAs` names Create-body fields that hold the parts of an object that Update and Get nest, such as `permutations: {createAs: {limit: permutationsLimit}}`. It applies to a field of the resource in an existing kind with a full-replace Update. The CR keeps the flat Create field. Create sends it as it is. Update builds the object when a flat field is set, and leaves the object out otherwise, so the API keeps its stored value or default. A folded property can be required inside the object and optional on Create: opgen then marks it computed and keepState for the shared module, so the SDK type stays the one of the contract. A writable property of the object that no `createAs` line names stops the run, because the CR cannot set it. A fold supports scalars, enums, and lists of them, and one property per object: with two flat fields, a CR could set one and Update would send the other at its zero value. The generated e2e update step can change a folded field: it reads the nested value from the API response.
   - `sendNullAsEmpty` sends `""` or `[]` in Create and Update when the CR omits an optional string or list. Use it when the API keeps the stored value of an omitted field on a full replace, or needs `[]` instead of `null`. It is not valid on a required field, a number, a bool, an object, a map, or a reference. Existing kinds only.
   - `finalizer` keeps the released finalizer name of an existing kind. The generated name is `kebab(Kind).coralogix.com/finalizer`. A released kind with another name must set it, or deleting its existing objects hangs. It is an operator key, so the shared `iac` module does not know it.
+  - `hooks` lists the handwritten steps of the generated lifecycle (see "Hooks" below). `status` declares extra status fields for a hook to set: `status: {externalId: {type: string}}`, with type `string`, `int32`, `int64`, or `bool`. Each field is a pointer with `omitempty`. `keepOnCleanup: true` keeps the field when a selector mismatch clears the remote status (like Dashboard `status.imported`). A generated kind with a `status` field owns its cleanup list: the cleanup removes `id`, `conditions`, `printableStatus`, and the fields without `keepOnCleanup`. The older fixed fields of handwritten kinds (`externalId`, `revision`, `accessPolicyManaged`) are removed only for a kind without `status` fields. A name cannot be `id`, `conditions`, or `printableStatus`. `status` is valid without `hooks`. Both keys need mode `existing`.
   - `enums.<component>` lists accepted API `values` and `rejected` values. `zero`, `names`, `verbatim`, and `trimPrefix` set CR spellings. `aliases` maps one accepted CR spelling to another business value for requests. Each accepted spelling maps to a checked SDK constant. A new kind uses the contract without an enum line.
   - Check values before writing them into Kubebuilder markers. Reject syntax characters that controller-gen can read as marker separators, or encode the values so the generated CRD keeps them exactly.
+- Hooks: a hook is handwritten Go code that runs at a fixed point of the generated lifecycle. It covers behavior that no override key can express. A hook changes the generated body. It never replaces it, so a new API field still reaches the CR, the conversions, and the request with no hook change.
+  - Declare hooks in `behavior-overrides.yaml`: `hooks: [validate, beforeCreate, beforeUpdate, afterCreate, afterUpdate, beforeDelete]`. Mode `existing` only. `delete` replaces the generated DELETE, and a kind cannot declare it with `beforeDelete`. `afterCreate` needs `afterUpdate`: a failed `afterCreate` keeps `status.id`, so only `afterUpdate` runs on the next run and repairs it.
+  - Write each hook as an unexported method of the reconciler, in a handwritten file of the same package: `internal/controller/coralogix/v1alpha1/<kind>_hooks.go`. The file has no generated header, so the generator never writes or removes it. Add the `+kubebuilder:rbac` markers that the hooks need to this file.
+  - A declared hook without a method fails `go build`. A method without a declared hook fails the `unused` linter.
+  - A kind with a hook gets `ClientSet *cxsdk.ClientSet` on its reconciler. Get the Kubernetes client and the settings from `config.GetClient()` and `config.GetConfig()`.
+  - Signatures (`body` is what `CreateRequest` or `UpdateRequest` returns, `resp` is what the SDK `Execute()` returns):
+
+    ```go
+    func (r *ThingReconciler) validate(ctx context.Context, log logr.Logger, cr *v1alpha1.Thing) error
+    func (r *ThingReconciler) beforeCreate(ctx context.Context, log logr.Logger, cr *v1alpha1.Thing, body *sdk.CreateThingRequest) error
+    func (r *ThingReconciler) beforeUpdate(ctx context.Context, log logr.Logger, cr *v1alpha1.Thing, body *sdk.ReplaceThingRequest) error
+    func (r *ThingReconciler) afterCreate(ctx context.Context, log logr.Logger, cr *v1alpha1.Thing, resp *sdk.CreateThingResponse) error
+    func (r *ThingReconciler) afterUpdate(ctx context.Context, log logr.Logger, cr *v1alpha1.Thing, resp *sdk.ReplaceThingResponse) error // resp is map[string]interface{} when the API returns an empty object
+    func (r *ThingReconciler) beforeDelete(ctx context.Context, log logr.Logger, cr *v1alpha1.Thing) error
+    func (r *ThingReconciler) delete(ctx context.Context, log logr.Logger, cr *v1alpha1.Thing) error
+    ```
+
+  - Create runs: `validate`, build the body, `beforeCreate`, the API Create, save `status.id` and the finalizer, `afterCreate`, save the status again if a hook changed it. Update runs: `validate`, build the body, `beforeUpdate`, the API Update, `afterUpdate`, save the status if a hook changed it. Delete runs `beforeDelete` and the generated DELETE (404 is success), or `delete` alone. Delete also runs on a selector mismatch and on every retry.
+  - A failure before the API Create creates nothing remote. A failure of `afterCreate` keeps `status.id`. The next run takes the Update path, and `afterUpdate` repairs what `afterCreate` missed.
+  - Status that a hook changes is saved only for a generated kind with hooks (`SavesHookStatus`). A handwritten kind keeps its behavior: SLO changes `status.revision` in `HandleUpdate` and relies on it not being saved.
+  - Errors: a `validate` error sets reason `ValidationFailed`. Any other hook error sets reason `HookFailed`. Return the error. Do not log and return. A hook error is never a remote NotFound: it never removes `status.id`, even when it wraps a 404 from another API.
+  - **Safe-hook rule.** Every hook can run many times. `afterUpdate` runs on every reconcile interval, also when nothing changed. Delete hooks run again after a failure and on selector mismatch. A hook is safe when running it 1 time or 100 times leaves the same result.
+    - Read the current state. Create it if it is missing. Update it if it differs.
+    - Do not create a remote object or a Kubernetes object blindly.
+    - Do not append to a body field that the generated code filled, unless the hook builds the whole field.
+    - Delete hooks accept a resource that is already gone.
+    - Keep API calls few.
+
+    ```go
+    // Safe: make sure the Secret is right.
+    err := c.Get(ctx, key, existing)
+    if apierrors.IsNotFound(err) { return c.Create(ctx, desired) }
+    if err != nil { return err }
+    existing.Data = desired.Data
+    return c.Update(ctx, existing)
+
+    // Unsafe: the second run fails with AlreadyExists, every time.
+    return c.Create(ctx, desired)
+
+    // Unsafe: each run adds one more item.
+    body.Retentions = append(body.Retentions, extra)
+    ```
+
+  - Test each hook: call it twice on the same input. Check the same result and no second remote object. The skill `.claude/skills/write-opgen-hook/SKILL.md` has the test pattern.
+  - There is no hook for `SetupWithManager`.
 - Goldens: `cd tools/opgen && go test ./internal/generator -update` rewrites them. Review the golden diff like code.
 - When a synthetic CR field changes, update envtest objects that use its golden CRD and run `make unit-tests`.
 - Version: the generated files have no version in their header. `tools/opgen/versions.yaml` is generated and holds `version.Current` of `tools/opgen/internal/version/version.go` for each kind, so a new version changes one file. Give the generator a new version (during beta, the next `-beta.N`) when a change changes what it produces: a generated file, a golden file, or a `check` report. A refactor with the same output keeps the version. CI enforces this with `tools/opgen/scripts/check-version-change.sh`: it builds opgen at the base commit and at the PR, runs both on the same input, and compares the output.
@@ -124,6 +170,8 @@ Return contextual errors from controllers; do not log and return the same error.
 Before changing finalizer or status order, consider partial failures, retries, conflicts, and remote resources created before Kubernetes status/finalizer updates succeed.
 
 Preserve `observedGeneration` behavior and `RemoteSynced` reasons from `internal/utils/conditions.go`.
+
+Generated kinds with hooks use two more `RemoteSynced` reasons: `ValidationFailed` (a `validate` hook rejected the resource) and `HookFailed` (any other hook returned an error). The shared reconciler reads the reason from `HookError` and checks it before it checks for a remote NotFound.
 
 When a remote resource is missing during update, the shared reconciler removes `status.id` so the next reconciliation can recreate it.
 

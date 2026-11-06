@@ -90,6 +90,10 @@ type kindData struct {
 	BodyIDField     string
 	BodyIDValue     bool
 
+	// Hooks and Status come from the hooks and status keys of the overrides file.
+	Hooks  hookData
+	Status []statusField
+
 	E2E *e2eData
 }
 
@@ -273,6 +277,9 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 	}
 	d.Types, d.Scalars, d.Enums, d.Convs = b.order, b.scalars, b.enumSeq, b.code
 	d.HasNameLookup = b.hasNameLookup
+	if err := b.hooks(d); err != nil {
+		return nil, err
+	}
 	if err := b.checkNames(d); err != nil {
 		return nil, err
 	}

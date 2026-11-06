@@ -21,7 +21,7 @@ func SetupGeneratedControllers(mgr ctrl.Manager, clientSet *cxsdk.ClientSet, int
 {{- range .Kinds}}
 	if err := (&{{.Kind}}Reconciler{
 		Client:   clientSet.{{.Accessor}}(),
-{{- if .HasNameLookup}}
+{{- if .HasClientSet}}
 		ClientSet: clientSet,
 {{- end}}
 		Interval: intervals[utils.{{.Kind}}Kind],

@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	bodyidthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/body_id_things_service"
+	hookdeletethings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/hook_delete_things_service"
+	hookthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/hook_things_service"
 	patchthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/patch_things_service"
 	refthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/ref_things_service"
 	things "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/things_service"
@@ -63,4 +65,12 @@ func NewAPIError(resp *http.Response, err error) error {
 func IsNotFound(err error) bool {
 	var apiErr *APIError
 	return errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusNotFound
+}
+
+func (c *ClientSet) HookThings() *hookthings.HookThingsServiceAPIService {
+	return hookthings.NewHookThingsServiceAPIService()
+}
+
+func (c *ClientSet) HookDeleteThings() *hookdeletethings.HookDeleteThingsServiceAPIService {
+	return hookdeletethings.NewHookDeleteThingsServiceAPIService()
 }

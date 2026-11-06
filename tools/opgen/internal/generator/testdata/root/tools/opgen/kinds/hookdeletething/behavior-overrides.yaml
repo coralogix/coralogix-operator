@@ -1,0 +1,6 @@
+resource: HookDeleteThing
+mode: existing
+validators:
+  inferred: true
+# The delete hook replaces the generated DELETE. A kind cannot declare it with beforeDelete.
+hooks: [delete]
