@@ -290,6 +290,7 @@ type AlertSpec struct {
 
 	// Description of the alert
 	// +optional
+	// +kubebuilder:validation:MaxLength=3000
 	Description string `json:"description,omitempty"`
 
 	// Priority of the alert.
