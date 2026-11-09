@@ -73,7 +73,7 @@ func (r *ScopeReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 	log.Info("Remote scope created", "response", utils.FormatJSON(createResponse))
 
 	scope.Status = coralogixv1alpha1.ScopeStatus{
-		ID: createResponse.Scope.Id,
+		ID: scopes.PtrString(createResponse.Scope.Id),
 	}
 
 	return nil
