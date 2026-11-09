@@ -61,10 +61,10 @@ func (s *ScopeSpec) ExtractCreateScopeRequest() (*scopes.CreateScopeRequest, err
 	}
 
 	return &scopes.CreateScopeRequest{
-		DisplayName:       s.Name,
+		DisplayName:       scopes.PtrString(s.Name),
 		Description:       s.Description,
 		Filters:           filters,
-		DefaultExpression: scopes.PtrString(s.DefaultExpression),
+		DefaultExpression: s.DefaultExpression,
 	}, nil
 }
 
@@ -76,7 +76,7 @@ func (s *ScopeSpec) ExtractUpdateScopeRequest(id string) (*scopes.UpdateScopeReq
 
 	return &scopes.UpdateScopeRequest{
 		Id:                id,
-		DisplayName:       s.Name,
+		DisplayName:       scopes.PtrString(s.Name),
 		Description:       s.Description,
 		Filters:           filters,
 		DefaultExpression: s.DefaultExpression,
@@ -87,8 +87,8 @@ func (s *ScopeSpec) ExtractScopeFilters() ([]scopes.ScopesV1Filter, error) {
 	var filters []scopes.ScopesV1Filter
 	for _, f := range s.Filters {
 		filters = append(filters, scopes.ScopesV1Filter{
-			EntityType: entityTypeSchemaToOpenAPI[f.EntityType].Ptr(),
-			Expression: scopes.PtrString(f.Expression),
+			EntityType: entityTypeSchemaToOpenAPI[f.EntityType],
+			Expression: f.Expression,
 		})
 	}
 
