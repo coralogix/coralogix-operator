@@ -439,6 +439,11 @@ func (in *AlertTypeDefinition) DeepCopy() *AlertTypeDefinition {
 func (in *AnalyticsImmediate) DeepCopyInto(out *AnalyticsImmediate) {
 	*out = *in
 	out.DataprimeQuery = in.DataprimeQuery
+	if in.EvaluationPeriodMinutes != nil {
+		in, out := &in.EvaluationPeriodMinutes, &out.EvaluationPeriodMinutes
+		*out = new(int32)
+		**out = **in
+	}
 	if in.UseRowsAsPermutations != nil {
 		in, out := &in.UseRowsAsPermutations, &out.UseRowsAsPermutations
 		*out = new(bool)
@@ -485,6 +490,11 @@ func (in *AnalyticsThreshold) DeepCopyInto(out *AnalyticsThreshold) {
 	if in.TargetColumn != nil {
 		in, out := &in.TargetColumn, &out.TargetColumn
 		*out = new(string)
+		**out = **in
+	}
+	if in.EvaluationPeriodMinutes != nil {
+		in, out := &in.EvaluationPeriodMinutes, &out.EvaluationPeriodMinutes
+		*out = new(int32)
 		**out = **in
 	}
 	if in.UseRowsAsPermutations != nil {

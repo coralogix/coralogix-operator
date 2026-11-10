@@ -21,6 +21,9 @@ spec:
       dataprimeQuery:
         query: source logs | filter $m.severity == Severity.ERROR | groupby $l.applicationname aggregate count() as errors
       timeframeMinutes: 15
+      # Optional. How often the query is evaluated, 1-15 minutes and at most timeframeMinutes.
+      # On create the default is min(10, timeframeMinutes). When omitted on update, the API keeps the current value.
+      evaluationPeriodMinutes: 5
       useRowsAsPermutations: true
       evaluationDelayMs: 60000
       noDataPolicy:

@@ -2144,6 +2144,8 @@ Type of alert.
         <td>object</td>
         <td>
           Immediate alerts for DataPrime query results (preview).<br/>
+          <br/>
+            <i>Validations</i>:<li>!has(self.evaluationPeriodMinutes) || self.evaluationPeriodMinutes <= self.timeframeMinutes: evaluationPeriodMinutes must not exceed timeframeMinutes</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2151,6 +2153,8 @@ Type of alert.
         <td>object</td>
         <td>
           Alerts for when a DataPrime query result column crosses a threshold (preview).<br/>
+          <br/>
+            <i>Validations</i>:<li>!has(self.evaluationPeriodMinutes) || self.evaluationPeriodMinutes <= self.timeframeMinutes: evaluationPeriodMinutes must not exceed timeframeMinutes</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2297,6 +2301,21 @@ Immediate alerts for DataPrime query results (preview).
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>evaluationPeriodMinutes</b></td>
+        <td>integer</td>
+        <td>
+          How often the alert is evaluated, in minutes. Each evaluation runs the query over the last timeframeMinutes.
+Must be between 1 and 15 and must not exceed timeframeMinutes.
+When unset, the API keeps the current value. On create, the default is the smaller of 10 and timeframeMinutes.
+To change the value, set it explicitly. When lowering timeframeMinutes below the stored value, set this field too,
+otherwise the API rejects the update.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+            <i>Minimum</i>: 1<br/>
+            <i>Maximum</i>: 15<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#alertsetspecalertsindexspecalerttypeanalyticsimmediatenodatapolicy">noDataPolicy</a></b></td>
         <td>object</td>
         <td>
@@ -2429,6 +2448,21 @@ Alerts for when a DataPrime query result column crosses a threshold (preview).
             <i>Format</i>: int32<br/>
             <i>Minimum</i>: 0<br/>
             <i>Maximum</i>: 1.08e+07<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>evaluationPeriodMinutes</b></td>
+        <td>integer</td>
+        <td>
+          How often the alert is evaluated, in minutes. Each evaluation runs the query over the last timeframeMinutes.
+Must be between 1 and 15 and must not exceed timeframeMinutes.
+When unset, the API keeps the current value. On create, the default is the smaller of 10 and timeframeMinutes.
+To change the value, set it explicitly. When lowering timeframeMinutes below the stored value, set this field too,
+otherwise the API rejects the update.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+            <i>Minimum</i>: 1<br/>
+            <i>Maximum</i>: 15<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -22594,6 +22628,8 @@ Type of alert.
         <td>object</td>
         <td>
           Immediate alerts for DataPrime query results (preview).<br/>
+          <br/>
+            <i>Validations</i>:<li>!has(self.evaluationPeriodMinutes) || self.evaluationPeriodMinutes <= self.timeframeMinutes: evaluationPeriodMinutes must not exceed timeframeMinutes</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -22601,6 +22637,8 @@ Type of alert.
         <td>object</td>
         <td>
           Alerts for when a DataPrime query result column crosses a threshold (preview).<br/>
+          <br/>
+            <i>Validations</i>:<li>!has(self.evaluationPeriodMinutes) || self.evaluationPeriodMinutes <= self.timeframeMinutes: evaluationPeriodMinutes must not exceed timeframeMinutes</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -22747,6 +22785,21 @@ Immediate alerts for DataPrime query results (preview).
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>evaluationPeriodMinutes</b></td>
+        <td>integer</td>
+        <td>
+          How often the alert is evaluated, in minutes. Each evaluation runs the query over the last timeframeMinutes.
+Must be between 1 and 15 and must not exceed timeframeMinutes.
+When unset, the API keeps the current value. On create, the default is the smaller of 10 and timeframeMinutes.
+To change the value, set it explicitly. When lowering timeframeMinutes below the stored value, set this field too,
+otherwise the API rejects the update.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+            <i>Minimum</i>: 1<br/>
+            <i>Maximum</i>: 15<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#alertspecalerttypeanalyticsimmediatenodatapolicy">noDataPolicy</a></b></td>
         <td>object</td>
         <td>
@@ -22879,6 +22932,21 @@ Alerts for when a DataPrime query result column crosses a threshold (preview).
             <i>Format</i>: int32<br/>
             <i>Minimum</i>: 0<br/>
             <i>Maximum</i>: 1.08e+07<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>evaluationPeriodMinutes</b></td>
+        <td>integer</td>
+        <td>
+          How often the alert is evaluated, in minutes. Each evaluation runs the query over the last timeframeMinutes.
+Must be between 1 and 15 and must not exceed timeframeMinutes.
+When unset, the API keeps the current value. On create, the default is the smaller of 10 and timeframeMinutes.
+To change the value, set it explicitly. When lowering timeframeMinutes below the stored value, set this field too,
+otherwise the API rejects the update.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+            <i>Minimum</i>: 1<br/>
+            <i>Maximum</i>: 15<br/>
         </td>
         <td>false</td>
       </tr><tr>

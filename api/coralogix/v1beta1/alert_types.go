@@ -819,6 +819,7 @@ type DataprimeQuery struct {
 }
 
 // Immediate alerts for DataPrime query results (preview).
+// +kubebuilder:validation:XValidation:rule="!has(self.evaluationPeriodMinutes) || self.evaluationPeriodMinutes <= self.timeframeMinutes",message="evaluationPeriodMinutes must not exceed timeframeMinutes"
 type AnalyticsImmediate struct {
 	// DataPrime query that triggers the alert when it returns results.
 	DataprimeQuery DataprimeQuery `json:"dataprimeQuery"`
@@ -826,6 +827,16 @@ type AnalyticsImmediate struct {
 	// Time frame in minutes the query is evaluated over.
 	// +kubebuilder:validation:Minimum=1
 	TimeframeMinutes int32 `json:"timeframeMinutes"`
+
+	// How often the alert is evaluated, in minutes. Each evaluation runs the query over the last timeframeMinutes.
+	// Must be between 1 and 15 and must not exceed timeframeMinutes.
+	// When unset, the API keeps the current value. On create, the default is the smaller of 10 and timeframeMinutes.
+	// To change the value, set it explicitly. When lowering timeframeMinutes below the stored value, set this field too,
+	// otherwise the API rejects the update.
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=15
+	// +optional
+	EvaluationPeriodMinutes *int32 `json:"evaluationPeriodMinutes,omitempty"`
 
 	// Whether each result row is treated as a separate permutation.
 	// +optional
@@ -843,6 +854,7 @@ type AnalyticsImmediate struct {
 }
 
 // Alerts for when a DataPrime query result column crosses a threshold (preview).
+// +kubebuilder:validation:XValidation:rule="!has(self.evaluationPeriodMinutes) || self.evaluationPeriodMinutes <= self.timeframeMinutes",message="evaluationPeriodMinutes must not exceed timeframeMinutes"
 type AnalyticsThreshold struct {
 	// DataPrime query whose results are evaluated against the rules.
 	DataprimeQuery DataprimeQuery `json:"dataprimeQuery"`
@@ -864,6 +876,16 @@ type AnalyticsThreshold struct {
 	// Time frame in minutes the query is evaluated over.
 	// +kubebuilder:validation:Minimum=1
 	TimeframeMinutes int32 `json:"timeframeMinutes"`
+
+	// How often the alert is evaluated, in minutes. Each evaluation runs the query over the last timeframeMinutes.
+	// Must be between 1 and 15 and must not exceed timeframeMinutes.
+	// When unset, the API keeps the current value. On create, the default is the smaller of 10 and timeframeMinutes.
+	// To change the value, set it explicitly. When lowering timeframeMinutes below the stored value, set this field too,
+	// otherwise the API rejects the update.
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=15
+	// +optional
+	EvaluationPeriodMinutes *int32 `json:"evaluationPeriodMinutes,omitempty"`
 
 	// Whether each result row is treated as a separate permutation.
 	// +optional
@@ -3340,23 +3362,25 @@ func expandMetricThreshold(threshold *MetricThreshold, priority alerts.AlertDefP
 
 func expandAnalyticsImmediate(immediate *AnalyticsImmediate) *alerts.AnalyticsImmediateType {
 	return &alerts.AnalyticsImmediateType{
-		DataprimeQuery:        expandDataprimeQuery(immediate.DataprimeQuery),
-		TimeframeMinutes:      alerts.PtrInt32(immediate.TimeframeMinutes),
-		UseRowsAsPermutations: immediate.UseRowsAsPermutations,
-		EvaluationDelayMs:     immediate.EvaluationDelayMs,
-		NoDataPolicy:          expandNoDataPolicy(immediate.NoDataPolicy),
+		DataprimeQuery:          expandDataprimeQuery(immediate.DataprimeQuery),
+		TimeframeMinutes:        alerts.PtrInt32(immediate.TimeframeMinutes),
+		EvaluationPeriodMinutes: immediate.EvaluationPeriodMinutes,
+		UseRowsAsPermutations:   immediate.UseRowsAsPermutations,
+		EvaluationDelayMs:       immediate.EvaluationDelayMs,
+		NoDataPolicy:            expandNoDataPolicy(immediate.NoDataPolicy),
 	}
 }
 
 func expandAnalyticsThreshold(threshold *AnalyticsThreshold, priority alerts.AlertDefPriority) *alerts.AnalyticsThresholdType {
 	thresholdType := &alerts.AnalyticsThresholdType{
-		DataprimeQuery:        expandDataprimeQuery(threshold.DataprimeQuery),
-		Rules:                 expandAnalyticsThresholdRules(threshold.Rules, priority),
-		TargetColumn:          threshold.TargetColumn,
-		TimeframeMinutes:      alerts.PtrInt32(threshold.TimeframeMinutes),
-		UseRowsAsPermutations: threshold.UseRowsAsPermutations,
-		EvaluationDelayMs:     threshold.EvaluationDelayMs,
-		NoDataPolicy:          expandNoDataPolicy(threshold.NoDataPolicy),
+		DataprimeQuery:          expandDataprimeQuery(threshold.DataprimeQuery),
+		Rules:                   expandAnalyticsThresholdRules(threshold.Rules, priority),
+		TargetColumn:            threshold.TargetColumn,
+		TimeframeMinutes:        alerts.PtrInt32(threshold.TimeframeMinutes),
+		EvaluationPeriodMinutes: threshold.EvaluationPeriodMinutes,
+		UseRowsAsPermutations:   threshold.UseRowsAsPermutations,
+		EvaluationDelayMs:       threshold.EvaluationDelayMs,
+		NoDataPolicy:            expandNoDataPolicy(threshold.NoDataPolicy),
 	}
 
 	if threshold.Operator != nil {
