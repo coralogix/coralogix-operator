@@ -10,9 +10,12 @@ name: Release PR Approval
 # GITHUB_TOKEN starts no push workflow. A run that finds the PR merged but never released starts
 # Release itself; a Release run that was cancelled or failed stays stopped for a person to restart.
 #
-# It runs when the release PR changes, whenever a PR workflow finishes, and whenever a check from
-# outside Actions finishes, so the approval follows the last check. A check that fails withdraws
-# the approval until every check passes, and approvals of an older commit are dismissed.
+# It runs whenever a PR workflow finishes and whenever a check from outside Actions finishes, so
+# the approval follows the last check. A check that fails withdraws the approval until every check
+# passes, and approvals of an older commit are dismissed. A push to the PR dismisses every approval
+# through the main ruleset (dismiss stale reviews on push).
+# Not pull_request_target: GitHub blocks that event in public repositories from 2026-12-02 unless
+# an Actions event policy allows it.
 #
 # Both triggers run this file and the check scripts from main, never from the PR, so a PR cannot
 # change what gets approved. Nothing from the PR is checked out or run; the diff is read through
@@ -21,10 +24,6 @@ name: Release PR Approval
 # The approval counts only while "Allow GitHub Actions to create and approve pull requests" is
 # enabled for the repository.
 on:
-  pull_request_target:
-    types: [opened, synchronize, reopened, ready_for_review]
-    branches:
-      - main
   # Every workflow that a release PR starts; scripts/check-release-ci.sh lists the same ones.
   workflow_run:
     workflows:
@@ -55,9 +54,6 @@ jobs:
     # Its own check run is named "Release PR: ...", which no check script waits for.
     name: "Release PR: approve"
     if: >-
-      (github.event_name == 'pull_request_target' &&
-       startsWith(github.head_ref, 'prepare-v') &&
-       github.event.pull_request.head.repo.full_name == github.repository) ||
       (github.event_name == 'workflow_run' &&
        github.event.workflow_run.event == 'pull_request' &&
        startsWith(github.event.workflow_run.head_branch, 'prepare-v') &&
@@ -69,7 +65,7 @@ jobs:
     # Never cancel a running job: one cancelled between merging and starting Release would leave
     # the version merged but not released. A newer event replaces only a waiting run.
     concurrency:
-      group: release-pr-approval-${{ github.head_ref || github.event.workflow_run.head_branch || github.event.check_run.check_suite.head_branch }}
+      group: release-pr-approval-${{ github.event.workflow_run.head_branch || github.event.check_run.check_suite.head_branch }}
       cancel-in-progress: false
     permissions:
       contents: write
@@ -79,7 +75,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GH_REPO: ${{ github.repository }}
-      HEAD_REF: ${{ github.head_ref || github.event.workflow_run.head_branch || github.event.check_run.check_suite.head_branch }}
+      HEAD_REF: ${{ github.event.workflow_run.head_branch || github.event.check_run.check_suite.head_branch }}
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
