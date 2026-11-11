@@ -672,7 +672,8 @@ var _ = Describe("Alert", Ordered, func() {
 			g.Expect(immediate).ToNot(BeNil())
 			g.Expect(immediate.DataprimeQuery.GetQuery()).To(Equal("source logs | count"))
 			g.Expect(immediate.GetTimeframeMinutes()).To(Equal(int32(15)))
-			// The period is not asserted here: an omitted period is the API's to default, and that is its behaviour, not the operator's.
+			// Omitted in the spec, so the API resets the period to its default and no longer returns it as set.
+			g.Expect(immediate.EvaluationPeriodMinutes).To(BeNil())
 			g.Expect(immediate.UseRowsAsPermutations).To(BeNil())
 			g.Expect(immediate.EvaluationDelayMs).To(BeNil())
 			g.Expect(immediate.NoDataPolicy).To(BeNil())
