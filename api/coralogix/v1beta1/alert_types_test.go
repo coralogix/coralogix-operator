@@ -184,7 +184,7 @@ func TestExtractAlertDefPropertiesAnalyticsThreshold(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, ptr.To[int32](15), props.AnalyticsThreshold.EvaluationPeriodMinutes)
 
-		// Omitted must stay nil so the API keeps its stored value instead of receiving a value the user never set.
+		// Omitted must stay nil so the API applies its default instead of receiving a value the user never set.
 		props, err = spec(nil).ExtractAlertDefProperties(&GetResourceRefProperties{})
 		require.NoError(t, err)
 		require.Nil(t, props.AnalyticsThreshold.EvaluationPeriodMinutes)

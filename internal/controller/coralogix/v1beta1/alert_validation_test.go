@@ -145,8 +145,8 @@ var _ = Describe("Alert validation", func() {
 		Expect(err.Error()).To(ContainSubstring("timeframeMinutes"))
 	})
 
-	It("should accept an analytics immediate alert with an evaluation period at the bounds", func(ctx context.Context) {
-		for i, period := range []int32{1, 15} {
+	It("should accept an analytics immediate alert with an evaluation period", func(ctx context.Context) {
+		for i, period := range []int32{1, 10} {
 			alert := analyticsImmediateAlert(fmt.Sprintf("analytics-immediate-evaluation-period-%d", i))
 			alert.Spec.TypeDefinition.AnalyticsImmediate.EvaluationPeriodMinutes = ptr.To(period)
 
@@ -164,56 +164,12 @@ var _ = Describe("Alert validation", func() {
 		Expect(k8sClient.Delete(ctx, alert)).To(Succeed())
 	})
 
-	It("should reject an analytics immediate alert with an evaluation period outside 1-15", func(ctx context.Context) {
-		for i, period := range []int32{0, 16} {
-			alert := analyticsImmediateAlert(fmt.Sprintf("analytics-immediate-evaluation-period-range-%d", i))
-			alert.Spec.TypeDefinition.AnalyticsImmediate.TimeframeMinutes = 60
-			alert.Spec.TypeDefinition.AnalyticsImmediate.EvaluationPeriodMinutes = ptr.To(period)
-
-			err := k8sClient.Create(ctx, alert)
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("evaluationPeriodMinutes"))
-		}
-	})
-
-	It("should reject an analytics immediate alert whose evaluation period exceeds the time frame", func(ctx context.Context) {
-		alert := analyticsImmediateAlert("analytics-immediate-evaluation-period-above-timeframe")
-		alert.Spec.TypeDefinition.AnalyticsImmediate.TimeframeMinutes = 5
-		alert.Spec.TypeDefinition.AnalyticsImmediate.EvaluationPeriodMinutes = ptr.To[int32](6)
-
-		err := k8sClient.Create(ctx, alert)
-		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("evaluationPeriodMinutes must not exceed timeframeMinutes"))
-	})
-
 	It("should accept an analytics threshold alert with an evaluation period", func(ctx context.Context) {
 		alert := analyticsThresholdAlert("analytics-threshold-evaluation-period", analyticsThresholdRule("1", "p1"))
 		alert.Spec.TypeDefinition.AnalyticsThreshold.EvaluationPeriodMinutes = ptr.To[int32](15)
 
 		Expect(k8sClient.Create(ctx, alert)).To(Succeed())
 		Expect(k8sClient.Delete(ctx, alert)).To(Succeed())
-	})
-
-	It("should reject an analytics threshold alert with an evaluation period outside 1-15", func(ctx context.Context) {
-		for i, period := range []int32{0, 16} {
-			alert := analyticsThresholdAlert(fmt.Sprintf("analytics-threshold-evaluation-period-range-%d", i), analyticsThresholdRule("1", "p1"))
-			alert.Spec.TypeDefinition.AnalyticsThreshold.TimeframeMinutes = 60
-			alert.Spec.TypeDefinition.AnalyticsThreshold.EvaluationPeriodMinutes = ptr.To(period)
-
-			err := k8sClient.Create(ctx, alert)
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("evaluationPeriodMinutes"))
-		}
-	})
-
-	It("should reject an analytics threshold alert whose evaluation period exceeds the time frame", func(ctx context.Context) {
-		alert := analyticsThresholdAlert("analytics-threshold-evaluation-period-above-timeframe", analyticsThresholdRule("1", "p1"))
-		alert.Spec.TypeDefinition.AnalyticsThreshold.TimeframeMinutes = 5
-		alert.Spec.TypeDefinition.AnalyticsThreshold.EvaluationPeriodMinutes = ptr.To[int32](6)
-
-		err := k8sClient.Create(ctx, alert)
-		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("evaluationPeriodMinutes must not exceed timeframeMinutes"))
 	})
 
 	It("should reject an analytics alert with an evaluation delay above three hours", func(ctx context.Context) {

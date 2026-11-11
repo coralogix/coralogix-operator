@@ -92,13 +92,9 @@ spec:
                       evaluationPeriodMinutes:
                         description: |-
                           How often the alert is evaluated, in minutes. Each evaluation runs the query over the last timeframeMinutes.
-                          Must be between 1 and 15 and must not exceed timeframeMinutes.
-                          When unset, the API keeps the current value. On create, the default is the smaller of 10 and timeframeMinutes.
-                          To change the value, set it explicitly. When lowering timeframeMinutes below the stored value, set this field too,
-                          otherwise the API rejects the update.
+                          When unset, the API uses the smaller of 10 and timeframeMinutes; removing the field resets the period to that default.
+                          The API checks the range and that the value does not exceed timeframeMinutes.
                         format: int32
-                        maximum: 15
-                        minimum: 1
                         type: integer
                       noDataPolicy:
                         description: Policy for handling missing data.
@@ -134,10 +130,6 @@ spec:
                     - dataprimeQuery
                     - timeframeMinutes
                     type: object
-                    x-kubernetes-validations:
-                    - message: evaluationPeriodMinutes must not exceed timeframeMinutes
-                      rule: '!has(self.evaluationPeriodMinutes) || self.evaluationPeriodMinutes
-                        <= self.timeframeMinutes'
                   analyticsThreshold:
                     description: Alerts for when a DataPrime query result column crosses
                       a threshold (preview).
@@ -164,13 +156,9 @@ spec:
                       evaluationPeriodMinutes:
                         description: |-
                           How often the alert is evaluated, in minutes. Each evaluation runs the query over the last timeframeMinutes.
-                          Must be between 1 and 15 and must not exceed timeframeMinutes.
-                          When unset, the API keeps the current value. On create, the default is the smaller of 10 and timeframeMinutes.
-                          To change the value, set it explicitly. When lowering timeframeMinutes below the stored value, set this field too,
-                          otherwise the API rejects the update.
+                          When unset, the API uses the smaller of 10 and timeframeMinutes; removing the field resets the period to that default.
+                          The API checks the range and that the value does not exceed timeframeMinutes.
                         format: int32
-                        maximum: 15
-                        minimum: 1
                         type: integer
                       noDataPolicy:
                         description: Policy for handling missing data.
@@ -265,10 +253,6 @@ spec:
                     - rules
                     - timeframeMinutes
                     type: object
-                    x-kubernetes-validations:
-                    - message: evaluationPeriodMinutes must not exceed timeframeMinutes
-                      rule: '!has(self.evaluationPeriodMinutes) || self.evaluationPeriodMinutes
-                        <= self.timeframeMinutes'
                   flow:
                     description: Flow alerts chaining multiple alerts together.
                     properties:

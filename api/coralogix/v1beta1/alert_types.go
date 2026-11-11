@@ -819,7 +819,6 @@ type DataprimeQuery struct {
 }
 
 // Immediate alerts for DataPrime query results (preview).
-// +kubebuilder:validation:XValidation:rule="!has(self.evaluationPeriodMinutes) || self.evaluationPeriodMinutes <= self.timeframeMinutes",message="evaluationPeriodMinutes must not exceed timeframeMinutes"
 type AnalyticsImmediate struct {
 	// DataPrime query that triggers the alert when it returns results.
 	DataprimeQuery DataprimeQuery `json:"dataprimeQuery"`
@@ -829,12 +828,8 @@ type AnalyticsImmediate struct {
 	TimeframeMinutes int32 `json:"timeframeMinutes"`
 
 	// How often the alert is evaluated, in minutes. Each evaluation runs the query over the last timeframeMinutes.
-	// Must be between 1 and 15 and must not exceed timeframeMinutes.
-	// When unset, the API keeps the current value. On create, the default is the smaller of 10 and timeframeMinutes.
-	// To change the value, set it explicitly. When lowering timeframeMinutes below the stored value, set this field too,
-	// otherwise the API rejects the update.
-	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:validation:Maximum=15
+	// When unset, the API uses the smaller of 10 and timeframeMinutes; removing the field resets the period to that default.
+	// The API checks the range and that the value does not exceed timeframeMinutes.
 	// +optional
 	EvaluationPeriodMinutes *int32 `json:"evaluationPeriodMinutes,omitempty"`
 
@@ -854,7 +849,6 @@ type AnalyticsImmediate struct {
 }
 
 // Alerts for when a DataPrime query result column crosses a threshold (preview).
-// +kubebuilder:validation:XValidation:rule="!has(self.evaluationPeriodMinutes) || self.evaluationPeriodMinutes <= self.timeframeMinutes",message="evaluationPeriodMinutes must not exceed timeframeMinutes"
 type AnalyticsThreshold struct {
 	// DataPrime query whose results are evaluated against the rules.
 	DataprimeQuery DataprimeQuery `json:"dataprimeQuery"`
@@ -878,12 +872,8 @@ type AnalyticsThreshold struct {
 	TimeframeMinutes int32 `json:"timeframeMinutes"`
 
 	// How often the alert is evaluated, in minutes. Each evaluation runs the query over the last timeframeMinutes.
-	// Must be between 1 and 15 and must not exceed timeframeMinutes.
-	// When unset, the API keeps the current value. On create, the default is the smaller of 10 and timeframeMinutes.
-	// To change the value, set it explicitly. When lowering timeframeMinutes below the stored value, set this field too,
-	// otherwise the API rejects the update.
-	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:validation:Maximum=15
+	// When unset, the API uses the smaller of 10 and timeframeMinutes; removing the field resets the period to that default.
+	// The API checks the range and that the value does not exceed timeframeMinutes.
 	// +optional
 	EvaluationPeriodMinutes *int32 `json:"evaluationPeriodMinutes,omitempty"`
 
