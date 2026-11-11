@@ -23,8 +23,8 @@ spec:
       targetColumn: errors
       operator: moreThan
       timeframeMinutes: 30
-      # Optional. How often the query is evaluated, 1-15 minutes and at most timeframeMinutes.
-      # On create the default is min(10, timeframeMinutes). When omitted on update, the API keeps the current value.
+      # Optional. How often the query is evaluated, in minutes. Must not exceed timeframeMinutes.
+      # When omitted, the API uses min(10, timeframeMinutes). Removing the line resets the period to that default.
       evaluationPeriodMinutes: 5
       useRowsAsPermutations: true
       rules:
