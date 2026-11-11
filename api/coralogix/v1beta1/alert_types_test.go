@@ -73,6 +73,19 @@ func TestExtractAlertDefPropertiesAnalyticsImmediate(t *testing.T) {
 			},
 		},
 		{
+			name: "evaluation period is sent when set",
+			immediate: &AnalyticsImmediate{
+				DataprimeQuery:          DataprimeQuery{Query: "source logs | count"},
+				TimeframeMinutes:        15,
+				EvaluationPeriodMinutes: ptr.To[int32](5),
+			},
+			want: &alerts.AnalyticsImmediateType{
+				DataprimeQuery:          &alerts.DataprimeAlertQuery{Query: ptr.To("source logs | count")},
+				TimeframeMinutes:        ptr.To[int32](15),
+				EvaluationPeriodMinutes: ptr.To[int32](5),
+			},
+		},
+		{
 			name: "full",
 			immediate: &AnalyticsImmediate{
 				DataprimeQuery:        DataprimeQuery{Query: "source logs | count"},
@@ -155,6 +168,26 @@ func TestExtractAlertDefPropertiesAnalyticsThreshold(t *testing.T) {
 				{Condition: &alerts.AnalyticsThresholdRuleCondition{Threshold: ptr.To(20.0)}, Override: p3},
 			},
 		}, props.AnalyticsThreshold)
+	})
+
+	t.Run("evaluation period is sent when set and left unset otherwise", func(t *testing.T) {
+		spec := func(period *int32) *AlertSpec {
+			return analyticsAlertSpec(AlertTypeDefinition{AnalyticsThreshold: &AnalyticsThreshold{
+				DataprimeQuery:          DataprimeQuery{Query: "source logs | count as c"},
+				TimeframeMinutes:        15,
+				EvaluationPeriodMinutes: period,
+				Rules:                   []AnalyticsThresholdRule{{Condition: AnalyticsThresholdRuleCondition{Threshold: resource.MustParse("1")}}},
+			}})
+		}
+
+		props, err := spec(ptr.To[int32](15)).ExtractAlertDefProperties(&GetResourceRefProperties{})
+		require.NoError(t, err)
+		require.Equal(t, ptr.To[int32](15), props.AnalyticsThreshold.EvaluationPeriodMinutes)
+
+		// Omitted must stay nil so the API applies its default instead of receiving a value the user never set.
+		props, err = spec(nil).ExtractAlertDefProperties(&GetResourceRefProperties{})
+		require.NoError(t, err)
+		require.Nil(t, props.AnalyticsThreshold.EvaluationPeriodMinutes)
 	})
 
 	for operator, want := range map[AnalyticsThresholdOperator]alerts.AnalyticsThresholdOperator{

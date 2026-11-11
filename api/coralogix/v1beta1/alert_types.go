@@ -827,6 +827,12 @@ type AnalyticsImmediate struct {
 	// +kubebuilder:validation:Minimum=1
 	TimeframeMinutes int32 `json:"timeframeMinutes"`
 
+	// How often the alert is evaluated, in minutes. Each evaluation runs the query over the last timeframeMinutes.
+	// When unset, the API uses the smaller of 10 and timeframeMinutes; removing the field resets the period to that default.
+	// The API checks the range and that the value does not exceed timeframeMinutes.
+	// +optional
+	EvaluationPeriodMinutes *int32 `json:"evaluationPeriodMinutes,omitempty"`
+
 	// Whether each result row is treated as a separate permutation.
 	// +optional
 	UseRowsAsPermutations *bool `json:"useRowsAsPermutations,omitempty"`
@@ -864,6 +870,12 @@ type AnalyticsThreshold struct {
 	// Time frame in minutes the query is evaluated over.
 	// +kubebuilder:validation:Minimum=1
 	TimeframeMinutes int32 `json:"timeframeMinutes"`
+
+	// How often the alert is evaluated, in minutes. Each evaluation runs the query over the last timeframeMinutes.
+	// When unset, the API uses the smaller of 10 and timeframeMinutes; removing the field resets the period to that default.
+	// The API checks the range and that the value does not exceed timeframeMinutes.
+	// +optional
+	EvaluationPeriodMinutes *int32 `json:"evaluationPeriodMinutes,omitempty"`
 
 	// Whether each result row is treated as a separate permutation.
 	// +optional
@@ -3340,23 +3352,25 @@ func expandMetricThreshold(threshold *MetricThreshold, priority alerts.AlertDefP
 
 func expandAnalyticsImmediate(immediate *AnalyticsImmediate) *alerts.AnalyticsImmediateType {
 	return &alerts.AnalyticsImmediateType{
-		DataprimeQuery:        expandDataprimeQuery(immediate.DataprimeQuery),
-		TimeframeMinutes:      alerts.PtrInt32(immediate.TimeframeMinutes),
-		UseRowsAsPermutations: immediate.UseRowsAsPermutations,
-		EvaluationDelayMs:     immediate.EvaluationDelayMs,
-		NoDataPolicy:          expandNoDataPolicy(immediate.NoDataPolicy),
+		DataprimeQuery:          expandDataprimeQuery(immediate.DataprimeQuery),
+		TimeframeMinutes:        alerts.PtrInt32(immediate.TimeframeMinutes),
+		EvaluationPeriodMinutes: immediate.EvaluationPeriodMinutes,
+		UseRowsAsPermutations:   immediate.UseRowsAsPermutations,
+		EvaluationDelayMs:       immediate.EvaluationDelayMs,
+		NoDataPolicy:            expandNoDataPolicy(immediate.NoDataPolicy),
 	}
 }
 
 func expandAnalyticsThreshold(threshold *AnalyticsThreshold, priority alerts.AlertDefPriority) *alerts.AnalyticsThresholdType {
 	thresholdType := &alerts.AnalyticsThresholdType{
-		DataprimeQuery:        expandDataprimeQuery(threshold.DataprimeQuery),
-		Rules:                 expandAnalyticsThresholdRules(threshold.Rules, priority),
-		TargetColumn:          threshold.TargetColumn,
-		TimeframeMinutes:      alerts.PtrInt32(threshold.TimeframeMinutes),
-		UseRowsAsPermutations: threshold.UseRowsAsPermutations,
-		EvaluationDelayMs:     threshold.EvaluationDelayMs,
-		NoDataPolicy:          expandNoDataPolicy(threshold.NoDataPolicy),
+		DataprimeQuery:          expandDataprimeQuery(threshold.DataprimeQuery),
+		Rules:                   expandAnalyticsThresholdRules(threshold.Rules, priority),
+		TargetColumn:            threshold.TargetColumn,
+		TimeframeMinutes:        alerts.PtrInt32(threshold.TimeframeMinutes),
+		EvaluationPeriodMinutes: threshold.EvaluationPeriodMinutes,
+		UseRowsAsPermutations:   threshold.UseRowsAsPermutations,
+		EvaluationDelayMs:       threshold.EvaluationDelayMs,
+		NoDataPolicy:            expandNoDataPolicy(threshold.NoDataPolicy),
 	}
 
 	if threshold.Operator != nil {

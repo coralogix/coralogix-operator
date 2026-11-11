@@ -145,6 +145,33 @@ var _ = Describe("Alert validation", func() {
 		Expect(err.Error()).To(ContainSubstring("timeframeMinutes"))
 	})
 
+	It("should accept an analytics immediate alert with an evaluation period", func(ctx context.Context) {
+		for i, period := range []int32{1, 10} {
+			alert := analyticsImmediateAlert(fmt.Sprintf("analytics-immediate-evaluation-period-%d", i))
+			alert.Spec.TypeDefinition.AnalyticsImmediate.EvaluationPeriodMinutes = ptr.To(period)
+
+			Expect(k8sClient.Create(ctx, alert)).To(Succeed())
+			Expect(k8sClient.Delete(ctx, alert)).To(Succeed())
+		}
+	})
+
+	It("should accept an analytics immediate alert whose evaluation period equals the time frame", func(ctx context.Context) {
+		alert := analyticsImmediateAlert("analytics-immediate-evaluation-period-equals-timeframe")
+		alert.Spec.TypeDefinition.AnalyticsImmediate.TimeframeMinutes = 5
+		alert.Spec.TypeDefinition.AnalyticsImmediate.EvaluationPeriodMinutes = ptr.To[int32](5)
+
+		Expect(k8sClient.Create(ctx, alert)).To(Succeed())
+		Expect(k8sClient.Delete(ctx, alert)).To(Succeed())
+	})
+
+	It("should accept an analytics threshold alert with an evaluation period", func(ctx context.Context) {
+		alert := analyticsThresholdAlert("analytics-threshold-evaluation-period", analyticsThresholdRule("1", "p1"))
+		alert.Spec.TypeDefinition.AnalyticsThreshold.EvaluationPeriodMinutes = ptr.To[int32](15)
+
+		Expect(k8sClient.Create(ctx, alert)).To(Succeed())
+		Expect(k8sClient.Delete(ctx, alert)).To(Succeed())
+	})
+
 	It("should reject an analytics alert with an evaluation delay above three hours", func(ctx context.Context) {
 		alert := analyticsImmediateAlert("analytics-evaluation-delay-too-big")
 		alert.Spec.TypeDefinition.AnalyticsImmediate.EvaluationDelayMs = ptr.To(int32(10800001))

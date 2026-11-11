@@ -611,9 +611,10 @@ var _ = Describe("Alert", Ordered, func() {
 						DataprimeQuery: coralogixv1beta1.DataprimeQuery{
 							Query: "source logs | groupby $l.applicationname aggregate count() as cnt",
 						},
-						TimeframeMinutes:      45,
-						UseRowsAsPermutations: ptr.To(true),
-						EvaluationDelayMs:     ptr.To(int32(120000)),
+						TimeframeMinutes:        45,
+						EvaluationPeriodMinutes: ptr.To(int32(5)),
+						UseRowsAsPermutations:   ptr.To(true),
+						EvaluationDelayMs:       ptr.To(int32(120000)),
 						NoDataPolicy: &coralogixv1beta1.NoDataPolicy{
 							State:             coralogixv1beta1.NoDataPolicyStateAlerting,
 							AutoRetireSeconds: ptr.To(int32(3600)),
@@ -645,6 +646,7 @@ var _ = Describe("Alert", Ordered, func() {
 			g.Expect(immediate).ToNot(BeNil())
 			g.Expect(immediate.DataprimeQuery.GetQuery()).To(Equal("source logs | groupby $l.applicationname aggregate count() as cnt"))
 			g.Expect(immediate.GetTimeframeMinutes()).To(Equal(int32(45)))
+			g.Expect(immediate.EvaluationPeriodMinutes).To(Equal(ptr.To(int32(5))))
 			g.Expect(immediate.UseRowsAsPermutations).To(Equal(ptr.To(true)))
 			g.Expect(immediate.EvaluationDelayMs).To(Equal(ptr.To(int32(120000))))
 			g.Expect(immediate.NoDataPolicy.GetState()).To(Equal(alerts.NODATAPOLICYSTATE_NO_DATA_POLICY_STATE_ALERTING))
@@ -670,6 +672,8 @@ var _ = Describe("Alert", Ordered, func() {
 			g.Expect(immediate).ToNot(BeNil())
 			g.Expect(immediate.DataprimeQuery.GetQuery()).To(Equal("source logs | count"))
 			g.Expect(immediate.GetTimeframeMinutes()).To(Equal(int32(15)))
+			// Omitted in the spec, so the API resets the period to its default and no longer returns it as set.
+			g.Expect(immediate.EvaluationPeriodMinutes).To(BeNil())
 			g.Expect(immediate.UseRowsAsPermutations).To(BeNil())
 			g.Expect(immediate.EvaluationDelayMs).To(BeNil())
 			g.Expect(immediate.NoDataPolicy).To(BeNil())
