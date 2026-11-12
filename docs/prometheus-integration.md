@@ -23,7 +23,7 @@ The following Coralogix Alert properties are derived from the PrometheusRule ale
 
 - `Alert.Spec.Name`: Set to `rule.Alert` value
 - `Alert.Spec.Description`: Set to `rule.Annotations["description"]` value
-- `Alert.Spec.EntityLabels`: Set to `rule.Labels` property
+- `Alert.Spec.EntityLabels`: Set to `rule.Labels` property, plus the PrometheusRule's own labels that start with `routing.` (see [Notification routing](#notification-routing))
 - `Alert.Spec.Priority`: Set to `rule.Labels["severity"]` value, with the next priority mapping:
     - `critical` -> `p1`
     - `error` -> `p2`
@@ -36,6 +36,56 @@ The following Coralogix Alert properties are derived from the PrometheusRule ale
 - `Alert.Spec.AlertType.MetricThreshold.Rules[0].Condition.ForOverPct`: Set to `100`
 
 Other properties will not be overridden by the operator and can be modified directly in the Coralogix Alert resource.
+
+#### Notification routing
+
+Alerts created from a PrometheusRule can be delivered through Notification Center [Global Routers](https://coralogix.com/docs/user-guides/notification-center/routing/introduction/), which match alerts by their routing labels.
+
+To route the Alerts generated from a PrometheusRule, add this annotation to the PrometheusRule, with the router's `notifyOn` as its value (`triggeredOnly` or `triggeredAndResolved`):
+
+```yaml
+app.coralogix.com/alert-router-notify-on: triggeredAndResolved
+```
+
+The operator then sets `Alert.Spec.NotificationGroup.Router` to `{notifyOn: <value>, mode: routingLabels}` on each generated Alert, so Coralogix sends its notifications to every Global Router whose routing labels match the Alert's. The rest of the notification group, such as `groupByKeys` and `webhooks`, is kept. `destinations` is removed, because an Alert can have a router or destinations but not both. A phantom Alert (`phantomMode: true`) gets no router, because it can't have a notification group. An invalid annotation value fails the reconcile and leaves routers as they are; the PrometheusRule's other changes still sync. Without the annotation, the operator leaves the notification group as it is.
+
+Routing labels are entity labels with the `routing.` prefix, such as `routing.environment`. Prometheus does not allow dots in rule label names, so set them as labels on the PrometheusRule itself. The operator copies every PrometheusRule label that starts with `routing.` into the entity labels of each generated Alert:
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app.coralogix.com/track-alerting-rules: "true"
+    routing.environment: production
+    routing.team: payments
+  annotations:
+    app.coralogix.com/alert-router-notify-on: triggeredAndResolved
+  name: payments-rules
+spec:
+  groups:
+    - name: payments.rules
+      rules:
+        - alert: payments-error-rate
+          expr: rate(payment_errors_total[5m]) > 1
+          for: 5m
+          labels:
+            severity: critical
+```
+
+The generated Alert gets these entity labels and router:
+
+```yaml
+spec:
+  entityLabels:
+    routing.environment: production
+    routing.team: payments
+    severity: critical
+  notificationGroup:
+    router:
+      mode: routingLabels
+      notifyOn: triggeredAndResolved
+```
 
 #### Example
 
