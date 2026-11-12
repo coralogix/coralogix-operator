@@ -236,6 +236,86 @@ var _ = Describe("Alert", Ordered, func() {
 		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
 	})
 
+	It("Should route by routing labels", func(ctx context.Context) {
+		By("Creating an Alert routed to the Global Routers matching its routing labels")
+		alertName := uniqueName("routing-labels-alert")
+		routedAlert := &coralogixv1beta1.Alert{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      alertName,
+				Namespace: testNamespace,
+			},
+			Spec: coralogixv1beta1.AlertSpec{
+				Name:        alertName,
+				Description: "alert from k8s operator",
+				Priority:    coralogixv1beta1.AlertPriorityP3,
+				EntityLabels: map[string]string{
+					"routing.environment": "e2e",
+				},
+				NotificationGroup: &coralogixv1beta1.NotificationGroup{
+					Router: &coralogixv1beta1.NotificationRouter{
+						NotifyOn: coralogixv1beta1.NotifyOnTriggeredAndResolved,
+						Mode:     coralogixv1beta1.NotificationRouterModeRoutingLabels,
+					},
+				},
+				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
+					MetricThreshold: &coralogixv1beta1.MetricThreshold{
+						MissingValues: coralogixv1beta1.MetricMissingValues{
+							MinNonNullValuesPct: ptr.To(int64(10)),
+						},
+						MetricFilter: coralogixv1beta1.MetricFilter{
+							Promql: "http_requests_total{status!~\"4..\"}",
+						},
+						Rules: []coralogixv1beta1.MetricThresholdRule{
+							{
+								Condition: coralogixv1beta1.MetricThresholdRuleCondition{
+									Threshold:     coralogix.FloatToQuantity(3),
+									ForOverPct:    50,
+									ConditionType: coralogixv1beta1.MetricThresholdConditionTypeMoreThan,
+									OfTheLast: coralogixv1beta1.MetricTimeWindow{
+										DynamicDuration: ptr.To("12h"),
+									},
+								},
+								Override: &coralogixv1beta1.AlertOverride{
+									Priority: coralogixv1beta1.AlertPriorityP3,
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		Expect(crClient.Create(ctx, routedAlert)).To(Succeed())
+
+		By("Fetching the Alert ID")
+		var routedAlertID string
+		Eventually(func(g Gomega) {
+			fetched := &coralogixv1beta1.Alert{}
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: alertName, Namespace: testNamespace}, fetched)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(fetched.Status.ID).ToNot(BeNil())
+			routedAlertID = *fetched.Status.ID
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying the backend Alert uses label-matched routing")
+		Eventually(func(g Gomega) {
+			alertDef, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(routedAlertID)})
+			g.Expect(err).ToNot(HaveOccurred())
+			properties := alertDef.GetAlertDef().GetAlertDefProperties()
+			router := properties.GetNotificationGroup().GetRouter()
+			g.Expect(router).ToNot(BeNil())
+			// An empty router ID is label-matched routing; the default router is "router_default".
+			g.Expect(router.GetId()).To(BeEmpty())
+			g.Expect(properties.GetEntityLabels()).To(HaveKeyWithValue("routing.environment", "e2e"))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Deleting the Alert")
+		Expect(crClient.Delete(ctx, routedAlert)).To(Succeed())
+		Eventually(func() codes.Code {
+			_, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(routedAlertID)})
+			return cxsdk.Code(err)
+		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
+	})
+
 	It("Should store an err condition in status", func(ctx context.Context) {
 		By("Creating Alert with a non-existing webhook")
 		alertName := uniqueName("promql-alert")

@@ -1,0 +1,36 @@
+apiVersion: coralogix.com/v1beta1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/name: alert
+    app.kubernetes.io/instance: alert-sample
+    app.kubernetes.io/part-of: coralogix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: coralogix-operator
+  name: metric-threshold-routing-labels
+spec:
+  name: metric-threshold alert routed by routing labels
+  description: alert from k8s operator, delivered by the Global Routers matching its routing labels
+  entityLabels:
+    routing.environment: production
+    routing.team: payments
+  alertType:
+    metricThreshold:
+      metricFilter:
+        promql: |
+          sum(rate(http_requests_total{job="api-server"}[5m])) by (status)
+      missingValues:
+        minNonNullValuesPct: 60
+      rules:
+        - condition:
+            threshold: "100"
+            forOverPct: 100
+            ofTheLast:
+              dynamicDuration: 5m
+            conditionType: moreThan
+          override:
+            priority: p3
+  notificationGroup:
+    router:
+      notifyOn: triggeredAndResolved
+      mode: routingLabels

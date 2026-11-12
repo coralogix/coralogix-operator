@@ -228,6 +228,13 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 
 	alertsToKeep := make(map[string]bool)
 	var errorsEncountered []error
+
+	// An invalid router annotation fails the reconcile, but must not stop the rule's other
+	// changes from syncing: routers are then left as they are.
+	routerNotifyOn, err := alertRouterNotifyOn(prometheusRule)
+	if err != nil {
+		errorsEncountered = append(errorsEncountered, err)
+	}
 	for alertName, rules := range alertMap {
 		for i, rule := range rules {
 			alert := &coralogixv1beta1.Alert{}
@@ -245,6 +252,10 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 					alert.Labels[managedByLabelKey] = truncateLabelValue(prometheusRule.Name)
 					alert.OwnerReferences = []metav1.OwnerReference{getOwnerReference(prometheusRule)}
 					alert.Spec = prometheusAlertingRuleToAlertSpec(&rule)
+					alert.Spec.EntityLabels = alertEntityLabels(prometheusRule, rule)
+					if routerNotifyOn != nil {
+						setAlertRouter(alert, *routerNotifyOn)
+					}
 					if err = config.GetClient().Create(ctx, alert); err != nil {
 						errorsEncountered = append(errorsEncountered, fmt.Errorf("error creating Alert CRD %s: %w", alertName, err))
 					}
@@ -274,7 +285,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 				updated = true
 			}
 
-			desiredEntityLabels := rule.Labels
+			desiredEntityLabels := alertEntityLabels(prometheusRule, rule)
 			if !reflect.DeepEqual(alert.Spec.EntityLabels, desiredEntityLabels) {
 				alert.Spec.EntityLabels = desiredEntityLabels
 				updated = true
@@ -292,6 +303,12 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 			desiredTypeDefinition.MetricThreshold.MissingValues.MinNonNullValuesPct = alert.Spec.TypeDefinition.MetricThreshold.MissingValues.MinNonNullValuesPct
 			if !reflect.DeepEqual(alert.Spec.TypeDefinition, desiredTypeDefinition) {
 				alert.Spec.TypeDefinition = desiredTypeDefinition
+				updated = true
+			}
+
+			// Only an annotated PrometheusRule manages the router. Without the annotation the
+			// notification group is left as it is, so one set directly on the Alert is kept.
+			if routerNotifyOn != nil && setAlertRouter(alert, *routerNotifyOn) {
 				updated = true
 			}
 
@@ -457,6 +474,74 @@ func prometheusAlertToMetricThreshold(rule prometheus.Rule, priority coralogixv1
 			MinNonNullValuesPct: ptr.To(int64(0)),
 		},
 	}
+}
+
+// alertRouterNotifyOn returns the notifyOn set by the PrometheusRule's router annotation, or nil
+// when the annotation is absent.
+func alertRouterNotifyOn(prometheusRule *prometheus.PrometheusRule) (*coralogixv1beta1.NotifyOn, error) {
+	value, ok := prometheusRule.Annotations[utils.PrometheusRuleAlertRouterNotifyOnAnnotationKey]
+	if !ok {
+		return nil, nil
+	}
+	notifyOn := coralogixv1beta1.NotifyOn(value)
+	if _, valid := coralogixv1beta1.NotifyOnToOpenAPINotifyOn[notifyOn]; !valid {
+		return nil, fmt.Errorf("annotation %s has invalid value %q: must be %q or %q",
+			utils.PrometheusRuleAlertRouterNotifyOnAnnotationKey, value,
+			coralogixv1beta1.NotifyOnTriggeredOnly, coralogixv1beta1.NotifyOnTriggeredAndResolved)
+	}
+	return &notifyOn, nil
+}
+
+// setAlertRouter routes alert to the Global Routers matching its routing labels, notifying on
+// notifyOn, and keeps the rest of its notification group. Destinations are cleared, since an
+// Alert can have a router or destinations but not both. A phantom Alert is left alone, since it
+// can't have a notification group. It reports whether alert changed.
+func setAlertRouter(alert *coralogixv1beta1.Alert, notifyOn coralogixv1beta1.NotifyOn) bool {
+	if alert.Spec.PhantomMode {
+		return false
+	}
+	want := coralogixv1beta1.NotificationRouter{
+		NotifyOn: notifyOn,
+		Mode:     coralogixv1beta1.NotificationRouterModeRoutingLabels,
+	}
+	group := alert.Spec.NotificationGroup
+	if group != nil && group.Destinations == nil && group.Router != nil && *group.Router == want {
+		return false
+	}
+	if group == nil {
+		group = &coralogixv1beta1.NotificationGroup{}
+		alert.Spec.NotificationGroup = group
+	}
+	group.Destinations = nil
+	group.Router = &want
+	return true
+}
+
+// routingLabelPrefix marks the PrometheusRule labels that become routing labels on its Alerts.
+// Prometheus rejects dots in rule label names, so routing labels are set on the PrometheusRule.
+const routingLabelPrefix = "routing."
+
+// alertEntityLabels returns the entity labels of the Alert generated from rule: the rule's
+// labels plus the PrometheusRule's routing.-prefixed labels.
+func alertEntityLabels(prometheusRule *prometheus.PrometheusRule, rule prometheus.Rule) map[string]string {
+	var labels map[string]string
+	for key, value := range prometheusRule.Labels {
+		if !strings.HasPrefix(key, routingLabelPrefix) {
+			continue
+		}
+		if labels == nil {
+			labels = make(map[string]string, len(rule.Labels)+1)
+			for k, v := range rule.Labels {
+				labels[k] = v
+			}
+		}
+		labels[key] = value
+	}
+	if labels == nil {
+		// No routing labels: keep the rule's labels as they are, so existing Alerts are unchanged.
+		return rule.Labels
+	}
+	return labels
 }
 
 func getPriority(rule prometheus.Rule) coralogixv1beta1.AlertPriority {

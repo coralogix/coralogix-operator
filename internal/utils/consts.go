@@ -54,5 +54,10 @@ const (
 	TrackPrometheusRuleAlertsLabelKey         = "app.coralogix.com/track-alerting-rules"
 	TrackPrometheusRuleRecordingRulesLabelKey = "app.coralogix.com/track-recording-rules"
 
+	// PrometheusRuleAlertRouterNotifyOnAnnotationKey, set on a PrometheusRule, routes the Alerts
+	// generated from its alerting rules through the Notification Center router. Its value is the
+	// router's notifyOn: triggeredOnly or triggeredAndResolved.
+	PrometheusRuleAlertRouterNotifyOnAnnotationKey = "app.coralogix.com/alert-router-notify-on"
+
 	LogVerbosityAnnotationKey = "app.coralogix.com/log-verbosity"
 )
