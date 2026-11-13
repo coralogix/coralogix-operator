@@ -3,6 +3,7 @@ package generator
 import (
 	"fmt"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/coralogix/coralogix-management-sdk/iac/model"
@@ -48,6 +49,8 @@ type coverage struct {
 	coupledKeys map[coverageKey]bool
 	// live holds the keys that a test can reach: the ones that are not only below a skipped arm.
 	live map[coverageKey]bool
+	// sent collects the keys that the spec in the making sends. It is nil when no spec is collected.
+	sent map[coverageKey]bool
 	// extra counts the list items that the current step added beyond the first.
 	extra int
 }
@@ -197,7 +200,27 @@ func (c *coverage) readSkips(file *e2eFile) error {
 }
 
 // mark records that a test sends the key.
-func (c *coverage) mark(key coverageKey) { c.covered[key] = true }
+func (c *coverage) mark(key coverageKey) {
+	c.covered[key] = true
+	if c.sent != nil {
+		c.sent[key] = true
+	}
+}
+
+// startSpec begins to collect the keys that one spec sends.
+func (c *coverage) startSpec() { c.sent = map[coverageKey]bool{} }
+
+// finishSpec returns the keys that the spec sent, in contract order.
+func (c *coverage) finishSpec() []coverageKey {
+	var keys []coverageKey
+	for _, key := range c.universe {
+		if c.sent[key] {
+			keys = append(keys, key)
+		}
+	}
+	c.sent = nil
+	return keys
+}
 
 // literal records what a fixed value of e2e.yaml really sends. A fixed value never exempts the
 // other values below it: the guard still names them.
@@ -364,21 +387,29 @@ func (c *coverage) guard() error {
 		msg: fmt.Sprintf("no test sends %d accepted values or arms.\nFor each, add a when entry, or add it to skipValues or skipChoices with a reason:\n  %s", len(missing), strings.Join(missing, "\n  "))}
 }
 
+// sweepCopy is one spec of a step, with the enum values and the oneOf arms that it sends.
+type sweepCopy struct {
+	spec *omap
+	keys []coverageKey
+}
+
 // sweep builds the extra steps. Step 0, the full spec, has already been recorded. Each step makes
 // copies of the spec until a copy adds nothing. The sweep stops at the first step that adds nothing.
-func (c *coverage) sweep(v *sampleValues, d *kindData) ([][]*omap, error) {
-	var steps [][]*omap
+func (c *coverage) sweep(v *sampleValues, d *kindData) ([][]sweepCopy, error) {
+	var steps [][]sweepCopy
 	for len(c.missing()) != 0 {
 		if len(steps) == maxSweepSteps {
 			return nil, &shapeError{code: codeE2ECoverageMissing, path: e2eFileName, msg: fmt.Sprintf("the sweep did not finish in %d steps", maxSweepSteps)}
 		}
 		c.extra = 0
-		var step []*omap
+		var step []sweepCopy
 		for len(step) < maxCopiesPerStep {
 			before := len(c.covered)
 			global, items := c.planCopy()
 			v.layers, v.items = []*overlay{global}, items
+			c.startSpec()
 			spec, err := v.object(d.Spec, "", true)
+			keys := c.finishSpec()
 			v.layers, v.items = nil, nil
 			if err != nil {
 				return nil, err
@@ -386,7 +417,7 @@ func (c *coverage) sweep(v *sampleValues, d *kindData) ([][]*omap, error) {
 			if len(c.covered) == before {
 				break
 			}
-			step = append(step, spec)
+			step = append(step, sweepCopy{spec: spec, keys: keys})
 		}
 		if len(step) == 0 {
 			break // the rest cannot be sent: the guard names it
@@ -394,4 +425,18 @@ func (c *coverage) sweep(v *sampleValues, d *kindData) ([][]*omap, error) {
 		steps = append(steps, step)
 	}
 	return steps, nil
+}
+
+// expectations returns the Go string literals that a Create request must hold for the keys: the
+// API value of an enum as a JSON string, and the API property of an arm as a JSON key.
+func (c *coverage) expectations(keys []coverageKey) []string {
+	var out []string
+	for _, key := range keys {
+		if key.kind == "arm" {
+			out = append(out, strconv.Quote(`"`+key.name+`":`))
+		} else {
+			out = append(out, strconv.Quote(`"`+key.name+`"`))
+		}
+	}
+	return out
 }

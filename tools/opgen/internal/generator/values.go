@@ -130,8 +130,19 @@ type e2eData struct {
 	NameField             string // the Go path of a string name, "" when there is none
 	NamePtr               bool
 	Update                *updateData
+	// FullKeys are the enum values and the oneOf arms that the full spec sends.
+	FullKeys []coverageKey
+	// CoverageSpecs are the specs that the offline coverage test checks: the full spec, the minimal
+	// spec, and every copy of every step.
+	CoverageSpecs []coverageSpecData
 	// Steps are the coverage steps after the full spec: the copies of the spec that each step creates.
-	Steps [][]*omap
+	Steps [][]sweepCopy
+}
+
+// coverageSpecData is one spec of the offline coverage test. Expect holds Go string literals.
+type coverageSpecData struct {
+	Name, JSON string
+	Expect     []string
 }
 
 type fixtureData struct {
@@ -169,6 +180,8 @@ type sampleValues struct {
 	cov *coverage
 	// record is true while the full spec is made: it records what it sends in cov.
 	record bool
+	// fullKeys are the enum values and oneOf arms of the full spec.
+	fullKeys []coverageKey
 	// sweeping picks open arms and values instead of the first ones.
 	sweeping bool
 	// layers hold the values and arms that when entries force in the current copy and list item.
@@ -192,7 +205,7 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 			return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":omit", msg: "omit must name an optional top-level spec field"}
 		}
 	}
-	var steps [][]*omap
+	var steps [][]sweepCopy
 	if full, minimal, steps, err = v.specs(d); err != nil {
 		return nil, nil, nil, err
 	}
@@ -214,7 +227,8 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 			return nil, nil, nil, &shapeError{code: codeE2EUnused, path: e2eFileName + ":values." + path, msg: "the spec has no such field"}
 		}
 	}
-	e2e = &e2eData{FullJSON: goString(full.json()), MinimalJSON: goString(minimal.json()), Serial: file.Serial, Omit: file.Omit, Steps: steps}
+	e2e = &e2eData{FullJSON: goString(full.json()), MinimalJSON: goString(minimal.json()), Serial: file.Serial, Omit: file.Omit, Steps: steps, FullKeys: v.fullKeys}
+	e2e.CoverageSpecs = v.coverageSpecs(full, minimal, steps)
 	for _, fixture := range file.Fixtures {
 		if !token.IsIdentifier(fixture.Kind) || fixture.Suffix == "" || !token.IsIdentifier(fixture.StatusField) || len(fixture.Spec) == 0 {
 			return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":fixtures", msg: "kind, suffix, statusField, and spec are required"}
@@ -261,14 +275,16 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 
 // specs makes up the full spec, the minimal spec, and the coverage steps. It fails when an accepted
 // enum value or oneOf arm is neither sent nor skipped.
-func (v *sampleValues) specs(d *kindData) (full, minimal *omap, steps [][]*omap, err error) {
+func (v *sampleValues) specs(d *kindData) (full, minimal *omap, steps [][]sweepCopy, err error) {
 	if v.cov, err = newCoverage(d, v.file); err != nil {
 		return nil, nil, nil, err
 	}
 	v.record = true
+	v.cov.startSpec()
 	if full, err = v.object(d.Spec, "", true); err != nil {
 		return nil, nil, nil, err
 	}
+	v.fullKeys = v.cov.finishSpec()
 	v.record = false
 	if minimal, err = v.object(d.Spec, "", false); err != nil {
 		return nil, nil, nil, err
@@ -282,6 +298,22 @@ func (v *sampleValues) specs(d *kindData) (full, minimal *omap, steps [][]*omap,
 		return nil, nil, nil, err
 	}
 	return full, minimal, steps, nil
+}
+
+// coverageSpecs lists the specs of the offline coverage test, with what each one must send.
+func (v *sampleValues) coverageSpecs(full, minimal *omap, steps [][]sweepCopy) []coverageSpecData {
+	specs := []coverageSpecData{
+		{Name: "full spec", JSON: goString(full.json()), Expect: v.cov.expectations(v.fullKeys)},
+		{Name: "minimal spec", JSON: goString(minimal.json())},
+	}
+	for i, step := range steps {
+		for j, c := range step {
+			specs = append(specs, coverageSpecData{
+				Name: fmt.Sprintf("step %d copy %d", i+1, j+1), JSON: goString(c.spec.json()), Expect: v.cov.expectations(c.keys),
+			})
+		}
+	}
+	return specs
 }
 
 // object makes up the value of a struct: every field when full is true, only the required fields

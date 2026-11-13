@@ -60,12 +60,12 @@ func aggEntries() []e2eWhen {
 }
 
 // specsAsJSON returns the full spec first, then the copies of each step.
-func copiesOf(t *testing.T, steps [][]*omap) []map[string]any {
+func copiesOf(t *testing.T, steps [][]sweepCopy) []map[string]any {
 	t.Helper()
 	var out []map[string]any
 	for _, step := range steps {
 		for _, spec := range step {
-			data, err := json.Marshal(spec)
+			data, err := json.Marshal(spec.spec)
 			if err != nil {
 				t.Fatal(err)
 			}

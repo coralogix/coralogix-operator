@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -56,16 +57,24 @@ func coverageSpec() *kindData {
 	return &kindData{Kind: "Thing", Spec: spec}
 }
 
-func specsOf(t *testing.T, d *kindData, file *e2eFile) ([][]*omap, *sampleValues, error) {
+func specsOf(t *testing.T, d *kindData, file *e2eFile) ([][]sweepCopy, *sampleValues, error) {
 	t.Helper()
 	v := &sampleValues{file: file, used: map[string]bool{}}
 	_, _, steps, err := v.specs(d)
 	return steps, v, err
 }
 
-func stepsJSON(t *testing.T, steps [][]*omap) string {
+func stepsJSON(t *testing.T, steps [][]sweepCopy) string {
 	t.Helper()
-	data, err := json.Marshal(steps)
+	var specs [][]*omap
+	for _, step := range steps {
+		var copies []*omap
+		for _, c := range step {
+			copies = append(copies, c.spec)
+		}
+		specs = append(specs, copies)
+	}
+	data, err := json.Marshal(specs)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -238,5 +247,38 @@ func TestOmittedFieldIsNotAnExemption(t *testing.T) {
 	shape := shapeOf(t, err, codeE2ECoverageMissing)
 	if !strings.Contains(shape.msg, "the value A of mode (component Mode)") {
 		t.Errorf("an omitted field must not hide its values:\n%s", shape.msg)
+	}
+}
+
+// The offline conversion check needs to know what each spec sends: the sweep records the keys of every copy.
+func TestEachSpecRecordsWhatItSends(t *testing.T) {
+	steps, v, err := specsOf(t, coverageSpec(), &e2eFile{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Contains(v.fullKeys, coverageKey{"enum", "Mode", "A"}) || !slices.Contains(v.fullKeys, coverageKey{"arm", "Query", "logs"}) {
+		t.Errorf("the full spec sends the first value and the first arm: %v", v.fullKeys)
+	}
+	seen := map[coverageKey]bool{}
+	for _, key := range v.fullKeys {
+		seen[key] = true
+	}
+	for _, step := range steps {
+		for _, c := range step {
+			if len(c.keys) == 0 {
+				t.Errorf("a copy must add coverage: %s", c.spec.json())
+			}
+			for _, key := range c.keys {
+				seen[key] = true
+			}
+		}
+	}
+	for _, key := range v.cov.universe {
+		if !seen[key] {
+			t.Errorf("no spec records %v", key)
+		}
+	}
+	if got := v.cov.expectations([]coverageKey{{"enum", "Mode", "A"}, {"arm", "Query", "logs"}}); !slices.Equal(got, []string{`"\"A\""`, `"\"logs\":"`}) {
+		t.Errorf("expectations = %v", got)
 	}
 }

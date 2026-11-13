@@ -1,0 +1,85 @@
+{{.Header}}
+
+{{template "license"}}
+
+package v1alpha1
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"strings"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	coralogixv1alpha1 "{{.Module}}/api/coralogix/v1alpha1"
+)
+
+// The specs that the generated e2e test sends to the API, one for each step of the coverage sweep.
+// Each spec must pass the admission of the CRD. The Create request of each spec must hold every
+// enum value and every oneOf arm that the sweep counts for it.
+type {{lowerFirst .Kind}}CoverageSpec struct {
+	name   string
+	spec   string
+	expect []string
+}
+
+var {{lowerFirst .Kind}}CoverageSpecs = []{{lowerFirst .Kind}}CoverageSpec{
+{{- range .E2E.CoverageSpecs}}
+	{
+		name: {{printf "%q" .Name}},
+		spec: {{.JSON}},
+{{- if .Expect}}
+		expect: []string{
+{{- range .Expect}}
+			{{.}},
+{{- end}}
+		},
+{{- end}}
+	},
+{{- end}}
+}
+
+var _ = Describe("{{.Kind}} coverage specs (generated)", func() {
+	var restore func()
+
+	BeforeEach(func() { restore = resolveEveryReference() })
+	AfterEach(func() { restore() })
+
+	for i, tc := range {{lowerFirst .Kind}}CoverageSpecs {
+		It(tc.name, func(ctx context.Context) {
+			cr := new{{.Kind}}CoverageCR(fmt.Sprintf("coverage-{{.Lower}}-%d", i), tc.spec)
+
+			By("passing the admission of the CRD")
+			Expect(k8sClient.Create(ctx, cr.DeepCopy(), client.DryRunAll)).To(Succeed())
+
+			By("sending every value and arm in the Create request")
+			body, err := cr.CreateRequest(ctx)
+			Expect(err).NotTo(HaveOccurred())
+			sent, err := json.Marshal(body)
+			Expect(err).NotTo(HaveOccurred())
+			for _, want := range tc.expect {
+				Expect(string(sent)).To(ContainSubstring(want))
+			}
+		})
+	}
+})
+
+// new{{.Kind}}CoverageCR returns a {{.Kind}} with the spec that the JSON holds. It sets the values
+// that the e2e test sets.
+func new{{.Kind}}CoverageCR(name, spec string) *coralogixv1alpha1.{{.Kind}} {
+	cr := &coralogixv1alpha1.{{.Kind}}{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: "default"}}
+	{{- range .E2E.Substitutions}}
+	spec = strings.ReplaceAll(spec, {{printf "%q" .From}}, strings.ReplaceAll({{printf "%q" .To}}, "@{run}", name))
+	{{- end}}
+	decoder := json.NewDecoder(strings.NewReader(spec))
+	decoder.DisallowUnknownFields()
+	Expect(decoder.Decode(&cr.Spec)).To(Succeed())
+{{- with .E2E.NameField}}
+	cr.Spec.{{.}} = {{if $.E2E.NamePtr}}&name{{else}}name{{end}}
+{{- end}}
+	return cr
+}

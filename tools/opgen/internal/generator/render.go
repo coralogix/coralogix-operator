@@ -49,6 +49,7 @@ func renderKind(d *kindData, full *omap) (map[string][]byte, error) {
 		{apiDir + "/" + d.Lower + "_convert.go", "convert.go.tmpl"},
 		{controllerDir + "/" + d.Lower + "_controller.go", "controller.go.tmpl"},
 		{e2eDir + "/" + d.Lower + "_generated_test.go", "e2e_test.go.tmpl"},
+		{controllerDir + "/" + d.Lower + "_coverage_test.go", "coverage_test.go.tmpl"},
 	} {
 		src, err := execute(f.tmpl, d)
 		if err != nil {
