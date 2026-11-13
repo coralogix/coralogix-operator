@@ -5,12 +5,12 @@
   "shards": [
     {
       "name": "coverage-1",
-      "filter": "coverage && (coverage-globalrouter-1 || coverage-preset-1 || coverage-view-1)",
-      "steps": 3
+      "filter": "coverage && (coverage-events2metric-1 || coverage-globalrouter-1 || coverage-preset-1 || coverage-view-1)",
+      "steps": 4
     },
     {
       "name": "coverage-rest",
-      "filter": "coverage && !(coverage-globalrouter-1 || coverage-preset-1 || coverage-view-1)",
+      "filter": "coverage && !(coverage-events2metric-1 || coverage-globalrouter-1 || coverage-preset-1 || coverage-view-1)",
       "steps": 0
     }
   ]

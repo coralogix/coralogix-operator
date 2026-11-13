@@ -20,6 +20,7 @@ package e2e
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -204,3 +205,210 @@ func waitForEvents2MetricGenerated(ctx context.Context, crClient client.Client, 
 	}, time.Minute, time.Second).Should(Succeed())
 	return id
 }
+
+// The coverage steps send an accepted enum value and a oneOf arm that the full spec does not. Each
+// step creates all its copies, waits until each is synced, reads each from the API, and deletes each.
+var events2MetricCoverageSteps = [][]string{
+	{
+		`{
+  "description": "sample-description",
+  "metricFields": [
+    {
+      "aggregations": [
+        {
+          "aggType": "samples",
+          "enabled": true,
+          "targetMetricName": "samples_min_value",
+          "aggMetadata": {
+            "samples": {
+              "sampleType": "min"
+            }
+          }
+        },
+        {
+          "aggType": "histogram",
+          "enabled": true,
+          "targetMetricName": "histogram_value",
+          "aggMetadata": {
+            "histogram": {
+              "buckets": [
+                1,
+                5,
+                10
+              ]
+            }
+          }
+        },
+        {
+          "aggType": "max",
+          "enabled": true,
+          "targetMetricName": "max_value",
+          "aggMetadata": {}
+        },
+        {
+          "aggType": "count",
+          "enabled": true,
+          "targetMetricName": "count_value",
+          "aggMetadata": {}
+        },
+        {
+          "aggType": "avg",
+          "enabled": true,
+          "targetMetricName": "avg_value",
+          "aggMetadata": {}
+        },
+        {
+          "aggType": "sum",
+          "enabled": true,
+          "targetMetricName": "sum_value",
+          "aggMetadata": {}
+        },
+        {
+          "aggType": "samples",
+          "enabled": true,
+          "targetMetricName": "samples_max_value",
+          "aggMetadata": {
+            "samples": {
+              "sampleType": "max"
+            }
+          }
+        }
+      ],
+      "sourceField": "request_count",
+      "targetBaseMetricName": "sample-target-base-metric-name"
+    }
+  ],
+  "metricLabels": [
+    {
+      "sourceField": "status",
+      "targetLabel": "sample-target-label"
+    }
+  ],
+  "name": "sample-name",
+  "permutationsLimit": 1,
+  "query": {
+    "logs": {
+      "alias": "sample-alias",
+      "applicationNameFilters": [
+        "sample-applicationname-filters"
+      ],
+      "lucene": "status:200",
+      "severityFilters": [
+        "debug",
+        "verbose",
+        "info",
+        "warn",
+        "error",
+        "critical"
+      ],
+      "subsystemNameFilters": [
+        "sample-subsystemname-filters"
+      ]
+    }
+  }
+}`,
+		`{
+  "description": "sample-description",
+  "metricFields": [
+    {
+      "aggregations": [
+        {
+          "aggMetadata": {},
+          "aggType": "min",
+          "enabled": true,
+          "targetMetricName": "min_value"
+        }
+      ],
+      "sourceField": "duration",
+      "targetBaseMetricName": "sample-target-base-metric-name"
+    }
+  ],
+  "metricLabels": [
+    {
+      "sourceField": "serviceName",
+      "targetLabel": "sample-target-label"
+    }
+  ],
+  "name": "sample-name",
+  "permutationsLimit": 1,
+  "query": {
+    "spans": {
+      "actionFilters": [
+        "sample-action-filters"
+      ],
+      "applicationNameFilters": [
+        "sample-applicationname-filters"
+      ],
+      "lucene": "sample-lucene",
+      "serviceFilters": [
+        "sample-service-filters"
+      ],
+      "subsystemNameFilters": [
+        "sample-subsystemname-filters"
+      ]
+    }
+  }
+}`,
+	},
+}
+
+var _ = Describe("Events2Metric (coverage)", Ordered, Label("coverage"), func() {
+	var (
+		crClient  client.Client
+		apiClient *events2metricsservice.Events2MetricsServiceAPIService
+		base      string
+	)
+
+	BeforeAll(func() {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		apiClient = newOpenAPIClientSet().Events2Metrics()
+		base = uniqueName("e2e-events2metric-cov")
+	})
+
+	for i, step := range events2MetricCoverageSteps {
+		It(fmt.Sprintf("sends step %d", i+1), Label(fmt.Sprintf("coverage-events2metric-%d", i+1)), func(ctx context.Context) {
+			var (
+				objects []client.Object
+				names   []string
+				ids     []string
+			)
+			DeferCleanup(func(ctx context.Context) {
+				for _, object := range objects {
+					_ = crClient.Delete(ctx, object)
+				}
+				for _, id := range ids {
+					removeEvents2MetricGenerated(ctx, apiClient, id)
+				}
+			})
+
+			for j, spec := range step {
+				name := fmt.Sprintf("%s-%d-%d", base, i+1, j+1)
+				cr := newEvents2MetricGenerated(name, spec)
+				Expect(crClient.Create(ctx, cr)).To(Succeed())
+				objects = append(objects, cr)
+				names = append(names, name)
+			}
+
+			By("Waiting until every copy is synced and the API returns it")
+			for _, name := range names {
+				id := waitForEvents2MetricGenerated(ctx, crClient, name)
+				ids = append(ids, id)
+				Eventually(func(g Gomega) {
+					_, httpResp, err := apiClient.Events2MetricServiceGetE2M(ctx, id).Execute()
+					g.Expect(cxsdk.NewAPIError(httpResp, err)).To(Succeed())
+				}, time.Minute, time.Second).Should(Succeed())
+			}
+
+			By("Deleting every copy")
+			for _, object := range objects {
+				Expect(crClient.Delete(ctx, object)).To(Succeed())
+			}
+			for _, id := range ids {
+				Eventually(func() bool {
+					_, httpResp, err := apiClient.Events2MetricServiceGetE2M(ctx, id).Execute()
+					return cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err))
+				}, time.Minute, time.Second).Should(BeTrue())
+			}
+		})
+	}
+})

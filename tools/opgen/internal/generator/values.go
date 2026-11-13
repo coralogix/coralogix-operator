@@ -368,7 +368,8 @@ func (v *sampleValues) field(f *crField, path string, full bool) (any, error) {
 		return value, nil
 	}
 	_, armForced := v.layerArm(path)
-	if value, ok := v.file.Values[path]; ok && !armForced { // a forced arm wins over a fixed value
+	planned := len(v.items[path]) != 0
+	if value, ok := v.file.Values[path]; ok && !armForced && !planned { // a forced arm or planned items win over a fixed value
 		v.used[path] = true
 		if v.record {
 			v.cov.literal(f, value)

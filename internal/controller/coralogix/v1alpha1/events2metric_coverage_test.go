@@ -89,6 +89,174 @@ var events2MetricCoverageSpecs = []events2MetricCoverageSpec{
   }
 }`,
 	},
+	{
+		name: "step 1 copy 1",
+		spec: `{
+  "description": "sample-description",
+  "metricFields": [
+    {
+      "aggregations": [
+        {
+          "aggType": "samples",
+          "enabled": true,
+          "targetMetricName": "samples_min_value",
+          "aggMetadata": {
+            "samples": {
+              "sampleType": "min"
+            }
+          }
+        },
+        {
+          "aggType": "histogram",
+          "enabled": true,
+          "targetMetricName": "histogram_value",
+          "aggMetadata": {
+            "histogram": {
+              "buckets": [
+                1,
+                5,
+                10
+              ]
+            }
+          }
+        },
+        {
+          "aggType": "max",
+          "enabled": true,
+          "targetMetricName": "max_value",
+          "aggMetadata": {}
+        },
+        {
+          "aggType": "count",
+          "enabled": true,
+          "targetMetricName": "count_value",
+          "aggMetadata": {}
+        },
+        {
+          "aggType": "avg",
+          "enabled": true,
+          "targetMetricName": "avg_value",
+          "aggMetadata": {}
+        },
+        {
+          "aggType": "sum",
+          "enabled": true,
+          "targetMetricName": "sum_value",
+          "aggMetadata": {}
+        },
+        {
+          "aggType": "samples",
+          "enabled": true,
+          "targetMetricName": "samples_max_value",
+          "aggMetadata": {
+            "samples": {
+              "sampleType": "max"
+            }
+          }
+        }
+      ],
+      "sourceField": "request_count",
+      "targetBaseMetricName": "sample-target-base-metric-name"
+    }
+  ],
+  "metricLabels": [
+    {
+      "sourceField": "status",
+      "targetLabel": "sample-target-label"
+    }
+  ],
+  "name": "sample-name",
+  "permutationsLimit": 1,
+  "query": {
+    "logs": {
+      "alias": "sample-alias",
+      "applicationNameFilters": [
+        "sample-applicationname-filters"
+      ],
+      "lucene": "status:200",
+      "severityFilters": [
+        "debug",
+        "verbose",
+        "info",
+        "warn",
+        "error",
+        "critical"
+      ],
+      "subsystemNameFilters": [
+        "sample-subsystemname-filters"
+      ]
+    }
+  }
+}`,
+		expect: []string{
+			"\"AGG_TYPE_MAX\"",
+			"\"AGG_TYPE_COUNT\"",
+			"\"AGG_TYPE_AVG\"",
+			"\"AGG_TYPE_SUM\"",
+			"\"AGG_TYPE_HISTOGRAM\"",
+			"\"AGG_TYPE_SAMPLES\"",
+			"\"samples\":",
+			"\"histogram\":",
+			"\"SAMPLE_TYPE_MIN\"",
+			"\"SAMPLE_TYPE_MAX\"",
+			"\"logsQuery\":",
+			"\"SEVERITY_DEBUG\"",
+			"\"SEVERITY_VERBOSE\"",
+			"\"SEVERITY_INFO\"",
+			"\"SEVERITY_WARNING\"",
+			"\"SEVERITY_ERROR\"",
+			"\"SEVERITY_CRITICAL\"",
+		},
+	},
+	{
+		name: "step 1 copy 2",
+		spec: `{
+  "description": "sample-description",
+  "metricFields": [
+    {
+      "aggregations": [
+        {
+          "aggMetadata": {},
+          "aggType": "min",
+          "enabled": true,
+          "targetMetricName": "min_value"
+        }
+      ],
+      "sourceField": "duration",
+      "targetBaseMetricName": "sample-target-base-metric-name"
+    }
+  ],
+  "metricLabels": [
+    {
+      "sourceField": "serviceName",
+      "targetLabel": "sample-target-label"
+    }
+  ],
+  "name": "sample-name",
+  "permutationsLimit": 1,
+  "query": {
+    "spans": {
+      "actionFilters": [
+        "sample-action-filters"
+      ],
+      "applicationNameFilters": [
+        "sample-applicationname-filters"
+      ],
+      "lucene": "sample-lucene",
+      "serviceFilters": [
+        "sample-service-filters"
+      ],
+      "subsystemNameFilters": [
+        "sample-subsystemname-filters"
+      ]
+    }
+  }
+}`,
+		expect: []string{
+			"\"AGG_TYPE_MIN\"",
+			"\"spansQuery\":",
+		},
+	},
 }
 
 var _ = Describe("Events2Metric coverage specs (generated)", func() {

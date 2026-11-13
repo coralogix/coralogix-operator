@@ -284,3 +284,26 @@ func TestWhenDecodesFromE2EYAML(t *testing.T) {
 		t.Errorf("a match list must decode as a list: %+v", file.When[0].Match)
 	}
 }
+
+// A fixed list in values: is the base of the full spec. The items that a copy plans for the same
+// list win over it, so a when entry in a list works with a fixed base.
+func TestPlannedItemsWinOverAFixedList(t *testing.T) {
+	fixed := []any{map[string]any{"type": "min", "meta": map[string]any{"samples": map[string]any{"sampleType": "s1"}}}}
+	file := &e2eFile{When: aggEntries(), Values: map[string]any{"aggs": fixed}}
+	steps, v, err := specsOf(t, whenSpec(), file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if missing := v.cov.missing(); len(missing) != 0 {
+		t.Fatalf("left %v", missing)
+	}
+	planned := false
+	for _, copy := range copiesOf(t, steps) {
+		if items, _ := copy["aggs"].([]any); len(items) == 2 {
+			planned = true // the fixed base already covers min: one item each for max and hist
+		}
+	}
+	if !planned {
+		t.Error("no copy has the two planned items: the fixed list hid them")
+	}
+}
