@@ -1,0 +1,38 @@
+[
+  {
+    "step": "create an APM SLO with neither errorConfig nor latencyConfig",
+    "spec": {
+      "name": "baseline-slo",
+      "productType": "apm",
+      "sliType": {
+        "apmSli": {
+          "services": [
+            "checkout-service"
+          ]
+        }
+      },
+      "targetThresholdPercentage": 99,
+      "window": {
+        "timeFrame": "7d"
+      }
+    },
+    "requests": [],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

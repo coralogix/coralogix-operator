@@ -1,0 +1,253 @@
+[
+  {
+    "step": "create with timeFrame 14d",
+    "spec": {
+      "name": "baseline-slo",
+      "sliType": {
+        "requestBasedMetric": {
+          "goodEvents": {
+            "query": "sum(rate(good_total[1m]))"
+          },
+          "totalEvents": {
+            "query": "sum(rate(all_total[1m]))"
+          }
+        }
+      },
+      "targetThresholdPercentage": 99,
+      "window": {
+        "timeFrame": "14d"
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/slo/slos/v1",
+        "body": {
+          "name": "baseline-slo",
+          "requestBasedMetricSli": {
+            "goodEvents": {
+              "query": "sum(rate(good_total[1m]))"
+            },
+            "totalEvents": {
+              "query": "sum(rate(all_total[1m]))"
+            }
+          },
+          "sloTimeFrame": "SLO_TIME_FRAME_14_DAYS",
+          "targetThresholdPercentage": 99
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "slo.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced",
+        "revision": 1
+      }
+    }
+  },
+  {
+    "step": "change timeFrame to 21d",
+    "spec": {
+      "name": "baseline-slo",
+      "sliType": {
+        "requestBasedMetric": {
+          "goodEvents": {
+            "query": "sum(rate(good_total[1m]))"
+          },
+          "totalEvents": {
+            "query": "sum(rate(all_total[1m]))"
+          }
+        }
+      },
+      "targetThresholdPercentage": 99,
+      "window": {
+        "timeFrame": "21d"
+      }
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/slo/slos/v1",
+        "body": {
+          "id": "<id-1>",
+          "name": "baseline-slo",
+          "requestBasedMetricSli": {
+            "goodEvents": {
+              "query": "sum(rate(good_total[1m]))"
+            },
+            "totalEvents": {
+              "query": "sum(rate(all_total[1m]))"
+            }
+          },
+          "sloTimeFrame": "SLO_TIME_FRAME_21_DAYS",
+          "targetThresholdPercentage": 99
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "slo.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 3,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced",
+        "revision": 1
+      }
+    }
+  },
+  {
+    "step": "change timeFrame to 28d",
+    "spec": {
+      "name": "baseline-slo",
+      "sliType": {
+        "requestBasedMetric": {
+          "goodEvents": {
+            "query": "sum(rate(good_total[1m]))"
+          },
+          "totalEvents": {
+            "query": "sum(rate(all_total[1m]))"
+          }
+        }
+      },
+      "targetThresholdPercentage": 99,
+      "window": {
+        "timeFrame": "28d"
+      }
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/slo/slos/v1",
+        "body": {
+          "id": "<id-1>",
+          "name": "baseline-slo",
+          "requestBasedMetricSli": {
+            "goodEvents": {
+              "query": "sum(rate(good_total[1m]))"
+            },
+            "totalEvents": {
+              "query": "sum(rate(all_total[1m]))"
+            }
+          },
+          "sloTimeFrame": "SLO_TIME_FRAME_28_DAYS",
+          "targetThresholdPercentage": 99
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "slo.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 4,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced",
+        "revision": 1
+      }
+    }
+  },
+  {
+    "step": "change timeFrame to 7d",
+    "spec": {
+      "name": "baseline-slo",
+      "sliType": {
+        "requestBasedMetric": {
+          "goodEvents": {
+            "query": "sum(rate(good_total[1m]))"
+          },
+          "totalEvents": {
+            "query": "sum(rate(all_total[1m]))"
+          }
+        }
+      },
+      "targetThresholdPercentage": 99,
+      "window": {
+        "timeFrame": "7d"
+      }
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/slo/slos/v1",
+        "body": {
+          "id": "<id-1>",
+          "name": "baseline-slo",
+          "requestBasedMetricSli": {
+            "goodEvents": {
+              "query": "sum(rate(good_total[1m]))"
+            },
+            "totalEvents": {
+              "query": "sum(rate(all_total[1m]))"
+            }
+          },
+          "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+          "targetThresholdPercentage": 99
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "slo.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 5,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced",
+        "revision": 1
+      }
+    }
+  }
+]

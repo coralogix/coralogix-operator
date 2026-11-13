@@ -1,0 +1,92 @@
+[
+  {
+    "step": "create the window-based sample",
+    "spec": {
+      "description": "Coralogix SLO example",
+      "name": "window-based-slo-example",
+      "ownershipTags": {
+        "environment": {
+          "staticValues": [
+            "production"
+          ]
+        },
+        "team": {
+          "labelKeys": [
+            "team"
+          ]
+        }
+      },
+      "sliType": {
+        "windowBasedMetric": {
+          "comparisonOperator": "greaterThan",
+          "missingDataStrategy": "good",
+          "query": {
+            "query": "sum(rate(coralogix_logs_events_total{app=\"coralogix-slo-example\", status=\"success\"}[10m]))"
+          },
+          "threshold": "0.232",
+          "window": "1m"
+        }
+      },
+      "targetThresholdPercentage": 10,
+      "window": {
+        "timeFrame": "7d"
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/slo/slos/v1",
+        "body": {
+          "description": "Coralogix SLO example",
+          "name": "window-based-slo-example",
+          "ownershipTags": {
+            "environment": {
+              "staticValues": [
+                "production"
+              ]
+            },
+            "team": {
+              "labelKeys": [
+                "team"
+              ]
+            }
+          },
+          "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+          "targetThresholdPercentage": 10,
+          "windowBasedMetricSli": {
+            "comparisonOperator": "COMPARISON_OPERATOR_GREATER_THAN",
+            "missingDataStrategy": "MISSING_DATA_STRATEGY_GOOD",
+            "query": {
+              "query": "sum(rate(coralogix_logs_events_total{app=\"coralogix-slo-example\", status=\"success\"}[10m]))"
+            },
+            "threshold": 0.232,
+            "window": "WINDOW_SLO_WINDOW_1_MINUTE"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "slo.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced",
+        "revision": 1
+      }
+    }
+  }
+]

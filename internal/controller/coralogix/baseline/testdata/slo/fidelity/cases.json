@@ -1,0 +1,474 @@
+{
+  "cases": [
+    {
+      "name": "create, get, replace, replace the SLI, delete, delete again, replace after delete",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-a",
+            "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+            "targetThresholdPercentage": 99,
+            "requestBasedMetricSli": {
+              "goodEvents": {
+                "query": "sum(rate(good_total[1m]))"
+              },
+              "totalEvents": {
+                "query": "sum(rate(all_total[1m]))"
+              }
+            },
+            "description": "first",
+            "labels": {
+              "team": "a"
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/slo/slos/v1/{{id}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-a2",
+            "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+            "targetThresholdPercentage": 99.5,
+            "requestBasedMetricSli": {
+              "goodEvents": {
+                "query": "sum(rate(good_total[1m]))"
+              },
+              "totalEvents": {
+                "query": "sum(rate(all_total[1m]))"
+              }
+            },
+            "id": "{{id}}"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/slo/slos/v1/{{id}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-a2",
+            "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+            "targetThresholdPercentage": 99,
+            "requestBasedMetricSli": {
+              "goodEvents": {
+                "query": "sum(rate(good_total[2m]))"
+              },
+              "totalEvents": {
+                "query": "sum(rate(all_total[2m]))"
+              }
+            },
+            "id": "{{id}}"
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/slo/slos/v1/{{id}}"
+        },
+        {
+          "method": "GET",
+          "path": "/slo/slos/v1/{{id}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/slo/slos/v1/{{id}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-a3",
+            "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+            "targetThresholdPercentage": 99,
+            "requestBasedMetricSli": {
+              "goodEvents": {
+                "query": "sum(rate(good_total[1m]))"
+              },
+              "totalEvents": {
+                "query": "sum(rate(all_total[1m]))"
+              }
+            },
+            "id": "{{id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a window-based SLI without threshold or missing data strategy",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-b",
+            "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+            "targetThresholdPercentage": 99,
+            "windowBasedMetricSli": {
+              "query": {
+                "query": "sum(rate(errors_total[5m])) by (service)"
+              },
+              "window": "WINDOW_SLO_WINDOW_1_MINUTE",
+              "comparisonOperator": "COMPARISON_OPERATOR_GREATER_THAN_OR_EQUALS"
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PUT",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-b",
+            "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+            "targetThresholdPercentage": 99,
+            "id": "{{id}}",
+            "windowBasedMetricSli": {
+              "query": {
+                "query": "sum(rate(errors_total[5m])) by (service)"
+              },
+              "window": "WINDOW_SLO_WINDOW_5_MINUTES",
+              "comparisonOperator": "COMPARISON_OPERATOR_LESS_THAN",
+              "threshold": 0.5,
+              "missingDataStrategy": "MISSING_DATA_STRATEGY_BAD"
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-b",
+            "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+            "targetThresholdPercentage": 99,
+            "id": "{{id}}",
+            "windowBasedMetricSli": {
+              "query": {
+                "query": "sum(rate(errors_total[5m])) by (service)"
+              },
+              "window": "WINDOW_SLO_WINDOW_5_MINUTES",
+              "comparisonOperator": "COMPARISON_OPERATOR_LESS_THAN",
+              "threshold": 0
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/slo/slos/v1/{{id}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/slo/slos/v1/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "a replace without description keeps the stored one",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-c",
+            "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+            "targetThresholdPercentage": 99,
+            "requestBasedMetricSli": {
+              "goodEvents": {
+                "query": "sum(rate(good_total[1m]))"
+              },
+              "totalEvents": {
+                "query": "sum(rate(all_total[1m]))"
+              }
+            },
+            "description": "kept"
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PUT",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-c",
+            "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+            "targetThresholdPercentage": 99,
+            "requestBasedMetricSli": {
+              "goodEvents": {
+                "query": "sum(rate(good_total[1m]))"
+              },
+              "totalEvents": {
+                "query": "sum(rate(all_total[1m]))"
+              }
+            },
+            "id": "{{id}}"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/slo/slos/v1/{{id}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/slo/slos/v1/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "ownership tags with an empty dimension",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-d",
+            "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+            "targetThresholdPercentage": 99,
+            "requestBasedMetricSli": {
+              "goodEvents": {
+                "query": "sum(rate(good_total[1m]))"
+              },
+              "totalEvents": {
+                "query": "sum(rate(all_total[1m]))"
+              }
+            },
+            "ownershipTags": {
+              "environment": {
+                "staticValues": [
+                  "production",
+                  "production"
+                ]
+              },
+              "service": {},
+              "team": {
+                "labelKeys": [
+                  "team"
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PUT",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-d",
+            "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+            "targetThresholdPercentage": 99,
+            "requestBasedMetricSli": {
+              "goodEvents": {
+                "query": "sum(rate(good_total[1m]))"
+              },
+              "totalEvents": {
+                "query": "sum(rate(all_total[1m]))"
+              }
+            },
+            "id": "{{id}}",
+            "ownershipTags": {}
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/slo/slos/v1/{{id}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/slo/slos/v1/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "rejections",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "",
+            "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+            "targetThresholdPercentage": 99,
+            "requestBasedMetricSli": {
+              "goodEvents": {
+                "query": "sum(rate(good_total[1m]))"
+              },
+              "totalEvents": {
+                "query": "sum(rate(all_total[1m]))"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-e",
+            "targetThresholdPercentage": 99,
+            "requestBasedMetricSli": {
+              "goodEvents": {
+                "query": "sum(rate(good_total[1m]))"
+              },
+              "totalEvents": {
+                "query": "sum(rate(all_total[1m]))"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-e",
+            "sloTimeFrame": "SLO_TIME_FRAME_UNSPECIFIED",
+            "targetThresholdPercentage": 99,
+            "requestBasedMetricSli": {
+              "goodEvents": {
+                "query": "sum(rate(good_total[1m]))"
+              },
+              "totalEvents": {
+                "query": "sum(rate(all_total[1m]))"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-e",
+            "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+            "targetThresholdPercentage": 99,
+            "requestBasedMetricSli": {
+              "goodEvents": {
+                "query": ""
+              },
+              "totalEvents": {
+                "query": "sum(rate(all_total[1m]))"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-e",
+            "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+            "targetThresholdPercentage": 99
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-e",
+            "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+            "targetThresholdPercentage": 99,
+            "windowBasedMetricSli": {
+              "query": {
+                "query": "sum(rate(errors_total[5m]))"
+              },
+              "window": "WINDOW_SLO_WINDOW_1_MINUTE",
+              "comparisonOperator": "COMPARISON_OPERATOR_UNSPECIFIED"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-e",
+            "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+            "targetThresholdPercentage": 99,
+            "windowBasedMetricSli": {
+              "query": {
+                "query": "sum(rate(errors_total[5m]))"
+              },
+              "window": "WINDOW_SLO_WINDOW_UNSPECIFIED",
+              "comparisonOperator": "COMPARISON_OPERATOR_GREATER_THAN"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-e",
+            "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+            "targetThresholdPercentage": 99,
+            "requestBasedMetricSli": {
+              "goodEvents": {
+                "query": "sum(rate(good_total[1m]))"
+              },
+              "totalEvents": {
+                "query": "sum(rate(all_total[1m]))"
+              }
+            },
+            "productType": "SLO_PRODUCT_TYPE_APM"
+          }
+        }
+      ]
+    },
+    {
+      "name": "an id that does not exist or is not a UUID",
+      "steps": [
+        {
+          "method": "GET",
+          "path": "/slo/slos/v1/00000000-0000-4000-8000-00000000dead"
+        },
+        {
+          "method": "GET",
+          "path": "/slo/slos/v1/not-a-uuid"
+        },
+        {
+          "method": "DELETE",
+          "path": "/slo/slos/v1/not-a-uuid"
+        },
+        {
+          "method": "PUT",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-f",
+            "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+            "targetThresholdPercentage": 99,
+            "requestBasedMetricSli": {
+              "goodEvents": {
+                "query": "sum(rate(good_total[1m]))"
+              },
+              "totalEvents": {
+                "query": "sum(rate(all_total[1m]))"
+              }
+            },
+            "id": "not-a-uuid"
+          }
+        }
+      ]
+    },
+    {
+      "name": "an APM SLI with an unknown service",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-g",
+            "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+            "targetThresholdPercentage": 99,
+            "productType": "SLO_PRODUCT_TYPE_APM",
+            "apmSli": {
+              "services": [
+                "cxo-fidelity-unknown-service"
+              ],
+              "errorConfig": {}
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    }
+  ]
+}
