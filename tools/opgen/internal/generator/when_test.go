@@ -429,3 +429,36 @@ func TestOverlaysConflictOnASharedPathOrAParentPath(t *testing.T) {
 		}
 	}
 }
+
+// An entry that matches a root field and a list-item field is global. The overlay of a list item
+// that sets the same item field differently would drop its match but keep its data: they must not
+// share a copy.
+func TestWhenGlobalEntryAndListItemEntriesDoNotShareACopyWhenTheyDisagree(t *testing.T) {
+	entries := []e2eWhen{
+		{Match: map[string]any{"kind": "http", "aggs.type": "min"}, Set: map[string]any{"parent": "p-http"}},
+		{Match: map[string]any{"kind": "mail"}},
+		aggEntries()[1], // max
+		aggEntries()[2], // hist
+	}
+	file := &e2eFile{When: entries, Values: map[string]any{"kind": "mail"},
+		SkipValues: map[string]e2eSkipValues{"Conn": {Values: []string{"SLACK"}, Reason: "no data"}}}
+	steps, _, err := specsOf(t, whenSpec(), file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, copy := range copiesOf(t, steps) {
+		if copy["parent"] != "p-http" {
+			continue
+		}
+		found := false
+		items, _ := copy["aggs"].([]any)
+		for _, raw := range items {
+			if raw.(map[string]any)["type"] == "min" {
+				found = true
+			}
+		}
+		if copy["kind"] != "http" || !found {
+			t.Errorf("a copy with the data of the http-and-min entry must match it: %v", copy)
+		}
+	}
+}
