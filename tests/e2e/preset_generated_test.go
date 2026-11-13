@@ -20,6 +20,7 @@ package e2e
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -222,3 +223,279 @@ func waitForPresetGenerated(ctx context.Context, crClient client.Client, name st
 	}, time.Minute, time.Second).Should(Succeed())
 	return id
 }
+
+// The coverage steps send an accepted enum value and a oneOf arm that the full spec does not. Each
+// step creates all its copies, waits until each is synced, reads each from the API, and deletes each.
+var presetCoverageSteps = [][]string{
+	{
+		`{
+  "attachmentConfig": "AUTO",
+  "configOverrides": [
+    {
+      "conditionType": {
+        "matchEntityType": {}
+      },
+      "messageConfig": {
+        "fields": [
+          {
+            "fieldName": "title",
+            "template": "Coverage alert"
+          }
+        ]
+      },
+      "payloadType": "slack_structured"
+    }
+  ],
+  "connectorType": "slack",
+  "description": "sample-description",
+  "entityType": "alerts",
+  "name": "sample-name",
+  "parentId": "preset_system_slack_alerts_basic"
+}`,
+		`{
+  "attachmentConfig": "DISABLED",
+  "configOverrides": [
+    {
+      "conditionType": {
+        "matchEntityType": {}
+      },
+      "messageConfig": {
+        "fields": [
+          {
+            "fieldName": "headers",
+            "template": "{}"
+          },
+          {
+            "fieldName": "body",
+            "template": "{ \"id\": \"{{ case.id }}\" }"
+          }
+        ]
+      },
+      "payloadType": "generic_https_default"
+    }
+  ],
+  "connectorType": "genericHttps",
+  "description": "sample-description",
+  "entityType": "cases",
+  "name": "sample-name",
+  "parentId": "preset_system_generic_https_cases_empty"
+}`,
+		`{
+  "attachmentConfig": "ENABLED",
+  "configOverrides": [
+    {
+      "conditionType": {
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "metricThresholdMoreThanTriggered"
+        }
+      },
+      "messageConfig": {
+        "fields": [
+          {
+            "fieldName": "summary",
+            "template": "{{ alertDef.name }}"
+          }
+        ]
+      },
+      "payloadType": "pagerduty_triggered"
+    }
+  ],
+  "connectorType": "pagerDuty",
+  "description": "sample-description",
+  "entityType": "alerts",
+  "name": "sample-name",
+  "parentId": "preset_system_pagerduty_alerts_basic"
+}`,
+		`{
+  "attachmentConfig": "ENABLED",
+  "configOverrides": [
+    {
+      "conditionType": {
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "caseActivated"
+        }
+      },
+      "messageConfig": {
+        "fields": [
+          {
+            "fieldName": "title",
+            "template": "{{ case.title }}"
+          }
+        ]
+      },
+      "payloadType": "pagerduty_incidents_default"
+    }
+  ],
+  "connectorType": "pagerDutyIncidents",
+  "description": "sample-description",
+  "entityType": "cases",
+  "name": "sample-name",
+  "parentId": "preset_system_pagerduty_incidents_cases_basic"
+}`,
+		`{
+  "attachmentConfig": "ENABLED",
+  "configOverrides": [
+    {
+      "conditionType": {
+        "matchEntityType": {}
+      },
+      "messageConfig": {
+        "fields": [
+          {
+            "fieldName": "customSubject",
+            "template": "{{ alertDef.name }}"
+          }
+        ]
+      },
+      "payloadType": "email_default"
+    }
+  ],
+  "connectorType": "email",
+  "description": "sample-description",
+  "entityType": "alerts",
+  "name": "sample-name",
+  "parentId": "preset_system_email_alerts"
+}`,
+		`{
+  "attachmentConfig": "ENABLED",
+  "configOverrides": [
+    {
+      "conditionType": {
+        "matchEntityType": {}
+      },
+      "messageConfig": {
+        "fields": [
+          {
+            "fieldName": "payload",
+            "template": "{ \"text\": \"{{ case.title }}\" }"
+          }
+        ]
+      },
+      "payloadType": "microsoft_teams_default"
+    }
+  ],
+  "connectorType": "microsoftTeams",
+  "description": "sample-description",
+  "entityType": "cases",
+  "name": "sample-name",
+  "parentId": "preset_system_microsoft_teams_cases_basic"
+}`,
+		`{
+  "attachmentConfig": "ENABLED",
+  "configOverrides": [
+    {
+      "conditionType": {
+        "matchEntityType": {}
+      },
+      "messageConfig": {
+        "fields": [
+          {
+            "fieldName": "detailType",
+            "template": "Coverage case"
+          },
+          {
+            "fieldName": "source",
+            "template": "com.coralogix.coverage"
+          },
+          {
+            "fieldName": "detail",
+            "template": "{ \"id\": \"{{ case.id }}\" }"
+          }
+        ]
+      },
+      "payloadType": "eventbridge_default"
+    }
+  ],
+  "connectorType": "eventBridge",
+  "description": "sample-description",
+  "entityType": "cases",
+  "name": "sample-name",
+  "parentId": "preset_system_eventbridge_cases_basic"
+}`,
+		`{
+  "attachmentConfig": "ENABLED",
+  "configOverrides": [
+    {
+      "conditionType": {
+        "matchEntityType": {}
+      },
+      "messageConfig": {
+        "fields": [
+          {
+            "fieldName": "title",
+            "template": "{{ case.title }}"
+          }
+        ]
+      },
+      "payloadType": "incident_io_default"
+    }
+  ],
+  "connectorType": "incidentIo",
+  "description": "sample-description",
+  "entityType": "cases",
+  "name": "sample-name",
+  "parentId": "preset_system_incident_io_cases_basic"
+}`,
+	},
+}
+
+var _ = Describe("Preset (coverage)", Ordered, Serial, Label("coverage"), func() {
+	var (
+		crClient  client.Client
+		apiClient *presetsservice.PresetsServiceAPIService
+		base      string
+	)
+
+	BeforeAll(func() {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		apiClient = newOpenAPIClientSet().Presets()
+		base = uniqueName("e2e-preset-cov")
+	})
+
+	for i, step := range presetCoverageSteps {
+		It(fmt.Sprintf("sends step %d", i+1), Label(fmt.Sprintf("coverage-preset-%d", i+1)), func(ctx context.Context) {
+			var (
+				objects []client.Object
+				names   []string
+				ids     []string
+			)
+			DeferCleanup(func(ctx context.Context) {
+				for _, object := range objects {
+					_ = crClient.Delete(ctx, object)
+				}
+				for _, id := range ids {
+					removePresetGenerated(ctx, apiClient, id)
+				}
+			})
+
+			for j, spec := range step {
+				name := fmt.Sprintf("%s-%d-%d", base, i+1, j+1)
+				cr := newPresetGenerated(name, spec)
+				Expect(crClient.Create(ctx, cr)).To(Succeed())
+				objects = append(objects, cr)
+				names = append(names, name)
+			}
+
+			By("Waiting until every copy is synced and the API returns it")
+			for _, name := range names {
+				id := waitForPresetGenerated(ctx, crClient, name)
+				ids = append(ids, id)
+				Eventually(func(g Gomega) {
+					_, httpResp, err := apiClient.PresetsServiceGetPreset(ctx, id).Execute()
+					g.Expect(cxsdk.NewAPIError(httpResp, err)).To(Succeed())
+				}, time.Minute, time.Second).Should(Succeed())
+			}
+
+			By("Deleting every copy")
+			for _, object := range objects {
+				Expect(crClient.Delete(ctx, object)).To(Succeed())
+			}
+			for _, id := range ids {
+				Eventually(func() bool {
+					_, httpResp, err := apiClient.PresetsServiceGetPreset(ctx, id).Execute()
+					return cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err))
+				}, time.Minute, time.Second).Should(BeTrue())
+			}
+		})
+	}
+})

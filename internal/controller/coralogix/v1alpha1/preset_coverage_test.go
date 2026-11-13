@@ -112,6 +112,286 @@ var presetCoverageSpecs = []presetCoverageSpec{
   "parentId": "preset_system_generic_https_alerts_empty"
 }`,
 	},
+	{
+		name: "step 1 copy 1",
+		spec: `{
+  "attachmentConfig": "AUTO",
+  "configOverrides": [
+    {
+      "conditionType": {
+        "matchEntityType": {}
+      },
+      "messageConfig": {
+        "fields": [
+          {
+            "fieldName": "title",
+            "template": "Coverage alert"
+          }
+        ]
+      },
+      "payloadType": "slack_structured"
+    }
+  ],
+  "connectorType": "slack",
+  "description": "sample-description",
+  "entityType": "alerts",
+  "name": "sample-name",
+  "parentId": "preset_system_slack_alerts_basic"
+}`,
+		expect: []string{
+			"\"AUTO\"",
+			"\"matchEntityType\":",
+			"\"SLACK\"",
+			"\"ALERTS\"",
+		},
+	},
+	{
+		name: "step 1 copy 2",
+		spec: `{
+  "attachmentConfig": "DISABLED",
+  "configOverrides": [
+    {
+      "conditionType": {
+        "matchEntityType": {}
+      },
+      "messageConfig": {
+        "fields": [
+          {
+            "fieldName": "headers",
+            "template": "{}"
+          },
+          {
+            "fieldName": "body",
+            "template": "{ \"id\": \"{{ case.id }}\" }"
+          }
+        ]
+      },
+      "payloadType": "generic_https_default"
+    }
+  ],
+  "connectorType": "genericHttps",
+  "description": "sample-description",
+  "entityType": "cases",
+  "name": "sample-name",
+  "parentId": "preset_system_generic_https_cases_empty"
+}`,
+		expect: []string{
+			"\"DISABLED\"",
+			"\"matchEntityType\":",
+			"\"GENERIC_HTTPS\"",
+			"\"CASES\"",
+		},
+	},
+	{
+		name: "step 1 copy 3",
+		spec: `{
+  "attachmentConfig": "ENABLED",
+  "configOverrides": [
+    {
+      "conditionType": {
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "metricThresholdMoreThanTriggered"
+        }
+      },
+      "messageConfig": {
+        "fields": [
+          {
+            "fieldName": "summary",
+            "template": "{{ alertDef.name }}"
+          }
+        ]
+      },
+      "payloadType": "pagerduty_triggered"
+    }
+  ],
+  "connectorType": "pagerDuty",
+  "description": "sample-description",
+  "entityType": "alerts",
+  "name": "sample-name",
+  "parentId": "preset_system_pagerduty_alerts_basic"
+}`,
+		expect: []string{
+			"\"ENABLED\"",
+			"\"matchEntityTypeAndSubType\":",
+			"\"PAGERDUTY\"",
+			"\"ALERTS\"",
+		},
+	},
+	{
+		name: "step 1 copy 4",
+		spec: `{
+  "attachmentConfig": "ENABLED",
+  "configOverrides": [
+    {
+      "conditionType": {
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "caseActivated"
+        }
+      },
+      "messageConfig": {
+        "fields": [
+          {
+            "fieldName": "title",
+            "template": "{{ case.title }}"
+          }
+        ]
+      },
+      "payloadType": "pagerduty_incidents_default"
+    }
+  ],
+  "connectorType": "pagerDutyIncidents",
+  "description": "sample-description",
+  "entityType": "cases",
+  "name": "sample-name",
+  "parentId": "preset_system_pagerduty_incidents_cases_basic"
+}`,
+		expect: []string{
+			"\"ENABLED\"",
+			"\"matchEntityTypeAndSubType\":",
+			"\"PAGERDUTY_INCIDENTS\"",
+			"\"CASES\"",
+		},
+	},
+	{
+		name: "step 1 copy 5",
+		spec: `{
+  "attachmentConfig": "ENABLED",
+  "configOverrides": [
+    {
+      "conditionType": {
+        "matchEntityType": {}
+      },
+      "messageConfig": {
+        "fields": [
+          {
+            "fieldName": "customSubject",
+            "template": "{{ alertDef.name }}"
+          }
+        ]
+      },
+      "payloadType": "email_default"
+    }
+  ],
+  "connectorType": "email",
+  "description": "sample-description",
+  "entityType": "alerts",
+  "name": "sample-name",
+  "parentId": "preset_system_email_alerts"
+}`,
+		expect: []string{
+			"\"ENABLED\"",
+			"\"matchEntityType\":",
+			"\"EMAIL\"",
+			"\"ALERTS\"",
+		},
+	},
+	{
+		name: "step 1 copy 6",
+		spec: `{
+  "attachmentConfig": "ENABLED",
+  "configOverrides": [
+    {
+      "conditionType": {
+        "matchEntityType": {}
+      },
+      "messageConfig": {
+        "fields": [
+          {
+            "fieldName": "payload",
+            "template": "{ \"text\": \"{{ case.title }}\" }"
+          }
+        ]
+      },
+      "payloadType": "microsoft_teams_default"
+    }
+  ],
+  "connectorType": "microsoftTeams",
+  "description": "sample-description",
+  "entityType": "cases",
+  "name": "sample-name",
+  "parentId": "preset_system_microsoft_teams_cases_basic"
+}`,
+		expect: []string{
+			"\"ENABLED\"",
+			"\"matchEntityType\":",
+			"\"MICROSOFT_TEAMS\"",
+			"\"CASES\"",
+		},
+	},
+	{
+		name: "step 1 copy 7",
+		spec: `{
+  "attachmentConfig": "ENABLED",
+  "configOverrides": [
+    {
+      "conditionType": {
+        "matchEntityType": {}
+      },
+      "messageConfig": {
+        "fields": [
+          {
+            "fieldName": "detailType",
+            "template": "Coverage case"
+          },
+          {
+            "fieldName": "source",
+            "template": "com.coralogix.coverage"
+          },
+          {
+            "fieldName": "detail",
+            "template": "{ \"id\": \"{{ case.id }}\" }"
+          }
+        ]
+      },
+      "payloadType": "eventbridge_default"
+    }
+  ],
+  "connectorType": "eventBridge",
+  "description": "sample-description",
+  "entityType": "cases",
+  "name": "sample-name",
+  "parentId": "preset_system_eventbridge_cases_basic"
+}`,
+		expect: []string{
+			"\"ENABLED\"",
+			"\"matchEntityType\":",
+			"\"EVENTBRIDGE\"",
+			"\"CASES\"",
+		},
+	},
+	{
+		name: "step 1 copy 8",
+		spec: `{
+  "attachmentConfig": "ENABLED",
+  "configOverrides": [
+    {
+      "conditionType": {
+        "matchEntityType": {}
+      },
+      "messageConfig": {
+        "fields": [
+          {
+            "fieldName": "title",
+            "template": "{{ case.title }}"
+          }
+        ]
+      },
+      "payloadType": "incident_io_default"
+    }
+  ],
+  "connectorType": "incidentIo",
+  "description": "sample-description",
+  "entityType": "cases",
+  "name": "sample-name",
+  "parentId": "preset_system_incident_io_cases_basic"
+}`,
+		expect: []string{
+			"\"ENABLED\"",
+			"\"matchEntityType\":",
+			"\"INCIDENT_IO\"",
+			"\"CASES\"",
+		},
+	},
 }
 
 var _ = Describe("Preset coverage specs (generated)", func() {
