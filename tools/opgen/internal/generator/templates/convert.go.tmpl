@@ -5,8 +5,12 @@
 package v1alpha1
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"strconv"
 {{- if .HasNameLookup}}
 	"{{.CxsdkPath}}"
@@ -15,9 +19,16 @@ import (
 	gouuid "github.com/google/uuid"
 {{- end}}
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/utils/ptr"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	{{.SDKAlias}} "{{.SDKPath}}"
+{{- if .Content}}
+	contentdecode "{{.Content.DecodePath}}"
+
+	"{{.Module}}/internal/config"
+{{- end}}
 )
 {{- if .Mask}}
 

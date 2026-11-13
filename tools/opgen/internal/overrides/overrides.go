@@ -65,6 +65,12 @@ type File struct {
 	// Status declares status fields beside id, conditions, and printableStatus. A hook sets them.
 	// Mode existing only.
 	Status map[string]StatusField `yaml:"status"`
+	// Content makes the CR hold the API resource as JSON text, not as fields. The CRD has no
+	// schema for the resource: opgen models only its id. Mode existing only.
+	Content *Content `yaml:"content"`
+	// Spec declares spec fields of handwritten Go types that a hook reads. The generated
+	// conversions do not use them. Mode existing only, and the kind needs a hook.
+	Spec map[string]SpecField `yaml:"spec"`
 
 	// hooksNode is the hooks key as the file writes it, nil without one. A written empty list is an
 	// error, and a Go slice cannot tell it from a missing key.
@@ -75,6 +81,32 @@ type File struct {
 	// validatorsNode is the validators section as the file writes it, nil without one. A written
 	// validators: null decodes as a missing section.
 	validatorsNode *yaml.Node
+}
+
+// Content is the content key: the CR holds the resource as JSON from one of three sources, json,
+// gzipJson, or configMapRef, as the released Dashboard does. Create and Update decode the JSON
+// into the SDK type of the resource with Decode.
+type Content struct {
+	// Decode is the function that decodes the JSON text into the SDK type of the resource, as
+	// <import path>.<Func>, with the signature func([]byte, any) error.
+	Decode string `yaml:"decode"`
+}
+
+// DecodePackage and DecodeFunc split Decode into its import path and its function.
+func (c *Content) DecodePackage() string {
+	i := strings.LastIndex(c.Decode, ".")
+	return c.Decode[:i]
+}
+
+func (c *Content) DecodeFunc() string {
+	return c.Decode[strings.LastIndex(c.Decode, ".")+1:]
+}
+
+// SpecField is one handwritten spec field.
+type SpecField struct {
+	// Type is a Go type of the API package that a handwritten file defines. The field is a
+	// pointer to it, optional.
+	Type string `yaml:"type"`
 }
 
 // Hook names. The generated controller calls each one in a fixed place of the lifecycle.
@@ -92,10 +124,13 @@ const (
 	HookBeforeDelete = "beforeDelete"
 	// HookDelete runs in place of the generated DELETE.
 	HookDelete = "delete"
+	// HookAdopt runs in Create after beforeCreate. An id that it returns becomes status.id, and
+	// the generated code does not call the API Create.
+	HookAdopt = "adopt"
 )
 
 // HookNames lists every hook in the order of the lifecycle.
-var HookNames = []string{HookValidate, HookBeforeCreate, HookBeforeUpdate, HookAfterCreate, HookAfterUpdate, HookBeforeDelete, HookDelete}
+var HookNames = []string{HookValidate, HookBeforeCreate, HookAdopt, HookBeforeUpdate, HookAfterCreate, HookAfterUpdate, HookBeforeDelete, HookDelete}
 
 // HasHook reports whether the file declares the hook.
 func (f *File) HasHook(name string) bool {
@@ -145,7 +180,9 @@ type API struct {
 
 // RequestValue names the source of a string field beside a request wrapper.
 type RequestValue struct {
-	// Source is spec.<field>, uuid, or literal.
+	// Source is spec.<field>, uuid, literal, field, or omit. field makes the sibling a spec field of
+	// its own name: an optional string with the description of the contract, sent when it is set.
+	// omit never sends the sibling, which must be optional.
 	Source string `yaml:"source"`
 	// Value is the value of a literal source, or the prefix of a uuid source.
 	Value string `yaml:"value"`
@@ -175,6 +212,13 @@ func (a API) Check() error {
 				return fmt.Errorf("api.requestValues.%s.%s: name a field beside the wrapper", operation, name)
 			}
 			switch {
+			case source.Source == "field", source.Source == "omit":
+				if source.Value != "" {
+					return fmt.Errorf("api.requestValues.%s.%s: %s cannot set value", operation, name, source.Source)
+				}
+				if !validJSONName(name) {
+					return fmt.Errorf("api.requestValues.%s.%s: %q is not a CR property name", operation, name, name)
+				}
 			case source.Source == "uuid", source.Source == "literal":
 				if source.Source == "literal" && source.Value == "" {
 					return fmt.Errorf("api.requestValues.%s.%s: literal needs a value", operation, name)
@@ -184,7 +228,7 @@ func (a API) Check() error {
 					return fmt.Errorf("api.requestValues.%s.%s: spec source cannot set value", operation, name)
 				}
 			default:
-				return fmt.Errorf("api.requestValues.%s.%s: source is not spec.<field>, uuid, or literal", operation, name)
+				return fmt.Errorf("api.requestValues.%s.%s: source is not spec.<field>, uuid, literal, field, or omit", operation, name)
 			}
 		}
 	}
@@ -332,6 +376,12 @@ func (f *File) check() error {
 		return err
 	}
 	if err := f.checkStatus(); err != nil {
+		return err
+	}
+	if err := f.checkContent(); err != nil {
+		return err
+	}
+	if err := f.checkSpec(); err != nil {
 		return err
 	}
 	for _, line := range f.Lines() {
@@ -548,8 +598,60 @@ func (f *File) checkHooks() error {
 		// afterUpdate runs there and repairs what afterCreate missed.
 		return fmt.Errorf("hooks: %s needs %s: %s repairs what a failed %s missed", HookAfterCreate, HookAfterUpdate, HookAfterUpdate, HookAfterCreate)
 	}
+	if seen[HookAdopt] && seen[HookAfterCreate] {
+		// An adopted resource has no Create response for afterCreate.
+		return fmt.Errorf("hooks: %s skips the API Create, so %s has no response; declare one", HookAdopt, HookAfterCreate)
+	}
 	if seen[HookDelete] && seen[HookBeforeDelete] {
 		return fmt.Errorf("hooks: %s replaces the generated DELETE and %s runs before it; declare one", HookDelete, HookBeforeDelete)
+	}
+	return nil
+}
+
+// decodePattern is <import path>.<Func>: a Go import path, then an exported function name.
+var decodePattern = regexp.MustCompile(`^[a-z0-9.\-]+(/[A-Za-z0-9_.\-]+)+\.[A-Z][A-Za-z0-9_]*$`)
+
+// checkContent checks the content key.
+func (f *File) checkContent() error {
+	if f.Content == nil {
+		return nil
+	}
+	if f.Mode != ModeExisting {
+		return errors.New("content: a new kind follows the contract")
+	}
+	if !decodePattern.MatchString(f.Content.Decode) {
+		return fmt.Errorf("content.decode: %q is not <import path>.<Func>", f.Content.Decode)
+	}
+	for _, name := range ContentFields {
+		if _, ok := f.Spec[name]; ok {
+			return fmt.Errorf("spec.%s: the content key has this field", name)
+		}
+	}
+	return nil
+}
+
+// ContentFields are the spec fields of the content key.
+var ContentFields = []string{"json", "gzipJson", "configMapRef"}
+
+// checkSpec checks the spec key.
+func (f *File) checkSpec() error {
+	if len(f.Spec) == 0 {
+		return nil
+	}
+	if f.Mode != ModeExisting {
+		return errors.New("spec: a new kind follows the contract")
+	}
+	if len(f.Hooks) == 0 {
+		return errors.New("spec: a handwritten spec field needs a hook that reads it")
+	}
+	for _, name := range slices.Sorted(maps.Keys(f.Spec)) {
+		field := f.Spec[name]
+		if !validJSONName(name) {
+			return fmt.Errorf("spec.%s: %q is not a spec property name", name, name)
+		}
+		if !token.IsIdentifier(field.Type) || !token.IsExported(field.Type) {
+			return fmt.Errorf("spec.%s.type: %q is not an exported Go type name", name, field.Type)
+		}
 	}
 	return nil
 }
@@ -664,7 +766,7 @@ func (f *File) checkAPI() error {
 	for i := 0; i < len(f.apiNode.Content); i += 2 {
 		key, value := f.apiNode.Content[i].Value, f.apiNode.Content[i+1]
 		switch key {
-		case "updateIDInBody", "operations", "customMethods", "serverSetID", "idProperty", "clientSetID", "delete", "updateMaskInBody", "requestWrapper", "requestValues":
+		case "updateIDInBody", "operations", "customMethods", "serverSetID", "idProperty", "clientSetID", "delete", "updateMaskInBody", "requestWrapper", "requestValues", "createResponseOnlyIDProperty":
 		default:
 			return fmt.Errorf("api.%s: opgen does not support this api key", key)
 		}

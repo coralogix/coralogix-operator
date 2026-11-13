@@ -1,0 +1,9 @@
+values:
+  json: '{"name":"e2e-content-thing","layout":{"rows":1}}'
+omit: [gzipJson, configMapRef, place]
+minimal:
+  json: '{"name":"e2e-content-thing-minimal","layout":{"rows":1}}'
+update:
+  field: json
+  value: '{"name":"e2e-content-thing-updated","layout":{"rows":2}}'
+  check: name

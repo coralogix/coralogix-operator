@@ -1,0 +1,30 @@
+resource: ContentThing
+mode: existing
+validators:
+  inferred: true
+content:
+  decode: github.com/coralogix/coralogix-management-sdk/go/openapi/contentthingjson.Unmarshal
+api:
+  requestWrapper: item
+  idProperty: id
+  serverSetID: true
+  updateIDInBody: true
+  createResponseOnlyIDProperty: thingId
+  requestValues:
+    create:
+      requestId: {source: uuid, value: "cx-operator-create-"}
+      policy: {source: field}
+      locked: {source: omit}
+    update:
+      requestId: {source: uuid, value: "cx-operator-replace-"}
+      policy: {source: field}
+      locked: {source: omit}
+types:
+  ContentThing:
+    fields:
+      id: {readOnly: true}
+spec:
+  place: {type: ContentThingPlace}
+hooks: [validate, beforeCreate, adopt, beforeUpdate]
+status:
+  imported: {type: bool, keepOnCleanup: true}

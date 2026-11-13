@@ -70,6 +70,10 @@ type kindData struct {
 	IDZeroValid                bool
 	CreateResponseField        string // the field that wraps the resource in the Create response
 	CreateResponseValue        bool
+	// CreateResponseIDField is the field of a Create response that holds only the id
+	// (api.createResponseOnlyIDProperty). CreateResponseIDValue: it is a value, not a pointer.
+	CreateResponseIDField string
+	CreateResponseIDValue bool
 	GetResponseField           string
 	GetResponseValue           bool
 	CreateWrapperField         string // the request field that wraps the resource
@@ -90,6 +94,9 @@ type kindData struct {
 	BodyIDInWrapper bool
 	BodyIDField     string
 	BodyIDValue     bool
+
+	// Content is set for a kind with the content key: the CR holds the resource as JSON text.
+	Content *contentData
 
 	// Hooks and Status come from the hooks and status keys of the overrides file.
 	Hooks  hookData
@@ -235,7 +242,7 @@ func (b *builder) out() string {
 
 // buildKind maps the resource and its SDK names to the data of the templates. It is also the
 // renderer check of check: an error is a contract that the renderer cannot write.
-func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module string, file *overrides.File, updateIDOutsideWrapper bool) (*kindData, error) {
+func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module string, file *overrides.File, updateIDOutsideWrapper bool, fields []wrapperField) (*kindData, error) {
 	ix, err := indexRefs(refs)
 	if err != nil {
 		return nil, err
@@ -271,6 +278,9 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 		return nil, err
 	}
 	if err := b.operations(r, d); err != nil {
+		return nil, err
+	}
+	if err := b.extraSpec(r, d, fields); err != nil {
 		return nil, err
 	}
 	if err := b.requests(r, d); err != nil {
@@ -396,8 +406,10 @@ func checkLifecycle(r *model.Resource) error {
 		return unsupported("resource", "a numeric id must be int32 or int64")
 	case r.IDType.Kind != model.String && r.IDType.Kind != model.Integer:
 		return unsupported("resource", "the id must be a string, int32, or int64")
-	case !r.Create.Response.Direct && r.Create.Response.Field == "":
-		return unsupported("create.response", "Create must return the resource directly or in a field")
+	case r.Create.Response.ID != "" && r.IDType.Kind != model.String:
+		return unsupported("create.response", "a Create response that holds only the id needs a string id")
+	case !r.Create.Response.Direct && r.Create.Response.Field == "" && r.Create.Response.ID == "":
+		return unsupported("create.response", "Create must return the resource directly, in a field, or its id (api.createResponseOnlyIDProperty)")
 	}
 	return nil
 }

@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	bodyidthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/body_id_things_service"
+	contentthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/content_things_service"
 	hookdeletethings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/hook_delete_things_service"
 	hookthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/hook_things_service"
 	patchthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/patch_things_service"
@@ -35,6 +36,10 @@ func (c *ClientSet) RefThings() *refthings.RefThingsServiceAPIService {
 // BodyIDThings returns the client of the body id things API.
 func (c *ClientSet) BodyIDThings() *bodyidthings.BodyIDThingsServiceAPIService {
 	return bodyidthings.NewBodyIDThingsServiceAPIService()
+}
+
+func (c *ClientSet) ContentThings() *contentthings.ContentThingsServiceAPIService {
+	return contentthings.NewContentThingsServiceAPIService()
 }
 
 func (c *ClientSet) WrappedThings() *wrappedthings.WrappedThingsServiceAPIService {

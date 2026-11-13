@@ -102,7 +102,17 @@ var _ = Describe("{{.Kind}} (generated)", Ordered{{if .E2E.Serial}}, Serial{{end
 {{- range .NotNil}}
 			g.Expect({{.}}).NotTo(BeNil())
 {{- end}}
+{{- if .Check}}
+			// The CR holds the {{$.Kind}} as JSON text: compare {{.Check}} of the new text and the response.
+			var gotFields, wantFields map[string]any
+			raw, err := json.Marshal(got{{if $.GetResponseField}}.{{$.GetResponseField}}{{end}})
+			g.Expect(err).NotTo(HaveOccurred())
+			g.Expect(json.Unmarshal(raw, &gotFields)).To(Succeed())
+			g.Expect(json.Unmarshal([]byte({{.Want}}), &wantFields)).To(Succeed())
+			g.Expect(gotFields[{{printf "%q" .Check}}]).To(Equal(wantFields[{{printf "%q" .Check}}]))
+{{- else}}
 			g.Expect({{.Got}}).To(Equal({{.Want}}))
+{{- end}}
 		}, time.Minute, time.Second).Should(Succeed())
 {{- end}}
 	})

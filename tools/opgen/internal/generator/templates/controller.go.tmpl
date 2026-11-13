@@ -38,6 +38,9 @@ type {{.Kind}}Reconciler struct {
 // +kubebuilder:rbac:groups=coralogix.com,resources={{.Plural}},verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=coralogix.com,resources={{.Plural}}/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=coralogix.com,resources={{.Plural}}/finalizers,verbs=update
+{{- if .Content}}
+// +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch
+{{- end}}
 
 func (r *{{.Kind}}Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	return coralogixreconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.{{.Kind}}{}, r)
@@ -80,6 +83,20 @@ func (r *{{.Kind}}Reconciler) HandleCreation(ctx context.Context, log logr.Logge
 		return {{$.CreateReturn}}coralogixreconciler.NewHookError(fmt.Errorf("beforeCreate hook of {{.Kind}} failed: %w", err))
 	}
 {{- end}}
+{{- if .Hooks.Adopt}}
+	// adopt runs after beforeCreate. An id that it returns names a remote {{.Kind}} that already
+	// exists: it becomes status.id, and no remote {{.Kind}} is created. "" creates one.
+	// {{template "safeHook"}}
+	adoptedID, err := r.adopt(ctx, log, cr, body)
+	if err != nil {
+		return {{$.CreateReturn}}coralogixreconciler.NewHookError(fmt.Errorf("adopt hook of {{.Kind}} failed: %w", err))
+	}
+	if adoptedID != "" {
+		log.Info("Adopted remote {{.Kind}}", "id", adoptedID)
+		cr.Status.ID = ptr.To(adoptedID)
+		return nil
+	}
+{{- end}}
 	log.Info("Creating remote {{.Kind}}", "{{.Kind}}", utils.FormatJSON(body))
 	resp, httpResp, err := r.Client.{{.CreateMethod}}(ctx).{{.CreateSetter}}(*body).Execute()
 	if err != nil {
@@ -89,6 +106,9 @@ func (r *{{.Kind}}Reconciler) HandleCreation(ctx context.Context, log logr.Logge
 	if resp == nil {
 		return {{$.CreateReturn}}fmt.Errorf("the create response of {{.Kind}} has no resource")
 	}
+{{- if .CreateResponseIDField}}
+	id := {{if .CreateResponseIDValue}}resp.{{.CreateResponseIDField}}{{else}}ptr.Deref(resp.{{.CreateResponseIDField}}, ""){{end}}
+{{- else}}
 {{- if and .CreateResponseField (not .CreateResponseValue)}}
 	if resp.{{.CreateResponseField}} == nil {
 		return {{$.CreateReturn}}fmt.Errorf("the create response of {{.Kind}} has no resource")
@@ -114,12 +134,13 @@ func (r *{{.Kind}}Reconciler) HandleCreation(ctx context.Context, log logr.Logge
 {{- else}}
 	id := ptr.Deref(resp.{{if .CreateResponseField}}{{.CreateResponseField}}.{{end}}{{.IDField}}, "")
 {{- end}}
+{{- end}}
 {{- if not .IDBits}}
 	if id == "" {
 		return {{$.CreateReturn}}fmt.Errorf("the create response of {{.Kind}} has no id")
 	}
 {{- end}}
-	cr.Status = coralogixv1alpha1.{{.Kind}}Status{ID: ptr.To(id)}
+	cr.Status = coralogixv1alpha1.{{.Kind}}Status{ID: ptr.To(id){{range .KeptStatusFields}}, {{.GoName}}: cr.Status.{{.GoName}}{{end}}}
 {{- if .Hooks.AfterCreate}}
 	return func(ctx context.Context) error {
 		// afterCreate runs after status.id and the finalizer are saved. If it fails, the next run

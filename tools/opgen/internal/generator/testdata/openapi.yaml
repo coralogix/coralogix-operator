@@ -11,6 +11,10 @@
 # generated DELETE; its Replace returns the resource.
 # WrappedThing: a kind that users already have. Its request wrapper holds a request component of its
 # own: title is heading in the requests, and note is extra.note (requestAs).
+# ContentThing: a kind that users already have, with the content key: the CR holds the resource as
+# JSON text. Create answers only the id (api.createResponseOnlyIDProperty). The request wrapper
+# has the resource beside a policy that the CR holds (requestValues source field) and a flag that
+# it never sends (omit). It has the adopt hook and a handwritten spec field (the spec key).
 # RefThing: a kind that users already have, with a required and an optional id of a Thing. Its
 # behavior-overrides file makes both ids references (the ref key).
 openapi: 3.1.0
@@ -382,6 +386,56 @@ paths:
       operationId: WrappedThingsService_DeleteWrappedThing
       responses:
         '200': {description: Deleted, content: {application/json: {schema: {type: object}}}}
+  /content-things:
+    post:
+      tags: [Content Things Service]
+      operationId: ContentThingsService_CreateContentThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: CreateContentThingRequest
+              type: object
+              required: [requestId, item]
+              properties:
+                item: {$ref: '#/components/schemas/ContentThing'}
+                policy: {type: string, maxLength: 100, description: The access policy of the thing., x-coralogix-presence: true}
+                locked: {type: boolean, x-coralogix-presence: true}
+                requestId: {type: string, x-coralogix-presence: true}
+      responses:
+        '200': {description: Created, content: {application/json: {schema: {$ref: '#/components/schemas/CreateContentThingResponse'}}}}
+    put:
+      tags: [Content Things Service]
+      operationId: ContentThingsService_ReplaceContentThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: ReplaceContentThingRequest
+              type: object
+              required: [requestId]
+              properties:
+                item: {$ref: '#/components/schemas/ContentThing'}
+                policy: {type: string, maxLength: 100, description: The access policy of the thing., x-coralogix-presence: true}
+                locked: {type: boolean, x-coralogix-presence: true}
+                requestId: {type: string, x-coralogix-presence: true}
+      responses:
+        '200': {description: Replaced, content: {application/json: {schema: {type: object}}}}
+  /content-things/{thing_id}:
+    parameters:
+      - {name: thing_id, in: path, required: true, schema: {type: string}}
+    get:
+      tags: [Content Things Service]
+      operationId: ContentThingsService_GetContentThing
+      responses:
+        '200': {description: Found, content: {application/json: {schema: {$ref: '#/components/schemas/GetContentThingResponse'}}}}
+    delete:
+      tags: [Content Things Service]
+      operationId: ContentThingsService_DeleteContentThing
+      responses:
+        '200': {description: Deleted, content: {application/json: {schema: {type: object}}}}
   /hook-things:
     post:
       tags: [Hook Things Service]
@@ -687,6 +741,31 @@ components:
         name: {type: string, minLength: 1, x-coralogix-presence: true}
         title: {type: string, x-coralogix-presence: true}
         note: {type: string, x-coralogix-presence: true}
+    ContentThing:
+      type: object
+      required: [name, layout]
+      properties:
+        id: {type: string, x-coralogix-presence: true}
+        name: {type: string, minLength: 1, x-coralogix-presence: true}
+        layout: {$ref: '#/components/schemas/ContentThingLayout'}
+        mode: {type: string, enum: [MODE_A, MODE_B]}
+    ContentThingLayout:
+      type: object
+      oneOf:
+        - {required: [rows], type: object}
+        - {required: [columns], type: object}
+      properties:
+        rows: {type: integer, format: int32, x-coralogix-presence: true}
+        columns: {type: integer, format: int32, x-coralogix-presence: true}
+    CreateContentThingResponse:
+      type: object
+      properties:
+        thingId: {type: string, x-coralogix-presence: true}
+    GetContentThingResponse:
+      type: object
+      properties:
+        item: {$ref: '#/components/schemas/ContentThing'}
+        policy: {type: string, x-coralogix-presence: true}
     HookThing:
       type: object
       required: [id, name]

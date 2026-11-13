@@ -15,6 +15,7 @@ rules:
       - coralogix.com
     resources:
       - bodyidthings
+      - contentthings
       - hookdeletethings
       - hookthings
       - patchthings
@@ -33,6 +34,7 @@ rules:
       - coralogix.com
     resources:
       - bodyidthings/finalizers
+      - contentthings/finalizers
       - hookdeletethings/finalizers
       - hookthings/finalizers
       - patchthings/finalizers
@@ -45,6 +47,7 @@ rules:
       - coralogix.com
     resources:
       - bodyidthings/status
+      - contentthings/status
       - hookdeletethings/status
       - hookthings/status
       - patchthings/status

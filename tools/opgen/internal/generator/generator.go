@@ -51,6 +51,7 @@ type validated struct {
 	e2e                    *e2eFile
 	file                   *overrides.File // nil for a kind without a behavior-overrides file
 	updateIDOutsideWrapper bool
+	wrapperFields          []wrapperField
 }
 
 // Generate resolves the SDK that the operator pins and publishes every kind of the kinds file.
@@ -86,8 +87,11 @@ func Check(options CheckOptions) error {
 	if err != nil {
 		return asEligibility(entry, err)
 	}
-	doc, err := model.Load(data)
+	doc, err := (&documents{raw: data}).forKind(entry, file)
 	if err != nil {
+		if shape, ok := isShapeError(err); ok {
+			return asEligibility(entry, shape)
+		}
 		return &EligibilityError{Report: issue.Report{{Code: "OPENAPI_INVALID", Location: "openapi", Message: err.Error(), Remediation: "Correct the OpenAPI document."}}}
 	}
 	v, err := validate(doc, entry, source.SDKModule, "candidate.invalid/coralogix-operator", e2e, file)
@@ -110,10 +114,7 @@ func generateFromInput(input source.Input, root, loadDir string) error {
 	var all []*validated
 	var report issue.Report
 	if len(kinds) != 0 {
-		doc, err := model.Load(input.OpenAPI)
-		if err != nil {
-			return fmt.Errorf("read the OpenAPI of the SDK: %w", err)
-		}
+		docs := &documents{raw: input.OpenAPI}
 		for _, entry := range kinds {
 			e2e, err := readE2E(filepath.Join(root, entry.dir(), e2eFileName))
 			if err != nil {
@@ -127,6 +128,14 @@ func generateFromInput(input source.Input, root, loadDir string) error {
 			if err != nil {
 				report = append(report, eligibility(entry, err).Report...)
 				continue
+			}
+			doc, err := docs.forKind(entry, file)
+			if err != nil {
+				if _, ok := isShapeError(err); ok {
+					report = append(report, eligibility(entry, err).Report...)
+					continue
+				}
+				return fmt.Errorf("read the OpenAPI of the SDK: %w", err)
 			}
 			v, err := validate(doc, entry, input.SDKModule, input.Module, e2e, file)
 			if err != nil {
@@ -174,6 +183,10 @@ func validate(doc docType, entry kindEntry, sdkModule, module string, e2e *e2eFi
 	if err := checkRequestValues(doc, r, file); err != nil {
 		return nil, asEligibility(entry, err)
 	}
+	fields, err := wrapperFields(doc, r, file)
+	if err != nil {
+		return nil, asEligibility(entry, err)
+	}
 	tag, err := sdkcheck.ResourceTag(doc, r)
 	if err != nil {
 		return nil, asEligibility(entry, &shapeError{code: "OPERATION_TAG_INCOMPATIBLE", path: "paths", msg: err.Error()})
@@ -183,7 +196,7 @@ func validate(doc docType, entry kindEntry, sdkModule, module string, e2e *e2eFi
 	if err != nil {
 		return nil, asEligibility(entry, &shapeError{code: "SDK_SHAPE_UNSUPPORTED", path: "resource", msg: err.Error()})
 	}
-	v := &validated{entry: entry, resource: r, refs: refs, e2e: e2e, file: file, updateIDOutsideWrapper: outside}
+	v := &validated{entry: entry, resource: r, refs: refs, e2e: e2e, file: file, updateIDOutsideWrapper: outside, wrapperFields: fields}
 	if _, err := renderAll([]*validated{v}, sdkModule, module); err != nil {
 		return nil, err
 	}
@@ -467,7 +480,7 @@ func renderAll(all []*validated, sdkModule, module string) (output, error) {
 }
 
 func renderOne(v *validated, module string) (map[string][]byte, *kindData, error) {
-	d, err := buildKind(v.resource, v.refs, v.entry, module, v.file, v.updateIDOutsideWrapper)
+	d, err := buildKind(v.resource, v.refs, v.entry, module, v.file, v.updateIDOutsideWrapper, v.wrapperFields)
 	if err != nil {
 		return nil, nil, err
 	}

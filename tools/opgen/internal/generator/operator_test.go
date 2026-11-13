@@ -57,10 +57,14 @@ func TestGeneratedKindsBuildInTheOperator(t *testing.T) {
 	writeKinds(t, filepath.Join(sandbox, kindsFile), filepath.Join(root, kindsFile), filepath.Join("testdata", "root", kindsFile))
 	overlaySDK(t, pinned.SDKDir, sdk)
 	// The handwritten hooks of the synthetic kinds with hooks. The generator never writes them.
-	for _, name := range []string{"hookthing_hooks.go", "hookdeletething_hooks.go"} {
+	for _, name := range []string{"hookthing_hooks.go", "hookdeletething_hooks.go", "contentthing_hooks.go"} {
 		if err := copyPath(filepath.Join("testdata", "hooks", name), filepath.Join(sandbox, controllerDir, name)); err != nil {
 			t.Fatal(err)
 		}
+	}
+	// The handwritten type of the spec key of ContentThing.
+	if err := copyPath(filepath.Join("testdata", "handwritten", "contentthing_place.go"), filepath.Join(sandbox, "api", "coralogix", "v1alpha1", "contentthing_place.go")); err != nil {
+		t.Fatal(err)
 	}
 	goMod := filepath.Join(sandbox, "go.mod")
 	appendFile(t, goMod, fmt.Sprintf("\nreplace %s => %s\n", source.SDKModule, sdk))
@@ -76,7 +80,7 @@ func TestGeneratedKindsBuildInTheOperator(t *testing.T) {
 	run(t, sandbox, "go", "vet", "./api/...", "./internal/controller/...", "./internal/utils/...", "./cmd/...", "./tests/e2e/")
 
 	golden := filepath.Join("testdata", "crd")
-	for _, name := range []string{"coralogix.com_things.yaml", "coralogix.com_patchthings.yaml", "coralogix.com_refthings.yaml", "coralogix.com_bodyidthings.yaml", "coralogix.com_wrappedthings.yaml", "coralogix.com_hookthings.yaml", "coralogix.com_hookdeletethings.yaml"} {
+	for _, name := range []string{"coralogix.com_things.yaml", "coralogix.com_patchthings.yaml", "coralogix.com_refthings.yaml", "coralogix.com_bodyidthings.yaml", "coralogix.com_wrappedthings.yaml", "coralogix.com_hookthings.yaml", "coralogix.com_hookdeletethings.yaml", "coralogix.com_contentthings.yaml"} {
 		got, err := os.ReadFile(filepath.Join(sandbox, "config", "crd", "bases", name))
 		if err != nil {
 			t.Fatal(err)
@@ -186,15 +190,20 @@ func overlaySDK(t *testing.T, pinned, dir string) {
 	linkExcept(t, filepath.Join(pinned, openapi), filepath.Join(dir, openapi), "gen", "cxsdk")
 	linkExcept(t, filepath.Join(pinned, openapi, "gen"), filepath.Join(dir, openapi, "gen"))
 	linkExcept(t, filepath.Join(pinned, openapi, "cxsdk"), filepath.Join(dir, openapi, "cxsdk"))
-	for _, pkg := range []string{"things_service", "patch_things_service", "ref_things_service", "body_id_things_service", "wrapped_things_service", "hook_things_service", "hook_delete_things_service"} {
+	for _, pkg := range []string{"things_service", "patch_things_service", "ref_things_service", "body_id_things_service", "wrapped_things_service", "hook_things_service", "hook_delete_things_service", "content_things_service"} {
 		if err := copyTree(filepath.Join("testdata", "sdk", openapi, "gen", pkg), filepath.Join(dir, openapi, "gen", pkg)); err != nil {
 			t.Fatal(err)
 		}
+	}
+	// The decoder of the content of ContentThing.
+	if err := copyTree(filepath.Join("testdata", "sdk", openapi, "contentthingjson"), filepath.Join(dir, openapi, "contentthingjson")); err != nil {
+		t.Fatal(err)
 	}
 	accessors := `package cxsdk
 
 import (
 	bodyidthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/body_id_things_service"
+	contentthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/content_things_service"
 	hookdeletethings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/hook_delete_things_service"
 	hookthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/hook_things_service"
 	patchthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/patch_things_service"
@@ -219,6 +228,10 @@ func (c *ClientSet) BodyIDThings() *bodyidthings.BodyIDThingsServiceAPIService {
 
 func (c *ClientSet) WrappedThings() *wrappedthings.WrappedThingsServiceAPIService {
 	return wrappedthings.NewWrappedThingsServiceAPIService()
+}
+
+func (c *ClientSet) ContentThings() *contentthings.ContentThingsServiceAPIService {
+	return contentthings.NewContentThingsServiceAPIService()
 }
 
 func (c *ClientSet) HookThings() *hookthings.HookThingsServiceAPIService {

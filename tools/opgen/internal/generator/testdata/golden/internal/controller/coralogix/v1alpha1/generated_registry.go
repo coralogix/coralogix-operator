@@ -37,6 +37,13 @@ func SetupGeneratedControllers(mgr ctrl.Manager, clientSet *cxsdk.ClientSet, int
 	}).SetupWithManager(mgr); err != nil {
 		return fmt.Errorf("unable to create the controller of %s: %w", utils.BodyIDThingKind, err)
 	}
+	if err := (&ContentThingReconciler{
+		Client:    clientSet.ContentThings(),
+		ClientSet: clientSet,
+		Interval:  intervals[utils.ContentThingKind],
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create the controller of %s: %w", utils.ContentThingKind, err)
+	}
 	if err := (&HookDeleteThingReconciler{
 		Client:    clientSet.HookDeleteThings(),
 		ClientSet: clientSet,
