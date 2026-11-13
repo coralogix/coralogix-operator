@@ -1,0 +1,58 @@
+[
+  {
+    "step": "create: the answer has a policy without its required fields",
+    "spec": {
+      "policies": [
+        {
+          "name": "rum-severities",
+          "priority": "high",
+          "severities": [
+            "critical",
+            "error"
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/rum-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "policy": {
+                "description": "",
+                "name": "rum-severities",
+                "priority": "PRIORITY_TYPE_HIGH"
+              },
+              "rumRules": {
+                "severities": [
+                  "SEVERITY_CRITICAL",
+                  "SEVERITY_ERROR"
+                ]
+              }
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "DeserializationError",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

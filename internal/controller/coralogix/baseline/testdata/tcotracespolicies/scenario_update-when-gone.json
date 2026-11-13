@@ -1,0 +1,195 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "policies": [
+        {
+          "name": "traces-minimal",
+          "priority": "high"
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/span-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "policy": {
+                "description": "",
+                "name": "traces-minimal",
+                "priority": "PRIORITY_TYPE_HIGH"
+              },
+              "spanRules": {}
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "tco-traces-policies.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "change the policies: the API answers 404",
+    "spec": {
+      "policies": [
+        {
+          "name": "traces-minimal",
+          "priority": "low",
+          "services": {
+            "names": [
+              "checkout"
+            ],
+            "ruleType": "is"
+          }
+        },
+        {
+          "actions": {
+            "names": [
+              "GET"
+            ],
+            "ruleType": "start_with"
+          },
+          "name": "traces-second",
+          "priority": "medium"
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/span-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "policy": {
+                "description": "",
+                "name": "traces-minimal",
+                "priority": "PRIORITY_TYPE_LOW"
+              },
+              "spanRules": {
+                "serviceRule": {
+                  "name": "checkout",
+                  "ruleTypeId": "RULE_TYPE_ID_IS"
+                }
+              }
+            },
+            {
+              "policy": {
+                "description": "",
+                "name": "traces-second",
+                "priority": "PRIORITY_TYPE_MEDIUM"
+              },
+              "spanRules": {
+                "actionRule": {
+                  "name": "GET",
+                  "ruleTypeId": "RULE_TYPE_ID_START_WITH"
+                }
+              }
+            }
+          ]
+        },
+        "status": 404
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [
+        "tco-traces-policies.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteResourceNotFound",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/span-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "policy": {
+                "description": "",
+                "name": "traces-minimal",
+                "priority": "PRIORITY_TYPE_LOW"
+              },
+              "spanRules": {
+                "serviceRule": {
+                  "name": "checkout",
+                  "ruleTypeId": "RULE_TYPE_ID_IS"
+                }
+              }
+            },
+            {
+              "policy": {
+                "description": "",
+                "name": "traces-second",
+                "priority": "PRIORITY_TYPE_MEDIUM"
+              },
+              "spanRules": {
+                "actionRule": {
+                  "name": "GET",
+                  "ruleTypeId": "RULE_TYPE_ID_START_WITH"
+                }
+              }
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "tco-traces-policies.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

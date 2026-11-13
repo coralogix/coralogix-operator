@@ -1,0 +1,92 @@
+[
+  {
+    "step": "create with a retention name: the retentions read fails",
+    "spec": {
+      "policies": [
+        {
+          "archiveRetention": {
+            "backendRef": {
+              "name": "Default"
+            }
+          },
+          "name": "traces-minimal",
+          "priority": "high"
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/dataengine/retention-tags/v1",
+        "status": 500
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteUpdateFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again: the read works",
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/dataengine/retention-tags/v1",
+        "status": 200
+      },
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/span-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "policy": {
+                "archiveRetention": {
+                  "id": "00000000-0000-4000-8000-0000000000a1"
+                },
+                "description": "",
+                "name": "traces-minimal",
+                "priority": "PRIORITY_TYPE_HIGH"
+              },
+              "spanRules": {}
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "tco-traces-policies.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

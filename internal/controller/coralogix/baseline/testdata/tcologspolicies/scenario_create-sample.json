@@ -1,0 +1,300 @@
+[
+  {
+    "step": "create the sample",
+    "spec": {
+      "policies": [
+        {
+          "applications": {
+            "names": [
+              "prod"
+            ],
+            "ruleType": "is"
+          },
+          "archiveRetention": {
+            "backendRef": {
+              "name": "Default"
+            }
+          },
+          "name": "first policy",
+          "priority": "high",
+          "severities": [
+            "critical",
+            "error"
+          ],
+          "subsystems": {
+            "names": [
+              "mobile"
+            ],
+            "ruleType": "is"
+          }
+        },
+        {
+          "applications": {
+            "names": [
+              "dev"
+            ],
+            "ruleType": "start_with"
+          },
+          "name": "second policy",
+          "priority": "low",
+          "severities": [
+            "warning"
+          ],
+          "subsystems": {
+            "names": [
+              "test"
+            ],
+            "ruleType": "is_not"
+          }
+        },
+        {
+          "applications": {
+            "names": [
+              "prod"
+            ],
+            "ruleType": "includes"
+          },
+          "disabled": true,
+          "name": "third policy",
+          "priority": "medium",
+          "severities": [
+            "info"
+          ],
+          "subsystems": {
+            "names": [
+              "mobile"
+            ],
+            "ruleType": "start_with"
+          }
+        },
+        {
+          "name": "fourth policy with targets",
+          "severities": [
+            "debug",
+            "info"
+          ],
+          "targets": [
+            {
+              "dataset": "myDataset",
+              "dataspace": "default",
+              "priority": "low"
+            },
+            {
+              "archiveRetention": {
+                "backendRef": {
+                  "name": "Default"
+                }
+              },
+              "dataset": "archiveDataset",
+              "dataspace": "default",
+              "priority": "low",
+              "priorityOverride": {
+                "quotaBased": {
+                  "usageTiers": [
+                    {
+                      "dailyQuotaPercentage": 60,
+                      "priority": "medium"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "dpxlExpression": "\u003cv1\u003e$d.applicationname == 'prod'",
+          "name": "fifth policy with dpxl expression",
+          "priority": "medium"
+        },
+        {
+          "name": "sixth policy with policy-level quota-based priority override",
+          "priority": "low",
+          "priorityOverride": {
+            "quotaBased": {
+              "usageTiers": [
+                {
+                  "dailyQuotaPercentage": 60,
+                  "priority": "medium"
+                }
+              ]
+            }
+          },
+          "severities": [
+            "info"
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/dataengine/retention-tags/v1",
+        "status": 200
+      },
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/log-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "logRules": {
+                "severities": [
+                  "SEVERITY_CRITICAL",
+                  "SEVERITY_ERROR"
+                ]
+              },
+              "policy": {
+                "applicationRule": {
+                  "name": "prod",
+                  "ruleTypeId": "RULE_TYPE_ID_IS"
+                },
+                "archiveRetention": {
+                  "id": "00000000-0000-4000-8000-0000000000a1"
+                },
+                "description": "",
+                "name": "first policy",
+                "priority": "PRIORITY_TYPE_HIGH",
+                "subsystemRule": {
+                  "name": "mobile",
+                  "ruleTypeId": "RULE_TYPE_ID_IS"
+                }
+              }
+            },
+            {
+              "logRules": {
+                "severities": [
+                  "SEVERITY_WARNING"
+                ]
+              },
+              "policy": {
+                "applicationRule": {
+                  "name": "dev",
+                  "ruleTypeId": "RULE_TYPE_ID_START_WITH"
+                },
+                "description": "",
+                "name": "second policy",
+                "priority": "PRIORITY_TYPE_LOW",
+                "subsystemRule": {
+                  "name": "test",
+                  "ruleTypeId": "RULE_TYPE_ID_IS_NOT"
+                }
+              }
+            },
+            {
+              "logRules": {
+                "severities": [
+                  "SEVERITY_INFO"
+                ]
+              },
+              "policy": {
+                "applicationRule": {
+                  "name": "prod",
+                  "ruleTypeId": "RULE_TYPE_ID_INCLUDES"
+                },
+                "description": "",
+                "disabled": true,
+                "name": "third policy",
+                "priority": "PRIORITY_TYPE_MEDIUM",
+                "subsystemRule": {
+                  "name": "mobile",
+                  "ruleTypeId": "RULE_TYPE_ID_START_WITH"
+                }
+              }
+            },
+            {
+              "logRules": {
+                "severities": [
+                  "SEVERITY_DEBUG",
+                  "SEVERITY_INFO"
+                ]
+              },
+              "policy": {
+                "description": "",
+                "name": "fourth policy with targets",
+                "priority": "PRIORITY_TYPE_UNSPECIFIED",
+                "targets": [
+                  {
+                    "dataset": "myDataset",
+                    "dataspace": "default",
+                    "priority": "PRIORITY_TYPE_LOW"
+                  },
+                  {
+                    "archiveRetention": {
+                      "id": "00000000-0000-4000-8000-0000000000a1"
+                    },
+                    "dataset": "archiveDataset",
+                    "dataspace": "default",
+                    "priority": "PRIORITY_TYPE_LOW",
+                    "priorityOverride": {
+                      "quotaBased": {
+                        "usageTiers": [
+                          {
+                            "dailyQuotaPercentage": 60,
+                            "priority": "PRIORITY_TYPE_MEDIUM"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "logRules": {
+                "dpxlExpression": "\u003cv1\u003e$d.applicationname == 'prod'"
+              },
+              "policy": {
+                "description": "",
+                "name": "fifth policy with dpxl expression",
+                "priority": "PRIORITY_TYPE_MEDIUM"
+              }
+            },
+            {
+              "logRules": {
+                "severities": [
+                  "SEVERITY_INFO"
+                ]
+              },
+              "policy": {
+                "description": "",
+                "name": "sixth policy with policy-level quota-based priority override",
+                "priority": "PRIORITY_TYPE_LOW",
+                "priorityOverride": {
+                  "quotaBased": {
+                    "usageTiers": [
+                      {
+                        "dailyQuotaPercentage": 60,
+                        "priority": "PRIORITY_TYPE_MEDIUM"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "tco-logs-policies.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]
