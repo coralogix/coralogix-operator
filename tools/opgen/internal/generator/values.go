@@ -48,6 +48,8 @@ type e2eFile struct {
 	Values map[string]any `yaml:"values"`
 	// Update is the change of the update step.
 	Update *e2eUpdate `yaml:"update"`
+	// When gives the extra values that an enum value or a oneOf arm needs.
+	When []e2eWhen `yaml:"when"`
 	// SkipValues lists accepted enum values that no test sends, by enum component, with the reason.
 	SkipValues map[string]e2eSkipValues `yaml:"skipValues"`
 	// SkipChoices lists oneOf arms that no test sends, by component, with the reason.
@@ -169,6 +171,10 @@ type sampleValues struct {
 	record bool
 	// sweeping picks open arms and values instead of the first ones.
 	sweeping bool
+	// layers hold the values and arms that when entries force in the current copy and list item.
+	// The last layer wins. items are the overlays of the list items that a copy plans, by list path.
+	layers []*overlay
+	items  map[string][]*overlay
 }
 
 // buildValues makes up the full and the minimal spec from the contract and e2e.yaml.
@@ -283,7 +289,7 @@ func (v *sampleValues) specs(d *kindData) (full, minimal *omap, steps [][]*omap,
 func (v *sampleValues) object(t *crType, prefix string, full bool) (*omap, error) {
 	skip := map[string]bool{}
 	for _, g := range t.groups {
-		chosen := v.arm(t, g, full)
+		chosen := v.arm(t, g, full, strings.TrimSuffix(prefix, "."))
 		for _, arm := range g.Arms {
 			skip[arm] = arm != chosen
 		}
@@ -314,7 +320,14 @@ func (v *sampleValues) object(t *crType, prefix string, full bool) (*omap, error
 }
 
 func (v *sampleValues) field(f *crField, path string, full bool) (any, error) {
-	if value, ok := v.file.Values[path]; ok {
+	if value, ok := v.layerValue(path); ok {
+		if v.record {
+			v.cov.literal(f, value)
+		}
+		return value, nil
+	}
+	_, armForced := v.layerArm(path)
+	if value, ok := v.file.Values[path]; ok && !armForced { // a forced arm wins over a fixed value
 		v.used[path] = true
 		if v.record {
 			v.cov.literal(f, value)
@@ -342,7 +355,7 @@ func (v *sampleValues) item(f *crField, t *model.Type, path string, full bool) (
 	case model.Object, model.OneOf:
 		return v.object(f.object, path+".", full)
 	case model.Enum:
-		return v.enumName(f), nil
+		return v.enumName(f, path), nil
 	case model.Bool:
 		return true, nil
 	case model.Integer:
@@ -357,12 +370,14 @@ func (v *sampleValues) item(f *crField, t *model.Type, path string, full bool) (
 
 // arm returns the API property of the arm that a value sets, "" for none. The first arm that is not
 // skipped is the default. A sweep takes the arm that adds the most coverage.
-func (v *sampleValues) arm(t *crType, g model.OneOfGroup, full bool) string {
+func (v *sampleValues) arm(t *crType, g model.OneOfGroup, full bool, path string) string {
 	if !full && g.AllowNone {
 		return ""
 	}
 	chosen := ""
-	if v.sweeping && v.record {
+	if forced, ok := v.layerArm(path); ok && slices.Contains(g.Arms, forced) {
+		chosen = forced
+	} else if v.sweeping && v.record && !v.cov.coupled[path] {
 		chosen = v.cov.pickArm(t, g)
 	}
 	for _, arm := range g.Arms {
@@ -381,13 +396,13 @@ func (v *sampleValues) arm(t *crType, g model.OneOfGroup, full bool) string {
 
 // enumName returns the CR spelling of the value that a value sets. The first value that is not
 // skipped is the default. A sweep takes the first value that no test sends yet.
-func (v *sampleValues) enumName(f *crField) string {
-	return v.enumNames(f, 1)[0]
+func (v *sampleValues) enumName(f *crField, path string) string {
+	return v.enumNames(f, path, 1)[0]
 }
 
 // enumNames returns up to limit CR spellings. A sweep returns the open values first, and the
 // default does not look at them.
-func (v *sampleValues) enumNames(f *crField, limit int) []string {
+func (v *sampleValues) enumNames(f *crField, path string, limit int) []string {
 	var open, usable []enumValue
 	for _, value := range f.enum.Values {
 		key := coverageKey{"enum", f.enum.schema, value.API}
@@ -395,7 +410,7 @@ func (v *sampleValues) enumNames(f *crField, limit int) []string {
 			continue
 		}
 		usable = append(usable, value)
-		if v.sweeping && v.record && v.cov.open(key) && value.API != enumZero(f) {
+		if v.sweeping && v.record && !v.cov.coupled[path] && v.cov.open(key) && value.API != enumZero(f) {
 			open = append(open, value)
 		}
 	}
@@ -435,10 +450,13 @@ func (v *sampleValues) list(f *crField, path string, full bool) (any, error) {
 			limit = int(*f.typ.MaxItems)
 		}
 		items := []any{}
-		for _, name := range v.enumNames(f, max(limit, 1)) {
+		for _, name := range v.enumNames(f, path, max(limit, 1)) {
 			items = append(items, name)
 		}
 		return items, nil
+	}
+	if planned := v.items[path]; len(planned) != 0 {
+		return v.plannedItems(f, path, full, planned)
 	}
 	first, err := v.item(f, f.typ.Elem, path, full)
 	if err != nil {
@@ -461,6 +479,41 @@ func (v *sampleValues) list(f *crField, path string, full bool) (any, error) {
 		v.cov.extra++
 	}
 	return items, nil
+}
+
+// plannedItems makes one item for each when entry that the copy plans in this list.
+func (v *sampleValues) plannedItems(f *crField, path string, full bool, planned []*overlay) (any, error) {
+	items := []any{}
+	for _, layer := range planned {
+		v.layers = append(v.layers, layer)
+		item, err := v.item(f, f.typ.Elem, path, full)
+		v.layers = v.layers[:len(v.layers)-1]
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+	return items, nil
+}
+
+// layerValue returns the value that the layers force at a path.
+func (v *sampleValues) layerValue(path string) (any, bool) {
+	for i := len(v.layers) - 1; i >= 0; i-- {
+		if value, ok := v.layers[i].values[path]; ok {
+			return value, true
+		}
+	}
+	return nil, false
+}
+
+// layerArm returns the arm that the layers force at the field that holds a oneOf.
+func (v *sampleValues) layerArm(path string) (string, bool) {
+	for i := len(v.layers) - 1; i >= 0; i-- {
+		if arm, ok := v.layers[i].arms[path]; ok {
+			return arm, true
+		}
+	}
+	return "", false
 }
 
 func integerValue(t *model.Type) int64 {

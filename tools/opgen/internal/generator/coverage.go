@@ -38,11 +38,14 @@ type coverageKey struct {
 // coverage is the set of enum values and oneOf arms of the spec tree, and the part that tests send.
 // It reads the same crType tree that renders the types and the CRD.
 type coverage struct {
-	universe []coverageKey
-	label    map[coverageKey]string
-	covered  map[coverageKey]bool
-	skipped  map[coverageKey]bool
-	owner    map[*crType]string // the contract component of each struct
+	universe    []coverageKey
+	label       map[coverageKey]string
+	covered     map[coverageKey]bool
+	skipped     map[coverageKey]bool
+	owner       map[*crType]string // the contract component of each struct
+	whens       []*whenEntry
+	coupled     map[string]bool // the CR paths that a when entry matches
+	coupledKeys map[coverageKey]bool
 	// live holds the keys that a test can reach: the ones that are not only below a skipped arm.
 	live map[coverageKey]bool
 	// extra counts the list items that the current step added beyond the first.
@@ -50,13 +53,20 @@ type coverage struct {
 }
 
 func newCoverage(d *kindData, file *e2eFile) (*coverage, error) {
-	c := &coverage{label: map[coverageKey]string{}, covered: map[coverageKey]bool{}, skipped: map[coverageKey]bool{}, owner: map[*crType]string{}}
+	c := &coverage{coupled: map[string]bool{}, coupledKeys: map[coverageKey]bool{}, label: map[coverageKey]string{}, covered: map[coverageKey]bool{}, skipped: map[coverageKey]bool{}, owner: map[*crType]string{}}
 	c.walk(d.Spec, d.Kind, "", map[*crType]bool{})
 	if err := c.readSkips(file); err != nil {
 		return nil, err
 	}
 	c.live = map[coverageKey]bool{}
 	c.markLive(d.Spec, map[*crType]bool{})
+	if err := c.parseWhen(d.Spec, file.When); err != nil {
+		return nil, err
+	}
+	c.markCoupledKeys(d.Spec)
+	if err := c.checkWhenCoverage(); err != nil {
+		return nil, err
+	}
 	return c, nil
 }
 
@@ -192,53 +202,64 @@ func (c *coverage) mark(key coverageKey) { c.covered[key] = true }
 // literal records what a fixed value of e2e.yaml really sends. A fixed value never exempts the
 // other values below it: the guard still names them.
 func (c *coverage) literal(f *crField, value any) {
+	for _, key := range c.literalKeys(f, value) {
+		c.mark(key)
+	}
+}
+
+// literalKeys lists the enum values and the oneOf arms that a literal value sends.
+func (c *coverage) literalKeys(f *crField, value any) []coverageKey {
+	var keys []coverageKey
 	if f.enum != nil {
 		for _, name := range literalStrings(value) {
 			for _, v := range f.enum.Values {
 				if v.Name == name {
-					c.mark(coverageKey{"enum", f.enum.schema, v.API})
+					keys = append(keys, coverageKey{"enum", f.enum.schema, v.API})
 				}
 			}
 		}
-		return
+		return keys
 	}
 	if f.object == nil {
-		return
+		return nil
 	}
 	switch x := value.(type) {
 	case []any:
 		for _, item := range x {
-			c.literalObject(f.object, item)
+			keys = append(keys, c.literalObjectKeys(f.object, item)...)
 		}
 	case map[string]any:
 		if f.typ != nil && f.typ.Kind == model.Map {
 			for _, item := range x {
-				c.literalObject(f.object, item)
+				keys = append(keys, c.literalObjectKeys(f.object, item)...)
 			}
-			return
+			return keys
 		}
-		c.literalObject(f.object, x)
+		keys = append(keys, c.literalObjectKeys(f.object, x)...)
 	}
+	return keys
 }
 
-func (c *coverage) literalObject(t *crType, value any) {
+func (c *coverage) literalObjectKeys(t *crType, value any) []coverageKey {
 	object, ok := value.(map[string]any)
 	if !ok {
-		return
+		return nil
 	}
+	var keys []coverageKey
 	component := c.owner[t]
 	for _, g := range t.groups {
 		for _, arm := range g.Arms {
 			if _, set := object[armJSON(t, arm)]; set {
-				c.mark(coverageKey{"arm", component, arm})
+				keys = append(keys, coverageKey{"arm", component, arm})
 			}
 		}
 	}
 	for _, f := range t.Fields {
 		if child, ok := object[f.JSON]; ok {
-			c.literal(f, child)
+			keys = append(keys, c.literalKeys(f, child)...)
 		}
 	}
+	return keys
 }
 
 func literalStrings(value any) []string {
@@ -340,7 +361,7 @@ func (c *coverage) guard() error {
 		return nil
 	}
 	return &shapeError{code: codeE2ECoverageMissing, path: e2eFileName,
-		msg: fmt.Sprintf("no test sends %d accepted values or arms.\nFor each, add it to skipValues or skipChoices with a reason:\n  %s", len(missing), strings.Join(missing, "\n  "))}
+		msg: fmt.Sprintf("no test sends %d accepted values or arms.\nFor each, add a when entry, or add it to skipValues or skipChoices with a reason:\n  %s", len(missing), strings.Join(missing, "\n  "))}
 }
 
 // sweep builds the extra steps. Step 0, the full spec, has already been recorded. Each step makes
@@ -355,7 +376,10 @@ func (c *coverage) sweep(v *sampleValues, d *kindData) ([][]*omap, error) {
 		var step []*omap
 		for len(step) < maxCopiesPerStep {
 			before := len(c.covered)
+			global, items := c.planCopy()
+			v.layers, v.items = []*overlay{global}, items
 			spec, err := v.object(d.Spec, "", true)
+			v.layers, v.items = nil, nil
 			if err != nil {
 				return nil, err
 			}
