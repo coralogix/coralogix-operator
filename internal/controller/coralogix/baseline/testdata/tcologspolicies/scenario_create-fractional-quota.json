@@ -42,7 +42,6 @@
               "policy": {
                 "description": "",
                 "name": "quota-override",
-                "priority": "PRIORITY_TYPE_UNSPECIFIED",
                 "targets": [
                   {
                     "dataset": "myDataset",

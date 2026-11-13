@@ -103,8 +103,8 @@ spec:
                                     enum:
                                     - block
                                     - high
-                                    - low
                                     - medium
+                                    - low
                                     type: string
                                 required:
                                 - dailyQuotaPercentage
@@ -176,8 +176,8 @@ spec:
                             enum:
                             - block
                             - high
-                            - low
                             - medium
+                            - low
                             type: string
                           priorityOverride:
                             properties:
@@ -196,8 +196,8 @@ spec:
                                           enum:
                                           - block
                                           - high
-                                          - low
                                           - medium
+                                          - low
                                           type: string
                                       required:
                                       - dailyQuotaPercentage

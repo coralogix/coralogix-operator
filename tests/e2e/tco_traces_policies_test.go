@@ -42,11 +42,11 @@ var _ = Describe("TCOTracesPolicies schema validation", func() {
 				Namespace: testNamespace,
 			},
 			Spec: coralogixv1alpha1.TCOTracesPoliciesSpec{
-				Policies: []coralogixv1alpha1.TCOTracesPolicy{{
+				Policies: []coralogixv1alpha1.TCOTracesPoliciesPolicy{{
 					Name:           "conflicting-rules",
 					Priority:       "low",
 					DpxlExpression: ptr.To("<v1> $d.status == 'ERROR'"),
-					Services: &coralogixv1alpha1.TCOPolicyRule{
+					Services: &coralogixv1alpha1.TCOTracesPoliciesQuotaV1Rule{
 						Names:    []string{"service"},
 						RuleType: "is",
 					},
@@ -80,27 +80,27 @@ var _ = Describe("TCOTracesPolicies", func() {
 				Namespace: testNamespace,
 			},
 			Spec: coralogixv1alpha1.TCOTracesPoliciesSpec{
-				Policies: []coralogixv1alpha1.TCOTracesPolicy{
+				Policies: []coralogixv1alpha1.TCOTracesPoliciesPolicy{
 					{
 						Name:     "sample policy",
 						Priority: "high",
-						Applications: &coralogixv1alpha1.TCOPolicyRule{
+						Applications: &coralogixv1alpha1.TCOTracesPoliciesQuotaV1Rule{
 							Names:    []string{"prod"},
 							RuleType: "is",
 						},
-						Subsystems: &coralogixv1alpha1.TCOPolicyRule{
+						Subsystems: &coralogixv1alpha1.TCOTracesPoliciesQuotaV1Rule{
 							Names:    []string{"mobile"},
 							RuleType: "is",
 						},
-						Actions: &coralogixv1alpha1.TCOPolicyRule{
+						Actions: &coralogixv1alpha1.TCOTracesPoliciesQuotaV1Rule{
 							Names:    []string{"action1", "action2"},
 							RuleType: "is",
 						},
-						Services: &coralogixv1alpha1.TCOPolicyRule{
+						Services: &coralogixv1alpha1.TCOTracesPoliciesQuotaV1Rule{
 							Names:    []string{"service", "system"},
 							RuleType: "includes",
 						},
-						Tags: []coralogixv1alpha1.TCOPolicyTag{
+						Tags: []coralogixv1alpha1.TCOTracesPoliciesTagRule{
 							{
 								Name:     "tags.app",
 								Values:   []string{"purchases", "signups"},
@@ -122,23 +122,23 @@ var _ = Describe("TCOTracesPolicies", func() {
 						Name:     "sample policy 2",
 						Priority: "high",
 						Disabled: ptr.To(true),
-						Applications: &coralogixv1alpha1.TCOPolicyRule{
+						Applications: &coralogixv1alpha1.TCOTracesPoliciesQuotaV1Rule{
 							Names:    []string{"prod"},
 							RuleType: "is",
 						},
-						Subsystems: &coralogixv1alpha1.TCOPolicyRule{
+						Subsystems: &coralogixv1alpha1.TCOTracesPoliciesQuotaV1Rule{
 							Names:    []string{"mobile"},
 							RuleType: "is",
 						},
-						Actions: &coralogixv1alpha1.TCOPolicyRule{
+						Actions: &coralogixv1alpha1.TCOTracesPoliciesQuotaV1Rule{
 							Names:    []string{"action1", "action2"},
 							RuleType: "is",
 						},
-						Services: &coralogixv1alpha1.TCOPolicyRule{
+						Services: &coralogixv1alpha1.TCOTracesPoliciesQuotaV1Rule{
 							Names:    []string{"service", "system"},
 							RuleType: "includes",
 						},
-						Tags: []coralogixv1alpha1.TCOPolicyTag{
+						Tags: []coralogixv1alpha1.TCOTracesPoliciesTagRule{
 							{
 								Name:     "tags.app",
 								Values:   []string{"purchases", "signups"},
@@ -164,9 +164,9 @@ var _ = Describe("TCOTracesPolicies", func() {
 					{
 						Name:     "priority override policy",
 						Priority: "low",
-						PriorityOverride: &coralogixv1alpha1.TCOPolicyPriorityOverride{
-							QuotaBased: &coralogixv1alpha1.TCOPolicyQuotaBased{
-								UsageTiers: []coralogixv1alpha1.TCOPolicyUsageTier{
+						PriorityOverride: &coralogixv1alpha1.TCOTracesPoliciesPriorityOverride{
+							QuotaBased: &coralogixv1alpha1.TCOTracesPoliciesQuotaBased{
+								UsageTiers: []coralogixv1alpha1.TCOTracesPoliciesUsageTier{
 									{DailyQuotaPercentage: resource.MustParse("30"), Priority: "high"},
 									{DailyQuotaPercentage: resource.MustParse("60"), Priority: "medium"},
 								},

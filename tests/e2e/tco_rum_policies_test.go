@@ -45,11 +45,11 @@ var _ = Describe("TCORumPolicies schema validation", func() {
 				Namespace: testNamespace,
 			},
 			Spec: coralogixv1alpha1.TCORumPoliciesSpec{
-				Policies: []coralogixv1alpha1.TCORumPolicy{{
+				Policies: []coralogixv1alpha1.TCORumPoliciesPolicy{{
 					Name:       "over-limit",
 					Priority:   "low",
-					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
-					Subsystems: &coralogixv1alpha1.TCOPolicyRule{
+					Severities: []string{"info"},
+					Subsystems: &coralogixv1alpha1.TCORumPoliciesQuotaV1Rule{
 						Names:    names,
 						RuleType: "is",
 					},
@@ -68,10 +68,10 @@ var _ = Describe("TCORumPolicies schema validation", func() {
 				Namespace: testNamespace,
 			},
 			Spec: coralogixv1alpha1.TCORumPoliciesSpec{
-				Policies: []coralogixv1alpha1.TCORumPolicy{{
+				Policies: []coralogixv1alpha1.TCORumPoliciesPolicy{{
 					Name:           "conflicting-rules",
 					Priority:       "low",
-					Severities:     []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					Severities:     []string{"info"},
 					DpxlExpression: ptr.To("<v1>$d.applicationname == 'prod'"),
 				}},
 			},
@@ -109,16 +109,16 @@ var _ = Describe("TCORumPolicies", Serial, func() {
 				Namespace: testNamespace,
 			},
 			Spec: coralogixv1alpha1.TCORumPoliciesSpec{
-				Policies: []coralogixv1alpha1.TCORumPolicy{
+				Policies: []coralogixv1alpha1.TCORumPoliciesPolicy{
 					{
 						Name:       "sample policy",
 						Priority:   "medium",
-						Severities: []coralogixv1alpha1.TCOPolicySeverity{"critical", "error"},
-						Applications: &coralogixv1alpha1.TCOPolicyRule{
+						Severities: []string{"critical", "error"},
+						Applications: &coralogixv1alpha1.TCORumPoliciesQuotaV1Rule{
 							Names:    []string{"prod"},
 							RuleType: "start_with",
 						},
-						Subsystems: &coralogixv1alpha1.TCOPolicyRule{
+						Subsystems: &coralogixv1alpha1.TCORumPoliciesQuotaV1Rule{
 							Names:    []string{"mobile"},
 							RuleType: "is",
 						},

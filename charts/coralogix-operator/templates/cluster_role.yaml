@@ -76,9 +76,6 @@ rules:
       - rulegroups
       - scopes
       - slos
-      - tcologspolicies
-      - tcorumpolicies
-      - tcotracespolicies
     verbs:
       - create
       - delete
@@ -114,9 +111,6 @@ rules:
       - rulegroups/finalizers
       - scopes/finalizers
       - slos/finalizers
-      - tcologspolicies/finalizers
-      - tcorumpolicies/finalizers
-      - tcotracespolicies/finalizers
     verbs:
       - update
   - apiGroups:
@@ -146,9 +140,6 @@ rules:
       - rulegroups/status
       - scopes/status
       - slos/status
-      - tcologspolicies/status
-      - tcorumpolicies/status
-      - tcotracespolicies/status
     verbs:
       - get
       - patch
@@ -168,6 +159,9 @@ rules:
       - events2metrics
       - globalrouters
       - presets
+      - tcologspolicies
+      - tcorumpolicies
+      - tcotracespolicies
       - views
       - viewfolders
     verbs:
@@ -184,6 +178,9 @@ rules:
       - events2metrics/finalizers
       - globalrouters/finalizers
       - presets/finalizers
+      - tcologspolicies/finalizers
+      - tcorumpolicies/finalizers
+      - tcotracespolicies/finalizers
       - views/finalizers
       - viewfolders/finalizers
     verbs:
@@ -194,6 +191,9 @@ rules:
       - events2metrics/status
       - globalrouters/status
       - presets/status
+      - tcologspolicies/status
+      - tcorumpolicies/status
+      - tcotracespolicies/status
       - views/status
       - viewfolders/status
     verbs:

@@ -3,5 +3,8 @@
 Events2Metric: v0.1.0-beta.20
 GlobalRouter: v0.1.0-beta.20
 Preset: v0.1.0-beta.20
+TCOLogsPolicies: v0.1.0-beta.20
+TCORumPolicies: v0.1.0-beta.20
+TCOTracesPolicies: v0.1.0-beta.20
 View: v0.1.0-beta.20
 ViewFolder: v0.1.0-beta.20

@@ -96,24 +96,6 @@ resources:
   controller: true
   domain: coralogix.com
   group: coralogix
-  kind: TCOLogsPolicies
-  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
-  version: v1alpha1
-- api:
-    crdVersion: v1
-    namespaced: true
-  controller: true
-  domain: coralogix.com
-  group: coralogix
-  kind: TCOTracesPolicies
-  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
-  version: v1alpha1
-- api:
-    crdVersion: v1
-    namespaced: true
-  controller: true
-  domain: coralogix.com
-  group: coralogix
   kind: QuotaAllocationRuleSet
   path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
   version: v1alpha1
@@ -251,6 +233,33 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: Preset
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: coralogix.com
+  group: coralogix
+  kind: TCOLogsPolicies
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: coralogix.com
+  group: coralogix
+  kind: TCORumPolicies
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: coralogix.com
+  group: coralogix
+  kind: TCOTracesPolicies
   path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
   version: v1alpha1
 - api:
