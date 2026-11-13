@@ -328,15 +328,18 @@ func (c *coverage) openInStruct(t *crType, seen map[*crType]bool) int {
 	}
 	seen[t] = true
 	n := 0
+	cut := map[string]bool{} // skipped arms: no test can send what is below them
 	for _, g := range t.groups {
 		for _, arm := range g.Arms {
-			if c.open(coverageKey{"arm", c.owner[t], arm}) {
+			key := coverageKey{"arm", c.owner[t], arm}
+			cut[arm] = c.skipped[key]
+			if c.open(key) {
 				n++
 			}
 		}
 	}
 	for _, f := range t.Fields {
-		if !f.synthetic {
+		if !f.synthetic && !cut[f.API] {
 			n += c.openBelow(f, seen)
 		}
 	}

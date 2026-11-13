@@ -304,3 +304,24 @@ func TestOmittedArmIsNotCovered(t *testing.T) {
 		t.Fatalf("an emitted arm must count: %v", err)
 	}
 }
+
+// The values below a skipped arm can never be sent. They must not count when the sweep ranks arms,
+// or an arm that holds them wins every time and starves the reachable arms.
+func TestSkippedSubtreeDoesNotStarveReachableArms(t *testing.T) {
+	deep := &crType{schema: "Deep", Fields: []*crField{enumField("level", "Level", "l1", "l2", "l3", "l4", "l5", "l6")}}
+	inner := &crType{schema: "Inner", Fields: []*crField{objectField("deep", model.Object, deep), objectField("shallow", model.Object, &crType{schema: "Shallow"})}}
+	inner.groups = []model.OneOfGroup{{Arms: []string{"deep", "shallow"}}}
+	left := &crType{schema: "Left", Fields: []*crField{objectField("inner", model.OneOf, inner)}}
+	right := &crType{schema: "Right", Fields: []*crField{enumField("agg", "RightAgg", "p", "q", "r")}}
+	root := &crType{schema: "Root", Fields: []*crField{objectField("left", model.Object, left), objectField("right", model.Object, right)}}
+	root.groups = []model.OneOfGroup{{Arms: []string{"left", "right"}}}
+	d := &kindData{Kind: "Thing", Spec: &crType{Name: "ThingSpec", Fields: []*crField{objectField("root", model.OneOf, root)}}}
+	file := &e2eFile{SkipChoices: map[string]e2eSkipChoices{"Inner": {Choices: []string{"deep"}, Reason: "no data"}}}
+	_, v, err := specsOf(t, d, file)
+	if err != nil {
+		t.Fatalf("the values of the reachable arm must all be sent: %v", err)
+	}
+	if missing := v.cov.missing(); len(missing) != 0 {
+		t.Fatalf("left %v", missing)
+	}
+}
