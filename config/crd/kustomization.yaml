@@ -18,7 +18,6 @@ resources:
   - bases/coralogix.com_tcorumpolicies.yaml
   - bases/coralogix.com_integrations.yaml
   - bases/coralogix.com_alertschedulers.yaml
-  - bases/coralogix.com_dashboards.yaml
   - bases/coralogix.com_dashboardsfolders.yaml
   - bases/coralogix.com_archivelogstargets.yaml
   - bases/coralogix.com_archivemetricstargets.yaml
@@ -30,6 +29,7 @@ resources:
   - bases/coralogix.com_aicustomevaluations.yaml
   - bases/coralogix.com_configurationgroups.yaml
   # BEGIN generated kinds
+  - bases/coralogix.com_dashboards.yaml
   - bases/coralogix.com_events2metrics.yaml
   - bases/coralogix.com_globalrouters.yaml
   - bases/coralogix.com_presets.yaml

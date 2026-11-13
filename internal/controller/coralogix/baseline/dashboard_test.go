@@ -62,7 +62,7 @@ func init() {
 		resource: "dashboards",
 		newFake:  newDashboardFake,
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
-			return &v1alpha1controllers.DashboardReconciler{DashboardsClient: cs.Dashboards(), Interval: reconcileInterval}
+			return &v1alpha1controllers.DashboardReconciler{Client: cs.Dashboards(), ClientSet: cs, Interval: reconcileInterval}
 		},
 		scenarios: dashboardScenarios,
 		fidelity: fidelityConfig{

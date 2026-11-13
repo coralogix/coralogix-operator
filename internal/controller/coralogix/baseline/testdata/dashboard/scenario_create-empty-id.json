@@ -21,24 +21,20 @@
       }
     ],
     "result": {
-      "error": false,
-      "requeueAfter": "10m0s"
+      "error": true
     },
     "object": {
-      "finalizers": [
-        "dashboard.coralogix.com/finalizer"
-      ],
+      "finalizers": [],
       "status": {
         "conditions": [
           {
             "observedGeneration": 1,
-            "reason": "RemoteSyncedSuccessfully",
-            "status": "True",
+            "reason": "RemoteCreationFailed",
+            "status": "False",
             "type": "RemoteSynced"
           }
         ],
-        "id": "",
-        "printableStatus": "RemoteSynced"
+        "printableStatus": "RemoteUnsynced"
       }
     }
   },
@@ -61,23 +57,20 @@
       }
     ],
     "result": {
-      "error": false,
-      "requeueAfter": "10m0s"
+      "error": true
     },
     "object": {
-      "finalizers": [
-        "dashboard.coralogix.com/finalizer"
-      ],
+      "finalizers": [],
       "status": {
         "conditions": [
           {
             "observedGeneration": 1,
-            "reason": "RemoteSyncedSuccessfully",
-            "status": "True",
+            "reason": "RemoteCreationFailed",
+            "status": "False",
             "type": "RemoteSynced"
           }
         ],
-        "printableStatus": "RemoteSynced"
+        "printableStatus": "RemoteUnsynced"
       }
     }
   },

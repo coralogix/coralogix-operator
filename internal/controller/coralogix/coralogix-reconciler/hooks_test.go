@@ -111,6 +111,10 @@ func createWithID(followUp func(*coralogixv1alpha1.Dashboard) error) func(*coral
 
 func ptr(s string) *string { return &s }
 
+func boolPtr(b bool) *bool { return &b }
+
+func isTrue(b *bool) bool { return b != nil && *b }
+
 // newDashboard is a Dashboard in the state that a successful run leaves: the RemoteSynced
 // condition is True, so the shared reconciler saves no status for the condition alone. A test then
 // sees only the saves of the hook status.
@@ -237,7 +241,7 @@ func TestCreateFollowUpStatusIsSavedWhenTheReconcilerOptsIn(t *testing.T) {
 			test := newHookTest(t, newDashboard(false))
 			r := &hookReconciler{saves: tt.saves}
 			r.create = createWithID(func(obj *coralogixv1alpha1.Dashboard) error {
-				obj.Status.Imported = true
+				obj.Status.Imported = boolPtr(true)
 				return nil
 			})
 			require.NoError(t, test.reconcile(r))
@@ -266,11 +270,11 @@ func TestUpdateStatusIsSavedOnlyWhenTheReconcilerOptsIn(t *testing.T) {
 			test := newHookTest(t, newDashboard(true))
 			r := &hookReconciler{saves: tt.saves}
 			r.update = func(obj *coralogixv1alpha1.Dashboard) error {
-				obj.Status.Imported = true
+				obj.Status.Imported = boolPtr(true)
 				return nil
 			}
 			require.NoError(t, test.reconcile(r))
-			require.Equal(t, tt.wantSaved, test.get().Status.Imported)
+			require.Equal(t, tt.wantSaved, isTrue(test.get().Status.Imported))
 		})
 	}
 }
@@ -386,7 +390,7 @@ func TestSelectorMismatchRemovesTheStatusFieldsOfTheReconciler(t *testing.T) {
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			dashboard := newDashboard(true)
-			dashboard.Status.Imported = true
+			dashboard.Status.Imported = boolPtr(true)
 			test := newHookTest(t, dashboard)
 			originalSelector := config.GetConfig().Selector
 			t.Cleanup(func() { config.GetConfig().Selector = originalSelector })
@@ -397,7 +401,7 @@ func TestSelectorMismatchRemovesTheStatusFieldsOfTheReconciler(t *testing.T) {
 			require.Equal(t, 1, r.deletions)
 			got := test.get()
 			require.Nil(t, got.Status.ID)
-			require.Equal(t, tt.wantImported, got.Status.Imported)
+			require.Equal(t, tt.wantImported, isTrue(got.Status.Imported))
 		})
 	}
 }

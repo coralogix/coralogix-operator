@@ -79,6 +79,10 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
         run: bash scripts/upgrade-check-preset.sh before
+      - name: Create a Dashboard with the released operator
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+        run: bash scripts/upgrade-check-dashboard.sh before
       # The Events2Metric name is also a metric name, which cannot have a dot, so its NAME has no "1.0".
       - name: Create an Events2Metric with the released operator
         if: matrix.operator_version != '0.5'
@@ -127,6 +131,10 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
         run: bash scripts/upgrade-check-preset.sh after
+      - name: Check the Dashboard of the released operator
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+        run: bash scripts/upgrade-check-dashboard.sh after
       - name: Check the Events2Metric of the released operator
         if: matrix.operator_version != '0.5'
         env:
@@ -134,6 +142,11 @@ jobs:
         run: bash scripts/upgrade-check-events2metric.sh after
       # A failed step before the check skips it, so delete the resources here; no run leaves them in
       # Coralogix.
+      - name: Delete the Dashboard of the upgrade test
+        if: always()
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+        run: bash scripts/upgrade-check-dashboard.sh cleanup
       - name: Delete the Events2Metric of the upgrade test
         if: always() && matrix.operator_version != '0.5'
         env:

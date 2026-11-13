@@ -12210,8 +12210,6 @@ with respect to the current state of the instance.<br/>
 
 Dashboard is the Schema for the dashboards API.
 
-**Added in v0.4.0**
-
 <table>
     <thead>
         <tr>
@@ -12242,8 +12240,7 @@ Dashboard is the Schema for the dashboards API.
         <td><b><a href="#dashboardspec">spec</a></b></td>
         <td>object</td>
         <td>
-          DashboardSpec defines the desired state of Dashboard.
-See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-started/<br/>
+          DashboardSpec defines the desired state of a Dashboard.<br/>
           <br/>
             <i>Validations</i>:<li>!(has(self.json) && has(self.configMapRef)): Only one of json or configMapRef can be declared at the same time</li>
         </td>
@@ -12252,7 +12249,7 @@ See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-starte
         <td><b><a href="#dashboardstatus">status</a></b></td>
         <td>object</td>
         <td>
-          DashboardStatus defines the observed state of Dashboard.<br/>
+          DashboardStatus defines the observed state of a Dashboard.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -12264,8 +12261,7 @@ See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-starte
 
 
 
-DashboardSpec defines the desired state of Dashboard.
-See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-started/
+DashboardSpec defines the desired state of a Dashboard.
 
 <table>
     <thead>
@@ -12287,14 +12283,14 @@ See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-starte
         <td><b><a href="#dashboardspecconfigmapref">configMapRef</a></b></td>
         <td>object</td>
         <td>
-          model from configmap<br/>
+          ConfigMapRef names the key of a ConfigMap in the namespace of the CR that holds the JSON text.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#dashboardspecfolderref">folderRef</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          DashboardFolderRef places the dashboard in a folder. It replaces the folder of the JSON content.<br/>
           <br/>
             <i>Validations</i>:<li>has(self.backendRef) || has(self.resourceRef): One of backendRef or resourceRef is required</li><li>!(has(self.backendRef) && has(self.resourceRef)): Only one of backendRef or resourceRef can be declared at the same time</li>
         </td>
@@ -12303,7 +12299,7 @@ See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-starte
         <td><b>gzipJson</b></td>
         <td>string</td>
         <td>
-          GzipJson the model's JSON compressed with Gzip. Base64-encoded when in YAML.<br/>
+          GzipJson is the JSON text compressed with gzip. It is base64-encoded in YAML. It wins over configMapRef.<br/>
           <br/>
             <i>Format</i>: byte<br/>
         </td>
@@ -12312,7 +12308,7 @@ See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-starte
         <td><b>json</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Json is the Dashboard as JSON text. It wins over gzipJson and configMapRef.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -12324,7 +12320,7 @@ See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-starte
 
 
 
-model from configmap
+ConfigMapRef names the key of a ConfigMap in the namespace of the CR that holds the JSON text.
 
 <table>
     <thead>
@@ -12371,7 +12367,7 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
 
 
 
-
+DashboardFolderRef places the dashboard in a folder. It replaces the folder of the JSON content.
 
 <table>
     <thead>
@@ -12475,7 +12471,7 @@ Reference to a Coralogix resource within the cluster.
 
 
 
-DashboardStatus defines the observed state of Dashboard.
+DashboardStatus defines the observed state of a Dashboard.
 
 <table>
     <thead>
@@ -12504,10 +12500,7 @@ DashboardStatus defines the observed state of Dashboard.
         <td><b>imported</b></td>
         <td>boolean</td>
         <td>
-          Imported records that this Dashboard was already adopted via the import annotation once.
-It is set the first time adoption succeeds and, unlike status.id, is not cleared if the
-remote dashboard is later deleted outside the operator - so a subsequent reconcile
-recreates it from spec instead of retrying the import Get for an id that no longer exists.<br/>
+          <br/>
         </td>
         <td>false</td>
       </tr><tr>
