@@ -59,7 +59,7 @@ var _ = Describe("AICustomEvaluation", Ordered, func() {
 
 		aiCustomEvaluation = newAICustomEvaluation(
 			aiCustomEvaluationName,
-			"competitor-policy",
+			uniqueName("competitor-policy"),
 			coralogixv1alpha1.AICustomEvaluationPolicyTypeQuality,
 			"Flags competitor references in assistant responses.",
 			"Score whether {response} mentions competitor products.\nTreat each assistant answer independently.",
@@ -194,7 +194,7 @@ var _ = Describe("AICustomEvaluation minimal", Ordered, func() {
 		aiEvaluations = newOpenAPIClientSet().AIEvaluations()
 		aiCustomEvaluation = newAICustomEvaluation(
 			resourceName,
-			"minimal-policy",
+			uniqueName("minimal-policy"),
 			coralogixv1alpha1.AICustomEvaluationPolicyTypeQuality,
 			"",
 			"Score whether {response} matches the policy.",
@@ -268,7 +268,7 @@ var _ = Describe("AICustomEvaluation application resolution", Ordered, func() {
 		resourceName := uniqueName("ai-custom-evaluation-missing-app-create")
 		aiCustomEvaluation := newAICustomEvaluation(
 			resourceName,
-			"missing-application-policy",
+			uniqueName("missing-application-policy"),
 			coralogixv1alpha1.AICustomEvaluationPolicyTypeQuality,
 			"",
 			"Score whether {response} matches the policy.",
@@ -290,7 +290,7 @@ var _ = Describe("AICustomEvaluation application resolution", Ordered, func() {
 	It("Should report unsynced when application is missing on update", func(ctx context.Context) {
 		aiCustomEvaluation := newAICustomEvaluation(
 			resourceName,
-			"missing-application-update-policy",
+			uniqueName("missing-application-update-policy"),
 			coralogixv1alpha1.AICustomEvaluationPolicyTypeQuality,
 			"",
 			"Score whether {response} matches the policy.",
@@ -328,6 +328,9 @@ var _ = Describe("AICustomEvaluation application resolution", Ordered, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: resourceName, Namespace: testNamespace}, fetched)).To(Succeed())
 			expectAICustomEvaluationRemoteUnsynced(g, fetched)
 		}, time.Minute, time.Second).Should(Succeed())
+
+		// The remote evaluation exists. Delete it here, so a later run does not find it.
+		deleteAICustomEvaluationAndWait(ctx, crClient, resourceName)
 	})
 })
 
