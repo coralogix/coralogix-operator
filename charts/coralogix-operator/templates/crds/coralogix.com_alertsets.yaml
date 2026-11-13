@@ -2494,6 +2494,7 @@ spec:
                           type: array
                         description:
                           description: Description of the alert
+                          maxLength: 3000
                           type: string
                         enabled:
                           default: true
