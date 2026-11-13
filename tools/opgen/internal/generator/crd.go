@@ -1011,7 +1011,7 @@ func (b *builder) enum(t *model.Type, path string) (*enumMap, error) {
 		return nil, err
 	}
 	base := lowerFirst(b.typeName(t.Schema))
-	e := &enumMap{Func: base + "ToAPI", Var: base + "Values", SDKType: b.alias + "." + sdkType}
+	e := &enumMap{Func: base + "ToAPI", Var: base + "Values", SDKType: b.alias + "." + sdkType, schema: t.Schema}
 	seen := map[string]string{}
 	line, overridden := b.file.Enum(t.Schema)
 	values := t.Values

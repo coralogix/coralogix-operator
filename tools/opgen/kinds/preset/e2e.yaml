@@ -1,4 +1,18 @@
 serial: true
+skipValues:
+  AttachmentConfigPolicy:
+    values: [AUTO, DISABLED]
+    reason: TEMPORARY - the probe data for this value lands in part 8 of the same PR
+  notification_center.ConnectorType:
+    values: [SLACK, PAGERDUTY, EMAIL, PAGERDUTY_INCIDENTS, MICROSOFT_TEAMS, EVENTBRIDGE, INCIDENT_IO]
+    reason: TEMPORARY - the probe data for this value lands in part 8 of the same PR
+  notification_center.EntityType:
+    values: [CASES]
+    reason: TEMPORARY - the probe data for this value lands in part 8 of the same PR
+skipChoices:
+  notification_center.ConditionType:
+    choices: [matchEntityType]
+    reason: TEMPORARY - the probe data for this value lands in part 8 of the same PR
 upgrade:
   from: '2.0'
   spec:

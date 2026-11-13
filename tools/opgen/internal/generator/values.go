@@ -48,6 +48,23 @@ type e2eFile struct {
 	Values map[string]any `yaml:"values"`
 	// Update is the change of the update step.
 	Update *e2eUpdate `yaml:"update"`
+	// SkipValues lists accepted enum values that no test sends, by enum component, with the reason.
+	SkipValues map[string]e2eSkipValues `yaml:"skipValues"`
+	// SkipChoices lists oneOf arms that no test sends, by component, with the reason.
+	SkipChoices map[string]e2eSkipChoices `yaml:"skipChoices"`
+}
+
+// e2eSkipValues skips API values of one enum component. A skipped value is still in the CRD: a skip
+// means "not tested", and rejected means "not accepted".
+type e2eSkipValues struct {
+	Values []string `yaml:"values"`
+	Reason string   `yaml:"reason"`
+}
+
+// e2eSkipChoices skips API properties that are arms of one oneOf component.
+type e2eSkipChoices struct {
+	Choices []string `yaml:"choices"`
+	Reason  string   `yaml:"reason"`
 }
 
 type e2eFixture struct {
@@ -87,6 +104,16 @@ func readE2E(path string) (*e2eFile, error) {
 	if f.Upgrade != nil && (f.Upgrade.From == "" || f.Upgrade.Field == "" || f.Upgrade.Value == "" || len(f.Upgrade.Spec) == 0) {
 		return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":upgrade", msg: "from, spec, field, and value are required"}
 	}
+	for _, component := range sortedKeys(f.SkipValues) {
+		if skip := f.SkipValues[component]; len(skip.Values) == 0 || strings.TrimSpace(skip.Reason) == "" {
+			return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":skipValues." + component, msg: "values and reason are required"}
+		}
+	}
+	for _, component := range sortedKeys(f.SkipChoices) {
+		if skip := f.SkipChoices[component]; len(skip.Choices) == 0 || strings.TrimSpace(skip.Reason) == "" {
+			return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":skipChoices." + component, msg: "choices and reason are required"}
+		}
+	}
 	return &f, nil
 }
 
@@ -101,6 +128,8 @@ type e2eData struct {
 	NameField             string // the Go path of a string name, "" when there is none
 	NamePtr               bool
 	Update                *updateData
+	// Steps are the coverage steps after the full spec: the copies of the spec that each step creates.
+	Steps [][]*omap
 }
 
 type fixtureData struct {
@@ -134,6 +163,12 @@ type updateCandidate struct {
 type sampleValues struct {
 	file *e2eFile
 	used map[string]bool
+	// cov holds the skips and the enum values and oneOf arms that the full spec sends.
+	cov *coverage
+	// record is true while the full spec is made: it records what it sends in cov.
+	record bool
+	// sweeping picks open arms and values instead of the first ones.
+	sweeping bool
 }
 
 // buildValues makes up the full and the minimal spec from the contract and e2e.yaml.
@@ -151,10 +186,8 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 			return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":omit", msg: "omit must name an optional top-level spec field"}
 		}
 	}
-	if full, err = v.object(d.Spec, "", true); err != nil {
-		return nil, nil, nil, err
-	}
-	if minimal, err = v.object(d.Spec, "", false); err != nil {
+	var steps [][]*omap
+	if full, minimal, steps, err = v.specs(d); err != nil {
 		return nil, nil, nil, err
 	}
 	for _, name := range sortedKeys(file.Minimal) {
@@ -175,7 +208,7 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 			return nil, nil, nil, &shapeError{code: codeE2EUnused, path: e2eFileName + ":values." + path, msg: "the spec has no such field"}
 		}
 	}
-	e2e = &e2eData{FullJSON: goString(full.json()), MinimalJSON: goString(minimal.json()), Serial: file.Serial, Omit: file.Omit}
+	e2e = &e2eData{FullJSON: goString(full.json()), MinimalJSON: goString(minimal.json()), Serial: file.Serial, Omit: file.Omit, Steps: steps}
 	for _, fixture := range file.Fixtures {
 		if !token.IsIdentifier(fixture.Kind) || fixture.Suffix == "" || !token.IsIdentifier(fixture.StatusField) || len(fixture.Spec) == 0 {
 			return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":fixtures", msg: "kind, suffix, statusField, and spec are required"}
@@ -220,13 +253,39 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 	return full, minimal, e2e, nil
 }
 
+// specs makes up the full spec, the minimal spec, and the coverage steps. It fails when an accepted
+// enum value or oneOf arm is neither sent nor skipped.
+func (v *sampleValues) specs(d *kindData) (full, minimal *omap, steps [][]*omap, err error) {
+	if v.cov, err = newCoverage(d, v.file); err != nil {
+		return nil, nil, nil, err
+	}
+	v.record = true
+	if full, err = v.object(d.Spec, "", true); err != nil {
+		return nil, nil, nil, err
+	}
+	v.record = false
+	if minimal, err = v.object(d.Spec, "", false); err != nil {
+		return nil, nil, nil, err
+	}
+	v.record, v.sweeping = true, true
+	if steps, err = v.cov.sweep(v, d); err != nil {
+		return nil, nil, nil, err
+	}
+	v.record, v.sweeping = false, false
+	if err := v.cov.guard(); err != nil {
+		return nil, nil, nil, err
+	}
+	return full, minimal, steps, nil
+}
+
 // object makes up the value of a struct: every field when full is true, only the required fields
 // otherwise. Of each oneOf group, it sets the first arm, when the group needs one or full is true.
 func (v *sampleValues) object(t *crType, prefix string, full bool) (*omap, error) {
 	skip := map[string]bool{}
 	for _, g := range t.groups {
-		for i, arm := range g.Arms {
-			skip[arm] = i > 0 || (!full && g.AllowNone)
+		chosen := v.arm(t, g, full)
+		for _, arm := range g.Arms {
+			skip[arm] = arm != chosen
 		}
 	}
 	out := &omap{}
@@ -257,6 +316,9 @@ func (v *sampleValues) object(t *crType, prefix string, full bool) (*omap, error
 func (v *sampleValues) field(f *crField, path string, full bool) (any, error) {
 	if value, ok := v.file.Values[path]; ok {
 		v.used[path] = true
+		if v.record {
+			v.cov.literal(f, value)
+		}
 		return value, nil
 	}
 	if f.ref != "" {
@@ -265,8 +327,7 @@ func (v *sampleValues) field(f *crField, path string, full bool) (any, error) {
 	}
 	switch f.typ.Kind {
 	case model.List, model.Set:
-		item, err := v.item(f, f.typ.Elem, path, full)
-		return []any{item}, err
+		return v.list(f, path, full)
 	case model.Map:
 		item, err := v.item(f, f.typ.Elem, path, full)
 		return (&omap{}).set("key", item), err
@@ -281,7 +342,7 @@ func (v *sampleValues) item(f *crField, t *model.Type, path string, full bool) (
 	case model.Object, model.OneOf:
 		return v.object(f.object, path+".", full)
 	case model.Enum:
-		return f.enum.Values[0].Name, nil
+		return v.enumName(f), nil
 	case model.Bool:
 		return true, nil
 	case model.Integer:
@@ -292,6 +353,114 @@ func (v *sampleValues) item(f *crField, t *model.Type, path string, full bool) (
 		// A string, below. The renderer rejects a collection here.
 	}
 	return stringValue(f.API, t, path)
+}
+
+// arm returns the API property of the arm that a value sets, "" for none. The first arm that is not
+// skipped is the default. A sweep takes the arm that adds the most coverage.
+func (v *sampleValues) arm(t *crType, g model.OneOfGroup, full bool) string {
+	if !full && g.AllowNone {
+		return ""
+	}
+	chosen := ""
+	if v.sweeping && v.record {
+		chosen = v.cov.pickArm(t, g)
+	}
+	for _, arm := range g.Arms {
+		if chosen == "" && !v.cov.skipped[coverageKey{"arm", v.cov.owner[t], arm}] {
+			chosen = arm
+		}
+	}
+	if chosen == "" {
+		chosen = g.Arms[0] // every arm is skipped: the guard has no say, the group needs one
+	}
+	if v.record {
+		v.cov.mark(coverageKey{"arm", v.cov.owner[t], chosen})
+	}
+	return chosen
+}
+
+// enumName returns the CR spelling of the value that a value sets. The first value that is not
+// skipped is the default. A sweep takes the first value that no test sends yet.
+func (v *sampleValues) enumName(f *crField) string {
+	return v.enumNames(f, 1)[0]
+}
+
+// enumNames returns up to limit CR spellings. A sweep returns the open values first, and the
+// default does not look at them.
+func (v *sampleValues) enumNames(f *crField, limit int) []string {
+	var open, usable []enumValue
+	for _, value := range f.enum.Values {
+		key := coverageKey{"enum", f.enum.schema, value.API}
+		if v.cov.skipped[key] {
+			continue
+		}
+		usable = append(usable, value)
+		if v.sweeping && v.record && v.cov.open(key) && value.API != enumZero(f) {
+			open = append(open, value)
+		}
+	}
+	chosen := open
+	if len(chosen) == 0 {
+		chosen = usable
+		if len(chosen) > 1 {
+			chosen = chosen[:1]
+		}
+	}
+	if len(chosen) == 0 {
+		chosen = f.enum.Values[:1] // every value is skipped: the field still needs one
+	}
+	if len(chosen) > limit {
+		chosen = chosen[:limit]
+	}
+	names := make([]string, len(chosen))
+	for i, value := range chosen {
+		names[i] = value.Name
+		if v.record {
+			v.cov.mark(coverageKey{"enum", f.enum.schema, value.API})
+		}
+	}
+	return names
+}
+
+// list makes up the items of a list. The default is one item. A sweep sends every open enum value
+// of a list of enums, and adds items of objects while each item adds coverage.
+func (v *sampleValues) list(f *crField, path string, full bool) (any, error) {
+	if !v.sweeping || !v.record {
+		item, err := v.item(f, f.typ.Elem, path, full)
+		return []any{item}, err
+	}
+	if f.typ.Elem.Kind == model.Enum && f.enum != nil {
+		limit := maxItemsPerList
+		if f.typ.MaxItems != nil && int(*f.typ.MaxItems) < limit {
+			limit = int(*f.typ.MaxItems)
+		}
+		items := []any{}
+		for _, name := range v.enumNames(f, max(limit, 1)) {
+			items = append(items, name)
+		}
+		return items, nil
+	}
+	first, err := v.item(f, f.typ.Elem, path, full)
+	if err != nil {
+		return nil, err
+	}
+	items := []any{first}
+	for len(items) < maxItemsPerList && v.cov.extra < maxExtraItemsPerStep {
+		if f.typ.MaxItems != nil && int64(len(items)) >= *f.typ.MaxItems {
+			break
+		}
+		before := len(v.cov.covered)
+		item, err := v.item(f, f.typ.Elem, path, full)
+		if err != nil {
+			return nil, err
+		}
+		if len(v.cov.covered) == before {
+			break // the item adds nothing: drop it
+		}
+		items = append(items, item)
+		v.cov.extra++
+	}
+	return items, nil
 }
 
 func integerValue(t *model.Type) int64 {

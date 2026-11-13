@@ -1,5 +1,22 @@
 # The live API needs an existing <namespace>/<dataset>; the released test leaves it unset.
 omit: [dataSource]
+skipValues:
+  AggType:
+    values: [AGG_TYPE_MAX, AGG_TYPE_COUNT, AGG_TYPE_AVG, AGG_TYPE_SUM, AGG_TYPE_HISTOGRAM, AGG_TYPE_SAMPLES]
+    reason: TEMPORARY - the probe data for this value lands in part 8 of the same PR
+  SampleType:
+    values: [SAMPLE_TYPE_MIN, SAMPLE_TYPE_MAX]
+    reason: TEMPORARY - the probe data for this value lands in part 8 of the same PR
+  logs2metrics.v2.Severity:
+    values: [SEVERITY_DEBUG, SEVERITY_VERBOSE, SEVERITY_INFO, SEVERITY_WARNING, SEVERITY_ERROR, SEVERITY_CRITICAL]
+    reason: TEMPORARY - the probe data for this value lands in part 8 of the same PR
+skipChoices:
+  v2.Aggregation:
+    choices: [samples, histogram]
+    reason: TEMPORARY - the probe data for this value lands in part 8 of the same PR
+  Events2Metric:
+    choices: [spansQuery]
+    reason: TEMPORARY - the probe data for this value lands in part 8 of the same PR
 substitutions:
   sample-name: '@{run}'                       # E2M names are unique per account
   sample-target-base-metric-name: '@{run}'    # metric names must not collide between runs

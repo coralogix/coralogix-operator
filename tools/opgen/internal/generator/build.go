@@ -165,6 +165,7 @@ type enumMap struct {
 	Var     string // the map
 	SDKType string
 	Values  []enumValue
+	schema  string // the contract component of the enum
 }
 
 type enumValue struct {
