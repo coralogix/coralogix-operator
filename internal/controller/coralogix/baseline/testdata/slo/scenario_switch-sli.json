@@ -1,0 +1,127 @@
+[
+  {
+    "step": "create a request-based SLO",
+    "spec": {
+      "name": "baseline-slo",
+      "sliType": {
+        "requestBasedMetric": {
+          "goodEvents": {
+            "query": "sum(rate(good_total[1m]))"
+          },
+          "totalEvents": {
+            "query": "sum(rate(all_total[1m]))"
+          }
+        }
+      },
+      "targetThresholdPercentage": 99,
+      "window": {
+        "timeFrame": "7d"
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/slo/slos/v1",
+        "body": {
+          "name": "baseline-slo",
+          "requestBasedMetricSli": {
+            "goodEvents": {
+              "query": "sum(rate(good_total[1m]))"
+            },
+            "totalEvents": {
+              "query": "sum(rate(all_total[1m]))"
+            }
+          },
+          "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+          "targetThresholdPercentage": 99
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "slo.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced",
+        "revision": 1
+      }
+    }
+  },
+  {
+    "step": "switch to a window-based SLI",
+    "spec": {
+      "name": "baseline-slo",
+      "sliType": {
+        "windowBasedMetric": {
+          "comparisonOperator": "greaterThan",
+          "query": {
+            "query": "sum(rate(errors_total[5m]))"
+          },
+          "threshold": "1",
+          "window": "1m"
+        }
+      },
+      "targetThresholdPercentage": 99,
+      "window": {
+        "timeFrame": "7d"
+      }
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/slo/slos/v1",
+        "body": {
+          "id": "<id-1>",
+          "name": "baseline-slo",
+          "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+          "targetThresholdPercentage": 99,
+          "windowBasedMetricSli": {
+            "comparisonOperator": "COMPARISON_OPERATOR_GREATER_THAN",
+            "query": {
+              "query": "sum(rate(errors_total[5m]))"
+            },
+            "threshold": 1,
+            "window": "WINDOW_SLO_WINDOW_1_MINUTE"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "slo.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 3,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced",
+        "revision": 1
+      }
+    }
+  }
+]

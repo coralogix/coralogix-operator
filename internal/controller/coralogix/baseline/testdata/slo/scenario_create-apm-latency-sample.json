@@ -1,0 +1,76 @@
+[
+  {
+    "step": "create the APM latency sample",
+    "spec": {
+      "description": "Coralogix APM latency SLO example",
+      "name": "apm-latency-slo-example",
+      "productType": "apm",
+      "sliType": {
+        "apmSli": {
+          "latencyConfig": {
+            "quantile": {
+              "percentile": "0.95"
+            },
+            "threshold": "500",
+            "timeWindow": "5m"
+          },
+          "services": [
+            "checkout-service"
+          ]
+        }
+      },
+      "targetThresholdPercentage": 99,
+      "window": {
+        "timeFrame": "7d"
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/slo/slos/v1",
+        "body": {
+          "apmSli": {
+            "latencyConfig": {
+              "quantile": {
+                "percentile": 0.95
+              },
+              "threshold": 500,
+              "timeWindow": "WINDOW_SLO_WINDOW_5_MINUTES"
+            },
+            "services": [
+              "checkout-service"
+            ]
+          },
+          "description": "Coralogix APM latency SLO example",
+          "name": "apm-latency-slo-example",
+          "productType": "SLO_PRODUCT_TYPE_APM",
+          "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+          "targetThresholdPercentage": 99
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "slo.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced",
+        "revision": 1
+      }
+    }
+  }
+]

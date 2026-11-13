@@ -1,0 +1,65 @@
+[
+  {
+    "step": "create the request-based sample",
+    "spec": {
+      "description": "Coralogix SLO example",
+      "name": "request-based-slo-example",
+      "sliType": {
+        "requestBasedMetric": {
+          "goodEvents": {
+            "query": "sum(rate(coralogix_logs_events_total{app=\"coralogix-slo-example\", status=\"success\"}[10m]))\n"
+          },
+          "groupByLabels": [
+            "app",
+            "status"
+          ],
+          "totalEvents": {
+            "query": "sum(rate(coralogix_logs_events_total{app=\"coralogix-slo-example\", status=\"success\"}[5m]))"
+          }
+        }
+      },
+      "targetThresholdPercentage": 10,
+      "window": {
+        "timeFrame": "7d"
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/slo/slos/v1",
+        "body": {
+          "description": "Coralogix SLO example",
+          "name": "request-based-slo-example",
+          "requestBasedMetricSli": {
+            "goodEvents": {
+              "query": "sum(rate(coralogix_logs_events_total{app=\"coralogix-slo-example\", status=\"success\"}[10m]))\n"
+            },
+            "totalEvents": {
+              "query": "sum(rate(coralogix_logs_events_total{app=\"coralogix-slo-example\", status=\"success\"}[5m]))"
+            }
+          },
+          "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+          "targetThresholdPercentage": 10
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

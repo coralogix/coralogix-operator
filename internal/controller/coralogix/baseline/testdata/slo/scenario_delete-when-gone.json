@@ -1,0 +1,78 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "name": "baseline-slo",
+      "sliType": {
+        "requestBasedMetric": {
+          "goodEvents": {
+            "query": "sum(rate(good_total[1m]))"
+          },
+          "totalEvents": {
+            "query": "sum(rate(all_total[1m]))"
+          }
+        }
+      },
+      "targetThresholdPercentage": 99,
+      "window": {
+        "timeFrame": "7d"
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/slo/slos/v1",
+        "body": {
+          "name": "baseline-slo",
+          "requestBasedMetricSli": {
+            "goodEvents": {
+              "query": "sum(rate(good_total[1m]))"
+            },
+            "totalEvents": {
+              "query": "sum(rate(all_total[1m]))"
+            }
+          },
+          "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+          "targetThresholdPercentage": 99
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "slo.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced",
+        "revision": 1
+      }
+    }
+  },
+  {
+    "step": "delete: the SLO was deleted outside the operator",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/slo/slos/v1/<id-1>",
+        "status": 404
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

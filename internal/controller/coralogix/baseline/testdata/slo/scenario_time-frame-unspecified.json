@@ -1,0 +1,59 @@
+[
+  {
+    "step": "create with timeFrame unspecified",
+    "spec": {
+      "name": "baseline-slo",
+      "sliType": {
+        "requestBasedMetric": {
+          "goodEvents": {
+            "query": "sum(rate(good_total[1m]))"
+          },
+          "totalEvents": {
+            "query": "sum(rate(all_total[1m]))"
+          }
+        }
+      },
+      "targetThresholdPercentage": 99,
+      "window": {
+        "timeFrame": "unspecified"
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/slo/slos/v1",
+        "body": {
+          "name": "baseline-slo",
+          "requestBasedMetricSli": {
+            "goodEvents": {
+              "query": "sum(rate(good_total[1m]))"
+            },
+            "totalEvents": {
+              "query": "sum(rate(all_total[1m]))"
+            }
+          },
+          "sloTimeFrame": "SLO_TIME_FRAME_UNSPECIFIED",
+          "targetThresholdPercentage": 99
+        },
+        "status": 500
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

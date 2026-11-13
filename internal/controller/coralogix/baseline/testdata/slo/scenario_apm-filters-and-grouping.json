@@ -1,0 +1,93 @@
+[
+  {
+    "step": "create an APM SLO with filters and grouping keys",
+    "spec": {
+      "name": "baseline-slo",
+      "productType": "apm",
+      "sliType": {
+        "apmSli": {
+          "errorConfig": {},
+          "filters": [
+            {
+              "key": "http.method",
+              "values": [
+                "POST",
+                "PUT"
+              ]
+            },
+            {
+              "key": "http.route"
+            }
+          ],
+          "groupingKeys": [
+            "http.route"
+          ],
+          "services": [
+            "checkout-service"
+          ]
+        }
+      },
+      "targetThresholdPercentage": 99,
+      "window": {
+        "timeFrame": "7d"
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/slo/slos/v1",
+        "body": {
+          "apmSli": {
+            "errorConfig": {},
+            "filters": [
+              {
+                "key": "http.method",
+                "values": [
+                  "POST",
+                  "PUT"
+                ]
+              },
+              {
+                "key": "http.route",
+                "values": []
+              }
+            ],
+            "groupingKeys": [
+              "http.route"
+            ],
+            "services": [
+              "checkout-service"
+            ]
+          },
+          "name": "baseline-slo",
+          "productType": "SLO_PRODUCT_TYPE_APM",
+          "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+          "targetThresholdPercentage": 99
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "slo.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced",
+        "revision": 1
+      }
+    }
+  }
+]
