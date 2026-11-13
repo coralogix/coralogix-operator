@@ -675,7 +675,23 @@ type NotificationRouter struct {
 	// +kubebuilder:default=triggeredOnly
 	// When to notify.
 	NotifyOn NotifyOn `json:"notifyOn"`
+
+	// How the router is chosen. `default` sends notifications to the default router
+	// (router_default). `routingLabels` sends them to every Global Router whose routing labels
+	// match the Alert's `routing.`-prefixed entity labels, such as `routing.team`.
+	// Omitted means `default`.
+	// +optional
+	Mode NotificationRouterMode `json:"mode,omitempty"`
 }
+
+// +kubebuilder:validation:Enum=default;routingLabels
+// How a notification router is chosen.
+type NotificationRouterMode string
+
+const (
+	NotificationRouterModeDefault       NotificationRouterMode = "default"
+	NotificationRouterModeRoutingLabels NotificationRouterMode = "routingLabels"
+)
 
 // +kubebuilder:validation:XValidation:rule="has(self.backendRef) != has(self.resourceRef)",message="Exactly one of backendRef or resourceRef must be set"
 type NCRef struct {
@@ -2311,8 +2327,13 @@ func expandNotificationGroup(notificationGroup *NotificationGroup, listingAlerts
 		}
 	} else if notificationGroup.Router != nil {
 		notifyOn := NotifyOnToOpenAPINotifyOn[notificationGroup.Router.NotifyOn]
+		// An empty router ID tells the API to match Global Routers by the alert's routing labels.
+		routerID := "router_default"
+		if notificationGroup.Router.Mode == NotificationRouterModeRoutingLabels {
+			routerID = ""
+		}
 		router = &alerts.NotificationRouter{
-			Id:       alerts.PtrString("router_default"),
+			Id:       alerts.PtrString(routerID),
 			NotifyOn: notifyOn.Ptr(),
 		}
 	}

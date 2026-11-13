@@ -1,0 +1,24 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app.coralogix.com/track-alerting-rules: "true"
+    # Copied into the entity labels of every Alert generated from this PrometheusRule.
+    routing.environment: production
+    routing.team: payments
+  annotations:
+    # Route the generated Alerts to the Global Routers matching their routing labels.
+    app.coralogix.com/alert-router-notify-on: triggeredAndResolved
+  name: prometheus-example-routed-rules
+spec:
+  groups:
+    - name: example.routed.rules
+      interval: "60s"
+      rules:
+        - alert: payments-error-rate
+          expr: sum(rate(payment_errors_total[5m])) > 1
+          for: 5m
+          annotations:
+            description: payment errors above 1/s
+          labels:
+            severity: critical
