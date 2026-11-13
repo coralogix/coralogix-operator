@@ -1,0 +1,31 @@
+# The e2e values of TCOLogsPolicies that the contract cannot state.
+#
+# The API rejects a policy with both a priority and targets, and a dpxlExpression next to
+# severities, applications, or subsystems, so the full spec leaves out targets and dpxlExpression.
+# A tier priority must be above the policy priority. The archive retention "Default" exists in every
+# team.
+omit: [policies.targets, policies.dpxlExpression]
+values:
+  policies.priority: low
+  policies.archiveRetention: {backendRef: {name: Default}}
+  policies.priorityOverride:
+    quotaBased:
+      usageTiers:
+        - {dailyQuotaPercentage: 30, priority: high}
+        - {dailyQuotaPercentage: 60, priority: medium}
+# The API needs a priority, or targets, and severities or a dpxlExpression.
+minimal:
+  policies:
+    - name: sample
+      priority: medium
+      severities: [info]
+# The spec that chart 0.5 accepts. Each write replaces every log policy of the team.
+upgrade:
+  from: '0.5'
+  spec:
+    policies:
+      - name: '@{run}'
+        priority: medium
+        severities: [info]
+  field: policies/0/description
+  value: TCOLogsPolicies updated after the operator upgrade

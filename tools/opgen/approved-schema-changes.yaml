@@ -1,4 +1,39 @@
 # Reviewed changes to rules on released CRD fields. opgen check-schema compares each kind with the
 # PR base commit and fails on a change that is not listed here with its exact hashes. An entry is
 # for one PR: remove it after the PR merges, because the base then already has the change.
-changes: []
+changes:
+  - kind: TCOLogsPolicies
+    path: spec.versions.v1alpha1.schema.openAPIV3Schema.properties.spec.properties.policies[].properties.priorityOverride.properties.quotaBased.properties.usageTiers[].properties.priority
+    before: 2b78bdb6dd99eab0
+    after: c9a15bb9db8f2ba1
+    reason: >-
+      Same values. One priority enum serves every field of the kind, so this field lists block, high,
+      medium, low, the order of the policy priority, instead of block, high, low, medium.
+  - kind: TCOLogsPolicies
+    path: spec.versions.v1alpha1.schema.openAPIV3Schema.properties.spec.properties.policies[].properties.targets[].properties.priority
+    before: 2b78bdb6dd99eab0
+    after: c9a15bb9db8f2ba1
+    reason: >-
+      Same values. One priority enum serves every field of the kind, so this field lists block, high,
+      medium, low, the order of the policy priority, instead of block, high, low, medium.
+  - kind: TCOLogsPolicies
+    path: spec.versions.v1alpha1.schema.openAPIV3Schema.properties.spec.properties.policies[].properties.targets[].properties.priorityOverride.properties.quotaBased.properties.usageTiers[].properties.priority
+    before: 2b78bdb6dd99eab0
+    after: c9a15bb9db8f2ba1
+    reason: >-
+      Same values. One priority enum serves every field of the kind, so this field lists block, high,
+      medium, low, the order of the policy priority, instead of block, high, low, medium.
+  - kind: TCORumPolicies
+    path: spec.versions.v1alpha1.schema.openAPIV3Schema.properties.spec.properties.policies[].properties.priorityOverride.properties.quotaBased.properties.usageTiers[].properties.priority
+    before: 2b78bdb6dd99eab0
+    after: c9a15bb9db8f2ba1
+    reason: >-
+      Same values. One priority enum serves every field of the kind, so this field lists block, high,
+      medium, low, the order of the policy priority, instead of block, high, low, medium.
+  - kind: TCOTracesPolicies
+    path: spec.versions.v1alpha1.schema.openAPIV3Schema.properties.spec.properties.policies[].properties.priorityOverride.properties.quotaBased.properties.usageTiers[].properties.priority
+    before: 2b78bdb6dd99eab0
+    after: c9a15bb9db8f2ba1
+    reason: >-
+      Same values. One priority enum serves every field of the kind, so this field lists block, high,
+      medium, low, the order of the policy priority, instead of block, high, low, medium.

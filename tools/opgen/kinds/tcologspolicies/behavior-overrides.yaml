@@ -1,0 +1,103 @@
+# Where TCOLogsPolicies differs from the API contract, because users already have it.
+#
+# A field with a line here keeps its released behavior. A field without a line follows the API
+# contract.
+resource: GetCompanyPoliciesResponse
+mode: existing
+
+validators:
+  inferred: true
+  fields:
+    spec.policies[]#type:
+      add:
+        - '+kubebuilder:validation:XValidation:rule="!(has(self.dpxlExpression) && (has(self.applications) || has(self.subsystems) || (has(self.severities) && size(self.severities) > 0)))",message="dpxlExpression is mutually exclusive with severities, applications and subsystems"'
+    # The released kind has no limits on these fields.
+    spec.policies[].name: {inferred: false}
+    spec.policies[].description: {inferred: false}
+    spec.policies[].disabled: {inferred: false}
+    spec.policies[].severities: {inferred: false}
+    spec.policies[].targets: {inferred: false}
+    spec.policies[].targets[].dataset:
+      inferred: false
+      add: ['+kubebuilder:validation:MinLength=1']
+    spec.policies[].targets[].dataspace:
+      inferred: false
+      add: ['+kubebuilder:validation:MaxLength=50']
+    spec.policies[].applications.names:
+      add: ['+kubebuilder:validation:MinItems=1', '+kubebuilder:validation:MaxItems=50']
+    spec.policies[].subsystems.names:
+      add: ['+kubebuilder:validation:MinItems=1', '+kubebuilder:validation:MaxItems=50']
+    spec.policies[].priorityOverride.quotaBased.usageTiers:
+      inferred: false
+      add: ['+kubebuilder:validation:MinItems=1']
+    spec.policies[].targets[].priorityOverride.quotaBased.usageTiers:
+      inferred: false
+      add: ['+kubebuilder:validation:MinItems=1']
+
+api:
+  # One PUT replaces every log policy of the team. Delete sends an empty list.
+  overwrite:
+    getQuery: {source_type: SOURCE_TYPE_LOGS}
+  operations:
+    create: PoliciesService_AtomicOverwriteLogPolicies
+    get: PoliciesService_GetCompanyPolicies
+    update: PoliciesService_AtomicOverwriteLogPolicies
+    delete: PoliciesService_AtomicOverwriteLogPolicies
+
+# The released archiveRetention holds a backend reference, not the API object.
+unwrap: [ArchiveRetention]
+
+types:
+  Policy:
+    # A written policy holds these fields in "policy", next to its logRules.
+    requestWrapper: policy
+    fields:
+      # The released field is the request value: true disables the policy.
+      enabled: {name: disabled, requestAs: disabled}
+      description: {sendNullAsEmpty: true}
+      # The released severities and dpxlExpression are fields of the policy.
+      logRules: {inline: true}
+      applicationRule: {name: applications}
+      subsystemRule: {name: subsystems}
+      archiveRetention:
+        name: archiveRetention
+        ref: {kind: ArchiveRetention, form: namedBackendOnly, type: ArchiveRetention, idField: Id, lookup: LookupArchiveRetentionName}
+  LogRules:
+    fields:
+      # The released severities are a list.
+      severities: {collection: list}
+  quota.v1.Rule:
+    fields:
+      name: {name: names, joinedBy: ",", required: true}
+      ruleTypeId: {name: ruleType, required: true}
+  QuotaBased:
+    fields:
+      usageTiers: {required: true}
+  UsageTier:
+    fields:
+      dailyQuotaPercentage: {required: true}
+      priority: {required: true}
+  v1.Target:
+    fields:
+      dataset: {required: true}
+      priority: {required: true}
+      archiveRetention:
+        name: archiveRetention
+        ref: {kind: ArchiveRetention, form: namedBackendOnly, type: ArchiveRetention, idField: Id, lookup: LookupArchiveRetentionName}
+
+enums:
+  quota.v1.Priority:
+    zero: unspecified
+    rejectZero: true
+    values: [PRIORITY_TYPE_BLOCK, PRIORITY_TYPE_HIGH, PRIORITY_TYPE_MEDIUM, PRIORITY_TYPE_LOW]
+    trimPrefix: PRIORITY_TYPE_
+  quota.v1.Severity:
+    zero: unspecified
+    rejectZero: true
+    values: [SEVERITY_INFO, SEVERITY_WARNING, SEVERITY_CRITICAL, SEVERITY_ERROR, SEVERITY_DEBUG, SEVERITY_VERBOSE]
+    trimPrefix: SEVERITY_
+  RuleTypeId:
+    zero: unspecified
+    rejectZero: true
+    values: [RULE_TYPE_ID_IS, RULE_TYPE_ID_IS_NOT, RULE_TYPE_ID_START_WITH, RULE_TYPE_ID_INCLUDES]
+    names: {RULE_TYPE_ID_IS: is, RULE_TYPE_ID_IS_NOT: is_not, RULE_TYPE_ID_START_WITH: start_with, RULE_TYPE_ID_INCLUDES: includes}

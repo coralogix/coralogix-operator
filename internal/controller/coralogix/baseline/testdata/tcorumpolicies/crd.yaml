@@ -104,8 +104,8 @@ spec:
                                     enum:
                                     - block
                                     - high
-                                    - low
                                     - medium
+                                    - low
                                     type: string
                                 required:
                                 - dailyQuotaPercentage

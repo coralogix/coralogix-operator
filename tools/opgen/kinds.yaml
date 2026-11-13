@@ -12,3 +12,9 @@ kinds:
     resource: View
   - kind: ViewFolder
     resource: ViewFolder
+  - kind: TCOLogsPolicies
+    resource: GetCompanyPoliciesResponse
+  - kind: TCOTracesPolicies
+    resource: GetCompanyPoliciesResponse
+  - kind: TCORumPolicies
+    resource: GetCompanyPoliciesResponse

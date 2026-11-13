@@ -1,0 +1,20 @@
+# The e2e values of TCORumPolicies that the contract cannot state.
+#
+# The API rejects severities next to a dpxlExpression, so the full spec leaves out dpxlExpression.
+# RUM policies do not accept the high priority, so the tiers use medium and low above a block
+# policy. The archive retention "Default" exists in every team.
+omit: [policies.dpxlExpression]
+values:
+  policies.priority: block
+  policies.archiveRetention: {backendRef: {name: Default}}
+  policies.priorityOverride:
+    quotaBased:
+      usageTiers:
+        - {dailyQuotaPercentage: 30, priority: medium}
+        - {dailyQuotaPercentage: 60, priority: low}
+# The API needs severities or a dpxlExpression.
+minimal:
+  policies:
+    - name: sample
+      priority: medium
+      severities: [error]

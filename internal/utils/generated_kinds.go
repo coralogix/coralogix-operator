@@ -19,9 +19,12 @@ package utils
 
 // The kinds that the operator generator writes.
 const (
-	Events2MetricKind = "Events2Metric"
-	GlobalRouterKind  = "GlobalRouter"
-	PresetKind        = "Preset"
-	ViewKind          = "View"
-	ViewFolderKind    = "ViewFolder"
+	Events2MetricKind     = "Events2Metric"
+	GlobalRouterKind      = "GlobalRouter"
+	PresetKind            = "Preset"
+	TCOLogsPoliciesKind   = "TCOLogsPolicies"
+	TCORumPoliciesKind    = "TCORumPolicies"
+	TCOTracesPoliciesKind = "TCOTracesPolicies"
+	ViewKind              = "View"
+	ViewFolderKind        = "ViewFolder"
 )

@@ -85,6 +85,16 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version == '1.0' && '1-0' || '2-0' }}
         run: bash scripts/upgrade-check-events2metric.sh before
+      # Each write of a TCO policies kind replaces every log or span policy of the team. The e2e tests
+      # write the same lists, so these checks end before the e2e tests start.
+      - name: Create TCOLogsPolicies with the released operator
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+        run: bash scripts/upgrade-check-tcologspolicies.sh before
+      - name: Create TCOTracesPolicies with the released operator
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+        run: bash scripts/upgrade-check-tcotracespolicies.sh before
       - name: Build PR image
         uses: ./.github/actions/build-operator-image
         with:
@@ -105,6 +115,42 @@ jobs:
             --set coralogixOperator.reconcileIntervalSeconds.ipAccess=30 \
             --set coralogixOperator.reconcileIntervalSeconds.archiveLogsTarget=30 \
             --set coralogixOperator.reconcileIntervalSeconds.archiveMetricsTarget=30
+      # The old pod keeps the leader lease for a while after the upgrade. The checks of the TCO
+      # policies kinds run before the e2e tests, so they wait for the new pod themselves.
+      - name: Wait for the new operator to hold the leader lease
+        run: |
+          ns=coralogix-operator-system
+          deploy="$(kubectl get deploy -n "$ns" -o name | head -1)"
+          kubectl rollout status "$deploy" -n "$ns" --timeout=180s
+          for _ in $(seq 1 90); do
+            holder="$(kubectl get lease coralogix-operator -n "$ns" -o jsonpath='{.spec.holderIdentity}' 2>/dev/null || true)"
+            pod="${holder%%_*}"
+            if [ -n "$pod" ] && kubectl get pod "$pod" -n "$ns" -o jsonpath='{.spec.containers[0].image}' 2>/dev/null | grep -q "${{ env.IMG_REPO }}"; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "The new operator pod does not hold the leader lease."
+          kubectl get lease coralogix-operator -n "$ns" -o yaml || true
+          exit 1
+      - name: Check the TCOLogsPolicies of the released operator
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+        run: bash scripts/upgrade-check-tcologspolicies.sh after
+      - name: Check the TCOTracesPolicies of the released operator
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+        run: bash scripts/upgrade-check-tcotracespolicies.sh after
+      - name: Delete the TCOLogsPolicies of the upgrade test
+        if: always()
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+        run: bash scripts/upgrade-check-tcologspolicies.sh cleanup
+      - name: Delete the TCOTracesPolicies of the upgrade test
+        if: always()
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+        run: bash scripts/upgrade-check-tcotracespolicies.sh cleanup
       - name: Run e2e Tests
         run: |
           make e2e-tests
