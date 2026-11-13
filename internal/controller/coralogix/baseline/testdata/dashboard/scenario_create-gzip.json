@@ -1,0 +1,45 @@
+[
+  {
+    "step": "create from gzip content",
+    "spec": {
+      "gzipJson": "H4sIAAAAAAAA/6pWykvMTVWyUnKvyixQSEkszkjKTyxKUdJRykmszC8tUbKqVipOTS7JzM8rVrKKjq2tBQQAAP//wi7DeTIAAAA="
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
+        "body": {
+          "dashboard": {
+            "layout": {
+              "sections": []
+            },
+            "name": "Gzip dashboard"
+          },
+          "requestId": "cx-operator-create-<id-1>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "dashboard.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "baselineDashboard0001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

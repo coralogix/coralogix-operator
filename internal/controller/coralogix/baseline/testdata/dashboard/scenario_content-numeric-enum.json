@@ -1,0 +1,26 @@
+[
+  {
+    "step": "create with a numeric enum value: rejected before a request",
+    "spec": {
+      "json": "{\"name\":\"Enum\",\"layout\":{\"sections\":[{\"rows\":[{\"widgets\":[{\"definition\":{\"gauge\":{\"thresholdBy\":1}}}]}]}]}}"
+    },
+    "requests": [],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

@@ -1,0 +1,49 @@
+[
+  {
+    "step": "create in a folder that does not exist: the API rejects it",
+    "spec": {
+      "folderRef": {
+        "backendRef": {
+          "id": "00000000-0000-4000-8000-0000000000f1"
+        }
+      },
+      "json": "{\"name\":\"Unknown folder\",\"layout\":{\"sections\":[]}}"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
+        "body": {
+          "dashboard": {
+            "folderId": {
+              "value": "00000000-0000-4000-8000-0000000000f1"
+            },
+            "layout": {
+              "sections": []
+            },
+            "name": "Unknown folder"
+          },
+          "requestId": "cx-operator-create-<id-1>"
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

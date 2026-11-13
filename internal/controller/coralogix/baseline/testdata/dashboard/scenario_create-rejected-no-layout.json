@@ -1,0 +1,26 @@
+[
+  {
+    "step": "create without a layout: the API rejects it",
+    "spec": {
+      "json": "{\"name\":\"No layout\"}"
+    },
+    "requests": [],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

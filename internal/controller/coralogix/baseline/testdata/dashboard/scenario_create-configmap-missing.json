@@ -1,0 +1,69 @@
+[
+  {
+    "step": "create from a ConfigMap that does not exist",
+    "spec": {
+      "configMapRef": {
+        "key": "json",
+        "name": "dashboard-definition"
+      }
+    },
+    "requests": [],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again after the ConfigMap is created",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
+        "body": {
+          "dashboard": {
+            "layout": {
+              "sections": []
+            },
+            "name": "ConfigMap dashboard"
+          },
+          "requestId": "cx-operator-create-<id-1>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "dashboard.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "baselineDashboard0001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

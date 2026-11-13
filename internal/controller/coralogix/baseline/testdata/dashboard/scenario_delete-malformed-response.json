@@ -1,0 +1,89 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "json": "{\"name\":\"Baseline dashboard\",\"layout\":{\"sections\":[]}}"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
+        "body": {
+          "dashboard": {
+            "layout": {
+              "sections": []
+            },
+            "name": "Baseline dashboard"
+          },
+          "requestId": "cx-operator-create-<id-1>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "dashboard.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "baselineDashboard0001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "delete: the answer cannot be decoded",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1/baselineDashboard0001",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [
+        "dashboard.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "DeserializationError",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "baselineDashboard0001",
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again: the API answers as it should",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1/baselineDashboard0001",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

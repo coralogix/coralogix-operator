@@ -1,0 +1,46 @@
+[
+  {
+    "step": "create with json and gzipJson: json wins",
+    "spec": {
+      "gzipJson": "H4sIAAAAAAAA/6pWykvMTVWyUnKvyixQyMkvTi1W0lHKSazMLy1RsqpWKk5NLsnMzytWsoqOra0FBAAA//9DnNytLgAAAA==",
+      "json": "{\"name\":\"JSON wins\",\"layout\":{\"sections\":[]}}"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
+        "body": {
+          "dashboard": {
+            "layout": {
+              "sections": []
+            },
+            "name": "JSON wins"
+          },
+          "requestId": "cx-operator-create-<id-1>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "dashboard.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "baselineDashboard0001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

@@ -1,0 +1,124 @@
+[
+  {
+    "step": "create: the answer has an empty id",
+    "spec": {
+      "json": "{\"name\":\"Baseline dashboard\",\"layout\":{\"sections\":[]}}"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
+        "body": {
+          "dashboard": {
+            "layout": {
+              "sections": []
+            },
+            "name": "Baseline dashboard"
+          },
+          "requestId": "cx-operator-create-<id-1>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "dashboard.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again: the answer has no id",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
+        "body": {
+          "dashboard": {
+            "layout": {
+              "sections": []
+            },
+            "name": "Baseline dashboard"
+          },
+          "requestId": "cx-operator-create-<id-2>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "dashboard.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again: the API answers as it should",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
+        "body": {
+          "dashboard": {
+            "layout": {
+              "sections": []
+            },
+            "name": "Baseline dashboard"
+          },
+          "requestId": "cx-operator-create-<id-3>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "dashboard.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "baselineDashboard0001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]
