@@ -20,3 +20,5 @@ kinds:
     resource: GetCompanyPoliciesResponse
   - kind: SLO
     resource: Slo
+  - kind: Dashboard
+    resource: Dashboard
