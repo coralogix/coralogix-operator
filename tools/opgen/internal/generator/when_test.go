@@ -787,3 +787,79 @@ func TestFixedObjectKeepsItsSiblingsWhenAnArmIsForced(t *testing.T) {
 		t.Fatal("arm y needs a copy")
 	}
 }
+
+func listMapSpec(key string) *kindData {
+	item := &crType{schema: "Rule", Fields: []*crField{stringField("id"), enumField("mode", "RuleMode", "a", "b", "c")}}
+	list := listOf(objectField("rules", model.Object, item))
+	list.Markers = []string{"+listType=map", "+listMapKey=" + key}
+	return &kindData{Kind: "Thing", Spec: &crType{Name: "ThingSpec", Fields: []*crField{list}}}
+}
+
+// The items of a list-map need distinct keys. The extra items that the sweep adds, and the items
+// that entries plan, must not repeat a key: Kubernetes rejects the list.
+func TestListMapItemsGetDistinctKeys(t *testing.T) {
+	steps, _, err := specsOf(t, listMapSpec("id"), &e2eFile{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	multi := false
+	for _, copy := range copiesOf(t, steps) {
+		seen := map[any]bool{}
+		items := copy["rules"].([]any)
+		multi = multi || len(items) > 1
+		for _, raw := range items {
+			id := raw.(map[string]any)["id"]
+			if seen[id] {
+				t.Errorf("the list-map has the key %v twice: %v", id, items)
+			}
+			seen[id] = true
+		}
+	}
+	if !multi {
+		t.Error("the sweep should put several modes into one list")
+	}
+}
+
+func TestListMapItemsOfWhenEntriesGetDistinctKeys(t *testing.T) {
+	entries := []e2eWhen{
+		{Match: map[string]any{"rules.mode": "a"}, Set: map[string]any{"rules.id": "same"}},
+		{Match: map[string]any{"rules.mode": "b"}, Set: map[string]any{"rules.id": "same"}},
+		{Match: map[string]any{"rules.mode": "c"}, Set: map[string]any{"rules.id": "same"}},
+	}
+	steps, v, err := specsOf(t, listMapSpec("id"), &e2eFile{When: entries})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if missing := v.cov.missing(); len(missing) != 0 {
+		t.Fatalf("left %v", missing)
+	}
+	for _, copy := range copiesOf(t, steps) {
+		seen := map[any]bool{}
+		for _, raw := range copy["rules"].([]any) {
+			id := raw.(map[string]any)["id"]
+			if seen[id] {
+				t.Errorf("the planned items repeat the key %v: %v", id, copy["rules"])
+			}
+			seen[id] = true
+		}
+	}
+}
+
+// A key that cannot be changed, an enum, drops the item that repeats it, and what the item would
+// have recorded. The list stays valid.
+func TestListMapEnumKeyDropsARepeatedItem(t *testing.T) {
+	steps, _, err := specsOf(t, listMapSpec("mode"), &e2eFile{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, copy := range copiesOf(t, steps) {
+		seen := map[any]bool{}
+		for _, raw := range copy["rules"].([]any) {
+			mode := raw.(map[string]any)["mode"]
+			if seen[mode] {
+				t.Errorf("the list-map has the mode %v twice: %v", mode, copy["rules"])
+			}
+			seen[mode] = true
+		}
+	}
+}

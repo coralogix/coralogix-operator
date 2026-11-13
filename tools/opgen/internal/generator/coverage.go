@@ -226,6 +226,22 @@ func (c *coverage) restoreSent(snapshot map[coverageKey]bool) {
 	}
 }
 
+// coverageSnapshot is what a dropped trial must give back: the covered keys and the sent keys.
+type coverageSnapshot struct {
+	covered, sent map[coverageKey]bool
+}
+
+// snapshot copies the covered keys and the sent keys, for an item that can be dropped after it was made.
+func (c *coverage) snapshot() coverageSnapshot {
+	return coverageSnapshot{covered: maps.Clone(c.covered), sent: c.snapshotSent()}
+}
+
+// restore gives back what a dropped item recorded.
+func (c *coverage) restore(s coverageSnapshot) {
+	c.covered = s.covered
+	c.restoreSent(s.sent)
+}
+
 // finishSpec returns the keys that the spec sent, in contract order.
 func (c *coverage) finishSpec() []coverageKey {
 	var keys []coverageKey

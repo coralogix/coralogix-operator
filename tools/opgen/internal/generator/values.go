@@ -519,6 +519,7 @@ func (v *sampleValues) list(f *crField, path string, full bool) (any, error) {
 		if err != nil {
 			return nil, err
 		}
+		v.uniqueKey(f, items, item) // a repeated item gets a key of its own, when it can
 		items = append(items, item)
 	}
 	return items, nil
@@ -620,13 +621,13 @@ func (v *sampleValues) listItems(f *crField, path string, full bool) (any, error
 			break
 		}
 		before := len(v.cov.covered)
-		sent := v.cov.snapshotSent()
+		trial := v.cov.snapshot()
 		item, err := v.item(f, f.typ.Elem, path, full)
 		if err != nil {
 			return nil, err
 		}
-		if len(v.cov.covered) == before {
-			v.cov.restoreSent(sent) // the item adds nothing: drop it, and what it would have sent
+		if len(v.cov.covered) == before || !v.uniqueKey(f, items, item) {
+			v.cov.restore(trial) // the item adds nothing, or has no free key: drop it, and what it would have recorded
 			break
 		}
 		items = append(items, item)
@@ -640,10 +641,15 @@ func (v *sampleValues) plannedItems(f *crField, path string, full bool, planned 
 	items := []any{}
 	for _, layer := range planned {
 		v.layers = append(v.layers, layer)
+		trial := v.cov.snapshot()
 		item, err := v.item(f, f.typ.Elem, path, full)
 		v.layers = v.layers[:len(v.layers)-1]
 		if err != nil {
 			return nil, err
+		}
+		if !v.uniqueKey(f, items, item) {
+			v.cov.restore(trial) // no free key: the entry waits, and records nothing
+			continue
 		}
 		items = append(items, item)
 	}
@@ -1062,4 +1068,79 @@ func yamlNode(value any) (*yaml.Node, error) {
 		return nil, err
 	}
 	return n, nil
+}
+
+// listMapKeys returns the item fields that identify the items of a Kubernetes list-map.
+func listMapKeys(f *crField) []string {
+	var keys []string
+	for _, marker := range f.Markers {
+		if key, ok := strings.CutPrefix(marker, "+listMapKey="); ok {
+			keys = append(keys, key)
+		}
+	}
+	return keys
+}
+
+// uniqueKey makes the key of a new item differ from the keys of the items before it. A string key
+// gets a suffix. It reports false when the key cannot be made unique: an enum key that repeats, or
+// a string key with a pattern or a length limit that the suffix would break.
+func (v *sampleValues) uniqueKey(f *crField, items []any, item any) bool {
+	keys := listMapKeys(f)
+	if len(keys) == 0 {
+		return true
+	}
+	get := func(x any, key string) any {
+		switch o := x.(type) {
+		case *omap:
+			return o.get(key)
+		case map[string]any:
+			return o[key]
+		}
+		return nil
+	}
+	set := func(x any, key string, value any) {
+		switch o := x.(type) {
+		case *omap:
+			o.set(key, value)
+		case map[string]any:
+			o[key] = value
+		}
+	}
+	tuple := func(x any) string {
+		var b strings.Builder
+		for _, key := range keys {
+			fmt.Fprintf(&b, "%v\x00", get(x, key))
+		}
+		return b.String()
+	}
+	taken := map[string]bool{}
+	for _, other := range items {
+		taken[tuple(other)] = true
+	}
+	if !taken[tuple(item)] {
+		return true
+	}
+	for _, key := range keys {
+		original, ok := get(item, key).(string)
+		if !ok || f.object == nil {
+			continue
+		}
+		i := slices.IndexFunc(f.object.Fields, func(c *crField) bool { return c.JSON == key })
+		if i < 0 || f.object.Fields[i].typ == nil || f.object.Fields[i].typ.Kind != model.String || f.object.Fields[i].typ.Pattern != "" {
+			continue
+		}
+		limit := f.object.Fields[i].typ.MaxLength
+		for n := len(items) + 1; n <= len(items)+25; n++ {
+			candidate := fmt.Sprintf("%s-%d", original, n)
+			if limit != nil && int64(len(candidate)) > *limit {
+				break
+			}
+			set(item, key, candidate)
+			if !taken[tuple(item)] {
+				return true
+			}
+		}
+		set(item, key, original)
+	}
+	return false
 }

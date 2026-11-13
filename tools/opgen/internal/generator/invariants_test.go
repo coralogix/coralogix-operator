@@ -82,6 +82,12 @@ func (b *treeBuilder) field(depth int) *crField {
 	case 4:
 		f := listOf(objectField(api, model.Object, b.object(depth+1)))
 		b.limits(f, 4)
+		if b.r.Intn(2) == 0 {
+			// A list-map: the items are identified by a string key.
+			key := b.name("key")
+			f.object.Fields = append([]*crField{stringField(key)}, f.object.Fields...)
+			f.Markers = []string{"+listType=map", "+listMapKey=" + key}
+		}
 		return f
 	case 5:
 		f := &crField{API: api, JSON: api, GoName: goName(api), Optional: true, typ: &model.Type{Kind: model.Map, Elem: &model.Type{Kind: model.String}}}
@@ -133,6 +139,20 @@ func checkValue(t *crType, value any, path string, report func(string)) {
 						report(fmt.Sprintf("%s.%s: duplicate enum value %v", path, f.JSON, item))
 					}
 					seen[item] = true
+				}
+			}
+			if keys := listMapKeys(f); len(keys) != 0 {
+				seen := map[string]bool{}
+				for _, item := range items {
+					object, _ := item.(map[string]any)
+					tuple := ""
+					for _, key := range keys {
+						tuple += fmt.Sprint(object[key]) + "\x00"
+					}
+					if seen[tuple] {
+						report(fmt.Sprintf("%s.%s: the list-map has the key %q twice", path, f.JSON, tuple))
+					}
+					seen[tuple] = true
 				}
 			}
 			if f.object != nil {
