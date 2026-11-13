@@ -323,7 +323,7 @@ func normalizeAnswer(t *testing.T, k kind, s fidelityStep, status int, resp any,
 	if err := json.Unmarshal([]byte(text), &out); err != nil {
 		t.Fatal(err)
 	}
-	return redactFields(redactStrings(out))
+	return redactFields(redactStrings(canonicalJSONStrings(out)))
 }
 
 // redactStrings hides account values inside each string value. A number that is not in a string
@@ -354,8 +354,8 @@ var (
 	timestampPattern = regexp.MustCompile(`\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?`)
 	// A run of five or more digits is a company, team, or user number.
 	longNumberPattern = regexp.MustCompile(`\b[0-9]{5,}\b`)
-	// Values of these response fields name an account or a single request.
-	redactedFieldPattern = regexp.MustCompile(`(?i)^(companyid|teamid|userid|orgid|accountid|email|requestid|traceid|correlationid)$`)
+	// Values of these response fields name an account, a person, or a single request.
+	redactedFieldPattern = regexp.MustCompile(`(?i)^(companyid|teamid|userid|orgid|accountid|email|requestid|traceid|correlationid|authorid|authorname|updaterauthorid|updatername|lockerauthorid|lockername)$`)
 )
 
 // redactText hides account values inside free text, such as an error message.
@@ -381,6 +381,37 @@ func replaceLongNumbers(text string) string {
 	}
 	b.WriteString(text[last:])
 	return b.String()
+}
+
+// canonicalJSONStrings rewrites each string that holds a JSON object with sorted keys. The API
+// can answer the same stored JSON text with its keys in another order on each call, such as the
+// default access policy of a dashboard.
+func canonicalJSONStrings(v any) any {
+	switch v := v.(type) {
+	case string:
+		trimmed := strings.TrimSpace(v)
+		if !strings.HasPrefix(trimmed, "{") {
+			return v
+		}
+		var parsed map[string]any
+		if err := json.Unmarshal([]byte(trimmed), &parsed); err != nil {
+			return v
+		}
+		raw, err := json.Marshal(parsed)
+		if err != nil {
+			return v
+		}
+		return string(raw)
+	case map[string]any:
+		for key, value := range v {
+			v[key] = canonicalJSONStrings(value)
+		}
+	case []any:
+		for i := range v {
+			v[i] = canonicalJSONStrings(v[i])
+		}
+	}
+	return v
 }
 
 // redactFields hides the values of response fields that name an account or a request.
@@ -476,6 +507,22 @@ func TestRedactHidesAccountValues(t *testing.T) {
 	}
 	if !reflect.DeepEqual(got, wantFields) {
 		t.Fatalf("redactFields:\n got %v\nwant %v", got, wantFields)
+	}
+}
+
+func TestCanonicalJSONStringsSortsKeys(t *testing.T) {
+	got := canonicalJSONStrings(map[string]any{
+		"policy": `{"b":1,"a":{"d":2,"c":3}}`,
+		"text":   "{not json",
+		"list":   []any{`{"y":1,"x":2}`},
+	})
+	want := map[string]any{
+		"policy": `{"a":{"c":3,"d":2},"b":1}`,
+		"text":   "{not json",
+		"list":   []any{`{"x":2,"y":1}`},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("canonicalJSONStrings = %v, want %v", got, want)
 	}
 }
 

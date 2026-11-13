@@ -1,0 +1,31 @@
+[
+  {
+    "step": "create in a DashboardsFolder CR that has no status id",
+    "spec": {
+      "folderRef": {
+        "resourceRef": {
+          "name": "folder"
+        }
+      },
+      "json": "{\"name\":\"Folder by CR\",\"layout\":{\"sections\":[]}}"
+    },
+    "requests": [],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

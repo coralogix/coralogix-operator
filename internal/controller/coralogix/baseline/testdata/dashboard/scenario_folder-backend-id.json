@@ -1,0 +1,97 @@
+[
+  {
+    "step": "create in a folder by backend id",
+    "spec": {
+      "folderRef": {
+        "backendRef": {
+          "id": "00000000-0000-4000-8000-0000000000d1"
+        }
+      },
+      "json": "{\"name\":\"Folder by id\",\"layout\":{\"sections\":[]},\"folderPath\":{\"segments\":[\"from\",\"content\"]}}"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
+        "body": {
+          "dashboard": {
+            "folderId": {
+              "value": "00000000-0000-4000-8000-0000000000d1"
+            },
+            "layout": {
+              "sections": []
+            },
+            "name": "Folder by id"
+          },
+          "requestId": "cx-operator-create-<id-1>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "dashboard.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "baselineDashboard0001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "update",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
+        "body": {
+          "dashboard": {
+            "folderId": {
+              "value": "00000000-0000-4000-8000-0000000000d1"
+            },
+            "id": "baselineDashboard0001",
+            "layout": {
+              "sections": []
+            },
+            "name": "Folder by id"
+          },
+          "requestId": "cx-operator-replace-<id-2>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "dashboard.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "baselineDashboard0001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]
