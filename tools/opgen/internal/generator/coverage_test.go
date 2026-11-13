@@ -282,3 +282,25 @@ func TestEachSpecRecordsWhatItSends(t *testing.T) {
 		t.Errorf("expectations = %v", got)
 	}
 }
+
+// An arm counts only when its field is in the spec. An omit can drop a selected arm, and the
+// guard must then name it.
+func TestOmittedArmIsNotCovered(t *testing.T) {
+	armA := &crType{schema: "ArmA"}
+	armB := &crType{schema: "ArmB"}
+	d := &kindData{Kind: "Thing", Spec: &crType{Name: "ThingSpec", Fields: []*crField{
+		objectField("a", model.Object, armA), objectField("b", model.Object, armB),
+	}}}
+	d.Spec.groups = []model.OneOfGroup{{Arms: []string{"a", "b"}, AllowNone: true}}
+	_, _, err := specsOf(t, d, &e2eFile{Omit: []string{"a", "b"}})
+	shape := shapeOf(t, err, codeE2ECoverageMissing)
+	for _, want := range []string{"the oneOf arm a of the spec", "the oneOf arm b of the spec"} {
+		if !strings.Contains(shape.msg, want) {
+			t.Errorf("the guard must name %q:\n%s", want, shape.msg)
+		}
+	}
+	// Without the omit, the same spec is fully covered.
+	if _, _, err := specsOf(t, d, &e2eFile{}); err != nil {
+		t.Fatalf("an emitted arm must count: %v", err)
+	}
+}

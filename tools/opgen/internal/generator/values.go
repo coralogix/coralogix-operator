@@ -329,10 +329,12 @@ func (v *sampleValues) coverageSpecs(full, minimal *omap, steps [][]sweepCopy) [
 // otherwise. Of each oneOf group, it sets the first arm, when the group needs one or full is true.
 func (v *sampleValues) object(t *crType, prefix string, full bool) (*omap, error) {
 	skip := map[string]bool{}
+	selected := map[string]bool{}
 	for _, g := range t.groups {
 		chosen := v.arm(t, g, full, strings.TrimSuffix(prefix, "."))
 		for _, arm := range g.Arms {
 			skip[arm] = arm != chosen
+			selected[arm] = arm == chosen
 		}
 	}
 	out := &omap{}
@@ -356,6 +358,10 @@ func (v *sampleValues) object(t *crType, prefix string, full bool) (*omap, error
 			return nil, err
 		}
 		out.set(f.JSON, value)
+		if v.record && selected[f.API] {
+			// The arm counts only when its field is in the spec: omit and the full-versus-minimal rule can drop it.
+			v.cov.mark(coverageKey{"arm", v.cov.owner[t], f.API})
+		}
 	}
 	return out, nil
 }
@@ -429,9 +435,6 @@ func (v *sampleValues) arm(t *crType, g model.OneOfGroup, full bool, path string
 	}
 	if chosen == "" {
 		chosen = g.Arms[0] // every arm is skipped: the guard has no say, the group needs one
-	}
-	if v.record {
-		v.cov.mark(coverageKey{"arm", v.cov.owner[t], chosen})
 	}
 	return chosen
 }
