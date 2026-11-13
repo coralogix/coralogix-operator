@@ -3,6 +3,7 @@ package generator
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/coralogix/coralogix-management-sdk/iac/model"
@@ -177,12 +178,36 @@ type requestValueData struct {
 }
 
 // Names returns the custom resource values, for the Enum marker.
+// Names returns the value list of the Enum marker. controller-gen reads a bare value that starts
+// with a digit, such as 5m, as a number, so a list with such a value is written as quoted strings.
 func (e *enumMap) Names() string {
 	names := make([]string, len(e.Values))
+	quoted := make([]string, len(e.Values))
+	quote := false
 	for i, v := range e.Values {
 		names[i] = v.Name
+		quoted[i] = strconv.Quote(v.Name)
+		if !bareMarkerString(v.Name) {
+			quote = true
+		}
+	}
+	if quote {
+		return "{" + strings.Join(quoted, ",") + "}"
 	}
 	return strings.Join(names, ";")
+}
+
+// bareMarkerString reports whether controller-gen reads the unquoted value as the same string.
+func bareMarkerString(value string) bool {
+	for i, r := range value {
+		switch {
+		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r == '_':
+		case r >= '0' && r <= '9' && i > 0:
+		default:
+			return false
+		}
+	}
+	return value != "" && value != "true" && value != "false"
 }
 
 type builder struct {
@@ -191,6 +216,8 @@ type builder struct {
 	used             map[overrides.Line]bool // the lines of the file that changed the output
 	usedEnums        map[string]bool
 	usedGroups       map[string]bool
+	usedIgnored      map[string]bool // components whose ignored fields are in a CR type
+	sharedPaths      [][2]string     // a path that reuses the struct of another path with the same validators lines
 	usedValidators   map[string]bool
 	ix               *refIndex
 	alias            string
@@ -241,7 +268,7 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 		return nil, err
 	}
 	b := &builder{kind: entry.Kind, file: file, used: map[overrides.Line]bool{}, usedEnums: map[string]bool{}, ix: ix, alias: sdkAlias(ix.pkg.Name), types: map[string]*crType{},
-		enums: map[string]*enumMap{}, usedGroups: map[string]bool{}, usedValidators: map[string]bool{}, convs: map[string]string{}}
+		enums: map[string]*enumMap{}, usedGroups: map[string]bool{}, usedIgnored: map[string]bool{}, usedValidators: map[string]bool{}, convs: map[string]string{}}
 	d := &kindData{
 		Kind: entry.Kind, Lower: strings.ToLower(entry.Kind), Plural: plural(entry.Kind),
 		Finalizer: kebab(entry.Kind) + ".coralogix.com/finalizer", Module: module,
@@ -306,6 +333,13 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 	}
 	if file != nil {
 		if file.Validators != nil {
+			for _, shared := range b.sharedPaths {
+				for rest := range b.nestedValidation(shared[0]) {
+					if b.usedValidators[shared[1]+rest] {
+						b.usedValidators[shared[0]+rest] = true
+					}
+				}
+			}
 			for path := range file.Validators.Fields {
 				if !b.usedValidators[path] {
 					return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":validators.fields." + path, msg: "the line changes no generated validation"}
@@ -327,6 +361,11 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 				if !b.usedGroups[component+"."+name] {
 					return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":types." + component + ".groups." + name, msg: "the group changes no generated CR field"}
 				}
+			}
+		}
+		for component, typ := range file.Types {
+			if len(typ.Ignored) != 0 && !b.usedIgnored[component] {
+				return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":types." + component + ".ignored", msg: "the component is not an object of the CR"}
 			}
 		}
 		for name := range file.Enums {

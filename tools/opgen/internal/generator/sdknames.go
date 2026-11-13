@@ -32,6 +32,7 @@ func resolveSDKNames(r *model.Resource, tag, module string, updateIDOutsideWrapp
 		}
 	}
 	if file != nil {
+		optionalValues(refs, r.Name, file)
 		for _, operation := range []string{"create", "update"} {
 			values := file.API.RequestValues[operation]
 			for _, ref := range refs {
@@ -169,4 +170,40 @@ var builtinTypes = map[string]bool{
 
 func sortedKeys[V any](m map[string]V) []string {
 	return slices.Sorted(maps.Keys(m))
+}
+
+// optionalValues lets a request field that an optional line relaxes keep the value type of the
+// SDK. The SDK follows the contract, so a required scalar is a value, not a pointer. The CR field
+// is a pointer: the request sets the value when the CR has one and keeps the zero value otherwise,
+// as the released code did.
+func optionalValues(refs []sdkcheck.Ref, resource string, file *overrides.File) {
+	schemaOf := map[string]string{}
+	for _, ref := range refs {
+		if ref.Kind != sdkcheck.KindType {
+			continue
+		}
+		switch {
+		case ref.Path == "create.body" || ref.Path == "update.body":
+			schemaOf[ref.Name] = resource
+		case ref.Schema != "":
+			schemaOf[ref.Name] = ref.Schema
+		}
+	}
+	for i := range refs {
+		ref := &refs[i]
+		if ref.Kind != sdkcheck.KindField || ref.WantValue != "" || !strings.HasPrefix(ref.Want, "*") {
+			continue
+		}
+		if !strings.HasPrefix(ref.Path, "create.") && !strings.HasPrefix(ref.Path, "update.") {
+			continue
+		}
+		schema, ok := schemaOf[ref.Owner]
+		if !ok {
+			continue
+		}
+		property := ref.Path[strings.LastIndex(ref.Path, ".")+1:]
+		if file.Field(schema, property).Optional {
+			ref.WantValue = strings.TrimPrefix(ref.Want, "*")
+		}
+	}
 }

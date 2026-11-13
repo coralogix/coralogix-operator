@@ -164,9 +164,13 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 			if field.JSON == name && field.Optional {
 				known = true
 			}
+			// A required group holds optional fields. The value names them.
+			if field.JSON == name && field.group && optionalGroupFields(field, value) {
+				known = true
+			}
 		}
 		if !known {
-			return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":minimal." + name, msg: "not an optional spec field"}
+			return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":minimal." + name, msg: "not an optional spec field, or a group object of its optional fields"}
 		}
 		minimal.set(name, value)
 	}
@@ -583,4 +587,24 @@ func yamlNode(value any) (*yaml.Node, error) {
 		return nil, err
 	}
 	return n, nil
+}
+
+// optionalGroupFields reports whether value is an object of optional fields of the group.
+func optionalGroupFields(group *crField, value any) bool {
+	fields, ok := value.(map[string]any)
+	if !ok || len(fields) == 0 || group.object == nil {
+		return false
+	}
+	for name := range fields {
+		found := false
+		for _, f := range group.object.Fields {
+			if f.JSON == name && f.Optional {
+				found = true
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
 }
