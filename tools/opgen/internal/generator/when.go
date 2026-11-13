@@ -59,16 +59,37 @@ type overlay struct {
 
 func newOverlay() *overlay { return &overlay{values: map[string]any{}, arms: map[string]string{}} }
 
-// conflicts reports whether the other overlay forces another value at a path that this one forces.
+// conflicts reports whether the other overlay forces something that this one forces differently.
+// The same path with the same value or the same arm is no conflict. A value and an arm at one
+// path conflict, and so do a path and a path below it: a literal object at a path replaces what
+// an entry sets or matches inside it.
 func (o *overlay) conflicts(other *overlay) bool {
-	for path, value := range other.values {
-		if have, ok := o.values[path]; ok && !reflect.DeepEqual(have, value) {
-			return true
-		}
+	type forced struct {
+		path  string
+		value any
+		arm   string
+		isArm bool
 	}
-	for path, arm := range other.arms {
-		if have, ok := o.arms[path]; ok && have != arm {
-			return true
+	list := func(x *overlay) []forced {
+		var out []forced
+		for path, value := range x.values {
+			out = append(out, forced{path: path, value: value})
+		}
+		for path, arm := range x.arms {
+			out = append(out, forced{path: path, arm: arm, isArm: true})
+		}
+		return out
+	}
+	for _, a := range list(o) {
+		for _, b := range list(other) {
+			switch {
+			case a.path == b.path:
+				if a.isArm != b.isArm || (a.isArm && a.arm != b.arm) || (!a.isArm && !reflect.DeepEqual(a.value, b.value)) {
+					return true
+				}
+			case strings.HasPrefix(a.path, b.path+".") || strings.HasPrefix(b.path, a.path+"."):
+				return true
+			}
 		}
 	}
 	return false

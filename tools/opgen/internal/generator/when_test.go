@@ -377,3 +377,55 @@ func TestWhenListOfArmsIsWorkedOffUntilEveryValueIsSent(t *testing.T) {
 		}
 	}
 }
+
+// An entry that sets a whole object and an entry that matches an arm at the same path must not
+// share a copy: the literal would win, and the data of the arm entry would apply to the wrong arm.
+func TestWhenLiteralObjectAndForcedArmDoNotShareACopy(t *testing.T) {
+	entries := append(queryEntries(),
+		e2eWhen{Match: map[string]any{"kind": "http"}, Set: map[string]any{"query": map[string]any{"logs": map[string]any{"lucene": "http-only"}}}},
+		e2eWhen{Match: map[string]any{"kind": "mail"}},
+	)
+	// The full spec uses mail, so the http entry is open and the spans entry is open too.
+	file := &e2eFile{When: entries, Values: map[string]any{"kind": "mail"},
+		SkipValues: map[string]e2eSkipValues{"Conn": {Values: []string{"SLACK"}, Reason: "no data"}}}
+	steps, _, err := specsOf(t, whenSpec(), file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, copy := range copiesOf(t, steps) {
+		_, spans := copy["query"].(map[string]any)["spans"]
+		if !spans && copy["source"] == "s-spans" {
+			t.Errorf("the data of the spans entry is applied to a copy without the spans arm: %v", copy)
+		}
+	}
+}
+
+func TestOverlaysConflictOnASharedPathOrAParentPath(t *testing.T) {
+	mk := func(values map[string]any, arms map[string]string) *overlay {
+		o := newOverlay()
+		for k, v := range values {
+			o.values[k] = v
+		}
+		for k, a := range arms {
+			o.arms[k] = a
+		}
+		return o
+	}
+	for name, tc := range map[string]struct {
+		a, b *overlay
+		want bool
+	}{
+		"same value":                  {mk(map[string]any{"p": "x"}, nil), mk(map[string]any{"p": "x"}, nil), false},
+		"other value":                 {mk(map[string]any{"p": "x"}, nil), mk(map[string]any{"p": "y"}, nil), true},
+		"same arm":                    {mk(nil, map[string]string{"q": "a"}), mk(nil, map[string]string{"q": "a"}), false},
+		"other arm":                   {mk(nil, map[string]string{"q": "a"}), mk(nil, map[string]string{"q": "b"}), true},
+		"value and arm, one path":     {mk(map[string]any{"q": map[string]any{}}, nil), mk(nil, map[string]string{"q": "a"}), true},
+		"path and a child":            {mk(map[string]any{"q": map[string]any{}}, nil), mk(map[string]any{"q.a.x": 1}, nil), true},
+		"different paths":             {mk(map[string]any{"p": 1}, nil), mk(map[string]any{"q": 1}, nil), false},
+		"a name that starts the same": {mk(map[string]any{"q": 1}, nil), mk(map[string]any{"query": 1}, nil), false},
+	} {
+		if got := tc.a.conflicts(tc.b); got != tc.want {
+			t.Errorf("%s: conflicts = %v, want %v", name, got, tc.want)
+		}
+	}
+}
