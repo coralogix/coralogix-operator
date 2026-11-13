@@ -2,6 +2,7 @@ package generator
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 	"strconv"
 	"strings"
@@ -209,6 +210,21 @@ func (c *coverage) mark(key coverageKey) {
 
 // startSpec begins to collect the keys that one spec sends.
 func (c *coverage) startSpec() { c.sent = map[coverageKey]bool{} }
+
+// snapshotSent copies the keys that the spec in the making has sent, for a trial that can be dropped.
+func (c *coverage) snapshotSent() map[coverageKey]bool {
+	if c.sent == nil {
+		return nil
+	}
+	return maps.Clone(c.sent)
+}
+
+// restoreSent drops what a dropped trial recorded.
+func (c *coverage) restoreSent(snapshot map[coverageKey]bool) {
+	if c.sent != nil {
+		c.sent = snapshot
+	}
+}
 
 // finishSpec returns the keys that the spec sent, in contract order.
 func (c *coverage) finishSpec() []coverageKey {

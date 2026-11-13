@@ -516,12 +516,14 @@ func (v *sampleValues) list(f *crField, path string, full bool) (any, error) {
 			break
 		}
 		before := len(v.cov.covered)
+		sent := v.cov.snapshotSent()
 		item, err := v.item(f, f.typ.Elem, path, full)
 		if err != nil {
 			return nil, err
 		}
 		if len(v.cov.covered) == before {
-			break // the item adds nothing: drop it
+			v.cov.restoreSent(sent) // the item adds nothing: drop it, and what it would have sent
+			break
 		}
 		items = append(items, item)
 		v.cov.extra++

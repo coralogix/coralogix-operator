@@ -379,3 +379,28 @@ func TestAliasCountsTheValueThatIsSent(t *testing.T) {
 		t.Errorf("the full spec sends PAGER, not LOW: %v", v.fullKeys)
 	}
 }
+
+// A trial list item that adds nothing is dropped. It must not leave its keys behind: the offline
+// test expects every recorded key in the Create request, and a dropped item is not in it.
+func TestDroppedTrialItemLeavesNoKeysBehind(t *testing.T) {
+	choice := &crType{schema: "Choice", Fields: []*crField{objectField("a", model.Object, &crType{schema: "ChoiceA"}), objectField("b", model.Object, &crType{schema: "ChoiceB"})}}
+	choice.groups = []model.OneOfGroup{{Arms: []string{"a", "b"}}}
+	d := &kindData{Kind: "Thing", Spec: &crType{Name: "ThingSpec", Fields: []*crField{listOf(objectField("choices", model.Object, choice))}}}
+	steps, _, err := specsOf(t, d, &e2eFile{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(steps) == 0 {
+		t.Fatal("arm b needs a copy")
+	}
+	for _, step := range steps {
+		for _, c := range step {
+			spec := c.spec.json()
+			for _, key := range c.keys {
+				if key.kind == "arm" && !strings.Contains(spec, `"`+key.name+`"`) {
+					t.Errorf("the copy records %s as sent, but its spec has no such arm: %s", key.name, spec)
+				}
+			}
+		}
+	}
+}
