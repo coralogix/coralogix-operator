@@ -336,3 +336,25 @@ func TestWhenPlannedItemsRespectTheListLimit(t *testing.T) {
 		t.Errorf("the entries for max and hist (the full spec covers min) need their own copies, got %d", copies)
 	}
 }
+
+// A when entry that selects an arm must stay in play while values below the arm are open: at a
+// coupled path the sweep does not pick the arm by itself.
+func TestWhenArmIsRevisitedWhileItsValuesAreOpen(t *testing.T) {
+	entries := []e2eWhen{
+		{Match: map[string]any{"query": "logs"}},
+		{Match: map[string]any{"query": "spans"}},
+	}
+	steps, v, err := specsOf(t, coverageSpec(), &e2eFile{When: entries})
+	if err != nil {
+		t.Fatalf("every value below a coupled arm must be reached: %v", err)
+	}
+	if missing := v.cov.missing(); len(missing) != 0 {
+		t.Fatalf("left %v", missing)
+	}
+	all := stepsJSON(t, steps)
+	for _, want := range []string{`"agg":"q"`, `"agg":"r"`} {
+		if !strings.Contains(all, want) {
+			t.Errorf("no copy sends %s: %s", want, all)
+		}
+	}
+}

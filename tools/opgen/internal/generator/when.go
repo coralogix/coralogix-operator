@@ -47,6 +47,8 @@ type whenOption struct {
 	name string // the CR spelling of an enum value, or the CR name of an arm
 	arm  string // the API property of an arm
 	key  coverageKey
+	// field is the field of an arm. The values below it stay open after the arm is covered.
+	field *crField
 }
 
 // overlay holds the values and the arms that one copy, or one list item, forces.
@@ -203,7 +205,7 @@ func (c *coverage) parseChoice(f *crField, path string, raw any, where string) (
 				return whenChoice{}, &shapeError{code: codeE2EWhenUnused, path: where, msg: fmt.Sprintf("%q is not an arm of the oneOf at %s", name, path)}
 			}
 			api := f.object.Fields[i].API
-			choice.options = append(choice.options, whenOption{name: name, arm: api, key: coverageKey{"arm", c.owner[f.object], api}})
+			choice.options = append(choice.options, whenOption{name: name, arm: api, key: coverageKey{"arm", c.owner[f.object], api}, field: f.object.Fields[i]})
 		}
 	default:
 		return whenChoice{}, &shapeError{code: codeE2EWhenInvalid, path: where, msg: "a match path names an enum field or the field that holds a oneOf"}
@@ -262,6 +264,7 @@ func (c *coverage) markCoupledKeys(root *crType) {
 func (c *coverage) choose(entry *whenEntry, planned map[coverageKey]bool) (assign *overlay, open int, ok bool) {
 	assign = newOverlay()
 	keys := map[coverageKey]bool{}
+	below := 0
 	for _, choice := range entry.choices {
 		var picked *whenOption
 		for i := range choice.options {
@@ -282,6 +285,9 @@ func (c *coverage) choose(entry *whenEntry, planned map[coverageKey]bool) (assig
 		}
 		if choice.arm {
 			assign.arms[choice.path] = picked.arm
+			// Automatic arm choice is off at a coupled path, so the entry is the only way to reach the
+			// values below its arm. Keep it in play while any of them is open.
+			below += c.openBelow(picked.field, map[*crType]bool{})
 		} else {
 			assign.values[choice.path] = picked.name
 		}
@@ -298,7 +304,7 @@ func (c *coverage) choose(entry *whenEntry, planned map[coverageKey]bool) (assig
 			open++
 		}
 	}
-	return assign, open, true
+	return assign, open + below, true
 }
 
 // planCopy picks the entries that one copy applies. It takes the entry with the most open keys
