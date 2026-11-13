@@ -1,0 +1,867 @@
+{
+  "cases": [
+    {
+      "name": "create, get, replace, replace the SLI, delete, delete again, replace after delete",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "exclusionWindowIds": [],
+            "slo": {
+              "createTime": "\u003ctime\u003e",
+              "creator": "\u003cemail\u003e",
+              "description": "first",
+              "grouping": {
+                "labels": []
+              },
+              "id": "{{id}}",
+              "labels": {
+                "team": "a"
+              },
+              "name": "cxo-fidelity-a",
+              "productType": "SLO_PRODUCT_TYPE_UNSPECIFIED",
+              "requestBasedMetricSli": {
+                "goodEvents": {
+                  "query": "sum(rate(good_total[1m]))"
+                },
+                "totalEvents": {
+                  "query": "sum(rate(all_total[1m]))"
+                }
+              },
+              "revision": {
+                "revision": 1,
+                "updateTime": "\u003ctime\u003e"
+              },
+              "sliDefinition": {
+                "requestBased": {
+                  "custom": {
+                    "goodEvents": {
+                      "query": "sum(rate(good_total[1m]))"
+                    },
+                    "totalEvents": {
+                      "query": "sum(rate(all_total[1m]))"
+                    }
+                  }
+                }
+              },
+              "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+              "sloType": "SLO_TYPE_REQUEST",
+              "targetThresholdPercentage": 99,
+              "type": "request",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "slo": {
+              "createTime": "\u003ctime\u003e",
+              "creator": "\u003cemail\u003e",
+              "description": "first",
+              "grouping": {
+                "labels": []
+              },
+              "id": "{{id}}",
+              "labels": {
+                "team": "a"
+              },
+              "name": "cxo-fidelity-a",
+              "productType": "SLO_PRODUCT_TYPE_UNSPECIFIED",
+              "requestBasedMetricSli": {
+                "goodEvents": {
+                  "query": "sum(rate(good_total[1m]))"
+                },
+                "totalEvents": {
+                  "query": "sum(rate(all_total[1m]))"
+                }
+              },
+              "revision": {
+                "revision": 1,
+                "updateTime": "\u003ctime\u003e"
+              },
+              "sliDefinition": {
+                "requestBased": {
+                  "custom": {
+                    "goodEvents": {
+                      "query": "sum(rate(good_total[1m]))"
+                    },
+                    "totalEvents": {
+                      "query": "sum(rate(all_total[1m]))"
+                    }
+                  }
+                }
+              },
+              "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+              "sloType": "SLO_TYPE_REQUEST",
+              "targetThresholdPercentage": 99,
+              "type": "request",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "effectedSloAlertIds": [],
+            "exclusionWindowIds": [],
+            "slo": {
+              "createTime": "\u003ctime\u003e",
+              "creator": "\u003cemail\u003e",
+              "grouping": {
+                "labels": []
+              },
+              "id": "{{id}}",
+              "labels": {},
+              "name": "cxo-fidelity-a2",
+              "productType": "SLO_PRODUCT_TYPE_UNSPECIFIED",
+              "requestBasedMetricSli": {
+                "goodEvents": {
+                  "query": "sum(rate(good_total[1m]))"
+                },
+                "totalEvents": {
+                  "query": "sum(rate(all_total[1m]))"
+                }
+              },
+              "revision": {
+                "revision": 2,
+                "updateTime": "\u003ctime\u003e"
+              },
+              "sliDefinition": {
+                "requestBased": {
+                  "custom": {
+                    "goodEvents": {
+                      "query": "sum(rate(good_total[1m]))"
+                    },
+                    "totalEvents": {
+                      "query": "sum(rate(all_total[1m]))"
+                    }
+                  }
+                }
+              },
+              "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+              "sloType": "SLO_TYPE_REQUEST",
+              "targetThresholdPercentage": 99.5,
+              "type": "request",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "slo": {
+              "createTime": "\u003ctime\u003e",
+              "creator": "\u003cemail\u003e",
+              "grouping": {
+                "labels": []
+              },
+              "id": "{{id}}",
+              "labels": {},
+              "name": "cxo-fidelity-a2",
+              "productType": "SLO_PRODUCT_TYPE_UNSPECIFIED",
+              "requestBasedMetricSli": {
+                "goodEvents": {
+                  "query": "sum(rate(good_total[1m]))"
+                },
+                "totalEvents": {
+                  "query": "sum(rate(all_total[1m]))"
+                }
+              },
+              "revision": {
+                "revision": 2,
+                "updateTime": "\u003ctime\u003e"
+              },
+              "sliDefinition": {
+                "requestBased": {
+                  "custom": {
+                    "goodEvents": {
+                      "query": "sum(rate(good_total[1m]))"
+                    },
+                    "totalEvents": {
+                      "query": "sum(rate(all_total[1m]))"
+                    }
+                  }
+                }
+              },
+              "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+              "sloType": "SLO_TYPE_REQUEST",
+              "targetThresholdPercentage": 99.5,
+              "type": "request",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Good events query: SLO queries must use a 1-minute range ([1m]) to ensure consistent time-window evaluation. Update all time ranges in your query to [1m].; Total events query: SLO queries must use a 1-minute range ([1m]) to ensure consistent time-window evaluation. Update all time ranges in your query to [1m]."
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "effectedSloAlertIds": []
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Slo with id {{id}} not found for company \u003cnumber\u003e"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Slo with id {{id}} not found for company \u003cnumber\u003e"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Cannot replace Slo with id {{id}} because it does not exist"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a window-based SLI without threshold or missing data strategy",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "exclusionWindowIds": [],
+            "slo": {
+              "createTime": "\u003ctime\u003e",
+              "creator": "\u003cemail\u003e",
+              "grouping": {
+                "labels": [
+                  "service"
+                ]
+              },
+              "id": "{{id}}",
+              "labels": {},
+              "name": "cxo-fidelity-b",
+              "productType": "SLO_PRODUCT_TYPE_UNSPECIFIED",
+              "revision": {
+                "revision": 1,
+                "updateTime": "\u003ctime\u003e"
+              },
+              "sliDefinition": {
+                "windowBased": {
+                  "custom": {
+                    "comparisonOperator": "COMPARISON_OPERATOR_GREATER_THAN_OR_EQUALS",
+                    "query": {
+                      "query": "sum(rate(errors_total[5m])) by (service)"
+                    },
+                    "threshold": 0
+                  },
+                  "missingDataStrategy": "MISSING_DATA_STRATEGY_UNCOUNTED",
+                  "window": "WINDOW_SLO_WINDOW_1_MINUTE"
+                }
+              },
+              "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+              "sloType": "SLO_TYPE_REQUEST",
+              "targetThresholdPercentage": 99,
+              "type": "request",
+              "updateTime": "\u003ctime\u003e",
+              "windowBasedMetricSli": {
+                "comparisonOperator": "COMPARISON_OPERATOR_GREATER_THAN_OR_EQUALS",
+                "missingDataStrategy": "MISSING_DATA_STRATEGY_UNCOUNTED",
+                "query": {
+                  "query": "sum(rate(errors_total[5m])) by (service)"
+                },
+                "threshold": 0,
+                "window": "WINDOW_SLO_WINDOW_1_MINUTE"
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "effectedSloAlertIds": [],
+            "exclusionWindowIds": [],
+            "slo": {
+              "createTime": "\u003ctime\u003e",
+              "creator": "\u003cemail\u003e",
+              "grouping": {
+                "labels": [
+                  "service"
+                ]
+              },
+              "id": "{{id}}",
+              "labels": {},
+              "name": "cxo-fidelity-b",
+              "productType": "SLO_PRODUCT_TYPE_UNSPECIFIED",
+              "revision": {
+                "revision": 2,
+                "updateTime": "\u003ctime\u003e"
+              },
+              "sliDefinition": {
+                "windowBased": {
+                  "custom": {
+                    "comparisonOperator": "COMPARISON_OPERATOR_LESS_THAN",
+                    "query": {
+                      "query": "sum(rate(errors_total[5m])) by (service)"
+                    },
+                    "threshold": 0.5
+                  },
+                  "missingDataStrategy": "MISSING_DATA_STRATEGY_BAD",
+                  "window": "WINDOW_SLO_WINDOW_5_MINUTES"
+                }
+              },
+              "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+              "sloType": "SLO_TYPE_REQUEST",
+              "targetThresholdPercentage": 99,
+              "type": "request",
+              "updateTime": "\u003ctime\u003e",
+              "windowBasedMetricSli": {
+                "comparisonOperator": "COMPARISON_OPERATOR_LESS_THAN",
+                "missingDataStrategy": "MISSING_DATA_STRATEGY_BAD",
+                "query": {
+                  "query": "sum(rate(errors_total[5m])) by (service)"
+                },
+                "threshold": 0.5,
+                "window": "WINDOW_SLO_WINDOW_5_MINUTES"
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "effectedSloAlertIds": [],
+            "exclusionWindowIds": [],
+            "slo": {
+              "createTime": "\u003ctime\u003e",
+              "creator": "\u003cemail\u003e",
+              "grouping": {
+                "labels": [
+                  "service"
+                ]
+              },
+              "id": "{{id}}",
+              "labels": {},
+              "name": "cxo-fidelity-b",
+              "productType": "SLO_PRODUCT_TYPE_UNSPECIFIED",
+              "revision": {
+                "revision": 3,
+                "updateTime": "\u003ctime\u003e"
+              },
+              "sliDefinition": {
+                "windowBased": {
+                  "custom": {
+                    "comparisonOperator": "COMPARISON_OPERATOR_LESS_THAN",
+                    "query": {
+                      "query": "sum(rate(errors_total[5m])) by (service)"
+                    },
+                    "threshold": 0
+                  },
+                  "missingDataStrategy": "MISSING_DATA_STRATEGY_UNCOUNTED",
+                  "window": "WINDOW_SLO_WINDOW_5_MINUTES"
+                }
+              },
+              "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+              "sloType": "SLO_TYPE_REQUEST",
+              "targetThresholdPercentage": 99,
+              "type": "request",
+              "updateTime": "\u003ctime\u003e",
+              "windowBasedMetricSli": {
+                "comparisonOperator": "COMPARISON_OPERATOR_LESS_THAN",
+                "missingDataStrategy": "MISSING_DATA_STRATEGY_UNCOUNTED",
+                "query": {
+                  "query": "sum(rate(errors_total[5m])) by (service)"
+                },
+                "threshold": 0,
+                "window": "WINDOW_SLO_WINDOW_5_MINUTES"
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "slo": {
+              "createTime": "\u003ctime\u003e",
+              "creator": "\u003cemail\u003e",
+              "grouping": {
+                "labels": [
+                  "service"
+                ]
+              },
+              "id": "{{id}}",
+              "labels": {},
+              "name": "cxo-fidelity-b",
+              "productType": "SLO_PRODUCT_TYPE_UNSPECIFIED",
+              "revision": {
+                "revision": 3,
+                "updateTime": "\u003ctime\u003e"
+              },
+              "sliDefinition": {
+                "windowBased": {
+                  "custom": {
+                    "comparisonOperator": "COMPARISON_OPERATOR_LESS_THAN",
+                    "query": {
+                      "query": "sum(rate(errors_total[5m])) by (service)"
+                    },
+                    "threshold": 0
+                  },
+                  "missingDataStrategy": "MISSING_DATA_STRATEGY_UNCOUNTED",
+                  "window": "WINDOW_SLO_WINDOW_5_MINUTES"
+                }
+              },
+              "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+              "sloType": "SLO_TYPE_REQUEST",
+              "targetThresholdPercentage": 99,
+              "type": "request",
+              "updateTime": "\u003ctime\u003e",
+              "windowBasedMetricSli": {
+                "comparisonOperator": "COMPARISON_OPERATOR_LESS_THAN",
+                "missingDataStrategy": "MISSING_DATA_STRATEGY_UNCOUNTED",
+                "query": {
+                  "query": "sum(rate(errors_total[5m])) by (service)"
+                },
+                "threshold": 0,
+                "window": "WINDOW_SLO_WINDOW_5_MINUTES"
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "effectedSloAlertIds": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "a replace without description keeps the stored one",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "exclusionWindowIds": [],
+            "slo": {
+              "createTime": "\u003ctime\u003e",
+              "creator": "\u003cemail\u003e",
+              "description": "kept",
+              "grouping": {
+                "labels": []
+              },
+              "id": "{{id}}",
+              "labels": {},
+              "name": "cxo-fidelity-c",
+              "productType": "SLO_PRODUCT_TYPE_UNSPECIFIED",
+              "requestBasedMetricSli": {
+                "goodEvents": {
+                  "query": "sum(rate(good_total[1m]))"
+                },
+                "totalEvents": {
+                  "query": "sum(rate(all_total[1m]))"
+                }
+              },
+              "revision": {
+                "revision": 1,
+                "updateTime": "\u003ctime\u003e"
+              },
+              "sliDefinition": {
+                "requestBased": {
+                  "custom": {
+                    "goodEvents": {
+                      "query": "sum(rate(good_total[1m]))"
+                    },
+                    "totalEvents": {
+                      "query": "sum(rate(all_total[1m]))"
+                    }
+                  }
+                }
+              },
+              "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+              "sloType": "SLO_TYPE_REQUEST",
+              "targetThresholdPercentage": 99,
+              "type": "request",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "effectedSloAlertIds": [],
+            "exclusionWindowIds": [],
+            "slo": {
+              "createTime": "\u003ctime\u003e",
+              "creator": "\u003cemail\u003e",
+              "grouping": {
+                "labels": []
+              },
+              "id": "{{id}}",
+              "labels": {},
+              "name": "cxo-fidelity-c",
+              "productType": "SLO_PRODUCT_TYPE_UNSPECIFIED",
+              "requestBasedMetricSli": {
+                "goodEvents": {
+                  "query": "sum(rate(good_total[1m]))"
+                },
+                "totalEvents": {
+                  "query": "sum(rate(all_total[1m]))"
+                }
+              },
+              "revision": {
+                "revision": 1,
+                "updateTime": "\u003ctime\u003e"
+              },
+              "sliDefinition": {
+                "requestBased": {
+                  "custom": {
+                    "goodEvents": {
+                      "query": "sum(rate(good_total[1m]))"
+                    },
+                    "totalEvents": {
+                      "query": "sum(rate(all_total[1m]))"
+                    }
+                  }
+                }
+              },
+              "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+              "sloType": "SLO_TYPE_REQUEST",
+              "targetThresholdPercentage": 99,
+              "type": "request",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "slo": {
+              "createTime": "\u003ctime\u003e",
+              "creator": "\u003cemail\u003e",
+              "description": "kept",
+              "grouping": {
+                "labels": []
+              },
+              "id": "{{id}}",
+              "labels": {},
+              "name": "cxo-fidelity-c",
+              "productType": "SLO_PRODUCT_TYPE_UNSPECIFIED",
+              "requestBasedMetricSli": {
+                "goodEvents": {
+                  "query": "sum(rate(good_total[1m]))"
+                },
+                "totalEvents": {
+                  "query": "sum(rate(all_total[1m]))"
+                }
+              },
+              "revision": {
+                "revision": 1,
+                "updateTime": "\u003ctime\u003e"
+              },
+              "sliDefinition": {
+                "requestBased": {
+                  "custom": {
+                    "goodEvents": {
+                      "query": "sum(rate(good_total[1m]))"
+                    },
+                    "totalEvents": {
+                      "query": "sum(rate(all_total[1m]))"
+                    }
+                  }
+                }
+              },
+              "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+              "sloType": "SLO_TYPE_REQUEST",
+              "targetThresholdPercentage": 99,
+              "type": "request",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "effectedSloAlertIds": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "ownership tags with an empty dimension",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "exclusionWindowIds": [],
+            "slo": {
+              "createTime": "\u003ctime\u003e",
+              "creator": "\u003cemail\u003e",
+              "grouping": {
+                "labels": []
+              },
+              "id": "{{id}}",
+              "labels": {},
+              "name": "cxo-fidelity-d",
+              "ownershipTags": {
+                "environment": {
+                  "labelKeys": [],
+                  "resolvedValues": [],
+                  "staticValues": [
+                    "production",
+                    "production"
+                  ]
+                },
+                "team": {
+                  "labelKeys": [
+                    "team"
+                  ],
+                  "resolvedValues": [],
+                  "staticValues": []
+                }
+              },
+              "productType": "SLO_PRODUCT_TYPE_UNSPECIFIED",
+              "requestBasedMetricSli": {
+                "goodEvents": {
+                  "query": "sum(rate(good_total[1m]))"
+                },
+                "totalEvents": {
+                  "query": "sum(rate(all_total[1m]))"
+                }
+              },
+              "revision": {
+                "revision": 1,
+                "updateTime": "\u003ctime\u003e"
+              },
+              "sliDefinition": {
+                "requestBased": {
+                  "custom": {
+                    "goodEvents": {
+                      "query": "sum(rate(good_total[1m]))"
+                    },
+                    "totalEvents": {
+                      "query": "sum(rate(all_total[1m]))"
+                    }
+                  }
+                }
+              },
+              "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+              "sloType": "SLO_TYPE_REQUEST",
+              "targetThresholdPercentage": 99,
+              "type": "request",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "effectedSloAlertIds": [],
+            "exclusionWindowIds": [],
+            "slo": {
+              "createTime": "\u003ctime\u003e",
+              "creator": "\u003cemail\u003e",
+              "grouping": {
+                "labels": []
+              },
+              "id": "{{id}}",
+              "labels": {},
+              "name": "cxo-fidelity-d",
+              "productType": "SLO_PRODUCT_TYPE_UNSPECIFIED",
+              "requestBasedMetricSli": {
+                "goodEvents": {
+                  "query": "sum(rate(good_total[1m]))"
+                },
+                "totalEvents": {
+                  "query": "sum(rate(all_total[1m]))"
+                }
+              },
+              "revision": {
+                "revision": 1,
+                "updateTime": "\u003ctime\u003e"
+              },
+              "sliDefinition": {
+                "requestBased": {
+                  "custom": {
+                    "goodEvents": {
+                      "query": "sum(rate(good_total[1m]))"
+                    },
+                    "totalEvents": {
+                      "query": "sum(rate(all_total[1m]))"
+                    }
+                  }
+                }
+              },
+              "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+              "sloType": "SLO_TYPE_REQUEST",
+              "targetThresholdPercentage": 99,
+              "type": "request",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "slo": {
+              "createTime": "\u003ctime\u003e",
+              "creator": "\u003cemail\u003e",
+              "grouping": {
+                "labels": []
+              },
+              "id": "{{id}}",
+              "labels": {},
+              "name": "cxo-fidelity-d",
+              "productType": "SLO_PRODUCT_TYPE_UNSPECIFIED",
+              "requestBasedMetricSli": {
+                "goodEvents": {
+                  "query": "sum(rate(good_total[1m]))"
+                },
+                "totalEvents": {
+                  "query": "sum(rate(all_total[1m]))"
+                }
+              },
+              "revision": {
+                "revision": 1,
+                "updateTime": "\u003ctime\u003e"
+              },
+              "sliDefinition": {
+                "requestBased": {
+                  "custom": {
+                    "goodEvents": {
+                      "query": "sum(rate(good_total[1m]))"
+                    },
+                    "totalEvents": {
+                      "query": "sum(rate(all_total[1m]))"
+                    }
+                  }
+                }
+              },
+              "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+              "sloType": "SLO_TYPE_REQUEST",
+              "targetThresholdPercentage": 99,
+              "type": "request",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "effectedSloAlertIds": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejections",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: validation failed for method /com.coralogixapis.slo.v1.SlosService/CreateSlo: ValidationError: \"slo.name\" is not allowed to be empty"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: validation failed for method /com.coralogixapis.slo.v1.SlosService/CreateSlo: ValidationError: \"slo.window\" is required"
+          }
+        },
+        {
+          "status": 500,
+          "response": {
+            "code": 500,
+            "message": "Internal Server Error: failed to create SLO: SLO time window must be specified"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Good events query: Query is missing"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: validation failed for method /com.coralogixapis.slo.v1.SlosService/CreateSlo: ValidationError: \"slo.sli\" is required"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Invalid comparison operator: 0"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Window SLI window must be specified"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: validation failed for method /com.coralogixapis.slo.v1.SlosService/CreateSlo: ValidationError: slo.apm_sli is required when slo.product_type is SLO_PRODUCT_TYPE_APM"
+          }
+        }
+      ]
+    },
+    {
+      "name": "an id that does not exist or is not a UUID",
+      "steps": [
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Slo with id 00000000-0000-4000-8000-00000000dead not found for company \u003cnumber\u003e"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: validation failed for method /com.coralogixapis.slo.v1.SlosService/GetSlo: ValidationError: \"id\" must be a valid GUID"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: validation failed for method /com.coralogixapis.slo.v1.SlosService/DeleteSlo: ValidationError: \"id\" must be a valid GUID"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: validation failed for method /com.coralogixapis.slo.v1.SlosService/ReplaceSlo: ValidationError: \"slo.id\" must be a valid GUID"
+          }
+        }
+      ]
+    },
+    {
+      "name": "an APM SLI with an unknown service",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: One or more APM SLO services not found in catalog"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,127 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "description": "Baseline description",
+      "labels": {
+        "team": "baseline"
+      },
+      "name": "baseline-slo",
+      "ownershipTags": {
+        "environment": {
+          "staticValues": [
+            "production"
+          ]
+        },
+        "service": {
+          "staticValues": [
+            "checkout"
+          ]
+        },
+        "team": {
+          "labelKeys": [
+            "team"
+          ]
+        }
+      },
+      "productType": "unspecified",
+      "sliType": {
+        "windowBasedMetric": {
+          "comparisonOperator": "lessThan",
+          "missingDataStrategy": "bad",
+          "query": {
+            "query": "sum(rate(errors_total[5m])) by (service)"
+          },
+          "threshold": "0.5",
+          "window": "5m"
+        }
+      },
+      "targetThresholdPercentage": "99.5",
+      "window": {
+        "timeFrame": "28d"
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/slo/slos/v1",
+        "body": {
+          "description": "Baseline description",
+          "labels": {
+            "team": "baseline"
+          },
+          "name": "baseline-slo",
+          "ownershipTags": {
+            "environment": {
+              "staticValues": [
+                "production"
+              ]
+            },
+            "service": {
+              "staticValues": [
+                "checkout"
+              ]
+            },
+            "team": {
+              "labelKeys": [
+                "team"
+              ]
+            }
+          },
+          "productType": "SLO_PRODUCT_TYPE_UNSPECIFIED",
+          "sloTimeFrame": "SLO_TIME_FRAME_28_DAYS",
+          "targetThresholdPercentage": 99.5,
+          "windowBasedMetricSli": {
+            "comparisonOperator": "COMPARISON_OPERATOR_LESS_THAN",
+            "missingDataStrategy": "MISSING_DATA_STRATEGY_BAD",
+            "query": {
+              "query": "sum(rate(errors_total[5m])) by (service)"
+            },
+            "threshold": 0.5,
+            "window": "WINDOW_SLO_WINDOW_5_MINUTES"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "slo.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced",
+        "revision": 1
+      }
+    }
+  },
+  {
+    "step": "reconcile after the selector stops matching the CR",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/slo/slos/v1/<id-1>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [],
+      "status": {}
+    }
+  }
+]
