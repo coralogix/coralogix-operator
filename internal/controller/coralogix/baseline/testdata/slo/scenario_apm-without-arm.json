@@ -26,7 +26,7 @@
         "conditions": [
           {
             "observedGeneration": 1,
-            "reason": "RemoteCreationFailed",
+            "reason": "ValidationFailed",
             "status": "False",
             "type": "RemoteSynced"
           }

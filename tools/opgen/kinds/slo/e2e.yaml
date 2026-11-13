@@ -1,0 +1,31 @@
+substitutions:
+  sample-name: '@{run}'
+values:
+  # The live API needs a PromQL query with 1-minute ranges in a request-based SLI.
+  sliType.requestBasedMetric.goodEvents.query: 'sum(rate(coralogix_e2e_events_total{status="ok"}[1m]))'
+  sliType.requestBasedMetric.totalEvents.query: 'sum(rate(coralogix_e2e_events_total[1m]))'
+  # The API rejects an unspecified time frame.
+  window.timeFrame: 7d
+  # A dimension takes staticValues or labelKeys, not both, and a static service must be in the
+  # APM Service Catalog of the team.
+  ownershipTags: {environment: {staticValues: [e2e]}, team: {labelKeys: [team]}}
+  targetThresholdPercentage: 99
+# The CRD does not require a time frame. The API does.
+minimal:
+  window: {timeFrame: 7d}
+update:
+  field: description
+  value: SLO updated by the e2e test
+upgrade:
+  from: '2.0'
+  spec:
+    name: '@{run}'
+    description: SLO created before the operator upgrade
+    sliType:
+      requestBasedMetric:
+        goodEvents: {query: 'sum(rate(coralogix_e2e_events_total{status="ok"}[1m]))'}
+        totalEvents: {query: 'sum(rate(coralogix_e2e_events_total[1m]))'}
+    window: {timeFrame: 7d}
+    targetThresholdPercentage: 99
+  field: description
+  value: SLO updated after the operator upgrade

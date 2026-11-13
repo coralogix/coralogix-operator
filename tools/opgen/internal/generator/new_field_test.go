@@ -422,3 +422,108 @@ func withNewE2MField(t *testing.T, spec []byte) []byte {
 	}
 	return out
 }
+
+// A field that a later contract adds to the SLO reaches the CRD type, the conversion, the sample,
+// and the e2e test with no new behavior-overrides line. Create and Replace share the body, so one
+// conversion sends it in both. The groups, ignored, optional, and enum lines of the kind do not stop
+// it, and the released chart upgrade check stays as it is.
+func TestSLONewFieldWithoutOverrides(t *testing.T) {
+	input, err := source.Resolve(".")
+	if err != nil {
+		if os.Getenv("CI") != "" {
+			t.Fatal(err)
+		}
+		t.Skipf("the pinned SDK is not in the module cache: %v", err)
+	}
+	entry := kindEntry{Kind: "SLO", Resource: "Slo"}
+	dir := filepath.Join(input.ModuleRoot, entry.dir())
+	file, err := readOverrides(filepath.Join(dir, "behavior-overrides.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	e2e, err := readE2E(filepath.Join(dir, e2eFileName))
+	if err != nil {
+		t.Fatal(err)
+	}
+	render := func(spec []byte) map[string][]byte {
+		t.Helper()
+		doc, err := model.Load(spec)
+		if err != nil {
+			t.Fatal(err)
+		}
+		v, err := validate(doc, entry, input.SDKModule, input.Module, e2e, file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		out, err := renderAll([]*validated{v}, input.SDKModule, input.Module)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return out.files
+	}
+	before := render(input.OpenAPI)
+	after := render(withNewSLOField(t, input.OpenAPI))
+	for name, content := range after {
+		if removed := removedLines(string(before[name]), string(content)); len(removed) != 0 {
+			t.Errorf("%s: a new field changed existing lines:\n%s", name, strings.Join(removed, "\n"))
+		}
+	}
+	for _, want := range []struct{ file, text string }{
+		{"api/coralogix/v1alpha1/slo_types.go", "ProbeNote *string `json:\"probeNote,omitempty\"`"},
+		{"api/coralogix/v1alpha1/slo_types.go", "+kubebuilder:validation:MaxLength=20"},
+		{"config/samples/v1alpha1/generated/slo.yaml", "probeNote:"},
+		{"tests/e2e/slo_generated_test.go", `"probeNote":`},
+	} {
+		if !strings.Contains(normalizeSpace(string(after[want.file])), normalizeSpace(want.text)) {
+			t.Errorf("%s has no %q", want.file, want.text)
+		}
+	}
+	if n := strings.Count(string(after["api/coralogix/v1alpha1/slo_convert.go"]), "out.ProbeNote = in.ProbeNote"); n != 1 {
+		t.Errorf("want probeNote in the shared request body, got %d conversions", n)
+	}
+	if string(after["scripts/upgrade-check-slo.sh"]) != string(before["scripts/upgrade-check-slo.sh"]) {
+		t.Error("a new field changed the released chart upgrade check")
+	}
+}
+
+// withNewSLOField adds the optional field probeNote to every schema with the SLO properties: the
+// Create body, the Replace body, and the resource. The bodies are inline in the contract.
+func withNewSLOField(t *testing.T, spec []byte) []byte {
+	t.Helper()
+	var doc map[string]any
+	if err := yaml.Unmarshal(spec, &doc); err != nil {
+		t.Fatal(err)
+	}
+	added := 0
+	var walk func(v any)
+	walk = func(v any) {
+		switch v := v.(type) {
+		case map[string]any:
+			if props, ok := v["properties"].(map[string]any); ok {
+				_, hasTimeFrame := props["sloTimeFrame"]
+				_, hasTarget := props["targetThresholdPercentage"]
+				_, hasRequest := props["requestBasedMetricSli"]
+				if hasTimeFrame && hasTarget && hasRequest {
+					props["probeNote"] = map[string]any{"type": "string", "x-coralogix-presence": true, "description": "A note.", "maxLength": 20}
+					added++
+				}
+			}
+			for _, child := range v {
+				walk(child)
+			}
+		case []any:
+			for _, child := range v {
+				walk(child)
+			}
+		}
+	}
+	walk(doc)
+	if added < 3 {
+		t.Fatalf("want probeNote in the Create body, the Replace body, and the resource, added it %d times", added)
+	}
+	out, err := yaml.Marshal(doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
