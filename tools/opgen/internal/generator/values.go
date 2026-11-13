@@ -519,7 +519,7 @@ func (v *sampleValues) list(f *crField, path string, full bool) (any, error) {
 		if err != nil {
 			return nil, err
 		}
-		v.uniqueKey(f, items, item) // a repeated item gets a key of its own, when it can
+		v.uniqueKey(f, path, items, item, true) // a repeated item gets a key of its own, when it can
 		items = append(items, item)
 	}
 	return items, nil
@@ -626,7 +626,7 @@ func (v *sampleValues) listItems(f *crField, path string, full bool) (any, error
 		if err != nil {
 			return nil, err
 		}
-		if len(v.cov.covered) == before || !v.uniqueKey(f, items, item) {
+		if len(v.cov.covered) == before || !v.uniqueKey(f, path, items, item, false) {
 			v.cov.restore(trial) // the item adds nothing, or has no free key: drop it, and what it would have recorded
 			break
 		}
@@ -643,11 +643,12 @@ func (v *sampleValues) plannedItems(f *crField, path string, full bool, planned 
 		v.layers = append(v.layers, layer)
 		trial := v.cov.snapshot()
 		item, err := v.item(f, f.typ.Elem, path, full)
+		fits := err == nil && v.uniqueKey(f, path, items, item, false) // the layer still holds the keys that the entry sets
 		v.layers = v.layers[:len(v.layers)-1]
 		if err != nil {
 			return nil, err
 		}
-		if !v.uniqueKey(f, items, item) {
+		if !fits {
 			v.cov.restore(trial) // no free key: the entry waits, and records nothing
 			continue
 		}
@@ -1081,10 +1082,22 @@ func listMapKeys(f *crField) []string {
 	return keys
 }
 
-// uniqueKey makes the key of a new item differ from the keys of the items before it. A string key
-// gets a suffix. It reports false when the key cannot be made unique: an enum key that repeats, or
-// a string key with a pattern or a length limit that the suffix would break.
-func (v *sampleValues) uniqueKey(f *crField, items []any, item any) bool {
+// explicitKey reports whether a value of e2e.yaml sets the key of the items at a path: a fixed
+// value, or a value of a when entry. Such a key is sent as it is. Any other key is made up.
+func (v *sampleValues) explicitKey(path, key string) bool {
+	if _, ok := v.layerValue(path + "." + key); ok {
+		return true
+	}
+	_, ok := v.fixed(path + "." + key)
+	return ok
+}
+
+// uniqueKey makes the key of a new item differ from the keys of the items before it. A made-up
+// string key gets a suffix. A key that e2e.yaml sets is never changed, so the item reports false
+// and waits for another copy. A padded item (pad) is a copy that the contract minimum needs: its
+// key is always made up. It also reports false when the key cannot be made unique: an enum key
+// that repeats, or a string key with a pattern or a length limit that the suffix would break.
+func (v *sampleValues) uniqueKey(f *crField, path string, items []any, item any, pad bool) bool {
 	keys := listMapKeys(f)
 	if len(keys) == 0 {
 		return true
@@ -1122,7 +1135,7 @@ func (v *sampleValues) uniqueKey(f *crField, items []any, item any) bool {
 	}
 	for _, key := range keys {
 		original, ok := get(item, key).(string)
-		if !ok || f.object == nil {
+		if !ok || f.object == nil || (!pad && v.explicitKey(path, key)) {
 			continue
 		}
 		i := slices.IndexFunc(f.object.Fields, func(c *crField) bool { return c.JSON == key })
