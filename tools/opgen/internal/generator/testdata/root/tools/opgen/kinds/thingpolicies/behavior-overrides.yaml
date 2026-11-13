@@ -1,0 +1,21 @@
+resource: GetThingPoliciesResponse
+mode: existing
+validators:
+  inferred: true
+  fields:
+    spec.policies[].tags:
+      add: ['+kubebuilder:validation:MaxItems=20']
+api:
+  overwrite: {}
+  operations:
+    create: ThingPoliciesService_OverwriteThingPolicies
+    get: ThingPoliciesService_GetThingPolicies
+    update: ThingPoliciesService_OverwriteThingPolicies
+    delete: ThingPoliciesService_OverwriteThingPolicies
+types:
+  ThingPolicy:
+    requestWrapper: item
+    fields:
+      enabled: {name: disabled, requestAs: disabled}
+      rules: {inline: true}
+      tags: {joinedBy: ","}

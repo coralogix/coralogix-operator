@@ -7,7 +7,9 @@ mode="${1:?usage: $0 before|after|cleanup}"
 cr="upgrade-test-{{.Lower}}"
 namespace="default"
 name="${NAME:?NAME is required}"
+{{- if not .Overwrite}}
 id_file="${RUNNER_TEMP:-/tmp}/upgrade-test-{{.Lower}}.id"
+{{- end}}
 
 jsonpath() {
     kubectl get {{.Lower}} "$cr" -n "$namespace" -o jsonpath="$1"
@@ -16,10 +18,12 @@ jsonpath() {
 gone() {
     ! kubectl get {{.Lower}} "$cr" -n "$namespace" >/dev/null 2>&1
 }
+{{- if not .Overwrite}}
 
 has_id() {
     [ -n "$(jsonpath '{.status.id}')" ]
 }
+{{- end}}
 
 synced() {
     local generation
@@ -47,15 +51,28 @@ JSON
     jq -n --arg name "$cr" --arg namespace "$namespace" --argjson spec "$spec" \
         '{apiVersion:"coralogix.com/v1alpha1", kind:"{{.Kind}}", metadata:{name:$name,namespace:$namespace}, spec:$spec}' \
         | kubectl apply -f -
+{{- if .Overwrite}}
+    # The {{.Kind}} is the whole list of the API: it has no status id.
+    wait_for synced
+{{- else}}
     wait_for has_id
     jsonpath '{.status.id}' > "$id_file"
+{{- end}}
     ;;
 after)
     wait_for synced
+{{- if not .Overwrite}}
     [ "$(jsonpath '{.status.id}')" = "$(cat "$id_file")" ] || { echo "{{.Kind}} id changed after upgrade"; exit 1; }
+{{- end}}
     value="$(printf '%s' '{{.E2E.Upgrade.Value}}' | sed "s/@{run}/$name/g")"
+{{- if .Overwrite}}
+    # The field is a path into the list, such as policies/0/description.
+    patch="$(jq -n --arg path '/spec/{{.E2E.Upgrade.Field}}' --arg value "$value" '[{op:"add", path:$path, value:$value}]')"
+    kubectl patch {{.Lower}} "$cr" -n "$namespace" --type json -p "$patch"
+{{- else}}
     patch="$(jq -n --arg field '{{.E2E.Upgrade.Field}}' --arg value "$value" '{spec:{($field):$value}}')"
     kubectl patch {{.Lower}} "$cr" -n "$namespace" --type merge -p "$patch"
+{{- end}}
     wait_for synced
     kubectl delete {{.Lower}} "$cr" -n "$namespace" --wait=false
     wait_for gone

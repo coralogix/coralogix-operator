@@ -195,6 +195,10 @@ func (a API) Check() error {
 type Type struct {
 	Fields map[string]Field `yaml:"fields"`
 	Groups map[string]Group `yaml:"groups"`
+	// RequestWrapper is the property of the request object of a nested component that holds its
+	// fields, for example policy in {"policy": {...}, "logRules": {...}}. The CR shows the fields
+	// beside the other fields of the component, as Get does. Mode existing only.
+	RequestWrapper string `yaml:"requestWrapper"`
 }
 
 // Group is a released CR object that holds fields from one API component.
@@ -244,8 +248,16 @@ type Field struct {
 	RequestValueBy map[string]string `yaml:"requestValueBy"`
 	// RequestAs is the path of the property that holds the field in the Create and Update bodies,
 	// when it is not the name of the field. A dot goes into an object: "integrationParameters.parameters".
-	// The CR keeps the name of the field. It applies to a field of the resource in an existing kind.
+	// The CR keeps the name of the field. It applies to a field of the resource in an existing kind,
+	// and, with one segment, to a field of a nested component.
 	RequestAs string `yaml:"requestAs"`
+	// Inline shows the fields of an optional object beside the other fields of its component, as the
+	// released CR does. Create and Update rebuild the object when the CR sets one of them. Mode
+	// existing only.
+	Inline bool `yaml:"inline"`
+	// JoinedBy shows a string that holds several values as a list. Create and Update join the items
+	// with this separator. Mode existing only.
+	JoinedBy string `yaml:"joinedBy"`
 }
 
 // Enum records the accepted API values and their custom resource spellings.
@@ -334,12 +346,24 @@ func (f *File) check() error {
 	if err := f.checkStatus(); err != nil {
 		return err
 	}
+	for _, component := range slices.Sorted(maps.Keys(f.Types)) {
+		wrapper := f.Types[component].RequestWrapper
+		switch {
+		case wrapper == "":
+		case f.Mode != ModeExisting:
+			return fmt.Errorf("types.%s.requestWrapper: a new kind follows the contract", component)
+		case component == f.Resource:
+			return fmt.Errorf("types.%s.requestWrapper: use api.requestWrapper for the resource", component)
+		case !validJSONName(wrapper):
+			return fmt.Errorf("types.%s.requestWrapper: %q is not a property name", component, wrapper)
+		}
+	}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
-		if !field.Skip && !field.SendNullAsEmpty && len(field.CreateAs) == 0 && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" && field.RequestAs == "" {
+		if !field.Skip && !field.SendNullAsEmpty && len(field.CreateAs) == 0 && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" && field.RequestAs == "" && !field.Inline && field.JoinedBy == "" {
 			return fmt.Errorf("%s: the line sets no key", line)
 		}
-		if field.Skip && (field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "") {
+		if field.Skip && (field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.Inline || field.JoinedBy != "") {
 			return fmt.Errorf("%s.skip: skip cannot change another property of the CR field", line)
 		}
 		if field.Skip && f.Mode != ModeExisting {
@@ -363,14 +387,33 @@ func (f *File) check() error {
 			if f.Mode != ModeExisting {
 				return fmt.Errorf("%s.requestAs: a new kind follows the contract", line)
 			}
-			if line.Component != f.Resource {
-				return fmt.Errorf("%s.requestAs: it applies only to a field of the resource", line)
+			if line.Component != f.Resource && strings.Contains(field.RequestAs, ".") {
+				return fmt.Errorf("%s.requestAs: a field of a nested component takes a name, not a path", line)
 			}
 			if err := (iacoverrides.Field{RequestAs: field.RequestAs}).Check(); err != nil {
 				return fmt.Errorf("%s.%w", line, err)
 			}
 			if field.Ref != nil || field.ReadOnly || len(field.RequestValueBy) != 0 || field.Unwrap != nil {
 				return fmt.Errorf("%s.requestAs: the line cannot set ref, readOnly, requestValueBy, or unwrap", line)
+			}
+		}
+		if field.Inline {
+			if f.Mode != ModeExisting {
+				return fmt.Errorf("%s.inline: a new kind follows the contract", line)
+			}
+			if line.Component == f.Resource {
+				return fmt.Errorf("%s.inline: it applies to a field of a nested component", line)
+			}
+			if field.SendNullAsEmpty || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.JoinedBy != "" || field.OmitEmptyInRequest {
+				return fmt.Errorf("%s.inline: the line cannot set another key", line)
+			}
+		}
+		if field.JoinedBy != "" {
+			if f.Mode != ModeExisting {
+				return fmt.Errorf("%s.joinedBy: a new kind follows the contract", line)
+			}
+			if field.Ref != nil || field.ReadOnly || field.SendNullAsEmpty || len(field.RequestValueBy) != 0 || field.Unwrap != nil || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" {
+				return fmt.Errorf("%s.joinedBy: the line cannot set ref, readOnly, sendNullAsEmpty, requestValueBy, unwrap, collection, listMapKey, or emptyObject", line)
 			}
 		}
 		if field.SendNullAsEmpty && f.Mode != ModeExisting {
@@ -664,7 +707,7 @@ func (f *File) checkAPI() error {
 	for i := 0; i < len(f.apiNode.Content); i += 2 {
 		key, value := f.apiNode.Content[i].Value, f.apiNode.Content[i+1]
 		switch key {
-		case "updateIDInBody", "operations", "customMethods", "serverSetID", "idProperty", "clientSetID", "delete", "updateMaskInBody", "requestWrapper", "requestValues":
+		case "updateIDInBody", "operations", "customMethods", "serverSetID", "idProperty", "clientSetID", "delete", "updateMaskInBody", "requestWrapper", "requestValues", "overwrite":
 		default:
 			return fmt.Errorf("api.%s: opgen does not support this api key", key)
 		}
@@ -743,6 +786,14 @@ func (f *File) Policy() model.Policy {
 		return model.Policy{}
 	}
 	exceptions := iacoverrides.Exceptions{API: f.API.API, Unwrap: f.Unwrap, Fields: map[string]map[string]iacoverrides.Field{}}
+	for _, component := range slices.Sorted(maps.Keys(f.Types)) {
+		if wrapper := f.Types[component].RequestWrapper; wrapper != "" {
+			if exceptions.RequestWrappers == nil {
+				exceptions.RequestWrappers = map[string]string{}
+			}
+			exceptions.RequestWrappers[component] = wrapper
+		}
+	}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
 		if !field.Skip && !field.ReadOnly && !field.Optional && field.Unwrap == nil && len(field.CreateAs) == 0 && field.RequestAs == "" {

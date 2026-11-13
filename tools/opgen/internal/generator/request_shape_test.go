@@ -370,7 +370,7 @@ func TestRequestAsLineIsChecked(t *testing.T) {
 	const head = "resource: Thing\nmode: existing\nvalidators: {inferred: true}\n"
 	for name, tc := range map[string]string{
 		"a new kind":           "resource: Thing\nmode: new\ntypes:\n  Thing:\n    fields:\n      note: {requestAs: memo}\n",
-		"a nested component":   head + "types:\n  ThingItem:\n    fields:\n      name: {requestAs: memo}\n",
+		"a nested path":        head + "types:\n  ThingItem:\n    fields:\n      name: {requestAs: a.memo}\n",
 		"an empty segment":     head + "types:\n  Thing:\n    fields:\n      note: {requestAs: a..b}\n",
 		"a trailing dot":       head + "types:\n  Thing:\n    fields:\n      note: {requestAs: a.}\n",
 		"skip on the line":     head + "types:\n  Thing:\n    fields:\n      note: {requestAs: memo, skip: true}\n",
@@ -383,6 +383,9 @@ func TestRequestAsLineIsChecked(t *testing.T) {
 	}
 	if _, err := overrides.Parse([]byte(head + "types:\n  Thing:\n    fields:\n      note: {requestAs: bundle.alpha}\n")); err != nil {
 		t.Errorf("a path with dots must be accepted: %v", err)
+	}
+	if _, err := overrides.Parse([]byte(head + "types:\n  ThingItem:\n    fields:\n      name: {requestAs: memo}\n")); err != nil {
+		t.Errorf("a name for a field of a nested component must be accepted: %v", err)
 	}
 }
 

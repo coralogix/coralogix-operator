@@ -40,7 +40,8 @@ type e2eFile struct {
 	Substitutions map[string]string `yaml:"substitutions"`
 	// Upgrade freezes the spec accepted by a released chart.
 	Upgrade *e2eUpgrade `yaml:"upgrade"`
-	// Omit lists optional top-level fields that cannot appear with other full-spec fields.
+	// Omit lists optional fields that cannot appear with other full-spec fields. A field of a list
+	// item takes the path without an index, for example policies.targets.
 	Omit []string `yaml:"omit"`
 	// Values are spec values by field path, for example config.http.endpoint. A value replaces the
 	// whole value that the generator makes up for that field. The path of a field inside a list item
@@ -101,6 +102,19 @@ type e2eData struct {
 	NameField             string // the Go path of a string name, "" when there is none
 	NamePtr               bool
 	Update                *updateData
+	// Overwrite is the e2e test of an overwrite resource, nil for another resource.
+	Overwrite *overwriteData
+}
+
+// overwriteData is the e2e test of an overwrite resource. The spec holds one list; the test gives its
+// item a unique name, finds the item by that name in the list that Get returns, and changes one field.
+type overwriteData struct {
+	List, ListGet   string // the Go field of the list in the spec and in the Get response
+	Name, NameGet   string // the Go field of the name of an item in the spec and in the Get response
+	NamePtr         bool   // the spec name is a pointer
+	NameGetPtr      bool   // the Get name is a pointer
+	Field, FieldGet string // the Go field that the update step changes, in the spec and in the Get response
+	Set, Want, Got  string
 }
 
 type fixtureData struct {
@@ -140,15 +154,8 @@ type sampleValues struct {
 func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap, e2e *e2eData, err error) {
 	v := &sampleValues{file: file, used: map[string]bool{}}
 	for _, name := range file.Omit {
-		found := false
-		for _, field := range d.Spec.Fields {
-			if field.JSON == name && field.Optional {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":omit", msg: "omit must name an optional top-level spec field"}
+		if !optionalPath(d.Spec, strings.Split(name, ".")) {
+			return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":omit", msg: "omit must name an optional spec field; a field of a list item takes the path without an index"}
 		}
 	}
 	if full, err = v.object(d.Spec, "", true); err != nil {
@@ -161,7 +168,9 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 		value := file.Minimal[name]
 		known := false
 		for _, field := range d.Spec.Fields {
-			if field.JSON == name && field.Optional {
+			// The list of an overwrite resource is required, and its items need the fields that the
+			// API needs.
+			if field.JSON == name && (field.Optional || d.Overwrite) {
 				known = true
 			}
 		}
@@ -207,6 +216,13 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 		}
 		e2e.Upgrade = &upgradeData{file.Upgrade.From, string(encoded), file.Upgrade.Field, file.Upgrade.Value}
 	}
+	if d.Overwrite {
+		if e2e.Overwrite, err = overwriteStep(d, ix, file, full); err != nil {
+			return nil, nil, nil, err
+		}
+		e2e.Serial = true // every write replaces the list of the whole account
+		return full, minimal, e2e, nil
+	}
 	candidates := updateCandidates(d.Spec, full)
 	for _, candidate := range candidates {
 		if candidate.field.API == "name" && candidate.field.typ.Kind == model.String {
@@ -218,6 +234,21 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 		return nil, nil, nil, err
 	}
 	return full, minimal, e2e, nil
+}
+
+// optionalPath reports whether path names an optional field of t: a top-level field, or a field
+// inside an object or the items of a list, named without an index.
+func optionalPath(t *crType, path []string) bool {
+	for _, f := range t.Fields {
+		if f.JSON != path[0] {
+			continue
+		}
+		if len(path) == 1 {
+			return f.Optional
+		}
+		return f.object != nil && optionalPath(f.object, path[1:])
+	}
+	return false
 }
 
 // object makes up the value of a struct: every field when full is true, only the required fields
@@ -242,7 +273,7 @@ func (v *sampleValues) object(t *crType, prefix string, full bool) (*omap, error
 			}
 		}
 		_, inGroup := skip[f.API]
-		if skip[f.API] || (full && prefix == "" && slices.Contains(v.file.Omit, f.JSON)) || (!full && f.Optional && !inGroup) {
+		if skip[f.API] || (full && slices.Contains(v.file.Omit, prefix+f.JSON)) || (!full && f.Optional && !inGroup) {
 			continue
 		}
 		value, err := v.field(f, prefix+f.JSON, full)
@@ -258,6 +289,10 @@ func (v *sampleValues) field(f *crField, path string, full bool) (any, error) {
 	if value, ok := v.file.Values[path]; ok {
 		v.used[path] = true
 		return value, nil
+	}
+	if f.joinedBy != "" {
+		item, err := stringValue(f.API, f.typ, path)
+		return []any{item}, err
 	}
 	if f.ref != "" {
 		return nil, &shapeError{code: codeE2ERequired, path: e2eFileName + ":values." + path,
@@ -445,6 +480,88 @@ func updateStep(d *kindData, ix *refIndex, candidates []updateCandidate, file *e
 	}
 	return nil, &shapeError{code: codeE2ERequired, path: e2eFileName + ":update",
 		msg: "the spec has no mutable string, bool, or integer outside a oneOf that the update step can change; set update in " + e2eFileName}
+}
+
+// overwriteStep builds the e2e test of an overwrite resource: the list field, the name of an item,
+// and the update step, the update line of e2e.yaml or the first mutable string, bool, or integer of
+// an item other than its name. A path of e2e.yaml names a field of an item without the list.
+func overwriteStep(d *kindData, ix *refIndex, file *e2eFile, full *omap) (*overwriteData, error) {
+	var list *crField
+	for _, f := range d.Spec.Fields {
+		if f.object != nil && strings.HasPrefix(f.GoType, "[]") {
+			if list != nil {
+				return nil, unsupported("spec", "the e2e test of an overwrite resource needs one list of objects")
+			}
+			list = f
+		}
+	}
+	if list == nil {
+		return nil, unsupported("spec", "the e2e test of an overwrite resource needs a list of objects")
+	}
+	resource, err := ix.typeRef("fields")
+	if err != nil {
+		return nil, err
+	}
+	listGet, err := ix.field(resource.Name, list.API)
+	if err != nil {
+		return nil, err
+	}
+	itemGet := strings.TrimPrefix(strings.TrimPrefix(listGet.Want, "[]"), "*")
+	d.ItemGetType = itemGet
+	out := &overwriteData{List: list.GoName, ListGet: listGet.Name}
+	var item any
+	if values, ok := objectValue(full, list.JSON).([]any); ok && len(values) != 0 {
+		item = values[0]
+	}
+	for _, f := range list.object.Fields {
+		if f.API != "name" || f.typ.Kind != model.String || f.joinedBy != "" {
+			continue
+		}
+		got, err := ix.field(itemGet, f.API)
+		if err != nil {
+			return nil, err
+		}
+		out.Name, out.NamePtr, out.NameGet, out.NameGetPtr = f.GoName, f.Optional, got.Name, strings.HasPrefix(got.Want, "*")
+	}
+	if out.Name == "" {
+		return nil, unsupported(list.JSON, "the e2e test of an overwrite resource needs a string name in each item")
+	}
+	for _, f := range list.object.Fields {
+		if file.Update != nil && file.Update.Field != f.JSON {
+			continue
+		}
+		if f.GoName == out.Name || f.immutable || f.enum != nil || f.ref != "" || f.joinedBy != "" || f.inlineParent != "" || f.typ.Pattern != "" ||
+			!slices.Contains([]model.Kind{model.String, model.Bool, model.Integer}, f.typ.Kind) {
+			if file.Update != nil {
+				return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":update.field",
+					msg: fmt.Sprintf("%s is not a mutable string, bool, or integer of an item", f.JSON)}
+			}
+			continue
+		}
+		value, err := updateValue(f, objectValue(item, f.JSON), file, false)
+		if err != nil {
+			return nil, err
+		}
+		got, err := ix.field(itemGet, f.API)
+		if err != nil {
+			return nil, err
+		}
+		read := "item." + got.Name
+		if strings.HasPrefix(got.Want, "*") {
+			read = fmt.Sprintf("ptr.Deref(%s, %s)", read, zeroLiteral(f.typ))
+		}
+		set := value
+		if f.Optional {
+			set = "ptr.To(" + value + ")"
+		}
+		out.Field, out.FieldGet, out.Set, out.Want, out.Got = f.GoName, got.Name, set, value, read
+		return out, nil
+	}
+	if file.Update != nil {
+		return nil, &shapeError{code: codeE2EUnused, path: e2eFileName + ":update.field", msg: "an item has no such field"}
+	}
+	return nil, &shapeError{code: codeE2ERequired, path: e2eFileName + ":update",
+		msg: "an item has no mutable string, bool, or integer that the update step can change; set update in " + e2eFileName}
 }
 
 // updateValue is the new value of the update step as Go code.
