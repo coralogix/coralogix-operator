@@ -489,6 +489,26 @@ func (v *sampleValues) enumNames(f *crField, path string, limit int) []string {
 // list makes up the items of a list. The default is one item. A sweep sends every open enum value
 // of a list of enums, and adds items of objects while each item adds coverage.
 func (v *sampleValues) list(f *crField, path string, full bool) (any, error) {
+	value, err := v.listItems(f, path, full)
+	if err != nil {
+		return nil, err
+	}
+	items, ok := value.([]any)
+	if !ok || f.typ.MinItems == nil {
+		return value, nil
+	}
+	// The contract may need more items than the entries or the sweep gave. Pad with ordinary items.
+	for int64(len(items)) < *f.typ.MinItems {
+		item, err := v.item(f, f.typ.Elem, path, full)
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+	return items, nil
+}
+
+func (v *sampleValues) listItems(f *crField, path string, full bool) (any, error) {
 	if !v.sweeping || !v.record {
 		item, err := v.item(f, f.typ.Elem, path, full)
 		return []any{item}, err

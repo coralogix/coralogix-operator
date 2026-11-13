@@ -497,3 +497,75 @@ func TestWhenSetsAFieldInsideAFixedObject(t *testing.T) {
 		t.Error("a copy must not change the fixed value of the file")
 	}
 }
+
+// An entry that matches an arm and entries for the values below that arm belong in one copy: the
+// arm selects the object, and the value fills it. They are no conflict.
+func TestWhenArmAndEntriesForItsValuesCoexist(t *testing.T) {
+	entries := append(queryEntries()[:0:0],
+		e2eWhen{Match: map[string]any{"query": "logs"}},
+		e2eWhen{Match: map[string]any{"query": "spans"}},
+		e2eWhen{Match: map[string]any{"query.spans.agg": "p"}},
+		e2eWhen{Match: map[string]any{"query.spans.agg": "q"}},
+		e2eWhen{Match: map[string]any{"query.spans.agg": "r"}},
+	)
+	steps, v, err := specsOf(t, coverageSpec(), &e2eFile{When: entries})
+	if err != nil {
+		t.Fatalf("the arm and the values below it must be reachable: %v", err)
+	}
+	if missing := v.cov.missing(); len(missing) != 0 {
+		t.Fatalf("left %v", missing)
+	}
+	all := stepsJSON(t, steps)
+	for _, want := range []string{`"agg":"q"`, `"agg":"r"`} {
+		if !strings.Contains(all, want) {
+			t.Errorf("no copy sends %s: %s", want, all)
+		}
+	}
+}
+
+func TestOverlaysOfAnArmAndOfAnotherArmsFieldConflict(t *testing.T) {
+	arm := newOverlay()
+	arm.arms["query"], arm.armNames["query"] = "spansQuery", "spans"
+	same := newOverlay()
+	same.values["query.spans.agg"] = "q"
+	other := newOverlay()
+	other.values["query.logs.severity"] = "e"
+	if arm.conflicts(same) || same.conflicts(arm) {
+		t.Error("a field below the selected arm belongs with it")
+	}
+	if !arm.conflicts(other) || !other.conflicts(arm) {
+		t.Error("a field below another arm has no place next to the selected arm")
+	}
+}
+
+// The contract can ask for more items than the selected entries give. The copy still needs them.
+func TestWhenPlannedItemsRespectTheListMinimum(t *testing.T) {
+	d := whenSpec()
+	two := int64(2)
+	for _, f := range d.Spec.Fields {
+		if f.JSON == "aggs" {
+			f.typ.MinItems = &two
+		}
+	}
+	steps, _, err := specsOf(t, d, &e2eFile{When: aggEntries()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, copy := range copiesOf(t, steps) {
+		if items, _ := copy["aggs"].([]any); len(items) < 2 {
+			t.Errorf("a copy holds %d items, the contract needs 2: %v", len(items), copy)
+		}
+	}
+}
+
+// A coupled field below a skipped arm needs no entry for each value: nothing can send them.
+func TestWhenCoupledValuesBelowASkippedArmNeedNoEntries(t *testing.T) {
+	entries := []e2eWhen{
+		{Match: map[string]any{"query": "logs"}},
+		{Match: map[string]any{"query.spans.agg": "p"}},
+	}
+	file := &e2eFile{When: entries, SkipChoices: map[string]e2eSkipChoices{"Query": {Choices: []string{"spans"}, Reason: "no span data"}}}
+	if _, _, err := specsOf(t, coverageSpec(), file); err != nil {
+		t.Fatalf("the values below a skipped arm need no entry or skip: %v", err)
+	}
+}

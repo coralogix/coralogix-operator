@@ -55,20 +55,26 @@ type whenOption struct {
 type overlay struct {
 	values map[string]any
 	arms   map[string]string
+	// armNames holds the CR name of each forced arm, to tell a field below the arm from a field below another arm.
+	armNames map[string]string
 }
 
-func newOverlay() *overlay { return &overlay{values: map[string]any{}, arms: map[string]string{}} }
+func newOverlay() *overlay {
+	return &overlay{values: map[string]any{}, arms: map[string]string{}, armNames: map[string]string{}}
+}
 
 // conflicts reports whether the other overlay forces something that this one forces differently.
 // The same path with the same value or the same arm is no conflict. A value and an arm at one
-// path conflict, and so do a path and a path below it: a literal object at a path replaces what
-// an entry sets or matches inside it.
+// path conflict. A path and a path below it conflict too: a literal object at a path replaces what
+// an entry sets or matches inside it. The exception is a forced arm and a path below that same arm,
+// which belong together.
 func (o *overlay) conflicts(other *overlay) bool {
 	type forced struct {
-		path  string
-		value any
-		arm   string
-		isArm bool
+		path    string
+		value   any
+		arm     string
+		armName string
+		isArm   bool
 	}
 	list := func(x *overlay) []forced {
 		var out []forced
@@ -76,9 +82,14 @@ func (o *overlay) conflicts(other *overlay) bool {
 			out = append(out, forced{path: path, value: value})
 		}
 		for path, arm := range x.arms {
-			out = append(out, forced{path: path, arm: arm, isArm: true})
+			out = append(out, forced{path: path, arm: arm, armName: x.armNames[path], isArm: true})
 		}
 		return out
+	}
+	// below reports whether the forced thing d is below the forced arm a: through the arm that a selects.
+	below := func(a, d forced) bool {
+		return a.isArm && a.armName != "" && strings.HasPrefix(d.path, a.path+"."+a.armName) &&
+			(len(d.path) == len(a.path)+1+len(a.armName) || d.path[len(a.path)+1+len(a.armName)] == '.')
 	}
 	for _, a := range list(o) {
 		for _, b := range list(other) {
@@ -87,8 +98,14 @@ func (o *overlay) conflicts(other *overlay) bool {
 				if a.isArm != b.isArm || (a.isArm && a.arm != b.arm) || (!a.isArm && !reflect.DeepEqual(a.value, b.value)) {
 					return true
 				}
-			case strings.HasPrefix(a.path, b.path+".") || strings.HasPrefix(b.path, a.path+"."):
-				return true
+			case strings.HasPrefix(b.path, a.path+"."):
+				if !below(a, b) {
+					return true
+				}
+			case strings.HasPrefix(a.path, b.path+"."):
+				if !below(b, a) {
+					return true
+				}
 			}
 		}
 	}
@@ -101,6 +118,7 @@ func (o *overlay) merge(other *overlay) {
 	}
 	for path, arm := range other.arms {
 		o.arms[path] = arm
+		o.armNames[path] = other.armNames[path]
 	}
 }
 
@@ -246,7 +264,7 @@ func (c *coverage) checkWhenCoverage() error {
 	}
 	var missing []string
 	for _, key := range c.universe {
-		if c.coupledKeys[key] && !named[key] && !c.skipped[key] {
+		if c.coupledKeys[key] && c.live[key] && !named[key] && !c.skipped[key] {
 			missing = append(missing, c.label[key])
 		}
 	}
@@ -312,6 +330,7 @@ func (c *coverage) choose(entry *whenEntry, planned map[coverageKey]bool) (assig
 		}
 		if choice.arm {
 			assign.arms[choice.path] = picked.arm
+			assign.armNames[choice.path] = picked.name
 			// Automatic arm choice is off at a coupled path, so the entry is the only way to reach the
 			// values below its arm. Keep it in play while any of them is open.
 			below += c.openBelow(picked.field, map[*crType]bool{})
