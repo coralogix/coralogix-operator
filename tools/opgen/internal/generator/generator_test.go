@@ -161,6 +161,8 @@ func TestKindNames(t *testing.T) {
 		"AIEvaluation": {"ai-evaluation", "aievaluations"},
 		"IPAccess":     {"ip-access", "ipaccesses"},
 		"Policy":       {"policy", "policies"},
+		// A kind that is already plural keeps its name.
+		"ThingPolicies": {"thing-policies", "thingpolicies"},
 	} {
 		if got := [2]string{kebab(kind), plural(kind)}; got != want {
 			t.Errorf("%s: got %v, want %v", kind, got, want)
@@ -219,7 +221,7 @@ func TestPublishRemovesFilesOfRemovedKinds(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, kindsFile), []byte("kinds:\n  - {kind: PatchThing, resource: PatchThing}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	for _, dir := range []string{"thing", "refthing", "bodyidthing", "wrappedthing", "hookthing", "hookdeletething"} {
+	for _, dir := range []string{"thing", "refthing", "bodyidthing", "wrappedthing", "hookthing", "hookdeletething", "thingpolicies"} {
 		if err := os.RemoveAll(filepath.Join(root, kindsDir, dir)); err != nil {
 			t.Fatal(err)
 		}

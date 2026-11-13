@@ -1,0 +1,9 @@
+omit: [policies.levels]
+upgrade:
+  from: '2.0'
+  spec:
+    policies:
+      - name: '@{run}'
+        pattern: before
+  field: policies/0/pattern
+  value: after

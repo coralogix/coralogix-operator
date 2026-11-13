@@ -57,7 +57,7 @@ var _ = Describe("{{.Kind}} coverage specs (generated)", func() {
 			Expect(k8sClient.Create(ctx, cr.DeepCopy(), client.DryRunAll)).To(Succeed())
 
 			By("sending every value and arm in the Create request")
-			body, err := cr.CreateRequest(ctx)
+			body, err := cr.CreateRequest(ctx{{if .HasNameLookup}}, nil{{end}})
 			Expect(err).NotTo(HaveOccurred())
 			sent, err := json.Marshal(body)
 			Expect(err).NotTo(HaveOccurred())

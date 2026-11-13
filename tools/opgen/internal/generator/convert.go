@@ -61,6 +61,9 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 	if err != nil {
 		return err
 	}
+	if r.Overwrite {
+		return b.overwriteOperations(r, d)
+	}
 	id, err := b.ix.field(resource.Name, r.ID())
 	if err != nil {
 		return err
@@ -134,6 +137,35 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 			return err
 		}
 		d.MaskInBody, d.MaskBodyField, d.MaskBodyValue = true, field.Name, field.Want == "string"
+	}
+	return nil
+}
+
+// overwriteOperations reads the SDK names of an overwrite resource (api.overwrite): one write is
+// Create, Update, and Delete. Delete sends every list of the write empty. The resource has no id.
+func (b *builder) overwriteOperations(r *model.Resource, d *kindData) error {
+	d.Overwrite = true
+	if d.CreateMethod != d.UpdateMethod || d.CreateMethod != d.DeleteMethod || d.CreateBody != d.UpdateBody {
+		return unsupported("api.operations", "an overwrite resource uses one write for Create, Update, and Delete")
+	}
+	if r.Create.Response.Field != "" || r.Get.Response.Field != "" {
+		return unsupported("resource", "an overwrite resource has no response wrapper")
+	}
+	for _, f := range r.Fields {
+		if f.Create == nil {
+			continue
+		}
+		ref, err := b.ix.field(d.CreateBody, f.Name)
+		if err != nil {
+			return err
+		}
+		if !strings.HasPrefix(ref.Want, "[]") && !strings.HasPrefix(ref.Want, "map[") {
+			return unsupported("resource."+f.Name, "the write of an overwrite resource sends a list or a map, got %s", ref.Want)
+		}
+		d.WriteFields = append(d.WriteFields, writeField{Field: ref.Name, Empty: qualify(ref.Want, b.alias) + "{}"})
+	}
+	if len(d.WriteFields) == 0 {
+		return unsupported("resource", "the write of an overwrite resource sends no field")
 	}
 	return nil
 }
@@ -285,16 +317,24 @@ func (b *builder) conversionAs(cr *crType, sdkType string, fields []*model.Field
 	}
 	name := "to" + sdkType + suffix
 	b.convs[key] = name
-	previous := b.conversionSuffix
-	b.conversionSuffix = suffix
-	defer func() { b.conversionSuffix = previous }()
+	previous, previousOut := b.conversionSuffix, b.outVar
+	b.conversionSuffix, b.outVar = suffix, ""
+	defer func() { b.conversionSuffix, b.outVar = previous, previousOut }()
 	var body strings.Builder
 	moved := &requestObject{}
 	for _, rf := range fields {
-		if len(rf.RequestPath) != 0 && cr == b.specType {
+		if len(rf.RequestPath) != 0 {
 			if err := b.movedField(cr, sdkType, rf, path, moved, &body); err != nil {
 				return "", err
 			}
+			continue
+		}
+		if children := inlineChildren(cr, rf.Name); len(children) != 0 {
+			code, err := b.inlineObject(cr, sdkType, rf, children, path)
+			if err != nil {
+				return "", err
+			}
+			body.WriteString(code)
 			continue
 		}
 		if folded := b.folds[rf.Name]; folded != nil && cr == b.specType && rf.Update != nil {
@@ -389,9 +429,18 @@ func (o *requestObject) conditions() (tests []string, ok bool) {
 func (b *builder) movedField(cr *crType, sdkType string, rf *model.Field, path string, root *requestObject, body *strings.Builder) error {
 	field, src := sourceField(cr, rf.Name)
 	if field == nil {
-		return unsupported(path+"."+rf.Name, "requestAs moves a field that the custom resource does not have")
+		if rf.Attrs.Required {
+			return unsupported(path+"."+rf.Name, "the request requires a field that the custom resource does not have")
+		}
+		return nil
 	}
-	b.used[overrides.Line{Component: b.file.Resource, Field: rf.Name}] = true
+	component := cr.schema
+	if component == "" {
+		component = b.file.Resource
+	}
+	if b.file.Field(component, rf.Name).RequestAs != "" {
+		b.used[overrides.Line{Component: component, Field: rf.Name}] = true
+	}
 	segments := rf.RequestPath
 	node, owner := root, sdkType
 	for _, segment := range segments[:len(segments)-1] {
@@ -428,6 +477,76 @@ func (b *builder) movedField(cr *crType, sdkType string, rf *model.Field, path s
 	}
 	node.leaves = append(node.leaves, requestLeaf{code: code, condition: sentCondition(field, src)})
 	return nil
+}
+
+// inlineChildren returns the CR fields of cr that an inline line moved out of the API object field
+// api, in order.
+func inlineChildren(cr *crType, api string) []*crField {
+	var out []*crField
+	for _, f := range cr.Fields {
+		if f.inlineParent == api {
+			out = append(out, f)
+		}
+	}
+	return out
+}
+
+// inlineObject writes the code that rebuilds an inlined object from the CR fields that show its
+// fields. An optional object is left out when the CR sets none of them.
+func (b *builder) inlineObject(cr *crType, sdkType string, rf *model.Field, children []*crField, path string) (string, error) {
+	if rf.Type.Kind != model.Object {
+		return "", unsupported(path+"."+rf.Name, "an inlined field must be an object in the request")
+	}
+	ref, err := b.ix.field(sdkType, rf.Name)
+	if err != nil {
+		return "", err
+	}
+	objectType := strings.TrimPrefix(ref.Want, "*")
+	object := b.temp("obj")
+	parent := b.out()
+	previous := b.outVar
+	b.outVar = object
+	defer func() { b.outVar = previous }()
+	var inner strings.Builder
+	var conditions []string
+	sent := map[string]bool{}
+	for _, nested := range rf.Type.Fields {
+		var crf *crField
+		for _, child := range children {
+			if child.API == nested.Name {
+				crf = child
+			}
+		}
+		if crf == nil {
+			if nested.Attrs.Required {
+				return "", unsupported(path+"."+rf.Name+"."+nested.Name, "the request requires a field of the inlined object that the custom resource does not have")
+			}
+			continue
+		}
+		sent[crf.API] = true
+		src := "in." + crf.GoName
+		code, err := b.assignFrom(crf, nested.Type, objectType, path+"."+crf.JSON, src)
+		if err != nil {
+			return "", err
+		}
+		inner.WriteString(code)
+		conditions = append(conditions, sentCondition(crf, src))
+	}
+	for _, child := range children {
+		if !sent[child.API] {
+			return "", unsupported(path+"."+child.JSON, "the request object %s has no field %s", objectType, child.API)
+		}
+	}
+	pointer := strings.HasPrefix(ref.Want, "*")
+	assign := parent + "." + ref.Name + " = " + object + "\n"
+	if !pointer {
+		assign = parent + "." + ref.Name + " = *" + object + "\n"
+	}
+	code := fmt.Sprintf("%s := &%s.%s{}\n%s%s", object, b.alias, objectType, inner.String(), assign)
+	if pointer && !slices.Contains(conditions, "") {
+		code = "if " + strings.Join(conditions, " || ") + " {\n" + code + "}\n"
+	}
+	return code, nil
 }
 
 // requestObjects writes the code that builds the objects of the tree and sets them in the body.
@@ -467,6 +586,10 @@ func sentCondition(f *crField, src string) string {
 	switch {
 	case f.sendNullAsEmpty:
 		return ""
+	case f.joinedBy != "":
+		if f.Optional {
+			return "len(" + src + ") != 0"
+		}
 	case f.typ.Kind == model.List || f.typ.Kind == model.Set || f.typ.Kind == model.Map:
 		if f.Optional || f.omitEmptyInRequest {
 			return "len(" + src + ") != 0"
@@ -646,6 +769,16 @@ func (b *builder) assignFrom(f *crField, rt *model.Type, owner, path, src string
 		return "", err
 	}
 	target := b.out() + "." + ref.Name
+	if f.joinedBy != "" {
+		if strings.TrimPrefix(ref.Want, "*") != "string" {
+			return "", unsupported(path, "joinedBy needs a string in the SDK, got %s", ref.Want)
+		}
+		code := b.set(target, ref.Want, fmt.Sprintf("strings.Join(%s, %q)", src, f.joinedBy), false)
+		if f.Optional {
+			return "if len(" + src + ") != 0 {\n" + code + "}\n", nil
+		}
+		return code, nil
+	}
 	if f.refForm == "split" {
 		sibling := strings.TrimSuffix(src, f.GoName) + goName(f.refSibling)
 		resolved := b.temp("id")
@@ -734,7 +867,8 @@ func (b *builder) value(f *crField, rt *model.Type, src, want, path string) (str
 			statements, value := b.referenceValue(f, item, path+"[]")
 			return fmt.Sprintf("%s := make([]%s, 0, len(%s))\nfor _, %s := range %s {\n%s%s = append(%s, %s)\n}\n", out, elemWant, src, item, src, statements, out, out, value), out, false, nil
 		}
-		if want != referenceWant(f) {
+		// A pointer is set from the value: the caller takes its address.
+		if strings.TrimPrefix(want, "*") != referenceWant(f) {
 			return "", "", false, unsupported(path, "a reference needs %s in the SDK, got %s", referenceWant(f), want)
 		}
 		statements, value := b.referenceValue(f, src, path)

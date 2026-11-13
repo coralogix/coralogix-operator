@@ -24,9 +24,10 @@ type {{.Name}} {{.GoType}}
 {{end -}}
 // {{.Kind}}Status defines the observed state of a {{.Kind}}.
 type {{.Kind}}Status struct {
+{{- if not .Overwrite}}
 	// +optional
 	ID *string `json:"id,omitempty"`
-
+{{end}}
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
@@ -55,9 +56,17 @@ func (in *{{.Kind}}) SetPrintableStatus(printableStatus string) {
 	in.Status.PrintableStatus = printableStatus
 }
 
+{{if .Overwrite -}}
+// HasIDInStatus is always true: the {{.Kind}} is the whole list of the API, which always exists. The
+// shared reconciler then takes the Update path, which writes the list.
+func (in *{{.Kind}}) HasIDInStatus() bool {
+	return true
+}
+{{- else -}}
 func (in *{{.Kind}}) HasIDInStatus() bool {
 	return in.Status.ID != nil && *in.Status.ID != ""
 }
+{{- end}}
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
@@ -66,6 +75,10 @@ func (in *{{.Kind}}) HasIDInStatus() bool {
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // {{.Kind}} is the Schema for the {{.Plural}} API.
+{{- if .Overwrite}}
+// NOTE: The {{.Kind}} is the whole list of the API. Each write replaces every item of the list,
+// so an item that the spec does not have is removed. Deleting the {{.Kind}} removes every item.
+{{- end}}
 type {{.Kind}} struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

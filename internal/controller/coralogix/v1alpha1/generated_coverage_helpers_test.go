@@ -27,7 +27,8 @@ import (
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 )
 
-// resolveEveryReference makes every resourceRef of a generated spec resolve to a status id, so the
+// resolveEveryReference makes every resourceRef of a generated spec resolve to a status id, and every
+// backend name to an id, so the
 // Create request of a coverage spec can be built with no cluster objects. It returns the function
 // that restores the client of the operator.
 func resolveEveryReference() func() {
@@ -47,5 +48,10 @@ func resolveEveryReference() func() {
 			return unstructured.SetNestedField(target.Object, "id-"+key.Name, "status", "id")
 		},
 	}).Build())
-	return func() { config.InitClient(original) }
+	// A backend name resolves without an SDK client set.
+	restoreNames := coralogixv1alpha1.SetNameLookupForTests(func(_, name string) string { return "id-" + name })
+	return func() {
+		restoreNames()
+		config.InitClient(original)
+	}
 }

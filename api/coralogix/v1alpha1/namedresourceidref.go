@@ -92,6 +92,18 @@ func NewNameLookupContext(clientSet *cxsdk.ClientSet) *NameLookupContext {
 	return &NameLookupContext{clientSet: clientSet}
 }
 
+// nameLookupForTests resolves backend names in a test that has no SDK client set. It is nil in the
+// operator.
+var nameLookupForTests func(lookupKey, name string) string
+
+// SetNameLookupForTests makes every backend name lookup return resolve(lookupKey, name), without an
+// SDK client set, until the returned function restores the real lookup. Only tests call it.
+func SetNameLookupForTests(resolve func(lookupKey, name string) string) (restore func()) {
+	previous := nameLookupForTests
+	nameLookupForTests = resolve
+	return func() { nameLookupForTests = previous }
+}
+
 // ResolveNamedResourceID resolves an id, a custom resource, or a backend name.
 func ResolveNamedResourceID(ctx context.Context, namespace string, ref NamedResourceIDRef, kind, version, lookupKey string, lookup *NameLookupContext, byName func(context.Context, *cxsdk.ClientSet, string) (string, error)) (string, error) {
 	if ref.BackendRef != nil {
@@ -100,6 +112,9 @@ func ResolveNamedResourceID(ctx context.Context, namespace string, ref NamedReso
 		}
 		if ref.BackendRef.Name == nil {
 			return "", fmt.Errorf("the %s backend reference has no id or name", kind)
+		}
+		if nameLookupForTests != nil {
+			return nameLookupForTests(lookupKey, *ref.BackendRef.Name), nil
 		}
 		if lookup == nil || lookup.clientSet == nil || byName == nil {
 			return "", fmt.Errorf("the %s name lookup is not configured", kind)

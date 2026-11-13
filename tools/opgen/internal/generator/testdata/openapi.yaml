@@ -13,6 +13,11 @@
 # own: title is heading in the requests, and note is extra.note (requestAs).
 # RefThing: a kind that users already have, with a required and an optional id of a Thing. Its
 # behavior-overrides file makes both ids references (the ref key).
+# ThingPolicies: an overwrite resource (api.overwrite), as the TCO policies API has it. One PUT
+# replaces the whole list, and Delete sends it empty. A written item holds its fields in "item"
+# (types.<Component>.requestWrapper), next to its rules, an arm of a oneOf of the response that the
+# CR shows inline. The response has the other arm too, which no request sends. Its enabled is
+# disabled in the request, and its tags are one string of comma-separated values (joinedBy).
 openapi: 3.1.0
 info:
   title: Synthetic things API
@@ -510,6 +515,38 @@ paths:
           content:
             application/json:
               schema: {type: object}
+  /thing-policies:
+    get:
+      tags: [Thing Policies Service]
+      operationId: ThingPoliciesService_GetThingPolicies
+      responses:
+        '200':
+          description: Found
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/GetThingPoliciesResponse'}
+    put:
+      tags: [Thing Policies Service]
+      operationId: ThingPoliciesService_OverwriteThingPolicies
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: OverwriteThingPoliciesRequest
+              type: object
+              required: [policies]
+              properties:
+                policies:
+                  type: array
+                  maxItems: 10
+                  items: {$ref: '#/components/schemas/CreateThingPolicyRequest'}
+      responses:
+        '200':
+          description: Overwritten
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/OverwriteThingPoliciesResponse'}
 components:
   schemas:
     Thing:
@@ -701,3 +738,55 @@ components:
         id: {type: string, readOnly: true}
         name: {type: string, minLength: 1, maxLength: 100, x-coralogix-presence: true, description: The name.}
         limit: {type: integer, format: int32, minimum: 1, maximum: 5, x-coralogix-presence: true}
+    GetThingPoliciesResponse:
+      type: object
+      required: [policies]
+      properties:
+        policies:
+          type: array
+          maxItems: 100
+          items: {$ref: '#/components/schemas/ThingPolicy'}
+    OverwriteThingPoliciesResponse:
+      type: object
+      properties:
+        policies:
+          type: array
+          items: {$ref: '#/components/schemas/ThingPolicy'}
+    ThingPolicy:
+      type: object
+      required: [id, name]
+      oneOf:
+        - {type: object, required: [rules]}
+        - {type: object, required: [otherRules]}
+      properties:
+        id: {type: string, readOnly: true, x-coralogix-presence: true}
+        name: {type: string, minLength: 1, maxLength: 50, x-coralogix-presence: true}
+        enabled: {type: boolean}
+        tags: {type: string, maxLength: 200, x-coralogix-presence: true}
+        rules: {$ref: '#/components/schemas/ThingPolicyRules'}
+        otherRules: {$ref: '#/components/schemas/ThingPolicyOtherRules'}
+    CreateThingPolicyRequest:
+      type: object
+      required: [item, rules]
+      properties:
+        item: {$ref: '#/components/schemas/CreateThingPolicyItem'}
+        rules: {$ref: '#/components/schemas/ThingPolicyRules'}
+    CreateThingPolicyItem:
+      type: object
+      required: [name]
+      properties:
+        name: {type: string, minLength: 1, maxLength: 50, x-coralogix-presence: true}
+        disabled: {type: boolean}
+        tags: {type: string, maxLength: 200, x-coralogix-presence: true}
+    ThingPolicyRules:
+      type: object
+      properties:
+        pattern: {type: string, minLength: 1, x-coralogix-presence: true}
+        levels:
+          type: array
+          maxItems: 3
+          items: {type: string}
+    ThingPolicyOtherRules:
+      type: object
+      properties:
+        code: {type: string, x-coralogix-presence: true}

@@ -42,6 +42,9 @@ func (b *builder) hooks(d *kindData) error {
 		BeforeDelete: file.HasHook(overrides.HookBeforeDelete),
 		Delete:       file.HasHook(overrides.HookDelete),
 	}
+	if file != nil && d.Overwrite && (len(file.Hooks) != 0 || len(file.Status) != 0) {
+		return unsupported("hooks", "an overwrite resource has no hooks or extra status fields yet")
+	}
 	if file != nil {
 		d.Hooks.Any = len(file.Hooks) != 0
 		for _, name := range sortedKeys(file.Status) {
