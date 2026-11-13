@@ -1,0 +1,241 @@
+{
+  "cases": [
+    {
+      "name": "create, get, replace, get, delete, get, delete again, replace after delete",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/dashboards/dashboards/v1",
+          "body": {
+            "requestId": "cxo-fidelity-create-a",
+            "dashboard": {
+              "name": "cxo-fidelity-a",
+              "layout": {}
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/dashboards/dashboards/v1/{{id}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/dashboards/dashboards/v1",
+          "body": {
+            "requestId": "cxo-fidelity-replace-a",
+            "dashboard": {
+              "name": "cxo-fidelity-a2",
+              "layout": {},
+              "id": "{{id}}",
+              "description": "replaced"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/dashboards/dashboards/v1/{{id}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/dashboards/dashboards/v1/{{id}}"
+        },
+        {
+          "method": "GET",
+          "path": "/dashboards/dashboards/v1/{{id}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/dashboards/dashboards/v1/{{id}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/dashboards/dashboards/v1",
+          "body": {
+            "requestId": "cxo-fidelity-replace-a3",
+            "dashboard": {
+              "name": "cxo-fidelity-a3",
+              "layout": {},
+              "id": "{{id}}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "access policy: set on create, kept when omitted on replace, explicit empty on replace",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/dashboards/dashboards/v1",
+          "body": {
+            "requestId": "cxo-fidelity-create-b",
+            "accessPolicy": "{\"version\":\"2025-01-01\",\"default\":{\"permissions\":{\"team-dashboards:Read\":\"grant\",\"team-dashboards:ReadAccessPolicy\":\"grant\",\"team-dashboards:Update\":\"grant\",\"team-dashboards:UpdateAccessPolicy\":\"grant\"}},\"rules\":[]}",
+            "dashboard": {
+              "name": "cxo-fidelity-b",
+              "layout": {}
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/dashboards/dashboards/v1/{{id}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/dashboards/dashboards/v1",
+          "body": {
+            "requestId": "cxo-fidelity-replace-b",
+            "dashboard": {
+              "name": "cxo-fidelity-b2",
+              "layout": {},
+              "id": "{{id}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/dashboards/dashboards/v1/{{id}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/dashboards/dashboards/v1",
+          "body": {
+            "requestId": "cxo-fidelity-replace-b3",
+            "accessPolicy": "",
+            "dashboard": {
+              "name": "cxo-fidelity-b3",
+              "layout": {},
+              "id": "{{id}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/dashboards/dashboards/v1/{{id}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/dashboards/dashboards/v1/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "replace keeps a description that the body omits",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/dashboards/dashboards/v1",
+          "body": {
+            "requestId": "cxo-fidelity-create-c",
+            "dashboard": {
+              "name": "cxo-fidelity-c",
+              "layout": {},
+              "description": "kept?"
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PUT",
+          "path": "/dashboards/dashboards/v1",
+          "body": {
+            "requestId": "cxo-fidelity-replace-c",
+            "dashboard": {
+              "name": "cxo-fidelity-c2",
+              "layout": {},
+              "id": "{{id}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/dashboards/dashboards/v1/{{id}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/dashboards/dashboards/v1/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create with an empty name",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/dashboards/dashboards/v1",
+          "body": {
+            "requestId": "cxo-fidelity-create-d",
+            "dashboard": {
+              "name": "",
+              "layout": {}
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "create without a layout",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/dashboards/dashboards/v1",
+          "body": {
+            "requestId": "cxo-fidelity-create-e",
+            "dashboard": {
+              "name": "cxo-fidelity-e"
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "create with a folder id that does not exist",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/dashboards/dashboards/v1",
+          "body": {
+            "requestId": "cxo-fidelity-create-f",
+            "dashboard": {
+              "name": "cxo-fidelity-f",
+              "layout": {},
+              "folderId": {
+                "value": "00000000-0000-4000-8000-0000000000f1"
+              }
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "get, delete and replace an id that never existed",
+      "steps": [
+        {
+          "method": "GET",
+          "path": "/dashboards/dashboards/v1/cxoFidelityMissing000"
+        },
+        {
+          "method": "DELETE",
+          "path": "/dashboards/dashboards/v1/cxoFidelityMissing000"
+        },
+        {
+          "method": "PUT",
+          "path": "/dashboards/dashboards/v1",
+          "body": {
+            "requestId": "cxo-fidelity-replace-g",
+            "dashboard": {
+              "name": "cxo-fidelity-g",
+              "layout": {},
+              "id": "cxoFidelityMissing000"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

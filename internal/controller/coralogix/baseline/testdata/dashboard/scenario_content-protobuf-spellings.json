@@ -1,0 +1,67 @@
+[
+  {
+    "step": "create with protobuf field spellings and a bare int64 number: both are accepted",
+    "spec": {
+      "json": "{\"name\":\"Spellings\",\"layout\":{\"sections\":[{\"rows\":[{\"widgets\":[{\"definition\":{\"line_chart\":{\"query_definitions\":[{\"id\":\"q1\",\"query\":{},\"series_count_limit\":20}]}}}]}]}]}}"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
+        "body": {
+          "dashboard": {
+            "layout": {
+              "sections": [
+                {
+                  "rows": [
+                    {
+                      "widgets": [
+                        {
+                          "definition": {
+                            "lineChart": {
+                              "queryDefinitions": [
+                                {
+                                  "id": "q1",
+                                  "query": {},
+                                  "seriesCountLimit": "20"
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "name": "Spellings"
+          },
+          "requestId": "cx-operator-create-<id-1>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "dashboard.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "baselineDashboard0001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

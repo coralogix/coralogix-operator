@@ -1,0 +1,81 @@
+[
+  {
+    "step": "import",
+    "spec": {
+      "accessPolicy": "{\"version\":\"2025-01-01\",\"default\":{\"permissions\":{\"team-dashboards:Read\":\"grant\",\"team-dashboards:Update\":\"deny\"}},\"rules\":[]}",
+      "json": "{\"name\":\"Imported dashboard\",\"layout\":{\"sections\":[]}}"
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1/baselineImportedDash1",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "dashboard.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "baselineImportedDash1",
+        "imported": true,
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "update: the access policy is sent",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
+        "body": {
+          "accessPolicy": "{\"version\":\"2025-01-01\",\"default\":{\"permissions\":{\"team-dashboards:Read\":\"grant\",\"team-dashboards:Update\":\"deny\"}},\"rules\":[]}",
+          "dashboard": {
+            "id": "baselineImportedDash1",
+            "layout": {
+              "sections": []
+            },
+            "name": "Imported dashboard"
+          },
+          "requestId": "cx-operator-replace-<id-1>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "dashboard.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "baselineImportedDash1",
+        "imported": true,
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

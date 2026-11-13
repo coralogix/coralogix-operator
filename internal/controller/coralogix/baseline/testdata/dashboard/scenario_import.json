@@ -1,0 +1,135 @@
+[
+  {
+    "step": "import: the dashboard is read, not created",
+    "spec": {
+      "json": "{\"name\":\"Imported dashboard\",\"layout\":{\"sections\":[]}}"
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1/baselineImportedDash1",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "dashboard.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "baselineImportedDash1",
+        "imported": true,
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "update: the spec replaces the remote content",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
+        "body": {
+          "dashboard": {
+            "id": "baselineImportedDash1",
+            "layout": {
+              "sections": []
+            },
+            "name": "Imported dashboard"
+          },
+          "requestId": "cx-operator-replace-<id-1>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "dashboard.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "baselineImportedDash1",
+        "imported": true,
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "resync",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
+        "body": {
+          "dashboard": {
+            "id": "baselineImportedDash1",
+            "layout": {
+              "sections": []
+            },
+            "name": "Imported dashboard"
+          },
+          "requestId": "cx-operator-replace-<id-2>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "dashboard.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "baselineImportedDash1",
+        "imported": true,
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1/baselineImportedDash1",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

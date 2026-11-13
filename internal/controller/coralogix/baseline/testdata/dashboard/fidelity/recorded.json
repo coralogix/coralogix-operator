@@ -1,0 +1,359 @@
+{
+  "cases": [
+    {
+      "name": "create, get, replace, get, delete, get, delete again, replace after delete",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "dashboardId": "{{id}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "accessPolicy": "{\"default\":{\"permissions\":{\"team-dashboards:Read\":\"grant\",\"team-dashboards:ReadAccessPolicy\":\"grant\",\"team-dashboards:Update\":\"grant\",\"team-dashboards:UpdateAccessPolicy\":\"grant\"}},\"rules\":[],\"version\":\"2025-01-01\"}",
+            "accessSource": "DASHBOARD_ACCESS_SOURCE_UNSPECIFIED",
+            "authorId": "\u003credacted\u003e",
+            "authorName": "\u003credacted\u003e",
+            "createdAt": "\u003ctime\u003e",
+            "createdOriginType": "TOKEN_ORIGIN_TYPE_API",
+            "dashboard": {
+              "actions": [],
+              "annotations": [],
+              "filters": [],
+              "id": "{{id}}",
+              "layout": {
+                "sections": []
+              },
+              "name": "cxo-fidelity-a",
+              "variables": [],
+              "variablesV2": []
+            },
+            "isLocked": false,
+            "permissions": {
+              "canRead": true,
+              "canReadAccessPolicy": true,
+              "canUpdate": true,
+              "canUpdateAccessPolicy": true
+            },
+            "resolvedWidgets": {},
+            "updatedAt": "\u003ctime\u003e",
+            "updatedOriginType": "TOKEN_ORIGIN_TYPE_API",
+            "updaterAuthorId": "\u003credacted\u003e",
+            "updaterName": "\u003credacted\u003e"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {
+            "accessPolicy": "{\"default\":{\"permissions\":{\"team-dashboards:Read\":\"grant\",\"team-dashboards:ReadAccessPolicy\":\"grant\",\"team-dashboards:Update\":\"grant\",\"team-dashboards:UpdateAccessPolicy\":\"grant\"}},\"rules\":[],\"version\":\"2025-01-01\"}",
+            "accessSource": "DASHBOARD_ACCESS_SOURCE_UNSPECIFIED",
+            "authorId": "\u003credacted\u003e",
+            "authorName": "\u003credacted\u003e",
+            "createdAt": "\u003ctime\u003e",
+            "createdOriginType": "TOKEN_ORIGIN_TYPE_API",
+            "dashboard": {
+              "actions": [],
+              "annotations": [],
+              "description": "replaced",
+              "filters": [],
+              "id": "{{id}}",
+              "layout": {
+                "sections": []
+              },
+              "name": "cxo-fidelity-a2",
+              "variables": [],
+              "variablesV2": []
+            },
+            "isLocked": false,
+            "permissions": {
+              "canRead": true,
+              "canReadAccessPolicy": true,
+              "canUpdate": true,
+              "canUpdateAccessPolicy": true
+            },
+            "resolvedWidgets": {},
+            "updatedAt": "\u003ctime\u003e",
+            "updatedOriginType": "TOKEN_ORIGIN_TYPE_API",
+            "updaterAuthorId": "\u003credacted\u003e",
+            "updaterName": "\u003credacted\u003e"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: dashboard with id {{id}} does not exist"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: dashboard with id {{id}} does not exist"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: dashboard with id {{id}} does not exist"
+          }
+        }
+      ]
+    },
+    {
+      "name": "access policy: set on create, kept when omitted on replace, explicit empty on replace",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "dashboardId": "{{id}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "accessPolicy": "{\"default\":{\"permissions\":{\"team-dashboards:Read\":\"grant\",\"team-dashboards:ReadAccessPolicy\":\"grant\",\"team-dashboards:Update\":\"grant\",\"team-dashboards:UpdateAccessPolicy\":\"grant\"}},\"rules\":[],\"version\":\"2025-01-01\"}",
+            "accessSource": "DASHBOARD_ACCESS_SOURCE_UNSPECIFIED",
+            "authorId": "\u003credacted\u003e",
+            "authorName": "\u003credacted\u003e",
+            "createdAt": "\u003ctime\u003e",
+            "createdOriginType": "TOKEN_ORIGIN_TYPE_API",
+            "dashboard": {
+              "actions": [],
+              "annotations": [],
+              "filters": [],
+              "id": "{{id}}",
+              "layout": {
+                "sections": []
+              },
+              "name": "cxo-fidelity-b",
+              "variables": [],
+              "variablesV2": []
+            },
+            "isLocked": false,
+            "permissions": {
+              "canRead": true,
+              "canReadAccessPolicy": true,
+              "canUpdate": true,
+              "canUpdateAccessPolicy": true
+            },
+            "resolvedWidgets": {},
+            "updatedAt": "\u003ctime\u003e",
+            "updatedOriginType": "TOKEN_ORIGIN_TYPE_API",
+            "updaterAuthorId": "\u003credacted\u003e",
+            "updaterName": "\u003credacted\u003e"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {
+            "accessPolicy": "{\"default\":{\"permissions\":{\"team-dashboards:Read\":\"grant\",\"team-dashboards:ReadAccessPolicy\":\"grant\",\"team-dashboards:Update\":\"grant\",\"team-dashboards:UpdateAccessPolicy\":\"grant\"}},\"rules\":[],\"version\":\"2025-01-01\"}",
+            "accessSource": "DASHBOARD_ACCESS_SOURCE_UNSPECIFIED",
+            "authorId": "\u003credacted\u003e",
+            "authorName": "\u003credacted\u003e",
+            "createdAt": "\u003ctime\u003e",
+            "createdOriginType": "TOKEN_ORIGIN_TYPE_API",
+            "dashboard": {
+              "actions": [],
+              "annotations": [],
+              "filters": [],
+              "id": "{{id}}",
+              "layout": {
+                "sections": []
+              },
+              "name": "cxo-fidelity-b2",
+              "variables": [],
+              "variablesV2": []
+            },
+            "isLocked": false,
+            "permissions": {
+              "canRead": true,
+              "canReadAccessPolicy": true,
+              "canUpdate": true,
+              "canUpdateAccessPolicy": true
+            },
+            "resolvedWidgets": {},
+            "updatedAt": "\u003ctime\u003e",
+            "updatedOriginType": "TOKEN_ORIGIN_TYPE_API",
+            "updaterAuthorId": "\u003credacted\u003e",
+            "updaterName": "\u003credacted\u003e"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {
+            "accessPolicy": "",
+            "accessSource": "DASHBOARD_ACCESS_SOURCE_UNSPECIFIED",
+            "authorId": "\u003credacted\u003e",
+            "authorName": "\u003credacted\u003e",
+            "createdAt": "\u003ctime\u003e",
+            "createdOriginType": "TOKEN_ORIGIN_TYPE_API",
+            "dashboard": {
+              "actions": [],
+              "annotations": [],
+              "filters": [],
+              "id": "{{id}}",
+              "layout": {
+                "sections": []
+              },
+              "name": "cxo-fidelity-b3",
+              "variables": [],
+              "variablesV2": []
+            },
+            "isLocked": false,
+            "permissions": {
+              "canRead": true,
+              "canReadAccessPolicy": true,
+              "canUpdate": true,
+              "canUpdateAccessPolicy": true
+            },
+            "resolvedWidgets": {},
+            "updatedAt": "\u003ctime\u003e",
+            "updatedOriginType": "TOKEN_ORIGIN_TYPE_API",
+            "updaterAuthorId": "\u003credacted\u003e",
+            "updaterName": "\u003credacted\u003e"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "replace keeps a description that the body omits",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "dashboardId": "{{id}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {
+            "accessPolicy": "{\"default\":{\"permissions\":{\"team-dashboards:Read\":\"grant\",\"team-dashboards:ReadAccessPolicy\":\"grant\",\"team-dashboards:Update\":\"grant\",\"team-dashboards:UpdateAccessPolicy\":\"grant\"}},\"rules\":[],\"version\":\"2025-01-01\"}",
+            "accessSource": "DASHBOARD_ACCESS_SOURCE_UNSPECIFIED",
+            "authorId": "\u003credacted\u003e",
+            "authorName": "\u003credacted\u003e",
+            "createdAt": "\u003ctime\u003e",
+            "createdOriginType": "TOKEN_ORIGIN_TYPE_API",
+            "dashboard": {
+              "actions": [],
+              "annotations": [],
+              "filters": [],
+              "id": "{{id}}",
+              "layout": {
+                "sections": []
+              },
+              "name": "cxo-fidelity-c2",
+              "variables": [],
+              "variablesV2": []
+            },
+            "isLocked": false,
+            "permissions": {
+              "canRead": true,
+              "canReadAccessPolicy": true,
+              "canUpdate": true,
+              "canUpdateAccessPolicy": true
+            },
+            "resolvedWidgets": {},
+            "updatedAt": "\u003ctime\u003e",
+            "updatedOriginType": "TOKEN_ORIGIN_TYPE_API",
+            "updaterAuthorId": "\u003credacted\u003e",
+            "updaterName": "\u003credacted\u003e"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "create with an empty name",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: dashboard name cannot be empty"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create without a layout",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: dashboard layout not found"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with a folder id that does not exist",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: dashboard folder with id DashboardFolderId(00000000-0000-4000-8000-0000000000f1) does not exist"
+          }
+        }
+      ]
+    },
+    {
+      "name": "get, delete and replace an id that never existed",
+      "steps": [
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: dashboard with id cxoFidelityMissing000 does not exist"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: dashboard with id cxoFidelityMissing000 does not exist"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: dashboard with id cxoFidelityMissing000 does not exist"
+          }
+        }
+      ]
+    }
+  ]
+}

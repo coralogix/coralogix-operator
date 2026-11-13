@@ -1,0 +1,51 @@
+[
+  {
+    "step": "create with a folder in the content and no folderRef: the content folder is sent",
+    "spec": {
+      "json": "{\"name\":\"Content folder\",\"layout\":{\"sections\":[]},\"folderPath\":{\"segments\":[\"from\",\"content\"]}}"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
+        "body": {
+          "dashboard": {
+            "folderPath": {
+              "segments": [
+                "from",
+                "content"
+              ]
+            },
+            "layout": {
+              "sections": []
+            },
+            "name": "Content folder"
+          },
+          "requestId": "cx-operator-create-<id-1>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "dashboard.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "baselineDashboard0001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]
