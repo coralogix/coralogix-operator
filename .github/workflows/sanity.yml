@@ -66,6 +66,10 @@ jobs:
         run: go mod download
       - name: Build and test the generator
         run: make opgen-test
+      - name: Check that each coverage spec runs in exactly one shard
+        run: |
+          make ginkgo
+          scripts/check-coverage-shards.sh
       - name: Test the generator version check
         run: bash tools/opgen/scripts/check-version-change_test.sh
       - name: Require a new generator version when its output changes

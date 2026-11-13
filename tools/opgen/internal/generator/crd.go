@@ -1011,17 +1011,23 @@ func (b *builder) enum(t *model.Type, path string) (*enumMap, error) {
 		return nil, err
 	}
 	base := lowerFirst(b.typeName(t.Schema))
-	e := &enumMap{Func: base + "ToAPI", Var: base + "Values", SDKType: b.alias + "." + sdkType}
+	e := &enumMap{Func: base + "ToAPI", Var: base + "Values", SDKType: b.alias + "." + sdkType, schema: t.Schema}
 	seen := map[string]string{}
 	line, overridden := b.file.Enum(t.Schema)
 	values := t.Values
 	if overridden {
-		values = slices.Clone(line.Values)
+		values = nil
+		for _, v := range t.Values {
+			if v != t.EnumZero && !line.IsRejected(v) {
+				values = append(values, v)
+			}
+		}
 		if line.Zero != "" && !line.RejectZero {
 			values = append([]string{t.EnumZero}, values...)
 		}
 	}
 	constantByName := map[string]string{}
+	apiByName := map[string]string{}
 	for _, v := range values {
 		name := enumName(v, t.EnumZero)
 		if overridden {
@@ -1047,6 +1053,7 @@ func (b *builder) enum(t *model.Type, path string) (*enumMap, error) {
 			return nil, err
 		}
 		constantByName[name] = b.alias + "." + c
+		apiByName[name] = v
 		e.Values = append(e.Values, enumValue{API: v, Name: name, Const: constantByName[name]})
 	}
 	if overridden {
@@ -1060,6 +1067,7 @@ func (b *builder) enum(t *model.Type, path string) (*enumMap, error) {
 			for i := range e.Values {
 				if e.Values[i].Name == alias {
 					e.Values[i].Const = constantByName[target]
+					e.Values[i].Send = apiByName[target]
 				}
 			}
 		}

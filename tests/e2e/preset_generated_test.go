@@ -20,6 +20,7 @@ package e2e
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -109,6 +110,8 @@ var _ = Describe("Preset (generated)", Ordered, Serial, func() {
 		minimalName string
 		fullID      string
 		full        *coralogixv1alpha1.Preset
+		// createdIDs holds the API id of every Preset that a step created, for the backstop in the cleanup.
+		createdIDs []string
 	)
 
 	BeforeAll(func() {
@@ -120,6 +123,9 @@ var _ = Describe("Preset (generated)", Ordered, Serial, func() {
 			for _, name := range []string{fullName, minimalName} {
 				_ = crClient.Delete(ctx, &coralogixv1alpha1.Preset{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: testNamespace}})
 			}
+			for _, id := range createdIDs {
+				removePresetGenerated(ctx, apiClient, id)
+			}
 		})
 	})
 
@@ -127,6 +133,7 @@ var _ = Describe("Preset (generated)", Ordered, Serial, func() {
 		full = newPresetGenerated(fullName, presetFullSpec)
 		Expect(crClient.Create(ctx, full)).To(Succeed())
 		fullID = waitForPresetGenerated(ctx, crClient, fullName)
+		createdIDs = append(createdIDs, fullID)
 
 		By("Reading the Preset from the API")
 		Eventually(func(g Gomega) {
@@ -166,6 +173,7 @@ var _ = Describe("Preset (generated)", Ordered, Serial, func() {
 		minimal := newPresetGenerated(minimalName, presetMinimalSpec)
 		Expect(crClient.Create(ctx, minimal)).To(Succeed())
 		id := waitForPresetGenerated(ctx, crClient, minimalName)
+		createdIDs = append(createdIDs, id)
 
 		Expect(crClient.Delete(ctx, minimal)).To(Succeed())
 		Eventually(func() bool {
@@ -174,6 +182,24 @@ var _ = Describe("Preset (generated)", Ordered, Serial, func() {
 		}, time.Minute, time.Second).Should(BeTrue())
 	})
 })
+
+// removePresetGenerated is the backstop of a test that fails. It waits until the operator has
+// deleted the Preset. When the operator does not, it deletes the Preset through the API. A
+// Preset that is already gone is a success.
+func removePresetGenerated(ctx context.Context, apiClient *presetsservice.PresetsServiceAPIService, id string) {
+	deadline := time.Now().Add(time.Minute)
+	for time.Now().Before(deadline) {
+		_, httpResp, err := apiClient.PresetsServiceGetPreset(ctx, id).Execute()
+		if cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err)) {
+			return
+		}
+		time.Sleep(time.Second)
+	}
+	_, httpResp, err := apiClient.PresetsServiceDeleteCustomPreset(ctx, id).Execute()
+	if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+		Expect(apiErr).To(Succeed())
+	}
+}
 
 // newPresetGenerated returns a Preset with the spec that the JSON holds.
 func newPresetGenerated(name, spec string) *coralogixv1alpha1.Preset {
@@ -191,9 +217,295 @@ func waitForPresetGenerated(ctx context.Context, crClient client.Client, name st
 	Eventually(func(g Gomega) {
 		cr := &coralogixv1alpha1.Preset{}
 		g.Expect(crClient.Get(ctx, types.NamespacedName{Name: name, Namespace: testNamespace}, cr)).To(Succeed())
-		g.Expect(meta.IsStatusConditionTrue(cr.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+		synced := meta.FindStatusCondition(cr.Status.Conditions, utils.ConditionTypeRemoteSynced)
+		g.Expect(synced).NotTo(BeNil(), "Preset %s has no RemoteSynced condition yet", name)
+		g.Expect(synced.Status).To(Equal(metav1.ConditionTrue), "Preset %s is not synced: %s: %s", name, synced.Reason, synced.Message)
 		g.Expect(cr.Status.ID).NotTo(BeNil())
 		id = *cr.Status.ID
 	}, time.Minute, time.Second).Should(Succeed())
 	return id
 }
+
+// The coverage steps send an accepted enum value and a oneOf arm that the full spec does not. Each
+// step creates all its copies, waits until each is synced, reads each from the API, and deletes each.
+var presetCoverageSteps = [][]string{
+	{
+		`{
+  "attachmentConfig": "AUTO",
+  "configOverrides": [
+    {
+      "conditionType": {
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "logsImmediateTriggered"
+        }
+      },
+      "messageConfig": {
+        "fields": [
+          {
+            "fieldName": "title",
+            "template": "Coverage alert"
+          }
+        ]
+      },
+      "payloadType": "slack_structured"
+    }
+  ],
+  "connectorType": "slack",
+  "description": "sample-description",
+  "entityType": "alerts",
+  "name": "sample-name",
+  "parentId": "preset_system_slack_alerts_basic"
+}`,
+		`{
+  "attachmentConfig": "DISABLED",
+  "configOverrides": [
+    {
+      "conditionType": {
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "caseActivated"
+        }
+      },
+      "messageConfig": {
+        "fields": [
+          {
+            "fieldName": "headers",
+            "template": "{}"
+          },
+          {
+            "fieldName": "body",
+            "template": "{ \"id\": \"{{ case.id }}\" }"
+          }
+        ]
+      },
+      "payloadType": "generic_https_default"
+    }
+  ],
+  "connectorType": "genericHttps",
+  "description": "sample-description",
+  "entityType": "cases",
+  "name": "sample-name",
+  "parentId": "preset_system_generic_https_cases_empty"
+}`,
+		`{
+  "attachmentConfig": "ENABLED",
+  "configOverrides": [
+    {
+      "conditionType": {
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "metricThresholdMoreThanTriggered"
+        }
+      },
+      "messageConfig": {
+        "fields": [
+          {
+            "fieldName": "summary",
+            "template": "{{ alertDef.name }}"
+          }
+        ]
+      },
+      "payloadType": "pagerduty_triggered"
+    }
+  ],
+  "connectorType": "pagerDuty",
+  "description": "sample-description",
+  "entityType": "alerts",
+  "name": "sample-name",
+  "parentId": "preset_system_pagerduty_alerts_basic"
+}`,
+		`{
+  "attachmentConfig": "ENABLED",
+  "configOverrides": [
+    {
+      "conditionType": {
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "caseActivated"
+        }
+      },
+      "messageConfig": {
+        "fields": [
+          {
+            "fieldName": "title",
+            "template": "{{ case.title }}"
+          }
+        ]
+      },
+      "payloadType": "pagerduty_incidents_default"
+    }
+  ],
+  "connectorType": "pagerDutyIncidents",
+  "description": "sample-description",
+  "entityType": "cases",
+  "name": "sample-name",
+  "parentId": "preset_system_pagerduty_incidents_cases_basic"
+}`,
+		`{
+  "attachmentConfig": "ENABLED",
+  "configOverrides": [
+    {
+      "conditionType": {
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "logsImmediateTriggered"
+        }
+      },
+      "messageConfig": {
+        "fields": [
+          {
+            "fieldName": "customSubject",
+            "template": "{{ alertDef.name }}"
+          }
+        ]
+      },
+      "payloadType": "email_default"
+    }
+  ],
+  "connectorType": "email",
+  "description": "sample-description",
+  "entityType": "alerts",
+  "name": "sample-name",
+  "parentId": "preset_system_email_alerts"
+}`,
+		`{
+  "attachmentConfig": "ENABLED",
+  "configOverrides": [
+    {
+      "conditionType": {
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "caseActivated"
+        }
+      },
+      "messageConfig": {
+        "fields": [
+          {
+            "fieldName": "payload",
+            "template": "{ \"text\": \"{{ case.title }}\" }"
+          }
+        ]
+      },
+      "payloadType": "microsoft_teams_default"
+    }
+  ],
+  "connectorType": "microsoftTeams",
+  "description": "sample-description",
+  "entityType": "cases",
+  "name": "sample-name",
+  "parentId": "preset_system_microsoft_teams_cases_basic"
+}`,
+		`{
+  "attachmentConfig": "ENABLED",
+  "configOverrides": [
+    {
+      "conditionType": {
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "caseActivated"
+        }
+      },
+      "messageConfig": {
+        "fields": [
+          {
+            "fieldName": "detailType",
+            "template": "Coverage case"
+          },
+          {
+            "fieldName": "detail",
+            "template": "{ \"id\": \"{{ case.id }}\" }"
+          }
+        ]
+      },
+      "payloadType": "eventbridge_default"
+    }
+  ],
+  "connectorType": "eventBridge",
+  "description": "sample-description",
+  "entityType": "cases",
+  "name": "sample-name",
+  "parentId": "preset_system_eventbridge_cases_basic"
+}`,
+		`{
+  "attachmentConfig": "ENABLED",
+  "configOverrides": [
+    {
+      "conditionType": {
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "caseActivated"
+        }
+      },
+      "messageConfig": {
+        "fields": [
+          {
+            "fieldName": "title",
+            "template": "{{ case.title }}"
+          }
+        ]
+      },
+      "payloadType": "incident_io_default"
+    }
+  ],
+  "connectorType": "incidentIo",
+  "description": "sample-description",
+  "entityType": "cases",
+  "name": "sample-name",
+  "parentId": "preset_system_incident_io_cases_basic"
+}`,
+	},
+}
+
+var _ = Describe("Preset (coverage)", Ordered, Serial, Label("coverage"), func() {
+	var (
+		crClient  client.Client
+		apiClient *presetsservice.PresetsServiceAPIService
+		base      string
+	)
+
+	BeforeAll(func() {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		apiClient = newOpenAPIClientSet().Presets()
+		base = uniqueName("e2e-preset-cov")
+	})
+
+	for i, step := range presetCoverageSteps {
+		It(fmt.Sprintf("sends step %d", i+1), Label(fmt.Sprintf("coverage-preset-%d", i+1)), func(ctx context.Context) {
+			var (
+				objects []client.Object
+				names   []string
+				ids     []string
+			)
+			DeferCleanup(func(ctx context.Context) {
+				for _, object := range objects {
+					_ = crClient.Delete(ctx, object)
+				}
+				for _, id := range ids {
+					removePresetGenerated(ctx, apiClient, id)
+				}
+			})
+
+			for j, spec := range step {
+				name := fmt.Sprintf("%s-%d-%d", base, i+1, j+1)
+				cr := newPresetGenerated(name, spec)
+				Expect(crClient.Create(ctx, cr)).To(Succeed())
+				objects = append(objects, cr)
+				names = append(names, name)
+			}
+
+			By("Waiting until every copy is synced and the API returns it")
+			for _, name := range names {
+				id := waitForPresetGenerated(ctx, crClient, name)
+				ids = append(ids, id)
+				Eventually(func(g Gomega) {
+					_, httpResp, err := apiClient.PresetsServiceGetPreset(ctx, id).Execute()
+					g.Expect(cxsdk.NewAPIError(httpResp, err)).To(Succeed())
+				}, time.Minute, time.Second).Should(Succeed())
+			}
+
+			By("Deleting every copy")
+			for _, object := range objects {
+				Expect(crClient.Delete(ctx, object)).To(Succeed())
+			}
+			for _, id := range ids {
+				Eventually(func() bool {
+					_, httpResp, err := apiClient.PresetsServiceGetPreset(ctx, id).Execute()
+					return cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err))
+				}, time.Minute, time.Second).Should(BeTrue())
+			}
+		})
+	}
+})

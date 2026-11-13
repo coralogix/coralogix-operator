@@ -234,7 +234,8 @@ integration-tests:
 # next to the rest of the suite.
 E2E_PROCS ?= 4
 E2E_TIMEOUT ?= 30m
-E2E_GINKGO_LABEL_FILTER ?= !scim-migration
+# The coverage specs are generated and run in their own shards (tests/e2e/coverage-shards.yaml).
+E2E_GINKGO_LABEL_FILTER ?= !scim-migration && !coverage
 .PHONY: e2e-tests
 e2e-tests: ginkgo
 	$(GINKGO) --procs=$(E2E_PROCS) --timeout=$(E2E_TIMEOUT) --label-filter="$(E2E_GINKGO_LABEL_FILTER)" -v ./tests/e2e/

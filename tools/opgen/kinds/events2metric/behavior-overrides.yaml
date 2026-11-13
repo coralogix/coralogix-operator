@@ -84,5 +84,4 @@ enums:
   logs2metrics.v2.Severity:
     zero: unspecified
     rejectZero: true   # the released CR does not accept an explicit unspecified severity
-    values: [SEVERITY_DEBUG, SEVERITY_VERBOSE, SEVERITY_INFO, SEVERITY_WARNING, SEVERITY_ERROR, SEVERITY_CRITICAL]
     names: {SEVERITY_WARNING: warn}

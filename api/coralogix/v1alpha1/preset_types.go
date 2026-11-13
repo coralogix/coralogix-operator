@@ -33,7 +33,7 @@ type PresetSpec struct {
 	ConfigOverrides []PresetConfigOverrides `json:"configOverrides,omitempty"`
 
 	// Connector type.
-	// +kubebuilder:validation:Enum=slack;genericHttps;pagerDuty;pagerDutyIncidents;email;microsoftTeams;eventBridge;incidentIo
+	// +kubebuilder:validation:Enum=slack;genericHttps;pagerDuty;email;pagerDutyIncidents;microsoftTeams;eventBridge;incidentIo
 	ConnectorType string `json:"connectorType"`
 
 	// Human-readable description.

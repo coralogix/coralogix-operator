@@ -20,6 +20,7 @@ package e2e
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -98,6 +99,8 @@ var _ = Describe("View (generated)", Ordered, func() {
 		minimalName string
 		fullID      int32
 		full        *coralogixv1alpha1.View
+		// createdIDs holds the API id of every View that a step created, for the backstop in the cleanup.
+		createdIDs []int32
 	)
 
 	BeforeAll(func(ctx context.Context) {
@@ -122,6 +125,9 @@ var _ = Describe("View (generated)", Ordered, func() {
 			for _, name := range []string{fullName, minimalName} {
 				_ = crClient.Delete(ctx, &coralogixv1alpha1.View{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: testNamespace}})
 			}
+			for _, id := range createdIDs {
+				removeViewGenerated(ctx, apiClient, id)
+			}
 		})
 	})
 
@@ -129,6 +135,7 @@ var _ = Describe("View (generated)", Ordered, func() {
 		full = newViewGenerated(fullName, viewFullSpec)
 		Expect(crClient.Create(ctx, full)).To(Succeed())
 		fullID = waitForViewGenerated(ctx, crClient, fullName)
+		createdIDs = append(createdIDs, fullID)
 
 		By("Reading the View from the API")
 		Eventually(func(g Gomega) {
@@ -166,6 +173,7 @@ var _ = Describe("View (generated)", Ordered, func() {
 		minimal := newViewGenerated(minimalName, viewMinimalSpec)
 		Expect(crClient.Create(ctx, minimal)).To(Succeed())
 		id := waitForViewGenerated(ctx, crClient, minimalName)
+		createdIDs = append(createdIDs, id)
 
 		Expect(crClient.Delete(ctx, minimal)).To(Succeed())
 		Eventually(func() bool {
@@ -174,6 +182,24 @@ var _ = Describe("View (generated)", Ordered, func() {
 		}, time.Minute, time.Second).Should(BeTrue())
 	})
 })
+
+// removeViewGenerated is the backstop of a test that fails. It waits until the operator has
+// deleted the View. When the operator does not, it deletes the View through the API. A
+// View that is already gone is a success.
+func removeViewGenerated(ctx context.Context, apiClient *viewsservice.ViewsServiceAPIService, id int32) {
+	deadline := time.Now().Add(time.Minute)
+	for time.Now().Before(deadline) {
+		_, httpResp, err := apiClient.ViewsServiceGetView(ctx, id).Execute()
+		if cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err)) {
+			return
+		}
+		time.Sleep(time.Second)
+	}
+	_, httpResp, err := apiClient.ViewsServiceDeleteView(ctx, id).Execute()
+	if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+		Expect(apiErr).To(Succeed())
+	}
+}
 
 // newViewGenerated returns a View with the spec that the JSON holds.
 func newViewGenerated(name, spec string) *coralogixv1alpha1.View {
@@ -192,7 +218,9 @@ func waitForViewGenerated(ctx context.Context, crClient client.Client, name stri
 	Eventually(func(g Gomega) {
 		cr := &coralogixv1alpha1.View{}
 		g.Expect(crClient.Get(ctx, types.NamespacedName{Name: name, Namespace: testNamespace}, cr)).To(Succeed())
-		g.Expect(meta.IsStatusConditionTrue(cr.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+		synced := meta.FindStatusCondition(cr.Status.Conditions, utils.ConditionTypeRemoteSynced)
+		g.Expect(synced).NotTo(BeNil(), "View %s has no RemoteSynced condition yet", name)
+		g.Expect(synced.Status).To(Equal(metav1.ConditionTrue), "View %s is not synced: %s: %s", name, synced.Reason, synced.Message)
 		g.Expect(cr.Status.ID).NotTo(BeNil())
 		id = *cr.Status.ID
 	}, time.Minute, time.Second).Should(Succeed())
@@ -200,3 +228,170 @@ func waitForViewGenerated(ctx context.Context, crClient client.Client, name stri
 	Expect(err).NotTo(HaveOccurred())
 	return int32(parsedID)
 }
+
+// The coverage steps send an accepted enum value and a oneOf arm that the full spec does not. Each
+// step creates all its copies, waits until each is synced, reads each from the API, and deletes each.
+var viewCoverageSteps = [][]string{
+	{
+		`{
+  "filters": {
+    "filters": [
+      {
+        "name": "severity",
+        "selectedValues": {
+          "ERROR": true
+        }
+      }
+    ]
+  },
+  "folder": {
+    "resourceRef": {
+      "name": "view-folder-sample"
+    }
+  },
+  "name": "sample-name",
+  "searchQuery": {
+    "query": "sample-query",
+    "syntaxType": "dataprime"
+  },
+  "timeSelection": {
+    "quickSelection": {
+      "seconds": 0
+    }
+  },
+  "viewType": "templates"
+}`,
+		`{
+  "filters": {
+    "filters": [
+      {
+        "name": "severity",
+        "selectedValues": {
+          "ERROR": true
+        }
+      }
+    ]
+  },
+  "folder": {
+    "resourceRef": {
+      "name": "view-folder-sample"
+    }
+  },
+  "name": "sample-name",
+  "searchQuery": {
+    "query": "sample-query",
+    "syntaxType": "lucene"
+  },
+  "timeSelection": {
+    "customSelection": {
+      "fromTime": "2024-01-01T00:00:00Z",
+      "toTime": "2024-01-01T01:00:00Z"
+    }
+  },
+  "viewType": "archiveLogs"
+}`,
+		`{
+  "filters": {
+    "filters": [
+      {
+        "name": "severity",
+        "selectedValues": {
+          "ERROR": true
+        }
+      }
+    ]
+  },
+  "folder": {
+    "resourceRef": {
+      "name": "view-folder-sample"
+    }
+  },
+  "name": "sample-name",
+  "searchQuery": {
+    "query": "sample-query",
+    "syntaxType": "lucene"
+  },
+  "timeSelection": {
+    "customSelection": {
+      "fromTime": "2024-01-01T00:00:00Z",
+      "toTime": "2024-01-01T01:00:00Z"
+    }
+  },
+  "viewType": "archiveTemplates"
+}`,
+	},
+}
+
+var _ = Describe("View (coverage)", Ordered, Label("coverage"), func() {
+	var (
+		crClient  client.Client
+		apiClient *viewsservice.ViewsServiceAPIService
+		base      string
+	)
+
+	BeforeAll(func() {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		apiClient = newOpenAPIClientSet().Views()
+		base = uniqueName("e2e-view-cov")
+	})
+
+	for i, step := range viewCoverageSteps {
+		It(fmt.Sprintf("sends step %d", i+1), Label(fmt.Sprintf("coverage-view-%d", i+1)), func(ctx context.Context) {
+			var (
+				objects []client.Object
+				names   []string
+				ids     []int32
+			)
+			DeferCleanup(func(ctx context.Context) {
+				for _, object := range objects {
+					_ = crClient.Delete(ctx, object)
+				}
+				for _, id := range ids {
+					removeViewGenerated(ctx, apiClient, id)
+				}
+			})
+
+			for j, spec := range step {
+				name := fmt.Sprintf("%s-%d-%d", base, i+1, j+1)
+				{
+					fixture := &coralogixv1alpha1.ViewFolder{ObjectMeta: metav1.ObjectMeta{Name: name + "-folder", Namespace: testNamespace}}
+					decoder := json.NewDecoder(strings.NewReader(strings.ReplaceAll(`{"name":"@{run}-folder"}`, "@{run}", name)))
+					decoder.DisallowUnknownFields()
+					Expect(decoder.Decode(&fixture.Spec)).To(Succeed())
+					Expect(crClient.Create(ctx, fixture)).To(Succeed())
+					objects = append(objects, fixture)
+					Eventually(func(g Gomega) {
+						current := &coralogixv1alpha1.ViewFolder{}
+						g.Expect(crClient.Get(ctx, types.NamespacedName{Name: fixture.Name, Namespace: testNamespace}, current)).To(Succeed())
+						g.Expect(current.Status.ID).NotTo(BeNil())
+					}, time.Minute, time.Second).Should(Succeed())
+				}
+				cr := newViewGenerated(name, spec)
+				Expect(crClient.Create(ctx, cr)).To(Succeed())
+				objects = append(objects, cr)
+				names = append(names, name)
+			}
+
+			By("Waiting until every copy is synced and the API returns it")
+			for _, name := range names {
+				id := waitForViewGenerated(ctx, crClient, name)
+				ids = append(ids, id)
+				Eventually(func(g Gomega) {
+					_, httpResp, err := apiClient.ViewsServiceGetView(ctx, id).Execute()
+					g.Expect(cxsdk.NewAPIError(httpResp, err)).To(Succeed())
+				}, time.Minute, time.Second).Should(Succeed())
+			}
+
+			By("Deleting every copy")
+			for _, object := range objects {
+				Expect(crClient.Delete(ctx, object)).To(Succeed())
+			}
+			for _, id := range ids {
+				Eventually(func() bool {
+					_, httpResp, err := apiClient.ViewsServiceGetView(ctx, id).Execute()
+					return cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err))
+				}, time.Minute, time.Second).Should(BeTrue())
+			}
+		})
+	}
+})

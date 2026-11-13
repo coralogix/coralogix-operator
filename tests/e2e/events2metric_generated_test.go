@@ -20,6 +20,7 @@ package e2e
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -88,6 +89,8 @@ var _ = Describe("Events2Metric (generated)", Ordered, func() {
 		minimalName string
 		fullID      string
 		full        *coralogixv1alpha1.Events2Metric
+		// createdIDs holds the API id of every Events2Metric that a step created, for the backstop in the cleanup.
+		createdIDs []string
 	)
 
 	BeforeAll(func() {
@@ -99,6 +102,9 @@ var _ = Describe("Events2Metric (generated)", Ordered, func() {
 			for _, name := range []string{fullName, minimalName} {
 				_ = crClient.Delete(ctx, &coralogixv1alpha1.Events2Metric{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: testNamespace}})
 			}
+			for _, id := range createdIDs {
+				removeEvents2MetricGenerated(ctx, apiClient, id)
+			}
 		})
 	})
 
@@ -106,6 +112,7 @@ var _ = Describe("Events2Metric (generated)", Ordered, func() {
 		full = newEvents2MetricGenerated(fullName, events2MetricFullSpec)
 		Expect(crClient.Create(ctx, full)).To(Succeed())
 		fullID = waitForEvents2MetricGenerated(ctx, crClient, fullName)
+		createdIDs = append(createdIDs, fullID)
 
 		By("Reading the Events2Metric from the API")
 		Eventually(func(g Gomega) {
@@ -144,6 +151,7 @@ var _ = Describe("Events2Metric (generated)", Ordered, func() {
 		minimal := newEvents2MetricGenerated(minimalName, events2MetricMinimalSpec)
 		Expect(crClient.Create(ctx, minimal)).To(Succeed())
 		id := waitForEvents2MetricGenerated(ctx, crClient, minimalName)
+		createdIDs = append(createdIDs, id)
 
 		Expect(crClient.Delete(ctx, minimal)).To(Succeed())
 		Eventually(func() bool {
@@ -152,6 +160,24 @@ var _ = Describe("Events2Metric (generated)", Ordered, func() {
 		}, time.Minute, time.Second).Should(BeTrue())
 	})
 })
+
+// removeEvents2MetricGenerated is the backstop of a test that fails. It waits until the operator has
+// deleted the Events2Metric. When the operator does not, it deletes the Events2Metric through the API. A
+// Events2Metric that is already gone is a success.
+func removeEvents2MetricGenerated(ctx context.Context, apiClient *events2metricsservice.Events2MetricsServiceAPIService, id string) {
+	deadline := time.Now().Add(time.Minute)
+	for time.Now().Before(deadline) {
+		_, httpResp, err := apiClient.Events2MetricServiceGetE2M(ctx, id).Execute()
+		if cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err)) {
+			return
+		}
+		time.Sleep(time.Second)
+	}
+	_, httpResp, err := apiClient.Events2MetricServiceDeleteE2M(ctx, id).Execute()
+	if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+		Expect(apiErr).To(Succeed())
+	}
+}
 
 // newEvents2MetricGenerated returns a Events2Metric with the spec that the JSON holds.
 func newEvents2MetricGenerated(name, spec string) *coralogixv1alpha1.Events2Metric {
@@ -171,9 +197,211 @@ func waitForEvents2MetricGenerated(ctx context.Context, crClient client.Client, 
 	Eventually(func(g Gomega) {
 		cr := &coralogixv1alpha1.Events2Metric{}
 		g.Expect(crClient.Get(ctx, types.NamespacedName{Name: name, Namespace: testNamespace}, cr)).To(Succeed())
-		g.Expect(meta.IsStatusConditionTrue(cr.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+		synced := meta.FindStatusCondition(cr.Status.Conditions, utils.ConditionTypeRemoteSynced)
+		g.Expect(synced).NotTo(BeNil(), "Events2Metric %s has no RemoteSynced condition yet", name)
+		g.Expect(synced.Status).To(Equal(metav1.ConditionTrue), "Events2Metric %s is not synced: %s: %s", name, synced.Reason, synced.Message)
 		g.Expect(cr.Status.ID).NotTo(BeNil())
 		id = *cr.Status.ID
 	}, time.Minute, time.Second).Should(Succeed())
 	return id
 }
+
+// The coverage steps send an accepted enum value and a oneOf arm that the full spec does not. Each
+// step creates all its copies, waits until each is synced, reads each from the API, and deletes each.
+var events2MetricCoverageSteps = [][]string{
+	{
+		`{
+  "description": "sample-description",
+  "metricFields": [
+    {
+      "aggregations": [
+        {
+          "aggType": "samples",
+          "enabled": true,
+          "targetMetricName": "samples_min_value",
+          "aggMetadata": {
+            "samples": {
+              "sampleType": "min"
+            }
+          }
+        },
+        {
+          "aggType": "histogram",
+          "enabled": true,
+          "targetMetricName": "histogram_value",
+          "aggMetadata": {
+            "histogram": {
+              "buckets": [
+                1,
+                5,
+                10
+              ]
+            }
+          }
+        },
+        {
+          "aggType": "max",
+          "enabled": true,
+          "targetMetricName": "max_value",
+          "aggMetadata": {}
+        },
+        {
+          "aggType": "count",
+          "enabled": true,
+          "targetMetricName": "count_value",
+          "aggMetadata": {}
+        },
+        {
+          "aggType": "avg",
+          "enabled": true,
+          "targetMetricName": "avg_value",
+          "aggMetadata": {}
+        },
+        {
+          "aggType": "sum",
+          "enabled": true,
+          "targetMetricName": "sum_value",
+          "aggMetadata": {}
+        },
+        {
+          "aggType": "samples",
+          "enabled": true,
+          "targetMetricName": "samples_max_value",
+          "aggMetadata": {
+            "samples": {
+              "sampleType": "max"
+            }
+          }
+        }
+      ],
+      "sourceField": "request_count",
+      "targetBaseMetricName": "sample-target-base-metric-name"
+    }
+  ],
+  "metricLabels": [
+    {
+      "sourceField": "status",
+      "targetLabel": "sample-target-label"
+    }
+  ],
+  "name": "sample-name",
+  "permutationsLimit": 1,
+  "query": {
+    "logs": {
+      "lucene": "status:200",
+      "severityFilters": [
+        "debug",
+        "verbose",
+        "info",
+        "warn",
+        "error",
+        "critical"
+      ]
+    }
+  }
+}`,
+		`{
+  "description": "sample-description",
+  "metricFields": [
+    {
+      "aggregations": [
+        {
+          "aggMetadata": {},
+          "aggType": "min",
+          "enabled": true,
+          "targetMetricName": "min_value"
+        }
+      ],
+      "sourceField": "duration",
+      "targetBaseMetricName": "sample-target-base-metric-name"
+    }
+  ],
+  "metricLabels": [
+    {
+      "sourceField": "serviceName",
+      "targetLabel": "sample-target-label"
+    }
+  ],
+  "name": "sample-name",
+  "permutationsLimit": 1,
+  "query": {
+    "spans": {
+      "actionFilters": [
+        "sample-action-filters"
+      ],
+      "applicationNameFilters": [
+        "sample-applicationname-filters"
+      ],
+      "lucene": "sample-lucene",
+      "serviceFilters": [
+        "sample-service-filters"
+      ],
+      "subsystemNameFilters": [
+        "sample-subsystemname-filters"
+      ]
+    }
+  }
+}`,
+	},
+}
+
+var _ = Describe("Events2Metric (coverage)", Ordered, Label("coverage"), func() {
+	var (
+		crClient  client.Client
+		apiClient *events2metricsservice.Events2MetricsServiceAPIService
+		base      string
+	)
+
+	BeforeAll(func() {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		apiClient = newOpenAPIClientSet().Events2Metrics()
+		base = uniqueName("e2e-events2metric-cov")
+	})
+
+	for i, step := range events2MetricCoverageSteps {
+		It(fmt.Sprintf("sends step %d", i+1), Label(fmt.Sprintf("coverage-events2metric-%d", i+1)), func(ctx context.Context) {
+			var (
+				objects []client.Object
+				names   []string
+				ids     []string
+			)
+			DeferCleanup(func(ctx context.Context) {
+				for _, object := range objects {
+					_ = crClient.Delete(ctx, object)
+				}
+				for _, id := range ids {
+					removeEvents2MetricGenerated(ctx, apiClient, id)
+				}
+			})
+
+			for j, spec := range step {
+				name := fmt.Sprintf("%s-%d-%d", base, i+1, j+1)
+				cr := newEvents2MetricGenerated(name, spec)
+				Expect(crClient.Create(ctx, cr)).To(Succeed())
+				objects = append(objects, cr)
+				names = append(names, name)
+			}
+
+			By("Waiting until every copy is synced and the API returns it")
+			for _, name := range names {
+				id := waitForEvents2MetricGenerated(ctx, crClient, name)
+				ids = append(ids, id)
+				Eventually(func(g Gomega) {
+					_, httpResp, err := apiClient.Events2MetricServiceGetE2M(ctx, id).Execute()
+					g.Expect(cxsdk.NewAPIError(httpResp, err)).To(Succeed())
+				}, time.Minute, time.Second).Should(Succeed())
+			}
+
+			By("Deleting every copy")
+			for _, object := range objects {
+				Expect(crClient.Delete(ctx, object)).To(Succeed())
+			}
+			for _, id := range ids {
+				Eventually(func() bool {
+					_, httpResp, err := apiClient.Events2MetricServiceGetE2M(ctx, id).Execute()
+					return cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err))
+				}, time.Minute, time.Second).Should(BeTrue())
+			}
+		})
+	}
+})

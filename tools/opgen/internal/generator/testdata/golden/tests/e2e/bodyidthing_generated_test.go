@@ -58,6 +58,8 @@ var _ = Describe("BodyIDThing (generated)", Ordered, func() {
 		minimalName string
 		fullID      string
 		full        *coralogixv1alpha1.BodyIDThing
+		// createdIDs holds the API id of every BodyIDThing that a step created, for the backstop in the cleanup.
+		createdIDs []string
 	)
 
 	BeforeAll(func() {
@@ -69,6 +71,9 @@ var _ = Describe("BodyIDThing (generated)", Ordered, func() {
 			for _, name := range []string{fullName, minimalName} {
 				_ = crClient.Delete(ctx, &coralogixv1alpha1.BodyIDThing{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: testNamespace}})
 			}
+			for _, id := range createdIDs {
+				removeBodyIDThingGenerated(ctx, apiClient, id)
+			}
 		})
 	})
 
@@ -76,6 +81,7 @@ var _ = Describe("BodyIDThing (generated)", Ordered, func() {
 		full = newBodyIDThingGenerated(fullName, bodyIDThingFullSpec)
 		Expect(crClient.Create(ctx, full)).To(Succeed())
 		fullID = waitForBodyIDThingGenerated(ctx, crClient, fullName)
+		createdIDs = append(createdIDs, fullID)
 
 		By("Reading the BodyIDThing from the API")
 		Eventually(func(g Gomega) {
@@ -113,6 +119,7 @@ var _ = Describe("BodyIDThing (generated)", Ordered, func() {
 		minimal := newBodyIDThingGenerated(minimalName, bodyIDThingMinimalSpec)
 		Expect(crClient.Create(ctx, minimal)).To(Succeed())
 		id := waitForBodyIDThingGenerated(ctx, crClient, minimalName)
+		createdIDs = append(createdIDs, id)
 
 		Expect(crClient.Delete(ctx, minimal)).To(Succeed())
 		Eventually(func() bool {
@@ -121,6 +128,24 @@ var _ = Describe("BodyIDThing (generated)", Ordered, func() {
 		}, time.Minute, time.Second).Should(BeTrue())
 	})
 })
+
+// removeBodyIDThingGenerated is the backstop of a test that fails. It waits until the operator has
+// deleted the BodyIDThing. When the operator does not, it deletes the BodyIDThing through the API. A
+// BodyIDThing that is already gone is a success.
+func removeBodyIDThingGenerated(ctx context.Context, apiClient *bodyidthingsservice.BodyIDThingsServiceAPIService, id string) {
+	deadline := time.Now().Add(time.Minute)
+	for time.Now().Before(deadline) {
+		_, httpResp, err := apiClient.BodyIDThingsServiceGetBodyIDThing(ctx, id).Execute()
+		if cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err)) {
+			return
+		}
+		time.Sleep(time.Second)
+	}
+	_, httpResp, err := apiClient.BodyIDThingsServiceDeleteBodyIDThing(ctx, id).Execute()
+	if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+		Expect(apiErr).To(Succeed())
+	}
+}
 
 // newBodyIDThingGenerated returns a BodyIDThing with the spec that the JSON holds.
 func newBodyIDThingGenerated(name, spec string) *coralogixv1alpha1.BodyIDThing {
@@ -138,7 +163,9 @@ func waitForBodyIDThingGenerated(ctx context.Context, crClient client.Client, na
 	Eventually(func(g Gomega) {
 		cr := &coralogixv1alpha1.BodyIDThing{}
 		g.Expect(crClient.Get(ctx, types.NamespacedName{Name: name, Namespace: testNamespace}, cr)).To(Succeed())
-		g.Expect(meta.IsStatusConditionTrue(cr.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+		synced := meta.FindStatusCondition(cr.Status.Conditions, utils.ConditionTypeRemoteSynced)
+		g.Expect(synced).NotTo(BeNil(), "BodyIDThing %s has no RemoteSynced condition yet", name)
+		g.Expect(synced.Status).To(Equal(metav1.ConditionTrue), "BodyIDThing %s is not synced: %s: %s", name, synced.Reason, synced.Message)
 		g.Expect(cr.Status.ID).NotTo(BeNil())
 		id = *cr.Status.ID
 	}, time.Minute, time.Second).Should(Succeed())

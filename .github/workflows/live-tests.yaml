@@ -1,7 +1,8 @@
 name: live-tests
 
-# Runs the four live suites, one after another, against the shared Coralogix team:
-# e2e-tests, helm-e2e-tests, integration-tests, and upgrade-test. Each one is a reusable
+# Runs the five live suites, one after another, against the shared Coralogix team:
+# e2e-tests, helm-e2e-tests, integration-tests, upgrade-test, and coverage-tests. The shards of
+# coverage-tests run in parallel inside their suite. Each one is a reusable
 # workflow in its own file. The last job, "Live tests result", is the check that branch
 # protection requires. It always runs, so it is visible on every pull request, and it fails
 # when any suite failed or was cancelled.
@@ -125,6 +126,14 @@ jobs:
     uses: ./.github/workflows/upgrade-test.yaml
     secrets: inherit
 
+  coverage:
+    needs: [changes, upgrade]
+    if: ${{ !cancelled() && needs.changes.result == 'success' && needs.changes.outputs.code_outside_charts == 'true' }}
+    permissions:
+      contents: read
+    uses: ./.github/workflows/coverage-tests.yaml
+    secrets: inherit
+
   live-tests-result:
     # Branch protection requires this check name. Keep it stable.
     name: Live tests result
@@ -138,6 +147,7 @@ jobs:
       - helm-e2e
       - integration
       - upgrade
+      - coverage
     permissions: {}
     runs-on: ubuntu-latest
     steps:
@@ -155,6 +165,7 @@ jobs:
       - helm-e2e
       - integration
       - upgrade
+      - coverage
     permissions:
       contents: read
     runs-on: ubuntu-latest

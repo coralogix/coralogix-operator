@@ -20,6 +20,7 @@ package e2e
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -95,6 +96,8 @@ var _ = Describe("Thing (generated)", Ordered, func() {
 		minimalName string
 		fullID      string
 		full        *coralogixv1alpha1.Thing
+		// createdIDs holds the API id of every Thing that a step created, for the backstop in the cleanup.
+		createdIDs []string
 	)
 
 	BeforeAll(func() {
@@ -106,6 +109,9 @@ var _ = Describe("Thing (generated)", Ordered, func() {
 			for _, name := range []string{fullName, minimalName} {
 				_ = crClient.Delete(ctx, &coralogixv1alpha1.Thing{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: testNamespace}})
 			}
+			for _, id := range createdIDs {
+				removeThingGenerated(ctx, apiClient, id)
+			}
 		})
 	})
 
@@ -113,6 +119,7 @@ var _ = Describe("Thing (generated)", Ordered, func() {
 		full = newThingGenerated(fullName, thingFullSpec)
 		Expect(crClient.Create(ctx, full)).To(Succeed())
 		fullID = waitForThingGenerated(ctx, crClient, fullName)
+		createdIDs = append(createdIDs, fullID)
 
 		By("Reading the Thing from the API")
 		Eventually(func(g Gomega) {
@@ -150,6 +157,7 @@ var _ = Describe("Thing (generated)", Ordered, func() {
 		minimal := newThingGenerated(minimalName, thingMinimalSpec)
 		Expect(crClient.Create(ctx, minimal)).To(Succeed())
 		id := waitForThingGenerated(ctx, crClient, minimalName)
+		createdIDs = append(createdIDs, id)
 
 		Expect(crClient.Delete(ctx, minimal)).To(Succeed())
 		Eventually(func() bool {
@@ -158,6 +166,24 @@ var _ = Describe("Thing (generated)", Ordered, func() {
 		}, time.Minute, time.Second).Should(BeTrue())
 	})
 })
+
+// removeThingGenerated is the backstop of a test that fails. It waits until the operator has
+// deleted the Thing. When the operator does not, it deletes the Thing through the API. A
+// Thing that is already gone is a success.
+func removeThingGenerated(ctx context.Context, apiClient *thingsservice.ThingsServiceAPIService, id string) {
+	deadline := time.Now().Add(time.Minute)
+	for time.Now().Before(deadline) {
+		_, httpResp, err := apiClient.ThingsServiceGetThing(ctx, id).Execute()
+		if cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err)) {
+			return
+		}
+		time.Sleep(time.Second)
+	}
+	_, httpResp, err := apiClient.ThingsServiceDeleteThing(ctx, id).Execute()
+	if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+		Expect(apiErr).To(Succeed())
+	}
+}
 
 // newThingGenerated returns a Thing with the spec that the JSON holds.
 func newThingGenerated(name, spec string) *coralogixv1alpha1.Thing {
@@ -175,9 +201,116 @@ func waitForThingGenerated(ctx context.Context, crClient client.Client, name str
 	Eventually(func(g Gomega) {
 		cr := &coralogixv1alpha1.Thing{}
 		g.Expect(crClient.Get(ctx, types.NamespacedName{Name: name, Namespace: testNamespace}, cr)).To(Succeed())
-		g.Expect(meta.IsStatusConditionTrue(cr.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+		synced := meta.FindStatusCondition(cr.Status.Conditions, utils.ConditionTypeRemoteSynced)
+		g.Expect(synced).NotTo(BeNil(), "Thing %s has no RemoteSynced condition yet", name)
+		g.Expect(synced.Status).To(Equal(metav1.ConditionTrue), "Thing %s is not synced: %s: %s", name, synced.Reason, synced.Message)
 		g.Expect(cr.Status.ID).NotTo(BeNil())
 		id = *cr.Status.ID
 	}, time.Minute, time.Second).Should(Succeed())
 	return id
 }
+
+// The coverage steps send an accepted enum value and a oneOf arm that the full spec does not. Each
+// step creates all its copies, waits until each is synced, reads each from the API, and deletes each.
+var thingCoverageSteps = [][]string{
+	{
+		`{
+  "name": "sample-name",
+  "description": "sample-description",
+  "enabled": true,
+  "kind": "advanced",
+  "priority": "pagerDutyIncidents",
+  "quota": 1,
+  "ratio": 1,
+  "buckets": [
+    1
+  ],
+  "config": {
+    "queue": {
+      "topic": "sample-topic"
+    }
+  },
+  "settings": {
+    "mode": "sample-mode",
+    "retries": 0,
+    "region": "sample-region"
+  },
+  "items": [
+    {
+      "name": "sample-name",
+      "weight": 1
+    }
+  ],
+  "destinations": [
+    "https://example.com"
+  ],
+  "tags": [
+    "sample-tags"
+  ],
+  "labels": {
+    "key": "sample-labels"
+  }
+}`,
+	},
+}
+
+var _ = Describe("Thing (coverage)", Ordered, Label("coverage"), func() {
+	var (
+		crClient  client.Client
+		apiClient *thingsservice.ThingsServiceAPIService
+		base      string
+	)
+
+	BeforeAll(func() {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		apiClient = newOpenAPIClientSet().Things()
+		base = uniqueName("e2e-thing-cov")
+	})
+
+	for i, step := range thingCoverageSteps {
+		It(fmt.Sprintf("sends step %d", i+1), Label(fmt.Sprintf("coverage-thing-%d", i+1)), func(ctx context.Context) {
+			var (
+				objects []client.Object
+				names   []string
+				ids     []string
+			)
+			DeferCleanup(func(ctx context.Context) {
+				for _, object := range objects {
+					_ = crClient.Delete(ctx, object)
+				}
+				for _, id := range ids {
+					removeThingGenerated(ctx, apiClient, id)
+				}
+			})
+
+			for j, spec := range step {
+				name := fmt.Sprintf("%s-%d-%d", base, i+1, j+1)
+				cr := newThingGenerated(name, spec)
+				Expect(crClient.Create(ctx, cr)).To(Succeed())
+				objects = append(objects, cr)
+				names = append(names, name)
+			}
+
+			By("Waiting until every copy is synced and the API returns it")
+			for _, name := range names {
+				id := waitForThingGenerated(ctx, crClient, name)
+				ids = append(ids, id)
+				Eventually(func(g Gomega) {
+					_, httpResp, err := apiClient.ThingsServiceGetThing(ctx, id).Execute()
+					g.Expect(cxsdk.NewAPIError(httpResp, err)).To(Succeed())
+				}, time.Minute, time.Second).Should(Succeed())
+			}
+
+			By("Deleting every copy")
+			for _, object := range objects {
+				Expect(crClient.Delete(ctx, object)).To(Succeed())
+			}
+			for _, id := range ids {
+				Eventually(func() bool {
+					_, httpResp, err := apiClient.ThingsServiceGetThing(ctx, id).Execute()
+					return cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err))
+				}, time.Minute, time.Second).Should(BeTrue())
+			}
+		})
+	}
+})

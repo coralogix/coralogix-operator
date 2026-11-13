@@ -165,10 +165,22 @@ type enumMap struct {
 	Var     string // the map
 	SDKType string
 	Values  []enumValue
+	schema  string // the contract component of the enum
 }
 
 type enumValue struct {
 	API, Name, Const string
+	// Send is the API value that the conversion sends for this CR spelling, when it differs from
+	// API: an alias maps a spelling to another business value.
+	Send string
+}
+
+// sent returns the API value that the conversion sends for the spelling.
+func (v enumValue) sent() string {
+	if v.Send != "" {
+		return v.Send
+	}
+	return v.API
 }
 
 type requestValueData struct {

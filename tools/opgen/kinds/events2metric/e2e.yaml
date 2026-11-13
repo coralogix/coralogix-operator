@@ -30,3 +30,38 @@ upgrade:
         aggregations: [{aggType: min, enabled: true, targetMetricName: min_request_count, aggMetadata: {samples: {sampleType: min}}}]
   field: description
   value: Events2Metric updated after the operator upgrade
+when:
+  # The query arm decides which fields the metric can read, so each arm sets its own source fields.
+  - match: {query: logs}
+    set:
+      query.logs.lucene: 'status:200'
+      query.logs.severityFilters: [debug, verbose, info, warn, error, critical]
+      metricFields.sourceField: request_count
+      metricLabels.sourceField: status
+  - match: {query: spans}
+    set:
+      metricFields.sourceField: duration
+      metricLabels.sourceField: serviceName
+  # Each aggregation of a metric field needs its own target metric name.
+  - match: {metricFields.aggregations.aggType: min}
+    set: {metricFields.aggregations.targetMetricName: min_value, metricFields.aggregations.aggMetadata: {}}
+  - match: {metricFields.aggregations.aggType: max}
+    set: {metricFields.aggregations.targetMetricName: max_value, metricFields.aggregations.aggMetadata: {}}
+  - match: {metricFields.aggregations.aggType: count}
+    set: {metricFields.aggregations.targetMetricName: count_value, metricFields.aggregations.aggMetadata: {}}
+  - match: {metricFields.aggregations.aggType: avg}
+    set: {metricFields.aggregations.targetMetricName: avg_value, metricFields.aggregations.aggMetadata: {}}
+  - match: {metricFields.aggregations.aggType: sum}
+    set: {metricFields.aggregations.targetMetricName: sum_value, metricFields.aggregations.aggMetadata: {}}
+  - match: {metricFields.aggregations.aggType: histogram}
+    set:
+      metricFields.aggregations.targetMetricName: histogram_value
+      metricFields.aggregations.aggMetadata: {histogram: {buckets: [1, 5, 10]}}
+  - match: {metricFields.aggregations.aggType: samples}
+    set:
+      metricFields.aggregations.targetMetricName: samples_min_value
+      metricFields.aggregations.aggMetadata: {samples: {sampleType: min}}
+  - match: {metricFields.aggregations.aggType: samples}
+    set:
+      metricFields.aggregations.targetMetricName: samples_max_value
+      metricFields.aggregations.aggMetadata: {samples: {sampleType: max}}

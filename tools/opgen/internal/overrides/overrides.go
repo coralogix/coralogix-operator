@@ -248,16 +248,48 @@ type Field struct {
 	RequestAs string `yaml:"requestAs"`
 }
 
-// Enum records the accepted API values and their custom resource spellings.
+// Enum records the rejected API values and the custom resource spellings of an enum. The accepted
+// values are the contract values, without the zero value and the rejected values. A new contract
+// value is accepted without a change of this line.
 type Enum struct {
 	Zero       string            `yaml:"zero"`
 	RejectZero bool              `yaml:"rejectZero"`
-	Values     []string          `yaml:"values"`
 	Verbatim   bool              `yaml:"verbatim"`
 	TrimPrefix string            `yaml:"trimPrefix"`
 	Names      map[string]string `yaml:"names"`
 	Aliases    map[string]string `yaml:"aliases"`
-	Rejected   []string          `yaml:"rejected"`
+	Rejected   []RejectedValue   `yaml:"rejected"`
+	// Values is the removed list of accepted values. The key is read only to tell the user to delete it.
+	Values []string `yaml:"values"`
+}
+
+// RejectedValue is an API value that the operator does not accept, with the reason.
+type RejectedValue struct {
+	Value  string `yaml:"value"`
+	Reason string `yaml:"reason"`
+}
+
+// UnmarshalYAML reads the mapping form. The old plain string form gets a message that shows the new form.
+func (r *RejectedValue) UnmarshalYAML(node *yaml.Node) error {
+	if node.Kind == yaml.ScalarNode {
+		return fmt.Errorf("rejected: write {value: %s, reason: <why the operator cannot accept it>} instead of the plain value", node.Value)
+	}
+	type plain RejectedValue
+	return node.Decode((*plain)(r))
+}
+
+// RejectedAPIValues returns the API values of the rejected list.
+func (e Enum) RejectedAPIValues() []string {
+	values := make([]string, len(e.Rejected))
+	for i, rejected := range e.Rejected {
+		values[i] = rejected.Value
+	}
+	return values
+}
+
+// IsRejected reports whether an API value is in the rejected list.
+func (e Enum) IsRejected(value string) bool {
+	return slices.ContainsFunc(e.Rejected, func(r RejectedValue) bool { return r.Value == value })
 }
 
 // Ref is the ref key of a field line.
@@ -617,8 +649,11 @@ func validJSONName(name string) bool {
 func asciiLetter(c byte) bool { return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' }
 
 func (e Enum) check(name string) error {
-	if name == "" || len(e.Values) == 0 {
-		return fmt.Errorf("enums.%s.values: name an enum and at least one accepted value", name)
+	if name == "" {
+		return errors.New("enums: name an enum")
+	}
+	if len(e.Values) != 0 {
+		return fmt.Errorf("enums.%s.values: the key is removed; every contract value is accepted except the zero value and the rejected values. Delete the key and list each unwanted value under rejected", name)
 	}
 	if !validEnumValue(e.Zero) && e.Zero != "" {
 		return fmt.Errorf("enums.%s.zero: %q is not one CR enum value", name, e.Zero)
@@ -627,14 +662,17 @@ func (e Enum) check(name string) error {
 		return fmt.Errorf("enums.%s.rejectZero: zero must name the omitted API value", name)
 	}
 	seen := map[string]bool{}
-	for _, value := range append(slices.Clone(e.Values), e.Rejected...) {
-		if value == "" || seen[value] {
-			return fmt.Errorf("enums.%s: value %q is empty or listed twice", name, value)
+	for _, rejected := range e.Rejected {
+		if rejected.Value == "" || seen[rejected.Value] {
+			return fmt.Errorf("enums.%s.rejected: value %q is empty or listed twice", name, rejected.Value)
 		}
-		seen[value] = true
+		if strings.TrimSpace(rejected.Reason) == "" {
+			return fmt.Errorf("enums.%s.rejected: value %q needs a reason", name, rejected.Value)
+		}
+		seen[rejected.Value] = true
 	}
 	for value, cr := range e.Names {
-		if !slices.Contains(e.Values, value) || !validEnumValue(cr) {
+		if e.IsRejected(value) || !validEnumValue(cr) {
 			return fmt.Errorf("enums.%s.names.%s: name an accepted API value and a nonempty CR value", name, value)
 		}
 	}
@@ -642,9 +680,6 @@ func (e Enum) check(name string) error {
 		if !validEnumValue(alias) || !validEnumValue(target) {
 			return fmt.Errorf("enums.%s.aliases: %q and %q must be single CR enum values", name, alias, target)
 		}
-	}
-	if e.TrimPrefix != "" && !slices.ContainsFunc(e.Values, func(value string) bool { return strings.HasPrefix(value, e.TrimPrefix) }) {
-		return fmt.Errorf("enums.%s.trimPrefix: %q is not a prefix of an accepted API value", name, e.TrimPrefix)
 	}
 	return nil
 }
@@ -762,10 +797,8 @@ func (f *File) Policy() model.Policy {
 			p.FixedRequest = append(p.FixedRequest, line.Component+"."+line.Field)
 		}
 	}
-	for name, enum := range f.Enums {
-		if len(enum.Values) != 0 {
-			p.EnumAnyPrefix = append(p.EnumAnyPrefix, name)
-		}
+	for name := range f.Enums {
+		p.EnumAnyPrefix = append(p.EnumAnyPrefix, name)
 	}
 	return p
 }

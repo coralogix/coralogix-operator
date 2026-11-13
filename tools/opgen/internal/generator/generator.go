@@ -566,7 +566,7 @@ func overrideIssues(doc docType, entry kindEntry, file *overrides.File) error {
 		for _, value := range proxy.Schema().Enum {
 			contract = append(contract, value.Value)
 		}
-		for _, value := range append(slices.Clone(enum.Values), enum.Rejected...) {
+		for _, value := range enum.RejectedAPIValues() {
 			if !slices.Contains(contract, value) {
 				return &shapeError{code: codeOverrideInvalid, path: location, msg: fmt.Sprintf("the API enum has no value %q", value)}
 			}
@@ -575,16 +575,26 @@ func overrideIssues(doc docType, entry kindEntry, file *overrides.File) error {
 		if hasZero != (enum.Zero != "") {
 			return &shapeError{code: codeOverrideInvalid, path: location + ".zero", msg: "zero must name the *_UNSPECIFIED value, and only that value"}
 		}
-		if hasZero && (slices.Contains(enum.Values, contract[0]) || slices.Contains(enum.Rejected, contract[0])) {
+		if hasZero && enum.IsRejected(contract[0]) {
 			return &shapeError{code: codeOverrideInvalid, path: location, msg: "the zero API value belongs only in zero"}
 		}
+		var accepted []string
 		for i, value := range contract {
-			if i == 0 && hasZero {
+			if (i == 0 && hasZero) || enum.IsRejected(value) {
 				continue
 			}
-			if !slices.Contains(enum.Values, value) && !slices.Contains(enum.Rejected, value) {
-				return &shapeError{code: codeOverrideInvalid, path: location, msg: fmt.Sprintf("the API value %q is neither accepted nor rejected", value)}
+			accepted = append(accepted, value)
+		}
+		if len(accepted) == 0 {
+			return &shapeError{code: codeOverrideInvalid, path: location, msg: "every API value is rejected"}
+		}
+		for value := range enum.Names {
+			if !slices.Contains(accepted, value) {
+				return &shapeError{code: codeOverrideInvalid, path: location + ".names." + value, msg: "name an accepted API value"}
 			}
+		}
+		if enum.TrimPrefix != "" && !slices.ContainsFunc(accepted, func(value string) bool { return strings.HasPrefix(value, enum.TrimPrefix) }) {
+			return &shapeError{code: codeOverrideInvalid, path: location + ".trimPrefix", msg: fmt.Sprintf("%q is not a prefix of an accepted API value", enum.TrimPrefix)}
 		}
 	}
 	return nil

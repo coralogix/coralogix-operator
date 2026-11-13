@@ -22,5 +22,4 @@ enums:
   notification_center.EntityType:
     zero: unspecified
     rejectZero: true
-    values: [ALERTS, CASES]
-    rejected: [TEST_NOTIFICATIONS, OLLY_SCHEDULED_TASKS]
+    rejected: [{value: TEST_NOTIFICATIONS, reason: test reason}, {value: OLLY_SCHEDULED_TASKS, reason: test reason}]

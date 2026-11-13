@@ -70,6 +70,8 @@ var _ = Describe("RefThing (generated)", Ordered, func() {
 		minimalName string
 		fullID      string
 		full        *coralogixv1alpha1.RefThing
+		// createdIDs holds the API id of every RefThing that a step created, for the backstop in the cleanup.
+		createdIDs []string
 	)
 
 	BeforeAll(func() {
@@ -81,6 +83,9 @@ var _ = Describe("RefThing (generated)", Ordered, func() {
 			for _, name := range []string{fullName, minimalName} {
 				_ = crClient.Delete(ctx, &coralogixv1alpha1.RefThing{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: testNamespace}})
 			}
+			for _, id := range createdIDs {
+				removeRefThingGenerated(ctx, apiClient, id)
+			}
 		})
 	})
 
@@ -88,6 +93,7 @@ var _ = Describe("RefThing (generated)", Ordered, func() {
 		full = newRefThingGenerated(fullName, refThingFullSpec)
 		Expect(crClient.Create(ctx, full)).To(Succeed())
 		fullID = waitForRefThingGenerated(ctx, crClient, fullName)
+		createdIDs = append(createdIDs, fullID)
 
 		By("Reading the RefThing from the API")
 		Eventually(func(g Gomega) {
@@ -125,6 +131,7 @@ var _ = Describe("RefThing (generated)", Ordered, func() {
 		minimal := newRefThingGenerated(minimalName, refThingMinimalSpec)
 		Expect(crClient.Create(ctx, minimal)).To(Succeed())
 		id := waitForRefThingGenerated(ctx, crClient, minimalName)
+		createdIDs = append(createdIDs, id)
 
 		Expect(crClient.Delete(ctx, minimal)).To(Succeed())
 		Eventually(func() bool {
@@ -133,6 +140,24 @@ var _ = Describe("RefThing (generated)", Ordered, func() {
 		}, time.Minute, time.Second).Should(BeTrue())
 	})
 })
+
+// removeRefThingGenerated is the backstop of a test that fails. It waits until the operator has
+// deleted the RefThing. When the operator does not, it deletes the RefThing through the API. A
+// RefThing that is already gone is a success.
+func removeRefThingGenerated(ctx context.Context, apiClient *refthingsservice.RefThingsServiceAPIService, id string) {
+	deadline := time.Now().Add(time.Minute)
+	for time.Now().Before(deadline) {
+		_, httpResp, err := apiClient.RefThingsServiceGetRefThing(ctx, id).Execute()
+		if cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err)) {
+			return
+		}
+		time.Sleep(time.Second)
+	}
+	_, httpResp, err := apiClient.RefThingsServiceDeleteRefThing(ctx, id).Execute()
+	if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+		Expect(apiErr).To(Succeed())
+	}
+}
 
 // newRefThingGenerated returns a RefThing with the spec that the JSON holds.
 func newRefThingGenerated(name, spec string) *coralogixv1alpha1.RefThing {
@@ -150,7 +175,9 @@ func waitForRefThingGenerated(ctx context.Context, crClient client.Client, name 
 	Eventually(func(g Gomega) {
 		cr := &coralogixv1alpha1.RefThing{}
 		g.Expect(crClient.Get(ctx, types.NamespacedName{Name: name, Namespace: testNamespace}, cr)).To(Succeed())
-		g.Expect(meta.IsStatusConditionTrue(cr.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+		synced := meta.FindStatusCondition(cr.Status.Conditions, utils.ConditionTypeRemoteSynced)
+		g.Expect(synced).NotTo(BeNil(), "RefThing %s has no RemoteSynced condition yet", name)
+		g.Expect(synced.Status).To(Equal(metav1.ConditionTrue), "RefThing %s is not synced: %s: %s", name, synced.Reason, synced.Message)
 		g.Expect(cr.Status.ID).NotTo(BeNil())
 		id = *cr.Status.ID
 	}, time.Minute, time.Second).Should(Succeed())
