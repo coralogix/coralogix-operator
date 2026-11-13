@@ -28,11 +28,13 @@ type e2eWhen struct {
 
 // whenEntry is a parsed when entry.
 type whenEntry struct {
-	index   int
-	anchor  string // the list that holds the matched fields, "" for the whole CR
-	choices []whenChoice
-	set     map[string]any
-	fields  map[string]*crField // the field of each set path
+	index  int
+	anchor string // the list that holds the matched fields, "" for the whole CR
+	// anchorMax is the contract limit of the items of the anchor list, 0 for none.
+	anchorMax int
+	choices   []whenChoice
+	set       map[string]any
+	fields    map[string]*crField // the field of each set path
 }
 
 type whenChoice struct {
@@ -126,6 +128,11 @@ func (c *coverage) parseWhen(root *crType, entries []e2eWhen) error {
 			paths = append(paths, path)
 		}
 		parsed.anchor = commonList(lists[0], paths)
+		if parsed.anchor != "" {
+			if list, _, ok := resolvePath(root, parsed.anchor); ok && list.typ != nil && list.typ.MaxItems != nil {
+				parsed.anchorMax = int(*list.typ.MaxItems)
+			}
+		}
 		for _, path := range sortedKeys(entry.Set) {
 			field, _, ok := resolvePath(root, path)
 			if !ok {
@@ -316,8 +323,8 @@ func (c *coverage) planCopy() (global *overlay, items map[string][]*overlay) {
 			if entry.anchor == "" && global.conflicts(assign) {
 				continue
 			}
-			if entry.anchor != "" && len(items[entry.anchor]) >= maxItemsPerList {
-				continue
+			if entry.anchor != "" && len(items[entry.anchor]) >= entry.itemLimit() {
+				continue // the list is full: the entry waits for another copy
 			}
 			best, bestAssign, bestOpen = entry, assign, open
 		}
@@ -343,4 +350,13 @@ func (c *coverage) planCopy() (global *overlay, items map[string][]*overlay) {
 			items[best.anchor] = append(items[best.anchor], bestAssign)
 		}
 	}
+}
+
+// itemLimit is the number of items that one copy may put into the anchor list: the cap of the
+// sweep, or the contract limit when it is lower.
+func (e *whenEntry) itemLimit() int {
+	if e.anchorMax > 0 && e.anchorMax < maxItemsPerList {
+		return e.anchorMax
+	}
+	return maxItemsPerList
 }

@@ -307,3 +307,32 @@ func TestPlannedItemsWinOverAFixedList(t *testing.T) {
 		t.Error("no copy has the two planned items: the fixed list hid them")
 	}
 }
+
+// A list has a contract limit. A copy must not hold more planned items than the limit allows. The
+// entries that do not fit wait for another copy: none is dropped.
+func TestWhenPlannedItemsRespectTheListLimit(t *testing.T) {
+	d := whenSpec()
+	one := int64(1)
+	for _, f := range d.Spec.Fields {
+		if f.JSON == "aggs" {
+			f.typ.MaxItems = &one
+		}
+	}
+	steps, v, err := specsOf(t, d, &e2eFile{When: aggEntries()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if missing := v.cov.missing(); len(missing) != 0 {
+		t.Fatalf("an entry that does not fit must wait, not vanish: %v", missing)
+	}
+	copies := 0
+	for _, copy := range copiesOf(t, steps) {
+		if items, _ := copy["aggs"].([]any); len(items) > 1 {
+			t.Errorf("a copy holds %d items, the contract allows 1: %v", len(items), copy)
+		}
+		copies++
+	}
+	if copies < 2 {
+		t.Errorf("the entries for max and hist (the full spec covers min) need their own copies, got %d", copies)
+	}
+}
