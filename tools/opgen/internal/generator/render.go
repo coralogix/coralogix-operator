@@ -44,11 +44,15 @@ const (
 func renderKind(d *kindData, full *omap) (map[string][]byte, error) {
 	d.Header = version.GoHeader
 	files := map[string][]byte{}
+	e2eTemplate := "e2e_test.go.tmpl"
+	if d.Overwrite {
+		e2eTemplate = "e2e_overwrite_test.go.tmpl"
+	}
 	for _, f := range []struct{ path, tmpl string }{
 		{apiDir + "/" + d.Lower + "_types.go", "types.go.tmpl"},
 		{apiDir + "/" + d.Lower + "_convert.go", "convert.go.tmpl"},
 		{controllerDir + "/" + d.Lower + "_controller.go", "controller.go.tmpl"},
-		{e2eDir + "/" + d.Lower + "_generated_test.go", "e2e_test.go.tmpl"},
+		{e2eDir + "/" + d.Lower + "_generated_test.go", e2eTemplate},
 	} {
 		src, err := execute(f.tmpl, d)
 		if err != nil {

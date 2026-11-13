@@ -701,7 +701,8 @@ func schemaRequiresProperty(schema *base.Schema, property string) bool {
 func refKindIssues(root string, kinds []kindEntry, file *overrides.File) error {
 	for _, line := range file.Lines() {
 		ref := file.Ref(line.Component, line.Field)
-		if ref == nil {
+		if ref == nil || ref.Form == "namedBackendOnly" {
+			// A backend-only reference has no resourceRef arm: its kind only names the API resource.
 			continue
 		}
 		kind := ref.Kind

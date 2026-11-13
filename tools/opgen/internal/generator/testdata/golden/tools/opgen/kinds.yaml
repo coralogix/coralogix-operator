@@ -13,3 +13,5 @@ kinds:
     resource: HookThing
   - kind: HookDeleteThing
     resource: HookDeleteThing
+  - kind: ThingPolicies
+    resource: GetThingPoliciesResponse

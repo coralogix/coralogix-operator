@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"math"
+	"reflect"
 	"slices"
 	"strconv"
 	"strings"
@@ -127,6 +128,15 @@ func (b *builder) foldedFields(r *model.Resource, f *model.ResourceField, folds 
 // applyValidation changes released markers after the contract and oneOf rules are built.
 func (b *builder) applyValidation(t *crType, path string, seen map[*crType]bool, root bool) error {
 	if seen[t] {
+		// A Go type that two paths share has the same lines at both (sameNestedValidation). They took
+		// effect at the first path.
+		if !root && t.path != "" && t.path != path && b.sameNestedValidation(t.path, path) {
+			for rest := range b.nestedValidation(path) {
+				if b.usedValidators[t.path+rest] {
+					b.usedValidators[path+rest] = true
+				}
+			}
+		}
 		return nil
 	}
 	seen[t] = true
@@ -183,6 +193,10 @@ func (b *builder) applyValidationMarkers(markers *[]string, path string) error {
 func (b *builder) contractDefault(field *crField, attrs *model.Attrs, path string) error {
 	if attrs == nil || attrs.Default == nil {
 		return nil
+	}
+	if field.joinedBy != "" {
+		// The default of the joined string is no list value.
+		return unsupported(path, "a joinedBy field with an API default is not supported yet")
 	}
 	if !b.file.InferredAt(path) {
 		if b.file.Inferred() {
@@ -498,6 +512,9 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 	if !required {
 		f.Markers = append(f.Markers, "+optional")
 	}
+	if change.JoinedBy != "" {
+		return b.joinedField(f, line, t, path)
+	}
 	if ref := b.file.Ref(component, name); ref != nil {
 		return b.refField(f, component, ref, path)
 	}
@@ -572,6 +589,22 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 	if !required {
 		f.GoType = "*" + f.GoType
 	}
+	return f, nil
+}
+
+// joinedField makes a string that holds several values a CR list of strings (joinedBy). The limits
+// of the contract are the limits of the joined string, so the list has none of its own: a released
+// kind states them with validators lines.
+func (b *builder) joinedField(f *crField, line overrides.Line, t *model.Type, path string) (*crField, error) {
+	if t.Kind != model.String || t.Format != "" || len(t.Wrappers) != 0 {
+		return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".joinedBy", msg: "joinedBy needs a string field"}
+	}
+	b.used[line] = true
+	// The limits of the joined string do not apply to the list.
+	b.limits(limitMarkers(t), path)
+	f.joinedBy = b.file.Field(line.Component, line.Field).JoinedBy
+	f.GoType = "[]string"
+	f.Doc = append(f.Doc, fmt.Sprintf("The API holds the values as one string, joined by %q.", f.joinedBy))
 	return f, nil
 }
 
@@ -887,7 +920,8 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 		return nil, collision(path, "the components %s and %s both are the Go type %s", existing.schema, t.Schema, name)
 	}
 	if existing := b.types[name]; existing != nil && existing.path != path &&
-		(b.hasNestedValidation(existing.path) || b.hasNestedValidation(path)) {
+		(b.hasNestedValidation(existing.path) || b.hasNestedValidation(path)) &&
+		!b.sameNestedValidation(existing.path, path) {
 		hash := sha256.Sum256([]byte(path))
 		name = fmt.Sprintf("%sAt%s%x", name, goName(path), hash[:6])
 	}
@@ -916,11 +950,21 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 			inGroup[arm] = true
 		}
 	}
+	inlined := map[string]bool{}
 	for _, f := range t.Fields {
 		if f.Behavior == model.Computed || f.Behavior == "" || f.Create == nil {
 			continue
 		}
 		if len(b.file.Field(t.Schema, f.Name).RequestValueBy) != 0 {
+			continue
+		}
+		if b.file.Field(t.Schema, f.Name).Inline {
+			fields, err := b.inlineFields(obj, t.Schema, f, path, inItem)
+			if err != nil {
+				return nil, err
+			}
+			obj.Fields = append(obj.Fields, fields...)
+			inlined[f.Name] = true
 			continue
 		}
 		if (t.Kind == model.OneOf || inGroup[f.Name]) && b.file.Field(t.Schema, f.Name).Required {
@@ -949,7 +993,7 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 	if len(obj.Fields) == 0 && (t.Kind != model.Object || len(t.Fields) != 0) {
 		return nil, unsupported(path, "an object without fields that a request sends is not supported yet")
 	}
-	groups := t.Groups
+	groups := settableGroups(t, inlined)
 	if t.Kind == model.OneOf {
 		arms := make([]string, len(obj.Fields))
 		for i, f := range obj.Fields {
@@ -970,6 +1014,115 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 	}
 	splitReferenceRules(obj)
 	return obj, nil
+}
+
+// settableGroups returns the oneOf groups of t that the custom resource can choose between. An arm
+// that no request sends, such as the rules of another source type, is not a choice of the CR. A
+// group with an inlined arm keeps no rule: the CR shows the fields of that arm, and a request sends
+// only that arm. A group with fewer than two arms left needs no rule either.
+func settableGroups(t *model.Type, inlined map[string]bool) []model.OneOfGroup {
+	settable := map[string]bool{}
+	for _, f := range t.Fields {
+		if f.Behavior != model.Computed && f.Behavior != "" && f.Create != nil {
+			settable[f.Name] = true
+		}
+	}
+	var out []model.OneOfGroup
+	for _, g := range t.Groups {
+		if slices.ContainsFunc(g.Arms, func(arm string) bool { return inlined[arm] }) {
+			continue
+		}
+		arms := slices.DeleteFunc(slices.Clone(g.Arms), func(arm string) bool { return !settable[arm] })
+		if len(arms) == len(g.Arms) {
+			out = append(out, g)
+			continue
+		}
+		if len(arms) < 2 {
+			continue
+		}
+		g.Arms = arms
+		out = append(out, g)
+	}
+	return out
+}
+
+// inlineFields builds the CR fields of an object field with an inline line: one field for each field
+// that a request sends, beside the other fields of owner. Each field keeps the lines of the object's
+// component. Create and Update rebuild the object (inlineParent).
+func (b *builder) inlineFields(owner *crType, component string, f *model.Field, path string, inItem bool) ([]*crField, error) {
+	line := overrides.Line{Component: component, Field: f.Name}
+	location := overrides.FileName + ":" + line.String() + ".inline"
+	if f.Type.Kind != model.Object || f.Type.Schema == "" || len(f.Type.Wrappers) != 0 {
+		return nil, &shapeError{code: codeOverrideInvalid, path: location, msg: "inline needs an object component"}
+	}
+	if b.file.Field(component, f.Name).Inline && len(b.file.GroupsFor(f.Type.Schema)) != 0 {
+		return nil, &shapeError{code: codeOverrideInvalid, path: location, msg: "the fields of an inlined object cannot be grouped"}
+	}
+	if len(settableGroups(f.Type, nil)) != 0 {
+		return nil, unsupported(path+"."+f.Name, "an inlined object with a oneOf group is not supported yet")
+	}
+	b.used[line] = true
+	var out []*crField
+	for _, child := range f.Type.Fields {
+		if child.Behavior == model.Computed || child.Behavior == "" || child.Create == nil {
+			continue
+		}
+		if b.file.Field(f.Type.Schema, child.Name).Inline {
+			return nil, unsupported(path+"."+child.Name, "an inlined object inside an inlined object is not supported yet")
+		}
+		// A field of an optional object is optional in the CR, and so is a field of a required object
+		// that the object does not require.
+		required := f.Create.Required && child.Create.Required
+		field, err := b.field(owner.Name, f.Type.Schema, child.Name, child.Description, child.Type, required, requiredScalarWithoutPresence(child.Create, child.Type), path+"."+child.Name, inItem)
+		if err != nil {
+			return nil, err
+		}
+		if err := b.contractDefault(field, child.Create, field.validationPath); err != nil {
+			return nil, err
+		}
+		if child.Behavior == model.Immutable {
+			return nil, unsupported(path+"."+child.Name, "an immutable field of an inlined object is not supported yet")
+		}
+		if field.refForm == "split" {
+			return nil, unsupported(path+"."+child.Name, "a split reference in an inlined object is not supported yet")
+		}
+		field.inlineParent = f.Name
+		out = append(out, field)
+	}
+	if len(out) == 0 {
+		return nil, &shapeError{code: codeOverrideInvalid, path: location, msg: "the object has no field that a request sends"}
+	}
+	return out, nil
+}
+
+// nestedValidation returns the validators lines inside the object at path, by the rest of their path.
+func (b *builder) nestedValidation(path string) map[string]overrides.Validation {
+	out := map[string]overrides.Validation{}
+	if b.file == nil || b.file.Validators == nil {
+		return out
+	}
+	for key, change := range b.file.Validators.Fields {
+		if key == path+"#type" || strings.HasPrefix(key, path+".") {
+			out[strings.TrimPrefix(key, path)] = change
+		}
+	}
+	return out
+}
+
+// sameNestedValidation reports whether the objects at two paths have the same validators lines, so
+// one Go type can hold both. The lines of the second path then take effect through the first.
+func (b *builder) sameNestedValidation(first, second string) bool {
+	a, c := b.nestedValidation(first), b.nestedValidation(second)
+	if len(a) != len(c) {
+		return false
+	}
+	for rest, change := range a {
+		other, ok := c[rest]
+		if !ok || !reflect.DeepEqual(change, other) {
+			return false
+		}
+	}
+	return true
 }
 
 // hasNestedValidation reports whether a path changes markers inside an object.

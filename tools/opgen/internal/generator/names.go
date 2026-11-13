@@ -54,6 +54,9 @@ func kebab(kind string) string {
 func plural(kind string) string {
 	s := strings.ToLower(kind)
 	switch {
+	case strings.HasSuffix(s, "ies"):
+		// A kind that is already plural, such as TCOLogsPolicies, keeps its name, as kubebuilder does.
+		return s
 	case strings.HasSuffix(s, "s"), strings.HasSuffix(s, "x"), strings.HasSuffix(s, "z"),
 		strings.HasSuffix(s, "ch"), strings.HasSuffix(s, "sh"):
 		return s + "es"

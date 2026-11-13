@@ -91,6 +91,12 @@ type kindData struct {
 	BodyIDField     string
 	BodyIDValue     bool
 
+	// Overwrite: one write replaces the whole list (api.overwrite). The status has no id, Create and
+	// Update send the spec, and Delete sends WriteFields empty.
+	Overwrite   bool
+	WriteFields []writeField
+	ItemGetType string // the SDK type of an item of the list that Get returns
+
 	// Hooks and Status come from the hooks and status keys of the overrides file.
 	Hooks  hookData
 	Status []statusField
@@ -149,6 +155,12 @@ type crField struct {
 
 	omitEmptyInRequest bool
 	sendNullAsEmpty    bool // Create and Update send "" or [] when the optional field is unset
+
+	// inlineParent is the API object field that holds this field in the API, when an inline line
+	// shows the fields of the object beside the fields of its component. "" otherwise.
+	inlineParent string
+	// joinedBy is the separator of a CR list of strings that the API holds as one string.
+	joinedBy string
 }
 
 // JSONTag is the json struct tag of the field.
@@ -169,6 +181,11 @@ type enumMap struct {
 
 type enumValue struct {
 	API, Name, Const string
+}
+
+// writeField is a field of the write of an overwrite resource, with its empty value.
+type writeField struct {
+	Field, Empty string
 }
 
 type requestValueData struct {
@@ -387,6 +404,9 @@ func resourceHasField(r *model.Resource, line overrides.Line) bool {
 // checkLifecycle rejects the API shapes that only a released resource has. Their keys land with
 // the first kind that needs them.
 func checkLifecycle(r *model.Resource) error {
+	if r.Overwrite {
+		return checkOverwrite(r)
+	}
 	switch {
 	case r.Singleton:
 		return unsupported("resource", "a singleton is not supported yet")
@@ -398,6 +418,20 @@ func checkLifecycle(r *model.Resource) error {
 		return unsupported("resource", "the id must be a string, int32, or int64")
 	case !r.Create.Response.Direct && r.Create.Response.Field == "":
 		return unsupported("create.response", "Create must return the resource directly or in a field")
+	}
+	return nil
+}
+
+// checkOverwrite checks an overwrite resource (api.overwrite): one write replaces the whole list.
+// The CR is the list, so its spec has the fields of the write, and the status has no id.
+func checkOverwrite(r *model.Resource) error {
+	if r.WriteReturnsResource {
+		return unsupported("api.overwrite.writeReturnsResource", "the operator does not read the write response")
+	}
+	for _, f := range r.Fields {
+		if f.Create != nil && f.Type.Kind != model.List && f.Type.Kind != model.Set && f.Type.Kind != model.Map {
+			return unsupported("resource."+f.Name, "the write of an overwrite resource sends a list or a map")
+		}
 	}
 	return nil
 }
