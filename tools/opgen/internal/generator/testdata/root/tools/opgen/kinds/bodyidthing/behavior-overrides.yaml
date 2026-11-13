@@ -12,7 +12,6 @@ types:
 enums:
   BodyIDThingMode:
     zero: unspecified
-    values: [BODY_ID_THING_MODE_LOW]
-    rejected: [BODY_ID_THING_MODE_HIGH]
+    rejected: [{value: BODY_ID_THING_MODE_HIGH, reason: test reason}]
     names: {BODY_ID_THING_MODE_LOW: alerts}
     aliases: {unspecified: alerts}

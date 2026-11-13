@@ -37,5 +37,6 @@ enums:
   notification_center.EntityType:
     zero: unspecified
     rejectZero: true
-    values: [ALERTS, CASES]
-    rejected: [TEST_NOTIFICATIONS, OLLY_SCHEDULED_TASKS]
+    rejected:
+      - {value: TEST_NOTIFICATIONS, reason: the released CRD never accepted this value}
+      - {value: OLLY_SCHEDULED_TASKS, reason: the released CRD never accepted this value}

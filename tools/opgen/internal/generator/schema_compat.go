@@ -211,7 +211,7 @@ func compareSchema(kind, path string, old, current map[string]any, changes *[]sc
 		*changes = append(*changes, schemaChange{Kind: kind, Path: path, Before: before, After: after})
 		return nil
 	}
-	if before != after {
+	if before != after && !onlyAddsEnumValues(old, current) {
 		*changes = append(*changes, schemaChange{Kind: kind, Path: path, Before: before, After: after})
 	}
 	for name, oldChild := range nestedMap(old, "properties") {
@@ -231,15 +231,63 @@ func compareSchema(kind, path string, old, current map[string]any, changes *[]sc
 	return nil
 }
 
+// onlyAddsEnumValues reports a rule change that is no tightening: the enum of the old schema is
+// a subset of the new enum, and every other rule is the same. A new API value then reaches a
+// released field without an approval. The order of the values does not matter.
+func onlyAddsEnumValues(old, current map[string]any) bool {
+	oldValues, ok := old["enum"].([]any)
+	if !ok {
+		return false
+	}
+	currentValues, ok := current["enum"].([]any)
+	if !ok {
+		return false
+	}
+	have := map[string]bool{}
+	for _, value := range currentValues {
+		data, err := json.Marshal(value)
+		if err != nil {
+			return false
+		}
+		have[string(data)] = true
+	}
+	for _, value := range oldValues {
+		data, err := json.Marshal(value)
+		if err != nil || !have[string(data)] {
+			return false
+		}
+	}
+	before, err := rulesJSON(old, false)
+	if err != nil {
+		return false
+	}
+	after, err := rulesJSON(current, false)
+	return err == nil && bytes.Equal(before, after)
+}
+
 func ruleHash(schema map[string]any) (string, error) {
 	if schema == nil {
 		return "missing", nil
 	}
+	data, err := rulesJSON(schema, true)
+	if err != nil {
+		return "", err
+	}
+	sum := sha256.Sum256(data)
+	return hex.EncodeToString(sum[:8]), nil
+}
+
+// rulesJSON encodes the rules of a schema node that a user can see: it leaves out children and text.
+func rulesJSON(schema map[string]any, withEnum bool) ([]byte, error) {
 	rules := map[string]any{}
 	for key, value := range schema {
 		switch key {
 		case "properties", "items", "description", "title", "example", "examples", "externalDocs":
 			continue
+		case "enum":
+			if !withEnum {
+				continue
+			}
 		case "additionalProperties":
 			if _, ok := value.(map[string]any); ok {
 				continue
@@ -249,8 +297,7 @@ func ruleHash(schema map[string]any) (string, error) {
 	}
 	data, err := json.Marshal(rules)
 	if err != nil {
-		return "", fmt.Errorf("encode schema rules: %w", err)
+		return nil, fmt.Errorf("encode schema rules: %w", err)
 	}
-	sum := sha256.Sum256(data)
-	return hex.EncodeToString(sum[:8]), nil
+	return data, nil
 }

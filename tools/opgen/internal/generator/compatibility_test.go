@@ -380,7 +380,7 @@ func TestEmptyCollectionAndObjectContractDefaults(t *testing.T) {
 }
 
 func TestReleasedEnumValues(t *testing.T) {
-	file := "resource: Thing\nmode: existing\nvalidators: {inferred: true}\nenums:\n  ThingPriority:\n    zero: unspecified\n    values: [THING_PRIORITY_LOW]\n    rejected: [THING_PRIORITY_PAGER_DUTY_INCIDENTS]\n    names: {THING_PRIORITY_LOW: alerts}\n    aliases: {unspecified: alerts}\n"
+	file := "resource: Thing\nmode: existing\nvalidators: {inferred: true}\nenums:\n  ThingPriority:\n    zero: unspecified\n    rejected: [{value: THING_PRIORITY_PAGER_DUTY_INCIDENTS, reason: test reason}]\n    names: {THING_PRIORITY_LOW: alerts}\n    aliases: {unspecified: alerts}\n"
 	files := checkLifecycleFixture(t, "Thing", syntheticContract(t), file)
 	types := string(files["api/coralogix/v1alpha1/thing_types.go"])
 	convert := string(files["api/coralogix/v1alpha1/thing_convert.go"])
@@ -394,7 +394,7 @@ func TestReleasedEnumValues(t *testing.T) {
 }
 
 func TestReleasedEnumCanRejectExplicitZero(t *testing.T) {
-	file := "resource: Thing\nmode: existing\nvalidators: {inferred: true}\nenums:\n  ThingPriority:\n    zero: unspecified\n    rejectZero: true\n    values: [THING_PRIORITY_LOW]\n    rejected: [THING_PRIORITY_PAGER_DUTY_INCIDENTS]\n"
+	file := "resource: Thing\nmode: existing\nvalidators: {inferred: true}\nenums:\n  ThingPriority:\n    zero: unspecified\n    rejectZero: true\n    rejected: [{value: THING_PRIORITY_PAGER_DUTY_INCIDENTS, reason: test reason}]\n"
 	files := checkLifecycleFixture(t, "Thing", syntheticContract(t), file)
 	types := string(files["api/coralogix/v1alpha1/thing_types.go"])
 	convert := string(files["api/coralogix/v1alpha1/thing_convert.go"])
@@ -484,14 +484,14 @@ func TestSkipRejectsInvalidLines(t *testing.T) {
 }
 
 func TestReleasedEnumVerbatimTrimmedAndBusinessFirst(t *testing.T) {
-	file := "resource: Thing\nmode: existing\nvalidators: {inferred: true}\nenums:\n  ThingPriority:\n    zero: unspecified\n    values: [THING_PRIORITY_LOW, THING_PRIORITY_PAGER_DUTY_INCIDENTS]\n    trimPrefix: THING_PRIORITY_\n    verbatim: true\n"
+	file := "resource: Thing\nmode: existing\nvalidators: {inferred: true}\nenums:\n  ThingPriority:\n    zero: unspecified\n    trimPrefix: THING_PRIORITY_\n    verbatim: true\n"
 	files := checkLifecycleFixture(t, "Thing", syntheticContract(t), file)
 	types := string(files["api/coralogix/v1alpha1/thing_types.go"])
 	if !strings.Contains(types, "Enum=unspecified;LOW;PAGER_DUTY_INCIDENTS") {
 		t.Error("verbatim and trimPrefix must set the CR enum values")
 	}
 	contract := strings.Replace(syntheticContract(t), "enum: [THING_PRIORITY_UNSPECIFIED, THING_PRIORITY_LOW, THING_PRIORITY_PAGER_DUTY_INCIDENTS]", "enum: [THING_PRIORITY_LOW, THING_PRIORITY_PAGER_DUTY_INCIDENTS]", 1)
-	file = "resource: Thing\nmode: existing\nvalidators: {inferred: true}\nenums:\n  ThingPriority:\n    values: [THING_PRIORITY_LOW, THING_PRIORITY_PAGER_DUTY_INCIDENTS]\n    verbatim: true\n"
+	file = "resource: Thing\nmode: existing\nvalidators: {inferred: true}\nenums:\n  ThingPriority:\n    verbatim: true\n"
 	files = checkLifecycleFixture(t, "Thing", contract, file)
 	if !strings.Contains(string(files["api/coralogix/v1alpha1/thing_types.go"]), "Enum=THING_PRIORITY_LOW;THING_PRIORITY_PAGER_DUTY_INCIDENTS") {
 		t.Error("a business first value must stay accepted")
@@ -499,7 +499,7 @@ func TestReleasedEnumVerbatimTrimmedAndBusinessFirst(t *testing.T) {
 }
 
 func TestReleasedEnumNameKeepsOtherDefaultNames(t *testing.T) {
-	file := "resource: Thing\nmode: existing\nvalidators: {inferred: true}\nenums:\n  ThingPriority:\n    zero: unspecified\n    values: [THING_PRIORITY_LOW, THING_PRIORITY_PAGER_DUTY_INCIDENTS]\n    names: {THING_PRIORITY_LOW: alerts}\n"
+	file := "resource: Thing\nmode: existing\nvalidators: {inferred: true}\nenums:\n  ThingPriority:\n    zero: unspecified\n    names: {THING_PRIORITY_LOW: alerts}\n"
 	files := checkLifecycleFixture(t, "Thing", syntheticContract(t), file)
 	if !strings.Contains(string(files["api/coralogix/v1alpha1/thing_types.go"]), "Enum=unspecified;alerts;pagerDutyIncidents") {
 		t.Error("the name override must keep the other CR spelling")
@@ -513,11 +513,13 @@ func TestCompatibilityLinesRejectInvalidValues(t *testing.T) {
 	}{
 		{"BodyIDThing", "types:\n  BodyIDThing:\n    fields:\n      name: {name: limit}\n", codeNameCollision},
 		{"BodyIDThing", "types:\n  BodyIDThing:\n    fields:\n      name: {required: true, optional: true}\n", codeOverrideInvalid},
-		{"Thing", "enums:\n  ThingPriority: {zero: unspecified, values: [THING_PRIORITY_LOW], rejected: [NOT_IN_API]}\n", codeOverrideInvalid},
-		{"Thing", "enums:\n  ThingPriority: {zero: unspecified, values: [THING_PRIORITY_LOW], rejected: [THING_PRIORITY_UNSPECIFIED, THING_PRIORITY_PAGER_DUTY_INCIDENTS]}\n", codeOverrideInvalid},
-		{"Thing", "enums:\n  ThingPriority: {zero: unspecified, values: [THING_PRIORITY_LOW], names: {THING_PRIORITY_LOW: low}}\n", codeOverrideInvalid},
-		{"Thing", "enums:\n  ThingPriority: {zero: unspecified, values: [THING_PRIORITY_LOW, THING_PRIORITY_PAGER_DUTY_INCIDENTS], names: {THING_PRIORITY_LOW: same, THING_PRIORITY_PAGER_DUTY_INCIDENTS: same}}\n", codeNameCollision},
-		{"Thing", "enums:\n  ThingPriority: {zero: unspecified, values: [THING_PRIORITY_LOW], rejected: [THING_PRIORITY_PAGER_DUTY_INCIDENTS], aliases: {unspecified: missing}}\n", codeOverrideInvalid},
+		{"Thing", "enums:\n  ThingPriority: {zero: unspecified, rejected: [{value: NOT_IN_API, reason: test reason}]}\n", codeOverrideInvalid},
+		{"Thing", "enums:\n  ThingPriority: {zero: unspecified, rejected: [{value: THING_PRIORITY_UNSPECIFIED, reason: test reason}, {value: THING_PRIORITY_PAGER_DUTY_INCIDENTS, reason: test reason}]}\n", codeOverrideInvalid},
+		{"Thing", "enums:\n  ThingPriority: {zero: unspecified, rejected: [{value: THING_PRIORITY_PAGER_DUTY_INCIDENTS, reason: test reason}], names: {THING_PRIORITY_PAGER_DUTY_INCIDENTS: low}}\n", codeOverrideInvalid},
+		{"Thing", "enums:\n  ThingPriority: {zero: unspecified, names: {THING_PRIORITY_UNSPECIFIED: low}}\n", codeOverrideInvalid},
+		{"Thing", "enums:\n  ThingPriority: {zero: unspecified, trimPrefix: NOT_A_PREFIX}\n", codeOverrideInvalid},
+		{"Thing", "enums:\n  ThingPriority: {zero: unspecified, names: {THING_PRIORITY_LOW: same, THING_PRIORITY_PAGER_DUTY_INCIDENTS: same}}\n", codeNameCollision},
+		{"Thing", "enums:\n  ThingPriority: {zero: unspecified, rejected: [{value: THING_PRIORITY_PAGER_DUTY_INCIDENTS, reason: test reason}], aliases: {unspecified: missing}}\n", codeOverrideInvalid},
 	}
 	for _, tc := range cases {
 		t.Run(tc.resource+tc.fields, func(t *testing.T) {
@@ -540,7 +542,7 @@ func TestCompatibilityLinesRejectInvalidValues(t *testing.T) {
 
 func TestEnumLineWithoutOutputChangeIsUnused(t *testing.T) {
 	contract := strings.Replace(syntheticContract(t), "enum: [THING_PRIORITY_UNSPECIFIED, THING_PRIORITY_LOW, THING_PRIORITY_PAGER_DUTY_INCIDENTS]", "enum: [THING_PRIORITY_LOW, THING_PRIORITY_PAGER_DUTY_INCIDENTS]", 1)
-	file := "resource: Thing\nmode: existing\nvalidators: {inferred: true}\nenums:\n  ThingPriority: {values: [THING_PRIORITY_LOW, THING_PRIORITY_PAGER_DUTY_INCIDENTS]}\n"
+	file := "resource: Thing\nmode: existing\nvalidators: {inferred: true}\nenums:\n  ThingPriority: {}\n"
 	dir := t.TempDir()
 	openAPI, override := filepath.Join(dir, "openapi.yaml"), filepath.Join(dir, "behavior-overrides.yaml")
 	if err := os.WriteFile(openAPI, []byte(contract), 0o644); err != nil {
@@ -554,9 +556,9 @@ func TestEnumLineWithoutOutputChangeIsUnused(t *testing.T) {
 
 func TestEnumMarkerDelimitersAreRejected(t *testing.T) {
 	for name, line := range map[string]string{
-		"zero":    "zero: 'unspec,ified'\n    values: [THING_PRIORITY_LOW]",
-		"names":   "values: [THING_PRIORITY_LOW]\n    names: {THING_PRIORITY_LOW: 'foo,bar'}",
-		"aliases": "values: [THING_PRIORITY_LOW]\n    aliases: {'foo,bar': low}",
+		"zero":    "zero: 'unspec,ified'",
+		"names":   "names: {THING_PRIORITY_LOW: 'foo,bar'}",
+		"aliases": "aliases: {'foo,bar': low}",
 	} {
 		t.Run(name, func(t *testing.T) {
 			data := "resource: Thing\nmode: existing\nvalidators: {inferred: true}\nenums:\n  ThingPriority:\n    " + line + "\n"

@@ -48,12 +48,12 @@ types:
 enums:
   AttachmentConfigPolicy:
     verbatim: true
-    values: [AUTO, ENABLED, DISABLED]
   notification_center.ConnectorType:
     zero: unspecified
     rejectZero: true
-    values: [SLACK, GENERIC_HTTPS, PAGERDUTY, PAGERDUTY_INCIDENTS, EMAIL, MICROSOFT_TEAMS, EVENTBRIDGE, INCIDENT_IO]
-    rejected: [IBM_EVENT_NOTIFICATIONS, SERVICE_NOW]
+    rejected:
+      - {value: IBM_EVENT_NOTIFICATIONS, reason: the released CRD never accepted this value}
+      - {value: SERVICE_NOW, reason: the released CRD never accepted this value}
     names:
       GENERIC_HTTPS: genericHttps
       PAGERDUTY: pagerDuty
@@ -64,9 +64,9 @@ enums:
   notification_center.EntityType:
     zero: unspecified
     rejectZero: true
-    values: [ALERTS, CASES]
-    rejected: [TEST_NOTIFICATIONS, OLLY_SCHEDULED_TASKS]
+    rejected:
+      - {value: TEST_NOTIFICATIONS, reason: the released CRD never accepted this value}
+      - {value: OLLY_SCHEDULED_TASKS, reason: the released CRD never accepted this value}
   PresetType:
     zero: unspecified
     rejectZero: true
-    values: [SYSTEM, CUSTOM]

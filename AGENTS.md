@@ -105,7 +105,19 @@ cd tools/opgen && go run ./cmd/opgen check \
   - `sendNullAsEmpty` sends `""` or `[]` in Create and Update when the CR omits an optional string or list. Use it when the API keeps the stored value of an omitted field on a full replace, or needs `[]` instead of `null`. It is not valid on a required field, a number, a bool, an object, a map, or a reference. Existing kinds only.
   - `finalizer` keeps the released finalizer name of an existing kind. The generated name is `kebab(Kind).coralogix.com/finalizer`. A released kind with another name must set it, or deleting its existing objects hangs. It is an operator key, so the shared `iac` module does not know it.
   - `hooks` lists the handwritten steps of the generated lifecycle (see "Hooks" below). `status` declares extra status fields for a hook to set: `status: {externalId: {type: string}}`, with type `string`, `int32`, `int64`, or `bool`. Each field is a pointer with `omitempty`. `keepOnCleanup: true` keeps the field when a selector mismatch clears the remote status (like Dashboard `status.imported`). A generated kind with a `status` field owns its cleanup list: the cleanup removes `id`, `conditions`, `printableStatus`, and the fields without `keepOnCleanup`. The older fixed fields of handwritten kinds (`externalId`, `revision`, `accessPolicyManaged`) are removed only for a kind without `status` fields. A name cannot be `id`, `conditions`, or `printableStatus`. `status` is valid without `hooks`. Both keys need mode `existing`.
-  - `enums.<component>` lists accepted API `values` and `rejected` values. `zero`, `names`, `verbatim`, and `trimPrefix` set CR spellings. `aliases` maps one accepted CR spelling to another business value for requests. Each accepted spelling maps to a checked SDK constant. A new kind uses the contract without an enum line.
+  - `enums.<component>` sets the CR spellings of an API enum and lists the rejected values. The accepted values are the contract values, without the zero value and without the rejected values, in contract order. A new contract value is accepted with no edit, and it gets the spelling that the line's `names`, `verbatim`, and `trimPrefix` rules give, or the default spelling. The old `values` key is an error.
+  - `rejected` is a list of `{value, reason}`. The reason is required. It says why the operator cannot accept the value.
+  - `zero`, `names`, `verbatim`, and `trimPrefix` set CR spellings. `names` and `trimPrefix` must match accepted values. `aliases` maps one accepted CR spelling to another business value for requests. Each accepted spelling maps to a checked SDK constant. A new kind uses the contract without an enum line.
+  - `opgen check-schema` accepts an enum list that keeps every old value and adds new ones. A removed value or any other rule change still needs an approval.
+
+    ```yaml
+    enums:
+      notification_center.EntityType:
+        zero: unspecified
+        rejectZero: true
+        rejected:
+          - {value: TEST_NOTIFICATIONS, reason: the released CRD never accepted this value}
+    ```
   - Check values before writing them into Kubebuilder markers. Reject syntax characters that controller-gen can read as marker separators, or encode the values so the generated CRD keeps them exactly.
 - Hooks: a hook is handwritten Go code that runs at a fixed point of the generated lifecycle. It covers behavior that no override key can express. A hook changes the generated body. It never replaces it, so a new API field still reaches the CR, the conversions, and the request with no hook change.
   - Declare hooks in `behavior-overrides.yaml`: `hooks: [validate, beforeCreate, beforeUpdate, afterCreate, afterUpdate, beforeDelete]`. Mode `existing` only. `delete` replaces the generated DELETE, and a kind cannot declare it with `beforeDelete`. `afterCreate` needs `afterUpdate`: a failed `afterCreate` keeps `status.id`, so only `afterUpdate` runs on the next run and repairs it.

@@ -1016,7 +1016,12 @@ func (b *builder) enum(t *model.Type, path string) (*enumMap, error) {
 	line, overridden := b.file.Enum(t.Schema)
 	values := t.Values
 	if overridden {
-		values = slices.Clone(line.Values)
+		values = nil
+		for _, v := range t.Values {
+			if v != t.EnumZero && !line.IsRejected(v) {
+				values = append(values, v)
+			}
+		}
 		if line.Zero != "" && !line.RejectZero {
 			values = append([]string{t.EnumZero}, values...)
 		}

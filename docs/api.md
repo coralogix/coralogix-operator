@@ -16932,7 +16932,7 @@ PresetSpec defines the desired state of a Preset.
         <td>
           Connector type.<br/>
           <br/>
-            <i>Enum</i>: slack, genericHttps, pagerDuty, pagerDutyIncidents, email, microsoftTeams, eventBridge, incidentIo<br/>
+            <i>Enum</i>: slack, genericHttps, pagerDuty, email, pagerDutyIncidents, microsoftTeams, eventBridge, incidentIo<br/>
         </td>
         <td>true</td>
       </tr><tr>
