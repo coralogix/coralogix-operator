@@ -74,7 +74,7 @@ func stepsJSON(t *testing.T, steps [][]*omap) string {
 
 func wantShapeCode(t *testing.T, err error, code string) {
 	t.Helper()
-	shapeOf(t, err, code)
+	_ = shapeOf(t, err, code)
 }
 
 func shapeOf(t *testing.T, err error, code string) *shapeError {
