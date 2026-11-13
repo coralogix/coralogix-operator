@@ -119,7 +119,9 @@ var presetCoverageSpecs = []presetCoverageSpec{
   "configOverrides": [
     {
       "conditionType": {
-        "matchEntityType": {}
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "logsImmediateTriggered"
+        }
       },
       "messageConfig": {
         "fields": [
@@ -140,7 +142,7 @@ var presetCoverageSpecs = []presetCoverageSpec{
 }`,
 		expect: []string{
 			"\"AUTO\"",
-			"\"matchEntityType\":",
+			"\"matchEntityTypeAndSubType\":",
 			"\"SLACK\"",
 			"\"ALERTS\"",
 		},
@@ -152,7 +154,9 @@ var presetCoverageSpecs = []presetCoverageSpec{
   "configOverrides": [
     {
       "conditionType": {
-        "matchEntityType": {}
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "caseActivated"
+        }
       },
       "messageConfig": {
         "fields": [
@@ -177,7 +181,7 @@ var presetCoverageSpecs = []presetCoverageSpec{
 }`,
 		expect: []string{
 			"\"DISABLED\"",
-			"\"matchEntityType\":",
+			"\"matchEntityTypeAndSubType\":",
 			"\"GENERIC_HTTPS\"",
 			"\"CASES\"",
 		},
@@ -259,7 +263,9 @@ var presetCoverageSpecs = []presetCoverageSpec{
   "configOverrides": [
     {
       "conditionType": {
-        "matchEntityType": {}
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "logsImmediateTriggered"
+        }
       },
       "messageConfig": {
         "fields": [
@@ -280,7 +286,7 @@ var presetCoverageSpecs = []presetCoverageSpec{
 }`,
 		expect: []string{
 			"\"ENABLED\"",
-			"\"matchEntityType\":",
+			"\"matchEntityTypeAndSubType\":",
 			"\"EMAIL\"",
 			"\"ALERTS\"",
 		},
@@ -292,7 +298,9 @@ var presetCoverageSpecs = []presetCoverageSpec{
   "configOverrides": [
     {
       "conditionType": {
-        "matchEntityType": {}
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "caseActivated"
+        }
       },
       "messageConfig": {
         "fields": [
@@ -313,7 +321,7 @@ var presetCoverageSpecs = []presetCoverageSpec{
 }`,
 		expect: []string{
 			"\"ENABLED\"",
-			"\"matchEntityType\":",
+			"\"matchEntityTypeAndSubType\":",
 			"\"MICROSOFT_TEAMS\"",
 			"\"CASES\"",
 		},
@@ -325,7 +333,9 @@ var presetCoverageSpecs = []presetCoverageSpec{
   "configOverrides": [
     {
       "conditionType": {
-        "matchEntityType": {}
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "caseActivated"
+        }
       },
       "messageConfig": {
         "fields": [
@@ -350,7 +360,7 @@ var presetCoverageSpecs = []presetCoverageSpec{
 }`,
 		expect: []string{
 			"\"ENABLED\"",
-			"\"matchEntityType\":",
+			"\"matchEntityTypeAndSubType\":",
 			"\"EVENTBRIDGE\"",
 			"\"CASES\"",
 		},
@@ -362,7 +372,9 @@ var presetCoverageSpecs = []presetCoverageSpec{
   "configOverrides": [
     {
       "conditionType": {
-        "matchEntityType": {}
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "caseActivated"
+        }
       },
       "messageConfig": {
         "fields": [
@@ -383,7 +395,7 @@ var presetCoverageSpecs = []presetCoverageSpec{
 }`,
 		expect: []string{
 			"\"ENABLED\"",
-			"\"matchEntityType\":",
+			"\"matchEntityTypeAndSubType\":",
 			"\"INCIDENT_IO\"",
 			"\"CASES\"",
 		},

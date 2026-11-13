@@ -235,7 +235,9 @@ var presetCoverageSteps = [][]string{
   "configOverrides": [
     {
       "conditionType": {
-        "matchEntityType": {}
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "logsImmediateTriggered"
+        }
       },
       "messageConfig": {
         "fields": [
@@ -259,7 +261,9 @@ var presetCoverageSteps = [][]string{
   "configOverrides": [
     {
       "conditionType": {
-        "matchEntityType": {}
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "caseActivated"
+        }
       },
       "messageConfig": {
         "fields": [
@@ -339,7 +343,9 @@ var presetCoverageSteps = [][]string{
   "configOverrides": [
     {
       "conditionType": {
-        "matchEntityType": {}
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "logsImmediateTriggered"
+        }
       },
       "messageConfig": {
         "fields": [
@@ -363,7 +369,9 @@ var presetCoverageSteps = [][]string{
   "configOverrides": [
     {
       "conditionType": {
-        "matchEntityType": {}
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "caseActivated"
+        }
       },
       "messageConfig": {
         "fields": [
@@ -387,7 +395,9 @@ var presetCoverageSteps = [][]string{
   "configOverrides": [
     {
       "conditionType": {
-        "matchEntityType": {}
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "caseActivated"
+        }
       },
       "messageConfig": {
         "fields": [
@@ -415,7 +425,9 @@ var presetCoverageSteps = [][]string{
   "configOverrides": [
     {
       "conditionType": {
-        "matchEntityType": {}
+        "matchEntityTypeAndSubType": {
+          "entitySubType": "caseActivated"
+        }
       },
       "messageConfig": {
         "fields": [

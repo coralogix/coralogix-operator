@@ -44,6 +44,10 @@ values:
       template: '{}'
     - fieldName: body
       template: '{ "groupingKey": "{{alert.groupingKey}}", "status": "{{alert.status}}", "groups": "{{alert.groups}}" }'
+skipChoices:
+  notification_center.ConditionType:
+    choices: [matchEntityType]
+    reason: Kubernetes 1.25, the oldest version in CI, rejects an empty-object oneOf arm in the CEL rule at admission
 when:
   # Each entry is one valid pair of connector type and entity type, with the system parent preset
   # and a config that the preset type accepts. Probed on the live API: PAGERDUTY_INCIDENTS,
@@ -54,7 +58,7 @@ when:
       parentId: preset_system_slack_alerts_basic
       attachmentConfig: AUTO
       configOverrides:
-        - conditionType: {matchEntityType: {}}
+        - conditionType: {matchEntityTypeAndSubType: {entitySubType: logsImmediateTriggered}}
           payloadType: slack_structured
           messageConfig: {fields: [{fieldName: title, template: Coverage alert}]}
   - match: {connectorType: slack, entityType: cases}
@@ -79,7 +83,7 @@ when:
       parentId: preset_system_generic_https_cases_empty
       attachmentConfig: DISABLED
       configOverrides:
-        - conditionType: {matchEntityType: {}}
+        - conditionType: {matchEntityTypeAndSubType: {entitySubType: caseActivated}}
           payloadType: generic_https_default
           messageConfig:
             fields:
@@ -110,28 +114,28 @@ when:
     set:
       parentId: preset_system_email_alerts
       configOverrides:
-        - conditionType: {matchEntityType: {}}
+        - conditionType: {matchEntityTypeAndSubType: {entitySubType: logsImmediateTriggered}}
           payloadType: email_default
           messageConfig: {fields: [{fieldName: customSubject, template: '{{ alertDef.name }}'}]}
   - match: {connectorType: email, entityType: cases}
     set:
       parentId: preset_system_email_cases
       configOverrides:
-        - conditionType: {matchEntityType: {}}
+        - conditionType: {matchEntityTypeAndSubType: {entitySubType: caseActivated}}
           payloadType: email_default
           messageConfig: {fields: [{fieldName: customSubject, template: '{{ case.title }}'}]}
   - match: {connectorType: microsoftTeams, entityType: cases}
     set:
       parentId: preset_system_microsoft_teams_cases_basic
       configOverrides:
-        - conditionType: {matchEntityType: {}}
+        - conditionType: {matchEntityTypeAndSubType: {entitySubType: caseActivated}}
           payloadType: microsoft_teams_default
           messageConfig: {fields: [{fieldName: payload, template: '{ "text": "{{ case.title }}" }'}]}
   - match: {connectorType: eventBridge, entityType: cases}
     set:
       parentId: preset_system_eventbridge_cases_basic
       configOverrides:
-        - conditionType: {matchEntityType: {}}
+        - conditionType: {matchEntityTypeAndSubType: {entitySubType: caseActivated}}
           payloadType: eventbridge_default
           messageConfig:
             fields:
@@ -141,6 +145,6 @@ when:
     set:
       parentId: preset_system_incident_io_cases_basic
       configOverrides:
-        - conditionType: {matchEntityType: {}}
+        - conditionType: {matchEntityTypeAndSubType: {entitySubType: caseActivated}}
           payloadType: incident_io_default
           messageConfig: {fields: [{fieldName: title, template: '{{ case.title }}'}]}

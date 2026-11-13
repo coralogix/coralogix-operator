@@ -111,6 +111,7 @@ cd tools/opgen && go run ./cmd/opgen check \
     ```
 - Each generated kind gets two kinds of coverage test.
   - An offline test, `internal/controller/coralogix/v1alpha1/<kind>_coverage_test.go`. It runs in `make unit-tests` with no key. It sends each spec through CRD admission in envtest, then builds the Create request and checks that each counted value and arm is in it.
+    - `make unit-tests` uses envtest 1.30.3, but the live CI cluster is older (Kind with Kubernetes 1.25). An empty-object oneOf arm passes on 1.30.3 and fails on 1.25. To check an older version, run the test with `KUBEBUILDER_ASSETS` set to the 1.28.3 assets of `bin/k8s`, which fail the same way.
   - A live test, the `<Kind> (coverage)` Describe of `tests/e2e/<kind>_generated_test.go`. It has the label `coverage` and one label `coverage-<kind>-<step>` for each step. `make e2e-tests` skips it (`!coverage`).
 - `tests/e2e/coverage-shards.yaml` is generated. It packs the steps into shards of about 4 minutes. All steps of a `serial` kind stay in one shard. The last shard, `coverage-rest`, runs every coverage spec that no label names.
   - `.github/workflows/coverage-tests.yaml` reads this file. It builds the image once and runs each shard in its own Kind cluster. A new step needs no workflow edit.
