@@ -48,7 +48,7 @@ when:
   # Each entry is one valid pair of connector type and entity type, with the system parent preset
   # and a config that the preset type accepts. Probed on the live API: PAGERDUTY_INCIDENTS,
   # MICROSOFT_TEAMS, EVENTBRIDGE, and INCIDENT_IO are accepted for CASES only. Their ALERTS pairs
-  # return 400, so they have no entry.
+  # return 400, so they have no entry. The API refuses an override of the EventBridge field source.
   - match: {connectorType: slack, entityType: alerts}
     set:
       parentId: preset_system_slack_alerts_basic
@@ -136,7 +136,6 @@ when:
           messageConfig:
             fields:
               - {fieldName: detailType, template: Coverage case}
-              - {fieldName: source, template: com.coralogix.coverage}
               - {fieldName: detail, template: '{ "id": "{{ case.id }}" }'}
   - match: {connectorType: incidentIo, entityType: cases}
     set:

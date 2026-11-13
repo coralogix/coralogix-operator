@@ -334,10 +334,6 @@ var presetCoverageSpecs = []presetCoverageSpec{
             "template": "Coverage case"
           },
           {
-            "fieldName": "source",
-            "template": "com.coralogix.coverage"
-          },
-          {
             "fieldName": "detail",
             "template": "{ \"id\": \"{{ case.id }}\" }"
           }
