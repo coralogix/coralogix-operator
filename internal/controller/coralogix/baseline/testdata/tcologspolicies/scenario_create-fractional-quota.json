@@ -1,0 +1,90 @@
+[
+  {
+    "step": "create with a fractional daily quota percentage on a target",
+    "spec": {
+      "policies": [
+        {
+          "name": "quota-override",
+          "severities": [
+            "info"
+          ],
+          "targets": [
+            {
+              "dataset": "myDataset",
+              "priority": "low",
+              "priorityOverride": {
+                "quotaBased": {
+                  "usageTiers": [
+                    {
+                      "dailyQuotaPercentage": "60.5",
+                      "priority": "medium"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/log-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "logRules": {
+                "severities": [
+                  "SEVERITY_INFO"
+                ]
+              },
+              "policy": {
+                "description": "",
+                "name": "quota-override",
+                "priority": "PRIORITY_TYPE_UNSPECIFIED",
+                "targets": [
+                  {
+                    "dataset": "myDataset",
+                    "priority": "PRIORITY_TYPE_LOW",
+                    "priorityOverride": {
+                      "quotaBased": {
+                        "usageTiers": [
+                          {
+                            "dailyQuotaPercentage": 60.5,
+                            "priority": "PRIORITY_TYPE_MEDIUM"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "tco-logs-policies.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

@@ -49,6 +49,10 @@ type fidelityConfig struct {
 	// deletePath returns the path that deletes a resource. The recorder calls it for each
 	// captured id when it ends, so a failed run leaves nothing behind.
 	deletePath func(id string) string
+	// overwritesTeam is true for a kind whose API replaces every resource of the kind in the
+	// team, such as the TCO policies. Its cases delete what the team had. The recorder runs them
+	// only when RECORD_FIDELITY_OVERWRITE_TEAM names the kind.
+	overwritesTeam bool
 }
 
 type fidelityStep struct {
@@ -154,6 +158,9 @@ func TestRecordFidelity(t *testing.T) {
 	k, ok := kinds[name]
 	if !ok {
 		t.Fatalf("unknown kind %q", name)
+	}
+	if k.fidelity.overwritesTeam && os.Getenv("RECORD_FIDELITY_OVERWRITE_TEAM") != name {
+		t.Fatalf("the %s cases replace every %s resource of the team. Use a team that holds nothing you need, and set RECORD_FIDELITY_OVERWRITE_TEAM=%s.", name, name, name)
 	}
 	base := recordBaseURL(t)
 	apiKey := os.Getenv("CORALOGIX_API_KEY")

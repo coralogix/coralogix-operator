@@ -1,0 +1,79 @@
+[
+  {
+    "step": "create with a fractional quota-based override",
+    "spec": {
+      "policies": [
+        {
+          "name": "quota-override",
+          "priority": "low",
+          "priorityOverride": {
+            "quotaBased": {
+              "usageTiers": [
+                {
+                  "dailyQuotaPercentage": "60.5",
+                  "priority": "medium"
+                }
+              ]
+            }
+          },
+          "severities": [
+            "info"
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/rum-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "policy": {
+                "description": "",
+                "name": "quota-override",
+                "priority": "PRIORITY_TYPE_LOW",
+                "priorityOverride": {
+                  "quotaBased": {
+                    "usageTiers": [
+                      {
+                        "dailyQuotaPercentage": 60.5,
+                        "priority": "PRIORITY_TYPE_MEDIUM"
+                      }
+                    ]
+                  }
+                }
+              },
+              "rumRules": {
+                "severities": [
+                  "SEVERITY_INFO"
+                ]
+              }
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "tco-rum-policies.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

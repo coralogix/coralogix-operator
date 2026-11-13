@@ -1,0 +1,118 @@
+[
+  {
+    "step": "create with 50 subsystem names: they are sent as one comma-separated name",
+    "spec": {
+      "policies": [
+        {
+          "name": "at-limit",
+          "priority": "low",
+          "severities": [
+            "info"
+          ],
+          "subsystems": {
+            "names": [
+              "subsystem-0",
+              "subsystem-1",
+              "subsystem-2",
+              "subsystem-3",
+              "subsystem-4",
+              "subsystem-5",
+              "subsystem-6",
+              "subsystem-7",
+              "subsystem-8",
+              "subsystem-9",
+              "subsystem-10",
+              "subsystem-11",
+              "subsystem-12",
+              "subsystem-13",
+              "subsystem-14",
+              "subsystem-15",
+              "subsystem-16",
+              "subsystem-17",
+              "subsystem-18",
+              "subsystem-19",
+              "subsystem-20",
+              "subsystem-21",
+              "subsystem-22",
+              "subsystem-23",
+              "subsystem-24",
+              "subsystem-25",
+              "subsystem-26",
+              "subsystem-27",
+              "subsystem-28",
+              "subsystem-29",
+              "subsystem-30",
+              "subsystem-31",
+              "subsystem-32",
+              "subsystem-33",
+              "subsystem-34",
+              "subsystem-35",
+              "subsystem-36",
+              "subsystem-37",
+              "subsystem-38",
+              "subsystem-39",
+              "subsystem-40",
+              "subsystem-41",
+              "subsystem-42",
+              "subsystem-43",
+              "subsystem-44",
+              "subsystem-45",
+              "subsystem-46",
+              "subsystem-47",
+              "subsystem-48",
+              "subsystem-49"
+            ],
+            "ruleType": "is"
+          }
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/log-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "logRules": {
+                "severities": [
+                  "SEVERITY_INFO"
+                ]
+              },
+              "policy": {
+                "description": "",
+                "name": "at-limit",
+                "priority": "PRIORITY_TYPE_LOW",
+                "subsystemRule": {
+                  "name": "subsystem-0,subsystem-1,subsystem-2,subsystem-3,subsystem-4,subsystem-5,subsystem-6,subsystem-7,subsystem-8,subsystem-9,subsystem-10,subsystem-11,subsystem-12,subsystem-13,subsystem-14,subsystem-15,subsystem-16,subsystem-17,subsystem-18,subsystem-19,subsystem-20,subsystem-21,subsystem-22,subsystem-23,subsystem-24,subsystem-25,subsystem-26,subsystem-27,subsystem-28,subsystem-29,subsystem-30,subsystem-31,subsystem-32,subsystem-33,subsystem-34,subsystem-35,subsystem-36,subsystem-37,subsystem-38,subsystem-39,subsystem-40,subsystem-41,subsystem-42,subsystem-43,subsystem-44,subsystem-45,subsystem-46,subsystem-47,subsystem-48,subsystem-49",
+                  "ruleTypeId": "RULE_TYPE_ID_IS"
+                }
+              }
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "tco-logs-policies.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

@@ -1,0 +1,131 @@
+{
+  "dpxl expression": {
+    "accepted": true
+  },
+  "dpxl expression and actions": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0]",
+        "message": "Invalid value: \"object\": dpxlExpression is mutually exclusive with services, actions, tags, applications and subsystems"
+      }
+    ]
+  },
+  "dpxl expression and an empty tags": {
+    "accepted": true
+  },
+  "dpxl expression and applications": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0]",
+        "message": "Invalid value: \"object\": dpxlExpression is mutually exclusive with services, actions, tags, applications and subsystems"
+      }
+    ]
+  },
+  "dpxl expression and services": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0]",
+        "message": "Invalid value: \"object\": dpxlExpression is mutually exclusive with services, actions, tags, applications and subsystems"
+      }
+    ]
+  },
+  "dpxl expression and subsystems": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0]",
+        "message": "Invalid value: \"object\": dpxlExpression is mutually exclusive with services, actions, tags, applications and subsystems"
+      }
+    ]
+  },
+  "dpxl expression and tags": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0]",
+        "message": "Invalid value: \"object\": dpxlExpression is mutually exclusive with services, actions, tags, applications and subsystems"
+      }
+    ]
+  },
+  "empty dpxl expression": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0].dpxlExpression",
+        "message": "Invalid value: \"\": spec.policies[0].dpxlExpression in body should be at least 1 chars long"
+      }
+    ]
+  },
+  "more than 200 policies": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooMany",
+        "field": "spec.policies",
+        "message": "Too many: 201: must have at most 200 items"
+      }
+    ]
+  },
+  "no priority": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.policies[0].priority",
+        "message": "Required value"
+      }
+    ]
+  },
+  "policy override": {
+    "accepted": true
+  },
+  "retention with both name and id": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0].archiveRetention.backendRef",
+        "message": "Invalid value: \"object\": exactly one of name or id must be set"
+      }
+    ]
+  },
+  "tag name without the tags prefix": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0].tags[0].name",
+        "message": "Invalid value: \"http\": spec.policies[0].tags[0].name in body should match '^tags\\..*'"
+      }
+    ]
+  },
+  "tag with more than 50 values": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooMany",
+        "field": "spec.policies[0].tags[0].values",
+        "message": "Too many: 51: must have at most 50 items"
+      }
+    ]
+  },
+  "tag without values": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0].tags[0].values",
+        "message": "Invalid value: 0: spec.policies[0].tags[0].values in body should have at least 1 items"
+      }
+    ]
+  }
+}

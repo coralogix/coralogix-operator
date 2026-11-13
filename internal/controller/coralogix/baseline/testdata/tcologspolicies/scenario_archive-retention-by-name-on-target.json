@@ -1,0 +1,83 @@
+[
+  {
+    "step": "create with a retention name on a target only: one retentions read",
+    "spec": {
+      "policies": [
+        {
+          "name": "target-retention",
+          "severities": [
+            "info"
+          ],
+          "targets": [
+            {
+              "archiveRetention": {
+                "backendRef": {
+                  "name": "Default"
+                }
+              },
+              "dataset": "myDataset",
+              "priority": "low"
+            }
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/dataengine/retention-tags/v1",
+        "status": 200
+      },
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/log-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "logRules": {
+                "severities": [
+                  "SEVERITY_INFO"
+                ]
+              },
+              "policy": {
+                "description": "",
+                "name": "target-retention",
+                "priority": "PRIORITY_TYPE_UNSPECIFIED",
+                "targets": [
+                  {
+                    "archiveRetention": {
+                      "id": "00000000-0000-4000-8000-0000000000a1"
+                    },
+                    "dataset": "myDataset",
+                    "priority": "PRIORITY_TYPE_LOW"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "tco-logs-policies.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

@@ -1,0 +1,63 @@
+[
+  {
+    "step": "create with a service rule only",
+    "spec": {
+      "policies": [
+        {
+          "name": "traces-structured",
+          "priority": "high",
+          "services": {
+            "names": [
+              "service"
+            ],
+            "ruleType": "is"
+          }
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/span-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "policy": {
+                "description": "",
+                "name": "traces-structured",
+                "priority": "PRIORITY_TYPE_HIGH"
+              },
+              "spanRules": {
+                "serviceRule": {
+                  "name": "service",
+                  "ruleTypeId": "RULE_TYPE_ID_IS"
+                }
+              }
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "tco-traces-policies.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]
