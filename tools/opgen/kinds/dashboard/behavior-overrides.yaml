@@ -1,0 +1,40 @@
+resource: Dashboard
+mode: existing
+validators:
+  inferred: true
+# The CR holds the dashboard as JSON text from json, gzipJson, or a ConfigMap. The CRD has no
+# schema for it; the SDK decoder reads the text into the SDK type.
+content:
+  decode: github.com/coralogix/coralogix-management-sdk/go/openapi/dashboardjson.Unmarshal
+api:
+  requestWrapper: dashboard
+  # Get reads /dashboards/{dashboard_id}; the dashboard holds the id in its id property.
+  idProperty: id
+  # The id is set by the server, and the contract does not require it in the Get response.
+  serverSetID: true
+  # Replace has no id in its path: it reads dashboard.id.
+  updateIDInBody: true
+  # Create answers {dashboardId} without the dashboard.
+  createResponseOnlyIDProperty: dashboardId
+  requestValues:
+    create:
+      requestId: {source: uuid, value: "cx-operator-create-"}
+      accessPolicy: {source: field}
+      isLocked: {source: omit}   # the released CR never sent it
+    update:
+      requestId: {source: uuid, value: "cx-operator-replace-"}
+      accessPolicy: {source: field}
+      isLocked: {source: omit}
+      dashboardId: {source: omit}   # Replace reads dashboard.id
+types:
+  Dashboard:
+    fields:
+      id: {readOnly: true}
+# folderRef sets dashboard.folderId or dashboard.folderPath (beforeCreate, beforeUpdate).
+spec:
+  folderRef: {type: DashboardFolderRef}
+hooks: [validate, beforeCreate, adopt, beforeUpdate]
+status:
+  # Set once the import annotation adopted the remote dashboard. It survives a selector mismatch
+  # and a remote deletion, so the dashboard is then created from the spec, not imported again.
+  imported: {type: bool, keepOnCleanup: true}

@@ -249,13 +249,6 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "AlertScheduler")
 		os.Exit(1)
 	}
-	if err = (&v1alpha1controllers.DashboardReconciler{
-		DashboardsClient: oapiClientSet.Dashboards(),
-		Interval:         cfg.ReconcileIntervals[utils.DashboardKind],
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Dashboard")
-		os.Exit(1)
-	}
 	if err = (&v1alpha1controllers.DashboardsFolderReconciler{
 		DashboardsFoldersClient: oapiClientSet.DashboardFolders(),
 		Interval:                cfg.ReconcileIntervals[utils.DashboardsFolderKind],

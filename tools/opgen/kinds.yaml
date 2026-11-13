@@ -12,3 +12,5 @@ kinds:
     resource: View
   - kind: ViewFolder
     resource: ViewFolder
+  - kind: Dashboard
+    resource: Dashboard
