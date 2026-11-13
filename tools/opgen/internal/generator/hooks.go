@@ -9,6 +9,7 @@ import (
 type hookData struct {
 	Validate     bool
 	BeforeCreate bool
+	Adopt        bool
 	BeforeUpdate bool
 	AfterCreate  bool
 	AfterUpdate  bool
@@ -36,6 +37,7 @@ func (b *builder) hooks(d *kindData) error {
 	d.Hooks = hookData{
 		Validate:     file.HasHook(overrides.HookValidate),
 		BeforeCreate: file.HasHook(overrides.HookBeforeCreate),
+		Adopt:        file.HasHook(overrides.HookAdopt),
 		BeforeUpdate: file.HasHook(overrides.HookBeforeUpdate),
 		AfterCreate:  file.HasHook(overrides.HookAfterCreate),
 		AfterUpdate:  file.HasHook(overrides.HookAfterUpdate),
@@ -63,6 +65,18 @@ func (b *builder) hooks(d *kindData) error {
 		d.Hooks.UpdateResponse = "*" + qualify(updated.Name, b.alias)
 	}
 	return nil
+}
+
+// KeptStatusFields are the extra status fields with keepOnCleanup. Create keeps them when it sets
+// status.id: they outlive the remote resource.
+func (d *kindData) KeptStatusFields() []statusField {
+	var out []statusField
+	for _, f := range d.Status {
+		if f.KeepOnCleanup {
+			out = append(out, f)
+		}
+	}
+	return out
 }
 
 // RemoteStatusFields are the extra status fields that a selector mismatch removes.

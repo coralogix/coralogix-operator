@@ -68,6 +68,9 @@ type e2eUpgrade struct {
 type e2eUpdate struct {
 	Field string `yaml:"field"`
 	Value any    `yaml:"value"`
+	// Check is the property of the resource that the update step compares, for a kind with the
+	// content key: the step sets json to Value and reads Check from the JSON of the Get response.
+	Check string `yaml:"check"`
 }
 
 func readE2E(path string) (*e2eFile, error) {
@@ -119,6 +122,9 @@ type upgradeData struct {
 // the value that the API then returns, and the expression that reads it from the response "got".
 type updateData struct {
 	Field, Set, Want, Got string
+	// Check is the resource property that the step compares for a kind with the content key.
+	// Want is then the new JSON text.
+	Check string
 	// NotNil lists values that the check reads through: the nested object of a createAs field.
 	NotNil []string
 }
@@ -387,6 +393,12 @@ func objectValue(object any, field string) any {
 // updateStep picks the change of the update step: the update line of e2e.yaml, or the first
 // mutable scalar outside a oneOf. A top-level field takes precedence over a grouped field.
 func updateStep(d *kindData, ix *refIndex, candidates []updateCandidate, file *e2eFile, nameField string) (*updateData, error) {
+	if d.Content != nil {
+		return contentUpdateStep(file)
+	}
+	if file.Update != nil && file.Update.Check != "" {
+		return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":update.check", msg: "only a kind with the content key uses check"}
+	}
 	resource, err := ix.typeRef("fields")
 	if err != nil {
 		return nil, err
@@ -445,6 +457,24 @@ func updateStep(d *kindData, ix *refIndex, candidates []updateCandidate, file *e
 	}
 	return nil, &shapeError{code: codeE2ERequired, path: e2eFileName + ":update",
 		msg: "the spec has no mutable string, bool, or integer outside a oneOf that the update step can change; set update in " + e2eFileName}
+}
+
+// contentUpdateStep sets json to new content, and compares one property of the resource.
+func contentUpdateStep(file *e2eFile) (*updateData, error) {
+	if file.Update == nil || file.Update.Field != "json" || file.Update.Check == "" {
+		return nil, &shapeError{code: codeE2ERequired, path: e2eFileName + ":update",
+			msg: "a kind with the content key needs update: {field: json, value: <JSON text>, check: <resource property>}"}
+	}
+	text, ok := file.Update.Value.(string)
+	var parsed map[string]any
+	if !ok || json.Unmarshal([]byte(text), &parsed) != nil {
+		return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":update.value", msg: "the value must be a JSON object as text"}
+	}
+	if _, ok := parsed[file.Update.Check]; !ok {
+		return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":update.check", msg: "the value has no such property"}
+	}
+	value := strconv.Quote(text)
+	return &updateData{Field: "Json", Set: "ptr.To(" + value + ")", Want: value, Check: file.Update.Check}, nil
 }
 
 // updateValue is the new value of the update step as Go code.

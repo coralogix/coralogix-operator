@@ -91,6 +91,20 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 		}
 		d.CreateResponseField, d.CreateResponseValue = field.Name, field.Want == resource.Name
 	}
+	if r.Create.Response.ID != "" {
+		response, err := b.ix.typeRef("create.response")
+		if err != nil {
+			return err
+		}
+		field, err := b.ix.field(response.Name, r.Create.Response.ID)
+		if err != nil {
+			return err
+		}
+		if strings.TrimPrefix(field.Want, "*") != "string" {
+			return unsupported("create.response", "the SDK id type %s of the Create response does not match the API string", field.Want)
+		}
+		d.CreateResponseIDField, d.CreateResponseIDValue = field.Name, field.Want == "string"
+	}
 	if r.Get.Response.Field != "" {
 		response, err := b.ix.typeRef("get.response")
 		if err != nil {
@@ -138,11 +152,26 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 	return nil
 }
 
+// specConversions writes the conversions of the spec fields to the Create and Update resources.
+func (b *builder) specConversions(d *kindData, create, update []*model.Field) error {
+	createType, updateType := d.CreateBody, d.UpdateBody
+	createSuffix, updateSuffix := "", ""
+	if d.CreateResourceBody != "" {
+		createType, updateType = d.CreateResourceBody, d.UpdateResourceBody
+		createSuffix, updateSuffix = "Create", "Update"
+	}
+	var err error
+	if d.CreateConv, err = b.conversionAs(d.Spec, createType, create, "spec", createSuffix); err != nil {
+		return err
+	}
+	d.UpdateConv, err = b.conversionAs(d.Spec, updateType, update, "spec", updateSuffix)
+	return err
+}
+
 // requests builds the conversions of the spec to the Create and Update bodies, and the update mask.
 func (b *builder) requests(r *model.Resource, d *kindData) error {
 	var create, update []*model.Field
 	var mask []string
-	var err error
 	bodyID := r.Policy.UpdateIDInBody
 	for _, f := range r.Fields {
 		var requestPath []string
@@ -168,16 +197,11 @@ func (b *builder) requests(r *model.Resource, d *kindData) error {
 			mask = append(mask, f.Name)
 		}
 	}
-	createType, updateType := d.CreateBody, d.UpdateBody
-	createSuffix, updateSuffix := "", ""
-	if d.CreateResourceBody != "" {
-		createType, updateType = d.CreateResourceBody, d.UpdateResourceBody
-		createSuffix, updateSuffix = "Create", "Update"
-	}
-	if d.CreateConv, err = b.conversionAs(d.Spec, createType, create, "spec", createSuffix); err != nil {
-		return err
-	}
-	if d.UpdateConv, err = b.conversionAs(d.Spec, updateType, update, "spec", updateSuffix); err != nil {
+	if d.Content != nil {
+		// The content method builds the whole resource; the spec has no field of it.
+		d.CreateConv, d.UpdateConv = "DecodeContent", "DecodeContent"
+		b.code = append(b.code, b.contentMethod(d))
+	} else if err := b.specConversions(d, create, update); err != nil {
 		return err
 	}
 	if bodyID {
@@ -228,11 +252,14 @@ func (b *builder) requestValues(r *model.Resource, d *kindData) error {
 			if name == r.UpdateMask && request.name == "update" && r.MaskInBody {
 				return unsupported(location, "the update mask already sets this field")
 			}
+			source := b.file.API.RequestValues[request.name][name]
+			if source.Source == "omit" {
+				continue // the request leaves the field out
+			}
 			ref, err := b.ix.field(request.body, name)
 			if err != nil {
 				return unsupported(location, "%s", err)
 			}
-			source := b.file.API.RequestValues[request.name][name]
 			expr, pointer, err := b.requestValueExpression(source, d, location)
 			if err != nil {
 				return err
@@ -264,6 +291,10 @@ func (b *builder) requestValueExpression(source overrides.RequestValue, d *kindD
 		return strconv.Quote(source.Value), false, nil
 	}
 	name := strings.TrimPrefix(source.Source, "spec.")
+	if source.Source == "field" {
+		name = strings.TrimPrefix(location, "api.requestValues.create.")
+		name = strings.TrimPrefix(name, "api.requestValues.update.")
+	}
 	for _, field := range d.Spec.Fields {
 		if field.JSON == name && field.typ != nil && field.typ.Kind == model.String {
 			return "in.Spec." + field.GoName, field.Optional, nil
