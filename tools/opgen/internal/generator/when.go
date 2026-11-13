@@ -266,18 +266,24 @@ func (c *coverage) choose(entry *whenEntry, planned map[coverageKey]bool) (assig
 	keys := map[coverageKey]bool{}
 	below := 0
 	for _, choice := range entry.choices {
+		// An open option wins. Among the rest, the arm with the most open values below it wins, so a
+		// list of options is worked off until every value below every arm is sent. A tie takes the first.
 		var picked *whenOption
+		best := -1
 		for i := range choice.options {
 			option := &choice.options[i]
 			if c.skipped[option.key] {
 				continue
 			}
-			if picked == nil {
-				picked = option
-			}
+			score := 0
 			if c.open(option.key) && !planned[option.key] {
-				picked = option
-				break
+				score = uncoveredArmWeight
+			}
+			if option.field != nil {
+				score += c.openBelow(option.field, map[*crType]bool{})
+			}
+			if score > best {
+				picked, best = option, score
 			}
 		}
 		if picked == nil {

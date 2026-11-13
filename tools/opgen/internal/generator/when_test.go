@@ -358,3 +358,22 @@ func TestWhenArmIsRevisitedWhileItsValuesAreOpen(t *testing.T) {
 		}
 	}
 }
+
+// One entry can list several arms. The sweep must come back to an arm of the list while values
+// below it are open, not fall back to the first arm.
+func TestWhenListOfArmsIsWorkedOffUntilEveryValueIsSent(t *testing.T) {
+	entries := []e2eWhen{{Match: map[string]any{"query": []any{"logs", "spans"}}}}
+	steps, v, err := specsOf(t, coverageSpec(), &e2eFile{When: entries})
+	if err != nil {
+		t.Fatalf("every value below every listed arm must be reached: %v", err)
+	}
+	if missing := v.cov.missing(); len(missing) != 0 {
+		t.Fatalf("left %v", missing)
+	}
+	all := stepsJSON(t, steps)
+	for _, want := range []string{`"agg":"q"`, `"agg":"r"`, `"severity":"e"`} {
+		if !strings.Contains(all, want) {
+			t.Errorf("no copy sends %s: %s", want, all)
+		}
+	}
+}
