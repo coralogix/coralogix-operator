@@ -109,6 +109,8 @@ var _ = Describe("Preset (generated)", Ordered, Serial, func() {
 		minimalName string
 		fullID      string
 		full        *coralogixv1alpha1.Preset
+		// createdIDs holds the API id of every Preset that a step created, for the backstop in the cleanup.
+		createdIDs []string
 	)
 
 	BeforeAll(func() {
@@ -120,6 +122,9 @@ var _ = Describe("Preset (generated)", Ordered, Serial, func() {
 			for _, name := range []string{fullName, minimalName} {
 				_ = crClient.Delete(ctx, &coralogixv1alpha1.Preset{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: testNamespace}})
 			}
+			for _, id := range createdIDs {
+				removePresetGenerated(ctx, apiClient, id)
+			}
 		})
 	})
 
@@ -127,6 +132,7 @@ var _ = Describe("Preset (generated)", Ordered, Serial, func() {
 		full = newPresetGenerated(fullName, presetFullSpec)
 		Expect(crClient.Create(ctx, full)).To(Succeed())
 		fullID = waitForPresetGenerated(ctx, crClient, fullName)
+		createdIDs = append(createdIDs, fullID)
 
 		By("Reading the Preset from the API")
 		Eventually(func(g Gomega) {
@@ -166,6 +172,7 @@ var _ = Describe("Preset (generated)", Ordered, Serial, func() {
 		minimal := newPresetGenerated(minimalName, presetMinimalSpec)
 		Expect(crClient.Create(ctx, minimal)).To(Succeed())
 		id := waitForPresetGenerated(ctx, crClient, minimalName)
+		createdIDs = append(createdIDs, id)
 
 		Expect(crClient.Delete(ctx, minimal)).To(Succeed())
 		Eventually(func() bool {
@@ -174,6 +181,24 @@ var _ = Describe("Preset (generated)", Ordered, Serial, func() {
 		}, time.Minute, time.Second).Should(BeTrue())
 	})
 })
+
+// removePresetGenerated is the backstop of a test that fails. It waits until the operator has
+// deleted the Preset. When the operator does not, it deletes the Preset through the API. A
+// Preset that is already gone is a success.
+func removePresetGenerated(ctx context.Context, apiClient *presetsservice.PresetsServiceAPIService, id string) {
+	deadline := time.Now().Add(time.Minute)
+	for time.Now().Before(deadline) {
+		_, httpResp, err := apiClient.PresetsServiceGetPreset(ctx, id).Execute()
+		if cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err)) {
+			return
+		}
+		time.Sleep(time.Second)
+	}
+	_, httpResp, err := apiClient.PresetsServiceDeleteCustomPreset(ctx, id).Execute()
+	if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+		Expect(apiErr).To(Succeed())
+	}
+}
 
 // newPresetGenerated returns a Preset with the spec that the JSON holds.
 func newPresetGenerated(name, spec string) *coralogixv1alpha1.Preset {

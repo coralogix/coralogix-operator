@@ -95,6 +95,8 @@ var _ = Describe("Thing (generated)", Ordered, func() {
 		minimalName string
 		fullID      string
 		full        *coralogixv1alpha1.Thing
+		// createdIDs holds the API id of every Thing that a step created, for the backstop in the cleanup.
+		createdIDs []string
 	)
 
 	BeforeAll(func() {
@@ -106,6 +108,9 @@ var _ = Describe("Thing (generated)", Ordered, func() {
 			for _, name := range []string{fullName, minimalName} {
 				_ = crClient.Delete(ctx, &coralogixv1alpha1.Thing{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: testNamespace}})
 			}
+			for _, id := range createdIDs {
+				removeThingGenerated(ctx, apiClient, id)
+			}
 		})
 	})
 
@@ -113,6 +118,7 @@ var _ = Describe("Thing (generated)", Ordered, func() {
 		full = newThingGenerated(fullName, thingFullSpec)
 		Expect(crClient.Create(ctx, full)).To(Succeed())
 		fullID = waitForThingGenerated(ctx, crClient, fullName)
+		createdIDs = append(createdIDs, fullID)
 
 		By("Reading the Thing from the API")
 		Eventually(func(g Gomega) {
@@ -150,6 +156,7 @@ var _ = Describe("Thing (generated)", Ordered, func() {
 		minimal := newThingGenerated(minimalName, thingMinimalSpec)
 		Expect(crClient.Create(ctx, minimal)).To(Succeed())
 		id := waitForThingGenerated(ctx, crClient, minimalName)
+		createdIDs = append(createdIDs, id)
 
 		Expect(crClient.Delete(ctx, minimal)).To(Succeed())
 		Eventually(func() bool {
@@ -158,6 +165,24 @@ var _ = Describe("Thing (generated)", Ordered, func() {
 		}, time.Minute, time.Second).Should(BeTrue())
 	})
 })
+
+// removeThingGenerated is the backstop of a test that fails. It waits until the operator has
+// deleted the Thing. When the operator does not, it deletes the Thing through the API. A
+// Thing that is already gone is a success.
+func removeThingGenerated(ctx context.Context, apiClient *thingsservice.ThingsServiceAPIService, id string) {
+	deadline := time.Now().Add(time.Minute)
+	for time.Now().Before(deadline) {
+		_, httpResp, err := apiClient.ThingsServiceGetThing(ctx, id).Execute()
+		if cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err)) {
+			return
+		}
+		time.Sleep(time.Second)
+	}
+	_, httpResp, err := apiClient.ThingsServiceDeleteThing(ctx, id).Execute()
+	if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+		Expect(apiErr).To(Succeed())
+	}
+}
 
 // newThingGenerated returns a Thing with the spec that the JSON holds.
 func newThingGenerated(name, spec string) *coralogixv1alpha1.Thing {

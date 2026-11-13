@@ -98,6 +98,8 @@ var _ = Describe("View (generated)", Ordered, func() {
 		minimalName string
 		fullID      int32
 		full        *coralogixv1alpha1.View
+		// createdIDs holds the API id of every View that a step created, for the backstop in the cleanup.
+		createdIDs []int32
 	)
 
 	BeforeAll(func(ctx context.Context) {
@@ -122,6 +124,9 @@ var _ = Describe("View (generated)", Ordered, func() {
 			for _, name := range []string{fullName, minimalName} {
 				_ = crClient.Delete(ctx, &coralogixv1alpha1.View{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: testNamespace}})
 			}
+			for _, id := range createdIDs {
+				removeViewGenerated(ctx, apiClient, id)
+			}
 		})
 	})
 
@@ -129,6 +134,7 @@ var _ = Describe("View (generated)", Ordered, func() {
 		full = newViewGenerated(fullName, viewFullSpec)
 		Expect(crClient.Create(ctx, full)).To(Succeed())
 		fullID = waitForViewGenerated(ctx, crClient, fullName)
+		createdIDs = append(createdIDs, fullID)
 
 		By("Reading the View from the API")
 		Eventually(func(g Gomega) {
@@ -166,6 +172,7 @@ var _ = Describe("View (generated)", Ordered, func() {
 		minimal := newViewGenerated(minimalName, viewMinimalSpec)
 		Expect(crClient.Create(ctx, minimal)).To(Succeed())
 		id := waitForViewGenerated(ctx, crClient, minimalName)
+		createdIDs = append(createdIDs, id)
 
 		Expect(crClient.Delete(ctx, minimal)).To(Succeed())
 		Eventually(func() bool {
@@ -174,6 +181,24 @@ var _ = Describe("View (generated)", Ordered, func() {
 		}, time.Minute, time.Second).Should(BeTrue())
 	})
 })
+
+// removeViewGenerated is the backstop of a test that fails. It waits until the operator has
+// deleted the View. When the operator does not, it deletes the View through the API. A
+// View that is already gone is a success.
+func removeViewGenerated(ctx context.Context, apiClient *viewsservice.ViewsServiceAPIService, id int32) {
+	deadline := time.Now().Add(time.Minute)
+	for time.Now().Before(deadline) {
+		_, httpResp, err := apiClient.ViewsServiceGetView(ctx, id).Execute()
+		if cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err)) {
+			return
+		}
+		time.Sleep(time.Second)
+	}
+	_, httpResp, err := apiClient.ViewsServiceDeleteView(ctx, id).Execute()
+	if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+		Expect(apiErr).To(Succeed())
+	}
+}
 
 // newViewGenerated returns a View with the spec that the JSON holds.
 func newViewGenerated(name, spec string) *coralogixv1alpha1.View {

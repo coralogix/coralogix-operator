@@ -55,6 +55,8 @@ var _ = Describe("ViewFolder (generated)", Ordered, func() {
 		minimalName string
 		fullID      string
 		full        *coralogixv1alpha1.ViewFolder
+		// createdIDs holds the API id of every ViewFolder that a step created, for the backstop in the cleanup.
+		createdIDs []string
 	)
 
 	BeforeAll(func() {
@@ -66,6 +68,9 @@ var _ = Describe("ViewFolder (generated)", Ordered, func() {
 			for _, name := range []string{fullName, minimalName} {
 				_ = crClient.Delete(ctx, &coralogixv1alpha1.ViewFolder{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: testNamespace}})
 			}
+			for _, id := range createdIDs {
+				removeViewFolderGenerated(ctx, apiClient, id)
+			}
 		})
 	})
 
@@ -73,6 +78,7 @@ var _ = Describe("ViewFolder (generated)", Ordered, func() {
 		full = newViewFolderGenerated(fullName, viewFolderFullSpec)
 		Expect(crClient.Create(ctx, full)).To(Succeed())
 		fullID = waitForViewFolderGenerated(ctx, crClient, fullName)
+		createdIDs = append(createdIDs, fullID)
 
 		By("Reading the ViewFolder from the API")
 		Eventually(func(g Gomega) {
@@ -110,6 +116,7 @@ var _ = Describe("ViewFolder (generated)", Ordered, func() {
 		minimal := newViewFolderGenerated(minimalName, viewFolderMinimalSpec)
 		Expect(crClient.Create(ctx, minimal)).To(Succeed())
 		id := waitForViewFolderGenerated(ctx, crClient, minimalName)
+		createdIDs = append(createdIDs, id)
 
 		Expect(crClient.Delete(ctx, minimal)).To(Succeed())
 		Eventually(func() bool {
@@ -118,6 +125,24 @@ var _ = Describe("ViewFolder (generated)", Ordered, func() {
 		}, time.Minute, time.Second).Should(BeTrue())
 	})
 })
+
+// removeViewFolderGenerated is the backstop of a test that fails. It waits until the operator has
+// deleted the ViewFolder. When the operator does not, it deletes the ViewFolder through the API. A
+// ViewFolder that is already gone is a success.
+func removeViewFolderGenerated(ctx context.Context, apiClient *foldersforviewsservice.FoldersForViewsServiceAPIService, id string) {
+	deadline := time.Now().Add(time.Minute)
+	for time.Now().Before(deadline) {
+		_, httpResp, err := apiClient.ViewsFoldersServiceGetViewFolder(ctx, id).Execute()
+		if cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err)) {
+			return
+		}
+		time.Sleep(time.Second)
+	}
+	_, httpResp, err := apiClient.ViewsFoldersServiceDeleteViewFolder(ctx, id).Execute()
+	if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+		Expect(apiErr).To(Succeed())
+	}
+}
 
 // newViewFolderGenerated returns a ViewFolder with the spec that the JSON holds.
 func newViewFolderGenerated(name, spec string) *coralogixv1alpha1.ViewFolder {

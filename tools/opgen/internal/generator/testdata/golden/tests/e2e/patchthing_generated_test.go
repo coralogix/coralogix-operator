@@ -66,6 +66,8 @@ var _ = Describe("PatchThing (generated)", Ordered, func() {
 		minimalName string
 		fullID      string
 		full        *coralogixv1alpha1.PatchThing
+		// createdIDs holds the API id of every PatchThing that a step created, for the backstop in the cleanup.
+		createdIDs []string
 	)
 
 	BeforeAll(func() {
@@ -77,6 +79,9 @@ var _ = Describe("PatchThing (generated)", Ordered, func() {
 			for _, name := range []string{fullName, minimalName} {
 				_ = crClient.Delete(ctx, &coralogixv1alpha1.PatchThing{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: testNamespace}})
 			}
+			for _, id := range createdIDs {
+				removePatchThingGenerated(ctx, apiClient, id)
+			}
 		})
 	})
 
@@ -84,6 +89,7 @@ var _ = Describe("PatchThing (generated)", Ordered, func() {
 		full = newPatchThingGenerated(fullName, patchThingFullSpec)
 		Expect(crClient.Create(ctx, full)).To(Succeed())
 		fullID = waitForPatchThingGenerated(ctx, crClient, fullName)
+		createdIDs = append(createdIDs, fullID)
 
 		By("Reading the PatchThing from the API")
 		Eventually(func(g Gomega) {
@@ -121,6 +127,7 @@ var _ = Describe("PatchThing (generated)", Ordered, func() {
 		minimal := newPatchThingGenerated(minimalName, patchThingMinimalSpec)
 		Expect(crClient.Create(ctx, minimal)).To(Succeed())
 		id := waitForPatchThingGenerated(ctx, crClient, minimalName)
+		createdIDs = append(createdIDs, id)
 
 		Expect(crClient.Delete(ctx, minimal)).To(Succeed())
 		Eventually(func() bool {
@@ -129,6 +136,24 @@ var _ = Describe("PatchThing (generated)", Ordered, func() {
 		}, time.Minute, time.Second).Should(BeTrue())
 	})
 })
+
+// removePatchThingGenerated is the backstop of a test that fails. It waits until the operator has
+// deleted the PatchThing. When the operator does not, it deletes the PatchThing through the API. A
+// PatchThing that is already gone is a success.
+func removePatchThingGenerated(ctx context.Context, apiClient *patchthingsservice.PatchThingsServiceAPIService, id string) {
+	deadline := time.Now().Add(time.Minute)
+	for time.Now().Before(deadline) {
+		_, httpResp, err := apiClient.PatchThingsServiceGetPatchThing(ctx, id).Execute()
+		if cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err)) {
+			return
+		}
+		time.Sleep(time.Second)
+	}
+	_, httpResp, err := apiClient.PatchThingsServiceDeletePatchThing(ctx, id).Execute()
+	if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+		Expect(apiErr).To(Succeed())
+	}
+}
 
 // newPatchThingGenerated returns a PatchThing with the spec that the JSON holds.
 func newPatchThingGenerated(name, spec string) *coralogixv1alpha1.PatchThing {

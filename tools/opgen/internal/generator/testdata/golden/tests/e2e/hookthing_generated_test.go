@@ -56,6 +56,8 @@ var _ = Describe("HookThing (generated)", Ordered, func() {
 		minimalName string
 		fullID      string
 		full        *coralogixv1alpha1.HookThing
+		// createdIDs holds the API id of every HookThing that a step created, for the backstop in the cleanup.
+		createdIDs []string
 	)
 
 	BeforeAll(func() {
@@ -67,6 +69,9 @@ var _ = Describe("HookThing (generated)", Ordered, func() {
 			for _, name := range []string{fullName, minimalName} {
 				_ = crClient.Delete(ctx, &coralogixv1alpha1.HookThing{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: testNamespace}})
 			}
+			for _, id := range createdIDs {
+				removeHookThingGenerated(ctx, apiClient, id)
+			}
 		})
 	})
 
@@ -74,6 +79,7 @@ var _ = Describe("HookThing (generated)", Ordered, func() {
 		full = newHookThingGenerated(fullName, hookThingFullSpec)
 		Expect(crClient.Create(ctx, full)).To(Succeed())
 		fullID = waitForHookThingGenerated(ctx, crClient, fullName)
+		createdIDs = append(createdIDs, fullID)
 
 		By("Reading the HookThing from the API")
 		Eventually(func(g Gomega) {
@@ -111,6 +117,7 @@ var _ = Describe("HookThing (generated)", Ordered, func() {
 		minimal := newHookThingGenerated(minimalName, hookThingMinimalSpec)
 		Expect(crClient.Create(ctx, minimal)).To(Succeed())
 		id := waitForHookThingGenerated(ctx, crClient, minimalName)
+		createdIDs = append(createdIDs, id)
 
 		Expect(crClient.Delete(ctx, minimal)).To(Succeed())
 		Eventually(func() bool {
@@ -119,6 +126,24 @@ var _ = Describe("HookThing (generated)", Ordered, func() {
 		}, time.Minute, time.Second).Should(BeTrue())
 	})
 })
+
+// removeHookThingGenerated is the backstop of a test that fails. It waits until the operator has
+// deleted the HookThing. When the operator does not, it deletes the HookThing through the API. A
+// HookThing that is already gone is a success.
+func removeHookThingGenerated(ctx context.Context, apiClient *hookthingsservice.HookThingsServiceAPIService, id string) {
+	deadline := time.Now().Add(time.Minute)
+	for time.Now().Before(deadline) {
+		_, httpResp, err := apiClient.HookThingsServiceGetHookThing(ctx, id).Execute()
+		if cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err)) {
+			return
+		}
+		time.Sleep(time.Second)
+	}
+	_, httpResp, err := apiClient.HookThingsServiceDeleteHookThing(ctx, id).Execute()
+	if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+		Expect(apiErr).To(Succeed())
+	}
+}
 
 // newHookThingGenerated returns a HookThing with the spec that the JSON holds.
 func newHookThingGenerated(name, spec string) *coralogixv1alpha1.HookThing {

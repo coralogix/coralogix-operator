@@ -88,6 +88,8 @@ var _ = Describe("Events2Metric (generated)", Ordered, func() {
 		minimalName string
 		fullID      string
 		full        *coralogixv1alpha1.Events2Metric
+		// createdIDs holds the API id of every Events2Metric that a step created, for the backstop in the cleanup.
+		createdIDs []string
 	)
 
 	BeforeAll(func() {
@@ -99,6 +101,9 @@ var _ = Describe("Events2Metric (generated)", Ordered, func() {
 			for _, name := range []string{fullName, minimalName} {
 				_ = crClient.Delete(ctx, &coralogixv1alpha1.Events2Metric{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: testNamespace}})
 			}
+			for _, id := range createdIDs {
+				removeEvents2MetricGenerated(ctx, apiClient, id)
+			}
 		})
 	})
 
@@ -106,6 +111,7 @@ var _ = Describe("Events2Metric (generated)", Ordered, func() {
 		full = newEvents2MetricGenerated(fullName, events2MetricFullSpec)
 		Expect(crClient.Create(ctx, full)).To(Succeed())
 		fullID = waitForEvents2MetricGenerated(ctx, crClient, fullName)
+		createdIDs = append(createdIDs, fullID)
 
 		By("Reading the Events2Metric from the API")
 		Eventually(func(g Gomega) {
@@ -144,6 +150,7 @@ var _ = Describe("Events2Metric (generated)", Ordered, func() {
 		minimal := newEvents2MetricGenerated(minimalName, events2MetricMinimalSpec)
 		Expect(crClient.Create(ctx, minimal)).To(Succeed())
 		id := waitForEvents2MetricGenerated(ctx, crClient, minimalName)
+		createdIDs = append(createdIDs, id)
 
 		Expect(crClient.Delete(ctx, minimal)).To(Succeed())
 		Eventually(func() bool {
@@ -152,6 +159,24 @@ var _ = Describe("Events2Metric (generated)", Ordered, func() {
 		}, time.Minute, time.Second).Should(BeTrue())
 	})
 })
+
+// removeEvents2MetricGenerated is the backstop of a test that fails. It waits until the operator has
+// deleted the Events2Metric. When the operator does not, it deletes the Events2Metric through the API. A
+// Events2Metric that is already gone is a success.
+func removeEvents2MetricGenerated(ctx context.Context, apiClient *events2metricsservice.Events2MetricsServiceAPIService, id string) {
+	deadline := time.Now().Add(time.Minute)
+	for time.Now().Before(deadline) {
+		_, httpResp, err := apiClient.Events2MetricServiceGetE2M(ctx, id).Execute()
+		if cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err)) {
+			return
+		}
+		time.Sleep(time.Second)
+	}
+	_, httpResp, err := apiClient.Events2MetricServiceDeleteE2M(ctx, id).Execute()
+	if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+		Expect(apiErr).To(Succeed())
+	}
+}
 
 // newEvents2MetricGenerated returns a Events2Metric with the spec that the JSON holds.
 func newEvents2MetricGenerated(name, spec string) *coralogixv1alpha1.Events2Metric {

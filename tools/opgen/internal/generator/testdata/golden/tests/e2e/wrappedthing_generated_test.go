@@ -57,6 +57,8 @@ var _ = Describe("WrappedThing (generated)", Ordered, func() {
 		minimalName string
 		fullID      string
 		full        *coralogixv1alpha1.WrappedThing
+		// createdIDs holds the API id of every WrappedThing that a step created, for the backstop in the cleanup.
+		createdIDs []string
 	)
 
 	BeforeAll(func() {
@@ -68,6 +70,9 @@ var _ = Describe("WrappedThing (generated)", Ordered, func() {
 			for _, name := range []string{fullName, minimalName} {
 				_ = crClient.Delete(ctx, &coralogixv1alpha1.WrappedThing{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: testNamespace}})
 			}
+			for _, id := range createdIDs {
+				removeWrappedThingGenerated(ctx, apiClient, id)
+			}
 		})
 	})
 
@@ -75,6 +80,7 @@ var _ = Describe("WrappedThing (generated)", Ordered, func() {
 		full = newWrappedThingGenerated(fullName, wrappedThingFullSpec)
 		Expect(crClient.Create(ctx, full)).To(Succeed())
 		fullID = waitForWrappedThingGenerated(ctx, crClient, fullName)
+		createdIDs = append(createdIDs, fullID)
 
 		By("Reading the WrappedThing from the API")
 		Eventually(func(g Gomega) {
@@ -114,6 +120,7 @@ var _ = Describe("WrappedThing (generated)", Ordered, func() {
 		minimal := newWrappedThingGenerated(minimalName, wrappedThingMinimalSpec)
 		Expect(crClient.Create(ctx, minimal)).To(Succeed())
 		id := waitForWrappedThingGenerated(ctx, crClient, minimalName)
+		createdIDs = append(createdIDs, id)
 
 		Expect(crClient.Delete(ctx, minimal)).To(Succeed())
 		Eventually(func() bool {
@@ -122,6 +129,24 @@ var _ = Describe("WrappedThing (generated)", Ordered, func() {
 		}, time.Minute, time.Second).Should(BeTrue())
 	})
 })
+
+// removeWrappedThingGenerated is the backstop of a test that fails. It waits until the operator has
+// deleted the WrappedThing. When the operator does not, it deletes the WrappedThing through the API. A
+// WrappedThing that is already gone is a success.
+func removeWrappedThingGenerated(ctx context.Context, apiClient *wrappedthingsservice.WrappedThingsServiceAPIService, id string) {
+	deadline := time.Now().Add(time.Minute)
+	for time.Now().Before(deadline) {
+		_, httpResp, err := apiClient.WrappedThingsServiceGetWrappedThing(ctx, id).Execute()
+		if cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err)) {
+			return
+		}
+		time.Sleep(time.Second)
+	}
+	_, httpResp, err := apiClient.WrappedThingsServiceDeleteWrappedThing(ctx, id).Execute()
+	if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+		Expect(apiErr).To(Succeed())
+	}
+}
 
 // newWrappedThingGenerated returns a WrappedThing with the spec that the JSON holds.
 func newWrappedThingGenerated(name, spec string) *coralogixv1alpha1.WrappedThing {
