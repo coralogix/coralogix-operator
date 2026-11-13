@@ -97,7 +97,7 @@ func (r *HookThingReconciler) HandleCreationWithFollowUp(ctx context.Context, lo
 	if id == "" {
 		return nil, fmt.Errorf("the create response of HookThing has no id")
 	}
-	cr.Status = coralogixv1alpha1.HookThingStatus{ID: ptr.To(id)}
+	cr.Status = coralogixv1alpha1.HookThingStatus{ID: ptr.To(id), Imported: cr.Status.Imported}
 	return func(ctx context.Context) error {
 		// afterCreate runs after status.id and the finalizer are saved. If it fails, the next run
 		// takes the Update path and afterUpdate repairs what it missed.
