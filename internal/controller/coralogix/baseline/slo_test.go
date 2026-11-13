@@ -44,7 +44,7 @@ func init() {
 		resource: "slos",
 		newFake:  newSLOFake,
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
-			return &v1alpha1controllers.SLOReconciler{SLOsClient: cs.SLOs(), Interval: reconcileInterval}
+			return &v1alpha1controllers.SLOReconciler{Client: cs.SLOs(), ClientSet: cs, Interval: reconcileInterval}
 		},
 		scenarios: sloScenarios,
 		fidelity: fidelityConfig{

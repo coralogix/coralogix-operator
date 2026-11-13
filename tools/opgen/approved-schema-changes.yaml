@@ -1,4 +1,12 @@
 # Reviewed changes to rules on released CRD fields. opgen check-schema compares each kind with the
 # PR base commit and fails on a change that is not listed here with its exact hashes. An entry is
 # for one PR: remove it after the PR merges, because the base then already has the change.
-changes: []
+changes:
+  - kind: SLO
+    path: spec.versions.v1alpha1.schema.openAPIV3Schema.properties.spec.properties.sliType
+    before: c11cd410447aae9d
+    after: ea0211836c1bf142
+    reason: >-
+      Same rule. The exactly-one CEL rule of requestBasedMetric, windowBasedMetric, and apmSli is
+      now generated from the groups line. It counts the set arms with a sum instead of a filtered
+      list, so it accepts and rejects the same objects; only the rule text and the message change.

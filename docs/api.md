@@ -18914,7 +18914,6 @@ with respect to the current state of the instance.<br/>
 
 
 SLO is the Schema for the slos API.
-See also https://coralogix.com/platform/apm/slo-management/
 
 <table>
     <thead>
@@ -18946,7 +18945,7 @@ See also https://coralogix.com/platform/apm/slo-management/
         <td><b><a href="#slospec">spec</a></b></td>
         <td>object</td>
         <td>
-          SLOSpec defines the desired state of SLO. For more information, see: https://coralogix.com/platform/apm/slo-management/<br/>
+          SLOSpec defines the desired state of a SLO.<br/>
           <br/>
             <i>Validations</i>:<li>!(has(self.productType) && self.productType == 'apm') || has(self.sliType.apmSli): productType 'apm' requires sliType.apmSli</li>
         </td>
@@ -18955,7 +18954,7 @@ See also https://coralogix.com/platform/apm/slo-management/
         <td><b><a href="#slostatus">status</a></b></td>
         <td>object</td>
         <td>
-          SLOStatus defines the observed state of SLO.<br/>
+          SLOStatus defines the observed state of a SLO.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -18967,7 +18966,7 @@ See also https://coralogix.com/platform/apm/slo-management/
 
 
 
-SLOSpec defines the desired state of SLO. For more information, see: https://coralogix.com/platform/apm/slo-management/
+SLOSpec defines the desired state of a SLO.
 
 <table>
     <thead>
@@ -18982,76 +18981,58 @@ SLOSpec defines the desired state of SLO. For more information, see: https://cor
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          SLO name<br/>
+          Human-readable display name for the SLO. Required. A missing or empty name is rejected.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#slospecslitype">sliType</a></b></td>
         <td>object</td>
         <td>
-          SliType defines the type of SLI used for the SLO.
-Exactly one of requestBasedMetric, windowBasedMetric or apmSli must be set.<br/>
+          SLOSpecSliType holds the sliType fields of the released CR.<br/>
           <br/>
-            <i>Validations</i>:<li>[has(self.requestBasedMetric),has(self.windowBasedMetric),has(self.apmSli)].filter(x, x).size() == 1: Exactly one of requestBasedMetric, windowBasedMetric or apmSli must be set</li>
+            <i>Validations</i>:<li>(has(self.requestBasedMetric) ? 1 : 0) + (has(self.windowBasedMetric) ? 1 : 0) + (has(self.apmSli) ? 1 : 0) == 1: Exactly one of requestBasedMetric, windowBasedMetric, apmSli must be set</li>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>targetThresholdPercentage</b></td>
         <td>int or string</td>
         <td>
-          TargetThresholdPercentage is the target compliance percentage for the SLO, so 99.9
-means three nines. The API rejects a value above 100 with
-`400 "slo.targetThresholdPercentage" must be less than or equal to 100`. The bound
-is not declared in the protobuf and is not enforced here either: the field is a
-resource.Quantity, which renders as int-or-string in the CRD, so the numeric
-Minimum and Maximum markers do not apply to it. The lower bound is unverified.<br/>
+          Target compliance percentage threshold for the SLO (e.g., 99.9 for three nines).<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#slospecwindow">window</a></b></td>
         <td>object</td>
         <td>
-          Window defines the time window for the SLO.<br/>
+          SLOSpecWindow holds the window fields of the released CR.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          Optional SLO description<br/>
+          Human-readable description of the SLO.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>labels</b></td>
         <td>map[string]string</td>
         <td>
-          Labels are additional labels to be added to the SLO.<br/>
+          List of labels.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#slospecownershiptags">ownershipTags</a></b></td>
         <td>object</td>
         <td>
-          OwnershipTags assign the SLO to a service, environment and team. Omitting the block
-clears the tags on the remote SLO, which is the declarative contract. An empty block,
-or a dimension whose lists are both empty, is discarded by the API and has no effect.<br/>
+          Service, environment, and team ownership configuration for the SLO group and its permutations.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>productType</b></td>
         <td>enum</td>
         <td>
-          ProductType selects the Coralogix product the SLO is built from. Valid values are
-"unspecified" and "apm". Setting "apm" requires sliType.apmSli.
-
-Setting it is never necessary. The API infers "apm" from the presence of
-sliType.apmSli and stores SLO_PRODUCT_TYPE_APM even when this field is omitted or
-set to "unspecified". For a metric SLI the API stores SLO_PRODUCT_TYPE_UNSPECIFIED.
-
-The coupling only runs one way. "apm" without an apmSli answers
-`400 slo.apm_sli is required when slo.product_type is SLO_PRODUCT_TYPE_APM`, so the
-rule on this struct mirrors that. An apmSli without "apm" is accepted, so there is
-no rule in the other direction.<br/>
+          Product type: APM for application performance monitoring SLOs, UNSPECIFIED for manual/custom SLOs<br/>
           <br/>
             <i>Enum</i>: unspecified, apm<br/>
         </td>
@@ -19065,8 +19046,7 @@ no rule in the other direction.<br/>
 
 
 
-SliType defines the type of SLI used for the SLO.
-Exactly one of requestBasedMetric, windowBasedMetric or apmSli must be set.
+SLOSpecSliType holds the sliType fields of the released CR.
 
 <table>
     <thead>
@@ -19081,22 +19061,21 @@ Exactly one of requestBasedMetric, windowBasedMetric or apmSli must be set.
         <td><b><a href="#slospecslitypeapmsli">apmSli</a></b></td>
         <td>object</td>
         <td>
-          ApmSli builds the SLO from an APM Service Catalog service instead of a PromQL query.
-It requires spec.productType "apm".<br/>
+          Definition of an APM-based SLI with automatic query generation<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#slospecslityperequestbasedmetric">requestBasedMetric</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Definition of a request-based SLI based on metrics<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#slospecslitypewindowbasedmetric">windowBasedMetric</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Definition of a window-based SLI based on metrics<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -19108,8 +19087,7 @@ It requires spec.productType "apm".<br/>
 
 
 
-ApmSli builds the SLO from an APM Service Catalog service instead of a PromQL query.
-It requires spec.productType "apm".
+Definition of an APM-based SLI with automatic query generation
 
 <table>
     <thead>
@@ -19124,38 +19102,35 @@ It requires spec.productType "apm".
         <td><b>services</b></td>
         <td>[]string</td>
         <td>
-          Services lists the APM Service Catalog services the SLO covers. The Coralogix API
-accepts exactly one service today and rejects names that are not in the catalog.
-The count is deliberately not capped here, so a server-side relaxation needs no
-operator release.<br/>
+          List of service names to monitor. Required. At least one service; an empty list is rejected.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>errorConfig</b></td>
         <td>object</td>
         <td>
-          ErrorConfig makes this an APM error-rate SLI. It carries no settings.<br/>
+          Configuration for error-based APM SLI<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#slospecslitypeapmslifiltersindex">filters</a></b></td>
         <td>[]object</td>
         <td>
-          Filters narrows the SLI to spans matching every filter.<br/>
+          Additional label-based filters to apply to the metrics<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>groupingKeys</b></td>
         <td>[]string</td>
         <td>
-          GroupingKeys splits the SLI by the given span attributes.<br/>
+          Labels to group SLO results by<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#slospecslitypeapmslilatencyconfig">latencyConfig</a></b></td>
         <td>object</td>
         <td>
-          LatencyConfig makes this an APM latency SLI.<br/>
+          Configuration for latency-based APM SLI<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -19167,7 +19142,7 @@ operator release.<br/>
 
 
 
-ApmFilter matches a span attribute against a set of values.
+SLOApmFilter is the ApmFilter object of the API.
 
 <table>
     <thead>
@@ -19182,18 +19157,23 @@ ApmFilter matches a span attribute against a set of values.
         <td><b>key</b></td>
         <td>string</td>
         <td>
-          Key is the span attribute name. Omitting it makes the API build a malformed query
-and answer HTTP 400, so it is required.<br/>
+          Label/tag name to filter on. Required. A missing or empty key is rejected.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>matchOperator</b></td>
+        <td>enum</td>
+        <td>
+          How literals on `key` are compared. Every item in `apmSli.filters` must use the same mode: all implicit (legacy) or all explicit — mixing modes in one list is rejected. Implicit: omitted or `APM_FILTER_MATCH_OPERATOR_UNSPECIFIED` on every item — multiple items with the same `key` OR-merge literals with exact (IS) comparison; sending `UNSPECIFIED` is equivalent to omitting the field (neither is stored as explicit `IS`). Explicit: `APM_FILTER_MATCH_OPERATOR_IS`, `STARTS_WITH`, `ENDS_WITH`, or `INCLUDES` on every item — each item is a separate AND criterion; OR applies only among literals in that item (explicit `IS` differs from implicit when several items share a `key`). Items on different keys are AND-combined. Pattern operators use literal substring matching (not caller-supplied regex). Applies only when the item has at least one literal: non-empty `values`, or deprecated `value` when `values` is omitted or empty (non-empty `values` takes precedence over `value`); otherwise rejected.<br/>
+          <br/>
+            <i>Enum</i>: unspecified, is, startsWith, endsWith, includes<br/>
+        </td>
+        <td>false</td>
       </tr><tr>
         <td><b>values</b></td>
         <td>[]string</td>
         <td>
-          Values are the accepted values for Key. There is deliberately no MinItems: the API
-accepts and stores an empty list, so rejecting one here would be stricter than the
-API. An absent list is sent as an empty list, which is the form the API is known to
-accept.<br/>
+          Preferred: multiple values to match (OR semantics, e.g. status IN [500, 503])<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -19205,7 +19185,7 @@ accept.<br/>
 
 
 
-LatencyConfig makes this an APM latency SLI.
+Configuration for latency-based APM SLI
 
 <table>
     <thead>
@@ -19220,9 +19200,7 @@ LatencyConfig makes this an APM latency SLI.
         <td><b>timeWindow</b></td>
         <td>enum</td>
         <td>
-          TimeWindow defines the evaluation window. Valid values are "1m" and "5m".
-Omitting it answers HTTP 500 with the same "Not implemented yet" error as an
-omitted windowBasedMetric.window, so it is required.<br/>
+          Time window for latency calculations. Required. Omitting it is rejected.<br/>
           <br/>
             <i>Enum</i>: 1m, 5m<br/>
         </td>
@@ -19231,22 +19209,21 @@ omitted windowBasedMetric.window, so it is required.<br/>
         <td><b>average</b></td>
         <td>object</td>
         <td>
-          Average measures average latency. It carries no settings.<br/>
+          Average/mean-based latency measurement<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#slospecslitypeapmslilatencyconfigquantile">quantile</a></b></td>
         <td>object</td>
         <td>
-          Quantile measures a latency quantile.<br/>
+          Quantile/percentile-based latency measurement<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>threshold</b></td>
         <td>int or string</td>
         <td>
-          Threshold is the latency threshold in milliseconds, so 500 means 500ms. Latency at
-or below the threshold is good. The API stores 0 when omitted.<br/>
+          Threshold in milliseconds. Good when latency <= threshold, bad when latency > threshold.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -19258,7 +19235,7 @@ or below the threshold is good. The API stores 0 when omitted.<br/>
 
 
 
-Quantile measures a latency quantile.
+Quantile/percentile-based latency measurement
 
 <table>
     <thead>
@@ -19273,9 +19250,7 @@ Quantile measures a latency quantile.
         <td><b>percentile</b></td>
         <td>int or string</td>
         <td>
-          Percentile is a fraction, so 0.95 means P95. The API stores 0 when omitted.
-There is deliberately no range validator: the API accepts and stores any float,
-including 5 and -1, so rejecting them here would be stricter than the API.<br/>
+          Percentile for latency SLOs (0.95 = P95, 0.99 = P99)<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -19287,7 +19262,7 @@ including 5 and -1, so rejecting them here would be stricter than the API.<br/>
 
 
 
-
+Definition of a request-based SLI based on metrics
 
 <table>
     <thead>
@@ -19302,14 +19277,14 @@ including 5 and -1, so rejecting them here would be stricter than the API.<br/>
         <td><b><a href="#slospecslityperequestbasedmetricgoodevents">goodEvents</a></b></td>
         <td>object</td>
         <td>
-          GoodEvents defines the good events metric.<br/>
+          Definition of a metric used in SLOs<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#slospecslityperequestbasedmetrictotalevents">totalEvents</a></b></td>
         <td>object</td>
         <td>
-          TotalEvents defines the total events metric.<br/>
+          Definition of a metric used in SLOs<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -19331,7 +19306,7 @@ Deprecated: ignored by the operator and by the API.<br/>
 
 
 
-GoodEvents defines the good events metric.
+Definition of a metric used in SLOs
 
 <table>
     <thead>
@@ -19346,7 +19321,7 @@ GoodEvents defines the good events metric.
         <td><b>query</b></td>
         <td>string</td>
         <td>
-          Query is the metric query string.<br/>
+          Query string. Required. A missing or empty query is rejected.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -19358,7 +19333,7 @@ GoodEvents defines the good events metric.
 
 
 
-TotalEvents defines the total events metric.
+Definition of a metric used in SLOs
 
 <table>
     <thead>
@@ -19373,7 +19348,7 @@ TotalEvents defines the total events metric.
         <td><b>query</b></td>
         <td>string</td>
         <td>
-          Query is the metric query string.<br/>
+          Query string. Required. A missing or empty query is rejected.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -19385,7 +19360,7 @@ TotalEvents defines the total events metric.
 
 
 
-
+Definition of a window-based SLI based on metrics
 
 <table>
     <thead>
@@ -19400,8 +19375,7 @@ TotalEvents defines the total events metric.
         <td><b>comparisonOperator</b></td>
         <td>enum</td>
         <td>
-          ComparisonOperator defines the comparison operator for the SLO. Valid values are
-"greaterThan", "lessThan", "greaterThanOrEquals" and "lessThanOrEquals".<br/>
+          Comparison operator.<br/>
           <br/>
             <i>Enum</i>: greaterThan, lessThan, greaterThanOrEquals, lessThanOrEquals<br/>
         </td>
@@ -19410,14 +19384,14 @@ TotalEvents defines the total events metric.
         <td><b><a href="#slospecslitypewindowbasedmetricquery">query</a></b></td>
         <td>object</td>
         <td>
-          Query defines the metric query for the SLO.<br/>
+          Definition of a metric used in SLOs<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>window</b></td>
         <td>enum</td>
         <td>
-          Window defines the time window for the SLO. Valid values are "1m" and "5m".<br/>
+          Window slo window.<br/>
           <br/>
             <i>Enum</i>: 1m, 5m<br/>
         </td>
@@ -19426,9 +19400,7 @@ TotalEvents defines the total events metric.
         <td><b>missingDataStrategy</b></td>
         <td>enum</td>
         <td>
-          MissingDataStrategy decides how a window with no data counts. Valid values are
-"uncounted", "good" and "bad". When omitted, the API stores
-MISSING_DATA_STRATEGY_UNCOUNTED.<br/>
+          Missing data strategy.<br/>
           <br/>
             <i>Enum</i>: uncounted, good, bad<br/>
         </td>
@@ -19437,9 +19409,7 @@ MISSING_DATA_STRATEGY_UNCOUNTED.<br/>
         <td><b>threshold</b></td>
         <td>int or string</td>
         <td>
-          Threshold defines the threshold the comparisonOperator applies to.
-The protobuf field is a bare float with no presence tracking, so the API cannot tell
-an omitted threshold from a threshold of 0. Omitting it here sends 0.<br/>
+          Threshold value.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -19451,7 +19421,7 @@ an omitted threshold from a threshold of 0. Omitting it here sends 0.<br/>
 
 
 
-Query defines the metric query for the SLO.
+Definition of a metric used in SLOs
 
 <table>
     <thead>
@@ -19466,7 +19436,7 @@ Query defines the metric query for the SLO.
         <td><b>query</b></td>
         <td>string</td>
         <td>
-          Query is the metric query string.<br/>
+          Query string. Required. A missing or empty query is rejected.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -19478,7 +19448,7 @@ Query defines the metric query for the SLO.
 
 
 
-Window defines the time window for the SLO.
+SLOSpecWindow holds the window fields of the released CR.
 
 <table>
     <thead>
@@ -19493,8 +19463,7 @@ Window defines the time window for the SLO.
         <td><b>timeFrame</b></td>
         <td>enum</td>
         <td>
-          TimeFrame defines the time frame for the SLO window. Valid values are "unspecified", "7d", "14d", "21d", and "28d".
-Deprecated: "90d" is no longer supported by the Coralogix API and will be rejected by the operator.<br/>
+          Rolling evaluation window (fixed-duration lookback).<br/>
           <br/>
             <i>Enum</i>: unspecified, 7d, 14d, 21d, 28d, 90d<br/>
         </td>
@@ -19508,9 +19477,7 @@ Deprecated: "90d" is no longer supported by the Coralogix API and will be reject
 
 
 
-OwnershipTags assign the SLO to a service, environment and team. Omitting the block
-clears the tags on the remote SLO, which is the declarative contract. An empty block,
-or a dimension whose lists are both empty, is discarded by the API and has no effect.
+Service, environment, and team ownership configuration for the SLO group and its permutations.
 
 <table>
     <thead>
@@ -19525,7 +19492,7 @@ or a dimension whose lists are both empty, is discarded by the API and has no ef
         <td><b><a href="#slospecownershiptagsenvironment">environment</a></b></td>
         <td>object</td>
         <td>
-          Environment tags the SLO with a free-form environment name.<br/>
+          Ownership for one dimension (service, environment, or team). static_values are group-wide (broad) assignments. label_keys are metric label names whose values are read per permutation (label-driven). Both may be set; when both lists are empty, that dimension is unset.<br/>
           <br/>
             <i>Validations</i>:<li>!(has(self.staticValues) && self.staticValues.size() > 0 && has(self.labelKeys) && self.labelKeys.size() > 0): Use either staticValues or labelKeys, not both</li>
         </td>
@@ -19534,8 +19501,7 @@ or a dimension whose lists are both empty, is discarded by the API and has no ef
         <td><b><a href="#slospecownershiptagsservice">service</a></b></td>
         <td>object</td>
         <td>
-          Service tags the SLO with an APM service. The API validates static values against
-the APM Service Catalog, so the operator does not.<br/>
+          Ownership for one dimension (service, environment, or team). static_values are group-wide (broad) assignments. label_keys are metric label names whose values are read per permutation (label-driven). Both may be set; when both lists are empty, that dimension is unset.<br/>
           <br/>
             <i>Validations</i>:<li>!(has(self.staticValues) && self.staticValues.size() > 0 && has(self.labelKeys) && self.labelKeys.size() > 0): Use either staticValues or labelKeys, not both</li>
         </td>
@@ -19544,7 +19510,7 @@ the APM Service Catalog, so the operator does not.<br/>
         <td><b><a href="#slospecownershiptagsteam">team</a></b></td>
         <td>object</td>
         <td>
-          Team tags the SLO with a free-form team name.<br/>
+          Ownership for one dimension (service, environment, or team). static_values are group-wide (broad) assignments. label_keys are metric label names whose values are read per permutation (label-driven). Both may be set; when both lists are empty, that dimension is unset.<br/>
           <br/>
             <i>Validations</i>:<li>!(has(self.staticValues) && self.staticValues.size() > 0 && has(self.labelKeys) && self.labelKeys.size() > 0): Use either staticValues or labelKeys, not both</li>
         </td>
@@ -19558,7 +19524,7 @@ the APM Service Catalog, so the operator does not.<br/>
 
 
 
-Environment tags the SLO with a free-form environment name.
+Ownership for one dimension (service, environment, or team). static_values are group-wide (broad) assignments. label_keys are metric label names whose values are read per permutation (label-driven). Both may be set; when both lists are empty, that dimension is unset.
 
 <table>
     <thead>
@@ -19573,14 +19539,14 @@ Environment tags the SLO with a free-form environment name.
         <td><b>labelKeys</b></td>
         <td>[]string</td>
         <td>
-          LabelKeys assigns the dimension from metric label names, resolved per series.<br/>
+          Metric label names to use as sources (label-driven). Actual values come from series at query time. Empty if not using label-driven for this dimension.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>staticValues</b></td>
         <td>[]string</td>
         <td>
-          StaticValues assigns the dimension group-wide, with fixed values.<br/>
+          Group-wide static values (broad). Empty if not using broad for this dimension.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -19592,8 +19558,7 @@ Environment tags the SLO with a free-form environment name.
 
 
 
-Service tags the SLO with an APM service. The API validates static values against
-the APM Service Catalog, so the operator does not.
+Ownership for one dimension (service, environment, or team). static_values are group-wide (broad) assignments. label_keys are metric label names whose values are read per permutation (label-driven). Both may be set; when both lists are empty, that dimension is unset.
 
 <table>
     <thead>
@@ -19608,14 +19573,14 @@ the APM Service Catalog, so the operator does not.
         <td><b>labelKeys</b></td>
         <td>[]string</td>
         <td>
-          LabelKeys assigns the dimension from metric label names, resolved per series.<br/>
+          Metric label names to use as sources (label-driven). Actual values come from series at query time. Empty if not using label-driven for this dimension.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>staticValues</b></td>
         <td>[]string</td>
         <td>
-          StaticValues assigns the dimension group-wide, with fixed values.<br/>
+          Group-wide static values (broad). Empty if not using broad for this dimension.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -19627,7 +19592,7 @@ the APM Service Catalog, so the operator does not.
 
 
 
-Team tags the SLO with a free-form team name.
+Ownership for one dimension (service, environment, or team). static_values are group-wide (broad) assignments. label_keys are metric label names whose values are read per permutation (label-driven). Both may be set; when both lists are empty, that dimension is unset.
 
 <table>
     <thead>
@@ -19642,14 +19607,14 @@ Team tags the SLO with a free-form team name.
         <td><b>labelKeys</b></td>
         <td>[]string</td>
         <td>
-          LabelKeys assigns the dimension from metric label names, resolved per series.<br/>
+          Metric label names to use as sources (label-driven). Actual values come from series at query time. Empty if not using label-driven for this dimension.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>staticValues</b></td>
         <td>[]string</td>
         <td>
-          StaticValues assigns the dimension group-wide, with fixed values.<br/>
+          Group-wide static values (broad). Empty if not using broad for this dimension.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -19661,7 +19626,7 @@ Team tags the SLO with a free-form team name.
 
 
 
-SLOStatus defines the observed state of SLO.
+SLOStatus defines the observed state of a SLO.
 
 <table>
     <thead>

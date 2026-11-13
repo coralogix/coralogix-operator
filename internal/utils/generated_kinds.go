@@ -22,6 +22,7 @@ const (
 	Events2MetricKind = "Events2Metric"
 	GlobalRouterKind  = "GlobalRouter"
 	PresetKind        = "Preset"
+	SLOKind           = "SLO"
 	ViewKind          = "View"
 	ViewFolderKind    = "ViewFolder"
 )

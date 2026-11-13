@@ -85,6 +85,12 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version == '1.0' && '1-0' || '2-0' }}
         run: bash scripts/upgrade-check-events2metric.sh before
+      # The SLO kind is in charts 2.0 and later.
+      - name: Create an SLO with the released operator
+        if: matrix.operator_version == '2.0'
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+        run: bash scripts/upgrade-check-slo.sh before
       - name: Build PR image
         uses: ./.github/actions/build-operator-image
         with:
@@ -132,8 +138,18 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version == '1.0' && '1-0' || '2-0' }}
         run: bash scripts/upgrade-check-events2metric.sh after
+      - name: Check the SLO of the released operator
+        if: matrix.operator_version == '2.0'
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+        run: bash scripts/upgrade-check-slo.sh after
       # A failed step before the check skips it, so delete the resources here; no run leaves them in
       # Coralogix.
+      - name: Delete the SLO of the upgrade test
+        if: always() && matrix.operator_version == '2.0'
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+        run: bash scripts/upgrade-check-slo.sh cleanup
       - name: Delete the Events2Metric of the upgrade test
         if: always() && matrix.operator_version != '0.5'
         env:

@@ -102,6 +102,14 @@ spec:
                           properties:
                             key:
                               type: string
+                            matchOperator:
+                              enum:
+                              - unspecified
+                              - is
+                              - startsWith
+                              - endsWith
+                              - includes
+                              type: string
                             values:
                               items:
                                 type: string
@@ -213,10 +221,10 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-validations:
-                - message: Exactly one of requestBasedMetric, windowBasedMetric or
-                    apmSli must be set
-                  rule: '[has(self.requestBasedMetric),has(self.windowBasedMetric),has(self.apmSli)].filter(x,
-                    x).size() == 1'
+                - message: Exactly one of requestBasedMetric, windowBasedMetric, apmSli
+                    must be set
+                  rule: '(has(self.requestBasedMetric) ? 1 : 0) + (has(self.windowBasedMetric)
+                    ? 1 : 0) + (has(self.apmSli) ? 1 : 0) == 1'
               targetThresholdPercentage:
                 anyOf:
                 - type: integer

@@ -43,7 +43,6 @@ const (
 	ConnectorKind              = "Connector"
 	ArchiveLogsTargetKind      = "ArchiveLogsTarget"
 	ArchiveMetricsTargetKind   = "ArchiveMetricsTarget"
-	SLOKind                    = "SLO"
 	IPAccess                   = "IPAccess"
 	CustomEnrichmentKind       = "CustomEnrichment"
 	EnrichmentKind             = "Enrichment"

@@ -30,7 +30,6 @@
             "query": {
               "query": "sum(rate(errors_total[5m]))"
             },
-            "threshold": 0,
             "window": "WINDOW_SLO_WINDOW_1_MINUTE"
           }
         },

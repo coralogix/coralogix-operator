@@ -49,6 +49,13 @@ func SetupGeneratedControllers(mgr ctrl.Manager, clientSet *cxsdk.ClientSet, int
 	}).SetupWithManager(mgr); err != nil {
 		return fmt.Errorf("unable to create the controller of %s: %w", utils.PresetKind, err)
 	}
+	if err := (&SLOReconciler{
+		Client:    clientSet.SLOs(),
+		ClientSet: clientSet,
+		Interval:  intervals[utils.SLOKind],
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create the controller of %s: %w", utils.SLOKind, err)
+	}
 	if err := (&ViewReconciler{
 		Client:   clientSet.Views(),
 		Interval: intervals[utils.ViewKind],

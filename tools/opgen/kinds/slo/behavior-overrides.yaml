@@ -1,0 +1,113 @@
+resource: Slo
+mode: existing
+validators:
+  inferred: true
+  fields:
+    # The released CRD has none of the contract limits on these fields.
+    spec.name: {inferred: false}
+    spec.sliType.requestBasedMetric.goodEvents.query: {inferred: false}
+    spec.sliType.requestBasedMetric.totalEvents.query: {inferred: false}
+    spec.sliType.windowBasedMetric.query.query: {inferred: false}
+    spec.sliType.apmSli.filters[].key: {inferred: false}
+    # The released CRD has no default: an omitted number is left out of the request.
+    spec.sliType.windowBasedMetric.threshold:
+      remove: ['+kubebuilder:default=`0`']
+    spec.sliType.apmSli.latencyConfig.threshold:
+      remove: ['+kubebuilder:default=`0`']
+    spec.sliType.apmSli.latencyConfig.quantile.percentile:
+      remove: ['+kubebuilder:default=`0`']
+    # errorConfig and average are empty objects. Kubernetes 1.29 and earlier cannot evaluate a CEL
+    # rule that reads such a field, so the released CRD has no rule here. The validate hook checks
+    # that exactly one arm is set.
+    spec.sliType.apmSli#type:
+      remove: ['+kubebuilder:validation:XValidation:rule="(has(self.errorConfig) ? 1 : 0) + (has(self.latencyConfig) ? 1 : 0) <= 1",message="At most one of errorConfig, latencyConfig can be set"']
+    spec.sliType.apmSli.latencyConfig#type:
+      remove: ['+kubebuilder:validation:XValidation:rule="(has(self.quantile) ? 1 : 0) + (has(self.average) ? 1 : 0) <= 1",message="At most one of quantile, average can be set"']
+    # The API rejects both lists when both are nonempty.
+    spec.ownershipTags.service:
+      add: ['+kubebuilder:validation:XValidation:rule="!(has(self.staticValues) && self.staticValues.size() > 0 && has(self.labelKeys) && self.labelKeys.size() > 0)",message="Use either staticValues or labelKeys, not both"']
+    spec.ownershipTags.environment:
+      add: ['+kubebuilder:validation:XValidation:rule="!(has(self.staticValues) && self.staticValues.size() > 0 && has(self.labelKeys) && self.labelKeys.size() > 0)",message="Use either staticValues or labelKeys, not both"']
+    spec.ownershipTags.team:
+      add: ['+kubebuilder:validation:XValidation:rule="!(has(self.staticValues) && self.staticValues.size() > 0 && has(self.labelKeys) && self.labelKeys.size() > 0)",message="Use either staticValues or labelKeys, not both"']
+    # The API rejects productType apm without an apmSli.
+    spec:
+      add: ['+kubebuilder:validation:XValidation:rule="!(has(self.productType) && self.productType == ''apm'') || has(self.sliType.apmSli)",message="productType ''apm'' requires sliType.apmSli"']
+    # The released CRD accepts 90d. The API no longer has it, so the conversion rejects it.
+    spec.window.timeFrame:
+      remove: ['+kubebuilder:validation:Enum={"unspecified","7d","14d","21d","28d"}']
+      add: ['+kubebuilder:validation:Enum={"unspecified","7d","14d","21d","28d","90d"}']
+api:
+  operations:
+    create: SlosService_CreateSlo
+    get: SlosService_GetSlo
+    update: SlosService_ReplaceSlo
+    delete: SlosService_DeleteSlo
+  customMethods: true
+  # Replace takes the whole SLO, with the server-set id in the body.
+  updateIDInBody: true
+  # The Slo schema is shared with the requests, so the contract cannot require the id in Get.
+  serverSetID: true
+# The released kind keeps status.revision from the Create response. Update leaves it as it is.
+hooks: [validate, afterCreate, afterUpdate]
+status:
+  revision: {type: int32}
+# The released CR holds the SLI arms in sliType, and the time frame in window.
+groups:
+  sliType:
+    fields: [requestBasedMetricSli, windowBasedMetricSli, apmSli]
+    requireOne: true
+  window:
+    fields: [sloTimeFrame]
+types:
+  Slo:
+    fields:
+      id: {readOnly: true}
+      targetThresholdPercentage: {required: true}
+      # The released CR does not require it. The API rejects an SLO without one.
+      sloTimeFrame: {name: timeFrame, optional: true}
+      requestBasedMetricSli: {name: requestBasedMetric}
+      windowBasedMetricSli: {name: windowBasedMetric}
+  RequestBasedMetricSli:
+    ignored:
+      groupByLabels:
+        type: '[]string'
+        doc: |-
+          GroupByLabels has no effect. The Coralogix API derives the SLO grouping itself and
+          the value is never sent. The field is kept because removing it would break existing
+          resources.
+          Deprecated: ignored by the operator and by the API.
+  ApmFilter:
+    fields:
+      # The released CR never sends the deprecated singular value.
+      value: {skip: true}
+      # The released request sends [] when the CR has no values.
+      values: {sendNullAsEmpty: true}
+enums:
+  SloTimeFrame:
+    zero: unspecified
+    values: [SLO_TIME_FRAME_7_DAYS, SLO_TIME_FRAME_14_DAYS, SLO_TIME_FRAME_21_DAYS, SLO_TIME_FRAME_28_DAYS]
+    rejected: [SLO_TIME_FRAME_1_DAY, SLO_TIME_FRAME_30_DAYS]
+    names: {SLO_TIME_FRAME_7_DAYS: 7d, SLO_TIME_FRAME_14_DAYS: 14d, SLO_TIME_FRAME_21_DAYS: 21d, SLO_TIME_FRAME_28_DAYS: 28d}
+  WindowSloWindow:
+    zero: unspecified
+    rejectZero: true   # the API answers 500 for WINDOW_SLO_WINDOW_UNSPECIFIED
+    values: [WINDOW_SLO_WINDOW_1_MINUTE, WINDOW_SLO_WINDOW_5_MINUTES]
+    names: {WINDOW_SLO_WINDOW_1_MINUTE: 1m, WINDOW_SLO_WINDOW_5_MINUTES: 5m}
+  ComparisonOperator:
+    zero: unspecified
+    rejectZero: true   # the API rejects COMPARISON_OPERATOR_UNSPECIFIED
+    values: [COMPARISON_OPERATOR_GREATER_THAN, COMPARISON_OPERATOR_LESS_THAN, COMPARISON_OPERATOR_GREATER_THAN_OR_EQUALS, COMPARISON_OPERATOR_LESS_THAN_OR_EQUALS]
+  MissingDataStrategy:
+    # The enum has no UNSPECIFIED value.
+    values: [MISSING_DATA_STRATEGY_UNCOUNTED, MISSING_DATA_STRATEGY_GOOD, MISSING_DATA_STRATEGY_BAD]
+    trimPrefix: MISSING_DATA_STRATEGY_
+  SloProductType:
+    zero: unspecified
+    values: [SLO_PRODUCT_TYPE_APM]
+  ApmFilterMatchOperator:
+    zero: unspecified
+    values: [APM_FILTER_MATCH_OPERATOR_IS, APM_FILTER_MATCH_OPERATOR_STARTS_WITH, APM_FILTER_MATCH_OPERATOR_ENDS_WITH, APM_FILTER_MATCH_OPERATOR_INCLUDES]
+  # sloType is read-only, but the model still checks its enum, which has no UNSPECIFIED value.
+  SloType:
+    values: [SLO_TYPE_REQUEST, SLO_TYPE_WINDOW]

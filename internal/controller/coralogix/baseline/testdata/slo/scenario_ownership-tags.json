@@ -38,10 +38,7 @@
         "body": {
           "name": "baseline-slo",
           "ownershipTags": {
-            "environment": {
-              "labelKeys": [],
-              "staticValues": []
-            },
+            "environment": {},
             "service": {
               "staticValues": [
                 "checkout",
@@ -119,9 +116,7 @@
           "id": "<id-1>",
           "name": "baseline-slo",
           "ownershipTags": {
-            "service": {
-              "staticValues": []
-            }
+            "service": {}
           },
           "requestBasedMetricSli": {
             "goodEvents": {
