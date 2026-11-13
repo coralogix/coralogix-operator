@@ -434,7 +434,10 @@ func (v *sampleValues) arm(t *crType, g model.OneOfGroup, full bool, path string
 		}
 	}
 	if chosen == "" {
-		chosen = g.Arms[0] // every arm is skipped: the guard has no say, the group needs one
+		if g.AllowNone {
+			return "" // every arm is skipped and the group may be empty: send none
+		}
+		chosen = g.Arms[0] // every arm is skipped, and the group needs one
 	}
 	return chosen
 }
@@ -450,7 +453,7 @@ func (v *sampleValues) enumName(f *crField, path string) string {
 func (v *sampleValues) enumNames(f *crField, path string, limit int) []string {
 	var open, usable []enumValue
 	for _, value := range f.enum.Values {
-		key := coverageKey{"enum", f.enum.schema, value.API}
+		key := coverageKey{"enum", f.enum.schema, value.sent()}
 		if v.cov.skipped[key] {
 			continue
 		}
@@ -476,7 +479,7 @@ func (v *sampleValues) enumNames(f *crField, path string, limit int) []string {
 	for i, value := range chosen {
 		names[i] = value.Name
 		if v.record {
-			v.cov.mark(coverageKey{"enum", f.enum.schema, value.API})
+			v.cov.mark(coverageKey{"enum", f.enum.schema, value.sent()})
 		}
 	}
 	return names

@@ -325,3 +325,57 @@ func TestSkippedSubtreeDoesNotStarveReachableArms(t *testing.T) {
 		t.Fatalf("left %v", missing)
 	}
 }
+
+// An allow-none group whose arms are all skipped stays empty. The skip says that no test may send
+// the arms, so the fallback of a required group must not apply.
+func TestAllowNoneGroupStaysEmptyWhenEveryArmIsSkipped(t *testing.T) {
+	d := &kindData{Kind: "Thing", Spec: &crType{Name: "ThingSpec", Fields: []*crField{
+		objectField("a", model.Object, &crType{schema: "ArmA"}), objectField("b", model.Object, &crType{schema: "ArmB"}),
+	}}}
+	d.Spec.groups = []model.OneOfGroup{{Arms: []string{"a", "b"}, AllowNone: true}}
+	file := &e2eFile{SkipChoices: map[string]e2eSkipChoices{"Thing": {Choices: []string{"a", "b"}, Reason: "no arm passes the API"}}}
+	v := &sampleValues{file: file, used: map[string]bool{}}
+	full, _, steps, err := v.specs(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := full.json(); strings.Contains(got, `"a"`) || strings.Contains(got, `"b"`) {
+		t.Errorf("the full spec must send no skipped arm: %s", got)
+	}
+	if len(steps) != 0 {
+		t.Errorf("no copy has anything to add: %s", stepsJSON(t, steps))
+	}
+	// A group that needs an arm still gets one.
+	d.Spec.groups = []model.OneOfGroup{{Arms: []string{"a", "b"}}}
+	v = &sampleValues{file: file, used: map[string]bool{}}
+	full, _, _, err = v.specs(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(full.json(), `"a"`) {
+		t.Errorf("a required group needs an arm: %s", full.json())
+	}
+}
+
+// An alias maps a CR spelling to another business value. The conversion sends the target, so the
+// sweep counts the target and the offline test expects it.
+func TestAliasCountsTheValueThatIsSent(t *testing.T) {
+	priority := enumField("priority", "Priority", "low", "pager")
+	priority.enum.Values[0].Send = "PAGER" // low is aliased to pager
+	d := &kindData{Kind: "Thing", Spec: &crType{Name: "ThingSpec", Fields: []*crField{priority}}}
+
+	_, _, err := specsOf(t, d, &e2eFile{})
+	shape := shapeOf(t, err, codeE2ECoverageMissing)
+	if !strings.Contains(shape.msg, "the value LOW of priority") {
+		t.Errorf("no spelling sends LOW, so the guard must name it:\n%s", shape.msg)
+	}
+
+	file := &e2eFile{SkipValues: map[string]e2eSkipValues{"Priority": {Values: []string{"LOW"}, Reason: "the alias sends PAGER"}}}
+	v := &sampleValues{file: file, used: map[string]bool{}}
+	if _, _, _, err := v.specs(d); err != nil {
+		t.Fatalf("a skip of the aliased value must pass: %v", err)
+	}
+	if !slices.Contains(v.fullKeys, coverageKey{"enum", "Priority", "PAGER"}) || slices.Contains(v.fullKeys, coverageKey{"enum", "Priority", "LOW"}) {
+		t.Errorf("the full spec sends PAGER, not LOW: %v", v.fullKeys)
+	}
+}

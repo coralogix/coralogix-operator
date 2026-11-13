@@ -5,12 +5,12 @@
   "shards": [
     {
       "name": "coverage-1",
-      "filter": "coverage && (coverage-bodyidthing-1 || coverage-patchthing-1 || coverage-thing-1)",
-      "steps": 3
+      "filter": "coverage && (coverage-patchthing-1 || coverage-thing-1)",
+      "steps": 2
     },
     {
       "name": "coverage-rest",
-      "filter": "coverage && !(coverage-bodyidthing-1 || coverage-patchthing-1 || coverage-thing-1)",
+      "filter": "coverage && !(coverage-patchthing-1 || coverage-thing-1)",
       "steps": 0
     }
   ]

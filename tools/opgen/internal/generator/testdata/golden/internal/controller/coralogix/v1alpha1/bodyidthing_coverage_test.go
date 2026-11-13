@@ -48,6 +48,9 @@ var bodyIDThingCoverageSpecs = []bodyIDThingCoverageSpec{
   "limit": 1,
   "mode": "unspecified"
 }`,
+		expect: []string{
+			"\"BODY_ID_THING_MODE_LOW\"",
+		},
 	},
 	{
 		name: "minimal spec",
@@ -55,17 +58,6 @@ var bodyIDThingCoverageSpecs = []bodyIDThingCoverageSpec{
   "title": "sample-name",
   "limit": 1
 }`,
-	},
-	{
-		name: "step 1 copy 1",
-		spec: `{
-  "title": "sample-name",
-  "limit": 1,
-  "mode": "alerts"
-}`,
-		expect: []string{
-			"\"BODY_ID_THING_MODE_LOW\"",
-		},
 	},
 }
 

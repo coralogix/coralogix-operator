@@ -214,7 +214,7 @@ func (c *coverage) parseChoice(f *crField, path string, raw any, where string) (
 			if i < 0 {
 				return whenChoice{}, &shapeError{code: codeE2EWhenUnused, path: where, msg: fmt.Sprintf("%q is not an accepted CR value of %s", name, f.enum.schema)}
 			}
-			choice.options = append(choice.options, whenOption{name: name, key: coverageKey{"enum", f.enum.schema, f.enum.Values[i].API}})
+			choice.options = append(choice.options, whenOption{name: name, key: coverageKey{"enum", f.enum.schema, f.enum.Values[i].sent()}})
 		}
 	case f.object != nil && len(f.object.groups) != 0:
 		choice.arm = true

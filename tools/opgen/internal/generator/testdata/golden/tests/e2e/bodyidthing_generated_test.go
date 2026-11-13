@@ -20,7 +20,6 @@ package e2e
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strings"
 	"time"
 
@@ -172,76 +171,3 @@ func waitForBodyIDThingGenerated(ctx context.Context, crClient client.Client, na
 	}, time.Minute, time.Second).Should(Succeed())
 	return id
 }
-
-// The coverage steps send an accepted enum value and a oneOf arm that the full spec does not. Each
-// step creates all its copies, waits until each is synced, reads each from the API, and deletes each.
-var bodyIDThingCoverageSteps = [][]string{
-	{
-		`{
-  "title": "sample-name",
-  "limit": 1,
-  "mode": "alerts"
-}`,
-	},
-}
-
-var _ = Describe("BodyIDThing (coverage)", Ordered, Label("coverage"), func() {
-	var (
-		crClient  client.Client
-		apiClient *bodyidthingsservice.BodyIDThingsServiceAPIService
-		base      string
-	)
-
-	BeforeAll(func() {
-		crClient = ClientsInstance.GetControllerRuntimeClient()
-		apiClient = newOpenAPIClientSet().BodyIDThings()
-		base = uniqueName("e2e-bodyidthing-cov")
-	})
-
-	for i, step := range bodyIDThingCoverageSteps {
-		It(fmt.Sprintf("sends step %d", i+1), Label(fmt.Sprintf("coverage-bodyidthing-%d", i+1)), func(ctx context.Context) {
-			var (
-				objects []client.Object
-				names   []string
-				ids     []string
-			)
-			DeferCleanup(func(ctx context.Context) {
-				for _, object := range objects {
-					_ = crClient.Delete(ctx, object)
-				}
-				for _, id := range ids {
-					removeBodyIDThingGenerated(ctx, apiClient, id)
-				}
-			})
-
-			for j, spec := range step {
-				name := fmt.Sprintf("%s-%d-%d", base, i+1, j+1)
-				cr := newBodyIDThingGenerated(name, spec)
-				Expect(crClient.Create(ctx, cr)).To(Succeed())
-				objects = append(objects, cr)
-				names = append(names, name)
-			}
-
-			By("Waiting until every copy is synced and the API returns it")
-			for _, name := range names {
-				id := waitForBodyIDThingGenerated(ctx, crClient, name)
-				ids = append(ids, id)
-				Eventually(func(g Gomega) {
-					_, httpResp, err := apiClient.BodyIDThingsServiceGetBodyIDThing(ctx, id).Execute()
-					g.Expect(cxsdk.NewAPIError(httpResp, err)).To(Succeed())
-				}, time.Minute, time.Second).Should(Succeed())
-			}
-
-			By("Deleting every copy")
-			for _, object := range objects {
-				Expect(crClient.Delete(ctx, object)).To(Succeed())
-			}
-			for _, id := range ids {
-				Eventually(func() bool {
-					_, httpResp, err := apiClient.BodyIDThingsServiceGetBodyIDThing(ctx, id).Execute()
-					return cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err))
-				}, time.Minute, time.Second).Should(BeTrue())
-			}
-		})
-	}
-})

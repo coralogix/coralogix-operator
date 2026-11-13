@@ -1027,6 +1027,7 @@ func (b *builder) enum(t *model.Type, path string) (*enumMap, error) {
 		}
 	}
 	constantByName := map[string]string{}
+	apiByName := map[string]string{}
 	for _, v := range values {
 		name := enumName(v, t.EnumZero)
 		if overridden {
@@ -1052,6 +1053,7 @@ func (b *builder) enum(t *model.Type, path string) (*enumMap, error) {
 			return nil, err
 		}
 		constantByName[name] = b.alias + "." + c
+		apiByName[name] = v
 		e.Values = append(e.Values, enumValue{API: v, Name: name, Const: constantByName[name]})
 	}
 	if overridden {
@@ -1065,6 +1067,7 @@ func (b *builder) enum(t *model.Type, path string) (*enumMap, error) {
 			for i := range e.Values {
 				if e.Values[i].Name == alias {
 					e.Values[i].Const = constantByName[target]
+					e.Values[i].Send = apiByName[target]
 				}
 			}
 		}

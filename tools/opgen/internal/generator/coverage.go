@@ -237,7 +237,7 @@ func (c *coverage) literalKeys(f *crField, value any) []coverageKey {
 		for _, name := range literalStrings(value) {
 			for _, v := range f.enum.Values {
 				if v.Name == name {
-					keys = append(keys, coverageKey{"enum", f.enum.schema, v.API})
+					keys = append(keys, coverageKey{"enum", f.enum.schema, v.sent()})
 				}
 			}
 		}
@@ -311,7 +311,7 @@ func (c *coverage) openBelow(f *crField, seen map[*crType]bool) int {
 	n := 0
 	if f.enum != nil {
 		for _, v := range f.enum.Values {
-			if v.API != enumZero(f) && c.open(coverageKey{"enum", f.enum.schema, v.API}) {
+			if v.API != enumZero(f) && c.open(coverageKey{"enum", f.enum.schema, v.sent()}) {
 				n++
 			}
 		}
