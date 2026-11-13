@@ -375,8 +375,9 @@ func (v *sampleValues) field(f *crField, path string, full bool) (any, error) {
 	}
 	_, armForced := v.layerArm(path)
 	planned := len(v.items[path]) != 0
-	if value, ok := v.file.Values[path]; ok && !armForced && !planned { // a forced arm or planned items win over a fixed value
+	if value, ok := v.file.Values[path]; ok && !armForced && !planned && !v.armForcedBelow(path) { // a forced arm or planned items win over a fixed value
 		v.used[path] = true
+		value = v.withDescendantValues(path, value)
 		if v.record {
 			v.cov.literal(f, value)
 		}
@@ -544,6 +545,81 @@ func (v *sampleValues) plannedItems(f *crField, path string, full bool, planned 
 		items = append(items, item)
 	}
 	return items, nil
+}
+
+// armForcedBelow reports whether the layers force an arm at a path below a fixed object. The
+// fixed value cannot hold that arm, so the object is made from the type tree.
+func (v *sampleValues) armForcedBelow(path string) bool {
+	for _, layer := range v.layers {
+		for p := range layer.arms {
+			if strings.HasPrefix(p, path+".") {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// withDescendantValues merges the values that the layers force below a fixed object into a copy of
+// the object, so a when entry that sets a field inside it is not lost. A path through a list
+// applies to every item, as a path with no index does elsewhere.
+func (v *sampleValues) withDescendantValues(path string, fixed any) any {
+	merged := fixed
+	copied := false
+	for _, layer := range v.layers {
+		for _, p := range sortedKeys(layer.values) {
+			if !strings.HasPrefix(p, path+".") {
+				continue
+			}
+			if !copied {
+				merged, copied = deepCopyLiteral(fixed), true
+			}
+			merged = setLiteralPath(merged, strings.Split(strings.TrimPrefix(p, path+"."), "."), layer.values[p])
+		}
+	}
+	return merged
+}
+
+func deepCopyLiteral(value any) any {
+	switch x := value.(type) {
+	case map[string]any:
+		out := make(map[string]any, len(x))
+		for k, child := range x {
+			out[k] = deepCopyLiteral(child)
+		}
+		return out
+	case []any:
+		out := make([]any, len(x))
+		for i, child := range x {
+			out[i] = deepCopyLiteral(child)
+		}
+		return out
+	}
+	return value
+}
+
+// setLiteralPath sets a value at a path inside a literal that is already a copy.
+func setLiteralPath(node any, segments []string, value any) any {
+	switch x := node.(type) {
+	case map[string]any:
+		if len(segments) == 1 {
+			x[segments[0]] = value
+			return x
+		}
+		x[segments[0]] = setLiteralPath(x[segments[0]], segments[1:], value)
+		return x
+	case []any:
+		for i := range x {
+			x[i] = setLiteralPath(x[i], segments, value)
+		}
+		return x
+	case nil:
+		if len(segments) == 1 {
+			return map[string]any{segments[0]: value}
+		}
+		return map[string]any{segments[0]: setLiteralPath(nil, segments[1:], value)}
+	}
+	return node
 }
 
 // layerValue returns the value that the layers force at a path.

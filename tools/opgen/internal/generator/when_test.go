@@ -462,3 +462,38 @@ func TestWhenGlobalEntryAndListItemEntriesDoNotShareACopyWhenTheyDisagree(t *tes
 		}
 	}
 }
+
+// A fixed object in values: is the base. A when entry that sets a field inside it must reach the
+// copy: the value of the entry replaces the value of the base.
+func TestWhenSetsAFieldInsideAFixedObject(t *testing.T) {
+	entries := []e2eWhen{
+		{Match: map[string]any{"kind": "http"}, Set: map[string]any{"query.logs.lucene": "http-only"}},
+		{Match: map[string]any{"kind": "mail"}},
+	}
+	file := &e2eFile{When: entries,
+		Values:      map[string]any{"kind": "mail", "query": map[string]any{"logs": map[string]any{"lucene": "base"}}},
+		SkipValues:  map[string]e2eSkipValues{"Conn": {Values: []string{"SLACK"}, Reason: "no data"}},
+		SkipChoices: map[string]e2eSkipChoices{"Query": {Choices: []string{"spans"}, Reason: "the fixed query is logs"}}}
+	steps, _, err := specsOf(t, whenSpec(), file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, copy := range copiesOf(t, steps) {
+		if copy["kind"] != "http" {
+			continue
+		}
+		found = true
+		logs, _ := copy["query"].(map[string]any)["logs"].(map[string]any)
+		if logs["lucene"] != "http-only" {
+			t.Errorf("the entry sets lucene inside the fixed query, got %v", copy["query"])
+		}
+	}
+	if !found {
+		t.Fatal("no copy sends http")
+	}
+	// The base value in the file is not changed by a copy.
+	if file.Values["query"].(map[string]any)["logs"].(map[string]any)["lucene"] != "base" {
+		t.Error("a copy must not change the fixed value of the file")
+	}
+}
