@@ -31,6 +31,11 @@ type BodyIDThingSpec struct {
 	// +optional
 	// +kubebuilder:validation:Enum=unspecified;alerts
 	Mode *string `json:"mode,omitempty"`
+
+	// LegacyTags has no effect. The API never had the field.
+	// Deprecated: ignored by the operator and by the API.
+	// +optional
+	LegacyTags []string `json:"legacyTags,omitempty"`
 }
 
 // BodyIDThingStatus defines the observed state of a BodyIDThing.

@@ -3,7 +3,9 @@ package generator
 import (
 	"crypto/sha256"
 	"fmt"
+	"maps"
 	"math"
+	"reflect"
 	"slices"
 	"strconv"
 	"strings"
@@ -60,6 +62,7 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 			spec.Fields = append(spec.Fields, splitReferenceField(field))
 		}
 	}
+	spec.Fields = append(spec.Fields, b.ignoredFields(r.Name)...)
 	b.specType = spec
 	groups, err := b.overrideGroups(r.Name, r.Groups, spec.Fields)
 	if err != nil {
@@ -886,10 +889,15 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 	if existing := b.types[name]; existing != nil && existing.schema != t.Schema {
 		return nil, collision(path, "the components %s and %s both are the Go type %s", existing.schema, t.Schema, name)
 	}
-	if existing := b.types[name]; existing != nil && existing.path != path &&
-		(b.hasNestedValidation(existing.path) || b.hasNestedValidation(path)) {
-		hash := sha256.Sum256([]byte(path))
-		name = fmt.Sprintf("%sAt%s%x", name, goName(path), hash[:6])
+	if existing := b.types[name]; existing != nil && existing.path != path {
+		if !reflect.DeepEqual(b.nestedValidation(existing.path), b.nestedValidation(path)) {
+			hash := sha256.Sum256([]byte(path))
+			name = fmt.Sprintf("%sAt%s%x", name, goName(path), hash[:6])
+		} else if len(b.nestedValidation(path)) != 0 {
+			// The same lines at both paths: one struct serves both, and the lines of this path
+			// count as used when the lines of the first path are.
+			b.sharedPaths = append(b.sharedPaths, [2]string{path, existing.path})
+		}
 	}
 	if existing, ok := b.types[name]; ok {
 		if existing.schema != t.Schema {
@@ -949,6 +957,7 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 	if len(obj.Fields) == 0 && (t.Kind != model.Object || len(t.Fields) != 0) {
 		return nil, unsupported(path, "an object without fields that a request sends is not supported yet")
 	}
+	obj.Fields = append(obj.Fields, b.ignoredFields(t.Schema)...)
 	groups := t.Groups
 	if t.Kind == model.OneOf {
 		arms := make([]string, len(obj.Fields))
@@ -972,17 +981,39 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 	return obj, nil
 }
 
-// hasNestedValidation reports whether a path changes markers inside an object.
-func (b *builder) hasNestedValidation(path string) bool {
-	if b.file == nil || b.file.Validators == nil {
-		return false
+// ignoredFields returns the released CR fields of a component that the API does not have. They
+// have no API property, so the conversions and the generated samples leave them out.
+func (b *builder) ignoredFields(component string) []*crField {
+	if b.file == nil {
+		return nil
 	}
-	for key := range b.file.Validators.Fields {
+	ignored := b.file.Types[component].Ignored
+	if len(ignored) == 0 {
+		return nil
+	}
+	b.usedIgnored[component] = true
+	var out []*crField
+	for _, name := range slices.Sorted(maps.Keys(ignored)) {
+		field := ignored[name]
+		out = append(out, &crField{JSON: name, GoName: goName(name), GoType: field.Type, Optional: true,
+			Doc: docLines(field.Doc), Markers: []string{"+optional"}, synthetic: true})
+	}
+	return out
+}
+
+// nestedValidation returns the validators lines inside an object at path, keyed by the rest of
+// their path: "#type" for the markers of the struct, ".field" for a field.
+func (b *builder) nestedValidation(path string) map[string]overrides.Validation {
+	if b.file == nil || b.file.Validators == nil {
+		return nil
+	}
+	out := map[string]overrides.Validation{}
+	for key, change := range b.file.Validators.Fields {
 		if key == path+"#type" || strings.HasPrefix(key, path+".") {
-			return true
+			out[strings.TrimPrefix(key, path)] = change
 		}
 	}
-	return false
+	return out
 }
 
 func splitReferenceRules(t *crType) {

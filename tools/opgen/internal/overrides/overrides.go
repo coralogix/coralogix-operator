@@ -195,7 +195,22 @@ func (a API) Check() error {
 type Type struct {
 	Fields map[string]Field `yaml:"fields"`
 	Groups map[string]Group `yaml:"groups"`
+	// Ignored lists released CR fields of the component that the API does not have, such as a
+	// deprecated field that was never sent. The CR keeps each one, so stored objects and manifests
+	// that set it stay valid, and Create and Update never send it. Existing kinds only.
+	Ignored map[string]IgnoredField `yaml:"ignored"`
 }
+
+// IgnoredField is one released CR field that the API does not have.
+type IgnoredField struct {
+	// Type is the Go type of the CR field: string, []string, or bool.
+	Type string `yaml:"type"`
+	// Doc is the description of the CR field. It says why the field has no effect.
+	Doc string `yaml:"doc"`
+}
+
+// IgnoredTypes are the allowed types of an ignored field.
+var IgnoredTypes = []string{"string", "[]string", "bool"}
 
 // Group is a released CR object that holds fields from one API component.
 type Group struct {
@@ -332,6 +347,9 @@ func (f *File) check() error {
 		return err
 	}
 	if err := f.checkStatus(); err != nil {
+		return err
+	}
+	if err := f.checkIgnored(); err != nil {
 		return err
 	}
 	for _, line := range f.Lines() {
@@ -846,4 +864,31 @@ func (f *File) Enum(component string) (Enum, bool) {
 	}
 	e, ok := f.Enums[component]
 	return e, ok
+}
+
+// checkIgnored checks the ignored fields of each component.
+func (f *File) checkIgnored() error {
+	for _, component := range slices.Sorted(maps.Keys(f.Types)) {
+		typ := f.Types[component]
+		for _, name := range slices.Sorted(maps.Keys(typ.Ignored)) {
+			field := typ.Ignored[name]
+			location := "types." + component + ".ignored." + name
+			if f.Mode != ModeExisting {
+				return fmt.Errorf("%s: a new kind follows the contract", location)
+			}
+			if !validJSONName(name) {
+				return fmt.Errorf("%s: %q is not a CR property name", location, name)
+			}
+			if !slices.Contains(IgnoredTypes, field.Type) {
+				return fmt.Errorf("%s.type: use %s", location, strings.Join(IgnoredTypes, ", "))
+			}
+			if strings.TrimSpace(field.Doc) == "" {
+				return fmt.Errorf("%s.doc: say why the field has no effect", location)
+			}
+			if _, ok := typ.Fields[name]; ok {
+				return fmt.Errorf("%s: a field line names the same field", location)
+			}
+		}
+	}
+	return nil
 }
