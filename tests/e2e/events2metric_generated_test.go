@@ -196,7 +196,9 @@ func waitForEvents2MetricGenerated(ctx context.Context, crClient client.Client, 
 	Eventually(func(g Gomega) {
 		cr := &coralogixv1alpha1.Events2Metric{}
 		g.Expect(crClient.Get(ctx, types.NamespacedName{Name: name, Namespace: testNamespace}, cr)).To(Succeed())
-		g.Expect(meta.IsStatusConditionTrue(cr.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+		synced := meta.FindStatusCondition(cr.Status.Conditions, utils.ConditionTypeRemoteSynced)
+		g.Expect(synced).NotTo(BeNil(), "Events2Metric %s has no RemoteSynced condition yet", name)
+		g.Expect(synced.Status).To(Equal(metav1.ConditionTrue), "Events2Metric %s is not synced: %s: %s", name, synced.Reason, synced.Message)
 		g.Expect(cr.Status.ID).NotTo(BeNil())
 		id = *cr.Status.ID
 	}, time.Minute, time.Second).Should(Succeed())
