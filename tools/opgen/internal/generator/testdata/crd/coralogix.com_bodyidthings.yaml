@@ -46,6 +46,13 @@ spec:
           spec:
             description: BodyIDThingSpec defines the desired state of a BodyIDThing.
             properties:
+              legacyTags:
+                description: |-
+                  LegacyTags has no effect. The API never had the field.
+                  Deprecated: ignored by the operator and by the API.
+                items:
+                  type: string
+                type: array
               limit:
                 format: int32
                 type: integer

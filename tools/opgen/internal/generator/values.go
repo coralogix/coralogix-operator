@@ -235,9 +235,13 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 			if field.JSON == name && (field.Optional || d.Overwrite) {
 				known = true
 			}
+			// A required group holds optional fields. The value names them.
+			if field.JSON == name && field.group && optionalGroupFields(field, value) {
+				known = true
+			}
 		}
 		if !known {
-			return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":minimal." + name, msg: "not an optional spec field"}
+			return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":minimal." + name, msg: "not an optional spec field, or a group object of its optional fields"}
 		}
 		minimal.set(name, value)
 	}
@@ -521,7 +525,12 @@ func (v *sampleValues) enumNames(f *crField, path string, limit int) []string {
 	}
 	chosen := open
 	if len(chosen) == 0 {
+		// The default is the first business value. The zero value is the API default, and an API can
+		// reject it when it is sent, so it is the default only when the field has no other value.
 		chosen = usable
+		if i := slices.IndexFunc(usable, func(value enumValue) bool { return value.API != enumZero(f) }); i > 0 {
+			chosen = usable[i:]
+		}
 		if len(chosen) > 1 {
 			chosen = chosen[:1]
 		}
@@ -1303,4 +1312,24 @@ func (v *sampleValues) uniqueKey(f *crField, path string, items []any, item any,
 		set(item, key, original)
 	}
 	return false
+}
+
+// optionalGroupFields reports whether value is an object of optional fields of the group.
+func optionalGroupFields(group *crField, value any) bool {
+	fields, ok := value.(map[string]any)
+	if !ok || len(fields) == 0 || group.object == nil {
+		return false
+	}
+	for name := range fields {
+		found := false
+		for _, f := range group.object.Fields {
+			if f.JSON == name && f.Optional {
+				found = true
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
 }

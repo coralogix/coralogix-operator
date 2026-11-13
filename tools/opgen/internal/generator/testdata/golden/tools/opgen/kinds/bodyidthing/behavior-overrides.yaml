@@ -9,6 +9,13 @@ types:
     fields:
       name: {name: title}
       limit: {required: true}
+    # The released CR has a field that the API never had.
+    ignored:
+      legacyTags:
+        type: '[]string'
+        doc: |-
+          LegacyTags has no effect. The API never had the field.
+          Deprecated: ignored by the operator and by the API.
 enums:
   BodyIDThingMode:
     zero: unspecified

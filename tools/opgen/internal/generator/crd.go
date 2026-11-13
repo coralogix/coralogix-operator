@@ -3,6 +3,7 @@ package generator
 import (
 	"crypto/sha256"
 	"fmt"
+	"maps"
 	"math"
 	"reflect"
 	"slices"
@@ -61,6 +62,7 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 			spec.Fields = append(spec.Fields, splitReferenceField(field))
 		}
 	}
+	spec.Fields = append(spec.Fields, b.ignoredFields(r.Name)...)
 	b.specType = spec
 	groups, err := b.overrideGroups(r.Name, r.Groups, spec.Fields)
 	if err != nil {
@@ -993,6 +995,7 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 	if len(obj.Fields) == 0 && (t.Kind != model.Object || len(t.Fields) != 0) {
 		return nil, unsupported(path, "an object without fields that a request sends is not supported yet")
 	}
+	obj.Fields = append(obj.Fields, b.ignoredFields(t.Schema)...)
 	groups := settableGroups(t, inlined)
 	if t.Kind == model.OneOf {
 		arms := make([]string, len(obj.Fields))
@@ -1136,6 +1139,26 @@ func (b *builder) hasNestedValidation(path string) bool {
 		}
 	}
 	return false
+}
+
+// ignoredFields returns the released CR fields of a component that the API does not have. They
+// have no API property, so the conversions and the generated samples leave them out.
+func (b *builder) ignoredFields(component string) []*crField {
+	if b.file == nil {
+		return nil
+	}
+	ignored := b.file.Types[component].Ignored
+	if len(ignored) == 0 {
+		return nil
+	}
+	b.usedIgnored[component] = true
+	var out []*crField
+	for _, name := range slices.Sorted(maps.Keys(ignored)) {
+		field := ignored[name]
+		out = append(out, &crField{JSON: name, GoName: goName(name), GoType: field.Type, Optional: true,
+			Doc: docLines(field.Doc), Markers: []string{"+optional"}, synthetic: true})
+	}
+	return out
 }
 
 func splitReferenceRules(t *crType) {
