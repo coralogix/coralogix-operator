@@ -569,3 +569,166 @@ func TestWhenCoupledValuesBelowASkippedArmNeedNoEntries(t *testing.T) {
 		t.Fatalf("the values below a skipped arm need no entry or skip: %v", err)
 	}
 }
+
+func pairSpec() *kindData {
+	item := &crType{schema: "Pair", Fields: []*crField{enumField("kind", "PairKind", "a", "b"), stringField("data")}}
+	return &kindData{Kind: "Thing", Spec: &crType{Name: "ThingSpec", Fields: []*crField{listOf(objectField("items", model.Object, item))}}}
+}
+
+func pairEntries() []e2eWhen {
+	return []e2eWhen{
+		{Match: map[string]any{"items.kind": "a"}, Set: map[string]any{"items.data": "data-a"}},
+		{Match: map[string]any{"items.kind": "b"}, Set: map[string]any{"items.data": "data-b"}},
+	}
+}
+
+// Padding a list to its minimum must keep the coupling: a padded item repeats a finished item
+// and does not pick a coupled value without its data.
+func TestWhenPaddedItemsKeepTheirCoupling(t *testing.T) {
+	d := pairSpec()
+	two := int64(2)
+	d.Spec.Fields[0].typ.MinItems = &two
+	base := []any{map[string]any{"kind": "a", "data": "data-a"}, map[string]any{"kind": "a", "data": "data-a"}}
+	steps, _, err := specsOf(t, d, &e2eFile{When: pairEntries(), Values: map[string]any{"items": base}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, copy := range copiesOf(t, steps) {
+		items, _ := copy["items"].([]any)
+		if len(items) < 2 {
+			t.Errorf("a copy holds %d items, the contract needs 2: %v", len(items), copy)
+		}
+		for _, raw := range items {
+			item := raw.(map[string]any)
+			if item["data"] != "data-"+item["kind"].(string) {
+				t.Errorf("an item breaks the coupling of its kind: %v", item)
+			}
+		}
+	}
+}
+
+// A list of enums below its minimum takes values that it does not hold yet: a set has no duplicates.
+func TestPaddedEnumListHasNoDuplicates(t *testing.T) {
+	d := coverageSpec()
+	three := int64(3)
+	for _, f := range d.Spec.Fields {
+		if f.JSON == "tags" {
+			f.typ.MinItems = &three
+		}
+	}
+	steps, v, err := specsOf(t, d, &e2eFile{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(stepsJSON(t, steps), `"tags":["`) {
+		t.Fatal("no copy sends tags")
+	}
+	full, _, _, err := (&sampleValues{file: &e2eFile{}, used: map[string]bool{}}).specs(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, spec := range append([]*omap{full}, func() []*omap {
+		var all []*omap
+		for _, step := range steps {
+			for _, c := range step {
+				all = append(all, c.spec)
+			}
+		}
+		return all
+	}()...) {
+		tags, _ := spec.get("tags").([]any)
+		seen := map[any]bool{}
+		for _, tag := range tags {
+			if seen[tag] {
+				t.Errorf("duplicate tag %v in %v", tag, tags)
+			}
+			seen[tag] = true
+		}
+		if len(tags) < 3 {
+			t.Errorf("tags needs 3 items: %v", tags)
+		}
+	}
+	_ = v
+}
+
+// A map can need more than one entry.
+func TestMapIsPaddedToItsMinimumEntries(t *testing.T) {
+	two := int64(2)
+	labels := &crField{API: "labels", JSON: "labels", GoName: "Labels", Optional: true,
+		typ: &model.Type{Kind: model.Map, Elem: &model.Type{Kind: model.String}, MinItems: &two}}
+	d := &kindData{Kind: "Thing", Spec: &crType{Name: "ThingSpec", Fields: []*crField{labels}}}
+	v := &sampleValues{file: &e2eFile{}, used: map[string]bool{}}
+	full, _, _, err := v.specs(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := full.json(); !strings.Contains(got, `"key"`) || !strings.Contains(got, `"key2"`) {
+		t.Errorf("the map needs two entries: %s", got)
+	}
+}
+
+// A fixed object above a list hides the items that entries plan below it: the object must come
+// from the type tree, or the data of the entries is lost.
+func TestFixedAncestorDoesNotHidePlannedItemsBelowIt(t *testing.T) {
+	d := whenSpec()
+	var aggs *crField
+	kept := d.Spec.Fields[:0:0]
+	for _, f := range d.Spec.Fields {
+		if f.JSON == "aggs" {
+			aggs = f
+			continue
+		}
+		kept = append(kept, f)
+	}
+	wrapper := &crType{schema: "Wrapper", Fields: []*crField{aggs}}
+	d.Spec.Fields = append(kept, objectField("wrapper", model.Object, wrapper))
+	entries := []e2eWhen{
+		{Match: map[string]any{"wrapper.aggs.type": "min"}, Set: map[string]any{"wrapper.aggs.meta": map[string]any{"samples": map[string]any{"sampleType": "s1"}}}},
+		{Match: map[string]any{"wrapper.aggs.type": "max"}, Set: map[string]any{"wrapper.aggs.meta": map[string]any{"samples": map[string]any{"sampleType": "s2"}}}},
+		{Match: map[string]any{"wrapper.aggs.type": "hist"}, Set: map[string]any{"wrapper.aggs.meta": map[string]any{"histogram": map[string]any{"buckets": "1"}}}},
+		{Match: map[string]any{"kind": "slack"}}, {Match: map[string]any{"kind": "http"}}, {Match: map[string]any{"kind": "mail"}},
+	}
+	fixed := map[string]any{"aggs": []any{map[string]any{"type": "min", "meta": map[string]any{"samples": map[string]any{"sampleType": "s1"}}}}}
+	steps, v, err := specsOf(t, d, &e2eFile{When: entries, Values: map[string]any{"wrapper": fixed}})
+	if err != nil {
+		t.Fatalf("the entries below a fixed object must still apply: %v", err)
+	}
+	if missing := v.cov.missing(); len(missing) != 0 {
+		t.Fatalf("left %v", missing)
+	}
+	if !strings.Contains(stepsJSON(t, steps), `"histogram"`) {
+		t.Error("the histogram item of the entry never reached a copy")
+	}
+}
+
+// An item of an outer list holds an inner list. The overlay of an inner item wins over the overlay
+// of the outer item at a shared path: they must not share a copy when they disagree.
+func TestNestedListItemEntriesThatDisagreeDoNotShareACopy(t *testing.T) {
+	inner := &crType{schema: "Inner", Fields: []*crField{enumField("t", "InnerType", "t1", "t2")}}
+	outer := &crType{schema: "Outer", Fields: []*crField{enumField("k", "OuterKind", "k1", "k2"), listOf(objectField("inner", model.Object, inner))}}
+	d := &kindData{Kind: "Thing", Spec: &crType{Name: "ThingSpec", Fields: []*crField{listOf(objectField("outer", model.Object, outer))}}}
+	entries := []e2eWhen{
+		{Match: map[string]any{"outer.k": "k1"}, Set: map[string]any{"outer.inner.t": "t1"}},
+		{Match: map[string]any{"outer.k": "k2"}},
+		{Match: map[string]any{"outer.inner.t": "t1"}},
+		{Match: map[string]any{"outer.inner.t": "t2"}},
+	}
+	// The full spec uses k2, so the entry for k1 and the entry for t2 are both open.
+	steps, _, err := specsOf(t, d, &e2eFile{When: entries, Values: map[string]any{"outer.k": "k2"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, copy := range copiesOf(t, steps) {
+		for _, raw := range copy["outer"].([]any) {
+			o := raw.(map[string]any)
+			if o["k"] != "k1" {
+				continue
+			}
+			for _, in := range o["inner"].([]any) {
+				if in.(map[string]any)["t"] != "t1" {
+					t.Errorf("an outer k1 item holds an inner item that its entry did not allow: %v", o)
+				}
+			}
+		}
+	}
+}

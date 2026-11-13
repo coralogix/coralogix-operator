@@ -392,7 +392,15 @@ func (v *sampleValues) field(f *crField, path string, full bool) (any, error) {
 		return v.list(f, path, full)
 	case model.Map:
 		item, err := v.item(f, f.typ.Elem, path, full)
-		return (&omap{}).set("key", item), err
+		if err != nil {
+			return nil, err
+		}
+		out := (&omap{}).set("key", item)
+		// A map can need more entries than one. Repeat the finished value under other keys.
+		for n := 2; f.typ.MinItems != nil && int64(len(out.keys)) < *f.typ.MinItems; n++ {
+			out.set(fmt.Sprintf("key%d", n), cloneSpecValue(item))
+		}
+		return out, nil
 	case model.String, model.Bool, model.Number, model.Integer, model.Enum, model.Object, model.OneOf:
 		// One value, below.
 	}
@@ -497,15 +505,83 @@ func (v *sampleValues) list(f *crField, path string, full bool) (any, error) {
 	if !ok || f.typ.MinItems == nil {
 		return value, nil
 	}
-	// The contract may need more items than the entries or the sweep gave. Pad with ordinary items.
+	// The contract may need more items than the entries or the sweep gave. Pad with items that keep
+	// what the others hold: a coupled value must keep its data.
 	for int64(len(items)) < *f.typ.MinItems {
-		item, err := v.item(f, f.typ.Elem, path, full)
+		item, err := v.padItem(f, path, full, items)
 		if err != nil {
 			return nil, err
 		}
 		items = append(items, item)
 	}
 	return items, nil
+}
+
+// padItem makes one more item for a list that is below its contract minimum. A list of objects
+// repeats a finished item, because a new one could pick a coupled value without its data. A list
+// of enums takes a value that the list does not hold yet, and a list of strings or integers a
+// distinct value, so a set does not get a duplicate.
+func (v *sampleValues) padItem(f *crField, path string, full bool, items []any) (any, error) {
+	elem := f.typ.Elem
+	switch {
+	case elem.Kind == model.Enum && f.enum != nil:
+		used := map[string]bool{}
+		for _, item := range items {
+			if name, ok := item.(string); ok {
+				used[name] = true
+			}
+		}
+		for _, value := range f.enum.Values {
+			if !used[value.Name] && value.API != enumZero(f) && !v.cov.skipped[coverageKey{"enum", f.enum.schema, value.API}] {
+				if v.record {
+					v.cov.mark(coverageKey{"enum", f.enum.schema, value.sent()})
+				}
+				return value.Name, nil
+			}
+		}
+	case (elem.Kind == model.Object || elem.Kind == model.OneOf) && f.typ.Kind == model.List && len(items) > 0:
+		return cloneSpecValue(items[len(items)-1]), nil
+	case elem.Kind == model.String && elem.Pattern == "" && elem.Format != "date-time" && len(items) > 0:
+		if s, ok := items[0].(string); ok {
+			next := fmt.Sprintf("%s-%d", s, len(items)+1)
+			if elem.MaxLength == nil || int64(len(next)) <= *elem.MaxLength {
+				return next, nil
+			}
+		}
+	case elem.Kind == model.Integer && len(items) > 0:
+		if n, ok := items[0].(int64); ok {
+			next := n + int64(len(items))
+			if elem.Maximum == nil || float64(next) <= *elem.Maximum {
+				return next, nil
+			}
+		}
+	}
+	return v.item(f, elem, path, full)
+}
+
+// cloneSpecValue copies a made-up value, so a repeated item can be changed without changing the first.
+func cloneSpecValue(value any) any {
+	switch x := value.(type) {
+	case *omap:
+		out := &omap{}
+		for _, key := range x.keys {
+			out.set(key, cloneSpecValue(x.values[key]))
+		}
+		return out
+	case map[string]any:
+		out := make(map[string]any, len(x))
+		for key, child := range x {
+			out[key] = cloneSpecValue(child)
+		}
+		return out
+	case []any:
+		out := make([]any, len(x))
+		for i, child := range x {
+			out[i] = cloneSpecValue(child)
+		}
+		return out
+	}
+	return value
 }
 
 func (v *sampleValues) listItems(f *crField, path string, full bool) (any, error) {
@@ -567,14 +643,19 @@ func (v *sampleValues) plannedItems(f *crField, path string, full bool, planned 
 	return items, nil
 }
 
-// armForcedBelow reports whether the layers force an arm at a path below a fixed object. The
-// fixed value cannot hold that arm, so the object is made from the type tree.
+// armForcedBelow reports whether the layers force an arm, or plan list items, at a path below a
+// fixed object. The fixed value cannot hold them, so the object is made from the type tree.
 func (v *sampleValues) armForcedBelow(path string) bool {
 	for _, layer := range v.layers {
 		for p := range layer.arms {
 			if strings.HasPrefix(p, path+".") {
 				return true
 			}
+		}
+	}
+	for p, planned := range v.items {
+		if len(planned) != 0 && strings.HasPrefix(p, path+".") {
+			return true
 		}
 	}
 	return false

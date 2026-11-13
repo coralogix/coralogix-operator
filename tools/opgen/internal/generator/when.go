@@ -375,8 +375,8 @@ func (c *coverage) planCopy() (global *overlay, items map[string][]*overlay) {
 			if entry.anchor == "" && (global.conflicts(assign) || conflictsWithAnyItem(items, assign)) {
 				continue
 			}
-			if entry.anchor != "" && global.conflicts(assign) {
-				continue // an item overlay that overrides a global entry would drop its match but keep its data
+			if entry.anchor != "" && (global.conflicts(assign) || conflictsWithNestedItems(items, entry.anchor, assign)) {
+				continue // an item overlay that overrides another entry would drop its match but keep its data
 			}
 			if entry.anchor != "" && len(items[entry.anchor]) >= entry.itemLimit() {
 				continue // the list is full: the entry waits for another copy
@@ -419,6 +419,23 @@ func (e *whenEntry) itemLimit() int {
 // conflictsWithAnyItem reports whether an overlay conflicts with the overlay of a planned list item.
 func conflictsWithAnyItem(items map[string][]*overlay, assign *overlay) bool {
 	for _, list := range items {
+		for _, item := range list {
+			if item.conflicts(assign) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// conflictsWithNestedItems reports whether an item overlay of a list conflicts with the item
+// overlays of a list above or below it: the inner item is made inside the outer one, and its
+// overlay would win over the outer one at a shared path.
+func conflictsWithNestedItems(items map[string][]*overlay, anchor string, assign *overlay) bool {
+	for other, list := range items {
+		if other == anchor || (!strings.HasPrefix(other, anchor+".") && !strings.HasPrefix(anchor, other+".")) {
+			continue
+		}
 		for _, item := range list {
 			if item.conflicts(assign) {
 				return true
