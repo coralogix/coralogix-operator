@@ -76,6 +76,47 @@ cd tools/opgen && go run ./cmd/opgen check \
 - An API field that Create does not have but Update does (`OPERATOR_UPDATE_ONLY_FIELD`) stops the run. The renderer cannot send a field in only one request, and it must not drop one without a word. Add `skip: true` for the field to keep it out of the CR and the requests, or extend the renderer.
 - A handwritten entry of a generated kind in `PROJECT`, `config/crd/kustomization.yaml`, or the Helm `cluster_role.yaml` stops the run (`OPERATOR_DUPLICATE_ENTRY`). Remove the handwritten entry when a kind moves to generated code.
 - `tools/opgen/kinds/<kind>/e2e.yaml` holds only the e2e values that the contract cannot state.
+- Every accepted enum value, enum list item, and oneOf arm of a generated kind must reach the real API in some test.
+  - The generator counts them from the CR type tree. A sweep builds extra specs until each one is sent. Step 0 is the full spec. Each later step has one or more copies of the spec.
+  - A fixed value of `values:` counts only for what it sends. It never hides the other values of its field. An `omit` path hides nothing either.
+  - A value or arm that no test sends stops the run with `E2E_COVERAGE_MISSING`. The message names each one. The fix is a `when` entry or a skip.
+  - `skipValues` and `skipChoices` in `e2e.yaml` mean "not tested". Both need a `reason` that a live probe proved. A skip that names nothing fails with `E2E_SKIP_UNUSED`. A skip is not `rejected`: a skipped value stays in the CRD.
+
+    ```yaml
+    skipValues:
+      notification_center.EntityType:   # the enum component
+        values: [CASES]                 # API values
+        reason: a cases preset needs a cases connector
+    skipChoices:
+      E2MQuery:                         # the component that holds the oneOf
+        choices: [spansQuery]           # API properties of the arms
+        reason: the team has no span dataset
+    ```
+  - Values below a skipped arm need no skip.
+- `when` in `e2e.yaml` gives the extra data that a value or an arm needs. Paths are CR paths with no index. Values are CR spellings.
+  - `match` holds one or more paths. All of them must hold. A list value matches any value in the list. For a oneOf, write the field that holds it and the CR name of the arm.
+  - `set` holds the values that the entry sets. A `set` path outside a list item of the `match` is not allowed. A `set` path that repeats a `match` path fails with `E2E_WHEN_CONFLICT`.
+  - A path in a `match` is coupled. Each accepted value or arm of a coupled field needs a `when` entry or a skip, or the run stops with `E2E_WHEN_MISSING`. An entry that names nothing fails with `E2E_WHEN_UNUSED`.
+  - The sweep never picks a coupled value alone. It picks whole entries. Entries that set one path to different values go into different copies. An entry in a list gets its own item.
+  - Take `when` data from live probes, not from the proto.
+
+    ```yaml
+    when:
+      - match: {connectorType: genericHttps, entityType: alerts}
+        set:
+          parentId: preset_system_generic_https_alerts_empty
+          configOverrides.payloadType: generic_https_default
+      - match: {aggs.aggType: [min, max]}     # a list item: set only paths below aggs
+        set: {aggs.aggMetadata: {}}
+    ```
+- Each generated kind gets two kinds of coverage test.
+  - An offline test, `internal/controller/coralogix/v1alpha1/<kind>_coverage_test.go`. It runs in `make unit-tests` with no key. It sends each spec through CRD admission in envtest, then builds the Create request and checks that each counted value and arm is in it.
+  - A live test, the `<Kind> (coverage)` Describe of `tests/e2e/<kind>_generated_test.go`. It has the label `coverage` and one label `coverage-<kind>-<step>` for each step. `make e2e-tests` skips it (`!coverage`).
+- `tests/e2e/coverage-shards.yaml` is generated. It packs the steps into shards of about 4 minutes. All steps of a `serial` kind stay in one shard. The last shard, `coverage-rest`, runs every coverage spec that no label names.
+  - `.github/workflows/coverage-tests.yaml` reads this file. It builds the image once and runs each shard in its own Kind cluster. A new step needs no workflow edit.
+  - `scripts/check-coverage-shards.sh` checks that each coverage spec runs in exactly one shard. CI runs it in the `opgen` job.
+  - The estimate of 1 minute per step is a guess. Calibrate it with the Ginkgo JSON report of a live run.
+- The generated e2e cleanup is a backstop. After the test, it waits until the operator deletes each object it created. If an object is still there, it deletes it through the API. A missing object is success.
 - Choose generated sample values that pass admission on the oldest Kubernetes version in CI. A selected oneOf arm with an empty object can fail CEL validation on older versions.
 - Use values from a working API fixture for strings that name server-side resources, such as output schemas. The API contract can validate their syntax but cannot prove they exist.
 - The live API can require a field that the contract marks optional, or a nonempty list that the contract permits empty. Add these values under `minimal` in the kind's `e2e.yaml`. Verify the minimal resource against the live API.
@@ -246,7 +287,7 @@ Use focused unit/envtest coverage for controller behavior, validation, status tr
 
 Use KUTTL or e2e coverage when Kubernetes wiring, CRDs, Helm packaging, or real API behavior is part of the risk.
 
-The live suites (e2e, Helm e2e, integration, upgrade) run from `.github/workflows/live-tests.yaml`, one after another, because they share one Coralogix team. Each suite is a reusable workflow in its own file. The `Live tests result` job is the check that branch protection requires. Keep its name stable: renaming it blocks every PR until the ruleset changes. To add a suite, add a `uses:` job to `live-tests.yaml`, chain it with `needs`, and add it to the `needs` of `live-tests-result` and `notify-failure`. A suite that is not in `live-tests-result` does not block merges.
+The live suites (e2e, Helm e2e, integration, upgrade, coverage) run from `.github/workflows/live-tests.yaml`, one after another, because they share one Coralogix team. Each suite is a reusable workflow in its own file. The `Live tests result` job is the check that branch protection requires. Keep its name stable: renaming it blocks every PR until the ruleset changes. To add a suite, add a `uses:` job to `live-tests.yaml`, chain it with `needs`, and add it to the `needs` of `live-tests-result` and `notify-failure`. A suite that is not in `live-tests-result` does not block merges.
 
 When a test reads a remote resource, do not depend on the order of items inside a returned list. The API can return
 list elements in any order. Assert on a set or find the element by an identifying field, instead of indexing a fixed

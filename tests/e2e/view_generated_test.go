@@ -20,6 +20,7 @@ package e2e
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -225,3 +226,170 @@ func waitForViewGenerated(ctx context.Context, crClient client.Client, name stri
 	Expect(err).NotTo(HaveOccurred())
 	return int32(parsedID)
 }
+
+// The coverage steps send an accepted enum value and a oneOf arm that the full spec does not. Each
+// step creates all its copies, waits until each is synced, reads each from the API, and deletes each.
+var viewCoverageSteps = [][]string{
+	{
+		`{
+  "filters": {
+    "filters": [
+      {
+        "name": "severity",
+        "selectedValues": {
+          "ERROR": true
+        }
+      }
+    ]
+  },
+  "folder": {
+    "resourceRef": {
+      "name": "view-folder-sample"
+    }
+  },
+  "name": "sample-name",
+  "searchQuery": {
+    "query": "sample-query",
+    "syntaxType": "dataprime"
+  },
+  "timeSelection": {
+    "quickSelection": {
+      "seconds": 0
+    }
+  },
+  "viewType": "templates"
+}`,
+		`{
+  "filters": {
+    "filters": [
+      {
+        "name": "severity",
+        "selectedValues": {
+          "ERROR": true
+        }
+      }
+    ]
+  },
+  "folder": {
+    "resourceRef": {
+      "name": "view-folder-sample"
+    }
+  },
+  "name": "sample-name",
+  "searchQuery": {
+    "query": "sample-query",
+    "syntaxType": "lucene"
+  },
+  "timeSelection": {
+    "customSelection": {
+      "fromTime": "2024-01-01T00:00:00Z",
+      "toTime": "2024-01-01T01:00:00Z"
+    }
+  },
+  "viewType": "archiveLogs"
+}`,
+		`{
+  "filters": {
+    "filters": [
+      {
+        "name": "severity",
+        "selectedValues": {
+          "ERROR": true
+        }
+      }
+    ]
+  },
+  "folder": {
+    "resourceRef": {
+      "name": "view-folder-sample"
+    }
+  },
+  "name": "sample-name",
+  "searchQuery": {
+    "query": "sample-query",
+    "syntaxType": "lucene"
+  },
+  "timeSelection": {
+    "customSelection": {
+      "fromTime": "2024-01-01T00:00:00Z",
+      "toTime": "2024-01-01T01:00:00Z"
+    }
+  },
+  "viewType": "archiveTemplates"
+}`,
+	},
+}
+
+var _ = Describe("View (coverage)", Ordered, Label("coverage"), func() {
+	var (
+		crClient  client.Client
+		apiClient *viewsservice.ViewsServiceAPIService
+		base      string
+	)
+
+	BeforeAll(func() {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		apiClient = newOpenAPIClientSet().Views()
+		base = uniqueName("e2e-view-cov")
+	})
+
+	for i, step := range viewCoverageSteps {
+		It(fmt.Sprintf("sends step %d", i+1), Label(fmt.Sprintf("coverage-view-%d", i+1)), func(ctx context.Context) {
+			var (
+				objects []client.Object
+				names   []string
+				ids     []int32
+			)
+			DeferCleanup(func(ctx context.Context) {
+				for _, object := range objects {
+					_ = crClient.Delete(ctx, object)
+				}
+				for _, id := range ids {
+					removeViewGenerated(ctx, apiClient, id)
+				}
+			})
+
+			for j, spec := range step {
+				name := fmt.Sprintf("%s-%d-%d", base, i+1, j+1)
+				{
+					fixture := &coralogixv1alpha1.ViewFolder{ObjectMeta: metav1.ObjectMeta{Name: name + "-folder", Namespace: testNamespace}}
+					decoder := json.NewDecoder(strings.NewReader(strings.ReplaceAll(`{"name":"@{run}-folder"}`, "@{run}", name)))
+					decoder.DisallowUnknownFields()
+					Expect(decoder.Decode(&fixture.Spec)).To(Succeed())
+					Expect(crClient.Create(ctx, fixture)).To(Succeed())
+					objects = append(objects, fixture)
+					Eventually(func(g Gomega) {
+						current := &coralogixv1alpha1.ViewFolder{}
+						g.Expect(crClient.Get(ctx, types.NamespacedName{Name: fixture.Name, Namespace: testNamespace}, current)).To(Succeed())
+						g.Expect(current.Status.ID).NotTo(BeNil())
+					}, time.Minute, time.Second).Should(Succeed())
+				}
+				cr := newViewGenerated(name, spec)
+				Expect(crClient.Create(ctx, cr)).To(Succeed())
+				objects = append(objects, cr)
+				names = append(names, name)
+			}
+
+			By("Waiting until every copy is synced and the API returns it")
+			for _, name := range names {
+				id := waitForViewGenerated(ctx, crClient, name)
+				ids = append(ids, id)
+				Eventually(func(g Gomega) {
+					_, httpResp, err := apiClient.ViewsServiceGetView(ctx, id).Execute()
+					g.Expect(cxsdk.NewAPIError(httpResp, err)).To(Succeed())
+				}, time.Minute, time.Second).Should(Succeed())
+			}
+
+			By("Deleting every copy")
+			for _, object := range objects {
+				Expect(crClient.Delete(ctx, object)).To(Succeed())
+			}
+			for _, id := range ids {
+				Eventually(func() bool {
+					_, httpResp, err := apiClient.ViewsServiceGetView(ctx, id).Execute()
+					return cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err))
+				}, time.Minute, time.Second).Should(BeTrue())
+			}
+		})
+	}
+})

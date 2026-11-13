@@ -20,6 +20,7 @@ package e2e
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -177,3 +178,82 @@ func waitForPatchThingGenerated(ctx context.Context, crClient client.Client, nam
 	}, time.Minute, time.Second).Should(Succeed())
 	return id
 }
+
+// The coverage steps send an accepted enum value and a oneOf arm that the full spec does not. Each
+// step creates all its copies, waits until each is synced, reads each from the API, and deletes each.
+var patchThingCoverageSteps = [][]string{
+	{
+		`{
+  "name": "sample-name",
+  "description": "sample-description",
+  "enabled": true,
+  "kind": "cases",
+  "target": {
+    "prefix": {
+      "value": "sample-value"
+    }
+  }
+}`,
+	},
+}
+
+var _ = Describe("PatchThing (coverage)", Ordered, Label("coverage"), func() {
+	var (
+		crClient  client.Client
+		apiClient *patchthingsservice.PatchThingsServiceAPIService
+		base      string
+	)
+
+	BeforeAll(func() {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		apiClient = newOpenAPIClientSet().PatchThings()
+		base = uniqueName("e2e-patchthing-cov")
+	})
+
+	for i, step := range patchThingCoverageSteps {
+		It(fmt.Sprintf("sends step %d", i+1), Label(fmt.Sprintf("coverage-patchthing-%d", i+1)), func(ctx context.Context) {
+			var (
+				objects []client.Object
+				names   []string
+				ids     []string
+			)
+			DeferCleanup(func(ctx context.Context) {
+				for _, object := range objects {
+					_ = crClient.Delete(ctx, object)
+				}
+				for _, id := range ids {
+					removePatchThingGenerated(ctx, apiClient, id)
+				}
+			})
+
+			for j, spec := range step {
+				name := fmt.Sprintf("%s-%d-%d", base, i+1, j+1)
+				cr := newPatchThingGenerated(name, spec)
+				Expect(crClient.Create(ctx, cr)).To(Succeed())
+				objects = append(objects, cr)
+				names = append(names, name)
+			}
+
+			By("Waiting until every copy is synced and the API returns it")
+			for _, name := range names {
+				id := waitForPatchThingGenerated(ctx, crClient, name)
+				ids = append(ids, id)
+				Eventually(func(g Gomega) {
+					_, httpResp, err := apiClient.PatchThingsServiceGetPatchThing(ctx, id).Execute()
+					g.Expect(cxsdk.NewAPIError(httpResp, err)).To(Succeed())
+				}, time.Minute, time.Second).Should(Succeed())
+			}
+
+			By("Deleting every copy")
+			for _, object := range objects {
+				Expect(crClient.Delete(ctx, object)).To(Succeed())
+			}
+			for _, id := range ids {
+				Eventually(func() bool {
+					_, httpResp, err := apiClient.PatchThingsServiceGetPatchThing(ctx, id).Execute()
+					return cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err))
+				}, time.Minute, time.Second).Should(BeTrue())
+			}
+		})
+	}
+})

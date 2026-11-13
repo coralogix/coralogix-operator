@@ -121,6 +121,11 @@ func renderShared(module, cxsdk string, kinds []*kindData) (output, error) {
 		}
 	}
 	out.files[version.VersionsFile] = renderVersions(kinds)
+	shards, err := renderShards(kinds)
+	if err != nil {
+		return output{}, err
+	}
+	out.files[shardsFile] = shards
 	out.blocks[projectFile] = project.String()
 	out.blocks[crdKustomization] = kustomization.String()
 	out.blocks[helmClusterRole] = clusterRoleRules(resources)

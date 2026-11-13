@@ -135,6 +135,8 @@ type e2eData struct {
 	// CoverageSpecs are the specs that the offline coverage test checks: the full spec, the minimal
 	// spec, and every copy of every step.
 	CoverageSpecs []coverageSpecData
+	// StepJSON are the specs of each coverage step as Go string literals, for the live coverage suite.
+	StepJSON [][]string
 	// Steps are the coverage steps after the full spec: the copies of the spec that each step creates.
 	Steps [][]sweepCopy
 }
@@ -229,6 +231,13 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 	}
 	e2e = &e2eData{FullJSON: goString(full.json()), MinimalJSON: goString(minimal.json()), Serial: file.Serial, Omit: file.Omit, Steps: steps, FullKeys: v.fullKeys}
 	e2e.CoverageSpecs = v.coverageSpecs(full, minimal, steps)
+	for _, step := range steps {
+		var specs []string
+		for _, c := range step {
+			specs = append(specs, goString(c.spec.json()))
+		}
+		e2e.StepJSON = append(e2e.StepJSON, specs)
+	}
 	for _, fixture := range file.Fixtures {
 		if !token.IsIdentifier(fixture.Kind) || fixture.Suffix == "" || !token.IsIdentifier(fixture.StatusField) || len(fixture.Spec) == 0 {
 			return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":fixtures", msg: "kind, suffix, statusField, and spec are required"}

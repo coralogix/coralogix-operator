@@ -20,6 +20,7 @@ package e2e
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -240,3 +241,139 @@ func waitForGlobalRouterGenerated(ctx context.Context, crClient client.Client, n
 	}, time.Minute, time.Second).Should(Succeed())
 	return id
 }
+
+// The coverage steps send an accepted enum value and a oneOf arm that the full spec does not. Each
+// step creates all its copies, waits until each is synced, reads each from the API, and deletes each.
+var globalRouterCoverageSteps = [][]string{
+	{
+		`{
+  "description": "sample-description",
+  "disabled": true,
+  "entityLabels": {
+    "key": "sample-entity-labels"
+  },
+  "fallbackTargets": [
+    {
+      "entityType": "cases",
+      "target": {
+        "connector": {
+          "resourceRef": {
+            "name": "connector-sample"
+          }
+        },
+        "customDetails": {
+          "key": "sample-custom-details"
+        }
+      }
+    }
+  ],
+  "name": "sample-name",
+  "routingLabels": {
+    "environment": "sample-environment",
+    "service": "sample-service",
+    "team": "sample-team"
+  },
+  "rules": [
+    {
+      "condition": "alertDef.priority == \"P1\"",
+      "customDetails": {
+        "key": "sample-custom-details"
+      },
+      "entityType": "alerts",
+      "name": "sample-name",
+      "targets": [
+        {
+          "connector": {
+            "resourceRef": {
+              "name": "connector-sample"
+            }
+          },
+          "customDetails": {
+            "key": "sample-custom-details"
+          },
+          "preset": {
+            "backendRef": {
+              "id": "preset_system_generic_https_alerts_empty"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}`,
+	},
+}
+
+var _ = Describe("GlobalRouter (coverage)", Ordered, Serial, Label("coverage"), func() {
+	var (
+		crClient  client.Client
+		apiClient *globalroutersservice.GlobalRoutersServiceAPIService
+		base      string
+	)
+
+	BeforeAll(func() {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		apiClient = newOpenAPIClientSet().GlobalRouters()
+		base = uniqueName("e2e-globalrouter-cov")
+	})
+
+	for i, step := range globalRouterCoverageSteps {
+		It(fmt.Sprintf("sends step %d", i+1), Label(fmt.Sprintf("coverage-globalrouter-%d", i+1)), func(ctx context.Context) {
+			var (
+				objects []client.Object
+				names   []string
+				ids     []string
+			)
+			DeferCleanup(func(ctx context.Context) {
+				for _, object := range objects {
+					_ = crClient.Delete(ctx, object)
+				}
+				for _, id := range ids {
+					removeGlobalRouterGenerated(ctx, apiClient, id)
+				}
+			})
+
+			for j, spec := range step {
+				name := fmt.Sprintf("%s-%d-%d", base, i+1, j+1)
+				{
+					fixture := &coralogixv1alpha1.Connector{ObjectMeta: metav1.ObjectMeta{Name: name + "-connector", Namespace: testNamespace}}
+					decoder := json.NewDecoder(strings.NewReader(strings.ReplaceAll(`{"connectorConfig":{"fields":[{"fieldName":"url","value":"https://httpbun.org/post"},{"fieldName":"method","value":"post"}]},"description":"generic HTTPS connector for the generated GlobalRouter test","name":"@{run}-connector","type":"genericHttps"}`, "@{run}", name)))
+					decoder.DisallowUnknownFields()
+					Expect(decoder.Decode(&fixture.Spec)).To(Succeed())
+					Expect(crClient.Create(ctx, fixture)).To(Succeed())
+					objects = append(objects, fixture)
+					Eventually(func(g Gomega) {
+						current := &coralogixv1alpha1.Connector{}
+						g.Expect(crClient.Get(ctx, types.NamespacedName{Name: fixture.Name, Namespace: testNamespace}, current)).To(Succeed())
+						g.Expect(current.Status.Id).NotTo(BeNil())
+					}, time.Minute, time.Second).Should(Succeed())
+				}
+				cr := newGlobalRouterGenerated(name, spec)
+				Expect(crClient.Create(ctx, cr)).To(Succeed())
+				objects = append(objects, cr)
+				names = append(names, name)
+			}
+
+			By("Waiting until every copy is synced and the API returns it")
+			for _, name := range names {
+				id := waitForGlobalRouterGenerated(ctx, crClient, name)
+				ids = append(ids, id)
+				Eventually(func(g Gomega) {
+					_, httpResp, err := apiClient.GlobalRoutersServiceGetGlobalRouter(ctx, id).Execute()
+					g.Expect(cxsdk.NewAPIError(httpResp, err)).To(Succeed())
+				}, time.Minute, time.Second).Should(Succeed())
+			}
+
+			By("Deleting every copy")
+			for _, object := range objects {
+				Expect(crClient.Delete(ctx, object)).To(Succeed())
+			}
+			for _, id := range ids {
+				Eventually(func() bool {
+					_, httpResp, err := apiClient.GlobalRoutersServiceGetGlobalRouter(ctx, id).Execute()
+					return cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err))
+				}, time.Minute, time.Second).Should(BeTrue())
+			}
+		})
+	}
+})
