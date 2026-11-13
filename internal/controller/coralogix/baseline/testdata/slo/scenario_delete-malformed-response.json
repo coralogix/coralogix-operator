@@ -81,7 +81,7 @@
         "conditions": [
           {
             "observedGeneration": 3,
-            "reason": "RemoteDeletionFailed",
+            "reason": "DeserializationError",
             "status": "False",
             "type": "RemoteSynced"
           }

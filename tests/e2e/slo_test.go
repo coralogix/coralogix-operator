@@ -25,6 +25,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -126,7 +128,7 @@ var _ = Describe("SLO", Ordered, func() {
 })
 
 func getSampleSlo(name, namespace string) *coralogixv1alpha1.SLO {
-	timeFrame := coralogixv1alpha1.SloTimeFrame7d
+	timeFrame := "7d"
 	return &coralogixv1alpha1.SLO{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -135,22 +137,22 @@ func getSampleSlo(name, namespace string) *coralogixv1alpha1.SLO {
 		Spec: coralogixv1alpha1.SLOSpec{
 			Name:        name,
 			Description: ptr.To("This is a sample slo"),
-			Labels: &map[string]string{
+			Labels: map[string]string{
 				"team": "e2e-test",
 			},
-			SliType: coralogixv1alpha1.SliType{
-				RequestBasedMetricSli: &coralogixv1alpha1.RequestBasedMetricSli{
-					GoodEvents: coralogixv1alpha1.SloMetricEvent{
+			SliType: coralogixv1alpha1.SLOSpecSliType{
+				RequestBasedMetric: &coralogixv1alpha1.SLORequestBasedMetricSli{
+					GoodEvents: coralogixv1alpha1.SLOMetric{
 						Query: "sum(rate(coralogix_logs_events_total{app=\"coralogix-slo-example\", status=\"success\"}[1m]))",
 					},
-					TotalEvents: coralogixv1alpha1.SloMetricEvent{
+					TotalEvents: coralogixv1alpha1.SLOMetric{
 						Query: "sum(rate(coralogix_logs_events_total{app=\"coralogix-slo-example\", status=\"success\"}[1m]))",
 					},
 					GroupByLabels: []string{"app", "status"},
 				},
 			},
 			TargetThresholdPercentage: *resource.NewQuantity(10, resource.DecimalSI),
-			Window: coralogixv1alpha1.SloWindow{
+			Window: coralogixv1alpha1.SLOSpecWindow{
 				TimeFrame: &timeFrame,
 			},
 		},
@@ -167,7 +169,7 @@ var _ = Describe("SLO validation", func() {
 	It("Should be rejected when window is unspecified", func(ctx context.Context) {
 		By("Creating an SLO with a window the API has no implementation for")
 		slo := getSampleWindowBasedSlo(uniqueName("slo-invalid-window"))
-		slo.Spec.SliType.WindowBasedMetricSli.Window = "unspecified"
+		slo.Spec.SliType.WindowBasedMetric.Window = "unspecified"
 
 		err := crClient.Create(ctx, slo)
 		Expect(err).To(HaveOccurred())
@@ -177,7 +179,7 @@ var _ = Describe("SLO validation", func() {
 	It("Should be rejected when no SLI type is set", func(ctx context.Context) {
 		By("Creating an SLO with an empty sliType")
 		slo := getSampleWindowBasedSlo(uniqueName("slo-no-sli"))
-		slo.Spec.SliType = coralogixv1alpha1.SliType{}
+		slo.Spec.SliType = coralogixv1alpha1.SLOSpecSliType{}
 
 		err := crClient.Create(ctx, slo)
 		Expect(err).To(HaveOccurred())
@@ -187,9 +189,9 @@ var _ = Describe("SLO validation", func() {
 	It("Should be rejected when two SLI types are set", func(ctx context.Context) {
 		By("Creating an SLO with both windowBasedMetric and apmSli")
 		slo := getSampleWindowBasedSlo(uniqueName("slo-two-slis"))
-		slo.Spec.SliType.ApmSli = &coralogixv1alpha1.ApmSli{
+		slo.Spec.SliType.ApmSli = &coralogixv1alpha1.SLOApmSli{
 			Services:    []string{"any-service"},
-			ErrorConfig: &coralogixv1alpha1.ApmErrorSli{},
+			ErrorConfig: &coralogixv1alpha1.SLOApmErrorSli{},
 		}
 
 		err := crClient.Create(ctx, slo)
@@ -197,14 +199,10 @@ var _ = Describe("SLO validation", func() {
 		Expect(err.Error()).To(ContainSubstring("Exactly one of requestBasedMetric, windowBasedMetric or apmSli must be set"))
 	})
 
-
-
-
-
 	It("Should be rejected when productType is apm without an apmSli", func(ctx context.Context) {
 		By("Creating a window-based SLO with productType apm")
 		slo := getSampleWindowBasedSlo(uniqueName("slo-apm-product-no-sli"))
-		slo.Spec.ProductType = ptr.To(coralogixv1alpha1.SloProductType("apm"))
+		slo.Spec.ProductType = ptr.To("apm")
 
 		err := crClient.Create(ctx, slo)
 		Expect(err).To(HaveOccurred())
@@ -214,7 +212,7 @@ var _ = Describe("SLO validation", func() {
 	It("Should accept an apmSli filter with an empty values list", func(ctx context.Context) {
 		By("Creating an APM SLO with a filter that has no values")
 		slo := getSampleAPMErrorSlo(uniqueName("slo-apm-empty-filter-values"), "any-service")
-		slo.Spec.SliType.ApmSli.Filters = []coralogixv1alpha1.ApmFilter{
+		slo.Spec.SliType.ApmSli.Filters = []coralogixv1alpha1.SLOApmFilter{
 			{Key: "http.method"},
 		}
 
@@ -237,9 +235,13 @@ var _ = Describe("SLO validation", func() {
 	It("Should be rejected when windowBasedMetric has no query", func(ctx context.Context) {
 		By("Creating a window-based SLO with no query")
 		slo := getSampleWindowBasedSlo(uniqueName("slo-no-query"))
-		slo.Spec.SliType.WindowBasedMetricSli.Query = nil
+		obj, err := runtime.DefaultUnstructuredConverter.ToUnstructured(slo)
+		Expect(err).NotTo(HaveOccurred())
+		u := &unstructured.Unstructured{Object: obj}
+		u.SetGroupVersionKind(coralogixv1alpha1.GroupVersion.WithKind("SLO"))
+		unstructured.RemoveNestedField(u.Object, "spec", "sliType", "windowBasedMetric", "query")
 
-		err := crClient.Create(ctx, slo)
+		err = crClient.Create(ctx, u)
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("spec.sliType.windowBasedMetric.query"))
 	})
@@ -247,7 +249,7 @@ var _ = Describe("SLO validation", func() {
 	It("Should be rejected when one ownership dimension sets both lists", func(ctx context.Context) {
 		By("Creating an SLO whose team dimension sets staticValues and labelKeys")
 		slo := getSampleWindowBasedSlo(uniqueName("slo-tags-both"))
-		slo.Spec.OwnershipTags.Team = &coralogixv1alpha1.SloOwnershipTag{
+		slo.Spec.OwnershipTags.Team = &coralogixv1alpha1.SLOSloOwnershipTag{
 			StaticValues: []string{"platform"},
 			LabelKeys:    []string{"team"},
 		}
@@ -260,7 +262,7 @@ var _ = Describe("SLO validation", func() {
 	It("Should accept an ownership dimension whose lists are both empty", func(ctx context.Context) {
 		By("Creating an SLO whose team dimension has two empty lists")
 		slo := getSampleWindowBasedSlo(uniqueName("slo-tags-empty"))
-		slo.Spec.OwnershipTags.Team = &coralogixv1alpha1.SloOwnershipTag{
+		slo.Spec.OwnershipTags.Team = &coralogixv1alpha1.SLOSloOwnershipTag{
 			StaticValues: []string{},
 			LabelKeys:    []string{},
 		}
@@ -312,8 +314,8 @@ var _ = Describe("SLO window-based", Ordered, func() {
 		current := &coralogixv1alpha1.SLO{}
 		Expect(crClient.Get(ctx, types.NamespacedName{Name: sloName, Namespace: testNamespace}, current)).To(Succeed())
 		modified := current.DeepCopy()
-		modified.Spec.SliType.WindowBasedMetricSli.MissingDataStrategy =
-			ptr.To(coralogixv1alpha1.MissingDataStrategy("bad"))
+		modified.Spec.SliType.WindowBasedMetric.MissingDataStrategy =
+			ptr.To("bad")
 		Expect(crClient.Patch(ctx, modified, client.MergeFrom(current))).To(Succeed())
 
 		By("Verifying the replace reached the backend")
@@ -385,7 +387,7 @@ var _ = Describe("SLO APM", Ordered, func() {
 		modified := &coralogixv1alpha1.SLO{}
 		Expect(crClient.Get(ctx, types.NamespacedName{Name: sloName, Namespace: testNamespace}, modified)).To(Succeed())
 		modified.Spec.SliType.ApmSli.LatencyConfig.Quantile = nil
-		modified.Spec.SliType.ApmSli.LatencyConfig.Average = &coralogixv1alpha1.ApmLatencyAverage{}
+		modified.Spec.SliType.ApmSli.LatencyConfig.Average = &coralogixv1alpha1.SLOApmLatencyAverage{}
 		Expect(crClient.Update(ctx, modified)).To(Succeed())
 
 		By("Verifying the replace reached the backend")
@@ -430,7 +432,7 @@ var _ = Describe("SLO APM error", Ordered, func() {
 		slosClient = newOpenAPIClientSet().SLOs()
 		sloName = uniqueName("slo-apm-error")
 		slo = getSampleAPMErrorSlo(sloName, sloAPMService)
-		slo.Spec.SliType.ApmSli.Filters = []coralogixv1alpha1.ApmFilter{
+		slo.Spec.SliType.ApmSli.Filters = []coralogixv1alpha1.SLOApmFilter{
 			{Key: "http.method", Values: []string{"POST"}},
 		}
 		slo.Spec.SliType.ApmSli.GroupingKeys = []string{"http.route"}
@@ -486,7 +488,7 @@ func waitForSyncedSLOID(ctx context.Context, crClient client.Client, name string
 }
 
 func getSampleWindowBasedSlo(name string) *coralogixv1alpha1.SLO {
-	timeFrame := coralogixv1alpha1.SloTimeFrame7d
+	timeFrame := "7d"
 	return &coralogixv1alpha1.SLO{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -495,27 +497,27 @@ func getSampleWindowBasedSlo(name string) *coralogixv1alpha1.SLO {
 		Spec: coralogixv1alpha1.SLOSpec{
 			Name:        name,
 			Description: ptr.To("This is a sample window-based slo"),
-			SliType: coralogixv1alpha1.SliType{
-				WindowBasedMetricSli: &coralogixv1alpha1.WindowBasedMetricSli{
-					Query: &coralogixv1alpha1.SloMetricEvent{
+			SliType: coralogixv1alpha1.SLOSpecSliType{
+				WindowBasedMetric: &coralogixv1alpha1.SLOWindowBasedMetricSli{
+					Query: coralogixv1alpha1.SLOMetric{
 						Query: "avg(avg_over_time(request_duration_seconds[1m]))",
 					},
 					Window:              "5m",
 					ComparisonOperator:  "greaterThan",
-					Threshold:           resource.MustParse("0.5"),
-					MissingDataStrategy: ptr.To(coralogixv1alpha1.MissingDataStrategy("good")),
+					Threshold:           ptr.To(resource.MustParse("0.5")),
+					MissingDataStrategy: ptr.To("good"),
 				},
 			},
-			OwnershipTags: &coralogixv1alpha1.SloOwnershipTags{
-				Environment: &coralogixv1alpha1.SloOwnershipTag{
+			OwnershipTags: &coralogixv1alpha1.SLOSloOwnershipTags{
+				Environment: &coralogixv1alpha1.SLOSloOwnershipTag{
 					StaticValues: []string{"production"},
 				},
-				Team: &coralogixv1alpha1.SloOwnershipTag{
+				Team: &coralogixv1alpha1.SLOSloOwnershipTag{
 					LabelKeys: []string{"team"},
 				},
 			},
 			TargetThresholdPercentage: *resource.NewQuantity(99, resource.DecimalSI),
-			Window: coralogixv1alpha1.SloWindow{
+			Window: coralogixv1alpha1.SLOSpecWindow{
 				TimeFrame: &timeFrame,
 			},
 		},
@@ -524,17 +526,17 @@ func getSampleWindowBasedSlo(name string) *coralogixv1alpha1.SLO {
 
 func getSampleAPMErrorSlo(name, service string) *coralogixv1alpha1.SLO {
 	slo := getSampleAPMSlo(name, service)
-	slo.Spec.SliType.ApmSli.ErrorConfig = &coralogixv1alpha1.ApmErrorSli{}
+	slo.Spec.SliType.ApmSli.ErrorConfig = &coralogixv1alpha1.SLOApmErrorSli{}
 	return slo
 }
 
 func getSampleAPMLatencySlo(name, service string) *coralogixv1alpha1.SLO {
 	slo := getSampleAPMSlo(name, service)
-	slo.Spec.SliType.ApmSli.LatencyConfig = &coralogixv1alpha1.ApmLatencySli{
+	slo.Spec.SliType.ApmSli.LatencyConfig = &coralogixv1alpha1.SLOApmLatencySli{
 		TimeWindow: "5m",
 		// milliseconds, so 500ms
 		Threshold: ptr.To(resource.MustParse("500")),
-		Quantile: &coralogixv1alpha1.ApmLatencyQuantile{
+		Quantile: &coralogixv1alpha1.SLOApmLatencyQuantile{
 			Percentile: ptr.To(resource.MustParse("0.95")),
 		},
 	}
@@ -544,7 +546,7 @@ func getSampleAPMLatencySlo(name, service string) *coralogixv1alpha1.SLO {
 // getSampleAPMSlo returns an APM SLO with no SLI branch selected. The callers pick one,
 // because a CEL rule requires exactly one of errorConfig or latencyConfig.
 func getSampleAPMSlo(name, service string) *coralogixv1alpha1.SLO {
-	timeFrame := coralogixv1alpha1.SloTimeFrame7d
+	timeFrame := "7d"
 	return &coralogixv1alpha1.SLO{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -553,14 +555,14 @@ func getSampleAPMSlo(name, service string) *coralogixv1alpha1.SLO {
 		Spec: coralogixv1alpha1.SLOSpec{
 			Name:        name,
 			Description: ptr.To("This is a sample apm slo"),
-			ProductType: ptr.To(coralogixv1alpha1.SloProductType("apm")),
-			SliType: coralogixv1alpha1.SliType{
-				ApmSli: &coralogixv1alpha1.ApmSli{
+			ProductType: ptr.To("apm"),
+			SliType: coralogixv1alpha1.SLOSpecSliType{
+				ApmSli: &coralogixv1alpha1.SLOApmSli{
 					Services: []string{service},
 				},
 			},
 			TargetThresholdPercentage: *resource.NewQuantity(99, resource.DecimalSI),
-			Window: coralogixv1alpha1.SloWindow{
+			Window: coralogixv1alpha1.SLOSpecWindow{
 				TimeFrame: &timeFrame,
 			},
 		},
