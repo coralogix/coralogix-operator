@@ -182,6 +182,8 @@ type sampleValues struct {
 	cov *coverage
 	// record is true while the full spec is made: it records what it sends in cov.
 	record bool
+	// virtual holds the parts of a fixed object that stay fixed when the object is rebuilt from the type tree.
+	virtual map[string]any
 	// fullKeys are the enum values and oneOf arms of the full spec.
 	fullKeys []coverageKey
 	// sweeping picks open arms and values instead of the first ones.
@@ -375,13 +377,18 @@ func (v *sampleValues) field(f *crField, path string, full bool) (any, error) {
 	}
 	_, armForced := v.layerArm(path)
 	planned := len(v.items[path]) != 0
-	if value, ok := v.file.Values[path]; ok && !armForced && !planned && !v.armForcedBelow(path) { // a forced arm or planned items win over a fixed value
+	if value, ok := v.fixed(path); ok {
 		v.used[path] = true
-		value = v.withDescendantValues(path, value)
-		if v.record {
-			v.cov.literal(f, value)
+		if !armForced && !planned && !v.armForcedBelow(path) {
+			value = v.withDescendantValues(path, value)
+			if v.record {
+				v.cov.literal(f, value)
+			}
+			return value, nil
 		}
-		return value, nil
+		// A forced arm or planned items win over the fixed value. The rest of the fixed object stays:
+		// its parts become fixed values of their own, and only the forced subtree is rebuilt.
+		v.keepFixedParts(path, value)
 	}
 	if f.ref != "" {
 		return nil, &shapeError{code: codeE2ERequired, path: e2eFileName + ":values." + path,
@@ -641,6 +648,29 @@ func (v *sampleValues) plannedItems(f *crField, path string, full bool, planned 
 		items = append(items, item)
 	}
 	return items, nil
+}
+
+// fixed returns the fixed value of a path: a value of e2e.yaml, or a part of a fixed object that is being rebuilt.
+func (v *sampleValues) fixed(path string) (any, bool) {
+	if value, ok := v.file.Values[path]; ok {
+		return value, true
+	}
+	value, ok := v.virtual[path]
+	return value, ok
+}
+
+// keepFixedParts makes each part of a fixed object a fixed value of its own path.
+func (v *sampleValues) keepFixedParts(path string, value any) {
+	object, ok := value.(map[string]any)
+	if !ok {
+		return
+	}
+	if v.virtual == nil {
+		v.virtual = map[string]any{}
+	}
+	for key, part := range object {
+		v.virtual[path+"."+key] = part
+	}
 }
 
 // armForcedBelow reports whether the layers force an arm, or plan list items, at a path below a

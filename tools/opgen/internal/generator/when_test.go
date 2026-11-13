@@ -732,3 +732,58 @@ func TestNestedListItemEntriesThatDisagreeDoNotShareACopy(t *testing.T) {
 		}
 	}
 }
+
+// A fixed object keeps the parts that entries do not touch. Only the planned list, or the forced
+// arm, is rebuilt: a sibling that names a real server-side object must stay what the file says.
+func TestFixedObjectKeepsItsSiblingsWhenAListBelowItIsPlanned(t *testing.T) {
+	d := pairSpec()
+	items := d.Spec.Fields[0]
+	wrapper := &crType{schema: "Wrapper", Fields: []*crField{stringField("resourceId"), items}}
+	d.Spec.Fields = []*crField{objectField("wrapper", model.Object, wrapper)}
+	entries := []e2eWhen{
+		{Match: map[string]any{"wrapper.items.kind": "a"}, Set: map[string]any{"wrapper.items.data": "data-a"}},
+		{Match: map[string]any{"wrapper.items.kind": "b"}, Set: map[string]any{"wrapper.items.data": "data-b"}},
+	}
+	fixed := map[string]any{"resourceId": "real-id", "items": []any{map[string]any{"kind": "a", "data": "data-a"}}}
+	steps, _, err := specsOf(t, d, &e2eFile{When: entries, Values: map[string]any{"wrapper": fixed}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	n := 0
+	for _, copy := range copiesOf(t, steps) {
+		n++
+		if got := copy["wrapper"].(map[string]any)["resourceId"]; got != "real-id" {
+			t.Errorf("the fixed sibling was rebuilt: %v", copy)
+		}
+	}
+	if n == 0 {
+		t.Fatal("arm b needs a copy")
+	}
+}
+
+func TestFixedObjectKeepsItsSiblingsWhenAnArmIsForced(t *testing.T) {
+	conf := &crType{schema: "Conf", Fields: []*crField{stringField("id"),
+		objectField("x", model.Object, &crType{schema: "X", Fields: []*crField{stringField("note")}}),
+		objectField("y", model.Object, &crType{schema: "Y", Fields: []*crField{stringField("note")}})}}
+	conf.groups = []model.OneOfGroup{{Arms: []string{"x", "y"}}}
+	d := &kindData{Kind: "Thing", Spec: &crType{Name: "ThingSpec", Fields: []*crField{objectField("conf", model.OneOf, conf)}}}
+	entries := []e2eWhen{{Match: map[string]any{"conf": "x"}}, {Match: map[string]any{"conf": "y"}}}
+	fixed := map[string]any{"id": "real-id", "x": map[string]any{"note": "base"}}
+	steps, _, err := specsOf(t, d, &e2eFile{When: entries, Values: map[string]any{"conf": fixed}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	sawY := false
+	for _, copy := range copiesOf(t, steps) {
+		c := copy["conf"].(map[string]any)
+		if _, y := c["y"]; y {
+			sawY = true
+		}
+		if c["id"] != "real-id" {
+			t.Errorf("the fixed sibling of a forced arm was rebuilt: %v", copy)
+		}
+	}
+	if !sawY {
+		t.Fatal("arm y needs a copy")
+	}
+}

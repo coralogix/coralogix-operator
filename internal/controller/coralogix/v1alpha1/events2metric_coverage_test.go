@@ -169,10 +169,6 @@ var events2MetricCoverageSpecs = []events2MetricCoverageSpec{
   "permutationsLimit": 1,
   "query": {
     "logs": {
-      "alias": "sample-alias",
-      "applicationNameFilters": [
-        "sample-applicationname-filters"
-      ],
       "lucene": "status:200",
       "severityFilters": [
         "debug",
@@ -181,9 +177,6 @@ var events2MetricCoverageSpecs = []events2MetricCoverageSpec{
         "warn",
         "error",
         "critical"
-      ],
-      "subsystemNameFilters": [
-        "sample-subsystemname-filters"
       ]
     }
   }

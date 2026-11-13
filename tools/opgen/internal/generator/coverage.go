@@ -425,7 +425,7 @@ func (c *coverage) sweep(v *sampleValues, d *kindData) ([][]sweepCopy, error) {
 		for len(step) < maxCopiesPerStep {
 			before := len(c.covered)
 			global, items := c.planCopy()
-			v.layers, v.items = []*overlay{global}, items
+			v.layers, v.items, v.virtual = []*overlay{global}, items, nil
 			c.startSpec()
 			spec, err := v.object(d.Spec, "", true)
 			keys := c.finishSpec()
