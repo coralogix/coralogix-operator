@@ -1,0 +1,136 @@
+{
+  "dpxl expression": {
+    "accepted": true
+  },
+  "dpxl expression and applications": {
+    "accepted": true
+  },
+  "empty dpxl expression": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0].dpxlExpression",
+        "message": "Invalid value: \"\": spec.policies[0].dpxlExpression in body should be at least 1 chars long"
+      }
+    ]
+  },
+  "empty name": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0].name",
+        "message": "Invalid value: \"\": spec.policies[0].name in body should be at least 1 chars long"
+      }
+    ]
+  },
+  "empty severities": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0].severities",
+        "message": "Invalid value: 0: spec.policies[0].severities in body should have at least 1 items"
+      }
+    ]
+  },
+  "more than 50 subsystem names": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooMany",
+        "field": "spec.policies[0].subsystems.names",
+        "message": "Too many: 51: must have at most 50 items"
+      }
+    ]
+  },
+  "more than 6 severities": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooMany",
+        "field": "spec.policies[0].severities",
+        "message": "Too many: 7: must have at most 6 items"
+      }
+    ]
+  },
+  "name longer than 255": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooLong",
+        "field": "spec.policies[0].name",
+        "message": "Too long: may not be longer than 255"
+      }
+    ]
+  },
+  "name of 255": {
+    "accepted": true
+  },
+  "neither severities nor dpxl expression": {
+    "accepted": true
+  },
+  "no priority": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.policies[0].priority",
+        "message": "Required value"
+      }
+    ]
+  },
+  "quota-based override": {
+    "accepted": true
+  },
+  "retention by id": {
+    "accepted": true
+  },
+  "retention by name": {
+    "accepted": true
+  },
+  "retention with an empty name": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0].archiveRetention.backendRef.name",
+        "message": "Invalid value: \"\": spec.policies[0].archiveRetention.backendRef.name in body should be at least 1 chars long"
+      }
+    ]
+  },
+  "retention with both name and id": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0].archiveRetention.backendRef",
+        "message": "Invalid value: \"object\": exactly one of name or id must be set"
+      }
+    ]
+  },
+  "retention with neither name nor id": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0].archiveRetention.backendRef",
+        "message": "Invalid value: \"object\": exactly one of name or id must be set"
+      }
+    ]
+  },
+  "severities and applications": {
+    "accepted": true
+  },
+  "severities and dpxl expression": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0]",
+        "message": "Invalid value: \"object\": severities and dpxlExpression are mutually exclusive"
+      }
+    ]
+  }
+}

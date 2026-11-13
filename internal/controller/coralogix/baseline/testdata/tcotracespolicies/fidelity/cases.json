@@ -1,0 +1,282 @@
+{
+  "cases": [
+    {
+      "name": "overwrite one policy, the same list again, then an empty list",
+      "steps": [
+        {
+          "method": "PUT",
+          "path": "/dataplans/span-policies/v1",
+          "body": {
+            "policies": [
+              {
+                "policy": {
+                  "name": "cxo-fidelity-a",
+                  "description": "",
+                  "priority": "PRIORITY_TYPE_HIGH"
+                },
+                "spanRules": {}
+              }
+            ]
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/dataplans/span-policies/v1",
+          "body": {
+            "policies": [
+              {
+                "policy": {
+                  "name": "cxo-fidelity-a",
+                  "description": "",
+                  "priority": "PRIORITY_TYPE_HIGH"
+                },
+                "spanRules": {}
+              }
+            ]
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/dataplans/span-policies/v1",
+          "body": {
+            "policies": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "overwrite with a null list, as the operator deletes",
+      "steps": [
+        {
+          "method": "PUT",
+          "path": "/dataplans/span-policies/v1",
+          "body": {
+            "policies": [
+              {
+                "policy": {
+                  "name": "cxo-fidelity-a",
+                  "description": "",
+                  "priority": "PRIORITY_TYPE_HIGH"
+                },
+                "spanRules": {}
+              }
+            ]
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/dataplans/span-policies/v1",
+          "body": {
+            "policies": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "a policy without a description",
+      "steps": [
+        {
+          "method": "PUT",
+          "path": "/dataplans/span-policies/v1",
+          "body": {
+            "policies": [
+              {
+                "policy": {
+                  "name": "cxo-fidelity-a",
+                  "priority": "PRIORITY_TYPE_HIGH"
+                },
+                "spanRules": {}
+              }
+            ]
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/dataplans/span-policies/v1",
+          "body": {
+            "policies": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "every field",
+      "steps": [
+        {
+          "method": "PUT",
+          "path": "/dataplans/span-policies/v1",
+          "body": {
+            "policies": [
+              {
+                "policy": {
+                  "name": "cxo-fidelity-structured",
+                  "description": "Structured rules",
+                  "priority": "PRIORITY_TYPE_HIGH",
+                  "disabled": true,
+                  "applicationRule": {
+                    "name": "prod,staging",
+                    "ruleTypeId": "RULE_TYPE_ID_IS"
+                  },
+                  "subsystemRule": {
+                    "name": "mobile",
+                    "ruleTypeId": "RULE_TYPE_ID_IS_NOT"
+                  },
+                  "priorityOverride": {
+                    "quotaBased": {
+                      "usageTiers": [
+                        {
+                          "dailyQuotaPercentage": 30,
+                          "priority": "PRIORITY_TYPE_MEDIUM"
+                        },
+                        {
+                          "dailyQuotaPercentage": 60.5,
+                          "priority": "PRIORITY_TYPE_LOW"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "spanRules": {
+                  "serviceRule": {
+                    "name": "service,system",
+                    "ruleTypeId": "RULE_TYPE_ID_INCLUDES"
+                  },
+                  "actionRule": {
+                    "name": "action1,action2",
+                    "ruleTypeId": "RULE_TYPE_ID_START_WITH"
+                  },
+                  "tagRules": [
+                    {
+                      "tagName": "tags.http",
+                      "tagValue": "GET,POST",
+                      "ruleTypeId": "RULE_TYPE_ID_IS"
+                    },
+                    {
+                      "tagName": "tags.env",
+                      "tagValue": "dev",
+                      "ruleTypeId": "RULE_TYPE_ID_IS_NOT"
+                    }
+                  ]
+                }
+              },
+              {
+                "policy": {
+                  "name": "cxo-fidelity-dpxl",
+                  "description": "DPXL rules",
+                  "priority": "PRIORITY_TYPE_MEDIUM",
+                  "disabled": false
+                },
+                "spanRules": {
+                  "dpxlExpression": "<v1> $d.status == 'ERROR'"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/dataplans/span-policies/v1",
+          "body": {
+            "policies": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "a policy override and no priority",
+      "steps": [
+        {
+          "method": "PUT",
+          "path": "/dataplans/span-policies/v1",
+          "body": {
+            "policies": [
+              {
+                "policy": {
+                  "name": "cxo-fidelity-override",
+                  "description": "",
+                  "priority": "PRIORITY_TYPE_UNSPECIFIED",
+                  "priorityOverride": {
+                    "quotaBased": {
+                      "usageTiers": [
+                        {
+                          "dailyQuotaPercentage": 30,
+                          "priority": "PRIORITY_TYPE_MEDIUM"
+                        },
+                        {
+                          "dailyQuotaPercentage": 60.5,
+                          "priority": "PRIORITY_TYPE_LOW"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "spanRules": {}
+              }
+            ]
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/dataplans/span-policies/v1",
+          "body": {
+            "policies": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejections",
+      "steps": [
+        {
+          "method": "PUT",
+          "path": "/dataplans/span-policies/v1",
+          "body": {
+            "policies": [
+              {
+                "policy": {
+                  "name": "cxo-fidelity-no-version",
+                  "description": "",
+                  "priority": "PRIORITY_TYPE_LOW"
+                },
+                "spanRules": {
+                  "dpxlExpression": "$d.status == 'ERROR'"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/dataplans/span-policies/v1",
+          "body": {
+            "policies": [
+              {
+                "policy": {
+                  "name": "cxo-fidelity-a",
+                  "description": "",
+                  "priority": "PRIORITY_TYPE_HIGH"
+                },
+                "spanRules": {}
+              },
+              {
+                "policy": {
+                  "name": "cxo-fidelity-a",
+                  "description": "",
+                  "priority": "PRIORITY_TYPE_HIGH"
+                },
+                "spanRules": {}
+              }
+            ]
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/dataplans/span-policies/v1",
+          "body": {
+            "policies": []
+          }
+        }
+      ]
+    }
+  ]
+}

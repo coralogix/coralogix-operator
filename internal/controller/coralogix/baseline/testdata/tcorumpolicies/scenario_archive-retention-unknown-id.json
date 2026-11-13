@@ -1,0 +1,69 @@
+[
+  {
+    "step": "create with a retention id that the team does not have: the operator sends it",
+    "spec": {
+      "policies": [
+        {
+          "archiveRetention": {
+            "backendRef": {
+              "id": "<id-1>"
+            }
+          },
+          "name": "rum-severities",
+          "priority": "high",
+          "severities": [
+            "critical",
+            "error"
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/rum-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "policy": {
+                "archiveRetention": {
+                  "id": "<id-1>"
+                },
+                "description": "",
+                "name": "rum-severities",
+                "priority": "PRIORITY_TYPE_HIGH"
+              },
+              "rumRules": {
+                "severities": [
+                  "SEVERITY_CRITICAL",
+                  "SEVERITY_ERROR"
+                ]
+              }
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "tco-rum-policies.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

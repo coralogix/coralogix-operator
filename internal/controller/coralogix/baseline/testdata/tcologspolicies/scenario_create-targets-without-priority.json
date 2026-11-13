@@ -1,0 +1,78 @@
+[
+  {
+    "step": "create with targets that each have a priority, and no policy priority",
+    "spec": {
+      "policies": [
+        {
+          "name": "targets-own-priority",
+          "severities": [
+            "info"
+          ],
+          "targets": [
+            {
+              "dataset": "ds1",
+              "priority": "low"
+            },
+            {
+              "dataset": "ds2",
+              "priority": "medium"
+            }
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/log-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "logRules": {
+                "severities": [
+                  "SEVERITY_INFO"
+                ]
+              },
+              "policy": {
+                "description": "",
+                "name": "targets-own-priority",
+                "priority": "PRIORITY_TYPE_UNSPECIFIED",
+                "targets": [
+                  {
+                    "dataset": "ds1",
+                    "priority": "PRIORITY_TYPE_LOW"
+                  },
+                  {
+                    "dataset": "ds2",
+                    "priority": "PRIORITY_TYPE_MEDIUM"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "tco-logs-policies.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

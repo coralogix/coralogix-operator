@@ -1,0 +1,49 @@
+[
+  {
+    "step": "create: the answer has a policy without its required fields",
+    "spec": {
+      "policies": [
+        {
+          "name": "traces-minimal",
+          "priority": "high"
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/span-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "policy": {
+                "description": "",
+                "name": "traces-minimal",
+                "priority": "PRIORITY_TYPE_HIGH"
+              },
+              "spanRules": {}
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "DeserializationError",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

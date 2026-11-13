@@ -1,0 +1,61 @@
+[
+  {
+    "step": "create with two policies of the same name: the API answers 409",
+    "spec": {
+      "policies": [
+        {
+          "name": "traces-minimal",
+          "priority": "high"
+        },
+        {
+          "name": "traces-minimal",
+          "priority": "high"
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/span-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "policy": {
+                "description": "",
+                "name": "traces-minimal",
+                "priority": "PRIORITY_TYPE_HIGH"
+              },
+              "spanRules": {}
+            },
+            {
+              "policy": {
+                "description": "",
+                "name": "traces-minimal",
+                "priority": "PRIORITY_TYPE_HIGH"
+              },
+              "spanRules": {}
+            }
+          ]
+        },
+        "status": 409
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteUpdateFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

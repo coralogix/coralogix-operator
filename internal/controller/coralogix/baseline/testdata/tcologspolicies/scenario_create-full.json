@@ -1,0 +1,236 @@
+[
+  {
+    "step": "create with every field",
+    "spec": {
+      "policies": [
+        {
+          "applications": {
+            "names": [
+              "prod",
+              "staging"
+            ],
+            "ruleType": "is"
+          },
+          "archiveRetention": {
+            "backendRef": {
+              "id": "00000000-0000-4000-8000-0000000000a2"
+            }
+          },
+          "description": "Structured rules",
+          "disabled": true,
+          "name": "logs-structured",
+          "priority": "high",
+          "priorityOverride": {
+            "quotaBased": {
+              "usageTiers": [
+                {
+                  "dailyQuotaPercentage": 30,
+                  "priority": "medium"
+                },
+                {
+                  "dailyQuotaPercentage": "60.5",
+                  "priority": "low"
+                }
+              ]
+            }
+          },
+          "severities": [
+            "debug",
+            "verbose",
+            "info",
+            "warning",
+            "error",
+            "critical"
+          ],
+          "subsystems": {
+            "names": [
+              "mobile",
+              "web"
+            ],
+            "ruleType": "start_with"
+          }
+        },
+        {
+          "description": "DPXL rules",
+          "disabled": false,
+          "dpxlExpression": "\u003cv1\u003e$d.applicationname == 'prod'",
+          "name": "logs-dpxl",
+          "priority": "medium"
+        },
+        {
+          "applications": {
+            "names": [
+              "dev"
+            ],
+            "ruleType": "includes"
+          },
+          "name": "logs-targets",
+          "severities": [
+            "info"
+          ],
+          "subsystems": {
+            "names": [
+              "test"
+            ],
+            "ruleType": "is_not"
+          },
+          "targets": [
+            {
+              "dataset": "myDataset",
+              "dataspace": "default",
+              "priority": "low"
+            },
+            {
+              "archiveRetention": {
+                "backendRef": {
+                  "id": "00000000-0000-4000-8000-0000000000a1"
+                }
+              },
+              "dataset": "archiveDataset",
+              "priority": "block",
+              "priorityOverride": {
+                "quotaBased": {
+                  "usageTiers": [
+                    {
+                      "dailyQuotaPercentage": 60,
+                      "priority": "medium"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/log-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "logRules": {
+                "severities": [
+                  "SEVERITY_DEBUG",
+                  "SEVERITY_VERBOSE",
+                  "SEVERITY_INFO",
+                  "SEVERITY_WARNING",
+                  "SEVERITY_ERROR",
+                  "SEVERITY_CRITICAL"
+                ]
+              },
+              "policy": {
+                "applicationRule": {
+                  "name": "prod,staging",
+                  "ruleTypeId": "RULE_TYPE_ID_IS"
+                },
+                "archiveRetention": {
+                  "id": "00000000-0000-4000-8000-0000000000a2"
+                },
+                "description": "Structured rules",
+                "disabled": true,
+                "name": "logs-structured",
+                "priority": "PRIORITY_TYPE_HIGH",
+                "priorityOverride": {
+                  "quotaBased": {
+                    "usageTiers": [
+                      {
+                        "dailyQuotaPercentage": 30,
+                        "priority": "PRIORITY_TYPE_MEDIUM"
+                      },
+                      {
+                        "dailyQuotaPercentage": 60.5,
+                        "priority": "PRIORITY_TYPE_LOW"
+                      }
+                    ]
+                  }
+                },
+                "subsystemRule": {
+                  "name": "mobile,web",
+                  "ruleTypeId": "RULE_TYPE_ID_START_WITH"
+                }
+              }
+            },
+            {
+              "logRules": {
+                "dpxlExpression": "\u003cv1\u003e$d.applicationname == 'prod'"
+              },
+              "policy": {
+                "description": "DPXL rules",
+                "disabled": false,
+                "name": "logs-dpxl",
+                "priority": "PRIORITY_TYPE_MEDIUM"
+              }
+            },
+            {
+              "logRules": {
+                "severities": [
+                  "SEVERITY_INFO"
+                ]
+              },
+              "policy": {
+                "applicationRule": {
+                  "name": "dev",
+                  "ruleTypeId": "RULE_TYPE_ID_INCLUDES"
+                },
+                "description": "",
+                "name": "logs-targets",
+                "priority": "PRIORITY_TYPE_UNSPECIFIED",
+                "subsystemRule": {
+                  "name": "test",
+                  "ruleTypeId": "RULE_TYPE_ID_IS_NOT"
+                },
+                "targets": [
+                  {
+                    "dataset": "myDataset",
+                    "dataspace": "default",
+                    "priority": "PRIORITY_TYPE_LOW"
+                  },
+                  {
+                    "archiveRetention": {
+                      "id": "00000000-0000-4000-8000-0000000000a1"
+                    },
+                    "dataset": "archiveDataset",
+                    "priority": "PRIORITY_TYPE_BLOCK",
+                    "priorityOverride": {
+                      "quotaBased": {
+                        "usageTiers": [
+                          {
+                            "dailyQuotaPercentage": 60,
+                            "priority": "PRIORITY_TYPE_MEDIUM"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "tco-logs-policies.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

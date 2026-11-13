@@ -1,0 +1,76 @@
+{
+  "charts/coralogix-operator/templates/cluster_role.yaml": [
+    {
+      "apiGroups": [
+        "coralogix.com"
+      ],
+      "resource": "tcorumpolicies",
+      "verbs": [
+        "create",
+        "delete",
+        "get",
+        "list",
+        "patch",
+        "update",
+        "watch"
+      ]
+    },
+    {
+      "apiGroups": [
+        "coralogix.com"
+      ],
+      "resource": "tcorumpolicies/finalizers",
+      "verbs": [
+        "update"
+      ]
+    },
+    {
+      "apiGroups": [
+        "coralogix.com"
+      ],
+      "resource": "tcorumpolicies/status",
+      "verbs": [
+        "get",
+        "patch",
+        "update"
+      ]
+    }
+  ],
+  "config/rbac/role.yaml": [
+    {
+      "apiGroups": [
+        "coralogix.com"
+      ],
+      "resource": "tcorumpolicies",
+      "verbs": [
+        "create",
+        "delete",
+        "get",
+        "list",
+        "patch",
+        "update",
+        "watch"
+      ]
+    },
+    {
+      "apiGroups": [
+        "coralogix.com"
+      ],
+      "resource": "tcorumpolicies/finalizers",
+      "verbs": [
+        "update"
+      ]
+    },
+    {
+      "apiGroups": [
+        "coralogix.com"
+      ],
+      "resource": "tcorumpolicies/status",
+      "verbs": [
+        "get",
+        "patch",
+        "update"
+      ]
+    }
+  ]
+}

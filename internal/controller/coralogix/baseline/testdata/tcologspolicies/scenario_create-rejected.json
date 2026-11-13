@@ -1,0 +1,101 @@
+[
+  {
+    "step": "create with a DPXL expression that has no version tag: the API rejects it",
+    "spec": {
+      "policies": [
+        {
+          "dpxlExpression": "$d.applicationname == 'prod'",
+          "name": "logs-no-version",
+          "priority": "low"
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/log-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "logRules": {
+                "dpxlExpression": "$d.applicationname == 'prod'"
+              },
+              "policy": {
+                "description": "",
+                "name": "logs-no-version",
+                "priority": "PRIORITY_TYPE_LOW"
+              }
+            }
+          ]
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteUpdateFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/log-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "logRules": {
+                "dpxlExpression": "$d.applicationname == 'prod'"
+              },
+              "policy": {
+                "description": "",
+                "name": "logs-no-version",
+                "priority": "PRIORITY_TYPE_LOW"
+              }
+            }
+          ]
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteUpdateFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "delete: the CR has no finalizer",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

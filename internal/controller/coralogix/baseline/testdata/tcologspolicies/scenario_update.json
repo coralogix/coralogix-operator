@@ -1,0 +1,137 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "policies": [
+        {
+          "name": "logs-severities",
+          "priority": "high",
+          "severities": [
+            "info",
+            "error"
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/log-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "logRules": {
+                "severities": [
+                  "SEVERITY_INFO",
+                  "SEVERITY_ERROR"
+                ]
+              },
+              "policy": {
+                "description": "",
+                "name": "logs-severities",
+                "priority": "PRIORITY_TYPE_HIGH"
+              }
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "tco-logs-policies.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "change the policies",
+    "spec": {
+      "policies": [
+        {
+          "name": "logs-severities",
+          "priority": "low",
+          "severities": [
+            "warning"
+          ]
+        },
+        {
+          "name": "logs-second",
+          "priority": "medium",
+          "severities": [
+            "critical"
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/log-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "logRules": {
+                "severities": [
+                  "SEVERITY_WARNING"
+                ]
+              },
+              "policy": {
+                "description": "",
+                "name": "logs-severities",
+                "priority": "PRIORITY_TYPE_LOW"
+              }
+            },
+            {
+              "logRules": {
+                "severities": [
+                  "SEVERITY_CRITICAL"
+                ]
+              },
+              "policy": {
+                "description": "",
+                "name": "logs-second",
+                "priority": "PRIORITY_TYPE_MEDIUM"
+              }
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "tco-logs-policies.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]
