@@ -845,6 +845,92 @@ func TestListMapItemsOfWhenEntriesGetDistinctKeys(t *testing.T) {
 	}
 }
 
+// A key that a when entry sets is sent as it is. Entries with the same key go into separate copies.
+func TestListMapKeyOfAWhenEntryIsNotRenamed(t *testing.T) {
+	entries := []e2eWhen{
+		{Match: map[string]any{"rules.mode": "a"}, Set: map[string]any{"rules.id": "real-id"}},
+		{Match: map[string]any{"rules.mode": "b"}, Set: map[string]any{"rules.id": "real-id"}},
+		{Match: map[string]any{"rules.mode": "c"}, Set: map[string]any{"rules.id": "real-id"}},
+	}
+	steps, v, err := specsOf(t, listMapSpec("id"), &e2eFile{When: entries})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if missing := v.cov.missing(); len(missing) != 0 {
+		t.Fatalf("left %v", missing)
+	}
+	for _, copy := range copiesOf(t, steps) {
+		for _, raw := range copy["rules"].([]any) {
+			if id := raw.(map[string]any)["id"]; id != "real-id" {
+				t.Errorf("the key of an entry was changed to %v: %v", id, copy["rules"])
+			}
+		}
+		if n := len(copy["rules"].([]any)); n != 1 {
+			t.Errorf("entries with the same key share a list of %d items: %v", n, copy["rules"])
+		}
+	}
+}
+
+// A generated key never takes the value of a key that an entry sets, in any order.
+func TestListMapGeneratedKeyAvoidsAnExplicitKey(t *testing.T) {
+	probe, _, err := specsOf(t, listMapSpec("id"), &e2eFile{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// The key that the generator makes up for the first item, and the one it makes for the second.
+	var generated []string
+	for _, copy := range copiesOf(t, probe) {
+		for _, raw := range copy["rules"].([]any) {
+			generated = append(generated, raw.(map[string]any)["id"].(string))
+		}
+	}
+	if len(generated) < 2 {
+		t.Fatalf("the sweep made %v", generated)
+	}
+	entries := []e2eWhen{
+		{Match: map[string]any{"rules.mode": "a"}},
+		{Match: map[string]any{"rules.mode": "b"}},
+		{Match: map[string]any{"rules.mode": "c"}, Set: map[string]any{"rules.id": generated[1]}},
+	}
+	steps, _, err := specsOf(t, listMapSpec("id"), &e2eFile{When: entries})
+	if err != nil {
+		t.Fatal(err)
+	}
+	sent := false
+	for _, copy := range copiesOf(t, steps) {
+		seen := map[any]bool{}
+		for _, raw := range copy["rules"].([]any) {
+			item := raw.(map[string]any)
+			if seen[item["id"]] {
+				t.Errorf("the list-map repeats the key %v: %v", item["id"], copy["rules"])
+			}
+			seen[item["id"]] = true
+			if item["mode"] == "c" {
+				sent = sent || item["id"] == generated[1]
+			}
+		}
+	}
+	if !sent {
+		t.Errorf("the entry did not send its key %q", generated[1])
+	}
+}
+
+// A fixed key stays as it is. The sweep adds no second item, because it has no free key.
+func TestListMapFixedKeyIsNotRenamed(t *testing.T) {
+	file := &e2eFile{Values: map[string]any{"rules.id": "fixed-id"}}
+	steps, _, err := specsOf(t, listMapSpec("id"), file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, copy := range copiesOf(t, steps) {
+		for _, raw := range copy["rules"].([]any) {
+			if id := raw.(map[string]any)["id"]; id != "fixed-id" {
+				t.Errorf("a fixed key was changed to %v: %v", id, copy["rules"])
+			}
+		}
+	}
+}
+
 // A key that cannot be changed, an enum, drops the item that repeats it, and what the item would
 // have recorded. The list stays valid.
 func TestListMapEnumKeyDropsARepeatedItem(t *testing.T) {

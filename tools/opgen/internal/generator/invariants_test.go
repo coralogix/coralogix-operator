@@ -15,6 +15,29 @@ type treeBuilder struct {
 	r    *rand.Rand
 	n    int
 	arms [][2]string // component and arm of every oneOf arm, to pick skips
+	maps []listMap   // every list-map, to set explicit keys
+}
+
+// listMap is a list-map of a random tree: the field, its key, and the enum field that tells the items apart.
+type listMap struct {
+	field *crField
+	key   string
+	mode  *crField
+}
+
+// pathOf returns the CR path of a field below a type.
+func pathOf(t *crType, prefix string, target *crField) (string, bool) {
+	for _, f := range t.Fields {
+		if f == target {
+			return prefix + f.JSON, true
+		}
+		if f.object != nil {
+			if path, ok := pathOf(f.object, prefix+f.JSON+".", target); ok {
+				return path, true
+			}
+		}
+	}
+	return "", false
 }
 
 func (b *treeBuilder) name(prefix string) string {
@@ -85,8 +108,10 @@ func (b *treeBuilder) field(depth int) *crField {
 		if b.r.Intn(2) == 0 {
 			// A list-map: the items are identified by a string key.
 			key := b.name("key")
-			f.object.Fields = append([]*crField{stringField(key)}, f.object.Fields...)
+			mode := b.enum(b.name("mode"))
+			f.object.Fields = append([]*crField{stringField(key), mode}, f.object.Fields...)
 			f.Markers = []string{"+listType=map", "+listMapKey=" + key}
+			b.maps = append(b.maps, listMap{field: f, key: key, mode: mode})
 		}
 		return f
 	case 5:
@@ -189,12 +214,14 @@ func TestSweepSpecsHoldTheInvariantsOnRandomTrees(t *testing.T) {
 			pick := b.arms[b.r.Intn(len(b.arms))]
 			file.SkipChoices = map[string]e2eSkipChoices{pick[0]: {Choices: []string{pick[1]}, Reason: "random skip"}}
 		}
+		explicit := b.explicitKeys(spec, file)
 		v := &sampleValues{file: file, used: map[string]bool{}}
 		full, minimal, steps, err := v.specs(d)
 		if err != nil {
 			t.Errorf("seed %d: %v", seed, err)
 			continue
 		}
+		var all strings.Builder
 		report := func(msg string) { t.Errorf("seed %d: %s", seed, msg) }
 		specs := []*omap{full, minimal}
 		keysOf := [][]coverageKey{v.fullKeys, nil}
@@ -214,6 +241,7 @@ func TestSweepSpecsHoldTheInvariantsOnRandomTrees(t *testing.T) {
 				t.Fatal(err)
 			}
 			checkValue(spec, decoded, "spec", report)
+			all.Write(data)
 			for _, key := range keysOf[i] {
 				token := `"` + key.name + `"`
 				if key.kind == "enum" {
@@ -224,5 +252,47 @@ func TestSweepSpecsHoldTheInvariantsOnRandomTrees(t *testing.T) {
 				}
 			}
 		}
+		for _, key := range explicit {
+			if renamed := strings.TrimSuffix(key, `"`) + `-`; strings.Contains(all.String(), renamed) {
+				t.Errorf("seed %d: a spec changes the explicit key %s", seed, key)
+			}
+		}
 	}
+}
+
+// explicitKeys gives some list-maps keys that e2e.yaml sets: a fixed key, or a when entry for each
+// mode, all with the same key or each with a key of its own. It returns the JSON of each key
+// that a spec must send as it is.
+func (b *treeBuilder) explicitKeys(spec *crType, file *e2eFile) []string {
+	var sent []string
+	for _, m := range b.maps {
+		path, ok := pathOf(spec, "", m.field)
+		// A list that needs more items than the entries give is padded with copies. A copy gets a
+		// key of its own, so only lists without a larger minimum can tell a renamed key from a copy.
+		if !ok || b.r.Intn(2) == 0 || (m.field.typ.MinItems != nil && *m.field.typ.MinItems > 1) {
+			continue
+		}
+		if b.r.Intn(3) == 0 {
+			value := b.name("fixed-key")
+			if file.Values == nil {
+				file.Values = map[string]any{}
+			}
+			file.Values[path+"."+m.key] = value
+			sent = append(sent, fmt.Sprintf("%q:%q", m.key, value))
+			continue
+		}
+		shared := b.name("shared-key")
+		for _, value := range m.mode.enum.Values {
+			key := shared
+			if b.r.Intn(2) == 0 {
+				key = b.name("own-key")
+			}
+			file.When = append(file.When, e2eWhen{
+				Match: map[string]any{path + "." + m.mode.JSON: value.Name},
+				Set:   map[string]any{path + "." + m.key: key},
+			})
+			sent = append(sent, fmt.Sprintf("%q:%q", m.key, key))
+		}
+	}
+	return sent
 }
