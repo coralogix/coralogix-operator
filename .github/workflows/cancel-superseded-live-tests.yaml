@@ -5,7 +5,7 @@ name: Cancel superseded live test runs
 # their place in the queue. This workflow runs outside that queue and cancels the waiting runs
 # of older commits of the same pull request.
 # It never cancels a running run: a cancelled run cannot finish its teardown and leaks
-# test resources into the shared Coralogix team.
+# test resources into the accounts for this workflow.
 
 on:
   pull_request:

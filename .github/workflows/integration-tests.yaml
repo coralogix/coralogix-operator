@@ -5,6 +5,9 @@ name: integration-tests
 # the code-change filter, and the result job that branch protection requires.
 on:
   workflow_call:
+    secrets:
+      api_key:
+        required: true
 
 permissions:
   contents: read
@@ -15,8 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IMG: coralogix-operator-image:latest
-      CORALOGIX_REGION: ${{ secrets.CORALOGIX_REGION }}
-      CORALOGIX_API_KEY: ${{ secrets.CORALOGIX_API_KEY }}
+      CORALOGIX_REGION: EU2
+      CORALOGIX_API_KEY: ${{ secrets.api_key }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

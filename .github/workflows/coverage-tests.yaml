@@ -8,6 +8,9 @@ name: coverage-tests
 # and the result job that branch protection requires.
 on:
   workflow_call:
+    secrets:
+      api_key:
+        required: true
 
 permissions:
   contents: read
@@ -60,9 +63,8 @@ jobs:
       matrix: ${{ fromJSON(needs.shards.outputs.matrix) }}
     env:
       IMG: coralogix-operator-image:latest
-      CORALOGIX_REGION: ${{ secrets.CORALOGIX_REGION }}
-      CORALOGIX_API_KEY: ${{ secrets.CORALOGIX_API_KEY }}
-      TEST_TEAM_ID: ${{ secrets.TEST_TEAM_ID }}
+      CORALOGIX_REGION: EU2
+      CORALOGIX_API_KEY: ${{ secrets.api_key }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -86,7 +88,7 @@ jobs:
       - name: Run the coverage specs of the shard
         env:
           SHARD_FILTER: ${{ matrix.filter }}
-        run: make e2e-tests E2E_GINKGO_LABEL_FILTER="${SHARD_FILTER}"
+        run: bash .github/scripts/ci-account.sh lookup make e2e-tests E2E_GINKGO_LABEL_FILTER="${SHARD_FILTER}"
       - name: Collect Operator Logs
         if: always()
         run: |

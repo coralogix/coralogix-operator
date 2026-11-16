@@ -1,0 +1,40 @@
+name: prepare-account
+
+# Prepares one EU2 account with tools/prepare-ci-team at the SHA pinned in
+# .github/scripts/ci-account.sh. Called by live-tests.yaml once per account.
+on:
+  workflow_call:
+    secrets:
+      api_key:
+        required: true
+      send_data_key:
+        required: true
+      ai_prefix:
+        required: true
+      pagerduty_key:
+        required: true
+      pagerduty_email:
+        required: true
+      logs_bucket:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: Prepare account
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Prepare the account
+        env:
+          CORALOGIX_API_KEY: ${{ secrets.api_key }}
+          CORALOGIX_SEND_YOUR_DATA_API_KEY: ${{ secrets.send_data_key }}
+          PAGERDUTY_REST_API_KEY: ${{ secrets.pagerduty_key }}
+          PAGERDUTY_USER_EMAIL: ${{ secrets.pagerduty_email }}
+          CI_PREP_AI_APPLICATION_PREFIX: ${{ secrets.ai_prefix }}
+          ARCHIVE_LOGS_BUCKET: ${{ secrets.logs_bucket }}
+        run: bash .github/scripts/ci-account.sh prepare
