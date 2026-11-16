@@ -47,7 +47,7 @@ To route the Alerts generated from a PrometheusRule, add this annotation to the 
 app.coralogix.com/alert-router-notify-on: triggeredAndResolved
 ```
 
-The operator then sets `Alert.Spec.NotificationGroup.Router` to `{notifyOn: <value>, mode: routingLabels}` on each generated Alert, so Coralogix sends its notifications to every Global Router whose routing labels match the Alert's. The rest of the notification group, such as `groupByKeys` and `webhooks`, is kept. `destinations` is removed, because an Alert can have a router or destinations but not both. A phantom Alert (`phantomMode: true`) gets no router, because it can't have a notification group. An invalid annotation value fails the reconcile and leaves routers as they are; the PrometheusRule's other changes still sync. Without the annotation, the operator leaves the notification group as it is.
+The operator then sets `Alert.Spec.NotificationGroup.Router` to `{notifyOn: <value>, mode: routingLabels}` on each generated Alert, so Coralogix sends its notifications to every Global Router whose routing labels match the Alert's. The rest of the notification group, such as `groupByKeys` and `webhooks`, is kept. `destinations` is removed, because an Alert can have a router or destinations but not both. `incidentsSettings.notifyOn` is set to the same value, because Coralogix rejects a router whose `notifyOn` differs from it; the retriggering period is kept. A phantom Alert (`phantomMode: true`) gets no router, because it can't have a notification group. An invalid annotation value fails the reconcile and leaves routers as they are; the PrometheusRule's other changes still sync. Without the annotation, the operator leaves the notification group as it is.
 
 Routing labels are entity labels with the `routing.` prefix, such as `routing.environment`. Prometheus does not allow dots in rule label names, so set them as labels on the PrometheusRule itself. The operator copies every PrometheusRule label that starts with `routing.` into the entity labels of each generated Alert:
 
@@ -81,6 +81,8 @@ spec:
     routing.environment: production
     routing.team: payments
     severity: critical
+  incidentsSettings:
+    notifyOn: triggeredAndResolved
   notificationGroup:
     router:
       mode: routingLabels

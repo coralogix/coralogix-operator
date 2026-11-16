@@ -251,6 +251,10 @@ var _ = Describe("Alert", Ordered, func() {
 				EntityLabels: map[string]string{
 					"routing.environment": "e2e",
 				},
+				// Coralogix rejects a router whose notifyOn differs from incidentsSettings.notifyOn.
+				IncidentsSettings: &coralogixv1beta1.IncidentsSettings{
+					NotifyOn: coralogixv1beta1.NotifyOnTriggeredAndResolved,
+				},
 				NotificationGroup: &coralogixv1beta1.NotificationGroup{
 					Router: &coralogixv1beta1.NotificationRouter{
 						NotifyOn: coralogixv1beta1.NotifyOnTriggeredAndResolved,
