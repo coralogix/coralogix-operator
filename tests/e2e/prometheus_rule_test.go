@@ -21,19 +21,26 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
+
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1beta1"
+	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 var _ = Describe("PrometheusRule", Ordered, func() {
 	var (
 		crClient             client.Client
+		alertsClient         *cxsdk.AlertsClient
 		promRule             *prometheus.PrometheusRule
 		modifiedPromRule     *prometheus.PrometheusRule
 		fetchedAlert         *coralogixv1beta1.Alert
@@ -46,6 +53,7 @@ var _ = Describe("PrometheusRule", Ordered, func() {
 
 	BeforeAll(func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
+		alertsClient = ClientsInstance.GetCoralogixClientSet().Alerts()
 	})
 
 	It("Should be created successfully", func(ctx context.Context) {
@@ -155,5 +163,74 @@ var _ = Describe("PrometheusRule", Ordered, func() {
 			err := crClient.Get(ctx, types.NamespacedName{Name: promRuleName, Namespace: testNamespace}, fetchedRecordingRuleGroupSet)
 			return errors.IsNotFound(err)
 		}, time.Minute, time.Second).Should(BeTrue())
+	})
+
+	It("Should route generated Alerts by routing labels", func(ctx context.Context) {
+		By("Creating a PrometheusRule with the router annotation and a routing label")
+		routedRuleName := uniqueName("routed-prometheus-rules")
+		routedRule := &prometheus.PrometheusRule{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      routedRuleName,
+				Namespace: testNamespace,
+				Labels: map[string]string{
+					"app.coralogix.com/track-alerting-rules": "true",
+					"routing.environment":                    "e2e",
+				},
+				Annotations: map[string]string{
+					utils.PrometheusRuleAlertRouterNotifyOnAnnotationKey: string(coralogixv1beta1.NotifyOnTriggeredAndResolved),
+				},
+			},
+			Spec: prometheus.PrometheusRuleSpec{
+				Groups: []prometheus.RuleGroup{
+					{
+						Name:     "routed.rules",
+						Interval: prometheus.DurationPointer("60s"),
+						Rules: []prometheus.Rule{
+							{
+								Alert: "routed-alert",
+								Expr:  intstr.FromString("up == 0"),
+								For:   prometheus.DurationPointer("5m"),
+								Labels: map[string]string{
+									"severity": "warning",
+									"team":     "platform",
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		Expect(crClient.Create(ctx, routedRule)).To(Succeed())
+
+		By("Fetching the generated Alert's backend ID")
+		routedAlertKey := types.NamespacedName{Name: routedRuleName + "-routed-alert-0", Namespace: testNamespace}
+		var routedAlertID string
+		Eventually(func(g Gomega) {
+			generated := &coralogixv1beta1.Alert{}
+			g.Expect(crClient.Get(ctx, routedAlertKey, generated)).To(Succeed())
+			g.Expect(meta.IsStatusConditionTrue(generated.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
+			g.Expect(generated.Status.ID).ToNot(BeNil())
+			routedAlertID = *generated.Status.ID
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Verifying the backend alert uses label-matched routing and carries the routing labels")
+		Eventually(func(g Gomega) {
+			alertDef, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(routedAlertID)})
+			g.Expect(err).ToNot(HaveOccurred())
+			properties := alertDef.GetAlertDef().GetAlertDefProperties()
+			router := properties.GetNotificationGroup().GetRouter()
+			g.Expect(router).ToNot(BeNil())
+			g.Expect(router.GetId()).To(BeEmpty())
+			g.Expect(router.GetNotifyOn()).To(Equal(cxsdk.AlertNotifyOnTriggeredAndResolved))
+			g.Expect(properties.GetEntityLabels()).To(HaveKeyWithValue("routing.environment", "e2e"))
+			g.Expect(properties.GetEntityLabels()).To(HaveKeyWithValue("team", "platform"))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Deleting the PrometheusRule")
+		Expect(crClient.Delete(ctx, routedRule)).To(Succeed())
+		Eventually(func() codes.Code {
+			_, err := alertsClient.Get(ctx, &cxsdk.GetAlertDefRequest{Id: wrapperspb.String(routedAlertID)})
+			return cxsdk.Code(err)
+		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
 	})
 })

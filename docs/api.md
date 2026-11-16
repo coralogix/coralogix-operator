@@ -8649,6 +8649,18 @@ The router for notifications (Notification Center feature) where to route notifi
             <i>Default</i>: triggeredOnly<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>mode</b></td>
+        <td>enum</td>
+        <td>
+          How the router is chosen. `default` sends notifications to the default router
+(router_default). `routingLabels` sends them to every Global Router whose routing labels
+match the Alert's `routing.`-prefixed entity labels, such as `routing.team`.
+Omitted means `default`.<br/>
+          <br/>
+            <i>Enum</i>: default, routingLabels<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -9479,6 +9491,18 @@ The router for notifications (Notification Center feature) where to route notifi
             <i>Default</i>: triggeredOnly<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>mode</b></td>
+        <td>enum</td>
+        <td>
+          How the router is chosen. `default` sends notifications to the default router
+(router_default). `routingLabels` sends them to every Global Router whose routing labels
+match the Alert's `routing.`-prefixed entity labels, such as `routing.team`.
+Omitted means `default`.<br/>
+          <br/>
+            <i>Enum</i>: default, routingLabels<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -29121,6 +29145,18 @@ The router for notifications (Notification Center feature) where to route notifi
             <i>Default</i>: triggeredOnly<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>mode</b></td>
+        <td>enum</td>
+        <td>
+          How the router is chosen. `default` sends notifications to the default router
+(router_default). `routingLabels` sends them to every Global Router whose routing labels
+match the Alert's `routing.`-prefixed entity labels, such as `routing.team`.
+Omitted means `default`.<br/>
+          <br/>
+            <i>Enum</i>: default, routingLabels<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -29951,6 +29987,18 @@ The router for notifications (Notification Center feature) where to route notifi
             <i>Default</i>: triggeredOnly<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>mode</b></td>
+        <td>enum</td>
+        <td>
+          How the router is chosen. `default` sends notifications to the default router
+(router_default). `routingLabels` sends them to every Global Router whose routing labels
+match the Alert's `routing.`-prefixed entity labels, such as `routing.team`.
+Omitted means `default`.<br/>
+          <br/>
+            <i>Enum</i>: default, routingLabels<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 

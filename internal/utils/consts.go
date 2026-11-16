@@ -54,5 +54,7 @@ const (
 	TrackPrometheusRuleAlertsLabelKey         = "app.coralogix.com/track-alerting-rules"
 	TrackPrometheusRuleRecordingRulesLabelKey = "app.coralogix.com/track-recording-rules"
 
+	PrometheusRuleAlertRouterNotifyOnAnnotationKey = "app.coralogix.com/alert-router-notify-on"
+
 	LogVerbosityAnnotationKey = "app.coralogix.com/log-verbosity"
 )

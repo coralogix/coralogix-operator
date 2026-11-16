@@ -382,3 +382,28 @@ func TestExtractAlertDefPropertiesCaseSettingsForEveryAlertType(t *testing.T) {
 		})
 	}
 }
+
+func TestExpandNotificationGroupRouterMode(t *testing.T) {
+	tests := []struct {
+		name   string
+		mode   NotificationRouterMode
+		wantID string
+	}{
+		{name: "omitted mode sends to the default router", wantID: "router_default"},
+		{name: "default mode sends to the default router", mode: NotificationRouterModeDefault, wantID: "router_default"},
+		{name: "routingLabels mode matches Global Routers by routing labels", mode: NotificationRouterModeRoutingLabels, wantID: ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			group, err := expandNotificationGroup(&NotificationGroup{
+				Router: &NotificationRouter{NotifyOn: NotifyOnTriggeredAndResolved, Mode: tt.mode},
+			}, &GetResourceRefProperties{})
+			require.NoError(t, err)
+			require.NotNil(t, group.Router)
+			require.NotNil(t, group.Router.Id)
+			require.Equal(t, tt.wantID, *group.Router.Id)
+			require.Equal(t, alerts.NOTIFYON_NOTIFY_ON_TRIGGERED_AND_RESOLVED, *group.Router.NotifyOn)
+		})
+	}
+}
