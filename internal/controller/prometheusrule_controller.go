@@ -495,10 +495,21 @@ func alertRouterNotifyOn(prometheusRule *prometheus.PrometheusRule) (*coralogixv
 // setAlertRouter routes alert to the Global Routers matching its routing labels, notifying on
 // notifyOn, and keeps the rest of its notification group. Destinations are cleared, since an
 // Alert can have a router or destinations but not both. A phantom Alert is left alone, since it
-// can't have a notification group. It reports whether alert changed.
+// can't have a notification group. The incidents settings get the same notifyOn, since Coralogix
+// rejects a router whose notifyOn differs from them; their retriggering period is kept. It
+// reports whether alert changed.
 func setAlertRouter(alert *coralogixv1beta1.Alert, notifyOn coralogixv1beta1.NotifyOn) bool {
 	if alert.Spec.PhantomMode {
 		return false
+	}
+	changed := false
+	if alert.Spec.IncidentsSettings == nil {
+		alert.Spec.IncidentsSettings = &coralogixv1beta1.IncidentsSettings{}
+		changed = true
+	}
+	if alert.Spec.IncidentsSettings.NotifyOn != notifyOn {
+		alert.Spec.IncidentsSettings.NotifyOn = notifyOn
+		changed = true
 	}
 	want := coralogixv1beta1.NotificationRouter{
 		NotifyOn: notifyOn,
@@ -506,7 +517,7 @@ func setAlertRouter(alert *coralogixv1beta1.Alert, notifyOn coralogixv1beta1.Not
 	}
 	group := alert.Spec.NotificationGroup
 	if group != nil && group.Destinations == nil && group.Router != nil && *group.Router == want {
-		return false
+		return changed
 	}
 	if group == nil {
 		group = &coralogixv1beta1.NotificationGroup{}

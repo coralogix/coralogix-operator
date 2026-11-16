@@ -579,14 +579,51 @@ func TestPrometheusRuleAlertRouterAnnotationOnCreate(t *testing.T) {
 
 			if tt.wantNotifyOn == nil {
 				assert.Nil(t, alert.Spec.NotificationGroup)
+				assert.Nil(t, alert.Spec.IncidentsSettings)
 				return
 			}
 			require.NotNil(t, alert.Spec.NotificationGroup)
 			require.NotNil(t, alert.Spec.NotificationGroup.Router)
 			assert.Equal(t, *tt.wantNotifyOn, alert.Spec.NotificationGroup.Router.NotifyOn)
 			assert.Equal(t, coralogixv1beta1.NotificationRouterModeRoutingLabels, alert.Spec.NotificationGroup.Router.Mode)
+			// Coralogix rejects a router whose notifyOn differs from incidentsSettings.notifyOn.
+			require.NotNil(t, alert.Spec.IncidentsSettings)
+			assert.Equal(t, *tt.wantNotifyOn, alert.Spec.IncidentsSettings.NotifyOn)
 		})
 	}
+}
+
+func TestPrometheusRuleAlertRouterAnnotationAddedLaterKeepsRetriggeringPeriod(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	// Cleanups run last-in first-out: cancelling first would stop the cache the
+	// cleanup reads through.
+	t.Cleanup(cancel)
+	reconciler, watcher := setupReconciler(ctx, t)
+
+	rule := newAlertingPrometheusRule("router-keeps-retriggering", nil)
+	require.NoError(t, config.GetClient().Create(ctx, rule))
+	cleanupPrometheusRule(t, rule)
+	<-watcher.ResultChan()
+
+	generated := reconcilePrometheusRule(ctx, t, reconciler, rule, func(*coralogixv1beta1.Alert) bool { return true })
+	generated.Spec.IncidentsSettings = &coralogixv1beta1.IncidentsSettings{
+		NotifyOn:           coralogixv1beta1.NotifyOnTriggeredOnly,
+		RetriggeringPeriod: coralogixv1beta1.RetriggeringPeriod{Minutes: ptr.To(int64(30))},
+	}
+	require.NoError(t, config.GetClient().Update(ctx, generated))
+
+	fresh := &prometheus.PrometheusRule{}
+	require.NoError(t, config.GetClient().Get(ctx, types.NamespacedName{Namespace: rule.Namespace, Name: rule.Name}, fresh))
+	fresh.Annotations = map[string]string{utils.PrometheusRuleAlertRouterNotifyOnAnnotationKey: "triggeredAndResolved"}
+	require.NoError(t, config.GetClient().Update(ctx, fresh))
+
+	updated := reconcilePrometheusRule(ctx, t, reconciler, rule, func(a *coralogixv1beta1.Alert) bool {
+		return a.Spec.NotificationGroup != nil && a.Spec.NotificationGroup.Router != nil
+	})
+	assert.Equal(t, coralogixv1beta1.NotifyOnTriggeredAndResolved, updated.Spec.NotificationGroup.Router.NotifyOn)
+	require.NotNil(t, updated.Spec.IncidentsSettings)
+	assert.Equal(t, coralogixv1beta1.NotifyOnTriggeredAndResolved, updated.Spec.IncidentsSettings.NotifyOn)
+	assert.Equal(t, ptr.To(int64(30)), updated.Spec.IncidentsSettings.RetriggeringPeriod.Minutes)
 }
 
 func TestPrometheusRuleAlertRouterAnnotationAddedLaterKeepsGroupByKeys(t *testing.T) {
