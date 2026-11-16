@@ -46,7 +46,24 @@ checkout_sdk() {
 
 build_image() {
   local sdk_dir="$1"
-  if ! docker build --quiet -t prepare-ci-team:ci "$sdk_dir/tools/prepare-ci-team" >/dev/null 2>&1; then
+  local context="$sdk_dir/tools/prepare-ci-team"
+  # GitHub Actions sets ACTIONS_CACHE_URL. The same scope shares one image
+  # cache across the prepare and lookup jobs. A local run has no cache.
+  if [ -n "${ACTIONS_CACHE_URL:-}" ]; then
+    if ! docker buildx inspect ci-prep >/dev/null 2>&1; then
+      docker buildx create --name ci-prep --driver docker-container >/dev/null 2>&1
+    fi
+    if ! docker buildx build --builder ci-prep --load \
+      --cache-from "type=gha,scope=prepare-ci-team-${sdk_commit}" \
+      --cache-to "type=gha,mode=max,scope=prepare-ci-team-${sdk_commit}" \
+      -t prepare-ci-team:ci \
+      "$context" >/dev/null 2>&1; then
+      echo 'Preparation image build failed' >&2
+      exit 1
+    fi
+    return
+  fi
+  if ! docker build --quiet -t prepare-ci-team:ci "$context" >/dev/null 2>&1; then
     echo 'Preparation image build failed' >&2
     exit 1
   fi

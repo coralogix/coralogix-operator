@@ -97,6 +97,7 @@ jobs:
     if: ${{ needs.changes.result == 'success' && needs.changes.outputs.code_outside_charts == 'true' }}
     permissions:
       contents: read
+      actions: write
     uses: ./.github/workflows/prepare-account.yaml
     secrets:
       api_key: ${{ secrets.OPERATOR_CI_API_KEY_1 }}
@@ -112,6 +113,7 @@ jobs:
     if: ${{ needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' }}
     permissions:
       contents: read
+      actions: write
     uses: ./.github/workflows/prepare-account.yaml
     secrets:
       api_key: ${{ secrets.OPERATOR_CI_API_KEY_2 }}
@@ -127,6 +129,7 @@ jobs:
     if: ${{ needs.changes.result == 'success' && needs.changes.outputs.code_outside_charts == 'true' }}
     permissions:
       contents: read
+      actions: write
     uses: ./.github/workflows/prepare-account.yaml
     secrets:
       api_key: ${{ secrets.OPERATOR_CI_API_KEY_3 }}
@@ -142,6 +145,7 @@ jobs:
     if: ${{ needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' }}
     permissions:
       contents: read
+      actions: write
     uses: ./.github/workflows/prepare-account.yaml
     secrets:
       api_key: ${{ secrets.OPERATOR_CI_API_KEY_4 }}
@@ -157,6 +161,7 @@ jobs:
     if: ${{ needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' }}
     permissions:
       contents: read
+      actions: write
     uses: ./.github/workflows/prepare-account.yaml
     secrets:
       api_key: ${{ secrets.OPERATOR_CI_API_KEY_5 }}
@@ -172,6 +177,7 @@ jobs:
     if: ${{ needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' }}
     permissions:
       contents: read
+      actions: write
     uses: ./.github/workflows/prepare-account.yaml
     secrets:
       api_key: ${{ secrets.OPERATOR_CI_API_KEY_6 }}
@@ -187,6 +193,7 @@ jobs:
     if: ${{ needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' }}
     permissions:
       contents: read
+      actions: write
     uses: ./.github/workflows/prepare-account.yaml
     secrets:
       api_key: ${{ secrets.OPERATOR_CI_API_KEY_7 }}
@@ -202,6 +209,7 @@ jobs:
     if: ${{ needs.changes.result == 'success' && needs.changes.outputs.code_outside_charts == 'true' }}
     permissions:
       contents: read
+      actions: write
     uses: ./.github/workflows/prepare-account.yaml
     secrets:
       api_key: ${{ secrets.OPERATOR_CI_API_KEY_8 }}
@@ -216,6 +224,7 @@ jobs:
     if: ${{ needs.changes.result == 'success' && needs.changes.outputs.code_outside_charts == 'true' && needs.prepare-1.result == 'success' }}
     permissions:
       contents: read
+      actions: write
     uses: ./.github/workflows/e2e-tests.yaml
     secrets:
       api_key: ${{ secrets.OPERATOR_CI_API_KEY_1 }}
@@ -229,6 +238,7 @@ jobs:
     if: ${{ needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' && needs.prepare-2.result == 'success' }}
     permissions:
       contents: read
+      actions: write
     uses: ./.github/workflows/helm-e2e-tests.yaml
     secrets:
       api_key: ${{ secrets.OPERATOR_CI_API_KEY_2 }}
@@ -252,6 +262,7 @@ jobs:
     if: ${{ needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' && needs.prepare-4.result == 'success' }}
     permissions:
       contents: read
+      actions: write
     uses: ./.github/workflows/upgrade-test.yaml
     with:
       suite: upgrade
@@ -269,6 +280,7 @@ jobs:
     if: ${{ needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' && needs.prepare-5.result == 'success' }}
     permissions:
       contents: read
+      actions: write
     uses: ./.github/workflows/upgrade-test.yaml
     with:
       suite: upgrade
@@ -286,6 +298,7 @@ jobs:
     if: ${{ needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' && needs.prepare-6.result == 'success' }}
     permissions:
       contents: read
+      actions: write
     uses: ./.github/workflows/upgrade-test.yaml
     with:
       suite: upgrade
@@ -303,6 +316,7 @@ jobs:
     if: ${{ needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' && needs.prepare-7.result == 'success' }}
     permissions:
       contents: read
+      actions: write
     uses: ./.github/workflows/upgrade-test.yaml
     with:
       suite: group-scim
@@ -314,6 +328,7 @@ jobs:
     if: ${{ needs.changes.result == 'success' && needs.changes.outputs.code_outside_charts == 'true' && needs.prepare-8.result == 'success' }}
     permissions:
       contents: read
+      actions: write
     uses: ./.github/workflows/coverage-tests.yaml
     secrets:
       api_key: ${{ secrets.OPERATOR_CI_API_KEY_8 }}

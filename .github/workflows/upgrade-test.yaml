@@ -29,6 +29,7 @@ on:
 
 permissions:
   contents: read
+  actions: write
 
 jobs:
   check-suite:
