@@ -251,7 +251,6 @@ var _ = Describe("Alert", Ordered, func() {
 				EntityLabels: map[string]string{
 					"routing.environment": "e2e",
 				},
-				// Coralogix rejects a router whose notifyOn differs from incidentsSettings.notifyOn.
 				IncidentsSettings: &coralogixv1beta1.IncidentsSettings{
 					NotifyOn: coralogixv1beta1.NotifyOnTriggeredAndResolved,
 				},
@@ -307,7 +306,6 @@ var _ = Describe("Alert", Ordered, func() {
 			properties := alertDef.GetAlertDef().GetAlertDefProperties()
 			router := properties.GetNotificationGroup().GetRouter()
 			g.Expect(router).ToNot(BeNil())
-			// An empty router ID is label-matched routing; the default router is "router_default".
 			g.Expect(router.GetId()).To(BeEmpty())
 			g.Expect(properties.GetEntityLabels()).To(HaveKeyWithValue("routing.environment", "e2e"))
 		}, time.Minute, time.Second).Should(Succeed())
