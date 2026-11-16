@@ -1,15 +1,14 @@
 name: live-tests
 
-# Runs the five live suites, one after another, against the shared Coralogix team:
-# e2e-tests, helm-e2e-tests, integration-tests, upgrade-test, and coverage-tests. The shards of
-# coverage-tests run in parallel inside their suite. Each one is a reusable
-# workflow in its own file. The last job, "Live tests result", is the check that branch
-# protection requires. It always runs, so it is visible on every pull request, and it fails
-# when any suite failed or was cancelled.
+# Runs the live suites at the same time. Each suite uses its own Coralogix account.
+# The coverage shards share one account and run in parallel inside that suite.
+# Each suite is a reusable workflow in its own file. The last job, "Live tests result",
+# is the check that branch protection requires. It always runs, so it is visible on every
+# pull request, and it fails when any suite failed or was cancelled.
 #
-# The suites run in a fixed order because they share one Coralogix team (archive metrics, TCO,
-# quota, IP access) and must not overlap. A failed suite does not stop the next one: every
-# suite runs, so one run shows every failure. Only a cancelled run stops the chain.
+# A failed suite does not stop the others. A second workflow run waits in the concurrency
+# group, because it would use these same accounts. Only a cancelled run fails the result
+# without waiting for the other jobs.
 on:
   schedule:
     - cron: 0 0 * * *
@@ -30,12 +29,12 @@ permissions:
 
 concurrency:
   # One group for every live run (any pull request, push, or nightly), so two runs never
-  # overlap on the same Coralogix team.
+  # use these accounts at the same time.
   group: coralogix-operator-live-cx
   # Not cancel-in-progress: these specs create real Coralogix resources, and cleanup happens in
   # the suite's own teardown. Cancelling kills the Kind cluster before finalizers run, so the
-  # remote resources leak and pollute the shared team. Let the old run finish and queue behind
-  # it instead.
+  # remote resources leak into the accounts for this workflow. Let the old run finish and queue
+  # behind it instead.
   cancel-in-progress: false
   # Keep every waiting run (the default keeps one, and a newer run cancels it). A cancelled
   # required check blocks the pull request, and a release PR needs this run to pass
@@ -50,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       # A file outside docs, agent files, and Markdown changed. The suites that install the
-      # chart (helm-e2e, upgrade) need it, because chart changes are what they cover.
+      # chart (Helm e2e, upgrade, Group SCIM) need it, because chart changes are what they cover.
       any_code: ${{ steps.filter.outputs.any_code }}
       # A file outside charts, docs, agent files, and Markdown changed. The suites that do not
       # use the chart (e2e, integration) need it.
@@ -92,47 +91,247 @@ jobs:
             echo "code_outside_charts=false" >> "$GITHUB_OUTPUT"
           fi
 
-  e2e:
+  prepare-1:
+    name: Prepare account 1
     needs: changes
-    if: ${{ needs.changes.outputs.code_outside_charts == 'true' }}
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.code_outside_charts == 'true' }}
     permissions:
       contents: read
-    uses: ./.github/workflows/e2e-tests.yaml
-    secrets: inherit
+      actions: write
+    uses: ./.github/workflows/prepare-account.yaml
+    secrets:
+      api_key: ${{ secrets.OPERATOR_CI_API_KEY_1 }}
+      send_data_key: ${{ secrets.OPERATOR_CI_SEND_DATA_API_KEY_1 }}
+      ai_prefix: ${{ secrets.OPERATOR_CI_AI_APPLICATION_PREFIX }}
+      pagerduty_key: ${{ secrets.PAGERDUTY_REST_API_KEY }}
+      pagerduty_email: ${{ secrets.PAGERDUTY_USER_EMAIL }}
+      logs_bucket: ${{ secrets.LOGS_BUCKET }}
 
-  # From here on, `!cancelled()` lets a suite run after an earlier one failed or was skipped.
-  # A cancelled run stops the chain. `changes` must have succeeded, so an error there skips all.
-  helm-e2e:
-    needs: [changes, e2e]
-    if: ${{ !cancelled() && needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' }}
+  prepare-2:
+    name: Prepare account 2
+    needs: changes
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' }}
     permissions:
       contents: read
+      actions: write
+    uses: ./.github/workflows/prepare-account.yaml
+    secrets:
+      api_key: ${{ secrets.OPERATOR_CI_API_KEY_2 }}
+      send_data_key: ${{ secrets.OPERATOR_CI_SEND_DATA_API_KEY_2 }}
+      ai_prefix: ${{ secrets.OPERATOR_CI_AI_APPLICATION_PREFIX }}
+      pagerduty_key: ${{ secrets.PAGERDUTY_REST_API_KEY }}
+      pagerduty_email: ${{ secrets.PAGERDUTY_USER_EMAIL }}
+      logs_bucket: ${{ secrets.LOGS_BUCKET }}
+
+  prepare-3:
+    name: Prepare account 3
+    needs: changes
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.code_outside_charts == 'true' }}
+    permissions:
+      contents: read
+      actions: write
+    uses: ./.github/workflows/prepare-account.yaml
+    secrets:
+      api_key: ${{ secrets.OPERATOR_CI_API_KEY_3 }}
+      send_data_key: ${{ secrets.OPERATOR_CI_SEND_DATA_API_KEY_3 }}
+      ai_prefix: ${{ secrets.OPERATOR_CI_AI_APPLICATION_PREFIX }}
+      pagerduty_key: ${{ secrets.PAGERDUTY_REST_API_KEY }}
+      pagerduty_email: ${{ secrets.PAGERDUTY_USER_EMAIL }}
+      logs_bucket: ${{ secrets.LOGS_BUCKET }}
+
+  prepare-4:
+    name: Prepare account 4
+    needs: changes
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' }}
+    permissions:
+      contents: read
+      actions: write
+    uses: ./.github/workflows/prepare-account.yaml
+    secrets:
+      api_key: ${{ secrets.OPERATOR_CI_API_KEY_4 }}
+      send_data_key: ${{ secrets.OPERATOR_CI_SEND_DATA_API_KEY_4 }}
+      ai_prefix: ${{ secrets.OPERATOR_CI_AI_APPLICATION_PREFIX }}
+      pagerduty_key: ${{ secrets.PAGERDUTY_REST_API_KEY }}
+      pagerduty_email: ${{ secrets.PAGERDUTY_USER_EMAIL }}
+      logs_bucket: ${{ secrets.LOGS_BUCKET }}
+
+  prepare-5:
+    name: Prepare account 5
+    needs: changes
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' }}
+    permissions:
+      contents: read
+      actions: write
+    uses: ./.github/workflows/prepare-account.yaml
+    secrets:
+      api_key: ${{ secrets.OPERATOR_CI_API_KEY_5 }}
+      send_data_key: ${{ secrets.OPERATOR_CI_SEND_DATA_API_KEY_5 }}
+      ai_prefix: ${{ secrets.OPERATOR_CI_AI_APPLICATION_PREFIX }}
+      pagerduty_key: ${{ secrets.PAGERDUTY_REST_API_KEY }}
+      pagerduty_email: ${{ secrets.PAGERDUTY_USER_EMAIL }}
+      logs_bucket: ${{ secrets.LOGS_BUCKET }}
+
+  prepare-6:
+    name: Prepare account 6
+    needs: changes
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' }}
+    permissions:
+      contents: read
+      actions: write
+    uses: ./.github/workflows/prepare-account.yaml
+    secrets:
+      api_key: ${{ secrets.OPERATOR_CI_API_KEY_6 }}
+      send_data_key: ${{ secrets.OPERATOR_CI_SEND_DATA_API_KEY_6 }}
+      ai_prefix: ${{ secrets.OPERATOR_CI_AI_APPLICATION_PREFIX }}
+      pagerduty_key: ${{ secrets.PAGERDUTY_REST_API_KEY }}
+      pagerduty_email: ${{ secrets.PAGERDUTY_USER_EMAIL }}
+      logs_bucket: ${{ secrets.LOGS_BUCKET }}
+
+  prepare-7:
+    name: Prepare account 7
+    needs: changes
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' }}
+    permissions:
+      contents: read
+      actions: write
+    uses: ./.github/workflows/prepare-account.yaml
+    secrets:
+      api_key: ${{ secrets.OPERATOR_CI_API_KEY_7 }}
+      send_data_key: ${{ secrets.OPERATOR_CI_SEND_DATA_API_KEY_7 }}
+      ai_prefix: ${{ secrets.OPERATOR_CI_AI_APPLICATION_PREFIX }}
+      pagerduty_key: ${{ secrets.PAGERDUTY_REST_API_KEY }}
+      pagerduty_email: ${{ secrets.PAGERDUTY_USER_EMAIL }}
+      logs_bucket: ${{ secrets.LOGS_BUCKET }}
+
+  prepare-8:
+    name: Prepare account 8
+    needs: changes
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.code_outside_charts == 'true' }}
+    permissions:
+      contents: read
+      actions: write
+    uses: ./.github/workflows/prepare-account.yaml
+    secrets:
+      api_key: ${{ secrets.OPERATOR_CI_API_KEY_8 }}
+      send_data_key: ${{ secrets.OPERATOR_CI_SEND_DATA_API_KEY_8 }}
+      ai_prefix: ${{ secrets.OPERATOR_CI_AI_APPLICATION_PREFIX }}
+      pagerduty_key: ${{ secrets.PAGERDUTY_REST_API_KEY }}
+      pagerduty_email: ${{ secrets.PAGERDUTY_USER_EMAIL }}
+      logs_bucket: ${{ secrets.LOGS_BUCKET }}
+
+  e2e:
+    needs: [changes, prepare-1]
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.code_outside_charts == 'true' && needs.prepare-1.result == 'success' }}
+    permissions:
+      contents: read
+      actions: write
+    uses: ./.github/workflows/e2e-tests.yaml
+    secrets:
+      api_key: ${{ secrets.OPERATOR_CI_API_KEY_1 }}
+      logs_bucket: ${{ secrets.LOGS_BUCKET }}
+      metrics_bucket: ${{ secrets.METRICS_BUCKET }}
+      aws_region: ${{ secrets.AWS_REGION }}
+      slack_channel: ${{ secrets.SLACK_INTEGRATION_CHANNEL }}
+
+  helm-e2e:
+    needs: [changes, prepare-2]
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' && needs.prepare-2.result == 'success' }}
+    permissions:
+      contents: read
+      actions: write
     uses: ./.github/workflows/helm-e2e-tests.yaml
-    secrets: inherit
+    secrets:
+      api_key: ${{ secrets.OPERATOR_CI_API_KEY_2 }}
+      logs_bucket: ${{ secrets.LOGS_BUCKET }}
+      metrics_bucket: ${{ secrets.METRICS_BUCKET }}
+      aws_region: ${{ secrets.AWS_REGION }}
+      slack_channel: ${{ secrets.SLACK_INTEGRATION_CHANNEL }}
 
   integration:
-    needs: [changes, helm-e2e]
-    if: ${{ !cancelled() && needs.changes.result == 'success' && needs.changes.outputs.code_outside_charts == 'true' }}
+    needs: [changes, prepare-3]
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.code_outside_charts == 'true' && needs.prepare-3.result == 'success' }}
     permissions:
       contents: read
     uses: ./.github/workflows/integration-tests.yaml
-    secrets: inherit
+    secrets:
+      api_key: ${{ secrets.OPERATOR_CI_API_KEY_3 }}
 
-  upgrade:
-    needs: [changes, integration]
-    if: ${{ !cancelled() && needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' }}
+  upgrade-0-5:
+    name: Upgrade 0.5
+    needs: [changes, prepare-4]
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' && needs.prepare-4.result == 'success' }}
     permissions:
       contents: read
+      actions: write
     uses: ./.github/workflows/upgrade-test.yaml
-    secrets: inherit
+    with:
+      suite: upgrade
+      operator_version: "0.5"
+    secrets:
+      api_key: ${{ secrets.OPERATOR_CI_API_KEY_4 }}
+      logs_bucket: ${{ secrets.LOGS_BUCKET }}
+      metrics_bucket: ${{ secrets.METRICS_BUCKET }}
+      aws_region: ${{ secrets.AWS_REGION }}
+      slack_channel: ${{ secrets.SLACK_INTEGRATION_CHANNEL }}
+
+  upgrade-1-0:
+    name: Upgrade 1.0
+    needs: [changes, prepare-5]
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' && needs.prepare-5.result == 'success' }}
+    permissions:
+      contents: read
+      actions: write
+    uses: ./.github/workflows/upgrade-test.yaml
+    with:
+      suite: upgrade
+      operator_version: "1.0"
+    secrets:
+      api_key: ${{ secrets.OPERATOR_CI_API_KEY_5 }}
+      logs_bucket: ${{ secrets.LOGS_BUCKET }}
+      metrics_bucket: ${{ secrets.METRICS_BUCKET }}
+      aws_region: ${{ secrets.AWS_REGION }}
+      slack_channel: ${{ secrets.SLACK_INTEGRATION_CHANNEL }}
+
+  upgrade-2-0:
+    name: Upgrade 2.0
+    needs: [changes, prepare-6]
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' && needs.prepare-6.result == 'success' }}
+    permissions:
+      contents: read
+      actions: write
+    uses: ./.github/workflows/upgrade-test.yaml
+    with:
+      suite: upgrade
+      operator_version: "2.0"
+    secrets:
+      api_key: ${{ secrets.OPERATOR_CI_API_KEY_6 }}
+      logs_bucket: ${{ secrets.LOGS_BUCKET }}
+      metrics_bucket: ${{ secrets.METRICS_BUCKET }}
+      aws_region: ${{ secrets.AWS_REGION }}
+      slack_channel: ${{ secrets.SLACK_INTEGRATION_CHANNEL }}
+
+  group-scim:
+    name: Group SCIM migration
+    needs: [changes, prepare-7]
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' && needs.prepare-7.result == 'success' }}
+    permissions:
+      contents: read
+      actions: write
+    uses: ./.github/workflows/upgrade-test.yaml
+    with:
+      suite: group-scim
+    secrets:
+      api_key: ${{ secrets.OPERATOR_CI_API_KEY_7 }}
 
   coverage:
-    needs: [changes, upgrade]
-    if: ${{ !cancelled() && needs.changes.result == 'success' && needs.changes.outputs.code_outside_charts == 'true' }}
+    needs: [changes, prepare-8]
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.code_outside_charts == 'true' && needs.prepare-8.result == 'success' }}
     permissions:
       contents: read
+      actions: write
     uses: ./.github/workflows/coverage-tests.yaml
-    secrets: inherit
+    secrets:
+      api_key: ${{ secrets.OPERATOR_CI_API_KEY_8 }}
 
   live-tests-result:
     # Branch protection requires this check name. Keep it stable.
@@ -143,10 +342,21 @@ jobs:
     if: ${{ always() }}
     needs:
       - changes
+      - prepare-1
+      - prepare-2
+      - prepare-3
+      - prepare-4
+      - prepare-5
+      - prepare-6
+      - prepare-7
+      - prepare-8
       - e2e
       - helm-e2e
       - integration
-      - upgrade
+      - upgrade-0-5
+      - upgrade-1-0
+      - upgrade-2-0
+      - group-scim
       - coverage
     permissions: {}
     runs-on: ubuntu-latest
@@ -161,10 +371,21 @@ jobs:
     if: ${{ always() && github.event_name == 'schedule' }}
     needs:
       - changes
+      - prepare-1
+      - prepare-2
+      - prepare-3
+      - prepare-4
+      - prepare-5
+      - prepare-6
+      - prepare-7
+      - prepare-8
       - e2e
       - helm-e2e
       - integration
-      - upgrade
+      - upgrade-0-5
+      - upgrade-1-0
+      - upgrade-2-0
+      - group-scim
       - coverage
     permissions:
       contents: read

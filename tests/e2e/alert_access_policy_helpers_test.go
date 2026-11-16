@@ -52,6 +52,10 @@ const (
 	// Unknown permission name: the API rejects it (an unknown version string is accepted and
 	// rewritten, so it would not exercise the invalid-policy paths).
 	alertAccessPolicyInvalid = `{"version":"2025-01-01","default":{"permissions":{"alerts:Read":"grant"}},"rules":[]}`
+	// The alerts API writes this policy when a create omits accessPolicy. An unset
+	// field stays unmanaged, so the operator does not remove it. expectAlertPolicy
+	// decodes both sides before comparing, so key order does not matter.
+	alertAccessPolicyDefaultAllow = `{"version":"2025-01-01","default":{"permissions":{"alerts:LogsReadConfig":"grant","alerts:LogsUpdateConfig":"grant","alerts:MetricsReadConfig":"grant","alerts:MetricsUpdateConfig":"grant","alerts:ReadAccessPolicy":"grant","alerts:ReadConfig":"grant","alerts:SloMgmtReadConfig":"grant","alerts:SloMgmtUpdateConfig":"grant","alerts:SnowbitCreateSecurityAlert":"grant","alerts:SnowbitRead":"grant","alerts:SpansReadConfig":"grant","alerts:SpansUpdateConfig":"grant","alerts:UpdateAccessPolicy":"grant","alerts:UpdateConfig":"grant"}},"rules":[]}`
 )
 
 // expectAlertPolicy asserts the remote alert's access policy. It first asserts

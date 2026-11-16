@@ -76,6 +76,7 @@ var _ = Describe("Group SCIM to OpenAPI migration", Serial, Ordered, Label("scim
 	})
 
 	It("creates the Group with the released SCIM operator", func(ctx context.Context) {
+		ensureGroupFixtureUsers(ctx)
 		Expect(crClient.Create(ctx, scope)).To(Succeed())
 		Expect(crClient.Create(ctx, customRole)).To(Succeed())
 
