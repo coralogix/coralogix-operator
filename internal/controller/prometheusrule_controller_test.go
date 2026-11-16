@@ -485,9 +485,7 @@ func newAlertingPrometheusRule(name string, annotations map[string]string) *prom
 	}
 }
 
-// uncachedClient reads straight from the API server. Assertions use it so they see the
-// result of the Reconcile that just ran, not a later one: the manager cache can lag behind
-// writes, and a Reconcile that finds the Alert already created takes the update path.
+// uncachedClient bypasses the manager cache, which lags behind writes.
 func uncachedClient(t *testing.T) client.Client {
 	t.Helper()
 	c, err := client.New(testCfg, client.Options{Scheme: config.GetScheme()})
@@ -500,9 +498,7 @@ func generatedAlertKey(rule *prometheus.PrometheusRule) types.NamespacedName {
 	return types.NamespacedName{Namespace: rule.Namespace, Name: rule.Name + "-examplealert-0"}
 }
 
-// reconcilePrometheusRule reconciles rule until the Alert generated from its first rule
-// satisfies done, or fails the test after 30s. Reconcile reads the PrometheusRule through
-// the manager cache, which can lag behind writes, hence the retries.
+// reconcilePrometheusRule reconciles rule until its first generated Alert satisfies done, or fails after 30s.
 func reconcilePrometheusRule(ctx context.Context, t *testing.T, reconciler PrometheusRuleReconciler,
 	rule *prometheus.PrometheusRule, done func(*coralogixv1beta1.Alert) bool) *coralogixv1beta1.Alert {
 	t.Helper()
@@ -524,8 +520,8 @@ func reconcilePrometheusRule(ctx context.Context, t *testing.T, reconciler Prome
 	}
 }
 
-// cleanupPrometheusRule removes rule and its generated Alerts. No Alert controller runs in
-// these tests, so nothing else would remove the Alerts' finalizers.
+// cleanupPrometheusRule removes rule and its Alerts, whose finalizers no controller removes here.
+// Register it after t.Cleanup(cancel): it reads through the manager cache.
 func cleanupPrometheusRule(t *testing.T, rule *prometheus.PrometheusRule) {
 	t.Cleanup(func() {
 		ctx := context.Background()
@@ -586,7 +582,6 @@ func TestPrometheusRuleAlertRouterAnnotationOnCreate(t *testing.T) {
 			require.NotNil(t, alert.Spec.NotificationGroup.Router)
 			assert.Equal(t, *tt.wantNotifyOn, alert.Spec.NotificationGroup.Router.NotifyOn)
 			assert.Equal(t, coralogixv1beta1.NotificationRouterModeRoutingLabels, alert.Spec.NotificationGroup.Router.Mode)
-			// Coralogix rejects a router whose notifyOn differs from incidentsSettings.notifyOn.
 			require.NotNil(t, alert.Spec.IncidentsSettings)
 			assert.Equal(t, *tt.wantNotifyOn, alert.Spec.IncidentsSettings.NotifyOn)
 		})
@@ -595,8 +590,6 @@ func TestPrometheusRuleAlertRouterAnnotationOnCreate(t *testing.T) {
 
 func TestPrometheusRuleAlertRouterAnnotationAddedLaterKeepsRetriggeringPeriod(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	// Cleanups run last-in first-out: cancelling first would stop the cache the
-	// cleanup reads through.
 	t.Cleanup(cancel)
 	reconciler, watcher := setupReconciler(ctx, t)
 
@@ -626,10 +619,30 @@ func TestPrometheusRuleAlertRouterAnnotationAddedLaterKeepsRetriggeringPeriod(t 
 	assert.Equal(t, ptr.To(int64(30)), updated.Spec.IncidentsSettings.RetriggeringPeriod.Minutes)
 }
 
+func TestPrometheusRuleAlertRouterAnnotationRestoresIncidentsNotifyOn(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	reconciler, watcher := setupReconciler(ctx, t)
+
+	rule := newAlertingPrometheusRule("router-restores-incidents",
+		map[string]string{utils.PrometheusRuleAlertRouterNotifyOnAnnotationKey: "triggeredAndResolved"})
+	require.NoError(t, config.GetClient().Create(ctx, rule))
+	cleanupPrometheusRule(t, rule)
+	<-watcher.ResultChan()
+
+	generated := reconcilePrometheusRule(ctx, t, reconciler, rule, func(a *coralogixv1beta1.Alert) bool {
+		return a.Spec.IncidentsSettings != nil
+	})
+	generated.Spec.IncidentsSettings.NotifyOn = coralogixv1beta1.NotifyOnTriggeredOnly
+	require.NoError(t, uncachedClient(t).Update(ctx, generated))
+
+	reconcilePrometheusRule(ctx, t, reconciler, rule, func(a *coralogixv1beta1.Alert) bool {
+		return a.Spec.IncidentsSettings.NotifyOn == coralogixv1beta1.NotifyOnTriggeredAndResolved
+	})
+}
+
 func TestPrometheusRuleAlertRouterAnnotationAddedLaterKeepsGroupByKeys(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	// Cleanups run last-in first-out: cancelling first would stop the cache the
-	// cleanup reads through.
 	t.Cleanup(cancel)
 	reconciler, watcher := setupReconciler(ctx, t)
 
@@ -657,8 +670,6 @@ func TestPrometheusRuleAlertRouterAnnotationAddedLaterKeepsGroupByKeys(t *testin
 
 func TestPrometheusRuleAlertRouterAnnotationAddedLaterClearsDestinations(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	// Cleanups run last-in first-out: cancelling first would stop the cache the
-	// cleanup reads through.
 	t.Cleanup(cancel)
 	reconciler, watcher := setupReconciler(ctx, t)
 
@@ -684,8 +695,7 @@ func TestPrometheusRuleAlertRouterAnnotationAddedLaterClearsDestinations(t *test
 	fresh.Annotations = map[string]string{utils.PrometheusRuleAlertRouterNotifyOnAnnotationKey: "triggeredOnly"}
 	require.NoError(t, config.GetClient().Update(ctx, fresh))
 
-	// The API server rejects a notification group with both destinations and a router, so
-	// the Alert only reaches this state if the reconcile cleared destinations in the same update.
+	// CEL rejects destinations plus a router, so this state proves both changed in one update.
 	updated := reconcilePrometheusRule(ctx, t, reconciler, rule, func(a *coralogixv1beta1.Alert) bool {
 		return a.Spec.NotificationGroup != nil && a.Spec.NotificationGroup.Router != nil
 	})
@@ -697,8 +707,6 @@ func TestPrometheusRuleAlertRouterAnnotationAddedLaterClearsDestinations(t *test
 
 func TestPrometheusRuleAlertRouterAnnotationRejectsUnknownValue(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	// Cleanups run last-in first-out: cancelling first would stop the cache the
-	// cleanup reads through.
 	t.Cleanup(cancel)
 	reconciler, watcher := setupReconciler(ctx, t)
 
@@ -770,7 +778,6 @@ func TestPrometheusRuleInvalidRouterAnnotationStillSyncsAlerts(t *testing.T) {
 	fresh.Spec.Groups[0].Rules[0].Annotations["description"] = "updated"
 	require.NoError(t, config.GetClient().Update(ctx, fresh))
 
-	// The invalid value fails the reconcile, but the rule's other changes still reach its Alert.
 	reader := uncachedClient(t)
 	deadline := time.Now().Add(30 * time.Second)
 	for {
@@ -809,8 +816,6 @@ func TestPrometheusRuleRouterAnnotationSkipsPhantomAlerts(t *testing.T) {
 	fresh.Spec.Groups[0].Rules[0].Annotations["description"] = "updated"
 	require.NoError(t, config.GetClient().Update(ctx, fresh))
 
-	// A phantom Alert can't have a notification group, so it gets no router, and the rule's
-	// other changes still apply.
 	updated := reconcilePrometheusRule(ctx, t, reconciler, rule, func(a *coralogixv1beta1.Alert) bool {
 		return a.Spec.Description == "updated"
 	})

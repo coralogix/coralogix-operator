@@ -229,8 +229,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 	alertsToKeep := make(map[string]bool)
 	var errorsEncountered []error
 
-	// An invalid router annotation fails the reconcile, but must not stop the rule's other
-	// changes from syncing: routers are then left as they are.
+	// An invalid annotation fails the reconcile but must not block the rule's other changes.
 	routerNotifyOn, err := alertRouterNotifyOn(prometheusRule)
 	if err != nil {
 		errorsEncountered = append(errorsEncountered, err)
@@ -306,8 +305,7 @@ func (r *PrometheusRuleReconciler) convertPrometheusRuleAlertToCxAlert(ctx conte
 				updated = true
 			}
 
-			// Only an annotated PrometheusRule manages the router. Without the annotation the
-			// notification group is left as it is, so one set directly on the Alert is kept.
+			// Without the annotation, keep any notification group set directly on the Alert.
 			if routerNotifyOn != nil && setAlertRouter(alert, *routerNotifyOn) {
 				updated = true
 			}
@@ -476,8 +474,7 @@ func prometheusAlertToMetricThreshold(rule prometheus.Rule, priority coralogixv1
 	}
 }
 
-// alertRouterNotifyOn returns the notifyOn set by the PrometheusRule's router annotation, or nil
-// when the annotation is absent.
+// alertRouterNotifyOn returns the router annotation's notifyOn, or nil when it is absent.
 func alertRouterNotifyOn(prometheusRule *prometheus.PrometheusRule) (*coralogixv1beta1.NotifyOn, error) {
 	value, ok := prometheusRule.Annotations[utils.PrometheusRuleAlertRouterNotifyOnAnnotationKey]
 	if !ok {
@@ -492,12 +489,8 @@ func alertRouterNotifyOn(prometheusRule *prometheus.PrometheusRule) (*coralogixv
 	return &notifyOn, nil
 }
 
-// setAlertRouter routes alert to the Global Routers matching its routing labels, notifying on
-// notifyOn, and keeps the rest of its notification group. Destinations are cleared, since an
-// Alert can have a router or destinations but not both. A phantom Alert is left alone, since it
-// can't have a notification group. The incidents settings get the same notifyOn, since Coralogix
-// rejects a router whose notifyOn differs from them; their retriggering period is kept. It
-// reports whether alert changed.
+// setAlertRouter routes alert by its routing labels and reports whether alert changed.
+// Coralogix rejects a router whose notifyOn differs from incidentsSettings.notifyOn.
 func setAlertRouter(alert *coralogixv1beta1.Alert, notifyOn coralogixv1beta1.NotifyOn) bool {
 	if alert.Spec.PhantomMode {
 		return false
@@ -528,12 +521,10 @@ func setAlertRouter(alert *coralogixv1beta1.Alert, notifyOn coralogixv1beta1.Not
 	return true
 }
 
-// routingLabelPrefix marks the PrometheusRule labels that become routing labels on its Alerts.
 // Prometheus rejects dots in rule label names, so routing labels are set on the PrometheusRule.
 const routingLabelPrefix = "routing."
 
-// alertEntityLabels returns the entity labels of the Alert generated from rule: the rule's
-// labels plus the PrometheusRule's routing.-prefixed labels.
+// alertEntityLabels returns rule's labels plus the PrometheusRule's routing.-prefixed labels.
 func alertEntityLabels(prometheusRule *prometheus.PrometheusRule, rule prometheus.Rule) map[string]string {
 	var labels map[string]string
 	for key, value := range prometheusRule.Labels {
@@ -549,7 +540,7 @@ func alertEntityLabels(prometheusRule *prometheus.PrometheusRule, rule prometheu
 		labels[key] = value
 	}
 	if labels == nil {
-		// No routing labels: keep the rule's labels as they are, so existing Alerts are unchanged.
+		// Return rule.Labels as is, so existing Alerts don't update.
 		return rule.Labels
 	}
 	return labels

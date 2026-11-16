@@ -220,7 +220,6 @@ var _ = Describe("PrometheusRule", Ordered, func() {
 			properties := alertDef.GetAlertDef().GetAlertDefProperties()
 			router := properties.GetNotificationGroup().GetRouter()
 			g.Expect(router).ToNot(BeNil())
-			// An empty router ID is label-matched routing; the default router is "router_default".
 			g.Expect(router.GetId()).To(BeEmpty())
 			g.Expect(router.GetNotifyOn()).To(Equal(cxsdk.AlertNotifyOnTriggeredAndResolved))
 			g.Expect(properties.GetEntityLabels()).To(HaveKeyWithValue("routing.environment", "e2e"))

@@ -35,7 +35,7 @@ The following Coralogix Alert properties are derived from the PrometheusRule ale
 - `Alert.Spec.AlertType.MetricThreshold.Rules[0].Condition.Threshold`: Set to `0`
 - `Alert.Spec.AlertType.MetricThreshold.Rules[0].Condition.ForOverPct`: Set to `100`
 
-Other properties will not be overridden by the operator and can be modified directly in the Coralogix Alert resource.
+Other properties will not be overridden by the operator and can be modified directly in the Coralogix Alert resource, except for those the routing annotation below sets.
 
 #### Notification routing
 

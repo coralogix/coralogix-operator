@@ -30,6 +30,8 @@ spec:
             conditionType: moreThan
           override:
             priority: p3
+  incidentsSettings:
+    notifyOn: triggeredAndResolved
   notificationGroup:
     router:
       notifyOn: triggeredAndResolved
