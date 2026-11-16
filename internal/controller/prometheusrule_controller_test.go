@@ -618,6 +618,46 @@ func TestPrometheusRuleAlertRouterAnnotationAddedLaterKeepsGroupByKeys(t *testin
 	assert.Equal(t, []string{"service"}, updated.Spec.NotificationGroup.GroupByKeys)
 }
 
+func TestPrometheusRuleAlertRouterAnnotationAddedLaterClearsDestinations(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	// Cleanups run last-in first-out: cancelling first would stop the cache the
+	// cleanup reads through.
+	t.Cleanup(cancel)
+	reconciler, watcher := setupReconciler(ctx, t)
+
+	rule := newAlertingPrometheusRule("router-clears-destinations", nil)
+	require.NoError(t, config.GetClient().Create(ctx, rule))
+	cleanupPrometheusRule(t, rule)
+	<-watcher.ResultChan()
+
+	generated := reconcilePrometheusRule(ctx, t, reconciler, rule, func(*coralogixv1beta1.Alert) bool { return true })
+	generated.Spec.NotificationGroup = &coralogixv1beta1.NotificationGroup{
+		GroupByKeys: []string{"service"},
+		Destinations: []coralogixv1beta1.NotificationDestination{
+			{
+				Connector: coralogixv1beta1.NCRef{BackendRef: &coralogixv1beta1.NCBackendRef{ID: "connector-id"}},
+				NotifyOn:  coralogixv1beta1.NotifyOnTriggeredOnly,
+			},
+		},
+	}
+	require.NoError(t, config.GetClient().Update(ctx, generated))
+
+	fresh := &prometheus.PrometheusRule{}
+	require.NoError(t, config.GetClient().Get(ctx, types.NamespacedName{Namespace: rule.Namespace, Name: rule.Name}, fresh))
+	fresh.Annotations = map[string]string{utils.PrometheusRuleAlertRouterNotifyOnAnnotationKey: "triggeredOnly"}
+	require.NoError(t, config.GetClient().Update(ctx, fresh))
+
+	// The API server rejects a notification group with both destinations and a router, so
+	// the Alert only reaches this state if the reconcile cleared destinations in the same update.
+	updated := reconcilePrometheusRule(ctx, t, reconciler, rule, func(a *coralogixv1beta1.Alert) bool {
+		return a.Spec.NotificationGroup != nil && a.Spec.NotificationGroup.Router != nil
+	})
+	assert.Empty(t, updated.Spec.NotificationGroup.Destinations)
+	assert.Equal(t, coralogixv1beta1.NotifyOnTriggeredOnly, updated.Spec.NotificationGroup.Router.NotifyOn)
+	assert.Equal(t, coralogixv1beta1.NotificationRouterModeRoutingLabels, updated.Spec.NotificationGroup.Router.Mode)
+	assert.Equal(t, []string{"service"}, updated.Spec.NotificationGroup.GroupByKeys)
+}
+
 func TestPrometheusRuleAlertRouterAnnotationRejectsUnknownValue(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	// Cleanups run last-in first-out: cancelling first would stop the cache the
