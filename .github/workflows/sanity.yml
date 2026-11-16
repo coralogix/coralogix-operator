@@ -70,6 +70,8 @@ jobs:
         run: |
           make ginkgo
           scripts/check-coverage-shards.sh
+      - name: Check that each e2e spec runs in exactly one shard
+        run: scripts/e2e-shards.sh check
       - name: Test the generator version check
         run: bash tools/opgen/scripts/check-version-change_test.sh
       - name: Require a new generator version when its output changes

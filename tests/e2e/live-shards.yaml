@@ -1,0 +1,30 @@
+# The shared shard runs the specs that cannot run beside the other shard.
+# A team has one IP access list, one logs archive, one metrics archive,
+# one TCO policy list per source, one quota rule set, and one rule-group order.
+# GlobalRouter routes notifications for the whole team. Connectors, presets,
+# outbound webhooks, and integrations share the team webhook cap.
+# The upgrade job creates a View, a ViewFolder, a GlobalRouter, a Preset,
+# and an Events2Metric on this shard only.
+# The rest shard is the catch-all. It runs every e2e spec this list does not name.
+# A new spec lands there. It is not dropped.
+# scripts/e2e-shards.sh check fails when a spec runs in both shards or in neither.
+{
+  "shared": [
+    "ArchiveLogsTarget",
+    "ArchiveMetricsTarget",
+    "Connector",
+    "Events2Metric",
+    "GlobalRouter",
+    "Integration",
+    "IPAccess",
+    "OutboundWebhook",
+    "Preset",
+    "QuotaAllocationRuleSet",
+    "RuleGroup",
+    "TCOLogsPolicies",
+    "TCORumPolicies",
+    "TCOTracesPolicies",
+    "View",
+    "ViewFolder"
+  ]
+}

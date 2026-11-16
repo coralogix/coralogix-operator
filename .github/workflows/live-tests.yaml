@@ -1,6 +1,8 @@
 name: live-tests
 
 # Runs the live suites at the same time. Each suite uses its own Coralogix account.
+# The e2e, Helm e2e, and upgrade suites build the image once and run two shards
+# on that suite's account. The shard list is tests/e2e/live-shards.yaml.
 # The coverage shards share one account and run in parallel inside that suite.
 # Each suite is a reusable workflow in its own file. The last job, "Live tests result",
 # is the check that branch protection requires. It always runs, so it is visible on every

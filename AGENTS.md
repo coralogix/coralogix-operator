@@ -290,6 +290,8 @@ Use KUTTL or e2e coverage when Kubernetes wiring, CRDs, Helm packaging, or real 
 
 The live jobs in `.github/workflows/live-tests.yaml` run at the same time. Each job uses its own Coralogix account. The coverage shards share one account. A second workflow run uses those same accounts, so the whole run waits in the group `coralogix-operator-live-cx`. `cancel-in-progress` stays false. The required check is `Live tests result`. Keep that name. Do not add `needs` between these jobs to keep them off one account. A new job needs the next numbered account. Add that job to the `needs` list of `Live tests result` and `Notify Slack on failure`. A job that is missing from `Live tests result` does not block merges.
 
+The e2e, Helm e2e, and upgrade suites build the operator image once and run the specs in two shards on that suite's account. A shard uses the suite's account. It does not get a new one. `tests/e2e/live-shards.yaml` lists the Describe names that share a team-wide resource. Those specs run in the shared shard. The rest shard is the catch-all: it runs every other spec. A spec that matches no shared name still runs. `scripts/e2e-shards.sh check` fails when a spec runs in both shards or in neither.
+
 When a test reads a remote resource, do not depend on the order of items inside a returned list. The API can return
 list elements in any order. Assert on a set or find the element by an identifying field, instead of indexing a fixed
 position.

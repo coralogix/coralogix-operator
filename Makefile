@@ -235,10 +235,23 @@ integration-tests:
 E2E_PROCS ?= 4
 E2E_TIMEOUT ?= 30m
 # The coverage specs are generated and run in their own shards (tests/e2e/coverage-shards.yaml).
+# The live e2e shards (tests/e2e/live-shards.yaml) set E2E_FOCUS or E2E_SKIP.
+# E2E_SUITE is the package, or the binary from `make e2e-test-binary`.
 E2E_GINKGO_LABEL_FILTER ?= !scim-migration && !coverage
+E2E_FOCUS ?=
+E2E_SKIP ?=
+E2E_SUITE ?= ./tests/e2e/
+.PHONY: e2e-test-binary
+e2e-test-binary: ginkgo
+	$(GINKGO) build ./tests/e2e/
 .PHONY: e2e-tests
 e2e-tests: ginkgo
-	$(GINKGO) --procs=$(E2E_PROCS) --timeout=$(E2E_TIMEOUT) --label-filter="$(E2E_GINKGO_LABEL_FILTER)" -v ./tests/e2e/
+	focus='$(E2E_FOCUS)'; \
+	skip='$(E2E_SKIP)'; \
+	set -- --procs='$(E2E_PROCS)' --timeout='$(E2E_TIMEOUT)' --label-filter='$(E2E_GINKGO_LABEL_FILTER)' -v; \
+	if [ -n "$$focus" ]; then set -- "$$@" --focus "$$focus"; fi; \
+	if [ -n "$$skip" ]; then set -- "$$@" --skip "$$skip"; fi; \
+	$(GINKGO) "$$@" '$(E2E_SUITE)'
 
 .PHONY: helm-sync-check
 helm-sync-check:

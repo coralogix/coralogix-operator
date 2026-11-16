@@ -1,6 +1,8 @@
 name: upgrade-test
 
 # Upgrades the operator from released chart versions to the chart in this checkout, and checks the Group SCIM migration.
+# An upgrade run builds the image once. Two shards then each install the old chart, upgrade, and run one half of the e2e specs.
+# Both shards use this suite's Coralogix account. The shared shard also creates the released resources and checks them after the upgrade.
 # Called by live-tests.yaml, which owns the triggers, the shared Coralogix concurrency group,
 # the code-change filter, and the result job that branch protection requires.
 on:
@@ -53,14 +55,79 @@ jobs:
             *) echo 'Suite must be upgrade or group-scim' >&2; exit 1 ;;
           esac
 
-  upgrade-test:
-    name: Upgrade Test
+  shards:
+    name: Read the shards
     needs: check-suite
     if: ${{ inputs.suite == 'upgrade' && needs.check-suite.result == 'success' }}
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.read.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Read the shard file
+        id: read
+        run: |
+          set -euo pipefail
+          {
+            echo "matrix<<EOF"
+            scripts/e2e-shards.sh matrix
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build the image
+    needs: check-suite
+    if: ${{ needs.check-suite.result == 'success' }}
+    runs-on: ubuntu-latest
+    env:
+      IMG: coralogix-operator-image:v0.0.1
+      IMAGE_ARTIFACT: operator-image-${{ inputs.suite }}-${{ inputs.operator_version }}
+      TEST_ARTIFACT: e2e-binary-${{ inputs.suite }}-${{ inputs.operator_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Cache Makefile tool binaries
+        uses: actions/cache@v4
+        with:
+          path: bin
+          key: ${{ runner.os }}-tools-${{ github.workflow }}-${{ hashFiles('Makefile', 'go.sum') }}
+      - name: Build the controller-manager image
+        uses: ./.github/actions/build-operator-image
+        with:
+          image: ${{ env.IMG }}
+      - name: Compile the e2e test binary
+        run: make e2e-test-binary
+      - name: Save the image
+        run: docker save "${IMG}" | gzip > operator-image.tar.gz
+      - name: Upload the image
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.IMAGE_ARTIFACT }}
+          path: operator-image.tar.gz
+          retention-days: 1
+      - name: Upload the e2e test binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.TEST_ARTIFACT }}
+          path: tests/e2e/e2e.test
+          retention-days: 1
+
+  upgrade-test:
+    name: Upgrade Test (${{ matrix.name }})
+    needs: [check-suite, shards, build]
+    if: ${{ inputs.suite == 'upgrade' && needs.check-suite.result == 'success' && needs.shards.result == 'success' && needs.build.result == 'success' }}
+    runs-on: ubuntu-latest
+    strategy:
+      # One shard that fails must not hide the failures of the other.
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.shards.outputs.matrix) }}
     env:
       IMG_REPO: coralogix-operator-image
       IMG_TAG: 0.0.1
+      IMG: coralogix-operator-image:v0.0.1
+      IMAGE_ARTIFACT: operator-image-${{ inputs.suite }}-${{ inputs.operator_version }}
+      TEST_ARTIFACT: e2e-binary-${{ inputs.suite }}-${{ inputs.operator_version }}
       CORALOGIX_REGION: EU2
       CORALOGIX_API_KEY: ${{ secrets.api_key }}
       AWS_REGION: ${{ secrets.aws_region }}
@@ -69,6 +136,9 @@ jobs:
       SLACK_INTEGRATION_CHANNEL: ${{ secrets.slack_channel }}
       # The service prepare-ci-team creates. The APM SLO specs fail in CI without it.
       CORALOGIX_SLO_APM_SERVICE: ci-acceptance-apm
+      E2E_FOCUS: ${{ matrix.focus }}
+      E2E_SKIP: ${{ matrix.skip }}
+      E2E_SUITE: e2e.test
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -80,11 +150,9 @@ jobs:
       - name: Create Kind cluster
         uses: helm/kind-action@v1.10.0
       - name: Install Prometheus Operator CRDs
-        run: |
-          make install-prometheus-crds
+        run: make install-prometheus-crds
       - name: Install Helm
-        run: |
-          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+        run: curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
       - name: Add Coralogix Helm repository
         run: |
           helm repo add coralogix https://cgx.jfrog.io/artifactory/coralogix-charts-virtual
@@ -97,37 +165,42 @@ jobs:
             --create-namespace \
             --set secret.data.apiKey="${{ secrets.api_key }}" \
             --set coralogixOperator.region="${{ env.CORALOGIX_REGION }}"
+      # One shard creates these resources. The other shard would use the same remote name.
       - name: Create a ViewFolder with the released operator
+        if: matrix.name == 'shared'
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-viewfolder.sh before
       - name: Create a View with the released operator
+        if: matrix.name == 'shared'
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-view.sh before
       - name: Create a GlobalRouter with the released operator
-        if: inputs.operator_version == '2.0'
+        if: matrix.name == 'shared' && inputs.operator_version == '2.0'
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-globalrouter.sh before
       - name: Create a Preset with the released operator
-        if: inputs.operator_version == '2.0'
+        if: matrix.name == 'shared' && inputs.operator_version == '2.0'
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-preset.sh before
       # The Events2Metric name is also a metric name, which cannot have a dot, so its NAME has no "1.0".
       - name: Create an Events2Metric with the released operator
-        if: inputs.operator_version != '0.5'
+        if: matrix.name == 'shared' && inputs.operator_version != '0.5'
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version == '1.0' && '1-0' || '2-0' }}
         run: bash scripts/upgrade-check-events2metric.sh before
-      - name: Build PR image
-        uses: ./.github/actions/build-operator-image
+      - name: Download the image
+        uses: actions/download-artifact@v4
         with:
-          image: ${{ env.IMG_REPO }}:v${{ env.IMG_TAG }}
+          name: ${{ env.IMAGE_ARTIFACT }}
+          path: image
       - name: Load PR image into Kind
         run: |
-          kind load docker-image ${{ env.IMG_REPO }}:v${{ env.IMG_TAG }} --name chart-testing
+          gunzip -c image/operator-image.tar.gz | docker load
+          kind load docker-image "${IMG}" --name chart-testing
       - name: Upgrade to PR version
         run: |
           helm upgrade coralogix-operator ./charts/coralogix-operator \
@@ -141,78 +214,89 @@ jobs:
             --set coralogixOperator.reconcileIntervalSeconds.ipAccess=30 \
             --set coralogixOperator.reconcileIntervalSeconds.archiveLogsTarget=30 \
             --set coralogixOperator.reconcileIntervalSeconds.archiveMetricsTarget=30
+      - name: Download the e2e test binary
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.TEST_ARTIFACT }}
       - name: Run e2e Tests
-        run: bash .github/scripts/ci-account.sh lookup make e2e-tests
+        run: |
+          chmod +x e2e.test
+          bash .github/scripts/ci-account.sh lookup make e2e-tests
       # After the e2e tests, which wait until the new operator holds the leader lease.
       - name: Check the ViewFolder of the released operator
+        if: matrix.name == 'shared'
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-viewfolder.sh after
       - name: Check the View of the released operator
+        if: matrix.name == 'shared'
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-view.sh after
       - name: Check the GlobalRouter of the released operator
-        if: inputs.operator_version == '2.0'
+        if: matrix.name == 'shared' && inputs.operator_version == '2.0'
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-globalrouter.sh after
       - name: Check the Preset of the released operator
-        if: inputs.operator_version == '2.0'
+        if: matrix.name == 'shared' && inputs.operator_version == '2.0'
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-preset.sh after
       - name: Check the Events2Metric of the released operator
-        if: inputs.operator_version != '0.5'
+        if: matrix.name == 'shared' && inputs.operator_version != '0.5'
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version == '1.0' && '1-0' || '2-0' }}
         run: bash scripts/upgrade-check-events2metric.sh after
       # A failed step before the check skips it, so delete the resources here; no run leaves them in
-      # Coralogix.
+      # Coralogix. The rest shard did not create them.
       - name: Delete the Events2Metric of the upgrade test
-        if: always() && inputs.operator_version != '0.5'
+        if: always() && matrix.name == 'shared' && inputs.operator_version != '0.5'
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version == '1.0' && '1-0' || '2-0' }}
         run: bash scripts/upgrade-check-events2metric.sh cleanup
       - name: Delete the Preset of the upgrade test
-        if: always() && inputs.operator_version == '2.0'
+        if: always() && matrix.name == 'shared' && inputs.operator_version == '2.0'
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-preset.sh cleanup
       - name: Delete the GlobalRouter of the upgrade test
-        if: always() && inputs.operator_version == '2.0'
+        if: always() && matrix.name == 'shared' && inputs.operator_version == '2.0'
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-globalrouter.sh cleanup
       - name: Delete the View of the upgrade test
-        if: always()
+        if: always() && matrix.name == 'shared'
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-view.sh cleanup
       - name: Delete the ViewFolder of the upgrade test
-        if: always()
+        if: always() && matrix.name == 'shared'
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-viewfolder.sh cleanup
       - name: Collect Operator Logs
         if: always()
-        run: |
-          scripts/collect-logs.sh
+        run: scripts/collect-logs.sh
 
   group-scim-migration:
     name: Group SCIM to OpenAPI migration
-    needs: check-suite
-    if: ${{ inputs.suite == 'group-scim' && needs.check-suite.result == 'success' }}
+    needs: [check-suite, build]
+    if: ${{ inputs.suite == 'group-scim' && needs.check-suite.result == 'success' && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
     env:
       IMG_REPO: coralogix-operator-image
       IMG_TAG: 0.0.1
+      IMG: coralogix-operator-image:v0.0.1
+      IMAGE_ARTIFACT: operator-image-${{ inputs.suite }}-${{ inputs.operator_version }}
+      TEST_ARTIFACT: e2e-binary-${{ inputs.suite }}-${{ inputs.operator_version }}
       CORALOGIX_REGION: EU2
       CORALOGIX_API_KEY: ${{ secrets.api_key }}
       E2E_PROCS: "1"
       E2E_GINKGO_LABEL_FILTER: scim-migration
       E2E_GROUP_SCIM_MIGRATION: "1"
       E2E_UPGRADE_IMAGE: coralogix-operator-image:v0.0.1
+      E2E_SUITE: e2e.test
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -224,11 +308,9 @@ jobs:
       - name: Create Kind cluster
         uses: helm/kind-action@v1.10.0
       - name: Install Prometheus Operator CRDs
-        run: |
-          make install-prometheus-crds
+        run: make install-prometheus-crds
       - name: Install Helm
-        run: |
-          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+        run: curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
       - name: Add Coralogix Helm repository
         run: |
           helm repo add coralogix https://cgx.jfrog.io/artifactory/coralogix-charts-virtual
@@ -241,16 +323,23 @@ jobs:
             --create-namespace \
             --set secret.data.apiKey="${{ secrets.api_key }}" \
             --set coralogixOperator.region="${{ env.CORALOGIX_REGION }}"
-      - name: Build PR image
-        uses: ./.github/actions/build-operator-image
+      - name: Download the image
+        uses: actions/download-artifact@v4
         with:
-          image: ${{ env.IMG_REPO }}:v${{ env.IMG_TAG }}
+          name: ${{ env.IMAGE_ARTIFACT }}
+          path: image
       - name: Load PR image into Kind
         run: |
-          kind load docker-image ${{ env.IMG_REPO }}:v${{ env.IMG_TAG }} --name chart-testing
+          gunzip -c image/operator-image.tar.gz | docker load
+          kind load docker-image "${IMG}" --name chart-testing
+      - name: Download the e2e test binary
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.TEST_ARTIFACT }}
       - name: Run Group SCIM migration e2e
-        run: bash .github/scripts/ci-account.sh lookup make e2e-tests
+        run: |
+          chmod +x e2e.test
+          bash .github/scripts/ci-account.sh lookup make e2e-tests
       - name: Collect Operator Logs
         if: always()
-        run: |
-          scripts/collect-logs.sh
+        run: scripts/collect-logs.sh
