@@ -257,7 +257,7 @@ var _ = Describe("AlertSet access policy", Ordered, func() {
 	}
 
 	It("Should manage access policies across a bulk replace", func(ctx context.Context) {
-		By("Creating an AlertSet with P1, absent and P1 policies")
+		By("Creating an AlertSet with P1, an unset policy, and P1")
 		alertSetName = uniqueName("alert-set-access-policy")
 		// Registered before creation so a mid-spec failure still deletes the
 		// AlertSet and sweeps the remote alerts. The spec ends with A back on
@@ -330,7 +330,7 @@ var _ = Describe("AlertSet access policy", Ordered, func() {
 		idA, idB, idC := *statuses["item-a"].ID, *statuses["item-b"].ID, *statuses["item-c"].ID
 		Eventually(func(g Gomega) {
 			expectAlertPolicy(ctx, g, openAPIAlerts, idA, ptr.To(alertAccessPolicyP1))
-			expectAlertPolicy(ctx, g, openAPIAlerts, idB, nil)
+			expectAlertPolicy(ctx, g, openAPIAlerts, idB, ptr.To(alertAccessPolicyDefaultAllow))
 			expectAlertPolicy(ctx, g, openAPIAlerts, idC, ptr.To(alertAccessPolicyP1))
 		}, time.Minute, time.Second).Should(Succeed())
 
