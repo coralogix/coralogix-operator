@@ -43,6 +43,10 @@ var _ = Describe("Group", Ordered, func() {
 		groupKey       types.NamespacedName
 	)
 
+	BeforeAll(func(ctx context.Context) {
+		ensureGroupFixtureUsers(ctx)
+	})
+
 	BeforeEach(func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		groupKey = types.NamespacedName{Name: groupName, Namespace: testNamespace}

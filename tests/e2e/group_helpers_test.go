@@ -128,6 +128,24 @@ func expectGroupMembers(ctx context.Context, groupID int64, usernames ...string)
 }
 
 func userIDByUsername(ctx context.Context, g Gomega, username string) string {
+	matches := searchUsersByUsername(ctx, g, username)
+	g.Expect(matches).ToNot(BeEmpty(), fmt.Sprintf("no Users OpenAPI match for %s", username))
+	return matches[0].GetUserId()
+}
+
+// ensureGroupFixtureUsers creates the two Group fixture users when the team does
+// not have them. Terraform does the same inside its Group acceptance test: search
+// first, then create with no invite so the user exists before the Group does.
+func ensureGroupFixtureUsers(ctx context.Context) {
+	for _, username := range []string{groupFixtureUserA, groupFixtureUserB} {
+		if len(searchUsersByUsername(ctx, Default, username)) > 0 {
+			continue
+		}
+		createGroupFixtureUser(ctx, username)
+	}
+}
+
+func searchUsersByUsername(ctx context.Context, g Gomega, username string) []users.RbacV2User {
 	resp, httpResp, err := newOpenAPIClientSet().Users().
 		UsersMgmtServiceSearchUsers(ctx).
 		Username(username).
@@ -142,8 +160,40 @@ func userIDByUsername(ctx context.Context, g Gomega, username string) string {
 			matches = append(matches, candidate)
 		}
 	}
-	g.Expect(matches).ToNot(BeEmpty(), fmt.Sprintf("no Users OpenAPI match for %s", username))
-	return matches[0].GetUserId()
+	return matches
+}
+
+func createGroupFixtureUser(ctx context.Context, username string) {
+	status := users.USERSTATUS_USER_STATUS_ACTIVE
+	onboarding := users.ONBOARDINGMODE_ONBOARDING_MODE_NO_INVITE
+	resp, httpResp, err := newOpenAPIClientSet().Users().
+		UsersMgmtServiceCreateUsers(ctx).
+		CreateUserRequest([]users.CreateUserRequest{{
+			OnboardingMode: &onboarding,
+			UserTemplate: &users.UserTemplate{
+				Username: &username,
+				Status:   &status,
+			},
+		}}).
+		Execute()
+	Expect(oapicxsdk.NewAPIError(httpResp, err)).ToNot(HaveOccurred())
+	Expect(resp).ToNot(BeNil())
+
+	var result *users.CreateUserResult
+	for i := range resp.Results {
+		if strings.EqualFold(resp.Results[i].Username, username) {
+			result = &resp.Results[i]
+			break
+		}
+	}
+	Expect(result).ToNot(BeNil(), fmt.Sprintf("create user %s returned no result", username))
+	Expect(result.GetStatus()).To(BeElementOf(
+		users.CREATEUSERSTATUS_CREATE_USER_STATUS_CREATED,
+		users.CREATEUSERSTATUS_CREATE_USER_STATUS_ALREADY_EXISTS,
+	), fmt.Sprintf("create user %s: %s", username, result.GetMessage()))
+	if result.GetStatus() == users.CREATEUSERSTATUS_CREATE_USER_STATUS_CREATED {
+		Expect(result.GetUserId()).ToNot(BeEmpty(), fmt.Sprintf("create user %s returned no id", username))
+	}
 }
 
 // remoteGroupUserIDs reads the members straight off the group. TeamGroup.userIds
