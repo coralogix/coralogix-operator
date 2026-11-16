@@ -61,6 +61,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           EVENT_NAME: ${{ github.event_name }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          # Fork pull requests run without repository secrets, so every account
+          # would be prepared with empty keys and every suite would fail at
+          # setup. The suites cannot work there; skip them instead of failing.
+          SECRETS_AVAILABLE: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork != true }}
           # Paths that a suite does not cover. A pull request that changes only these skips it.
           IGNORE_ANY_CODE: '^docs/|^(\.claude|\.cursor)/|\.md$'
           IGNORE_CODE_OUTSIDE_CHARTS: '^(charts|docs)/|^(\.claude|\.cursor)/|\.md$'
@@ -70,6 +74,7 @@ jobs:
             {
               echo "any_code=true"
               echo "code_outside_charts=true"
+              echo "secrets_available=true"
             } >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -90,11 +95,12 @@ jobs:
           else
             echo "code_outside_charts=false" >> "$GITHUB_OUTPUT"
           fi
+          echo "secrets_available=$SECRETS_AVAILABLE" >> "$GITHUB_OUTPUT"
 
   prepare-1:
     name: Prepare account 1
     needs: changes
-    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.code_outside_charts == 'true' }}
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.secrets_available == 'true' && needs.changes.outputs.code_outside_charts == 'true' }}
     permissions:
       contents: read
       actions: write
@@ -110,7 +116,7 @@ jobs:
   prepare-2:
     name: Prepare account 2
     needs: changes
-    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' }}
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.secrets_available == 'true' && needs.changes.outputs.any_code == 'true' }}
     permissions:
       contents: read
       actions: write
@@ -126,7 +132,7 @@ jobs:
   prepare-3:
     name: Prepare account 3
     needs: changes
-    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.code_outside_charts == 'true' }}
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.secrets_available == 'true' && needs.changes.outputs.code_outside_charts == 'true' }}
     permissions:
       contents: read
       actions: write
@@ -142,7 +148,7 @@ jobs:
   prepare-4:
     name: Prepare account 4
     needs: changes
-    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' }}
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.secrets_available == 'true' && needs.changes.outputs.any_code == 'true' }}
     permissions:
       contents: read
       actions: write
@@ -158,7 +164,7 @@ jobs:
   prepare-5:
     name: Prepare account 5
     needs: changes
-    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' }}
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.secrets_available == 'true' && needs.changes.outputs.any_code == 'true' }}
     permissions:
       contents: read
       actions: write
@@ -174,7 +180,7 @@ jobs:
   prepare-6:
     name: Prepare account 6
     needs: changes
-    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' }}
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.secrets_available == 'true' && needs.changes.outputs.any_code == 'true' }}
     permissions:
       contents: read
       actions: write
@@ -190,7 +196,7 @@ jobs:
   prepare-7:
     name: Prepare account 7
     needs: changes
-    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.any_code == 'true' }}
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.secrets_available == 'true' && needs.changes.outputs.any_code == 'true' }}
     permissions:
       contents: read
       actions: write
@@ -206,7 +212,7 @@ jobs:
   prepare-8:
     name: Prepare account 8
     needs: changes
-    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.code_outside_charts == 'true' }}
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.secrets_available == 'true' && needs.changes.outputs.code_outside_charts == 'true' }}
     permissions:
       contents: read
       actions: write

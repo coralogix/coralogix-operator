@@ -41,6 +41,11 @@ jobs:
         key: ${{ runner.os }}-tools-${{ github.workflow }}-${{ hashFiles('Makefile', 'go.sum') }}
     - run: make unit-tests
     - name: Patch Coverage
+      # On fork pull requests the action cannot post the coverage comment
+      # ("Resource not accessible by integration"), and its failure turned the
+      # whole Unit tests check red. The tests themselves are unaffected, so the
+      # step is skipped where it can never write.
+      if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork != true }}
       uses: seriousben/go-patch-cover-action@v1
       with:
         version: v0.2.0
