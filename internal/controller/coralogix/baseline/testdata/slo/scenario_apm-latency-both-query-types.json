@@ -1,0 +1,45 @@
+[
+  {
+    "step": "create an APM latency SLO with quantile and average",
+    "spec": {
+      "name": "baseline-slo",
+      "productType": "apm",
+      "sliType": {
+        "apmSli": {
+          "latencyConfig": {
+            "average": {},
+            "quantile": {
+              "percentile": "0.9"
+            },
+            "timeWindow": "5m"
+          },
+          "services": [
+            "checkout-service"
+          ]
+        }
+      },
+      "targetThresholdPercentage": 99,
+      "window": {
+        "timeFrame": "7d"
+      }
+    },
+    "requests": [],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

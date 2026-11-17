@@ -1,0 +1,297 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: slos.coralogix.com
+spec:
+  group: coralogix.com
+  names:
+    kind: SLO
+    listKind: SLOList
+    plural: slos
+    singular: slo
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.printableStatus
+      name: Status
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              description:
+                type: string
+              labels:
+                additionalProperties:
+                  type: string
+                type: object
+              name:
+                type: string
+              ownershipTags:
+                properties:
+                  environment:
+                    properties:
+                      labelKeys:
+                        items:
+                          type: string
+                        type: array
+                      staticValues:
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                    x-kubernetes-validations:
+                    - message: Use either staticValues or labelKeys, not both
+                      rule: '!(has(self.staticValues) && self.staticValues.size()
+                        > 0 && has(self.labelKeys) && self.labelKeys.size() > 0)'
+                  service:
+                    properties:
+                      labelKeys:
+                        items:
+                          type: string
+                        type: array
+                      staticValues:
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                    x-kubernetes-validations:
+                    - message: Use either staticValues or labelKeys, not both
+                      rule: '!(has(self.staticValues) && self.staticValues.size()
+                        > 0 && has(self.labelKeys) && self.labelKeys.size() > 0)'
+                  team:
+                    properties:
+                      labelKeys:
+                        items:
+                          type: string
+                        type: array
+                      staticValues:
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                    x-kubernetes-validations:
+                    - message: Use either staticValues or labelKeys, not both
+                      rule: '!(has(self.staticValues) && self.staticValues.size()
+                        > 0 && has(self.labelKeys) && self.labelKeys.size() > 0)'
+                type: object
+              productType:
+                enum:
+                - unspecified
+                - apm
+                type: string
+              sliType:
+                properties:
+                  apmSli:
+                    properties:
+                      errorConfig:
+                        type: object
+                      filters:
+                        items:
+                          properties:
+                            key:
+                              type: string
+                            values:
+                              items:
+                                type: string
+                              type: array
+                          required:
+                          - key
+                          type: object
+                        type: array
+                      groupingKeys:
+                        items:
+                          type: string
+                        type: array
+                      latencyConfig:
+                        properties:
+                          average:
+                            type: object
+                          quantile:
+                            properties:
+                              percentile:
+                                anyOf:
+                                - type: integer
+                                - type: string
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                            type: object
+                          threshold:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                          timeWindow:
+                            enum:
+                            - 1m
+                            - 5m
+                            type: string
+                        required:
+                        - timeWindow
+                        type: object
+                      services:
+                        items:
+                          type: string
+                        minItems: 1
+                        type: array
+                    required:
+                    - services
+                    type: object
+                  requestBasedMetric:
+                    properties:
+                      goodEvents:
+                        properties:
+                          query:
+                            type: string
+                        required:
+                        - query
+                        type: object
+                      groupByLabels:
+                        items:
+                          type: string
+                        type: array
+                      totalEvents:
+                        properties:
+                          query:
+                            type: string
+                        required:
+                        - query
+                        type: object
+                    required:
+                    - goodEvents
+                    - totalEvents
+                    type: object
+                  windowBasedMetric:
+                    properties:
+                      comparisonOperator:
+                        enum:
+                        - greaterThan
+                        - lessThan
+                        - greaterThanOrEquals
+                        - lessThanOrEquals
+                        type: string
+                      missingDataStrategy:
+                        enum:
+                        - uncounted
+                        - good
+                        - bad
+                        type: string
+                      query:
+                        properties:
+                          query:
+                            type: string
+                        required:
+                        - query
+                        type: object
+                      threshold:
+                        anyOf:
+                        - type: integer
+                        - type: string
+                        pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                        x-kubernetes-int-or-string: true
+                      window:
+                        enum:
+                        - 1m
+                        - 5m
+                        type: string
+                    required:
+                    - comparisonOperator
+                    - query
+                    - window
+                    type: object
+                type: object
+                x-kubernetes-validations:
+                - message: Exactly one of requestBasedMetric, windowBasedMetric or
+                    apmSli must be set
+                  rule: '[has(self.requestBasedMetric),has(self.windowBasedMetric),has(self.apmSli)].filter(x,
+                    x).size() == 1'
+              targetThresholdPercentage:
+                anyOf:
+                - type: integer
+                - type: string
+                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                x-kubernetes-int-or-string: true
+              window:
+                properties:
+                  timeFrame:
+                    enum:
+                    - unspecified
+                    - 7d
+                    - 14d
+                    - 21d
+                    - 28d
+                    - 90d
+                    type: string
+                type: object
+            required:
+            - name
+            - sliType
+            - targetThresholdPercentage
+            - window
+            type: object
+            x-kubernetes-validations:
+            - message: productType 'apm' requires sliType.apmSli
+              rule: '!(has(self.productType) && self.productType == ''apm'') || has(self.sliType.apmSli)'
+          status:
+            properties:
+              conditions:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      format: date-time
+                      type: string
+                    message:
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              id:
+                type: string
+              printableStatus:
+                type: string
+              revision:
+                format: int32
+                type: integer
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
