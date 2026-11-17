@@ -19,6 +19,7 @@ package v1alpha1
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	thingpoliciesservice "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/thing_policies_service"
@@ -38,18 +39,25 @@ func (in *ThingPolicies) UpdateRequest(ctx context.Context) (*thingpoliciesservi
 // toCreateThingPolicyRequest converts the ThingPoliciesThingPolicy to the API type CreateThingPolicyRequest.
 func (in *ThingPoliciesThingPolicy) toCreateThingPolicyRequest(ctx context.Context, namespace string) (*thingpoliciesservice.CreateThingPolicyRequest, error) {
 	out := &thingpoliciesservice.CreateThingPolicyRequest{}
-	obj5 := &thingpoliciesservice.ThingPolicyRules{}
-	obj5.Pattern = in.Pattern
+	obj6 := &thingpoliciesservice.ThingPolicyRules{}
+	obj6.Pattern = in.Pattern
 	if len(in.Levels) != 0 {
-		obj5.Levels = in.Levels
+		obj6.Levels = in.Levels
 	}
-	out.Rules = *obj5
+	out.Rules = *obj6
 	obj3 := &thingpoliciesservice.CreateThingPolicyItem{}
 	obj3.Name = in.Name
 	obj3.Disabled = in.Disabled
 	if len(in.Tags) != 0 {
 		v4 := strings.Join(in.Tags, ",")
 		obj3.Tags = &v4
+	}
+	if in.Level != nil {
+		v5, err := thingPoliciesThingPolicyLevelToAPI(*in.Level)
+		if err != nil {
+			return nil, fmt.Errorf("spec.policies[].level: %w", err)
+		}
+		obj3.Level = &v5
 	}
 	out.Item = *obj3
 	return out, nil
@@ -60,12 +68,27 @@ func (in *ThingPoliciesSpec) toOverwriteThingPoliciesRequest(ctx context.Context
 	out := &thingpoliciesservice.OverwriteThingPoliciesRequest{}
 	v1 := make([]thingpoliciesservice.CreateThingPolicyRequest, 0, len(in.Policies))
 	for _, e2 := range in.Policies {
-		v8, err := e2.toCreateThingPolicyRequest(ctx, namespace)
+		v9, err := e2.toCreateThingPolicyRequest(ctx, namespace)
 		if err != nil {
 			return nil, err
 		}
-		v1 = append(v1, *v8)
+		v1 = append(v1, *v9)
 	}
 	out.Policies = v1
 	return out, nil
+}
+
+// thingPoliciesThingPolicyLevelValues maps each value of the spec to the API value.
+var thingPoliciesThingPolicyLevelValues = map[string]thingpoliciesservice.ThingPolicyLevel{
+	"low":  thingpoliciesservice.THINGPOLICYLEVEL_THING_POLICY_LEVEL_LOW,
+	"high": thingpoliciesservice.THINGPOLICYLEVEL_THING_POLICY_LEVEL_HIGH,
+}
+
+// thingPoliciesThingPolicyLevelToAPI returns the API value of a spec value.
+func thingPoliciesThingPolicyLevelToAPI(value string) (thingpoliciesservice.ThingPolicyLevel, error) {
+	v, ok := thingPoliciesThingPolicyLevelValues[value]
+	if !ok {
+		return "", fmt.Errorf("unknown value %q", value)
+	}
+	return v, nil
 }

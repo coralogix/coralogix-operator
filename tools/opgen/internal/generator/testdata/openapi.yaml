@@ -17,7 +17,8 @@
 # replaces the whole list, and Delete sends it empty. A written item holds its fields in "item"
 # (types.<Component>.requestWrapper), next to its rules, an arm of a oneOf of the response that the
 # CR shows inline. The response has the other arm too, which no request sends. Its enabled is
-# disabled in the request, and its tags are one string of comma-separated values (joinedBy).
+# disabled in the request, and its tags are one string of comma-separated values (joinedBy). Its
+# level is an enum, so the e2e test has a coverage step.
 openapi: 3.1.0
 info:
   title: Synthetic things API
@@ -763,6 +764,7 @@ components:
         name: {type: string, minLength: 1, maxLength: 50, x-coralogix-presence: true}
         enabled: {type: boolean}
         tags: {type: string, maxLength: 200, x-coralogix-presence: true}
+        level: {$ref: '#/components/schemas/ThingPolicyLevel'}
         rules: {$ref: '#/components/schemas/ThingPolicyRules'}
         otherRules: {$ref: '#/components/schemas/ThingPolicyOtherRules'}
     CreateThingPolicyRequest:
@@ -778,6 +780,10 @@ components:
         name: {type: string, minLength: 1, maxLength: 50, x-coralogix-presence: true}
         disabled: {type: boolean}
         tags: {type: string, maxLength: 200, x-coralogix-presence: true}
+        level: {$ref: '#/components/schemas/ThingPolicyLevel'}
+    ThingPolicyLevel:
+      type: string
+      enum: [THING_POLICY_LEVEL_UNSPECIFIED, THING_POLICY_LEVEL_LOW, THING_POLICY_LEVEL_HIGH]
     ThingPolicyRules:
       type: object
       properties:

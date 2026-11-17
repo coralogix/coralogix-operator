@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"regexp"
 	"strings"
 	"testing"
 
@@ -45,6 +46,22 @@ func TestOverwriteKindHasNoStatusID(t *testing.T) {
 			t.Errorf("the e2e test of an overwrite resource must create its fixtures; it lacks %q", want)
 		}
 	}
+	// A failed test leaves no items: it waits for the operator, then writes the list empty itself.
+	for _, want := range []string{
+		"removeThingPoliciesGenerated(ctx, apiClient, name)",
+		"apiClient.ThingPoliciesServiceOverwriteThingPolicies(ctx).OverwriteThingPoliciesRequest(body).Execute()",
+		"!cxsdk.IsNotFound(apiErr)",
+	} {
+		if !strings.Contains(e2e, want) {
+			t.Errorf("the e2e test of an overwrite resource lacks the remote cleanup backstop %q", want)
+		}
+	}
+	// The coverage steps run their copies one at a time: two copies would replace each other's list.
+	for _, want := range []string{`Describe("ThingPolicies (coverage)", Ordered, Serial`, "thingPoliciesCoverageSteps", "Deleting copy %d"} {
+		if !strings.Contains(e2e, want) {
+			t.Errorf("the e2e test of an overwrite resource lacks the coverage sweep %q", want)
+		}
+	}
 	script := readGenerated(t, root, "scripts/upgrade-check-thingpolicies.sh")
 	if strings.Contains(script, "status.id") || !strings.Contains(script, "--type json") {
 		t.Errorf("the upgrade check of an overwrite resource has no id and patches the list:\n%s", script)
@@ -71,13 +88,13 @@ func TestInlineWrapperAndJoinedFields(t *testing.T) {
 	}
 	convert := readGenerated(t, root, apiDir+"/thingpolicies_convert.go")
 	for _, want := range []string{
-		"obj3.Disabled = in.Disabled",
-		`strings.Join(in.Tags, ",")`,
-		"out.Rules = *obj5",
-		"out.Item = *obj3",
+		`obj\d+\.Disabled = in\.Disabled`,
+		`strings\.Join\(in\.Tags, ","\)`,
+		`out\.Rules = \*obj\d+`,
+		`out\.Item = \*obj\d+`,
 	} {
-		if !strings.Contains(convert, want) {
-			t.Errorf("the conversion lacks %q:\n%s", want, convert)
+		if !regexp.MustCompile(want).MatchString(convert) {
+			t.Errorf("the conversion lacks %s:\n%s", want, convert)
 		}
 	}
 }

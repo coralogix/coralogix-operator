@@ -57,6 +57,11 @@ spec:
                     disabled:
                       default: false
                       type: boolean
+                    level:
+                      enum:
+                      - low
+                      - high
+                      type: string
                     levels:
                       items:
                         type: string

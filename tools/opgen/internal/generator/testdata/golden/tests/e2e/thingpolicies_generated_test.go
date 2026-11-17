@@ -20,6 +20,7 @@ package e2e
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -49,6 +50,7 @@ const (
       "tags": [
         "sample-tags"
       ],
+      "level": "low",
       "pattern": "sample-pattern"
     }
   ]
@@ -92,6 +94,9 @@ var _ = Describe("ThingPolicies (generated)", Ordered, Serial, func() {
 		DeferCleanup(func(ctx context.Context) {
 			for _, name := range []string{fullName, minimalName} {
 				_ = crClient.Delete(ctx, &coralogixv1alpha1.ThingPolicies{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: testNamespace}})
+			}
+			for _, name := range []string{fullName, minimalName} {
+				removeThingPoliciesGenerated(ctx, apiClient, name)
 			}
 		})
 	})
@@ -146,6 +151,41 @@ var _ = Describe("ThingPolicies (generated)", Ordered, Serial, func() {
 	})
 })
 
+// removeThingPoliciesGenerated is the backstop of a test that fails. It waits until the operator has
+// removed the item with the name from the list of the API. When the operator does not, it writes the
+// list empty through the API. A list that is already empty is a success.
+func removeThingPoliciesGenerated(ctx context.Context, apiClient *thingpoliciesservice.ThingPoliciesServiceAPIService, name string) {
+	deadline := time.Now().Add(time.Minute)
+	for time.Now().Before(deadline) {
+		if !hasThingPoliciesGenerated(ctx, apiClient, name) {
+			return
+		}
+		time.Sleep(time.Second)
+	}
+	body := thingpoliciesservice.OverwriteThingPoliciesRequest{
+		Policies: []thingpoliciesservice.CreateThingPolicyRequest{},
+	}
+	_, httpResp, err := apiClient.ThingPoliciesServiceOverwriteThingPolicies(ctx).OverwriteThingPoliciesRequest(body).Execute()
+	if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+		Expect(apiErr).To(Succeed())
+	}
+}
+
+// hasThingPoliciesGenerated reports whether the list of the API has an item with the name. A failed read
+// counts as yes, so the backstop keeps waiting.
+func hasThingPoliciesGenerated(ctx context.Context, apiClient *thingpoliciesservice.ThingPoliciesServiceAPIService, name string) bool {
+	got, httpResp, err := apiClient.ThingPoliciesServiceGetThingPolicies(ctx).Execute()
+	if cxsdk.NewAPIError(httpResp, err) != nil || got == nil {
+		return true
+	}
+	for i := range got.Policies {
+		if got.Policies[i].Name == name {
+			return true
+		}
+	}
+	return false
+}
+
 // newThingPoliciesGenerated returns a ThingPolicies with the spec that the JSON holds. Its item is named
 // after the custom resource, so that the test can find it in the list of the API.
 func newThingPoliciesGenerated(name, spec string) *coralogixv1alpha1.ThingPolicies {
@@ -180,3 +220,83 @@ func findThingPoliciesGenerated(ctx context.Context, g Gomega, apiClient *thingp
 	}
 	return nil
 }
+
+// The coverage steps send an accepted enum value and a oneOf arm that the full spec does not. Each
+// write replaces the whole list of the account, so the copies run one at a time: each copy is
+// created, synced, found in the list of the API, and deleted before the next one.
+var thingPoliciesCoverageSteps = [][]string{
+	{
+		`{
+  "policies": [
+    {
+      "name": "sample-name",
+      "disabled": true,
+      "tags": [
+        "sample-tags"
+      ],
+      "level": "high",
+      "pattern": "sample-pattern"
+    }
+  ]
+}`,
+	},
+}
+
+var _ = Describe("ThingPolicies (coverage)", Ordered, Serial, Label("coverage"), func() {
+	var (
+		crClient  client.Client
+		apiClient *thingpoliciesservice.ThingPoliciesServiceAPIService
+		base      string
+	)
+
+	BeforeAll(func() {
+		crClient = ClientsInstance.GetControllerRuntimeClient()
+		apiClient = newOpenAPIClientSet().ThingPolicies()
+		base = uniqueName("e2e-thingpolicies-cov")
+	})
+
+	for i, step := range thingPoliciesCoverageSteps {
+		It(fmt.Sprintf("sends step %d", i+1), Label(fmt.Sprintf("coverage-thingpolicies-%d", i+1)), func(ctx context.Context) {
+			for j, spec := range step {
+				name := fmt.Sprintf("%s-%d-%d", base, i+1, j+1)
+				var objects []client.Object
+				DeferCleanup(func(ctx context.Context) {
+					for _, object := range objects {
+						_ = crClient.Delete(ctx, object)
+					}
+					removeThingPoliciesGenerated(ctx, apiClient, name)
+				})
+				{
+					fixture := &coralogixv1alpha1.Thing{ObjectMeta: metav1.ObjectMeta{Name: name + "-thing", Namespace: testNamespace}}
+					decoder := json.NewDecoder(strings.NewReader(strings.ReplaceAll(`{"name":"@{run}"}`, "@{run}", name)))
+					decoder.DisallowUnknownFields()
+					Expect(decoder.Decode(&fixture.Spec)).To(Succeed())
+					Expect(crClient.Create(ctx, fixture)).To(Succeed())
+					objects = append(objects, fixture)
+					Eventually(func(g Gomega) {
+						current := &coralogixv1alpha1.Thing{}
+						g.Expect(crClient.Get(ctx, types.NamespacedName{Name: fixture.Name, Namespace: testNamespace}, current)).To(Succeed())
+						g.Expect(current.Status.ID).NotTo(BeNil())
+					}, time.Minute, time.Second).Should(Succeed())
+				}
+				cr := newThingPoliciesGenerated(name, spec)
+				Expect(crClient.Create(ctx, cr)).To(Succeed())
+				objects = append(objects, cr)
+
+				By(fmt.Sprintf("Waiting until copy %d is synced and the list of the API has it", j+1))
+				waitForThingPoliciesGenerated(ctx, crClient, name)
+				Eventually(func(g Gomega) {
+					g.Expect(findThingPoliciesGenerated(ctx, g, apiClient, name)).NotTo(BeNil())
+				}, time.Minute, time.Second).Should(Succeed())
+
+				By(fmt.Sprintf("Deleting copy %d", j+1))
+				for _, object := range objects {
+					Expect(crClient.Delete(ctx, object)).To(Succeed())
+				}
+				Eventually(func(g Gomega) {
+					g.Expect(findThingPoliciesGenerated(ctx, g, apiClient, name)).To(BeNil())
+				}, time.Minute, time.Second).Should(Succeed())
+			}
+		})
+	}
+})

@@ -15,11 +15,20 @@ type OverwriteThingPoliciesResponse struct {
 	Policies []ThingPolicy `json:"policies,omitempty"`
 }
 
+type ThingPolicyLevel string
+
+const (
+	THINGPOLICYLEVEL_THING_POLICY_LEVEL_UNSPECIFIED ThingPolicyLevel = "THING_POLICY_LEVEL_UNSPECIFIED"
+	THINGPOLICYLEVEL_THING_POLICY_LEVEL_LOW         ThingPolicyLevel = "THING_POLICY_LEVEL_LOW"
+	THINGPOLICYLEVEL_THING_POLICY_LEVEL_HIGH        ThingPolicyLevel = "THING_POLICY_LEVEL_HIGH"
+)
+
 type ThingPolicy struct {
 	Id         string                 `json:"id"`
 	Name       string                 `json:"name"`
 	Enabled    *bool                  `json:"enabled,omitempty"`
 	Tags       *string                `json:"tags,omitempty"`
+	Level      *ThingPolicyLevel      `json:"level,omitempty"`
 	Rules      *ThingPolicyRules      `json:"rules,omitempty"`
 	OtherRules *ThingPolicyOtherRules `json:"otherRules,omitempty"`
 }
@@ -34,9 +43,10 @@ type CreateThingPolicyRequest struct {
 }
 
 type CreateThingPolicyItem struct {
-	Name     string  `json:"name"`
-	Disabled *bool   `json:"disabled,omitempty"`
-	Tags     *string `json:"tags,omitempty"`
+	Name     string            `json:"name"`
+	Disabled *bool             `json:"disabled,omitempty"`
+	Tags     *string           `json:"tags,omitempty"`
+	Level    *ThingPolicyLevel `json:"level,omitempty"`
 }
 
 type ThingPolicyRules struct {
