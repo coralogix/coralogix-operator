@@ -17,6 +17,7 @@ package v1beta1
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -96,6 +97,23 @@ var _ = Describe("Alert validation", func() {
 	It("should accept a phantom alert with no notification group", func(ctx context.Context) {
 		alert := minimalAlert("phantom-without-notification-group")
 		alert.Spec.PhantomMode = true
+
+		Expect(k8sClient.Create(ctx, alert)).To(Succeed())
+		Expect(k8sClient.Delete(ctx, alert)).To(Succeed())
+	})
+
+	It("should reject an alert with a description longer than 3000 characters", func(ctx context.Context) {
+		alert := minimalAlert("description-too-long")
+		alert.Spec.Description = strings.Repeat("a", 3001)
+
+		err := k8sClient.Create(ctx, alert)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("spec.description: Too long"))
+	})
+
+	It("should accept an alert with a 3000 character description", func(ctx context.Context) {
+		alert := minimalAlert("description-at-limit")
+		alert.Spec.Description = strings.Repeat("a", 3000)
 
 		Expect(k8sClient.Create(ctx, alert)).To(Succeed())
 		Expect(k8sClient.Delete(ctx, alert)).To(Succeed())
