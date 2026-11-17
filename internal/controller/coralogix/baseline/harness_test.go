@@ -75,7 +75,10 @@ type kind struct {
 	// newReconciler returns the kind's reconciler, with SDK clients built from the client set.
 	newReconciler func(cs *openapicxsdk.ClientSet) reconcile.Reconciler
 	scenarios     map[string]func(h *harness)
-	fidelity      fidelityConfig
+	// admission maps a case name to a CR manifest. TestAdmission records whether the API server
+	// accepts each one, and why it rejects it.
+	admission map[string]string
+	fidelity  fidelityConfig
 }
 
 var kinds = map[string]kind{}

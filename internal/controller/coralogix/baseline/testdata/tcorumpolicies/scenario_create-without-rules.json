@@ -1,0 +1,49 @@
+[
+  {
+    "step": "create with neither severities nor a DPXL expression: the API rejects it",
+    "spec": {
+      "policies": [
+        {
+          "name": "rum-no-rules",
+          "priority": "low"
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/rum-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "policy": {
+                "description": "",
+                "name": "rum-no-rules",
+                "priority": "PRIORITY_TYPE_LOW"
+              },
+              "rumRules": {}
+            }
+          ]
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteUpdateFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

@@ -1,0 +1,276 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: tcologspolicies.coralogix.com
+spec:
+  group: coralogix.com
+  names:
+    kind: TCOLogsPolicies
+    listKind: TCOLogsPoliciesList
+    plural: tcologspolicies
+    singular: tcologspolicies
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.printableStatus
+      name: Status
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              policies:
+                items:
+                  properties:
+                    applications:
+                      properties:
+                        names:
+                          items:
+                            type: string
+                          maxItems: 50
+                          minItems: 1
+                          type: array
+                        ruleType:
+                          enum:
+                          - is
+                          - is_not
+                          - start_with
+                          - includes
+                          type: string
+                      required:
+                      - names
+                      - ruleType
+                      type: object
+                    archiveRetention:
+                      properties:
+                        backendRef:
+                          properties:
+                            id:
+                              pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+                              type: string
+                            name:
+                              minLength: 1
+                              type: string
+                          type: object
+                          x-kubernetes-validations:
+                          - message: exactly one of name or id must be set
+                            rule: has(self.name) != has(self.id)
+                      required:
+                      - backendRef
+                      type: object
+                    description:
+                      type: string
+                    disabled:
+                      type: boolean
+                    dpxlExpression:
+                      maxLength: 65535
+                      minLength: 1
+                      type: string
+                    name:
+                      type: string
+                    priority:
+                      enum:
+                      - block
+                      - high
+                      - medium
+                      - low
+                      type: string
+                    priorityOverride:
+                      properties:
+                        quotaBased:
+                          properties:
+                            usageTiers:
+                              items:
+                                properties:
+                                  dailyQuotaPercentage:
+                                    anyOf:
+                                    - type: integer
+                                    - type: string
+                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                    x-kubernetes-int-or-string: true
+                                  priority:
+                                    enum:
+                                    - block
+                                    - high
+                                    - low
+                                    - medium
+                                    type: string
+                                required:
+                                - dailyQuotaPercentage
+                                - priority
+                                type: object
+                              minItems: 1
+                              type: array
+                          required:
+                          - usageTiers
+                          type: object
+                      type: object
+                    severities:
+                      items:
+                        enum:
+                        - info
+                        - warning
+                        - critical
+                        - error
+                        - debug
+                        - verbose
+                        type: string
+                      type: array
+                    subsystems:
+                      properties:
+                        names:
+                          items:
+                            type: string
+                          maxItems: 50
+                          minItems: 1
+                          type: array
+                        ruleType:
+                          enum:
+                          - is
+                          - is_not
+                          - start_with
+                          - includes
+                          type: string
+                      required:
+                      - names
+                      - ruleType
+                      type: object
+                    targets:
+                      items:
+                        properties:
+                          archiveRetention:
+                            properties:
+                              backendRef:
+                                properties:
+                                  id:
+                                    pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+                                    type: string
+                                  name:
+                                    minLength: 1
+                                    type: string
+                                type: object
+                                x-kubernetes-validations:
+                                - message: exactly one of name or id must be set
+                                  rule: has(self.name) != has(self.id)
+                            required:
+                            - backendRef
+                            type: object
+                          dataset:
+                            minLength: 1
+                            type: string
+                          dataspace:
+                            maxLength: 50
+                            type: string
+                          priority:
+                            enum:
+                            - block
+                            - high
+                            - low
+                            - medium
+                            type: string
+                          priorityOverride:
+                            properties:
+                              quotaBased:
+                                properties:
+                                  usageTiers:
+                                    items:
+                                      properties:
+                                        dailyQuotaPercentage:
+                                          anyOf:
+                                          - type: integer
+                                          - type: string
+                                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                          x-kubernetes-int-or-string: true
+                                        priority:
+                                          enum:
+                                          - block
+                                          - high
+                                          - low
+                                          - medium
+                                          type: string
+                                      required:
+                                      - dailyQuotaPercentage
+                                      - priority
+                                      type: object
+                                    minItems: 1
+                                    type: array
+                                required:
+                                - usageTiers
+                                type: object
+                            type: object
+                        required:
+                        - dataset
+                        - priority
+                        type: object
+                      type: array
+                  required:
+                  - name
+                  type: object
+                  x-kubernetes-validations:
+                  - message: dpxlExpression is mutually exclusive with severities,
+                      applications and subsystems
+                    rule: '!(has(self.dpxlExpression) && (has(self.applications) ||
+                      has(self.subsystems) || (has(self.severities) && size(self.severities)
+                      > 0)))'
+                maxItems: 200
+                type: array
+            required:
+            - policies
+            type: object
+          status:
+            properties:
+              conditions:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      format: date-time
+                      type: string
+                    message:
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              printableStatus:
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

@@ -1,0 +1,242 @@
+{
+  "dpxl expression": {
+    "accepted": true
+  },
+  "dpxl expression and applications": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0]",
+        "message": "Invalid value: \"object\": dpxlExpression is mutually exclusive with severities, applications and subsystems"
+      }
+    ]
+  },
+  "dpxl expression and subsystems": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0]",
+        "message": "Invalid value: \"object\": dpxlExpression is mutually exclusive with severities, applications and subsystems"
+      }
+    ]
+  },
+  "empty dpxl expression": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0].dpxlExpression",
+        "message": "Invalid value: \"\": spec.policies[0].dpxlExpression in body should be at least 1 chars long"
+      }
+    ]
+  },
+  "empty severities and dpxl expression": {
+    "accepted": true
+  },
+  "exactly 50 subsystem names": {
+    "accepted": true
+  },
+  "more than 200 policies": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooMany",
+        "field": "spec.policies",
+        "message": "Too many: 201: must have at most 200 items"
+      }
+    ]
+  },
+  "more than 50 subsystem names": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooMany",
+        "field": "spec.policies[0].subsystems.names",
+        "message": "Too many: 51: must have at most 50 items"
+      }
+    ]
+  },
+  "no name": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.policies[0].name",
+        "message": "Required value"
+      }
+    ]
+  },
+  "no policies field": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.policies",
+        "message": "Required value"
+      }
+    ]
+  },
+  "no priority, no targets": {
+    "accepted": true
+  },
+  "no subsystem names": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0].subsystems.names",
+        "message": "Invalid value: 0: spec.policies[0].subsystems.names in body should have at least 1 items"
+      }
+    ]
+  },
+  "override without usage tiers": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0].priorityOverride.quotaBased.usageTiers",
+        "message": "Invalid value: 0: spec.policies[0].priorityOverride.quotaBased.usageTiers in body should have at least 1 items"
+      }
+    ]
+  },
+  "policy override": {
+    "accepted": true
+  },
+  "retention by id": {
+    "accepted": true
+  },
+  "retention by name": {
+    "accepted": true
+  },
+  "retention id that is not a UUID": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0].archiveRetention.backendRef.id",
+        "message": "Invalid value: \"not-a-uuid\": spec.policies[0].archiveRetention.backendRef.id in body should match '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'"
+      }
+    ]
+  },
+  "retention with an empty name": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0].archiveRetention.backendRef.name",
+        "message": "Invalid value: \"\": spec.policies[0].archiveRetention.backendRef.name in body should be at least 1 chars long"
+      }
+    ]
+  },
+  "retention with both name and id": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0].archiveRetention.backendRef",
+        "message": "Invalid value: \"object\": exactly one of name or id must be set"
+      }
+    ]
+  },
+  "retention with neither name nor id": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0].archiveRetention.backendRef",
+        "message": "Invalid value: \"object\": exactly one of name or id must be set"
+      }
+    ]
+  },
+  "severities and dpxl expression": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0]",
+        "message": "Invalid value: \"object\": dpxlExpression is mutually exclusive with severities, applications and subsystems"
+      }
+    ]
+  },
+  "target override with a fractional percentage": {
+    "accepted": true
+  },
+  "target retention with both name and id": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0].targets[0].archiveRetention.backendRef",
+        "message": "Invalid value: \"object\": exactly one of name or id must be set"
+      }
+    ]
+  },
+  "target with a dataspace longer than 50": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooLong",
+        "field": "spec.policies[0].targets[0].dataspace",
+        "message": "Too long: may not be longer than 50"
+      }
+    ]
+  },
+  "target with an empty dataset": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.policies[0].targets[0].dataset",
+        "message": "Invalid value: \"\": spec.policies[0].targets[0].dataset in body should be at least 1 chars long"
+      }
+    ]
+  },
+  "target without a priority": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.policies[0].targets[0].priority",
+        "message": "Required value"
+      }
+    ]
+  },
+  "targets that each have a priority and no policy priority": {
+    "accepted": true
+  },
+  "unknown priority": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.policies[0].priority",
+        "message": "Unsupported value: \"urgent\": supported values: \"block\", \"high\", \"medium\", \"low\""
+      }
+    ]
+  },
+  "unknown rule type": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.policies[0].applications.ruleType",
+        "message": "Unsupported value: \"equals\": supported values: \"is\", \"is_not\", \"start_with\", \"includes\""
+      }
+    ]
+  },
+  "unknown severity": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.policies[0].severities[0]",
+        "message": "Unsupported value: \"fatal\": supported values: \"info\", \"warning\", \"critical\", \"error\", \"debug\", \"verbose\""
+      }
+    ]
+  },
+  "valid target": {
+    "accepted": true
+  }
+}

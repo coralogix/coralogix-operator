@@ -1,0 +1,382 @@
+{
+  "cases": [
+    {
+      "name": "overwrite one policy, the same list again, then an empty list",
+      "steps": [
+        {
+          "method": "PUT",
+          "path": "/dataplans/log-policies/v1",
+          "body": {
+            "policies": [
+              {
+                "policy": {
+                  "name": "cxo-fidelity-a",
+                  "description": "",
+                  "priority": "PRIORITY_TYPE_HIGH"
+                },
+                "logRules": {
+                  "severities": [
+                    "SEVERITY_INFO",
+                    "SEVERITY_ERROR"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/dataplans/log-policies/v1",
+          "body": {
+            "policies": [
+              {
+                "policy": {
+                  "name": "cxo-fidelity-a",
+                  "description": "",
+                  "priority": "PRIORITY_TYPE_HIGH"
+                },
+                "logRules": {
+                  "severities": [
+                    "SEVERITY_INFO",
+                    "SEVERITY_ERROR"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/dataplans/log-policies/v1",
+          "body": {
+            "policies": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "overwrite with a null list, as the operator deletes",
+      "steps": [
+        {
+          "method": "PUT",
+          "path": "/dataplans/log-policies/v1",
+          "body": {
+            "policies": [
+              {
+                "policy": {
+                  "name": "cxo-fidelity-a",
+                  "description": "",
+                  "priority": "PRIORITY_TYPE_HIGH"
+                },
+                "logRules": {
+                  "severities": [
+                    "SEVERITY_INFO",
+                    "SEVERITY_ERROR"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/dataplans/log-policies/v1",
+          "body": {
+            "policies": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "a policy without a description",
+      "steps": [
+        {
+          "method": "PUT",
+          "path": "/dataplans/log-policies/v1",
+          "body": {
+            "policies": [
+              {
+                "policy": {
+                  "name": "cxo-fidelity-a",
+                  "priority": "PRIORITY_TYPE_HIGH"
+                },
+                "logRules": {
+                  "severities": [
+                    "SEVERITY_INFO",
+                    "SEVERITY_ERROR"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/dataplans/log-policies/v1",
+          "body": {
+            "policies": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "every field",
+      "steps": [
+        {
+          "method": "PUT",
+          "path": "/dataplans/log-policies/v1",
+          "body": {
+            "policies": [
+              {
+                "policy": {
+                  "name": "cxo-fidelity-structured",
+                  "description": "Structured rules",
+                  "priority": "PRIORITY_TYPE_HIGH",
+                  "disabled": true,
+                  "applicationRule": {
+                    "name": "prod,staging",
+                    "ruleTypeId": "RULE_TYPE_ID_IS"
+                  },
+                  "subsystemRule": {
+                    "name": "mobile,web",
+                    "ruleTypeId": "RULE_TYPE_ID_START_WITH"
+                  },
+                  "priorityOverride": {
+                    "quotaBased": {
+                      "usageTiers": [
+                        {
+                          "dailyQuotaPercentage": 30,
+                          "priority": "PRIORITY_TYPE_MEDIUM"
+                        },
+                        {
+                          "dailyQuotaPercentage": 60.5,
+                          "priority": "PRIORITY_TYPE_LOW"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "logRules": {
+                  "severities": [
+                    "SEVERITY_DEBUG",
+                    "SEVERITY_VERBOSE",
+                    "SEVERITY_INFO",
+                    "SEVERITY_WARNING",
+                    "SEVERITY_ERROR",
+                    "SEVERITY_CRITICAL"
+                  ]
+                }
+              },
+              {
+                "policy": {
+                  "name": "cxo-fidelity-dpxl",
+                  "description": "DPXL rules",
+                  "priority": "PRIORITY_TYPE_MEDIUM",
+                  "disabled": false
+                },
+                "logRules": {
+                  "dpxlExpression": "<v1>$d.applicationname == 'prod'"
+                }
+              },
+              {
+                "policy": {
+                  "name": "cxo-fidelity-targets",
+                  "description": "",
+                  "priority": "PRIORITY_TYPE_UNSPECIFIED",
+                  "applicationRule": {
+                    "name": "dev",
+                    "ruleTypeId": "RULE_TYPE_ID_INCLUDES"
+                  },
+                  "subsystemRule": {
+                    "name": "test",
+                    "ruleTypeId": "RULE_TYPE_ID_IS_NOT"
+                  },
+                  "targets": [
+                    {
+                      "dataset": "logs",
+                      "dataspace": "default",
+                      "priority": "PRIORITY_TYPE_LOW"
+                    },
+                    {
+                      "dataset": "logs",
+                      "priority": "PRIORITY_TYPE_BLOCK",
+                      "priorityOverride": {
+                        "quotaBased": {
+                          "usageTiers": [
+                            {
+                              "dailyQuotaPercentage": 60,
+                              "priority": "PRIORITY_TYPE_MEDIUM"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                },
+                "logRules": {
+                  "severities": [
+                    "SEVERITY_INFO"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/dataplans/log-policies/v1",
+          "body": {
+            "policies": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "a policy override and no priority",
+      "steps": [
+        {
+          "method": "PUT",
+          "path": "/dataplans/log-policies/v1",
+          "body": {
+            "policies": [
+              {
+                "policy": {
+                  "name": "cxo-fidelity-override",
+                  "description": "",
+                  "priority": "PRIORITY_TYPE_UNSPECIFIED",
+                  "priorityOverride": {
+                    "quotaBased": {
+                      "usageTiers": [
+                        {
+                          "dailyQuotaPercentage": 30,
+                          "priority": "PRIORITY_TYPE_MEDIUM"
+                        },
+                        {
+                          "dailyQuotaPercentage": 60.5,
+                          "priority": "PRIORITY_TYPE_LOW"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "logRules": {
+                  "severities": [
+                    "SEVERITY_INFO",
+                    "SEVERITY_ERROR"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/dataplans/log-policies/v1",
+          "body": {
+            "policies": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejections",
+      "steps": [
+        {
+          "method": "PUT",
+          "path": "/dataplans/log-policies/v1",
+          "body": {
+            "policies": [
+              {
+                "policy": {
+                  "name": "cxo-fidelity-no-rules",
+                  "description": "",
+                  "priority": "PRIORITY_TYPE_LOW"
+                },
+                "logRules": {}
+              }
+            ]
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/dataplans/log-policies/v1",
+          "body": {
+            "policies": [
+              {
+                "policy": {
+                  "name": "cxo-fidelity-no-version",
+                  "description": "",
+                  "priority": "PRIORITY_TYPE_LOW"
+                },
+                "logRules": {
+                  "dpxlExpression": "$d.applicationname == 'prod'"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/dataplans/log-policies/v1",
+          "body": {
+            "policies": [
+              {
+                "policy": {
+                  "name": "cxo-fidelity-a",
+                  "description": "",
+                  "priority": "PRIORITY_TYPE_HIGH"
+                },
+                "logRules": {
+                  "severities": [
+                    "SEVERITY_INFO",
+                    "SEVERITY_ERROR"
+                  ]
+                }
+              },
+              {
+                "policy": {
+                  "name": "cxo-fidelity-a",
+                  "description": "",
+                  "priority": "PRIORITY_TYPE_HIGH"
+                },
+                "logRules": {
+                  "severities": [
+                    "SEVERITY_INFO",
+                    "SEVERITY_ERROR"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/dataplans/log-policies/v1",
+          "body": {
+            "policies": [
+              {
+                "policy": {
+                  "name": "cxo-fidelity-no-priority",
+                  "description": "",
+                  "priority": "PRIORITY_TYPE_UNSPECIFIED"
+                },
+                "logRules": {
+                  "severities": [
+                    "SEVERITY_INFO"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/dataplans/log-policies/v1",
+          "body": {
+            "policies": []
+          }
+        }
+      ]
+    }
+  ]
+}

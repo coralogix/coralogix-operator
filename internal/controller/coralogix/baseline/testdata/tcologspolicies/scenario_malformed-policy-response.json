@@ -1,0 +1,58 @@
+[
+  {
+    "step": "create: the answer has a policy without its required fields",
+    "spec": {
+      "policies": [
+        {
+          "name": "logs-severities",
+          "priority": "high",
+          "severities": [
+            "info",
+            "error"
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/log-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "logRules": {
+                "severities": [
+                  "SEVERITY_INFO",
+                  "SEVERITY_ERROR"
+                ]
+              },
+              "policy": {
+                "description": "",
+                "name": "logs-severities",
+                "priority": "PRIORITY_TYPE_HIGH"
+              }
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "DeserializationError",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

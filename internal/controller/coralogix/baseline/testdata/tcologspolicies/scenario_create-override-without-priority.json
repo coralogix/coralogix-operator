@@ -1,0 +1,78 @@
+[
+  {
+    "step": "create with a policy override and no priority",
+    "spec": {
+      "policies": [
+        {
+          "name": "override-only",
+          "priorityOverride": {
+            "quotaBased": {
+              "usageTiers": [
+                {
+                  "dailyQuotaPercentage": 60,
+                  "priority": "medium"
+                }
+              ]
+            }
+          },
+          "severities": [
+            "info"
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/log-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "logRules": {
+                "severities": [
+                  "SEVERITY_INFO"
+                ]
+              },
+              "policy": {
+                "description": "",
+                "name": "override-only",
+                "priority": "PRIORITY_TYPE_UNSPECIFIED",
+                "priorityOverride": {
+                  "quotaBased": {
+                    "usageTiers": [
+                      {
+                        "dailyQuotaPercentage": 60,
+                        "priority": "PRIORITY_TYPE_MEDIUM"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "tco-logs-policies.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

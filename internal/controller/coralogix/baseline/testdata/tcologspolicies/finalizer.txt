@@ -1,0 +1,1 @@
+tco-logs-policies.coralogix.com/finalizer

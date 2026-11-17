@@ -1,0 +1,101 @@
+[
+  {
+    "step": "create with a DPXL expression that has no version tag: the API rejects it",
+    "spec": {
+      "policies": [
+        {
+          "dpxlExpression": "$d.status == 'ERROR'",
+          "name": "traces-no-version",
+          "priority": "low"
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/span-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "policy": {
+                "description": "",
+                "name": "traces-no-version",
+                "priority": "PRIORITY_TYPE_LOW"
+              },
+              "spanRules": {
+                "dpxlExpression": "$d.status == 'ERROR'"
+              }
+            }
+          ]
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteUpdateFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/span-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "policy": {
+                "description": "",
+                "name": "traces-no-version",
+                "priority": "PRIORITY_TYPE_LOW"
+              },
+              "spanRules": {
+                "dpxlExpression": "$d.status == 'ERROR'"
+              }
+            }
+          ]
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteUpdateFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "delete: the CR has no finalizer",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

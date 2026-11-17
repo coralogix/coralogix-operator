@@ -1,0 +1,240 @@
+[
+  {
+    "step": "create with every field",
+    "spec": {
+      "policies": [
+        {
+          "applications": {
+            "names": [
+              "prod",
+              "staging"
+            ],
+            "ruleType": "is"
+          },
+          "archiveRetention": {
+            "backendRef": {
+              "id": "00000000-0000-4000-8000-0000000000a2"
+            }
+          },
+          "description": "Structured rules",
+          "disabled": true,
+          "name": "rum-structured",
+          "priority": "high",
+          "priorityOverride": {
+            "quotaBased": {
+              "usageTiers": [
+                {
+                  "dailyQuotaPercentage": 30,
+                  "priority": "medium"
+                },
+                {
+                  "dailyQuotaPercentage": "60.5",
+                  "priority": "low"
+                }
+              ]
+            }
+          },
+          "severities": [
+            "debug",
+            "verbose",
+            "info",
+            "warning",
+            "error",
+            "critical"
+          ],
+          "subsystems": {
+            "names": [
+              "mobile",
+              "web"
+            ],
+            "ruleType": "start_with"
+          }
+        },
+        {
+          "applications": {
+            "names": [
+              "prod"
+            ],
+            "ruleType": "includes"
+          },
+          "description": "DPXL rules",
+          "disabled": false,
+          "dpxlExpression": "\u003cv1\u003e$d.applicationname == 'prod'",
+          "name": "rum-dpxl",
+          "priority": "medium",
+          "subsystems": {
+            "names": [
+              "web"
+            ],
+            "ruleType": "is_not"
+          }
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/rum-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "policy": {
+                "applicationRule": {
+                  "name": "prod,staging",
+                  "ruleTypeId": "RULE_TYPE_ID_IS"
+                },
+                "archiveRetention": {
+                  "id": "00000000-0000-4000-8000-0000000000a2"
+                },
+                "description": "Structured rules",
+                "disabled": true,
+                "name": "rum-structured",
+                "priority": "PRIORITY_TYPE_HIGH",
+                "priorityOverride": {
+                  "quotaBased": {
+                    "usageTiers": [
+                      {
+                        "dailyQuotaPercentage": 30,
+                        "priority": "PRIORITY_TYPE_MEDIUM"
+                      },
+                      {
+                        "dailyQuotaPercentage": 60.5,
+                        "priority": "PRIORITY_TYPE_LOW"
+                      }
+                    ]
+                  }
+                },
+                "subsystemRule": {
+                  "name": "mobile,web",
+                  "ruleTypeId": "RULE_TYPE_ID_START_WITH"
+                }
+              },
+              "rumRules": {
+                "severities": [
+                  "SEVERITY_DEBUG",
+                  "SEVERITY_VERBOSE",
+                  "SEVERITY_INFO",
+                  "SEVERITY_WARNING",
+                  "SEVERITY_ERROR",
+                  "SEVERITY_CRITICAL"
+                ]
+              }
+            },
+            {
+              "policy": {
+                "applicationRule": {
+                  "name": "prod",
+                  "ruleTypeId": "RULE_TYPE_ID_INCLUDES"
+                },
+                "description": "DPXL rules",
+                "disabled": false,
+                "name": "rum-dpxl",
+                "priority": "PRIORITY_TYPE_MEDIUM",
+                "subsystemRule": {
+                  "name": "web",
+                  "ruleTypeId": "RULE_TYPE_ID_IS_NOT"
+                }
+              },
+              "rumRules": {
+                "dpxlExpression": "\u003cv1\u003e$d.applicationname == 'prod'"
+              }
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "tco-rum-policies.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "remove every optional field: description is sent as an empty string",
+    "spec": {
+      "policies": [
+        {
+          "name": "rum-structured",
+          "priority": "high",
+          "severities": [
+            "info"
+          ]
+        },
+        {
+          "dpxlExpression": "\u003cv1\u003e$d.applicationname == 'prod'",
+          "name": "rum-dpxl",
+          "priority": "medium"
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/rum-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "policy": {
+                "description": "",
+                "name": "rum-structured",
+                "priority": "PRIORITY_TYPE_HIGH"
+              },
+              "rumRules": {
+                "severities": [
+                  "SEVERITY_INFO"
+                ]
+              }
+            },
+            {
+              "policy": {
+                "description": "",
+                "name": "rum-dpxl",
+                "priority": "PRIORITY_TYPE_MEDIUM"
+              },
+              "rumRules": {
+                "dpxlExpression": "\u003cv1\u003e$d.applicationname == 'prod'"
+              }
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "tco-rum-policies.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 3,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

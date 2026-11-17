@@ -1,0 +1,227 @@
+[
+  {
+    "step": "create the sample",
+    "spec": {
+      "policies": [
+        {
+          "actions": {
+            "names": [
+              "action1",
+              "action2"
+            ],
+            "ruleType": "is"
+          },
+          "archiveRetention": {
+            "backendRef": {
+              "name": "Default"
+            }
+          },
+          "description": "This is the first policy",
+          "name": "first policy",
+          "priority": "high",
+          "services": {
+            "names": [
+              "service",
+              "system"
+            ],
+            "ruleType": "includes"
+          },
+          "tags": [
+            {
+              "name": "tags.http",
+              "ruleType": "is",
+              "values": [
+                "GET",
+                "POST"
+              ]
+            },
+            {
+              "name": "tags.env",
+              "ruleType": "is",
+              "values": [
+                "prod",
+                "dev"
+              ]
+            }
+          ]
+        },
+        {
+          "actions": {
+            "names": [
+              "action3"
+            ],
+            "ruleType": "is"
+          },
+          "description": "This is the second policy",
+          "disabled": true,
+          "name": "second policy",
+          "priority": "low",
+          "services": {
+            "names": [
+              "service"
+            ],
+            "ruleType": "is"
+          },
+          "tags": [
+            {
+              "name": "tags.http",
+              "ruleType": "is",
+              "values": [
+                "GET"
+              ]
+            }
+          ]
+        },
+        {
+          "dpxlExpression": "\u003cv1\u003e $d.status == 'ERROR'",
+          "name": "third policy with dpxl expression",
+          "priority": "medium"
+        },
+        {
+          "description": "de-prioritize as the daily quota fills",
+          "name": "fourth policy with quota-based priority override",
+          "priority": "low",
+          "priorityOverride": {
+            "quotaBased": {
+              "usageTiers": [
+                {
+                  "dailyQuotaPercentage": 30,
+                  "priority": "high"
+                },
+                {
+                  "dailyQuotaPercentage": 60,
+                  "priority": "medium"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/dataengine/retention-tags/v1",
+        "status": 200
+      },
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplans/span-policies/v1",
+        "body": {
+          "policies": [
+            {
+              "policy": {
+                "archiveRetention": {
+                  "id": "00000000-0000-4000-8000-0000000000a1"
+                },
+                "description": "This is the first policy",
+                "name": "first policy",
+                "priority": "PRIORITY_TYPE_HIGH"
+              },
+              "spanRules": {
+                "actionRule": {
+                  "name": "action1,action2",
+                  "ruleTypeId": "RULE_TYPE_ID_IS"
+                },
+                "serviceRule": {
+                  "name": "service,system",
+                  "ruleTypeId": "RULE_TYPE_ID_INCLUDES"
+                },
+                "tagRules": [
+                  {
+                    "ruleTypeId": "RULE_TYPE_ID_IS",
+                    "tagName": "tags.http",
+                    "tagValue": "GET,POST"
+                  },
+                  {
+                    "ruleTypeId": "RULE_TYPE_ID_IS",
+                    "tagName": "tags.env",
+                    "tagValue": "prod,dev"
+                  }
+                ]
+              }
+            },
+            {
+              "policy": {
+                "description": "This is the second policy",
+                "disabled": true,
+                "name": "second policy",
+                "priority": "PRIORITY_TYPE_LOW"
+              },
+              "spanRules": {
+                "actionRule": {
+                  "name": "action3",
+                  "ruleTypeId": "RULE_TYPE_ID_IS"
+                },
+                "serviceRule": {
+                  "name": "service",
+                  "ruleTypeId": "RULE_TYPE_ID_IS"
+                },
+                "tagRules": [
+                  {
+                    "ruleTypeId": "RULE_TYPE_ID_IS",
+                    "tagName": "tags.http",
+                    "tagValue": "GET"
+                  }
+                ]
+              }
+            },
+            {
+              "policy": {
+                "description": "",
+                "name": "third policy with dpxl expression",
+                "priority": "PRIORITY_TYPE_MEDIUM"
+              },
+              "spanRules": {
+                "dpxlExpression": "\u003cv1\u003e $d.status == 'ERROR'"
+              }
+            },
+            {
+              "policy": {
+                "description": "de-prioritize as the daily quota fills",
+                "name": "fourth policy with quota-based priority override",
+                "priority": "PRIORITY_TYPE_LOW",
+                "priorityOverride": {
+                  "quotaBased": {
+                    "usageTiers": [
+                      {
+                        "dailyQuotaPercentage": 30,
+                        "priority": "PRIORITY_TYPE_HIGH"
+                      },
+                      {
+                        "dailyQuotaPercentage": 60,
+                        "priority": "PRIORITY_TYPE_MEDIUM"
+                      }
+                    ]
+                  }
+                }
+              },
+              "spanRules": {}
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "tco-traces-policies.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]
