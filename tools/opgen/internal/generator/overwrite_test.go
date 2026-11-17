@@ -56,6 +56,12 @@ func TestOverwriteKindHasNoStatusID(t *testing.T) {
 			t.Errorf("the e2e test of an overwrite resource lacks the remote cleanup backstop %q", want)
 		}
 	}
+	// Every item of a spec gets its own name: the API rejects two items with one name.
+	for _, want := range []string{`itemName = fmt.Sprintf("%s-%d", name, i+1)`, `strings.HasPrefix(item, name+"-")`} {
+		if !strings.Contains(e2e, want) {
+			t.Errorf("the e2e test of an overwrite resource must name each item; it lacks %q", want)
+		}
+	}
 	// The coverage steps run their copies one at a time: two copies would replace each other's list.
 	for _, want := range []string{`Describe("ThingPolicies (coverage)", Ordered, Serial`, "thingPoliciesCoverageSteps", "Deleting copy %d"} {
 		if !strings.Contains(e2e, want) {

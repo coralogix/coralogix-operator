@@ -171,30 +171,36 @@ func removeThingPoliciesGenerated(ctx context.Context, apiClient *thingpoliciess
 	}
 }
 
-// hasThingPoliciesGenerated reports whether the list of the API has an item with the name. A failed read
-// counts as yes, so the backstop keeps waiting.
+// hasThingPoliciesGenerated reports whether the list of the API has an item of the custom resource with
+// the name: an item named name, or name with a position, such as name-2. A failed read counts as
+// yes, so the backstop keeps waiting.
 func hasThingPoliciesGenerated(ctx context.Context, apiClient *thingpoliciesservice.ThingPoliciesServiceAPIService, name string) bool {
 	got, httpResp, err := apiClient.ThingPoliciesServiceGetThingPolicies(ctx).Execute()
 	if cxsdk.NewAPIError(httpResp, err) != nil || got == nil {
 		return true
 	}
 	for i := range got.Policies {
-		if got.Policies[i].Name == name {
+		if item := got.Policies[i].Name; item == name || strings.HasPrefix(item, name+"-") {
 			return true
 		}
 	}
 	return false
 }
 
-// newThingPoliciesGenerated returns a ThingPolicies with the spec that the JSON holds. Its item is named
-// after the custom resource, so that the test can find it in the list of the API.
+// newThingPoliciesGenerated returns a ThingPolicies with the spec that the JSON holds. Its first item is
+// named after the custom resource, so that the test can find it in the list of the API. Each later
+// item gets the name with its position, such as name-2: the API rejects two items with one name.
 func newThingPoliciesGenerated(name, spec string) *coralogixv1alpha1.ThingPolicies {
 	cr := &coralogixv1alpha1.ThingPolicies{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: testNamespace}}
 	decoder := json.NewDecoder(strings.NewReader(spec))
 	decoder.DisallowUnknownFields()
 	Expect(decoder.Decode(&cr.Spec)).To(Succeed())
 	for i := range cr.Spec.Policies {
-		cr.Spec.Policies[i].Name = name
+		itemName := name
+		if i > 0 {
+			itemName = fmt.Sprintf("%s-%d", name, i+1)
+		}
+		cr.Spec.Policies[i].Name = itemName
 	}
 	return cr
 }
