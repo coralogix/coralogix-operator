@@ -335,6 +335,22 @@ func tcoCommonScenarios(kind string, signal tcoSignal, minimal, updated, rejecte
 			h.SetSpec("change the policies", tcoSpec(h, updated))
 		},
 
+		// Each write replaces the whole list, so a policy that the spec no longer has is not sent.
+		"remove-policy": func(h *harness) {
+			h.Create("create with two policies", tcoManifest(kind, tcoWithSecondPolicy(minimal)))
+			h.SetSpec("remove the second policy: the overwrite sends only the first one", tcoSpec(h, minimal))
+		},
+
+		// A failed update keeps the finalizer of the create. The next reconcile sends the whole list
+		// of the spec again, not only the change.
+		"update-failed-then-retried": func(h *harness) {
+			h.Create("create", tcoManifest(kind, minimal))
+			tcoAPI(h).answerNext(http.MethodPut, signal.path, http.StatusInternalServerError,
+				map[string]any{"code": 500, "message": "Internal Server Error: try again"})
+			h.SetSpec("add a second policy: the API answers 500", tcoSpec(h, tcoWithSecondPolicy(minimal)))
+			h.Reconcile("reconcile again: the overwrite sends both policies")
+		},
+
 		"create-rejected": func(h *harness) {
 			h.Create("create with a DPXL expression that has no version tag: the API rejects it", tcoManifest(kind, rejected))
 			h.Reconcile("reconcile again")
@@ -446,6 +462,18 @@ func tcoCommonScenarios(kind string, signal tcoSignal, minimal, updated, rejecte
 func tcoDuplicate(spec string) string {
 	_, policy, _ := strings.Cut(spec, "  policies:\n")
 	return spec + policy
+}
+
+// tcoWithSecondPolicy adds a copy of the first policy of a spec, named after it with "-second". The
+// spec must hold one policy.
+func tcoWithSecondPolicy(spec string) string {
+	_, policy, _ := strings.Cut(spec, "  policies:\n")
+	before, after, ok := strings.Cut(policy, "    - name: ")
+	if !ok {
+		panic("the spec has no policy")
+	}
+	name, rest, _ := strings.Cut(after, "\n")
+	return spec + before + "    - name: " + name + "-second\n" + rest
 }
 
 // tcoWithRetentionName adds an archive retention by name to the first policy of a spec.
