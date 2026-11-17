@@ -1,0 +1,217 @@
+[
+  {
+    "step": "create with arcDisplay, showMinMax, and layoutColumns",
+    "spec": {
+      "json": "{\"name\":\"Gauge fields\",\"layout\":{\"sections\":[{\"id\":{\"value\":\"<id-1>\"},\"rows\":[{\"id\":{\"value\":\"<id-2>\"},\"appearance\":{\"height\":16},\"widgets\":[{\"id\":{\"value\":\"<id-3>\"},\"title\":\"Gauge with arcs\",\"definition\":{\"gauge\":{\"query\":{\"metrics\":{\"promqlQuery\":{\"value\":\"vector(2)\"},\"aggregation\":\"AGGREGATION_UNSPECIFIED\",\"filters\":[],\"editorMode\":\"METRICS_QUERY_EDITOR_MODE_TEXT\",\"promqlQueryType\":\"PROM_QL_QUERY_TYPE_INSTANT\"}},\"min\":0,\"max\":100,\"showInnerArc\":true,\"showOuterArc\":true,\"unit\":\"UNIT_NUMBER\",\"thresholds\":[],\"dataModeType\":\"DATA_MODE_TYPE_HIGH_UNSPECIFIED\",\"thresholdBy\":\"THRESHOLD_BY_UNSPECIFIED\",\"thresholdType\":\"THRESHOLD_TYPE_RELATIVE\",\"legend\":{\"isVisible\":true,\"columns\":[\"LEGEND_COLUMN_NAME\"],\"groupByQuery\":false,\"placement\":\"LEGEND_PLACEMENT_AUTO\"},\"legendBy\":\"LEGEND_BY_GROUPS\",\"displaySeriesName\":true,\"arcDisplay\":{\"valueArc\":true,\"thresholdArc\":true},\"showMinMax\":false}},\"layoutColumns\":12}]}]}]}}"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
+        "body": {
+          "dashboard": {
+            "layout": {
+              "sections": [
+                {
+                  "id": {
+                    "value": "<id-1>"
+                  },
+                  "rows": [
+                    {
+                      "appearance": {
+                        "height": 16
+                      },
+                      "id": {
+                        "value": "<id-2>"
+                      },
+                      "widgets": [
+                        {
+                          "definition": {
+                            "gauge": {
+                              "arcDisplay": {
+                                "thresholdArc": true,
+                                "valueArc": true
+                              },
+                              "dataModeType": "DATA_MODE_TYPE_HIGH_UNSPECIFIED",
+                              "displaySeriesName": true,
+                              "legend": {
+                                "columns": [
+                                  "LEGEND_COLUMN_NAME"
+                                ],
+                                "groupByQuery": false,
+                                "isVisible": true,
+                                "placement": "LEGEND_PLACEMENT_AUTO"
+                              },
+                              "legendBy": "LEGEND_BY_GROUPS",
+                              "max": 100,
+                              "min": 0,
+                              "query": {
+                                "metrics": {
+                                  "aggregation": "AGGREGATION_UNSPECIFIED",
+                                  "editorMode": "METRICS_QUERY_EDITOR_MODE_TEXT",
+                                  "filters": [],
+                                  "promqlQuery": {
+                                    "value": "vector(2)"
+                                  },
+                                  "promqlQueryType": "PROM_QL_QUERY_TYPE_INSTANT"
+                                }
+                              },
+                              "showInnerArc": true,
+                              "showMinMax": false,
+                              "showOuterArc": true,
+                              "thresholdBy": "THRESHOLD_BY_UNSPECIFIED",
+                              "thresholdType": "THRESHOLD_TYPE_RELATIVE",
+                              "thresholds": [],
+                              "unit": "UNIT_NUMBER"
+                            }
+                          },
+                          "id": {
+                            "value": "<id-3>"
+                          },
+                          "layoutColumns": 12,
+                          "title": "Gauge with arcs"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "name": "Gauge fields"
+          },
+          "requestId": "cx-operator-create-<id-4>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "dashboard.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "baselineDashboard0001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "change the name: Replace sends the gauge fields too",
+    "spec": {
+      "json": "{\"name\":\"Gauge fields renamed\",\"layout\":{\"sections\":[{\"id\":{\"value\":\"<id-1>\"},\"rows\":[{\"id\":{\"value\":\"<id-2>\"},\"appearance\":{\"height\":16},\"widgets\":[{\"id\":{\"value\":\"<id-3>\"},\"title\":\"Gauge with arcs\",\"definition\":{\"gauge\":{\"query\":{\"metrics\":{\"promqlQuery\":{\"value\":\"vector(2)\"},\"aggregation\":\"AGGREGATION_UNSPECIFIED\",\"filters\":[],\"editorMode\":\"METRICS_QUERY_EDITOR_MODE_TEXT\",\"promqlQueryType\":\"PROM_QL_QUERY_TYPE_INSTANT\"}},\"min\":0,\"max\":100,\"showInnerArc\":true,\"showOuterArc\":true,\"unit\":\"UNIT_NUMBER\",\"thresholds\":[],\"dataModeType\":\"DATA_MODE_TYPE_HIGH_UNSPECIFIED\",\"thresholdBy\":\"THRESHOLD_BY_UNSPECIFIED\",\"thresholdType\":\"THRESHOLD_TYPE_RELATIVE\",\"legend\":{\"isVisible\":true,\"columns\":[\"LEGEND_COLUMN_NAME\"],\"groupByQuery\":false,\"placement\":\"LEGEND_PLACEMENT_AUTO\"},\"legendBy\":\"LEGEND_BY_GROUPS\",\"displaySeriesName\":true,\"arcDisplay\":{\"valueArc\":true,\"thresholdArc\":true},\"showMinMax\":false}},\"layoutColumns\":12}]}]}]}}"
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
+        "body": {
+          "dashboard": {
+            "id": "baselineDashboard0001",
+            "layout": {
+              "sections": [
+                {
+                  "id": {
+                    "value": "<id-1>"
+                  },
+                  "rows": [
+                    {
+                      "appearance": {
+                        "height": 16
+                      },
+                      "id": {
+                        "value": "<id-2>"
+                      },
+                      "widgets": [
+                        {
+                          "definition": {
+                            "gauge": {
+                              "arcDisplay": {
+                                "thresholdArc": true,
+                                "valueArc": true
+                              },
+                              "dataModeType": "DATA_MODE_TYPE_HIGH_UNSPECIFIED",
+                              "displaySeriesName": true,
+                              "legend": {
+                                "columns": [
+                                  "LEGEND_COLUMN_NAME"
+                                ],
+                                "groupByQuery": false,
+                                "isVisible": true,
+                                "placement": "LEGEND_PLACEMENT_AUTO"
+                              },
+                              "legendBy": "LEGEND_BY_GROUPS",
+                              "max": 100,
+                              "min": 0,
+                              "query": {
+                                "metrics": {
+                                  "aggregation": "AGGREGATION_UNSPECIFIED",
+                                  "editorMode": "METRICS_QUERY_EDITOR_MODE_TEXT",
+                                  "filters": [],
+                                  "promqlQuery": {
+                                    "value": "vector(2)"
+                                  },
+                                  "promqlQueryType": "PROM_QL_QUERY_TYPE_INSTANT"
+                                }
+                              },
+                              "showInnerArc": true,
+                              "showMinMax": false,
+                              "showOuterArc": true,
+                              "thresholdBy": "THRESHOLD_BY_UNSPECIFIED",
+                              "thresholdType": "THRESHOLD_TYPE_RELATIVE",
+                              "thresholds": [],
+                              "unit": "UNIT_NUMBER"
+                            }
+                          },
+                          "id": {
+                            "value": "<id-3>"
+                          },
+                          "layoutColumns": 12,
+                          "title": "Gauge with arcs"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "name": "Gauge fields renamed"
+          },
+          "requestId": "cx-operator-replace-<id-5>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "dashboard.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "baselineDashboard0001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

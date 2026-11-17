@@ -131,13 +131,14 @@ func createConfigMap(h *harness, data map[string]string) {
 	}
 }
 
-// createDashboardsFolder creates a DashboardsFolder CR. A non-empty id is written to its status.
-func createDashboardsFolder(h *harness, name, id string) {
+// createDashboardsFolder creates a DashboardsFolder CR in the namespace. A non-empty id is written
+// to its status.
+func createDashboardsFolder(h *harness, namespace, name, id string) {
 	h.t.Helper()
 	obj := &unstructured.Unstructured{Object: map[string]any{
 		"apiVersion": "coralogix.com/v1alpha1",
 		"kind":       "DashboardsFolder",
-		"metadata":   map[string]any{"name": name, "namespace": h.namespace},
+		"metadata":   map[string]any{"name": name, "namespace": namespace},
 		"spec":       map[string]any{"name": name},
 	}}
 	if err := h.client.Create(context.Background(), obj); err != nil {
@@ -153,6 +154,40 @@ func createDashboardsFolder(h *harness, name, id string) {
 		h.t.Fatalf("set DashboardsFolder %s status id: %v", name, err)
 	}
 }
+
+// requireSent checks that the last step sent a request with the method whose body holds every
+// JSON fragment. The golden records the body too; this states what the scenario is about.
+func requireSent(h *harness, method string, fragments ...string) {
+	h.t.Helper()
+	last := h.steps[len(h.steps)-1]
+	for _, r := range last.Requests {
+		if r.Method != method {
+			continue
+		}
+		raw, err := json.Marshal(r.Body)
+		if err != nil {
+			h.t.Fatal(err)
+		}
+		for _, fragment := range fragments {
+			if !strings.Contains(string(raw), fragment) {
+				h.t.Errorf("%s: the %s body has no %s:\n%s", last.Step, method, fragment, raw)
+			}
+		}
+		return
+	}
+	h.t.Errorf("%s: no %s request", last.Step, method)
+}
+
+// dashboardGaugeWidget is a gauge with the fields that the gRPC client of older operators dropped:
+// arcDisplay, showMinMax, and layoutColumns (from config/samples/v1alpha1/dashboards/dashboard-import.yaml).
+const dashboardGaugeWidget = `{"id":{"value":"56ef23be-e4cb-492d-a535-5156f75226fd"},"title":"Gauge with arcs","definition":{"gauge":{"query":{"metrics":{"promqlQuery":{"value":"vector(2)"},"aggregation":"AGGREGATION_UNSPECIFIED","filters":[],"editorMode":"METRICS_QUERY_EDITOR_MODE_TEXT","promqlQueryType":"PROM_QL_QUERY_TYPE_INSTANT"}},"min":0,"max":100,"showInnerArc":true,"showOuterArc":true,"unit":"UNIT_NUMBER","thresholds":[],"dataModeType":"DATA_MODE_TYPE_HIGH_UNSPECIFIED","thresholdBy":"THRESHOLD_BY_UNSPECIFIED","thresholdType":"THRESHOLD_TYPE_RELATIVE","legend":{"isVisible":true,"columns":["LEGEND_COLUMN_NAME"],"groupByQuery":false,"placement":"LEGEND_PLACEMENT_AUTO"},"legendBy":"LEGEND_BY_GROUPS","displaySeriesName":true,"arcDisplay":{"valueArc":true,"thresholdArc":true},"showMinMax":false}},"layoutColumns":12}`
+
+func dashboardGaugeContent(name string) string {
+	return fmt.Sprintf(`{"name":%q,"layout":{"sections":[{"id":{"value":"9dbd9f8c-2a2d-4a26-9b9d-8d8d6f70cc01"},"rows":[{"id":{"value":"9dbd9f8c-2a2d-4a26-9b9d-8d8d6f70cc02"},"appearance":{"height":16},"widgets":[%s]}]}]}}`, name, dashboardGaugeWidget)
+}
+
+// The gauge fields of dashboardGaugeWidget as the SDK sends them.
+var dashboardGaugeFragments = []string{`"arcDisplay":{"thresholdArc":true,"valueArc":true}`, `"showMinMax":false`, `"layoutColumns":12`}
 
 // setDashboardStatusID writes status.id of the CR, as a user who edits the status could.
 func setDashboardStatusID(h *harness, id string) {
@@ -237,6 +272,13 @@ var dashboardScenarios = map[string]func(h *harness){
 			`{"name":"Enum","layout":{"sections":[{"rows":[{"widgets":[{"definition":{"gauge":{"thresholdBy":1}}}]}]}]}}`))
 	},
 
+	"content-gauge-fields": func(h *harness) {
+		h.Create("create with arcDisplay, showMinMax, and layoutColumns", dashboardJSONManifest(dashboardGaugeContent("Gauge fields")))
+		requireSent(h, http.MethodPost, dashboardGaugeFragments...)
+		h.SetSpec("change the name: Replace sends the gauge fields too", map[string]any{"json": dashboardGaugeContent("Gauge fields renamed")})
+		requireSent(h, http.MethodPut, dashboardGaugeFragments...)
+	},
+
 	"content-folder-without-ref": func(h *harness) {
 		h.Create("create with a folder in the content and no folderRef: the content folder is sent", dashboardJSONManifest(
 			dashboardContent("Content folder", `"folderPath":{"segments":["from","content"]}`)))
@@ -259,14 +301,28 @@ var dashboardScenarios = map[string]func(h *harness){
 	},
 
 	"folder-resource-ref": func(h *harness) {
-		createDashboardsFolder(h, "folder", dashboardFolderID)
+		createDashboardsFolder(h, h.namespace, "folder", dashboardFolderID)
 		h.Create("create in a folder by DashboardsFolder CR", dashboardManifest(
 			dashboardJSONSpec(dashboardContent("Folder by CR"))+"  folderRef:\n    resourceRef:\n      name: folder\n"))
 		h.Reconcile("update")
 	},
 
+	"folder-resource-ref-other-namespace": func(h *harness) {
+		folders := createNamespace(h, namespaceName(h.namespace+"-folders"))
+		createDashboardsFolder(h, folders, "folder", dashboardFolderID)
+		h.Create("create in a DashboardsFolder CR of another namespace", dashboardManifest(
+			dashboardJSONSpec(dashboardContent("Folder in another namespace"))+
+				fmt.Sprintf("  folderRef:\n    resourceRef:\n      name: folder\n      namespace: %s\n", folders)))
+		requireSent(h, http.MethodPost, fmt.Sprintf(`"folderId":{"value":%q}`, dashboardFolderID))
+		h.SetSpec("change the content", map[string]any{
+			"json":      dashboardContent("Folder in another namespace renamed"),
+			"folderRef": map[string]any{"resourceRef": map[string]any{"name": "folder", "namespace": folders}},
+		})
+		requireSent(h, http.MethodPut, fmt.Sprintf(`"folderId":{"value":%q}`, dashboardFolderID))
+	},
+
 	"folder-resource-ref-without-id": func(h *harness) {
-		createDashboardsFolder(h, "folder", "")
+		createDashboardsFolder(h, h.namespace, "folder", "")
 		h.Create("create in a DashboardsFolder CR that has no status id", dashboardManifest(
 			dashboardJSONSpec(dashboardContent("Folder by CR"))+"  folderRef:\n    resourceRef:\n      name: folder\n"))
 	},

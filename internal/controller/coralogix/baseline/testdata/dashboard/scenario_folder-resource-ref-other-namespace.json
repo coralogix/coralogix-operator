@@ -1,0 +1,107 @@
+[
+  {
+    "step": "create in a DashboardsFolder CR of another namespace",
+    "spec": {
+      "folderRef": {
+        "resourceRef": {
+          "name": "folder",
+          "namespace": "dashboard-folder-resource-ref-other-namespace-folders"
+        }
+      },
+      "json": "{\"name\":\"Folder in another namespace\",\"layout\":{\"sections\":[]}}"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
+        "body": {
+          "dashboard": {
+            "folderId": {
+              "value": "00000000-0000-4000-8000-0000000000d1"
+            },
+            "layout": {
+              "sections": []
+            },
+            "name": "Folder in another namespace"
+          },
+          "requestId": "cx-operator-create-<id-1>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "dashboard.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "baselineDashboard0001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "change the content",
+    "spec": {
+      "folderRef": {
+        "resourceRef": {
+          "name": "folder",
+          "namespace": "dashboard-folder-resource-ref-other-namespace-folders"
+        }
+      },
+      "json": "{\"name\":\"Folder in another namespace renamed\",\"layout\":{\"sections\":[]}}"
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
+        "body": {
+          "dashboard": {
+            "folderId": {
+              "value": "00000000-0000-4000-8000-0000000000d1"
+            },
+            "id": "baselineDashboard0001",
+            "layout": {
+              "sections": []
+            },
+            "name": "Folder in another namespace renamed"
+          },
+          "requestId": "cx-operator-replace-<id-2>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "dashboard.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "baselineDashboard0001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]
