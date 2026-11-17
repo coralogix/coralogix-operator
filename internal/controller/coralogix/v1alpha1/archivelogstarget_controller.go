@@ -60,6 +60,14 @@ func (r *ArchiveLogsTargetReconciler) RequeueInterval() time.Duration {
 	return r.Interval
 }
 
+// SkipCreationRollback always skips the status-failure rollback: this is a
+// tenant-level singleton assigned a constant ID, so a retry cannot create a
+// duplicate, while rolling back would deactivate the target and interrupt
+// archiving until the next successful reconcile.
+func (r *ArchiveLogsTargetReconciler) SkipCreationRollback(client.Object) bool {
+	return true
+}
+
 func (r *ArchiveLogsTargetReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	archivelogstarget := obj.(*coralogixv1alpha1.ArchiveLogsTarget)
 	createRequest, err := archivelogstarget.Spec.ExtractSetTargetRequest(true)
